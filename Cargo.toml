@@ -17,5 +17,4 @@ codegen-units = 16
 opt-level = 3 # https://bevy-cheatbook.github.io/pitfalls/performance.html
 
 [profile.dev]
-codegen-units = 16
 opt-level = 3

@@ -26,7 +26,6 @@ pub fn add_entities(
     spawner.spawn_containables();
     spawner.spawn_window_wall();
 
-    spawner.load_cdda_region(Pos(105, 0, 218), Pos(2, SIZE.1, 2), Pos(0, 0, 48));
-    spawner.load_cdda_region(Pos(107, 0, 218), Pos(2, SIZE.1, 2), Pos(48, 0, 48));
+    spawner.load_cdda_region(Pos(105, 0, 218), Pos(4, SIZE.1, 2), Pos(0, 0, 48));
     spawner.load_cdda_region(Pos(107, 0, 216), Pos(2, SIZE.1, 2), Pos(48, 0, 0));
 }

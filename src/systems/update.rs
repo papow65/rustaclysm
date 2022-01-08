@@ -1,10 +1,9 @@
-use std::time::Instant;
-
 use bevy::diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin};
 use bevy::math::Quat;
 use bevy::prelude::*;
 use bevy::render::camera::Camera;
 use bevy::tasks::ComputeTaskPool;
+use std::time::Instant;
 
 use super::super::components::*;
 use super::super::resources::{Envir, Location, Timeouts};
@@ -41,7 +40,10 @@ pub fn update_transforms(
             Option<&Stairs>,
             Option<&Corpse>,
         ),
-        Or<(Changed<Pos>, Changed<Corpse>)>,
+        (
+            Or<(Changed<Pos>, Changed<Corpse>)>,
+            Without<TextureAtlasSprite>,
+        ),
     >,
 ) {
     let start = Instant::now();
@@ -243,13 +245,15 @@ pub fn update_material_on_player_move(
 #[allow(clippy::needless_pass_by_value)]
 pub fn update_tile_color_on_player_move(
     envir: Envir,
-    mut tiles: Query<(&Pos, &mut TextureAtlasSprite)>,
+    mut tiles: Query<(&Parent, &mut TextureAtlasSprite)>,
+    tile_parents: Query<&Pos, With<Children>>,
     moved_players: Query<&Pos, (With<Player>, Changed<Pos>)>,
     pool: Res<ComputeTaskPool>,
 ) {
     let start = Instant::now();
     if let Ok(&player_pos) = moved_players.single() {
-        tiles.par_for_each_mut(&pool, 64, |(&pos, mut sprite)| {
+        tiles.par_for_each_mut(&pool, 64, |(parent, mut sprite)| {
+            let &pos = tile_parents.get(parent.0).unwrap();
             sprite.color = envir.can_see(player_pos, pos).adjust(Color::WHITE);
         });
     }

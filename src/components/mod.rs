@@ -109,8 +109,6 @@ pub struct Damage {
 
 pub struct Corpse;
 
-pub struct InheritVisibility;
-
 #[derive(Clone, Copy, PartialEq)]
 pub enum Visibility {
     Seen,

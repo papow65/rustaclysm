@@ -1,6 +1,5 @@
-use std::time::{Duration, Instant};
-
 use bevy::prelude::{Changed, Entity, Local, Or, Parent, Query, Res, With};
+use std::time::{Duration, Instant};
 
 use super::super::components::*;
 use super::super::resources::{Location, StdInstant};
