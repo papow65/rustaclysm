@@ -3,10 +3,9 @@ mod input;
 mod startup;
 mod update;
 
-use std::time::{Duration, Instant};
-
 use bevy::prelude::*;
 use bevy::render::camera::Camera;
+use std::time::{Duration, Instant};
 
 use super::components::*;
 use super::resources::*;

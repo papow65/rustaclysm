@@ -5,7 +5,8 @@ use bevy::render::camera::PerspectiveProjection;
 use super::super::components::Window;
 use super::super::components::*;
 use super::super::units::*;
-use super::loader::*;
+use super::tile_loader::*;
+use super::zone_loader::*;
 
 pub struct Spawner<'a> {
     commands: Commands<'a>,
@@ -24,7 +25,7 @@ pub struct Spawner<'a> {
     rack_transform: Transform,
     table_transform: Transform,
     font: Handle<Font>,
-    loader: Loader,
+    tile_loader: TileLoader,
 }
 
 impl<'a> Spawner<'a> {
@@ -79,69 +80,53 @@ impl<'a> Spawner<'a> {
                 ADJACENT.f32(),
             )),
             font: asset_server.load("fonts/FiraMono-Medium.otf"),
-            loader: Loader::new(texture_atlases, asset_server),
+            tile_loader: TileLoader::new(texture_atlases, asset_server),
         }
     }
 
-    fn spawn_tile(
-        &mut self,
-        pos: Pos,
-        label: Label,
-        stairs_down: Option<StairsDown>,
-        tile_name: &TileName,
-    ) {
-        let (texture_atlas, sprite) = self.loader.atlas_and_sprite(tile_name);
-        let tile = self
-            .commands
-            .spawn_bundle((Floor, pos, label))
-            .insert_bundle(SpriteSheetBundle {
-                transform: Transform {
-                    translation: pos.vec3(0.0),
-                    rotation: Quat::from_rotation_y(0.5 * std::f32::consts::PI)
-                        * Quat::from_rotation_x(0.5 * std::f32::consts::PI),
-                    ..Transform::default()
-                },
-                sprite,
-                texture_atlas,
-                visible: Visible::default(), // revert transparency
-                ..SpriteSheetBundle::default()
+    fn spawn_tile(&mut self, pos: Pos, tile_name: &TileName) -> Entity {
+        let rotation = Quat::from_rotation_z(0.01 * std::f32::consts::PI)
+            * Quat::from_rotation_y(1.5 * std::f32::consts::PI)
+            * Quat::from_rotation_x(1.5 * std::f32::consts::PI);
+        let label = tile_name.to_label();
+        println!("{:?}", tile_name);
+        self.commands
+            .spawn_bundle((
+                Floor,
+                pos,
+                label,
+                Transform::from_translation(pos.vec3(0.0)),
+                GlobalTransform::default(),
+                Visible::default(),
+            ))
+            .with_children(|child_builder| {
+                /*if pos.1 == 0 {
+                    for sprite in self.tile_loader.debug(pos, &rotation) {
+                        child_builder.spawn_bundle(sprite);
+                    }
+                }*/
+                for sprite in self.tile_loader.sprite_sheet_bundles(tile_name, &rotation) {
+                    child_builder.spawn_bundle(sprite);
+                }
             })
-            .id();
-
-        if let Some(stairs_down) = stairs_down {
-            self.commands.entity(tile).insert(stairs_down);
-        }
+            .id()
     }
 
     pub fn spawn_stairs_down(&mut self, pos: Pos) {
-        self.spawn_tile(
-            pos,
-            Label::new("stairs down"),
-            Some(StairsDown),
-            &TileName::new("t_wood_stairs_down"),
-        );
+        let entity = self.spawn_tile(pos, &TileName::new("t_wood_stairs_down"));
+        self.commands.entity(entity).insert(StairsDown);
     }
 
     pub fn spawn_grass(&mut self, pos: Pos) {
-        self.spawn_tile(pos, Label::new("grass"), None, &TileName::new("t_grass"));
+        self.spawn_tile(pos, &TileName::new("t_grass"));
     }
 
     pub fn spawn_stone_floor(&mut self, pos: Pos) {
-        self.spawn_tile(
-            pos,
-            Label::new("stone floor"),
-            None,
-            &TileName::new("t_concrete"),
-        );
+        self.spawn_tile(pos, &TileName::new("t_concrete"));
     }
 
     pub fn spawn_roofing(&mut self, pos: Pos) {
-        self.spawn_tile(
-            pos,
-            Label::new("roofing"),
-            None,
-            &TileName::new("t_shingle_flat_roof"),
-        );
+        self.spawn_tile(pos, &TileName::new("t_shingle_flat_roof"));
     }
 
     pub fn spawn_wall(&mut self, pos: Pos) {
@@ -191,7 +176,6 @@ impl<'a> Spawner<'a> {
                         ..PbrBundle::default()
                     })
                     .insert(self.glass.clone())
-                    .insert(InheritVisibility)
                     .insert(WindowPane);
             });
     }
@@ -282,7 +266,6 @@ impl<'a> Spawner<'a> {
                         },
                         ..PbrBundle::default()
                     })
-                    .insert(InheritVisibility)
                     .insert(self.whitish.clone());
             });
     }
@@ -680,7 +663,7 @@ impl<'a> Spawner<'a> {
             for y in 0..zones.1 {
                 for z in 0..zones.2 {
                     if let Some(zone_layout) =
-                        Loader::zone_layout(Pos(zone_pos.0 + x, zone_pos.1 + y, zone_pos.2 + z))
+                        zone_layout(Pos(zone_pos.0 + x, zone_pos.1 + y, zone_pos.2 + z))
                     {
                         self.spawn_zone(
                             &zone_layout,
@@ -710,18 +693,29 @@ impl<'a> Spawner<'a> {
     fn spawn_subzone(&mut self, subzone_layout: &SubzoneLayout, to: Pos) {
         for x in 0..12 {
             for z in 0..12 {
-                let tile_name = subzone_layout.terrain[(x + 12 * z) as usize].clone();
-                if tile_name != TileName::new("t_open_air")
-                    && tile_name != TileName::new("t_open_air_rooved")
-                    && tile_name != TileName::new("t_door_frame")
-                    && tile_name != TileName::new("t_gutter_west")
-                    && tile_name != TileName::new("t_gutter_south")
-                    && tile_name != TileName::new("t_gutter_north")
-                    && tile_name != TileName::new("t_gutter_east")
-                    && tile_name != TileName::new("t_gutter_drop")
+                let pos = Pos(to.0 + x, to.1, to.2 + z);
+                let tile_name = &subzone_layout.terrain[(x + 12 * z) as usize];
+                if tile_name != &TileName::new("t_open_air")
+                    && tile_name != &TileName::new("t_open_air_rooved")
                 {
-                    let label = tile_name.to_label();
-                    self.spawn_tile(Pos(to.0 + x, to.1, to.2 + z), label, None, &tile_name);
+                    self.spawn_tile(pos, tile_name);
+                }
+
+                for tile_name in subzone_layout
+                    .furniture
+                    .iter()
+                    .filter_map(|at| at.get(Pos(x, 0, z)))
+                {
+                    self.spawn_tile(pos, tile_name);
+                }
+
+                if let Some(tile_name) = subzone_layout
+                    .items
+                    .iter()
+                    .find_map(|at| at.get(Pos(x, 0, z)))
+                    .map(|item| &item.typeid)
+                {
+                    self.spawn_tile(pos, tile_name);
                 }
             }
         }

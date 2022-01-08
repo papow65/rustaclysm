@@ -1,8 +1,7 @@
-use std::time::Instant;
-
 use bevy::app::Events;
 use bevy::input::{keyboard::KeyboardInput, mouse::MouseWheel};
 use bevy::prelude::{Commands, EventReader, Input, KeyCode, Query, Res, ResMut};
+use std::time::Instant;
 
 use super::super::components::*;
 use super::super::resources::Instructions;

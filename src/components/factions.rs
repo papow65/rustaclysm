@@ -1,7 +1,6 @@
-use std::iter::once;
-
 use rand::prelude::*;
 use rand::seq::SliceRandom;
+use std::iter::once;
 
 use super::super::components::*;
 use super::super::resources::Envir;
