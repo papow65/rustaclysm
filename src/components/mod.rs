@@ -3,7 +3,7 @@ mod factions;
 mod player;
 mod pos;
 
-use bevy::prelude::{Assets, Color, Handle, StandardMaterial};
+use bevy::prelude::{AlphaMode, Assets, Color, Component, Handle, StandardMaterial};
 
 pub use super::units::Partial;
 
@@ -12,7 +12,7 @@ pub use factions::{Faction, Intelligence};
 pub use player::Player;
 pub use pos::{Path, Pos, SIZE};
 
-#[derive(Clone, Debug)]
+#[derive(Component, Clone, Debug)]
 pub struct Label(pub String);
 
 impl Label {
@@ -30,25 +30,49 @@ impl std::fmt::Display for Label {
     }
 }
 
+#[derive(Component)]
 pub struct Floor;
+
+#[derive(Component)]
 pub struct Wall;
+
+#[derive(Component)]
 pub struct Stairs;
+
+#[derive(Component)]
 pub struct Window;
+
+#[derive(Component)]
 pub struct Rack;
+
+#[derive(Component)]
 pub struct Table;
+
+#[derive(Component)]
 pub struct Chair;
 
+#[derive(Component)]
 pub struct WindowPane;
+
+#[derive(Component)]
 pub struct StairsDown;
 
+#[derive(Component)]
 pub struct Obstacle;
+
+#[derive(Component)]
 pub struct Hurdle(pub f32);
 
+#[derive(Component)]
 pub struct Opaque;
 
+#[derive(Component)]
 pub struct Container(pub u8);
+
+#[derive(Component)]
 pub struct Containable(pub u8);
 
+#[derive(Component)]
 pub struct Health {
     curr: i8,
     max: i8,
@@ -73,10 +97,11 @@ impl Health {
 
 impl std::fmt::Display for Health {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
-        write!(f, "{}", self.curr)
+        write!(f, "{curr}", curr = self.curr)
     }
 }
 
+#[derive(Component)]
 pub struct Integrity {
     pub curr: i32,
     pub max: i32,
@@ -89,7 +114,7 @@ impl Integrity {
 
     // TODO de-duplicate code with Health::apply
     pub fn apply(&mut self, damage: &Damage) -> bool {
-        self.curr -= (damage.amount as i32)
+        self.curr -= i32::from(damage.amount)
             .min(self.curr)
             .max(self.max - self.curr);
         0 < self.curr
@@ -98,40 +123,42 @@ impl Integrity {
 
 impl std::fmt::Display for Integrity {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
-        write!(f, "{}", self.curr)
+        write!(f, "{curr}", curr = self.curr)
     }
 }
 
+#[derive(Component)]
 pub struct Damage {
     pub attacker: Label,
     pub amount: i8, // TODO damage type
 }
 
+#[derive(Component)]
 pub struct Corpse;
 
-#[derive(Clone, Copy, PartialEq)]
-pub enum Visibility {
+#[derive(Component, Clone, Copy, PartialEq)]
+pub enum PlayerVisible {
     Seen,
     Hidden,
     Reevaluate,
 }
 
-impl Visibility {
+impl PlayerVisible {
     pub fn adjust(&self, color: Color) -> Color {
         match self {
-            Visibility::Seen => color,
-            Visibility::Hidden => Color::rgba(
+            PlayerVisible::Seen => color,
+            PlayerVisible::Hidden => Color::rgba(
                 color.r() / 4.0,
                 color.g() / 4.0,
                 color.b() / 3.0,
-                0.5 + 0.5 * color.a(),
+                0.5f32.mul_add(color.a(), 0.5),
             ),
             _ => panic!(),
         }
     }
 }
 
-#[derive(Clone)]
+#[derive(Component, Clone)]
 pub struct Appearance {
     seen: Handle<StandardMaterial>,
     out_of_sight: Handle<StandardMaterial>,
@@ -142,10 +169,12 @@ impl Appearance {
     where
         T: Into<StandardMaterial>,
     {
-        let material = material.into();
+        let mut material = material.into();
+        material.alpha_mode = AlphaMode::Blend;
         let out_of_sight = materials.add(StandardMaterial {
             base_color_texture: material.base_color_texture.clone(),
-            base_color: Visibility::Hidden.adjust(material.base_color),
+            base_color: PlayerVisible::Hidden.adjust(material.base_color),
+            alpha_mode: AlphaMode::Blend,
             ..StandardMaterial::default()
         });
         Self {
@@ -154,19 +183,22 @@ impl Appearance {
         }
     }
 
-    pub fn material(&self, visibility: Visibility) -> Handle<StandardMaterial> {
-        match visibility {
-            Visibility::Seen => self.seen.clone(),
-            Visibility::Hidden => self.out_of_sight.clone(),
+    pub fn material(&self, player_visible: PlayerVisible) -> Handle<StandardMaterial> {
+        match player_visible {
+            PlayerVisible::Seen => self.seen.clone(),
+            PlayerVisible::Hidden => self.out_of_sight.clone(),
             _ => panic!(),
         }
     }
 }
 
+#[derive(Component)]
 pub struct PosYChanged;
 
+#[derive(Component)]
 pub struct Status; // debugging
 
+#[derive(Component)]
 pub struct Message(pub String); // shown to the player
 
 impl Message {
@@ -175,6 +207,11 @@ impl Message {
     }
 }
 
+#[derive(Component)]
 pub struct LogDisplay;
+
+#[derive(Component)]
 pub struct StatusDisplay;
+
+#[derive(Component)]
 pub struct ManualDisplay;

@@ -1,9 +1,9 @@
-use bevy::app::Events;
+use bevy::ecs::event::Events;
 use bevy::input::{keyboard::KeyboardInput, mouse::MouseWheel};
 use bevy::prelude::{Commands, EventReader, Input, KeyCode, Query, Res, ResMut};
 use std::time::Instant;
 
-use super::super::components::*;
+use super::super::components::{Instruction, Player, Status};
 use super::super::resources::Instructions;
 
 use super::log_if_slow;

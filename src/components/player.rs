@@ -1,6 +1,9 @@
-use super::super::components::*;
+use bevy::ecs::component::Component;
+
+use super::super::components::{Action, Instruction, Message, Pos};
 use super::super::resources::Envir;
 
+#[derive(Component)]
 pub struct Player {
     pub camera_distance: f32,
 }
@@ -12,7 +15,7 @@ impl Player {
         pos: Pos,
         instruction: Instruction,
     ) -> Result<Action, Vec<(Message,)>> {
-        println!("processing instruction: {:?}", instruction);
+        println!("processing instruction: {instruction:?}");
 
         let mut action_in_progress = combo.take();
         let mut target = pos;

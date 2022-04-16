@@ -4,7 +4,7 @@ use rand::seq::SliceRandom;
 use serde::Deserialize;
 use std::fs::read_to_string;
 
-use super::super::components::*;
+use super::super::components::Label;
 
 #[derive(Hash, PartialEq, Eq, Debug, Clone, Deserialize)]
 pub struct TileName(pub String);
@@ -49,7 +49,7 @@ impl TileInfo {
                             tile_names.push(TileName(item.as_str().unwrap().to_string()));
                         }
                     }
-                    other => panic!("{:?}", other),
+                    other => panic!("{other:?}"),
                 };
                 tile_names
             },
@@ -77,15 +77,15 @@ impl Clone for TileInfo {
 }
 
 #[derive(PartialEq, Eq, PartialOrd, Debug, Clone, Copy, Hash)]
-pub struct SpriteNumber(u32);
+pub struct SpriteNumber(usize);
 
 impl SpriteNumber {
     fn from_json(value: &serde_json::Value) -> Self {
-        Self(value.as_u64().unwrap() as u32)
+        Self(value.as_u64().unwrap() as usize)
     }
 
     fn from_number(n: &serde_json::Number) -> Self {
-        Self(n.as_u64().unwrap() as u32)
+        Self(n.as_u64().unwrap() as usize)
     }
 
     fn to_sprite(self, atlas_wrapper: &AtlasWrapper) -> TextureAtlasSprite {
@@ -154,17 +154,15 @@ impl AtlasWrapper {
         let width = atlas
             .get("sprite_width")
             .and_then(serde_json::Value::as_i64)
-            .map(|w| w as f32 / 32.0)
-            .unwrap_or(1.0);
+            .map_or(1.0, |w| w as f32 / 32.0);
         let height = atlas
             .get("sprite_height")
             .and_then(serde_json::Value::as_i64)
-            .map(|h| h as f32 / 32.0)
-            .unwrap_or(1.0);
+            .map_or(1.0, |h| h as f32 / 32.0);
 
         dbg!(&filepath);
         println!(
-            "{:?} {:?} | {:?}-{:?} |  {:?}",
+            "{:?} {:?} | {:?}-{:?} | {:?}",
             width,
             height,
             from_to[0],
@@ -181,13 +179,11 @@ impl AtlasWrapper {
         let offset_x = atlas
             .get("sprite_offset_x")
             .and_then(serde_json::Value::as_i64)
-            .map(|x| x as f32 / 32.0)
-            .unwrap_or(0.0);
+            .map_or(0.0, |x| x as f32 / 32.0);
         let offset_y = atlas
             .get("sprite_offset_y")
             .and_then(serde_json::Value::as_i64)
-            .map(|y| y as f32 / 32.0)
-            .unwrap_or(0.0);
+            .map_or(0.0, |y| y as f32 / 32.0);
 
         // 2D -> 3D
         // upper left offset -> center offset
@@ -220,6 +216,7 @@ impl AtlasWrapper {
 pub struct TileLoader {
     tiles: HashMap<TileName, TileInfo>,
     sprites: HashMap<SpriteNumber, SpriteTemplate>,
+    pub atlas: Handle<TextureAtlas>, // TODO
 }
 
 impl TileLoader {
@@ -242,6 +239,7 @@ impl TileLoader {
         let mut loader = Self {
             tiles,
             sprites: HashMap::default(),
+            atlas: atlas_wrappers[1].handle.clone(),
         };
 
         for tile_info in loader.tiles.values() {
@@ -274,7 +272,7 @@ impl TileLoader {
                 translation: atlas_wrapper.offset,
                 sprite: sprite_number.to_sprite(atlas_wrapper),
             })
-            .unwrap_or_else(|| panic!("{:?} not found", sprite_number))
+            .unwrap_or_else(|| panic!("{sprite_number:?} not found"))
     }
 
     pub fn sprite_sheet_bundles(
@@ -289,7 +287,7 @@ impl TileLoader {
             .find_map(|variant| self.tiles.get(variant))
             .unwrap_or_else(|| self.tiles.get(&TileName::new("unknown")).unwrap())
             .sprite_numbers();
-        println!("{:?} {:?} {:?}", tile_name, &foreground, &background);
+        println!("{tile_name:?} {:?} {:?}", &foreground, &background);
         bundles.extend(foreground.map(|fg| {
             self.sprites[&fg].clone().sprite_sheet_bundle(Transform {
                 translation: if background.is_some() {
@@ -332,12 +330,12 @@ fn load_xg(xg: Option<&serde_json::Value>) -> Vec<SpriteNumber> {
                         serde_json::Value::Object(obj) => {
                             ids.push(SpriteNumber::from_json(obj.get("sprite").unwrap()));
                         }
-                        other => panic!("{:?}", other),
+                        other => panic!("{other:?}"),
                     }
                 }
                 ids
             }
-            other => panic!("{:?}", other),
+            other => panic!("{other:?}"),
         }
     } else {
         Vec::new()

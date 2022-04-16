@@ -3,7 +3,7 @@ use serde::de::{Deserializer, SeqAccess, Visitor};
 use serde::Deserialize;
 use std::fs::read_to_string;
 
-use super::super::components::*;
+use super::super::components::Pos;
 use super::tile_loader::TileName;
 
 pub fn zone_layout(zone_pos: Pos) -> Option<ZoneLayout> {
@@ -16,7 +16,7 @@ pub fn zone_layout(zone_pos: Pos) -> Option<ZoneLayout> {
         zone_pos.2,
         zone_pos.1
     );
-    println!("Path: {}", filepath);
+    println!("Path: {filepath}");
     read_to_string(&filepath)
         .ok()
         .map(|s| ZoneLayout::new(s.as_str()))
@@ -193,7 +193,7 @@ where
                             obj: TileName(list[2].as_str().unwrap().to_string()),
                         });
                     }
-                    _ => panic!("{:?}", element),
+                    _ => panic!("{element:?}"),
                 }
             }
             Ok(result)
@@ -247,7 +247,7 @@ where
                         x = None;
                         y = None;
                     }
-                    _ => panic!("{:?}", element),
+                    _ => panic!("{element:?}"),
                 }
             }
             Ok(result)

@@ -7,8 +7,8 @@ use bevy::prelude::*;
 use bevy::render::camera::Camera;
 use std::time::{Duration, Instant};
 
-use super::components::*;
-use super::resources::*;
+use super::components::{Action, Appearance, Corpse, Health, Label, Message, Player, Pos, Status};
+use super::resources::{Characters, Envir, Hierarchy, Instructions, Timeouts};
 
 pub use check::*;
 pub use input::*;
@@ -18,18 +18,18 @@ pub use update::*;
 fn log_if_slow(name: &str, start: Instant) {
     let duration = Instant::now() - start;
     if Duration::new(0, 200_000) < duration {
-        println!("slow system: {} took {:?}", name, duration);
+        println!("slow system: {name} took {duration:?}");
     }
 }
 
 #[allow(clippy::needless_pass_by_value)]
 pub fn manage_game_over(
-    mut app_exit_events: ResMut<bevy::app::Events<bevy::app::AppExit>>,
+    mut app_exit_events: ResMut<bevy::ecs::event::Events<bevy::app::AppExit>>,
     dead_players: Query<(), (With<Player>, Without<Health>)>,
 ) {
     let start = Instant::now();
 
-    if dead_players.single().is_ok() {
+    if dead_players.get_single().is_ok() {
         app_exit_events.send(bevy::app::AppExit);
     }
 
@@ -44,7 +44,6 @@ pub fn manage_status(
         (
             Entity,
             Option<&Label>,
-            Option<&Camera>,
             Option<&Pos>,
             Option<&Action>,
             Option<&Parent>,
@@ -57,11 +56,10 @@ pub fn manage_status(
     let start = Instant::now();
 
     for debugger in debuggers.iter() {
-        for (entity, label, camera, pos, action, parent, children, gt) in all.iter() {
+        for (entity, label, pos, action, parent, children, gt) in all.iter() {
             let message = format!(
-                "{} {:?} | {:?} -> {:?} | {:?} > {:?} > {:?}\nGT: {:?} {:?} {:?}",
+                "{} | {:?} -> {:?} | {:?} > {:?} > {:?}\nGT: {:?} {:?} {:?}",
                 label.unwrap_or(&Label::new("-")),
-                camera.and_then(|c| c.name.as_ref()),
                 pos.unwrap_or(&Pos(9, 9, 9)),
                 action,
                 parent,

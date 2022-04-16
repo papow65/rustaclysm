@@ -1,8 +1,8 @@
 use bevy::prelude::*;
 
-use super::super::resources::*;
-use super::super::units::*;
-use super::*;
+use super::super::resources::{Collision, Envir, Hierarchy, Location};
+use super::super::units::{Milliseconds, Speed};
+use super::{Container, Damage, Label, Message, Pos, PosYChanged};
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Instruction {
@@ -60,7 +60,7 @@ impl Instruction {
     }
 }
 
-#[derive(Debug)]
+#[derive(Component, Debug)]
 pub enum Action {
     Stay,
     Step {
@@ -117,7 +117,7 @@ impl Action {
             Action::SwitchRunning => switch_running(commands, actor),
         };
 
-        //println!("removing finished action: {:?}", action);
+        //println!("removing finished action: {action:?}");
         /*commands.entity(actor).remove::<Action>();
         if 0 < duration.0 {
             commands.entity(actor).insert(Timeout {
@@ -137,12 +137,8 @@ fn move_(
     to: Pos,
     speed: Speed,
 ) -> Milliseconds {
-    /*if to == from {
-        return 0;
-    }*/
-
     if !to.is_potential_nbor(from) {
-        let message = format!("STEP ERROR: {:?} is not a nbor of {:?}", to, from);
+        let message = format!("STEP ERROR: {to:?} is not a nbor of {from:?}");
         commands.spawn_bundle(Message::new(message));
         return Milliseconds(0);
     }
@@ -170,21 +166,21 @@ fn move_(
             VERTICAL
         }*/
         Collision::Blocked(obstacle) => {
-            let message = format!("{} crashes into {}", label, obstacle);
+            let message = format!("{label} crashes into {obstacle}");
             commands.spawn_bundle(Message::new(message));
             Milliseconds(0)
         }
         Collision::Ledged => {
-            commands.spawn_bundle(Message::new(format!("{} halts at the ledge", label)));
+            commands.spawn_bundle(Message::new(format!("{label} halts at the ledge")));
             Milliseconds(0)
         }
         Collision::NoStairsUp => {
-            let message = format!("{} needs a stair to go up", label);
+            let message = format!("{label} needs a stair to go up");
             commands.spawn_bundle(Message::new(message));
             Milliseconds(0)
         }
         Collision::NoStairsDown => {
-            let message = format!("{} needs a stair to go down", label);
+            let message = format!("{label} needs a stair to go down");
             commands.spawn_bundle(Message::new(message));
             Milliseconds(0)
         }
@@ -210,7 +206,7 @@ fn attack(
         });
         pos.dist(target) / speed
     } else {
-        commands.spawn_bundle(Message::new(format!("{} attacks nothing", a_label)));
+        commands.spawn_bundle(Message::new(format!("{a_label} attacks nothing")));
         Milliseconds(0)
     }
 }
@@ -229,11 +225,11 @@ fn smash(
 
     let stair_pos = Pos(target.0, pos.1, target.2);
     if pos.1 < target.1 && !envir.has_stairs_up(stair_pos) {
-        let message = format!("{} smashes the ceiling", s_label);
+        let message = format!("{s_label} smashes the ceiling");
         commands.spawn_bundle(Message::new(message));
         Milliseconds(0)
     } else if target.1 < pos.1 && !envir.has_stairs_down(stair_pos) {
-        let message = format!("{} smashes the floor", s_label);
+        let message = format!("{s_label} smashes the floor");
         commands.spawn_bundle(Message::new(message));
         Milliseconds(0)
     } else if let Some(smashable) = envir.find_item(target) {
@@ -243,7 +239,7 @@ fn smash(
         });
         pos.dist(target) / speed
     } else {
-        commands.spawn_bundle(Message::new(format!("{} smashes nothing", s_label)));
+        commands.spawn_bundle(Message::new(format!("{s_label} smashes nothing")));
         Milliseconds(0)
     }
 }
@@ -262,15 +258,15 @@ fn dump(
         .iter()
         .find(|(_, &Parent(parent), _)| parent == dumper)
     {
-        commands.spawn_bundle(Message::new(format!("{} drops {}", dr_label, dee_label)));
+        commands.spawn_bundle(Message::new(format!("{dr_label} drops {dee_label}")));
         commands
             .entity(dumpee)
             .insert(pos)
-            .insert(Visible::default())
+            .insert(Visibility::default())
             .remove::<Parent>(); // Doesn't seem to affect 'Children'
         speed.stay()
     } else {
-        commands.spawn_bundle(Message::new(format!("nothing to drop for {}", dr_label)));
+        commands.spawn_bundle(Message::new(format!("nothing to drop for {dr_label}")));
         Milliseconds(0)
     }
 }
@@ -305,17 +301,17 @@ fn pickup(
             commands.spawn_bundle(Message::new(message));
             Milliseconds(0)
         } else {
-            let message = format!("{} picks up {}", pr_label, &pd_label);
+            let message = format!("{pr_label} picks up {pd_label}", pd_label = &pd_label);
             commands.spawn_bundle(Message::new(message));
             commands
                 .entity(pd_entity)
                 .remove::<Pos>()
-                .remove::<Visible>();
+                .remove::<Visibility>();
             commands.entity(picker).push_children(&[pd_entity]);
             speed.activate()
         }
     } else {
-        let message = format!("nothing to pick up for {}", pr_label);
+        let message = format!("nothing to pick up for {pr_label}");
         commands.spawn_bundle(Message::new(message));
         Milliseconds(0)
     }

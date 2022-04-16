@@ -1,7 +1,7 @@
-use bevy::prelude::Vec3;
+use bevy::prelude::{Component, Vec3};
 use pathfinding::prelude::astar;
 
-use super::super::units::*;
+use super::super::units::{Distance, Millimeter, Milliseconds, ADJACENT, DIAGONAL, VERTICAL};
 
 fn straight_2d(from: (i16, i16), to: (i16, i16)) -> impl Iterator<Item = (i16, i16)> {
     bresenham::Bresenham::new(
@@ -14,7 +14,7 @@ fn straight_2d(from: (i16, i16), to: (i16, i16)) -> impl Iterator<Item = (i16, i
 }
 
 /// Y is vertical
-#[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
+#[derive(Component, Copy, Clone, PartialEq, Eq, Hash, Debug)]
 pub struct Pos(pub i16, pub i16, pub i16);
 
 impl Pos {
@@ -71,9 +71,9 @@ impl Pos {
 
     pub fn vec3(self, height: f32) -> Vec3 {
         Vec3::new(
-            self.0 as f32 * ADJACENT.f32(),
-            self.1 as f32 * VERTICAL.f32() + 0.5 * height,
-            self.2 as f32 * ADJACENT.f32(),
+            f32::from(self.0) * ADJACENT.f32(),
+            f32::from(self.1).mul_add(VERTICAL.f32(), 0.5 * height),
+            f32::from(self.2) * ADJACENT.f32(),
         )
     }
 
