@@ -47,7 +47,6 @@
 #![forbid(unreachable_patterns)]
 #![forbid(unstable_name_collisions)]
 #![forbid(unsupported_calling_conventions)]
-#![forbid(unsupported_naked_functions)]
 #![forbid(unused_allocation)]
 #![forbid(unused_assignments)]
 #![forbid(unused_braces)]
@@ -68,22 +67,28 @@
 #![deny(unused_attributes)]
 #![deny(unused_extern_crates)]
 #![deny(unused_macros)]
-#![deny(clippy::cloned_instead_of_copied)]
-#![deny(clippy::default_trait_access)]
-#![deny(clippy::explicit_iter_loop)]
-#![deny(clippy::flat_map_option)]
-#![deny(clippy::implicit_clone)]
-#![deny(clippy::map_flatten)]
-#![deny(clippy::missing_const_for_fn)]
-#![deny(clippy::needless_pass_by_value)]
-#![deny(clippy::redundant_closure_for_method_calls)]
-#![deny(clippy::ref_binding_to_reference)]
-#![deny(clippy::semicolon_if_nothing_returned)]
-#![deny(clippy::unreadable_literal)]
-#![deny(clippy::unseparated_literal_suffix)]
-#![deny(clippy::use_self)]
+#![deny(clippy::complexity)]
+#![deny(clippy::correctness)]
+#![deny(clippy::nursery)]
+#![deny(clippy::pedantic)]
+#![deny(clippy::perf)]
+#![deny(clippy::style)]
+#![deny(clippy::suspicious)]
+#![allow(clippy::cast_possible_truncation)]
+#![allow(clippy::cast_precision_loss)]
+#![allow(clippy::cast_possible_wrap)]
+#![allow(clippy::cast_sign_loss)]
+#![allow(clippy::if_not_else)]
+#![allow(clippy::map_unwrap_or)]
+#![allow(clippy::match_wildcard_for_single_variants)]
+#![allow(clippy::module_name_repetitions)]
+#![allow(clippy::option_if_let_else)]
+#![allow(clippy::redundant_else)]
+#![allow(clippy::similar_names)]
 #![allow(clippy::too_many_arguments)]
+#![allow(clippy::trivially_copy_pass_by_ref)]
 #![allow(clippy::type_complexity)]
+#![allow(clippy::type_repetition_in_bounds)]
 
 mod components;
 mod plugin;
@@ -97,7 +102,7 @@ use bevy::prelude::{App, DefaultPlugins};
 use plugin::RustaclysmPlugin;
 
 fn main() {
-    App::build()
+    App::new()
         .add_plugin(RustaclysmPlugin) // first, to prevent vulkan errors
         .add_plugins(DefaultPlugins)
         .add_plugin(FrameTimeDiagnosticsPlugin::default())

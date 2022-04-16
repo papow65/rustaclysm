@@ -2,7 +2,7 @@ use bevy::ecs::query::{Fetch, FilterFetch, ReadOnlyFetch, WorldQuery};
 use bevy::prelude::{Entity, Query};
 use bevy::utils::HashMap;
 
-use super::super::components::*;
+use super::super::components::{Pos, Stairs};
 
 pub struct Location {
     all: HashMap<Pos, Vec<Entity>>,
@@ -30,7 +30,7 @@ impl Location {
             if let Some(vec) = self.all.get_mut(&pos) {
                 assert!(!vec.iter().any(|&x| x == entity));
                 vec.push(entity);
-                //println!("\n\rTogether {:?}", vec);
+                //println!("\n\rTogether {vec:?}");
             } else {
                 self.all.insert(pos, vec![entity]);
             }
@@ -40,10 +40,12 @@ impl Location {
         }
     }
 
-    pub fn any<'a, Q, F>(&self, pos: Pos, items: &'a Query<'a, Q, F>) -> bool
+    pub fn any<'w, 's, Q, F>(&self, pos: Pos, items: &'s Query<'w, 's, Q, F>) -> bool
     where
-        F: 'a,
-        Q: 'a,
+        F: 'w,
+        F: 's,
+        Q: 'w,
+        Q: 's,
         Q: WorldQuery,
         F: WorldQuery,
         <Q as WorldQuery>::Fetch: ReadOnlyFetch,
@@ -56,14 +58,16 @@ impl Location {
             .any(|&x| items.get(x).is_ok())
     }
 
-    pub fn get_first<'a, Q, F>(
+    pub fn get_first<'w, 's: 'w, Q, F>(
         &self,
         pos: Pos,
-        items: &'a Query<'a, Q, F>,
-    ) -> Option<<<Q as WorldQuery>::Fetch as Fetch<'a>>::Item>
+        items: &'s Query<'w, 's, Q, F>,
+    ) -> Option<<<Q as WorldQuery>::ReadOnlyFetch as Fetch<'w, 's>>::Item>
     where
-        F: 'a,
-        Q: 'a,
+        F: 'w,
+        F: 's,
+        Q: 'w,
+        Q: 's,
         F: WorldQuery,
         Q: WorldQuery,
         <Q as WorldQuery>::Fetch: ReadOnlyFetch,
@@ -78,11 +82,19 @@ impl Location {
 
     // helper methods
 
-    pub fn has_stairs_up<'a>(&self, from: Pos, stairs: &'a Query<'a, &'static Stairs>) -> bool {
+    pub fn has_stairs_up<'w, 's>(
+        &self,
+        from: Pos,
+        stairs: &'s Query<'w, 's, &'static Stairs>,
+    ) -> bool {
         self.any(from, stairs)
     }
 
-    pub fn has_stairs_down<'a>(&self, from: Pos, stairs: &'a Query<'a, &'static Stairs>) -> bool {
+    pub fn has_stairs_down<'w, 's>(
+        &self,
+        from: Pos,
+        stairs: &'s Query<'w, 's, &'static Stairs>,
+    ) -> bool {
         let below = Pos(from.0, from.1 - 1, from.2);
         self.any(below, stairs)
     }

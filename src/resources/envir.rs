@@ -3,22 +3,25 @@ use bevy::prelude::*;
 use pathfinding::prelude::{build_path, dijkstra_partial};
 use std::cmp::Ordering;
 
-use super::super::components::*;
-use super::*;
+use super::super::components::{
+    Floor, Health, Instruction, Integrity, Intelligence, Label, Obstacle, Opaque, Path,
+    PlayerVisible, Pos, Stairs,
+};
+use super::{Collision, Distance, Location, Milliseconds, RelativeRays, Speed};
 
 #[derive(SystemParam)]
-pub struct Envir<'a> {
-    pub location: ResMut<'a, Location>,
-    relative_rays: Res<'a, RelativeRays>,
-    floors: Query<'a, &'static Floor>,
-    stairs: Query<'a, &'static Stairs>,
-    obstacles: Query<'a, &'static Label, With<Obstacle>>,
-    opaques: Query<'a, &'static Label, With<Opaque>>,
-    characters: Query<'a, Entity, With<Health>>,
-    items: Query<'a, Entity, With<Integrity>>,
+pub struct Envir<'w, 's> {
+    pub location: ResMut<'w, Location>,
+    relative_rays: Res<'w, RelativeRays>,
+    floors: Query<'w, 's, &'static Floor>,
+    stairs: Query<'w, 's, &'static Stairs>,
+    obstacles: Query<'w, 's, &'static Label, With<Obstacle>>,
+    opaques: Query<'w, 's, &'static Label, With<Opaque>>,
+    characters: Query<'w, 's, Entity, With<Health>>,
+    items: Query<'w, 's, Entity, With<Integrity>>,
 }
 
-impl<'a> Envir<'a> {
+impl<'w, 's> Envir<'w, 's> {
     // base methods
 
     pub fn has_floor(&self, pos: Pos) -> bool {
@@ -55,31 +58,32 @@ impl<'a> Envir<'a> {
         !self.has_floor(pos) || self.has_stairs_down(pos)
     }
 
-    pub fn can_see(&self, from: Pos, to: Pos) -> Visibility {
+    pub fn can_see(&self, from: Pos, to: Pos) -> PlayerVisible {
         if from == to {
-            Visibility::Seen
+            PlayerVisible::Seen
         } else if 60 < (from.0 - to.0).abs() || 60 < (from.2 - to.2).abs() {
             // more than 60 meter away
-            Visibility::Hidden
+            PlayerVisible::Hidden
         } else {
             match self.relative_rays.ray(from, to) {
                 Some((mut between, mut d_line)) => {
                     if between.all(|pos| self.find_opaque(pos).is_none())
                         && d_line.all(|(a, b)| self.can_see_down(a) || self.can_see_down(b))
                     {
-                        Visibility::Seen
+                        PlayerVisible::Seen
                     } else {
-                        Visibility::Hidden
+                        PlayerVisible::Hidden
                     }
                 }
-                None => Visibility::Hidden,
+                None => PlayerVisible::Hidden,
             }
         }
     }
 
     fn nbors<F>(&self, pos: Pos, acceptable: F) -> impl Iterator<Item = (Pos, Distance)> + '_
     where
-        F: 'a,
+        F: 'w,
+        F: 's,
         F: Fn(Pos) -> bool,
     {
         pos.potential_nbors()
@@ -92,12 +96,12 @@ impl<'a> Envir<'a> {
     }
 
     pub fn nbors_for_moving(
-        &'a self,
+        &'s self,
         pos: Pos,
         destination: Option<Pos>,
         intelligence: Intelligence,
         speed: Speed,
-    ) -> impl Iterator<Item = (Pos, Milliseconds)> + 'a {
+    ) -> impl Iterator<Item = (Pos, Milliseconds)> + 's {
         self.nbors(pos, move |nbor| {
             let at_destination = Some(nbor) == destination;
             match intelligence {
@@ -111,10 +115,10 @@ impl<'a> Envir<'a> {
     }
 
     pub fn nbors_for_exploring(
-        &'a self,
+        &'s self,
         pos: Pos,
         instruction: Instruction,
-    ) -> impl Iterator<Item = Pos> + 'a {
+    ) -> impl Iterator<Item = Pos> + 's {
         self.nbors(pos, move |nbor| match instruction {
             Instruction::Attack => self.find_character(nbor).is_none(),
             Instruction::Smash => self.find_item(nbor).is_none(),
@@ -161,7 +165,7 @@ impl<'a> Envir<'a> {
         let nbors_fn = |pos: &Pos| self.nbors_for_moving(*pos, Some(to), intelligence, speed);
         let estimated_duration_fn = |pos: &Pos| pos.dist(to) / speed;
 
-        //println!("dumb? {:?} @{:?}", dumb, from);
+        //println!("dumb? {dumb:?} @{from:?}");
         match intelligence {
             Intelligence::Smart => Path::plan(from, nbors_fn, estimated_duration_fn, to),
             Intelligence::Dumb => Path::improvize(nbors_fn(&from), estimated_duration_fn, to),

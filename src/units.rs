@@ -1,3 +1,5 @@
+use bevy::prelude::Component;
+
 #[derive(Clone, Copy, Debug)]
 pub struct Millimeter(pub u64);
 
@@ -61,7 +63,7 @@ pub struct Distance {
     pub down: Millimeter,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Component, Clone, Copy)]
 pub struct Speed {
     pub h: MillimeterPerSecond,
     pub up: MillimeterPerSecond,

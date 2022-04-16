@@ -1,10 +1,11 @@
+use bevy::ecs::component::Component;
 use rand::prelude::*;
 use rand::seq::SliceRandom;
 use std::iter::once;
 
-use super::super::components::*;
+use super::super::components::{Action, Health, PlayerVisible, Pos};
 use super::super::resources::Envir;
-use super::super::units::*;
+use super::super::units::{Milliseconds, Partial, Speed};
 
 pub const SAFETY: Milliseconds = Milliseconds(10000);
 
@@ -27,7 +28,7 @@ pub enum Intent {
     Wait,
 }
 
-#[derive(Debug)]
+#[derive(Component, Debug)]
 pub enum Faction {
     Human,
     Zombie,
@@ -168,22 +169,22 @@ impl Faction {
         .map(|action| Strategy { intent, action })
     }
 
-    pub fn behave<'a>(
+    pub fn behave<'f>(
         &self,
         envir: &Envir,
         start_pos: Pos,
         speed: Speed,
         health: &Health,
-        factions: &[(Pos, &'a Self)],
+        factions: &[(Pos, &'f Self)],
     ) -> Strategy {
         let enemies = factions
             .iter()
             .filter(|(_, other_faction)| self.dislikes(other_faction))
             .map(|(enemy_pos, _)| enemy_pos)
             .copied()
-            .filter(|enemy_pos| envir.can_see(start_pos, *enemy_pos) == Visibility::Seen)
+            .filter(|enemy_pos| envir.can_see(start_pos, *enemy_pos) == PlayerVisible::Seen)
             .collect::<Vec<Pos>>();
-        println!("{:?} can see {:?} enemies", self, enemies.len());
+        println!("{self:?} can see {:?} enemies", enemies.len());
 
         self.intents(health)
             .find_map(|intent| self.attempt(intent, envir, start_pos, speed, factions, &enemies))

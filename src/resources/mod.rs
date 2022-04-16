@@ -9,8 +9,10 @@ use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
 
-use super::components::*;
-use super::units::*;
+use super::components::{
+    Containable, Container, Faction, Health, Instruction, Label, Player, Pos, SIZE,
+};
+use super::units::{Distance, Milliseconds, Speed};
 
 pub use debug::*;
 pub use envir::*;
@@ -30,9 +32,9 @@ pub enum Collision {
 
 // pickup
 #[derive(SystemParam)]
-pub struct Hierarchy<'a> {
-    pub picked: Query<'a, (Entity, &'static Label, &'static Containable)>,
-    pub children: Query<'a, (&'static Parent, &'static Containable)>,
+pub struct Hierarchy<'w, 's> {
+    pub picked: Query<'w, 's, (Entity, &'static Label, &'static Containable)>,
+    pub children: Query<'w, 's, (&'static Parent, &'static Containable)>,
 }
 
 #[derive(Debug)]
@@ -78,9 +80,10 @@ impl Timeouts {
 }
 
 #[derive(SystemParam)]
-pub struct Characters<'a> {
+pub struct Characters<'w, 's> {
     pub c: Query<
-        'a,
+        'w,
+        's,
         (
             Entity,
             &'static Label,
@@ -94,12 +97,12 @@ pub struct Characters<'a> {
     >,
 }
 
-impl<'a> Characters<'a> {
-    pub fn collect_factions(&'a self) -> Vec<(Pos, &'a Faction)> {
+impl<'w, 's> Characters<'w, 's> {
+    pub fn collect_factions(&'s self) -> Vec<(Pos, &'s Faction)> {
         self.c
             .iter()
             .map(|(_, _, p, _, _, f, _, _)| (*p, f))
-            .collect::<Vec<(Pos, &'a Faction)>>()
+            .collect::<Vec<(Pos, &'s Faction)>>()
     }
 }
 
@@ -115,9 +118,9 @@ impl RelativeRays {
                     let to = Pos(x, y, z);
 
                     if 14_400
-                        < 4 * (to.0 as i32).pow(2)
-                            + 25 * (to.1 as i32).pow(2)
-                            + 4 * (to.2 as i32).pow(2)
+                        < 4 * i32::from(to.0).pow(2)
+                            + 25 * i32::from(to.1).pow(2)
+                            + 4 * i32::from(to.2).pow(2)
                     {
                         // more than 60 meter away
                         continue;

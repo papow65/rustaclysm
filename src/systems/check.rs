@@ -1,7 +1,7 @@
 use bevy::prelude::{Changed, Entity, Local, Or, Parent, Query, Res, With};
 use std::time::{Duration, Instant};
 
-use super::super::components::*;
+use super::super::components::{Action, Faction, Label, Obstacle, Pos};
 use super::super::resources::{Location, StdInstant};
 
 use super::log_if_slow;
@@ -65,11 +65,11 @@ pub fn check_hierarchy(
             pos.is_some() != parent.is_some(),
             "hierarchy violation of {} {} {}",
             label.map_or_else(
-                || format!("entity {:?} without label", entity),
-                |label| format!("{}", label)
+                || format!("entity {entity:?} without label"),
+                |label| format!("{label}")
             ),
-            parent.map_or_else(|| "without parent".to_string(), |p| format!("< {:?}", p)),
-            pos.map_or_else(|| "without position".to_string(), |p| format!("at {:?}", p))
+            parent.map_or_else(|| "without parent".to_string(), |p| format!("< {p:?}")),
+            pos.map_or_else(|| "without position".to_string(), |p| format!("at {p:?}"))
         );
     }
 
@@ -94,12 +94,12 @@ pub fn check_characters(
 
     for (entity, label, pos, faction, action) in characters.iter() {
         let label = label.map_or_else(
-            || format!("entity {:?} without label", entity),
-            |label| format!("{}", label),
+            || format!("entity {entity:?} without label"),
+            |label| format!("{label}"),
         );
-        assert!(pos.is_some(), "{} has no position", label);
-        assert!(faction.is_some(), "{} has no faction", label);
-        assert!(action.is_none(), "{} has an action", label);
+        assert!(pos.is_some(), "{label} has no position");
+        assert!(faction.is_some(), "{label} has no faction");
+        assert!(action.is_none(), "{label} has an action");
     }
 
     log_if_slow("check_characters", start);
@@ -111,7 +111,7 @@ pub fn check_delay(mut last_time: Local<StdInstant>) {
 
     let delay = last_time.next();
     if Duration::new(0, 20_000_000) < delay {
-        println!("Large delay: {:?}", delay);
+        println!("Large delay: {delay:?}");
     }
 
     log_if_slow("check_delay", start);

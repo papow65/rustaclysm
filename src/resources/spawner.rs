@@ -3,13 +3,17 @@ use bevy::prelude::*;
 use bevy::render::camera::PerspectiveProjection;
 
 use super::super::components::Window;
-use super::super::components::*;
-use super::super::units::*;
-use super::tile_loader::*;
-use super::zone_loader::*;
+use super::super::components::{
+    Appearance, Chair, Containable, Container, Faction, Floor, Health, Hurdle, Integrity, Label,
+    LogDisplay, ManualDisplay, Obstacle, Opaque, Player, PlayerVisible, Pos, PosYChanged, Rack,
+    Stairs, StairsDown, StatusDisplay, Table, Wall, WindowPane, SIZE,
+};
+use super::super::units::{Speed, ADJACENT, VERTICAL};
+use super::tile_loader::{TileLoader, TileName};
+use super::zone_loader::{zone_layout, SubzoneLayout, ZoneLayout};
 
-pub struct Spawner<'a> {
-    commands: Commands<'a>,
+pub struct Spawner<'w, 's> {
+    commands: Commands<'w, 's>,
     character: Appearance,
     blackish: Appearance,
     glass: Appearance,
@@ -28,14 +32,14 @@ pub struct Spawner<'a> {
     tile_loader: TileLoader,
 }
 
-impl<'a> Spawner<'a> {
+impl<'w, 's> Spawner<'w, 's> {
     pub fn new(
-        commands: Commands<'a>,
+        commands: Commands<'w, 's>,
         materials: &mut Assets<StandardMaterial>,
         meshes: &mut Assets<Mesh>,
         texture_atlases: &mut Assets<TextureAtlas>,
         asset_server: &Res<AssetServer>,
-    ) -> Spawner<'a> {
+    ) -> Spawner<'w, 's> {
         Spawner {
             commands,
             character: Appearance::new(materials, asset_server.load("tiles/character.png")),
@@ -88,8 +92,30 @@ impl<'a> Spawner<'a> {
         let rotation = Quat::from_rotation_z(0.01 * std::f32::consts::PI)
             * Quat::from_rotation_y(1.5 * std::f32::consts::PI)
             * Quat::from_rotation_x(1.5 * std::f32::consts::PI);
+
+        self.commands
+            .spawn_bundle(SpriteSheetBundle {
+                sprite: TextureAtlasSprite::new(8),
+                texture_atlas: self.tile_loader.atlas.clone(),
+                ..SpriteSheetBundle::default()
+            })
+            .insert(
+                Transform::from_rotation(
+                    Quat::from_rotation_y(1.5 * std::f32::consts::PI)
+                        * Quat::from_rotation_x(1.5 * std::f32::consts::PI),
+                )
+                .with_scale(Vec3::splat(20.0)),
+            );
+
+        for sprite in self.tile_loader.sprite_sheet_bundles(tile_name, &rotation) {
+            self.commands
+                .spawn_bundle(sprite)
+                .insert(Floor)
+                .insert(Transform::from_rotation(rotation));
+        }
+
         let label = tile_name.to_label();
-        println!("{:?}", tile_name);
+        println!("{tile_name:?}");
         self.commands
             .spawn_bundle((
                 Floor,
@@ -97,17 +123,12 @@ impl<'a> Spawner<'a> {
                 label,
                 Transform::from_translation(pos.vec3(0.0)),
                 GlobalTransform::default(),
-                Visible::default(),
+                Visibility::default(),
             ))
-            .with_children(|child_builder| {
-                /*if pos.1 == 0 {
-                    for sprite in self.tile_loader.debug(pos, &rotation) {
-                        child_builder.spawn_bundle(sprite);
-                    }
-                }*/
-                for sprite in self.tile_loader.sprite_sheet_bundles(tile_name, &rotation) {
+            .with_children(|_child_builder| {
+                /* TODO for sprite in self.tile_loader.sprite_sheet_bundles(tile_name, &rotation) {
                     child_builder.spawn_bundle(sprite);
-                }
+                }*/
             })
             .id()
     }
@@ -139,7 +160,7 @@ impl<'a> Spawner<'a> {
                 Opaque,
                 self.wooden_wall.clone(),
                 Label::new("wall"),
-                Visibility::Reevaluate,
+                PlayerVisible::Reevaluate,
             ))
             .insert_bundle(PbrBundle {
                 mesh: self.cube_mesh.clone(),
@@ -158,7 +179,7 @@ impl<'a> Spawner<'a> {
                 Hurdle(2.5),
                 Label::new("window"),
                 self.wooden_wall.clone(),
-                Visibility::Reevaluate,
+                PlayerVisible::Reevaluate,
             ))
             .insert_bundle(PbrBundle {
                 mesh: self.cube_mesh.clone(),
@@ -168,10 +189,6 @@ impl<'a> Spawner<'a> {
                 child_builder
                     .spawn_bundle(PbrBundle {
                         mesh: self.cube_mesh.clone(),
-                        visible: Visible {
-                            is_transparent: true,
-                            ..Visible::default()
-                        },
                         transform: self.window_pane_transform,
                         ..PbrBundle::default()
                     })
@@ -189,7 +206,7 @@ impl<'a> Spawner<'a> {
                 Hurdle(1.5),
                 Label::new("stairs"),
                 self.wood.clone(),
-                Visibility::Reevaluate,
+                PlayerVisible::Reevaluate,
             ))
             .insert_bundle(PbrBundle {
                 mesh: self.cube_mesh.clone(),
@@ -208,7 +225,7 @@ impl<'a> Spawner<'a> {
                 Opaque,
                 Label::new("rack"),
                 self.wood.clone(),
-                Visibility::Reevaluate,
+                PlayerVisible::Reevaluate,
             ))
             .insert_bundle(PbrBundle {
                 mesh: self.cube_mesh.clone(),
@@ -226,7 +243,7 @@ impl<'a> Spawner<'a> {
                 Hurdle(2.0),
                 Label::new("table"),
                 self.wood.clone(),
-                Visibility::Reevaluate,
+                PlayerVisible::Reevaluate,
             ))
             .insert_bundle(PbrBundle {
                 mesh: self.cube_mesh.clone(),
@@ -244,7 +261,7 @@ impl<'a> Spawner<'a> {
                 Hurdle(1.5),
                 Label::new("chair"),
                 self.whitish.clone(),
-                Visibility::Reevaluate,
+                PlayerVisible::Reevaluate,
             ))
             .insert_bundle(PbrBundle {
                 mesh: self.cube_mesh.clone(),
@@ -271,7 +288,7 @@ impl<'a> Spawner<'a> {
     }
 
     pub fn spawn_containable(&mut self, label: Label, pos: Pos, containable: Containable) {
-        let size = (containable.0 as f32).min(64.0).powf(0.33) / 4.0;
+        let size = f32::from(containable.0).min(64.0).powf(0.33) / 4.0;
 
         self.commands
             .spawn_bundle((
@@ -279,7 +296,7 @@ impl<'a> Spawner<'a> {
                 pos,
                 containable,
                 self.yellow.clone(),
-                Visibility::Reevaluate,
+                PlayerVisible::Reevaluate,
             ))
             .insert_bundle(PbrBundle {
                 mesh: self.cube_mesh.clone(),
@@ -304,14 +321,10 @@ impl<'a> Spawner<'a> {
         let entity = self
             .commands
             .spawn_bundle((label, pos, health, speed, faction, Obstacle, Container(4)))
-            .insert_bundle((self.character.clone(), Visibility::Reevaluate))
+            .insert_bundle((self.character.clone(), PlayerVisible::Reevaluate))
             .insert_bundle(PbrBundle {
                 mesh: self.character_mesh.clone(),
                 transform,
-                visible: Visible {
-                    is_transparent: true,
-                    ..Visible::default()
-                },
                 ..PbrBundle::default()
             })
             .id();
@@ -335,6 +348,7 @@ impl<'a> Spawner<'a> {
                         .with_children(|child_builder| {
                             child_builder.spawn_bundle(PerspectiveCameraBundle {
                                 perspective_projection: PerspectiveProjection {
+                                    // more overview, less personal than the default
                                     fov: 0.3,
                                     ..PerspectiveProjection::default()
                                 },
@@ -349,11 +363,11 @@ impl<'a> Spawner<'a> {
         for x in 0..=SIZE.0 {
             self.commands.spawn_bundle(PbrBundle {
                 mesh: self.cube_mesh.clone(),
-                material: self.blackish.material(Visibility::Seen),
+                material: self.blackish.material(PlayerVisible::Seen),
                 transform: Transform {
-                    translation: Vec3::new(x as f32 - 0.5, 0.0, 0.5 * SIZE.2 as f32 - 0.5),
+                    translation: Vec3::new(f32::from(x) - 0.5, 0.0, 0.5 * f32::from(SIZE.2) - 0.5),
                     rotation: Quat::IDENTITY,
-                    scale: Vec3::new(0.01, 0.01, SIZE.2 as f32),
+                    scale: Vec3::new(0.01, 0.01, f32::from(SIZE.2)),
                 },
                 ..PbrBundle::default()
             });
@@ -362,11 +376,11 @@ impl<'a> Spawner<'a> {
         for z in 0..=SIZE.2 {
             self.commands.spawn_bundle(PbrBundle {
                 mesh: self.cube_mesh.clone(),
-                material: self.blackish.material(Visibility::Seen),
+                material: self.blackish.material(PlayerVisible::Seen),
                 transform: Transform {
-                    translation: Vec3::new(0.5 * SIZE.0 as f32 - 0.5, 0.0, z as f32 - 0.5),
+                    translation: Vec3::new(0.5 * f32::from(SIZE.0) - 0.5, 0.0, f32::from(z) - 0.5),
                     rotation: Quat::IDENTITY,
-                    scale: Vec3::new(SIZE.0 as f32, 0.01, 0.01),
+                    scale: Vec3::new(f32::from(SIZE.0), 0.01, 0.01),
                 },
                 ..PbrBundle::default()
             });
@@ -411,7 +425,7 @@ impl<'a> Spawner<'a> {
                     sections: vec!["    fps: ", "", "\n  time: ", "", "\nhealth: ", ""]
                         .iter()
                         .map(|s| TextSection {
-                            value: s.to_string(),
+                            value: (*s).to_string(),
                             style: text_style.clone(),
                         })
                         .collect::<Vec<TextSection>>(),
@@ -454,18 +468,28 @@ impl<'a> Spawner<'a> {
             ..TextBundle::default()
         }).insert(ManualDisplay);
 
-        self.commands.spawn_bundle(LightBundle {
-            light: Light {
-                range: 10_000_000.0,
-                intensity: 4_000_000.0,
-                ..Light::default()
+        let theta = std::f32::consts::FRAC_PI_4;
+        let light_transform =
+            Mat4::from_euler(EulerRot::ZYX, 0.0, std::f32::consts::FRAC_PI_2, -theta);
+        self.commands.spawn_bundle(DirectionalLightBundle {
+            directional_light: DirectionalLight {
+                illuminance: 100_000.0,
+                shadow_projection: OrthographicProjection {
+                    left: -0.35,
+                    right: 500.35,
+                    bottom: -0.1,
+                    top: 5.0,
+                    near: -5.0,
+                    far: 5.0,
+                    ..OrthographicProjection::default()
+                },
+                shadow_depth_bias: 0.0,
+                shadow_normal_bias: 0.0,
+                shadows_enabled: true,
+                ..DirectionalLight::default()
             },
-            transform: Transform::from_xyz(
-                -600.0 * f32::cos(50.0 / 180.0 * std::f32::consts::PI),
-                1000.0 * f32::sin(50.0 / 180.0 * std::f32::consts::PI),
-                -400.0 * f32::cos(50.0 / 180.0 * std::f32::consts::PI),
-            ),
-            ..LightBundle::default()
+            transform: Transform::from_matrix(light_transform),
+            ..DirectionalLightBundle::default()
         });
     }
 
@@ -587,8 +611,7 @@ impl<'a> Spawner<'a> {
     pub fn spawn_characters(&mut self) {
         self.spawn_character(
             Label::new("T"),
-            //Pos(12, 0, 13),
-            Pos(45, 0, 45),
+            Pos(1, 0, 1), // TODO Pos(45, 0, 45),
             Health::new(10),
             Speed::from_h_kmph(6),
             Faction::Human,
