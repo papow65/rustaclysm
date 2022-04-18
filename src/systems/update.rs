@@ -84,16 +84,16 @@ pub fn update_visibility_for_hidden_items(
 }
 
 fn update_visibility(
-    _pos: Pos,
+    pos: Pos,
     visibility: &mut Visibility,
     children: Option<&Children>,
-    _player_pos: Pos,
+    player_pos: Pos,
     child_items: &mut Query<&mut Visibility, (With<Parent>, Without<Pos>)>,
 ) {
     // TODO make something only invisibility when it would overlap with the player FOV
     // TODO partially show obstacles that overlap with the player and his nbors
 
-    visibility.is_visible = true; // TODO pos.1 <= player_pos.1;
+    visibility.is_visible = pos.1 <= player_pos.1;
 
     if let Some(children) = children {
         for &child in children.iter() {
@@ -308,7 +308,7 @@ pub fn update_damaged_items(
 ) {
     let start = Instant::now();
 
-    for (item, label, mut integrity, damage, children) in windows.iter_mut() {
+    for (item, label, mut integrity, damage, _children) in windows.iter_mut() {
         let prev = format!("{integrity}", integrity = *integrity);
         if integrity.apply(damage) {
             let curr = format!("{integrity}", integrity = *integrity);
@@ -327,11 +327,14 @@ pub fn update_damaged_items(
                 damage.attacker, label
             )));
         }
+        /*
+        Causes a crash
+        TODO What was this supposed to do?
         if let Some(children) = children {
             for &child in children.iter() {
                 commands.entity(child).despawn();
             }
-        }
+        }*/
 
         commands.entity(item).remove::<Damage>();
     }

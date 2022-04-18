@@ -53,8 +53,8 @@ impl TileInfo {
                 };
                 tile_names
             },
-            foreground: load_xg(tile.get("fg")),
-            background: load_xg(tile.get("bg")),
+            foreground: load_xground(tile.get("fg")),
+            background: load_xground(tile.get("bg")),
         }
     }
 
@@ -88,47 +88,47 @@ impl SpriteNumber {
         Self(n.as_u64().unwrap() as usize)
     }
 
-    fn to_sprite(self, atlas_wrapper: &AtlasWrapper) -> TextureAtlasSprite {
-        assert!(
-            atlas_wrapper.contains(&self),
-            "{:?} {:?}",
-            atlas_wrapper.from,
-            &self
-        );
-        TextureAtlasSprite::new(self.0 - atlas_wrapper.from.0)
+    pub const fn to_usize(self) -> usize {
+        self.0
     }
 }
 
-#[derive(Clone, Debug)]
-struct SpriteTemplate {
-    texture_atlas: Handle<TextureAtlas>,
-    translation: Vec3,
-    sprite: TextureAtlasSprite,
+#[derive(PartialEq, Eq, Debug, Clone, Copy, Hash)]
+pub struct MeshInfo {
+    pub index: SpriteNumber,
+    pub range: (SpriteNumber, SpriteNumber),
 }
 
-impl SpriteTemplate {
-    pub fn sprite_sheet_bundle(self, transform: Transform) -> SpriteSheetBundle {
-        println!("{:?}", self.sprite.index);
-        SpriteSheetBundle {
-            sprite: self.sprite,
-            texture_atlas: self.texture_atlas,
-            transform: Transform::from_translation(self.translation) * transform,
-            ..SpriteSheetBundle::default()
-        }
-    }
+#[derive(Debug, Clone, Copy)]
+pub enum SpriteOrientation {
+    Horizontal,
+    Vertical,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum SpriteLayer {
+    Front,
+    Back,
+}
+
+#[derive(Debug, Clone)]
+pub struct SpriteInfo {
+    pub mesh_info: MeshInfo,
+    pub imagepath: String,
+    pub orientation: SpriteOrientation,
+    pub layer: SpriteLayer,
+    pub offset: (i16, i16),
 }
 
 struct AtlasWrapper {
-    from: SpriteNumber,
-    to: SpriteNumber,
-    handle: Handle<TextureAtlas>,
-    offset: Vec3,
+    range: (SpriteNumber, SpriteNumber),
+    imagepath: String,
+    offset: (i16, i16),
 }
 
 impl AtlasWrapper {
     fn new(
-        texture_atlases: &mut Assets<TextureAtlas>,
-        asset_server: &AssetServer,
+        _asset_server: &AssetServer,
         json: &serde_json::Value,
         tiles: &mut HashMap<TileName, TileInfo>,
     ) -> Option<Self> {
@@ -137,7 +137,7 @@ impl AtlasWrapper {
         if filename == "fallback.png" {
             return None;
         }
-        let filepath = "gfx/UltimateCataclysm/".to_string() + filename;
+        let imagepath = "gfx/UltimateCataclysm/".to_string() + filename;
 
         let from_to = if let Some(comment) = atlas.get("//") {
             comment
@@ -160,7 +160,7 @@ impl AtlasWrapper {
             .and_then(serde_json::Value::as_i64)
             .map_or(1.0, |h| h as f32 / 32.0);
 
-        dbg!(&filepath);
+        dbg!(&imagepath);
         println!(
             "{:?} {:?} | {:?}-{:?} | {:?}",
             width,
@@ -169,29 +169,15 @@ impl AtlasWrapper {
             from_to[1],
             (from_to[1].0 - from_to[0].0) as usize / 16 + 1
         );
-        let handle = texture_atlases.add(TextureAtlas::from_grid(
-            asset_server.load(filepath.as_str()),
-            Vec2::new(width, height),
-            16,
-            (from_to[1].0 - from_to[0].0) as usize / 16 + 1,
-        ));
 
         let offset_x = atlas
             .get("sprite_offset_x")
             .and_then(serde_json::Value::as_i64)
-            .map_or(0.0, |x| x as f32 / 32.0);
+            .map_or(0, |x| x as i16);
         let offset_y = atlas
             .get("sprite_offset_y")
             .and_then(serde_json::Value::as_i64)
-            .map_or(0.0, |y| y as f32 / 32.0);
-
-        // 2D -> 3D
-        // upper left offset -> center offset
-        let offset = Vec3::new(
-            0.5 * height - 0.5 - offset_y,
-            0.0,
-            0.5 * width - 0.5 - offset_x,
-        );
+            .map_or(0, |y| y as i16);
 
         for tile in atlas["tiles"].as_array().unwrap() {
             let tile_info = TileInfo::new(tile);
@@ -201,26 +187,24 @@ impl AtlasWrapper {
         }
 
         Some(Self {
-            from: from_to[0],
-            to: from_to[1],
-            handle,
-            offset,
+            range: (from_to[0], from_to[1]),
+            imagepath,
+            offset: (offset_x, offset_y),
         })
     }
 
     fn contains(&self, sprite_number: &SpriteNumber) -> bool {
-        (self.from..=self.to).contains(sprite_number)
+        (self.range.0..=self.range.1).contains(sprite_number)
     }
 }
 
 pub struct TileLoader {
     tiles: HashMap<TileName, TileInfo>,
-    sprites: HashMap<SpriteNumber, SpriteTemplate>,
-    pub atlas: Handle<TextureAtlas>, // TODO
+    sprites: HashMap<SpriteNumber, SpriteInfo>,
 }
 
 impl TileLoader {
-    pub fn new(texture_atlases: &mut Assets<TextureAtlas>, asset_server: &AssetServer) -> Self {
+    pub fn new(asset_server: &AssetServer) -> Self {
         let filepath = "assets/gfx/UltimateCataclysm/tile_config.json";
         let file_contents = read_to_string(&filepath).unwrap();
         let json: serde_json::Value = serde_json::from_str(&file_contents).unwrap();
@@ -230,8 +214,7 @@ impl TileLoader {
         let mut tiles = HashMap::default();
 
         for atlas in atlases {
-            if let Some(atlas) = AtlasWrapper::new(texture_atlases, asset_server, atlas, &mut tiles)
-            {
+            if let Some(atlas) = AtlasWrapper::new(asset_server, atlas, &mut tiles) {
                 atlas_wrappers.push(atlas);
             }
         }
@@ -239,47 +222,57 @@ impl TileLoader {
         let mut loader = Self {
             tiles,
             sprites: HashMap::default(),
-            atlas: atlas_wrappers[1].handle.clone(),
         };
 
         for tile_info in loader.tiles.values() {
             for fg in &tile_info.foreground {
-                loader
-                    .sprites
-                    .entry(*fg)
-                    .or_insert_with(|| Self::sprite_template(&atlas_wrappers, fg));
+                loader.sprites.entry(*fg).or_insert_with(|| {
+                    Self::sprite_info(
+                        &atlas_wrappers,
+                        fg,
+                        SpriteOrientation::Horizontal,
+                        SpriteLayer::Front,
+                    )
+                });
             }
             for bg in &tile_info.background {
-                loader
-                    .sprites
-                    .entry(*bg)
-                    .or_insert_with(|| Self::sprite_template(&atlas_wrappers, bg));
+                loader.sprites.entry(*bg).or_insert_with(|| {
+                    Self::sprite_info(
+                        &atlas_wrappers,
+                        bg,
+                        SpriteOrientation::Horizontal,
+                        SpriteLayer::Back,
+                    )
+                });
             }
         }
 
         loader
     }
 
-    fn sprite_template(
+    fn sprite_info(
         atlas_wrappers: &[AtlasWrapper],
         sprite_number: &SpriteNumber,
-    ) -> SpriteTemplate {
+        orientation: SpriteOrientation,
+        layer: SpriteLayer,
+    ) -> SpriteInfo {
         atlas_wrappers
             .iter()
             .find(|atlas_wrapper| atlas_wrapper.contains(sprite_number))
-            .map(|atlas_wrapper| SpriteTemplate {
-                texture_atlas: atlas_wrapper.handle.clone(),
-                translation: atlas_wrapper.offset,
-                sprite: sprite_number.to_sprite(atlas_wrapper),
+            .map(|atlas_wrapper| SpriteInfo {
+                mesh_info: MeshInfo {
+                    index: *sprite_number,
+                    range: atlas_wrapper.range,
+                },
+                imagepath: atlas_wrapper.imagepath.clone(),
+                orientation,
+                layer,
+                offset: atlas_wrapper.offset,
             })
             .unwrap_or_else(|| panic!("{sprite_number:?} not found"))
     }
 
-    pub fn sprite_sheet_bundles(
-        &self,
-        tile_name: &TileName,
-        rotation: &Quat,
-    ) -> Vec<SpriteSheetBundle> {
+    pub fn sprite_infos(&self, tile_name: &TileName) -> Vec<SpriteInfo> {
         let mut bundles = Vec::new();
         let (foreground, background) = tile_name
             .variants()
@@ -287,38 +280,14 @@ impl TileLoader {
             .find_map(|variant| self.tiles.get(variant))
             .unwrap_or_else(|| self.tiles.get(&TileName::new("unknown")).unwrap())
             .sprite_numbers();
-        println!("{tile_name:?} {:?} {:?}", &foreground, &background);
-        bundles.extend(foreground.map(|fg| {
-            self.sprites[&fg].clone().sprite_sheet_bundle(Transform {
-                translation: if background.is_some() {
-                    Vec3::new(0.0, 0.001, 0.0)
-                } else {
-                    Vec3::ZERO
-                },
-                rotation: *rotation,
-                ..Transform::default()
-            })
-        }));
-        bundles.extend(background.map(|bg| {
-            self.sprites[&bg]
-                .clone()
-                .sprite_sheet_bundle(Transform::from_rotation(*rotation))
-        }));
+        println!("{tile_name:?} {foreground:?} {background:?}");
+        bundles.extend(foreground.map(|fg| self.sprites[&fg].clone()));
+        bundles.extend(background.map(|bg| self.sprites[&bg].clone()));
         bundles
     }
-
-    /*pub fn debug(&self, pos: Pos, rotation: &Quat) -> Vec<SpriteSheetBundle> {
-        self.sprites
-            .get(&SpriteNumber((7760 + (pos.2 % 48) + 48 * pos.0) as u32))
-            .cloned()
-            .map(|x| x.sprite_sheet_bundle(Transform::from_rotation(*rotation)))
-            .iter()
-            .cloned()
-            .collect()
-    }*/
 }
 
-fn load_xg(xg: Option<&serde_json::Value>) -> Vec<SpriteNumber> {
+fn load_xground(xg: Option<&serde_json::Value>) -> Vec<SpriteNumber> {
     if let Some(xg) = xg {
         match xg {
             serde_json::Value::Number(n) => vec![SpriteNumber::from_number(n)],
