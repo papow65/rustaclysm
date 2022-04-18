@@ -61,11 +61,13 @@ impl ZoneLayout {
     }
 }
 
+#[allow(unused)]
 #[derive(Debug)]
 pub struct Furniture {
     typeid: TileName,
 }
 
+#[allow(unused)]
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Item {
@@ -95,6 +97,7 @@ pub struct Item {
     poison: Option<u8>,
 }
 
+#[allow(unused)]
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Container {
@@ -102,6 +105,7 @@ pub struct Container {
     additional_pockets: Option<Vec<Pocket>>,
 }
 
+#[allow(unused)]
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Pocket {

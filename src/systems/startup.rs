@@ -8,16 +8,9 @@ pub fn add_entities(
     commands: Commands,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
     asset_server: Res<AssetServer>,
 ) {
-    let mut spawner = Spawner::new(
-        commands,
-        &mut materials,
-        &mut meshes,
-        &mut texture_atlases,
-        &asset_server,
-    );
+    let mut spawner = Spawner::new(commands, &mut materials, &mut meshes, &asset_server);
     spawner.spawn_gui();
     spawner.spawn_grid_lines();
     spawner.spawn_floors();

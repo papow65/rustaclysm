@@ -1,6 +1,10 @@
 use bevy::math::Quat;
 use bevy::prelude::*;
-use bevy::render::camera::PerspectiveProjection;
+use bevy::render::{
+    camera::PerspectiveProjection,
+    mesh::{Indices, PrimitiveTopology},
+};
+use bevy::utils::HashMap;
 
 use super::super::components::Window;
 use super::super::components::{
@@ -9,7 +13,7 @@ use super::super::components::{
     Stairs, StairsDown, StatusDisplay, Table, Wall, WindowPane, SIZE,
 };
 use super::super::units::{Speed, ADJACENT, VERTICAL};
-use super::tile_loader::{TileLoader, TileName};
+use super::tile_loader::{MeshInfo, TileLoader, TileName};
 use super::zone_loader::{zone_layout, SubzoneLayout, ZoneLayout};
 
 pub struct Spawner<'w, 's> {
@@ -21,8 +25,10 @@ pub struct Spawner<'w, 's> {
     whitish: Appearance,
     wooden_wall: Appearance,
     yellow: Appearance,
+    tile_materials: HashMap<String, Handle<StandardMaterial>>,
     character_mesh: Handle<Mesh>,
     cube_mesh: Handle<Mesh>,
+    tile_meshes: HashMap<MeshInfo, Handle<Mesh>>,
     wall_transform: Transform,
     window_pane_transform: Transform,
     stair_transform: Transform,
@@ -30,15 +36,17 @@ pub struct Spawner<'w, 's> {
     table_transform: Transform,
     font: Handle<Font>,
     tile_loader: TileLoader,
+    materials: &'s mut Assets<StandardMaterial>,
+    meshes: &'s mut Assets<Mesh>,
+    asset_server: &'s Res<'w, AssetServer>,
 }
 
 impl<'w, 's> Spawner<'w, 's> {
     pub fn new(
         commands: Commands<'w, 's>,
-        materials: &mut Assets<StandardMaterial>,
-        meshes: &mut Assets<Mesh>,
-        texture_atlases: &mut Assets<TextureAtlas>,
-        asset_server: &Res<AssetServer>,
+        materials: &'s mut Assets<StandardMaterial>,
+        meshes: &'s mut Assets<Mesh>,
+        asset_server: &'s Res<'w, AssetServer>,
     ) -> Spawner<'w, 's> {
         Spawner {
             commands,
@@ -49,11 +57,13 @@ impl<'w, 's> Spawner<'w, 's> {
             whitish: Appearance::new(materials, Color::rgb(0.95, 0.93, 0.88)),
             wooden_wall: Appearance::new(materials, asset_server.load("tiles/wall.png")),
             yellow: Appearance::new(materials, Color::rgb(0.8, 0.8, 0.4)),
+            tile_materials: HashMap::new(),
             character_mesh: meshes.add(Mesh::from(shape::Quad {
                 size: Vec2::new(1.0, 1.0),
                 flip: false,
             })),
             cube_mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
+            tile_meshes: HashMap::new(),
             wall_transform: Transform::from_scale(Vec3::new(
                 ADJACENT.f32(),
                 0.99 * VERTICAL.f32(),
@@ -84,34 +94,81 @@ impl<'w, 's> Spawner<'w, 's> {
                 ADJACENT.f32(),
             )),
             font: asset_server.load("fonts/FiraMono-Medium.otf"),
-            tile_loader: TileLoader::new(texture_atlases, asset_server),
+            tile_loader: TileLoader::new(asset_server),
+            materials,
+            meshes,
+            asset_server,
         }
     }
 
+    // Based on bevy_render-0.7.0/src/mesh/shape/mod.rs - line 194-223
+    fn get_tile_mesh(&mut self, mesh_info: MeshInfo) -> Handle<Mesh> {
+        self.tile_meshes
+            .entry(mesh_info)
+            .or_insert_with(|| {
+                let extent = 1.0 / 2.0;
+
+                let index = mesh_info.index.to_usize() - mesh_info.range.0.to_usize();
+                let last = mesh_info.range.1.to_usize() - mesh_info.range.0.to_usize();
+                let width = 16.0; // tiles per row
+                let height = (last as f32 / width).ceil() as f32; // tiles per column
+
+                let x_min = (index as f32 % width) / width;
+                let x_max = x_min + 1.0 / width;
+                let y_min = (index as f32 / width).floor() / height;
+                let y_max = y_min + 1.0 / height;
+
+                let vertices = [
+                    ([extent, 0.0, -extent], [x_max, y_max]),
+                    ([extent, 0.0, extent], [x_max, y_min]),
+                    ([-extent, 0.0, extent], [x_min, y_min]),
+                    ([-extent, 0.0, -extent], [x_min, y_max]),
+                ];
+
+                let indices = Indices::U32(vec![0, 2, 1, 0, 3, 2]);
+                let mut positions = Vec::new();
+                let mut uvs = Vec::new();
+                for (position, uv) in &vertices {
+                    positions.push(*position);
+                    uvs.push(*uv);
+                }
+                let normals = vec![[0.0, 1.0, 0.0]; 4];
+
+                let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
+                mesh.set_indices(Some(indices));
+                mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, positions);
+                mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
+                mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
+
+                self.meshes.add(mesh)
+            })
+            .clone()
+    }
+
+    fn get_tile_material(&mut self, imagepath: &str) -> Handle<StandardMaterial> {
+        self.tile_materials
+            .entry(imagepath.to_string())
+            .or_insert_with(|| {
+                self.materials
+                    .add(StandardMaterial::from(self.asset_server.load(imagepath)))
+            })
+            .clone()
+    }
+
     fn spawn_tile(&mut self, pos: Pos, tile_name: &TileName) -> Entity {
-        let rotation = Quat::from_rotation_z(0.01 * std::f32::consts::PI)
+        let _rotation = Quat::from_rotation_z(0.01 * std::f32::consts::PI)
             * Quat::from_rotation_y(1.5 * std::f32::consts::PI)
             * Quat::from_rotation_x(1.5 * std::f32::consts::PI);
 
-        self.commands
-            .spawn_bundle(SpriteSheetBundle {
-                sprite: TextureAtlasSprite::new(8),
-                texture_atlas: self.tile_loader.atlas.clone(),
-                ..SpriteSheetBundle::default()
-            })
-            .insert(
-                Transform::from_rotation(
-                    Quat::from_rotation_y(1.5 * std::f32::consts::PI)
-                        * Quat::from_rotation_x(1.5 * std::f32::consts::PI),
-                )
-                .with_scale(Vec3::splat(20.0)),
-            );
-
-        for sprite in self.tile_loader.sprite_sheet_bundles(tile_name, &rotation) {
-            self.commands
-                .spawn_bundle(sprite)
-                .insert(Floor)
-                .insert(Transform::from_rotation(rotation));
+        let mut pbr_bundles = Vec::new();
+        for sprite_info in self.tile_loader.sprite_infos(tile_name) {
+            pbr_bundles.push(PbrBundle {
+                mesh: self.get_tile_mesh(sprite_info.mesh_info),
+                material: self.get_tile_material(&sprite_info.imagepath),
+                // TODO rotation
+                // TODO offset
+                ..PbrBundle::default()
+            });
         }
 
         let label = tile_name.to_label();
@@ -125,10 +182,10 @@ impl<'w, 's> Spawner<'w, 's> {
                 GlobalTransform::default(),
                 Visibility::default(),
             ))
-            .with_children(|_child_builder| {
-                /* TODO for sprite in self.tile_loader.sprite_sheet_bundles(tile_name, &rotation) {
-                    child_builder.spawn_bundle(sprite);
-                }*/
+            .with_children(|child_builder| {
+                for pbr_bundle in pbr_bundles {
+                    child_builder.spawn_bundle(pbr_bundle);
+                }
             })
             .id()
     }
