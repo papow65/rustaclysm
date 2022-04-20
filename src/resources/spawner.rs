@@ -165,6 +165,11 @@ impl<'w, 's> Spawner<'w, 's> {
 
         let mut pbr_bundles = Vec::new();
         for sprite_info in self.tile_loader.sprite_infos(tile_name) {
+            let scale = Vec3::new(
+                sprite_info.scale.0,
+                /*thickness*/ 1.0,
+                sprite_info.scale.1,
+            );
             pbr_bundles.push(PbrBundle {
                 mesh: self.get_tile_mesh(sprite_info.mesh_info),
                 material: self.get_tile_material(&sprite_info.imagepath),
@@ -180,7 +185,7 @@ impl<'w, 's> Spawner<'w, 's> {
                             /*right*/ sprite_info.offset.0,
                         ),
                         rotation: Quat::from_rotation_y(0.5 * std::f32::consts::PI),
-                        scale: Vec3::new(sprite_info.scale.0, 1.0, sprite_info.scale.1),
+                        scale,
                     },
                     SpriteOrientation::Vertical => Transform {
                         translation: Vec3::new(
@@ -190,12 +195,13 @@ impl<'w, 's> Spawner<'w, 's> {
                                 _ => 0.0,
                             },
                             /*up*/
-                            0.02 + 0.5f32.mul_add(sprite_info.scale.1, sprite_info.offset.1),
-                            /*right*/ sprite_info.offset.0,
+                            0.52 + sprite_info.offset.1,
+                            /*right*/
+                            sprite_info.offset.0,
                         ),
                         rotation: Quat::from_rotation_z(0.5 * std::f32::consts::PI)
                             * Quat::from_rotation_y(0.5 * std::f32::consts::PI),
-                        scale: Vec3::new(1.0, sprite_info.scale.1, sprite_info.scale.0),
+                        scale,
                     },
                 },
                 ..PbrBundle::default()
