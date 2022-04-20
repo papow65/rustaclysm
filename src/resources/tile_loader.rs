@@ -250,7 +250,7 @@ impl TileLoader {
                     Self::sprite_info(
                         &atlas_wrappers,
                         bg,
-                        if tile_info.names[0].0.starts_with("t_tree") {
+                        if tile_info.names[0].0.starts_with("not_t_tree") {
                             SpriteOrientation::Vertical
                         } else {
                             SpriteOrientation::Horizontal
