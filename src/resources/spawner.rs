@@ -13,7 +13,7 @@ use super::super::components::{
     Stairs, StairsDown, StatusDisplay, Table, Wall, WindowPane, SIZE,
 };
 use super::super::units::{Speed, ADJACENT, VERTICAL};
-use super::tile_loader::{MeshInfo, TileLoader, TileName};
+use super::tile_loader::{MeshInfo, SpriteLayer, SpriteOrientation, TileLoader, TileName};
 use super::zone_loader::{zone_layout, SubzoneLayout, ZoneLayout};
 
 pub struct Spawner<'w, 's> {
@@ -108,14 +108,14 @@ impl<'w, 's> Spawner<'w, 's> {
             .or_insert_with(|| {
                 let extent = 1.0 / 2.0;
 
-                let index = mesh_info.index.to_usize() - mesh_info.range.0.to_usize();
-                let last = mesh_info.range.1.to_usize() - mesh_info.range.0.to_usize();
-                let width = 16.0; // tiles per row
-                let height = (last as f32 / width).ceil() as f32; // tiles per column
+                let index = mesh_info.index as f32;
+                let size = mesh_info.size as f32;
+                let width = mesh_info.width as f32; // tiles per row
+                let height = (size / width).ceil() as f32; // tiles per column
 
-                let x_min = (index as f32 % width) / width;
+                let x_min = (index % width) / width;
                 let x_max = x_min + 1.0 / width;
-                let y_min = (index as f32 / width).floor() / height;
+                let y_min = (index / width).floor() / height;
                 let y_max = y_min + 1.0 / height;
 
                 let vertices = [
@@ -149,8 +149,11 @@ impl<'w, 's> Spawner<'w, 's> {
         self.tile_materials
             .entry(imagepath.to_string())
             .or_insert_with(|| {
-                self.materials
-                    .add(StandardMaterial::from(self.asset_server.load(imagepath)))
+                self.materials.add(StandardMaterial {
+                    base_color_texture: Some(self.asset_server.load(imagepath)),
+                    alpha_mode: AlphaMode::Blend,
+                    ..StandardMaterial::default()
+                })
             })
             .clone()
     }
@@ -165,14 +168,41 @@ impl<'w, 's> Spawner<'w, 's> {
             pbr_bundles.push(PbrBundle {
                 mesh: self.get_tile_mesh(sprite_info.mesh_info),
                 material: self.get_tile_material(&sprite_info.imagepath),
-                // TODO rotation
-                // TODO offset
+                transform: match sprite_info.orientation {
+                    SpriteOrientation::Horizontal => Transform {
+                        translation: Vec3::new(
+                            /*back*/ sprite_info.offset.1,
+                            /*up*/
+                            match sprite_info.layer {
+                                SpriteLayer::Front => 0.01,
+                                _ => 0.0,
+                            },
+                            /*right*/ sprite_info.offset.0,
+                        ),
+                        rotation: Quat::from_rotation_y(0.5 * std::f32::consts::PI),
+                        scale: Vec3::new(sprite_info.scale.0, 1.0, sprite_info.scale.1),
+                    },
+                    SpriteOrientation::Vertical => Transform {
+                        translation: Vec3::new(
+                            /*back*/
+                            match sprite_info.layer {
+                                SpriteLayer::Front => -0.01,
+                                _ => 0.0,
+                            },
+                            /*up*/
+                            0.02 + 0.5f32.mul_add(sprite_info.scale.1, sprite_info.offset.1),
+                            /*right*/ sprite_info.offset.0,
+                        ),
+                        rotation: Quat::from_rotation_z(0.5 * std::f32::consts::PI)
+                            * Quat::from_rotation_y(0.5 * std::f32::consts::PI),
+                        scale: Vec3::new(1.0, sprite_info.scale.1, sprite_info.scale.0),
+                    },
+                },
                 ..PbrBundle::default()
             });
         }
 
         let label = tile_name.to_label();
-        println!("{tile_name:?}");
         self.commands
             .spawn_bundle((
                 Floor,
@@ -525,12 +555,16 @@ impl<'w, 's> Spawner<'w, 's> {
             ..TextBundle::default()
         }).insert(ManualDisplay);
 
-        let theta = std::f32::consts::FRAC_PI_4;
-        let light_transform =
-            Mat4::from_euler(EulerRot::ZYX, 0.0, std::f32::consts::FRAC_PI_2, -theta);
+        let light_transform = Transform::from_matrix(Mat4::from_euler(
+            EulerRot::ZYX,
+            0.0,
+            -0.18 * std::f32::consts::TAU,
+            -std::f32::consts::FRAC_PI_4,
+        ));
+        dbg!(&light_transform);
         self.commands.spawn_bundle(DirectionalLightBundle {
             directional_light: DirectionalLight {
-                illuminance: 100_000.0,
+                illuminance: 50_000.0,
                 shadow_projection: OrthographicProjection {
                     left: -0.35,
                     right: 500.35,
@@ -540,12 +574,10 @@ impl<'w, 's> Spawner<'w, 's> {
                     far: 5.0,
                     ..OrthographicProjection::default()
                 },
-                shadow_depth_bias: 0.0,
-                shadow_normal_bias: 0.0,
-                shadows_enabled: true,
+                //shadows_enabled: true, // TODO transparency should not be ignored
                 ..DirectionalLight::default()
             },
-            transform: Transform::from_matrix(light_transform),
+            transform: light_transform,
             ..DirectionalLightBundle::default()
         });
     }

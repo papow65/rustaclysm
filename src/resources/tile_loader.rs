@@ -95,8 +95,9 @@ impl SpriteNumber {
 
 #[derive(PartialEq, Eq, Debug, Clone, Copy, Hash)]
 pub struct MeshInfo {
-    pub index: SpriteNumber,
-    pub range: (SpriteNumber, SpriteNumber),
+    pub index: usize,
+    pub width: usize,
+    pub size: usize,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -117,13 +118,16 @@ pub struct SpriteInfo {
     pub imagepath: String,
     pub orientation: SpriteOrientation,
     pub layer: SpriteLayer,
-    pub offset: (i16, i16),
+    pub scale: (f32, f32),
+    pub offset: (f32, f32),
 }
 
+#[derive(Debug)]
 struct AtlasWrapper {
     range: (SpriteNumber, SpriteNumber),
     imagepath: String,
-    offset: (i16, i16),
+    scale: (f32, f32),
+    offset: (f32, f32),
 }
 
 impl AtlasWrapper {
@@ -160,24 +164,16 @@ impl AtlasWrapper {
             .and_then(serde_json::Value::as_i64)
             .map_or(1.0, |h| h as f32 / 32.0);
 
-        dbg!(&imagepath);
-        println!(
-            "{:?} {:?} | {:?}-{:?} | {:?}",
-            width,
-            height,
-            from_to[0],
-            from_to[1],
-            (from_to[1].0 - from_to[0].0) as usize / 16 + 1
-        );
-
         let offset_x = atlas
             .get("sprite_offset_x")
-            .and_then(serde_json::Value::as_i64)
-            .map_or(0, |x| x as i16);
-        let offset_y = atlas
+            .and_then(serde_json::Value::as_f64)
+            .map_or(0.0, |x| x as f32 / 32.0)
+            + (0.5 * width - 0.5);
+        let offset_y = -(atlas // notice the minus sign
             .get("sprite_offset_y")
-            .and_then(serde_json::Value::as_i64)
-            .map_or(0, |y| y as i16);
+            .and_then(serde_json::Value::as_f64)
+            .map_or(0.0, |y| y as f32 / 32.0)
+            + (0.5 * height - 0.5));
 
         for tile in atlas["tiles"].as_array().unwrap() {
             let tile_info = TileInfo::new(tile);
@@ -189,6 +185,7 @@ impl AtlasWrapper {
         Some(Self {
             range: (from_to[0], from_to[1]),
             imagepath,
+            scale: (width, height),
             offset: (offset_x, offset_y),
         })
     }
@@ -215,6 +212,7 @@ impl TileLoader {
 
         for atlas in atlases {
             if let Some(atlas) = AtlasWrapper::new(asset_server, atlas, &mut tiles) {
+                dbg!(&atlas);
                 atlas_wrappers.push(atlas);
             }
         }
@@ -225,12 +223,24 @@ impl TileLoader {
         };
 
         for tile_info in loader.tiles.values() {
+            dbg!(tile_info.names[0].0.as_str());
             for fg in &tile_info.foreground {
                 loader.sprites.entry(*fg).or_insert_with(|| {
                     Self::sprite_info(
                         &atlas_wrappers,
                         fg,
-                        SpriteOrientation::Horizontal,
+                        if tile_info.names[0].0.starts_with("t_tree")
+                            || tile_info.names[0].0.starts_with("t_fence")
+                            || tile_info.names[0].0.starts_with("t_splitrail_fence")
+                            || tile_info.names[0].0.starts_with("t_shrub")
+                            || tile_info.names[0].0.starts_with("t_wall")
+                            || tile_info.names[0].0.starts_with("t_door")
+                            || tile_info.names[0].0.starts_with("t_flower")
+                        {
+                            SpriteOrientation::Vertical
+                        } else {
+                            SpriteOrientation::Horizontal
+                        },
                         SpriteLayer::Front,
                     )
                 });
@@ -240,7 +250,11 @@ impl TileLoader {
                     Self::sprite_info(
                         &atlas_wrappers,
                         bg,
-                        SpriteOrientation::Horizontal,
+                        if tile_info.names[0].0.starts_with("t_tree") {
+                            SpriteOrientation::Vertical
+                        } else {
+                            SpriteOrientation::Horizontal
+                        },
                         SpriteLayer::Back,
                     )
                 });
@@ -261,14 +275,29 @@ impl TileLoader {
             .find(|atlas_wrapper| atlas_wrapper.contains(sprite_number))
             .map(|atlas_wrapper| SpriteInfo {
                 mesh_info: MeshInfo {
-                    index: *sprite_number,
-                    range: atlas_wrapper.range,
+                    index: (*sprite_number).to_usize() - atlas_wrapper.range.0.to_usize(),
+                    width: match &atlas_wrapper.imagepath {
+                        p if p.ends_with("filler_tall.png") => 2,
+                        p if p.ends_with("large_ridden.png") => 3,
+                        p if p.ends_with("giant.png") => 4,
+                        p if p.ends_with("huge.png") => 4,
+                        p if p.ends_with("large.png") => 8,
+                        p if p.ends_with("centered.png") => 12,
+                        p if p.ends_with("small.png") => 12,
+                        _ => 16,
+                    },
+                    size: 1 + atlas_wrapper.range.1.to_usize() - atlas_wrapper.range.0.to_usize(),
                 },
                 imagepath: atlas_wrapper.imagepath.clone(),
                 orientation,
                 layer,
+                scale: atlas_wrapper.scale,
                 offset: atlas_wrapper.offset,
             })
+            /*.map(|sprite_info| {
+                dbg!(&sprite_info);
+                sprite_info
+            })*/
             .unwrap_or_else(|| panic!("{sprite_number:?} not found"))
     }
 
@@ -280,7 +309,9 @@ impl TileLoader {
             .find_map(|variant| self.tiles.get(variant))
             .unwrap_or_else(|| self.tiles.get(&TileName::new("unknown")).unwrap())
             .sprite_numbers();
-        println!("{tile_name:?} {foreground:?} {background:?}");
+        if tile_name.0.as_str() != "t_dirt" && !tile_name.0.starts_with("t_grass") {
+            println!("{tile_name:?} {foreground:?} {background:?}");
+        }
         bundles.extend(foreground.map(|fg| self.sprites[&fg].clone()));
         bundles.extend(background.map(|bg| self.sprites[&bg].clone()));
         bundles
