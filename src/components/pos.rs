@@ -91,7 +91,7 @@ impl Pos {
     }
 }
 
-pub const SIZE: Pos = Pos(96, 3, 96);
+pub const SIZE: Pos = Pos(20 * 24, 10, 20 * 24);
 
 #[derive(Debug)]
 pub struct Path {

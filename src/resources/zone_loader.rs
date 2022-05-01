@@ -16,7 +16,7 @@ pub fn zone_layout(zone_pos: Pos) -> Option<ZoneLayout> {
         zone_pos.2,
         zone_pos.1
     );
-    println!("Path: {filepath}");
+    //println!("Path: {filepath}");
     read_to_string(&filepath)
         .ok()
         .map(|s| ZoneLayout::new(s.as_str()))
@@ -75,6 +75,7 @@ pub struct Item {
     pub snip_id: Option<String>,
     charges: Option<u16>,
     active: Option<bool>,
+    corpse: Option<String>,
     owner: Option<String>,
     bday: Option<u64>,
     last_temp_check: u64,
@@ -112,7 +113,7 @@ pub struct Pocket {
     pocket_type: u8,
     contents: Vec<Item>,
     _sealed: bool,
-    allowed: bool,
+    allowed: Option<bool>,
     favorite_settings: Option<serde_json::Value>,
 }
 

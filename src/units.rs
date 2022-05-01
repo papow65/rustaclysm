@@ -18,6 +18,12 @@ impl MillimeterPerSecond {
     }
 }
 
+impl std::fmt::Display for MillimeterPerSecond {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{:.00?} km/h", self.0 as f32 * 3_600.0 / 1_000_000.0)
+    }
+}
+
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Milliseconds(pub u64);
 

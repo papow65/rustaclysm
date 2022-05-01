@@ -12,13 +12,21 @@ pub fn add_entities(
 ) {
     let mut spawner = Spawner::new(commands, &mut materials, &mut meshes, &asset_server);
     spawner.spawn_gui();
-    spawner.spawn_grid_lines();
+    //spawner.spawn_grid_lines();
     spawner.spawn_floors();
     spawner.spawn_house();
     spawner.spawn_characters();
     spawner.spawn_containables();
     spawner.spawn_window_wall();
 
-    spawner.load_cdda_region(Pos(105, 0, 218), Pos(4, SIZE.1, 2), Pos(0, 0, 48));
-    spawner.load_cdda_region(Pos(107, 0, 216), Pos(2, SIZE.1, 2), Pos(48, 0, 0));
+    spawner.load_cdda_region(
+        Pos(100, 0, 214),
+        Pos(SIZE.0 / 24, SIZE.1, SIZE.2 / 24 - 2),
+        Pos(0, 0, 48),
+    );
+    spawner.load_cdda_region(
+        Pos(102, 0, 212),
+        Pos(SIZE.0 / 24 - 2, SIZE.1, 2),
+        Pos(48, 0, 0),
+    );
 }
