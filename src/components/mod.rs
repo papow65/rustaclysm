@@ -139,6 +139,9 @@ pub struct Corpse;
 #[derive(Component)]
 pub struct CameraBase;
 
+#[derive(Component)]
+pub struct CameraCursor;
+
 #[derive(Component, Clone, Copy, PartialEq)]
 pub enum PlayerVisible {
     Seen,
@@ -197,9 +200,6 @@ impl Appearance {
 
 #[derive(Component)]
 pub struct PosYChanged;
-
-#[derive(Component)]
-pub struct Status; // debugging
 
 #[derive(Component)]
 pub struct Message(pub String); // shown to the player

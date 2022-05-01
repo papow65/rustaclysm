@@ -5,10 +5,11 @@ use bevy::prelude::*;
 use super::resources::{Instructions, Location, RelativeRays, Timeouts};
 use super::systems::{
     add_entities, check_delay, manage_characters, manage_game_over, manage_keyboard_input,
-    manage_mouse_input, manage_status, update_camera, update_damaged_characters,
-    update_damaged_items, update_location, update_log, update_material_on_item_move,
-    update_material_on_player_move, update_status_fps, update_status_health, update_status_input,
-    update_status_speed, update_status_time, update_tile_color_on_player_move, update_transforms,
+    manage_mouse_input, maximize_window, update_camera, update_cursor_visibility_on_player_change,
+    update_damaged_characters, update_damaged_items, update_location, update_log,
+    update_material_on_item_move, update_material_on_player_move, update_status_detais,
+    update_status_fps, update_status_health, update_status_player_state, update_status_speed,
+    update_status_time, update_tile_color_on_player_move, update_transforms,
     update_visibility_for_hidden_items, update_visibility_on_item_y_change,
     update_visibility_on_player_y_change,
 };
@@ -32,12 +33,12 @@ impl Plugin for RustaclysmPlugin {
             .insert_resource(Timeouts::new());
 
         // executed once at startup
-        app.add_startup_system(add_entities)
+        app.add_startup_system(maximize_window)
+            .add_startup_system(add_entities)
             .add_startup_system_set_to_stage(StartupStage::PostStartup, update_systems());
 
         // executed every frame
         app.add_system(manage_game_over)
-            .add_system(manage_status)
             .add_system(manage_mouse_input)
             .add_system(manage_keyboard_input)
             .add_system(manage_characters)
@@ -57,6 +58,7 @@ fn update_systems() -> SystemSet {
         .with_system(update_visibility_for_hidden_items)
         .with_system(update_visibility_on_item_y_change)
         .with_system(update_visibility_on_player_y_change)
+        .with_system(update_cursor_visibility_on_player_change)
         .with_system(update_material_on_item_move)
         .with_system(update_material_on_player_move)
         .with_system(update_tile_color_on_player_move)
@@ -68,7 +70,8 @@ fn update_systems() -> SystemSet {
         .with_system(update_status_time)
         .with_system(update_status_health)
         .with_system(update_status_speed)
-        .with_system(update_status_input)
+        .with_system(update_status_player_state)
+        .with_system(update_status_detais)
 }
 
 trait AppBuilderExt {

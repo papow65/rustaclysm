@@ -4,10 +4,9 @@ mod startup;
 mod update;
 
 use bevy::prelude::*;
-use bevy::render::camera::Camera;
 use std::time::{Duration, Instant};
 
-use super::components::{Action, Appearance, Corpse, Health, Label, Message, Player, Pos, Status};
+use super::components::{Appearance, Health, Label, Player};
 use super::resources::{Characters, Envir, Hierarchy, Instructions, Timeouts};
 
 pub use check::*;
@@ -34,47 +33,6 @@ pub fn manage_game_over(
     }
 
     log_if_slow("manage_game_over", start);
-}
-
-#[allow(clippy::needless_pass_by_value)]
-pub fn manage_status(
-    mut commands: Commands,
-    debuggers: Query<Entity, With<Status>>,
-    all: Query<
-        (
-            Entity,
-            Option<&Label>,
-            Option<&Pos>,
-            Option<&Action>,
-            Option<&Parent>,
-            Option<&Children>,
-            &GlobalTransform,
-        ),
-        Or<(With<Health>, With<Corpse>, With<Children>, With<Camera>)>,
-    >,
-) {
-    let start = Instant::now();
-
-    for debugger in debuggers.iter() {
-        for (entity, label, pos, action, parent, children, gt) in all.iter() {
-            let message = format!(
-                "{} | {:?} -> {:?} | {:?} > {:?} > {:?}\nGT: {:?} {:?} {:?}",
-                label.unwrap_or(&Label::new("-")),
-                pos.unwrap_or(&Pos(9, 9, 9)),
-                action,
-                parent,
-                entity,
-                children,
-                gt.translation,
-                gt.rotation,
-                gt.scale
-            );
-            commands.spawn_bundle(Message::new(message));
-        }
-        commands.entity(debugger).despawn();
-    }
-
-    log_if_slow("manage_status", start);
 }
 
 #[allow(clippy::needless_pass_by_value)]

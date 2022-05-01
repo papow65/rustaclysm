@@ -6,9 +6,9 @@ use bevy::tasks::ComputeTaskPool;
 use std::time::Instant;
 
 use super::super::components::{
-    CameraBase, Corpse, Damage, Faction, Floor, Health, Hurdle, Integrity, Label, LogDisplay,
-    Message, Obstacle, Player, PlayerActionState, PlayerVisible, Pos, PosYChanged, Stairs,
-    StatusDisplay,
+    Action, CameraBase, CameraCursor, Corpse, Damage, Faction, Floor, Health, Hurdle, Integrity,
+    Label, LogDisplay, Message, Obstacle, Opaque, Player, PlayerActionState, PlayerVisible, Pos,
+    PosYChanged, Stairs, StatusDisplay,
 };
 use super::super::resources::{Envir, Location, Timeouts};
 use super::super::units::{Speed, VERTICAL};
@@ -145,6 +145,23 @@ pub fn update_visibility_on_player_y_change(
     }
 
     log_if_slow("update_visibility_on_player_y_change", start);
+}
+
+/// for both meshes and tiles
+#[allow(clippy::needless_pass_by_value)]
+pub fn update_cursor_visibility_on_player_change(
+    mut curors: Query<&mut Visibility, With<CameraCursor>>,
+    players: Query<&Player, Changed<Player>>,
+) {
+    let start = Instant::now();
+
+    if let Ok(player) = players.get_single() {
+        if let Ok(mut visible) = curors.get_single_mut() {
+            visible.is_visible = matches!(player.state, PlayerActionState::Examining(_));
+        }
+    }
+
+    log_if_slow("update_cursor_visibility_on_player_change", start);
 }
 
 fn update_material(
@@ -445,7 +462,7 @@ pub fn update_status_fps(
                 // Precision of 0.1s
                 // Padding to 6 characters, aligned right
                 status_displays.iter_mut().next().unwrap().sections[0].value =
-                    format!("{average:>6.1} fps\n");
+                    format!("{average:05.1} fps\n");
             }
         }
     }
@@ -485,7 +502,7 @@ pub fn update_status_health(
 
     if let Some(health) = health.iter().next() {
         status_displays.iter_mut().next().unwrap().sections[2].value =
-            format!("{:>3} health\n", format!("{}", health));
+            format!("{} health\n", health);
     }
 
     log_if_slow("update_status_health", start);
@@ -499,15 +516,14 @@ pub fn update_status_speed(
     let start = Instant::now();
 
     if let Some(speed) = speed.iter().next() {
-        status_displays.iter_mut().next().unwrap().sections[3].value =
-            format!("{:>10}\n", format!("{}", speed.h));
+        status_displays.iter_mut().next().unwrap().sections[3].value = format!("{}\n", speed.h);
     }
 
     log_if_slow("update_status_speed", start);
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub fn update_status_input(
+pub fn update_status_player_state(
     player: Query<&Player, Changed<Player>>,
     mut status_displays: Query<&mut Text, With<StatusDisplay>>,
 ) {
@@ -515,8 +531,105 @@ pub fn update_status_input(
 
     if let Some(player) = player.iter().next() {
         status_displays.iter_mut().next().unwrap().sections[4].value =
-            format!("{:>10}\n", format!("{}", player.state));
+            format!("{}\n", player.state);
     }
 
-    log_if_slow("update_status_input", start);
+    log_if_slow("update_status_player_state", start);
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub fn update_status_detais(
+    envir: Envir,
+    items: Query<(
+        Option<&Label>,
+        Option<&Health>,
+        Option<&Corpse>,
+        Option<&Action>,
+        Option<&Floor>,
+        Option<&Stairs>,
+        Option<&Obstacle>,
+        Option<&Hurdle>,
+        Option<&Opaque>,
+    )>,
+    player: Query<&Player, Changed<Player>>,
+    mut status_displays: Query<&mut Text, With<StatusDisplay>>,
+) {
+    let start = Instant::now();
+
+    if let Some(player) = player.iter().next() {
+        status_displays.iter_mut().next().unwrap().sections[5].value =
+            if let PlayerActionState::Examining(pos) = player.state {
+                format!(
+                    "{:?}\n{}{}",
+                    pos,
+                    if envir.has_stairs_down(pos) {
+                        "Stairs down\n"
+                    } else {
+                        ""
+                    },
+                    envir
+                        .location
+                        .all(pos)
+                        .iter()
+                        .map(|&i| {
+                            let (
+                                label,
+                                health,
+                                corpse,
+                                action,
+                                floor,
+                                stairs,
+                                obstacle,
+                                hurdle,
+                                opaque,
+                            ) = items.get(i).unwrap();
+                            let label = label.map_or_else(|| format!("{:?}", i), |l| l.0.clone());
+                            let mut flags = Vec::new();
+                            let health_str;
+                            if let Some(health) = health {
+                                health_str = format!("health({})", health);
+                                flags.push(health_str.as_str());
+                            }
+                            if corpse.is_some() {
+                                flags.push("corpse");
+                            }
+                            let action_str;
+                            if let Some(action) = action {
+                                action_str = format!("{:?}", action);
+                                flags.push(action_str.as_str());
+                            }
+                            if floor.is_some() {
+                                flags.push("floor");
+                            }
+                            if stairs.is_some() {
+                                flags.push("stairs");
+                            }
+                            if obstacle.is_some() {
+                                flags.push("obstacle");
+                            }
+                            let hurdle_str;
+                            if let Some(hurdle) = hurdle {
+                                hurdle_str = format!("hurdle({})", hurdle.0);
+                                flags.push(hurdle_str.as_str());
+                            }
+                            if opaque.is_some() {
+                                flags.push("opaque");
+                            }
+                            label
+                                + flags
+                                    .iter()
+                                    .map(|s| format!("\n- {}", s))
+                                    .collect::<String>()
+                                    .as_str()
+                        })
+                        .collect::<Vec<String>>()
+                        .join("\n")
+                        + "\n"
+                )
+            } else {
+                String::new()
+            };
+    }
+
+    log_if_slow("update_status_detais", start);
 }
