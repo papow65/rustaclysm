@@ -69,10 +69,26 @@ impl Pos {
         self.potential_nbors().any(|(p, _)| p == other)
     }
 
-    pub fn vec3(self, height: f32) -> Vec3 {
+    pub fn nbor(self, offset: Self) -> Option<Self> {
+        let nbor = Self(self.0 + offset.0, self.1 + offset.1, self.2 + offset.2);
+        if nbor.in_bounds() {
+            assert!(
+                self.is_potential_nbor(nbor) || nbor == self,
+                "{:?} (= {:?} + {:?}) is not a nbor",
+                nbor,
+                self,
+                offset
+            );
+            Some(nbor)
+        } else {
+            None
+        }
+    }
+
+    pub fn vec3(self) -> Vec3 {
         Vec3::new(
             f32::from(self.0) * ADJACENT.f32(),
-            f32::from(self.1).mul_add(VERTICAL.f32(), 0.5 * height),
+            f32::from(self.1) * VERTICAL.f32(),
             f32::from(self.2) * ADJACENT.f32(),
         )
     }

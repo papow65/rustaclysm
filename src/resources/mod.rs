@@ -9,9 +9,7 @@ use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
 
-use super::components::{
-    Containable, Container, Faction, Health, Instruction, Label, Player, Pos, SIZE,
-};
+use super::components::{Containable, Container, Faction, Health, Instruction, Label, Pos, SIZE};
 use super::units::{Distance, Milliseconds, Speed};
 
 pub use debug::*;
@@ -40,15 +38,11 @@ pub struct Hierarchy<'w, 's> {
 #[derive(Debug)]
 pub struct Instructions {
     pub queue: Vec<Instruction>,
-    pub combo: Option<Instruction>,
 }
 
 impl Instructions {
     pub const fn new() -> Self {
-        Self {
-            queue: Vec::new(),
-            combo: None,
-        }
+        Self { queue: Vec::new() }
     }
 }
 
@@ -92,7 +86,6 @@ pub struct Characters<'w, 's> {
             &'static Health,
             &'static Faction,
             &'static Container,
-            Option<&'static Player>,
         ),
     >,
 }
@@ -101,7 +94,7 @@ impl<'w, 's> Characters<'w, 's> {
     pub fn collect_factions(&'s self) -> Vec<(Pos, &'s Faction)> {
         self.c
             .iter()
-            .map(|(_, _, p, _, _, f, _, _)| (*p, f))
+            .map(|(_, _, p, _, _, f, _)| (*p, f))
             .collect::<Vec<(Pos, &'s Faction)>>()
     }
 }

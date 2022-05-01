@@ -7,8 +7,8 @@ use super::systems::{
     add_entities, check_delay, manage_characters, manage_game_over, manage_keyboard_input,
     manage_mouse_input, manage_status, update_camera, update_damaged_characters,
     update_damaged_items, update_location, update_log, update_material_on_item_move,
-    update_material_on_player_move, update_status_fps, update_status_health, update_status_speed,
-    update_status_time, update_tile_color_on_player_move, update_transforms,
+    update_material_on_player_move, update_status_fps, update_status_health, update_status_input,
+    update_status_speed, update_status_time, update_tile_color_on_player_move, update_transforms,
     update_visibility_for_hidden_items, update_visibility_on_item_y_change,
     update_visibility_on_player_y_change,
 };
@@ -68,6 +68,7 @@ fn update_systems() -> SystemSet {
         .with_system(update_status_time)
         .with_system(update_status_health)
         .with_system(update_status_speed)
+        .with_system(update_status_input)
 }
 
 trait AppBuilderExt {
