@@ -80,6 +80,10 @@ impl Location {
             .find_map(|&x| items.get(x).ok())
     }
 
+    pub fn all(&self, pos: Pos) -> Vec<Entity> {
+        self.all.get(&pos).unwrap_or(&vec![]).clone()
+    }
+
     // helper methods
 
     pub fn has_stairs_up<'w, 's>(

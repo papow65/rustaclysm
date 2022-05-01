@@ -8,10 +8,10 @@ use bevy::utils::HashMap;
 
 use super::super::components::Window;
 use super::super::components::{
-    Appearance, CameraBase, Chair, Containable, Container, Faction, Floor, Health, Hurdle,
-    Integrity, Label, LogDisplay, ManualDisplay, Obstacle, Opaque, Player, PlayerActionState,
-    PlayerVisible, Pos, PosYChanged, Rack, Stairs, StairsDown, StatusDisplay, Table, Wall,
-    WindowPane, SIZE,
+    Appearance, CameraBase, CameraCursor, Chair, Containable, Container, Faction, Floor, Health,
+    Hurdle, Integrity, Label, LogDisplay, ManualDisplay, Obstacle, Opaque, Player,
+    PlayerActionState, PlayerVisible, Pos, PosYChanged, Rack, Stairs, StairsDown, StatusDisplay,
+    Table, Wall, WindowPane, SIZE,
 };
 use super::super::units::{Speed, ADJACENT, VERTICAL};
 use super::tile_loader::{MeshInfo, SpriteLayer, SpriteOrientation, TileLoader, TileName};
@@ -164,11 +164,7 @@ impl<'w, 's> Spawner<'w, 's> {
             .clone()
     }
 
-    fn spawn_tile(&mut self, pos: Pos, tile_name: &TileName, tile_type: TileType) -> Entity {
-        let _rotation = Quat::from_rotation_z(0.01 * std::f32::consts::PI)
-            * Quat::from_rotation_y(1.5 * std::f32::consts::PI)
-            * Quat::from_rotation_x(1.5 * std::f32::consts::PI);
-
+    fn get_pbr_bundles(&mut self, tile_name: &TileName) -> Vec<PbrBundle> {
         let mut pbr_bundles = Vec::new();
         for sprite_info in self.tile_loader.sprite_infos(tile_name) {
             let scale = Vec3::new(
@@ -213,8 +209,12 @@ impl<'w, 's> Spawner<'w, 's> {
                 ..PbrBundle::default()
             });
         }
+        pbr_bundles
+    }
 
+    fn spawn_tile(&mut self, pos: Pos, tile_name: &TileName, tile_type: TileType) -> Entity {
         let label = tile_name.to_label();
+        let pbr_bundles = self.get_pbr_bundles(tile_name);
         let tile = self
             .commands
             .spawn_bundle((
@@ -490,6 +490,11 @@ impl<'w, 's> Spawner<'w, 's> {
             .id();
 
         if let Some(player) = player {
+            let cursor_sprite_info = &self
+                .tile_loader
+                .sprite_infos(&TileName("cursor".to_string()))[0];
+            let cursor_mesh = self.get_tile_mesh(cursor_sprite_info.mesh_info);
+            let cursor_material = self.get_tile_material(&cursor_sprite_info.imagepath);
             self.commands
                 .entity(entity)
                 .insert(player)
@@ -505,6 +510,23 @@ impl<'w, 's> Spawner<'w, 's> {
                                 .spawn_bundle(PbrBundle::default())
                                 .insert(CameraBase)
                                 .with_children(|child_builder| {
+                                    child_builder
+                                        .spawn_bundle(PbrBundle {
+                                            mesh: cursor_mesh,
+                                            material: cursor_material,
+                                            transform: Transform {
+                                                translation: Vec3::new(
+                                                    0.0,
+                                                    0.15 - 0.5 * transform.scale.y,
+                                                    0.0,
+                                                ),
+                                                scale: Vec3::new(1.15, 1.0, 1.15),
+                                                ..Transform::default()
+                                            },
+                                            ..PbrBundle::default()
+                                        })
+                                        .insert(CameraCursor);
+
                                     child_builder
                                         .spawn_bundle(PbrBundle {
                                             transform: Transform::identity()
@@ -561,7 +583,7 @@ impl<'w, 's> Spawner<'w, 's> {
 
         let text_style = TextStyle {
             font: self.font.clone(),
-            font_size: 20.0,
+            font_size: 16.0,
             color: Color::rgb(0.8, 0.8, 0.8),
         };
 
@@ -596,12 +618,12 @@ impl<'w, 's> Spawner<'w, 's> {
                             value: "\n".to_string(),
                             style: text_style.clone(),
                         };
-                        5
+                        6
                     ],
                     ..Text::default()
                 },
                 style: Style {
-                    align_self: AlignSelf::FlexEnd,
+                    align_self: AlignSelf::FlexStart,
                     position_type: PositionType::Absolute,
                     position: Rect {
                         top: Val::Px(5.0),
@@ -618,7 +640,7 @@ impl<'w, 's> Spawner<'w, 's> {
             text: Text {
                 sections: vec![
                     TextSection {
-                        value: "move      numpad\nup/down   r/f\npick/drop b/v\nattack    a\nstatus    ,\nzoom      scroll wheel\nquit      esc/ctrl+c/ctrl+d".to_string(),
+                        value: "move      numpad\nup/down   r/f\npick/drop b/v\nattack    a\nrun       +\nexamine   x\nzoom      scroll wheel\nquit      esc/ctrl+c/ctrl+d".to_string(),
                         style: text_style,
                     },
                 ],

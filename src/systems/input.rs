@@ -3,7 +3,7 @@ use bevy::input::{keyboard::KeyboardInput, mouse::MouseWheel, ElementState};
 use bevy::prelude::{Commands, EventReader, Input, KeyCode, Local, Query, Res, ResMut};
 use std::time::Instant;
 
-use super::super::components::{Instruction, Player, Status};
+use super::super::components::{Instruction, Player};
 use super::super::resources::Instructions;
 
 use super::log_if_slow;
@@ -26,7 +26,6 @@ pub fn manage_mouse_input(
 
 #[allow(clippy::needless_pass_by_value)]
 pub fn manage_keyboard_input(
-    mut commands: Commands,
     mut app_exit_events: ResMut<Events<bevy::app::AppExit>>,
     mut key_events: EventReader<KeyboardInput>,
     mut instructions: ResMut<Instructions>,
@@ -49,9 +48,6 @@ pub fn manage_keyboard_input(
                     match (key_code, control) {
                         (KeyCode::Escape, _) | (KeyCode::C | KeyCode::D, true) => {
                             app_exit_events.send(bevy::app::AppExit);
-                        }
-                        (KeyCode::Comma, false) => {
-                            commands.spawn_bundle((Status,));
                         }
                         (_, false) => {
                             if let Some(instruction) = Instruction::new(key_code) {

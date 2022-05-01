@@ -4,6 +4,11 @@ use super::super::components::{Pos, SIZE};
 use super::super::resources::Spawner;
 
 #[allow(clippy::needless_pass_by_value)]
+pub fn maximize_window(mut windows: ResMut<Windows>) {
+    windows.primary_mut().set_maximized(true);
+}
+
+#[allow(clippy::needless_pass_by_value)]
 pub fn add_entities(
     commands: Commands,
     mut materials: ResMut<Assets<StandardMaterial>>,

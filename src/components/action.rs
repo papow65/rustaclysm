@@ -119,7 +119,7 @@ impl Action {
                 pos,
                 speed,
             ),
-            Action::Examine { target } => examine(commands, envir, target),
+            Action::Examine { target: _ } => examine(),
             Action::SwitchRunning => switch_running(commands, actor),
         };
 
@@ -323,9 +323,8 @@ fn pickup(
     }
 }
 
-fn examine(commands: &mut Commands, _envir: &mut Envir, target: Pos) -> Milliseconds {
-    let message = format!("Examining {:?}...", target);
-    commands.spawn_bundle(Message::new(message));
+const fn examine() -> Milliseconds {
+    // see update_status_detais() in systems/update.rs
     Milliseconds(0)
 }
 
