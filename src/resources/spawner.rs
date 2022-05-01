@@ -8,15 +8,16 @@ use bevy::utils::HashMap;
 
 use super::super::components::Window;
 use super::super::components::{
-    Appearance, Chair, Containable, Container, Faction, Floor, Health, Hurdle, Integrity, Label,
-    LogDisplay, ManualDisplay, Obstacle, Opaque, Player, PlayerVisible, Pos, PosYChanged, Rack,
-    Stairs, StairsDown, StatusDisplay, Table, Wall, WindowPane, SIZE,
+    Appearance, CameraBase, Chair, Containable, Container, Faction, Floor, Health, Hurdle,
+    Integrity, Label, LogDisplay, ManualDisplay, Obstacle, Opaque, Player, PlayerActionState,
+    PlayerVisible, Pos, PosYChanged, Rack, Stairs, StairsDown, StatusDisplay, Table, Wall,
+    WindowPane, SIZE,
 };
 use super::super::units::{Speed, ADJACENT, VERTICAL};
 use super::tile_loader::{MeshInfo, SpriteLayer, SpriteOrientation, TileLoader, TileName};
 use super::zone_loader::{zone_layout, SubzoneLayout, ZoneLayout};
 
-#[derive(PartialEq)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum TileType {
     Terrain,
     Furniture,
@@ -220,7 +221,7 @@ impl<'w, 's> Spawner<'w, 's> {
                 Floor,
                 pos,
                 label,
-                Transform::from_translation(pos.vec3(0.0)),
+                Transform::from_translation(pos.vec3()),
                 GlobalTransform::default(),
                 Visibility::default(),
             ))
@@ -466,13 +467,21 @@ impl<'w, 's> Spawner<'w, 's> {
         faction: Faction,
         player: Option<Player>,
     ) {
-        let transform = Transform::from_scale(Vec3::new(1.0, 1.8, 1.0))
-            .looking_at(Vec3::new(1.0, 0.0, 0.1), Vec3::Y);
+        let focus = Vec3::new(1.0, 0.0, 0.1);
+        let transform = Transform::from_scale(Vec3::new(1.0, 1.8, 1.0)).looking_at(focus, Vec3::Y);
 
         let entity = self
             .commands
             .spawn_bundle((label, pos, health, speed, faction, Obstacle, Container(4)))
             .insert_bundle((self.character.clone(), PlayerVisible::Reevaluate))
+            /* TODO better as sub-entity?
+            .with_children(|child_builder| {
+                child_builder.spawn_bundle(PbrBundle {
+                    mesh: self.character_mesh.clone(),
+                    transform,
+                    ..PbrBundle::default()
+                    });
+                })*/
             .insert_bundle(PbrBundle {
                 mesh: self.character_mesh.clone(),
                 transform,
@@ -486,25 +495,33 @@ impl<'w, 's> Spawner<'w, 's> {
                 .insert(player)
                 .insert(PosYChanged)
                 .with_children(|child_builder| {
-                    // ChildBuilder has a similar API to Commands
                     child_builder
                         .spawn_bundle(PbrBundle {
-                            transform: Transform::from_scale(Vec3::new(
-                                1.0 / transform.scale.x,
-                                1.0 / transform.scale.y,
-                                1.0 / transform.scale.z,
-                            )),
+                            transform: Transform::from_matrix(transform.compute_matrix().inverse()),
                             ..PbrBundle::default()
                         })
                         .with_children(|child_builder| {
-                            child_builder.spawn_bundle(PerspectiveCameraBundle {
-                                perspective_projection: PerspectiveProjection {
-                                    // more overview, less personal than the default
-                                    fov: 0.3,
-                                    ..PerspectiveProjection::default()
-                                },
-                                ..PerspectiveCameraBundle::default()
-                            });
+                            child_builder
+                                .spawn_bundle(PbrBundle::default())
+                                .insert(CameraBase)
+                                .with_children(|child_builder| {
+                                    child_builder
+                                        .spawn_bundle(PbrBundle {
+                                            transform: Transform::identity()
+                                                .looking_at(focus, Vec3::Y),
+                                            ..PbrBundle::default()
+                                        })
+                                        .with_children(|child_builder| {
+                                            child_builder.spawn_bundle(PerspectiveCameraBundle {
+                                                perspective_projection: PerspectiveProjection {
+                                                    // more overview, less personal than the default
+                                                    fov: 0.3,
+                                                    ..PerspectiveProjection::default()
+                                                },
+                                                ..PerspectiveCameraBundle::default()
+                                            });
+                                        });
+                                });
                         });
                 });
         }
@@ -579,7 +596,7 @@ impl<'w, 's> Spawner<'w, 's> {
                             value: "\n".to_string(),
                             style: text_style.clone(),
                         };
-                        4
+                        5
                     ],
                     ..Text::default()
                 },
@@ -770,6 +787,7 @@ impl<'w, 's> Spawner<'w, 's> {
             Speed::from_h_kmph(6),
             Faction::Human,
             Some(Player {
+                state: PlayerActionState::Normal,
                 camera_distance: 7.1,
             }),
         );

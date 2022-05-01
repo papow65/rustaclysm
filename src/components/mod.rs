@@ -9,7 +9,7 @@ pub use super::units::Partial;
 
 pub use action::{Action, Instruction};
 pub use factions::{Faction, Intelligence};
-pub use player::Player;
+pub use player::{Player, PlayerActionState};
 pub use pos::{Path, Pos, SIZE};
 
 #[derive(Component, Clone, Debug)]
@@ -135,6 +135,9 @@ pub struct Damage {
 
 #[derive(Component)]
 pub struct Corpse;
+
+#[derive(Component)]
+pub struct CameraBase;
 
 #[derive(Component, Clone, Copy, PartialEq)]
 pub enum PlayerVisible {

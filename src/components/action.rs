@@ -12,6 +12,7 @@ pub enum Instruction {
     Attack,
     Smash,
     SwitchRunning,
+    SwitchExamining,
 }
 
 impl Instruction {
@@ -32,6 +33,7 @@ impl Instruction {
             KeyCode::V => Self::Dump,
             KeyCode::A => Self::Attack,
             KeyCode::S => Self::Smash,
+            KeyCode::X => Self::SwitchExamining,
             KeyCode::NumpadAdd => Self::SwitchRunning,
             _ => {
                 return None;
@@ -75,6 +77,9 @@ pub enum Action {
     Pickup,
     Dump,
     SwitchRunning,
+    Examine {
+        target: Pos,
+    },
 }
 
 impl Action {
@@ -114,6 +119,7 @@ impl Action {
                 pos,
                 speed,
             ),
+            Action::Examine { target } => examine(commands, envir, target),
             Action::SwitchRunning => switch_running(commands, actor),
         };
 
@@ -219,7 +225,7 @@ fn smash(
     target: Pos,
     speed: Speed,
 ) -> Milliseconds {
-    if !target.is_potential_nbor(pos) {
+    if !target.is_potential_nbor(pos) && target != pos {
         unimplemented!();
     }
 
@@ -315,6 +321,12 @@ fn pickup(
         commands.spawn_bundle(Message::new(message));
         Milliseconds(0)
     }
+}
+
+fn examine(commands: &mut Commands, _envir: &mut Envir, target: Pos) -> Milliseconds {
+    let message = format!("Examining {:?}...", target);
+    commands.spawn_bundle(Message::new(message));
+    Milliseconds(0)
 }
 
 fn switch_running(commands: &mut Commands, switcher: Entity) -> Milliseconds {

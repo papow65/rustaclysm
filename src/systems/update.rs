@@ -6,8 +6,9 @@ use bevy::tasks::ComputeTaskPool;
 use std::time::Instant;
 
 use super::super::components::{
-    Corpse, Damage, Faction, Floor, Health, Hurdle, Integrity, Label, LogDisplay, Message,
-    Obstacle, Player, PlayerVisible, Pos, PosYChanged, Stairs, StatusDisplay,
+    CameraBase, Corpse, Damage, Faction, Floor, Health, Hurdle, Integrity, Label, LogDisplay,
+    Message, Obstacle, Player, PlayerActionState, PlayerVisible, Pos, PosYChanged, Stairs,
+    StatusDisplay,
 };
 use super::super::resources::{Envir, Location, Timeouts};
 use super::super::units::{Speed, VERTICAL};
@@ -61,7 +62,7 @@ pub fn update_transforms(
         } else {
             transform.scale.y
         };
-        transform.translation = pos.vec3(vertical_height);
+        transform.translation = pos.vec3() + Vec3::new(0.0, 0.5 * vertical_height, 0.0);
     }
 
     log_if_slow("update_transforms", start);
@@ -128,15 +129,19 @@ pub fn update_visibility_on_player_y_change(
     mut commands: Commands,
     mut items: Query<(&Pos, &mut Visibility, Option<&Children>)>,
     mut child_items: Query<&mut Visibility, (With<Parent>, Without<Pos>)>,
-    moved_players: Query<(Entity, &Pos), (With<Player>, With<PosYChanged>)>,
+    moved_players: Query<(Entity, &Pos, &Player), Or<(With<PosYChanged>, Changed<Player>)>>,
 ) {
     let start = Instant::now();
 
-    if let Ok((player, &player_pos)) = moved_players.get_single() {
+    if let Ok((entity, &player_pos, player)) = moved_players.get_single() {
+        let reference = match player.state {
+            PlayerActionState::Examining(pos) => pos,
+            _ => player_pos,
+        };
         for (&pos, mut visibility, children) in items.iter_mut() {
-            update_visibility(pos, &mut visibility, children, player_pos, &mut child_items);
+            update_visibility(pos, &mut visibility, children, reference, &mut child_items);
         }
-        commands.entity(player).remove::<PosYChanged>();
+        commands.entity(entity).remove::<PosYChanged>();
     }
 
     log_if_slow("update_visibility_on_player_y_change", start);
@@ -342,22 +347,54 @@ pub fn update_damaged_items(
     log_if_slow("update_damaged_items", start);
 }
 
+/*
 #[allow(clippy::needless_pass_by_value)]
 pub fn update_camera(
     changed_players: Query<&Player, Changed<Player>>,
-    mut cameras: Query<(&Camera3d, &mut Transform)>,
+    mut cameras: Query<&mut Transform, With<Camera3d>>,
 ) {
     let start = Instant::now();
 
     if let Ok(player) = changed_players.get_single() {
-        for (_camera, mut transform) in cameras.iter_mut() {
+        for mut transform in cameras.iter_mut() {
             let translation = Vec3::new(
                 0.0 * player.camera_distance,
                 4.0 * player.camera_distance,
                 5.0 * player.camera_distance,
             );
             transform.translation = translation;
-            transform.look_at(-translation, Vec3::Y);
+            transform.look_at(Vec3::ZERO, Vec3::Y);
+        }
+    }
+
+    log_if_slow("update_camera", start);
+}
+*/
+
+#[allow(clippy::needless_pass_by_value)]
+pub fn update_camera(
+    changed_players: Query<(&Pos, &Player), Changed<Player>>,
+    mut camera_bases: Query<&mut Transform, (With<CameraBase>, Without<Camera3d>)>,
+    mut cameras: Query<&mut Transform, With<Camera3d>>,
+) {
+    let start = Instant::now();
+
+    if let Ok((&pos, player)) = changed_players.get_single() {
+        for mut transform in camera_bases.iter_mut() {
+            transform.translation = match player.state {
+                PlayerActionState::Examining(target) => target.vec3() - pos.vec3(),
+                _ => Vec3::ZERO,
+            };
+        }
+
+        for mut transform in cameras.iter_mut() {
+            let view_direction = Vec3::new(
+                0.0 * player.camera_distance,
+                4.0 * player.camera_distance,
+                5.0 * player.camera_distance,
+            );
+            transform.translation = view_direction;
+            transform.look_at(Vec3::ZERO, Vec3::Y);
         }
     }
 
@@ -467,4 +504,19 @@ pub fn update_status_speed(
     }
 
     log_if_slow("update_status_speed", start);
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub fn update_status_input(
+    player: Query<&Player, Changed<Player>>,
+    mut status_displays: Query<&mut Text, With<StatusDisplay>>,
+) {
+    let start = Instant::now();
+
+    if let Some(player) = player.iter().next() {
+        status_displays.iter_mut().next().unwrap().sections[4].value =
+            format!("{:>10}\n", format!("{}", player.state));
+    }
+
+    log_if_slow("update_status_input", start);
 }

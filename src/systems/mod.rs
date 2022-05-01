@@ -84,19 +84,20 @@ pub fn manage_characters(
     mut instructions: ResMut<Instructions>,
     mut timeouts: ResMut<Timeouts>,
     characters: Characters,
+    mut players: Query<&mut Player>,
     dumpees: Query<(Entity, &Parent, &Label)>,
     hierarchy: Hierarchy, // pickup
 ) {
     let start = Instant::now();
 
-    let entities = characters.c.iter().map(|(e, _, _, _, _, _, _, _)| e);
+    let entities = characters.c.iter().map(|(e, _, _, _, _, _, _)| e);
     if let Some(character) = timeouts.next(entities) {
         let factions = characters.collect_factions();
-        let (_, label, &pos, &speed, health, faction, container, player) =
+        let (entity, label, &pos, &speed, health, faction, container) =
             characters.c.get(character).unwrap();
-        let action = if player.is_some() {
+        let action = if let Ok(ref mut player) = players.get_mut(entity) {
             if let Some(instruction) = instructions.queue.pop() {
-                match Player::behave(&mut instructions.combo, &envir, pos, instruction) {
+                match player.behave(&envir, pos, instruction) {
                     Ok(action) => action,
                     Err(messages) => {
                         for message in messages {
@@ -128,7 +129,7 @@ pub fn manage_characters(
             container,
         );
         assert!(
-            player.is_some() || 0 < timeout.0,
+            players.get(entity).is_ok() || 0 < timeout.0,
             "invalid action fot an npc"
         );
 

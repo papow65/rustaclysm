@@ -1,101 +1,134 @@
 use bevy::ecs::component::Component;
+use std::fmt::{Display, Formatter};
 
 use super::super::components::{Action, Instruction, Message, Pos};
 use super::super::resources::Envir;
 
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum PlayerActionState {
+    Normal,
+    Attacking,
+    Smashing,
+    Examining(Pos),
+}
+
+impl Display for PlayerActionState {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                PlayerActionState::Normal => "",
+                PlayerActionState::Attacking => "Attacking",
+                PlayerActionState::Smashing => "Smashing",
+                PlayerActionState::Examining(_) => "Examining",
+            }
+        )
+        .unwrap();
+
+        Ok(())
+    }
+}
+
 #[derive(Component)]
 pub struct Player {
+    pub state: PlayerActionState,
     pub camera_distance: f32,
 }
 
 impl Player {
     pub fn behave(
-        combo: &mut Option<Instruction>,
+        &mut self,
         envir: &Envir,
         pos: Pos,
         instruction: Instruction,
     ) -> Result<Action, Vec<(Message,)>> {
         println!("processing instruction: {instruction:?}");
 
-        let mut action_in_progress = combo.take();
-        let mut target = pos;
-
-        match instruction {
-            Instruction::Offset(Pos(0, 0, 0)) => {
-                if action_in_progress == Some(Instruction::Attack) {
-                    return Err(vec![Message::new("can't attack self".to_string())]);
-                } else {
-                    return Ok(Action::Stay);
-                }
+        match (self.state, instruction) {
+            (PlayerActionState::Normal, Instruction::Offset(Pos(0, 0, 0))) => Ok(Action::Stay),
+            (PlayerActionState::Attacking, Instruction::Offset(Pos(0, 0, 0))) => {
+                Err(vec![Message::new("can't attack self".to_string())])
             }
-            Instruction::Offset(offset) => {
-                target.0 += offset.0;
-                target.1 += offset.1;
-                target.2 += offset.2;
+            (PlayerActionState::Examining(curr), Instruction::Offset(offset)) => {
+                self.handle_offset(curr, offset)
             }
-            Instruction::Pickup => {
-                return Ok(Action::Pickup);
+            (_, Instruction::Offset(offset)) => self.handle_offset(pos, offset),
+            (_, Instruction::Pickup) => Ok(Action::Pickup),
+            (_, Instruction::Dump) => Ok(Action::Dump),
+            (_, Instruction::Attack) => self.handle_attack(envir, pos),
+            (_, Instruction::Smash) => self.handle_smash(envir, pos),
+            (PlayerActionState::Examining(_), Instruction::SwitchExamining) => {
+                self.state = PlayerActionState::Normal;
+                Err(vec![]) // no action, but no error either
             }
-            Instruction::Dump => {
-                return Ok(Action::Dump);
+            (_, Instruction::SwitchExamining) => {
+                self.state = PlayerActionState::Examining(pos);
+                Ok(Action::Examine { target: pos })
             }
-            Instruction::Attack => {
-                let attackable_nbors = envir
-                    .nbors_for_exploring(pos, instruction)
-                    .collect::<Vec<Pos>>();
-                match attackable_nbors.len() {
-                    0 => {
-                        return Err(vec![Message::new("no targets nearby".to_string())]);
-                    }
-                    1 => {
-                        action_in_progress = Some(Instruction::Attack);
-                        target = attackable_nbors[0];
-                    }
-                    _ => {
-                        combo.replace(instruction);
-                        return Err(vec![Message::new("attacking...".to_string())]);
-                    }
-                }
-            }
-            Instruction::Smash => {
-                let smashable_nbors = envir
-                    .nbors_for_exploring(pos, instruction)
-                    .collect::<Vec<Pos>>();
-                match smashable_nbors.len() {
-                    0 => {
-                        return Err(vec![Message::new("no targets nearby".to_string())]);
-                    }
-                    1 => {
-                        action_in_progress = Some(Instruction::Smash);
-                        target = smashable_nbors[0];
-                    }
-                    _ => {
-                        combo.replace(instruction);
-                        return Err(vec![Message::new("smashing...".to_string())]);
-                    }
-                }
-            }
-            Instruction::SwitchRunning => {
-                return Ok(Action::SwitchRunning);
-            }
+            (_, Instruction::SwitchRunning) => Ok(Action::SwitchRunning),
         }
+    }
 
-        if target.in_bounds() {
-            Ok(match action_in_progress {
-                Some(Instruction::Attack) => Action::Attack { target },
-                Some(Instruction::Smash) => Action::Smash { target },
-                None => Action::Step { target },
-                _ => panic!(),
+    fn handle_offset(&mut self, reference: Pos, offset: Pos) -> Result<Action, Vec<(Message,)>> {
+        let target = reference.nbor(offset);
+        if let Some(target) = target {
+            Ok(match self.state {
+                PlayerActionState::Normal => Action::Step { target },
+                PlayerActionState::Attacking => {
+                    self.state = PlayerActionState::Normal;
+                    Action::Attack { target }
+                }
+                PlayerActionState::Smashing => {
+                    self.state = PlayerActionState::Normal;
+                    Action::Smash { target }
+                }
+                PlayerActionState::Examining(_) => {
+                    self.state = PlayerActionState::Examining(target);
+                    Action::Examine { target }
+                }
             })
         } else {
             Err(vec![Message::new(
-                if action_in_progress.is_some() {
-                    "invalid target"
-                } else {
+                if self.state == PlayerActionState::Normal {
                     "you can't leave"
+                } else {
+                    "invalid target"
                 }
                 .to_string(),
             )])
+        }
+    }
+
+    fn handle_attack(&mut self, envir: &Envir, pos: Pos) -> Result<Action, Vec<(Message,)>> {
+        let attackable_nbors = envir
+            .nbors_for_exploring(pos, Instruction::Attack)
+            .collect::<Vec<Pos>>();
+        match attackable_nbors.len() {
+            0 => Err(vec![Message::new("no targets nearby".to_string())]),
+            1 => Ok(Action::Attack {
+                target: attackable_nbors[0],
+            }),
+            _ => {
+                self.state = PlayerActionState::Attacking;
+                Err(vec![Message::new("attacking...".to_string())])
+            }
+        }
+    }
+
+    fn handle_smash(&mut self, envir: &Envir, pos: Pos) -> Result<Action, Vec<(Message,)>> {
+        let smashable_nbors = envir
+            .nbors_for_exploring(pos, Instruction::Smash)
+            .collect::<Vec<Pos>>();
+        match smashable_nbors.len() {
+            0 => Err(vec![Message::new("no targets nearby".to_string())]),
+            1 => Ok(Action::Smash {
+                target: smashable_nbors[0],
+            }),
+            _ => {
+                self.state = PlayerActionState::Smashing;
+                Err(vec![Message::new("smashing...".to_string())])
+            }
         }
     }
 }
