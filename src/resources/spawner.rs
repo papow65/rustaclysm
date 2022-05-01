@@ -16,10 +16,16 @@ use super::super::units::{Speed, ADJACENT, VERTICAL};
 use super::tile_loader::{MeshInfo, SpriteLayer, SpriteOrientation, TileLoader, TileName};
 use super::zone_loader::{zone_layout, SubzoneLayout, ZoneLayout};
 
+#[derive(PartialEq)]
+pub enum TileType {
+    Terrain,
+    Furniture,
+    Item,
+}
+
 pub struct Spawner<'w, 's> {
     commands: Commands<'w, 's>,
     character: Appearance,
-    blackish: Appearance,
     glass: Appearance,
     wood: Appearance,
     whitish: Appearance,
@@ -51,7 +57,6 @@ impl<'w, 's> Spawner<'w, 's> {
         Spawner {
             commands,
             character: Appearance::new(materials, asset_server.load("tiles/character.png")),
-            blackish: Appearance::new(materials, Color::rgb(0.15, 0.15, 0.15)),
             glass: Appearance::new(materials, Color::rgba(0.8, 0.9, 1.0, 0.2)), // transparant blue
             wood: Appearance::new(materials, Color::rgb(0.7, 0.6, 0.5)),
             whitish: Appearance::new(materials, Color::rgb(0.95, 0.93, 0.88)),
@@ -158,7 +163,7 @@ impl<'w, 's> Spawner<'w, 's> {
             .clone()
     }
 
-    fn spawn_tile(&mut self, pos: Pos, tile_name: &TileName) -> Entity {
+    fn spawn_tile(&mut self, pos: Pos, tile_name: &TileName, tile_type: TileType) -> Entity {
         let _rotation = Quat::from_rotation_z(0.01 * std::f32::consts::PI)
             * Quat::from_rotation_y(1.5 * std::f32::consts::PI)
             * Quat::from_rotation_x(1.5 * std::f32::consts::PI);
@@ -187,7 +192,7 @@ impl<'w, 's> Spawner<'w, 's> {
                         rotation: Quat::from_rotation_y(0.5 * std::f32::consts::PI),
                         scale,
                     },
-                    SpriteOrientation::Vertical => Transform {
+                    SpriteOrientation::Vertical | SpriteOrientation::Cube => Transform {
                         translation: Vec3::new(
                             /*back*/
                             match sprite_info.layer {
@@ -209,7 +214,8 @@ impl<'w, 's> Spawner<'w, 's> {
         }
 
         let label = tile_name.to_label();
-        self.commands
+        let tile = self
+            .commands
             .spawn_bundle((
                 Floor,
                 pos,
@@ -223,24 +229,76 @@ impl<'w, 's> Spawner<'w, 's> {
                     child_builder.spawn_bundle(pbr_bundle);
                 }
             })
-            .id()
+            .id();
+
+        if self
+            .tile_loader
+            .sprite_infos(tile_name)
+            .iter()
+            .any(|t| t.orientation == SpriteOrientation::Cube)
+        {
+            self.commands.entity(tile).insert(Obstacle).insert(Opaque);
+        } else if self
+            .tile_loader
+            .sprite_infos(tile_name)
+            .iter()
+            .any(|t| t.orientation == SpriteOrientation::Vertical)
+        {
+            if tile_name.0.starts_with("t_stairs_up")
+                || tile_name.0.starts_with("t_wood_stairs_up")
+                || tile_name.0.starts_with("t_ladder_up")
+                || tile_name.0.starts_with("t_gutter_downspout")
+            {
+                self.commands.entity(tile).insert(Stairs);
+            } else {
+                match self
+                    .tile_loader
+                    .sprite_infos(tile_name)
+                    .iter()
+                    .map(|t| (10.0 * t.scale.1) as i8)
+                    .max()
+                    .unwrap()
+                {
+                    x if 25 < x => {
+                        self.commands.entity(tile).insert(Obstacle).insert(Opaque);
+                    }
+                    x if 15 < x => {
+                        self.commands
+                            .entity(tile)
+                            .insert(Hurdle(3.0))
+                            .insert(Opaque);
+                    }
+                    _ => {
+                        self.commands.entity(tile).insert(Hurdle(2.0));
+                    }
+                }
+            }
+        } else if tile_type == TileType::Terrain {
+            self.commands.entity(tile).insert(Floor);
+        }
+
+        tile
     }
 
     pub fn spawn_stairs_down(&mut self, pos: Pos) {
-        let entity = self.spawn_tile(pos, &TileName::new("t_wood_stairs_down"));
+        let entity = self.spawn_tile(pos, &TileName::new("t_wood_stairs_down"), TileType::Terrain);
         self.commands.entity(entity).insert(StairsDown);
     }
 
     pub fn spawn_grass(&mut self, pos: Pos) {
-        self.spawn_tile(pos, &TileName::new("t_grass"));
+        self.spawn_tile(pos, &TileName::new("t_grass"), TileType::Terrain);
     }
 
     pub fn spawn_stone_floor(&mut self, pos: Pos) {
-        self.spawn_tile(pos, &TileName::new("t_concrete"));
+        self.spawn_tile(pos, &TileName::new("t_concrete"), TileType::Terrain);
     }
 
     pub fn spawn_roofing(&mut self, pos: Pos) {
-        self.spawn_tile(pos, &TileName::new("t_shingle_flat_roof"));
+        self.spawn_tile(
+            pos,
+            &TileName::new("t_shingle_flat_roof"),
+            TileType::Terrain,
+        );
     }
 
     pub fn spawn_wall(&mut self, pos: Pos) {
@@ -452,11 +510,12 @@ impl<'w, 's> Spawner<'w, 's> {
         }
     }
 
+    #[allow(dead_code)]
     pub fn spawn_grid_lines(&mut self) {
         for x in 0..=SIZE.0 {
             self.commands.spawn_bundle(PbrBundle {
                 mesh: self.cube_mesh.clone(),
-                material: self.blackish.material(PlayerVisible::Seen),
+                material: self.wood.material(PlayerVisible::Seen),
                 transform: Transform {
                     translation: Vec3::new(f32::from(x) - 0.5, 0.0, 0.5 * f32::from(SIZE.2) - 0.5),
                     rotation: Quat::IDENTITY,
@@ -469,7 +528,7 @@ impl<'w, 's> Spawner<'w, 's> {
         for z in 0..=SIZE.2 {
             self.commands.spawn_bundle(PbrBundle {
                 mesh: self.cube_mesh.clone(),
-                material: self.blackish.material(PlayerVisible::Seen),
+                material: self.wood.material(PlayerVisible::Seen),
                 transform: Transform {
                     translation: Vec3::new(0.5 * f32::from(SIZE.0) - 0.5, 0.0, f32::from(z) - 0.5),
                     rotation: Quat::IDENTITY,
@@ -515,13 +574,13 @@ impl<'w, 's> Spawner<'w, 's> {
         self.commands
             .spawn_bundle(TextBundle {
                 text: Text {
-                    sections: vec!["    fps: ", "", "\n  time: ", "", "\nhealth: ", ""]
-                        .iter()
-                        .map(|s| TextSection {
-                            value: (*s).to_string(),
+                    sections: vec![
+                        TextSection {
+                            value: "\n".to_string(),
                             style: text_style.clone(),
-                        })
-                        .collect::<Vec<TextSection>>(),
+                        };
+                        4
+                    ],
                     ..Text::default()
                 },
                 style: Style {
@@ -711,7 +770,7 @@ impl<'w, 's> Spawner<'w, 's> {
             Speed::from_h_kmph(6),
             Faction::Human,
             Some(Player {
-                camera_distance: 3.0,
+                camera_distance: 7.1,
             }),
         );
         self.spawn_character(
@@ -816,7 +875,7 @@ impl<'w, 's> Spawner<'w, 's> {
                 if tile_name != &TileName::new("t_open_air")
                     && tile_name != &TileName::new("t_open_air_rooved")
                 {
-                    self.spawn_tile(pos, tile_name);
+                    self.spawn_tile(pos, tile_name, TileType::Terrain);
                 }
 
                 for tile_name in subzone_layout
@@ -824,7 +883,7 @@ impl<'w, 's> Spawner<'w, 's> {
                     .iter()
                     .filter_map(|at| at.get(Pos(x, 0, z)))
                 {
-                    self.spawn_tile(pos, tile_name);
+                    self.spawn_tile(pos, tile_name, TileType::Furniture);
                 }
 
                 if let Some(tile_name) = subzone_layout
@@ -833,7 +892,7 @@ impl<'w, 's> Spawner<'w, 's> {
                     .find_map(|at| at.get(Pos(x, 0, z)))
                     .map(|item| &item.typeid)
                 {
-                    self.spawn_tile(pos, tile_name);
+                    self.spawn_tile(pos, tile_name, TileType::Item);
                 }
             }
         }

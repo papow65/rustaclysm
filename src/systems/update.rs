@@ -10,7 +10,7 @@ use super::super::components::{
     Obstacle, Player, PlayerVisible, Pos, PosYChanged, Stairs, StatusDisplay,
 };
 use super::super::resources::{Envir, Location, Timeouts};
-use super::super::units::VERTICAL;
+use super::super::units::{Speed, VERTICAL};
 
 use super::{log_if_slow, Appearance};
 
@@ -406,9 +406,9 @@ pub fn update_status_fps(
         if let Some(fps) = diagnostics.get(FrameTimeDiagnosticsPlugin::FPS) {
             if let Some(average) = fps.average() {
                 // Precision of 0.1s
-                // Padding to 5 characters, aligned right
-                status_displays.iter_mut().next().unwrap().sections[1].value =
-                    format!("{average:>5.1}");
+                // Padding to 6 characters, aligned right
+                status_displays.iter_mut().next().unwrap().sections[0].value =
+                    format!("{average:>6.1} fps\n");
             }
         }
     }
@@ -423,8 +423,18 @@ pub fn update_status_time(
 ) {
     let start = Instant::now();
 
-    status_displays.iter_mut().next().unwrap().sections[3].value =
-        format!("{:.1?} s", 0.001 * (timeouts.time().0 as f32));
+    let tenth_seconds = timeouts.time().0 / 100;
+    let seconds = tenth_seconds / 10;
+    let minutes = seconds / 10;
+    let hours = minutes / 60;
+
+    status_displays.iter_mut().next().unwrap().sections[1].value = format!(
+        "{:#02}:{:#02}:{:#02}.{}\n",
+        hours,
+        minutes % 60,
+        seconds % 60,
+        tenth_seconds % 10
+    );
 
     log_if_slow("update_status_time", start);
 }
@@ -437,8 +447,24 @@ pub fn update_status_health(
     let start = Instant::now();
 
     if let Some(health) = health.iter().next() {
-        status_displays.iter_mut().next().unwrap().sections[5].value = format!("{health}");
+        status_displays.iter_mut().next().unwrap().sections[2].value =
+            format!("{:>3} health\n", format!("{}", health));
     }
 
     log_if_slow("update_status_health", start);
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub fn update_status_speed(
+    speed: Query<&Speed, (With<Player>, Changed<Speed>)>,
+    mut status_displays: Query<&mut Text, With<StatusDisplay>>,
+) {
+    let start = Instant::now();
+
+    if let Some(speed) = speed.iter().next() {
+        status_displays.iter_mut().next().unwrap().sections[3].value =
+            format!("{:>10}\n", format!("{}", speed.h));
+    }
+
+    log_if_slow("update_status_speed", start);
 }

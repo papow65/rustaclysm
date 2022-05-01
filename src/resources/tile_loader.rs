@@ -100,13 +100,14 @@ pub struct MeshInfo {
     pub size: usize,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub enum SpriteOrientation {
     Horizontal,
     Vertical,
+    Cube,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub enum SpriteLayer {
     Front,
     Back,
@@ -193,6 +194,55 @@ impl AtlasWrapper {
     fn contains(&self, sprite_number: &SpriteNumber) -> bool {
         (self.range.0..=self.range.1).contains(sprite_number)
     }
+
+    fn sprite_info(
+        &self,
+        sprite_number: &SpriteNumber,
+        tile_name: &TileName,
+        layer: SpriteLayer,
+    ) -> SpriteInfo {
+        SpriteInfo {
+            mesh_info: MeshInfo {
+                index: (*sprite_number).to_usize() - self.range.0.to_usize(),
+                width: match &self.imagepath {
+                    p if p.ends_with("filler_tall.png") => 2,
+                    p if p.ends_with("large_ridden.png") => 3,
+                    p if p.ends_with("giant.png") => 4,
+                    p if p.ends_with("huge.png") => 4,
+                    p if p.ends_with("large.png") => 8,
+                    p if p.ends_with("centered.png") => 12,
+                    p if p.ends_with("small.png") => 12,
+                    _ => 16,
+                },
+                size: 1 + self.range.1.to_usize() - self.range.0.to_usize(),
+            },
+            imagepath: self.imagepath.clone(),
+            orientation: {
+                if layer == SpriteLayer::Back {
+                    SpriteOrientation::Horizontal
+                } else if tile_name.0.starts_with("t_wall")
+                    || tile_name.0.starts_with("t_brick_wall")
+                {
+                    SpriteOrientation::Cube
+                } else if 1.0 < self.scale.0.max(self.scale.1)
+                    || tile_name.0.starts_with("t_fence")
+                    || tile_name.0.starts_with("t_splitrail_fence")
+                    || tile_name.0.starts_with("t_window")
+                    || tile_name.0.starts_with("t_shrub")
+                    || tile_name.0.starts_with("t_door")
+                    || tile_name.0.starts_with("t_flower")
+                    || tile_name.0.starts_with("f_plant")
+                {
+                    SpriteOrientation::Vertical
+                } else {
+                    SpriteOrientation::Horizontal
+                }
+            },
+            layer,
+            scale: self.scale,
+            offset: self.offset,
+        }
+    }
 }
 
 pub struct TileLoader {
@@ -223,40 +273,15 @@ impl TileLoader {
         };
 
         for tile_info in loader.tiles.values() {
-            dbg!(tile_info.names[0].0.as_str());
+            //dbg!(tile_info.names[0].0.as_str());
             for fg in &tile_info.foreground {
                 loader.sprites.entry(*fg).or_insert_with(|| {
-                    Self::sprite_info(
-                        &atlas_wrappers,
-                        fg,
-                        if tile_info.names[0].0.starts_with("t_tree")
-                            || tile_info.names[0].0.starts_with("t_fence")
-                            || tile_info.names[0].0.starts_with("t_splitrail_fence")
-                            || tile_info.names[0].0.starts_with("t_shrub")
-                            || tile_info.names[0].0.starts_with("t_wall")
-                            || tile_info.names[0].0.starts_with("t_door")
-                            || tile_info.names[0].0.starts_with("t_flower")
-                        {
-                            SpriteOrientation::Vertical
-                        } else {
-                            SpriteOrientation::Horizontal
-                        },
-                        SpriteLayer::Front,
-                    )
+                    Self::sprite_info(&atlas_wrappers, fg, &tile_info.names[0], SpriteLayer::Front)
                 });
             }
             for bg in &tile_info.background {
                 loader.sprites.entry(*bg).or_insert_with(|| {
-                    Self::sprite_info(
-                        &atlas_wrappers,
-                        bg,
-                        if tile_info.names[0].0.starts_with("not_t_tree") {
-                            SpriteOrientation::Vertical
-                        } else {
-                            SpriteOrientation::Horizontal
-                        },
-                        SpriteLayer::Back,
-                    )
+                    Self::sprite_info(&atlas_wrappers, bg, &tile_info.names[0], SpriteLayer::Back)
                 });
             }
         }
@@ -267,37 +292,13 @@ impl TileLoader {
     fn sprite_info(
         atlas_wrappers: &[AtlasWrapper],
         sprite_number: &SpriteNumber,
-        orientation: SpriteOrientation,
+        tile_name: &TileName,
         layer: SpriteLayer,
     ) -> SpriteInfo {
         atlas_wrappers
             .iter()
             .find(|atlas_wrapper| atlas_wrapper.contains(sprite_number))
-            .map(|atlas_wrapper| SpriteInfo {
-                mesh_info: MeshInfo {
-                    index: (*sprite_number).to_usize() - atlas_wrapper.range.0.to_usize(),
-                    width: match &atlas_wrapper.imagepath {
-                        p if p.ends_with("filler_tall.png") => 2,
-                        p if p.ends_with("large_ridden.png") => 3,
-                        p if p.ends_with("giant.png") => 4,
-                        p if p.ends_with("huge.png") => 4,
-                        p if p.ends_with("large.png") => 8,
-                        p if p.ends_with("centered.png") => 12,
-                        p if p.ends_with("small.png") => 12,
-                        _ => 16,
-                    },
-                    size: 1 + atlas_wrapper.range.1.to_usize() - atlas_wrapper.range.0.to_usize(),
-                },
-                imagepath: atlas_wrapper.imagepath.clone(),
-                orientation,
-                layer,
-                scale: atlas_wrapper.scale,
-                offset: atlas_wrapper.offset,
-            })
-            /*.map(|sprite_info| {
-                dbg!(&sprite_info);
-                sprite_info
-            })*/
+            .map(|atlas_wrapper| atlas_wrapper.sprite_info(sprite_number, tile_name, layer))
             .unwrap_or_else(|| panic!("{sprite_number:?} not found"))
     }
 
@@ -307,11 +308,14 @@ impl TileLoader {
             .variants()
             .iter()
             .find_map(|variant| self.tiles.get(variant))
-            .unwrap_or_else(|| self.tiles.get(&TileName::new("unknown")).unwrap())
+            .unwrap_or_else(|| {
+                println!("{tile_name:?} not found, falling back to default sprite");
+                self.tiles.get(&TileName::new("unknown")).unwrap()
+            })
             .sprite_numbers();
-        if tile_name.0.as_str() != "t_dirt" && !tile_name.0.starts_with("t_grass") {
+        /*if tile_name.0.as_str() != "t_dirt" && !tile_name.0.starts_with("t_grass") {
             println!("{tile_name:?} {foreground:?} {background:?}");
-        }
+        }*/
         bundles.extend(foreground.map(|fg| self.sprites[&fg].clone()));
         bundles.extend(background.map(|bg| self.sprites[&bg].clone()));
         bundles
