@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use super::super::resources::{Collision, Envir, Hierarchy, Location};
 use super::super::units::{Milliseconds, Speed};
-use super::{Container, Damage, Label, Message, Pos, PosYChanged};
+use super::{Container, Damage, Label, Message, Pos, PosYChanged, ZoneChanged};
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Instruction {
@@ -158,14 +158,16 @@ fn move_(
             if from.1 != to.1 {
                 commands.entity(mover).insert(PosYChanged);
             }
-            /*let message = format!(
-                "{} moves from {:?} to {:?} in {:?}",
-                label,
-                from,
-                to,
-                from.dist(to) * speed
-            );
-            commands.spawn_bundle(Message::new(message));*/
+
+            if from.0.div_euclid(24) != to.0.div_euclid(24)
+                || from.2.div_euclid(24) != to.2.div_euclid(24)
+            {
+                commands
+                    .spawn()
+                    .insert(Message::new("Zone changed".to_string()));
+                commands.entity(mover).insert(ZoneChanged);
+            }
+
             from.dist(to) / speed
         }
         /*Collision::Fall(fall_pos) => {

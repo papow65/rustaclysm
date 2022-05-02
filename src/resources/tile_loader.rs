@@ -220,8 +220,11 @@ impl AtlasWrapper {
             orientation: {
                 if layer == SpriteLayer::Back {
                     SpriteOrientation::Horizontal
-                } else if tile_name.0.starts_with("t_wall")
+                } else if tile_name.0.starts_with("t_rock")
+                    || tile_name.0.starts_with("t_wall")
                     || tile_name.0.starts_with("t_brick_wall")
+                    || tile_name.0.starts_with("t_concrete_wall")
+                    || tile_name.0.starts_with("t_reinforced_glass")
                 {
                     SpriteOrientation::Cube
                 } else if 1.0 < self.scale.0.max(self.scale.1)

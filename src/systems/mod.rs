@@ -6,7 +6,7 @@ mod update;
 use bevy::prelude::*;
 use std::time::{Duration, Instant};
 
-use super::components::{Appearance, Health, Label, Player, Pos};
+use super::components::{Appearance, Health, Label, Message, Player, Pos, Zone, ZoneChanged};
 use super::resources::{Characters, Envir, Hierarchy, Instructions, Spawner, Timeouts};
 
 pub use check::*;
@@ -76,7 +76,7 @@ pub fn manage_characters(
             );
             strategy.action
         };
-        let timeout = action.perform(
+        let mut timeout = action.perform(
             &mut commands,
             &mut envir,
             &dumpees,
@@ -87,10 +87,13 @@ pub fn manage_characters(
             speed,
             container,
         );
-        assert!(
-            players.get(entity).is_ok() || 0 < timeout.0,
-            "invalid action fot an npc"
-        );
+
+        if timeout.0 == 0 && players.get(character).is_err() {
+            commands
+                .spawn()
+                .insert(Message::new("ERROR: invalid action fot an npc".to_string()));
+            timeout.0 = 1000;
+        }
 
         timeouts.add(character, timeout);
     }
@@ -100,17 +103,19 @@ pub fn manage_characters(
 
 #[allow(clippy::needless_pass_by_value)]
 pub fn spawn_nearby_zones(
+    mut commands: Commands,
     envir: Envir,
     mut spawner: Spawner,
-    moved_players: Query<&Pos, (With<Player>, Changed<Pos>)>,
+    moved_players: Query<(Entity, &Pos), (With<Player>, With<ZoneChanged>)>,
 ) {
-    if let Ok(&player_pos) = moved_players.get_single() {
-        let groud_pos = Pos(player_pos.0, 0, player_pos.2);
-        for offset in [Pos(-1, 0, 0), Pos(1, 0, 0), Pos(0, 0, -1), Pos(0, 0, 1)] {
-            if let Some(nbor) = groud_pos.nbor(offset) {
-                if !envir.has_floor(nbor) {
-                    spawner.load_cdda_region(Pos(24 * (nbor.0 / 24), 0, 24 * (nbor.2 / 24)), 1);
-                }
+    if let Ok((player, &pos)) = moved_players.get_single() {
+        for nbor_zone in Zone::from(pos).nbors() {
+            if !envir.has_floor(nbor_zone.base_pos(0)) {
+                commands.entity(player).remove::<ZoneChanged>();
+                commands
+                    .spawn()
+                    .insert(Message::new("Loading region".to_string()));
+                spawner.load_cdda_region(nbor_zone, 1);
             }
         }
     }

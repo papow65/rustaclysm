@@ -10,7 +10,7 @@ pub use super::units::Partial;
 pub use action::{Action, Instruction};
 pub use factions::{Faction, Intelligence};
 pub use player::{Player, PlayerActionState};
-pub use pos::{Path, Pos};
+pub use pos::{Path, Pos, PosYChanged, Zone, ZoneChanged};
 
 #[derive(Component, Clone, Debug)]
 pub struct Label(pub String);
@@ -197,9 +197,6 @@ impl Appearance {
         }
     }
 }
-
-#[derive(Component)]
-pub struct PosYChanged;
 
 #[derive(Component)]
 pub struct Message(pub String); // shown to the player

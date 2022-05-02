@@ -12,7 +12,7 @@ use super::super::components::{
     Appearance, CameraBase, CameraCursor, Chair, Containable, Container, Faction, Floor, Health,
     Hurdle, Integrity, Label, LogDisplay, ManualDisplay, Obstacle, Opaque, Player,
     PlayerActionState, PlayerVisible, Pos, PosYChanged, Rack, Stairs, StairsDown, StatusDisplay,
-    Table, Wall, WindowPane,
+    Table, Wall, WindowPane, Zone,
 };
 use super::super::units::{Speed, ADJACENT, VERTICAL};
 use super::tile_loader::{MeshInfo, SpriteLayer, SpriteOrientation, TileLoader, TileName};
@@ -255,6 +255,7 @@ impl<'w, 's> Spawner<'w, 's> {
             if tile_name.0.starts_with("t_stairs_up")
                 || tile_name.0.starts_with("t_wood_stairs_up")
                 || tile_name.0.starts_with("t_ladder_up")
+                || tile_name.0.starts_with("t_ramp_up")
                 || tile_name.0.starts_with("t_gutter_downspout")
             {
                 self.commands.entity(tile).insert(Stairs);
@@ -282,7 +283,10 @@ impl<'w, 's> Spawner<'w, 's> {
                     }
                 }
             }
-        } else if tile_type == TileType::Terrain {
+        } else if tile_type == TileType::Terrain
+            && !tile_name.0.starts_with("t_water_dp")
+            && !tile_name.0.starts_with("t_water_moving_dp")
+        {
             self.commands.entity(tile).insert(Floor);
         }
 
@@ -830,20 +834,13 @@ impl<'w, 's> Spawner<'w, 's> {
         }
     }
 
-    pub fn load_cdda_region(&mut self, from: Pos, size: i16) {
-        let zone_pos = Pos(100, 0, 212);
+    pub fn load_cdda_region(&mut self, base_zone: Zone, size: i16) {
         for x in 0..size {
             for y in Pos::vertical_range() {
                 for z in 0..size {
-                    if let Some(zone_layout) = zone_layout(Pos(
-                        zone_pos.0 + from.0 / 24 + x,
-                        zone_pos.1 + from.1 / 24 + y,
-                        zone_pos.2 + from.2 / 24 + z,
-                    )) {
-                        self.spawn_zone(
-                            &zone_layout,
-                            Pos(from.0 + 24 * x, from.1 + y, from.2 + 24 * z),
-                        );
+                    let zone = base_zone.offset(x, z);
+                    if let Some(zone_layout) = zone_layout(zone.offset(100, 212), y) {
+                        self.spawn_zone(&zone_layout, zone.base_pos(y));
                     }
                 }
             }
