@@ -9,7 +9,7 @@ use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
 
-use super::components::{Containable, Container, Faction, Health, Instruction, Label, Pos, SIZE};
+use super::components::{Containable, Container, Faction, Health, Instruction, Label, Pos};
 use super::units::{Distance, Milliseconds, Speed};
 
 pub use debug::*;
@@ -106,8 +106,8 @@ impl RelativeRays {
         let mut map: HashMap<Pos, (Vec<Pos>, Vec<(Pos, Pos)>)> = HashMap::default();
         let origin = Pos(0, 0, 0);
         for x in -60..=60 {
-            for y in -60..=60 {
-                for z in -SIZE.0..=SIZE.0 {
+            for y in Pos::vertical_range() {
+                for z in -60..=60 {
                     let to = Pos(x, y, z);
 
                     if 14_400

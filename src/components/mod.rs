@@ -10,7 +10,7 @@ pub use super::units::Partial;
 pub use action::{Action, Instruction};
 pub use factions::{Faction, Intelligence};
 pub use player::{Player, PlayerActionState};
-pub use pos::{Path, Pos, SIZE};
+pub use pos::{Path, Pos};
 
 #[derive(Component, Clone, Debug)]
 pub struct Label(pub String);
@@ -205,8 +205,8 @@ pub struct PosYChanged;
 pub struct Message(pub String); // shown to the player
 
 impl Message {
-    pub const fn new(s: String) -> (Self,) {
-        (Self(s),)
+    pub const fn new(s: String) -> Self {
+        Self(s)
     }
 }
 

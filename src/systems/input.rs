@@ -46,7 +46,7 @@ pub fn manage_keyboard_input(
                         key_code
                     );
                     match (key_code, control) {
-                        (KeyCode::Escape, _) | (KeyCode::C | KeyCode::D, true) => {
+                        (KeyCode::C | KeyCode::D | KeyCode::Q, true) => {
                             app_exit_events.send(bevy::app::AppExit);
                         }
                         (_, false) => {

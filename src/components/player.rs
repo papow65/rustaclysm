@@ -42,13 +42,13 @@ impl Player {
         envir: &Envir,
         pos: Pos,
         instruction: Instruction,
-    ) -> Result<Action, Vec<(Message,)>> {
+    ) -> Result<Action, Option<Message>> {
         println!("processing instruction: {instruction:?}");
 
         match (self.state, instruction) {
             (PlayerActionState::Normal, Instruction::Offset(Pos(0, 0, 0))) => Ok(Action::Stay),
             (PlayerActionState::Attacking, Instruction::Offset(Pos(0, 0, 0))) => {
-                Err(vec![Message::new("can't attack self".to_string())])
+                Err(Some(Message::new("can't attack self".to_string())))
             }
             (PlayerActionState::Examining(curr), Instruction::Offset(offset)) => {
                 self.handle_offset(curr, offset)
@@ -58,9 +58,13 @@ impl Player {
             (_, Instruction::Dump) => Ok(Action::Dump),
             (_, Instruction::Attack) => self.handle_attack(envir, pos),
             (_, Instruction::Smash) => self.handle_smash(envir, pos),
-            (PlayerActionState::Examining(_), Instruction::SwitchExamining) => {
+            (PlayerActionState::Normal, Instruction::Cancel) => {
+                Err(Some(Message::new("Press ctrl+c/d/q to exit".to_string())))
+            }
+            (_, Instruction::Cancel)
+            | (PlayerActionState::Examining(_), Instruction::SwitchExamining) => {
                 self.state = PlayerActionState::Normal;
-                Err(vec![]) // no action, but no error either
+                Err(None)
             }
             (_, Instruction::SwitchExamining) => {
                 self.state = PlayerActionState::Examining(pos);
@@ -70,7 +74,7 @@ impl Player {
         }
     }
 
-    fn handle_offset(&mut self, reference: Pos, offset: Pos) -> Result<Action, Vec<(Message,)>> {
+    fn handle_offset(&mut self, reference: Pos, offset: Pos) -> Result<Action, Option<Message>> {
         let target = reference.nbor(offset);
         if let Some(target) = target {
             Ok(match self.state {
@@ -89,45 +93,45 @@ impl Player {
                 }
             })
         } else {
-            Err(vec![Message::new(
+            Err(Some(Message::new(
                 if self.state == PlayerActionState::Normal {
                     "you can't leave"
                 } else {
                     "invalid target"
                 }
                 .to_string(),
-            )])
+            )))
         }
     }
 
-    fn handle_attack(&mut self, envir: &Envir, pos: Pos) -> Result<Action, Vec<(Message,)>> {
+    fn handle_attack(&mut self, envir: &Envir, pos: Pos) -> Result<Action, Option<Message>> {
         let attackable_nbors = envir
             .nbors_for_exploring(pos, Instruction::Attack)
             .collect::<Vec<Pos>>();
         match attackable_nbors.len() {
-            0 => Err(vec![Message::new("no targets nearby".to_string())]),
+            0 => Err(Some(Message::new("no targets nearby".to_string()))),
             1 => Ok(Action::Attack {
                 target: attackable_nbors[0],
             }),
             _ => {
                 self.state = PlayerActionState::Attacking;
-                Err(vec![Message::new("attacking...".to_string())])
+                Err(Some(Message::new("attacking...".to_string())))
             }
         }
     }
 
-    fn handle_smash(&mut self, envir: &Envir, pos: Pos) -> Result<Action, Vec<(Message,)>> {
+    fn handle_smash(&mut self, envir: &Envir, pos: Pos) -> Result<Action, Option<Message>> {
         let smashable_nbors = envir
             .nbors_for_exploring(pos, Instruction::Smash)
             .collect::<Vec<Pos>>();
         match smashable_nbors.len() {
-            0 => Err(vec![Message::new("no targets nearby".to_string())]),
+            0 => Err(Some(Message::new("no targets nearby".to_string()))),
             1 => Ok(Action::Smash {
                 target: smashable_nbors[0],
             }),
             _ => {
                 self.state = PlayerActionState::Smashing;
-                Err(vec![Message::new("smashing...".to_string())])
+                Err(Some(Message::new("smashing...".to_string())))
             }
         }
     }
