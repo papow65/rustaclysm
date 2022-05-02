@@ -18,13 +18,18 @@ fn straight_2d(from: (i16, i16), to: (i16, i16)) -> impl Iterator<Item = (i16, i
 pub struct Pos(pub i16, pub i16, pub i16);
 
 impl Pos {
+    pub const fn vertical_range() -> core::ops::RangeInclusive<i16> {
+        -10..=10
+    }
+
     pub const fn in_bounds(&self) -> bool {
-        0 <= self.0
-            && self.0 < SIZE.0
-            && 0 <= self.1
-            && self.1 < SIZE.1
-            && 0 <= self.2
-            && self.2 < SIZE.2
+        let vertical_range = Self::vertical_range();
+        *vertical_range.start() <= self.1 && self.1 <= *vertical_range.end()
+        /*0 <= self.0
+        && self.0 < SIZE.0
+        &&
+        && 0 <= self.2
+        && self.2 < SIZE.2*/
     }
 
     /** Distance without regard for obstacles or stairs */
@@ -106,8 +111,6 @@ impl Pos {
             .map(|(((x, _), (y, _)), (z, _))| Self(x, y, z))
     }
 }
-
-pub const SIZE: Pos = Pos(20 * 24, 10, 20 * 24);
 
 #[derive(Debug)]
 pub struct Path {

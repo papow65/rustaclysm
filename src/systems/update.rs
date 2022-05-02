@@ -301,9 +301,9 @@ pub fn update_damaged_characters(
                 "{} hits {} for {} ({} -> {})",
                 damage.attacker, label, damage.amount, prev, curr
             );
-            commands.spawn_bundle(Message::new(message));
+            commands.spawn().insert(Message::new(message));
         } else {
-            commands.spawn_bundle(Message::new(format!(
+            commands.spawn().insert(Message::new(format!(
                 "{attacker} kills {label}",
                 attacker = damage.attacker
             )));
@@ -338,13 +338,13 @@ pub fn update_damaged_items(
                 "{attacker} hits {label} ({prev} -> {curr})",
                 attacker = damage.attacker
             );
-            commands.spawn_bundle(Message::new(message));
+            commands.spawn().insert(Message::new(message));
         } else {
             commands
                 .entity(item)
                 .insert(Hurdle(3.0))
                 .remove::<Obstacle>();
-            commands.spawn_bundle(Message::new(format!(
+            commands.spawn().insert(Message::new(format!(
                 "{} breaks {}",
                 damage.attacker, label
             )));
@@ -363,30 +363,6 @@ pub fn update_damaged_items(
 
     log_if_slow("update_damaged_items", start);
 }
-
-/*
-#[allow(clippy::needless_pass_by_value)]
-pub fn update_camera(
-    changed_players: Query<&Player, Changed<Player>>,
-    mut cameras: Query<&mut Transform, With<Camera3d>>,
-) {
-    let start = Instant::now();
-
-    if let Ok(player) = changed_players.get_single() {
-        for mut transform in cameras.iter_mut() {
-            let translation = Vec3::new(
-                0.0 * player.camera_distance,
-                4.0 * player.camera_distance,
-                5.0 * player.camera_distance,
-            );
-            transform.translation = translation;
-            transform.look_at(Vec3::ZERO, Vec3::Y);
-        }
-    }
-
-    log_if_slow("update_camera", start);
-}
-*/
 
 #[allow(clippy::needless_pass_by_value)]
 pub fn update_camera(

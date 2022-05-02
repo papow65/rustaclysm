@@ -57,11 +57,12 @@ pub fn manage_characters(
             if let Some(instruction) = instructions.queue.pop() {
                 match player.behave(&envir, pos, instruction) {
                     Ok(action) => action,
-                    Err(messages) => {
-                        for message in messages {
-                            commands.spawn_bundle(message);
-                        }
-                        return; // invalid key - wait for the user
+                    Err(Some(message)) => {
+                        commands.spawn().insert(message);
+                        return; // invalid instruction - wait for the user
+                    }
+                    Err(None) => {
+                        return; // valid instruction, but no action performed
                     }
                 }
             } else {

@@ -12,7 +12,7 @@ use super::super::components::{
     Appearance, CameraBase, CameraCursor, Chair, Containable, Container, Faction, Floor, Health,
     Hurdle, Integrity, Label, LogDisplay, ManualDisplay, Obstacle, Opaque, Player,
     PlayerActionState, PlayerVisible, Pos, PosYChanged, Rack, Stairs, StairsDown, StatusDisplay,
-    Table, Wall, WindowPane, SIZE,
+    Table, Wall, WindowPane,
 };
 use super::super::units::{Speed, ADJACENT, VERTICAL};
 use super::tile_loader::{MeshInfo, SpriteLayer, SpriteOrientation, TileLoader, TileName};
@@ -612,7 +612,7 @@ impl<'w, 's> Spawner<'w, 's> {
             text: Text {
                 sections: vec![
                     TextSection {
-                        value: "move      numpad\nup/down   r/f\npick/drop b/v\nattack    a\nrun       +\nexamine   x\nzoom      scroll wheel\nquit      esc/ctrl+c/ctrl+d".to_string(),
+                        value: "move      numpad\nup/down   r/f\npick/drop b/v\nattack    a\nrun       +\nexamine   x\nzoom      scroll wheel\nquit      ctrl+c/ctrl+d/ctrl+q".to_string(),
                         style: text_style,
                     },
                 ],
@@ -832,10 +832,9 @@ impl<'w, 's> Spawner<'w, 's> {
 
     pub fn load_cdda_region(&mut self, from: Pos, size: i16) {
         let zone_pos = Pos(100, 0, 212);
-        let size = Pos(size, SIZE.1, size);
-        for x in 0..size.0 {
-            for y in 0..size.1 {
-                for z in 0..size.2 {
+        for x in 0..size {
+            for y in Pos::vertical_range() {
+                for z in 0..size {
                     if let Some(zone_layout) = zone_layout(Pos(
                         zone_pos.0 + from.0 / 24 + x,
                         zone_pos.1 + from.1 / 24 + y,
