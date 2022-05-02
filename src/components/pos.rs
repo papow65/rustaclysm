@@ -74,17 +74,14 @@ impl Pos {
         self.potential_nbors().any(|(p, _)| p == other)
     }
 
-    pub fn nbor(self, offset: Self) -> Option<Self> {
-        let nbor = Self(self.0 + offset.0, self.1 + offset.1, self.2 + offset.2);
-        if nbor.in_bounds() {
-            assert!(
-                self.is_potential_nbor(nbor) || nbor == self,
-                "{:?} (= {:?} + {:?}) is not a nbor",
-                nbor,
-                self,
-                offset
-            );
-            Some(nbor)
+    pub const fn offset(self, relative: Self) -> Option<Self> {
+        let other = Self(
+            self.0 + relative.0,
+            self.1 + relative.1,
+            self.2 + relative.2,
+        );
+        if other.in_bounds() {
+            Some(other)
         } else {
             None
         }
@@ -161,3 +158,74 @@ impl Path {
             .min_by_key(|path| path.duration)
     }
 }
+
+#[derive(Component, Copy, Clone, PartialEq, Eq, Hash, Debug)]
+pub struct Zone {
+    pub x: i16,
+    pub z: i16,
+}
+
+impl Zone {
+    pub const fn offset(&self, x: i16, z: i16) -> Self {
+        Self {
+            x: self.x + x,
+            z: self.z + z,
+        }
+    }
+
+    pub const fn base_pos(&self, y: i16) -> Pos {
+        Pos(24 * self.x, y, 24 * self.z)
+    }
+
+    pub const fn nbors(&self) -> [Self; 8] {
+        [
+            Self {
+                x: self.x - 1,
+                z: self.z - 1,
+            },
+            Self {
+                x: self.x - 1,
+                z: self.z,
+            },
+            Self {
+                x: self.x - 1,
+                z: self.z + 1,
+            },
+            Self {
+                x: self.x,
+                z: self.z + 1,
+            },
+            Self {
+                x: self.x + 1,
+                z: self.z + 1,
+            },
+            Self {
+                x: self.x + 1,
+                z: self.z,
+            },
+            Self {
+                x: self.x + 1,
+                z: self.z - 1,
+            },
+            Self {
+                x: self.x,
+                z: self.z - 1,
+            },
+        ]
+    }
+}
+
+impl From<Pos> for Zone {
+    fn from(pos: Pos) -> Self {
+        Self {
+            x: pos.0.div_euclid(24),
+            z: pos.2.div_euclid(24),
+        }
+    }
+}
+
+#[derive(Component)]
+pub struct PosYChanged;
+
+#[derive(Component)]
+pub struct ZoneChanged;

@@ -3,18 +3,18 @@ use serde::de::{Deserializer, SeqAccess, Visitor};
 use serde::Deserialize;
 use std::fs::read_to_string;
 
-use super::super::components::Pos;
+use super::super::components::{Pos, Zone};
 use super::tile_loader::TileName;
 
-pub fn zone_layout(zone_pos: Pos) -> Option<ZoneLayout> {
+pub fn zone_layout(zone: Zone, y: i16) -> Option<ZoneLayout> {
     let filepath = format!(
         "assets/maps/{}.{}.{}/{}.{}.{}.map",
-        zone_pos.0 / 32,
-        zone_pos.2 / 32,
-        zone_pos.1,
-        zone_pos.0,
-        zone_pos.2,
-        zone_pos.1
+        zone.x.div_euclid(32),
+        zone.z.div_euclid(32),
+        y,
+        zone.x,
+        zone.z,
+        y
     );
     //println!("Path: {filepath}");
     read_to_string(&filepath)
@@ -30,11 +30,11 @@ pub struct ZoneLayout {
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct SubzoneLayout {
-    pub version: u16,
+    pub version: u64,
     pub coordinates: (i16, i16, i16),
-    pub turn_last_touched: u32,
-    pub temperature: i16,
-    pub radiation: Vec<i16>,
+    pub turn_last_touched: u64,
+    pub temperature: i64,
+    pub radiation: Vec<i64>,
 
     #[serde(deserialize_with = "load_terrain")]
     pub terrain: Vec<TileName>,
@@ -51,6 +51,7 @@ pub struct SubzoneLayout {
     pub spawns: Vec<serde_json::Value>,
     pub vehicles: Vec<serde_json::Value>,
     pub partial_constructions: Vec<serde_json::Value>,
+    pub computers: Option<Vec<serde_json::Value>>,
 }
 
 impl ZoneLayout {
@@ -77,7 +78,7 @@ pub struct Item {
     active: Option<bool>,
     corpse: Option<String>,
     owner: Option<String>,
-    bday: Option<u64>,
+    bday: Option<i64>,
     last_temp_check: u64,
     specific_energy: Option<u64>,
     temperature: Option<u64>,
@@ -87,7 +88,7 @@ pub struct Item {
     components: Option<Vec<Item>>,
     is_favorite: Option<bool>,
     relic_data: Option<serde_json::Value>,
-    damaged: Option<i16>,
+    damaged: Option<i64>,
     current_phase: Option<u8>,
     faults: Option<Vec<String>>,
     rot: Option<u64>,
@@ -96,6 +97,7 @@ pub struct Item {
     variant: Option<String>,
     recipe_charges: Option<u8>,
     poison: Option<u8>,
+    craft_data: Option<serde_json::Value>,
 }
 
 #[allow(unused)]

@@ -75,7 +75,7 @@ impl Player {
     }
 
     fn handle_offset(&mut self, reference: Pos, offset: Pos) -> Result<Action, Option<Message>> {
-        let target = reference.nbor(offset);
+        let target = reference.offset(offset);
         if let Some(target) = target {
             Ok(match self.state {
                 PlayerActionState::Normal => Action::Step { target },
