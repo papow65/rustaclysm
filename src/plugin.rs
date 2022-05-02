@@ -4,12 +4,12 @@ use bevy::prelude::*;
 
 use super::resources::{Instructions, Location, RelativeRays, Timeouts};
 use super::systems::{
-    add_entities, check_delay, manage_characters, manage_game_over, manage_keyboard_input,
-    manage_mouse_input, maximize_window, update_camera, update_cursor_visibility_on_player_change,
-    update_damaged_characters, update_damaged_items, update_location, update_log,
-    update_material_on_item_move, update_material_on_player_move, update_status_detais,
-    update_status_fps, update_status_health, update_status_player_state, update_status_speed,
-    update_status_time, update_tile_color_on_player_move, update_transforms,
+    check_delay, create_spawner_data, manage_characters, manage_game_over, manage_keyboard_input,
+    manage_mouse_input, maximize_window, spawn_initial_entities, spawn_nearby_zones, update_camera,
+    update_cursor_visibility_on_player_change, update_damaged_characters, update_damaged_items,
+    update_location, update_log, update_material_on_item_move, update_material_on_player_move,
+    update_status_detais, update_status_fps, update_status_health, update_status_player_state,
+    update_status_speed, update_status_time, update_tile_color_on_player_move, update_transforms,
     update_visibility_for_hidden_items, update_visibility_on_item_y_change,
     update_visibility_on_player_y_change,
 };
@@ -33,8 +33,9 @@ impl Plugin for RustaclysmPlugin {
             .insert_resource(Timeouts::new());
 
         // executed once at startup
-        app.add_startup_system(maximize_window)
-            .add_startup_system(add_entities)
+        app.add_startup_system_to_stage(StartupStage::PreStartup, maximize_window)
+            .add_startup_system_to_stage(StartupStage::PreStartup, create_spawner_data)
+            .add_startup_system(spawn_initial_entities)
             .add_startup_system_set_to_stage(StartupStage::PostStartup, update_systems());
 
         // executed every frame
@@ -47,7 +48,8 @@ impl Plugin for RustaclysmPlugin {
             .add_system_to_stage(CoreStage::Last, check_overlap)
             .add_system_to_stage(CoreStage::Last, check_hierarchy)
             .add_system_to_stage(CoreStage::Last, check_characters)*/
-            .add_system_to_stage(CoreStage::Last, check_delay);
+            .add_system_to_stage(CoreStage::Last, check_delay)
+            .add_system_to_stage(CoreStage::Last, spawn_nearby_zones);
     }
 }
 

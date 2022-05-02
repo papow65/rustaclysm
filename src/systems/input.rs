@@ -1,6 +1,6 @@
 use bevy::ecs::event::Events;
 use bevy::input::{keyboard::KeyboardInput, mouse::MouseWheel, ElementState};
-use bevy::prelude::{Commands, EventReader, Input, KeyCode, Local, Query, Res, ResMut};
+use bevy::prelude::{EventReader, Input, KeyCode, Local, Query, Res, ResMut};
 use std::time::Instant;
 
 use super::super::components::{Instruction, Player};

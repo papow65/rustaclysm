@@ -1,3 +1,4 @@
+use bevy::ecs::system::SystemParam;
 use bevy::math::Quat;
 use bevy::prelude::*;
 use bevy::render::{
@@ -24,8 +25,7 @@ pub enum TileType {
     Item,
 }
 
-pub struct Spawner<'w, 's> {
-    commands: Commands<'w, 's>,
+pub struct SpawnerData {
     character: Appearance,
     glass: Appearance,
     wood: Appearance,
@@ -43,20 +43,15 @@ pub struct Spawner<'w, 's> {
     table_transform: Transform,
     font: Handle<Font>,
     tile_loader: TileLoader,
-    materials: &'s mut Assets<StandardMaterial>,
-    meshes: &'s mut Assets<Mesh>,
-    asset_server: &'s Res<'w, AssetServer>,
 }
 
-impl<'w, 's> Spawner<'w, 's> {
+impl SpawnerData {
     pub fn new(
-        commands: Commands<'w, 's>,
-        materials: &'s mut Assets<StandardMaterial>,
-        meshes: &'s mut Assets<Mesh>,
-        asset_server: &'s Res<'w, AssetServer>,
-    ) -> Spawner<'w, 's> {
-        Spawner {
-            commands,
+        materials: &mut Assets<StandardMaterial>,
+        meshes: &mut Assets<Mesh>,
+        asset_server: &Res<AssetServer>,
+    ) -> Self {
+        Self {
             character: Appearance::new(materials, asset_server.load("tiles/character.png")),
             glass: Appearance::new(materials, Color::rgba(0.8, 0.9, 1.0, 0.2)), // transparant blue
             wood: Appearance::new(materials, Color::rgb(0.7, 0.6, 0.5)),
@@ -101,15 +96,24 @@ impl<'w, 's> Spawner<'w, 's> {
             )),
             font: asset_server.load("fonts/FiraMono-Medium.otf"),
             tile_loader: TileLoader::new(asset_server),
-            materials,
-            meshes,
-            asset_server,
         }
     }
+}
 
+#[derive(SystemParam)]
+pub struct Spawner<'w, 's> {
+    commands: Commands<'w, 's>,
+    materials: ResMut<'w, Assets<StandardMaterial>>,
+    meshes: ResMut<'w, Assets<Mesh>>,
+    asset_server: Res<'w, AssetServer>,
+    data: ResMut<'w, SpawnerData>,
+}
+
+impl<'w, 's> Spawner<'w, 's> {
     // Based on bevy_render-0.7.0/src/mesh/shape/mod.rs - line 194-223
     fn get_tile_mesh(&mut self, mesh_info: MeshInfo) -> Handle<Mesh> {
-        self.tile_meshes
+        self.data
+            .tile_meshes
             .entry(mesh_info)
             .or_insert_with(|| {
                 let extent = 1.0 / 2.0;
@@ -152,7 +156,8 @@ impl<'w, 's> Spawner<'w, 's> {
     }
 
     fn get_tile_material(&mut self, imagepath: &str) -> Handle<StandardMaterial> {
-        self.tile_materials
+        self.data
+            .tile_materials
             .entry(imagepath.to_string())
             .or_insert_with(|| {
                 self.materials.add(StandardMaterial {
@@ -166,7 +171,7 @@ impl<'w, 's> Spawner<'w, 's> {
 
     fn get_pbr_bundles(&mut self, tile_name: &TileName) -> Vec<PbrBundle> {
         let mut pbr_bundles = Vec::new();
-        for sprite_info in self.tile_loader.sprite_infos(tile_name) {
+        for sprite_info in self.data.tile_loader.sprite_infos(tile_name) {
             let scale = Vec3::new(
                 sprite_info.scale.0,
                 /*thickness*/ 1.0,
@@ -233,6 +238,7 @@ impl<'w, 's> Spawner<'w, 's> {
             .id();
 
         if self
+            .data
             .tile_loader
             .sprite_infos(tile_name)
             .iter()
@@ -240,6 +246,7 @@ impl<'w, 's> Spawner<'w, 's> {
         {
             self.commands.entity(tile).insert(Obstacle).insert(Opaque);
         } else if self
+            .data
             .tile_loader
             .sprite_infos(tile_name)
             .iter()
@@ -253,6 +260,7 @@ impl<'w, 's> Spawner<'w, 's> {
                 self.commands.entity(tile).insert(Stairs);
             } else {
                 match self
+                    .data
                     .tile_loader
                     .sprite_infos(tile_name)
                     .iter()
@@ -286,14 +294,6 @@ impl<'w, 's> Spawner<'w, 's> {
         self.commands.entity(entity).insert(StairsDown);
     }
 
-    pub fn spawn_grass(&mut self, pos: Pos) {
-        self.spawn_tile(pos, &TileName::new("t_grass"), TileType::Terrain);
-    }
-
-    pub fn spawn_stone_floor(&mut self, pos: Pos) {
-        self.spawn_tile(pos, &TileName::new("t_concrete"), TileType::Terrain);
-    }
-
     pub fn spawn_roofing(&mut self, pos: Pos) {
         self.spawn_tile(
             pos,
@@ -310,13 +310,13 @@ impl<'w, 's> Spawner<'w, 's> {
                 Integrity::new(1000),
                 Obstacle,
                 Opaque,
-                self.wooden_wall.clone(),
+                self.data.wooden_wall.clone(),
                 Label::new("wall"),
                 PlayerVisible::Reevaluate,
             ))
             .insert_bundle(PbrBundle {
-                mesh: self.cube_mesh.clone(),
-                transform: self.wall_transform,
+                mesh: self.data.cube_mesh.clone(),
+                transform: self.data.wall_transform,
                 ..PbrBundle::default()
             });
     }
@@ -330,21 +330,21 @@ impl<'w, 's> Spawner<'w, 's> {
                 Obstacle,
                 Hurdle(2.5),
                 Label::new("window"),
-                self.wooden_wall.clone(),
+                self.data.wooden_wall.clone(),
                 PlayerVisible::Reevaluate,
             ))
             .insert_bundle(PbrBundle {
-                mesh: self.cube_mesh.clone(),
+                mesh: self.data.cube_mesh.clone(),
                 ..PbrBundle::default()
             })
             .with_children(|child_builder| {
                 child_builder
                     .spawn_bundle(PbrBundle {
-                        mesh: self.cube_mesh.clone(),
-                        transform: self.window_pane_transform,
+                        mesh: self.data.cube_mesh.clone(),
+                        transform: self.data.window_pane_transform,
                         ..PbrBundle::default()
                     })
-                    .insert(self.glass.clone())
+                    .insert(self.data.glass.clone())
                     .insert(WindowPane);
             });
     }
@@ -357,12 +357,12 @@ impl<'w, 's> Spawner<'w, 's> {
                 Integrity::new(100),
                 Hurdle(1.5),
                 Label::new("stairs"),
-                self.wood.clone(),
+                self.data.wood.clone(),
                 PlayerVisible::Reevaluate,
             ))
             .insert_bundle(PbrBundle {
-                mesh: self.cube_mesh.clone(),
-                transform: self.stair_transform,
+                mesh: self.data.cube_mesh.clone(),
+                transform: self.data.stair_transform,
                 ..PbrBundle::default()
             });
     }
@@ -376,12 +376,12 @@ impl<'w, 's> Spawner<'w, 's> {
                 Obstacle,
                 Opaque,
                 Label::new("rack"),
-                self.wood.clone(),
+                self.data.wood.clone(),
                 PlayerVisible::Reevaluate,
             ))
             .insert_bundle(PbrBundle {
-                mesh: self.cube_mesh.clone(),
-                transform: self.rack_transform,
+                mesh: self.data.cube_mesh.clone(),
+                transform: self.data.rack_transform,
                 ..PbrBundle::default()
             });
     }
@@ -394,12 +394,12 @@ impl<'w, 's> Spawner<'w, 's> {
                 Integrity::new(30),
                 Hurdle(2.0),
                 Label::new("table"),
-                self.wood.clone(),
+                self.data.wood.clone(),
                 PlayerVisible::Reevaluate,
             ))
             .insert_bundle(PbrBundle {
-                mesh: self.cube_mesh.clone(),
-                transform: self.table_transform,
+                mesh: self.data.cube_mesh.clone(),
+                transform: self.data.table_transform,
                 ..PbrBundle::default()
             });
     }
@@ -412,11 +412,11 @@ impl<'w, 's> Spawner<'w, 's> {
                 Integrity::new(10),
                 Hurdle(1.5),
                 Label::new("chair"),
-                self.whitish.clone(),
+                self.data.whitish.clone(),
                 PlayerVisible::Reevaluate,
             ))
             .insert_bundle(PbrBundle {
-                mesh: self.cube_mesh.clone(),
+                mesh: self.data.cube_mesh.clone(),
                 transform: Transform::from_scale(Vec3::new(
                     0.45 * ADJACENT.f32(),
                     0.45 * ADJACENT.f32(),
@@ -427,7 +427,7 @@ impl<'w, 's> Spawner<'w, 's> {
             .with_children(|child_builder| {
                 child_builder
                     .spawn_bundle(PbrBundle {
-                        mesh: self.cube_mesh.clone(),
+                        mesh: self.data.cube_mesh.clone(),
                         transform: Transform {
                             translation: Vec3::new(0.0, 0.2 / 0.45, -0.23 / 0.45),
                             rotation: Quat::from_rotation_y(-0.5 * std::f32::consts::PI),
@@ -435,7 +435,7 @@ impl<'w, 's> Spawner<'w, 's> {
                         },
                         ..PbrBundle::default()
                     })
-                    .insert(self.whitish.clone());
+                    .insert(self.data.whitish.clone());
             });
     }
 
@@ -447,11 +447,11 @@ impl<'w, 's> Spawner<'w, 's> {
                 label,
                 pos,
                 containable,
-                self.yellow.clone(),
+                self.data.yellow.clone(),
                 PlayerVisible::Reevaluate,
             ))
             .insert_bundle(PbrBundle {
-                mesh: self.cube_mesh.clone(),
+                mesh: self.data.cube_mesh.clone(),
                 // customizing the size using a transform allows better positioning
                 transform: Transform::from_scale(Vec3::new(size, size, size)),
                 ..PbrBundle::default()
@@ -473,7 +473,7 @@ impl<'w, 's> Spawner<'w, 's> {
         let entity = self
             .commands
             .spawn_bundle((label, pos, health, speed, faction, Obstacle, Container(4)))
-            .insert_bundle((self.character.clone(), PlayerVisible::Reevaluate))
+            .insert_bundle((self.data.character.clone(), PlayerVisible::Reevaluate))
             /* TODO better as sub-entity?
             .with_children(|child_builder| {
                 child_builder.spawn_bundle(PbrBundle {
@@ -483,7 +483,7 @@ impl<'w, 's> Spawner<'w, 's> {
                     });
                 })*/
             .insert_bundle(PbrBundle {
-                mesh: self.character_mesh.clone(),
+                mesh: self.data.character_mesh.clone(),
                 transform,
                 ..PbrBundle::default()
             })
@@ -491,6 +491,7 @@ impl<'w, 's> Spawner<'w, 's> {
 
         if let Some(player) = player {
             let cursor_sprite_info = &self
+                .data
                 .tile_loader
                 .sprite_infos(&TileName("cursor".to_string()))[0];
             let cursor_mesh = self.get_tile_mesh(cursor_sprite_info.mesh_info);
@@ -549,40 +550,11 @@ impl<'w, 's> Spawner<'w, 's> {
         }
     }
 
-    #[allow(dead_code)]
-    pub fn spawn_grid_lines(&mut self) {
-        for x in 0..=SIZE.0 {
-            self.commands.spawn_bundle(PbrBundle {
-                mesh: self.cube_mesh.clone(),
-                material: self.wood.material(PlayerVisible::Seen),
-                transform: Transform {
-                    translation: Vec3::new(f32::from(x) - 0.5, 0.0, 0.5 * f32::from(SIZE.2) - 0.5),
-                    rotation: Quat::IDENTITY,
-                    scale: Vec3::new(0.01, 0.01, f32::from(SIZE.2)),
-                },
-                ..PbrBundle::default()
-            });
-        }
-
-        for z in 0..=SIZE.2 {
-            self.commands.spawn_bundle(PbrBundle {
-                mesh: self.cube_mesh.clone(),
-                material: self.wood.material(PlayerVisible::Seen),
-                transform: Transform {
-                    translation: Vec3::new(0.5 * f32::from(SIZE.0) - 0.5, 0.0, f32::from(z) - 0.5),
-                    rotation: Quat::IDENTITY,
-                    scale: Vec3::new(f32::from(SIZE.0), 0.01, 0.01),
-                },
-                ..PbrBundle::default()
-            });
-        }
-    }
-
     pub fn spawn_gui(&mut self) {
         self.commands.spawn_bundle(UiCameraBundle::default());
 
         let text_style = TextStyle {
-            font: self.font.clone(),
+            font: self.data.font.clone(),
             font_size: 16.0,
             color: Color::rgb(0.8, 0.8, 0.8),
         };
@@ -687,14 +659,9 @@ impl<'w, 's> Spawner<'w, 's> {
     }
 
     pub fn spawn_floors(&mut self) {
-        for y in 0..=2 {
-            let x_range = match y {
-                0 => 0..SIZE.0,
-                _ => 17..24,
-            };
-            for x in x_range {
+        for y in 1..=2 {
+            for x in 17..24 {
                 let z_range = match y {
-                    0 => 0..SIZE.0,
                     1 => 17..26,
                     _ => 21..26,
                 };
@@ -703,18 +670,6 @@ impl<'w, 's> Spawner<'w, 's> {
                     match pos {
                         Pos(18, 1, 24) | Pos(18, 2, 22) => {
                             self.spawn_stairs_down(pos);
-                        }
-                        Pos(x, 1, z) if (18..=22).contains(&x) && (18..=24).contains(&z) => {
-                            self.spawn_stone_floor(pos);
-                        }
-                        Pos(x, 0, z) if (16..=23).contains(&x) && (17..=26).contains(&z) => {
-                            self.spawn_stone_floor(pos);
-                        }
-                        Pos(x, 0, z) if 48 <= x || 48 <= z => {
-                            continue;
-                        }
-                        Pos(_, 0, _) => {
-                            self.spawn_grass(pos);
                         }
                         _ => {
                             self.spawn_roofing(pos);
@@ -875,13 +830,17 @@ impl<'w, 's> Spawner<'w, 's> {
         }
     }
 
-    pub fn load_cdda_region(&mut self, zone_pos: Pos, zones: Pos, from: Pos) {
-        for x in 0..zones.0 {
-            for y in 0..zones.1 {
-                for z in 0..zones.2 {
-                    if let Some(zone_layout) =
-                        zone_layout(Pos(zone_pos.0 + x, zone_pos.1 + y, zone_pos.2 + z))
-                    {
+    pub fn load_cdda_region(&mut self, from: Pos, size: i16) {
+        let zone_pos = Pos(100, 0, 212);
+        let size = Pos(size, SIZE.1, size);
+        for x in 0..size.0 {
+            for y in 0..size.1 {
+                for z in 0..size.2 {
+                    if let Some(zone_layout) = zone_layout(Pos(
+                        zone_pos.0 + from.0 / 24 + x,
+                        zone_pos.1 + from.1 / 24 + y,
+                        zone_pos.2 + from.2 / 24 + z,
+                    )) {
                         self.spawn_zone(
                             &zone_layout,
                             Pos(from.0 + 24 * x, from.1 + y, from.2 + 24 * z),
@@ -926,10 +885,10 @@ impl<'w, 's> Spawner<'w, 's> {
                     self.spawn_tile(pos, tile_name, TileType::Furniture);
                 }
 
-                if let Some(tile_name) = subzone_layout
+                for tile_name in subzone_layout
                     .items
                     .iter()
-                    .find_map(|at| at.get(Pos(x, 0, z)))
+                    .filter_map(|at| at.get(Pos(x, 0, z)))
                     .map(|item| &item.typeid)
                 {
                     self.spawn_tile(pos, tile_name, TileType::Item);
