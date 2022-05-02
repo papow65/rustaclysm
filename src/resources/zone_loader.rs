@@ -72,7 +72,7 @@ pub struct Furniture {
 #[serde(deny_unknown_fields)]
 pub struct Item {
     pub typeid: TileName,
-    pub snip_id: Option<String>,
+    snip_id: Option<String>,
     charges: Option<u16>,
     active: Option<bool>,
     corpse: Option<String>,

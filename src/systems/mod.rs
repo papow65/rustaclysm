@@ -6,8 +6,8 @@ mod update;
 use bevy::prelude::*;
 use std::time::{Duration, Instant};
 
-use super::components::{Appearance, Health, Label, Player};
-use super::resources::{Characters, Envir, Hierarchy, Instructions, Timeouts};
+use super::components::{Appearance, Health, Label, Player, Pos};
+use super::resources::{Characters, Envir, Hierarchy, Instructions, Spawner, Timeouts};
 
 pub use check::*;
 pub use input::*;
@@ -95,4 +95,22 @@ pub fn manage_characters(
     }
 
     log_if_slow("manage_characters", start);
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub fn spawn_nearby_zones(
+    envir: Envir,
+    mut spawner: Spawner,
+    moved_players: Query<&Pos, (With<Player>, Changed<Pos>)>,
+) {
+    if let Ok(&player_pos) = moved_players.get_single() {
+        let groud_pos = Pos(player_pos.0, 0, player_pos.2);
+        for offset in [Pos(-1, 0, 0), Pos(1, 0, 0), Pos(0, 0, -1), Pos(0, 0, 1)] {
+            if let Some(nbor) = groud_pos.nbor(offset) {
+                if !envir.has_floor(nbor) {
+                    spawner.load_cdda_region(Pos(24 * (nbor.0 / 24), 0, 24 * (nbor.2 / 24)), 1);
+                }
+            }
+        }
+    }
 }
