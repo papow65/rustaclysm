@@ -6,6 +6,8 @@ use std::fs::read_to_string;
 use super::super::components::{Pos, ZoneLevel};
 use super::tile_loader::TileName;
 
+// Reference: https://github.com/CleverRaven/Cataclysm-DDA/blob/master/src/savegame_json.cpp
+
 pub fn zone_layout(zone_level: ZoneLevel) -> Option<ZoneLayout> {
     let filepath = format!(
         "assets/maps/{}.{}.{}/{}.{}.{}.map",
@@ -31,7 +33,7 @@ pub struct ZoneLayout {
 #[serde(deny_unknown_fields)]
 pub struct SubzoneLayout {
     pub version: u64,
-    pub coordinates: (i16, i16, i16),
+    pub coordinates: (i32, i32, i32),
     pub turn_last_touched: u64,
     pub temperature: i64,
     pub radiation: Vec<i64>,
@@ -48,7 +50,7 @@ pub struct SubzoneLayout {
     pub traps: Vec<serde_json::Value>,
     pub fields: Vec<serde_json::Value>,
     pub cosmetics: Vec<serde_json::Value>,
-    pub spawns: Vec<serde_json::Value>,
+    pub spawns: Vec<Spawn>,
     pub vehicles: Vec<serde_json::Value>,
     pub partial_constructions: Vec<serde_json::Value>,
     pub computers: Option<Vec<serde_json::Value>>,
@@ -80,7 +82,7 @@ pub struct Item {
     name: Option<String>,
     owner: Option<String>,
     bday: Option<i64>,
-    last_temp_check: u64,
+    last_temp_check: Option<u64>,
     specific_energy: Option<u64>,
     temperature: Option<u64>,
     item_vars: Option<HashMap<String, String>>,
@@ -119,6 +121,20 @@ pub struct Pocket {
     _sealed: bool,
     allowed: Option<bool>,
     favorite_settings: Option<serde_json::Value>,
+}
+
+#[allow(unused)]
+#[derive(Clone, Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Spawn {
+    pub spawn_type: TileName,
+    count: i32,
+    pub x: i32,
+    pub z: i32,
+    faction_id: i32,
+    mission_id: i32,
+    pub friendly: bool,
+    pub name: Option<String>,
 }
 
 #[derive(Debug)]

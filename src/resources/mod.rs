@@ -110,11 +110,7 @@ impl RelativeRays {
                 for z in -60..=60 {
                     let to = Pos(x, y, z);
 
-                    if 14_400
-                        < 4 * i32::from(to.0).pow(2)
-                            + 25 * i32::from(to.1).pow(2)
-                            + 4 * i32::from(to.2).pow(2)
-                    {
+                    if 14_400 < 4 * to.0.pow(2) + 25 * to.1.pow(2) + 4 * to.2.pow(2) {
                         // more than 60 meter away
                         continue;
                     }
