@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 
-use super::super::components::Zone;
 use super::super::resources::{Spawner, SpawnerData};
 
 #[allow(clippy::needless_pass_by_value)]
@@ -26,6 +25,4 @@ pub fn spawn_initial_entities(mut spawner: Spawner) {
     spawner.spawn_characters();
     spawner.spawn_containables();
     spawner.spawn_window_wall();
-
-    spawner.load_cdda_region(Zone { x: 0, z: 0 }, 2);
 }

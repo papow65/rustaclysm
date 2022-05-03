@@ -91,7 +91,7 @@ fn update_visibility(
     player_pos: Pos,
     child_items: &mut Query<&mut Visibility, (With<Parent>, Without<Pos>)>,
 ) {
-    // TODO make something only invisibility when it would overlap with the player FOV
+    // TODO make something only invisibile when it would overlap with the player FOV
     // TODO partially show obstacles that overlap with the player and his nbors
 
     visibility.is_visible = pos.1 <= player_pos.1;
@@ -123,7 +123,6 @@ pub fn update_visibility_on_item_y_change(
     log_if_slow("update_visibility_on_item_y_change", start);
 }
 
-/// for both meshes and tiles
 #[allow(clippy::needless_pass_by_value)]
 pub fn update_visibility_on_player_y_change(
     mut commands: Commands,
@@ -147,7 +146,6 @@ pub fn update_visibility_on_player_y_change(
     log_if_slow("update_visibility_on_player_y_change", start);
 }
 
-/// for both meshes and tiles
 #[allow(clippy::needless_pass_by_value)]
 pub fn update_cursor_visibility_on_player_change(
     mut curors: Query<&mut Visibility, With<CameraCursor>>,

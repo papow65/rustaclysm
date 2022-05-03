@@ -109,13 +109,39 @@ pub fn spawn_nearby_zones(
     moved_players: Query<(Entity, &Pos), (With<Player>, With<ZoneChanged>)>,
 ) {
     if let Ok((player, &pos)) = moved_players.get_single() {
-        for nbor_zone in Zone::from(pos).nbors() {
-            if !envir.has_floor(nbor_zone.base_pos(0)) {
+        let mut nboorhood = Zone::from(pos)
+            .nbors()
+            .iter()
+            .flat_map(Zone::nbors)
+            .collect::<Vec<Zone>>();
+        nboorhood.sort();
+        nboorhood.dedup();
+        for zone in nboorhood {
+            if !envir.has_floor(zone.zone_level(0).base_pos()) {
                 commands.entity(player).remove::<ZoneChanged>();
                 commands
                     .spawn()
-                    .insert(Message::new("Loading region".to_string()));
-                spawner.load_cdda_region(nbor_zone, 1);
+                    .insert(Message::new("Spawning zone".to_string()));
+                spawner.load_cdda_region(zone, 1);
+            }
+        }
+    }
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub fn despawn_far_zones(
+    mut commands: Commands,
+    zones: Query<(Entity, &Zone)>,
+    moved_players: Query<&Pos, (With<Player>, With<ZoneChanged>)>,
+) {
+    if let Ok(&pos) = moved_players.get_single() {
+        let player_zone = Zone::from(pos);
+        println!("Current zone: {:?}", player_zone);
+        for (entity, zone) in zones.iter() {
+            println!("{:?} <-> {:?} : {}", entity, zone, zone.dist(player_zone));
+            if 3 < zone.dist(player_zone) {
+                println!("Despawning zone");
+                commands.entity(entity).despawn_recursive();
             }
         }
     }

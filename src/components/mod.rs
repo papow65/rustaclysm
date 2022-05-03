@@ -10,7 +10,7 @@ pub use super::units::Partial;
 pub use action::{Action, Instruction};
 pub use factions::{Faction, Intelligence};
 pub use player::{Player, PlayerActionState};
-pub use pos::{Path, Pos, PosYChanged, Zone, ZoneChanged};
+pub use pos::{Path, Pos, PosYChanged, Zone, ZoneChanged, ZoneLevel};
 
 #[derive(Component, Clone, Debug)]
 pub struct Label(pub String);
@@ -53,9 +53,6 @@ pub struct Chair;
 
 #[derive(Component)]
 pub struct WindowPane;
-
-#[derive(Component)]
-pub struct StairsDown;
 
 #[derive(Component)]
 pub struct Obstacle;

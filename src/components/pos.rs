@@ -159,7 +159,7 @@ impl Path {
     }
 }
 
-#[derive(Component, Copy, Clone, PartialEq, Eq, Hash, Debug)]
+#[derive(Component, Copy, Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct Zone {
     pub x: i16,
     pub z: i16,
@@ -173,8 +173,16 @@ impl Zone {
         }
     }
 
-    pub const fn base_pos(&self, y: i16) -> Pos {
-        Pos(24 * self.x, y, 24 * self.z)
+    pub const fn zone_level(&self, y: i16) -> ZoneLevel {
+        ZoneLevel {
+            x: self.x,
+            y,
+            z: self.z,
+        }
+    }
+
+    pub fn dist(&self, other: Self) -> u16 {
+        (self.x - other.x).abs().max((self.z - other.z).abs()) as u16
     }
 
     pub const fn nbors(&self) -> [Self; 8] {
@@ -219,6 +227,46 @@ impl From<Pos> for Zone {
     fn from(pos: Pos) -> Self {
         Self {
             x: pos.0.div_euclid(24),
+            z: pos.2.div_euclid(24),
+        }
+    }
+}
+
+impl From<ZoneLevel> for Zone {
+    fn from(zone_level: ZoneLevel) -> Self {
+        Self {
+            x: zone_level.x,
+            z: zone_level.y,
+        }
+    }
+}
+
+#[derive(Component, Copy, Clone, Debug, PartialEq)]
+pub struct ZoneLevel {
+    pub x: i16,
+    pub y: i16,
+    pub z: i16,
+}
+
+impl ZoneLevel {
+    pub const fn offset(&self, x: i16, z: i16) -> Self {
+        Self {
+            x: self.x + x,
+            y: self.y,
+            z: self.z + z,
+        }
+    }
+
+    pub const fn base_pos(&self) -> Pos {
+        Pos(24 * self.x, self.y, 24 * self.z)
+    }
+}
+
+impl From<Pos> for ZoneLevel {
+    fn from(pos: Pos) -> Self {
+        Self {
+            x: pos.0.div_euclid(24),
+            y: pos.1,
             z: pos.2.div_euclid(24),
         }
     }
