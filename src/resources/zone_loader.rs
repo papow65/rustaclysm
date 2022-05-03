@@ -3,18 +3,18 @@ use serde::de::{Deserializer, SeqAccess, Visitor};
 use serde::Deserialize;
 use std::fs::read_to_string;
 
-use super::super::components::{Pos, Zone};
+use super::super::components::{Pos, ZoneLevel};
 use super::tile_loader::TileName;
 
-pub fn zone_layout(zone: Zone, y: i16) -> Option<ZoneLayout> {
+pub fn zone_layout(zone_level: ZoneLevel) -> Option<ZoneLayout> {
     let filepath = format!(
         "assets/maps/{}.{}.{}/{}.{}.{}.map",
-        zone.x.div_euclid(32),
-        zone.z.div_euclid(32),
-        y,
-        zone.x,
-        zone.z,
-        y
+        zone_level.x.div_euclid(32),
+        zone_level.z.div_euclid(32),
+        zone_level.y,
+        zone_level.x,
+        zone_level.z,
+        zone_level.y
     );
     //println!("Path: {filepath}");
     read_to_string(&filepath)
@@ -97,6 +97,7 @@ pub struct Item {
     variant: Option<String>,
     recipe_charges: Option<u8>,
     poison: Option<u8>,
+    burnt: Option<serde_json::Value>,
     craft_data: Option<serde_json::Value>,
 }
 

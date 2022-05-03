@@ -1,4 +1,4 @@
-use bevy::ecs::system::SystemParam;
+use bevy::ecs::system::{Insert, SystemParam};
 use bevy::math::Quat;
 use bevy::prelude::*;
 use bevy::render::{
@@ -11,11 +11,13 @@ use super::super::components::Window;
 use super::super::components::{
     Appearance, CameraBase, CameraCursor, Chair, Containable, Container, Faction, Floor, Health,
     Hurdle, Integrity, Label, LogDisplay, ManualDisplay, Obstacle, Opaque, Player,
-    PlayerActionState, PlayerVisible, Pos, PosYChanged, Rack, Stairs, StairsDown, StatusDisplay,
-    Table, Wall, WindowPane, Zone,
+    PlayerActionState, PlayerVisible, Pos, PosYChanged, Rack, Stairs, StatusDisplay, Table, Wall,
+    WindowPane, Zone, ZoneChanged, ZoneLevel,
 };
 use super::super::units::{Speed, ADJACENT, VERTICAL};
-use super::tile_loader::{MeshInfo, SpriteLayer, SpriteOrientation, TileLoader, TileName};
+use super::tile_loader::{
+    MeshInfo, SpriteInfo, SpriteLayer, SpriteOrientation, TileLoader, TileName,
+};
 use super::zone_loader::{zone_layout, SubzoneLayout, ZoneLayout};
 
 #[derive(Clone, Copy, PartialEq)]
@@ -155,31 +157,48 @@ impl<'w, 's> Spawner<'w, 's> {
             .clone()
     }
 
-    fn get_tile_material(&mut self, imagepath: &str) -> Handle<StandardMaterial> {
+    fn get_tile_material(
+        &mut self,
+        imagepath: &str,
+        alpha_mode: AlphaMode,
+    ) -> Handle<StandardMaterial> {
         self.data
             .tile_materials
             .entry(imagepath.to_string())
             .or_insert_with(|| {
                 self.materials.add(StandardMaterial {
                     base_color_texture: Some(self.asset_server.load(imagepath)),
-                    alpha_mode: AlphaMode::Blend,
+                    alpha_mode,
                     ..StandardMaterial::default()
                 })
             })
             .clone()
     }
 
-    fn get_pbr_bundles(&mut self, tile_name: &TileName) -> Vec<PbrBundle> {
+    fn get_pbr_bundles(
+        &mut self,
+        tile_name: &TileName,
+        sprite_infos: &Vec<SpriteInfo>,
+        tile_type: TileType,
+    ) -> Vec<PbrBundle> {
         let mut pbr_bundles = Vec::new();
-        for sprite_info in self.data.tile_loader.sprite_infos(tile_name) {
+        for sprite_info in sprite_infos {
             let scale = Vec3::new(
                 sprite_info.scale.0,
                 /*thickness*/ 1.0,
                 sprite_info.scale.1,
             );
+            let alpha_mode = if tile_type == TileType::Terrain
+                && sprite_info.orientation == SpriteOrientation::Horizontal
+                && (tile_name.0.starts_with("t_grass") || tile_name.0.starts_with("t_dirt"))
+            {
+                AlphaMode::Opaque
+            } else {
+                AlphaMode::Blend
+            };
             pbr_bundles.push(PbrBundle {
                 mesh: self.get_tile_mesh(sprite_info.mesh_info),
-                material: self.get_tile_material(&sprite_info.imagepath),
+                material: self.get_tile_material(&sprite_info.imagepath, alpha_mode),
                 transform: match sprite_info.orientation {
                     SpriteOrientation::Horizontal => Transform {
                         translation: Vec3::new(
@@ -217,89 +236,113 @@ impl<'w, 's> Spawner<'w, 's> {
         pbr_bundles
     }
 
-    fn spawn_tile(&mut self, pos: Pos, tile_name: &TileName, tile_type: TileType) -> Entity {
+    fn spawn_tile(&mut self, parent: Entity, pos: Pos, tile_name: &TileName, tile_type: TileType) {
         let label = tile_name.to_label();
-        let pbr_bundles = self.get_pbr_bundles(tile_name);
-        let tile = self
-            .commands
-            .spawn_bundle((
-                Floor,
-                pos,
-                label,
-                Transform::from_translation(pos.vec3()),
-                GlobalTransform::default(),
-                Visibility::default(),
-            ))
-            .with_children(|child_builder| {
-                for pbr_bundle in pbr_bundles {
-                    child_builder.spawn_bundle(pbr_bundle);
-                }
-            })
-            .id();
+        let tile_infos = self.data.tile_loader.sprite_infos(tile_name);
+        let pbr_bundles = self.get_pbr_bundles(tile_name, &tile_infos, tile_type);
 
-        if self
-            .data
-            .tile_loader
-            .sprite_infos(tile_name)
-            .iter()
-            .any(|t| t.orientation == SpriteOrientation::Cube)
-        {
-            self.commands.entity(tile).insert(Obstacle).insert(Opaque);
-        } else if self
-            .data
-            .tile_loader
-            .sprite_infos(tile_name)
-            .iter()
-            .any(|t| t.orientation == SpriteOrientation::Vertical)
-        {
-            if tile_name.0.starts_with("t_stairs_up")
-                || tile_name.0.starts_with("t_wood_stairs_up")
-                || tile_name.0.starts_with("t_ladder_up")
-                || tile_name.0.starts_with("t_ramp_up")
-                || tile_name.0.starts_with("t_gutter_downspout")
+        self.commands.entity(parent).with_children(|child_builder| {
+            let tile = child_builder
+                .spawn_bundle((
+                    Floor,
+                    pos,
+                    label,
+                    Transform::from_translation(pos.vec3()),
+                    GlobalTransform::default(),
+                    Visibility::default(),
+                ))
+                .with_children(|child_builder| {
+                    for pbr_bundle in pbr_bundles {
+                        child_builder.spawn_bundle(pbr_bundle);
+                    }
+                })
+                .id();
+
+            if tile_infos
+                .iter()
+                .any(|t| t.orientation == SpriteOrientation::Cube)
             {
-                self.commands.entity(tile).insert(Stairs);
-            } else {
-                match self
-                    .data
-                    .tile_loader
-                    .sprite_infos(tile_name)
-                    .iter()
-                    .map(|t| (10.0 * t.scale.1) as i8)
-                    .max()
-                    .unwrap()
+                child_builder.add_command(Insert {
+                    entity: tile,
+                    component: Obstacle,
+                });
+                child_builder.add_command(Insert {
+                    entity: tile,
+                    component: Opaque,
+                });
+            } else if tile_infos
+                .iter()
+                .any(|t| t.orientation == SpriteOrientation::Vertical)
+            {
+                if tile_name.0.starts_with("t_stairs_up")
+                    || tile_name.0.starts_with("t_wood_stairs_up")
+                    || tile_name.0.starts_with("t_ladder_up")
+                    || tile_name.0.starts_with("t_ramp_up")
+                    || tile_name.0.starts_with("t_gutter_downspout")
                 {
-                    x if 25 < x => {
-                        self.commands.entity(tile).insert(Obstacle).insert(Opaque);
-                    }
-                    x if 15 < x => {
-                        self.commands
-                            .entity(tile)
-                            .insert(Hurdle(3.0))
-                            .insert(Opaque);
-                    }
-                    _ => {
-                        self.commands.entity(tile).insert(Hurdle(2.0));
+                    child_builder.add_command(Insert {
+                        entity: tile,
+                        component: Stairs,
+                    });
+                } else {
+                    match tile_infos
+                        .iter()
+                        .map(|t| (10.0 * t.scale.1) as i8)
+                        .max()
+                        .unwrap()
+                    {
+                        x if 25 < x => {
+                            child_builder.add_command(Insert {
+                                entity: tile,
+                                component: Obstacle,
+                            });
+                            child_builder.add_command(Insert {
+                                entity: tile,
+                                component: Opaque,
+                            });
+                        }
+                        x if 15 < x => {
+                            child_builder.add_command(Insert {
+                                entity: tile,
+                                component: Hurdle(2.0),
+                            });
+                            child_builder.add_command(Insert {
+                                entity: tile,
+                                component: Opaque,
+                            });
+                        }
+                        _ => {
+                            child_builder.add_command(Insert {
+                                entity: tile,
+                                component: Hurdle(2.0),
+                            });
+                        }
                     }
                 }
+            } else if tile_type == TileType::Terrain
+                && !tile_name.0.starts_with("t_water_dp")
+                && !tile_name.0.starts_with("t_water_moving_dp")
+            {
+                child_builder.add_command(Insert {
+                    entity: tile,
+                    component: Floor,
+                });
             }
-        } else if tile_type == TileType::Terrain
-            && !tile_name.0.starts_with("t_water_dp")
-            && !tile_name.0.starts_with("t_water_moving_dp")
-        {
-            self.commands.entity(tile).insert(Floor);
-        }
-
-        tile
+        });
     }
 
-    pub fn spawn_stairs_down(&mut self, pos: Pos) {
-        let entity = self.spawn_tile(pos, &TileName::new("t_wood_stairs_down"), TileType::Terrain);
-        self.commands.entity(entity).insert(StairsDown);
-    }
-
-    pub fn spawn_roofing(&mut self, pos: Pos) {
+    pub fn spawn_stairs_down(&mut self, parent: Entity, pos: Pos) {
         self.spawn_tile(
+            parent,
+            pos,
+            &TileName::new("t_wood_stairs_down"),
+            TileType::Terrain,
+        );
+    }
+
+    pub fn spawn_roofing(&mut self, parent: Entity, pos: Pos) {
+        self.spawn_tile(
+            parent,
             pos,
             &TileName::new("t_shingle_flat_roof"),
             TileType::Terrain,
@@ -499,11 +542,13 @@ impl<'w, 's> Spawner<'w, 's> {
                 .tile_loader
                 .sprite_infos(&TileName("cursor".to_string()))[0];
             let cursor_mesh = self.get_tile_mesh(cursor_sprite_info.mesh_info);
-            let cursor_material = self.get_tile_material(&cursor_sprite_info.imagepath);
+            let cursor_material =
+                self.get_tile_material(&cursor_sprite_info.imagepath, AlphaMode::Blend);
             self.commands
                 .entity(entity)
                 .insert(player)
                 .insert(PosYChanged)
+                .insert(ZoneChanged)
                 .with_children(|child_builder| {
                     child_builder
                         .spawn_bundle(PbrBundle {
@@ -663,6 +708,8 @@ impl<'w, 's> Spawner<'w, 's> {
     }
 
     pub fn spawn_floors(&mut self) {
+        let parent = self.commands.spawn_bundle(PbrBundle::default()).id();
+
         for y in 1..=2 {
             for x in 17..24 {
                 let z_range = match y {
@@ -673,10 +720,10 @@ impl<'w, 's> Spawner<'w, 's> {
                     let pos = Pos(x, y, z);
                     match pos {
                         Pos(18, 1, 24) | Pos(18, 2, 22) => {
-                            self.spawn_stairs_down(pos);
+                            self.spawn_stairs_down(parent, pos);
                         }
                         _ => {
-                            self.spawn_roofing(pos);
+                            self.spawn_roofing(parent, pos);
                         }
                     }
                 }
@@ -836,41 +883,76 @@ impl<'w, 's> Spawner<'w, 's> {
 
     pub fn load_cdda_region(&mut self, base_zone: Zone, size: i16) {
         for x in 0..size {
-            for y in Pos::vertical_range() {
-                for z in 0..size {
-                    let zone = base_zone.offset(x, z);
-                    if let Some(zone_layout) = zone_layout(zone.offset(100, 212), y) {
-                        self.spawn_zone(&zone_layout, zone.base_pos(y));
+            for z in 0..size {
+                let zone = base_zone.offset(x, z);
+                let zone_entity = self
+                    .commands
+                    .spawn_bundle(PbrBundle::default())
+                    .insert(zone)
+                    .id();
+                for y in Pos::vertical_range() {
+                    let zone_level = zone.zone_level(y);
+                    /*
+                    TODO wait for https://github.com/bevyengine/bevy/pull/2087
+                    let zone_level_entity = self
+                        .commands
+                        .spawn_bundle(PbrBundle::default())
+                        .insert(zone_level)
+                        .id();
+                    self.commands
+                        .entity(zone_entity)
+                        .add_child(zone_level_entity);
+                    */
+                    if let Some(zone_layout) = zone_layout(zone_level.offset(100, 212)) {
+                        self.spawn_zone(&zone_layout, zone_entity, zone_level);
                     }
                 }
             }
         }
     }
 
-    fn spawn_zone(&mut self, zone_layout: &ZoneLayout, to: Pos) {
+    fn spawn_zone(
+        &mut self,
+        zone_layout: &ZoneLayout,
+        parent_entity: Entity,
+        zone_level: ZoneLevel,
+    ) {
         let base = zone_layout.subzone_layouts[0].coordinates;
         for subzone_layout in &zone_layout.subzone_layouts {
             assert!(base.2 == subzone_layout.coordinates.2);
             self.spawn_subzone(
                 subzone_layout,
+                parent_entity,
+                zone_level,
                 Pos(
-                    to.0 + 12 * (subzone_layout.coordinates.0 - base.0),
-                    to.1,
-                    to.2 + 12 * (subzone_layout.coordinates.1 - base.1),
+                    12 * (subzone_layout.coordinates.0 - base.0),
+                    0,
+                    12 * (subzone_layout.coordinates.1 - base.1),
                 ),
             );
         }
     }
 
-    fn spawn_subzone(&mut self, subzone_layout: &SubzoneLayout, to: Pos) {
+    fn spawn_subzone(
+        &mut self,
+        subzone_layout: &SubzoneLayout,
+        parent_entity: Entity,
+        zone_level: ZoneLevel,
+        subzone_offset: Pos,
+    ) {
         for x in 0..12 {
             for z in 0..12 {
-                let pos = Pos(to.0 + x, to.1, to.2 + z);
+                let pos = zone_level
+                    .base_pos()
+                    .offset(subzone_offset)
+                    .unwrap()
+                    .offset(Pos(x, 0, z))
+                    .unwrap();
                 let tile_name = &subzone_layout.terrain[(x + 12 * z) as usize];
                 if tile_name != &TileName::new("t_open_air")
                     && tile_name != &TileName::new("t_open_air_rooved")
                 {
-                    self.spawn_tile(pos, tile_name, TileType::Terrain);
+                    self.spawn_tile(parent_entity, pos, tile_name, TileType::Terrain);
                 }
 
                 for tile_name in subzone_layout
@@ -878,7 +960,7 @@ impl<'w, 's> Spawner<'w, 's> {
                     .iter()
                     .filter_map(|at| at.get(Pos(x, 0, z)))
                 {
-                    self.spawn_tile(pos, tile_name, TileType::Furniture);
+                    self.spawn_tile(parent_entity, pos, tile_name, TileType::Furniture);
                 }
 
                 for tile_name in subzone_layout
@@ -887,7 +969,7 @@ impl<'w, 's> Spawner<'w, 's> {
                     .filter_map(|at| at.get(Pos(x, 0, z)))
                     .map(|item| &item.typeid)
                 {
-                    self.spawn_tile(pos, tile_name, TileType::Item);
+                    self.spawn_tile(parent_entity, pos, tile_name, TileType::Item);
                 }
             }
         }
