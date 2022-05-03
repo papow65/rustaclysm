@@ -185,41 +185,16 @@ impl Zone {
         (self.x - other.x).abs().max((self.z - other.z).abs()) as u16
     }
 
-    pub const fn nbors(&self) -> [Self; 8] {
-        [
-            Self {
-                x: self.x - 1,
-                z: self.z - 1,
-            },
-            Self {
-                x: self.x - 1,
-                z: self.z,
-            },
-            Self {
-                x: self.x - 1,
-                z: self.z + 1,
-            },
-            Self {
-                x: self.x,
-                z: self.z + 1,
-            },
-            Self {
-                x: self.x + 1,
-                z: self.z + 1,
-            },
-            Self {
-                x: self.x + 1,
-                z: self.z,
-            },
-            Self {
-                x: self.x + 1,
-                z: self.z - 1,
-            },
-            Self {
-                x: self.x,
-                z: self.z - 1,
-            },
-        ]
+    pub fn nearby(&self, n: u8) -> Vec<Self> {
+        let n = i16::from(n);
+        (-n..n)
+            .flat_map(move |x| {
+                (-n..n).map(move |z| Self {
+                    x: self.x + x,
+                    z: self.z + z,
+                })
+            })
+            .collect()
     }
 }
 

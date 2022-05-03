@@ -48,7 +48,12 @@ pub fn manage_characters(
 ) {
     let start = Instant::now();
 
-    let entities = characters.c.iter().map(|(e, _, _, _, _, _, _)| e);
+    let entities = characters
+        .c
+        .iter()
+        .map(|(e, _, pos, _, _, _, _)| (e, pos))
+        .filter(|(_, &pos)| envir.has_floor(pos))
+        .map(|(e, _pos)| e);
     if let Some(character) = timeouts.next(entities) {
         let factions = characters.collect_factions();
         let (entity, label, &pos, &speed, health, faction, container) =
@@ -109,14 +114,7 @@ pub fn spawn_nearby_zones(
     moved_players: Query<(Entity, &Pos), (With<Player>, With<ZoneChanged>)>,
 ) {
     if let Ok((player, &pos)) = moved_players.get_single() {
-        let mut nboorhood = Zone::from(pos)
-            .nbors()
-            .iter()
-            .flat_map(Zone::nbors)
-            .collect::<Vec<Zone>>();
-        nboorhood.sort();
-        nboorhood.dedup();
-        for zone in nboorhood {
+        for zone in Zone::from(pos).nearby(2) {
             if !envir.has_floor(zone.zone_level(0).base_pos()) {
                 commands.entity(player).remove::<ZoneChanged>();
                 commands
