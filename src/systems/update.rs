@@ -40,6 +40,7 @@ pub fn update_transforms(
         (
             &Pos,
             &mut Transform,
+            Option<&Handle<Mesh>>,
             Option<&Floor>,
             Option<&Stairs>,
             Option<&Corpse>,
@@ -52,13 +53,13 @@ pub fn update_transforms(
 ) {
     let start = Instant::now();
 
-    for (&pos, mut transform, floor, stair, corpse) in obstacles.iter_mut() {
-        let vertical_height = if floor.is_some() {
+    for (&pos, mut transform, mesh, floor, stair, corpse) in obstacles.iter_mut() {
+        let vertical_height = if floor.is_some() || mesh.is_none() {
             0.0
-        } else if stair.is_some() {
-            VERTICAL.f32()
         } else if corpse.is_some() {
             0.01
+        } else if stair.is_some() {
+            VERTICAL.f32()
         } else {
             transform.scale.y
         };
@@ -94,7 +95,7 @@ fn update_visibility(
     // TODO make something only invisibile when it would overlap with the player FOV
     // TODO partially show obstacles that overlap with the player and his nbors
 
-    visibility.is_visible = pos.1 <= player_pos.1;
+    visibility.is_visible = pos.1 == player_pos.1 || (0 <= pos.1 && pos.1 < player_pos.1);
 
     if let Some(children) = children {
         for &child in children.iter() {

@@ -1,4 +1,4 @@
-use bevy::ecs::system::{Insert, SystemParam};
+use bevy::ecs::system::{Insert, Remove, SystemParam};
 use bevy::math::Quat;
 use bevy::prelude::*;
 use bevy::render::{
@@ -25,6 +25,7 @@ pub enum TileType {
     Terrain,
     Furniture,
     Item,
+    Character,
 }
 
 pub struct SpawnerData {
@@ -244,7 +245,6 @@ impl<'w, 's> Spawner<'w, 's> {
         self.commands.entity(parent).with_children(|child_builder| {
             let tile = child_builder
                 .spawn_bundle((
-                    Floor,
                     pos,
                     label,
                     Transform::from_translation(pos.vec3()),
@@ -258,7 +258,16 @@ impl<'w, 's> Spawner<'w, 's> {
                 })
                 .id();
 
-            if tile_infos
+            if tile_type == TileType::Character {
+                child_builder.add_command(Insert {
+                    entity: tile,
+                    component: Obstacle,
+                });
+                child_builder.add_command(Insert {
+                    entity: tile,
+                    component: Health::new(5),
+                });
+            } else if tile_infos
                 .iter()
                 .any(|t| t.orientation == SpriteOrientation::Cube)
             {
@@ -270,7 +279,14 @@ impl<'w, 's> Spawner<'w, 's> {
                     entity: tile,
                     component: Opaque,
                 });
-            } else if tile_infos
+            } else if tile_type == TileType::Terrain {
+                child_builder.add_command(Insert {
+                    entity: tile,
+                    component: Floor,
+                });
+            }
+
+            if tile_infos
                 .iter()
                 .any(|t| t.orientation == SpriteOrientation::Vertical)
             {
@@ -296,6 +312,10 @@ impl<'w, 's> Spawner<'w, 's> {
                                 entity: tile,
                                 component: Obstacle,
                             });
+                            child_builder.add_command(Remove {
+                                entity: tile,
+                                phantom: core::marker::PhantomData::<Floor>,
+                            });
                             child_builder.add_command(Insert {
                                 entity: tile,
                                 component: Opaque,
@@ -319,14 +339,6 @@ impl<'w, 's> Spawner<'w, 's> {
                         }
                     }
                 }
-            } else if tile_type == TileType::Terrain
-                && !tile_name.0.starts_with("t_water_dp")
-                && !tile_name.0.starts_with("t_water_moving_dp")
-            {
-                child_builder.add_command(Insert {
-                    entity: tile,
-                    component: Floor,
-                });
             }
         });
     }
@@ -881,7 +893,7 @@ impl<'w, 's> Spawner<'w, 's> {
         }
     }
 
-    pub fn load_cdda_region(&mut self, base_zone: Zone, size: i16) {
+    pub fn load_cdda_region(&mut self, base_zone: Zone, size: i32) {
         for x in 0..size {
             for z in 0..size {
                 let zone = base_zone.offset(x, z);
@@ -963,13 +975,20 @@ impl<'w, 's> Spawner<'w, 's> {
                     self.spawn_tile(parent_entity, pos, tile_name, TileType::Furniture);
                 }
 
-                for tile_name in subzone_layout
+                for item in subzone_layout
                     .items
                     .iter()
                     .filter_map(|at| at.get(Pos(x, 0, z)))
-                    .map(|item| &item.typeid)
                 {
-                    self.spawn_tile(parent_entity, pos, tile_name, TileType::Item);
+                    self.spawn_tile(parent_entity, pos, &item.typeid, TileType::Item);
+                }
+
+                for spawn in subzone_layout
+                    .spawns
+                    .iter()
+                    .filter(|spawn| spawn.x == x && spawn.z == z)
+                {
+                    self.spawn_tile(parent_entity, pos, &spawn.spawn_type, TileType::Character);
                 }
             }
         }

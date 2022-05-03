@@ -3,22 +3,22 @@ use pathfinding::prelude::astar;
 
 use super::super::units::{Distance, Millimeter, Milliseconds, ADJACENT, DIAGONAL, VERTICAL};
 
-fn straight_2d(from: (i16, i16), to: (i16, i16)) -> impl Iterator<Item = (i16, i16)> {
+fn straight_2d(from: (i32, i32), to: (i32, i32)) -> impl Iterator<Item = (i32, i32)> {
     bresenham::Bresenham::new(
         (from.0 as isize, from.1 as isize),
         (to.0 as isize, to.1 as isize),
     )
     .skip(1) // skip 'self'
-    .map(|p| (p.0 as i16, p.1 as i16))
+    .map(|p| (p.0 as i32, p.1 as i32))
     .chain(std::iter::once(to))
 }
 
 /// Y is vertical
 #[derive(Component, Copy, Clone, PartialEq, Eq, Hash, Debug)]
-pub struct Pos(pub i16, pub i16, pub i16);
+pub struct Pos(pub i32, pub i32, pub i32);
 
 impl Pos {
-    pub const fn vertical_range() -> core::ops::RangeInclusive<i16> {
+    pub const fn vertical_range() -> core::ops::RangeInclusive<i32> {
         -10..=10
     }
 
@@ -89,9 +89,9 @@ impl Pos {
 
     pub fn vec3(self) -> Vec3 {
         Vec3::new(
-            f32::from(self.0) * ADJACENT.f32(),
-            f32::from(self.1) * VERTICAL.f32(),
-            f32::from(self.2) * ADJACENT.f32(),
+            f64::from(self.0) as f32 * ADJACENT.f32(),
+            f64::from(self.1) as f32 * VERTICAL.f32(),
+            f64::from(self.2) as f32 * ADJACENT.f32(),
         )
     }
 
@@ -161,19 +161,19 @@ impl Path {
 
 #[derive(Component, Copy, Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct Zone {
-    pub x: i16,
-    pub z: i16,
+    pub x: i32,
+    pub z: i32,
 }
 
 impl Zone {
-    pub const fn offset(&self, x: i16, z: i16) -> Self {
+    pub const fn offset(&self, x: i32, z: i32) -> Self {
         Self {
             x: self.x + x,
             z: self.z + z,
         }
     }
 
-    pub const fn zone_level(&self, y: i16) -> ZoneLevel {
+    pub const fn zone_level(&self, y: i32) -> ZoneLevel {
         ZoneLevel {
             x: self.x,
             y,
@@ -186,7 +186,7 @@ impl Zone {
     }
 
     pub fn nearby(&self, n: u8) -> Vec<Self> {
-        let n = i16::from(n);
+        let n = i32::from(n);
         (-n..n)
             .flat_map(move |x| {
                 (-n..n).map(move |z| Self {
@@ -218,13 +218,13 @@ impl From<ZoneLevel> for Zone {
 
 #[derive(Component, Copy, Clone, Debug, PartialEq)]
 pub struct ZoneLevel {
-    pub x: i16,
-    pub y: i16,
-    pub z: i16,
+    pub x: i32,
+    pub y: i32,
+    pub z: i32,
 }
 
 impl ZoneLevel {
-    pub const fn offset(&self, x: i16, z: i16) -> Self {
+    pub const fn offset(&self, x: i32, z: i32) -> Self {
         Self {
             x: self.x + x,
             y: self.y,
