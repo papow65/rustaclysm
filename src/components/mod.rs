@@ -199,8 +199,11 @@ impl Appearance {
 pub struct Message(pub String); // shown to the player
 
 impl Message {
-    pub const fn new(s: String) -> Self {
-        Self(s)
+    pub fn new<S>(s: S) -> Self
+    where
+        S: Into<String>,
+    {
+        Self(s.into())
     }
 }
 

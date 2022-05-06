@@ -162,9 +162,7 @@ fn move_(
             if from.0.div_euclid(24) != to.0.div_euclid(24)
                 || from.2.div_euclid(24) != to.2.div_euclid(24)
             {
-                commands
-                    .spawn()
-                    .insert(Message::new("Zone changed".to_string()));
+                commands.spawn().insert(Message::new("Zone changed"));
                 commands.entity(mover).insert(ZoneChanged);
             }
 
@@ -181,9 +179,8 @@ fn move_(
             Milliseconds(0)
         }
         Collision::Ledged => {
-            commands
-                .spawn()
-                .insert(Message::new(format!("{label} halts at the ledge")));
+            let message = format!("{label} halts at the ledge");
+            commands.spawn().insert(Message::new(message));
             Milliseconds(0)
         }
         Collision::NoStairsUp => {

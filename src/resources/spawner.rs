@@ -36,7 +36,6 @@ pub struct SpawnerData {
     wooden_wall: Appearance,
     yellow: Appearance,
     tile_materials: HashMap<String, Handle<StandardMaterial>>,
-    character_mesh: Handle<Mesh>,
     cube_mesh: Handle<Mesh>,
     tile_meshes: HashMap<MeshInfo, Handle<Mesh>>,
     wall_transform: Transform,
@@ -62,10 +61,6 @@ impl SpawnerData {
             wooden_wall: Appearance::new(materials, asset_server.load("tiles/wall.png")),
             yellow: Appearance::new(materials, Color::rgb(0.8, 0.8, 0.4)),
             tile_materials: HashMap::new(),
-            character_mesh: meshes.add(Mesh::from(shape::Quad {
-                size: Vec2::new(1.0, 1.0),
-                flip: false,
-            })),
             cube_mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
             tile_meshes: HashMap::new(),
             wall_transform: Transform::from_scale(Vec3::new(
@@ -185,9 +180,9 @@ impl<'w, 's> Spawner<'w, 's> {
         let mut pbr_bundles = Vec::new();
         for sprite_info in sprite_infos {
             let scale = Vec3::new(
-                sprite_info.scale.0,
+                sprite_info.texture_info.scale.0,
                 /*thickness*/ 1.0,
-                sprite_info.scale.1,
+                sprite_info.texture_info.scale.1,
             );
             let alpha_mode = if tile_type == TileType::Terrain
                 && sprite_info.orientation == SpriteOrientation::Horizontal
@@ -198,18 +193,18 @@ impl<'w, 's> Spawner<'w, 's> {
                 AlphaMode::Blend
             };
             pbr_bundles.push(PbrBundle {
-                mesh: self.get_tile_mesh(sprite_info.mesh_info),
-                material: self.get_tile_material(&sprite_info.imagepath, alpha_mode),
+                mesh: self.get_tile_mesh(sprite_info.texture_info.mesh_info),
+                material: self.get_tile_material(&sprite_info.texture_info.imagepath, alpha_mode),
                 transform: match sprite_info.orientation {
                     SpriteOrientation::Horizontal => Transform {
                         translation: Vec3::new(
-                            /*back*/ sprite_info.offset.1,
+                            /*back*/ sprite_info.texture_info.offset.1,
                             /*up*/
                             match sprite_info.layer {
                                 SpriteLayer::Front => 0.01,
                                 _ => 0.0,
                             },
-                            /*right*/ sprite_info.offset.0,
+                            /*right*/ sprite_info.texture_info.offset.0,
                         ),
                         rotation: Quat::from_rotation_y(0.5 * std::f32::consts::PI),
                         scale,
@@ -222,9 +217,9 @@ impl<'w, 's> Spawner<'w, 's> {
                                 _ => 0.0,
                             },
                             /*up*/
-                            0.52 + sprite_info.offset.1,
+                            0.52 + sprite_info.texture_info.offset.1,
                             /*right*/
-                            sprite_info.offset.0,
+                            sprite_info.texture_info.offset.0,
                         ),
                         rotation: Quat::from_rotation_z(0.5 * std::f32::consts::PI)
                             * Quat::from_rotation_y(0.5 * std::f32::consts::PI),
@@ -303,7 +298,7 @@ impl<'w, 's> Spawner<'w, 's> {
                 } else {
                     match tile_infos
                         .iter()
-                        .map(|t| (10.0 * t.scale.1) as i8)
+                        .map(|t| (10.0 * t.texture_info.scale.1) as i8)
                         .max()
                         .unwrap()
                     {
@@ -527,24 +522,45 @@ impl<'w, 's> Spawner<'w, 's> {
         player: Option<Player>,
     ) {
         let focus = Vec3::new(1.0, 0.0, 0.1);
-        let transform = Transform::from_scale(Vec3::new(1.0, 1.8, 1.0)).looking_at(focus, Vec3::Y);
+
+        let character_sprite_info = &self.data.tile_loader.sprite_infos(&match faction {
+            Faction::Human => TileName("overlay_male_mutation_SKIN_TAN".to_string()),
+            Faction::Zombie => TileName("mon_zombie".to_string()),
+        })[0];
+        let character_mesh = self.get_tile_mesh(character_sprite_info.texture_info.mesh_info);
+        let character_material = self.get_tile_material(
+            &character_sprite_info.texture_info.imagepath,
+            AlphaMode::Blend,
+        );
+        let character_scale = Vec3::new(
+            character_sprite_info.texture_info.scale.0,
+            /*thickness*/ 1.0,
+            character_sprite_info.texture_info.scale.1,
+        ) * 1.8;
 
         let entity = self
             .commands
             .spawn_bundle((label, pos, health, speed, faction, Obstacle, Container(4)))
             .insert_bundle((self.data.character.clone(), PlayerVisible::Reevaluate))
-            /* TODO better as sub-entity?
+            .insert_bundle(PbrBundle::default())
             .with_children(|child_builder| {
                 child_builder.spawn_bundle(PbrBundle {
-                    mesh: self.character_mesh.clone(),
-                    transform,
+                    mesh: character_mesh,
+                    material: character_material,
+                    transform: Transform {
+                        translation: Vec3::new(
+                            /*back*/ -0.02,
+                            /*up*/
+                            0.02 + (character_scale.y - character_sprite_info.texture_info.scale.1)
+                                / 2.0,
+                            /*right*/ 0.0,
+                        ),
+                        rotation: Quat::from_rotation_z(0.5 * std::f32::consts::PI)
+                            * Quat::from_rotation_y(0.5 * std::f32::consts::PI),
+                        scale: character_scale,
+                    },
                     ..PbrBundle::default()
-                    });
-                })*/
-            .insert_bundle(PbrBundle {
-                mesh: self.data.character_mesh.clone(),
-                transform,
-                ..PbrBundle::default()
+                });
             })
             .id();
 
@@ -553,9 +569,9 @@ impl<'w, 's> Spawner<'w, 's> {
                 .data
                 .tile_loader
                 .sprite_infos(&TileName("cursor".to_string()))[0];
-            let cursor_mesh = self.get_tile_mesh(cursor_sprite_info.mesh_info);
-            let cursor_material =
-                self.get_tile_material(&cursor_sprite_info.imagepath, AlphaMode::Blend);
+            let cursor_mesh = self.get_tile_mesh(cursor_sprite_info.texture_info.mesh_info);
+            let cursor_material = self
+                .get_tile_material(&cursor_sprite_info.texture_info.imagepath, AlphaMode::Blend);
             self.commands
                 .entity(entity)
                 .insert(player)
@@ -563,48 +579,40 @@ impl<'w, 's> Spawner<'w, 's> {
                 .insert(ZoneChanged)
                 .with_children(|child_builder| {
                     child_builder
-                        .spawn_bundle(PbrBundle {
-                            transform: Transform::from_matrix(transform.compute_matrix().inverse()),
-                            ..PbrBundle::default()
-                        })
+                        .spawn_bundle(PbrBundle::default())
+                        .insert(CameraBase)
                         .with_children(|child_builder| {
                             child_builder
-                                .spawn_bundle(PbrBundle::default())
-                                .insert(CameraBase)
-                                .with_children(|child_builder| {
-                                    child_builder
-                                        .spawn_bundle(PbrBundle {
-                                            mesh: cursor_mesh,
-                                            material: cursor_material,
-                                            transform: Transform {
-                                                translation: Vec3::new(
-                                                    0.0,
-                                                    0.15 - 0.5 * transform.scale.y,
-                                                    0.0,
-                                                ),
-                                                scale: Vec3::new(1.15, 1.0, 1.15),
-                                                ..Transform::default()
-                                            },
-                                            ..PbrBundle::default()
-                                        })
-                                        .insert(CameraCursor);
+                                .spawn_bundle(PbrBundle {
+                                    mesh: cursor_mesh,
+                                    material: cursor_material,
+                                    transform: Transform {
+                                        translation: Vec3::new(
+                                            0.0,
+                                            0.2 - character_sprite_info.texture_info.scale.1 / 2.0,
+                                            0.0,
+                                        ),
+                                        scale: Vec3::new(1.15, 1.0, 1.15),
+                                        ..Transform::default()
+                                    },
+                                    ..PbrBundle::default()
+                                })
+                                .insert(CameraCursor);
 
-                                    child_builder
-                                        .spawn_bundle(PbrBundle {
-                                            transform: Transform::identity()
-                                                .looking_at(focus, Vec3::Y),
-                                            ..PbrBundle::default()
-                                        })
-                                        .with_children(|child_builder| {
-                                            child_builder.spawn_bundle(PerspectiveCameraBundle {
-                                                perspective_projection: PerspectiveProjection {
-                                                    // more overview, less personal than the default
-                                                    fov: 0.3,
-                                                    ..PerspectiveProjection::default()
-                                                },
-                                                ..PerspectiveCameraBundle::default()
-                                            });
-                                        });
+                            child_builder
+                                .spawn_bundle(PbrBundle {
+                                    transform: Transform::identity().looking_at(focus, Vec3::Y),
+                                    ..PbrBundle::default()
+                                })
+                                .with_children(|child_builder| {
+                                    child_builder.spawn_bundle(PerspectiveCameraBundle {
+                                        perspective_projection: PerspectiveProjection {
+                                            // more overview, less personal than the default
+                                            fov: 0.3,
+                                            ..PerspectiveProjection::default()
+                                        },
+                                        ..PerspectiveCameraBundle::default()
+                                    });
                                 });
                         });
                 });
