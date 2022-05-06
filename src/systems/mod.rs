@@ -52,8 +52,8 @@ pub fn manage_characters(
         .c
         .iter()
         .map(|(e, _, pos, _, _, _, _)| (e, pos))
-        .filter(|(_, &pos)| envir.has_floor(pos))
-        .map(|(e, _pos)| e);
+        .filter(|(e, &pos)| envir.has_floor(pos) || players.get(*e).is_ok())
+        .map(|(e, _)| e);
     if let Some(character) = timeouts.next(entities) {
         let factions = characters.collect_factions();
         let (entity, label, &pos, &speed, health, faction, container) =
@@ -94,7 +94,9 @@ pub fn manage_characters(
         );
 
         if timeout.0 == 0 && players.get(character).is_err() {
-            commands.spawn().insert(Message::new("ERROR: invalid action fot an npc"));
+            commands
+                .spawn()
+                .insert(Message::new("ERROR: invalid action fot an npc"));
             timeout.0 = 1000;
         }
 
