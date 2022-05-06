@@ -297,15 +297,16 @@ pub fn update_damaged_characters(
         if health.apply(damage) {
             let curr = format!("{health}", health = *health);
             let message = format!(
-                "{} hits {} for {} ({} -> {})",
-                damage.attacker, label, damage.amount, prev, curr
+                "{} hits {label} for {} ({prev} -> {curr})",
+                damage.attacker, damage.amount
             );
             commands.spawn().insert(Message::new(message));
         } else {
-            commands.spawn().insert(Message::new(format!(
+            let message = format!(
                 "{attacker} kills {label}",
                 attacker = damage.attacker
-            )));
+            );
+            commands.spawn().insert(Message::new(message));
             transform.rotation = Quat::from_rotation_y(0.5 * std::f32::consts::PI)
                 * Quat::from_rotation_x(-0.5 * std::f32::consts::PI);
             commands

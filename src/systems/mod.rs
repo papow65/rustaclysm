@@ -94,9 +94,7 @@ pub fn manage_characters(
         );
 
         if timeout.0 == 0 && players.get(character).is_err() {
-            commands
-                .spawn()
-                .insert(Message::new("ERROR: invalid action fot an npc".to_string()));
+            commands.spawn().insert(Message::new("ERROR: invalid action fot an npc"));
             timeout.0 = 1000;
         }
 
@@ -114,12 +112,10 @@ pub fn spawn_nearby_zones(
     moved_players: Query<(Entity, &Pos), (With<Player>, With<ZoneChanged>)>,
 ) {
     if let Ok((player, &pos)) = moved_players.get_single() {
-        for zone in Zone::from(pos).nearby(2) {
+        for zone in Zone::from(pos).nearby(3) {
             if !envir.has_floor(zone.zone_level(0).base_pos()) {
                 commands.entity(player).remove::<ZoneChanged>();
-                commands
-                    .spawn()
-                    .insert(Message::new("Spawning zone".to_string()));
+                commands.spawn().insert(Message::new("Spawning zone"));
                 spawner.load_cdda_region(zone, 1);
             }
         }

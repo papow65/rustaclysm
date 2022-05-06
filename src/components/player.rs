@@ -48,7 +48,7 @@ impl Player {
         match (self.state, instruction) {
             (PlayerActionState::Normal, Instruction::Offset(Pos(0, 0, 0))) => Ok(Action::Stay),
             (PlayerActionState::Attacking, Instruction::Offset(Pos(0, 0, 0))) => {
-                Err(Some(Message::new("can't attack self".to_string())))
+                Err(Some(Message::new("can't attack self")))
             }
             (PlayerActionState::Examining(curr), Instruction::Offset(offset)) => {
                 self.handle_offset(curr, offset)
@@ -59,7 +59,7 @@ impl Player {
             (_, Instruction::Attack) => self.handle_attack(envir, pos),
             (_, Instruction::Smash) => self.handle_smash(envir, pos),
             (PlayerActionState::Normal, Instruction::Cancel) => {
-                Err(Some(Message::new("Press ctrl+c/d/q to exit".to_string())))
+                Err(Some(Message::new("Press ctrl+c/d/q to exit")))
             }
             (_, Instruction::Cancel)
             | (PlayerActionState::Examining(_), Instruction::SwitchExamining) => {
@@ -98,8 +98,7 @@ impl Player {
                     "you can't leave"
                 } else {
                     "invalid target"
-                }
-                .to_string(),
+                },
             )))
         }
     }
@@ -109,13 +108,13 @@ impl Player {
             .nbors_for_exploring(pos, Instruction::Attack)
             .collect::<Vec<Pos>>();
         match attackable_nbors.len() {
-            0 => Err(Some(Message::new("no targets nearby".to_string()))),
+            0 => Err(Some(Message::new("no targets nearby"))),
             1 => Ok(Action::Attack {
                 target: attackable_nbors[0],
             }),
             _ => {
                 self.state = PlayerActionState::Attacking;
-                Err(Some(Message::new("attacking...".to_string())))
+                Err(Some(Message::new("attacking...")))
             }
         }
     }
@@ -125,13 +124,13 @@ impl Player {
             .nbors_for_exploring(pos, Instruction::Smash)
             .collect::<Vec<Pos>>();
         match smashable_nbors.len() {
-            0 => Err(Some(Message::new("no targets nearby".to_string()))),
+            0 => Err(Some(Message::new("no targets nearby"))),
             1 => Ok(Action::Smash {
                 target: smashable_nbors[0],
             }),
             _ => {
                 self.state = PlayerActionState::Smashing;
-                Err(Some(Message::new("smashing...".to_string())))
+                Err(Some(Message::new("smashing...")))
             }
         }
     }
