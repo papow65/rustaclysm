@@ -1,14 +1,14 @@
 mod action;
-mod factions;
+mod faction;
 mod player;
 mod pos;
 
 use bevy::prelude::{AlphaMode, Assets, Color, Component, Handle, StandardMaterial};
 
-pub use super::units::Partial;
+pub use super::unit::Partial;
 
 pub use action::{Action, Instruction};
-pub use factions::{Faction, Intelligence};
+pub use faction::{Faction, Intelligence};
 pub use player::{Player, PlayerActionState};
 pub use pos::{Path, Pos, PosYChanged, Zone, ZoneChanged, ZoneLevel};
 

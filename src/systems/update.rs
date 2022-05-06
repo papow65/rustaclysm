@@ -11,7 +11,7 @@ use super::super::components::{
     PosYChanged, Stairs, StatusDisplay,
 };
 use super::super::resources::{Envir, Location, Timeouts};
-use super::super::units::{Speed, VERTICAL};
+use super::super::unit::{Speed, VERTICAL};
 
 use super::{log_if_slow, Appearance};
 

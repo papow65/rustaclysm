@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use super::super::resources::{Collision, Envir, Hierarchy, Location};
-use super::super::units::{Milliseconds, Speed};
+use super::super::unit::{Milliseconds, Speed};
 use super::{Container, Damage, Label, Message, Pos, PosYChanged, ZoneChanged};
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]

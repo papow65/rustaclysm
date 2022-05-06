@@ -5,7 +5,7 @@ use std::iter::once;
 
 use super::super::components::{Action, Health, PlayerVisible, Pos};
 use super::super::resources::Envir;
-use super::super::units::{Milliseconds, Partial, Speed};
+use super::super::unit::{Milliseconds, Partial, Speed};
 
 pub const SAFETY: Milliseconds = Milliseconds(10000);
 

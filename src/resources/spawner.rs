@@ -14,7 +14,7 @@ use super::super::components::{
     PlayerActionState, PlayerVisible, Pos, PosYChanged, Rack, Stairs, StatusDisplay, Table, Wall,
     WindowPane, Zone, ZoneChanged, ZoneLevel,
 };
-use super::super::units::{Speed, ADJACENT, VERTICAL};
+use super::super::unit::{Speed, ADJACENT, VERTICAL};
 use super::tile_loader::{
     MeshInfo, SpriteInfo, SpriteLayer, SpriteOrientation, TileLoader, TileName,
 };
