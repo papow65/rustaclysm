@@ -80,7 +80,7 @@ mod components;
 mod plugin;
 mod resources;
 mod systems;
-mod units;
+mod unit;
 
 use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
 use bevy::prelude::{App, DefaultPlugins};

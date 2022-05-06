@@ -10,7 +10,7 @@ use bevy::prelude::*;
 use bevy::utils::HashMap;
 
 use super::components::{Containable, Container, Faction, Health, Instruction, Label, Pos};
-use super::units::{Distance, Milliseconds, Speed};
+use super::unit::{Distance, Milliseconds, Speed};
 
 pub use debug::*;
 pub use envir::*;
