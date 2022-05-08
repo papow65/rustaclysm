@@ -8,6 +8,10 @@ use crate::resources::Instructions;
 
 use super::log_if_slow;
 
+fn zoom(player: &mut Player, in_: bool) {
+    player.camera_distance *= 0.75_f32.powi(if in_ { 1 } else { -1 });
+}
+
 #[allow(clippy::needless_pass_by_value)]
 pub fn manage_mouse_input(
     mut mouse_wheel_events: EventReader<MouseWheel>,
@@ -18,7 +22,7 @@ pub fn manage_mouse_input(
     let mut player = player.iter_mut().next().unwrap();
 
     for scroll_event in mouse_wheel_events.iter() {
-        player.camera_distance *= 0.75_f32.powi(scroll_event.y.signum() as i32);
+        zoom(&mut player, 0.0 < scroll_event.y);
     }
 
     log_if_slow("manage_mouse_input", start);
@@ -31,6 +35,7 @@ pub fn manage_keyboard_input(
     mut instructions: ResMut<Instructions>,
     keys: Res<Input<KeyCode>>,
     mut keys_held: Local<Vec<KeyCode>>,
+    mut player: Query<&mut Player>,
 ) {
     let start = Instant::now();
 
@@ -40,16 +45,22 @@ pub fn manage_keyboard_input(
                 if let Some(key_code) = key_event.key_code {
                     let control =
                         keys.pressed(KeyCode::LControl) || keys.pressed(KeyCode::RControl);
+                    let shift = keys.pressed(KeyCode::LShift) || keys.pressed(KeyCode::RShift);
                     println!(
-                        "{}{:?} pressed",
+                        "{}{}{:?} pressed",
                         if control { "ctrl+" } else { "" },
+                        if shift { "shift+" } else { "" },
                         key_code
                     );
-                    match (key_code, control) {
-                        (KeyCode::C | KeyCode::D | KeyCode::Q, true) => {
+                    match (control, shift, key_code) {
+                        (true, _, KeyCode::C | KeyCode::D | KeyCode::Q) => {
                             app_exit_events.send(bevy::app::AppExit);
                         }
-                        (_, false) => {
+                        (false, _, KeyCode::Z) => {
+                            let mut player = player.iter_mut().next().unwrap();
+                            zoom(&mut player, !shift);
+                        }
+                        (false, false, _) => {
                             if let Some(instruction) = Instruction::new(key_code) {
                                 // Wait for an instruction to be processed until adding a duplicate when holding a key down.
                                 if !keys_held.contains(&key_code)
@@ -62,7 +73,7 @@ pub fn manage_keyboard_input(
                                 keys_held.push(key_code);
                             }
                         }
-                        (_, true) => {}
+                        (..) => {}
                     }
                 }
             }
