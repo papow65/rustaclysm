@@ -132,7 +132,7 @@ impl Player {
             }),
             _ => {
                 self.state = PlayerActionState::Smashing;
-                Err(Some(Message::new("smashing...")))
+                Err(None)
             }
         }
     }

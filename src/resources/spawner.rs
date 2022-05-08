@@ -9,17 +9,17 @@ use super::zone_loader::{zone_layout, SubzoneLayout, ZoneLayout};
 use crate::components::Window;
 use crate::components::{
     Appearance, CameraBase, Chair, Containable, Container, ExamineCursor, Faction, Floor, Health,
-    Hurdle, Integrity, Label, Obstacle, Opaque, Player, PlayerActionState, PlayerVisible, Pos,
-    PosYChanged, Rack, Stairs, Table, Wall, WindowPane, Zone, ZoneChanged, ZoneLevel,
+    Hurdle, Integrity, Item, Label, Obstacle, Opaque, Player, PlayerActionState, PlayerVisible,
+    Pos, PosYChanged, Rack, Stairs, Table, Wall, WindowPane, Zone, ZoneChanged, ZoneLevel,
 };
 use crate::model::{Model, ModelShape, SpriteOrientation};
 use crate::unit::{Speed, ADJACENT, VERTICAL};
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(PartialEq)]
 pub enum TileType {
     Terrain,
     Furniture,
-    Item,
+    Item(Item),
     Character,
     Meta,
 }
@@ -83,9 +83,9 @@ impl<'w, 's> TileSpawner<'w, 's> {
         &mut self,
         tile_name: &TileName,
         model: &Model,
-        tile_type: TileType,
+        tile_type: &TileType,
     ) -> PbrBundle {
-        let alpha_mode = if tile_type == TileType::Terrain && tile_name.is_ground() {
+        let alpha_mode = if tile_type == &TileType::Terrain && tile_name.is_ground() {
             AlphaMode::Opaque
         } else {
             AlphaMode::Blend
@@ -102,7 +102,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
         let models = self.loader.get_models(tile_name);
         let pbr_bundles = models
             .iter()
-            .map(|model| self.get_pbr_bundle(tile_name, model, tile_type))
+            .map(|model| self.get_pbr_bundle(tile_name, model, &tile_type))
             .collect::<Vec<PbrBundle>>();
 
         self.commands.entity(parent).with_children(|child_builder| {
@@ -121,82 +121,91 @@ impl<'w, 's> TileSpawner<'w, 's> {
                 })
                 .id();
 
-            if tile_type == TileType::Character {
-                child_builder.add_command(Insert {
-                    entity: tile,
-                    component: Obstacle,
-                });
-                child_builder.add_command(Insert {
-                    entity: tile,
-                    component: Health::new(5),
-                });
-            } else {
-                match models
-                    .iter()
-                    .find(|m| m.layer == SpriteLayer::Front)
-                    .unwrap()
-                    .shape
-                {
-                    ModelShape::Plane {
-                        orientation,
-                        transform2d,
-                    } => {
-                        if tile_type == TileType::Terrain {
-                            child_builder.add_command(Insert {
-                                entity: tile,
-                                component: Floor,
-                            });
-                        }
+            match tile_type {
+                TileType::Character => {
+                    child_builder.add_command(Insert {
+                        entity: tile,
+                        component: Obstacle,
+                    });
+                    child_builder.add_command(Insert {
+                        entity: tile,
+                        component: Health::new(5),
+                    });
+                }
+                TileType::Item(item) => {
+                    child_builder.add_command(Insert {
+                        entity: tile,
+                        component: item,
+                    });
+                }
+                _ => {
+                    if tile_type == TileType::Terrain {
+                        child_builder.add_command(Insert {
+                            entity: tile,
+                            component: Floor,
+                        });
+                    }
 
-                        if tile_name.is_stairs_up() {
-                            child_builder.add_command(Insert {
-                                entity: tile,
-                                component: Stairs,
-                            });
-                        } else if orientation == SpriteOrientation::Vertical {
-                            match transform2d.scale.y {
-                                x if 2.5 < x => {
-                                    child_builder.add_command(Insert {
-                                        entity: tile,
-                                        component: Obstacle,
-                                    });
-                                    child_builder.add_command(Remove {
-                                        entity: tile,
-                                        phantom: core::marker::PhantomData::<Floor>,
-                                    });
-                                    child_builder.add_command(Insert {
-                                        entity: tile,
-                                        component: Opaque,
-                                    });
-                                }
-                                x if 1.5 < x => {
-                                    child_builder.add_command(Insert {
-                                        entity: tile,
-                                        component: Hurdle(2.0),
-                                    });
-                                    child_builder.add_command(Insert {
-                                        entity: tile,
-                                        component: Opaque,
-                                    });
-                                }
-                                _ => {
-                                    child_builder.add_command(Insert {
-                                        entity: tile,
-                                        component: Hurdle(1.5),
-                                    });
+                    match models
+                        .iter()
+                        .find(|m| m.layer == SpriteLayer::Front)
+                        .unwrap()
+                        .shape
+                    {
+                        ModelShape::Plane {
+                            orientation,
+                            transform2d,
+                        } => {
+                            if tile_name.is_stairs_up() {
+                                child_builder.add_command(Insert {
+                                    entity: tile,
+                                    component: Stairs,
+                                });
+                            } else if orientation == SpriteOrientation::Vertical {
+                                match transform2d.scale.y {
+                                    x if 2.5 < x => {
+                                        child_builder.add_command(Insert {
+                                            entity: tile,
+                                            component: Obstacle,
+                                        });
+                                        child_builder.add_command(Remove {
+                                            entity: tile,
+                                            phantom: core::marker::PhantomData::<Floor>,
+                                        });
+                                        child_builder.add_command(Insert {
+                                            entity: tile,
+                                            component: Opaque,
+                                        });
+                                    }
+                                    x if 1.5 < x => {
+                                        child_builder.add_command(Insert {
+                                            entity: tile,
+                                            component: Hurdle(2.0),
+                                        });
+                                        child_builder.add_command(Insert {
+                                            entity: tile,
+                                            component: Opaque,
+                                        });
+                                    }
+                                    _ => {
+                                        child_builder.add_command(Insert {
+                                            entity: tile,
+                                            component: Hurdle(1.5),
+                                        });
+                                    }
                                 }
                             }
                         }
-                    }
-                    ModelShape::Cuboid { .. } => {
-                        child_builder.add_command(Insert {
-                            entity: tile,
-                            component: Obstacle,
-                        });
-                        child_builder.add_command(Insert {
-                            entity: tile,
-                            component: Opaque,
-                        });
+                        ModelShape::Cuboid { .. } => {
+                            child_builder.add_command(Insert {
+                                entity: tile,
+                                component: Obstacle,
+                            });
+                            child_builder.add_command(Insert {
+                                entity: tile,
+                                component: Opaque,
+                            });
+                        }
                     }
                 }
             }
@@ -290,7 +299,14 @@ impl<'w, 's> TileSpawner<'w, 's> {
                     .iter()
                     .filter_map(|at| at.get(Pos(x, 0, z)))
                 {
-                    self.spawn_tile(parent_entity, pos, &item.typeid, TileType::Item);
+                    self.spawn_tile(
+                        parent_entity,
+                        pos,
+                        &item.typeid,
+                        TileType::Item(Item {
+                            amount: item.charges.unwrap_or(1),
+                        }),
+                    );
                 }
 
                 for spawn in subzone_layout
@@ -581,7 +597,7 @@ impl<'w, 's> Spawner<'w, 's> {
         let cursor_model = &mut self.tile_spawner.loader.get_models(&cursor_tile_name)[0];
         let mut cursor_bundle =
             self.tile_spawner
-                .get_pbr_bundle(&cursor_tile_name, cursor_model, TileType::Meta);
+                .get_pbr_bundle(&cursor_tile_name, cursor_model, &TileType::Meta);
         cursor_bundle.transform.translation.y = 0.15;
         cursor_bundle.transform.scale = Vec3::new(1.15, 1.0, 1.15);
 
@@ -648,7 +664,7 @@ impl<'w, 's> Spawner<'w, 's> {
         let mut character_bundle = self.tile_spawner.get_pbr_bundle(
             &character_tile_name,
             character_sprite_info,
-            TileType::Character,
+            &TileType::Character,
         );
         character_bundle.transform.translation.y *= character_scale;
         println!("{:?}", character_bundle.transform);
