@@ -1,8 +1,8 @@
 use bevy::prelude::*;
 
-use super::super::resources::{Collision, Envir, Hierarchy, Location};
-use super::super::unit::{Milliseconds, Speed};
 use super::{Container, Damage, Label, Message, Pos, PosYChanged, ZoneChanged};
+use crate::resources::{Collision, Envir, Hierarchy, Location};
+use crate::unit::{Milliseconds, Speed};
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Instruction {
@@ -162,7 +162,7 @@ fn move_(
             if from.0.div_euclid(24) != to.0.div_euclid(24)
                 || from.2.div_euclid(24) != to.2.div_euclid(24)
             {
-                commands.spawn().insert(Message::new("Zone changed"));
+                //commands.spawn().insert(Message::new("Zone changed"));
                 commands.entity(mover).insert(ZoneChanged);
             }
 

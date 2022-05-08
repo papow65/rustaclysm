@@ -77,6 +77,8 @@
 #![allow(clippy::type_repetition_in_bounds)]
 
 mod components;
+mod mesh;
+mod model;
 mod plugin;
 mod resources;
 mod systems;

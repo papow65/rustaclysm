@@ -3,8 +3,8 @@ use bevy::input::{keyboard::KeyboardInput, mouse::MouseWheel, ElementState};
 use bevy::prelude::{EventReader, Input, KeyCode, Local, Query, Res, ResMut};
 use std::time::Instant;
 
-use super::super::components::{Instruction, Player};
-use super::super::resources::Instructions;
+use crate::components::{Instruction, Player};
+use crate::resources::Instructions;
 
 use super::log_if_slow;
 

@@ -1,8 +1,8 @@
 use bevy::ecs::component::Component;
 use std::fmt::{Display, Formatter};
 
-use super::super::components::{Action, Instruction, Message, Pos};
-use super::super::resources::Envir;
+use crate::components::{Action, Instruction, Message, Pos};
+use crate::resources::Envir;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum PlayerActionState {

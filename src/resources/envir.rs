@@ -3,11 +3,11 @@ use bevy::prelude::*;
 use pathfinding::prelude::{build_path, dijkstra_partial};
 use std::cmp::Ordering;
 
-use super::super::components::{
+use super::{Collision, Distance, Location, Milliseconds, RelativeRays, Speed};
+use crate::components::{
     Floor, Health, Instruction, Integrity, Intelligence, Label, Obstacle, Opaque, Path,
     PlayerVisible, Pos, Stairs,
 };
-use super::{Collision, Distance, Location, Milliseconds, RelativeRays, Speed};
 
 #[derive(SystemParam)]
 pub struct Envir<'w, 's> {

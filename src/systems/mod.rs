@@ -1,4 +1,5 @@
 mod check;
+mod hud;
 mod input;
 mod startup;
 mod update;
@@ -7,9 +8,10 @@ use bevy::prelude::*;
 use std::time::{Duration, Instant};
 
 use super::components::{Appearance, Health, Label, Message, Player, Pos, Zone, ZoneChanged};
-use super::resources::{Characters, Envir, Hierarchy, Instructions, Spawner, Timeouts};
+use super::resources::{Characters, Envir, Hierarchy, Instructions, TileSpawner, Timeouts};
 
 pub use check::*;
+pub use hud::*;
 pub use input::*;
 pub use startup::*;
 pub use update::*;
@@ -110,15 +112,15 @@ pub fn manage_characters(
 pub fn spawn_nearby_zones(
     mut commands: Commands,
     envir: Envir,
-    mut spawner: Spawner,
+    mut tile_spawner: TileSpawner,
     moved_players: Query<(Entity, &Pos), (With<Player>, With<ZoneChanged>)>,
 ) {
     if let Ok((player, &pos)) = moved_players.get_single() {
         for zone in Zone::from(pos).nearby(3) {
             if !envir.has_floor(zone.zone_level(0).base_pos()) {
                 commands.entity(player).remove::<ZoneChanged>();
-                commands.spawn().insert(Message::new("Spawning zone"));
-                spawner.load_cdda_region(zone, 1);
+                //commands.spawn().insert(Message::new("Spawning zone"));
+                tile_spawner.load_cdda_region(zone, 1);
             }
         }
     }
@@ -132,11 +134,11 @@ pub fn despawn_far_zones(
 ) {
     if let Ok(&pos) = moved_players.get_single() {
         let player_zone = Zone::from(pos);
-        println!("Current zone: {:?}", player_zone);
+        //println!("Current zone: {:?}", player_zone);
         for (entity, zone) in zones.iter() {
-            println!("{:?} <-> {:?} : {}", entity, zone, zone.dist(player_zone));
+            //println!("{:?} <-> {:?} : {}", entity, zone, zone.dist(player_zone));
             if 3 < zone.dist(player_zone) {
-                println!("Despawning zone");
+                //println!("Despawning zone");
                 commands.entity(entity).despawn_recursive();
             }
         }
