@@ -53,19 +53,21 @@ impl Player {
             (PlayerActionState::Examining(curr), Instruction::Offset(offset)) => {
                 self.handle_offset(curr, offset)
             }
+            (PlayerActionState::Normal, Instruction::Cancel) => {
+                Err(Some(Message::new("Press ctrl+c/d/q to exit")))
+            }
+            (_, Instruction::Cancel)
+            | (PlayerActionState::Attacking, Instruction::Attack)
+            | (PlayerActionState::Smashing, Instruction::Smash)
+            | (PlayerActionState::Examining(_), Instruction::SwitchExamining) => {
+                self.state = PlayerActionState::Normal;
+                Err(None)
+            }
             (_, Instruction::Offset(offset)) => self.handle_offset(pos, offset),
             (_, Instruction::Pickup) => Ok(Action::Pickup),
             (_, Instruction::Dump) => Ok(Action::Dump),
             (_, Instruction::Attack) => self.handle_attack(envir, pos),
             (_, Instruction::Smash) => self.handle_smash(envir, pos),
-            (PlayerActionState::Normal, Instruction::Cancel) => {
-                Err(Some(Message::new("Press ctrl+c/d/q to exit")))
-            }
-            (_, Instruction::Cancel)
-            | (PlayerActionState::Examining(_), Instruction::SwitchExamining) => {
-                self.state = PlayerActionState::Normal;
-                Err(None)
-            }
             (_, Instruction::SwitchExamining) => {
                 self.state = PlayerActionState::Examining(pos);
                 Ok(Action::Examine { target: pos })
@@ -114,7 +116,7 @@ impl Player {
             }),
             _ => {
                 self.state = PlayerActionState::Attacking;
-                Err(Some(Message::new("attacking...")))
+                Err(None)
             }
         }
     }
