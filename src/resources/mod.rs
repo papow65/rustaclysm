@@ -63,9 +63,13 @@ impl Timeouts {
 
     /// Does not 'pop' the entity
     /// Adds a timeout for untracked entities
-    pub fn next(&mut self, entities: impl Iterator<Item = Entity>) -> Option<Entity> {
+    pub fn next(&mut self, entities: &[Entity]) -> Option<Entity> {
+        self.m.retain(|e, _| entities.contains(e));
         let time = self.time();
-        entities.min_by_key(|e| *self.m.entry(*e).or_insert(time))
+        entities
+            .iter()
+            .copied()
+            .min_by_key(|e| *self.m.entry(*e).or_insert(time))
     }
 
     pub fn time(&self) -> Milliseconds {

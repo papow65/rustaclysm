@@ -55,8 +55,9 @@ pub fn manage_characters(
         .iter()
         .map(|(e, _, pos, _, _, _, _)| (e, pos))
         .filter(|(e, &pos)| envir.has_floor(pos) || players.get(*e).is_ok())
-        .map(|(e, _)| e);
-    if let Some(character) = timeouts.next(entities) {
+        .map(|(e, _)| e)
+        .collect::<Vec<Entity>>();
+    if let Some(character) = timeouts.next(&entities) {
         let factions = characters.collect_factions();
         let (entity, label, &pos, &speed, health, faction, container) =
             characters.c.get(character).unwrap();
