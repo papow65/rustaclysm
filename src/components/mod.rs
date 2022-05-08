@@ -12,7 +12,7 @@ pub use faction::{Faction, Intelligence};
 pub use player::{Player, PlayerActionState};
 pub use pos::{Path, Pos, PosYChanged, Zone, ZoneChanged, ZoneLevel};
 
-#[derive(Component, Clone, Debug)]
+#[derive(Component, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Label(pub String);
 
 impl Label {
@@ -73,6 +73,11 @@ pub struct Containable(pub u8);
 pub struct Health {
     curr: i8,
     max: i8,
+}
+
+#[derive(Component, PartialEq)]
+pub struct Item {
+    pub amount: u16,
 }
 
 impl Health {

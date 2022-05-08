@@ -76,7 +76,7 @@ pub struct Furniture {
 pub struct Item {
     pub typeid: TileName,
     snip_id: Option<String>,
-    charges: Option<u16>,
+    pub charges: Option<u16>,
     active: Option<bool>,
     corpse: Option<String>,
     name: Option<String>,
