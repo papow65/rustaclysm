@@ -6,7 +6,7 @@ use std::fs::read_to_string;
 
 use crate::components::Label;
 use crate::mesh::MeshInfo;
-use crate::model::{Model, SpriteOrientation, SpritePlane, SpriteShape, Transform2d};
+use crate::model::{Model, ModelShape, SpriteOrientation, Transform2d};
 use crate::unit::{ADJACENT, VERTICAL};
 
 #[derive(Hash, PartialEq, Eq, Debug, Clone, Deserialize)]
@@ -41,33 +41,37 @@ impl TileName {
             || self.0.starts_with("t_gutter_downspout")
     }
 
-    pub fn to_shape(&self, layer: SpriteLayer, transform2d: Transform2d) -> SpriteShape {
+    pub fn to_shape(&self, layer: SpriteLayer, transform2d: Transform2d) -> ModelShape {
         if self.0.starts_with("t_rock")
             || self.0.starts_with("t_wall")
             || self.0.starts_with("t_brick_wall")
             || self.0.starts_with("t_concrete_wall")
             || self.0.starts_with("t_reinforced_glass")
         {
-            SpriteShape::Cuboid(VERTICAL.f32())
+            ModelShape::Cuboid {
+                height: VERTICAL.f32(),
+            }
         } else if self.0.starts_with("t_window")
             || self.0.starts_with("t_door")
             || self.0.starts_with("t_curtains")
             || self.0.starts_with("t_bars")
         {
-            SpriteShape::Plane(SpritePlane {
+            ModelShape::Plane {
                 orientation: SpriteOrientation::Vertical,
                 transform2d: Transform2d {
                     scale: Vec2::new(ADJACENT.f32(), VERTICAL.f32()),
                     offset: Vec2::new(0.0, 0.5 * (VERTICAL.f32() - ADJACENT.f32())),
                 },
-            })
+            }
         } else if self.0.starts_with("t_sewage_pipe") {
-            SpriteShape::Cuboid(ADJACENT.f32())
+            ModelShape::Cuboid {
+                height: ADJACENT.f32(),
+            }
         } else if layer == SpriteLayer::Back {
-            SpriteShape::Plane(SpritePlane {
+            ModelShape::Plane {
                 orientation: SpriteOrientation::Horizontal,
                 transform2d,
-            })
+            }
         } else if 1.0 < transform2d.scale.x.max(transform2d.scale.y)
             || self.0.starts_with("t_fence")
             || self.0.starts_with("t_splitrail_fence")
@@ -75,15 +79,15 @@ impl TileName {
             || self.0.starts_with("t_flower")
             || self.0.starts_with("f_plant")
         {
-            SpriteShape::Plane(SpritePlane {
+            ModelShape::Plane {
                 orientation: SpriteOrientation::Vertical,
                 transform2d,
-            })
+            }
         } else {
-            SpriteShape::Plane(SpritePlane {
+            ModelShape::Plane {
                 orientation: SpriteOrientation::Horizontal,
                 transform2d,
-            })
+            }
         }
     }
 }
