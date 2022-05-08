@@ -2,7 +2,7 @@ use bevy::ecs::query::{Fetch, FilterFetch, ReadOnlyFetch, WorldQuery};
 use bevy::prelude::{Entity, Query};
 use bevy::utils::HashMap;
 
-use super::super::components::{Pos, Stairs};
+use crate::components::{Pos, Stairs};
 
 pub struct Location {
     all: HashMap<Pos, Vec<Entity>>,

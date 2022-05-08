@@ -3,9 +3,9 @@ use rand::prelude::*;
 use rand::seq::SliceRandom;
 use std::iter::once;
 
-use super::super::components::{Action, Health, PlayerVisible, Pos};
-use super::super::resources::Envir;
-use super::super::unit::{Milliseconds, Partial, Speed};
+use crate::components::{Action, Health, PlayerVisible, Pos};
+use crate::resources::Envir;
+use crate::unit::{Milliseconds, Partial, Speed};
 
 pub const SAFETY: Milliseconds = Milliseconds(10000);
 

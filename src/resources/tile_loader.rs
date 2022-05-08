@@ -4,10 +4,13 @@ use rand::seq::SliceRandom;
 use serde::Deserialize;
 use std::fs::read_to_string;
 
-use super::super::components::Label;
+use crate::components::Label;
+use crate::mesh::MeshInfo;
+use crate::model::{Model, SpriteOrientation, SpritePlane, SpriteShape, Transform2d};
+use crate::unit::{ADJACENT, VERTICAL};
 
 #[derive(Hash, PartialEq, Eq, Debug, Clone, Deserialize)]
-pub struct TileName(pub String);
+pub struct TileName(String);
 
 impl TileName {
     pub fn new<S: Into<String>>(value: S) -> Self {
@@ -24,6 +27,64 @@ impl TileName {
             result.push(Self(self.0[..index].to_string()));
         }
         result
+    }
+
+    pub fn is_ground(&self) -> bool {
+        self.0 == "t_grass" || self.0 == "t_dirt"
+    }
+
+    pub fn is_stairs_up(&self) -> bool {
+        self.0.starts_with("t_stairs_up")
+            || self.0.starts_with("t_wood_stairs_up")
+            || self.0.starts_with("t_ladder_up")
+            || self.0.starts_with("t_ramp_up")
+            || self.0.starts_with("t_gutter_downspout")
+    }
+
+    pub fn to_shape(&self, layer: SpriteLayer, transform2d: Transform2d) -> SpriteShape {
+        if self.0.starts_with("t_rock")
+            || self.0.starts_with("t_wall")
+            || self.0.starts_with("t_brick_wall")
+            || self.0.starts_with("t_concrete_wall")
+            || self.0.starts_with("t_reinforced_glass")
+        {
+            SpriteShape::Cuboid(VERTICAL.f32())
+        } else if self.0.starts_with("t_window")
+            || self.0.starts_with("t_door")
+            || self.0.starts_with("t_curtains")
+            || self.0.starts_with("t_bars")
+        {
+            SpriteShape::Plane(SpritePlane {
+                orientation: SpriteOrientation::Vertical,
+                transform2d: Transform2d {
+                    scale: Vec2::new(ADJACENT.f32(), VERTICAL.f32()),
+                    offset: Vec2::new(0.0, 0.5 * (VERTICAL.f32() - ADJACENT.f32())),
+                },
+            })
+        } else if self.0.starts_with("t_sewage_pipe") {
+            SpriteShape::Cuboid(ADJACENT.f32())
+        } else if layer == SpriteLayer::Back {
+            SpriteShape::Plane(SpritePlane {
+                orientation: SpriteOrientation::Horizontal,
+                transform2d,
+            })
+        } else if 1.0 < transform2d.scale.x.max(transform2d.scale.y)
+            || self.0.starts_with("t_fence")
+            || self.0.starts_with("t_splitrail_fence")
+            || self.0.starts_with("t_shrub")
+            || self.0.starts_with("t_flower")
+            || self.0.starts_with("f_plant")
+        {
+            SpriteShape::Plane(SpritePlane {
+                orientation: SpriteOrientation::Vertical,
+                transform2d,
+            })
+        } else {
+            SpriteShape::Plane(SpritePlane {
+                orientation: SpriteOrientation::Horizontal,
+                transform2d,
+            })
+        }
     }
 }
 
@@ -93,27 +154,18 @@ impl SpriteNumber {
     }
 }
 
-#[derive(PartialEq, Eq, Debug, Clone, Copy, Hash)]
-pub struct MeshInfo {
-    pub index: usize,
-    pub width: usize,
-    pub size: usize,
-}
-
 #[derive(Debug, Clone)]
 pub struct TextureInfo {
     pub mesh_info: MeshInfo,
-    pub imagepath: String,
-    pub scale: (f32, f32),
-    pub offset: (f32, f32),
+    pub image_path: String,
+    pub transform2d: Transform2d,
 }
 
 #[derive(Debug)]
 struct AtlasWrapper {
     range: (SpriteNumber, SpriteNumber),
-    imagepath: String,
-    scale: (f32, f32),
-    offset: (f32, f32),
+    image_path: String,
+    transform2d: Transform2d,
 }
 
 impl AtlasWrapper {
@@ -127,7 +179,7 @@ impl AtlasWrapper {
         if filename == "fallback.png" {
             return None;
         }
-        let imagepath = "gfx/UltimateCataclysm/".to_string() + filename;
+        let image_path = "gfx/UltimateCataclysm/".to_string() + filename;
 
         let from_to = if let Some(comment) = atlas.get("//") {
             comment
@@ -170,9 +222,11 @@ impl AtlasWrapper {
 
         Some(Self {
             range: (from_to[0], from_to[1]),
-            imagepath,
-            scale: (width, height),
-            offset: (offset_x, offset_y),
+            image_path,
+            transform2d: Transform2d {
+                scale: Vec2::new(width, height),
+                offset: Vec2::new(offset_x, offset_y),
+            },
         })
     }
 
@@ -182,9 +236,9 @@ impl AtlasWrapper {
 
     fn texture_info(&self, sprite_number: &SpriteNumber) -> TextureInfo {
         TextureInfo {
-            mesh_info: MeshInfo {
-                index: (*sprite_number).to_usize() - self.range.0.to_usize(),
-                width: match &self.imagepath {
+            mesh_info: MeshInfo::new(
+                (*sprite_number).to_usize() - self.range.0.to_usize(),
+                match &self.image_path {
                     p if p.ends_with("filler_tall.png") => 2,
                     p if p.ends_with("large_ridden.png") => 3,
                     p if p.ends_with("giant.png") => 4,
@@ -194,33 +248,18 @@ impl AtlasWrapper {
                     p if p.ends_with("small.png") => 12,
                     _ => 16,
                 },
-                size: 1 + self.range.1.to_usize() - self.range.0.to_usize(),
-            },
-            imagepath: self.imagepath.clone(),
-            scale: self.scale,
-            offset: self.offset,
+                1 + self.range.1.to_usize() - self.range.0.to_usize(),
+            ),
+            image_path: self.image_path.clone(),
+            transform2d: self.transform2d,
         }
     }
-}
-
-#[derive(Debug, PartialEq, Clone, Copy)]
-pub enum SpriteOrientation {
-    Horizontal,
-    Vertical,
-    Cube,
 }
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum SpriteLayer {
     Front,
     Back,
-}
-
-#[derive(Debug)]
-pub struct SpriteInfo {
-    pub texture_info: TextureInfo,
-    pub orientation: SpriteOrientation,
-    pub layer: SpriteLayer,
 }
 
 pub struct TileLoader {
@@ -277,7 +316,7 @@ impl TileLoader {
             .unwrap_or_else(|| panic!("{sprite_number:?} not found"))
     }
 
-    pub fn sprite_infos(&self, tile_name: &TileName) -> Vec<SpriteInfo> {
+    pub fn get_models(&self, tile_name: &TileName) -> Vec<Model> {
         let mut bundles = Vec::new();
         let (foreground, background) = tile_name
             .variants()
@@ -292,52 +331,20 @@ impl TileLoader {
             println!("{tile_name:?} {foreground:?} {background:?}");
         }*/
 
-        for (xground, layer) in [
+        for (sprite_numbers, layer) in [
             (foreground, SpriteLayer::Front),
             (background, SpriteLayer::Back),
         ] {
-            bundles.extend(xground.map(|fg| {
-                let texture_info = self.textures[&fg].clone();
-                let orientation = get_orientation(tile_name, layer, &texture_info.scale);
-                SpriteInfo {
-                    texture_info,
-                    orientation,
+            bundles.extend(sprite_numbers.map(|sprite_number| {
+                Model::new(
+                    tile_name,
                     layer,
-                }
+                    sprite_number,
+                    &self.textures[&sprite_number],
+                )
             }));
         }
         bundles
-    }
-}
-
-fn get_orientation(
-    tile_name: &TileName,
-    layer: SpriteLayer,
-    scale: &(f32, f32),
-) -> SpriteOrientation {
-    {
-        if layer == SpriteLayer::Back {
-            SpriteOrientation::Horizontal
-        } else if tile_name.0.starts_with("t_rock")
-            || tile_name.0.starts_with("t_wall")
-            || tile_name.0.starts_with("t_brick_wall")
-            || tile_name.0.starts_with("t_concrete_wall")
-            || tile_name.0.starts_with("t_reinforced_glass")
-        {
-            SpriteOrientation::Cube
-        } else if 1.0 < scale.0.max(scale.1)
-            || tile_name.0.starts_with("t_fence")
-            || tile_name.0.starts_with("t_splitrail_fence")
-            || tile_name.0.starts_with("t_window")
-            || tile_name.0.starts_with("t_shrub")
-            || tile_name.0.starts_with("t_door")
-            || tile_name.0.starts_with("t_flower")
-            || tile_name.0.starts_with("f_plant")
-        {
-            SpriteOrientation::Vertical
-        } else {
-            SpriteOrientation::Horizontal
-        }
     }
 }
 

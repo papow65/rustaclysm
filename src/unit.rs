@@ -60,7 +60,7 @@ impl std::ops::Div<MillimeterPerSecond> for Millimeter {
 
 pub const ADJACENT: Millimeter = Millimeter(1000);
 pub const DIAGONAL: Millimeter = Millimeter(1414);
-pub const VERTICAL: Millimeter = Millimeter(2500);
+pub const VERTICAL: Millimeter = Millimeter(1800);
 
 #[derive(Clone, Copy)]
 pub struct Distance {

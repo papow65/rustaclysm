@@ -137,7 +137,7 @@ pub struct Corpse;
 pub struct CameraBase;
 
 #[derive(Component)]
-pub struct CameraCursor;
+pub struct ExamineCursor;
 
 #[derive(Component, Clone, Copy, PartialEq)]
 pub enum PlayerVisible {

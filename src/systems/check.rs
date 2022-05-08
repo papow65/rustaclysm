@@ -1,8 +1,8 @@
 use bevy::prelude::{Changed, Entity, Local, Or, Parent, Query, Res, With};
 use std::time::{Duration, Instant};
 
-use super::super::components::{Action, Faction, Label, Obstacle, Pos};
-use super::super::resources::{Location, StdInstant};
+use crate::components::{Action, Faction, Label, Obstacle, Pos};
+use crate::resources::{Location, StdInstant};
 
 use super::log_if_slow;
 

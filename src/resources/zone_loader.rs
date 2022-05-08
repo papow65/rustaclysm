@@ -3,8 +3,8 @@ use serde::de::{Deserializer, SeqAccess, Visitor};
 use serde::Deserialize;
 use std::fs::read_to_string;
 
-use super::super::components::{Pos, ZoneLevel};
 use super::tile_loader::TileName;
+use crate::components::{Pos, ZoneLevel};
 
 // Reference: https://github.com/CleverRaven/Cataclysm-DDA/blob/master/src/savegame_json.cpp
 
@@ -215,7 +215,7 @@ where
                         result.push(At::<TileName> {
                             x: list[0].as_u64().unwrap() as u8,
                             y: list[1].as_u64().unwrap() as u8,
-                            obj: TileName(list[2].as_str().unwrap().to_string()),
+                            obj: TileName::new(list[2].as_str().unwrap()),
                         });
                     }
                     _ => panic!("{element:?}"),

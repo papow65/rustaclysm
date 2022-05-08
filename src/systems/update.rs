@@ -1,17 +1,14 @@
-use bevy::diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin};
 use bevy::math::Quat;
 use bevy::prelude::*;
 use bevy::render::camera::Camera3d;
 use bevy::tasks::ComputeTaskPool;
 use std::time::Instant;
 
-use super::super::components::{
-    Action, CameraBase, CameraCursor, Corpse, Damage, Faction, Floor, Health, Hurdle, Integrity,
-    Label, LogDisplay, Message, Obstacle, Opaque, Player, PlayerActionState, PlayerVisible, Pos,
-    PosYChanged, Stairs, StatusDisplay,
+use crate::components::{
+    CameraBase, Corpse, Damage, ExamineCursor, Faction, Health, Hurdle, Integrity, Label, Message,
+    Obstacle, Player, PlayerActionState, PlayerVisible, Pos, PosYChanged,
 };
-use super::super::resources::{Envir, Location, Timeouts};
-use super::super::unit::{Speed, VERTICAL};
+use crate::resources::{Envir, Location};
 
 use super::{log_if_slow, Appearance};
 
@@ -35,35 +32,11 @@ pub fn update_location(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub fn update_transforms(
-    mut obstacles: Query<
-        (
-            &Pos,
-            &mut Transform,
-            Option<&Handle<Mesh>>,
-            Option<&Floor>,
-            Option<&Stairs>,
-            Option<&Corpse>,
-        ),
-        (
-            Or<(Changed<Pos>, Changed<Corpse>)>,
-            Without<TextureAtlasSprite>,
-        ),
-    >,
-) {
+pub fn update_transforms(mut obstacles: Query<(&Pos, &mut Transform), Changed<Pos>>) {
     let start = Instant::now();
 
-    for (&pos, mut transform, mesh, floor, stair, corpse) in obstacles.iter_mut() {
-        let vertical_height = if floor.is_some() || mesh.is_none() {
-            0.0
-        } else if corpse.is_some() {
-            0.01
-        } else if stair.is_some() {
-            VERTICAL.f32()
-        } else {
-            transform.scale.y
-        };
-        transform.translation = pos.vec3() + Vec3::new(0.0, 0.5 * vertical_height, 0.0);
+    for (&pos, mut transform) in obstacles.iter_mut() {
+        transform.translation = pos.vec3();
     }
 
     log_if_slow("update_transforms", start);
@@ -149,14 +122,15 @@ pub fn update_visibility_on_player_y_change(
 
 #[allow(clippy::needless_pass_by_value)]
 pub fn update_cursor_visibility_on_player_change(
-    mut curors: Query<&mut Visibility, With<CameraCursor>>,
+    mut curors: Query<(&mut Visibility, &GlobalTransform), With<ExamineCursor>>,
     players: Query<&Player, Changed<Player>>,
 ) {
     let start = Instant::now();
 
     if let Ok(player) = players.get_single() {
-        if let Ok(mut visible) = curors.get_single_mut() {
+        if let Ok((mut visible, gt)) = curors.get_single_mut() {
             visible.is_visible = matches!(player.state, PlayerActionState::Examining(_));
+            println!("{:?}", gt);
         }
     }
 
@@ -389,220 +363,4 @@ pub fn update_camera(
     }
 
     log_if_slow("update_camera", start);
-}
-
-#[allow(clippy::needless_pass_by_value)]
-pub fn update_log(
-    mut logs: Query<&mut Text, With<LogDisplay>>,
-    messages: Query<&Message>,
-    changed: Query<&Message, Changed<Message>>,
-) {
-    let start = Instant::now();
-
-    let mut new_messages = false;
-    for message in changed.iter() {
-        println!("{string}", string = message.0);
-        new_messages = true;
-    }
-    if !new_messages {
-        return;
-    }
-
-    let log = messages
-        .iter()
-        .map(|m| format!("{string}\n", string = m.0))
-        .collect::<Vec<String>>();
-
-    logs.iter_mut().next().unwrap().sections[0].value = log
-        [std::cmp::max(log.len() as isize - 20, 0) as usize..log.len()]
-        .iter()
-        .map(String::as_str)
-        .collect::<String>();
-
-    log_if_slow("update_log", start);
-}
-
-#[allow(clippy::needless_pass_by_value)]
-pub fn update_status_fps(
-    diagnostics: Res<Diagnostics>,
-    mut status_displays: Query<&mut Text, With<StatusDisplay>>,
-) {
-    let start = Instant::now();
-
-    if diagnostics.is_changed() {
-        if let Some(fps) = diagnostics.get(FrameTimeDiagnosticsPlugin::FPS) {
-            if let Some(average) = fps.average() {
-                // Precision of 0.1s
-                // Padding to 6 characters, aligned right
-                status_displays.iter_mut().next().unwrap().sections[0].value =
-                    format!("{average:05.1} fps\n");
-            }
-        }
-    }
-
-    log_if_slow("update_status_fps", start);
-}
-
-#[allow(clippy::needless_pass_by_value)]
-pub fn update_status_time(
-    timeouts: Res<Timeouts>,
-    mut status_displays: Query<&mut Text, With<StatusDisplay>>,
-) {
-    let start = Instant::now();
-
-    let tenth_seconds = timeouts.time().0 / 100;
-    let seconds = tenth_seconds / 10;
-    let minutes = seconds / 10;
-    let hours = minutes / 60;
-
-    status_displays.iter_mut().next().unwrap().sections[1].value = format!(
-        "{:#02}:{:#02}:{:#02}.{}\n",
-        hours,
-        minutes % 60,
-        seconds % 60,
-        tenth_seconds % 10
-    );
-
-    log_if_slow("update_status_time", start);
-}
-
-#[allow(clippy::needless_pass_by_value)]
-pub fn update_status_health(
-    health: Query<&Health, (With<Player>, Changed<Health>)>,
-    mut status_displays: Query<&mut Text, With<StatusDisplay>>,
-) {
-    let start = Instant::now();
-
-    if let Some(health) = health.iter().next() {
-        status_displays.iter_mut().next().unwrap().sections[2].value =
-            format!("{} health\n", health);
-    }
-
-    log_if_slow("update_status_health", start);
-}
-
-#[allow(clippy::needless_pass_by_value)]
-pub fn update_status_speed(
-    speed: Query<&Speed, (With<Player>, Changed<Speed>)>,
-    mut status_displays: Query<&mut Text, With<StatusDisplay>>,
-) {
-    let start = Instant::now();
-
-    if let Some(speed) = speed.iter().next() {
-        status_displays.iter_mut().next().unwrap().sections[3].value = format!("{}\n", speed.h);
-    }
-
-    log_if_slow("update_status_speed", start);
-}
-
-#[allow(clippy::needless_pass_by_value)]
-pub fn update_status_player_state(
-    player: Query<&Player, Changed<Player>>,
-    mut status_displays: Query<&mut Text, With<StatusDisplay>>,
-) {
-    let start = Instant::now();
-
-    if let Some(player) = player.iter().next() {
-        status_displays.iter_mut().next().unwrap().sections[4].value =
-            format!("{}\n", player.state);
-    }
-
-    log_if_slow("update_status_player_state", start);
-}
-
-#[allow(clippy::needless_pass_by_value)]
-pub fn update_status_detais(
-    envir: Envir,
-    items: Query<(
-        Option<&Label>,
-        Option<&Health>,
-        Option<&Corpse>,
-        Option<&Action>,
-        Option<&Floor>,
-        Option<&Stairs>,
-        Option<&Obstacle>,
-        Option<&Hurdle>,
-        Option<&Opaque>,
-    )>,
-    player: Query<&Player, Changed<Player>>,
-    mut status_displays: Query<&mut Text, With<StatusDisplay>>,
-) {
-    let start = Instant::now();
-
-    if let Some(player) = player.iter().next() {
-        status_displays.iter_mut().next().unwrap().sections[5].value =
-            if let PlayerActionState::Examining(pos) = player.state {
-                format!(
-                    "{:?}\n{}{}",
-                    pos,
-                    if envir.has_stairs_down(pos) {
-                        "Stairs down\n"
-                    } else {
-                        ""
-                    },
-                    envir
-                        .location
-                        .all(pos)
-                        .iter()
-                        .map(|&i| {
-                            let (
-                                label,
-                                health,
-                                corpse,
-                                action,
-                                floor,
-                                stairs,
-                                obstacle,
-                                hurdle,
-                                opaque,
-                            ) = items.get(i).unwrap();
-                            let label = label.map_or_else(|| format!("{:?}", i), |l| l.0.clone());
-                            let mut flags = Vec::new();
-                            let health_str;
-                            if let Some(health) = health {
-                                health_str = format!("health({})", health);
-                                flags.push(health_str.as_str());
-                            }
-                            if corpse.is_some() {
-                                flags.push("corpse");
-                            }
-                            let action_str;
-                            if let Some(action) = action {
-                                action_str = format!("{:?}", action);
-                                flags.push(action_str.as_str());
-                            }
-                            if floor.is_some() {
-                                flags.push("floor");
-                            }
-                            if stairs.is_some() {
-                                flags.push("stairs");
-                            }
-                            if obstacle.is_some() {
-                                flags.push("obstacle");
-                            }
-                            let hurdle_str;
-                            if let Some(hurdle) = hurdle {
-                                hurdle_str = format!("hurdle({})", hurdle.0);
-                                flags.push(hurdle_str.as_str());
-                            }
-                            if opaque.is_some() {
-                                flags.push("opaque");
-                            }
-                            label
-                                + flags
-                                    .iter()
-                                    .map(|s| format!("\n- {}", s))
-                                    .collect::<String>()
-                                    .as_str()
-                        })
-                        .collect::<Vec<String>>()
-                        .join("\n")
-                        + "\n"
-                )
-            } else {
-                String::new()
-            };
-    }
-
-    log_if_slow("update_status_detais", start);
 }
