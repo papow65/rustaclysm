@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use bevy::render::camera::PerspectiveProjection;
 use bevy::utils::HashMap;
 
-use super::tile_loader::{SpriteNumber, TileLoader, TileName};
+use super::tile_loader::{SpriteLayer, SpriteNumber, TileLoader, TileName};
 use super::zone_loader::{zone_layout, SubzoneLayout, ZoneLayout};
 use crate::components::Window;
 use crate::components::{
@@ -12,7 +12,7 @@ use crate::components::{
     Hurdle, Integrity, Label, Obstacle, Opaque, Player, PlayerActionState, PlayerVisible, Pos,
     PosYChanged, Rack, Stairs, Table, Wall, WindowPane, Zone, ZoneChanged, ZoneLevel,
 };
-use crate::model::{Model, SpriteOrientation, SpriteShape};
+use crate::model::{Model, ModelShape, SpriteOrientation};
 use crate::unit::{Speed, ADJACENT, VERTICAL};
 
 #[derive(Clone, Copy, PartialEq)]
@@ -27,7 +27,7 @@ pub enum TileType {
 pub struct TileCaches {
     material_cache: HashMap<String, Handle<StandardMaterial>>,
     plane_mesh_cache: HashMap<SpriteNumber, Handle<Mesh>>,
-    cube_mesh_cache: HashMap<SpriteNumber, Handle<Mesh>>,
+    cuboid_mesh_cache: HashMap<SpriteNumber, Handle<Mesh>>,
 }
 
 impl TileCaches {
@@ -35,7 +35,7 @@ impl TileCaches {
         Self {
             material_cache: HashMap::new(),
             plane_mesh_cache: HashMap::new(),
-            cube_mesh_cache: HashMap::new(),
+            cuboid_mesh_cache: HashMap::new(),
         }
     }
 }
@@ -53,8 +53,8 @@ pub struct TileSpawner<'w, 's> {
 impl<'w, 's> TileSpawner<'w, 's> {
     fn get_tile_mesh(&mut self, model: &Model) -> Handle<Mesh> {
         match model.shape {
-            SpriteShape::Cuboid(_) => &mut self.caches.cube_mesh_cache,
-            _ => &mut self.caches.plane_mesh_cache,
+            ModelShape::Plane { .. } => &mut self.caches.plane_mesh_cache,
+            ModelShape::Cuboid { .. } => &mut self.caches.cuboid_mesh_cache,
         }
         .entry(model.sprite_number)
         .or_insert_with(|| self.mesh_assets.add(model.to_mesh()))
@@ -99,7 +99,6 @@ impl<'w, 's> TileSpawner<'w, 's> {
     }
 
     fn spawn_tile(&mut self, parent: Entity, pos: Pos, tile_name: &TileName, tile_type: TileType) {
-        let label = tile_name.to_label();
         let models = self.loader.get_models(tile_name);
         let pbr_bundles = models
             .iter()
@@ -110,7 +109,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
             let tile = child_builder
                 .spawn_bundle((
                     pos,
-                    label,
+                    tile_name.to_label(),
                     Transform::from_translation(pos.vec3()),
                     GlobalTransform::default(),
                     Visibility::default(),
@@ -131,76 +130,74 @@ impl<'w, 's> TileSpawner<'w, 's> {
                     entity: tile,
                     component: Health::new(5),
                 });
-            } else if models
-                .iter()
-                .any(|t| matches!(t.shape, SpriteShape::Cuboid(_)))
-            {
-                child_builder.add_command(Insert {
-                    entity: tile,
-                    component: Obstacle,
-                });
-                child_builder.add_command(Insert {
-                    entity: tile,
-                    component: Opaque,
-                });
-            } else if tile_type == TileType::Terrain {
-                child_builder.add_command(Insert {
-                    entity: tile,
-                    component: Floor,
-                });
-            }
-
-            if tile_name.is_stairs_up() {
-                child_builder.add_command(Insert {
-                    entity: tile,
-                    component: Stairs,
-                });
             } else {
-                let max_height = models
+                match models
                     .iter()
-                    .filter_map(|t| match t.shape {
-                        SpriteShape::Plane(plane)
-                            if plane.orientation == SpriteOrientation::Vertical =>
-                        {
-                            Some(plane.transform2d.scale.y)
+                    .find(|m| m.layer == SpriteLayer::Front)
+                    .unwrap()
+                    .shape
+                {
+                    ModelShape::Plane {
+                        orientation,
+                        transform2d,
+                    } => {
+                        if tile_type == TileType::Terrain {
+                            child_builder.add_command(Insert {
+                                entity: tile,
+                                component: Floor,
+                            });
                         }
-                        _ => None,
-                    })
-                    .map(|height| (10.0 * height) as i8)
-                    .max()
-                    .map(|height| 0.1 * f32::from(height));
-                match max_height {
-                    Some(x) if 2.5 < x => {
+
+                        if tile_name.is_stairs_up() {
+                            child_builder.add_command(Insert {
+                                entity: tile,
+                                component: Stairs,
+                            });
+                        } else if orientation == SpriteOrientation::Vertical {
+                            match transform2d.scale.y {
+                                x if 2.5 < x => {
+                                    child_builder.add_command(Insert {
+                                        entity: tile,
+                                        component: Obstacle,
+                                    });
+                                    child_builder.add_command(Remove {
+                                        entity: tile,
+                                        phantom: core::marker::PhantomData::<Floor>,
+                                    });
+                                    child_builder.add_command(Insert {
+                                        entity: tile,
+                                        component: Opaque,
+                                    });
+                                }
+                                x if 1.5 < x => {
+                                    child_builder.add_command(Insert {
+                                        entity: tile,
+                                        component: Hurdle(2.0),
+                                    });
+                                    child_builder.add_command(Insert {
+                                        entity: tile,
+                                        component: Opaque,
+                                    });
+                                }
+                                _ => {
+                                    child_builder.add_command(Insert {
+                                        entity: tile,
+                                        component: Hurdle(1.5),
+                                    });
+                                }
+                            }
+                        }
+                    }
+                    ModelShape::Cuboid { .. } => {
                         child_builder.add_command(Insert {
                             entity: tile,
                             component: Obstacle,
                         });
-                        child_builder.add_command(Remove {
-                            entity: tile,
-                            phantom: core::marker::PhantomData::<Floor>,
-                        });
                         child_builder.add_command(Insert {
                             entity: tile,
                             component: Opaque,
                         });
                     }
-                    Some(x) if 1.5 < x => {
-                        child_builder.add_command(Insert {
-                            entity: tile,
-                            component: Hurdle(2.0),
-                        });
-                        child_builder.add_command(Insert {
-                            entity: tile,
-                            component: Opaque,
-                        });
-                    }
-                    Some(_) => {
-                        child_builder.add_command(Insert {
-                            entity: tile,
-                            component: Hurdle(2.0),
-                        });
-                    }
-                    None => {}
                 }
             }
         });
@@ -563,6 +560,51 @@ impl<'w, 's> Spawner<'w, 's> {
             });
     }
 
+    fn configure_player(&mut self, player_entity: Entity, player: Player) {
+        let cursor_tile_name = TileName::new("cursor");
+        let cursor_model = &mut self.tile_spawner.loader.get_models(&cursor_tile_name)[0];
+        let mut cursor_bundle =
+            self.tile_spawner
+                .get_pbr_bundle(&cursor_tile_name, cursor_model, TileType::Meta);
+        cursor_bundle.transform.translation.y = 0.15;
+        cursor_bundle.transform.scale = Vec3::new(1.15, 1.0, 1.15);
+
+        self.tile_spawner
+            .commands
+            .entity(player_entity)
+            .insert(player)
+            .insert(PosYChanged)
+            .insert(ZoneChanged)
+            .with_children(|child_builder| {
+                child_builder
+                    .spawn_bundle(PbrBundle::default())
+                    .insert(CameraBase)
+                    .with_children(|child_builder| {
+                        child_builder
+                            .spawn_bundle(cursor_bundle)
+                            .insert(ExamineCursor);
+
+                        let camera_direction =
+                            Transform::identity().looking_at(Vec3::new(1.0, 0.0, 0.1), Vec3::Y);
+                        child_builder
+                            .spawn_bundle(PbrBundle {
+                                transform: camera_direction,
+                                ..PbrBundle::default()
+                            })
+                            .with_children(|child_builder| {
+                                child_builder.spawn_bundle(PerspectiveCameraBundle {
+                                    perspective_projection: PerspectiveProjection {
+                                        // more overview, less personal than the default
+                                        fov: 0.3,
+                                        ..PerspectiveProjection::default()
+                                    },
+                                    ..PerspectiveCameraBundle::default()
+                                });
+                            });
+                    });
+            });
+    }
+
     pub fn spawn_character(
         &mut self,
         label: Label,
@@ -572,7 +614,6 @@ impl<'w, 's> Spawner<'w, 's> {
         faction: Faction,
         player: Option<Player>,
     ) {
-        let focus = Vec3::new(1.0, 0.0, 0.1);
         let character_scale = 1.5;
 
         let character_tile_name = match faction {
@@ -581,8 +622,12 @@ impl<'w, 's> Spawner<'w, 's> {
         };
         let character_sprite_info =
             &mut self.tile_spawner.loader.get_models(&character_tile_name)[0];
-        if let SpriteShape::Plane(ref mut plane) = character_sprite_info.shape {
-            plane.transform2d.scale *= character_scale;
+        if let ModelShape::Plane {
+            ref mut transform2d,
+            ..
+        } = character_sprite_info.shape
+        {
+            transform2d.scale *= character_scale;
         }
         let mut character_bundle = self.tile_spawner.get_pbr_bundle(
             &character_tile_name,
@@ -603,46 +648,7 @@ impl<'w, 's> Spawner<'w, 's> {
             .id();
 
         if let Some(player) = player {
-            let cursor_tile_name = TileName::new("cursor");
-            let cursor_model = &mut self.tile_spawner.loader.get_models(&cursor_tile_name)[0];
-            let mut cursor_bundle =
-                self.tile_spawner
-                    .get_pbr_bundle(&cursor_tile_name, cursor_model, TileType::Meta);
-            cursor_bundle.transform.translation.y = 0.15;
-            cursor_bundle.transform.scale = Vec3::new(1.15, 1.0, 1.15);
-
-            self.tile_spawner
-                .commands
-                .entity(entity)
-                .insert(player)
-                .insert(PosYChanged)
-                .insert(ZoneChanged)
-                .with_children(|child_builder| {
-                    child_builder
-                        .spawn_bundle(PbrBundle::default())
-                        .insert(CameraBase)
-                        .with_children(|child_builder| {
-                            child_builder
-                                .spawn_bundle(cursor_bundle)
-                                .insert(ExamineCursor);
-
-                            child_builder
-                                .spawn_bundle(PbrBundle {
-                                    transform: Transform::identity().looking_at(focus, Vec3::Y),
-                                    ..PbrBundle::default()
-                                })
-                                .with_children(|child_builder| {
-                                    child_builder.spawn_bundle(PerspectiveCameraBundle {
-                                        perspective_projection: PerspectiveProjection {
-                                            // more overview, less personal than the default
-                                            fov: 0.3,
-                                            ..PerspectiveProjection::default()
-                                        },
-                                        ..PerspectiveCameraBundle::default()
-                                    });
-                                });
-                        });
-                });
+            self.configure_player(entity, player);
         }
     }
 

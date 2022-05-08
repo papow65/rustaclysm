@@ -69,7 +69,7 @@ fn spawn_manual_display(commands: &mut Commands, text_style: &TextStyle) {
         text: Text {
             sections: vec![
                 TextSection {
-                    value: "move      numpad\nup/down   r/f\npick/drop b/v\nattack    a\nrun       +\nexamine   x\nzoom      scroll wheel\nquit      ctrl+c/ctrl+d/ctrl+q".to_string(),
+                    value: "move      numpad\nup/down   r/f\npick/drop b/v\nattack    a\nrun       +\nexamine   x\nzoom      (shift+)z/scroll wheel\nquit      ctrl+c/d/q".to_string(),
                     style: text_style.clone(),
                 },
             ],
