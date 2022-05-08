@@ -11,82 +11,85 @@ use crate::components::{
 use crate::resources::{Envir, Timeouts};
 use crate::unit::Speed;
 
-fn spawn_log_display(commands: &mut Commands, text_style: &TextStyle) {
-    commands
-        .spawn_bundle(TextBundle {
-            text: Text {
-                sections: vec![TextSection {
-                    value: "".to_string(),
-                    style: text_style.clone(),
-                }],
-                ..Text::default()
-            },
-            style: Style {
-                align_self: AlignSelf::FlexEnd,
-                position_type: PositionType::Absolute,
-                position: Rect {
-                    top: Val::Px(5.0),
-                    left: Val::Px(5.0),
-                    ..Rect::default()
-                },
-                ..Style::default()
-            },
-            ..TextBundle::default()
-        })
-        .insert(LogDisplay);
-}
+fn spawn_log_display(
+    commands: &mut Commands,
+    text_style: &TextStyle,
+    default_background: &NodeBundle,
+) {
+    let mut background = default_background.clone();
+    background.style.position.bottom = Val::Px(0.0);
+    background.style.position.right = Val::Px(0.0);
 
-fn spawn_status_display(commands: &mut Commands, text_style: &TextStyle) {
-    commands
-        .spawn_bundle(TextBundle {
-            text: Text {
-                sections: vec![
-                    TextSection {
-                        value: "\n".to_string(),
+    commands.spawn_bundle(background).with_children(|parent| {
+        parent
+            .spawn_bundle(TextBundle {
+                text: Text {
+                    sections: vec![TextSection {
+                        value: "".to_string(),
                         style: text_style.clone(),
-                    };
-                    6
-                ],
-                ..Text::default()
-            },
-            style: Style {
-                align_self: AlignSelf::FlexStart,
-                position_type: PositionType::Absolute,
-                position: Rect {
-                    top: Val::Px(5.0),
-                    right: Val::Px(5.0),
-                    ..Rect::default()
+                    }],
+                    ..Text::default()
                 },
-                ..Style::default()
-            },
-            ..TextBundle::default()
-        })
-        .insert(StatusDisplay);
+                ..TextBundle::default()
+            })
+            .insert(LogDisplay);
+    });
 }
 
-fn spawn_manual_display(commands: &mut Commands, text_style: &TextStyle) {
-    commands.spawn_bundle(TextBundle {
-        text: Text {
-            sections: vec![
-                TextSection {
-                    value: "move      numpad\nup/down   r/f\npick/drop b/v\nattack    a\nrun       +\nexamine   x\nzoom      (shift+)z/scroll wheel\nquit      ctrl+c/d/q".to_string(),
-                    style: text_style.clone(),
+fn spawn_status_display(
+    commands: &mut Commands,
+    text_style: &TextStyle,
+    default_background: &NodeBundle,
+) {
+    let mut background = default_background.clone();
+    background.style.position.top = Val::Px(0.0);
+    background.style.position.right = Val::Px(0.0);
+
+    commands.spawn_bundle(background).with_children(|parent| {
+        parent
+            .spawn_bundle(TextBundle {
+                text: Text {
+                    sections: vec![
+                        TextSection {
+                            value: "\n".to_string(),
+                            style: text_style.clone(),
+                        };
+                        6
+                    ],
+                    ..Text::default()
                 },
-            ],
-            ..Text::default()
-        },
-        style: Style {
-            align_self: AlignSelf::FlexEnd,
-            position_type: PositionType::Absolute,
-            position: Rect {
-                bottom: Val::Px(5.0),
-                left: Val::Px(5.0),
-                ..Rect::default()
-            },
-            ..Style::default()
-        },
-        ..TextBundle::default()
-    }).insert(ManualDisplay);
+                ..TextBundle::default()
+            })
+            .insert(StatusDisplay);
+    });
+}
+
+fn spawn_manual_display(
+    commands: &mut Commands,
+    text_style: &TextStyle,
+    default_background: &NodeBundle,
+) {
+    let mut background = default_background.clone();
+    background.style.position.bottom = Val::Px(0.0);
+    background.style.position.left = Val::Px(0.0);
+
+    commands
+        .spawn_bundle(background)
+        .insert(ManualDisplay)
+        .with_children(|parent| {
+            parent.spawn_bundle(TextBundle {
+                text: Text {
+                    sections: vec![
+                        TextSection {
+                            value: "move         numpad\nup/down      r/f\npick/drop    b/v\nattack       a\nrun          +\nexamine      x\nzoom        (shift+)z\nzoom         scroll wheel\ntoggle this  h\nquit         ctrl+c/d/q".to_string(),
+                            style: text_style.clone(),
+                        },
+                    ],
+                    ..Text::default()
+                },
+                ..default()
+        })        .insert(ManualDisplay);
+        });
 }
 
 #[allow(clippy::needless_pass_by_value)]
@@ -98,10 +101,19 @@ pub fn spawn_hud(mut commands: Commands, asset_server: ResMut<AssetServer>) {
         font_size: 16.0,
         color: Color::rgb(0.8, 0.8, 0.8),
     };
+    let default_background = NodeBundle {
+        style: Style {
+            position_type: PositionType::Absolute,
+            padding: Rect::all(Val::Px(5.0)),
+            ..default()
+        },
+        color: Color::rgba(0.25, 0.25, 0.25, 0.6).into(),
+        ..default()
+    };
 
-    spawn_log_display(&mut commands, &text_style);
-    spawn_status_display(&mut commands, &text_style);
-    spawn_manual_display(&mut commands, &text_style);
+    spawn_log_display(&mut commands, &text_style, &default_background);
+    spawn_status_display(&mut commands, &text_style, &default_background);
+    spawn_manual_display(&mut commands, &text_style, &default_background);
 }
 
 #[allow(clippy::needless_pass_by_value)]
