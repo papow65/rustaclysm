@@ -1,9 +1,9 @@
 use bevy::ecs::event::Events;
 use bevy::input::{keyboard::KeyboardInput, mouse::MouseWheel, ElementState};
-use bevy::prelude::{EventReader, Input, KeyCode, Local, Query, Res, ResMut};
+use bevy::prelude::{EventReader, Input, KeyCode, Local, Query, Res, ResMut, Visibility, With};
 use std::time::Instant;
 
-use crate::components::{Instruction, Player};
+use crate::components::{Instruction, ManualDisplay, Player};
 use crate::resources::Instructions;
 
 use super::log_if_slow;
@@ -36,6 +36,7 @@ pub fn manage_keyboard_input(
     keys: Res<Input<KeyCode>>,
     mut keys_held: Local<Vec<KeyCode>>,
     mut player: Query<&mut Player>,
+    mut help: Query<&mut Visibility, With<ManualDisplay>>,
 ) {
     let start = Instant::now();
 
@@ -57,8 +58,12 @@ pub fn manage_keyboard_input(
                             app_exit_events.send(bevy::app::AppExit);
                         }
                         (false, _, KeyCode::Z) => {
-                            let mut player = player.iter_mut().next().unwrap();
-                            zoom(&mut player, !shift);
+                            zoom(&mut player.single_mut(), !shift);
+                        }
+                        (false, false, KeyCode::H) => {
+                            for mut visibility in help.iter_mut() {
+                                visibility.is_visible ^= true; // XOR
+                            }
                         }
                         (false, false, _) => {
                             if let Some(instruction) = Instruction::new(key_code) {
