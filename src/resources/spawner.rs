@@ -332,11 +332,11 @@ impl CustomData {
             wooden_wall: Appearance::new(material_assets, asset_server.load("tiles/wall.png")),
             yellow: Appearance::new(material_assets, Color::rgb(0.8, 0.8, 0.4)),
             cube_mesh: mesh_assets.add(Mesh::from(shape::Cube { size: 1.0 })),
-            wall_transform: Transform::from_scale(Vec3::new(
-                ADJACENT.f32(),
-                0.99 * VERTICAL.f32(),
-                ADJACENT.f32(),
-            )),
+            wall_transform: Transform {
+                translation: Vec3::new(0.0, 0.495 * VERTICAL.f32(), 0.0),
+                scale: Vec3::new(ADJACENT.f32(), 0.99 * VERTICAL.f32(), ADJACENT.f32()),
+                ..Transform::default()
+            },
             window_pane_transform: Transform {
                 translation: Vec3::new(0.0, 0.75, 0.0),
                 rotation: Quat::from_rotation_y(-0.5 * std::f32::consts::PI),
@@ -351,16 +351,20 @@ impl CustomData {
                 scale: Vec3::new(0.8, 1.2 * VERTICAL.f32(), 0.2),
                 ..Transform::default()
             },
-            rack_transform: Transform::from_scale(Vec3::new(
-                0.90 * ADJACENT.f32(),
-                0.90 * VERTICAL.f32(),
-                0.90 * ADJACENT.f32(),
-            )),
-            table_transform: Transform::from_scale(Vec3::new(
-                ADJACENT.f32(),
-                0.75 * ADJACENT.f32(),
-                ADJACENT.f32(),
-            )),
+            rack_transform: Transform {
+                translation: Vec3::new(0.0, 0.45 * VERTICAL.f32(), 0.0),
+                scale: Vec3::new(
+                    0.90 * ADJACENT.f32(),
+                    0.90 * VERTICAL.f32(),
+                    0.90 * ADJACENT.f32(),
+                ),
+                ..default()
+            },
+            table_transform: Transform {
+                translation: Vec3::new(0.0, 0.375 * ADJACENT.f32(), 0.0),
+                scale: Vec3::new(ADJACENT.f32(), 0.75 * ADJACENT.f32(), ADJACENT.f32()),
+                ..Transform::default()
+            },
         }
     }
 }
@@ -393,42 +397,46 @@ impl<'w, 's> Spawner<'w, 's> {
     pub fn spawn_wall(&mut self, pos: Pos) {
         self.tile_spawner
             .commands
-            .spawn_bundle((
-                Wall,
-                pos,
-                Integrity::new(1000),
-                Obstacle,
-                Opaque,
-                self.custom.wooden_wall.clone(),
-                Label::new("wall"),
-                PlayerVisible::Reevaluate,
-            ))
-            .insert_bundle(PbrBundle {
-                mesh: self.custom.cube_mesh.clone(),
-                transform: self.custom.wall_transform,
-                ..PbrBundle::default()
+            .spawn_bundle(PbrBundle::default())
+            .insert(Wall)
+            .insert(pos)
+            .insert(Integrity::new(1000))
+            .insert(Obstacle)
+            .insert(Opaque)
+            .insert(Label::new("wall"))
+            .insert(PlayerVisible::Reevaluate)
+            .with_children(|parent| {
+                parent
+                    .spawn_bundle(PbrBundle {
+                        mesh: self.custom.cube_mesh.clone(),
+                        transform: self.custom.wall_transform,
+                        ..PbrBundle::default()
+                    })
+                    .insert(self.custom.wooden_wall.clone());
             });
     }
 
     pub fn spawn_window(&mut self, pos: Pos) {
         self.tile_spawner
             .commands
-            .spawn_bundle((
-                Window,
-                pos,
-                Integrity::new(1),
-                Obstacle,
-                Hurdle(2.5),
-                Label::new("window"),
-                self.custom.wooden_wall.clone(),
-                PlayerVisible::Reevaluate,
-            ))
-            .insert_bundle(PbrBundle {
-                mesh: self.custom.cube_mesh.clone(),
-                ..PbrBundle::default()
-            })
-            .with_children(|child_builder| {
-                child_builder
+            .spawn_bundle(PbrBundle::default())
+            .insert(Window)
+            .insert(pos)
+            .insert(Integrity::new(1))
+            .insert(Obstacle)
+            .insert(Hurdle(2.5))
+            .insert(Label::new("window"))
+            .insert(PlayerVisible::Reevaluate)
+            .with_children(|parent| {
+                parent
+                    .spawn_bundle(PbrBundle {
+                        mesh: self.custom.cube_mesh.clone(),
+                        transform: Transform::from_translation(Vec3::new(0.0, 0.5, 0.0)),
+                        ..PbrBundle::default()
+                    })
+                    .insert(self.custom.wooden_wall.clone());
+
+                parent
                     .spawn_bundle(PbrBundle {
                         mesh: self.custom.cube_mesh.clone(),
                         transform: self.custom.window_pane_transform,
@@ -442,90 +450,99 @@ impl<'w, 's> Spawner<'w, 's> {
     pub fn spawn_stairs(&mut self, pos: Pos) {
         self.tile_spawner
             .commands
-            .spawn_bundle((
-                Stairs,
-                pos,
-                Integrity::new(100),
-                Hurdle(1.5),
-                Label::new("stairs"),
-                self.custom.wood.clone(),
-                PlayerVisible::Reevaluate,
-            ))
-            .insert_bundle(PbrBundle {
-                mesh: self.custom.cube_mesh.clone(),
-                transform: self.custom.stair_transform,
-                ..PbrBundle::default()
+            .spawn_bundle(PbrBundle::default())
+            .insert(Stairs)
+            .insert(pos)
+            .insert(Integrity::new(100))
+            .insert(Hurdle(1.5))
+            .insert(Label::new("stairs"))
+            .insert(PlayerVisible::Reevaluate)
+            .with_children(|child_builder| {
+                child_builder
+                    .spawn_bundle(PbrBundle {
+                        mesh: self.custom.cube_mesh.clone(),
+                        transform: self.custom.stair_transform,
+                        ..PbrBundle::default()
+                    })
+                    .insert(self.custom.wood.clone());
             });
     }
 
     pub fn spawn_rack(&mut self, pos: Pos) {
         self.tile_spawner
             .commands
-            .spawn_bundle((
-                Rack,
-                pos,
-                Integrity::new(40),
-                Obstacle,
-                Opaque,
-                Label::new("rack"),
-                self.custom.wood.clone(),
-                PlayerVisible::Reevaluate,
-            ))
-            .insert_bundle(PbrBundle {
-                mesh: self.custom.cube_mesh.clone(),
-                transform: self.custom.rack_transform,
-                ..PbrBundle::default()
+            .spawn_bundle(PbrBundle::default())
+            .insert(Rack)
+            .insert(pos)
+            .insert(Integrity::new(40))
+            .insert(Obstacle)
+            .insert(Opaque)
+            .insert(Label::new("rack"))
+            .insert(PlayerVisible::Reevaluate)
+            .with_children(|parent| {
+                parent
+                    .spawn_bundle(PbrBundle {
+                        mesh: self.custom.cube_mesh.clone(),
+                        transform: self.custom.rack_transform,
+                        ..PbrBundle::default()
+                    })
+                    .insert(self.custom.wood.clone());
             });
     }
 
     pub fn spawn_table(&mut self, pos: Pos) {
         self.tile_spawner
             .commands
-            .spawn_bundle((
-                Table,
-                pos,
-                Integrity::new(30),
-                Hurdle(2.0),
-                Label::new("table"),
-                self.custom.wood.clone(),
-                PlayerVisible::Reevaluate,
-            ))
-            .insert_bundle(PbrBundle {
-                mesh: self.custom.cube_mesh.clone(),
-                transform: self.custom.table_transform,
-                ..PbrBundle::default()
+            .spawn_bundle(PbrBundle::default())
+            .insert(Table)
+            .insert(pos)
+            .insert(Integrity::new(30))
+            .insert(Hurdle(2.0))
+            .insert(Label::new("table"))
+            .insert(PlayerVisible::Reevaluate)
+            .with_children(|parent| {
+                parent
+                    .spawn_bundle(PbrBundle {
+                        mesh: self.custom.cube_mesh.clone(),
+                        transform: self.custom.table_transform,
+                        ..PbrBundle::default()
+                    })
+                    .insert(self.custom.wood.clone());
             });
     }
 
     pub fn spawn_chair(&mut self, pos: Pos) {
+        let scale = 0.45 * ADJACENT.f32();
+
         self.tile_spawner
             .commands
-            .spawn_bundle((
-                Chair,
-                pos,
-                Integrity::new(10),
-                Hurdle(1.5),
-                Label::new("chair"),
-                self.custom.whitish.clone(),
-                PlayerVisible::Reevaluate,
-            ))
-            .insert_bundle(PbrBundle {
-                mesh: self.custom.cube_mesh.clone(),
-                transform: Transform::from_scale(Vec3::new(
-                    0.45 * ADJACENT.f32(),
-                    0.45 * ADJACENT.f32(),
-                    0.45 * ADJACENT.f32(),
-                )),
-                ..PbrBundle::default()
-            })
+            .spawn_bundle(PbrBundle::default())
+            .insert(Chair)
+            .insert(pos)
+            .insert(Integrity::new(10))
+            .insert(Hurdle(1.5))
+            .insert(Label::new("chair"))
+            .insert(PlayerVisible::Reevaluate)
             .with_children(|child_builder| {
                 child_builder
                     .spawn_bundle(PbrBundle {
                         mesh: self.custom.cube_mesh.clone(),
                         transform: Transform {
-                            translation: Vec3::new(0.0, 0.2 / 0.45, -0.23 / 0.45),
-                            rotation: Quat::from_rotation_y(-0.5 * std::f32::consts::PI),
-                            scale: Vec3::new(0.05 / 0.45, 0.85 / 0.45, 1.0),
+                            translation: Vec3::new(0.0, scale / 2.0, 0.0),
+                            scale: Vec3::splat(scale),
+                            ..Transform::default()
+                        },
+                        ..PbrBundle::default()
+                    })
+                    .insert(self.custom.whitish.clone());
+
+                child_builder
+                    .spawn_bundle(PbrBundle {
+                        mesh: self.custom.cube_mesh.clone(),
+                        transform: Transform {
+                            translation: Vec3::new(0.0, 0.425, -0.23),
+                            scale: Vec3::new(scale, 0.85, 0.05),
+                            ..Transform::default()
                         },
                         ..PbrBundle::default()
                     })
@@ -538,25 +555,24 @@ impl<'w, 's> Spawner<'w, 's> {
 
         self.tile_spawner
             .commands
-            .spawn_bundle((
-                label,
-                pos,
-                containable,
-                self.custom.yellow.clone(),
-                PlayerVisible::Reevaluate,
-            ))
-            .insert_bundle(PbrBundle::default())
+            .spawn_bundle(PbrBundle::default())
+            .insert(label)
+            .insert(pos)
+            .insert(containable)
+            .insert(PlayerVisible::Reevaluate)
             .with_children(|child_builder| {
-                child_builder.spawn_bundle(PbrBundle {
-                    mesh: self.custom.cube_mesh.clone(),
-                    // customizing the size using a transform allows better positioning
-                    transform: Transform {
-                        translation: Vec3::new(0.0, size, 0.0),
-                        scale: Vec3::new(size, size, size),
-                        ..Transform::default()
-                    },
-                    ..PbrBundle::default()
-                });
+                child_builder
+                    .spawn_bundle(PbrBundle {
+                        mesh: self.custom.cube_mesh.clone(),
+                        // customizing the size using a transform allows better positioning
+                        transform: Transform {
+                            translation: Vec3::new(0.0, size / 2.0, 0.0),
+                            scale: Vec3::splat(size),
+                            ..Transform::default()
+                        },
+                        ..PbrBundle::default()
+                    })
+                    .insert(self.custom.yellow.clone());
             });
     }
 

@@ -140,10 +140,9 @@ pub fn update_cursor_visibility_on_player_change(
 fn update_material(
     commands: &mut Commands,
     envir: &Envir,
-    entity: Entity,
+    _entity: Entity,
     pos: Pos,
     prev_player_visible: &mut PlayerVisible,
-    appearance: &Appearance,
     children: Option<&Children>,
     player_pos: Pos,
     child_items: &mut Query<&Appearance, (With<Parent>, Without<Pos>)>,
@@ -151,10 +150,6 @@ fn update_material(
     let player_visible = envir.can_see(player_pos, pos);
     if player_visible != *prev_player_visible {
         *prev_player_visible = player_visible;
-
-        commands
-            .entity(entity)
-            .insert(appearance.material(player_visible));
 
         if let Some(children) = children {
             for &child in children.iter() {
@@ -172,30 +167,20 @@ fn update_material(
 pub fn update_material_on_item_move(
     mut commands: Commands,
     envir: Envir,
-    mut moved_items: Query<
-        (
-            Entity,
-            &Pos,
-            &mut PlayerVisible,
-            &Appearance,
-            Option<&Children>,
-        ),
-        Changed<Pos>,
-    >,
+    mut moved_items: Query<(Entity, &Pos, &mut PlayerVisible, Option<&Children>), Changed<Pos>>,
     mut child_items: Query<&Appearance, (With<Parent>, Without<Pos>)>,
     players: Query<&Pos, With<Player>>,
 ) {
     let start = Instant::now();
 
     let &player_pos = players.single();
-    for (entity, &pos, mut prev_player_visible, appearance, children) in moved_items.iter_mut() {
+    for (entity, &pos, mut prev_player_visible, children) in moved_items.iter_mut() {
         update_material(
             &mut commands,
             &envir,
             entity,
             pos,
             &mut prev_player_visible,
-            appearance,
             children,
             player_pos,
             &mut child_items,
@@ -209,27 +194,20 @@ pub fn update_material_on_item_move(
 pub fn update_material_on_player_move(
     mut commands: Commands,
     envir: Envir,
-    mut items: Query<(
-        Entity,
-        &Pos,
-        &mut PlayerVisible,
-        &Appearance,
-        Option<&Children>,
-    )>,
+    mut items: Query<(Entity, &Pos, &mut PlayerVisible, Option<&Children>)>,
     mut child_items: Query<&Appearance, (With<Parent>, Without<Pos>)>,
     moved_players: Query<&Pos, (With<Player>, Changed<Pos>)>,
 ) {
     let start = Instant::now();
 
     if let Ok(&player_pos) = moved_players.get_single() {
-        for (entity, &pos, mut prev_player_visible, appearance, children) in items.iter_mut() {
+        for (entity, &pos, mut prev_player_visible, children) in items.iter_mut() {
             update_material(
                 &mut commands,
                 &envir,
                 entity,
                 pos,
                 &mut prev_player_visible,
-                appearance,
                 children,
                 player_pos,
                 &mut child_items,
