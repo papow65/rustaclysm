@@ -42,7 +42,12 @@ impl TileName {
     }
 
     pub fn to_shape(&self, layer: SpriteLayer, transform2d: Transform2d) -> ModelShape {
-        if self.0.starts_with("t_rock")
+        if self.0.starts_with("t_rock_floor") {
+            ModelShape::Plane {
+                orientation: SpriteOrientation::Horizontal,
+                transform2d,
+            }
+        } else if self.0.starts_with("t_rock")
             || self.0.starts_with("t_wall")
             || self.0.starts_with("t_brick_wall")
             || self.0.starts_with("t_concrete_wall")
