@@ -1,4 +1,5 @@
 use bevy::diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin};
+use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 
 use std::collections::BTreeMap;
@@ -12,17 +13,10 @@ use crate::components::{
 use crate::resources::{Envir, Timeouts};
 use crate::unit::Speed;
 
-fn spawn_log_display(
-    commands: &mut Commands,
-    text_style: &TextStyle,
-    default_background: &NodeBundle,
-) {
-    let mut background = default_background.clone();
-    background.style.position.bottom = Val::Px(0.0);
-    background.style.position.right = Val::Px(0.0);
-
-    commands.spawn_bundle(background).with_children(|parent| {
-        parent
+fn spawn_log_display(text_style: &TextStyle, parent: &mut EntityCommands) {
+    // TODO properly use flex layout
+    parent.with_children(|child_builder| {
+        child_builder
             .spawn_bundle(TextBundle {
                 text: Text {
                     sections: vec![TextSection {
@@ -31,23 +25,26 @@ fn spawn_log_display(
                     }],
                     ..Text::default()
                 },
+                style: Style {
+                    position_type: PositionType::Absolute,
+                    position: Rect {
+                        bottom: Val::Px(0.0),
+                        left: Val::Px(0.0),
+                        ..Rect::default()
+                    },
+                    margin: Rect::all(Val::Px(5.0)),
+                    ..Style::default()
+                },
                 ..TextBundle::default()
             })
             .insert(LogDisplay);
     });
 }
 
-fn spawn_status_display(
-    commands: &mut Commands,
-    text_style: &TextStyle,
-    default_background: &NodeBundle,
-) {
-    let mut background = default_background.clone();
-    background.style.position.top = Val::Px(0.0);
-    background.style.position.right = Val::Px(0.0);
-
-    commands.spawn_bundle(background).with_children(|parent| {
-        parent
+fn spawn_status_display(text_style: &TextStyle, parent: &mut EntityCommands) {
+    // TODO properly use flex layout
+    parent.with_children(|child_builder| {
+        child_builder
             .spawn_bundle(TextBundle {
                 text: Text {
                     sections: vec![
@@ -59,6 +56,16 @@ fn spawn_status_display(
                     ],
                     ..Text::default()
                 },
+                style: Style {
+                    position_type: PositionType::Absolute,
+                    position: Rect {
+                        top: Val::Px(0.0),
+                        left: Val::Px(0.0),
+                        ..Rect::default()
+                    },
+                    margin: Rect::all(Val::Px(5.0)),
+                    ..Style::default()
+                },
                 ..TextBundle::default()
             })
             .insert(StatusDisplay);
@@ -68,9 +75,8 @@ fn spawn_status_display(
 fn spawn_manual_display(
     commands: &mut Commands,
     text_style: &TextStyle,
-    default_background: &NodeBundle,
+    mut background: NodeBundle,
 ) {
-    let mut background = default_background.clone();
     background.style.position.bottom = Val::Px(0.0);
     background.style.position.left = Val::Px(0.0);
 
@@ -89,7 +95,8 @@ fn spawn_manual_display(
                     ..Text::default()
                 },
                 ..default()
-        })        .insert(ManualDisplay);
+            })
+            .insert(ManualDisplay);
         });
 }
 
@@ -102,7 +109,7 @@ pub fn spawn_hud(mut commands: Commands, asset_server: ResMut<AssetServer>) {
         font_size: 16.0,
         color: Color::rgb(0.8, 0.8, 0.8),
     };
-    let default_background = NodeBundle {
+    let mut background = NodeBundle {
         style: Style {
             position_type: PositionType::Absolute,
             padding: Rect::all(Val::Px(5.0)),
@@ -112,9 +119,17 @@ pub fn spawn_hud(mut commands: Commands, asset_server: ResMut<AssetServer>) {
         ..default()
     };
 
-    spawn_log_display(&mut commands, &text_style, &default_background);
-    spawn_status_display(&mut commands, &text_style, &default_background);
-    spawn_manual_display(&mut commands, &text_style, &default_background);
+    spawn_manual_display(&mut commands, &text_style, background.clone());
+
+    background.style.position.top = Val::Px(0.0);
+    background.style.position.right = Val::Px(0.0);
+    background.style.size = Size {
+        width: Val::Px(353.0), // for 43 chars - determined by trial and error
+        height: Val::Percent(100.0),
+    };
+    let mut parent = commands.spawn_bundle(background);
+    spawn_status_display(&text_style, &mut parent);
+    spawn_log_display(&text_style, &mut parent);
 }
 
 #[allow(clippy::needless_pass_by_value)]
@@ -140,7 +155,7 @@ pub fn update_log(
         .collect::<Vec<String>>();
 
     logs.iter_mut().next().unwrap().sections[0].value = log
-        [std::cmp::max(log.len() as isize - 20, 0) as usize..log.len()]
+        [log.len().saturating_sub(20)..log.len()]
         .iter()
         .map(String::as_str)
         .collect::<String>();
