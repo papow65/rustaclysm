@@ -181,12 +181,12 @@ impl Zone {
         }
     }
 
-    pub fn dist(&self, other: Self) -> u16 {
-        (self.x - other.x).abs().max((self.z - other.z).abs()) as u16
+    pub fn dist(&self, other: Self) -> u32 {
+        (self.x - other.x).abs().max((self.z - other.z).abs()) as u32
     }
 
-    pub fn nearby(&self, n: u8) -> Vec<Self> {
-        let n = i32::from(n);
+    pub fn nearby(&self, n: u32) -> Vec<Self> {
+        let n = i32::try_from(n).unwrap();
         (-n..n)
             .flat_map(move |x| {
                 (-n..n).map(move |z| Self {

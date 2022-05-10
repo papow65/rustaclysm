@@ -7,7 +7,9 @@ mod update;
 use bevy::prelude::*;
 use std::time::{Duration, Instant};
 
-use super::components::{Appearance, Health, Label, Message, Player, Pos, Zone, ZoneChanged};
+use super::components::{
+    Appearance, Health, Label, Message, Player, PlayerActionState, Pos, Zone, ZoneChanged,
+};
 use super::resources::{Characters, Envir, Hierarchy, Instructions, TileSpawner, Timeouts};
 
 pub use check::*;
@@ -109,39 +111,64 @@ pub fn manage_characters(
     log_if_slow("manage_characters", start);
 }
 
+const SPAWN_DISTANCE: u32 = 3;
+const DESPAWN_DISTANCE: u32 = SPAWN_DISTANCE + 1;
+
+fn get_center_zones(pos: Pos, player: &Player) -> Vec<Zone> {
+    let mut positions = vec![pos];
+    if let PlayerActionState::Examining(camera_pos) = player.state {
+        positions.push(camera_pos);
+    }
+    positions
+        .iter()
+        .map(|&p| Zone::from(p))
+        .collect::<Vec<Zone>>()
+}
+
 #[allow(clippy::needless_pass_by_value)]
 pub fn spawn_nearby_zones(
     mut commands: Commands,
     envir: Envir,
     mut tile_spawner: TileSpawner,
-    moved_players: Query<(Entity, &Pos), (With<Player>, With<ZoneChanged>)>,
+    players: Query<(Entity, &Pos, &Player), With<ZoneChanged>>,
 ) {
-    if let Ok((player, &pos)) = moved_players.get_single() {
-        for zone in Zone::from(pos).nearby(3) {
-            if !envir.has_floor(zone.zone_level(0).base_pos()) {
-                commands.entity(player).remove::<ZoneChanged>();
-                //commands.spawn().insert(Message::new("Spawning zone"));
-                tile_spawner.load_cdda_region(zone, 1);
+    // ZoneChanged is set when moving of examining
+
+    if let Ok((entity, &pos, player)) = players.get_single() {
+        for center_zone in get_center_zones(pos, player) {
+            for nearby_zone in center_zone.nearby(SPAWN_DISTANCE) {
+                if !envir.has_floor(nearby_zone.zone_level(0).base_pos()) {
+                    tile_spawner.load_cdda_region(nearby_zone, 1);
+                }
             }
         }
+
+        // This is applied at the end of the stage,
+        // so spawning and despawing should be in he same stage.
+        commands.entity(entity).remove::<ZoneChanged>();
     }
 }
 
 #[allow(clippy::needless_pass_by_value)]
 pub fn despawn_far_zones(
     mut commands: Commands,
-    zones: Query<(Entity, &Zone)>,
-    moved_players: Query<&Pos, (With<Player>, With<ZoneChanged>)>,
+    checked_zones: Query<(Entity, &Zone)>,
+    players: Query<(&Pos, &Player), With<ZoneChanged>>,
 ) {
-    if let Ok(&pos) = moved_players.get_single() {
-        let player_zone = Zone::from(pos);
-        //println!("Current zone: {:?}", player_zone);
-        for (entity, zone) in zones.iter() {
-            //println!("{:?} <-> {:?} : {}", entity, zone, zone.dist(player_zone));
-            if 3 < zone.dist(player_zone) {
-                //println!("Despawning zone");
-                commands.entity(entity).despawn_recursive();
-            }
-        }
+    // ZoneChanged is set when moving of examining
+
+    if let Ok((&pos, player)) = players.get_single() {
+        let centers = get_center_zones(pos, player);
+        let is_far_away = |zone: Zone| {
+            centers
+                .iter()
+                .map(|&center| zone.dist(center))
+                .all(|dist_from_center| DESPAWN_DISTANCE <= dist_from_center)
+        };
+        checked_zones
+            .iter()
+            .filter(|(_, &checked_zone)| is_far_away(checked_zone))
+            .map(|(e, _)| e)
+            .for_each(|e| commands.entity(e).despawn_recursive());
     }
 }
