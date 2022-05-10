@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use super::{Container, Damage, Label, Message, Pos, PosYChanged, ZoneChanged};
+use super::{Container, Damage, Label, Message, Pos, PosYChanged, Zone, ZoneChanged};
 use crate::resources::{Collision, Envir, Hierarchy, Location};
 use crate::unit::{Milliseconds, Speed};
 
@@ -121,7 +121,7 @@ impl Action {
                 pos,
                 speed,
             ),
-            Action::Examine { target: _ } => examine(),
+            Action::Examine { target } => examine(commands, actor, pos, target),
             Action::SwitchRunning => switch_running(commands, actor),
         };
 
@@ -158,11 +158,7 @@ fn move_(
             if from.1 != to.1 {
                 commands.entity(mover).insert(PosYChanged);
             }
-
-            if from.0.div_euclid(24) != to.0.div_euclid(24)
-                || from.2.div_euclid(24) != to.2.div_euclid(24)
-            {
-                //commands.spawn().insert(Message::new("Zone changed"));
+            if Zone::from(from) != Zone::from(to) {
                 commands.entity(mover).insert(ZoneChanged);
             }
 
@@ -334,8 +330,16 @@ fn pickup(
     }
 }
 
-const fn examine() -> Milliseconds {
+fn examine(commands: &mut Commands, player: Entity, from: Pos, to: Pos) -> Milliseconds {
     // see update_status_detais() in systems/update.rs
+
+    if from.1 != to.1 {
+        commands.entity(player).insert(PosYChanged);
+    }
+    if Zone::from(from) != Zone::from(to) {
+        commands.entity(player).insert(ZoneChanged);
+    }
+
     Milliseconds(0)
 }
 
