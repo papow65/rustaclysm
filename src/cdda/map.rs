@@ -8,30 +8,37 @@ use crate::components::{Pos, ZoneLevel};
 
 // Reference: https://github.com/CleverRaven/Cataclysm-DDA/blob/master/src/savegame_json.cpp
 
-pub fn zone_layout(zone_level: ZoneLevel) -> Option<ZoneLayout> {
-    let filepath = format!(
-        "assets/maps/{}.{}.{}/{}.{}.{}.map",
-        zone_level.x.div_euclid(32),
-        zone_level.z.div_euclid(32),
-        zone_level.y,
-        zone_level.x,
-        zone_level.z,
-        zone_level.y
-    );
-    //println!("Path: {filepath}");
-    read_to_string(&filepath)
-        .ok()
-        .map(|s| ZoneLayout::new(s.as_str()))
+/** Corresponds to a 'map' in CDDA. It defines the layout of a `ZoneLevel`. */
+#[derive(Debug)]
+pub struct Map {
+    pub submaps: Vec<Submap>,
 }
 
-#[derive(Debug)]
-pub struct ZoneLayout {
-    pub subzone_layouts: Vec<SubzoneLayout>,
+impl TryFrom<ZoneLevel> for Map {
+    type Error = ();
+    fn try_from(zone_level: ZoneLevel) -> Result<Self, ()> {
+        let filepath = format!(
+            "assets/maps/{}.{}.{}/{}.{}.{}.map",
+            zone_level.x.div_euclid(32),
+            zone_level.z.div_euclid(32),
+            zone_level.y,
+            zone_level.x,
+            zone_level.z,
+            zone_level.y
+        );
+        //println!("Path: {filepath}");
+        read_to_string(&filepath)
+            .ok()
+            .map(|s| Self {
+                submaps: serde_json::from_str(s.as_str()).unwrap(),
+            })
+            .ok_or(())
+    }
 }
 
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct SubzoneLayout {
+pub struct Submap {
     pub version: u64,
     pub coordinates: (i32, i32, i32),
     pub turn_last_touched: u64,
@@ -54,14 +61,6 @@ pub struct SubzoneLayout {
     pub vehicles: Vec<serde_json::Value>,
     pub partial_constructions: Vec<serde_json::Value>,
     pub computers: Option<Vec<serde_json::Value>>,
-}
-
-impl ZoneLayout {
-    fn new(file_contents: &str) -> Self {
-        Self {
-            subzone_layouts: serde_json::from_str(file_contents).unwrap(),
-        }
-    }
 }
 
 #[allow(unused)]

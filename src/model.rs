@@ -1,7 +1,7 @@
 use bevy::prelude::{Mesh, Quat, Transform, Vec2, Vec3};
 
+use crate::cdda::tile_loader::{SpriteLayer, SpriteNumber, TextureInfo, TileName};
 use crate::mesh::MeshInfo;
-use crate::resources::{SpriteLayer, SpriteNumber, TextureInfo, TileName};
 use crate::unit::ADJACENT;
 
 #[derive(Debug, PartialEq, Clone, Copy)]

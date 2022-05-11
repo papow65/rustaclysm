@@ -4,13 +4,12 @@ use bevy::prelude::*;
 use bevy::render::camera::PerspectiveProjection;
 use bevy::utils::HashMap;
 
-use super::tile_loader::{SpriteLayer, SpriteNumber, TileLoader, TileName};
-use super::zone_loader::{zone_layout, SubzoneLayout, ZoneLayout};
-use crate::components::Window;
+use crate::cdda::map::{Map, Submap};
+use crate::cdda::tile_loader::{SpriteLayer, SpriteNumber, TileLoader, TileName};
 use crate::components::{
     Appearance, CameraBase, Chair, Containable, Container, ExamineCursor, Faction, Floor, Health,
     Hurdle, Integrity, Item, Label, Obstacle, Opaque, Player, PlayerActionState, PlayerVisible,
-    Pos, PosYChanged, Rack, Stairs, Table, Wall, WindowPane, Zone, ZoneChanged, ZoneLevel,
+    Pos, PosYChanged, Rack, Stairs, Table, Wall, Window, WindowPane, Zone, ZoneChanged, ZoneLevel,
 };
 use crate::model::{Model, ModelShape, SpriteOrientation};
 use crate::unit::{Speed, ADJACENT, VERTICAL};
@@ -234,31 +233,26 @@ impl<'w, 's> TileSpawner<'w, 's> {
                         .entity(zone_entity)
                         .add_child(zone_level_entity);
                     */
-                    if let Some(zone_layout) = zone_layout(zone_level.offset(100, 212)) {
-                        self.spawn_zone(&zone_layout, zone_entity, zone_level);
+                    if let Ok(map) = Map::try_from(zone_level.offset(100, 212)) {
+                        self.spawn_zone(&map, zone_entity, zone_level);
                     }
                 }
             }
         }
     }
 
-    fn spawn_zone(
-        &mut self,
-        zone_layout: &ZoneLayout,
-        parent_entity: Entity,
-        zone_level: ZoneLevel,
-    ) {
-        let base = zone_layout.subzone_layouts[0].coordinates;
-        for subzone_layout in &zone_layout.subzone_layouts {
-            assert!(base.2 == subzone_layout.coordinates.2);
+    fn spawn_zone(&mut self, map: &Map, parent_entity: Entity, zone_level: ZoneLevel) {
+        let base = map.submaps[0].coordinates;
+        for submap in &map.submaps {
+            assert!(base.2 == submap.coordinates.2);
             self.spawn_subzone(
-                subzone_layout,
+                submap,
                 parent_entity,
                 zone_level,
                 Pos(
-                    12 * (subzone_layout.coordinates.0 - base.0),
+                    12 * (submap.coordinates.0 - base.0),
                     0,
-                    12 * (subzone_layout.coordinates.1 - base.1),
+                    12 * (submap.coordinates.1 - base.1),
                 ),
             );
         }
@@ -266,7 +260,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
 
     fn spawn_subzone(
         &mut self,
-        subzone_layout: &SubzoneLayout,
+        submap: &Submap,
         parent_entity: Entity,
         zone_level: ZoneLevel,
         subzone_offset: Pos,
@@ -279,14 +273,14 @@ impl<'w, 's> TileSpawner<'w, 's> {
                     .unwrap()
                     .offset(Pos(x, 0, z))
                     .unwrap();
-                let tile_name = &subzone_layout.terrain[(x + 12 * z) as usize];
+                let tile_name = &submap.terrain[(x + 12 * z) as usize];
                 if tile_name != &TileName::new("t_open_air")
                     && tile_name != &TileName::new("t_open_air_rooved")
                 {
                     self.spawn_tile(parent_entity, pos, tile_name, TileType::Terrain);
                 }
 
-                for tile_name in subzone_layout
+                for tile_name in submap
                     .furniture
                     .iter()
                     .filter_map(|at| at.get(Pos(x, 0, z)))
@@ -294,11 +288,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
                     self.spawn_tile(parent_entity, pos, tile_name, TileType::Furniture);
                 }
 
-                for item in subzone_layout
-                    .items
-                    .iter()
-                    .filter_map(|at| at.get(Pos(x, 0, z)))
-                {
+                for item in submap.items.iter().filter_map(|at| at.get(Pos(x, 0, z))) {
                     self.spawn_tile(
                         parent_entity,
                         pos,
@@ -309,7 +299,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
                     );
                 }
 
-                for spawn in subzone_layout
+                for spawn in submap
                     .spawns
                     .iter()
                     .filter(|spawn| spawn.x == x && spawn.z == z)

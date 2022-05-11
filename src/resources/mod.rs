@@ -2,8 +2,6 @@ mod debug;
 mod envir;
 mod location;
 mod spawner;
-mod tile_loader;
-mod zone_loader;
 
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
@@ -16,8 +14,6 @@ pub use debug::*;
 pub use envir::*;
 pub use location::*;
 pub use spawner::*;
-pub use tile_loader::*;
-pub use zone_loader::*;
 
 pub enum Collision {
     Pass,
