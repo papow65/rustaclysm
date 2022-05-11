@@ -76,6 +76,7 @@
 #![allow(clippy::type_complexity)]
 #![allow(clippy::type_repetition_in_bounds)]
 
+mod cdda;
 mod components;
 mod mesh;
 mod model;

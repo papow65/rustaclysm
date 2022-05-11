@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 
-use crate::resources::{CustomData, Spawner, TileLoader};
+use crate::cdda::tile_loader::TileLoader;
+use crate::resources::{CustomData, Spawner};
 
 #[allow(clippy::needless_pass_by_value)]
 pub fn maximize_window(mut windows: ResMut<Windows>) {

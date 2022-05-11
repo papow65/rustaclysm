@@ -5,8 +5,7 @@ mod pos;
 
 use bevy::prelude::{AlphaMode, Assets, Color, Component, Handle, StandardMaterial};
 
-pub use super::unit::Partial;
-
+pub use crate::unit::Partial;
 pub use action::{Action, Instruction};
 pub use faction::{Faction, Intelligence};
 pub use player::{Player, PlayerActionState};

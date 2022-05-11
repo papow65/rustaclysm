@@ -171,13 +171,13 @@ pub struct TextureInfo {
 }
 
 #[derive(Debug)]
-struct AtlasWrapper {
+struct Atlas {
     range: (SpriteNumber, SpriteNumber),
     image_path: String,
     transform2d: Transform2d,
 }
 
-impl AtlasWrapper {
+impl Atlas {
     fn new(
         _asset_server: &AssetServer,
         json: &serde_json::Value,
@@ -281,15 +281,15 @@ impl TileLoader {
         let filepath = "assets/gfx/UltimateCataclysm/tile_config.json";
         let file_contents = read_to_string(&filepath).unwrap();
         let json: serde_json::Value = serde_json::from_str(&file_contents).unwrap();
-        let atlases = json.as_object().unwrap()["tiles-new"].as_array().unwrap();
+        let json_atlases = json.as_object().unwrap()["tiles-new"].as_array().unwrap();
 
-        let mut atlas_wrappers = Vec::new();
+        let mut atlases = Vec::new();
         let mut tiles = HashMap::default();
 
-        for atlas in atlases {
-            if let Some(atlas) = AtlasWrapper::new(asset_server, atlas, &mut tiles) {
+        for json_atlas in json_atlases {
+            if let Some(atlas) = Atlas::new(asset_server, json_atlas, &mut tiles) {
                 dbg!(&atlas);
-                atlas_wrappers.push(atlas);
+                atlases.push(atlas);
             }
         }
 
@@ -304,21 +304,21 @@ impl TileLoader {
                 loader
                     .textures
                     .entry(*fg)
-                    .or_insert_with(|| Self::texture_info(&atlas_wrappers, fg));
+                    .or_insert_with(|| Self::texture_info(&atlases, fg));
             }
             for bg in &tile_info.background {
                 loader
                     .textures
                     .entry(*bg)
-                    .or_insert_with(|| Self::texture_info(&atlas_wrappers, bg));
+                    .or_insert_with(|| Self::texture_info(&atlases, bg));
             }
         }
 
         loader
     }
 
-    fn texture_info(atlas_wrappers: &[AtlasWrapper], sprite_number: &SpriteNumber) -> TextureInfo {
-        atlas_wrappers
+    fn texture_info(atlases: &[Atlas], sprite_number: &SpriteNumber) -> TextureInfo {
+        atlases
             .iter()
             .find(|atlas_wrapper| atlas_wrapper.contains(sprite_number))
             .map(|atlas_wrapper| atlas_wrapper.texture_info(sprite_number))
