@@ -1,8 +1,6 @@
 use bevy::prelude::{Mesh, Quat, Transform, Vec2, Vec3};
 
-use crate::cdda::tile_loader::{SpriteLayer, SpriteNumber, TextureInfo, TileName};
-use crate::mesh::MeshInfo;
-use crate::unit::ADJACENT;
+use crate::prelude::*;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Transform2d {
@@ -104,9 +102,10 @@ impl Model {
         layer: SpriteLayer,
         sprite_number: SpriteNumber,
         texture_info: &TextureInfo,
+        tile_type: &TileType,
     ) -> Self {
         Self {
-            shape: tile_name.to_shape(layer, texture_info.transform2d),
+            shape: tile_name.to_shape(layer, texture_info.transform2d, tile_type),
             layer,
             sprite_number,
             mesh_info: texture_info.mesh_info,

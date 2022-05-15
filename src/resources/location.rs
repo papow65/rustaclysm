@@ -80,6 +80,14 @@ impl Location {
             .find_map(|&x| items.get(x).ok())
     }
 
+    pub fn exists(&self, pos: Pos) -> bool {
+        if let Some(entities) = self.all.get(&pos) {
+            !entities.is_empty()
+        } else {
+            false
+        }
+    }
+
     pub fn all(&self, pos: Pos) -> Vec<Entity> {
         self.all.get(&pos).unwrap_or(&vec![]).clone()
     }

@@ -1,13 +1,9 @@
+use crate::prelude::*;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
 use rand::seq::SliceRandom;
 use serde::Deserialize;
 use std::fs::read_to_string;
-
-use crate::components::Label;
-use crate::mesh::MeshInfo;
-use crate::model::{Model, ModelShape, SpriteOrientation, Transform2d};
-use crate::unit::{ADJACENT, VERTICAL};
 
 #[derive(Hash, PartialEq, Eq, Debug, Clone, Deserialize)]
 pub struct TileName(String);
@@ -41,8 +37,13 @@ impl TileName {
             || self.0.starts_with("t_gutter_downspout")
     }
 
-    pub fn to_shape(&self, layer: SpriteLayer, transform2d: Transform2d) -> ModelShape {
-        if self.0.starts_with("t_rock_floor") {
+    pub fn to_shape(
+        &self,
+        layer: SpriteLayer,
+        transform2d: Transform2d,
+        tile_type: &TileType,
+    ) -> ModelShape {
+        if tile_type == &TileType::ZoneLayer || self.0.starts_with("t_rock_floor") {
             ModelShape::Plane {
                 orientation: SpriteOrientation::Horizontal,
                 transform2d,
@@ -325,7 +326,7 @@ impl TileLoader {
             .unwrap_or_else(|| panic!("{sprite_number:?} not found"))
     }
 
-    pub fn get_models(&self, tile_name: &TileName) -> Vec<Model> {
+    pub fn get_models(&self, tile_name: &TileName, tile_type: &TileType) -> Vec<Model> {
         let mut bundles = Vec::new();
         let (foreground, background) = tile_name
             .variants()
@@ -350,6 +351,7 @@ impl TileLoader {
                     layer,
                     sprite_number,
                     &self.textures[&sprite_number],
+                    tile_type,
                 )
             }));
         }

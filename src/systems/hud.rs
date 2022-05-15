@@ -304,7 +304,6 @@ pub fn update_status_detais(
                             obstacle,
                             hurdle,
                             opaque,
-                            //global_transform,
                         )| {
                             let label = label.map_or_else(|| "?".to_string(), |l| l.0.clone());
                             let mut flags = Vec::new();
@@ -338,11 +337,6 @@ pub fn update_status_detais(
                             if opaque.is_some() {
                                 flags.push("opaque");
                             }
-                            /*let global_transform_str;
-                            if let Some(global_transform) = global_transform {
-                                global_transform_str = format!("{:#?}", global_transform);
-                                flags.push(global_transform_str.as_str());
-                            }*/
                             label
                                 + flags
                                     .iter()
