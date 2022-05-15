@@ -4,9 +4,10 @@ use bevy::prelude::*;
 
 use super::resources::{Instructions, Location, RelativeRays, TileCaches, Timeouts};
 use super::systems::{
-    check_delay, create_custom_data, create_tiles, despawn_far_zones, manage_characters,
-    manage_game_over, manage_keyboard_input, manage_mouse_input, maximize_window, spawn_hud,
-    spawn_initial_entities, spawn_nearby_zones, update_camera,
+    check_delay, create_custom_data, create_tiles, despawn_far_overzones, despawn_far_zones,
+    manage_characters, manage_game_over, manage_keyboard_input, manage_mouse_input,
+    maximize_window, remove_changed_markers, spawn_hud, spawn_initial_entities,
+    spawn_nearby_overzones, spawn_nearby_zones, update_camera,
     update_cursor_visibility_on_player_change, update_damaged_characters, update_damaged_items,
     update_location, update_log, update_material_on_item_move, update_material_on_player_move,
     update_status_detais, update_status_fps, update_status_health, update_status_player_state,
@@ -40,10 +41,26 @@ impl Plugin for RustaclysmPlugin {
             .add_startup_system_to_stage(StartupStage::PreStartup, create_tiles)
             .add_startup_system(spawn_hud)
             .add_startup_system(spawn_initial_entities)
-            .add_startup_system_set_to_stage(StartupStage::PostStartup, update_systems());
+            .add_startup_system_set_to_stage(StartupStage::PostStartup, update_systems())
+            .add_startup_system_to_stage(StartupStage::PostStartup, spawn_nearby_overzones);
 
         // executed every frame
-        app.add_system(manage_game_over)
+        app.add_system_to_stage(CoreStage::PreUpdate, spawn_nearby_overzones)
+            .add_system_to_stage(CoreStage::PreUpdate, despawn_far_overzones)
+            .add_system_to_stage(
+                CoreStage::PreUpdate,
+                spawn_nearby_zones.after(spawn_nearby_overzones),
+            )
+            .add_system_to_stage(CoreStage::PreUpdate, despawn_far_zones)
+            .add_system_to_stage(
+                CoreStage::PreUpdate,
+                remove_changed_markers
+                    .after(spawn_nearby_overzones)
+                    .after(despawn_far_overzones)
+                    .after(spawn_nearby_zones)
+                    .after(despawn_far_zones),
+            )
+            .add_system(manage_game_over)
             .add_system(manage_mouse_input)
             .add_system(manage_keyboard_input)
             .add_system(manage_characters)
@@ -52,9 +69,7 @@ impl Plugin for RustaclysmPlugin {
             .add_system_to_stage(CoreStage::Last, check_overlap)
             .add_system_to_stage(CoreStage::Last, check_hierarchy)
             .add_system_to_stage(CoreStage::Last, check_characters)*/
-            .add_system_to_stage(CoreStage::Last, check_delay)
-            .add_system_to_stage(CoreStage::Last, spawn_nearby_zones)
-            .add_system_to_stage(CoreStage::Last, despawn_far_zones);
+            .add_system_to_stage(CoreStage::Last, check_delay);
     }
 }
 

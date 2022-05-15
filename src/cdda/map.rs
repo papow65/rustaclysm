@@ -1,10 +1,8 @@
+use crate::prelude::{Pos, TileName, ZoneLevel};
 use bevy::utils::HashMap;
 use serde::de::{Deserializer, SeqAccess, Visitor};
 use serde::Deserialize;
 use std::fs::read_to_string;
-
-use super::tile_loader::TileName;
-use crate::components::{Pos, ZoneLevel};
 
 // Reference: https://github.com/CleverRaven/Cataclysm-DDA/blob/master/src/savegame_json.cpp
 
@@ -18,7 +16,7 @@ impl TryFrom<ZoneLevel> for Map {
     type Error = ();
     fn try_from(zone_level: ZoneLevel) -> Result<Self, ()> {
         let filepath = format!(
-            "assets/maps/{}.{}.{}/{}.{}.{}.map",
+            "assets/save/maps/{}.{}.{}/{}.{}.{}.map",
             zone_level.x.div_euclid(32),
             zone_level.z.div_euclid(32),
             zone_level.y,
@@ -26,7 +24,6 @@ impl TryFrom<ZoneLevel> for Map {
             zone_level.z,
             zone_level.y
         );
-        //println!("Path: {filepath}");
         read_to_string(&filepath)
             .ok()
             .map(|s| Self {
@@ -52,7 +49,7 @@ pub struct Submap {
     pub furniture: Vec<At<TileName>>,
 
     #[serde(deserialize_with = "load_items")]
-    pub items: Vec<At<Item>>,
+    pub items: Vec<At<CddaItem>>,
 
     pub traps: Vec<serde_json::Value>,
     pub fields: Vec<serde_json::Value>,
@@ -72,7 +69,7 @@ pub struct Furniture {
 #[allow(unused)]
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct Item {
+pub struct CddaItem {
     pub typeid: TileName,
     snip_id: Option<String>,
     pub charges: Option<u16>,
@@ -86,8 +83,8 @@ pub struct Item {
     temperature: Option<u64>,
     item_vars: Option<HashMap<String, String>>,
     item_tags: Option<Vec<String>>,
-    contents: Option<Container>,
-    components: Option<Vec<Item>>,
+    contents: Option<CddaContainer>,
+    components: Option<Vec<CddaItem>>,
     is_favorite: Option<bool>,
     relic_data: Option<serde_json::Value>,
     damaged: Option<i64>,
@@ -106,7 +103,7 @@ pub struct Item {
 #[allow(unused)]
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct Container {
+pub struct CddaContainer {
     contents: Vec<Pocket>,
     additional_pockets: Option<Vec<Pocket>>,
 }
@@ -116,7 +113,7 @@ pub struct Container {
 #[serde(deny_unknown_fields)]
 pub struct Pocket {
     pocket_type: u8,
-    contents: Vec<Item>,
+    contents: Vec<CddaItem>,
     _sealed: bool,
     allowed: Option<bool>,
     favorite_settings: Option<serde_json::Value>,
@@ -227,14 +224,14 @@ where
     deserializer.deserialize_seq(FurnitureVisitor)
 }
 
-fn load_items<'de, D>(deserializer: D) -> Result<Vec<At<Item>>, D::Error>
+fn load_items<'de, D>(deserializer: D) -> Result<Vec<At<CddaItem>>, D::Error>
 where
     D: Deserializer<'de>,
 {
     struct ItemsVisitor;
 
     impl<'de> Visitor<'de> for ItemsVisitor {
-        type Value = Vec<At<Item>>;
+        type Value = Vec<At<CddaItem>>;
 
         fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
             formatter.write_str("a sequence containing [x, y, [item, ...], x, y, [item, ...], ...]")
@@ -244,7 +241,7 @@ where
         where
             A: SeqAccess<'de>,
         {
-            let mut result: Vec<At<Item>> = Vec::new();
+            let mut result: Vec<At<CddaItem>> = Vec::new();
             let mut x = None;
             let mut y = None;
             while let Some(element) = seq.next_element::<serde_json::Value>()? {
@@ -261,7 +258,7 @@ where
                             let mut vec = Vec::new();
                             parse_repetition(&element, &mut vec);
                             for obj in vec {
-                                result.push(At::<Item> {
+                                result.push(At::<CddaItem> {
                                     x: x.unwrap(),
                                     y: y.unwrap(),
                                     obj,

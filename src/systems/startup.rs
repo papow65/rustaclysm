@@ -1,7 +1,5 @@
+use crate::prelude::*;
 use bevy::prelude::*;
-
-use crate::cdda::tile_loader::TileLoader;
-use crate::resources::{CustomData, Spawner};
 
 #[allow(clippy::needless_pass_by_value)]
 pub fn maximize_window(mut windows: ResMut<Windows>) {
@@ -26,9 +24,11 @@ pub fn create_custom_data(
 #[allow(clippy::needless_pass_by_value)]
 pub fn spawn_initial_entities(mut spawner: Spawner) {
     spawner.spawn_light();
-    spawner.spawn_floors();
-    spawner.spawn_house();
-    spawner.spawn_characters();
-    spawner.spawn_containables();
-    spawner.spawn_window_wall();
+
+    let offset = Zone { x: 100, z: 212 }.zone_level(0).base_pos();
+    spawner.spawn_floors(offset);
+    spawner.spawn_house(offset);
+    spawner.spawn_characters(offset);
+    spawner.spawn_containables(offset);
+    spawner.spawn_window_wall(offset);
 }

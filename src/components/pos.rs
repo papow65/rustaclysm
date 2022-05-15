@@ -25,11 +25,6 @@ impl Pos {
     pub const fn in_bounds(&self) -> bool {
         let vertical_range = Self::vertical_range();
         *vertical_range.start() <= self.1 && self.1 <= *vertical_range.end()
-        /*0 <= self.0
-        && self.0 < SIZE.0
-        &&
-        && 0 <= self.2
-        && self.2 < SIZE.2*/
     }
 
     /** Distance without regard for obstacles or stairs */
@@ -166,13 +161,6 @@ pub struct Zone {
 }
 
 impl Zone {
-    pub const fn offset(&self, x: i32, z: i32) -> Self {
-        Self {
-            x: self.x + x,
-            z: self.z + z,
-        }
-    }
-
     pub const fn zone_level(&self, y: i32) -> ZoneLevel {
         ZoneLevel {
             x: self.x,
@@ -211,7 +199,7 @@ impl From<ZoneLevel> for Zone {
     fn from(zone_level: ZoneLevel) -> Self {
         Self {
             x: zone_level.x,
-            z: zone_level.y,
+            z: zone_level.z,
         }
     }
 }
@@ -246,9 +234,75 @@ impl From<Pos> for ZoneLevel {
         }
     }
 }
+#[derive(Component, Copy, Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct Overzone {
+    pub x: i32,
+    pub z: i32,
+}
 
+impl Overzone {
+    pub const fn overzone_level(&self, y: i32) -> OverzoneLevel {
+        OverzoneLevel {
+            x: self.x,
+            y,
+            z: self.z,
+        }
+    }
+}
+
+impl From<Zone> for Overzone {
+    fn from(zone: Zone) -> Self {
+        Self {
+            x: zone.x.div_euclid(180),
+            z: zone.z.div_euclid(180),
+        }
+    }
+}
+
+impl From<OverzoneLevel> for Overzone {
+    fn from(overzone_level: OverzoneLevel) -> Self {
+        Self {
+            x: overzone_level.x,
+            z: overzone_level.z,
+        }
+    }
+}
+
+#[derive(Component, Copy, Clone, Debug, PartialEq)]
+pub struct OverzoneLevel {
+    pub x: i32,
+    pub y: i32,
+    pub z: i32,
+}
+
+impl OverzoneLevel {
+    pub const fn base_zone_level(&self) -> ZoneLevel {
+        ZoneLevel {
+            x: 180 * self.x,
+            y: self.y,
+            z: 180 * self.z,
+        }
+    }
+
+    pub const fn level_index(&self) -> usize {
+        self.y as usize + 10
+    }
+}
+
+impl From<ZoneLevel> for OverzoneLevel {
+    fn from(zone_level: ZoneLevel) -> Self {
+        Self {
+            x: zone_level.x.div_euclid(24),
+            y: zone_level.y,
+            z: zone_level.z.div_euclid(24),
+        }
+    }
+}
+
+/** Indication that the player moved to or examined another level */
 #[derive(Component)]
 pub struct PosYChanged;
 
+/** Indication that the player moved to or examined a new zone */
 #[derive(Component)]
 pub struct ZoneChanged;

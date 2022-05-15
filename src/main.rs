@@ -81,6 +81,7 @@ mod components;
 mod mesh;
 mod model;
 mod plugin;
+mod prelude;
 mod resources;
 mod systems;
 mod unit;

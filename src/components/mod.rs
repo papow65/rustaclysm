@@ -9,7 +9,7 @@ pub use crate::unit::Partial;
 pub use action::{Action, Instruction};
 pub use faction::{Faction, Intelligence};
 pub use player::{Player, PlayerActionState};
-pub use pos::{Path, Pos, PosYChanged, Zone, ZoneChanged, ZoneLevel};
+pub use pos::{Overzone, OverzoneLevel, Path, Pos, PosYChanged, Zone, ZoneChanged, ZoneLevel};
 
 #[derive(Component, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Label(pub String);
@@ -164,6 +164,11 @@ impl PlayerVisible {
         }
     }
 }
+
+/** Indication for a zone level that it only show its overmap tile
+A zone level without this indicates that it is expanded into tiles */
+#[derive(Component)]
+pub struct Collapsed;
 
 #[derive(Component, Clone)]
 pub struct Appearance {

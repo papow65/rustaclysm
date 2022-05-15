@@ -1,16 +1,10 @@
+use super::log_if_slow;
+use crate::prelude::*;
 use bevy::math::Quat;
 use bevy::prelude::*;
 use bevy::render::camera::Camera3d;
 use bevy::tasks::ComputeTaskPool;
 use std::time::Instant;
-
-use crate::components::{
-    CameraBase, Corpse, Damage, ExamineCursor, Faction, Health, Hurdle, Integrity, Label, Message,
-    Obstacle, Player, PlayerActionState, PlayerVisible, Pos, PosYChanged,
-};
-use crate::resources::{Envir, Location};
-
-use super::{log_if_slow, Appearance};
 
 #[allow(clippy::needless_pass_by_value)]
 pub fn update_location(
@@ -60,7 +54,6 @@ pub fn update_visibility_for_hidden_items(
 
 fn update_visibility(
     pos: Pos,
-    visibility: &mut Visibility,
     children: Option<&Children>,
     player_pos: Pos,
     child_items: &mut Query<&mut Visibility, (With<Parent>, Without<Pos>)>,
@@ -68,12 +61,12 @@ fn update_visibility(
     // TODO make something only invisibile when it would overlap with the player FOV
     // TODO partially show obstacles that overlap with the player and his nbors
 
-    visibility.is_visible = pos.1 == player_pos.1 || (0 <= pos.1 && pos.1 < player_pos.1);
+    let is_visible = pos.1 == player_pos.1 || (0 <= pos.1 && pos.1 < player_pos.1);
 
     if let Some(children) = children {
         for &child in children.iter() {
             if let Ok(mut child_visibility) = child_items.get_mut(child) {
-                child_visibility.is_visible = visibility.is_visible;
+                child_visibility.is_visible = is_visible;
             }
         }
     }
@@ -81,17 +74,15 @@ fn update_visibility(
 
 #[allow(clippy::needless_pass_by_value)]
 pub fn update_visibility_on_item_y_change(
-    mut commands: Commands,
-    mut moved_items: Query<(Entity, &Pos, &mut Visibility, Option<&Children>), With<PosYChanged>>,
+    mut moved_items: Query<(&Pos, Option<&Children>), With<PosYChanged>>,
     mut child_items: Query<&mut Visibility, (With<Parent>, Without<Pos>)>,
     players: Query<&Pos, With<Player>>,
 ) {
     let start = Instant::now();
 
     let &player_pos = players.single();
-    for (entity, &pos, mut visibility, children) in moved_items.iter_mut() {
-        update_visibility(pos, &mut visibility, children, player_pos, &mut child_items);
-        commands.entity(entity).remove::<PosYChanged>();
+    for (&pos, children) in moved_items.iter_mut() {
+        update_visibility(pos, children, player_pos, &mut child_items);
     }
 
     log_if_slow("update_visibility_on_item_y_change", start);
@@ -99,22 +90,20 @@ pub fn update_visibility_on_item_y_change(
 
 #[allow(clippy::needless_pass_by_value)]
 pub fn update_visibility_on_player_y_change(
-    mut commands: Commands,
-    mut items: Query<(&Pos, &mut Visibility, Option<&Children>)>,
+    mut items: Query<(&Pos, Option<&Children>)>,
     mut child_items: Query<&mut Visibility, (With<Parent>, Without<Pos>)>,
-    moved_players: Query<(Entity, &Pos, &Player), Or<(With<PosYChanged>, Changed<Player>)>>,
+    moved_players: Query<(&Pos, &Player), Or<(With<PosYChanged>, Changed<Player>)>>,
 ) {
     let start = Instant::now();
 
-    if let Ok((entity, &player_pos, player)) = moved_players.get_single() {
+    if let Ok((&player_pos, player)) = moved_players.get_single() {
         let reference = match player.state {
             PlayerActionState::Examining(pos) => pos,
             _ => player_pos,
         };
-        for (&pos, mut visibility, children) in items.iter_mut() {
-            update_visibility(pos, &mut visibility, children, reference, &mut child_items);
+        for (&pos, children) in items.iter_mut() {
+            update_visibility(pos, children, reference, &mut child_items);
         }
-        commands.entity(entity).remove::<PosYChanged>();
     }
 
     log_if_slow("update_visibility_on_player_y_change", start);
