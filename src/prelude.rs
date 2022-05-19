@@ -5,6 +5,6 @@ pub use crate::{
     model::*,
     plugin::*,
     resources::*,
-    systems::*,
+    systems::{character::*, check::*, hud::*, input::*, spawn::*, startup::*, update::*},
     unit::*,
 };

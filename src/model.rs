@@ -1,6 +1,5 @@
-use bevy::prelude::{Mesh, Quat, Transform, Vec2, Vec3};
-
 use crate::prelude::*;
+use bevy::prelude::{Mesh, Quat, Transform, Vec2, Vec3};
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Transform2d {
