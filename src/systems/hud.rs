@@ -1,17 +1,10 @@
+use super::log_if_slow;
+use crate::prelude::*;
 use bevy::diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin};
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
-
 use std::collections::BTreeMap;
 use std::time::Instant;
-
-use super::log_if_slow;
-use crate::components::{
-    Action, Corpse, Floor, Health, Hurdle, Item, Label, LogDisplay, ManualDisplay, Message,
-    Obstacle, Opaque, Player, PlayerActionState, Stairs, StatusDisplay,
-};
-use crate::resources::{Envir, Timeouts};
-use crate::unit::Speed;
 
 fn spawn_log_display(text_style: &TextStyle, parent: &mut EntityCommands) {
     // TODO properly use flex layout

@@ -1,20 +1,7 @@
+use crate::prelude::*;
 use bevy::ecs::schedule::SystemSet;
 use bevy::pbr::AmbientLight;
 use bevy::prelude::*;
-
-use super::resources::{Instructions, Location, RelativeRays, TileCaches, Timeouts};
-use super::systems::{
-    check_delay, create_custom_data, create_tiles, despawn_far_overzones, despawn_far_zones,
-    manage_characters, manage_game_over, manage_keyboard_input, manage_mouse_input,
-    maximize_window, remove_changed_markers, spawn_hud, spawn_initial_entities,
-    spawn_nearby_overzones, spawn_nearby_zones, update_camera,
-    update_cursor_visibility_on_player_change, update_damaged_characters, update_damaged_items,
-    update_location, update_log, update_material_on_item_move, update_material_on_player_move,
-    update_status_detais, update_status_fps, update_status_health, update_status_player_state,
-    update_status_speed, update_status_time, update_tile_color_on_player_move, update_transforms,
-    update_visibility_for_hidden_items, update_visibility_on_item_y_change,
-    update_visibility_on_player_y_change,
-};
 
 pub struct RustaclysmPlugin;
 
