@@ -45,25 +45,36 @@ pub struct Submap {
     #[serde(deserialize_with = "load_terrain")]
     pub terrain: Vec<TileName>,
 
-    #[serde(deserialize_with = "load_furniture")]
+    #[serde(deserialize_with = "load_at_tile_name")]
     pub furniture: Vec<At<TileName>>,
 
     #[serde(deserialize_with = "load_items")]
     pub items: Vec<At<CddaItem>>,
 
-    pub traps: Vec<serde_json::Value>,
-    pub fields: Vec<serde_json::Value>,
-    pub cosmetics: Vec<serde_json::Value>,
+    #[serde(deserialize_with = "load_at_tile_name")]
+    pub traps: Vec<At<TileName>>,
+
+    #[serde(deserialize_with = "load_at_field")]
+    pub fields: Vec<At<Field>>,
+    pub cosmetics: Vec<u32>, //serde_json::Value>,
     pub spawns: Vec<Spawn>,
-    pub vehicles: Vec<serde_json::Value>,
-    pub partial_constructions: Vec<serde_json::Value>,
-    pub computers: Option<Vec<serde_json::Value>>,
+    pub vehicles: Vec<serde_json::Value>, // grep -orIE 'vehicles":\[[^]]+.{80}'  assets/save/maps/ | less
+    pub partial_constructions: Vec<i16>,  //serde_json::Value>,
+    pub computers: Option<Vec<i32>>,      //serde_json::Value>>,
 }
 
 #[allow(unused)]
 #[derive(Debug)]
 pub struct Furniture {
-    typeid: TileName,
+    tile_name: TileName,
+}
+
+#[allow(unused)]
+#[derive(Debug)]
+pub struct Field {
+    pub tile_name: TileName,
+    intensity: i32,
+    age: u64,
 }
 
 #[allow(unused)]
@@ -187,41 +198,77 @@ where
     deserializer.deserialize_seq(TerrainVisitor)
 }
 
-fn load_furniture<'de, D>(deserializer: D) -> Result<Vec<At<TileName>>, D::Error>
+trait JsonLoad {
+    fn load(json: &serde_json::Value) -> Self;
+}
+
+impl JsonLoad for Field {
+    fn load(json: &serde_json::Value) -> Self {
+        let list = json.as_array().unwrap();
+        Self {
+            tile_name: TileName::load(&list[0]),
+            intensity: list[1].as_i64().unwrap() as i32,
+            age: list[2].as_u64().unwrap(),
+        }
+    }
+}
+
+impl JsonLoad for TileName {
+    fn load(json: &serde_json::Value) -> Self {
+        Self::new(json.as_str().unwrap())
+    }
+}
+
+struct AtVisitor<T>(std::marker::PhantomData<T>)
+where
+    T: JsonLoad;
+
+impl<T: JsonLoad> AtVisitor<T> {
+    const fn new() -> Self {
+        Self(std::marker::PhantomData)
+    }
+}
+
+impl<'de, T: JsonLoad> Visitor<'de> for AtVisitor<T> {
+    type Value = Vec<At<T>>;
+
+    fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+        formatter.write_str("a sequence of sequences containing [x, y, tile name]")
+    }
+
+    fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
+    where
+        A: SeqAccess<'de>,
+    {
+        let mut result: Vec<At<T>> = Vec::new();
+        while let Some(element) = seq.next_element::<serde_json::Value>()? {
+            match element {
+                serde_json::Value::Array(list) => {
+                    result.push(At::<T> {
+                        x: list[0].as_u64().unwrap() as u8,
+                        y: list[1].as_u64().unwrap() as u8,
+                        obj: T::load(&list[2]),
+                    });
+                }
+                _ => panic!("{element:?}"),
+            }
+        }
+        Ok(result)
+    }
+}
+
+fn load_at_tile_name<'de, D>(deserializer: D) -> Result<Vec<At<TileName>>, D::Error>
 where
     D: Deserializer<'de>,
 {
-    struct FurnitureVisitor;
+    deserializer.deserialize_seq(AtVisitor::<TileName>::new())
+}
 
-    impl<'de> Visitor<'de> for FurnitureVisitor {
-        type Value = Vec<At<TileName>>;
-
-        fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-            formatter.write_str("a sequence of sequences containing [x, y, tile name]")
-        }
-
-        fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
-        where
-            A: SeqAccess<'de>,
-        {
-            let mut result: Vec<At<TileName>> = Vec::new();
-            while let Some(element) = seq.next_element::<serde_json::Value>()? {
-                match element {
-                    serde_json::Value::Array(list) => {
-                        result.push(At::<TileName> {
-                            x: list[0].as_u64().unwrap() as u8,
-                            y: list[1].as_u64().unwrap() as u8,
-                            obj: TileName::new(list[2].as_str().unwrap()),
-                        });
-                    }
-                    _ => panic!("{element:?}"),
-                }
-            }
-            Ok(result)
-        }
-    }
-
-    deserializer.deserialize_seq(FurnitureVisitor)
+fn load_at_field<'de, D>(deserializer: D) -> Result<Vec<At<Field>>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    deserializer.deserialize_seq(AtVisitor::<Field>::new())
 }
 
 fn load_items<'de, D>(deserializer: D) -> Result<Vec<At<CddaItem>>, D::Error>
