@@ -64,17 +64,15 @@
 #![allow(clippy::cast_precision_loss)]
 #![allow(clippy::cast_possible_wrap)]
 #![allow(clippy::cast_sign_loss)]
-#![allow(clippy::if_not_else)]
-#![allow(clippy::map_unwrap_or)]
 #![allow(clippy::match_wildcard_for_single_variants)]
 #![allow(clippy::module_name_repetitions)]
-#![allow(clippy::option_if_let_else)]
+#![allow(clippy::option_if_let_else)] // worse readability
 #![allow(clippy::redundant_else)]
 #![allow(clippy::similar_names)]
-#![allow(clippy::too_many_arguments)]
+#![allow(clippy::too_many_arguments)] // doesn't work well with bevy
 #![allow(clippy::trivially_copy_pass_by_ref)]
-#![allow(clippy::type_complexity)]
-#![allow(clippy::type_repetition_in_bounds)]
+#![allow(clippy::type_complexity)] // doesn't work well with bevy
+#![allow(clippy::only_used_in_recursion)] // false positives
 
 mod cdda;
 mod components;
