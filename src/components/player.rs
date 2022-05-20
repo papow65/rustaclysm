@@ -18,9 +18,9 @@ impl Display for PlayerActionState {
             f,
             "{}",
             match self {
-                PlayerActionState::Normal => "",
-                PlayerActionState::Attacking => "Attacking",
-                PlayerActionState::Smashing => "Smashing",
+                Self::Normal => "",
+                Self::Attacking => "Attacking",
+                Self::Smashing => "Smashing",
                 PlayerActionState::Examining(_) => "Examining",
             }
         )

@@ -322,8 +322,10 @@ impl TileLoader {
         atlases
             .iter()
             .find(|atlas_wrapper| atlas_wrapper.contains(sprite_number))
-            .map(|atlas_wrapper| atlas_wrapper.texture_info(sprite_number))
-            .unwrap_or_else(|| panic!("{sprite_number:?} not found"))
+            .map_or_else(
+                || panic!("{sprite_number:?} not found"),
+                |atlas_wrapper| atlas_wrapper.texture_info(sprite_number),
+            )
     }
 
     pub fn get_models(&self, tile_name: &TileName, tile_type: &TileType) -> Vec<Model> {

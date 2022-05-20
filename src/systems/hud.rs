@@ -280,8 +280,7 @@ pub fn update_status_detais(
                         let label = label.map_or_else(|| "?".to_string(), |l| l.0.clone());
                         format!("{} ({} health)\n", label, health)
                     })
-                    .collect::<Vec<String>>()
-                    .join("");
+                    .collect::<String>();
 
                 let entities = all_here
                     .iter()
@@ -339,8 +338,7 @@ pub fn update_status_detais(
                                 + "\n"
                         },
                     )
-                    .collect::<Vec<String>>()
-                    .join("");
+                    .collect::<String>();
 
                 let mut grouped_items = BTreeMap::<Option<&Label>, u16>::new();
                 for (label, item) in all_here.iter().flat_map(|&i| items.get(i)) {
@@ -356,8 +354,7 @@ pub fn update_status_detais(
                             .unwrap_or_default();
                         label + amount.as_str() + "\n"
                     })
-                    .collect::<Vec<String>>()
-                    .join("");
+                    .collect::<String>();
 
                 format!(
                     "{:?}\n{}{}{}{}",
