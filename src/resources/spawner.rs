@@ -276,6 +276,10 @@ impl<'w, 's> TileSpawner<'w, 's> {
                 {
                     self.spawn_tile(parent_entity, pos, &spawn.spawn_type, TileType::Character);
                 }
+
+                for field in submap.fields.iter().filter_map(|at| at.get(Pos(x, 0, z))) {
+                    self.spawn_tile(parent_entity, pos, &field.tile_name, TileType::Terrain);
+                }
             }
         }
     }
