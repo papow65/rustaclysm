@@ -153,8 +153,8 @@ pub enum PlayerVisible {
 impl PlayerVisible {
     pub fn adjust(&self, color: Color) -> Color {
         match self {
-            PlayerVisible::Seen => color,
-            PlayerVisible::Hidden => Color::rgba(
+            Self::Seen => color,
+            Self::Hidden => Color::rgba(
                 color.r() / 4.0,
                 color.g() / 4.0,
                 color.b() / 3.0,

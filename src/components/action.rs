@@ -106,12 +106,12 @@ impl Action {
         container: &Container,
     ) -> Milliseconds {
         let duration: Milliseconds = match self {
-            Action::Stay => speed.stay(),
+            Self::Stay => speed.stay(),
             Action::Step { target } => move_(commands, envir, actor, label, pos, target, speed),
             Action::Attack { target } => attack(commands, envir, label, pos, target, speed),
             Action::Smash { target } => smash(commands, envir, label, pos, target, speed),
-            Action::Dump => dump(commands, dumpees, actor, label, pos, speed),
-            Action::Pickup => pickup(
+            Self::Dump => dump(commands, dumpees, actor, label, pos, speed),
+            Self::Pickup => pickup(
                 commands,
                 &mut envir.location,
                 hierarchy,
@@ -122,7 +122,7 @@ impl Action {
                 speed,
             ),
             Action::Examine { target } => examine(commands, actor, pos, target),
-            Action::SwitchRunning => switch_running(commands, actor),
+            Self::SwitchRunning => switch_running(commands, actor),
         };
 
         //println!("removing finished action: {action:?}");

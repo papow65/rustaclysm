@@ -22,8 +22,8 @@ pub enum SpriteOrientation {
 impl SpriteOrientation {
     fn to_rotation(self) -> Quat {
         match self {
-            SpriteOrientation::Horizontal => Quat::from_rotation_y(0.5 * std::f32::consts::PI),
-            SpriteOrientation::Vertical => {
+            Self::Horizontal => Quat::from_rotation_y(0.5 * std::f32::consts::PI),
+            Self::Vertical => {
                 Quat::from_rotation_z(0.5 * std::f32::consts::PI)
                     * Quat::from_rotation_y(0.5 * std::f32::consts::PI)
             }

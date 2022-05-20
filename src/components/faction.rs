@@ -41,7 +41,7 @@ impl Faction {
 
     pub fn is_aggressive(&self, health: &Health) -> bool {
         match self {
-            Faction::Zombie => true,
+            Self::Zombie => true,
             _ => health.relative_damage() < Partial::from_u8(128),
         }
     }
@@ -60,7 +60,7 @@ impl Faction {
 
     pub const fn intelligence(&self) -> Intelligence {
         match self {
-            Faction::Zombie => Intelligence::Dumb,
+            Self::Zombie => Intelligence::Dumb,
             _ => Intelligence::Smart,
         }
     }
