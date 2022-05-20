@@ -280,8 +280,7 @@ where
 
 fn parse_repetition<T>(value: &serde_json::Value, vec: &mut Vec<T>)
 where
-    T: Clone,
-    T: for<'de> Deserialize<'de>,
+    T: Clone + for<'de> Deserialize<'de>,
 {
     match value {
         serde_json::Value::Array(_) => {

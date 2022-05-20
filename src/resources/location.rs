@@ -42,12 +42,8 @@ impl Location {
 
     pub fn any<'w, 's, Q, F>(&self, pos: Pos, items: &'s Query<'w, 's, Q, F>) -> bool
     where
-        F: 'w,
-        F: 's,
-        Q: 'w,
-        Q: 's,
-        Q: WorldQuery,
-        F: WorldQuery,
+        F: 'w + 's + WorldQuery,
+        Q: 'w + 's + WorldQuery,
         <Q as WorldQuery>::Fetch: ReadOnlyFetch,
         <F as WorldQuery>::Fetch: FilterFetch,
     {
@@ -64,12 +60,8 @@ impl Location {
         items: &'s Query<'w, 's, Q, F>,
     ) -> Option<<<Q as WorldQuery>::ReadOnlyFetch as Fetch<'w, 's>>::Item>
     where
-        F: 'w,
-        F: 's,
-        Q: 'w,
-        Q: 's,
-        F: WorldQuery,
-        Q: WorldQuery,
+        F: 'w + 's + WorldQuery,
+        Q: 'w + 's + WorldQuery,
         <Q as WorldQuery>::Fetch: ReadOnlyFetch,
         <F as WorldQuery>::Fetch: FilterFetch,
     {

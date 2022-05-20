@@ -82,9 +82,7 @@ impl<'w, 's> Envir<'w, 's> {
 
     fn nbors<F>(&self, pos: Pos, acceptable: F) -> impl Iterator<Item = (Pos, Distance)> + '_
     where
-        F: 'w,
-        F: 's,
-        F: Fn(Pos) -> bool,
+        F: 'w + 's + Fn(Pos) -> bool,
     {
         pos.potential_nbors()
             .filter(move |(nbor, _)| acceptable(*nbor))
