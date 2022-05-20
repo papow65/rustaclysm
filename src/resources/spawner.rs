@@ -869,7 +869,7 @@ impl<'w, 's> Spawner<'w, 's> {
     pub fn spawn_characters(&mut self, offset: Pos) {
         self.spawn_character(
             Label::new("T"),
-            Pos(45, 0, 45).offset(offset).unwrap(),
+            Pos(45, 0, 56).offset(offset).unwrap(),
             Health::new(10),
             Speed::from_h_kmph(6),
             Faction::Human,
