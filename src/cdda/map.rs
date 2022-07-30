@@ -26,6 +26,10 @@ impl TryFrom<ZoneLevel> for Map {
         );
         read_to_string(&filepath)
             .ok()
+            .map(|s| {
+                println!("Found map: {filepath}");
+                s
+            })
             .map(|s| Self {
                 submaps: serde_json::from_str(s.as_str()).unwrap(),
             })
@@ -49,18 +53,18 @@ pub struct Submap {
     pub furniture: Vec<At<TileName>>,
 
     #[serde(deserialize_with = "load_items")]
-    pub items: Vec<At<CddaItem>>,
+    pub items: Vec<At<Vec<Repetition<CddaItem>>>>,
 
     #[serde(deserialize_with = "load_at_tile_name")]
     pub traps: Vec<At<TileName>>,
 
     #[serde(deserialize_with = "load_at_field")]
     pub fields: Vec<At<Field>>,
-    pub cosmetics: Vec<u32>, //serde_json::Value>,
+    pub cosmetics: Vec<(u8, u8, String, String)>,
     pub spawns: Vec<Spawn>,
     pub vehicles: Vec<serde_json::Value>, // grep -orIE 'vehicles":\[[^]]+.{80}'  assets/save/maps/ | less
-    pub partial_constructions: Vec<i16>,  //serde_json::Value>,
-    pub computers: Option<Vec<i32>>,      //serde_json::Value>>,
+    pub partial_constructions: Vec<serde_json::Value>,
+    pub computers: Option<Vec<serde_json::Value>>,
 }
 
 #[allow(unused)]
@@ -161,13 +165,6 @@ impl<T> At<T> {
     }
 }
 
-#[derive(Debug, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct Repetition<T> {
-    obj: T,
-    amount: u16,
-}
-
 fn load_terrain<'de, D>(deserializer: D) -> Result<Vec<TileName>, D::Error>
 where
     D: Deserializer<'de>,
@@ -189,13 +186,37 @@ where
         {
             let mut result = Vec::new();
             while let Some(element) = seq.next_element::<serde_json::Value>()? {
-                parse_repetition::<TileName>(&element, &mut result);
+                let repetition = Repetition::<TileName>::from(element);
+                for _ in 0..repetition.amount {
+                    result.push(repetition.obj.clone());
+                }
             }
             Ok(result)
         }
     }
 
     deserializer.deserialize_seq(TerrainVisitor)
+}
+
+fn load_at_tile_name<'de, D>(deserializer: D) -> Result<Vec<At<TileName>>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    deserializer.deserialize_seq(AtVisitor::<TileName>::new())
+}
+
+fn load_at_field<'de, D>(deserializer: D) -> Result<Vec<At<Field>>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    deserializer.deserialize_seq(AtSeqVisitor::<Field>::new())
+}
+
+fn load_items<'de, D>(deserializer: D) -> Result<Vec<At<Vec<Repetition<CddaItem>>>>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    deserializer.deserialize_seq(AtSeqVisitor::<Vec<Repetition<CddaItem>>>::new())
 }
 
 trait JsonLoad {
@@ -219,17 +240,27 @@ impl JsonLoad for TileName {
     }
 }
 
+impl JsonLoad for Vec<Repetition<CddaItem>> {
+    fn load(json: &serde_json::Value) -> Self {
+        let mut vec = Self::new();
+        for element in json.as_array().unwrap() {
+            vec.push(Repetition::from(element.clone()));
+        }
+        vec
+    }
+}
+
 struct AtVisitor<T>(std::marker::PhantomData<T>)
 where
-    T: JsonLoad;
+    T: JsonLoad + std::fmt::Debug;
 
-impl<T: JsonLoad> AtVisitor<T> {
+impl<T: JsonLoad + std::fmt::Debug> AtVisitor<T> {
     const fn new() -> Self {
         Self(std::marker::PhantomData)
     }
 }
 
-impl<'de, T: JsonLoad> Visitor<'de> for AtVisitor<T> {
+impl<'de, T: JsonLoad + std::fmt::Debug> Visitor<'de> for AtVisitor<T> {
     type Value = Vec<At<T>>;
 
     fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -250,6 +281,55 @@ impl<'de, T: JsonLoad> Visitor<'de> for AtVisitor<T> {
                         obj: T::load(&list[2]),
                     });
                 }
+                _ => panic!("{result:?} - {element:?}"),
+            }
+        }
+        Ok(result)
+    }
+}
+
+struct AtSeqVisitor<T>(std::marker::PhantomData<T>)
+where
+    T: JsonLoad + std::fmt::Debug;
+
+impl<T: JsonLoad + std::fmt::Debug> AtSeqVisitor<T> {
+    const fn new() -> Self {
+        Self(std::marker::PhantomData)
+    }
+}
+
+impl<'de, T: JsonLoad + std::fmt::Debug> Visitor<'de> for AtSeqVisitor<T> {
+    type Value = Vec<At<T>>;
+
+    fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+        formatter.write_str("a sequence containing [x, y, [item, ...], x, y, [item, ...], ...]")
+    }
+
+    fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
+    where
+        A: SeqAccess<'de>,
+    {
+        let mut result: Vec<At<T>> = Vec::new();
+        let mut x = None;
+        let mut y = None;
+        while let Some(element) = seq.next_element::<serde_json::Value>()? {
+            match element {
+                serde_json::Value::Number(n) => {
+                    if x.is_none() {
+                        x = Some(n.as_u64().unwrap() as u8);
+                    } else {
+                        y = Some(n.as_u64().unwrap() as u8);
+                    }
+                }
+                element @ serde_json::Value::Array(_) => {
+                    result.push(At::<T> {
+                        x: x.unwrap(),
+                        y: y.unwrap(),
+                        obj: T::load(&element),
+                    });
+                    x = None;
+                    y = None;
+                }
                 _ => panic!("{element:?}"),
             }
         }
@@ -257,101 +337,23 @@ impl<'de, T: JsonLoad> Visitor<'de> for AtVisitor<T> {
     }
 }
 
-fn load_at_tile_name<'de, D>(deserializer: D) -> Result<Vec<At<TileName>>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    deserializer.deserialize_seq(AtVisitor::<TileName>::new())
+#[derive(Debug, Deserialize)]
+pub struct Repetition<T> {
+    pub obj: T,
+    pub amount: u16,
 }
 
-fn load_at_field<'de, D>(deserializer: D) -> Result<Vec<At<Field>>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    deserializer.deserialize_seq(AtVisitor::<Field>::new())
-}
-
-fn load_items<'de, D>(deserializer: D) -> Result<Vec<At<CddaItem>>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    struct ItemsVisitor;
-
-    impl<'de> Visitor<'de> for ItemsVisitor {
-        type Value = Vec<At<CddaItem>>;
-
-        fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-            formatter.write_str("a sequence containing [x, y, [item, ...], x, y, [item, ...], ...]")
-        }
-
-        fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
-        where
-            A: SeqAccess<'de>,
-        {
-            let mut result: Vec<At<CddaItem>> = Vec::new();
-            let mut x = None;
-            let mut y = None;
-            while let Some(element) = seq.next_element::<serde_json::Value>()? {
-                match element {
-                    serde_json::Value::Number(n) => {
-                        if x.is_none() {
-                            x = Some(n.as_u64().unwrap() as u8);
-                        } else {
-                            y = Some(n.as_u64().unwrap() as u8);
-                        }
-                    }
-                    serde_json::Value::Array(list) => {
-                        for element in list {
-                            let mut vec = Vec::new();
-                            parse_repetition(&element, &mut vec);
-                            for obj in vec {
-                                result.push(At::<CddaItem> {
-                                    x: x.unwrap(),
-                                    y: y.unwrap(),
-                                    obj,
-                                });
-                            }
-                        }
-                        x = None;
-                        y = None;
-                    }
-                    _ => panic!("{element:?}"),
-                }
-            }
-            Ok(result)
-        }
-    }
-
-    deserializer.deserialize_seq(ItemsVisitor)
-}
-
-fn parse_repetition<T>(value: &serde_json::Value, vec: &mut Vec<T>)
+impl<T> From<serde_json::Value> for Repetition<T>
 where
     T: Clone + for<'de> Deserialize<'de>,
 {
-    match value {
-        serde_json::Value::Array(_) => {
-            let repetition: Repetition<T> =
-                helpful_unwrap(serde_json::from_value(value.clone()), value);
-            for _ in 0..repetition.amount {
-                vec.push(repetition.obj.clone());
-            }
-        }
-        _ => vec.push(helpful_unwrap(
-            serde_json::from_value::<T>(value.clone()),
-            value,
-        )),
-    }
-}
-
-fn helpful_unwrap<T, E>(result: Result<T, E>, value: &serde_json::Value) -> T
-where
-    E: std::fmt::Debug,
-{
-    match result {
-        Ok(item) => item,
-        Err(err) => {
-            panic!("{:?}\njson: {:?}", &err, value)
+    fn from(value: serde_json::Value) -> Self {
+        match value {
+            serde_json::Value::Array(_) => serde_json::from_value(value).unwrap(),
+            _ => Self {
+                obj: serde_json::from_value::<T>(value).unwrap(),
+                amount: 1,
+            },
         }
     }
 }

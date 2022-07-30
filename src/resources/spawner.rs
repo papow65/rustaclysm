@@ -120,6 +120,18 @@ impl<'w, 's> TileSpawner<'w, 's> {
                         entity: tile,
                         component: Health::new(5),
                     });
+                    child_builder.add_command(Insert {
+                        entity: tile,
+                        component: Faction::Animal,
+                    });
+                    child_builder.add_command(Insert {
+                        entity: tile,
+                        component: Speed::from_h_kmph(10),
+                    });
+                    child_builder.add_command(Insert {
+                        entity: tile,
+                        component: Container(0),
+                    });
                 }
                 TileType::Item(item) => {
                     child_builder.add_command(Insert {
@@ -258,15 +270,18 @@ impl<'w, 's> TileSpawner<'w, 's> {
                     self.spawn_tile(parent_entity, pos, tile_name, TileType::Furniture);
                 }
 
-                for item in submap.items.iter().filter_map(|at| at.get(Pos(x, 0, z))) {
-                    self.spawn_tile(
-                        parent_entity,
-                        pos,
-                        &item.typeid,
-                        TileType::Item(Item {
-                            amount: item.charges.unwrap_or(1),
-                        }),
-                    );
+                for repetitions in submap.items.iter().filter_map(|at| at.get(Pos(x, 0, z))) {
+                    for repetition in repetitions {
+                        let Repetition { obj: item, amount } = repetition;
+                        self.spawn_tile(
+                            parent_entity,
+                            pos,
+                            &item.typeid,
+                            TileType::Item(Item {
+                                amount: item.charges.unwrap_or(1) * amount,
+                            }),
+                        );
+                    }
                 }
 
                 for spawn in submap
@@ -694,7 +709,7 @@ impl<'w, 's> Spawner<'w, 's> {
         let character_tile_type = &TileType::Character;
         let character_tile_name = match faction {
             Faction::Human => TileName::new("overlay_male_mutation_SKIN_TAN"),
-            Faction::Zombie => TileName::new("mon_zombie"),
+            _ => TileName::new("mon_zombie"),
         };
         let character_sprite_info = &mut self
             .tile_spawner

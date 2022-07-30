@@ -32,6 +32,7 @@ pub enum Intent {
 pub enum Faction {
     Human,
     Zombie,
+    Animal,
 }
 
 impl Faction {
@@ -41,8 +42,8 @@ impl Faction {
 
     pub fn is_aggressive(&self, health: &Health) -> bool {
         match self {
-            Self::Zombie => true,
-            _ => health.relative_damage() < Partial::from_u8(128),
+            Self::Human => health.relative_damage() < Partial::from_u8(128),
+            _ => true,
         }
     }
 
@@ -55,7 +56,7 @@ impl Faction {
     }
 
     pub fn wanders(&self) -> bool {
-        self.equals(&Self::Zombie)
+        !self.equals(&Self::Human)
     }
 
     pub const fn intelligence(&self) -> Intelligence {

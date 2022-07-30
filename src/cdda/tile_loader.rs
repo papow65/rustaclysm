@@ -53,6 +53,7 @@ impl TileName {
             || self.0.starts_with("t_brick_wall")
             || self.0.starts_with("t_concrete_wall")
             || self.0.starts_with("t_reinforced_glass")
+            || self.0.starts_with("t_paper")
         {
             ModelShape::Cuboid {
                 height: VERTICAL.f32(),
@@ -84,6 +85,7 @@ impl TileName {
             || self.0.starts_with("t_shrub")
             || self.0.starts_with("t_flower")
             || self.0.starts_with("f_plant")
+            || self.0.starts_with("mon_")
         {
             ModelShape::Plane {
                 orientation: SpriteOrientation::Vertical,
