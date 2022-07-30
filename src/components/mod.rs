@@ -76,7 +76,7 @@ pub struct Health {
 
 #[derive(Component, PartialEq)]
 pub struct Item {
-    pub amount: u16,
+    pub amount: u32,
 }
 
 impl Health {
