@@ -263,18 +263,17 @@ fn dump(
 ) -> Milliseconds {
     // It seems impossible to remove something from 'Children', so we check 'Parent'.
 
-    if let Some((dumpee, _, dee_label)) = dumpees
-        .iter()
-        .find(|(_, &Parent(parent), _)| parent == dumper)
+    if let Some((dumpee, _, dee_label)) =
+        dumpees.iter().find(|(_, parent, _)| parent.get() == dumper)
     {
         commands
             .spawn()
             .insert(Message::new(format!("{dr_label} drops {dee_label}")));
+        commands.entity(dumper).remove_children(&[dumpee]);
         commands
             .entity(dumpee)
-            .insert(pos)
-            .insert(Visibility::default())
-            .remove::<Parent>(); // Doesn't seem to affect 'Children'
+            .insert_bundle(VisibilityBundle::default())
+            .insert(pos);
         speed.stay()
     } else {
         commands
@@ -300,7 +299,7 @@ fn pickup(
         let space_used: u8 = hierarchy
             .children
             .iter()
-            .filter(|(&parent, _)| parent.0 == picker)
+            .filter(|(parent, _)| parent.get() == picker)
             .map(|(_, containable)| containable.0)
             .sum();
         if container.0 < space_used + pd_containable.0 {

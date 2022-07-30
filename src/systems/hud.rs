@@ -20,12 +20,12 @@ fn spawn_log_display(text_style: &TextStyle, parent: &mut EntityCommands) {
                 },
                 style: Style {
                     position_type: PositionType::Absolute,
-                    position: Rect {
+                    position: UiRect {
                         bottom: Val::Px(0.0),
                         left: Val::Px(0.0),
-                        ..Rect::default()
+                        ..UiRect::default()
                     },
-                    margin: Rect::all(Val::Px(5.0)),
+                    margin: UiRect::all(Val::Px(5.0)),
                     ..Style::default()
                 },
                 ..TextBundle::default()
@@ -51,12 +51,12 @@ fn spawn_status_display(text_style: &TextStyle, parent: &mut EntityCommands) {
                 },
                 style: Style {
                     position_type: PositionType::Absolute,
-                    position: Rect {
+                    position: UiRect {
                         top: Val::Px(0.0),
                         left: Val::Px(0.0),
-                        ..Rect::default()
+                        ..UiRect::default()
                     },
-                    margin: Rect::all(Val::Px(5.0)),
+                    margin: UiRect::all(Val::Px(5.0)),
                     ..Style::default()
                 },
                 ..TextBundle::default()
@@ -95,8 +95,6 @@ fn spawn_manual_display(
 
 #[allow(clippy::needless_pass_by_value)]
 pub fn spawn_hud(mut commands: Commands, asset_server: ResMut<AssetServer>) {
-    commands.spawn_bundle(UiCameraBundle::default());
-
     let text_style = TextStyle {
         font: asset_server.load("fonts/FiraMono-Medium.otf"),
         font_size: 16.0,
@@ -105,7 +103,7 @@ pub fn spawn_hud(mut commands: Commands, asset_server: ResMut<AssetServer>) {
     let mut background = NodeBundle {
         style: Style {
             position_type: PositionType::Absolute,
-            padding: Rect::all(Val::Px(5.0)),
+            padding: UiRect::all(Val::Px(5.0)),
             ..default()
         },
         color: Color::rgba(0.25, 0.25, 0.25, 0.6).into(),

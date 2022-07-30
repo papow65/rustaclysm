@@ -2,8 +2,6 @@ use super::log_if_slow;
 use crate::prelude::*;
 use bevy::math::Quat;
 use bevy::prelude::*;
-use bevy::render::camera::Camera3d;
-use bevy::tasks::ComputeTaskPool;
 use std::time::Instant;
 
 #[allow(clippy::needless_pass_by_value)]
@@ -213,12 +211,11 @@ pub fn update_tile_color_on_player_move(
     mut tiles: Query<(&Parent, &mut TextureAtlasSprite)>,
     tile_parents: Query<&Pos, With<Children>>,
     moved_players: Query<&Pos, (With<Player>, Changed<Pos>)>,
-    pool: Res<ComputeTaskPool>,
 ) {
     let start = Instant::now();
     if let Ok(&player_pos) = moved_players.get_single() {
-        tiles.par_for_each_mut(&pool, 64, |(parent, mut sprite)| {
-            let &pos = tile_parents.get(parent.0).unwrap();
+        tiles.par_for_each_mut(64, |(parent, mut sprite)| {
+            let &pos = tile_parents.get(parent.get()).unwrap();
             sprite.color = envir.can_see(player_pos, pos).adjust(Color::WHITE);
         });
     }
