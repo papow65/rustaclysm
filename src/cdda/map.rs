@@ -87,7 +87,7 @@ pub struct Field {
 pub struct CddaItem {
     pub typeid: TileName,
     snip_id: Option<String>,
-    pub charges: Option<u16>,
+    pub charges: Option<u32>,
     active: Option<bool>,
     corpse: Option<String>,
     name: Option<String>,
@@ -340,7 +340,7 @@ impl<'de, T: JsonLoad + std::fmt::Debug> Visitor<'de> for AtSeqVisitor<T> {
 #[derive(Debug, Deserialize)]
 pub struct Repetition<T> {
     pub obj: T,
-    pub amount: u16,
+    pub amount: u32,
 }
 
 impl<T> From<serde_json::Value> for Repetition<T>

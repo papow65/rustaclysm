@@ -338,7 +338,7 @@ pub fn update_status_detais(
                     )
                     .collect::<String>();
 
-                let mut grouped_items = BTreeMap::<Option<&Label>, u16>::new();
+                let mut grouped_items = BTreeMap::<Option<&Label>, u32>::new();
                 for (label, item) in all_here.iter().flat_map(|&i| items.get(i)) {
                     *grouped_items.entry(label).or_insert(0) += item.amount;
                 }
