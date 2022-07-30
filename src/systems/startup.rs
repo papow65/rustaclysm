@@ -25,7 +25,7 @@ pub fn create_custom_data(
 pub fn spawn_initial_entities(mut spawner: Spawner) {
     spawner.spawn_light();
 
-    let offset = Zone { x: 100, z: 212 }.zone_level(0).base_pos();
+    let offset = Zone { x: 12, z: 265 }.zone_level(0).base_pos();
     spawner.spawn_floors(offset);
     spawner.spawn_house(offset);
     spawner.spawn_characters(offset);
