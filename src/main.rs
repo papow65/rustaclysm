@@ -22,7 +22,6 @@
 #![forbid(legacy_derive_helpers)]
 #![forbid(macro_expanded_macro_exports_accessed_by_absolute_paths)]
 #![forbid(missing_fragment_specifier)]
-#![forbid(mutable_borrow_reservation_conflict)]
 #![forbid(non_fmt_panics)]
 #![forbid(non_snake_case)]
 #![forbid(nontrivial_structural_match)]

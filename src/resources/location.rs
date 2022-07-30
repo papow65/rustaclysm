@@ -1,4 +1,4 @@
-use bevy::ecs::query::{Fetch, FilterFetch, ReadOnlyFetch, WorldQuery};
+use bevy::ecs::query::{Fetch, WorldQuery, WorldQueryGats};
 use bevy::prelude::{Entity, Query};
 use bevy::utils::HashMap;
 
@@ -44,8 +44,8 @@ impl Location {
     where
         F: 'w + 's + WorldQuery,
         Q: 'w + 's + WorldQuery,
-        <Q as WorldQuery>::Fetch: ReadOnlyFetch,
-        <F as WorldQuery>::Fetch: FilterFetch,
+        // <Q as WorldQuery>::Fetch: ReadOnlyWorldQuery,
+        // <F as WorldQuery>::Fetch: FilterFetch,
     {
         self.all
             .get(&pos)
@@ -58,12 +58,10 @@ impl Location {
         &self,
         pos: Pos,
         items: &'s Query<'w, 's, Q, F>,
-    ) -> Option<<<Q as WorldQuery>::ReadOnlyFetch as Fetch<'w, 's>>::Item>
+    ) -> Option<<<<Q as WorldQuery>::ReadOnly as WorldQueryGats<'w>>::Fetch as Fetch<'s>>::Item>
     where
         F: 'w + 's + WorldQuery,
         Q: 'w + 's + WorldQuery,
-        <Q as WorldQuery>::Fetch: ReadOnlyFetch,
-        <F as WorldQuery>::Fetch: FilterFetch,
     {
         self.all
             .get(&pos)

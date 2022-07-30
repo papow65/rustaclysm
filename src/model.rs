@@ -8,7 +8,7 @@ pub struct Transform2d {
 }
 
 impl Transform2d {
-    fn to_scale(self) -> Vec3 {
+    const fn to_scale(self) -> Vec3 {
         Vec3::new(self.scale.x, /*thickness*/ 1.0, self.scale.y)
     }
 }

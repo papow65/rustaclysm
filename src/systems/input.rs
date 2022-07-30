@@ -1,5 +1,5 @@
 use bevy::ecs::event::Events;
-use bevy::input::{keyboard::KeyboardInput, mouse::MouseWheel, ElementState};
+use bevy::input::{keyboard::KeyboardInput, mouse::MouseWheel, ButtonState};
 use bevy::prelude::{EventReader, Input, KeyCode, Local, Query, Res, ResMut, Visibility, With};
 use std::time::Instant;
 
@@ -42,7 +42,7 @@ pub fn manage_keyboard_input(
 
     for key_event in key_events.iter() {
         match key_event.state {
-            ElementState::Pressed => {
+            ButtonState::Pressed => {
                 if let Some(key_code) = key_event.key_code {
                     let control =
                         keys.pressed(KeyCode::LControl) || keys.pressed(KeyCode::RControl);
@@ -82,7 +82,7 @@ pub fn manage_keyboard_input(
                     }
                 }
             }
-            ElementState::Released => {
+            ButtonState::Released => {
                 if let Some(released_key) = key_event.key_code {
                     keys_held.retain(|k| *k != released_key);
                 }

@@ -5,7 +5,7 @@ authors = ["papow65 <papow65@protonmail.com>"]
 edition = "2021"
 
 [dependencies]
-bevy = { version = "0.7.*", features=["dynamic", "trace", "wayland"] }
+bevy = { version = "0.8.*", features=["dynamic", "trace", "wayland"] }
 pathfinding = "2.*"
 bresenham = "0.1.*"
 rand = "0.8.*"

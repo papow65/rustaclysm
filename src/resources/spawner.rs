@@ -2,7 +2,7 @@ use crate::prelude::*;
 use bevy::ecs::system::{Insert, Remove, SystemParam};
 use bevy::math::Quat;
 use bevy::prelude::*;
-use bevy::render::camera::PerspectiveProjection;
+use bevy::render::camera::{PerspectiveProjection, Projection::Perspective};
 use bevy::utils::HashMap;
 
 #[derive(PartialEq)]
@@ -98,11 +98,10 @@ impl<'w, 's> TileSpawner<'w, 's> {
 
         self.commands.entity(parent).with_children(|child_builder| {
             let tile = child_builder
-                .spawn_bundle(TransformBundle::default())
+                .spawn_bundle(SpatialBundle::default())
                 .insert(tile_name.to_label())
                 .insert(pos)
                 .insert(Transform::from_translation(pos.vec3()))
-                .insert(Visibility::default()) // TODO necessary?
                 .with_children(|child_builder| {
                     for pbr_bundle in pbr_bundles {
                         child_builder.spawn_bundle(pbr_bundle.clone());
@@ -217,7 +216,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
         if let Ok(map) = Map::try_from(zone_level) {
             let zone_level_entity = self
                 .commands
-                .spawn_bundle(TransformBundle::default())
+                .spawn_bundle(SpatialBundle::default())
                 .insert(zone_level)
                 .id();
             let base = map.submaps[0].coordinates;
@@ -307,7 +306,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
         /*
         let zone_level_entity = self
             .commands
-            .spawn_bundle(TransformBundle::default())
+            .spawn_bundle(SpatialBundle::default())
             .insert(zone_level)
             .id();
         self.commands
@@ -359,7 +358,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
             .collect::<Vec<PbrBundle>>();
 
         self.commands
-            .spawn_bundle(TransformBundle::default())
+            .spawn_bundle(SpatialBundle::default())
             .insert(tile_name.to_label())
             .insert(zone_level)
             .insert(Collapsed)
@@ -468,7 +467,7 @@ impl<'w, 's> Spawner<'w, 's> {
     pub fn spawn_wall(&mut self, pos: Pos) {
         self.tile_spawner
             .commands
-            .spawn_bundle(TransformBundle::default())
+            .spawn_bundle(SpatialBundle::default())
             .insert(Wall)
             .insert(pos)
             .insert(Integrity::new(1000))
@@ -490,7 +489,7 @@ impl<'w, 's> Spawner<'w, 's> {
     pub fn spawn_window(&mut self, pos: Pos) {
         self.tile_spawner
             .commands
-            .spawn_bundle(TransformBundle::default())
+            .spawn_bundle(SpatialBundle::default())
             .insert(Window)
             .insert(pos)
             .insert(Integrity::new(1))
@@ -521,7 +520,7 @@ impl<'w, 's> Spawner<'w, 's> {
     pub fn spawn_stairs(&mut self, pos: Pos) {
         self.tile_spawner
             .commands
-            .spawn_bundle(TransformBundle::default())
+            .spawn_bundle(SpatialBundle::default())
             .insert(Stairs)
             .insert(pos)
             .insert(Integrity::new(100))
@@ -542,7 +541,7 @@ impl<'w, 's> Spawner<'w, 's> {
     pub fn spawn_rack(&mut self, pos: Pos) {
         self.tile_spawner
             .commands
-            .spawn_bundle(TransformBundle::default())
+            .spawn_bundle(SpatialBundle::default())
             .insert(Rack)
             .insert(pos)
             .insert(Integrity::new(40))
@@ -564,7 +563,7 @@ impl<'w, 's> Spawner<'w, 's> {
     pub fn spawn_table(&mut self, pos: Pos) {
         self.tile_spawner
             .commands
-            .spawn_bundle(TransformBundle::default())
+            .spawn_bundle(SpatialBundle::default())
             .insert(Table)
             .insert(pos)
             .insert(Integrity::new(30))
@@ -587,7 +586,7 @@ impl<'w, 's> Spawner<'w, 's> {
 
         self.tile_spawner
             .commands
-            .spawn_bundle(TransformBundle::default())
+            .spawn_bundle(SpatialBundle::default())
             .insert(Chair)
             .insert(pos)
             .insert(Integrity::new(10))
@@ -626,7 +625,7 @@ impl<'w, 's> Spawner<'w, 's> {
 
         self.tile_spawner
             .commands
-            .spawn_bundle(TransformBundle::default())
+            .spawn_bundle(SpatialBundle::default())
             .insert(label)
             .insert(pos)
             .insert(containable)
@@ -668,7 +667,7 @@ impl<'w, 's> Spawner<'w, 's> {
             .insert(ZoneChanged)
             .with_children(|child_builder| {
                 child_builder
-                    .spawn_bundle(TransformBundle::default())
+                    .spawn_bundle(SpatialBundle::default())
                     .insert(CameraBase)
                     .with_children(|child_builder| {
                         child_builder
@@ -683,13 +682,13 @@ impl<'w, 's> Spawner<'w, 's> {
                                 ..PbrBundle::default()
                             })
                             .with_children(|child_builder| {
-                                child_builder.spawn_bundle(PerspectiveCameraBundle {
-                                    perspective_projection: PerspectiveProjection {
+                                child_builder.spawn_bundle(Camera3dBundle {
+                                    projection: Perspective(PerspectiveProjection {
                                         // more overview, less personal than the default
                                         fov: 0.3,
-                                        ..PerspectiveProjection::default()
-                                    },
-                                    ..PerspectiveCameraBundle::default()
+                                        ..default()
+                                    }),
+                                    ..default()
                                 });
                             });
                     });
@@ -733,7 +732,7 @@ impl<'w, 's> Spawner<'w, 's> {
         let entity = self
             .tile_spawner
             .commands
-            .spawn_bundle(TransformBundle::default())
+            .spawn_bundle(SpatialBundle::default())
             .insert(label)
             .insert(pos)
             .insert(health)
@@ -785,7 +784,7 @@ impl<'w, 's> Spawner<'w, 's> {
         let parent = self
             .tile_spawner
             .commands
-            .spawn_bundle(TransformBundle::default())
+            .spawn_bundle(SpatialBundle::default())
             .id();
 
         for y in 1..=2 {
