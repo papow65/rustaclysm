@@ -1,3 +1,5 @@
-pub mod map;
-pub mod overmap;
-pub mod tile_loader;
+mod map;
+mod overmap;
+mod tile_loader;
+
+pub use self::{map::*, overmap::*, tile_loader::*};

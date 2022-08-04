@@ -1,5 +1,4 @@
-use crate::cdda::tile_loader::TileName;
-use crate::components::Overzone;
+use crate::prelude::{ObjectName, Overzone};
 use serde::Deserialize;
 use std::fs::read_to_string;
 
@@ -41,4 +40,4 @@ impl TryFrom<Overzone> for Overmap {
 
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct OvermapLevel(pub Vec<(TileName, u16)>);
+pub struct OvermapLevel(pub Vec<(ObjectName, u16)>);

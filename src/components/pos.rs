@@ -1,7 +1,7 @@
 use bevy::prelude::{Component, Vec3};
 use pathfinding::prelude::astar;
 
-use crate::unit::{Distance, Millimeter, Milliseconds, ADJACENT, DIAGONAL, VERTICAL};
+use crate::prelude::{Distance, Millimeter, Milliseconds, ADJACENT, DIAGONAL, VERTICAL};
 
 fn straight_2d(from: (i32, i32), to: (i32, i32)) -> impl Iterator<Item = (i32, i32)> {
     bresenham::Bresenham::new(

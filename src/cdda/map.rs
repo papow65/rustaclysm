@@ -1,4 +1,4 @@
-use crate::prelude::{Pos, TileName, ZoneLevel};
+use crate::prelude::{ObjectName, Pos, ZoneLevel};
 use bevy::utils::HashMap;
 use serde::de::{Deserializer, SeqAccess, Visitor};
 use serde::Deserialize;
@@ -47,16 +47,16 @@ pub struct Submap {
     pub radiation: Vec<i64>,
 
     #[serde(deserialize_with = "load_terrain")]
-    pub terrain: Vec<TileName>,
+    pub terrain: Vec<ObjectName>,
 
     #[serde(deserialize_with = "load_at_tile_name")]
-    pub furniture: Vec<At<TileName>>,
+    pub furniture: Vec<At<ObjectName>>,
 
     #[serde(deserialize_with = "load_items")]
     pub items: Vec<At<Vec<Repetition<CddaItem>>>>,
 
     #[serde(deserialize_with = "load_at_tile_name")]
-    pub traps: Vec<At<TileName>>,
+    pub traps: Vec<At<ObjectName>>,
 
     #[serde(deserialize_with = "load_at_field")]
     pub fields: Vec<At<Field>>,
@@ -70,13 +70,13 @@ pub struct Submap {
 #[allow(unused)]
 #[derive(Debug)]
 pub struct Furniture {
-    tile_name: TileName,
+    tile_name: ObjectName,
 }
 
 #[allow(unused)]
 #[derive(Debug)]
 pub struct Field {
-    pub tile_name: TileName,
+    pub tile_name: ObjectName,
     intensity: i32,
     age: u64,
 }
@@ -85,7 +85,7 @@ pub struct Field {
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct CddaItem {
-    pub typeid: TileName,
+    pub typeid: ObjectName,
     snip_id: Option<String>,
     pub charges: Option<u32>,
     active: Option<bool>,
@@ -138,7 +138,7 @@ pub struct Pocket {
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Spawn {
-    pub spawn_type: TileName,
+    pub spawn_type: ObjectName,
     count: i32,
     pub x: i32,
     pub z: i32,
@@ -165,14 +165,14 @@ impl<T> At<T> {
     }
 }
 
-fn load_terrain<'de, D>(deserializer: D) -> Result<Vec<TileName>, D::Error>
+fn load_terrain<'de, D>(deserializer: D) -> Result<Vec<ObjectName>, D::Error>
 where
     D: Deserializer<'de>,
 {
     struct TerrainVisitor;
 
     impl<'de> Visitor<'de> for TerrainVisitor {
-        type Value = Vec<TileName>;
+        type Value = Vec<ObjectName>;
 
         fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
             formatter.write_str(
@@ -186,7 +186,7 @@ where
         {
             let mut result = Vec::new();
             while let Some(element) = seq.next_element::<serde_json::Value>()? {
-                let repetition = Repetition::<TileName>::from(element);
+                let repetition = Repetition::<ObjectName>::from(element);
                 for _ in 0..repetition.amount {
                     result.push(repetition.obj.clone());
                 }
@@ -198,11 +198,11 @@ where
     deserializer.deserialize_seq(TerrainVisitor)
 }
 
-fn load_at_tile_name<'de, D>(deserializer: D) -> Result<Vec<At<TileName>>, D::Error>
+fn load_at_tile_name<'de, D>(deserializer: D) -> Result<Vec<At<ObjectName>>, D::Error>
 where
     D: Deserializer<'de>,
 {
-    deserializer.deserialize_seq(AtVisitor::<TileName>::new())
+    deserializer.deserialize_seq(AtVisitor::<ObjectName>::new())
 }
 
 fn load_at_field<'de, D>(deserializer: D) -> Result<Vec<At<Field>>, D::Error>
@@ -227,14 +227,14 @@ impl JsonLoad for Field {
     fn load(json: &serde_json::Value) -> Self {
         let list = json.as_array().unwrap();
         Self {
-            tile_name: TileName::load(&list[0]),
+            tile_name: ObjectName::load(&list[0]),
             intensity: list[1].as_i64().unwrap() as i32,
             age: list[2].as_u64().unwrap(),
         }
     }
 }
 
-impl JsonLoad for TileName {
+impl JsonLoad for ObjectName {
     fn load(json: &serde_json::Value) -> Self {
         Self::new(json.as_str().unwrap())
     }

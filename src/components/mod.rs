@@ -3,13 +3,10 @@ mod faction;
 mod player;
 mod pos;
 
+use crate::prelude::*;
 use bevy::prelude::{AlphaMode, Assets, Color, Component, Handle, StandardMaterial};
 
-pub use crate::unit::Partial;
-pub use action::{Action, Instruction};
-pub use faction::{Faction, Intelligence};
-pub use player::{Player, PlayerActionState};
-pub use pos::{Overzone, OverzoneLevel, Path, Pos, PosYChanged, Zone, ZoneChanged, ZoneLevel};
+pub use {action::*, faction::*, player::*, pos::*};
 
 #[derive(Component, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Label(pub String);
@@ -74,7 +71,7 @@ pub struct Health {
     max: i8,
 }
 
-#[derive(Component, PartialEq)]
+#[derive(Component, Debug, PartialEq)]
 pub struct Item {
     pub amount: u32,
 }

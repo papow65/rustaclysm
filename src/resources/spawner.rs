@@ -5,16 +5,6 @@ use bevy::prelude::*;
 use bevy::render::camera::{PerspectiveProjection, Projection::Perspective};
 use bevy::utils::HashMap;
 
-#[derive(PartialEq)]
-pub enum TileType {
-    Terrain,
-    Furniture,
-    Item(Item),
-    Character,
-    ZoneLayer,
-    Meta,
-}
-
 pub struct TileCaches {
     material_cache: HashMap<String, Handle<StandardMaterial>>,
     plane_mesh_cache: HashMap<SpriteNumber, Handle<Mesh>>,
@@ -70,36 +60,26 @@ impl<'w, 's> TileSpawner<'w, 's> {
             .clone()
     }
 
-    fn get_pbr_bundle(
-        &mut self,
-        tile_name: &TileName,
-        model: &Model,
-        tile_type: &TileType,
-    ) -> PbrBundle {
-        let alpha_mode = if tile_type == &TileType::Terrain && tile_name.is_ground() {
-            AlphaMode::Opaque
-        } else {
-            AlphaMode::Blend
-        };
+    fn get_pbr_bundle(&mut self, model: &Model) -> PbrBundle {
         PbrBundle {
             mesh: self.get_tile_mesh(model),
-            material: self.get_tile_material(&model.texture_path, alpha_mode),
+            material: self.get_tile_material(&model.texture_path, model.alpha_mode),
             transform: model.to_transform(),
             ..PbrBundle::default()
         }
     }
 
-    fn spawn_tile(&mut self, parent: Entity, pos: Pos, tile_name: &TileName, tile_type: TileType) {
-        let models = self.loader.get_models(tile_name, &tile_type);
+    fn spawn_tile(&mut self, parent: Entity, pos: Pos, definition: ObjectDefinition) {
+        let models = self.loader.get_models(&definition);
         let pbr_bundles = models
             .iter()
-            .map(|model| self.get_pbr_bundle(tile_name, model, &tile_type))
+            .map(|model| self.get_pbr_bundle(model))
             .collect::<Vec<PbrBundle>>();
 
         self.commands.entity(parent).with_children(|child_builder| {
             let tile = child_builder
                 .spawn_bundle(SpatialBundle::default())
-                .insert(tile_name.to_label())
+                .insert(definition.name.to_label())
                 .insert(pos)
                 .insert(Transform::from_translation(pos.vec3()))
                 .with_children(|child_builder| {
@@ -109,8 +89,8 @@ impl<'w, 's> TileSpawner<'w, 's> {
                 })
                 .id();
 
-            match tile_type {
-                TileType::Character => {
+            match definition.specifier {
+                ObjectSpecifier::Character => {
                     child_builder.add_command(Insert {
                         entity: tile,
                         component: Obstacle,
@@ -132,14 +112,14 @@ impl<'w, 's> TileSpawner<'w, 's> {
                         component: Container(0),
                     });
                 }
-                TileType::Item(item) => {
+                ObjectSpecifier::Item(item) => {
                     child_builder.add_command(Insert {
                         entity: tile,
                         component: item,
                     });
                 }
                 _ => {
-                    if tile_type == TileType::Terrain {
+                    if definition.specifier == ObjectSpecifier::Terrain {
                         child_builder.add_command(Insert {
                             entity: tile,
                             component: Floor,
@@ -156,7 +136,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
                             orientation,
                             transform2d,
                         } => {
-                            if tile_name.is_stairs_up() {
+                            if definition.name.is_stairs_up() {
                                 child_builder.add_command(Insert {
                                     entity: tile,
                                     component: Stairs,
@@ -255,10 +235,17 @@ impl<'w, 's> TileSpawner<'w, 's> {
                     .offset(Pos(x, 0, z))
                     .unwrap();
                 let tile_name = &submap.terrain[(x + 12 * z) as usize];
-                if tile_name != &TileName::new("t_open_air")
-                    && tile_name != &TileName::new("t_open_air_rooved")
+                if tile_name != &ObjectName::new("t_open_air")
+                    && tile_name != &ObjectName::new("t_open_air_rooved")
                 {
-                    self.spawn_tile(parent_entity, pos, tile_name, TileType::Terrain);
+                    self.spawn_tile(
+                        parent_entity,
+                        pos,
+                        ObjectDefinition {
+                            name: tile_name,
+                            specifier: ObjectSpecifier::Terrain,
+                        },
+                    );
                 }
 
                 for tile_name in submap
@@ -266,7 +253,14 @@ impl<'w, 's> TileSpawner<'w, 's> {
                     .iter()
                     .filter_map(|at| at.get(Pos(x, 0, z)))
                 {
-                    self.spawn_tile(parent_entity, pos, tile_name, TileType::Furniture);
+                    self.spawn_tile(
+                        parent_entity,
+                        pos,
+                        ObjectDefinition {
+                            name: tile_name,
+                            specifier: ObjectSpecifier::Furniture,
+                        },
+                    );
                 }
 
                 for repetitions in submap.items.iter().filter_map(|at| at.get(Pos(x, 0, z))) {
@@ -275,10 +269,12 @@ impl<'w, 's> TileSpawner<'w, 's> {
                         self.spawn_tile(
                             parent_entity,
                             pos,
-                            &item.typeid,
-                            TileType::Item(Item {
-                                amount: item.charges.unwrap_or(1) * amount,
-                            }),
+                            ObjectDefinition {
+                                name: tile_name,
+                                specifier: ObjectSpecifier::Item(Item {
+                                    amount: item.charges.unwrap_or(1) * amount,
+                                }),
+                            },
                         );
                     }
                 }
@@ -288,11 +284,25 @@ impl<'w, 's> TileSpawner<'w, 's> {
                     .iter()
                     .filter(|spawn| spawn.x == x && spawn.z == z)
                 {
-                    self.spawn_tile(parent_entity, pos, &spawn.spawn_type, TileType::Character);
+                    self.spawn_tile(
+                        parent_entity,
+                        pos,
+                        ObjectDefinition {
+                            name: &spawn.spawn_type,
+                            specifier: ObjectSpecifier::Character,
+                        },
+                    );
                 }
 
                 for field in submap.fields.iter().filter_map(|at| at.get(Pos(x, 0, z))) {
-                    self.spawn_tile(parent_entity, pos, &field.tile_name, TileType::Terrain);
+                    self.spawn_tile(
+                        parent_entity,
+                        pos,
+                        ObjectDefinition {
+                            name: &field.tile_name,
+                            specifier: ObjectSpecifier::Terrain,
+                        },
+                    );
                 }
             }
         }
@@ -334,32 +344,35 @@ impl<'w, 's> TileSpawner<'w, 's> {
         overzone_level: OverzoneLevel,
     ) {
         let mut i: i32 = 0;
-        for (tile_name, amount) in &overmap_layer.0 {
+        for (name, amount) in &overmap_layer.0 {
             let amount = i32::from(*amount);
             for j in i..i + amount {
                 let x = j.rem_euclid(180);
                 let z = j.div_euclid(180);
                 let zone_level = overzone_level.base_zone_level().offset(x, z);
                 println!("{zone_level:?}");
-                self.spawn_collaped_zone_level(zone_level, tile_name);
+                let definition = ObjectDefinition {
+                    name,
+                    specifier: ObjectSpecifier::ZoneLayer,
+                };
+                self.spawn_collaped_zone_level(zone_level, &definition);
             }
             i += amount;
         }
         assert!(i == 32400, "{i}");
     }
 
-    fn spawn_collaped_zone_level(&mut self, zone_level: ZoneLevel, tile_name: &TileName) {
-        let tile_type = &TileType::ZoneLayer;
+    fn spawn_collaped_zone_level(&mut self, zone_level: ZoneLevel, definition: &ObjectDefinition) {
         let pbr_bundles = self
             .loader
-            .get_models(tile_name, tile_type)
+            .get_models(definition)
             .iter()
-            .map(|model| self.get_pbr_bundle(tile_name, model, tile_type))
+            .map(|model| self.get_pbr_bundle(model))
             .collect::<Vec<PbrBundle>>();
 
         self.commands
             .spawn_bundle(SpatialBundle::default())
-            .insert(tile_name.to_label())
+            .insert(definition.name.to_label())
             .insert(zone_level)
             .insert(Collapsed)
             .insert(Transform {
@@ -450,8 +463,10 @@ impl<'w, 's> Spawner<'w, 's> {
         self.tile_spawner.spawn_tile(
             parent,
             pos,
-            &TileName::new("t_wood_stairs_down"),
-            TileType::Terrain,
+            ObjectDefinition {
+                name: &ObjectName::new("t_wood_stairs_down"),
+                specifier: ObjectSpecifier::Terrain,
+            },
         );
     }
 
@@ -459,8 +474,10 @@ impl<'w, 's> Spawner<'w, 's> {
         self.tile_spawner.spawn_tile(
             parent,
             pos,
-            &TileName::new("t_shingle_flat_roof"),
-            TileType::Terrain,
+            ObjectDefinition {
+                name: &ObjectName::new("t_shingle_flat_roof"),
+                specifier: ObjectSpecifier::Terrain,
+            },
         );
     }
 
@@ -647,17 +664,14 @@ impl<'w, 's> Spawner<'w, 's> {
     }
 
     fn configure_player(&mut self, player_entity: Entity, player: Player) {
-        let cursor_tile_type = &TileType::Meta;
-        let cursor_tile_name = TileName::new("cursor");
-        let cursor_model = &mut self
-            .tile_spawner
-            .loader
-            .get_models(&cursor_tile_name, cursor_tile_type)[0];
-        let mut cursor_bundle =
-            self.tile_spawner
-                .get_pbr_bundle(&cursor_tile_name, cursor_model, cursor_tile_type);
-        cursor_bundle.transform.translation.y = 0.15;
-        cursor_bundle.transform.scale = Vec3::new(1.15, 1.0, 1.15);
+        let cursor_definition = ObjectDefinition {
+            name: &ObjectName::new("cursor"),
+            specifier: ObjectSpecifier::Meta,
+        };
+        let cursor_model = &mut self.tile_spawner.loader.get_models(&cursor_definition)[0];
+        let mut cursor_bundle = self.tile_spawner.get_pbr_bundle(cursor_model);
+        cursor_bundle.transform.translation.y = 0.1;
+        cursor_bundle.transform.scale = Vec3::new(1.1, 1.0, 1.1);
 
         self.tile_spawner
             .commands
@@ -686,6 +700,8 @@ impl<'w, 's> Spawner<'w, 's> {
                                     projection: Perspective(PerspectiveProjection {
                                         // more overview, less personal than the default
                                         fov: 0.3,
+                                        near: 0.01,
+                                        far: 10.0,
                                         ..default()
                                     }),
                                     ..default()
@@ -705,27 +721,22 @@ impl<'w, 's> Spawner<'w, 's> {
         player: Option<Player>,
     ) {
         let character_scale = 1.5;
-        let character_tile_type = &TileType::Character;
-        let character_tile_name = match faction {
-            Faction::Human => TileName::new("overlay_male_mutation_SKIN_TAN"),
-            _ => TileName::new("mon_zombie"),
+        let character_definition = ObjectDefinition {
+            name: &match faction {
+                Faction::Human => ObjectName::new("overlay_male_mutation_SKIN_TAN"),
+                _ => ObjectName::new("mon_zombie"),
+            },
+            specifier: ObjectSpecifier::Character,
         };
-        let character_sprite_info = &mut self
-            .tile_spawner
-            .loader
-            .get_models(&character_tile_name, character_tile_type)[0];
+        let character_model = &mut self.tile_spawner.loader.get_models(&character_definition)[0];
         if let ModelShape::Plane {
             ref mut transform2d,
             ..
-        } = character_sprite_info.shape
+        } = character_model.shape
         {
             transform2d.scale *= character_scale;
         }
-        let mut character_bundle = self.tile_spawner.get_pbr_bundle(
-            &character_tile_name,
-            character_sprite_info,
-            character_tile_type,
-        );
+        let mut character_bundle = self.tile_spawner.get_pbr_bundle(character_model);
         character_bundle.transform.translation.y *= character_scale;
         println!("{:?}", character_bundle.transform);
 

@@ -2,107 +2,11 @@ use crate::prelude::*;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
 use rand::seq::SliceRandom;
-use serde::Deserialize;
 use std::fs::read_to_string;
-
-#[derive(Hash, PartialEq, Eq, Debug, Clone, Deserialize)]
-pub struct TileName(String);
-
-impl TileName {
-    pub fn new<S: Into<String>>(value: S) -> Self {
-        Self(value.into())
-    }
-
-    pub fn to_label(&self) -> Label {
-        Label::new(self.0.clone())
-    }
-
-    fn variants(&self) -> Vec<Self> {
-        let mut result = vec![Self(self.0.clone() + "_season_summer"), self.clone()];
-        if let Some(index) = self.0.rfind('_') {
-            result.push(Self(self.0[..index].to_string()));
-        }
-        result
-    }
-
-    pub fn is_ground(&self) -> bool {
-        self.0 == "t_grass" || self.0 == "t_dirt"
-    }
-
-    pub fn is_stairs_up(&self) -> bool {
-        self.0.starts_with("t_stairs_up")
-            || self.0.starts_with("t_wood_stairs_up")
-            || self.0.starts_with("t_ladder_up")
-            || self.0.starts_with("t_ramp_up")
-            || self.0.starts_with("t_gutter_downspout")
-    }
-
-    pub fn to_shape(
-        &self,
-        layer: SpriteLayer,
-        transform2d: Transform2d,
-        tile_type: &TileType,
-    ) -> ModelShape {
-        if tile_type == &TileType::ZoneLayer || self.0.starts_with("t_rock_floor") {
-            ModelShape::Plane {
-                orientation: SpriteOrientation::Horizontal,
-                transform2d,
-            }
-        } else if self.0.starts_with("t_rock")
-            || self.0.starts_with("t_wall")
-            || self.0.starts_with("t_brick_wall")
-            || self.0.starts_with("t_concrete_wall")
-            || self.0.starts_with("t_reinforced_glass")
-            || self.0.starts_with("t_paper")
-        {
-            ModelShape::Cuboid {
-                height: VERTICAL.f32(),
-            }
-        } else if self.0.starts_with("t_window")
-            || self.0.starts_with("t_door")
-            || self.0.starts_with("t_curtains")
-            || self.0.starts_with("t_bars")
-        {
-            ModelShape::Plane {
-                orientation: SpriteOrientation::Vertical,
-                transform2d: Transform2d {
-                    scale: Vec2::new(ADJACENT.f32(), VERTICAL.f32()),
-                    offset: Vec2::new(0.0, 0.5 * (VERTICAL.f32() - ADJACENT.f32())),
-                },
-            }
-        } else if self.0.starts_with("t_sewage_pipe") {
-            ModelShape::Cuboid {
-                height: ADJACENT.f32(),
-            }
-        } else if layer == SpriteLayer::Back {
-            ModelShape::Plane {
-                orientation: SpriteOrientation::Horizontal,
-                transform2d,
-            }
-        } else if 1.0 < transform2d.scale.x.max(transform2d.scale.y)
-            || self.0.starts_with("t_fence")
-            || self.0.starts_with("t_splitrail_fence")
-            || self.0.starts_with("t_shrub")
-            || self.0.starts_with("t_flower")
-            || self.0.starts_with("f_plant")
-            || self.0.starts_with("mon_")
-        {
-            ModelShape::Plane {
-                orientation: SpriteOrientation::Vertical,
-                transform2d,
-            }
-        } else {
-            ModelShape::Plane {
-                orientation: SpriteOrientation::Horizontal,
-                transform2d,
-            }
-        }
-    }
-}
 
 #[derive(Debug)]
 struct TileInfo {
-    names: Vec<TileName>,
+    names: Vec<ObjectName>,
     foreground: Vec<SpriteNumber>,
     background: Vec<SpriteNumber>,
 }
@@ -115,11 +19,11 @@ impl TileInfo {
                 let mut tile_names = Vec::new();
                 match &tile["id"] {
                     serde_json::Value::String(s) => {
-                        tile_names.push(TileName(s.to_string()));
+                        tile_names.push(ObjectName::new(s));
                     }
                     serde_json::Value::Array(list) => {
                         for item in list {
-                            tile_names.push(TileName(item.as_str().unwrap().to_string()));
+                            tile_names.push(ObjectName::new(item.as_str().unwrap()));
                         }
                     }
                     other => panic!("{other:?}"),
@@ -184,7 +88,7 @@ impl Atlas {
     fn new(
         _asset_server: &AssetServer,
         json: &serde_json::Value,
-        tiles: &mut HashMap<TileName, TileInfo>,
+        tiles: &mut HashMap<ObjectName, TileInfo>,
     ) -> Option<Self> {
         let atlas = json.as_object().unwrap();
         let filename = atlas["file"].as_str().unwrap();
@@ -268,14 +172,8 @@ impl Atlas {
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Copy)]
-pub enum SpriteLayer {
-    Front,
-    Back,
-}
-
 pub struct TileLoader {
-    tiles: HashMap<TileName, TileInfo>,
+    tiles: HashMap<ObjectName, TileInfo>,
     textures: HashMap<SpriteNumber, TextureInfo>,
 }
 
@@ -330,15 +228,19 @@ impl TileLoader {
             )
     }
 
-    pub fn get_models(&self, tile_name: &TileName, tile_type: &TileType) -> Vec<Model> {
+    pub fn get_models(&self, definition: &ObjectDefinition) -> Vec<Model> {
         let mut bundles = Vec::new();
-        let (foreground, background) = tile_name
+        let (foreground, background) = definition
+            .name
             .variants()
             .iter()
             .find_map(|variant| self.tiles.get(variant))
             .unwrap_or_else(|| {
-                println!("{tile_name:?} not found, falling back to default sprite");
-                self.tiles.get(&TileName::new("unknown")).unwrap()
+                println!(
+                    "{:?} not found, falling back to default sprite",
+                    definition.name
+                );
+                self.tiles.get(&ObjectName::new("unknown")).unwrap()
             })
             .sprite_numbers();
         /*if tile_name.0.as_str() != "t_dirt" && !tile_name.0.starts_with("t_grass") {
@@ -351,11 +253,10 @@ impl TileLoader {
         ] {
             bundles.extend(sprite_numbers.map(|sprite_number| {
                 Model::new(
-                    tile_name,
+                    definition,
                     layer,
                     sprite_number,
                     &self.textures[&sprite_number],
-                    tile_type,
                 )
             }));
         }

@@ -1,12 +1,14 @@
-pub mod character;
-pub mod check;
-pub mod hud;
-pub mod input;
-pub mod spawn;
-pub mod startup;
-pub mod update;
+mod character;
+mod check;
+mod hud;
+mod input;
+mod spawn;
+mod startup;
+mod update;
 
 use std::time::{Duration, Instant};
+
+pub use self::{character::*, check::*, hud::*, input::*, spawn::*, startup::*, update::*};
 
 fn log_if_slow(name: &str, start: Instant) {
     let duration = Instant::now() - start;

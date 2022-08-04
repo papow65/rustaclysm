@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use bevy::prelude::{Mesh, Quat, Transform, Vec2, Vec3};
+use bevy::prelude::{AlphaMode, Mesh, Quat, Transform, Vec2, Vec3};
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Transform2d {
@@ -43,7 +43,7 @@ pub enum ModelShape {
 }
 
 impl ModelShape {
-    fn to_transform(self, layer: &SpriteLayer) -> Transform {
+    fn to_transform(self, layer: &SpriteLayer, vertical_offset: f32) -> Transform {
         match self {
             ModelShape::Plane {
                 orientation,
@@ -53,10 +53,7 @@ impl ModelShape {
                     SpriteOrientation::Horizontal => Vec3::new(
                         /*back*/ transform2d.offset.y,
                         /*up*/
-                        match layer {
-                            SpriteLayer::Front => 0.01,
-                            _ => 0.0,
-                        },
+                        vertical_offset,
                         /*right*/ transform2d.offset.x,
                     ),
                     SpriteOrientation::Vertical => Vec3::new(
@@ -65,7 +62,8 @@ impl ModelShape {
                             SpriteLayer::Front => -0.41,
                             SpriteLayer::Back => -0.4,
                         },
-                        /*up*/ 0.02 + ADJACENT.f32() / 2.0 + transform2d.offset.y,
+                        /*up*/
+                        vertical_offset + ADJACENT.f32() / 2.0 + transform2d.offset.y,
                         /*right*/ transform2d.offset.x,
                     ),
                 };
@@ -93,22 +91,27 @@ pub struct Model {
     pub sprite_number: SpriteNumber,
     pub mesh_info: MeshInfo,
     pub texture_path: String,
+    pub vertical_offset: f32,
+    pub alpha_mode: AlphaMode,
 }
 
 impl Model {
     pub fn new(
-        tile_name: &TileName,
+        definition: &ObjectDefinition,
         layer: SpriteLayer,
         sprite_number: SpriteNumber,
         texture_info: &TextureInfo,
-        tile_type: &TileType,
     ) -> Self {
         Self {
-            shape: tile_name.to_shape(layer, texture_info.transform2d, tile_type),
+            shape: definition
+                .name
+                .to_shape(layer, texture_info.transform2d, &definition.specifier),
             layer,
             sprite_number,
             mesh_info: texture_info.mesh_info,
             texture_path: texture_info.image_path.clone(),
+            vertical_offset: definition.specifier.vertical_offset(&layer),
+            alpha_mode: definition.alpha_mode(),
         }
     }
 
@@ -120,6 +123,6 @@ impl Model {
     }
 
     pub fn to_transform(&self) -> Transform {
-        self.shape.to_transform(&self.layer)
+        self.shape.to_transform(&self.layer, self.vertical_offset)
     }
 }

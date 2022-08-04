@@ -75,17 +75,14 @@
 
 mod cdda;
 mod components;
-mod mesh;
-mod model;
+mod core;
 mod plugin;
 mod prelude;
 mod resources;
 mod systems;
-mod unit;
 
 use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
 use bevy::prelude::{App, DefaultPlugins};
-
 use plugin::RustaclysmPlugin;
 
 fn main() {

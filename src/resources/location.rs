@@ -1,8 +1,10 @@
-use bevy::ecs::query::{Fetch, WorldQuery, WorldQueryGats};
+use bevy::ecs::query::{ROQueryItem, WorldQuery};
 use bevy::prelude::{Entity, Query};
 use bevy::utils::HashMap;
 
 use crate::components::{Pos, Stairs};
+
+const NOT_FOUND: &Vec<Entity> = &Vec::new();
 
 pub struct Location {
     all: HashMap<Pos, Vec<Entity>>,
@@ -40,46 +42,36 @@ impl Location {
         }
     }
 
+    fn entities<'l>(&'l self, pos: Pos) -> impl ExactSizeIterator<Item = &Entity> {
+        self.all.get(&pos).unwrap_or(NOT_FOUND).iter()
+    }
+
     pub fn any<'w, 's, Q, F>(&self, pos: Pos, items: &'s Query<'w, 's, Q, F>) -> bool
     where
         F: 'w + 's + WorldQuery,
         Q: 'w + 's + WorldQuery,
-        // <Q as WorldQuery>::Fetch: ReadOnlyWorldQuery,
-        // <F as WorldQuery>::Fetch: FilterFetch,
     {
-        self.all
-            .get(&pos)
-            .unwrap_or(&vec![])
-            .iter()
-            .any(|&x| items.get(x).is_ok())
+        self.entities(pos).any(|&x| items.get(x).is_ok())
     }
 
     pub fn get_first<'w, 's: 'w, Q, F>(
         &self,
         pos: Pos,
         items: &'s Query<'w, 's, Q, F>,
-    ) -> Option<<<<Q as WorldQuery>::ReadOnly as WorldQueryGats<'w>>::Fetch as Fetch<'s>>::Item>
+    ) -> Option<ROQueryItem<'s, Q>>
     where
         F: 'w + 's + WorldQuery,
         Q: 'w + 's + WorldQuery,
     {
-        self.all
-            .get(&pos)
-            .unwrap_or(&vec![])
-            .iter()
-            .find_map(|&x| items.get(x).ok())
+        self.entities(pos).find_map(|&x| items.get(x).ok())
     }
 
     pub fn exists(&self, pos: Pos) -> bool {
-        if let Some(entities) = self.all.get(&pos) {
-            !entities.is_empty()
-        } else {
-            false
-        }
+        0 < self.entities(pos).len()
     }
 
     pub fn all(&self, pos: Pos) -> Vec<Entity> {
-        self.all.get(&pos).unwrap_or(&vec![]).clone()
+        self.entities(pos).cloned().collect()
     }
 
     // helper methods

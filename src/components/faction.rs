@@ -1,11 +1,8 @@
+use crate::prelude::*;
 use bevy::ecs::component::Component;
 use rand::prelude::*;
 use rand::seq::SliceRandom;
 use std::iter::once;
-
-use crate::components::{Action, Health, PlayerVisible, Pos};
-use crate::resources::Envir;
-use crate::unit::{Milliseconds, Partial, Speed};
 
 pub const SAFETY: Milliseconds = Milliseconds(10000);
 

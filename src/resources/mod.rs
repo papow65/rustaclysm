@@ -3,17 +3,12 @@ mod envir;
 mod location;
 mod spawner;
 
+use crate::prelude::*;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
 
-use super::components::{Containable, Container, Faction, Health, Instruction, Label, Pos};
-use super::unit::{Distance, Milliseconds, Speed};
-
-pub use debug::*;
-pub use envir::*;
-pub use location::*;
-pub use spawner::*;
+pub use self::{debug::*, envir::*, location::*, spawner::*};
 
 pub enum Collision {
     Pass,
