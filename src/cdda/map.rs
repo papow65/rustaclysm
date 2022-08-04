@@ -186,7 +186,7 @@ where
         {
             let mut result = Vec::new();
             while let Some(element) = seq.next_element::<serde_json::Value>()? {
-                let repetition = Repetition::<ObjectName>::from(element);
+                let repetition = Repetition::<ObjectName>::try_from(element).unwrap();
                 for _ in 0..repetition.amount {
                     result.push(repetition.obj.clone());
                 }
@@ -244,7 +244,7 @@ impl JsonLoad for Vec<Repetition<CddaItem>> {
     fn load(json: &serde_json::Value) -> Self {
         let mut vec = Self::new();
         for element in json.as_array().unwrap() {
-            vec.push(Repetition::from(element.clone()));
+            vec.push(Repetition::try_from(element.clone()).unwrap());
         }
         vec
     }
@@ -343,17 +343,16 @@ pub struct Repetition<T> {
     pub amount: u32,
 }
 
-impl<T> From<serde_json::Value> for Repetition<T>
+impl<T> TryFrom<serde_json::Value> for Repetition<T>
 where
     T: Clone + for<'de> Deserialize<'de>,
 {
-    fn from(value: serde_json::Value) -> Self {
+    type Error = serde_json::Error;
+
+    fn try_from(value: serde_json::Value) -> Result<Self, serde_json::Error> {
         match value {
-            serde_json::Value::Array(_) => serde_json::from_value(value).unwrap(),
-            _ => Self {
-                obj: serde_json::from_value::<T>(value).unwrap(),
-                amount: 1,
-            },
+            serde_json::Value::Array(_) => serde_json::from_value(value),
+            _ => serde_json::from_value::<T>(value).map(|obj| Self { obj, amount: 1 }),
         }
     }
 }

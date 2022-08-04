@@ -16,12 +16,12 @@ pub enum ObjectSpecifier {
 impl ObjectSpecifier {
     pub fn vertical_offset(&self, layer: &SpriteLayer) -> f32 {
         let level = match self {
-            ObjectSpecifier::ZoneLayer => -2,
-            ObjectSpecifier::Terrain => 0,
-            ObjectSpecifier::Furniture => 2,
-            ObjectSpecifier::Item(_) => 4,
-            ObjectSpecifier::Character => 6,
-            ObjectSpecifier::Meta => return 0.15,
+            Self::ZoneLayer => -2,
+            Self::Terrain => 0,
+            Self::Furniture => 2,
+            Self::Item(_) => 4,
+            Self::Character => 6,
+            Self::Meta => return 0.15,
         } + match &layer {
             SpriteLayer::Front => 1,
             SpriteLayer::Back => 0,

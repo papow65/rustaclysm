@@ -29,9 +29,9 @@ impl Pos {
 
     /** Distance without regard for obstacles or stairs */
     pub fn dist(&self, other: Self) -> Distance {
-        let dx = (self.0 - other.0).abs() as u64;
+        let dx = u64::from((self.0 - other.0).unsigned_abs());
         let dy = self.1 - other.1;
-        let dz = (self.2 - other.2).abs() as u64;
+        let dz = u64::from((self.2 - other.2).unsigned_abs());
 
         Distance {
             h: Millimeter(
@@ -40,7 +40,7 @@ impl Pos {
             ),
             up: Millimeter(if 0 < dy { VERTICAL.0 * dy as u64 } else { 0 }),
             down: Millimeter(if dy < 0 {
-                VERTICAL.0 * dy.abs() as u64
+                VERTICAL.0 * u64::from(dy.unsigned_abs())
             } else {
                 0
             }),

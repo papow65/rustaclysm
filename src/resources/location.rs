@@ -71,7 +71,7 @@ impl Location {
     }
 
     pub fn all(&self, pos: Pos) -> Vec<Entity> {
-        self.entities(pos).cloned().collect()
+        self.entities(pos).copied().collect()
     }
 
     // helper methods
