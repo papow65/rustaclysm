@@ -49,17 +49,18 @@ pub fn spawn_nearby_zones(
         for center_zone in get_center_zones(pos, player) {
             println!("{:?}", center_zone);
             for nearby_zone in center_zone.nearby(SPAWN_DISTANCE) {
-                for y in Pos::vertical_range() {
-                    let zone_level = nearby_zone.zone_level(y);
-                    if !location.exists(zone_level.base_pos())
-                        && tile_spawner.spawn_expanded_zone_level(zone_level).is_ok()
-                    {
-                        set_collapsed_zone_level_visibility(
-                            &mut commands,
-                            &collapsed_zone_levels,
-                            zone_level,
-                            false,
-                        );
+                // level 0 always exists
+                if !location.exists(nearby_zone.zone_level(0).base_pos()) {
+                    for y in Pos::vertical_range() {
+                        let zone_level = nearby_zone.zone_level(y);
+                        if tile_spawner.spawn_expanded_zone_level(zone_level).is_ok() {
+                            set_collapsed_zone_level_visibility(
+                                &mut commands,
+                                &collapsed_zone_levels,
+                                zone_level,
+                                false,
+                            );
+                        }
                     }
                 }
             }
