@@ -41,17 +41,17 @@ impl Instruction {
     }
 
     const fn get_relative_pos(key_code: KeyCode) -> Pos {
-        Pos(
+        Pos::new(
             match key_code {
                 KeyCode::Numpad1 | KeyCode::Numpad2 | KeyCode::Numpad3 => -1,
                 KeyCode::Numpad7 | KeyCode::Numpad8 | KeyCode::Numpad9 => 1,
                 _ => 0,
             },
-            match key_code {
+            Level::new(match key_code {
                 KeyCode::R => 1,
                 KeyCode::F => -1,
                 _ => 0,
-            },
+            }),
             match key_code {
                 KeyCode::Numpad1 | KeyCode::Numpad4 | KeyCode::Numpad7 => -1,
                 KeyCode::Numpad3 | KeyCode::Numpad6 | KeyCode::Numpad9 => 1,
@@ -152,8 +152,8 @@ fn move_(
         Collision::Pass => {
             commands.entity(mover).insert(to);
 
-            if from.1 != to.1 {
-                commands.entity(mover).insert(PosYChanged);
+            if from.level != to.level {
+                commands.entity(mover).insert(LevelChanged);
             }
             if Zone::from(from) != Zone::from(to) {
                 commands.entity(mover).insert(ZoneChanged);
@@ -227,12 +227,12 @@ fn smash(
         unimplemented!();
     }
 
-    let stair_pos = Pos(target.0, pos.1, target.2);
-    if pos.1 < target.1 && !envir.has_stairs_up(stair_pos) {
+    let stair_pos = Pos::new(target.x, pos.level, target.z);
+    if pos.level.up() == Some(target.level) && !envir.has_stairs_up(stair_pos) {
         let message = format!("{s_label} smashes the ceiling");
         commands.spawn().insert(Message::new(message));
         Milliseconds(0)
-    } else if target.1 < pos.1 && !envir.has_stairs_down(stair_pos) {
+    } else if pos.level.down() == Some(target.level) && !envir.has_stairs_down(stair_pos) {
         let message = format!("{s_label} smashes the floor");
         commands.spawn().insert(Message::new(message));
         Milliseconds(0)
@@ -329,8 +329,8 @@ fn pickup(
 fn examine(commands: &mut Commands, player: Entity, from: Pos, to: Pos) -> Milliseconds {
     // see update_status_detais() in systems/update.rs
 
-    if from.1 != to.1 {
-        commands.entity(player).insert(PosYChanged);
+    if from.level != to.level {
+        commands.entity(player).insert(LevelChanged);
     }
     if Zone::from(from) != Zone::from(to) {
         commands.entity(player).insert(ZoneChanged);

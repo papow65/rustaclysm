@@ -59,7 +59,8 @@ fn update_visibility(
     // TODO make something only invisibile when it would overlap with the player FOV
     // TODO partially show obstacles that overlap with the player and his nbors
 
-    let is_visible = pos.1 == player_pos.1 || (0 <= pos.1 && pos.1 < player_pos.1);
+    let is_visible =
+        pos.level == player_pos.level || (Level::ZERO <= pos.level && pos.level < player_pos.level);
 
     if let Some(children) = children {
         for &child in children.iter() {
@@ -72,7 +73,7 @@ fn update_visibility(
 
 #[allow(clippy::needless_pass_by_value)]
 pub fn update_visibility_on_item_y_change(
-    mut moved_items: Query<(&Pos, Option<&Children>), With<PosYChanged>>,
+    mut moved_items: Query<(&Pos, Option<&Children>), With<LevelChanged>>,
     mut child_items: Query<&mut Visibility, (With<Parent>, Without<Pos>)>,
     players: Query<&Pos, With<Player>>,
 ) {
@@ -90,7 +91,7 @@ pub fn update_visibility_on_item_y_change(
 pub fn update_visibility_on_player_y_change(
     mut items: Query<(&Pos, Option<&Children>)>,
     mut child_items: Query<&mut Visibility, (With<Parent>, Without<Pos>)>,
-    moved_players: Query<(&Pos, &Player), Or<(With<PosYChanged>, Changed<Player>)>>,
+    moved_players: Query<(&Pos, &Player), Or<(With<LevelChanged>, Changed<Player>)>>,
 ) {
     let start = Instant::now();
 

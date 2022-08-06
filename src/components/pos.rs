@@ -13,25 +13,102 @@ fn straight_2d(from: (i32, i32), to: (i32, i32)) -> impl Iterator<Item = (i32, i
     .chain(std::iter::once(to))
 }
 
-/// Y is vertical
-#[derive(Component, Copy, Clone, PartialEq, Eq, Hash, Debug)]
-pub struct Pos(pub i32, pub i32, pub i32);
+/// Vertical aspect
+#[derive(Copy, Clone, PartialOrd, Ord, PartialEq, Eq, Hash, Debug)]
+pub struct Level {
+    pub h: i8,
+}
 
-impl Pos {
-    pub const fn vertical_range() -> core::ops::RangeInclusive<i32> {
-        -10..=10
+impl Level {
+    pub const ZERO: Self = Self::new(0);
+    const LOWEST: Self = Self::new(-10);
+    const HIGHEST: Self = Self::new(10);
+    pub const ALL: [Self; 21] = [
+        Self::LOWEST,
+        Self::new(-9),
+        Self::new(-8),
+        Self::new(-7),
+        Self::new(-6),
+        Self::new(-5),
+        Self::new(-4),
+        Self::new(-3),
+        Self::new(-2),
+        Self::new(-1),
+        Self::new(0),
+        Self::new(1),
+        Self::new(2),
+        Self::new(3),
+        Self::new(4),
+        Self::new(5),
+        Self::new(6),
+        Self::new(7),
+        Self::new(8),
+        Self::new(9),
+        Self::HIGHEST,
+    ];
+
+    pub const fn new(level: i8) -> Self {
+        Self { h: level }
     }
 
-    pub const fn in_bounds(&self) -> bool {
-        let vertical_range = Self::vertical_range();
-        *vertical_range.start() <= self.1 && self.1 <= *vertical_range.end()
+    fn in_bounds(&self) -> bool {
+        &Self::LOWEST <= self && self <= &Self::HIGHEST
+    }
+
+    pub fn up(&self) -> Option<Self> {
+        let up = Self { h: self.h + 1 };
+        up.in_bounds().then_some(up)
+    }
+
+    pub fn down(&self) -> Option<Self> {
+        let down = Self { h: self.h - 1 };
+        down.in_bounds().then_some(down)
+    }
+
+    pub fn offset(&self, relative: Self) -> Option<Self> {
+        let sum = Self {
+            h: self.h + relative.h,
+        };
+        sum.in_bounds().then_some(sum)
+    }
+
+    pub const fn dist(self, to: Self) -> i8 {
+        (self.h - to.h).abs()
+    }
+
+    pub const fn index(&self) -> usize {
+        (self.h + 10) as usize
+    }
+
+    pub fn f32(&self) -> f32 {
+        f32::from(self.h) as f32 * VERTICAL.f32()
+    }
+}
+
+/// Y is vertical, like the bevy default
+#[derive(Component, Copy, Clone, PartialEq, Eq, Hash, Debug)]
+pub struct Pos {
+    pub x: i32,
+    pub level: Level,
+    pub z: i32,
+}
+
+impl Pos {
+    pub const ORIGIN: Self = Self {
+        x: 0,
+        level: Level::ZERO,
+        z: 0,
+    };
+
+    pub const fn new(x: i32, level: Level, z: i32) -> Self {
+        Self { x, level, z }
     }
 
     /** Distance without regard for obstacles or stairs */
     pub fn dist(&self, other: Self) -> Distance {
-        let dx = u64::from((self.0 - other.0).unsigned_abs());
-        let dy = self.1 - other.1;
-        let dz = u64::from((self.2 - other.2).unsigned_abs());
+        let dx = u64::from((self.x - other.x).unsigned_abs());
+        let dy = self.level.h - other.level.h;
+        let dz = u64::from((self.z - other.z).unsigned_abs());
 
         Distance {
             h: Millimeter(
@@ -49,19 +126,21 @@ impl Pos {
 
     pub fn potential_nbors(self) -> impl Iterator<Item = (Self, Distance)> {
         (0..10)
-            .map(move |i| match i {
-                0 => Self(self.0 + 1, self.1, self.2),
-                1 => Self(self.0 + 1, self.1, self.2 + 1),
-                2 => Self(self.0, self.1, self.2 + 1),
-                3 => Self(self.0 - 1, self.1, self.2 + 1),
-                4 => Self(self.0 - 1, self.1, self.2),
-                5 => Self(self.0 - 1, self.1, self.2 - 1),
-                6 => Self(self.0, self.1, self.2 - 1),
-                7 => Self(self.0 + 1, self.1, self.2 - 1),
-                8 => Self(self.0, self.1 + 1, self.2),
-                _ => Self(self.0, self.1 - 1, self.2),
+            .filter_map(move |i| match i {
+                0 => Some(Self::new(self.x + 1, self.level, self.z)),
+                1 => Some(Self::new(self.x + 1, self.level, self.z + 1)),
+                2 => Some(Self::new(self.x, self.level, self.z + 1)),
+                3 => Some(Self::new(self.x - 1, self.level, self.z + 1)),
+                4 => Some(Self::new(self.x - 1, self.level, self.z)),
+                5 => Some(Self::new(self.x - 1, self.level, self.z - 1)),
+                6 => Some(Self::new(self.x, self.level, self.z - 1)),
+                7 => Some(Self::new(self.x + 1, self.level, self.z - 1)),
+                8 => self.level.up().map(|up| Self::new(self.x, up, self.z)),
+                _ => self
+                    .level
+                    .down()
+                    .map(|down| Self::new(self.x, down, self.z)),
             })
-            .filter(Self::in_bounds)
             .map(move |p| (p, self.dist(p)))
     }
 
@@ -69,38 +148,34 @@ impl Pos {
         self.potential_nbors().any(|(p, _)| p == other)
     }
 
-    pub const fn offset(self, relative: Self) -> Option<Self> {
-        let other = Self(
-            self.0 + relative.0,
-            self.1 + relative.1,
-            self.2 + relative.2,
-        );
-        if other.in_bounds() {
-            Some(other)
-        } else {
-            None
-        }
+    pub fn offset(self, relative: Self) -> Option<Self> {
+        self.level
+            .offset(relative.level)
+            .map(|level| Self::new(self.x + relative.x, level, self.z + relative.z))
     }
 
     pub fn vec3(self) -> Vec3 {
         Vec3::new(
-            f64::from(self.0) as f32 * ADJACENT.f32(),
-            f64::from(self.1) as f32 * VERTICAL.f32(),
-            f64::from(self.2) as f32 * ADJACENT.f32(),
+            f64::from(self.x) as f32 * ADJACENT.f32(),
+            self.level.f32(),
+            f64::from(self.z) as f32 * ADJACENT.f32(),
         )
     }
 
     pub fn straight(self, to: Self) -> impl Iterator<Item = Self> {
         assert!(self != to);
 
-        let max_diff = (self.0 - to.0)
+        let max_diff = (self.x - to.x)
             .abs()
-            .max((self.1 - to.1).abs())
-            .max((self.2 - to.2).abs());
-        straight_2d((self.0, 0), (to.0, max_diff))
-            .zip(straight_2d((self.1, 0), (to.1, max_diff)))
-            .zip(straight_2d((self.2, 0), (to.2, max_diff)))
-            .map(|(((x, _), (y, _)), (z, _))| Self(x, y, z))
+            .max(i32::from(self.level.dist(to.level)))
+            .max((self.z - to.z).abs());
+        straight_2d((self.x, 0), (to.x, max_diff))
+            .zip(straight_2d(
+                (i32::from(self.level.h), 0),
+                (i32::from(to.level.h), max_diff),
+            ))
+            .zip(straight_2d((self.z, 0), (to.z, max_diff)))
+            .map(|(((x, _), (y, _)), (z, _))| Self::new(x, Level::new(y as i8), z))
     }
 }
 
@@ -161,10 +236,10 @@ pub struct Zone {
 }
 
 impl Zone {
-    pub const fn zone_level(&self, y: i32) -> ZoneLevel {
+    pub const fn zone_level(&self, level: Level) -> ZoneLevel {
         ZoneLevel {
             x: self.x,
-            y,
+            level,
             z: self.z,
         }
     }
@@ -189,8 +264,8 @@ impl Zone {
 impl From<Pos> for Zone {
     fn from(pos: Pos) -> Self {
         Self {
-            x: pos.0.div_euclid(24),
-            z: pos.2.div_euclid(24),
+            x: pos.x.div_euclid(24),
+            z: pos.z.div_euclid(24),
         }
     }
 }
@@ -207,7 +282,7 @@ impl From<ZoneLevel> for Zone {
 #[derive(Component, Copy, Clone, Debug, PartialEq)]
 pub struct ZoneLevel {
     pub x: i32,
-    pub y: i32,
+    pub level: Level,
     pub z: i32,
 }
 
@@ -215,22 +290,22 @@ impl ZoneLevel {
     pub const fn offset(&self, x: i32, z: i32) -> Self {
         Self {
             x: self.x + x,
-            y: self.y,
+            level: self.level,
             z: self.z + z,
         }
     }
 
     pub const fn base_pos(&self) -> Pos {
-        Pos(24 * self.x, self.y, 24 * self.z)
+        Pos::new(24 * self.x, self.level, 24 * self.z)
     }
 }
 
 impl From<Pos> for ZoneLevel {
     fn from(pos: Pos) -> Self {
         Self {
-            x: pos.0.div_euclid(24),
-            y: pos.1,
-            z: pos.2.div_euclid(24),
+            x: pos.x.div_euclid(24),
+            level: pos.level,
+            z: pos.z.div_euclid(24),
         }
     }
 }
@@ -241,11 +316,10 @@ pub struct Overzone {
 }
 
 impl Overzone {
-    pub const fn overzone_level(&self, y: i32) -> OverzoneLevel {
-        OverzoneLevel {
-            x: self.x,
-            y,
-            z: self.z,
+    pub const fn base_zone(&self) -> Zone {
+        Zone {
+            x: 180 * self.x,
+            z: 180 * self.z,
         }
     }
 }
@@ -259,49 +333,9 @@ impl From<Zone> for Overzone {
     }
 }
 
-impl From<OverzoneLevel> for Overzone {
-    fn from(overzone_level: OverzoneLevel) -> Self {
-        Self {
-            x: overzone_level.x,
-            z: overzone_level.z,
-        }
-    }
-}
-
-#[derive(Component, Copy, Clone, Debug, PartialEq)]
-pub struct OverzoneLevel {
-    pub x: i32,
-    pub y: i32,
-    pub z: i32,
-}
-
-impl OverzoneLevel {
-    pub const fn base_zone_level(&self) -> ZoneLevel {
-        ZoneLevel {
-            x: 180 * self.x,
-            y: self.y,
-            z: 180 * self.z,
-        }
-    }
-
-    pub const fn level_index(&self) -> usize {
-        self.y as usize + 10
-    }
-}
-
-impl From<ZoneLevel> for OverzoneLevel {
-    fn from(zone_level: ZoneLevel) -> Self {
-        Self {
-            x: zone_level.x.div_euclid(24),
-            y: zone_level.y,
-            z: zone_level.z.div_euclid(24),
-        }
-    }
-}
-
 /** Indication that the player moved to or examined another level */
 #[derive(Component)]
-pub struct PosYChanged;
+pub struct LevelChanged;
 
 /** Indication that the player moved to or examined a new zone */
 #[derive(Component)]

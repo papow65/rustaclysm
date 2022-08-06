@@ -50,8 +50,8 @@ pub fn spawn_nearby_zones(
             println!("{:?}", center_zone);
             for nearby_zone in center_zone.nearby(SPAWN_DISTANCE) {
                 // level 0 always exists
-                if !location.exists(nearby_zone.zone_level(0).base_pos()) {
-                    for y in Pos::vertical_range() {
+                if !location.exists(nearby_zone.zone_level(Level::ZERO).base_pos()) {
+                    for y in Level::ALL {
                         let zone_level = nearby_zone.zone_level(y);
                         if tile_spawner.spawn_expanded_zone_level(zone_level).is_ok() {
                             set_collapsed_zone_level_visibility(
@@ -118,12 +118,12 @@ fn set_collapsed_zone_level_visibility(
 pub fn remove_changed_markers(
     mut commands: Commands,
     zone_changers: Query<Entity, With<ZoneChanged>>,
-    pos_y_changers: Query<Entity, With<PosYChanged>>,
+    level_changers: Query<Entity, With<LevelChanged>>,
 ) {
     for entity in zone_changers.iter() {
         commands.entity(entity).remove::<ZoneChanged>();
     }
-    for entity in pos_y_changers.iter() {
-        commands.entity(entity).remove::<PosYChanged>();
+    for entity in level_changers.iter() {
+        commands.entity(entity).remove::<LevelChanged>();
     }
 }

@@ -1,7 +1,6 @@
+use crate::prelude::{Action, Envir, Instruction, Message, Pos};
 use bevy::ecs::component::Component;
 use std::fmt::{Display, Formatter};
-
-use crate::prelude::{Action, Envir, Instruction, Message, Pos};
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum PlayerActionState {
@@ -45,8 +44,8 @@ impl Player {
         println!("processing instruction: {instruction:?}");
 
         match (self.state, instruction) {
-            (PlayerActionState::Normal, Instruction::Offset(Pos(0, 0, 0))) => Ok(Action::Stay),
-            (PlayerActionState::Attacking, Instruction::Offset(Pos(0, 0, 0))) => {
+            (PlayerActionState::Normal, Instruction::Offset(Pos::ORIGIN)) => Ok(Action::Stay),
+            (PlayerActionState::Attacking, Instruction::Offset(Pos::ORIGIN)) => {
                 Err(Some(Message::new("can't attack self")))
             }
             (PlayerActionState::Examining(curr), Instruction::Offset(offset)) => {

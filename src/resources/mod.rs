@@ -99,13 +99,15 @@ pub struct RelativeRays(HashMap<Pos, (Vec<Pos>, Vec<(Pos, Pos)>)>);
 impl RelativeRays {
     pub fn new() -> Self {
         let mut map: HashMap<Pos, (Vec<Pos>, Vec<(Pos, Pos)>)> = HashMap::default();
-        let origin = Pos(0, 0, 0);
+        let origin = Pos::new(0, Level::ZERO, 0);
         for x in -60..=60 {
-            for y in Pos::vertical_range() {
+            for y in Level::ALL {
                 for z in -60..=60 {
-                    let to = Pos(x, y, z);
+                    let to = Pos::new(x, y, z);
 
-                    if 14_400 < 4 * to.0.pow(2) + 25 * to.1.pow(2) + 4 * to.2.pow(2) {
+                    if 14_400
+                        < 4 * to.x.pow(2) + 25 * i32::from(to.level.h).pow(2) + 4 * to.z.pow(2)
+                    {
                         // more than 60 meter away
                         continue;
                     }
@@ -119,10 +121,10 @@ impl RelativeRays {
                     let down = std::iter::once(origin)
                         .chain(line.iter().copied())
                         .zip(line.iter().copied())
-                        .filter(|(a, b)| a.1 != b.1)
+                        .filter(|(a, b)| a.level != b.level)
                         .map(|(a, b)| {
-                            let y = a.1.max(b.1);
-                            (Pos(a.0, y, a.2), Pos(b.0, y, b.2))
+                            let level = a.level.max(b.level);
+                            (Pos::new(a.x, level, a.z), Pos::new(b.x, level, b.z))
                         })
                         .collect::<Vec<(Pos, Pos)>>();
 
@@ -148,17 +150,16 @@ impl RelativeRays {
         impl Iterator<Item = (Pos, Pos)> + '_,
     )> {
         self.0
-            .get(&Pos(to.0 - from.0, to.1 - from.1, to.2 - from.2))
+            .get(&Pos::new(
+                to.x - from.x,
+                Level::new(to.level.h - from.level.h),
+                to.z - from.z,
+            ))
             .map(|(line, down)| {
                 (
-                    line.iter()
-                        .map(move |pos| Pos(pos.0 + from.0, pos.1 + from.1, pos.2 + from.2)),
-                    down.iter().map(move |(a, b)| {
-                        (
-                            Pos(a.0 + from.0, a.1 + from.1, a.2 + from.2),
-                            Pos(b.0 + from.0, b.1 + from.1, b.2 + from.2),
-                        )
-                    }),
+                    line.iter().map(move |pos| from.offset(*pos).unwrap()),
+                    down.iter()
+                        .map(move |(a, b)| (from.offset(*a).unwrap(), from.offset(*b).unwrap())),
                 )
             })
     }

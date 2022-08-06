@@ -61,7 +61,7 @@ impl<'w, 's> Envir<'w, 's> {
     pub fn can_see(&self, from: Pos, to: Pos) -> PlayerVisible {
         if from == to {
             PlayerVisible::Seen
-        } else if 60 < (from.0 - to.0).abs() || 60 < (from.2 - to.2).abs() {
+        } else if 60 < (from.x - to.x).abs() || 60 < (from.z - to.z).abs() {
             // more than 60 meter away
             PlayerVisible::Hidden
         } else {
@@ -87,9 +87,9 @@ impl<'w, 's> Envir<'w, 's> {
         pos.potential_nbors()
             .filter(move |(nbor, _)| acceptable(*nbor))
             .filter(move |(nbor, _)| {
-                pos.1 == nbor.1
-                    || (pos.1 < nbor.1 && self.has_stairs_up(pos))
-                    || (nbor.1 < pos.1 && self.has_stairs_down(pos))
+                pos.level == nbor.level
+                    || (pos.level.up() == Some(nbor.level) && self.has_stairs_up(pos))
+                    || (pos.level.down() == Some(nbor.level) && self.has_stairs_down(pos))
             })
     }
 
@@ -174,7 +174,7 @@ impl<'w, 's> Envir<'w, 's> {
         assert!(from != to);
         assert!(to.is_potential_nbor(from));
 
-        match to.1.cmp(&from.1) {
+        match to.level.cmp(&from.level) {
             x @ (Ordering::Greater | Ordering::Less) => {
                 if controlled {
                     if self.has_stairs_up(if x == Ordering::Greater { from } else { to }) {

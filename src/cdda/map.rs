@@ -19,10 +19,10 @@ impl TryFrom<ZoneLevel> for Map {
             "assets/save/maps/{}.{}.{}/{}.{}.{}.map",
             zone_level.x.div_euclid(32),
             zone_level.z.div_euclid(32),
-            zone_level.y,
+            zone_level.level.h,
             zone_level.x,
             zone_level.z,
-            zone_level.y
+            zone_level.level.h
         );
         read_to_string(&filepath)
             .ok()
@@ -157,7 +157,7 @@ pub struct At<T> {
 
 impl<T> At<T> {
     pub const fn get(&self, relative_pos: Pos) -> Option<&T> {
-        if relative_pos.0 as u8 == self.x && relative_pos.2 as u8 == self.y {
+        if relative_pos.x as u8 == self.x && relative_pos.z as u8 == self.y {
             Some(&self.obj)
         } else {
             None
