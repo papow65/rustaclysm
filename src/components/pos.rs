@@ -83,6 +83,10 @@ impl Level {
     pub fn f32(&self) -> f32 {
         f32::from(self.h) as f32 * VERTICAL.f32()
     }
+
+    pub fn visible_from(&self, reference: Self) -> bool {
+        *self == reference || (Self::ZERO <= *self && *self < reference)
+    }
 }
 
 /// Y is vertical, like the bevy default
