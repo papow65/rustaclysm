@@ -31,15 +31,6 @@ pub fn spawn_nearby_overzones(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub const fn despawn_far_overzones(
-    mut _commands: Commands,
-    _checked_zones: Query<(Entity, &ZoneLevel)>,
-    _players: Query<(&Pos, &Player), With<ZoneChanged>>,
-) {
-    // TODO
-}
-
-#[allow(clippy::needless_pass_by_value)]
 pub fn spawn_nearby_zones(
     mut commands: Commands,
     location: Res<Location>,

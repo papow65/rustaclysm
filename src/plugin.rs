@@ -34,7 +34,6 @@ impl Plugin for RustaclysmPlugin {
 
         // executed every frame
         app.add_system_to_stage(CoreStage::PreUpdate, spawn_nearby_overzones)
-            .add_system_to_stage(CoreStage::PreUpdate, despawn_far_overzones)
             .add_system_to_stage(
                 CoreStage::PreUpdate,
                 spawn_nearby_zones.after(spawn_nearby_overzones),
@@ -44,7 +43,6 @@ impl Plugin for RustaclysmPlugin {
                 CoreStage::PreUpdate,
                 remove_changed_markers
                     .after(spawn_nearby_overzones)
-                    .after(despawn_far_overzones)
                     .after(spawn_nearby_zones)
                     .after(despawn_far_zones),
             )
