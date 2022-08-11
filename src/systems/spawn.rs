@@ -19,12 +19,14 @@ fn get_center_zones(pos: Pos, player: &Player) -> Vec<Zone> {
 pub fn spawn_nearby_overzones(
     mut tile_spawner: TileSpawner,
     all_zone_levels: Query<(Entity, &ZoneLevel, Option<&Collapsed>)>,
-    players: Query<(&Pos, &Player), With<ZoneChanged>>,
+    players: Query<&Pos, (With<Player>, With<ZoneChanged>)>,
 ) {
-    // TODO spawn relevant overmaps
-    // TODO spawn relevant levels
-    if players.get_single().is_ok() && all_zone_levels.is_empty() {
-        tile_spawner.spawn_overmaps();
+    // TODO more than once
+    if all_zone_levels.is_empty() {
+        if let Ok(&pos) = players.get_single() {
+            let overzone = Overzone::from(Zone::from(pos));
+            tile_spawner.spawn_zones_around(overzone);
+        }
     }
 }
 

@@ -1,7 +1,6 @@
+use crate::prelude::{Distance, Millimeter, Milliseconds, ADJACENT, DIAGONAL, VERTICAL};
 use bevy::prelude::{Component, Vec3};
 use pathfinding::prelude::astar;
-
-use crate::prelude::{Distance, Millimeter, Milliseconds, ADJACENT, DIAGONAL, VERTICAL};
 
 fn straight_2d(from: (i32, i32), to: (i32, i32)) -> impl Iterator<Item = (i32, i32)> {
     bresenham::Bresenham::new(
@@ -20,10 +19,11 @@ pub struct Level {
 }
 
 impl Level {
+    pub const AMOUNT: usize = 21;
     pub const ZERO: Self = Self::new(0);
     const LOWEST: Self = Self::new(-10);
     const HIGHEST: Self = Self::new(10);
-    pub const ALL: [Self; 21] = [
+    pub const ALL: [Self; Self::AMOUNT] = [
         Self::LOWEST,
         Self::new(-9),
         Self::new(-8),
@@ -248,15 +248,17 @@ impl Zone {
         (self.x - other.x).abs().max((self.z - other.z).abs()) as u32
     }
 
+    pub const fn offset(&self, x: i32, z: i32) -> Self {
+        Self {
+            x: self.x + x,
+            z: self.z + z,
+        }
+    }
+
     pub fn nearby(&self, n: u32) -> Vec<Self> {
         let n = i32::try_from(n).unwrap();
         (-n..n)
-            .flat_map(move |x| {
-                (-n..n).map(move |z| Self {
-                    x: self.x + x,
-                    z: self.z + z,
-                })
-            })
+            .flat_map(move |x| (-n..n).map(move |z| self.offset(x, z)))
             .collect()
     }
 }
@@ -320,6 +322,13 @@ impl Overzone {
         Zone {
             x: 180 * self.x,
             z: 180 * self.z,
+        }
+    }
+
+    pub const fn offset(self, x: i32, z: i32) -> Self {
+        Self {
+            x: self.x + x,
+            z: self.z + z,
         }
     }
 }

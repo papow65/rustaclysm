@@ -316,63 +316,89 @@ impl<'w, 's> TileSpawner<'w, 's> {
         }
     }
 
-    pub fn spawn_overmaps(&mut self) {
-        // Hierarchy: Overzone - Zone - ZoneLevel - Pos
+    pub fn spawn_zones_around(&mut self, center: Overzone) {
+        for x in -0..=0 {
+            for z in -0..=0 {
+                self.spawn_zones(center.offset(x, z));
+            }
+        }
+    }
 
-        /*
-        let zone_level_entity = self
-            .commands
-            .spawn_bundle(SpatialBundle::default())
-            .insert(zone_level)
-            .id();
-        self.commands
-            .entity(zone_entity)
-            .add_child(zone_level_entity);
-        */
+    fn spawn_zones(&mut self, overzone: Overzone) {
+        // Hierarchy: ZoneLevel - Pos
+        // TODO What with collapsed an uncollapsed?
 
-        for x in 0..=0 {
-            for z in 1..=1 {
-                let overzone = Overzone { x, z };
-                if let Ok(overmap) = Overmap::try_from(overzone) {
-                    let level = Level::ZERO;
-                    self.spawn_overmap_levels(&overmap.layers[level.index()], overzone, level);
+        if let Ok(overmap) = Overmap::try_from(overzone) {
+            let tmp = ObjectName::new("tmp");
+            let mut names = vec![/*x*/ [/*level*/ [ /*z*/ &tmp; 180 ] ; Level::AMOUNT ]; 180]
+                .into_boxed_slice();
+            for level in [
+                Level::new(-2),
+                Level::new(-1),
+                Level::ZERO,
+                Level::new(1),
+                Level::new(2),
+            ] {
+                let mut i: i32 = 0;
+                for (name, amount) in &overmap.layers[level.index()].0 {
+                    let amount = i32::from(*amount);
+                    for j in i..i + amount {
+                        let x = j.rem_euclid(180);
+                        let z = j.div_euclid(180);
+                        names[x as usize][level.index() as usize][z as usize] = name;
+                    }
+                    i += amount;
+                }
+                assert!(i == 32400, "{i}");
+            }
+
+            for x in 0..180 {
+                for z in 0..180 {
+                    let zone = overzone.base_zone().offset(x, z);
+                    /*let zone_entity = self
+                    .commands
+                    .spawn_bundle(SpatialBundle::default())
+                    .insert(Label::new(format!("{:?}", zone)))
+                    .insert(Transform {
+                        translation: zone.zone_level(Level::ZERO).base_pos().vec3(),
+                        ..Transform::default()
+                    })
+                    .id();*/
+
+                    for level in [
+                        Level::new(-2),
+                        Level::new(-1),
+                        Level::ZERO,
+                        Level::new(1),
+                        Level::new(2),
+                    ] {
+                        let zone_level = zone.zone_level(level);
+                        let definition = ObjectDefinition {
+                            name: names[x as usize][level.index()][z as usize],
+                            specifier: ObjectSpecifier::ZoneLevel,
+                        };
+                        println!("{zone_level:?} {:?}", &definition);
+                        self.spawn_collaped_zone_level(zone_level, &definition);
+                    }
                 }
             }
         }
     }
 
-    fn spawn_overmap_levels(
-        &mut self,
-        overmap_layer: &OvermapLevel,
-        overzone: Overzone,
-        level: Level,
-    ) {
-        let mut i: i32 = 0;
-        for (name, amount) in &overmap_layer.0 {
-            let amount = i32::from(*amount);
-            for j in i..i + amount {
-                let x = j.rem_euclid(180);
-                let z = j.div_euclid(180);
-                let zone_level = overzone.base_zone().zone_level(level).offset(x, z);
-                println!("{zone_level:?}");
-                let definition = ObjectDefinition {
-                    name,
-                    specifier: ObjectSpecifier::ZoneLayer,
-                };
-                self.spawn_collaped_zone_level(zone_level, &definition);
-            }
-            i += amount;
-        }
-        assert!(i == 32400, "{i}");
-    }
-
     fn spawn_collaped_zone_level(&mut self, zone_level: ZoneLevel, definition: &ObjectDefinition) {
-        let pbr_bundles = self
-            .loader
-            .get_models(definition)
-            .iter()
-            .map(|model| self.get_pbr_bundle(model))
-            .collect::<Vec<PbrBundle>>();
+        let pbr_bundles = match definition.name {
+            name if name == &ObjectName::new("open_air")
+                || name == &ObjectName::new("empty_rock") =>
+            {
+                Vec::new()
+            }
+            _ => self
+                .loader
+                .get_models(definition)
+                .iter()
+                .map(|model| self.get_pbr_bundle(model))
+                .collect::<Vec<PbrBundle>>(),
+        };
 
         self.commands
             .spawn_bundle(SpatialBundle::default())

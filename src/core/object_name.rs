@@ -40,7 +40,7 @@ impl ObjectName {
         transform2d: Transform2d,
         specifier: &ObjectSpecifier,
     ) -> ModelShape {
-        if specifier == &ObjectSpecifier::ZoneLayer || self.0.starts_with("t_rock_floor") {
+        if specifier == &ObjectSpecifier::ZoneLevel || self.0.starts_with("t_rock_floor") {
             ModelShape::Plane {
                 orientation: SpriteOrientation::Horizontal,
                 transform2d,

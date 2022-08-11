@@ -1,4 +1,4 @@
-use crate::prelude::{ObjectName, Overzone};
+use crate::prelude::{Level, ObjectName, Overzone};
 use serde::Deserialize;
 use std::fs::read_to_string;
 
@@ -7,7 +7,7 @@ use std::fs::read_to_string;
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Overmap {
-    pub layers: Vec<OvermapLevel>,
+    pub layers: [OvermapLevel; Level::AMOUNT],
     region_id: serde_json::Value,
     monster_groups: serde_json::Value,
     cities: serde_json::Value,
