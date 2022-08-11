@@ -110,15 +110,14 @@ pub fn update_visibility_on_player_y_change(
 
 #[allow(clippy::needless_pass_by_value)]
 pub fn update_cursor_visibility_on_player_change(
-    mut curors: Query<(&mut Visibility, &GlobalTransform), With<ExamineCursor>>,
+    mut curors: Query<&mut Visibility, With<ExamineCursor>>,
     players: Query<&Player, Changed<Player>>,
 ) {
     let start = Instant::now();
 
     if let Ok(player) = players.get_single() {
-        if let Ok((mut visible, gt)) = curors.get_single_mut() {
+        if let Ok(mut visible) = curors.get_single_mut() {
             visible.is_visible = matches!(player.state, PlayerActionState::Examining(_));
-            println!("{:?}", gt);
         }
     }
 
