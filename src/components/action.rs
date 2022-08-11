@@ -2,62 +2,95 @@ use crate::prelude::*;
 use bevy::prelude::*;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum Direction {
+    Here,
+    Away,
+    AwayRight,
+    Right,
+    CloserRight,
+    Closer,
+    CloserLeft,
+    Left,
+    AwayLeft,
+    Above,
+    Below,
+}
+
+impl Direction {
+    pub const fn get_relative_pos(&self) -> Pos {
+        Pos::new(
+            match self {
+                Self::CloserLeft | Self::Closer | Self::CloserRight => -1,
+                Self::AwayLeft | Self::Away | Self::AwayRight => 1,
+                _ => 0,
+            },
+            Level::new(match self {
+                Self::Above => 1,
+                Self::Below => -1,
+                _ => 0,
+            }),
+            match self {
+                Self::CloserLeft | Self::Left | Self::AwayLeft => -1,
+                Self::CloserRight | Self::Right | Self::AwayRight => 1,
+                _ => 0,
+            },
+        )
+    }
+}
+
+impl TryFrom<KeyCode> for Direction {
+    type Error = ();
+
+    fn try_from(key_code: KeyCode) -> Result<Self, ()> {
+        Ok(match key_code {
+            KeyCode::Numpad1 => Self::CloserLeft,
+            KeyCode::Numpad2 => Self::Closer,
+            KeyCode::Numpad3 => Self::CloserRight,
+            KeyCode::Numpad4 => Self::Left,
+            KeyCode::Numpad5 => Self::Here,
+            KeyCode::Numpad6 => Self::Right,
+            KeyCode::Numpad7 => Self::AwayLeft,
+            KeyCode::Numpad8 => Self::Away,
+            KeyCode::Numpad9 => Self::AwayRight,
+            KeyCode::R => Self::Above,
+            KeyCode::F => Self::Below,
+            _ => {
+                return Err(());
+            }
+        })
+    }
+}
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Instruction {
-    Offset(Pos),
+    Offset(Direction),
     Pickup,
     Dump,
     Attack,
     Smash,
     SwitchRunning,
-    SwitchExamining,
+    ExaminePos,
+    ExamineZoneLevel,
     Cancel,
 }
 
-impl Instruction {
-    pub const fn new(key_code: KeyCode) -> Option<Self> {
-        Some(match key_code {
-            KeyCode::Numpad1
-            | KeyCode::Numpad2
-            | KeyCode::Numpad3
-            | KeyCode::Numpad4
-            | KeyCode::Numpad5
-            | KeyCode::Numpad6
-            | KeyCode::Numpad7
-            | KeyCode::Numpad8
-            | KeyCode::Numpad9
-            | KeyCode::R
-            | KeyCode::F => Self::Offset(Self::get_relative_pos(key_code)),
+impl TryFrom<KeyCode> for Instruction {
+    type Error = ();
+
+    fn try_from(key_code: KeyCode) -> Result<Self, ()> {
+        Ok(match key_code {
             KeyCode::B => Self::Pickup,
             KeyCode::V => Self::Dump,
             KeyCode::A => Self::Attack,
             KeyCode::S => Self::Smash,
-            KeyCode::X => Self::SwitchExamining,
+            KeyCode::X => Self::ExaminePos,
+            KeyCode::M => Self::ExamineZoneLevel,
             KeyCode::NumpadAdd => Self::SwitchRunning,
             KeyCode::Escape => Self::Cancel,
             _ => {
-                return None;
+                return Direction::try_from(key_code).map(Self::Offset);
             }
         })
-    }
-
-    const fn get_relative_pos(key_code: KeyCode) -> Pos {
-        Pos::new(
-            match key_code {
-                KeyCode::Numpad1 | KeyCode::Numpad2 | KeyCode::Numpad3 => -1,
-                KeyCode::Numpad7 | KeyCode::Numpad8 | KeyCode::Numpad9 => 1,
-                _ => 0,
-            },
-            Level::new(match key_code {
-                KeyCode::R => 1,
-                KeyCode::F => -1,
-                _ => 0,
-            }),
-            match key_code {
-                KeyCode::Numpad1 | KeyCode::Numpad4 | KeyCode::Numpad7 => -1,
-                KeyCode::Numpad3 | KeyCode::Numpad6 | KeyCode::Numpad9 => 1,
-                _ => 0,
-            },
-        )
     }
 }
 
@@ -76,8 +109,11 @@ pub enum Action {
     Pickup,
     Dump,
     SwitchRunning,
-    Examine {
+    ExaminePos {
         target: Pos,
+    },
+    ExamineZoneLevel {
+        target: ZoneLevel,
     },
 }
 
@@ -118,7 +154,8 @@ impl Action {
                 pos,
                 speed,
             ),
-            Action::Examine { target } => examine(commands, actor, pos, target),
+            Action::ExaminePos { target } => examine(commands, actor, pos, target),
+            Action::ExamineZoneLevel { target } => examine(commands, actor, pos, target.base_pos()),
             Self::SwitchRunning => switch_running(commands, actor),
         };
 

@@ -6,9 +6,10 @@ const DESPAWN_DISTANCE: u32 = SPAWN_DISTANCE + 1;
 
 fn get_center_zones(pos: Pos, player: &Player) -> Vec<Zone> {
     let mut positions = vec![pos];
-    if let PlayerActionState::Examining(camera_pos) = player.state {
+    if let PlayerActionState::ExaminingPos(camera_pos) = player.state {
         positions.push(camera_pos);
     }
+    // Not needed for PlayerActionState::ExaminingZoneLevel
     positions
         .iter()
         .map(|&p| Zone::from(p))
@@ -24,8 +25,7 @@ pub fn spawn_nearby_overzones(
     // TODO more than once
     if all_zone_levels.is_empty() {
         if let Ok(&pos) = players.get_single() {
-            let overzone = Overzone::from(Zone::from(pos));
-            tile_spawner.spawn_zones_around(overzone);
+            tile_spawner.spawn_zones_around(Zone::from(pos));
         }
     }
 }

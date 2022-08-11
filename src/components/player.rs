@@ -1,4 +1,4 @@
-use crate::prelude::{Action, Envir, Instruction, Message, Pos};
+use crate::prelude::{Action, Direction, Envir, Instruction, Message, Pos, ZoneLevel};
 use bevy::ecs::component::Component;
 use std::fmt::{Display, Formatter};
 
@@ -7,7 +7,8 @@ pub enum PlayerActionState {
     Normal,
     Attacking,
     Smashing,
-    Examining(Pos),
+    ExaminingPos(Pos),
+    ExaminingZoneLevel(ZoneLevel),
 }
 
 impl Display for PlayerActionState {
@@ -19,7 +20,8 @@ impl Display for PlayerActionState {
                 Self::Normal => "",
                 Self::Attacking => "Attacking",
                 Self::Smashing => "Smashing",
-                PlayerActionState::Examining(_) => "Examining",
+                Self::ExaminingPos(_) => "Examining",
+                Self::ExaminingZoneLevel(_) => "Examining map",
             }
         )
         .unwrap();
@@ -44,12 +46,12 @@ impl Player {
         println!("processing instruction: {instruction:?}");
 
         match (self.state, instruction) {
-            (PlayerActionState::Normal, Instruction::Offset(Pos::ORIGIN)) => Ok(Action::Stay),
-            (PlayerActionState::Attacking, Instruction::Offset(Pos::ORIGIN)) => {
+            (PlayerActionState::Normal, Instruction::Offset(Direction::Here)) => Ok(Action::Stay),
+            (PlayerActionState::Attacking, Instruction::Offset(Direction::Here)) => {
                 Err(Some(Message::new("can't attack self")))
             }
-            (PlayerActionState::Examining(curr), Instruction::Offset(offset)) => {
-                self.handle_offset(curr, offset)
+            (PlayerActionState::ExaminingPos(curr), Instruction::Offset(direction)) => {
+                self.handle_offset(curr, direction)
             }
             (PlayerActionState::Normal, Instruction::Cancel) => {
                 Err(Some(Message::new("Press ctrl+c/d/q to exit")))
@@ -57,7 +59,8 @@ impl Player {
             (_, Instruction::Cancel)
             | (PlayerActionState::Attacking, Instruction::Attack)
             | (PlayerActionState::Smashing, Instruction::Smash)
-            | (PlayerActionState::Examining(_), Instruction::SwitchExamining) => {
+            | (PlayerActionState::ExaminingPos(_), Instruction::ExaminePos)
+            | (PlayerActionState::ExaminingZoneLevel(_), Instruction::ExamineZoneLevel) => {
                 self.state = PlayerActionState::Normal;
                 Err(None)
             }
@@ -66,16 +69,36 @@ impl Player {
             (_, Instruction::Dump) => Ok(Action::Dump),
             (_, Instruction::Attack) => self.handle_attack(envir, pos),
             (_, Instruction::Smash) => self.handle_smash(envir, pos),
-            (_, Instruction::SwitchExamining) => {
-                self.state = PlayerActionState::Examining(pos);
-                Ok(Action::Examine { target: pos })
+            (_, Instruction::ExaminePos) => {
+                self.state = PlayerActionState::ExaminingPos(pos);
+                Ok(Action::ExaminePos { target: pos })
+            }
+            (_, Instruction::ExamineZoneLevel) => {
+                let target = ZoneLevel::from(pos);
+                self.state = PlayerActionState::ExaminingZoneLevel(target);
+                Ok(Action::ExamineZoneLevel { target })
             }
             (_, Instruction::SwitchRunning) => Ok(Action::SwitchRunning),
         }
     }
 
-    fn handle_offset(&mut self, reference: Pos, offset: Pos) -> Result<Action, Option<Message>> {
-        let target = reference.offset(offset);
+    fn handle_offset(
+        &mut self,
+        reference: Pos,
+        direction: Direction,
+    ) -> Result<Action, Option<Message>> {
+        if let PlayerActionState::ExaminingZoneLevel(current) = self.state {
+            let Pos { x, level, z } = direction.get_relative_pos();
+            let target = current.offset(ZoneLevel { x, level, z });
+            if let Some(target) = target {
+                self.state = PlayerActionState::ExaminingZoneLevel(target);
+                return Ok(Action::ExamineZoneLevel { target });
+            } else {
+                return Err(Some(Message::new("invalid target")));
+            }
+        }
+
+        let target = reference.offset(direction.get_relative_pos());
         if let Some(target) = target {
             Ok(match self.state {
                 PlayerActionState::Normal => Action::Step { target },
@@ -87,9 +110,13 @@ impl Player {
                     self.state = PlayerActionState::Normal;
                     Action::Smash { target }
                 }
-                PlayerActionState::Examining(_) => {
-                    self.state = PlayerActionState::Examining(target);
-                    Action::Examine { target }
+                PlayerActionState::ExaminingPos(current) => {
+                    assert!(reference == current, "{reference:?} {current:?}");
+                    self.state = PlayerActionState::ExaminingPos(target);
+                    Action::ExaminePos { target }
+                }
+                PlayerActionState::ExaminingZoneLevel(_) => {
+                    unreachable!();
                 }
             })
         } else {

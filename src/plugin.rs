@@ -18,6 +18,7 @@ impl Plugin for RustaclysmPlugin {
                 ..AmbientLight::default()
             })
             .insert_resource(Location::new())
+            .insert_resource(ZoneLevelNames::new())
             .insert_resource(RelativeRays::new())
             .insert_resource(Instructions::new())
             .insert_resource(Timeouts::new());

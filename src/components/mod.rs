@@ -3,10 +3,11 @@ mod faction;
 mod player;
 mod pos;
 
-use crate::prelude::*;
+use crate::prelude::Partial;
 use bevy::prelude::{AlphaMode, Assets, Color, Component, Handle, StandardMaterial};
 
-pub use {action::*, faction::*, player::*, pos::*};
+// Bevy also has a type named 'Direction', so we have to make it explicit.
+pub use {action::Direction, action::*, faction::*, player::*, pos::*};
 
 #[derive(Component, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Label(pub String);

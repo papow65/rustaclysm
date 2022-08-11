@@ -1,4 +1,4 @@
-use crate::components::{/*Level,*/ Pos, Stairs};
+use crate::prelude::{Pos, Stairs};
 use bevy::ecs::query::{ROQueryItem, WorldQuery};
 use bevy::prelude::{Entity, Query};
 use bevy::utils::HashMap;
@@ -8,7 +8,6 @@ const NOT_FOUND: &Vec<Entity> = &Vec::new();
 pub struct Location {
     objects: HashMap<Pos, Vec<Entity>>,
     positions: HashMap<Entity, Pos>,
-    // zone_levels: HashMap<Level, Vec<ZoneLevel>>,
 }
 
 impl Location {

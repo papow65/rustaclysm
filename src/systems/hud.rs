@@ -81,7 +81,7 @@ fn spawn_manual_display(
                 text: Text {
                     sections: vec![
                         TextSection {
-                            value: "move         numpad\nup/down      r/f\npick/drop    b/v\nattack       a\nrun          +\nexamine      x\nzoom         (shift+)z\nzoom         scroll wheel\ntoggle this  h\nquit         ctrl+c/d/q".to_string(),
+                            value: "move         numpad\nup/down      r/f\npick/drop    b/v\nattack       a\nrun          +\nexamine      x\nexamine map  m\nzoom         (shift+)z\nzoom         scroll wheel\ntoggle this  h\nquit         ctrl+c/d/q".to_string(),
                             style: text_style.clone(),
                         },
                     ],
@@ -245,6 +245,7 @@ pub fn update_status_player_state(
 #[allow(clippy::needless_pass_by_value)]
 pub fn update_status_detais(
     envir: Envir,
+    mut labels: ResMut<ZoneLevelNames>,
     characters: Query<(Option<&Label>, &Health), Without<Item>>,
     entities: Query<
         (
@@ -267,109 +268,125 @@ pub fn update_status_detais(
     let start = Instant::now();
 
     if let Some(player) = player.iter().next() {
-        status_displays.iter_mut().next().unwrap().sections[5].value =
-            if let PlayerActionState::Examining(pos) = player.state {
-                let all_here = envir.location.all(pos);
-
-                let characters = all_here
-                    .iter()
-                    .flat_map(|&i| characters.get(i))
-                    .map(|(label, health)| {
-                        let label = label.map_or_else(|| "?".to_string(), |l| l.0.clone());
-                        format!("{} ({} health)\n", label, health)
-                    })
-                    .collect::<String>();
-
-                let entities = all_here
-                    .iter()
-                    .flat_map(|&i| entities.get(i))
-                    .map(
-                        |(
-                            label,
-                            health,
-                            corpse,
-                            action,
-                            floor,
-                            stairs,
-                            obstacle,
-                            hurdle,
-                            opaque,
-                        )| {
-                            let label = label.map_or_else(|| "?".to_string(), |l| l.0.clone());
-                            let mut flags = Vec::new();
-                            let health_str;
-                            if let Some(health) = health {
-                                health_str = format!("health({})", health);
-                                flags.push(health_str.as_str());
-                            }
-                            if corpse.is_some() {
-                                flags.push("corpse");
-                            }
-                            let action_str;
-                            if let Some(action) = action {
-                                action_str = format!("{:?}", action);
-                                flags.push(action_str.as_str());
-                            }
-                            if floor.is_some() {
-                                flags.push("floor");
-                            }
-                            if stairs.is_some() {
-                                flags.push("stairs");
-                            }
-                            if obstacle.is_some() {
-                                flags.push("obstacle");
-                            }
-                            let hurdle_str;
-                            if let Some(hurdle) = hurdle {
-                                hurdle_str = format!("hurdle({})", hurdle.0);
-                                flags.push(hurdle_str.as_str());
-                            }
-                            if opaque.is_some() {
-                                flags.push("opaque");
-                            }
-                            label
-                                + flags
-                                    .iter()
-                                    .map(|s| format!("\n- {}", s))
-                                    .collect::<String>()
-                                    .as_str()
-                                + "\n"
-                        },
-                    )
-                    .collect::<String>();
-
-                let mut grouped_items = BTreeMap::<Option<&Label>, u32>::new();
-                for (label, item) in all_here.iter().flat_map(|&i| items.get(i)) {
-                    *grouped_items.entry(label).or_insert(0) += item.amount;
-                }
-                let items = grouped_items
-                    .iter()
-                    .map(|(label, amount)| {
-                        let label = label.map_or_else(|| "?".to_string(), |l| l.0.clone());
-                        let amount = Some(amount)
-                            .filter(|&&a| 1 < a)
-                            .map(|a| format!(" (x{})", a))
-                            .unwrap_or_default();
-                        label + amount.as_str() + "\n"
-                    })
-                    .collect::<String>();
-
-                format!(
-                    "{:?}\n{}{}{}{}",
-                    pos,
-                    characters,
-                    if envir.has_stairs_down(pos) {
-                        "Stairs down\n"
-                    } else {
-                        ""
-                    },
-                    entities,
-                    items
-                )
-            } else {
-                String::new()
-            };
+        status_displays.iter_mut().next().unwrap().sections[5].value = match player.state {
+            PlayerActionState::ExaminingPos(pos) => {
+                pos_info(&envir, &characters, &entities, &items, pos)
+            }
+            PlayerActionState::ExaminingZoneLevel(zone_level) => {
+                format!("{:?}\n{:?}", zone_level, labels.get(zone_level).unwrap_or(&ObjectName::new("NOT FOUND")))
+            }
+            _ => String::new(),
+        };
     }
 
     log_if_slow("update_status_detais", start);
+}
+
+fn pos_info(
+    envir: &Envir,
+    characters: &Query<(Option<&Label>, &Health), Without<Item>>,
+    entities: &Query<
+        (
+            Option<&Label>,
+            Option<&Health>,
+            Option<&Corpse>,
+            Option<&Action>,
+            Option<&Floor>,
+            Option<&Stairs>,
+            Option<&Obstacle>,
+            Option<&Hurdle>,
+            Option<&Opaque>,
+        ),
+        (Without<Health>, Without<Item>),
+    >,
+    items: &Query<(Option<&Label>, &Item), Without<Health>>,
+    pos: Pos,
+) -> String {
+    let all_here = envir.location.all(pos);
+
+    let characters = all_here
+        .iter()
+        .flat_map(|&i| characters.get(i))
+        .map(|(label, health)| {
+            let label = label.map_or_else(|| "?".to_string(), |l| l.0.clone());
+            format!("{} ({} health)\n", label, health)
+        })
+        .collect::<String>();
+
+    let entities = all_here
+        .iter()
+        .flat_map(|&i| entities.get(i))
+        .map(
+            |(label, health, corpse, action, floor, stairs, obstacle, hurdle, opaque)| {
+                let label = label.map_or_else(|| "?".to_string(), |l| l.0.clone());
+                let mut flags = Vec::new();
+                let health_str;
+                if let Some(health) = health {
+                    health_str = format!("health({})", health);
+                    flags.push(health_str.as_str());
+                }
+                if corpse.is_some() {
+                    flags.push("corpse");
+                }
+                let action_str;
+                if let Some(action) = action {
+                    action_str = format!("{:?}", action);
+                    flags.push(action_str.as_str());
+                }
+                if floor.is_some() {
+                    flags.push("floor");
+                }
+                if stairs.is_some() {
+                    flags.push("stairs");
+                }
+                if obstacle.is_some() {
+                    flags.push("obstacle");
+                }
+                let hurdle_str;
+                if let Some(hurdle) = hurdle {
+                    hurdle_str = format!("hurdle({})", hurdle.0);
+                    flags.push(hurdle_str.as_str());
+                }
+                if opaque.is_some() {
+                    flags.push("opaque");
+                }
+                label
+                    + flags
+                        .iter()
+                        .map(|s| format!("\n- {}", s))
+                        .collect::<String>()
+                        .as_str()
+                    + "\n"
+            },
+        )
+        .collect::<String>();
+
+    let mut grouped_items = BTreeMap::<Option<&Label>, u32>::new();
+    for (label, item) in all_here.iter().flat_map(|&i| items.get(i)) {
+        *grouped_items.entry(label).or_insert(0) += item.amount;
+    }
+    let items = grouped_items
+        .iter()
+        .map(|(label, amount)| {
+            let label = label.map_or_else(|| "?".to_string(), |l| l.0.clone());
+            let amount = Some(amount)
+                .filter(|&&a| 1 < a)
+                .map(|a| format!(" (x{})", a))
+                .unwrap_or_default();
+            label + amount.as_str() + "\n"
+        })
+        .collect::<String>();
+
+    format!(
+        "{:?}\n{}{}{}{}",
+        pos,
+        characters,
+        if envir.has_stairs_down(pos) {
+            "Stairs down\n"
+        } else {
+            ""
+        },
+        entities,
+        items
+    )
 }

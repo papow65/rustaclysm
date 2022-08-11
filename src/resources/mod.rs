@@ -2,13 +2,14 @@ mod debug;
 mod envir;
 mod location;
 mod spawner;
+mod zone_level_names;
 
 use crate::prelude::*;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
 
-pub use self::{debug::*, envir::*, location::*, spawner::*};
+pub use self::{debug::*, envir::*, location::*, spawner::*, zone_level_names::*};
 
 pub enum Collision {
     Pass,

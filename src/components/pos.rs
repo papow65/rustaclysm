@@ -98,12 +98,6 @@ pub struct Pos {
 }
 
 impl Pos {
-    pub const ORIGIN: Self = Self {
-        x: 0,
-        level: Level::ZERO,
-        z: 0,
-    };
-
     pub const fn new(x: i32, level: Level, z: i32) -> Self {
         Self { x, level, z }
     }
@@ -285,7 +279,7 @@ impl From<ZoneLevel> for Zone {
     }
 }
 
-#[derive(Component, Copy, Clone, Debug, PartialEq)]
+#[derive(Component, Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct ZoneLevel {
     pub x: i32,
     pub level: Level,
@@ -293,12 +287,12 @@ pub struct ZoneLevel {
 }
 
 impl ZoneLevel {
-    pub const fn offset(&self, x: i32, z: i32) -> Self {
-        Self {
-            x: self.x + x,
-            level: self.level,
-            z: self.z + z,
-        }
+    pub fn offset(self, relative: Self) -> Option<Self> {
+        self.level.offset(relative.level).map(|level| Self {
+            x: self.x + relative.x,
+            level,
+            z: self.z + relative.z,
+        })
     }
 
     pub const fn base_pos(&self) -> Pos {

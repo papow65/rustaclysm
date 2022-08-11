@@ -66,7 +66,7 @@ pub fn manage_keyboard_input(
                             }
                         }
                         (false, false, _) => {
-                            if let Some(instruction) = Instruction::new(key_code) {
+                            if let Ok(instruction) = Instruction::try_from(key_code) {
                                 // Wait for an instruction to be processed until adding a duplicate when holding a key down.
                                 if !keys_held.contains(&key_code)
                                     || !instructions.queue.contains(&instruction)

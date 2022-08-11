@@ -59,7 +59,7 @@ pub fn update_visibility_on_item_y_change(
 
     if let Ok(&player_pos) = players.get_single() {
         for (&pos, mut visibility) in moved_items.iter_mut() {
-            visibility.is_visible = pos.level.visible_from(player_pos.level)
+            visibility.is_visible = pos.level.visible_from(player_pos.level);
         }
     }
 
@@ -79,7 +79,8 @@ pub fn update_visibility_on_player_y_change(
 
     if let Ok((&player_pos, player)) = moved_players.get_single() {
         let reference = match player.state {
-            PlayerActionState::Examining(pos) => pos,
+            PlayerActionState::ExaminingPos(pos) => pos,
+            PlayerActionState::ExaminingZoneLevel(zone_level) => zone_level.base_pos(),
             _ => player_pos,
         };
 
@@ -97,14 +98,22 @@ pub fn update_visibility_on_player_y_change(
 
 #[allow(clippy::needless_pass_by_value)]
 pub fn update_cursor_visibility_on_player_change(
-    mut curors: Query<&mut Visibility, With<ExamineCursor>>,
+    mut curors: Query<(&mut Visibility, &mut Transform), With<ExamineCursor>>,
     players: Query<&Player, Changed<Player>>,
 ) {
     let start = Instant::now();
 
     if let Ok(player) = players.get_single() {
-        if let Ok(mut visible) = curors.get_single_mut() {
-            visible.is_visible = matches!(player.state, PlayerActionState::Examining(_));
+        if let Ok((mut visible, mut transform)) = curors.get_single_mut() {
+            let examine_pos = matches!(player.state, PlayerActionState::ExaminingPos(_));
+            let examine_zone_level =
+                matches!(player.state, PlayerActionState::ExaminingZoneLevel(_));
+            visible.is_visible = examine_pos || examine_zone_level;
+            transform.scale = if examine_zone_level {
+                Vec3::splat(24.0)
+            } else {
+                Vec3::ONE
+            };
         }
     }
 
@@ -297,7 +306,10 @@ pub fn update_camera(
     if let Ok((&pos, player)) = changed_players.get_single() {
         for mut transform in camera_bases.iter_mut() {
             transform.translation = match player.state {
-                PlayerActionState::Examining(target) => target.vec3() - pos.vec3(),
+                PlayerActionState::ExaminingPos(target) => target.vec3() - pos.vec3(),
+                PlayerActionState::ExaminingZoneLevel(target) => {
+                    target.base_pos().vec3() - pos.vec3() + Vec3::new(11.5, 0.0, 11.5)
+                }
                 _ => Vec3::ZERO,
             };
         }

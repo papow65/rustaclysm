@@ -29,6 +29,7 @@ pub struct TileSpawner<'w, 's> {
     asset_server: Res<'w, AssetServer>,
     loader: Res<'w, TileLoader>,
     caches: ResMut<'w, TileCaches>,
+    zone_level_names: ResMut<'w, ZoneLevelNames>,
 }
 
 impl<'w, 's> TileSpawner<'w, 's> {
@@ -316,68 +317,27 @@ impl<'w, 's> TileSpawner<'w, 's> {
         }
     }
 
-    pub fn spawn_zones_around(&mut self, center: Overzone) {
-        for x in -0..=0 {
-            for z in -0..=0 {
-                self.spawn_zones(center.offset(x, z));
-            }
-        }
-    }
+    pub fn spawn_zones_around(&mut self, center: Zone) {
+        for x in -50..=50 {
+            for z in -50..=50 {
+                let zone = center.offset(x, z);
+                /*let zone_entity = self
+                .commands
+                .spawn_bundle(SpatialBundle::default())
+                .insert(Label::new(format!("{:?}", zone)))
+                .insert(Transform {
+                    translation: zone.zone_level(Level::ZERO).base_pos().vec3(),
+                    ..Transform::default()
+                })
+                .id();*/
 
-    fn spawn_zones(&mut self, overzone: Overzone) {
-        // Hierarchy: ZoneLevel - Pos
-        // TODO What with collapsed an uncollapsed?
-
-        if let Ok(overmap) = Overmap::try_from(overzone) {
-            let tmp = ObjectName::new("tmp");
-            let mut names = vec![/*x*/ [/*level*/ [ /*z*/ &tmp; 180 ] ; Level::AMOUNT ]; 180]
-                .into_boxed_slice();
-            for level in [
-                Level::new(-2),
-                Level::new(-1),
-                Level::ZERO,
-                Level::new(1),
-                Level::new(2),
-            ] {
-                let mut i: i32 = 0;
-                for (name, amount) in &overmap.layers[level.index()].0 {
-                    let amount = i32::from(*amount);
-                    for j in i..i + amount {
-                        let x = j.rem_euclid(180);
-                        let z = j.div_euclid(180);
-                        names[x as usize][level.index() as usize][z as usize] = name;
-                    }
-                    i += amount;
-                }
-                assert!(i == 32400, "{i}");
-            }
-
-            for x in 0..180 {
-                for z in 0..180 {
-                    let zone = overzone.base_zone().offset(x, z);
-                    /*let zone_entity = self
-                    .commands
-                    .spawn_bundle(SpatialBundle::default())
-                    .insert(Label::new(format!("{:?}", zone)))
-                    .insert(Transform {
-                        translation: zone.zone_level(Level::ZERO).base_pos().vec3(),
-                        ..Transform::default()
-                    })
-                    .id();*/
-
-                    for level in [
-                        Level::new(-2),
-                        Level::new(-1),
-                        Level::ZERO,
-                        Level::new(1),
-                        Level::new(2),
-                    ] {
-                        let zone_level = zone.zone_level(level);
+                for level in Level::ALL {
+                    let zone_level = zone.zone_level(level);
+                    if let Some(name) = self.zone_level_names.get(zone_level) {
                         let definition = ObjectDefinition {
-                            name: names[x as usize][level.index()][z as usize],
+                            name: &name.clone(),
                             specifier: ObjectSpecifier::ZoneLevel,
                         };
-                        println!("{zone_level:?} {:?}", &definition);
                         self.spawn_collaped_zone_level(zone_level, &definition);
                     }
                 }
@@ -392,12 +352,14 @@ impl<'w, 's> TileSpawner<'w, 's> {
             {
                 Vec::new()
             }
-            _ => self
-                .loader
-                .get_models(definition)
-                .iter()
-                .map(|model| self.get_pbr_bundle(model))
-                .collect::<Vec<PbrBundle>>(),
+            _ => {
+                //println!("{zone_level:?} {:?}", &definition);
+                self.loader
+                    .get_models(definition)
+                    .iter()
+                    .map(|model| self.get_pbr_bundle(model))
+                    .collect::<Vec<PbrBundle>>()
+            }
         };
 
         self.commands
