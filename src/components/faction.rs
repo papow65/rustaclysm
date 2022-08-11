@@ -6,7 +6,7 @@ use std::iter::once;
 
 pub const SAFETY: Milliseconds = Milliseconds(10000);
 
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub enum Intelligence {
     Dumb,
     Smart,

@@ -273,7 +273,13 @@ pub fn update_status_detais(
                 pos_info(&envir, &characters, &entities, &items, pos)
             }
             PlayerActionState::ExaminingZoneLevel(zone_level) => {
-                format!("{:?}\n{:?}", zone_level, labels.get(zone_level).unwrap_or(&ObjectName::new("NOT FOUND")))
+                format!(
+                    "{:?}\n{:?}",
+                    zone_level,
+                    labels
+                        .get(zone_level)
+                        .unwrap_or(&ObjectName::new("NOT FOUND"))
+                )
             }
             _ => String::new(),
         };

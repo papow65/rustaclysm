@@ -2,7 +2,7 @@ use crate::prelude::{Action, Direction, Envir, Instruction, Message, Pos, ZoneLe
 use bevy::ecs::component::Component;
 use std::fmt::{Display, Formatter};
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum PlayerActionState {
     Normal,
     Attacking,

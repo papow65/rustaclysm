@@ -13,7 +13,7 @@ impl Transform2d {
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum SpriteOrientation {
     Horizontal,
     Vertical,
@@ -45,7 +45,7 @@ pub enum ModelShape {
 impl ModelShape {
     fn to_transform(self, layer: &SpriteLayer, vertical_offset: f32) -> Transform {
         match self {
-            ModelShape::Plane {
+            Self::Plane {
                 orientation,
                 transform2d,
             } => {
@@ -75,7 +75,7 @@ impl ModelShape {
                     scale,
                 }
             }
-            ModelShape::Cuboid { height } => Transform {
+            Self::Cuboid { height } => Transform {
                 scale: Vec3::new(ADJACENT.f32(), height, ADJACENT.f32()),
                 ..Transform::default()
             },

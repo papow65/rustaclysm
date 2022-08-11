@@ -6,7 +6,7 @@ mod unit;
 
 pub use self::{mesh::*, model::*, object_definition::*, object_name::*, unit::*};
 
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum SpriteLayer {
     Front,
     Back,

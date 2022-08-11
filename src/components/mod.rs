@@ -72,7 +72,7 @@ pub struct Health {
     max: i8,
 }
 
-#[derive(Component, Debug, PartialEq)]
+#[derive(Component, Debug, PartialEq, Eq)]
 pub struct Item {
     pub amount: u32,
 }
@@ -141,7 +141,7 @@ pub struct CameraBase;
 #[derive(Component)]
 pub struct ExamineCursor;
 
-#[derive(Component, Clone, Copy, PartialEq)]
+#[derive(Component, Clone, Copy, PartialEq, Eq)]
 pub enum PlayerVisible {
     Seen,
     Hidden,

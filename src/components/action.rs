@@ -140,9 +140,9 @@ impl Action {
     ) -> Milliseconds {
         let duration: Milliseconds = match self {
             Self::Stay => speed.stay(),
-            Action::Step { target } => move_(commands, envir, actor, label, pos, target, speed),
-            Action::Attack { target } => attack(commands, envir, label, pos, target, speed),
-            Action::Smash { target } => smash(commands, envir, label, pos, target, speed),
+            Self::Step { target } => move_(commands, envir, actor, label, pos, target, speed),
+            Self::Attack { target } => attack(commands, envir, label, pos, target, speed),
+            Self::Smash { target } => smash(commands, envir, label, pos, target, speed),
             Self::Dump => dump(commands, dumpees, actor, label, pos, speed),
             Self::Pickup => pickup(
                 commands,
@@ -154,8 +154,8 @@ impl Action {
                 pos,
                 speed,
             ),
-            Action::ExaminePos { target } => examine(commands, actor, pos, target),
-            Action::ExamineZoneLevel { target } => examine(commands, actor, pos, target.base_pos()),
+            Self::ExaminePos { target } => examine(commands, actor, pos, target),
+            Self::ExamineZoneLevel { target } => examine(commands, actor, pos, target.base_pos()),
             Self::SwitchRunning => switch_running(commands, actor),
         };
 
