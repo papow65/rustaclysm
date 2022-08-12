@@ -1,13 +1,8 @@
+use crate::prelude::*;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use pathfinding::prelude::{build_path, dijkstra_partial};
 use std::cmp::Ordering;
-
-use super::{Collision, Distance, Location, Milliseconds, RelativeRays, Speed};
-use crate::components::{
-    Floor, Health, Instruction, Integrity, Intelligence, Label, Obstacle, Opaque, Path,
-    PlayerVisible, Pos, Stairs,
-};
 
 #[derive(SystemParam)]
 pub struct Envir<'w, 's> {
@@ -115,11 +110,11 @@ impl<'w, 's> Envir<'w, 's> {
     pub fn nbors_for_exploring(
         &'s self,
         pos: Pos,
-        instruction: Instruction,
+        instruction: QueuedInstruction,
     ) -> impl Iterator<Item = Pos> + 's {
         self.nbors(pos, move |nbor| match instruction {
-            Instruction::Attack => self.find_character(nbor).is_none(),
-            Instruction::Smash => self.find_item(nbor).is_none(),
+            QueuedInstruction::Attack => self.find_character(nbor).is_none(),
+            QueuedInstruction::Smash => self.find_item(nbor).is_none(),
             _ => panic!(),
         })
         .map(move |(nbor, _)| nbor)

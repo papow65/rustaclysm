@@ -12,16 +12,16 @@ impl Plugin for RustaclysmPlugin {
                 present_mode: bevy::window::PresentMode::Mailbox, // much better responsiveness
                 ..WindowDescriptor::default()
             })
-            .insert_resource(TileCaches::new())
             .insert_resource(AmbientLight {
                 brightness: 0.2,
                 ..AmbientLight::default()
             })
-            .insert_resource(Location::new())
-            .insert_resource(ZoneLevelNames::new())
+            .insert_resource(Location::default())
+            .insert_resource(InstructionQueue::default())
             .insert_resource(RelativeRays::new())
-            .insert_resource(Instructions::new())
-            .insert_resource(Timeouts::new());
+            .insert_resource(TileCaches::default())
+            .insert_resource(Timeouts::default())
+            .insert_resource(ZoneLevelNames::default());
 
         // executed once at startup
         app.add_startup_system_to_stage(StartupStage::PreStartup, maximize_window)

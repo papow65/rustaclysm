@@ -1,15 +1,30 @@
+use crate::prelude::{
+    Instruction, InstructionQueue, KeyCombo, ManualDisplay, Player, ZoomDirection,
+};
 use bevy::ecs::event::Events;
 use bevy::input::{keyboard::KeyboardInput, mouse::MouseWheel, ButtonState};
-use bevy::prelude::{EventReader, Input, KeyCode, Local, Query, Res, ResMut, Visibility, With};
+use bevy::prelude::{EventReader, Input, KeyCode, Query, Res, ResMut, Visibility, With};
 use std::time::Instant;
-
-use crate::components::{Instruction, ManualDisplay, Player};
-use crate::resources::Instructions;
 
 use super::log_if_slow;
 
-fn zoom(player: &mut Player, in_: bool) {
-    player.camera_distance *= 0.75_f32.powi(if in_ { 1 } else { -1 });
+fn quit(app_exit_events: &mut ResMut<Events<bevy::app::AppExit>>) {
+    app_exit_events.send(bevy::app::AppExit);
+}
+
+fn zoom(player: &mut Query<&mut Player>, direction: ZoomDirection) {
+    //println!("{direction:?}");
+    player.single_mut().camera_distance *= 0.75_f32.powi(if direction == ZoomDirection::In {
+        1
+    } else {
+        -1
+    });
+}
+
+fn toggle_help(help: &mut Query<&mut Visibility, With<ManualDisplay>>) {
+    for mut visibility in help.iter_mut() {
+        visibility.is_visible ^= true; // XOR
+    }
 }
 
 #[allow(clippy::needless_pass_by_value)]
@@ -18,11 +33,15 @@ pub fn manage_mouse_input(
     mut player: Query<&mut Player>,
 ) {
     let start = Instant::now();
-
-    let mut player = player.iter_mut().next().unwrap();
-
     for scroll_event in mouse_wheel_events.iter() {
-        zoom(&mut player, 0.0 < scroll_event.y);
+        zoom(
+            &mut player,
+            if 0.0 < scroll_event.y {
+                ZoomDirection::In
+            } else {
+                ZoomDirection::Out
+            },
+        );
     }
 
     log_if_slow("manage_mouse_input", start);
@@ -32,67 +51,37 @@ pub fn manage_mouse_input(
 pub fn manage_keyboard_input(
     mut app_exit_events: ResMut<Events<bevy::app::AppExit>>,
     mut key_events: EventReader<KeyboardInput>,
-    mut instructions: ResMut<Instructions>,
+    mut instruction_queue: ResMut<InstructionQueue>,
     keys: Res<Input<KeyCode>>,
-    mut keys_held: Local<Vec<KeyCode>>,
     mut player: Query<&mut Player>,
     mut help: Query<&mut Visibility, With<ManualDisplay>>,
 ) {
     let start = Instant::now();
 
     for key_event in key_events.iter() {
-        match key_event.state {
-            ButtonState::Pressed => {
-                if let Some(key_code) = key_event.key_code {
-                    let control =
-                        keys.pressed(KeyCode::LControl) || keys.pressed(KeyCode::RControl);
-                    let shift = keys.pressed(KeyCode::LShift) || keys.pressed(KeyCode::RShift);
-                    println!(
-                        "{}{}{:?} pressed",
-                        if control { "ctrl+" } else { "" },
-                        if shift { "shift+" } else { "" },
-                        key_code
-                    );
-                    match (control, shift, key_code) {
-                        (true, _, KeyCode::C | KeyCode::D | KeyCode::Q) => {
-                            app_exit_events.send(bevy::app::AppExit);
-                        }
-                        (false, _, KeyCode::Z) => {
-                            zoom(&mut player.single_mut(), !shift);
-                        }
-                        (false, false, KeyCode::H) => {
-                            for mut visibility in help.iter_mut() {
-                                visibility.is_visible ^= true; // XOR
-                            }
-                        }
-                        (false, false, _) => {
-                            if let Ok(instruction) = Instruction::try_from(key_code) {
-                                // Wait for an instruction to be processed until adding a duplicate when holding a key down.
-                                if !keys_held.contains(&key_code)
-                                    || !instructions.queue.contains(&instruction)
-                                {
-                                    instructions.queue.insert(0, instruction);
-                                }
-
-                                // Duplicates in 'keys_held' are ignored and fixed on key release.
-                                keys_held.push(key_code);
-                            }
-                        }
-                        (..) => {}
+        let combo = KeyCombo::new(key_event, &keys);
+        println!("{:?} -> {}", &key_event, &combo);
+        if let Ok(instruction) = Instruction::try_from(&combo) {
+            match key_event.state {
+                ButtonState::Pressed => {
+                    println!("{:?} -> {} -> {:?}", &key_event, &combo, &instruction);
+                    match instruction {
+                        Instruction::Quit => quit(&mut app_exit_events),
+                        Instruction::Zoom(direction) => zoom(&mut player, direction),
+                        Instruction::ToggleHelp => toggle_help(&mut help),
+                        Instruction::Queued(instruction) => instruction_queue.add(instruction),
                     }
                 }
-            }
-            ButtonState::Released => {
-                if let Some(released_key) = key_event.key_code {
-                    keys_held.retain(|k| *k != released_key);
+                ButtonState::Released => {
+                    if let Instruction::Queued(queued) = instruction {
+                        instruction_queue.interrupt(queued);
+                    }
                 }
             }
         }
     }
 
-    if 1 < instructions.queue.len() {
-        println!("Unprocessed key codes: {:?}", instructions.queue);
-    }
+    instruction_queue.log_if_long();
 
     log_if_slow("manage_keyboard_input", start);
 }

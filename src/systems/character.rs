@@ -21,7 +21,7 @@ pub fn manage_game_over(
 pub fn manage_characters(
     mut commands: Commands,
     mut envir: Envir,
-    mut instructions: ResMut<Instructions>,
+    mut instruction_queue: ResMut<InstructionQueue>,
     mut timeouts: ResMut<Timeouts>,
     characters: Characters,
     mut players: Query<&mut Player>,
@@ -42,7 +42,7 @@ pub fn manage_characters(
         let (entity, label, &pos, &speed, health, faction, container) =
             characters.c.get(character).unwrap();
         let action = if let Ok(ref mut player) = players.get_mut(entity) {
-            if let Some(instruction) = instructions.queue.pop() {
+            if let Some(instruction) = instruction_queue.pop() {
                 match player.behave(&envir, pos, instruction) {
                     Ok(action) => action,
                     Err(Some(message)) => {

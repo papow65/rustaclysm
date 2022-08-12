@@ -5,20 +5,11 @@ use bevy::prelude::*;
 use bevy::render::camera::{PerspectiveProjection, Projection::Perspective};
 use bevy::utils::HashMap;
 
+#[derive(Default)]
 pub struct TileCaches {
     material_cache: HashMap<String, Handle<StandardMaterial>>,
     plane_mesh_cache: HashMap<SpriteNumber, Handle<Mesh>>,
     cuboid_mesh_cache: HashMap<SpriteNumber, Handle<Mesh>>,
-}
-
-impl TileCaches {
-    pub fn new() -> Self {
-        Self {
-            material_cache: HashMap::new(),
-            plane_mesh_cache: HashMap::new(),
-            cuboid_mesh_cache: HashMap::new(),
-        }
-    }
 }
 
 #[derive(SystemParam)]

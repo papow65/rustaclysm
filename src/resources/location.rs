@@ -5,6 +5,7 @@ use bevy::utils::HashMap;
 
 const NOT_FOUND: &Vec<Entity> = &Vec::new();
 
+#[derive(Default)]
 pub struct Location {
     objects: HashMap<Pos, Vec<Entity>>,
     positions: HashMap<Entity, Pos>,
@@ -12,13 +13,6 @@ pub struct Location {
 
 impl Location {
     // base methods
-
-    pub fn new() -> Self {
-        Self {
-            objects: HashMap::default(),
-            positions: HashMap::default(),
-        }
-    }
 
     pub fn update(&mut self, entity: Entity, pos: Option<Pos>) {
         if let Some(&prev_pos) = self.positions.get(&entity) {

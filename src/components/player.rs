@@ -1,4 +1,4 @@
-use crate::prelude::{Action, Direction, Envir, Instruction, Message, Pos, ZoneLevel};
+use crate::prelude::{Action, Direction, Envir, Message, Pos, QueuedInstruction, ZoneLevel};
 use bevy::ecs::component::Component;
 use std::fmt::{Display, Formatter};
 
@@ -41,44 +41,46 @@ impl Player {
         &mut self,
         envir: &Envir,
         pos: Pos,
-        instruction: Instruction,
+        instruction: QueuedInstruction,
     ) -> Result<Action, Option<Message>> {
         println!("processing instruction: {instruction:?}");
 
         match (self.state, instruction) {
-            (PlayerActionState::Normal, Instruction::Offset(Direction::Here)) => Ok(Action::Stay),
-            (PlayerActionState::Attacking, Instruction::Offset(Direction::Here)) => {
+            (PlayerActionState::Normal, QueuedInstruction::Offset(Direction::Here)) => {
+                Ok(Action::Stay)
+            }
+            (PlayerActionState::Attacking, QueuedInstruction::Offset(Direction::Here)) => {
                 Err(Some(Message::new("can't attack self")))
             }
-            (PlayerActionState::ExaminingPos(curr), Instruction::Offset(direction)) => {
+            (PlayerActionState::ExaminingPos(curr), QueuedInstruction::Offset(direction)) => {
                 self.handle_offset(curr, direction)
             }
-            (PlayerActionState::Normal, Instruction::Cancel) => {
+            (PlayerActionState::Normal, QueuedInstruction::Cancel) => {
                 Err(Some(Message::new("Press ctrl+c/d/q to exit")))
             }
-            (_, Instruction::Cancel)
-            | (PlayerActionState::Attacking, Instruction::Attack)
-            | (PlayerActionState::Smashing, Instruction::Smash)
-            | (PlayerActionState::ExaminingPos(_), Instruction::ExaminePos)
-            | (PlayerActionState::ExaminingZoneLevel(_), Instruction::ExamineZoneLevel) => {
+            (_, QueuedInstruction::Cancel)
+            | (PlayerActionState::Attacking, QueuedInstruction::Attack)
+            | (PlayerActionState::Smashing, QueuedInstruction::Smash)
+            | (PlayerActionState::ExaminingPos(_), QueuedInstruction::ExaminePos)
+            | (PlayerActionState::ExaminingZoneLevel(_), QueuedInstruction::ExamineZoneLevel) => {
                 self.state = PlayerActionState::Normal;
                 Err(None)
             }
-            (_, Instruction::Offset(offset)) => self.handle_offset(pos, offset),
-            (_, Instruction::Pickup) => Ok(Action::Pickup),
-            (_, Instruction::Dump) => Ok(Action::Dump),
-            (_, Instruction::Attack) => self.handle_attack(envir, pos),
-            (_, Instruction::Smash) => self.handle_smash(envir, pos),
-            (_, Instruction::ExaminePos) => {
+            (_, QueuedInstruction::Offset(offset)) => self.handle_offset(pos, offset),
+            (_, QueuedInstruction::Pickup) => Ok(Action::Pickup),
+            (_, QueuedInstruction::Dump) => Ok(Action::Dump),
+            (_, QueuedInstruction::Attack) => self.handle_attack(envir, pos),
+            (_, QueuedInstruction::Smash) => self.handle_smash(envir, pos),
+            (_, QueuedInstruction::ExaminePos) => {
                 self.state = PlayerActionState::ExaminingPos(pos);
                 Ok(Action::ExaminePos { target: pos })
             }
-            (_, Instruction::ExamineZoneLevel) => {
+            (_, QueuedInstruction::ExamineZoneLevel) => {
                 let target = ZoneLevel::from(pos);
                 self.state = PlayerActionState::ExaminingZoneLevel(target);
                 Ok(Action::ExamineZoneLevel { target })
             }
-            (_, Instruction::SwitchRunning) => Ok(Action::SwitchRunning),
+            (_, QueuedInstruction::SwitchRunning) => Ok(Action::SwitchRunning),
         }
     }
 
@@ -132,7 +134,7 @@ impl Player {
 
     fn handle_attack(&mut self, envir: &Envir, pos: Pos) -> Result<Action, Option<Message>> {
         let attackable_nbors = envir
-            .nbors_for_exploring(pos, Instruction::Attack)
+            .nbors_for_exploring(pos, QueuedInstruction::Attack)
             .collect::<Vec<Pos>>();
         match attackable_nbors.len() {
             0 => Err(Some(Message::new("no targets nearby"))),
@@ -148,7 +150,7 @@ impl Player {
 
     fn handle_smash(&mut self, envir: &Envir, pos: Pos) -> Result<Action, Option<Message>> {
         let smashable_nbors = envir
-            .nbors_for_exploring(pos, Instruction::Smash)
+            .nbors_for_exploring(pos, QueuedInstruction::Smash)
             .collect::<Vec<Pos>>();
         match smashable_nbors.len() {
             0 => Err(Some(Message::new("no targets nearby"))),

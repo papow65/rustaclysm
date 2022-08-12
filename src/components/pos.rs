@@ -322,13 +322,6 @@ impl Overzone {
             z: 180 * self.z,
         }
     }
-
-    pub const fn offset(self, x: i32, z: i32) -> Self {
-        Self {
-            x: self.x + x,
-            z: self.z + z,
-        }
-    }
 }
 
 impl From<Zone> for Overzone {

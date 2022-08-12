@@ -27,28 +27,42 @@ pub struct Hierarchy<'w, 's> {
     pub children: Query<'w, 's, (&'static Parent, &'static Containable)>,
 }
 
-#[derive(Debug)]
-pub struct Instructions {
-    pub queue: Vec<Instruction>,
+#[derive(Debug, Default)]
+pub struct InstructionQueue {
+    queue: Vec<QueuedInstruction>,
+    continuous: Vec<QueuedInstruction>,
 }
 
-impl Instructions {
-    pub const fn new() -> Self {
-        Self { queue: Vec::new() }
+impl InstructionQueue {
+    pub fn add(&mut self, instruction: QueuedInstruction) {
+        // Wait for an instruction to be processed until adding a duplicate when holding a key down.
+        if !self.continuous.contains(&instruction) || !self.queue.contains(&instruction) {
+            self.queue.insert(0, instruction);
+            self.continuous.push(instruction);
+        }
+    }
+
+    pub fn interrupt(&mut self, instruction: QueuedInstruction) {
+        self.continuous.retain(|k| *k != instruction);
+    }
+
+    pub fn pop(&mut self) -> Option<QueuedInstruction> {
+        self.queue.pop()
+    }
+
+    pub fn log_if_long(&self) {
+        if 1 < self.queue.len() {
+            println!("Unprocessed key codes: {:?}", self.queue);
+        }
     }
 }
 
+#[derive(Default)]
 pub struct Timeouts {
     m: HashMap<Entity, Milliseconds>,
 }
 
 impl Timeouts {
-    pub fn new() -> Self {
-        Self {
-            m: HashMap::default(),
-        }
-    }
-
     pub fn add(&mut self, entity: Entity, timeout: Milliseconds) {
         self.m.get_mut(&entity).unwrap().0 += timeout.0;
     }
