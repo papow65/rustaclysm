@@ -671,8 +671,9 @@ impl<'w, 's> Spawner<'w, 's> {
                             .spawn_bundle(cursor_bundle)
                             .insert(ExamineCursor);
 
-                        let camera_direction =
-                            Transform::identity().looking_at(Vec3::new(1.0, 0.0, 0.1), Vec3::Y);
+                        let camera_direction = Transform::identity()
+                            .looking_at(Vec3::new(1.0, 0.0, 0.1), Vec3::Y)
+                            * Transform::from_translation(Vec3::new(0.0, 1.0, 0.0));
                         child_builder
                             .spawn_bundle(PbrBundle {
                                 transform: camera_direction,
