@@ -15,3 +15,9 @@ pub enum SpriteLayer {
     Front,
     Back,
 }
+
+#[derive(Debug, PartialEq, Eq)]
+pub enum Visible {
+    Seen,
+    Unseen,
+}

@@ -14,14 +14,18 @@ pub enum ObjectSpecifier {
 }
 
 impl ObjectSpecifier {
+    pub const fn shading_applied(&self) -> bool {
+        !matches!(self, Self::ZoneLevel | Self::Meta)
+    }
+
     pub fn vertical_offset(&self, layer: &SpriteLayer) -> f32 {
         let level = match self {
-            Self::ZoneLevel => -2,
+            Self::ZoneLevel => -60, // to prevent glitches
             Self::Terrain => 0,
             Self::Furniture => 2,
             Self::Item(_) => 4,
             Self::Character => 6,
-            Self::Meta => return 0.15,
+            Self::Meta => 8,
         } + match &layer {
             SpriteLayer::Front => 1,
             SpriteLayer::Back => 0,

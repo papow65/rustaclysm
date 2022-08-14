@@ -43,7 +43,7 @@ pub fn update_visibility_for_hidden_items(
 
     for entity in removed_positions.iter() {
         if let Ok(mut visibility) = hidden_items.get_mut(entity) {
-            visibility.is_visible = true; // TODO false;
+            visibility.is_visible = false;
         }
     }
 
@@ -68,28 +68,16 @@ pub fn update_visibility_on_item_y_change(
 
 #[allow(clippy::needless_pass_by_value)]
 pub fn update_visibility_on_player_y_change(
-    mut items: Query<(&Pos, &mut Visibility)>,
     mut zone_levels: Query<(&ZoneLevel, &mut Visibility), (With<Collapsed>, Without<Pos>)>,
     moved_players: Query<(&Pos, &Player), Or<(With<LevelChanged>, Changed<Player>)>>,
 ) {
-    // TODO make something only invisibile when it would overlap with the player FOV
-    // TODO partially show obstacles that overlap with the player and his nbors
-
     let start = Instant::now();
 
     if let Ok((&player_pos, player)) = moved_players.get_single() {
-        let reference = match player.state {
-            PlayerActionState::ExaminingPos(pos) => pos,
-            PlayerActionState::ExaminingZoneLevel(zone_level) => zone_level.base_pos(),
-            _ => player_pos,
-        };
-
-        for (&pos, mut visibility) in items.iter_mut() {
-            visibility.is_visible = pos.level.visible_from(reference.level);
-        }
+        println!("Level changed");
 
         for (&zone_level, mut visibility) in zone_levels.iter_mut() {
-            visibility.is_visible = zone_level.level.visible_from(reference.level);
+            visibility.is_visible = player.is_shown(zone_level.level, player_pos);
         }
     }
 
@@ -122,98 +110,134 @@ pub fn update_cursor_visibility_on_player_change(
 
 fn update_material(
     commands: &mut Commands,
-    envir: &Envir,
-    pos: Pos,
-    prev_player_visible: &mut PlayerVisible,
     children: Option<&Children>,
-    player_pos: Pos,
-    child_items: &mut Query<&Appearance, (With<Parent>, Without<Pos>)>,
+    child_items: &Query<&Appearance, (With<Parent>, Without<Pos>)>,
+    last_seen: &LastSeen,
 ) {
-    let player_visible = envir.can_see(player_pos, pos);
-    if player_visible != *prev_player_visible {
-        *prev_player_visible = player_visible;
-
-        if let Some(children) = children {
-            for &child in children.iter() {
-                if let Ok(child_appearance) = child_items.get_mut(child) {
-                    commands
-                        .entity(child)
-                        .insert(child_appearance.material(player_visible));
-                }
+    if let Some(children) = children {
+        for &child in children.iter() {
+            if let Ok(child_appearance) = child_items.get(child) {
+                commands
+                    .entity(child)
+                    .insert(child_appearance.material(last_seen));
             }
         }
     }
 }
 
-#[allow(clippy::needless_pass_by_value)]
-pub fn update_material_on_item_move(
-    mut commands: Commands,
-    envir: Envir,
-    mut moved_items: Query<(&Pos, &mut PlayerVisible, Option<&Children>), Changed<Pos>>,
-    mut child_items: Query<&Appearance, (With<Parent>, Without<Pos>)>,
-    players: Query<&Pos, With<Player>>,
+/// If Obscuring? hidden
+/// Else
+///   PC: LastSeen(timestamp)
+///   if Seen now?
+///     light = light(here) + dist + light(target)
+///     if threshold < light?
+///     then visible(light)
+///     else hidden(too dark)
+///   else if Remembered? static?
+///   then visible(filter)
+///   else hidden(mobile)
+fn update_visualization(
+    commands: &mut Commands,
+    envir: &Envir,
+    player: &Player,
+    player_pos: Pos,
+    entity: Entity,
+    pos: Pos,
+    visibility: &mut Visibility,
+    last_seen: &mut LastSeen,
+    children: Option<&Children>,
+    child_items: &Query<&Appearance, (With<Parent>, Without<Pos>)>,
+    movable_items: &Query<(), With<Speed>>,
 ) {
-    let start = Instant::now();
+    let level_shown = player.is_shown(pos.level, player_pos);
 
-    let &player_pos = players.single();
-    for (&pos, mut prev_player_visible, children) in moved_items.iter_mut() {
-        update_material(
-            &mut commands,
-            &envir,
-            pos,
-            &mut prev_player_visible,
-            children,
-            player_pos,
-            &mut child_items,
-        );
+    // TODO check if there is enough light
+    let visible = envir.can_see(player_pos, pos);
+    last_seen.update(&visible);
+
+    visibility.is_visible = level_shown && last_seen.shown(movable_items.contains(entity));
+    if visibility.is_visible {
+        // TODO select an appearance based on amount of perceived light
+        update_material(commands, children, child_items, last_seen);
     }
-
-    log_if_slow("update_material_on_item_move", start);
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub fn update_material_on_player_move(
+pub fn update_visualization_on_item_move(
     mut commands: Commands,
     envir: Envir,
-    mut items: Query<(&Pos, &mut PlayerVisible, Option<&Children>)>,
-    mut child_items: Query<&Appearance, (With<Parent>, Without<Pos>)>,
-    moved_players: Query<&Pos, (With<Player>, Changed<Pos>)>,
+    mut moved_items: Query<
+        (
+            Entity,
+            &Pos,
+            &mut Visibility,
+            &mut LastSeen,
+            Option<&Children>,
+        ),
+        Changed<Pos>,
+    >,
+    child_items: Query<&Appearance, (With<Parent>, Without<Pos>)>,
+    players: Query<(&Pos, &Player)>,
+    movable_items: Query<(), With<Speed>>,
 ) {
     let start = Instant::now();
 
-    if let Ok(&player_pos) = moved_players.get_single() {
-        for (&pos, mut prev_player_visible, children) in items.iter_mut() {
-            update_material(
+    let (&player_pos, player) = players.single();
+    for (entity, &pos, mut visibility, mut last_seen, children) in moved_items.iter_mut() {
+        update_visualization(
+            &mut commands,
+            &envir,
+            player,
+            player_pos,
+            entity,
+            pos,
+            &mut visibility,
+            &mut last_seen,
+            children,
+            &child_items,
+            &movable_items,
+        );
+    }
+
+    log_if_slow("update_visualization_on_item_move", start);
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub fn update_visualization_on_player_move(
+    mut commands: Commands,
+    envir: Envir,
+    mut items: Query<(
+        Entity,
+        &Pos,
+        &mut Visibility,
+        &mut LastSeen,
+        Option<&Children>,
+    )>,
+    child_items: Query<&Appearance, (With<Parent>, Without<Pos>)>,
+    moved_players: Query<(&Pos, &Player), Or<(Changed<Pos>, With<LevelChanged>, Changed<Player>)>>,
+    movable_items: Query<(), With<Speed>>,
+) {
+    let start = Instant::now();
+
+    if let Ok((&player_pos, player)) = moved_players.get_single() {
+        for (entity, &pos, mut visibility, mut last_seen, children) in items.iter_mut() {
+            update_visualization(
                 &mut commands,
                 &envir,
-                pos,
-                &mut prev_player_visible,
-                children,
+                player,
                 player_pos,
-                &mut child_items,
+                entity,
+                pos,
+                &mut visibility,
+                &mut last_seen,
+                children,
+                &child_items,
+                &movable_items,
             );
         }
     }
 
-    log_if_slow("update_material_on_player_move", start);
-}
-
-#[allow(clippy::needless_pass_by_value)]
-pub fn update_tile_color_on_player_move(
-    envir: Envir,
-    mut tiles: Query<(&Parent, &mut TextureAtlasSprite)>,
-    tile_parents: Query<&Pos, With<Children>>,
-    moved_players: Query<&Pos, (With<Player>, Changed<Pos>)>,
-) {
-    let start = Instant::now();
-    if let Ok(&player_pos) = moved_players.get_single() {
-        tiles.par_for_each_mut(64, |(parent, mut sprite)| {
-            let &pos = tile_parents.get(parent.get()).unwrap();
-            sprite.color = envir.can_see(player_pos, pos).adjust(Color::WHITE);
-        });
-    }
-
-    log_if_slow("update_tile_color_on_player_move", start);
+    log_if_slow("update_visualization_on_player_move", start);
 }
 
 #[allow(clippy::needless_pass_by_value)]
@@ -235,8 +259,8 @@ pub fn update_damaged_characters(
         } else {
             let message = format!("{attacker} kills {label}", attacker = damage.attacker);
             commands.spawn().insert(Message::new(message));
-            transform.rotation = Quat::from_rotation_y(0.5 * std::f32::consts::PI)
-                * Quat::from_rotation_x(-0.5 * std::f32::consts::PI);
+            transform.rotation = Quat::from_rotation_y(std::f32::consts::FRAC_PI_2)
+                * Quat::from_rotation_x(-std::f32::consts::FRAC_PI_2);
             commands
                 .entity(character)
                 .insert(Corpse)

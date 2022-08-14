@@ -180,7 +180,7 @@ impl Faction {
             .filter(|(_, other_faction)| self.dislikes(other_faction))
             .map(|(enemy_pos, _)| enemy_pos)
             .copied()
-            .filter(|enemy_pos| envir.can_see(start_pos, *enemy_pos) == PlayerVisible::Seen)
+            .filter(|enemy_pos| envir.can_see(start_pos, *enemy_pos) == Visible::Seen)
             .collect::<Vec<Pos>>();
         println!("{self:?} can see {:?} enemies", enemies.len());
 

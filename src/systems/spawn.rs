@@ -91,18 +91,19 @@ pub fn despawn_far_zones(
     }
 }
 
+// TODO remove when no longer glitching
 fn set_collapsed_zone_level_visibility(
-    commands: &mut Commands,
+    _commands: &mut Commands,
     collapsed_zone_levels: &Query<(&ZoneLevel, &Children), With<Collapsed>>,
     expanded_zone_level: ZoneLevel,
-    is_visible: bool,
+    _is_visible: bool,
 ) {
     if let Some((_, children)) = collapsed_zone_levels
         .iter()
         .find(|(&zone_level, _)| zone_level == expanded_zone_level)
     {
-        for &entity in children.iter() {
-            commands.entity(entity).insert(Visibility { is_visible });
+        for &_entity in children.iter() {
+            //commands.entity(entity).insert(Visibility { is_visible });
         }
     }
 }

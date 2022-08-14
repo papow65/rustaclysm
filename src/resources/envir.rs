@@ -53,24 +53,24 @@ impl<'w, 's> Envir<'w, 's> {
         !self.has_floor(pos) || self.has_stairs_down(pos)
     }
 
-    pub fn can_see(&self, from: Pos, to: Pos) -> PlayerVisible {
+    pub fn can_see(&self, from: Pos, to: Pos) -> Visible {
         if from == to {
-            PlayerVisible::Seen
+            Visible::Seen
         } else if 60 < (from.x - to.x).abs() || 60 < (from.z - to.z).abs() {
             // more than 60 meter away
-            PlayerVisible::Hidden
+            Visible::Unseen
         } else {
             match self.relative_rays.ray(from, to) {
                 Some((mut between, mut d_line)) => {
                     if between.all(|pos| self.find_opaque(pos).is_none())
                         && d_line.all(|(a, b)| self.can_see_down(a) || self.can_see_down(b))
                     {
-                        PlayerVisible::Seen
+                        Visible::Seen
                     } else {
-                        PlayerVisible::Hidden
+                        Visible::Unseen
                     }
                 }
-                None => PlayerVisible::Hidden,
+                None => Visible::Unseen,
             }
         }
     }

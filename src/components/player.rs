@@ -1,4 +1,4 @@
-use crate::prelude::{Action, Direction, Envir, Message, Pos, QueuedInstruction, ZoneLevel};
+use crate::prelude::{Action, Direction, Envir, Level, Message, Pos, QueuedInstruction, ZoneLevel};
 use bevy::ecs::component::Component;
 use std::fmt::{Display, Formatter};
 
@@ -37,6 +37,16 @@ pub struct Player {
 }
 
 impl Player {
+    pub fn is_shown(&self, level: Level, player_pos: Pos) -> bool {
+        let reference = match self.state {
+            PlayerActionState::ExaminingPos(pos) => pos,
+            PlayerActionState::ExaminingZoneLevel(zone_level) => zone_level.base_pos(),
+            _ => player_pos,
+        };
+
+        level.visible_from(reference.level)
+    }
+
     pub fn behave(
         &mut self,
         envir: &Envir,

@@ -264,15 +264,28 @@ pub fn update_status_detais(
     items: Query<(Option<&Label>, &Item), Without<Health>>,
     player: Query<&Player, Changed<Player>>,
     mut status_displays: Query<&mut Text, With<StatusDisplay>>,
+    globs: Query<(&GlobalTransform, Option<&ZoneLevel>)>,
 ) {
     let start = Instant::now();
 
     if let Some(player) = player.iter().next() {
         status_displays.iter_mut().next().unwrap().sections[5].value = match player.state {
             PlayerActionState::ExaminingPos(pos) => {
+                for ent in envir.location.all(pos) {
+                    if let Ok((glob, _)) = globs.get(ent) {
+                        println!("Global transfrom: {glob:?}");
+                    }
+                }
+
                 pos_info(&envir, &characters, &entities, &items, pos)
             }
             PlayerActionState::ExaminingZoneLevel(zone_level) => {
+                for (glob, z) in globs.iter() {
+                    if z == Some(&zone_level) {
+                        println!("Global transfrom: {glob:?}");
+                    }
+                }
+
                 format!(
                     "{:?}\n{:?}",
                     zone_level,

@@ -22,10 +22,10 @@ pub enum SpriteOrientation {
 impl SpriteOrientation {
     fn to_rotation(self) -> Quat {
         match self {
-            Self::Horizontal => Quat::from_rotation_y(0.5 * std::f32::consts::PI),
+            Self::Horizontal => Quat::from_rotation_y(std::f32::consts::FRAC_PI_2),
             Self::Vertical => {
-                Quat::from_rotation_z(0.5 * std::f32::consts::PI)
-                    * Quat::from_rotation_y(0.5 * std::f32::consts::PI)
+                Quat::from_rotation_z(std::f32::consts::FRAC_PI_2)
+                    * Quat::from_rotation_y(std::f32::consts::FRAC_PI_2)
             }
         }
     }
@@ -93,7 +93,6 @@ pub struct Model {
     pub texture_path: String,
     pub vertical_offset: f32,
     pub alpha_mode: AlphaMode,
-    pub default_visible: PlayerVisible,
 }
 
 impl Model {
@@ -113,10 +112,6 @@ impl Model {
             texture_path: texture_info.image_path.clone(),
             vertical_offset: definition.specifier.vertical_offset(&layer),
             alpha_mode: definition.alpha_mode(),
-            default_visible: match definition.specifier {
-                ObjectSpecifier::ZoneLevel | ObjectSpecifier::Meta => PlayerVisible::Seen,
-                _ => PlayerVisible::Hidden,
-            },
         }
     }
 

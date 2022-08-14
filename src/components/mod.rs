@@ -3,7 +3,7 @@ mod faction;
 mod player;
 mod pos;
 
-use crate::prelude::Partial;
+use crate::prelude::{Partial, Visible};
 use bevy::prelude::{AlphaMode, Assets, Color, Component, Handle, StandardMaterial};
 
 pub use {action::*, faction::*, player::*, pos::*};
@@ -140,23 +140,24 @@ pub struct CameraBase;
 #[derive(Component)]
 pub struct ExamineCursor;
 
-#[derive(Component, Clone, Copy, PartialEq, Eq, Debug)]
-pub enum PlayerVisible {
-    Seen,
-    Hidden,
+#[derive(Component, PartialEq, Eq, Debug)]
+pub enum LastSeen {
+    Currently,
+    Previously, // TODO add timestamp
+    Never,
 }
 
-impl PlayerVisible {
-    pub fn adjust(&self, color: Color) -> Color {
-        match self {
-            Self::Seen => color,
-            Self::Hidden => Color::rgba(
-                color.r() / 2.0,
-                color.g() / 2.0,
-                color.b() / 1.5,
-                0.5f32.mul_add(color.a(), 0.5),
-            ),
+impl LastSeen {
+    pub fn update(&mut self, visible: &Visible) {
+        if visible == &Visible::Seen {
+            *self = Self::Currently;
+        } else if self == &Self::Currently {
+            *self = Self::Previously;
         }
+    }
+
+    pub fn shown(&self, can_move: bool) -> bool {
+        self == &Self::Currently || (self == &Self::Previously && !can_move)
     }
 }
 
@@ -168,7 +169,7 @@ pub struct Collapsed;
 #[derive(Component, Clone)]
 pub struct Appearance {
     seen: Handle<StandardMaterial>,
-    out_of_sight: Handle<StandardMaterial>,
+    remembered: Handle<StandardMaterial>,
 }
 
 impl Appearance {
@@ -178,23 +179,33 @@ impl Appearance {
     {
         let mut material = material.into();
         material.alpha_mode = AlphaMode::Blend;
-        let out_of_sight = materials.add(StandardMaterial {
+        let remembered = materials.add(StandardMaterial {
             base_color_texture: material.base_color_texture.clone(),
-            base_color: PlayerVisible::Hidden.adjust(material.base_color),
+            base_color: Self::remembered(material.base_color),
             alpha_mode: AlphaMode::Blend,
             ..StandardMaterial::default()
         });
         Self {
             seen: materials.add(material),
-            out_of_sight,
+            remembered,
         }
     }
 
-    pub fn material(&self, player_visible: PlayerVisible) -> Handle<StandardMaterial> {
-        match player_visible {
-            PlayerVisible::Seen => self.seen.clone(),
-            PlayerVisible::Hidden => self.out_of_sight.clone(),
+    pub fn material(&self, last_seen: &LastSeen) -> Handle<StandardMaterial> {
+        match last_seen {
+            LastSeen::Currently => self.seen.clone(),
+            LastSeen::Previously => self.remembered.clone(),
+            _ => panic!("material(...) called when never seen"),
         }
+    }
+
+    fn remembered(color: Color) -> Color {
+        Color::rgba(
+            color.r() / 2.0,
+            color.g() / 2.0,
+            color.b() / 1.5,
+            0.5f32.mul_add(color.a(), 0.5),
+        )
     }
 }
 

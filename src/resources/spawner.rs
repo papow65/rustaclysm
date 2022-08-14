@@ -52,7 +52,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
     fn get_pbr_bundle(&mut self, model: &Model) -> PbrBundle {
         PbrBundle {
             mesh: self.get_tile_mesh(model),
-            material: self.get_appearance(model).material(model.default_visible),
+            material: self.get_appearance(model).material(&LastSeen::Currently), // required when not shaded
             transform: model.to_transform(),
             ..PbrBundle::default()
         }
@@ -78,13 +78,14 @@ impl<'w, 's> TileSpawner<'w, 's> {
                 })
                 .id();
 
-            if !matches!(
-                definition.specifier,
-                ObjectSpecifier::ZoneLevel | ObjectSpecifier::Meta
-            ) {
+            if definition.specifier.shading_applied() {
                 child_builder.add_command(Insert {
                     entity: tile,
-                    component: PlayerVisible::Hidden,
+                    component: if (pos.z / 24) % 2 == 1 {
+                        LastSeen::Previously
+                    } else {
+                        LastSeen::Never
+                    },
                 });
             }
 
@@ -425,7 +426,7 @@ impl CustomData {
             },
             window_pane_transform: Transform {
                 translation: Vec3::new(0.0, 0.75, 0.0),
-                rotation: Quat::from_rotation_y(-0.5 * std::f32::consts::PI),
+                rotation: Quat::from_rotation_y(-std::f32::consts::FRAC_PI_2),
                 scale: Vec3::new(
                     0.99 * ADJACENT.f32(),
                     0.99 * VERTICAL.f32(),
@@ -494,7 +495,7 @@ impl<'w, 's> Spawner<'w, 's> {
             .insert(Obstacle)
             .insert(Opaque)
             .insert(Label::new("wall"))
-            .insert(PlayerVisible::Hidden)
+            .insert(LastSeen::Previously)
             .with_children(|parent| {
                 parent
                     .spawn_bundle(PbrBundle {
@@ -516,7 +517,7 @@ impl<'w, 's> Spawner<'w, 's> {
             .insert(Obstacle)
             .insert(Hurdle(2.5))
             .insert(Label::new("window"))
-            .insert(PlayerVisible::Hidden)
+            .insert(LastSeen::Previously)
             .with_children(|parent| {
                 parent
                     .spawn_bundle(PbrBundle {
@@ -546,7 +547,7 @@ impl<'w, 's> Spawner<'w, 's> {
             .insert(Integrity::new(100))
             .insert(Hurdle(1.5))
             .insert(Label::new("stairs"))
-            .insert(PlayerVisible::Hidden)
+            .insert(LastSeen::Previously)
             .with_children(|child_builder| {
                 child_builder
                     .spawn_bundle(PbrBundle {
@@ -568,7 +569,7 @@ impl<'w, 's> Spawner<'w, 's> {
             .insert(Obstacle)
             .insert(Opaque)
             .insert(Label::new("rack"))
-            .insert(PlayerVisible::Hidden)
+            .insert(LastSeen::Previously)
             .with_children(|parent| {
                 parent
                     .spawn_bundle(PbrBundle {
@@ -589,7 +590,7 @@ impl<'w, 's> Spawner<'w, 's> {
             .insert(Integrity::new(30))
             .insert(Hurdle(2.0))
             .insert(Label::new("table"))
-            .insert(PlayerVisible::Hidden)
+            .insert(LastSeen::Previously)
             .with_children(|parent| {
                 parent
                     .spawn_bundle(PbrBundle {
@@ -612,7 +613,7 @@ impl<'w, 's> Spawner<'w, 's> {
             .insert(Integrity::new(10))
             .insert(Hurdle(1.5))
             .insert(Label::new("chair"))
-            .insert(PlayerVisible::Hidden)
+            .insert(LastSeen::Previously)
             .with_children(|child_builder| {
                 child_builder
                     .spawn_bundle(PbrBundle {
@@ -649,7 +650,7 @@ impl<'w, 's> Spawner<'w, 's> {
             .insert(label)
             .insert(pos)
             .insert(containable)
-            .insert(PlayerVisible::Hidden)
+            .insert(LastSeen::Previously)
             .with_children(|child_builder| {
                 child_builder
                     .spawn_bundle(PbrBundle {
@@ -704,8 +705,6 @@ impl<'w, 's> Spawner<'w, 's> {
                                     projection: Perspective(PerspectiveProjection {
                                         // more overview, less personal than the default
                                         fov: 0.3,
-                                        near: 0.01,
-                                        far: 10.0,
                                         ..default()
                                     }),
                                     ..default()
@@ -752,7 +751,7 @@ impl<'w, 's> Spawner<'w, 's> {
             .spawn_bundle(SpatialBundle::default())
             .insert(label)
             .insert(pos)
-            .insert(PlayerVisible::Hidden)
+            .insert(LastSeen::Previously)
             .insert(health)
             .insert(speed)
             .insert(faction)
