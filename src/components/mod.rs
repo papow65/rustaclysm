@@ -140,11 +140,10 @@ pub struct CameraBase;
 #[derive(Component)]
 pub struct ExamineCursor;
 
-#[derive(Component, Clone, Copy, PartialEq, Eq)]
+#[derive(Component, Clone, Copy, PartialEq, Eq, Debug)]
 pub enum PlayerVisible {
     Seen,
     Hidden,
-    Reevaluate,
 }
 
 impl PlayerVisible {
@@ -152,12 +151,11 @@ impl PlayerVisible {
         match self {
             Self::Seen => color,
             Self::Hidden => Color::rgba(
-                color.r() / 4.0,
-                color.g() / 4.0,
-                color.b() / 3.0,
+                color.r() / 2.0,
+                color.g() / 2.0,
+                color.b() / 1.5,
                 0.5f32.mul_add(color.a(), 0.5),
             ),
-            _ => panic!(),
         }
     }
 }
@@ -196,7 +194,6 @@ impl Appearance {
         match player_visible {
             PlayerVisible::Seen => self.seen.clone(),
             PlayerVisible::Hidden => self.out_of_sight.clone(),
-            _ => panic!(),
         }
     }
 }
