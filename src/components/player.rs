@@ -3,7 +3,7 @@ use bevy::ecs::component::Component;
 use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum PlayerActionState {
+pub(crate) enum PlayerActionState {
     Normal,
     Attacking,
     Smashing,
@@ -31,13 +31,13 @@ impl Display for PlayerActionState {
 }
 
 #[derive(Component)]
-pub struct Player {
-    pub state: PlayerActionState,
-    pub camera_distance: f32,
+pub(crate) struct Player {
+    pub(crate) state: PlayerActionState,
+    pub(crate) camera_distance: f32,
 }
 
 impl Player {
-    pub fn is_shown(&self, level: Level, player_pos: Pos) -> bool {
+    pub(crate) fn is_shown(&self, level: Level, player_pos: Pos) -> bool {
         let reference = match self.state {
             PlayerActionState::ExaminingPos(pos) => pos,
             PlayerActionState::ExaminingZoneLevel(zone_level) => zone_level.base_pos(),
@@ -47,7 +47,7 @@ impl Player {
         level.visible_from(reference.level)
     }
 
-    pub fn behave(
+    pub(crate) fn behave(
         &mut self,
         envir: &Envir,
         pos: Pos,

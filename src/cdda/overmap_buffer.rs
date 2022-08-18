@@ -5,15 +5,19 @@ use std::fs::read_to_string;
 /** Corresponds to an 'overmapbuffer' in CDDA. It defines the save-specific information of a `Zone`. */
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct OvermapBuffer {
-    /// Visible on the overmap (?)
-    pub visible: Vec<RepetitionBlock<bool>>,
+pub(crate) struct OvermapBuffer {
+    /// Visible on the overmap
+    pub(crate) visible: Vec<RepetitionBlock<bool>>,
 
     /// Marked as 'Exmplored' on the overmap
-    pub explored: Vec<RepetitionBlock<bool>>,
+    #[allow(unused)]
+    pub(crate) explored: Vec<RepetitionBlock<bool>>,
 
-    pub notes: Vec<serde_json::Value>,
-    pub extras: Vec<serde_json::Value>,
+    #[allow(unused)]
+    pub(crate) notes: Vec<serde_json::Value>,
+
+    #[allow(unused)]
+    pub(crate) extras: Vec<serde_json::Value>,
 }
 
 impl TryFrom<Overzone> for OvermapBuffer {

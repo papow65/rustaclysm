@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use std::time::Instant;
 
 #[allow(clippy::needless_pass_by_value)]
-pub fn manage_game_over(
+pub(crate) fn manage_game_over(
     mut app_exit_events: ResMut<bevy::ecs::event::Events<bevy::app::AppExit>>,
     dead_players: Query<(), (With<Player>, Without<Health>)>,
 ) {
@@ -18,7 +18,7 @@ pub fn manage_game_over(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub fn manage_characters(
+pub(crate) fn manage_characters(
     mut commands: Commands,
     mut envir: Envir,
     mut instruction_queue: ResMut<InstructionQueue>,

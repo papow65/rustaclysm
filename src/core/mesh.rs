@@ -1,7 +1,7 @@
 use bevy::render::mesh::{Indices, Mesh, PrimitiveTopology};
 
 #[derive(PartialEq, Debug, Clone, Copy)]
-pub struct MeshInfo {
+pub(crate) struct MeshInfo {
     x_min: f32,
     x_max: f32,
     y_min: f32,
@@ -9,7 +9,7 @@ pub struct MeshInfo {
 }
 
 impl MeshInfo {
-    pub fn new(index: usize, width: usize, size: usize) -> Self {
+    pub(crate) fn new(index: usize, width: usize, size: usize) -> Self {
         let index = index as f32;
         let size = size as f32;
         let width = width as f32; // tiles per row
@@ -27,7 +27,7 @@ impl MeshInfo {
     }
 
     // Based on bevy_render-0.7.0/src/mesh/shape/mod.rs - line 194-223
-    pub fn to_plane(self) -> Mesh {
+    pub(crate) fn to_plane(self) -> Mesh {
         let extent = 0.5;
         let vertices = [
             ([extent, 0.0, -extent], [self.x_min, self.y_max]),
@@ -56,7 +56,7 @@ impl MeshInfo {
 
     // Based on bevy_render-0.7.0/src/mesh/shape/mod.rs - line 61-120
     // Does not include the bottom face or the back face
-    pub fn to_cube(self) -> Mesh {
+    pub(crate) fn to_cube(self) -> Mesh {
         let vertices = [
             // right
             ([-0.5, 0.0, 0.5], [0., 0., 1.0], [self.x_min, self.y_max]),

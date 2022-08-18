@@ -28,7 +28,7 @@ fn toggle_help(help: &mut Query<&mut Visibility, With<ManualDisplay>>) {
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub fn manage_mouse_input(
+pub(crate) fn manage_mouse_input(
     mut mouse_wheel_events: EventReader<MouseWheel>,
     mut player: Query<&mut Player>,
 ) {
@@ -48,7 +48,7 @@ pub fn manage_mouse_input(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub fn manage_keyboard_input(
+pub(crate) fn manage_keyboard_input(
     mut app_exit_events: ResMut<Events<bevy::app::AppExit>>,
     mut key_events: EventReader<KeyboardInput>,
     mut instruction_queue: ResMut<InstructionQueue>,

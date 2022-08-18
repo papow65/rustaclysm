@@ -1,1 +1,1 @@
-pub use crate::{cdda::*, components::*, core::*, plugin::*, resources::*, systems::*};
+pub(crate) use crate::{cdda::*, components::*, core::*, resources::*, systems::*};

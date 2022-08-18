@@ -6,7 +6,7 @@ use bevy::utils::HashMap;
 const NOT_FOUND: &Vec<Entity> = &Vec::new();
 
 #[derive(Default)]
-pub struct Location {
+pub(crate) struct Location {
     objects: HashMap<Pos, Vec<Entity>>,
     positions: HashMap<Entity, Pos>,
 }
@@ -14,7 +14,7 @@ pub struct Location {
 impl Location {
     // base methods
 
-    pub fn update(&mut self, entity: Entity, pos: Option<Pos>) {
+    pub(crate) fn update(&mut self, entity: Entity, pos: Option<Pos>) {
         if let Some(&prev_pos) = self.positions.get(&entity) {
             let old_pos_vec = self.objects.get_mut(&prev_pos).unwrap();
             let index = old_pos_vec.iter().position(|&x| x == entity).unwrap();
@@ -39,7 +39,7 @@ impl Location {
         self.objects.get(&pos).unwrap_or(NOT_FOUND).iter()
     }
 
-    pub fn any<'w, 's, Q, F>(&self, pos: Pos, items: &'s Query<'w, 's, Q, F>) -> bool
+    pub(crate) fn any<'w, 's, Q, F>(&self, pos: Pos, items: &'s Query<'w, 's, Q, F>) -> bool
     where
         F: 'w + 's + WorldQuery,
         Q: 'w + 's + WorldQuery,
@@ -47,7 +47,7 @@ impl Location {
         self.entities(pos).any(|&x| items.get(x).is_ok())
     }
 
-    pub fn get_first<'w, 's: 'w, Q, F>(
+    pub(crate) fn get_first<'w, 's: 'w, Q, F>(
         &self,
         pos: Pos,
         items: &'s Query<'w, 's, Q, F>,
@@ -59,17 +59,17 @@ impl Location {
         self.entities(pos).find_map(|&x| items.get(x).ok())
     }
 
-    pub fn exists(&self, pos: Pos) -> bool {
+    pub(crate) fn exists(&self, pos: Pos) -> bool {
         0 < self.entities(pos).len()
     }
 
-    pub fn all(&self, pos: Pos) -> Vec<Entity> {
+    pub(crate) fn all(&self, pos: Pos) -> Vec<Entity> {
         self.entities(pos).copied().collect()
     }
 
     // helper methods
 
-    pub fn has_stairs_up<'w, 's>(
+    pub(crate) fn has_stairs_up<'w, 's>(
         &self,
         from: Pos,
         stairs: &'s Query<'w, 's, &'static Stairs>,
@@ -77,7 +77,7 @@ impl Location {
         from.level.up().is_some() && self.any(from, stairs)
     }
 
-    pub fn has_stairs_down<'w, 's>(
+    pub(crate) fn has_stairs_down<'w, 's>(
         &self,
         from: Pos,
         stairs: &'s Query<'w, 's, &'static Stairs>,

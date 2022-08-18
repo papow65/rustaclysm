@@ -6,18 +6,18 @@ mod object_definition;
 mod object_name;
 mod unit;
 
-pub use self::{
+pub(crate) use self::{
     instruction::*, key::*, mesh::*, model::*, object_definition::*, object_name::*, unit::*,
 };
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub enum SpriteLayer {
+pub(crate) enum SpriteLayer {
     Front,
     Back,
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub enum Visible {
+pub(crate) enum Visible {
     Seen,
     Unseen,
 }

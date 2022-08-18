@@ -5,7 +5,7 @@ use bevy::{
 use std::fmt;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub enum Ctrl {
+pub(crate) enum Ctrl {
     With,
     Without,
 }
@@ -21,7 +21,7 @@ impl From<bool> for Ctrl {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub enum Shift {
+pub(crate) enum Shift {
     With,
     Without,
 }
@@ -37,13 +37,13 @@ impl From<bool> for Shift {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub enum Key {
+pub(crate) enum Key {
     KeyCode(KeyCode), // preferred, but not always available
     ScanCode(u32),
 }
 
 impl Key {
-    pub const LESS_THAN: Self = Self::ScanCode(86);
+    pub(crate) const LESS_THAN: Self = Self::ScanCode(86);
 }
 
 impl fmt::Display for Key {
@@ -65,10 +65,10 @@ impl From<&KeyboardInput> for Key {
     }
 }
 
-pub struct KeyCombo(pub Ctrl, pub Shift, pub Key);
+pub(crate) struct KeyCombo(pub(crate) Ctrl, pub(crate) Shift, pub(crate) Key);
 
 impl KeyCombo {
-    pub fn new(input: &KeyboardInput, keys: &Res<Input<KeyCode>>) -> Self {
+    pub(crate) fn new(input: &KeyboardInput, keys: &Res<Input<KeyCode>>) -> Self {
         Self(
             Ctrl::from(keys.pressed(KeyCode::LControl) || keys.pressed(KeyCode::RControl)),
             Shift::from(keys.pressed(KeyCode::LShift) || keys.pressed(KeyCode::RShift)),

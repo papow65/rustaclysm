@@ -6,14 +6,14 @@ use bevy::render::camera::{PerspectiveProjection, Projection::Perspective};
 use bevy::utils::HashMap;
 
 #[derive(Default)]
-pub struct TileCaches {
+pub(crate) struct TileCaches {
     appearance_cache: HashMap<String, Appearance>,
     plane_mesh_cache: HashMap<SpriteNumber, Handle<Mesh>>,
     cuboid_mesh_cache: HashMap<SpriteNumber, Handle<Mesh>>,
 }
 
 #[derive(SystemParam)]
-pub struct TileSpawner<'w, 's> {
+pub(crate) struct TileSpawner<'w, 's> {
     commands: Commands<'w, 's>,
     material_assets: ResMut<'w, Assets<StandardMaterial>>,
     mesh_assets: ResMut<'w, Assets<Mesh>>,
@@ -206,7 +206,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
         }
     }
 
-    pub fn spawn_expanded_zone_level(&mut self, zone_level: ZoneLevel) -> Result<(), ()> {
+    pub(crate) fn spawn_expanded_zone_level(&mut self, zone_level: ZoneLevel) -> Result<(), ()> {
         if let Ok(map) = Map::try_from(zone_level) {
             let zone_level_entity = self
                 .commands
@@ -328,7 +328,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
         }
     }
 
-    pub fn spawn_zones_around(&mut self, center: Zone) {
+    pub(crate) fn spawn_zones_around(&mut self, center: Zone) {
         let distance = 100;
         for x in -distance..=distance {
             for z in -distance..=distance {
@@ -387,7 +387,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
     }
 }
 
-pub struct CustomData {
+pub(crate) struct CustomData {
     glass: Appearance,
     wood: Appearance,
     whitish: Appearance,
@@ -402,7 +402,7 @@ pub struct CustomData {
 }
 
 impl CustomData {
-    pub fn new(
+    pub(crate) fn new(
         material_assets: &mut Assets<StandardMaterial>,
         mesh_assets: &mut Assets<Mesh>,
         asset_server: &Res<AssetServer>,
@@ -452,13 +452,13 @@ impl CustomData {
 }
 
 #[derive(SystemParam)]
-pub struct Spawner<'w, 's> {
+pub(crate) struct Spawner<'w, 's> {
     tile_spawner: TileSpawner<'w, 's>,
     custom: ResMut<'w, CustomData>,
 }
 
 impl<'w, 's> Spawner<'w, 's> {
-    pub fn spawn_stairs_down(&mut self, parent: Entity, pos: Pos) {
+    pub(crate) fn spawn_stairs_down(&mut self, parent: Entity, pos: Pos) {
         self.tile_spawner.spawn_tile(
             parent,
             pos,
@@ -469,7 +469,7 @@ impl<'w, 's> Spawner<'w, 's> {
         );
     }
 
-    pub fn spawn_roofing(&mut self, parent: Entity, pos: Pos) {
+    pub(crate) fn spawn_roofing(&mut self, parent: Entity, pos: Pos) {
         self.tile_spawner.spawn_tile(
             parent,
             pos,
@@ -480,7 +480,7 @@ impl<'w, 's> Spawner<'w, 's> {
         );
     }
 
-    pub fn spawn_wall(&mut self, pos: Pos) {
+    pub(crate) fn spawn_wall(&mut self, pos: Pos) {
         self.tile_spawner
             .commands
             .spawn_bundle(SpatialBundle::default())
@@ -502,7 +502,7 @@ impl<'w, 's> Spawner<'w, 's> {
             });
     }
 
-    pub fn spawn_window(&mut self, pos: Pos) {
+    pub(crate) fn spawn_window(&mut self, pos: Pos) {
         self.tile_spawner
             .commands
             .spawn_bundle(SpatialBundle::default())
@@ -533,7 +533,7 @@ impl<'w, 's> Spawner<'w, 's> {
             });
     }
 
-    pub fn spawn_stairs(&mut self, pos: Pos) {
+    pub(crate) fn spawn_stairs(&mut self, pos: Pos) {
         self.tile_spawner
             .commands
             .spawn_bundle(SpatialBundle::default())
@@ -554,7 +554,7 @@ impl<'w, 's> Spawner<'w, 's> {
             });
     }
 
-    pub fn spawn_rack(&mut self, pos: Pos) {
+    pub(crate) fn spawn_rack(&mut self, pos: Pos) {
         self.tile_spawner
             .commands
             .spawn_bundle(SpatialBundle::default())
@@ -576,7 +576,7 @@ impl<'w, 's> Spawner<'w, 's> {
             });
     }
 
-    pub fn spawn_table(&mut self, pos: Pos) {
+    pub(crate) fn spawn_table(&mut self, pos: Pos) {
         self.tile_spawner
             .commands
             .spawn_bundle(SpatialBundle::default())
@@ -597,7 +597,7 @@ impl<'w, 's> Spawner<'w, 's> {
             });
     }
 
-    pub fn spawn_chair(&mut self, pos: Pos) {
+    pub(crate) fn spawn_chair(&mut self, pos: Pos) {
         let scale = 0.45 * ADJACENT.f32();
 
         self.tile_spawner
@@ -636,7 +636,7 @@ impl<'w, 's> Spawner<'w, 's> {
             });
     }
 
-    pub fn spawn_containable(&mut self, label: Label, pos: Pos, containable: Containable) {
+    pub(crate) fn spawn_containable(&mut self, label: Label, pos: Pos, containable: Containable) {
         let size = f32::from(containable.0).min(64.0).powf(0.33) / 4.0;
 
         self.tile_spawner
@@ -709,7 +709,7 @@ impl<'w, 's> Spawner<'w, 's> {
             });
     }
 
-    pub fn spawn_character(
+    pub(crate) fn spawn_character(
         &mut self,
         label: Label,
         pos: Pos,
@@ -764,7 +764,7 @@ impl<'w, 's> Spawner<'w, 's> {
         }
     }
 
-    pub fn spawn_light(&mut self) {
+    pub(crate) fn spawn_light(&mut self) {
         let light_transform = Transform::from_matrix(Mat4::from_euler(
             EulerRot::ZYX,
             0.0,
@@ -794,7 +794,7 @@ impl<'w, 's> Spawner<'w, 's> {
             });
     }
 
-    pub fn spawn_floors(&mut self, offset: Pos) {
+    pub(crate) fn spawn_floors(&mut self, offset: Pos) {
         let parent = self
             .tile_spawner
             .commands
@@ -831,7 +831,7 @@ impl<'w, 's> Spawner<'w, 's> {
         }
     }
 
-    pub fn spawn_house(&mut self, offset: Pos) {
+    pub(crate) fn spawn_house(&mut self, offset: Pos) {
         self.spawn_wall(Pos::new(17, Level::ZERO, 17).offset(offset).unwrap());
         self.spawn_wall(Pos::new(17, Level::ZERO, 18).offset(offset).unwrap());
         self.spawn_wall(Pos::new(17, Level::ZERO, 19).offset(offset).unwrap());
@@ -907,7 +907,7 @@ impl<'w, 's> Spawner<'w, 's> {
         self.spawn_chair(Pos::new(21, Level::new(1), 23).offset(offset).unwrap());
     }
 
-    pub fn spawn_characters(&mut self, offset: Pos) {
+    pub(crate) fn spawn_characters(&mut self, offset: Pos) {
         self.spawn_character(
             Label::new("T"),
             Pos::new(45, Level::ZERO, 56).offset(offset).unwrap(),
@@ -969,7 +969,7 @@ impl<'w, 's> Spawner<'w, 's> {
         );
     }
 
-    pub fn spawn_containables(&mut self, offset: Pos) {
+    pub(crate) fn spawn_containables(&mut self, offset: Pos) {
         self.spawn_containable(
             Label::new("large"),
             Pos::new(13, Level::ZERO, 13).offset(offset).unwrap(),
@@ -987,7 +987,7 @@ impl<'w, 's> Spawner<'w, 's> {
         );
     }
 
-    pub fn spawn_window_wall(&mut self, offset: Pos) {
+    pub(crate) fn spawn_window_wall(&mut self, offset: Pos) {
         for i in 0..48 {
             self.spawn_window(Pos::new(i, Level::ZERO, 15).offset(offset).unwrap());
         }

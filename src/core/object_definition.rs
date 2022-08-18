@@ -4,7 +4,7 @@ use bevy::prelude::AlphaMode;
 const SEPARATION_OFFSET: f32 = 0.005;
 
 #[derive(Debug, PartialEq, Eq)]
-pub enum ObjectSpecifier {
+pub(crate) enum ObjectSpecifier {
     Terrain,
     Furniture,
     Item(Item),
@@ -14,11 +14,11 @@ pub enum ObjectSpecifier {
 }
 
 impl ObjectSpecifier {
-    pub const fn shading_applied(&self) -> bool {
+    pub(crate) const fn shading_applied(&self) -> bool {
         !matches!(self, Self::ZoneLevel | Self::Meta)
     }
 
-    pub fn vertical_offset(&self, layer: &SpriteLayer) -> f32 {
+    pub(crate) fn vertical_offset(&self, layer: &SpriteLayer) -> f32 {
         let level = match self {
             Self::ZoneLevel => -60, // to prevent glitches
             Self::Terrain => 0,
@@ -36,13 +36,13 @@ impl ObjectSpecifier {
 }
 
 #[derive(Debug)]
-pub struct ObjectDefinition<'d> {
-    pub name: &'d ObjectName,
-    pub specifier: ObjectSpecifier,
+pub(crate) struct ObjectDefinition<'d> {
+    pub(crate) name: &'d ObjectName,
+    pub(crate) specifier: ObjectSpecifier,
 }
 
 impl<'d> ObjectDefinition<'d> {
-    pub fn alpha_mode(&self) -> AlphaMode {
+    pub(crate) fn alpha_mode(&self) -> AlphaMode {
         if self.specifier == ObjectSpecifier::Terrain && self.name.is_ground() {
             AlphaMode::Opaque
         } else {

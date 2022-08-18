@@ -1,19 +1,19 @@
 use bevy::prelude::Component;
 
 #[derive(Clone, Copy, Debug)]
-pub struct Millimeter(pub u64);
+pub(crate) struct Millimeter(pub(crate) u64);
 
 impl Millimeter {
-    pub fn f32(&self) -> f32 {
+    pub(crate) fn f32(&self) -> f32 {
         0.001 * self.0 as f32
     }
 }
 
 #[derive(Clone, Copy)]
-pub struct MillimeterPerSecond(pub u64);
+pub(crate) struct MillimeterPerSecond(pub(crate) u64);
 
 impl MillimeterPerSecond {
-    pub const fn from_kmph(n: u64) -> Self {
+    pub(crate) const fn from_kmph(n: u64) -> Self {
         Self(n * 1_000_000 / 3_600)
     }
 }
@@ -25,7 +25,7 @@ impl std::fmt::Display for MillimeterPerSecond {
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub struct Milliseconds(pub u64);
+pub(crate) struct Milliseconds(pub(crate) u64);
 
 impl std::fmt::Debug for Milliseconds {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -58,26 +58,26 @@ impl std::ops::Div<MillimeterPerSecond> for Millimeter {
     }
 }
 
-pub const ADJACENT: Millimeter = Millimeter(1000);
-pub const DIAGONAL: Millimeter = Millimeter(1414);
-pub const VERTICAL: Millimeter = Millimeter(1800);
+pub(crate) const ADJACENT: Millimeter = Millimeter(1000);
+pub(crate) const DIAGONAL: Millimeter = Millimeter(1414);
+pub(crate) const VERTICAL: Millimeter = Millimeter(1800);
 
 #[derive(Clone, Copy)]
-pub struct Distance {
-    pub h: Millimeter,
-    pub up: Millimeter,
-    pub down: Millimeter,
+pub(crate) struct Distance {
+    pub(crate) h: Millimeter,
+    pub(crate) up: Millimeter,
+    pub(crate) down: Millimeter,
 }
 
 #[derive(Component, Clone, Copy)]
-pub struct Speed {
-    pub h: MillimeterPerSecond,
-    pub up: MillimeterPerSecond,
-    pub down: MillimeterPerSecond,
+pub(crate) struct Speed {
+    pub(crate) h: MillimeterPerSecond,
+    pub(crate) up: MillimeterPerSecond,
+    pub(crate) down: MillimeterPerSecond,
 }
 
 impl Speed {
-    pub const fn from_h_kmph(s: u64) -> Self {
+    pub(crate) const fn from_h_kmph(s: u64) -> Self {
         let h = MillimeterPerSecond::from_kmph(s);
         Self {
             h,
@@ -86,11 +86,11 @@ impl Speed {
         }
     }
 
-    pub fn stay(&self) -> Milliseconds {
+    pub(crate) fn stay(&self) -> Milliseconds {
         Millimeter(ADJACENT.0 / 2) / self.h
     }
 
-    pub fn activate(&self) -> Milliseconds {
+    pub(crate) fn activate(&self) -> Milliseconds {
         Millimeter(3 * ADJACENT.0) / self.h
     }
 }
@@ -104,10 +104,10 @@ impl std::ops::Div<Speed> for Distance {
 }
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub struct Partial(u8);
+pub(crate) struct Partial(u8);
 
 impl Partial {
-    pub const fn from_u8(from: u8) -> Self {
+    pub(crate) const fn from_u8(from: u8) -> Self {
         Self(from)
     }
 }

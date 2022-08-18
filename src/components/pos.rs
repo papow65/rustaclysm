@@ -14,16 +14,16 @@ fn straight_2d(from: (i32, i32), to: (i32, i32)) -> impl Iterator<Item = (i32, i
 
 /// Vertical aspect
 #[derive(Copy, Clone, PartialOrd, Ord, PartialEq, Eq, Hash, Debug)]
-pub struct Level {
-    pub h: i8,
+pub(crate) struct Level {
+    pub(crate) h: i8,
 }
 
 impl Level {
-    pub const AMOUNT: usize = 21;
-    pub const ZERO: Self = Self::new(0);
+    pub(crate) const AMOUNT: usize = 21;
+    pub(crate) const ZERO: Self = Self::new(0);
     const LOWEST: Self = Self::new(-10);
     const HIGHEST: Self = Self::new(10);
-    pub const ALL: [Self; Self::AMOUNT] = [
+    pub(crate) const ALL: [Self; Self::AMOUNT] = [
         Self::LOWEST,
         Self::new(-9),
         Self::new(-8),
@@ -47,7 +47,7 @@ impl Level {
         Self::HIGHEST,
     ];
 
-    pub const fn new(level: i8) -> Self {
+    pub(crate) const fn new(level: i8) -> Self {
         Self { h: level }
     }
 
@@ -55,55 +55,55 @@ impl Level {
         &Self::LOWEST <= self && self <= &Self::HIGHEST
     }
 
-    pub fn up(&self) -> Option<Self> {
+    pub(crate) fn up(&self) -> Option<Self> {
         let up = Self { h: self.h + 1 };
         up.in_bounds().then_some(up)
     }
 
-    pub fn down(&self) -> Option<Self> {
+    pub(crate) fn down(&self) -> Option<Self> {
         let down = Self { h: self.h - 1 };
         down.in_bounds().then_some(down)
     }
 
-    pub fn offset(&self, relative: Self) -> Option<Self> {
+    pub(crate) fn offset(&self, relative: Self) -> Option<Self> {
         let sum = Self {
             h: self.h + relative.h,
         };
         sum.in_bounds().then_some(sum)
     }
 
-    pub const fn dist(self, to: Self) -> i8 {
+    pub(crate) const fn dist(self, to: Self) -> i8 {
         (self.h - to.h).abs()
     }
 
-    pub const fn index(&self) -> usize {
+    pub(crate) const fn index(&self) -> usize {
         (self.h + 10) as usize
     }
 
-    pub fn f32(&self) -> f32 {
+    pub(crate) fn f32(&self) -> f32 {
         f32::from(self.h) as f32 * VERTICAL.f32()
     }
 
-    pub fn visible_from(&self, reference: Self) -> bool {
+    pub(crate) fn visible_from(&self, reference: Self) -> bool {
         *self == reference || (Self::ZERO <= *self && *self < reference)
     }
 }
 
 /// Y is vertical, like the bevy default
 #[derive(Component, Copy, Clone, PartialEq, Eq, Hash, Debug)]
-pub struct Pos {
-    pub x: i32,
-    pub level: Level,
-    pub z: i32,
+pub(crate) struct Pos {
+    pub(crate) x: i32,
+    pub(crate) level: Level,
+    pub(crate) z: i32,
 }
 
 impl Pos {
-    pub const fn new(x: i32, level: Level, z: i32) -> Self {
+    pub(crate) const fn new(x: i32, level: Level, z: i32) -> Self {
         Self { x, level, z }
     }
 
     /** Distance without regard for obstacles or stairs */
-    pub fn dist(&self, other: Self) -> Distance {
+    pub(crate) fn dist(&self, other: Self) -> Distance {
         let dx = u64::from((self.x - other.x).unsigned_abs());
         let dy = self.level.h - other.level.h;
         let dz = u64::from((self.z - other.z).unsigned_abs());
@@ -122,7 +122,7 @@ impl Pos {
         }
     }
 
-    pub fn potential_nbors(self) -> impl Iterator<Item = (Self, Distance)> {
+    pub(crate) fn potential_nbors(self) -> impl Iterator<Item = (Self, Distance)> {
         (0..10)
             .filter_map(move |i| match i {
                 0 => Some(Self::new(self.x + 1, self.level, self.z)),
@@ -142,17 +142,17 @@ impl Pos {
             .map(move |p| (p, self.dist(p)))
     }
 
-    pub fn is_potential_nbor(self, other: Self) -> bool {
+    pub(crate) fn is_potential_nbor(self, other: Self) -> bool {
         self.potential_nbors().any(|(p, _)| p == other)
     }
 
-    pub fn offset(self, relative: Self) -> Option<Self> {
+    pub(crate) fn offset(self, relative: Self) -> Option<Self> {
         self.level
             .offset(relative.level)
             .map(|level| Self::new(self.x + relative.x, level, self.z + relative.z))
     }
 
-    pub fn vec3(self) -> Vec3 {
+    pub(crate) fn vec3(self) -> Vec3 {
         Vec3::new(
             f64::from(self.x) as f32 * ADJACENT.f32(),
             self.level.f32(),
@@ -160,7 +160,7 @@ impl Pos {
         )
     }
 
-    pub fn straight(self, to: Self) -> impl Iterator<Item = Self> {
+    pub(crate) fn straight(self, to: Self) -> impl Iterator<Item = Self> {
         assert!(self != to);
 
         let max_diff = (self.x - to.x)
@@ -178,14 +178,14 @@ impl Pos {
 }
 
 #[derive(Debug)]
-pub struct Path {
-    pub first: Pos,
-    pub duration: Milliseconds,
-    pub destination: Pos,
+pub(crate) struct Path {
+    pub(crate) first: Pos,
+    pub(crate) duration: Milliseconds,
+    pub(crate) destination: Pos,
 }
 
 impl Path {
-    pub fn plan<FN, IN, FH>(
+    pub(crate) fn plan<FN, IN, FH>(
         from: Pos,
         successors: FN,
         heuristic: FH,
@@ -212,7 +212,7 @@ impl Path {
         }
     }
 
-    pub fn improvize<I, FH>(nbors: I, mut heuristic: FH, destination: Pos) -> Option<Self>
+    pub(crate) fn improvize<I, FH>(nbors: I, mut heuristic: FH, destination: Pos) -> Option<Self>
     where
         I: Iterator<Item = (Pos, Milliseconds)>,
         FH: FnMut(&Pos) -> Milliseconds,
@@ -228,13 +228,13 @@ impl Path {
 }
 
 #[derive(Component, Copy, Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub struct Zone {
-    pub x: i32,
-    pub z: i32,
+pub(crate) struct Zone {
+    pub(crate) x: i32,
+    pub(crate) z: i32,
 }
 
 impl Zone {
-    pub const fn zone_level(&self, level: Level) -> ZoneLevel {
+    pub(crate) const fn zone_level(&self, level: Level) -> ZoneLevel {
         ZoneLevel {
             x: self.x,
             level,
@@ -242,18 +242,18 @@ impl Zone {
         }
     }
 
-    pub fn dist(&self, other: Self) -> u32 {
+    pub(crate) fn dist(&self, other: Self) -> u32 {
         (self.x - other.x).abs().max((self.z - other.z).abs()) as u32
     }
 
-    pub const fn offset(&self, x: i32, z: i32) -> Self {
+    pub(crate) const fn offset(&self, x: i32, z: i32) -> Self {
         Self {
             x: self.x + x,
             z: self.z + z,
         }
     }
 
-    pub fn nearby(&self, n: u32) -> Vec<Self> {
+    pub(crate) fn nearby(&self, n: u32) -> Vec<Self> {
         let n = i32::try_from(n).unwrap();
         (-n..n)
             .flat_map(move |x| (-n..n).map(move |z| self.offset(x, z)))
@@ -280,14 +280,14 @@ impl From<ZoneLevel> for Zone {
 }
 
 #[derive(Component, Copy, Clone, Debug, PartialEq, Eq, Hash)]
-pub struct ZoneLevel {
-    pub x: i32,
-    pub level: Level,
-    pub z: i32,
+pub(crate) struct ZoneLevel {
+    pub(crate) x: i32,
+    pub(crate) level: Level,
+    pub(crate) z: i32,
 }
 
 impl ZoneLevel {
-    pub fn offset(self, relative: Self) -> Option<Self> {
+    pub(crate) fn offset(self, relative: Self) -> Option<Self> {
         self.level.offset(relative.level).map(|level| Self {
             x: self.x + relative.x,
             level,
@@ -295,7 +295,7 @@ impl ZoneLevel {
         })
     }
 
-    pub const fn base_pos(&self) -> Pos {
+    pub(crate) const fn base_pos(&self) -> Pos {
         Pos::new(24 * self.x, self.level, 24 * self.z)
     }
 }
@@ -310,13 +310,13 @@ impl From<Pos> for ZoneLevel {
     }
 }
 #[derive(Component, Copy, Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub struct Overzone {
-    pub x: i32,
-    pub z: i32,
+pub(crate) struct Overzone {
+    pub(crate) x: i32,
+    pub(crate) z: i32,
 }
 
 impl Overzone {
-    pub const fn base_zone(&self) -> Zone {
+    pub(crate) const fn base_zone(&self) -> Zone {
         Zone {
             x: 180 * self.x,
             z: 180 * self.z,
@@ -335,8 +335,8 @@ impl From<Zone> for Overzone {
 
 /** Indication that the player moved to or examined another level */
 #[derive(Component)]
-pub struct LevelChanged;
+pub(crate) struct LevelChanged;
 
 /** Indication that the player moved to or examined a new zone */
 #[derive(Component)]
-pub struct ZoneChanged;
+pub(crate) struct ZoneChanged;

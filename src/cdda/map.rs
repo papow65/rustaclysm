@@ -9,7 +9,7 @@ use std::{fmt, fs::read_to_string};
 /** Corresponds to a 'map' in CDDA. It defines the layout of a `ZoneLevel`. */
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct Map(pub Vec<Submap>);
+pub(crate) struct Map(pub(crate) Vec<Submap>);
 
 impl TryFrom<ZoneLevel> for Map {
     type Error = ();
@@ -36,42 +36,60 @@ impl TryFrom<ZoneLevel> for Map {
 
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct Submap {
-    pub version: u64,
-    pub coordinates: (i32, i32, i32),
-    pub turn_last_touched: u64,
-    pub temperature: i64,
-    pub radiation: Vec<i64>,
-    pub terrain: RepetitionBlock<ObjectName>,
+pub(crate) struct Submap {
+    #[allow(unused)]
+    pub(crate) version: u64,
+    pub(crate) coordinates: (i32, i32, i32),
+
+    #[allow(unused)]
+    pub(crate) turn_last_touched: u64,
+
+    #[allow(unused)]
+    pub(crate) temperature: i64,
+
+    #[allow(unused)]
+    pub(crate) radiation: Vec<i64>,
+
+    pub(crate) terrain: RepetitionBlock<ObjectName>,
 
     #[serde(deserialize_with = "load_at_tile_name")]
-    pub furniture: Vec<At<ObjectName>>,
+    pub(crate) furniture: Vec<At<ObjectName>>,
 
     #[serde(deserialize_with = "load_items")]
-    pub items: Vec<At<Vec<Repetition<CddaItem>>>>,
+    pub(crate) items: Vec<At<Vec<Repetition<CddaItem>>>>,
 
+    #[allow(unused)]
     #[serde(deserialize_with = "load_at_tile_name")]
-    pub traps: Vec<At<ObjectName>>,
+    pub(crate) traps: Vec<At<ObjectName>>,
 
     #[serde(deserialize_with = "load_at_field")]
-    pub fields: Vec<At<Field>>,
-    pub cosmetics: Vec<(u8, u8, String, String)>,
-    pub spawns: Vec<Spawn>,
-    pub vehicles: Vec<serde_json::Value>, // grep -orIE 'vehicles":\[[^]]+.{80}'  assets/save/maps/ | less
-    pub partial_constructions: Vec<serde_json::Value>,
-    pub computers: Option<Vec<serde_json::Value>>,
+    pub(crate) fields: Vec<At<Field>>,
+
+    #[allow(unused)]
+    pub(crate) cosmetics: Vec<(u8, u8, String, String)>,
+
+    pub(crate) spawns: Vec<Spawn>,
+
+    #[allow(unused)]
+    pub(crate) vehicles: Vec<serde_json::Value>, // grep -orIE 'vehicles":\[[^]]+.{80}'  assets/save/maps/ | less
+
+    #[allow(unused)]
+    pub(crate) partial_constructions: Vec<serde_json::Value>,
+
+    #[allow(unused)]
+    pub(crate) computers: Option<Vec<serde_json::Value>>,
 }
 
 #[allow(unused)]
 #[derive(Debug)]
-pub struct Furniture {
+pub(crate) struct Furniture {
     tile_name: ObjectName,
 }
 
 #[allow(unused)]
 #[derive(Debug)]
-pub struct Field {
-    pub tile_name: ObjectName,
+pub(crate) struct Field {
+    pub(crate) tile_name: ObjectName,
     intensity: i32,
     age: u64,
 }
@@ -79,10 +97,10 @@ pub struct Field {
 #[allow(unused)]
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct CddaItem {
-    pub typeid: ObjectName,
+pub(crate) struct CddaItem {
+    pub(crate) typeid: ObjectName,
     snip_id: Option<String>,
-    pub charges: Option<u32>,
+    pub(crate) charges: Option<u32>,
     active: Option<bool>,
     corpse: Option<String>,
     name: Option<String>,
@@ -113,7 +131,7 @@ pub struct CddaItem {
 #[allow(unused)]
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct CddaContainer {
+pub(crate) struct CddaContainer {
     contents: Vec<Pocket>,
     additional_pockets: Option<Vec<Pocket>>,
 }
@@ -121,7 +139,7 @@ pub struct CddaContainer {
 #[allow(unused)]
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct Pocket {
+pub(crate) struct Pocket {
     pocket_type: u8,
     contents: Vec<CddaItem>,
     _sealed: bool,
@@ -132,26 +150,26 @@ pub struct Pocket {
 #[allow(unused)]
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct Spawn {
-    pub spawn_type: ObjectName,
+pub(crate) struct Spawn {
+    pub(crate) spawn_type: ObjectName,
     count: i32,
-    pub x: i32,
-    pub z: i32,
+    pub(crate) x: i32,
+    pub(crate) z: i32,
     faction_id: i32,
     mission_id: i32,
-    pub friendly: bool,
-    pub name: Option<String>,
+    pub(crate) friendly: bool,
+    pub(crate) name: Option<String>,
 }
 
 #[derive(Debug)]
-pub struct At<T> {
+pub(crate) struct At<T> {
     x: u8,
     y: u8,
     obj: T,
 }
 
 impl<T> At<T> {
-    pub const fn get(&self, relative_pos: Pos) -> Option<&T> {
+    pub(crate) const fn get(&self, relative_pos: Pos) -> Option<&T> {
         if relative_pos.x as u8 == self.x && relative_pos.z as u8 == self.y {
             Some(&self.obj)
         } else {

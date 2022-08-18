@@ -9,9 +9,9 @@ use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
 
-pub use self::{debug::*, envir::*, location::*, spawner::*, zone_level_names::*};
+pub(crate) use self::{debug::*, envir::*, location::*, spawner::*, zone_level_names::*};
 
-pub enum Collision {
+pub(crate) enum Collision {
     Pass,
     //Fall(Pos), // todo
     Blocked(Label),
@@ -22,19 +22,19 @@ pub enum Collision {
 
 // pickup
 #[derive(SystemParam)]
-pub struct Hierarchy<'w, 's> {
-    pub picked: Query<'w, 's, (Entity, &'static Label, &'static Containable)>,
-    pub children: Query<'w, 's, (&'static Parent, &'static Containable)>,
+pub(crate) struct Hierarchy<'w, 's> {
+    pub(crate) picked: Query<'w, 's, (Entity, &'static Label, &'static Containable)>,
+    pub(crate) children: Query<'w, 's, (&'static Parent, &'static Containable)>,
 }
 
 #[derive(Debug, Default)]
-pub struct InstructionQueue {
+pub(crate) struct InstructionQueue {
     queue: Vec<QueuedInstruction>,
     continuous: Vec<QueuedInstruction>,
 }
 
 impl InstructionQueue {
-    pub fn add(&mut self, instruction: QueuedInstruction) {
+    pub(crate) fn add(&mut self, instruction: QueuedInstruction) {
         // Wait for an instruction to be processed until adding a duplicate when holding a key down.
         if !self.continuous.contains(&instruction) || !self.queue.contains(&instruction) {
             self.queue.insert(0, instruction);
@@ -42,15 +42,15 @@ impl InstructionQueue {
         }
     }
 
-    pub fn interrupt(&mut self, instruction: QueuedInstruction) {
+    pub(crate) fn interrupt(&mut self, instruction: QueuedInstruction) {
         self.continuous.retain(|k| *k != instruction);
     }
 
-    pub fn pop(&mut self) -> Option<QueuedInstruction> {
+    pub(crate) fn pop(&mut self) -> Option<QueuedInstruction> {
         self.queue.pop()
     }
 
-    pub fn log_if_long(&self) {
+    pub(crate) fn log_if_long(&self) {
         if 1 < self.queue.len() {
             println!("Unprocessed key codes: {:?}", self.queue);
         }
@@ -58,18 +58,18 @@ impl InstructionQueue {
 }
 
 #[derive(Default)]
-pub struct Timeouts {
+pub(crate) struct Timeouts {
     m: HashMap<Entity, Milliseconds>,
 }
 
 impl Timeouts {
-    pub fn add(&mut self, entity: Entity, timeout: Milliseconds) {
+    pub(crate) fn add(&mut self, entity: Entity, timeout: Milliseconds) {
         self.m.get_mut(&entity).unwrap().0 += timeout.0;
     }
 
     /// Does not 'pop' the entity
     /// Adds a timeout for untracked entities
-    pub fn next(&mut self, entities: &[Entity]) -> Option<Entity> {
+    pub(crate) fn next(&mut self, entities: &[Entity]) -> Option<Entity> {
         self.m.retain(|e, _| entities.contains(e));
         let time = self.time();
         entities
@@ -78,14 +78,14 @@ impl Timeouts {
             .min_by_key(|e| *self.m.entry(*e).or_insert(time))
     }
 
-    pub fn time(&self) -> Milliseconds {
+    pub(crate) fn time(&self) -> Milliseconds {
         self.m.values().min().copied().unwrap_or(Milliseconds(0))
     }
 }
 
 #[derive(SystemParam)]
-pub struct Characters<'w, 's> {
-    pub c: Query<
+pub(crate) struct Characters<'w, 's> {
+    pub(crate) c: Query<
         'w,
         's,
         (
@@ -101,7 +101,7 @@ pub struct Characters<'w, 's> {
 }
 
 impl<'w, 's> Characters<'w, 's> {
-    pub fn collect_factions(&'s self) -> Vec<(Pos, &'s Faction)> {
+    pub(crate) fn collect_factions(&'s self) -> Vec<(Pos, &'s Faction)> {
         self.c
             .iter()
             .map(|(_, _, p, _, _, f, _)| (*p, f))
@@ -109,10 +109,10 @@ impl<'w, 's> Characters<'w, 's> {
     }
 }
 
-pub struct RelativeRays(HashMap<Pos, (Vec<Pos>, Vec<(Pos, Pos)>)>);
+pub(crate) struct RelativeRays(HashMap<Pos, (Vec<Pos>, Vec<(Pos, Pos)>)>);
 
 impl RelativeRays {
-    pub fn new() -> Self {
+    pub(crate) fn new() -> Self {
         let mut map: HashMap<Pos, (Vec<Pos>, Vec<(Pos, Pos)>)> = HashMap::default();
         let origin = Pos::new(0, Level::ZERO, 0);
         for x in -60..=60 {
@@ -156,7 +156,7 @@ impl RelativeRays {
         Self(map)
     }
 
-    pub fn ray(
+    pub(crate) fn ray(
         &self,
         from: Pos,
         to: Pos,

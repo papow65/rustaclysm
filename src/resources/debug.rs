@@ -1,4 +1,4 @@
-pub struct StdInstant(std::time::Instant);
+pub(crate) struct StdInstant(std::time::Instant);
 
 impl Default for StdInstant {
     fn default() -> Self {
@@ -7,7 +7,7 @@ impl Default for StdInstant {
 }
 
 impl StdInstant {
-    pub fn next(&mut self) -> std::time::Duration {
+    pub(crate) fn next(&mut self) -> std::time::Duration {
         let previous = self.0;
         self.0 = std::time::Instant::now();
         self.0 - previous

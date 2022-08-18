@@ -17,7 +17,7 @@ fn get_center_zones(pos: Pos, player: &Player) -> Vec<Zone> {
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub fn spawn_nearby_overzones(
+pub(crate) fn spawn_nearby_overzones(
     mut tile_spawner: TileSpawner,
     all_zone_levels: Query<(Entity, &ZoneLevel, Option<&Collapsed>)>,
     players: Query<&Pos, (With<Player>, With<ZoneChanged>)>,
@@ -31,7 +31,7 @@ pub fn spawn_nearby_overzones(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub fn spawn_nearby_zones(
+pub(crate) fn spawn_nearby_zones(
     mut commands: Commands,
     location: Res<Location>,
     mut tile_spawner: TileSpawner,
@@ -62,7 +62,7 @@ pub fn spawn_nearby_zones(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub fn despawn_far_zones(
+pub(crate) fn despawn_far_zones(
     mut commands: Commands,
     collapsed_zone_levels: Query<(&ZoneLevel, &Children), With<Collapsed>>,
     expanded_zone_levels: Query<(Entity, &ZoneLevel), Without<Collapsed>>,
@@ -109,7 +109,7 @@ fn set_collapsed_zone_level_visibility(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub fn remove_changed_markers(
+pub(crate) fn remove_changed_markers(
     mut commands: Commands,
     zone_changers: Query<Entity, With<ZoneChanged>>,
     level_changers: Query<Entity, With<LevelChanged>>,

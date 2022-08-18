@@ -2,9 +2,9 @@ use crate::prelude::*;
 use bevy::prelude::{AlphaMode, Mesh, Quat, Transform, Vec2, Vec3};
 
 #[derive(Debug, PartialEq, Clone, Copy)]
-pub struct Transform2d {
-    pub scale: Vec2,
-    pub offset: Vec2,
+pub(crate) struct Transform2d {
+    pub(crate) scale: Vec2,
+    pub(crate) offset: Vec2,
 }
 
 impl Transform2d {
@@ -14,7 +14,7 @@ impl Transform2d {
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub enum SpriteOrientation {
+pub(crate) enum SpriteOrientation {
     Horizontal,
     Vertical,
 }
@@ -32,7 +32,7 @@ impl SpriteOrientation {
 }
 
 #[derive(Debug, PartialEq, Clone, Copy)]
-pub enum ModelShape {
+pub(crate) enum ModelShape {
     Plane {
         orientation: SpriteOrientation,
         transform2d: Transform2d,
@@ -85,18 +85,18 @@ impl ModelShape {
 
 /** Everything to make a `PbrBundle` */
 #[derive(Debug)]
-pub struct Model {
-    pub shape: ModelShape,
-    pub layer: SpriteLayer,
-    pub sprite_number: SpriteNumber,
-    pub mesh_info: MeshInfo,
-    pub texture_path: String,
-    pub vertical_offset: f32,
-    pub alpha_mode: AlphaMode,
+pub(crate) struct Model {
+    pub(crate) shape: ModelShape,
+    pub(crate) layer: SpriteLayer,
+    pub(crate) sprite_number: SpriteNumber,
+    pub(crate) mesh_info: MeshInfo,
+    pub(crate) texture_path: String,
+    pub(crate) vertical_offset: f32,
+    pub(crate) alpha_mode: AlphaMode,
 }
 
 impl Model {
-    pub fn new(
+    pub(crate) fn new(
         definition: &ObjectDefinition,
         layer: SpriteLayer,
         sprite_number: SpriteNumber,
@@ -115,14 +115,14 @@ impl Model {
         }
     }
 
-    pub fn to_mesh(&self) -> Mesh {
+    pub(crate) fn to_mesh(&self) -> Mesh {
         match self.shape {
             ModelShape::Plane { .. } => self.mesh_info.to_plane(),
             ModelShape::Cuboid { .. } => self.mesh_info.to_cube(),
         }
     }
 
-    pub fn to_transform(&self) -> Transform {
+    pub(crate) fn to_transform(&self) -> Transform {
         self.shape.to_transform(&self.layer, self.vertical_offset)
     }
 }

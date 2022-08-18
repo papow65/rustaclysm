@@ -3,18 +3,18 @@ use bevy::prelude::Vec2;
 use serde::Deserialize;
 
 #[derive(Hash, PartialEq, Eq, Debug, Clone, Deserialize)]
-pub struct ObjectName(String);
+pub(crate) struct ObjectName(String);
 
 impl ObjectName {
-    pub fn new<S: Into<String>>(value: S) -> Self {
+    pub(crate) fn new<S: Into<String>>(value: S) -> Self {
         Self(value.into())
     }
 
-    pub fn to_label(&self) -> Label {
+    pub(crate) fn to_label(&self) -> Label {
         Label::new(self.0.clone())
     }
 
-    pub fn variants(&self) -> Vec<Self> {
+    pub(crate) fn variants(&self) -> Vec<Self> {
         let mut result = vec![Self(self.0.clone() + "_season_summer"), self.clone()];
         if let Some(index) = self.0.rfind('_') {
             result.push(Self(self.0[..index].to_string()));
@@ -22,11 +22,11 @@ impl ObjectName {
         result
     }
 
-    pub fn is_ground(&self) -> bool {
+    pub(crate) fn is_ground(&self) -> bool {
         self.0 == "t_grass" || self.0 == "t_dirt"
     }
 
-    pub fn is_stairs_up(&self) -> bool {
+    pub(crate) fn is_stairs_up(&self) -> bool {
         self.0.starts_with("t_stairs_up")
             || self.0.starts_with("t_wood_stairs_up")
             || self.0.starts_with("t_ladder_up")
@@ -34,7 +34,7 @@ impl ObjectName {
             || self.0.starts_with("t_gutter_downspout")
     }
 
-    pub fn to_shape(
+    pub(crate) fn to_shape(
         &self,
         layer: SpriteLayer,
         transform2d: Transform2d,

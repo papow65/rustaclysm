@@ -3,7 +3,7 @@ use bevy::ecs::schedule::SystemSet;
 use bevy::pbr::AmbientLight;
 use bevy::prelude::*;
 
-pub struct RustaclysmPlugin;
+pub(crate) struct RustaclysmPlugin;
 
 impl Plugin for RustaclysmPlugin {
     fn build(&self, app: &mut App) {

@@ -2,7 +2,7 @@ use crate::prelude::{Ctrl, Key, KeyCombo, Level, Pos, Shift};
 use bevy::prelude::KeyCode;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub enum Direction {
+pub(crate) enum Direction {
     Here,
     Away,
     AwayRight,
@@ -17,7 +17,7 @@ pub enum Direction {
 }
 
 impl Direction {
-    pub const fn get_relative_pos(&self) -> Pos {
+    pub(crate) const fn get_relative_pos(&self) -> Pos {
         Pos::new(
             match self {
                 Self::CloserLeft | Self::Closer | Self::CloserRight => -1,
@@ -62,7 +62,7 @@ impl TryFrom<&KeyCode> for Direction {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub enum QueuedInstruction {
+pub(crate) enum QueuedInstruction {
     Offset(Direction),
     Pickup,
     Dump,
@@ -105,13 +105,13 @@ impl TryFrom<&KeyCombo> for QueuedInstruction {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub enum ZoomDirection {
+pub(crate) enum ZoomDirection {
     In,
     Out,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub enum Instruction {
+pub(crate) enum Instruction {
     Queued(QueuedInstruction),
     Quit,
     ToggleHelp,

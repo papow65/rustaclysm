@@ -5,9 +5,9 @@ use serde::Deserialize;
 use std::{fmt, hash::Hash, marker::PhantomData};
 
 #[derive(Debug)]
-pub struct Repetition<T> {
-    pub obj: T,
-    pub amount: u32,
+pub(crate) struct Repetition<T> {
+    pub(crate) obj: T,
+    pub(crate) amount: u32,
 }
 
 impl<T> TryFrom<serde_json::Value> for Repetition<T>
@@ -93,10 +93,10 @@ where
 }
 
 #[derive(Debug, Deserialize)]
-pub struct RepetitionBlock<T>(Vec<Repetition<T>>);
+pub(crate) struct RepetitionBlock<T>(Vec<Repetition<T>>);
 
 impl<T> RepetitionBlock<T> {
-    pub fn load_as_subzone(&self, subzone_offset: Pos) -> HashMap<Pos, &T> {
+    pub(crate) fn load_as_subzone(&self, subzone_offset: Pos) -> HashMap<Pos, &T> {
         self.load(
             |x, z| {
                 subzone_offset
@@ -111,7 +111,8 @@ impl<T> RepetitionBlock<T> {
         )
     }
 
-    pub fn load_as_zone_level(&self, zone_level: ZoneLevel) -> HashMap<Pos, &T> {
+    #[allow(unused)]
+    pub(crate) fn load_as_zone_level(&self, zone_level: ZoneLevel) -> HashMap<Pos, &T> {
         let base_pos = zone_level.base_pos();
         self.load(
             |x, z| {
@@ -127,7 +128,11 @@ impl<T> RepetitionBlock<T> {
         )
     }
 
-    pub fn load_as_overzone(&self, overzone: Overzone, level: Level) -> HashMap<ZoneLevel, &T> {
+    pub(crate) fn load_as_overzone(
+        &self,
+        overzone: Overzone,
+        level: Level,
+    ) -> HashMap<ZoneLevel, &T> {
         self.load(
             |x, z| overzone.base_zone().offset(x, z).zone_level(level),
             180,

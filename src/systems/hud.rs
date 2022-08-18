@@ -94,7 +94,7 @@ fn spawn_manual_display(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub fn spawn_hud(mut commands: Commands, asset_server: ResMut<AssetServer>) {
+pub(crate) fn spawn_hud(mut commands: Commands, asset_server: ResMut<AssetServer>) {
     let text_style = TextStyle {
         font: asset_server.load("fonts/FiraMono-Medium.otf"),
         font_size: 16.0,
@@ -124,7 +124,7 @@ pub fn spawn_hud(mut commands: Commands, asset_server: ResMut<AssetServer>) {
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub fn update_log(
+pub(crate) fn update_log(
     mut logs: Query<&mut Text, With<LogDisplay>>,
     messages: Query<&Message>,
     changed: Query<&Message, Changed<Message>>,
@@ -155,7 +155,7 @@ pub fn update_log(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub fn update_status_fps(
+pub(crate) fn update_status_fps(
     diagnostics: Res<Diagnostics>,
     mut status_displays: Query<&mut Text, With<StatusDisplay>>,
 ) {
@@ -176,7 +176,7 @@ pub fn update_status_fps(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub fn update_status_time(
+pub(crate) fn update_status_time(
     timeouts: Res<Timeouts>,
     mut status_displays: Query<&mut Text, With<StatusDisplay>>,
 ) {
@@ -199,7 +199,7 @@ pub fn update_status_time(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub fn update_status_health(
+pub(crate) fn update_status_health(
     health: Query<&Health, (With<Player>, Changed<Health>)>,
     mut status_displays: Query<&mut Text, With<StatusDisplay>>,
 ) {
@@ -214,7 +214,7 @@ pub fn update_status_health(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub fn update_status_speed(
+pub(crate) fn update_status_speed(
     speed: Query<&Speed, (With<Player>, Changed<Speed>)>,
     mut status_displays: Query<&mut Text, With<StatusDisplay>>,
 ) {
@@ -228,7 +228,7 @@ pub fn update_status_speed(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub fn update_status_player_state(
+pub(crate) fn update_status_player_state(
     player: Query<&Player, Changed<Player>>,
     mut status_displays: Query<&mut Text, With<StatusDisplay>>,
 ) {
@@ -243,7 +243,7 @@ pub fn update_status_player_state(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub fn update_status_detais(
+pub(crate) fn update_status_detais(
     envir: Envir,
     mut labels: ResMut<ZoneLevelNames>,
     characters: Query<(Option<&Label>, &Health), Without<Item>>,

@@ -6,8 +6,8 @@ use std::fs::read_to_string;
 #[allow(unused)]
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct Overmap {
-    pub layers: [OvermapLevel; Level::AMOUNT],
+pub(crate) struct Overmap {
+    pub(crate) layers: [OvermapLevel; Level::AMOUNT],
     region_id: serde_json::Value,
     monster_groups: serde_json::Value,
     cities: serde_json::Value,
@@ -40,4 +40,4 @@ impl TryFrom<Overzone> for Overmap {
 
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct OvermapLevel(pub RepetitionBlock<ObjectName>);
+pub(crate) struct OvermapLevel(pub(crate) RepetitionBlock<ObjectName>);

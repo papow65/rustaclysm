@@ -4,21 +4,21 @@ use rand::prelude::*;
 use rand::seq::SliceRandom;
 use std::iter::once;
 
-pub const SAFETY: Milliseconds = Milliseconds(10000);
+pub(crate) const SAFETY: Milliseconds = Milliseconds(10000);
 
 #[derive(Copy, Clone, PartialEq, Eq)]
-pub enum Intelligence {
+pub(crate) enum Intelligence {
     Dumb,
     Smart,
 }
 
-pub struct Strategy {
-    pub intent: Intent,
-    pub action: Action,
+pub(crate) struct Strategy {
+    pub(crate) intent: Intent,
+    pub(crate) action: Action,
 }
 
 #[derive(Copy, Clone, Debug)]
-pub enum Intent {
+pub(crate) enum Intent {
     Attack,
     Flee,
     Wander,
@@ -26,7 +26,7 @@ pub enum Intent {
 }
 
 #[derive(Component, Debug)]
-pub enum Faction {
+pub(crate) enum Faction {
     Human,
     Zombie,
     Animal,
@@ -37,26 +37,26 @@ impl Faction {
         std::mem::discriminant(self) == std::mem::discriminant(other)
     }
 
-    pub fn is_aggressive(&self, health: &Health) -> bool {
+    pub(crate) fn is_aggressive(&self, health: &Health) -> bool {
         match self {
             Self::Human => health.relative_damage() < Partial::from_u8(128),
             _ => true,
         }
     }
 
-    pub fn dislikes(&self, other: &Self) -> bool {
+    pub(crate) fn dislikes(&self, other: &Self) -> bool {
         !self.equals(other)
     }
 
-    pub fn can_fear(&self) -> bool {
+    pub(crate) fn can_fear(&self) -> bool {
         !self.equals(&Self::Zombie)
     }
 
-    pub fn wanders(&self) -> bool {
+    pub(crate) fn wanders(&self) -> bool {
         !self.equals(&Self::Human)
     }
 
-    pub const fn intelligence(&self) -> Intelligence {
+    pub(crate) const fn intelligence(&self) -> Intelligence {
         match self {
             Self::Zombie => Intelligence::Dumb,
             _ => Intelligence::Smart,
@@ -71,7 +71,7 @@ impl Faction {
             .chain(once(Intent::Wait))
     }
 
-    pub fn attack(
+    pub(crate) fn attack(
         &self,
         envir: &Envir,
         start_pos: Pos,
@@ -99,7 +99,7 @@ impl Faction {
             })
     }
 
-    pub fn flee(
+    pub(crate) fn flee(
         &self,
         envir: &Envir,
         start_pos: Pos,
@@ -126,7 +126,7 @@ impl Faction {
         ))
     }
 
-    pub fn wander(&self, envir: &Envir, start_pos: Pos, speed: Speed) -> Option<Action> {
+    pub(crate) fn wander(&self, envir: &Envir, start_pos: Pos, speed: Speed) -> Option<Action> {
         let mut random = rand::thread_rng();
 
         if random.gen::<f32>() < 0.3 {
@@ -167,7 +167,7 @@ impl Faction {
         .map(|action| Strategy { intent, action })
     }
 
-    pub fn behave<'f>(
+    pub(crate) fn behave<'f>(
         &self,
         envir: &Envir,
         start_pos: Pos,

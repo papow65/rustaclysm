@@ -5,7 +5,7 @@ use bevy::prelude::*;
 use std::time::Instant;
 
 #[allow(clippy::needless_pass_by_value)]
-pub fn update_location(
+pub(crate) fn update_location(
     mut location: ResMut<Location>,
     changed_positions: Query<(Entity, &Pos), Changed<Pos>>,
     removed_positions: RemovedComponents<Pos>,
@@ -24,7 +24,7 @@ pub fn update_location(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub fn update_transforms(mut obstacles: Query<(&Pos, &mut Transform), Changed<Pos>>) {
+pub(crate) fn update_transforms(mut obstacles: Query<(&Pos, &mut Transform), Changed<Pos>>) {
     let start = Instant::now();
 
     for (&pos, mut transform) in obstacles.iter_mut() {
@@ -35,7 +35,7 @@ pub fn update_transforms(mut obstacles: Query<(&Pos, &mut Transform), Changed<Po
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub fn update_visibility_for_hidden_items(
+pub(crate) fn update_visibility_for_hidden_items(
     mut hidden_items: Query<&mut Visibility, Without<Pos>>,
     removed_positions: RemovedComponents<Pos>,
 ) {
@@ -52,7 +52,7 @@ pub fn update_visibility_for_hidden_items(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub fn update_visibility_on_item_y_change(
+pub(crate) fn update_visibility_on_item_y_change(
     mut moved_items: Query<(&Pos, &mut Visibility), With<LevelChanged>>,
     players: Query<&Pos, With<Player>>,
 ) {
@@ -69,7 +69,7 @@ pub fn update_visibility_on_item_y_change(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub fn update_visibility_on_player_y_change(
+pub(crate) fn update_visibility_on_player_y_change(
     mut zone_levels: Query<
         (&ZoneLevel, &LastSeen, &mut Visibility),
         (With<Collapsed>, Without<Pos>),
@@ -91,7 +91,7 @@ pub fn update_visibility_on_player_y_change(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub fn update_cursor_visibility_on_player_change(
+pub(crate) fn update_cursor_visibility_on_player_change(
     mut curors: Query<(&mut Visibility, &mut Transform), With<ExamineCursor>>,
     players: Query<&Player, Changed<Player>>,
 ) {
@@ -169,7 +169,7 @@ fn update_visualization(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub fn update_visualization_on_item_move(
+pub(crate) fn update_visualization_on_item_move(
     mut commands: Commands,
     envir: Envir,
     mut moved_items: Query<
@@ -209,7 +209,7 @@ pub fn update_visualization_on_item_move(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub fn update_visualization_on_player_move(
+pub(crate) fn update_visualization_on_player_move(
     mut commands: Commands,
     envir: Envir,
     mut items: Query<(
@@ -247,7 +247,7 @@ pub fn update_visualization_on_player_move(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub fn update_damaged_characters(
+pub(crate) fn update_damaged_characters(
     mut commands: Commands,
     mut characters: Query<(Entity, &Label, &mut Health, &Damage, &mut Transform), With<Faction>>,
 ) {
@@ -282,7 +282,7 @@ pub fn update_damaged_characters(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub fn update_damaged_items(
+pub(crate) fn update_damaged_items(
     mut commands: Commands,
     mut windows: Query<(Entity, &Label, &mut Integrity, &Damage, Option<&Children>)>,
 ) {
@@ -323,7 +323,7 @@ pub fn update_damaged_items(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub fn update_camera(
+pub(crate) fn update_camera(
     changed_players: Query<(&Pos, &Player), Changed<Player>>,
     mut camera_bases: Query<&mut Transform, (With<CameraBase>, Without<Camera3d>)>,
     mut cameras: Query<&mut Transform, With<Camera3d>>,

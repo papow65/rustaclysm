@@ -2,10 +2,10 @@ use crate::prelude::*;
 use bevy::utils::HashMap;
 
 #[derive(Default)]
-pub struct ZoneLevelNames(HashMap<ZoneLevel, ObjectName>);
+pub(crate) struct ZoneLevelNames(HashMap<ZoneLevel, ObjectName>);
 
 impl ZoneLevelNames {
-    pub fn get(&mut self, zone_level: ZoneLevel) -> Option<&ObjectName> {
+    pub(crate) fn get(&mut self, zone_level: ZoneLevel) -> Option<&ObjectName> {
         if !self.0.contains_key(&zone_level) {
             let overzone = Overzone::from(Zone::from(zone_level));
             if let Ok(overmap) = Overmap::try_from(overzone) {

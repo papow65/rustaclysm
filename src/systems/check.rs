@@ -8,7 +8,7 @@ use super::log_if_slow;
 
 #[allow(dead_code)]
 #[allow(clippy::needless_pass_by_value)]
-pub fn check_obstacle_location(
+pub(crate) fn check_obstacle_location(
     location: Res<Location>,
     items: Query<(Entity, &Pos, Option<&Label>), With<Obstacle>>,
 ) {
@@ -30,7 +30,7 @@ pub fn check_obstacle_location(
 
 #[allow(dead_code)]
 #[allow(clippy::needless_pass_by_value)]
-pub fn check_overlap(all_obstacles: Query<(Entity, &Pos, Option<&Label>), With<Obstacle>>) {
+pub(crate) fn check_overlap(all_obstacles: Query<(Entity, &Pos, Option<&Label>), With<Obstacle>>) {
     let start = Instant::now();
 
     for (a, &a_p, a_s) in all_obstacles.iter() {
@@ -52,7 +52,7 @@ pub fn check_overlap(all_obstacles: Query<(Entity, &Pos, Option<&Label>), With<O
 
 #[allow(dead_code)]
 #[allow(clippy::needless_pass_by_value)]
-pub fn check_hierarchy(
+pub(crate) fn check_hierarchy(
     changed: Query<
         (Entity, Option<&Pos>, Option<&Parent>, Option<&Label>),
         Or<(Changed<Pos>, Changed<Parent>)>,
@@ -78,7 +78,7 @@ pub fn check_hierarchy(
 
 #[allow(dead_code)]
 #[allow(clippy::needless_pass_by_value)]
-pub fn check_characters(
+pub(crate) fn check_characters(
     characters: Query<
         (
             Entity,
@@ -106,7 +106,7 @@ pub fn check_characters(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub fn check_delay(mut last_time: Local<StdInstant>) {
+pub(crate) fn check_delay(mut last_time: Local<StdInstant>) {
     let start = Instant::now();
 
     let delay = last_time.next();

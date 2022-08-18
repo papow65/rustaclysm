@@ -2,17 +2,17 @@ use crate::prelude::*;
 use bevy::prelude::*;
 
 #[allow(clippy::needless_pass_by_value)]
-pub fn maximize_window(mut windows: ResMut<Windows>) {
+pub(crate) fn maximize_window(mut windows: ResMut<Windows>) {
     windows.primary_mut().set_maximized(true);
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub fn create_tiles(mut commands: Commands, asset_server: Res<AssetServer>) {
+pub(crate) fn create_tiles(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.insert_resource(TileLoader::new(&asset_server));
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub fn create_custom_data(
+pub(crate) fn create_custom_data(
     mut commands: Commands,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -22,7 +22,7 @@ pub fn create_custom_data(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub fn spawn_initial_entities(mut spawner: Spawner) {
+pub(crate) fn spawn_initial_entities(mut spawner: Spawner) {
     spawner.spawn_light();
 
     let offset = Zone { x: 12, z: 265 }.zone_level(Level::ZERO).base_pos();

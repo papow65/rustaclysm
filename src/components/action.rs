@@ -4,7 +4,7 @@ use bevy::prelude::{
 };
 
 #[derive(Component, Debug)]
-pub enum Action {
+pub(crate) enum Action {
     Stay,
     Step {
         target: Pos, // nbor pos
@@ -27,7 +27,7 @@ pub enum Action {
 }
 
 impl Action {
-    pub const fn step_or_stay(pos: Option<Pos>) -> Self {
+    pub(crate) const fn step_or_stay(pos: Option<Pos>) -> Self {
         if let Some(pos) = pos {
             Self::Step { target: pos }
         } else {
@@ -35,7 +35,7 @@ impl Action {
         }
     }
 
-    pub fn perform(
+    pub(crate) fn perform(
         self,
         commands: &mut Commands,
         envir: &mut Envir,

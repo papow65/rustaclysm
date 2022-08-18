@@ -2,12 +2,12 @@ use crate::prelude::*;
 use bevy::utils::HashMap;
 
 #[derive(Default)]
-pub struct Memory {
+pub(crate) struct Memory {
     explored: HashMap<ZoneLevel, bool>,
 }
 
 impl Memory {
-    pub fn has_been_seen(&mut self, zone_level: ZoneLevel) -> bool {
+    pub(crate) fn has_been_seen(&mut self, zone_level: ZoneLevel) -> bool {
         if !self.explored.contains_key(&zone_level) {
             let overzone = Overzone::from(Zone::from(zone_level));
             let buffer = OvermapBuffer::try_from(overzone).unwrap();

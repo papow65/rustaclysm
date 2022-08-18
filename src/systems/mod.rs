@@ -8,7 +8,7 @@ mod update;
 
 use std::time::{Duration, Instant};
 
-pub use self::{character::*, check::*, hud::*, input::*, spawn::*, startup::*, update::*};
+pub(crate) use self::{character::*, check::*, hud::*, input::*, spawn::*, startup::*, update::*};
 
 fn log_if_slow(name: &str, start: Instant) {
     let duration = Instant::now() - start;

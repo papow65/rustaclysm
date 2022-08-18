@@ -54,7 +54,7 @@ impl Clone for TileInfo {
 }
 
 #[derive(PartialEq, Eq, PartialOrd, Debug, Clone, Copy, Hash)]
-pub struct SpriteNumber(usize);
+pub(crate) struct SpriteNumber(usize);
 
 impl SpriteNumber {
     fn from_json(value: &serde_json::Value) -> Self {
@@ -65,16 +65,16 @@ impl SpriteNumber {
         Self(n.as_u64().unwrap() as usize)
     }
 
-    pub const fn to_usize(self) -> usize {
+    pub(crate) const fn to_usize(self) -> usize {
         self.0
     }
 }
 
 #[derive(Debug, Clone)]
-pub struct TextureInfo {
-    pub mesh_info: MeshInfo,
-    pub image_path: String,
-    pub transform2d: Transform2d,
+pub(crate) struct TextureInfo {
+    pub(crate) mesh_info: MeshInfo,
+    pub(crate) image_path: String,
+    pub(crate) transform2d: Transform2d,
 }
 
 #[derive(Debug)]
@@ -172,13 +172,13 @@ impl Atlas {
     }
 }
 
-pub struct TileLoader {
+pub(crate) struct TileLoader {
     tiles: HashMap<ObjectName, TileInfo>,
     textures: HashMap<SpriteNumber, TextureInfo>,
 }
 
 impl TileLoader {
-    pub fn new(asset_server: &AssetServer) -> Self {
+    pub(crate) fn new(asset_server: &AssetServer) -> Self {
         let filepath = "assets/gfx/UltimateCataclysm/tile_config.json";
         let file_contents = read_to_string(&filepath).unwrap();
         let json: serde_json::Value = serde_json::from_str(&file_contents).unwrap();
@@ -228,7 +228,7 @@ impl TileLoader {
             )
     }
 
-    pub fn get_models(&self, definition: &ObjectDefinition) -> Vec<Model> {
+    pub(crate) fn get_models(&self, definition: &ObjectDefinition) -> Vec<Model> {
         let mut bundles = Vec::new();
         let (foreground, background) = definition
             .name

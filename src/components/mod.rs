@@ -6,13 +6,13 @@ mod pos;
 use crate::prelude::{Partial, Visible};
 use bevy::prelude::{AlphaMode, Assets, Color, Component, Handle, StandardMaterial};
 
-pub use {action::*, faction::*, player::*, pos::*};
+pub(crate) use {action::*, faction::*, player::*, pos::*};
 
 #[derive(Component, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub struct Label(pub String);
+pub(crate) struct Label(pub(crate) String);
 
 impl Label {
-    pub fn new<S>(label: S) -> Self
+    pub(crate) fn new<S>(label: S) -> Self
     where
         S: Into<String>,
     {
@@ -27,57 +27,57 @@ impl std::fmt::Display for Label {
 }
 
 #[derive(Component)]
-pub struct Floor;
+pub(crate) struct Floor;
 
 #[derive(Component)]
-pub struct Wall;
+pub(crate) struct Wall;
 
 #[derive(Component)]
-pub struct Stairs;
+pub(crate) struct Stairs;
 
 #[derive(Component)]
-pub struct Window;
+pub(crate) struct Window;
 
 #[derive(Component)]
-pub struct Rack;
+pub(crate) struct Rack;
 
 #[derive(Component)]
-pub struct Table;
+pub(crate) struct Table;
 
 #[derive(Component)]
-pub struct Chair;
+pub(crate) struct Chair;
 
 #[derive(Component)]
-pub struct WindowPane;
+pub(crate) struct WindowPane;
 
 #[derive(Component)]
-pub struct Obstacle;
+pub(crate) struct Obstacle;
 
 #[derive(Component)]
-pub struct Hurdle(pub f32);
+pub(crate) struct Hurdle(pub(crate) f32);
 
 #[derive(Component)]
-pub struct Opaque;
+pub(crate) struct Opaque;
 
 #[derive(Component)]
-pub struct Container(pub u8);
+pub(crate) struct Container(pub(crate) u8);
 
 #[derive(Component)]
-pub struct Containable(pub u8);
+pub(crate) struct Containable(pub(crate) u8);
 
 #[derive(Component)]
-pub struct Health {
+pub(crate) struct Health {
     curr: i8,
     max: i8,
 }
 
 #[derive(Component, Debug, PartialEq, Eq)]
-pub struct Item {
-    pub amount: u32,
+pub(crate) struct Item {
+    pub(crate) amount: u32,
 }
 
 impl Health {
-    pub fn new(max: i8) -> Self {
+    pub(crate) fn new(max: i8) -> Self {
         assert!(0 < max);
         Self { curr: max, max }
     }
@@ -87,7 +87,7 @@ impl Health {
         Partial::from_u8((255_i16 * damage as i16 / self.max as i16) as u8)
     }
 
-    pub fn apply(&mut self, damage: &Damage) -> bool {
+    pub(crate) fn apply(&mut self, damage: &Damage) -> bool {
         self.curr -= damage.amount.min(self.curr).max(self.curr - self.max);
         0 < self.curr
     }
@@ -100,18 +100,18 @@ impl std::fmt::Display for Health {
 }
 
 #[derive(Component)]
-pub struct Integrity {
-    pub curr: i32,
-    pub max: i32,
+pub(crate) struct Integrity {
+    pub(crate) curr: i32,
+    pub(crate) max: i32,
 }
 
 impl Integrity {
-    pub const fn new(max: i32) -> Self {
+    pub(crate) const fn new(max: i32) -> Self {
         Self { curr: max, max }
     }
 
     // TODO de-duplicate code with Health::apply
-    pub fn apply(&mut self, damage: &Damage) -> bool {
+    pub(crate) fn apply(&mut self, damage: &Damage) -> bool {
         self.curr -= i32::from(damage.amount)
             .min(self.curr)
             .max(self.max - self.curr);
@@ -126,29 +126,29 @@ impl std::fmt::Display for Integrity {
 }
 
 #[derive(Component)]
-pub struct Damage {
-    pub attacker: Label,
-    pub amount: i8, // TODO damage type
+pub(crate) struct Damage {
+    pub(crate) attacker: Label,
+    pub(crate) amount: i8, // TODO damage type
 }
 
 #[derive(Component)]
-pub struct Corpse;
+pub(crate) struct Corpse;
 
 #[derive(Component)]
-pub struct CameraBase;
+pub(crate) struct CameraBase;
 
 #[derive(Component)]
-pub struct ExamineCursor;
+pub(crate) struct ExamineCursor;
 
 #[derive(Component, PartialEq, Eq, Debug)]
-pub enum LastSeen {
+pub(crate) enum LastSeen {
     Currently,
     Previously, // TODO add timestamp
     Never,
 }
 
 impl LastSeen {
-    pub fn update(&mut self, visible: &Visible) {
+    pub(crate) fn update(&mut self, visible: &Visible) {
         if visible == &Visible::Seen {
             *self = Self::Currently;
         } else if self == &Self::Currently {
@@ -156,7 +156,7 @@ impl LastSeen {
         }
     }
 
-    pub fn shown(&self, can_move: bool) -> bool {
+    pub(crate) fn shown(&self, can_move: bool) -> bool {
         self == &Self::Currently || (self == &Self::Previously && !can_move)
     }
 }
@@ -164,16 +164,16 @@ impl LastSeen {
 /** Indication for a zone level that it only show its overmap tile
 A zone level without this indicates that it is expanded into tiles */
 #[derive(Component)]
-pub struct Collapsed;
+pub(crate) struct Collapsed;
 
 #[derive(Component, Clone)]
-pub struct Appearance {
+pub(crate) struct Appearance {
     seen: Handle<StandardMaterial>,
     remembered: Handle<StandardMaterial>,
 }
 
 impl Appearance {
-    pub fn new<T>(materials: &mut Assets<StandardMaterial>, material: T) -> Self
+    pub(crate) fn new<T>(materials: &mut Assets<StandardMaterial>, material: T) -> Self
     where
         T: Into<StandardMaterial>,
     {
@@ -191,7 +191,7 @@ impl Appearance {
         }
     }
 
-    pub fn material(&self, last_seen: &LastSeen) -> Handle<StandardMaterial> {
+    pub(crate) fn material(&self, last_seen: &LastSeen) -> Handle<StandardMaterial> {
         match last_seen {
             LastSeen::Currently => self.seen.clone(),
             LastSeen::Previously => self.remembered.clone(),
@@ -210,10 +210,10 @@ impl Appearance {
 }
 
 #[derive(Component)]
-pub struct Message(pub String); // shown to the player
+pub(crate) struct Message(pub(crate) String); // shown to the player
 
 impl Message {
-    pub fn new<S>(s: S) -> Self
+    pub(crate) fn new<S>(s: S) -> Self
     where
         S: Into<String>,
     {
@@ -222,10 +222,10 @@ impl Message {
 }
 
 #[derive(Component)]
-pub struct LogDisplay;
+pub(crate) struct LogDisplay;
 
 #[derive(Component)]
-pub struct StatusDisplay;
+pub(crate) struct StatusDisplay;
 
 #[derive(Component)]
-pub struct ManualDisplay;
+pub(crate) struct ManualDisplay;
