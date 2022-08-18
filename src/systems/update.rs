@@ -41,6 +41,7 @@ pub fn update_visibility_for_hidden_items(
 ) {
     let start = Instant::now();
 
+    // TODO use update_visualization
     for entity in removed_positions.iter() {
         if let Ok(mut visibility) = hidden_items.get_mut(entity) {
             visibility.is_visible = false;
@@ -57,6 +58,7 @@ pub fn update_visibility_on_item_y_change(
 ) {
     let start = Instant::now();
 
+    // TODO use update_visualization
     if let Ok(&player_pos) = players.get_single() {
         for (&pos, mut visibility) in moved_items.iter_mut() {
             visibility.is_visible = pos.level.visible_from(player_pos.level);
@@ -68,7 +70,10 @@ pub fn update_visibility_on_item_y_change(
 
 #[allow(clippy::needless_pass_by_value)]
 pub fn update_visibility_on_player_y_change(
-    mut zone_levels: Query<(&ZoneLevel, &mut Visibility), (With<Collapsed>, Without<Pos>)>,
+    mut zone_levels: Query<
+        (&ZoneLevel, &LastSeen, &mut Visibility),
+        (With<Collapsed>, Without<Pos>),
+    >,
     moved_players: Query<(&Pos, &Player), Or<(With<LevelChanged>, Changed<Player>)>>,
 ) {
     let start = Instant::now();
@@ -76,8 +81,9 @@ pub fn update_visibility_on_player_y_change(
     if let Ok((&player_pos, player)) = moved_players.get_single() {
         println!("Level changed");
 
-        for (&zone_level, mut visibility) in zone_levels.iter_mut() {
-            visibility.is_visible = player.is_shown(zone_level.level, player_pos);
+        for (&zone_level, last_seen, mut visibility) in zone_levels.iter_mut() {
+            visibility.is_visible =
+                last_seen != &LastSeen::Never && player.is_shown(zone_level.level, player_pos);
         }
     }
 

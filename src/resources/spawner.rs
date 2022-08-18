@@ -21,6 +21,7 @@ pub struct TileSpawner<'w, 's> {
     loader: Res<'w, TileLoader>,
     caches: ResMut<'w, TileCaches>,
     zone_level_names: ResMut<'w, ZoneLevelNames>,
+    memory: ResMut<'w, Memory>,
 }
 
 impl<'w, 's> TileSpawner<'w, 's> {
@@ -81,7 +82,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
             if definition.specifier.shading_applied() {
                 child_builder.add_command(Insert {
                     entity: tile,
-                    component: if (pos.z / 24) % 2 == 1 {
+                    component: if self.memory.has_been_seen(ZoneLevel::from(pos)) {
                         LastSeen::Previously
                     } else {
                         LastSeen::Never
@@ -212,8 +213,8 @@ impl<'w, 's> TileSpawner<'w, 's> {
                 .spawn_bundle(SpatialBundle::default())
                 .insert(zone_level)
                 .id();
-            let base = map.submaps[0].coordinates;
-            for submap in &map.submaps {
+            let base = map.0[0].coordinates;
+            for submap in &map.0 {
                 assert!(base.2 == submap.coordinates.2);
                 self.spawn_subzone(
                     submap,
@@ -239,17 +240,15 @@ impl<'w, 's> TileSpawner<'w, 's> {
         zone_level: ZoneLevel,
         subzone_offset: Pos,
     ) {
+        let base_pos = zone_level.base_pos().offset(subzone_offset).unwrap();
+        let terrain = submap.terrain.load_as_subzone(base_pos);
+
         for x in 0..12 {
             for z in 0..12 {
-                let pos = zone_level
-                    .base_pos()
-                    .offset(subzone_offset)
-                    .unwrap()
-                    .offset(Pos::new(x, Level::ZERO, z))
-                    .unwrap();
-                let tile_name = &submap.terrain[(x + 12 * z) as usize];
-                if tile_name != &ObjectName::new("t_open_air")
-                    && tile_name != &ObjectName::new("t_open_air_rooved")
+                let pos = base_pos.offset(Pos::new(x, Level::ZERO, z)).unwrap();
+                let tile_name = terrain.get(&pos).unwrap();
+                if tile_name != &&ObjectName::new("t_open_air")
+                    && tile_name != &&ObjectName::new("t_open_air_rooved")
                 {
                     self.spawn_tile(
                         parent_entity,
@@ -330,19 +329,10 @@ impl<'w, 's> TileSpawner<'w, 's> {
     }
 
     pub fn spawn_zones_around(&mut self, center: Zone) {
-        for x in -50..=50 {
-            for z in -50..=50 {
+        let distance = 100;
+        for x in -distance..=distance {
+            for z in -distance..=distance {
                 let zone = center.offset(x, z);
-                /*let zone_entity = self
-                .commands
-                .spawn_bundle(SpatialBundle::default())
-                .insert(Label::new(format!("{:?}", zone)))
-                .insert(Transform {
-                    translation: zone.zone_level(Level::ZERO).base_pos().vec3(),
-                    ..Transform::default()
-                })
-                .id();*/
-
                 for level in Level::ALL {
                     let zone_level = zone.zone_level(level);
                     if let Some(name) = self.zone_level_names.get(zone_level) {
@@ -383,6 +373,11 @@ impl<'w, 's> TileSpawner<'w, 's> {
                 translation: zone_level.base_pos().vec3() + Vec3::new(11.5, 0.0, 11.5),
                 scale: Vec3::splat(24.0),
                 ..Transform::default()
+            })
+            .insert(if self.memory.has_been_seen(zone_level) {
+                LastSeen::Previously
+            } else {
+                LastSeen::Never
             })
             .with_children(|child_builder| {
                 for pbr_bundle in pbr_bundles {

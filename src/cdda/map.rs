@@ -1,16 +1,15 @@
-use crate::prelude::{ObjectName, Pos, ZoneLevel};
+use crate::prelude::{ObjectName, Pos, Repetition, RepetitionBlock, ZoneLevel};
 use bevy::utils::HashMap;
 use serde::de::{Deserializer, SeqAccess, Visitor};
 use serde::Deserialize;
-use std::fs::read_to_string;
+use std::{fmt, fs::read_to_string};
 
 // Reference: https://github.com/CleverRaven/Cataclysm-DDA/blob/master/src/savegame_json.cpp
 
 /** Corresponds to a 'map' in CDDA. It defines the layout of a `ZoneLevel`. */
-#[derive(Debug)]
-pub struct Map {
-    pub submaps: Vec<Submap>,
-}
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Map(pub Vec<Submap>);
 
 impl TryFrom<ZoneLevel> for Map {
     type Error = ();
@@ -30,9 +29,7 @@ impl TryFrom<ZoneLevel> for Map {
                 println!("Found map: {filepath}");
                 s
             })
-            .map(|s| Self {
-                submaps: serde_json::from_str(s.as_str()).unwrap(),
-            })
+            .map(|s| serde_json::from_str::<Self>(s.as_str()).unwrap())
             .ok_or(())
     }
 }
@@ -45,9 +42,7 @@ pub struct Submap {
     pub turn_last_touched: u64,
     pub temperature: i64,
     pub radiation: Vec<i64>,
-
-    #[serde(deserialize_with = "load_terrain")]
-    pub terrain: Vec<ObjectName>,
+    pub terrain: RepetitionBlock<ObjectName>,
 
     #[serde(deserialize_with = "load_at_tile_name")]
     pub furniture: Vec<At<ObjectName>>,
@@ -165,39 +160,6 @@ impl<T> At<T> {
     }
 }
 
-fn load_terrain<'de, D>(deserializer: D) -> Result<Vec<ObjectName>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    struct TerrainVisitor;
-
-    impl<'de> Visitor<'de> for TerrainVisitor {
-        type Value = Vec<ObjectName>;
-
-        fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-            formatter.write_str(
-                "a (mixed) sequence of strings and sequences containing [tile name, amount]",
-            )
-        }
-
-        fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
-        where
-            A: SeqAccess<'de>,
-        {
-            let mut result = Vec::new();
-            while let Some(element) = seq.next_element::<serde_json::Value>()? {
-                let repetition = Repetition::<ObjectName>::try_from(element).unwrap();
-                for _ in 0..repetition.amount {
-                    result.push(repetition.obj.clone());
-                }
-            }
-            Ok(result)
-        }
-    }
-
-    deserializer.deserialize_seq(TerrainVisitor)
-}
-
 fn load_at_tile_name<'de, D>(deserializer: D) -> Result<Vec<At<ObjectName>>, D::Error>
 where
     D: Deserializer<'de>,
@@ -252,18 +214,18 @@ impl JsonLoad for Vec<Repetition<CddaItem>> {
 
 struct AtVisitor<T>(std::marker::PhantomData<T>)
 where
-    T: JsonLoad + std::fmt::Debug;
+    T: JsonLoad + fmt::Debug;
 
-impl<T: JsonLoad + std::fmt::Debug> AtVisitor<T> {
+impl<T: JsonLoad + fmt::Debug> AtVisitor<T> {
     const fn new() -> Self {
         Self(std::marker::PhantomData)
     }
 }
 
-impl<'de, T: JsonLoad + std::fmt::Debug> Visitor<'de> for AtVisitor<T> {
+impl<'de, T: JsonLoad + fmt::Debug> Visitor<'de> for AtVisitor<T> {
     type Value = Vec<At<T>>;
 
-    fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         formatter.write_str("a sequence of sequences containing [x, y, tile name]")
     }
 
@@ -290,18 +252,18 @@ impl<'de, T: JsonLoad + std::fmt::Debug> Visitor<'de> for AtVisitor<T> {
 
 struct AtSeqVisitor<T>(std::marker::PhantomData<T>)
 where
-    T: JsonLoad + std::fmt::Debug;
+    T: JsonLoad + fmt::Debug;
 
-impl<T: JsonLoad + std::fmt::Debug> AtSeqVisitor<T> {
+impl<T: JsonLoad + fmt::Debug> AtSeqVisitor<T> {
     const fn new() -> Self {
         Self(std::marker::PhantomData)
     }
 }
 
-impl<'de, T: JsonLoad + std::fmt::Debug> Visitor<'de> for AtSeqVisitor<T> {
+impl<'de, T: JsonLoad + fmt::Debug> Visitor<'de> for AtSeqVisitor<T> {
     type Value = Vec<At<T>>;
 
-    fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         formatter.write_str("a sequence containing [x, y, [item, ...], x, y, [item, ...], ...]")
     }
 
@@ -334,25 +296,5 @@ impl<'de, T: JsonLoad + std::fmt::Debug> Visitor<'de> for AtSeqVisitor<T> {
             }
         }
         Ok(result)
-    }
-}
-
-#[derive(Debug, Deserialize)]
-pub struct Repetition<T> {
-    pub obj: T,
-    pub amount: u32,
-}
-
-impl<T> TryFrom<serde_json::Value> for Repetition<T>
-where
-    T: Clone + for<'de> Deserialize<'de>,
-{
-    type Error = serde_json::Error;
-
-    fn try_from(value: serde_json::Value) -> Result<Self, serde_json::Error> {
-        match value {
-            serde_json::Value::Array(_) => serde_json::from_value(value),
-            _ => serde_json::from_value::<T>(value).map(|obj| Self { obj, amount: 1 }),
-        }
     }
 }
