@@ -1,30 +1,21 @@
-use crate::prelude::*;
+use crate::prelude::{Level, Overzone, Pos, ZoneLevel};
 use bevy::utils::HashMap;
-use serde::de::{Deserializer, Error, SeqAccess, Visitor};
+use serde::de::Deserializer;
 use serde::Deserialize;
-use std::{fmt, hash::Hash, marker::PhantomData};
+use std::hash::Hash;
 
-#[derive(Debug)]
-pub(crate) struct Repetition<T> {
+#[derive(Debug, Deserialize)]
+pub(crate) struct Amount<T> {
     pub(crate) obj: T,
+
+    /// can be 1, should not be 0
     pub(crate) amount: u32,
 }
 
-impl<T> TryFrom<serde_json::Value> for Repetition<T>
-where
-    T: Clone + for<'de> Deserialize<'de>,
-{
-    type Error = serde_json::Error;
+#[derive(Debug)]
+pub(crate) struct Single<T>(Amount<T>);
 
-    fn try_from(value: serde_json::Value) -> Result<Self, serde_json::Error> {
-        match value {
-            serde_json::Value::Array(_) => serde_json::from_value(value),
-            _ => serde_json::from_value::<T>(value).map(|obj| Self { obj, amount: 1 }),
-        }
-    }
-}
-
-impl<'de, T> Deserialize<'de> for Repetition<T>
+impl<'de, T> Deserialize<'de> for Single<T>
 where
     T: Deserialize<'de>,
 {
@@ -32,63 +23,24 @@ where
     where
         D: Deserializer<'de>,
     {
-        deserializer.deserialize_any(RepetitionVisitor(PhantomData))
+        let obj: T = Deserialize::deserialize(deserializer)?;
+        Ok(Single(Amount { obj, amount: 1 }))
     }
 }
 
-struct RepetitionVisitor<T>(PhantomData<T>);
+#[derive(Debug, Deserialize)]
+#[serde(untagged)]
+pub(crate) enum Repetition<T> {
+    Single(Single<T>),
+    Multiple(Amount<T>),
+}
 
-impl<'de, T> Visitor<'de> for RepetitionVisitor<T>
-where
-    T: Deserialize<'de>,
-{
-    type Value = Repetition<T>;
-
-    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        formatter.write_str("item of [item, amount]")
-    }
-
-    fn visit_bool<E>(self, value: bool) -> Result<Repetition<T>, E>
-    where
-        E: Error,
-    {
-        Ok(Deserialize::deserialize(serde_json::Value::Bool(value))
-            .map(|obj| Repetition { obj, amount: 1 })
-            .unwrap())
-    }
-
-    fn visit_str<E>(self, value: &str) -> Result<Repetition<T>, E>
-    where
-        E: Error,
-    {
-        Ok(
-            Deserialize::deserialize(serde_json::Value::String(value.to_string()))
-                .map(|obj| Repetition { obj, amount: 1 })
-                .unwrap(),
-        )
-    }
-
-    fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
-    where
-        A: SeqAccess<'de>,
-    {
-        let mut obj = None;
-        let mut amount = None;
-        while let Some(element) = seq.next_element::<serde_json::Value>()? {
-            assert!(amount == None);
-            match obj {
-                None => {
-                    obj = Some(Deserialize::deserialize(element).unwrap());
-                }
-                Some(_) => {
-                    amount = Some(Deserialize::deserialize(element).unwrap());
-                }
-            }
+impl<T> Repetition<T> {
+    pub(crate) fn as_amount(&self) -> &Amount<T> {
+        match self {
+            Self::Single(m) => &m.0,
+            Self::Multiple(m) => m,
         }
-        Ok(Repetition {
-            obj: obj.unwrap(),
-            amount: amount.unwrap(),
-        })
     }
 }
 
@@ -146,12 +98,10 @@ impl<T> RepetitionBlock<T> {
         let mut result = HashMap::new();
         let mut i: i32 = 0;
         for repetition in &self.0 {
-            let amount = repetition.amount as i32;
+            let Amount { obj, amount } = repetition.as_amount();
+            let amount = *amount as i32;
             for j in i..i + amount {
-                result.insert(
-                    location(j.rem_euclid(size), j.div_euclid(size)),
-                    &repetition.obj,
-                );
+                result.insert(location(j.rem_euclid(size), j.div_euclid(size)), obj);
             }
             i += amount;
         }

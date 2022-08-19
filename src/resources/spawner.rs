@@ -277,11 +277,12 @@ impl<'w, 's> TileSpawner<'w, 's> {
 
                 for repetitions in submap
                     .items
+                    .0
                     .iter()
                     .filter_map(|at| at.get(Pos::new(x, Level::ZERO, z)))
                 {
                     for repetition in repetitions {
-                        let Repetition { obj: item, amount } = repetition;
+                        let Amount { obj: item, amount } = repetition.as_amount();
                         self.spawn_tile(
                             parent_entity,
                             pos,
@@ -312,6 +313,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
 
                 for field in submap
                     .fields
+                    .0
                     .iter()
                     .filter_map(|at| at.get(Pos::new(x, Level::ZERO, z)))
                 {

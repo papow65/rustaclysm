@@ -1,8 +1,7 @@
-use crate::prelude::{ObjectName, Pos, Repetition, RepetitionBlock, ZoneLevel};
+use crate::prelude::{At, AtVec, ObjectName, Repetition, RepetitionBlock, ZoneLevel};
 use bevy::utils::HashMap;
-use serde::de::{Deserializer, SeqAccess, Visitor};
 use serde::Deserialize;
-use std::{fmt, fs::read_to_string};
+use std::fs::read_to_string;
 
 // Reference: https://github.com/CleverRaven/Cataclysm-DDA/blob/master/src/savegame_json.cpp
 
@@ -29,7 +28,8 @@ impl TryFrom<ZoneLevel> for Map {
                 println!("Found map: {filepath}");
                 s
             })
-            .map(|s| serde_json::from_str::<Self>(s.as_str()).unwrap())
+            .map(|s| serde_json::from_str::<Self>(s.as_str()))
+            .map(|r| r.map_err(|e| println!("{e}")).unwrap())
             .ok_or(())
     }
 }
@@ -51,19 +51,13 @@ pub(crate) struct Submap {
     pub(crate) radiation: Vec<i64>,
 
     pub(crate) terrain: RepetitionBlock<ObjectName>,
-
-    #[serde(deserialize_with = "load_at_tile_name")]
     pub(crate) furniture: Vec<At<ObjectName>>,
-
-    #[serde(deserialize_with = "load_items")]
-    pub(crate) items: Vec<At<Vec<Repetition<CddaItem>>>>,
+    pub(crate) items: AtVec<Vec<Repetition<CddaItem>>>,
 
     #[allow(unused)]
-    #[serde(deserialize_with = "load_at_tile_name")]
-    pub(crate) traps: Vec<At<ObjectName>>,
+    pub(crate) traps: AtVec<ObjectName>,
 
-    #[serde(deserialize_with = "load_at_field")]
-    pub(crate) fields: Vec<At<Field>>,
+    pub(crate) fields: AtVec<Field>,
 
     #[allow(unused)]
     pub(crate) cosmetics: Vec<(u8, u8, String, String)>,
@@ -87,7 +81,7 @@ pub(crate) struct Furniture {
 }
 
 #[allow(unused)]
-#[derive(Debug)]
+#[derive(Debug, Deserialize)]
 pub(crate) struct Field {
     pub(crate) tile_name: ObjectName,
     intensity: i32,
@@ -159,160 +153,4 @@ pub(crate) struct Spawn {
     mission_id: i32,
     pub(crate) friendly: bool,
     pub(crate) name: Option<String>,
-}
-
-#[derive(Debug)]
-pub(crate) struct At<T> {
-    x: u8,
-    y: u8,
-    obj: T,
-}
-
-impl<T> At<T> {
-    pub(crate) const fn get(&self, relative_pos: Pos) -> Option<&T> {
-        if relative_pos.x as u8 == self.x && relative_pos.z as u8 == self.y {
-            Some(&self.obj)
-        } else {
-            None
-        }
-    }
-}
-
-fn load_at_tile_name<'de, D>(deserializer: D) -> Result<Vec<At<ObjectName>>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    deserializer.deserialize_seq(AtVisitor::<ObjectName>::new())
-}
-
-fn load_at_field<'de, D>(deserializer: D) -> Result<Vec<At<Field>>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    deserializer.deserialize_seq(AtSeqVisitor::<Field>::new())
-}
-
-fn load_items<'de, D>(deserializer: D) -> Result<Vec<At<Vec<Repetition<CddaItem>>>>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    deserializer.deserialize_seq(AtSeqVisitor::<Vec<Repetition<CddaItem>>>::new())
-}
-
-trait JsonLoad {
-    fn load(json: &serde_json::Value) -> Self;
-}
-
-impl JsonLoad for Field {
-    fn load(json: &serde_json::Value) -> Self {
-        let list = json.as_array().unwrap();
-        Self {
-            tile_name: ObjectName::load(&list[0]),
-            intensity: list[1].as_i64().unwrap() as i32,
-            age: list[2].as_u64().unwrap(),
-        }
-    }
-}
-
-impl JsonLoad for ObjectName {
-    fn load(json: &serde_json::Value) -> Self {
-        Self::new(json.as_str().unwrap())
-    }
-}
-
-impl JsonLoad for Vec<Repetition<CddaItem>> {
-    fn load(json: &serde_json::Value) -> Self {
-        let mut vec = Self::new();
-        for element in json.as_array().unwrap() {
-            vec.push(Repetition::try_from(element.clone()).unwrap());
-        }
-        vec
-    }
-}
-
-struct AtVisitor<T>(std::marker::PhantomData<T>)
-where
-    T: JsonLoad + fmt::Debug;
-
-impl<T: JsonLoad + fmt::Debug> AtVisitor<T> {
-    const fn new() -> Self {
-        Self(std::marker::PhantomData)
-    }
-}
-
-impl<'de, T: JsonLoad + fmt::Debug> Visitor<'de> for AtVisitor<T> {
-    type Value = Vec<At<T>>;
-
-    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        formatter.write_str("a sequence of sequences containing [x, y, tile name]")
-    }
-
-    fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
-    where
-        A: SeqAccess<'de>,
-    {
-        let mut result: Vec<At<T>> = Vec::new();
-        while let Some(element) = seq.next_element::<serde_json::Value>()? {
-            match element {
-                serde_json::Value::Array(list) => {
-                    result.push(At::<T> {
-                        x: list[0].as_u64().unwrap() as u8,
-                        y: list[1].as_u64().unwrap() as u8,
-                        obj: T::load(&list[2]),
-                    });
-                }
-                _ => panic!("{result:?} - {element:?}"),
-            }
-        }
-        Ok(result)
-    }
-}
-
-struct AtSeqVisitor<T>(std::marker::PhantomData<T>)
-where
-    T: JsonLoad + fmt::Debug;
-
-impl<T: JsonLoad + fmt::Debug> AtSeqVisitor<T> {
-    const fn new() -> Self {
-        Self(std::marker::PhantomData)
-    }
-}
-
-impl<'de, T: JsonLoad + fmt::Debug> Visitor<'de> for AtSeqVisitor<T> {
-    type Value = Vec<At<T>>;
-
-    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        formatter.write_str("a sequence containing [x, y, [item, ...], x, y, [item, ...], ...]")
-    }
-
-    fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
-    where
-        A: SeqAccess<'de>,
-    {
-        let mut result: Vec<At<T>> = Vec::new();
-        let mut x = None;
-        let mut y = None;
-        while let Some(element) = seq.next_element::<serde_json::Value>()? {
-            match element {
-                serde_json::Value::Number(n) => {
-                    if x.is_none() {
-                        x = Some(n.as_u64().unwrap() as u8);
-                    } else {
-                        y = Some(n.as_u64().unwrap() as u8);
-                    }
-                }
-                element @ serde_json::Value::Array(_) => {
-                    result.push(At::<T> {
-                        x: x.unwrap(),
-                        y: y.unwrap(),
-                        obj: T::load(&element),
-                    });
-                    x = None;
-                    y = None;
-                }
-                _ => panic!("{element:?}"),
-            }
-        }
-        Ok(result)
-    }
 }
