@@ -1,4 +1,4 @@
-use crate::prelude::{At, AtVec, ObjectName, Repetition, RepetitionBlock, ZoneLevel};
+use crate::prelude::{At, AtVec, FieldVec, ObjectName, Repetition, RepetitionBlock, ZoneLevel};
 use bevy::utils::HashMap;
 use serde::Deserialize;
 use std::fs::read_to_string;
@@ -57,7 +57,7 @@ pub(crate) struct Submap {
     #[allow(unused)]
     pub(crate) traps: AtVec<ObjectName>,
 
-    pub(crate) fields: AtVec<Field>,
+    pub(crate) fields: AtVec<FieldVec>,
 
     #[allow(unused)]
     pub(crate) cosmetics: Vec<(u8, u8, String, String)>,
@@ -78,14 +78,6 @@ pub(crate) struct Submap {
 #[derive(Debug)]
 pub(crate) struct Furniture {
     tile_name: ObjectName,
-}
-
-#[allow(unused)]
-#[derive(Debug, Deserialize)]
-pub(crate) struct Field {
-    pub(crate) tile_name: ObjectName,
-    intensity: i32,
-    age: u64,
 }
 
 #[allow(unused)]

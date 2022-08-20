@@ -311,20 +311,22 @@ impl<'w, 's> TileSpawner<'w, 's> {
                     );
                 }
 
-                for field in submap
+                for fields in submap
                     .fields
                     .0
                     .iter()
                     .filter_map(|at| at.get(Pos::new(x, Level::ZERO, z)))
                 {
-                    self.spawn_tile(
-                        parent_entity,
-                        pos,
-                        ObjectDefinition {
-                            name: &field.tile_name,
-                            specifier: ObjectSpecifier::Terrain,
-                        },
-                    );
+                    for field in &fields.0 {
+                        self.spawn_tile(
+                            parent_entity,
+                            pos,
+                            ObjectDefinition {
+                                name: &field.tile_name,
+                                specifier: ObjectSpecifier::Terrain,
+                            },
+                        );
+                    }
                 }
             }
         }

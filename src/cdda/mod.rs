@@ -1,4 +1,6 @@
 mod at;
+mod field;
+mod flat_vec;
 mod map;
 mod memory;
 mod overmap;
@@ -7,5 +9,6 @@ mod repitition;
 mod tile_loader;
 
 pub(crate) use self::{
-    at::*, map::*, memory::*, overmap::*, overmap_buffer::*, repitition::*, tile_loader::*,
+    at::*, field::*, flat_vec::*, map::*, memory::*, overmap::*, overmap_buffer::*, repitition::*,
+    tile_loader::*,
 };
