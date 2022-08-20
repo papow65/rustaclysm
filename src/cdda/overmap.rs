@@ -1,6 +1,18 @@
-use crate::prelude::{Level, ObjectName, Overzone, RepetitionBlock};
+use crate::prelude::{Level, ObjectName, Overzone, PathFor, RepetitionBlock, WorldPath};
 use serde::Deserialize;
 use std::fs::read_to_string;
+
+pub(crate) type OvermapPath = PathFor<Overmap>;
+
+impl OvermapPath {
+    pub(crate) fn new(world_path: &WorldPath, overzone: Overzone) -> Self {
+        Self::init(
+            world_path
+                .0
+                .join(format!("o.{}.{}", overzone.x, overzone.z)),
+        )
+    }
+}
 
 /** Corresponds to an 'overmap' in CDDA. It defines the layout of 180x180 `Zone`s. */
 #[allow(unused)]
@@ -25,12 +37,11 @@ pub(crate) struct Overmap {
     predecessors: Option<serde_json::Value>,
 }
 
-impl TryFrom<Overzone> for Overmap {
+impl TryFrom<&OvermapPath> for Overmap {
     type Error = ();
-    fn try_from(overzone: Overzone) -> Result<Self, ()> {
-        let filepath = format!("assets/save/o.{}.{}", overzone.x, overzone.z);
+    fn try_from(overmap_path: &OvermapPath) -> Result<Self, ()> {
         //println!("Path: {filepath}");
-        read_to_string(&filepath)
+        read_to_string(&overmap_path.0)
             .ok()
             .map(|s| s.split_at(s.find('\n').unwrap()).1.to_string())
             .map(|s| serde_json::from_str(s.as_str()).unwrap())

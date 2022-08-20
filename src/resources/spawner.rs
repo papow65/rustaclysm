@@ -22,6 +22,7 @@ pub(crate) struct TileSpawner<'w, 's> {
     caches: ResMut<'w, TileCaches>,
     zone_level_names: ResMut<'w, ZoneLevelNames>,
     memory: ResMut<'w, Memory>,
+    paths: Res<'w, Paths>,
 }
 
 impl<'w, 's> TileSpawner<'w, 's> {
@@ -207,7 +208,8 @@ impl<'w, 's> TileSpawner<'w, 's> {
     }
 
     pub(crate) fn spawn_expanded_zone_level(&mut self, zone_level: ZoneLevel) -> Result<(), ()> {
-        if let Ok(map) = Map::try_from(zone_level) {
+        let map_path = MapPath::new(&self.paths.world_path(), zone_level);
+        if let Ok(map) = Map::try_from(map_path) {
             let zone_level_entity = self
                 .commands
                 .spawn_bundle(SpatialBundle::default())

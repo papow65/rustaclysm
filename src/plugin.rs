@@ -18,20 +18,16 @@ impl Plugin for RustaclysmPlugin {
             })
             .insert_resource(Location::default())
             .insert_resource(InstructionQueue::default())
-            .insert_resource(Memory::default())
             .insert_resource(RelativeRays::new())
             .insert_resource(TileCaches::default())
-            .insert_resource(Timeouts::default())
-            .insert_resource(ZoneLevelNames::default());
+            .insert_resource(Timeouts::default());
 
         // executed once at startup
         app.add_startup_system_to_stage(StartupStage::PreStartup, maximize_window)
-            .add_startup_system_to_stage(StartupStage::PreStartup, create_custom_data)
-            .add_startup_system_to_stage(StartupStage::PreStartup, create_tiles)
+            .add_startup_system_to_stage(StartupStage::PreStartup, create_secondairy_resources)
             .add_startup_system(spawn_hud)
             .add_startup_system(spawn_initial_entities)
-            .add_startup_system_set_to_stage(StartupStage::PostStartup, update_systems())
-            .add_startup_system_to_stage(StartupStage::PostStartup, spawn_nearby_overzones);
+            .add_startup_system_set_to_stage(StartupStage::PostStartup, update_systems());
 
         // executed every frame
         app.add_system_to_stage(CoreStage::PreUpdate, spawn_nearby_overzones)

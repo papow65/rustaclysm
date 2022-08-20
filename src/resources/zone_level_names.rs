@@ -1,16 +1,26 @@
 use crate::prelude::*;
 use bevy::utils::HashMap;
 
-#[derive(Default)]
-pub(crate) struct ZoneLevelNames(HashMap<ZoneLevel, ObjectName>);
+pub(crate) struct ZoneLevelNames {
+    world_path: WorldPath,
+    names: HashMap<ZoneLevel, ObjectName>,
+}
 
 impl ZoneLevelNames {
+    pub(crate) fn new(world_path: WorldPath) -> Self {
+        Self {
+            world_path,
+            names: HashMap::default(),
+        }
+    }
+
     pub(crate) fn get(&mut self, zone_level: ZoneLevel) -> Option<&ObjectName> {
-        if !self.0.contains_key(&zone_level) {
+        if !self.names.contains_key(&zone_level) {
             let overzone = Overzone::from(Zone::from(zone_level));
-            if let Ok(overmap) = Overmap::try_from(overzone) {
+            let overmap_path = OvermapPath::new(&self.world_path, overzone);
+            if let Ok(overmap) = Overmap::try_from(&overmap_path) {
                 for level in Level::ALL {
-                    self.0.extend(
+                    self.names.extend(
                         overmap.layers[level.index()]
                             .0
                             .load_as_overzone(overzone, level)
@@ -20,6 +30,6 @@ impl ZoneLevelNames {
                 }
             }
         }
-        self.0.get(&zone_level)
+        self.names.get(&zone_level)
     }
 }

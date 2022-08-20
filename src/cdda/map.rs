@@ -1,7 +1,31 @@
-use crate::prelude::{At, AtVec, FieldVec, ObjectName, Repetition, RepetitionBlock, ZoneLevel};
+use crate::prelude::{
+    At, AtVec, FieldVec, ObjectName, PathFor, Repetition, RepetitionBlock, WorldPath, ZoneLevel,
+};
 use bevy::utils::HashMap;
 use serde::Deserialize;
 use std::fs::read_to_string;
+
+pub(crate) type MapPath = PathFor<Map>;
+
+impl MapPath {
+    pub(crate) fn new(world_path: &WorldPath, zone_level: ZoneLevel) -> Self {
+        Self::init(
+            world_path
+                .0
+                .join("maps")
+                .join(format!(
+                    "{}.{}.{}",
+                    zone_level.x.div_euclid(32),
+                    zone_level.z.div_euclid(32),
+                    zone_level.level.h,
+                ))
+                .join(format!(
+                    "{}.{}.{}.map",
+                    zone_level.x, zone_level.z, zone_level.level.h
+                )),
+        )
+    }
+}
 
 // Reference: https://github.com/CleverRaven/Cataclysm-DDA/blob/master/src/savegame_json.cpp
 
@@ -10,22 +34,13 @@ use std::fs::read_to_string;
 #[serde(deny_unknown_fields)]
 pub(crate) struct Map(pub(crate) Vec<Submap>);
 
-impl TryFrom<ZoneLevel> for Map {
+impl TryFrom<MapPath> for Map {
     type Error = ();
-    fn try_from(zone_level: ZoneLevel) -> Result<Self, ()> {
-        let filepath = format!(
-            "assets/save/maps/{}.{}.{}/{}.{}.{}.map",
-            zone_level.x.div_euclid(32),
-            zone_level.z.div_euclid(32),
-            zone_level.level.h,
-            zone_level.x,
-            zone_level.z,
-            zone_level.level.h
-        );
-        read_to_string(&filepath)
+    fn try_from(map_path: MapPath) -> Result<Self, ()> {
+        read_to_string(&map_path.0)
             .ok()
             .map(|s| {
-                println!("Found map: {filepath}");
+                println!("Found map: {}", map_path.0.display());
                 s
             })
             .map(|s| serde_json::from_str::<Self>(s.as_str()))

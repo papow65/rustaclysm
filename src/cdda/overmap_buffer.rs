@@ -2,6 +2,16 @@ use crate::prelude::*;
 use serde::Deserialize;
 use std::fs::read_to_string;
 
+pub(crate) type OvermapBufferPath = PathFor<OvermapBuffer>;
+
+impl OvermapBufferPath {
+    pub(crate) fn new(sav_path: &SavPath, overzone: Overzone) -> Self {
+        let mut seen_path = sav_path.0.clone();
+        seen_path.set_extension(format!("seen.{}.{}", overzone.x, overzone.z));
+        Self::init(seen_path)
+    }
+}
+
 /** Corresponds to an 'overmapbuffer' in CDDA. It defines the save-specific information of a `Zone`. */
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -20,18 +30,13 @@ pub(crate) struct OvermapBuffer {
     pub(crate) extras: Vec<serde_json::Value>,
 }
 
-impl TryFrom<Overzone> for OvermapBuffer {
-    type Error = ();
-    fn try_from(overzone: Overzone) -> Result<Self, ()> {
-        let filepath = format!("assets/save/#VGFsZG9y.seen.{}.{}", overzone.x, overzone.z,);
-        read_to_string(&filepath)
-            .ok()
-            .map(|s| {
-                println!("Found overmap buffer: {filepath}");
-                s
-            })
-            .map(|s| s.split_at(s.find('\n').unwrap()).1.to_string())
-            .map(|s| serde_json::from_str::<Self>(s.as_str()).unwrap())
-            .ok_or(())
+impl TryFrom<OvermapBufferPath> for OvermapBuffer {
+    type Error = serde_json::Error;
+    fn try_from(overmap_buffer_path: OvermapBufferPath) -> Result<Self, Self::Error> {
+        let file_contents =
+            read_to_string(&overmap_buffer_path.0).expect("Overmap buffer file not found");
+        println!("Found overmap buffer: {}", overmap_buffer_path.0.display());
+        let from_second_line = file_contents.split_at(file_contents.find('\n').unwrap()).1;
+        serde_json::from_str::<Self>(from_second_line)
     }
 }

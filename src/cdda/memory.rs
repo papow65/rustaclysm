@@ -1,22 +1,31 @@
 use crate::prelude::*;
 use bevy::utils::HashMap;
 
-#[derive(Default)]
 pub(crate) struct Memory {
+    sav_path: SavPath,
     explored: HashMap<ZoneLevel, bool>,
 }
 
 impl Memory {
+    pub(crate) fn new(sav_path: SavPath) -> Self {
+        Self {
+            sav_path,
+            explored: HashMap::default(),
+        }
+    }
+
     pub(crate) fn has_been_seen(&mut self, zone_level: ZoneLevel) -> bool {
         if !self.explored.contains_key(&zone_level) {
             let overzone = Overzone::from(Zone::from(zone_level));
-            let buffer = OvermapBuffer::try_from(overzone).unwrap();
+            let overmap_buffer_path = OvermapBufferPath::new(&self.sav_path, overzone);
+            let buffer =
+                OvermapBuffer::try_from(overmap_buffer_path).expect("Failed loading overzone");
             for level in Level::ALL {
                 self.explored.extend(
                     buffer
                         .visible
                         .get(level.index())
-                        .unwrap()
+                        .expect("level missing")
                         .load_as_overzone(overzone, level)
                         .iter()
                         .map(|(k, v)| (*k, *(*v))),
