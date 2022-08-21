@@ -204,6 +204,10 @@ impl<'w, 's> TileSpawner<'w, 's> {
                                 entity: tile,
                                 component: Hurdle(1.5),
                             });
+                            child_builder.add_command(Insert {
+                                entity: tile,
+                                component: Integrity::new(10),
+                            });
                         }
                     }
                 }

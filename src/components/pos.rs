@@ -109,11 +109,12 @@ impl HorizontalNborOffset {
 pub(crate) enum Nbor {
     Up,
     Horizontal(HorizontalNborOffset),
+    Here,
     Down,
 }
 
 impl Nbor {
-    pub(crate) const ALL: [Self; 10] = [
+    pub(crate) const ALL: [Self; 11] = [
         Self::Up,
         Self::Horizontal(HorizontalNborOffset { x: 1, z: 0 }),
         Self::Horizontal(HorizontalNborOffset { x: 1, z: 1 }),
@@ -123,6 +124,7 @@ impl Nbor {
         Self::Horizontal(HorizontalNborOffset { x: -1, z: -1 }),
         Self::Horizontal(HorizontalNborOffset { x: 0, z: -1 }),
         Self::Horizontal(HorizontalNborOffset { x: 1, z: -1 }),
+        Self::Here,
         Self::Down,
     ];
 

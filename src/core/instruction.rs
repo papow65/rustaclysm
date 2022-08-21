@@ -21,6 +21,7 @@ impl Direction {
         match self {
             Self::Above => Nbor::Up,
             Self::Below => Nbor::Down,
+            Self::Here => Nbor::Here,
             _ => Nbor::try_horizontal(
                 match self {
                     Self::CloserLeft | Self::Closer | Self::CloserRight => -1,
@@ -33,7 +34,7 @@ impl Direction {
                     _ => 0,
                 },
             )
-            .unwrap(),
+            .unwrap_or_else(|| panic!("{self:?} should have a matching nbor")),
         }
     }
 }

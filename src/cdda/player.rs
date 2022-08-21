@@ -139,6 +139,8 @@ pub(crate) struct CddaPlayer {
     pub(crate) values: serde_json::Value,
     pub(crate) vitamin_levels: serde_json::Value,*/
     pub(crate) worn: serde_json::Value,
+
+    // To prevent a linking eror when there Too many fields to deserialize
     #[serde(flatten)]
     pub(crate) extra: HashMap<String, serde_json::Value>,
 }
