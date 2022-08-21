@@ -19,8 +19,7 @@ impl Plugin for RustaclysmPlugin {
             .insert_resource(Location::default())
             .insert_resource(InstructionQueue::default())
             .insert_resource(RelativeRays::new())
-            .insert_resource(TileCaches::default())
-            .insert_resource(Timeouts::default());
+            .insert_resource(TileCaches::default());
 
         // executed once at startup
         app.add_startup_system_to_stage(StartupStage::PreStartup, maximize_window)

@@ -46,13 +46,18 @@ pub(crate) fn spawn_nearby_zones(
                 if !location.exists(nearby_zone.zone_level(Level::ZERO).base_pos()) {
                     for y in Level::ALL {
                         let zone_level = nearby_zone.zone_level(y);
-                        if tile_spawner.spawn_expanded_zone_level(zone_level).is_ok() {
-                            set_collapsed_zone_level_visibility(
-                                &mut commands,
-                                &collapsed_zone_levels,
-                                zone_level,
-                                false,
-                            );
+                        match tile_spawner.spawn_expanded_zone_level(zone_level) {
+                            Ok(()) => {
+                                set_collapsed_zone_level_visibility(
+                                    &mut commands,
+                                    &collapsed_zone_levels,
+                                    zone_level,
+                                    false,
+                                );
+                            }
+                            Err(e) => {
+                                eprintln!("{e}");
+                            }
                         }
                     }
                 }

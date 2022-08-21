@@ -3,6 +3,7 @@ use crate::prelude::*;
 use bevy::diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin};
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
+use chrono::prelude::{Datelike, Local};
 use std::collections::BTreeMap;
 use std::time::Instant;
 
@@ -182,14 +183,28 @@ pub(crate) fn update_status_time(
 ) {
     let start = Instant::now();
 
+    let season_length = 91; // TODO look up
+
     let tenth_seconds = timeouts.time().0 / 100;
     let seconds = tenth_seconds / 10;
-    let minutes = seconds / 10;
+    let minutes = seconds / 60;
     let hours = minutes / 60;
+    let days = hours / 24;
+    let seasons = days / season_length;
+    let years = seasons / 4;
 
     status_displays.iter_mut().next().unwrap().sections[1].value = format!(
-        "{:#02}:{:#02}:{:#02}.{}\n",
-        hours,
+        "{:#04}-{}-{:#02} {:#02}:{:#02}:{:#02}.{}\n",
+        years + Local::now().year() as u64 + 1, // based on https://cataclysmdda.org/lore-background.html
+        match seasons % 4 {
+            0 => "Spring",
+            1 => "Summer",
+            2 => "Autumn",
+            3 => "Winter",
+            _ => panic!("Modulo error"),
+        },
+        days % season_length + 1, // 1-based
+        hours % 24,
         minutes % 60,
         seconds % 60,
         tenth_seconds % 10

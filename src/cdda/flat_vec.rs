@@ -39,7 +39,9 @@ where
             let mut fields = [(); N].map(|_| serde_json::Value::default());
             fields[0] = element;
             for field in fields.iter_mut().take(N).skip(1) {
-                *field = seq.next_element::<serde_json::Value>()?.unwrap();
+                *field = seq.next_element::<serde_json::Value>()?.ok_or_else(|| {
+                    A::Error::custom("Missing value(s) at the end of the sequence".to_string())
+                })?;
             }
             result.push(
                 serde_json::from_value(serde_json::Value::Array(Vec::from(fields))).map_err(

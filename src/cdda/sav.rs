@@ -4,43 +4,86 @@ use std::fs::read_to_string;
 
 pub(crate) type SavPath = PathFor<Sav>;
 
-/// This represents a sav-file
-#[allow(unused)]
+/// This represents a .sav file
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct Sav {
+    #[allow(unused)]
     achievements_tracker: serde_json::Value,
+
+    #[allow(unused)]
     active_monsters: serde_json::Value,
+
+    #[allow(unused)]
     auto_travel_mode: serde_json::Value,
 
+    #[allow(unused)]
     #[serde(rename(deserialize = "bVMonsterLookFire"))]
     b_v_monster_look_fire: serde_json::Value,
 
-    calendar_start: serde_json::Value,
+    #[allow(unused)]
+    pub(crate) calendar_start: u64,
+
+    #[allow(unused)]
+    pub(crate) game_start: u64,
+
+    pub(crate) turn: u64,
+
+    #[allow(unused)]
     driving_view_offset: serde_json::Value,
-    game_start: serde_json::Value,
+
+    #[allow(unused)]
     global_vals: serde_json::Value,
+
+    #[allow(unused)]
     grscent: serde_json::Value,
+
+    #[allow(unused)]
     inactive_global_effect_on_condition_vector: serde_json::Value,
+
+    #[allow(unused)]
     initial_season: serde_json::Value,
+
+    #[allow(unused)]
     kill_tracker: serde_json::Value,
-    levx: serde_json::Value,
-    levy: serde_json::Value,
-    levz: serde_json::Value,
+
+    pub(crate) om_x: i16,
+    pub(crate) om_y: i16,
+
+    pub(crate) levx: i16,
+    pub(crate) levy: i16,
+    pub(crate) levz: i8,
+
+    #[allow(unused)]
     mostseen: serde_json::Value,
-    om_x: i16,
-    om_y: i16,
+
+    #[allow(unused)]
     player: serde_json::Value,
+
+    #[allow(unused)]
     player_messages: serde_json::Value,
+
+    #[allow(unused)]
     queued_global_effect_on_conditions: serde_json::Value,
+
+    #[allow(unused)]
     run_mode: serde_json::Value,
+
+    #[allow(unused)]
     stats_tracker: serde_json::Value,
-    turn: serde_json::Value,
+
+    #[allow(unused)]
     turnssincelastmon: serde_json::Value,
+
+    #[allow(unused)]
     typescent: serde_json::Value,
-    view_offset_x: serde_json::Value,
-    view_offset_y: serde_json::Value,
-    view_offset_z: serde_json::Value,
+
+    #[allow(unused)]
+    unique_npcs: Option<serde_json::Value>,
+
+    pub(crate) view_offset_x: serde_json::Value,
+    pub(crate) view_offset_y: serde_json::Value,
+    pub(crate) view_offset_z: serde_json::Value,
 }
 
 impl TryFrom<&SavPath> for Sav {

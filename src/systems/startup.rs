@@ -15,18 +15,35 @@ pub(crate) fn create_secondairy_resources(
     asset_server: Res<AssetServer>,
     paths: Res<Paths>,
 ) {
+    let sav = Sav::try_from(&paths.sav_path()).expect("Loading sav file failed");
+    let timouts = Timeouts::new(sav.turn);
+
     commands.insert_resource(CustomData::new(&mut materials, &mut meshes, &asset_server));
     commands.insert_resource(Memory::new(paths.sav_path()));
-    commands.insert_resource(Sav::try_from(&paths.sav_path()).expect("Loading sav file failed"));
+    commands.insert_resource(sav);
     commands.insert_resource(TileLoader::new(&asset_server));
+    commands.insert_resource(timouts);
     commands.insert_resource(ZoneLevelNames::new(paths.world_path()));
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn spawn_initial_entities(_sav: Res<Sav>, mut spawner: Spawner) {
+pub(crate) fn spawn_initial_entities(sav: Res<Sav>, mut spawner: Spawner) {
     spawner.spawn_light();
 
-    let offset = Zone { x: 12, z: 265 }.zone_level(Level::ZERO).base_pos();
+    let offset = Zone {
+        x: i32::from(sav.om_x) * 180 + i32::from(sav.levx) / 2,
+        z: i32::from(sav.om_y) * 180 + i32::from(sav.levy) / 2,
+    }
+    .zone_level(Level::new(sav.levz))
+    .base_pos()
+    .offset(Pos::new(
+        12 * (i32::from(sav.levx) % 2),
+        Level::ZERO,
+        12 * (i32::from(sav.levy) % 2),
+    ))
+    .unwrap()
+    .offset(Pos::new(24, Level::ZERO, 24)) // experimental
+    .unwrap();
     spawner.spawn_floors(offset);
     spawner.spawn_house(offset);
     spawner.spawn_characters(offset);

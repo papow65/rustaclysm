@@ -57,12 +57,19 @@ impl InstructionQueue {
     }
 }
 
-#[derive(Default)]
 pub(crate) struct Timeouts {
+    start: Milliseconds,
     m: HashMap<Entity, Milliseconds>,
 }
 
 impl Timeouts {
+    pub(crate) fn new(turn: u64) -> Self {
+        Self {
+            start: Milliseconds(1000 * turn),
+            m: HashMap::default(),
+        }
+    }
+
     pub(crate) fn add(&mut self, entity: Entity, timeout: Milliseconds) {
         self.m.get_mut(&entity).unwrap().0 += timeout.0;
     }
@@ -79,7 +86,7 @@ impl Timeouts {
     }
 
     pub(crate) fn time(&self) -> Milliseconds {
-        self.m.values().min().copied().unwrap_or(Milliseconds(0))
+        self.m.values().min().copied().unwrap_or(self.start)
     }
 }
 

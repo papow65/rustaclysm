@@ -34,18 +34,18 @@ impl MapPath {
 #[serde(deny_unknown_fields)]
 pub(crate) struct Map(pub(crate) Vec<Submap>);
 
-impl TryFrom<MapPath> for Map {
-    type Error = ();
-    fn try_from(map_path: MapPath) -> Result<Self, ()> {
+impl TryFrom<MapPath> for Option<Map> {
+    type Error = serde_json::Error;
+    fn try_from(map_path: MapPath) -> Result<Option<Map>, Self::Error> {
         read_to_string(&map_path.0)
             .ok()
             .map(|s| {
                 println!("Found map: {}", map_path.0.display());
                 s
             })
-            .map(|s| serde_json::from_str::<Self>(s.as_str()))
-            .map(|r| r.map_err(|e| println!("{e}")).unwrap())
-            .ok_or(())
+            .map_or(std::result::Result::Ok(Option::None), |s| {
+                serde_json::from_str::<Map>(s.as_str()).map(Some)
+            })
     }
 }
 

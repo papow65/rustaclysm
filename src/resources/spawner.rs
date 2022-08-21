@@ -207,9 +207,12 @@ impl<'w, 's> TileSpawner<'w, 's> {
         }
     }
 
-    pub(crate) fn spawn_expanded_zone_level(&mut self, zone_level: ZoneLevel) -> Result<(), ()> {
+    pub(crate) fn spawn_expanded_zone_level(
+        &mut self,
+        zone_level: ZoneLevel,
+    ) -> Result<(), serde_json::Error> {
         let map_path = MapPath::new(&self.paths.world_path(), zone_level);
-        if let Ok(map) = Map::try_from(map_path) {
+        if let Some(map) = Option::<Map>::try_from(map_path)? {
             let zone_level_entity = self
                 .commands
                 .spawn_bundle(SpatialBundle::default())
@@ -229,10 +232,8 @@ impl<'w, 's> TileSpawner<'w, 's> {
                     ),
                 );
             }
-            Ok(())
-        } else {
-            Err(())
         }
+        Ok(())
     }
 
     fn spawn_subzone(
