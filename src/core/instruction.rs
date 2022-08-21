@@ -1,4 +1,4 @@
-use crate::prelude::{Ctrl, Key, KeyCombo, Level, Pos, Shift};
+use crate::prelude::{Ctrl, Key, KeyCombo, Nbor, Shift};
 use bevy::prelude::KeyCode;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -17,24 +17,24 @@ pub(crate) enum Direction {
 }
 
 impl Direction {
-    pub(crate) const fn get_relative_pos(&self) -> Pos {
-        Pos::new(
-            match self {
-                Self::CloserLeft | Self::Closer | Self::CloserRight => -1,
-                Self::AwayLeft | Self::Away | Self::AwayRight => 1,
-                _ => 0,
-            },
-            Level::new(match self {
-                Self::Above => 1,
-                Self::Below => -1,
-                _ => 0,
-            }),
-            match self {
-                Self::CloserLeft | Self::Left | Self::AwayLeft => -1,
-                Self::CloserRight | Self::Right | Self::AwayRight => 1,
-                _ => 0,
-            },
-        )
+    pub(crate) fn to_nbor(self) -> Nbor {
+        match self {
+            Self::Above => Nbor::Up,
+            Self::Below => Nbor::Down,
+            _ => Nbor::try_horizontal(
+                match self {
+                    Self::CloserLeft | Self::Closer | Self::CloserRight => -1,
+                    Self::AwayLeft | Self::Away | Self::AwayRight => 1,
+                    _ => 0,
+                },
+                match self {
+                    Self::CloserLeft | Self::Left | Self::AwayLeft => -1,
+                    Self::CloserRight | Self::Right | Self::AwayRight => 1,
+                    _ => 0,
+                },
+            )
+            .unwrap(),
+        }
     }
 }
 

@@ -63,7 +63,7 @@ impl Player {
                 Err(Some(Message::warn("can't attack self")))
             }
             (PlayerActionState::ExaminingPos(curr), QueuedInstruction::Offset(direction)) => {
-                self.handle_offset(curr, direction)
+                self.handle_offset(envir, curr, direction)
             }
             (PlayerActionState::Normal, QueuedInstruction::Cancel) => {
                 Err(Some(Message::warn("Press ctrl+c/d/q to exit")))
@@ -76,7 +76,7 @@ impl Player {
                 self.state = PlayerActionState::Normal;
                 Err(None)
             }
-            (_, QueuedInstruction::Offset(offset)) => self.handle_offset(pos, offset),
+            (_, QueuedInstruction::Offset(offset)) => self.handle_offset(envir, pos, offset),
             (_, QueuedInstruction::Pickup) => Ok(Action::Pickup),
             (_, QueuedInstruction::Dump) => Ok(Action::Dump),
             (_, QueuedInstruction::Attack) => self.handle_attack(envir, pos),
@@ -96,12 +96,12 @@ impl Player {
 
     fn handle_offset(
         &mut self,
+        envir: &Envir,
         reference: Pos,
         direction: Direction,
     ) -> Result<Action, Option<Message>> {
         if let PlayerActionState::ExaminingZoneLevel(current) = self.state {
-            let Pos { x, level, z } = direction.get_relative_pos();
-            let target = current.offset(ZoneLevel { x, level, z });
+            let target = current.nbor(direction.to_nbor());
             if let Some(target) = target {
                 self.state = PlayerActionState::ExaminingZoneLevel(target);
                 return Ok(Action::ExamineZoneLevel { target });
@@ -110,7 +110,7 @@ impl Player {
             }
         }
 
-        let target = reference.offset(direction.get_relative_pos());
+        let target = envir.get_nbor(reference, &direction.to_nbor());
         if let Some(target) = target {
             Ok(match self.state {
                 PlayerActionState::Normal => Action::Step { target },

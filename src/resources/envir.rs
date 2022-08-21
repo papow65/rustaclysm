@@ -9,7 +9,8 @@ pub(crate) struct Envir<'w, 's> {
     pub(crate) location: ResMut<'w, Location>,
     relative_rays: Res<'w, RelativeRays>,
     floors: Query<'w, 's, &'static Floor>,
-    stairs: Query<'w, 's, &'static Stairs>,
+    stairs_up: Query<'w, 's, &'static StairsUp>,
+    stairs_down: Query<'w, 's, &'static StairsDown>,
     obstacles: Query<'w, 's, &'static Label, With<Obstacle>>,
     opaques: Query<'w, 's, &'static Label, With<Opaque>>,
     characters: Query<'w, 's, Entity, With<Health>>,
@@ -23,12 +24,79 @@ impl<'w, 's> Envir<'w, 's> {
         self.location.any(pos, &self.floors)
     }
 
-    pub(crate) fn has_stairs_up(&self, pos: Pos) -> bool {
-        self.location.has_stairs_up(pos, &self.stairs)
+    pub(crate) fn stairs_up_to(&self, pos: Pos) -> Option<Pos> {
+        if self.location.has_stairs_up(pos, &self.stairs_up) {
+            let zone_level_up = ZoneLevel::from(pos)
+                .offset(ZoneLevel {
+                    x: 0,
+                    level: Level::new(1),
+                    z: 0,
+                })
+                .unwrap();
+
+            for distance in 0..24i32 {
+                for dx in -distance..=distance {
+                    for dz in -distance..=distance {
+                        if dx.abs().max(dz.abs()) == distance {
+                            let test_up = pos
+                                .offset(Pos {
+                                    x: dx,
+                                    level: Level::new(1),
+                                    z: dz,
+                                })
+                                .unwrap();
+                            if ZoneLevel::from(test_up) == zone_level_up
+                                && self.location.has_stairs_down(test_up, &self.stairs_down)
+                            {
+                                return Some(test_up);
+                            }
+                        }
+                    }
+                }
+            }
+
+            panic!("No matching stairs down found");
+        } else {
+            None
+        }
     }
 
-    pub(crate) fn has_stairs_down(&self, pos: Pos) -> bool {
-        self.location.has_stairs_down(pos, &self.stairs)
+    pub(crate) fn stairs_down_to(&self, pos: Pos) -> Option<Pos> {
+        if self.location.has_stairs_down(pos, &self.stairs_down) {
+            let zone_level_down = ZoneLevel::from(pos)
+                .offset(ZoneLevel {
+                    x: 0,
+                    level: Level::new(-1),
+                    z: 0,
+                })
+                .unwrap();
+
+            // fast approach in most cases, otherwise fast enough
+            for distance in 0..Zone::SIZE as i32 {
+                for dx in -distance..=distance {
+                    for dz in -distance..=distance {
+                        if dx.abs().max(dz.abs()) == distance {
+                            let test_down = pos
+                                .offset(Pos {
+                                    x: dx,
+                                    level: Level::new(-1),
+                                    z: dz,
+                                })
+                                .unwrap();
+                            if ZoneLevel::from(test_down) == zone_level_down
+                                && self.location.has_stairs_up(test_down, &self.stairs_up)
+                            {
+                                return Some(test_down);
+                            }
+                        }
+                    }
+                }
+            }
+
+            panic!("No matching stairs up found");
+        } else {
+            None
+        }
     }
 
     pub(crate) fn find_obstacle(&self, pos: Pos) -> Option<Label> {
@@ -50,7 +118,7 @@ impl<'w, 's> Envir<'w, 's> {
     // helper methods
 
     pub(crate) fn can_see_down(&self, pos: Pos) -> bool {
-        !self.has_floor(pos) || self.has_stairs_down(pos)
+        !self.has_floor(pos) || self.stairs_down_to(pos).is_some()
     }
 
     pub(crate) fn can_see(&self, from: Pos, to: Pos) -> Visible {
@@ -75,17 +143,40 @@ impl<'w, 's> Envir<'w, 's> {
         }
     }
 
-    fn nbors<F>(&self, pos: Pos, acceptable: F) -> impl Iterator<Item = (Pos, Distance)> + '_
+    pub(crate) fn get_nbor(&self, from: Pos, nbor: &Nbor) -> Option<Pos> {
+        match nbor {
+            Nbor::Up => self.stairs_up_to(from),
+            Nbor::Down => self.stairs_down_to(from),
+            horizontal => {
+                let (x, z) = horizontal.horizontal_offset();
+                Some(Pos::new(from.x + x, from.level, from.z + z))
+            }
+        }
+    }
+
+    fn nbors(&'s self, pos: Pos) -> impl Iterator<Item = (Nbor, Pos, Distance)> + 's {
+        Nbor::ALL.iter().filter_map(move |nbor| {
+            self.get_nbor(pos, nbor)
+                .map(|npos| (nbor.clone(), npos, nbor.distance()))
+        })
+    }
+
+    pub(crate) fn are_nbors(&self, one: Pos, other: Pos) -> bool {
+        self.nbors_if(one, move |npos| npos == other)
+            .next()
+            .is_some()
+    }
+
+    fn nbors_if<F>(
+        &'s self,
+        pos: Pos,
+        acceptable: F,
+    ) -> impl Iterator<Item = (Nbor, Pos, Distance)> + 's
     where
         F: 'w + 's + Fn(Pos) -> bool,
     {
-        pos.potential_nbors()
-            .filter(move |(nbor, _)| acceptable(*nbor))
-            .filter(move |(nbor, _)| {
-                pos.level == nbor.level
-                    || (pos.level.up() == Some(nbor.level) && self.has_stairs_up(pos))
-                    || (pos.level.down() == Some(nbor.level) && self.has_stairs_down(pos))
-            })
+        self.nbors(pos)
+            .filter(move |(_nbor, npos, _distance)| acceptable(*npos))
     }
 
     pub(crate) fn nbors_for_moving(
@@ -95,7 +186,7 @@ impl<'w, 's> Envir<'w, 's> {
         intelligence: Intelligence,
         speed: Speed,
     ) -> impl Iterator<Item = (Pos, Milliseconds)> + 's {
-        self.nbors(pos, move |nbor| {
+        self.nbors_if(pos, move |nbor| {
             let at_destination = Some(nbor) == destination;
             match intelligence {
                 Intelligence::Smart => {
@@ -104,7 +195,7 @@ impl<'w, 's> Envir<'w, 's> {
                 Intelligence::Dumb => at_destination || self.find_opaque(nbor).is_none(),
             }
         })
-        .map(move |(nbor, d)| (nbor, d / speed))
+        .map(move |(_nbor, npos, distance)| (npos, distance / speed))
     }
 
     pub(crate) fn nbors_for_exploring(
@@ -112,12 +203,12 @@ impl<'w, 's> Envir<'w, 's> {
         pos: Pos,
         instruction: QueuedInstruction,
     ) -> impl Iterator<Item = Pos> + 's {
-        self.nbors(pos, move |nbor| match instruction {
+        self.nbors_if(pos, move |nbor| match instruction {
             QueuedInstruction::Attack => self.find_character(nbor).is_none(),
             QueuedInstruction::Smash => self.find_item(nbor).is_none(),
-            _ => panic!(),
+            _ => panic!("unexpected instruction {:?}", instruction),
         })
-        .map(move |(nbor, _)| nbor)
+        .map(move |(_nbor, npos, _distance)| npos)
     }
 
     /// only for smart npcs
@@ -167,24 +258,37 @@ impl<'w, 's> Envir<'w, 's> {
 
     pub(crate) fn collide(&self, from: Pos, to: Pos, controlled: bool) -> Collision {
         assert!(from != to);
-        assert!(to.is_potential_nbor(from));
+        assert!(self.are_nbors(from, to));
 
         match to.level.cmp(&from.level) {
-            x @ (Ordering::Greater | Ordering::Less) => {
+            Ordering::Greater => {
                 if controlled {
-                    if self.has_stairs_up(if x == Ordering::Greater { from } else { to }) {
+                    if self.stairs_up_to(from) == Some(to) {
+                        // TODO check if redundant
                         if let Some(obstacle) = self.find_obstacle(to) {
                             Collision::Blocked(obstacle)
                         } else {
                             Collision::Pass
                         }
-                    } else if x == Ordering::Greater {
+                    } else {
                         Collision::NoStairsUp
+                    }
+                } else {
+                    unimplemented!();
+                }
+            }
+            Ordering::Less => {
+                if controlled {
+                    if self.stairs_down_to(from) == Some(to) {
+                        // TODO check if redundant
+                        if let Some(obstacle) = self.find_obstacle(to) {
+                            Collision::Blocked(obstacle)
+                        } else {
+                            Collision::Pass
+                        }
                     } else {
                         Collision::NoStairsDown
                     }
-                //} else if x == Ordering::Greater {
-                //    unimplemented!();
                 } else {
                     unimplemented!();
                 }

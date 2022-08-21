@@ -231,7 +231,7 @@ pub(crate) fn update_status_time(
 ) {
     let start = Instant::now();
 
-    let season_length = 91; // TODO look up
+    let season_length = 91; // TODO load from worldoptions.json
 
     let tenth_seconds = timeouts.time().0 / 100;
     let seconds = tenth_seconds / 10;
@@ -317,7 +317,8 @@ pub(crate) fn update_status_detais(
             Option<&Corpse>,
             Option<&Action>,
             Option<&Floor>,
-            Option<&Stairs>,
+            Option<&StairsUp>,
+            Option<&StairsDown>,
             Option<&Obstacle>,
             Option<&Hurdle>,
             Option<&Opaque>,
@@ -374,7 +375,8 @@ fn pos_info(
             Option<&Corpse>,
             Option<&Action>,
             Option<&Floor>,
-            Option<&Stairs>,
+            Option<&StairsUp>,
+            Option<&StairsDown>,
             Option<&Obstacle>,
             Option<&Hurdle>,
             Option<&Opaque>,
@@ -399,7 +401,18 @@ fn pos_info(
         .iter()
         .flat_map(|&i| entities.get(i))
         .map(
-            |(label, health, corpse, action, floor, stairs, obstacle, hurdle, opaque)| {
+            |(
+                label,
+                health,
+                corpse,
+                action,
+                floor,
+                stairs_up,
+                stairs_down,
+                obstacle,
+                hurdle,
+                opaque,
+            )| {
                 let label = label.map_or_else(|| "?".to_string(), |l| l.0.clone());
                 let mut flags = Vec::new();
                 let health_str;
@@ -418,8 +431,11 @@ fn pos_info(
                 if floor.is_some() {
                     flags.push("floor");
                 }
-                if stairs.is_some() {
-                    flags.push("stairs");
+                if stairs_up.is_some() {
+                    flags.push("stairs up");
+                }
+                if stairs_down.is_some() {
+                    flags.push("stairs down");
                 }
                 if obstacle.is_some() {
                     flags.push("obstacle");
@@ -459,16 +475,5 @@ fn pos_info(
         })
         .collect::<String>();
 
-    format!(
-        "{:?}\n{}{}{}{}",
-        pos,
-        characters,
-        if envir.has_stairs_down(pos) {
-            "Stairs down\n"
-        } else {
-            ""
-        },
-        entities,
-        items
-    )
+    format!("{:?}\n{}{}{}", pos, characters, entities, items)
 }

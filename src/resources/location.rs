@@ -1,4 +1,4 @@
-use crate::prelude::{Pos, Stairs};
+use crate::prelude::{Pos, StairsDown, StairsUp};
 use bevy::ecs::query::{ROQueryItem, WorldQuery};
 use bevy::prelude::{Entity, Query};
 use bevy::utils::HashMap;
@@ -12,8 +12,6 @@ pub(crate) struct Location {
 }
 
 impl Location {
-    // base methods
-
     pub(crate) fn update(&mut self, entity: Entity, pos: Option<Pos>) {
         if let Some(&prev_pos) = self.positions.get(&entity) {
             let old_pos_vec = self.objects.get_mut(&prev_pos).unwrap();
@@ -67,24 +65,19 @@ impl Location {
         self.entities(pos).copied().collect()
     }
 
-    // helper methods
-
     pub(crate) fn has_stairs_up<'w, 's>(
         &self,
         from: Pos,
-        stairs: &'s Query<'w, 's, &'static Stairs>,
+        stairs_up: &'s Query<'w, 's, &'static StairsUp>,
     ) -> bool {
-        from.level.up().is_some() && self.any(from, stairs)
+        from.level.up().is_some() && self.any(from, stairs_up)
     }
 
     pub(crate) fn has_stairs_down<'w, 's>(
         &self,
         from: Pos,
-        stairs: &'s Query<'w, 's, &'static Stairs>,
+        stairs_down: &'s Query<'w, 's, &'static StairsDown>,
     ) -> bool {
-        from.level.down().map_or(false, |down| {
-            let below = Pos::new(from.x, down, from.z);
-            self.any(below, stairs)
-        })
+        from.level.down().is_some() && self.any(from, stairs_down)
     }
 }

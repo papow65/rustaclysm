@@ -35,6 +35,15 @@ impl ObjectName {
             || self.0.starts_with("t_gutter_downspout")
     }
 
+    pub(crate) fn is_stairs_down(&self) -> bool {
+        self.0.starts_with("t_stairs_down")
+            || self.0.starts_with("t_wood_stairs_down")
+            || self.0.starts_with("t_ladder_down")
+            || self.0.starts_with("t_ramp_down")
+            || self.0.starts_with("t_slope_down")
+            || self.0.starts_with("t_gutter_downspout") // TODO
+    }
+
     pub(crate) fn to_shape(
         &self,
         layer: SpriteLayer,

@@ -89,6 +89,78 @@ impl Level {
     }
 }
 
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub(crate) struct HorizontalNborOffset {
+    /*private*/ x: i32, // -1, 0, or 1
+    /*private*/ z: i32, // -1, 0, or 1
+}
+
+impl HorizontalNborOffset {
+    fn try_from(x: i32, z: i32) -> Option<HorizontalNborOffset> {
+        if x.abs().max(z.abs()) == 1 {
+            Some(HorizontalNborOffset { x, z })
+        } else {
+            None
+        }
+    }
+}
+
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub(crate) enum Nbor {
+    Up,
+    Horizontal(HorizontalNborOffset),
+    Down,
+}
+
+impl Nbor {
+    pub(crate) const ALL: [Self; 10] = [
+        Self::Up,
+        Self::Horizontal(HorizontalNborOffset { x: 1, z: 0 }),
+        Self::Horizontal(HorizontalNborOffset { x: 1, z: 1 }),
+        Self::Horizontal(HorizontalNborOffset { x: 0, z: 1 }),
+        Self::Horizontal(HorizontalNborOffset { x: -1, z: 1 }),
+        Self::Horizontal(HorizontalNborOffset { x: -1, z: 0 }),
+        Self::Horizontal(HorizontalNborOffset { x: -1, z: -1 }),
+        Self::Horizontal(HorizontalNborOffset { x: 0, z: -1 }),
+        Self::Horizontal(HorizontalNborOffset { x: 1, z: -1 }),
+        Self::Down,
+    ];
+
+    pub(crate) fn try_horizontal(x: i32, z: i32) -> Option<Self> {
+        HorizontalNborOffset::try_from(x, z).map(Self::Horizontal)
+    }
+
+    pub(crate) const fn horizontal_offset(&self) -> (i32, i32) {
+        match self {
+            Self::Horizontal(HorizontalNborOffset { x, z }) => (*x, *z),
+            _ => (0, 0),
+        }
+    }
+
+    pub(crate) fn distance(&self) -> Distance {
+        match self {
+            Self::Up => Distance {
+                h: Millimeter(0),
+                up: VERTICAL,
+                down: Millimeter(0),
+            },
+            Self::Down => Distance {
+                h: Millimeter(0),
+                up: Millimeter(0),
+                down: VERTICAL,
+            },
+            horizontal => {
+                let (x, z) = horizontal.horizontal_offset();
+                Distance {
+                    h: if x == 0 || z == 0 { ADJACENT } else { DIAGONAL },
+                    up: Millimeter(0),
+                    down: Millimeter(0),
+                }
+            }
+        }
+    }
+}
+
 /// Y is vertical, like the bevy default
 #[derive(Component, Copy, Clone, PartialEq, Eq, Hash, Debug)]
 pub(crate) struct Pos {
@@ -120,30 +192,6 @@ impl Pos {
                 0
             }),
         }
-    }
-
-    pub(crate) fn potential_nbors(self) -> impl Iterator<Item = (Self, Distance)> {
-        (0..10)
-            .filter_map(move |i| match i {
-                0 => Some(Self::new(self.x + 1, self.level, self.z)),
-                1 => Some(Self::new(self.x + 1, self.level, self.z + 1)),
-                2 => Some(Self::new(self.x, self.level, self.z + 1)),
-                3 => Some(Self::new(self.x - 1, self.level, self.z + 1)),
-                4 => Some(Self::new(self.x - 1, self.level, self.z)),
-                5 => Some(Self::new(self.x - 1, self.level, self.z - 1)),
-                6 => Some(Self::new(self.x, self.level, self.z - 1)),
-                7 => Some(Self::new(self.x + 1, self.level, self.z - 1)),
-                8 => self.level.up().map(|up| Self::new(self.x, up, self.z)),
-                _ => self
-                    .level
-                    .down()
-                    .map(|down| Self::new(self.x, down, self.z)),
-            })
-            .map(move |p| (p, self.dist(p)))
-    }
-
-    pub(crate) fn is_potential_nbor(self, other: Self) -> bool {
-        self.potential_nbors().any(|(p, _)| p == other)
     }
 
     pub(crate) fn offset(self, relative: Self) -> Option<Self> {
@@ -234,6 +282,8 @@ pub(crate) struct Zone {
 }
 
 impl Zone {
+    pub(crate) const SIZE: usize = 24;
+
     pub(crate) const fn zone_level(&self, level: Level) -> ZoneLevel {
         ZoneLevel {
             x: self.x,
@@ -264,8 +314,8 @@ impl Zone {
 impl From<Pos> for Zone {
     fn from(pos: Pos) -> Self {
         Self {
-            x: pos.x.div_euclid(24),
-            z: pos.z.div_euclid(24),
+            x: pos.x.div_euclid(Self::SIZE as i32),
+            z: pos.z.div_euclid(Self::SIZE as i32),
         }
     }
 }
@@ -293,6 +343,29 @@ impl ZoneLevel {
             level,
             z: self.z + relative.z,
         })
+    }
+
+    pub(crate) fn nbor(self, nbor: Nbor) -> Option<Self> {
+        match nbor {
+            Nbor::Up => self.level.up().map(|level| Self {
+                x: self.x,
+                level,
+                z: self.z,
+            }),
+            Nbor::Down => self.level.down().map(|level| Self {
+                x: self.x,
+                level,
+                z: self.z,
+            }),
+            horizontal => {
+                let (x, z) = horizontal.horizontal_offset();
+                Some(Self {
+                    x: self.x + x,
+                    level: self.level,
+                    z: self.z + z,
+                })
+            }
+        }
     }
 
     pub(crate) const fn base_pos(&self) -> Pos {

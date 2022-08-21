@@ -129,11 +129,24 @@ impl<'w, 's> TileSpawner<'w, 's> {
                         });
                     }
 
-                    if definition.name.is_stairs_up() {
-                        child_builder.add_command(Insert {
-                            entity: tile,
-                            component: Stairs,
-                        });
+                    let up = definition.name.is_stairs_up();
+                    let down = definition.name.is_stairs_down();
+                    if up || down {
+                        // can be both
+
+                        if up {
+                            child_builder.add_command(Insert {
+                                entity: tile,
+                                component: StairsUp,
+                            });
+                        }
+
+                        if down {
+                            child_builder.add_command(Insert {
+                                entity: tile,
+                                component: StairsDown,
+                            });
+                        }
                     } else {
                         TileSpawner::add_components_from_shape(
                             models
@@ -545,7 +558,7 @@ impl<'w, 's> Spawner<'w, 's> {
         self.tile_spawner
             .commands
             .spawn_bundle(SpatialBundle::default())
-            .insert(Stairs)
+            .insert(StairsUp)
             .insert(pos)
             .insert(Integrity::new(100))
             .insert(Hurdle(1.5))

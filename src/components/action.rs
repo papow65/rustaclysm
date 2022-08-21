@@ -88,7 +88,7 @@ fn move_(
     to: Pos,
     speed: Speed,
 ) -> Milliseconds {
-    if !to.is_potential_nbor(from) {
+    if !envir.are_nbors(from, to) {
         let message = format!("can't move to {to:?}, as it is not a nbor of {from:?}");
         commands.spawn().insert(Message::error(message));
         return Milliseconds(0);
@@ -143,7 +143,7 @@ fn attack(
     target: Pos,
     speed: Speed,
 ) -> Milliseconds {
-    if !target.is_potential_nbor(pos) {
+    if !envir.are_nbors(pos, target) {
         unimplemented!();
     }
 
@@ -169,16 +169,16 @@ fn smash(
     target: Pos,
     speed: Speed,
 ) -> Milliseconds {
-    if !target.is_potential_nbor(pos) && target != pos {
+    if !envir.are_nbors(pos, target) && target != pos {
         unimplemented!();
     }
 
     let stair_pos = Pos::new(target.x, pos.level, target.z);
-    if pos.level.up() == Some(target.level) && !envir.has_stairs_up(stair_pos) {
+    if pos.level.up() == Some(target.level) && envir.stairs_up_to(stair_pos).is_none() {
         let message = format!("{s_label} smashes the ceiling");
         commands.spawn().insert(Message::warn(message));
         Milliseconds(0)
-    } else if pos.level.down() == Some(target.level) && !envir.has_stairs_down(stair_pos) {
+    } else if pos.level.down() == Some(target.level) && envir.stairs_down_to(stair_pos).is_none() {
         let message = format!("{s_label} smashes the floor");
         commands.spawn().insert(Message::warn(message));
         Milliseconds(0)

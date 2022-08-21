@@ -33,7 +33,10 @@ pub(crate) struct Floor;
 pub(crate) struct Wall;
 
 #[derive(Component)]
-pub(crate) struct Stairs;
+pub(crate) struct StairsUp;
+
+#[derive(Component)]
+pub(crate) struct StairsDown;
 
 #[derive(Component)]
 pub(crate) struct Window;
