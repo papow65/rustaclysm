@@ -154,21 +154,49 @@ pub(crate) fn update_log(
         return;
     }
 
+    let mut last: Option<(&Message, usize)> = None;
+    let mut shown_reverse = Vec::<(&Message, usize)>::new();
+    for message in messages.iter().collect::<Vec<&Message>>().iter().rev() {
+        match last {
+            Some((last_message, ref mut last_count)) if last_message.0 == message.0 => {
+                *last_count += 1;
+            }
+            Some(message_and_count) => {
+                shown_reverse.push(message_and_count);
+                if 20 <= shown_reverse.len() {
+                    last = None;
+                    break;
+                } else {
+                    last = Some((message, 1));
+                }
+            }
+            None => {
+                last = Some((message, 1));
+            }
+        }
+    }
+    if let Some(message_and_count) = last {
+        shown_reverse.push(message_and_count);
+    }
+
     let sections = &mut logs.iter_mut().next().unwrap().sections;
     sections.clear();
-    for message in messages
-        .iter()
-        .collect::<Vec<&Message>>()
-        .iter()
-        .rev()
-        .take(20)
-        .rev()
-    {
+    for (message, count) in shown_reverse.iter().rev() {
         let mut style = hud_defaults.text_style.clone();
         style.color = message.1;
         sections.push(TextSection {
-            value: format!("{string}\n", string = message.0),
+            value: message.0.clone(),
             style,
+        });
+        if 1 < *count {
+            sections.push(TextSection {
+                value: format!(" ({}x)", count),
+                style: hud_defaults.text_style.clone(),
+            });
+        }
+        sections.push(TextSection {
+            value: "\n".to_string(),
+            style: hud_defaults.text_style.clone(),
         });
     }
 
