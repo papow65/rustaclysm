@@ -1,6 +1,6 @@
 use bevy::{
     input::keyboard::{KeyCode, KeyboardInput},
-    prelude::{Input, Res},
+    prelude::Input,
 };
 use std::fmt;
 
@@ -68,7 +68,7 @@ impl From<&KeyboardInput> for Key {
 pub(crate) struct KeyCombo(pub(crate) Ctrl, pub(crate) Shift, pub(crate) Key);
 
 impl KeyCombo {
-    pub(crate) fn new(input: &KeyboardInput, keys: &Res<Input<KeyCode>>) -> Self {
+    pub(crate) fn new(input: &KeyboardInput, keys: &Input<KeyCode>) -> Self {
         Self(
             Ctrl::from(keys.pressed(KeyCode::LControl) || keys.pressed(KeyCode::RControl)),
             Shift::from(keys.pressed(KeyCode::LShift) || keys.pressed(KeyCode::RShift)),

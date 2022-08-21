@@ -413,7 +413,7 @@ impl CustomData {
     pub(crate) fn new(
         material_assets: &mut Assets<StandardMaterial>,
         mesh_assets: &mut Assets<Mesh>,
-        asset_server: &Res<AssetServer>,
+        asset_server: &AssetServer,
     ) -> Self {
         Self {
             glass: Appearance::new(material_assets, Color::rgba(0.8, 0.9, 1.0, 0.2)), // transparant blue

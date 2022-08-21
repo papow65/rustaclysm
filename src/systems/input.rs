@@ -8,7 +8,7 @@ use std::time::Instant;
 
 use super::log_if_slow;
 
-fn quit(app_exit_events: &mut ResMut<Events<bevy::app::AppExit>>) {
+fn quit(app_exit_events: &mut Events<bevy::app::AppExit>) {
     app_exit_events.send(bevy::app::AppExit);
 }
 
