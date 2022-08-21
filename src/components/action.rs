@@ -122,16 +122,6 @@ fn move_(
             commands.spawn().insert(Message::warn(message));
             Milliseconds(0)
         }
-        Collision::NoStairsUp => {
-            let message = format!("{label} needs a stair to go up");
-            commands.spawn().insert(Message::warn(message));
-            Milliseconds(0)
-        }
-        Collision::NoStairsDown => {
-            let message = format!("{label} needs a stair to go down");
-            commands.spawn().insert(Message::warn(message));
-            Milliseconds(0)
-        }
     }
 }
 

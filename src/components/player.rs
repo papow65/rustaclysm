@@ -1,4 +1,6 @@
-use crate::prelude::{Action, Direction, Envir, Level, Message, Pos, QueuedInstruction, ZoneLevel};
+use crate::prelude::{
+    Action, Direction, Envir, Level, Message, Nbor, Pos, QueuedInstruction, ZoneLevel,
+};
 use bevy::ecs::component::Component;
 use std::fmt::{Display, Formatter};
 
@@ -63,7 +65,8 @@ impl Player {
                 Err(Some(Message::warn("can't attack self")))
             }
             (PlayerActionState::ExaminingPos(curr), QueuedInstruction::Offset(direction)) => {
-                self.handle_offset(envir, curr, direction)
+                let nbor = direction.to_nbor();
+                self.handle_offset(envir.get_nbor(curr, &nbor), &nbor)
             }
             (PlayerActionState::Normal, QueuedInstruction::Cancel) => {
                 Err(Some(Message::warn("Press ctrl+c/d/q to exit")))
@@ -76,7 +79,10 @@ impl Player {
                 self.state = PlayerActionState::Normal;
                 Err(None)
             }
-            (_, QueuedInstruction::Offset(offset)) => self.handle_offset(envir, pos, offset),
+            (_, QueuedInstruction::Offset(direction)) => {
+                let nbor = direction.to_nbor();
+                self.handle_offset(envir.get_nbor(pos, &nbor), &nbor)
+            }
             (_, QueuedInstruction::Pickup) => Ok(Action::Pickup),
             (_, QueuedInstruction::Dump) => Ok(Action::Dump),
             (_, QueuedInstruction::Attack) => self.handle_attack(envir, pos),
@@ -96,49 +102,37 @@ impl Player {
 
     fn handle_offset(
         &mut self,
-        envir: &Envir,
-        reference: Pos,
-        direction: Direction,
+        target: Result<Pos, Message>,
+        nbor: &Nbor,
     ) -> Result<Action, Option<Message>> {
-        if let PlayerActionState::ExaminingZoneLevel(current) = self.state {
-            let target = current.nbor(direction.to_nbor());
-            if let Some(target) = target {
-                self.state = PlayerActionState::ExaminingZoneLevel(target);
-                return Ok(Action::ExamineZoneLevel { target });
-            } else {
-                return Err(Some(Message::warn("invalid zone level to examine")));
-            }
-        }
-
-        let target = envir.get_nbor(reference, &direction.to_nbor());
-        if let Some(target) = target {
-            Ok(match self.state {
-                PlayerActionState::Normal => Action::Step { target },
-                PlayerActionState::Attacking => {
-                    self.state = PlayerActionState::Normal;
-                    Action::Attack { target }
-                }
-                PlayerActionState::Smashing => {
-                    self.state = PlayerActionState::Normal;
-                    Action::Smash { target }
-                }
-                PlayerActionState::ExaminingPos(current) => {
-                    assert!(reference == current, "{reference:?} {current:?}");
-                    self.state = PlayerActionState::ExaminingPos(target);
-                    Action::ExaminePos { target }
-                }
-                PlayerActionState::ExaminingZoneLevel(_) => {
-                    unreachable!();
-                }
-            })
-        } else {
-            Err(Some(Message::error(
-                if self.state == PlayerActionState::Normal {
-                    "you can't leave"
+        match (self.state, target) {
+            (PlayerActionState::ExaminingZoneLevel(current), _) => {
+                let target = current.nbor(nbor);
+                if let Some(target) = target {
+                    self.state = PlayerActionState::ExaminingZoneLevel(target);
+                    Ok(Action::ExamineZoneLevel { target })
                 } else {
-                    "invalid target"
-                },
-            )))
+                    Err(Some(Message::warn("invalid zone level to examine")))
+                }
+            }
+            (PlayerActionState::ExaminingPos(current), target) => {
+                if let Some(target) = target.ok().or_else(|| current.raw_nbor(nbor)) {
+                    self.state = PlayerActionState::ExaminingPos(target);
+                    Ok(Action::ExaminePos { target })
+                } else {
+                    Err(Some(Message::warn("invalid position to examine")))
+                }
+            }
+            (PlayerActionState::Normal, Ok(target)) => Ok(Action::Step { target }),
+            (PlayerActionState::Attacking, Ok(target)) => {
+                self.state = PlayerActionState::Normal;
+                Ok(Action::Attack { target })
+            }
+            (PlayerActionState::Smashing, Ok(target)) => {
+                self.state = PlayerActionState::Normal;
+                Ok(Action::Smash { target })
+            }
+            (_, Err(message)) => Err(Some(message)),
         }
     }
 

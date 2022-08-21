@@ -143,13 +143,17 @@ impl<'w, 's> Envir<'w, 's> {
         }
     }
 
-    pub(crate) fn get_nbor(&self, from: Pos, nbor: &Nbor) -> Option<Pos> {
+    pub(crate) fn get_nbor(&self, from: Pos, nbor: &Nbor) -> Result<Pos, Message> {
         match nbor {
-            Nbor::Up => self.stairs_up_to(from),
-            Nbor::Down => self.stairs_down_to(from),
+            Nbor::Up => self
+                .stairs_up_to(from)
+                .ok_or_else(|| Message::warn("No stairs up")),
+            Nbor::Down => self
+                .stairs_down_to(from)
+                .ok_or_else(|| Message::warn("No stairs down")),
             horizontal => {
                 let (x, z) = horizontal.horizontal_offset();
-                Some(Pos::new(from.x + x, from.level, from.z + z))
+                Ok(Pos::new(from.x + x, from.level, from.z + z))
             }
         }
     }
@@ -157,6 +161,7 @@ impl<'w, 's> Envir<'w, 's> {
     fn nbors(&'s self, pos: Pos) -> impl Iterator<Item = (Nbor, Pos, Distance)> + 's {
         Nbor::ALL.iter().filter_map(move |nbor| {
             self.get_nbor(pos, nbor)
+                .ok()
                 .map(|npos| (nbor.clone(), npos, nbor.distance()))
         })
     }
@@ -261,33 +266,12 @@ impl<'w, 's> Envir<'w, 's> {
         assert!(self.are_nbors(from, to));
 
         match to.level.cmp(&from.level) {
-            Ordering::Greater => {
+            Ordering::Greater | Ordering::Less => {
                 if controlled {
-                    if self.stairs_up_to(from) == Some(to) {
-                        // TODO check if redundant
-                        if let Some(obstacle) = self.find_obstacle(to) {
-                            Collision::Blocked(obstacle)
-                        } else {
-                            Collision::Pass
-                        }
+                    if let Some(obstacle) = self.find_obstacle(to) {
+                        Collision::Blocked(obstacle)
                     } else {
-                        Collision::NoStairsUp
-                    }
-                } else {
-                    unimplemented!();
-                }
-            }
-            Ordering::Less => {
-                if controlled {
-                    if self.stairs_down_to(from) == Some(to) {
-                        // TODO check if redundant
-                        if let Some(obstacle) = self.find_obstacle(to) {
-                            Collision::Blocked(obstacle)
-                        } else {
-                            Collision::Pass
-                        }
-                    } else {
-                        Collision::NoStairsDown
+                        Collision::Pass
                     }
                 } else {
                     unimplemented!();

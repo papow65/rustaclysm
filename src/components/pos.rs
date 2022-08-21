@@ -200,6 +200,30 @@ impl Pos {
             .map(|level| Self::new(self.x + relative.x, level, self.z + relative.z))
     }
 
+    /// Get nbor while ignoring stairs - meant for meta operations like examining
+    pub(crate) fn raw_nbor(self, nbor: &Nbor) -> Option<Self> {
+        match nbor {
+            Nbor::Up => self.level.up().map(|level| Self {
+                x: self.x,
+                level,
+                z: self.z,
+            }),
+            Nbor::Down => self.level.down().map(|level| Self {
+                x: self.x,
+                level,
+                z: self.z,
+            }),
+            horizontal => {
+                let (x, z) = horizontal.horizontal_offset();
+                Some(Self {
+                    x: self.x + x,
+                    level: self.level,
+                    z: self.z + z,
+                })
+            }
+        }
+    }
+
     pub(crate) fn vec3(self) -> Vec3 {
         Vec3::new(
             f64::from(self.x) as f32 * ADJACENT.f32(),
@@ -345,7 +369,7 @@ impl ZoneLevel {
         })
     }
 
-    pub(crate) fn nbor(self, nbor: Nbor) -> Option<Self> {
+    pub(crate) fn nbor(self, nbor: &Nbor) -> Option<Self> {
         match nbor {
             Nbor::Up => self.level.up().map(|level| Self {
                 x: self.x,

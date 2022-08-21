@@ -16,8 +16,6 @@ pub(crate) enum Collision {
     //Fall(Pos), // todo
     Blocked(Label),
     Ledged,
-    NoStairsUp,
-    NoStairsDown,
 }
 
 // pickup
