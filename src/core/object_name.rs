@@ -31,6 +31,7 @@ impl ObjectName {
             || self.0.starts_with("t_wood_stairs_up")
             || self.0.starts_with("t_ladder_up")
             || self.0.starts_with("t_ramp_up")
+            || self.0.starts_with("t_slope_up")
             || self.0.starts_with("t_gutter_downspout")
     }
 
