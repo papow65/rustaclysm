@@ -1,4 +1,4 @@
-use crate::prelude::PathFor;
+use crate::prelude::{CddaPlayer, PathFor};
 use serde::Deserialize;
 use std::fs::read_to_string;
 
@@ -9,17 +9,17 @@ pub(crate) type SavPath = PathFor<Sav>;
 #[serde(deny_unknown_fields)]
 pub(crate) struct Sav {
     #[allow(unused)]
-    achievements_tracker: serde_json::Value,
+    pub(crate) achievements_tracker: serde_json::Value,
 
     #[allow(unused)]
-    active_monsters: serde_json::Value,
+    pub(crate) active_monsters: serde_json::Value,
 
     #[allow(unused)]
-    auto_travel_mode: serde_json::Value,
+    pub(crate) auto_travel_mode: serde_json::Value,
 
     #[allow(unused)]
     #[serde(rename(deserialize = "bVMonsterLookFire"))]
-    b_v_monster_look_fire: serde_json::Value,
+    pub(crate) b_v_monster_look_fire: serde_json::Value,
 
     #[allow(unused)]
     pub(crate) calendar_start: u64,
@@ -30,22 +30,22 @@ pub(crate) struct Sav {
     pub(crate) turn: u64,
 
     #[allow(unused)]
-    driving_view_offset: serde_json::Value,
+    pub(crate) driving_view_offset: serde_json::Value,
 
     #[allow(unused)]
-    global_vals: serde_json::Value,
+    pub(crate) global_vals: serde_json::Value,
 
     #[allow(unused)]
-    grscent: serde_json::Value,
+    pub(crate) grscent: serde_json::Value,
 
     #[allow(unused)]
-    inactive_global_effect_on_condition_vector: serde_json::Value,
+    pub(crate) inactive_global_effect_on_condition_vector: serde_json::Value,
 
     #[allow(unused)]
-    initial_season: serde_json::Value,
+    pub(crate) initial_season: serde_json::Value,
 
     #[allow(unused)]
-    kill_tracker: serde_json::Value,
+    pub(crate) kill_tracker: serde_json::Value,
 
     pub(crate) om_x: i16,
     pub(crate) om_y: i16,
@@ -55,31 +55,31 @@ pub(crate) struct Sav {
     pub(crate) levz: i8,
 
     #[allow(unused)]
-    mostseen: serde_json::Value,
+    pub(crate) mostseen: serde_json::Value,
 
     #[allow(unused)]
-    player: serde_json::Value,
+    pub(crate) player: CddaPlayer,
 
     #[allow(unused)]
-    player_messages: serde_json::Value,
+    pub(crate) player_messages: serde_json::Value,
 
     #[allow(unused)]
-    queued_global_effect_on_conditions: serde_json::Value,
+    pub(crate) queued_global_effect_on_conditions: serde_json::Value,
 
     #[allow(unused)]
-    run_mode: serde_json::Value,
+    pub(crate) run_mode: serde_json::Value,
 
     #[allow(unused)]
-    stats_tracker: serde_json::Value,
+    pub(crate) stats_tracker: serde_json::Value,
 
     #[allow(unused)]
-    turnssincelastmon: serde_json::Value,
+    pub(crate) turnssincelastmon: serde_json::Value,
 
     #[allow(unused)]
-    typescent: serde_json::Value,
+    pub(crate) typescent: serde_json::Value,
 
     #[allow(unused)]
-    unique_npcs: Option<serde_json::Value>,
+    pub(crate) unique_npcs: Option<serde_json::Value>,
 
     #[allow(unused)]
     pub(crate) view_offset_x: serde_json::Value,

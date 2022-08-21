@@ -6,11 +6,12 @@ mod memory;
 mod overmap;
 mod overmap_buffer;
 mod paths;
+mod player;
 mod repitition;
 mod sav;
 mod tile_loader;
 
 pub(crate) use self::{
     at::*, field::*, flat_vec::*, map::*, memory::*, overmap::*, overmap_buffer::*, paths::*,
-    repitition::*, sav::*, tile_loader::*,
+    player::*, repitition::*, sav::*, tile_loader::*,
 };

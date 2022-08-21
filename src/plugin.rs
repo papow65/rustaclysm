@@ -22,11 +22,11 @@ impl Plugin for RustaclysmPlugin {
             .insert_resource(TileCaches::default());
 
         // executed once at startup
-        app.add_startup_system_to_stage(StartupStage::PreStartup, maximize_window)
-            .add_startup_system_to_stage(StartupStage::PreStartup, create_secondairy_resources)
+        app.add_startup_system_to_stage(StartupStage::PreStartup, create_secondairy_resources)
             .add_startup_system(spawn_hud)
             .add_startup_system(spawn_initial_entities)
-            .add_startup_system_set_to_stage(StartupStage::PostStartup, update_systems());
+            .add_startup_system_set_to_stage(StartupStage::PostStartup, update_systems())
+            .add_startup_system_to_stage(StartupStage::PostStartup, maximize_window);
 
         // executed every frame
         app.add_system_to_stage(CoreStage::PreUpdate, spawn_nearby_overzones)

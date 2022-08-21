@@ -89,7 +89,7 @@ fn main() -> Result<(), ()> {
     Paths::load().map(|paths| {
         App::new()
             .insert_resource(paths)
-            .add_plugin(RustaclysmPlugin) // first, to prevent vulkan errors
+            .add_plugin(RustaclysmPlugin) // before DefaultPlugins, to prevent vulkan errors
             .add_plugins(DefaultPlugins)
             .add_plugin(FrameTimeDiagnosticsPlugin::default())
             .run();
