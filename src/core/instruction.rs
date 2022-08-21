@@ -69,6 +69,7 @@ pub(crate) enum QueuedInstruction {
     Dump,
     Attack,
     Smash,
+    Wait,
     SwitchRunning,
     ExaminePos,
     ExamineZoneLevel,
@@ -87,6 +88,7 @@ impl TryFrom<&KeyCombo> for QueuedInstruction {
                     Direction::Below
                 }))
             }
+            KeyCombo(_, _, Key::PIPE) => Ok(Self::Wait),
             KeyCombo(Ctrl::Without, Shift::Without, Key::KeyCode(key_code)) => Ok(match key_code {
                 KeyCode::B => Self::Pickup,
                 KeyCode::V => Self::Dump,

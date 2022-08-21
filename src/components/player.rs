@@ -1,5 +1,5 @@
 use crate::prelude::{
-    Action, Direction, Envir, Level, Message, Nbor, Pos, QueuedInstruction, ZoneLevel,
+    Action, Direction, Envir, Level, Message, Milliseconds, Nbor, Pos, QueuedInstruction, ZoneLevel,
 };
 use bevy::ecs::component::Component;
 use std::fmt::{Display, Formatter};
@@ -9,26 +9,21 @@ pub(crate) enum PlayerActionState {
     Normal,
     Attacking,
     Smashing,
+    Waiting(Milliseconds),
     ExaminingPos(Pos),
     ExaminingZoneLevel(ZoneLevel),
 }
 
 impl Display for PlayerActionState {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-        write!(
-            f,
-            "{}",
-            match self {
-                Self::Normal => "",
-                Self::Attacking => "Attacking",
-                Self::Smashing => "Smashing",
-                Self::ExaminingPos(_) => "Examining",
-                Self::ExaminingZoneLevel(_) => "Examining map",
-            }
-        )
-        .unwrap();
-
-        Ok(())
+        f.write_str(match self {
+            Self::Normal => "",
+            Self::Attacking => "Attacking",
+            Self::Smashing => "Smashing",
+            Self::Waiting(_) => "Waiting",
+            Self::ExaminingPos(_) => "Examining",
+            Self::ExaminingZoneLevel(_) => "Examining map",
+        })
     }
 }
 
@@ -54,12 +49,17 @@ impl Player {
         envir: &Envir,
         pos: Pos,
         instruction: QueuedInstruction,
+        now: Milliseconds,
     ) -> Result<Action, Option<Message>> {
         println!("processing instruction: {instruction:?}");
 
         match (self.state, instruction) {
             (PlayerActionState::Normal, QueuedInstruction::Offset(Direction::Here)) => {
                 Ok(Action::Stay)
+            }
+            (PlayerActionState::Normal, QueuedInstruction::Wait) => {
+                self.state = PlayerActionState::Waiting(now + Milliseconds(60_000));
+                Err(Some(Message::new("Started waiting...")))
             }
             (PlayerActionState::Attacking, QueuedInstruction::Offset(Direction::Here)) => {
                 Err(Some(Message::warn("can't attack self")))
@@ -71,7 +71,7 @@ impl Player {
             (PlayerActionState::Normal, QueuedInstruction::Cancel) => {
                 Err(Some(Message::warn("Press ctrl+c/d/q to exit")))
             }
-            (_, QueuedInstruction::Cancel)
+            (_, QueuedInstruction::Cancel | QueuedInstruction::Wait)
             | (PlayerActionState::Attacking, QueuedInstruction::Attack)
             | (PlayerActionState::Smashing, QueuedInstruction::Smash)
             | (PlayerActionState::ExaminingPos(_), QueuedInstruction::ExaminePos)
@@ -131,6 +131,10 @@ impl Player {
             (PlayerActionState::Smashing, Ok(target)) => {
                 self.state = PlayerActionState::Normal;
                 Ok(Action::Smash { target })
+            }
+            (PlayerActionState::Waiting(_), _) => {
+                self.state = PlayerActionState::Normal;
+                Err(None)
             }
             (_, Err(message)) => Err(Some(message)),
         }

@@ -43,6 +43,7 @@ pub(crate) enum Key {
 }
 
 impl Key {
+    pub(crate) const PIPE: Self = Self::ScanCode(2);
     pub(crate) const LESS_THAN: Self = Self::ScanCode(86);
 }
 

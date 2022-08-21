@@ -43,7 +43,7 @@ pub(crate) fn manage_characters(
             characters.c.get(character).unwrap();
         let action = if let Ok(ref mut player) = players.get_mut(entity) {
             if let Some(instruction) = instruction_queue.pop() {
-                match player.behave(&envir, pos, instruction) {
+                match player.behave(&envir, pos, instruction, timeouts.time()) {
                     Ok(action) => action,
                     Err(Some(message)) => {
                         commands.spawn().insert(message);
@@ -52,6 +52,13 @@ pub(crate) fn manage_characters(
                     Err(None) => {
                         return; // valid instruction, but no action performed
                     }
+                }
+            } else if let PlayerActionState::Waiting(until) = player.state {
+                if until <= timeouts.time() {
+                    instruction_queue.add(QueuedInstruction::Cancel);
+                    return; // process the cancellation next turn
+                } else {
+                    Action::Stay
                 }
             } else {
                 return; // no key pressed - wait for the user
