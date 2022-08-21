@@ -108,8 +108,8 @@ pub(crate) struct CddaItem {
     owner: Option<String>,
     bday: Option<i64>,
     last_temp_check: Option<u64>,
-    specific_energy: Option<u64>,
-    temperature: Option<u64>,
+    specific_energy: Option<Number>,
+    temperature: Option<Number>,
     item_vars: Option<HashMap<String, String>>,
     item_tags: Option<Vec<String>>,
     contents: Option<CddaContainer>,
@@ -148,16 +148,33 @@ pub(crate) struct Pocket {
     favorite_settings: Option<serde_json::Value>,
 }
 
-#[allow(unused)]
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct Spawn {
     pub(crate) spawn_type: ObjectName,
+
+    #[allow(unused)]
     count: i32,
+
     pub(crate) x: i32,
     pub(crate) z: i32,
+
+    #[allow(unused)]
     faction_id: i32,
+
+    #[allow(unused)]
     mission_id: i32,
+
+    #[allow(unused)]
     pub(crate) friendly: bool,
+
+    #[allow(unused)]
     pub(crate) name: Option<String>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(untagged)]
+pub(crate) enum Number {
+    Int(i64),
+    Text(String),
 }

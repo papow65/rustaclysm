@@ -81,8 +81,13 @@ pub(crate) struct Sav {
     #[allow(unused)]
     unique_npcs: Option<serde_json::Value>,
 
+    #[allow(unused)]
     pub(crate) view_offset_x: serde_json::Value,
+
+    #[allow(unused)]
     pub(crate) view_offset_y: serde_json::Value,
+
+    #[allow(unused)]
     pub(crate) view_offset_z: serde_json::Value,
 }
 
@@ -97,6 +102,6 @@ impl TryFrom<&SavPath> for Sav {
             })
             .map(|s| s.split_at(s.find('\n').unwrap()).1.to_string())
             .map(|s| serde_json::from_str::<Self>(s.as_str()))
-            .expect("sav file could not be read")
+            .expect(".sav file could not be read")
     }
 }

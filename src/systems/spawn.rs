@@ -57,6 +57,7 @@ pub(crate) fn spawn_nearby_zones(
                             }
                             Err(e) => {
                                 eprintln!("{e}");
+                                panic!("{e}");
                             }
                         }
                     }
