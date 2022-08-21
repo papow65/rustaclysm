@@ -7,16 +7,29 @@ use chrono::prelude::{Datelike, Local};
 use std::collections::BTreeMap;
 use std::time::Instant;
 
-fn spawn_log_display(text_style: &TextStyle, parent: &mut EntityCommands) {
+pub(crate) struct HudDefaults {
+    text_style: TextStyle,
+}
+
+impl HudDefaults {
+    pub(crate) fn new(asset_server: &mut AssetServer) -> Self {
+        Self {
+            text_style: TextStyle {
+                font: asset_server.load("fonts/FiraMono-Medium.otf"),
+                font_size: 16.0,
+                color: Color::rgb(0.8, 0.8, 0.8),
+            },
+        }
+    }
+}
+
+fn spawn_log_display(parent: &mut EntityCommands) {
     // TODO properly use flex layout
     parent.with_children(|child_builder| {
         child_builder
             .spawn_bundle(TextBundle {
                 text: Text {
-                    sections: vec![TextSection {
-                        value: "".to_string(),
-                        style: text_style.clone(),
-                    }],
+                    sections: vec![],
                     ..Text::default()
                 },
                 style: Style {
@@ -35,7 +48,7 @@ fn spawn_log_display(text_style: &TextStyle, parent: &mut EntityCommands) {
     });
 }
 
-fn spawn_status_display(text_style: &TextStyle, parent: &mut EntityCommands) {
+fn spawn_status_display(hud_defaults: &HudDefaults, parent: &mut EntityCommands) {
     // TODO properly use flex layout
     parent.with_children(|child_builder| {
         child_builder
@@ -44,7 +57,7 @@ fn spawn_status_display(text_style: &TextStyle, parent: &mut EntityCommands) {
                     sections: vec![
                         TextSection {
                             value: "\n".to_string(),
-                            style: text_style.clone(),
+                            style: hud_defaults.text_style.clone(),
                         };
                         6
                     ],
@@ -68,7 +81,7 @@ fn spawn_status_display(text_style: &TextStyle, parent: &mut EntityCommands) {
 
 fn spawn_manual_display(
     commands: &mut Commands,
-    text_style: &TextStyle,
+    hud_defaults: &HudDefaults,
     mut background: NodeBundle,
 ) {
     background.style.position.bottom = Val::Px(0.0);
@@ -83,7 +96,7 @@ fn spawn_manual_display(
                     sections: vec![
                         TextSection {
                             value: "move         numpad\nup/down      r/f\npick/drop    b/v\nattack       a\nrun          +\nexamine      x\nexamine map  m\nzoom         (shift+)z\nzoom         scroll wheel\ntoggle this  h\nquit         ctrl+c/d/q".to_string(),
-                            style: text_style.clone(),
+                            style: hud_defaults.text_style.clone(),
                         },
                     ],
                     ..Text::default()
@@ -95,12 +108,9 @@ fn spawn_manual_display(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn spawn_hud(mut commands: Commands, asset_server: ResMut<AssetServer>) {
-    let text_style = TextStyle {
-        font: asset_server.load("fonts/FiraMono-Medium.otf"),
-        font_size: 16.0,
-        color: Color::rgb(0.8, 0.8, 0.8),
-    };
+pub(crate) fn spawn_hud(mut commands: Commands, mut asset_server: ResMut<AssetServer>) {
+    let hud_defaults = HudDefaults::new(asset_server.as_mut());
+
     let mut background = NodeBundle {
         style: Style {
             position_type: PositionType::Absolute,
@@ -111,7 +121,7 @@ pub(crate) fn spawn_hud(mut commands: Commands, asset_server: ResMut<AssetServer
         ..default()
     };
 
-    spawn_manual_display(&mut commands, &text_style, background.clone());
+    spawn_manual_display(&mut commands, &hud_defaults, background.clone());
 
     background.style.position.top = Val::Px(0.0);
     background.style.position.right = Val::Px(0.0);
@@ -120,12 +130,15 @@ pub(crate) fn spawn_hud(mut commands: Commands, asset_server: ResMut<AssetServer
         height: Val::Percent(100.0),
     };
     let mut parent = commands.spawn_bundle(background);
-    spawn_status_display(&text_style, &mut parent);
-    spawn_log_display(&text_style, &mut parent);
+    spawn_status_display(&hud_defaults, &mut parent);
+    spawn_log_display(&mut parent);
+
+    commands.insert_resource(hud_defaults);
 }
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_log(
+    hud_defaults: Res<HudDefaults>,
     mut logs: Query<&mut Text, With<LogDisplay>>,
     messages: Query<&Message>,
     changed: Query<&Message, Changed<Message>>,
@@ -141,16 +154,23 @@ pub(crate) fn update_log(
         return;
     }
 
-    let log = messages
+    let sections = &mut logs.iter_mut().next().unwrap().sections;
+    sections.clear();
+    for message in messages
         .iter()
-        .map(|m| format!("{string}\n", string = m.0))
-        .collect::<Vec<String>>();
-
-    logs.iter_mut().next().unwrap().sections[0].value = log
-        [log.len().saturating_sub(20)..log.len()]
+        .collect::<Vec<&Message>>()
         .iter()
-        .map(String::as_str)
-        .collect::<String>();
+        .rev()
+        .take(20)
+        .rev()
+    {
+        let mut style = hud_defaults.text_style.clone();
+        style.color = message.1;
+        sections.push(TextSection {
+            value: format!("{string}\n", string = message.0),
+            style,
+        });
+    }
 
     log_if_slow("update_log", start);
 }

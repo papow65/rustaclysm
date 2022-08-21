@@ -77,9 +77,7 @@ pub(crate) fn manage_characters(
         );
 
         if timeout.0 == 0 && players.get(character).is_err() {
-            commands
-                .spawn()
-                .insert(Message::new("ERROR: invalid action fot an npc"));
+            commands.spawn().insert(Message::error("failed npc action"));
             timeout.0 = 1000;
         }
 

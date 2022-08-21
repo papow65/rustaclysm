@@ -210,14 +210,28 @@ impl Appearance {
 }
 
 #[derive(Component)]
-pub(crate) struct Message(pub(crate) String); // shown to the player
+pub(crate) struct Message(pub(crate) String, pub(crate) Color); // shown to the player
 
 impl Message {
     pub(crate) fn new<S>(s: S) -> Self
     where
         S: Into<String>,
     {
-        Self(s.into())
+        Self(s.into(), Color::WHITE)
+    }
+
+    pub(crate) fn warn<S>(s: S) -> Self
+    where
+        S: Into<String>,
+    {
+        Self(s.into(), Color::rgb(1.0, 1.0, 0.4))
+    }
+
+    pub(crate) fn error<S>(s: S) -> Self
+    where
+        S: Into<String>,
+    {
+        Self(s.into(), Color::rgb(1.0, 0.4, 0.4))
     }
 }
 

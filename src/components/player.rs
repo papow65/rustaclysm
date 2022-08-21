@@ -60,13 +60,13 @@ impl Player {
                 Ok(Action::Stay)
             }
             (PlayerActionState::Attacking, QueuedInstruction::Offset(Direction::Here)) => {
-                Err(Some(Message::new("can't attack self")))
+                Err(Some(Message::warn("can't attack self")))
             }
             (PlayerActionState::ExaminingPos(curr), QueuedInstruction::Offset(direction)) => {
                 self.handle_offset(curr, direction)
             }
             (PlayerActionState::Normal, QueuedInstruction::Cancel) => {
-                Err(Some(Message::new("Press ctrl+c/d/q to exit")))
+                Err(Some(Message::warn("Press ctrl+c/d/q to exit")))
             }
             (_, QueuedInstruction::Cancel)
             | (PlayerActionState::Attacking, QueuedInstruction::Attack)
@@ -106,7 +106,7 @@ impl Player {
                 self.state = PlayerActionState::ExaminingZoneLevel(target);
                 return Ok(Action::ExamineZoneLevel { target });
             } else {
-                return Err(Some(Message::new("invalid target")));
+                return Err(Some(Message::warn("invalid zone level to examine")));
             }
         }
 
@@ -132,7 +132,7 @@ impl Player {
                 }
             })
         } else {
-            Err(Some(Message::new(
+            Err(Some(Message::error(
                 if self.state == PlayerActionState::Normal {
                     "you can't leave"
                 } else {
@@ -147,7 +147,7 @@ impl Player {
             .nbors_for_exploring(pos, QueuedInstruction::Attack)
             .collect::<Vec<Pos>>();
         match attackable_nbors.len() {
-            0 => Err(Some(Message::new("no targets nearby"))),
+            0 => Err(Some(Message::warn("no targets nearby"))),
             1 => Ok(Action::Attack {
                 target: attackable_nbors[0],
             }),
@@ -163,7 +163,7 @@ impl Player {
             .nbors_for_exploring(pos, QueuedInstruction::Smash)
             .collect::<Vec<Pos>>();
         match smashable_nbors.len() {
-            0 => Err(Some(Message::new("no targets nearby"))),
+            0 => Err(Some(Message::warn("no targets nearby"))),
             1 => Ok(Action::Smash {
                 target: smashable_nbors[0],
             }),
