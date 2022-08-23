@@ -24,7 +24,7 @@ impl std::fmt::Display for MillimeterPerSecond {
     }
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub(crate) struct Milliseconds(pub(crate) u64);
 
 impl std::fmt::Debug for Milliseconds {
@@ -64,9 +64,15 @@ pub(crate) const VERTICAL: Millimeter = Millimeter(1800);
 
 #[derive(Clone, Copy)]
 pub(crate) struct Distance {
-    pub(crate) h: Millimeter,
+    pub(crate) horizontal: Millimeter,
     pub(crate) up: Millimeter,
     pub(crate) down: Millimeter,
+}
+
+impl Distance {
+    pub(crate) fn equivalent(&self) -> Millimeter {
+        Millimeter(self.horizontal.0 + 2 * self.up.0 + self.down.0)
+    }
 }
 
 #[derive(Component, Clone, Copy)]
@@ -99,7 +105,7 @@ impl std::ops::Div<Speed> for Distance {
     type Output = Milliseconds;
 
     fn div(self, speed: Speed) -> Milliseconds {
-        self.h / speed.h + self.up / speed.up + self.down / speed.down
+        self.horizontal / speed.h + self.up / speed.up + self.down / speed.down
     }
 }
 

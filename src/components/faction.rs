@@ -1,10 +1,9 @@
 use crate::prelude::*;
 use bevy::ecs::component::Component;
+use pathfinding::prelude::{build_path, dijkstra_all};
 use rand::prelude::*;
 use rand::seq::SliceRandom;
 use std::iter::once;
-
-pub(crate) const SAFETY: Milliseconds = Milliseconds(10000);
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub(crate) enum Intelligence {
@@ -110,20 +109,46 @@ impl Faction {
             return None;
         }
 
-        let penalty = |pos: &Pos| {
-            let safe_for = enemies
-                .iter()
-                .filter_map(|enemy_pos| envir.path(*pos, *enemy_pos, self.intelligence(), speed))
-                .map(|path| path.duration)
-                .chain(std::iter::once(SAFETY))
-                .min()
-                .unwrap();
+        let up_time: Milliseconds = Distance {
+            horizontal: Millimeter(0),
+            up: VERTICAL,
+            down: Millimeter(0),
+        } / speed;
 
-            (1000.0 / safe_for.0 as f32 - 1000.0 / SAFETY.0 as f32) as i64
-        };
-        Some(Action::step_or_stay(
-            envir.find_best(start_pos, speed, penalty),
-        ))
+        // Higher gives better results but is slower
+        let planning_limit: u64 = 5;
+        let min_time = Milliseconds((planning_limit - 1) * up_time.0); // included
+        let max_time = Milliseconds(planning_limit * up_time.0); // not included
+
+        let graph = dijkstra_all(&(start_pos, Milliseconds(0)), |(pos, prev_total_ms)| {
+            envir
+                .nbors_for_moving(*pos, None, self.intelligence(), speed)
+                .filter_map(|(nbor, ms)| {
+                    let total_ms = *prev_total_ms + ms;
+                    if max_time < total_ms {
+                        None
+                    } else {
+                        Some(((nbor, total_ms), Danger::new(&ms, nbor, enemies)))
+                    }
+                })
+                .collect::<Vec<((Pos, Milliseconds), Danger)>>()
+                .into_iter()
+        });
+        let safest_longtime_pos = graph
+            .iter()
+            .filter(|((_, ms), _)| min_time < *ms)
+            .min_by_key(|((_, ms), (_, danger))| danger.average(ms))
+            .expect("Non-empty graph")
+            .0;
+        let target = build_path(safest_longtime_pos, &graph)
+            .get(1)
+            .expect("First step (after current position)")
+            .0;
+        Some(if target == start_pos {
+            Action::Stay
+        } else {
+            Action::Step { target }
+        })
     }
 
     pub(crate) fn wander(&self, envir: &Envir, start_pos: Pos, speed: Speed) -> Option<Action> {

@@ -27,14 +27,6 @@ pub(crate) enum Action {
 }
 
 impl Action {
-    pub(crate) const fn step_or_stay(pos: Option<Pos>) -> Self {
-        if let Some(pos) = pos {
-            Self::Step { target: pos }
-        } else {
-            Self::Stay
-        }
-    }
-
     pub(crate) fn perform(
         self,
         commands: &mut Commands,

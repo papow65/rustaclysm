@@ -1,7 +1,6 @@
 use crate::prelude::*;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
-use pathfinding::prelude::{build_path, dijkstra_partial};
 use std::cmp::Ordering;
 
 #[derive(SystemParam)]
@@ -183,7 +182,6 @@ impl<'w, 's> Envir<'w, 's> {
         self.nbors(pos)
             .filter(move |(_nbor, npos, _distance)| acceptable(*npos))
     }
-
     pub(crate) fn nbors_for_moving(
         &'s self,
         pos: Pos,
@@ -192,12 +190,15 @@ impl<'w, 's> Envir<'w, 's> {
         speed: Speed,
     ) -> impl Iterator<Item = (Pos, Milliseconds)> + 's {
         self.nbors_if(pos, move |nbor| {
-            let at_destination = Some(nbor) == destination;
-            match intelligence {
-                Intelligence::Smart => {
-                    self.has_floor(nbor) && (at_destination || self.find_obstacle(nbor).is_none())
+            (pos.level == Level::ZERO || !self.location.all(pos).is_empty()) && {
+                let at_destination = Some(nbor) == destination;
+                match intelligence {
+                    Intelligence::Smart => {
+                        self.has_floor(nbor)
+                            && (at_destination || self.find_obstacle(nbor).is_none())
+                    }
+                    Intelligence::Dumb => at_destination || self.find_opaque(nbor).is_none(),
                 }
-                Intelligence::Dumb => at_destination || self.find_opaque(nbor).is_none(),
             }
         })
         .map(move |(_nbor, npos, distance)| (npos, distance / speed))
@@ -214,30 +215,6 @@ impl<'w, 's> Envir<'w, 's> {
             _ => panic!("unexpected instruction {:?}", instruction),
         })
         .map(move |(_nbor, npos, _distance)| npos)
-    }
-
-    /// only for smart npcs
-    pub(crate) fn find_best<F>(&self, from: Pos, speed: Speed, penalty: F) -> Option<Pos>
-    where
-        F: Fn(&Pos) -> i64,
-    {
-        if penalty(&from) <= 0 {
-            return None; // it's ok here
-        }
-
-        let (map, found) = dijkstra_partial(
-            &from,
-            |&p| {
-                self.nbors_for_moving(p, None, Intelligence::Smart, speed)
-                    .map(|(nbor, ms)| (nbor, ms.0 as i64 * penalty(&nbor)))
-            },
-            |p| penalty(p) <= 0,
-        );
-
-        found
-            .or_else(|| map.keys().min_by_key(|p| penalty(p)).copied())
-            .filter(|best| penalty(best) < penalty(&from))
-            .map(|best| *build_path(&best, &map).get(1).unwrap())
     }
 
     pub(crate) fn path(

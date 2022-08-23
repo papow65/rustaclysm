@@ -1,6 +1,8 @@
 use crate::prelude::{Distance, Millimeter, Milliseconds, ADJACENT, DIAGONAL, VERTICAL};
 use bevy::prelude::{Component, Vec3};
-use pathfinding::prelude::astar;
+use float_ord::FloatOrd;
+use pathfinding::{num_traits::Zero, prelude::astar};
+use std::ops::Add;
 
 fn straight_2d(from: (i32, i32), to: (i32, i32)) -> impl Iterator<Item = (i32, i32)> {
     bresenham::Bresenham::new(
@@ -142,19 +144,19 @@ impl Nbor {
     pub(crate) fn distance(&self) -> Distance {
         match self {
             Self::Up => Distance {
-                h: Millimeter(0),
+                horizontal: Millimeter(0),
                 up: VERTICAL,
                 down: Millimeter(0),
             },
             Self::Down => Distance {
-                h: Millimeter(0),
+                horizontal: Millimeter(0),
                 up: Millimeter(0),
                 down: VERTICAL,
             },
             horizontal => {
                 let (x, z) = horizontal.horizontal_offset();
                 Distance {
-                    h: if x == 0 || z == 0 { ADJACENT } else { DIAGONAL },
+                    horizontal: if x == 0 || z == 0 { ADJACENT } else { DIAGONAL },
                     up: Millimeter(0),
                     down: Millimeter(0),
                 }
@@ -183,7 +185,7 @@ impl Pos {
         let dz = u64::from(self.z.abs_diff(other.z));
 
         Distance {
-            h: Millimeter(
+            horizontal: Millimeter(
                 std::cmp::max(dx, dz) * ADJACENT.0
                     + std::cmp::min(dx, dz) * (DIAGONAL.0 - ADJACENT.0),
             ),
@@ -440,3 +442,40 @@ pub(crate) struct LevelChanged;
 /** Indication that the player moved to or examined a new zone */
 #[derive(Component)]
 pub(crate) struct ZoneChanged;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub(crate) struct Danger(FloatOrd<f32>);
+
+impl Danger {
+    pub(crate) fn new(time: &Milliseconds, pos: Pos, froms: &[Pos]) -> Self {
+        Self(FloatOrd(
+            time.0 as f32
+                * froms
+                    .iter()
+                    .map(|from| 1.0 / (pos.dist(*from).equivalent().0 as f32))
+                    .sum::<f32>(),
+        ))
+    }
+
+    pub(crate) fn average(&self, time: &Milliseconds) -> Self {
+        Self(FloatOrd(self.0 .0 / (time.0 as f32)))
+    }
+}
+
+impl Add<Self> for Danger {
+    type Output = Danger;
+
+    fn add(self, other: Self) -> Danger {
+        Danger(FloatOrd(self.0 .0 + other.0 .0))
+    }
+}
+
+impl Zero for Danger {
+    fn zero() -> Self {
+        Danger(FloatOrd(0.0))
+    }
+
+    fn is_zero(&self) -> bool {
+        self.0 == FloatOrd(0.0)
+    }
+}
