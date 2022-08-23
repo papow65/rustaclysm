@@ -72,8 +72,8 @@ impl Level {
         sum.in_bounds().then_some(sum)
     }
 
-    pub(crate) const fn dist(self, to: Self) -> i8 {
-        (self.h - to.h).abs()
+    pub(crate) const fn dist(self, to: Self) -> u8 {
+        self.h.abs_diff(to.h)
     }
 
     pub(crate) const fn index(&self) -> usize {
@@ -178,9 +178,9 @@ impl Pos {
 
     /** Distance without regard for obstacles or stairs */
     pub(crate) fn dist(&self, other: Self) -> Distance {
-        let dx = u64::from((self.x - other.x).unsigned_abs());
+        let dx = u64::from(self.x.abs_diff(other.x));
         let dy = self.level.h - other.level.h;
-        let dz = u64::from((self.z - other.z).unsigned_abs());
+        let dz = u64::from(self.z.abs_diff(other.z));
 
         Distance {
             h: Millimeter(
@@ -237,10 +237,11 @@ impl Pos {
     pub(crate) fn straight(self, to: Self) -> impl Iterator<Item = Self> {
         assert!(self != to);
 
-        let max_diff = (self.x - to.x)
-            .abs()
-            .max(i32::from(self.level.dist(to.level)))
-            .max((self.z - to.z).abs());
+        let max_diff = self
+            .x
+            .abs_diff(to.x)
+            .max(u32::from(self.level.dist(to.level)))
+            .max(self.z.abs_diff(to.z)) as i32;
         straight_2d((self.x, 0), (to.x, max_diff))
             .zip(straight_2d(
                 (i32::from(self.level.h), 0),
@@ -319,7 +320,7 @@ impl Zone {
     }
 
     pub(crate) fn dist(&self, other: Self) -> u32 {
-        (self.x - other.x).abs().max((self.z - other.z).abs()) as u32
+        self.x.abs_diff(other.x).max(self.z.abs_diff(other.z))
     }
 
     pub(crate) const fn offset(&self, x: i32, z: i32) -> Self {
