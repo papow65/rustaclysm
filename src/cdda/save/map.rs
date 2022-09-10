@@ -53,45 +53,46 @@ impl TryFrom<MapPath> for Option<Map> {
 #[serde(deny_unknown_fields)]
 pub(crate) struct Submap {
     #[allow(unused)]
-    pub(crate) version: u64,
+    version: u64,
+
     pub(crate) coordinates: (i32, i32, i32),
 
     #[allow(unused)]
-    pub(crate) turn_last_touched: u64,
+    turn_last_touched: u64,
 
     #[allow(unused)]
-    pub(crate) temperature: i64,
+    temperature: i64,
 
     #[allow(unused)]
-    pub(crate) radiation: Vec<i64>,
+    radiation: Vec<i64>,
 
     pub(crate) terrain: RepetitionBlock<ObjectName>,
     pub(crate) furniture: Vec<At<ObjectName>>,
     pub(crate) items: AtVec<Vec<Repetition<CddaItem>>>,
 
     #[allow(unused)]
-    pub(crate) traps: AtVec<ObjectName>,
+    traps: AtVec<ObjectName>,
 
     pub(crate) fields: AtVec<FieldVec>,
 
     #[allow(unused)]
-    pub(crate) cosmetics: Vec<(u8, u8, String, String)>,
+    cosmetics: Vec<(u8, u8, String, String)>,
 
     pub(crate) spawns: Vec<Spawn>,
 
     #[allow(unused)]
-    pub(crate) vehicles: Vec<serde_json::Value>, // grep -orIE 'vehicles":\[[^]]+.{80}'  assets/save/maps/ | less
+    vehicles: Vec<serde_json::Value>, // grep -orIE 'vehicles":\[[^]]+.{80}'  assets/save/maps/ | less
 
     #[allow(unused)]
-    pub(crate) partial_constructions: Vec<serde_json::Value>,
+    partial_constructions: Vec<serde_json::Value>,
 
     #[allow(unused)]
-    pub(crate) computers: Option<Vec<serde_json::Value>>,
+    computers: Option<Vec<serde_json::Value>>,
 }
 
-#[allow(unused)]
 #[derive(Debug)]
 pub(crate) struct Furniture {
+    #[allow(unused)]
     tile_name: ObjectName,
 }
 
@@ -129,22 +130,32 @@ pub(crate) struct CddaItem {
     craft_data: Option<serde_json::Value>,
 }
 
-#[allow(unused)]
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct CddaContainer {
+    #[allow(unused)]
     contents: Vec<Pocket>,
+
+    #[allow(unused)]
     additional_pockets: Option<Vec<Pocket>>,
 }
 
-#[allow(unused)]
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct Pocket {
+    #[allow(unused)]
     pocket_type: u8,
+
+    #[allow(unused)]
     contents: Vec<CddaItem>,
+
+    #[allow(unused)]
     _sealed: bool,
+
+    #[allow(unused)]
     allowed: Option<bool>,
+
+    #[allow(unused)]
     favorite_settings: Option<serde_json::Value>,
 }
 
@@ -166,10 +177,10 @@ pub(crate) struct Spawn {
     mission_id: i32,
 
     #[allow(unused)]
-    pub(crate) friendly: bool,
+    friendly: bool,
 
     #[allow(unused)]
-    pub(crate) name: Option<String>,
+    name: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize)]
