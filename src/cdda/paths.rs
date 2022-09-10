@@ -17,7 +17,7 @@ impl<T> PathFor<T> {
 }
 
 impl<T> fmt::Debug for PathFor<T> {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         "PathFor<".fmt(formatter)?;
         type_name::<T>().fmt(formatter)?;
         ">{".fmt(formatter)?;

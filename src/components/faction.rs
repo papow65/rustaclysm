@@ -211,6 +211,6 @@ impl Faction {
 
         self.intents(health)
             .find_map(|intent| self.attempt(intent, envir, start_pos, speed, factions, &enemies))
-            .unwrap()
+            .expect("Fallback intent")
     }
 }

@@ -19,7 +19,7 @@ pub(crate) fn create_secondairy_resources(
     let timouts = Timeouts::new(sav.turn);
 
     commands.insert_resource(CustomData::new(&mut materials, &mut meshes, &asset_server));
-    commands.insert_resource(Memory::new(paths.sav_path()));
+    commands.insert_resource(Explored::new(paths.sav_path()));
     commands.insert_resource(sav);
     commands.insert_resource(TileLoader::new(&asset_server));
     commands.insert_resource(timouts);

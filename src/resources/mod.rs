@@ -1,5 +1,6 @@
 mod debug;
 mod envir;
+mod explored;
 mod location;
 mod spawner;
 mod zone_level_names;
@@ -9,7 +10,9 @@ use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
 
-pub(crate) use self::{debug::*, envir::*, location::*, spawner::*, zone_level_names::*};
+pub(crate) use self::{
+    debug::*, envir::*, explored::*, location::*, spawner::*, zone_level_names::*,
+};
 
 pub(crate) enum Collision {
     Pass,

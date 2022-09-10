@@ -21,7 +21,7 @@ pub(crate) struct TileSpawner<'w, 's> {
     loader: Res<'w, TileLoader>,
     caches: ResMut<'w, TileCaches>,
     zone_level_names: ResMut<'w, ZoneLevelNames>,
-    memory: ResMut<'w, Memory>,
+    explored: ResMut<'w, Explored>,
     paths: Res<'w, Paths>,
     sav: Res<'w, Sav>,
 }
@@ -84,7 +84,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
             if definition.specifier.shading_applied() {
                 child_builder.add_command(Insert {
                     entity: tile,
-                    component: if self.memory.has_been_seen(ZoneLevel::from(pos)) {
+                    component: if self.explored.has_been_seen(ZoneLevel::from(pos)) {
                         LastSeen::Previously
                     } else {
                         LastSeen::Never
@@ -399,7 +399,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
                 scale: Vec3::splat(24.0),
                 ..Transform::default()
             })
-            .insert(if self.memory.has_been_seen(zone_level) {
+            .insert(if self.explored.has_been_seen(zone_level) {
                 LastSeen::Previously
             } else {
                 LastSeen::Never

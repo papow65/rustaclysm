@@ -1,12 +1,12 @@
 use crate::prelude::*;
 use bevy::utils::HashMap;
 
-pub(crate) struct Memory {
+pub(crate) struct Explored {
     sav_path: SavPath,
     explored: HashMap<ZoneLevel, bool>,
 }
 
-impl Memory {
+impl Explored {
     pub(crate) fn new(sav_path: SavPath) -> Self {
         Self {
             sav_path,
@@ -34,7 +34,7 @@ impl Memory {
         }
 
         /*println!(
-            "Memory.is_explored({zone_level:?}) {} -> {:?}",
+            "Explored.is_explored({zone_level:?}) {} -> {:?}",
             self.explored.len(),
             self.explored.get(&zone_level)
         );*/
