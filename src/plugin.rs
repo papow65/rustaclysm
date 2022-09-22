@@ -16,6 +16,7 @@ impl Plugin for RustaclysmPlugin {
                 brightness: 0.2,
                 ..AmbientLight::default()
             })
+            .insert_resource(ItemInfos::new())
             .insert_resource(Location::default())
             .insert_resource(InstructionQueue::default())
             .insert_resource(RelativeRays::new())

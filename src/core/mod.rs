@@ -1,4 +1,5 @@
 mod instruction;
+mod item_info;
 mod key;
 mod mesh;
 mod model;
@@ -7,7 +8,8 @@ mod object_name;
 mod unit;
 
 pub(crate) use self::{
-    instruction::*, key::*, mesh::*, model::*, object_definition::*, object_name::*, unit::*,
+    instruction::*, item_info::*, key::*, mesh::*, model::*, object_definition::*, object_name::*,
+    unit::*,
 };
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]

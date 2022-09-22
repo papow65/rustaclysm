@@ -22,6 +22,7 @@ pub(crate) struct TileSpawner<'w, 's> {
     caches: ResMut<'w, TileCaches>,
     zone_level_names: ResMut<'w, ZoneLevelNames>,
     explored: ResMut<'w, Explored>,
+    item_infos: ResMut<'w, ItemInfos>,
     paths: Res<'w, Paths>,
     sav: Res<'w, Sav>,
 }
@@ -68,10 +69,12 @@ impl<'w, 's> TileSpawner<'w, 's> {
             .map(|model| (self.get_pbr_bundle(model), self.get_appearance(model)))
             .collect::<Vec<(PbrBundle, Appearance)>>();
 
+        let item_info = self.item_infos.get(definition.name);
+
         self.commands.entity(parent).with_children(|child_builder| {
             let tile = child_builder
                 .spawn_bundle(SpatialBundle::default())
-                .insert(definition.name.to_label())
+                .insert(item_info.to_label(1))
                 .insert(pos)
                 .insert(Transform::from_translation(pos.vec3()))
                 .with_children(|child_builder| {
@@ -389,9 +392,11 @@ impl<'w, 's> TileSpawner<'w, 's> {
             }
         };
 
+        let item_info = self.item_infos.get(definition.name);
+
         self.commands
             .spawn_bundle(SpatialBundle::default())
-            .insert(definition.name.to_label())
+            .insert(item_info.to_label(1))
             .insert(zone_level)
             .insert(Collapsed)
             .insert(Transform {

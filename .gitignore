@@ -1,5 +1,6 @@
 /target
 /assets/gfx
+/assets/data
 /assets/save
 /*.map
 /o.*

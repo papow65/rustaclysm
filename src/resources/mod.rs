@@ -1,6 +1,7 @@
 mod debug;
 mod envir;
 mod explored;
+mod item_infos;
 mod location;
 mod spawner;
 mod zone_level_names;
@@ -11,7 +12,7 @@ use bevy::prelude::*;
 use bevy::utils::HashMap;
 
 pub(crate) use self::{
-    debug::*, envir::*, explored::*, location::*, spawner::*, zone_level_names::*,
+    debug::*, envir::*, explored::*, item_infos::*, location::*, spawner::*, zone_level_names::*,
 };
 
 pub(crate) enum Collision {

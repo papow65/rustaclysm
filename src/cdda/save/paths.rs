@@ -39,8 +39,12 @@ impl Paths {
         Path::new("assets")
     }
 
+    pub(crate) fn data_path() -> PathBuf {
+        Self::asset_path().join("data")
+    }
+
     fn save_path() -> PathBuf {
-        Self::asset_path().join(Path::new("save"))
+        Self::asset_path().join("save")
     }
 
     fn new(path: &PathBuf) -> Self {
@@ -67,6 +71,10 @@ impl Paths {
         if !Self::asset_path().is_dir() {
             eprintln!("Directory '{}' not found.", Self::asset_path().display());
             eprintln!("Please run this in the directory containing the 'assets' directory.");
+            Err(())
+        } else if !Self::data_path().is_dir() {
+            eprintln!("Directory '{}' not found.", Self::data_path().display());
+            eprintln!("Please make sure the '{}' directory contains a copy of (or a symlink to) Cataclysm-DDA's 'data' directory.", Self::asset_path().display());
             Err(())
         } else if !Self::save_path().is_dir() {
             eprintln!("Directory '{}' not found.", Self::save_path().display());
