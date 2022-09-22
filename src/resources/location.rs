@@ -33,7 +33,7 @@ impl Location {
         }
     }
 
-    fn entities<'l>(&'l self, pos: Pos) -> impl ExactSizeIterator<Item = &Entity> {
+    fn entities(&self, pos: Pos) -> impl ExactSizeIterator<Item = &Entity> {
         self.objects.get(&pos).unwrap_or(NOT_FOUND).iter()
     }
 

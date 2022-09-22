@@ -63,9 +63,9 @@ impl Faction {
     }
 
     fn intents(&self, health: &Health) -> impl Iterator<Item = Intent> {
-        once(self.is_aggressive(health).then(|| Intent::Attack))
-            .chain(once(self.can_fear().then(|| Intent::Flee)))
-            .chain(once(self.wanders().then(|| Intent::Wander)))
+        once(self.is_aggressive(health).then_some(Intent::Attack))
+            .chain(once(self.can_fear().then_some(Intent::Flee)))
+            .chain(once(self.wanders().then_some(Intent::Wander)))
             .flatten()
             .chain(once(Intent::Wait))
     }
