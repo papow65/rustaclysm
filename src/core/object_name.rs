@@ -10,6 +10,10 @@ impl ObjectName {
         Self(value.into())
     }
 
+    pub(crate) fn to_fallback_label(&self) -> Label {
+        Label::new(self.0.clone())
+    }
+
     pub(crate) fn variants(&self) -> Vec<Self> {
         let mut result = vec![Self(self.0.clone() + "_season_summer"), self.clone()];
         if let Some(index) = self.0.rfind('_') {

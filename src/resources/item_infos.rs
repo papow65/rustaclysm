@@ -14,10 +14,8 @@ impl ItemInfos {
         .load_all()
     }
 
-    pub(crate) fn get<'a>(&'a self, name: &'a ObjectName) -> &'a ItemInfo {
-        self.infos
-            .get(name)
-            .unwrap_or_else(|| panic!("Item info not known: {:?}", name))
+    pub(crate) fn get<'a>(&'a self, name: &'a ObjectName) -> Option<&'a ItemInfo> {
+        self.infos.get(name)
     }
 
     fn load_all(mut self) -> Self {

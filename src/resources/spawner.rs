@@ -74,7 +74,9 @@ impl<'w, 's> TileSpawner<'w, 's> {
         self.commands.entity(parent).with_children(|child_builder| {
             let tile = child_builder
                 .spawn_bundle(SpatialBundle::default())
-                .insert(item_info.to_label(1))
+                .insert(
+                    item_info.map_or_else(|| definition.name.to_fallback_label(), |i| i.to_label(1)),
+                )
                 .insert(pos)
                 .insert(Transform::from_translation(pos.vec3()))
                 .with_children(|child_builder| {
@@ -396,7 +398,9 @@ impl<'w, 's> TileSpawner<'w, 's> {
 
         self.commands
             .spawn_bundle(SpatialBundle::default())
-            .insert(item_info.to_label(1))
+            .insert(
+                item_info.map_or_else(|| definition.name.to_fallback_label(), |i| i.to_label(1)),
+            )
             .insert(zone_level)
             .insert(Collapsed)
             .insert(Transform {
