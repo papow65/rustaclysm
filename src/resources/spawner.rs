@@ -75,7 +75,8 @@ impl<'w, 's> TileSpawner<'w, 's> {
             let tile = child_builder
                 .spawn_bundle(SpatialBundle::default())
                 .insert(
-                    item_info.map_or_else(|| definition.name.to_fallback_label(), |i| i.to_label(1)),
+                    item_info
+                        .map_or_else(|| definition.name.to_fallback_label(), |i| i.to_label(1)),
                 )
                 .insert(pos)
                 .insert(Transform::from_translation(pos.vec3()))

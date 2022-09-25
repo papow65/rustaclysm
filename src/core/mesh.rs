@@ -1,3 +1,4 @@
+use crate::prelude::SpriteOrientation;
 use bevy::render::mesh::{Indices, Mesh, PrimitiveTopology};
 
 #[derive(PartialEq, Debug, Clone, Copy)]
@@ -27,13 +28,28 @@ impl MeshInfo {
     }
 
     // Based on bevy_render-0.7.0/src/mesh/shape/mod.rs - line 194-223
-    pub(crate) fn to_plane(self) -> Mesh {
+    pub(crate) fn to_plane(self, orientation: SpriteOrientation) -> Mesh {
         let extent = 0.5;
+        let corners = match orientation {
+            SpriteOrientation::Horizontal => [
+                [-extent, 0.0, -extent],
+                [extent, 0.0, -extent],
+                [extent, 0.0, extent],
+                [-extent, 0.0, extent],
+            ],
+            SpriteOrientation::Vertical => [
+                [0.0, 0.0, -extent],
+                [0.0, 1.0, -extent],
+                [0.0, 1.0, extent],
+                [0.0, 0.0, extent],
+            ],
+        };
+
         let vertices = [
-            ([extent, 0.0, -extent], [self.x_min, self.y_max]),
-            ([extent, 0.0, extent], [self.x_min, self.y_min]),
-            ([-extent, 0.0, extent], [self.x_max, self.y_min]),
-            ([-extent, 0.0, -extent], [self.x_max, self.y_max]),
+            (corners[0], [self.x_min, self.y_max]),
+            (corners[1], [self.x_min, self.y_min]),
+            (corners[2], [self.x_max, self.y_min]),
+            (corners[3], [self.x_max, self.y_max]),
         ];
 
         let indices = Indices::U32(vec![0, 2, 1, 0, 3, 2]);

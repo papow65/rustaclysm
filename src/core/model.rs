@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use bevy::prelude::{AlphaMode, Mesh, Quat, Transform, Vec2, Vec3};
+use bevy::prelude::{AlphaMode, Mesh, Transform, Vec2, Vec3};
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub(crate) struct Transform2d {
@@ -8,8 +8,15 @@ pub(crate) struct Transform2d {
 }
 
 impl Transform2d {
-    const fn to_scale(self) -> Vec3 {
-        Vec3::new(self.scale.x, /*thickness*/ 1.0, self.scale.y)
+    const fn to_scale(self, orientation: SpriteOrientation) -> Vec3 {
+        match orientation {
+            SpriteOrientation::Horizontal => {
+                Vec3::new(self.scale.x, /*thickness*/ 1.0, self.scale.y)
+            }
+            SpriteOrientation::Vertical => {
+                Vec3::new(/*thickness*/ 1.0, self.scale.y, self.scale.x)
+            }
+        }
     }
 }
 
@@ -17,18 +24,6 @@ impl Transform2d {
 pub(crate) enum SpriteOrientation {
     Horizontal,
     Vertical,
-}
-
-impl SpriteOrientation {
-    fn to_rotation(self) -> Quat {
-        match self {
-            Self::Horizontal => Quat::from_rotation_y(std::f32::consts::FRAC_PI_2),
-            Self::Vertical => {
-                Quat::from_rotation_z(std::f32::consts::FRAC_PI_2)
-                    * Quat::from_rotation_y(std::f32::consts::FRAC_PI_2)
-            }
-        }
-    }
 }
 
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -63,16 +58,14 @@ impl ModelShape {
                             SpriteLayer::Back => -0.4,
                         },
                         /*up*/
-                        vertical_offset + ADJACENT.f32() / 2.0 + transform2d.offset.y,
+                        vertical_offset,
                         /*right*/ transform2d.offset.x,
                     ),
                 };
-                let rotation = orientation.to_rotation();
-                let scale = transform2d.to_scale();
                 Transform {
                     translation,
-                    rotation,
-                    scale,
+                    scale: transform2d.to_scale(orientation),
+                    ..Transform::default()
                 }
             }
             Self::Cuboid { height } => Transform {
@@ -117,7 +110,7 @@ impl Model {
 
     pub(crate) fn to_mesh(&self) -> Mesh {
         match self.shape {
-            ModelShape::Plane { .. } => self.mesh_info.to_plane(),
+            ModelShape::Plane { orientation, .. } => self.mesh_info.to_plane(orientation),
             ModelShape::Cuboid { .. } => self.mesh_info.to_cube(),
         }
     }
