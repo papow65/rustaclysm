@@ -8,7 +8,8 @@ use bevy::utils::HashMap;
 #[derive(Default)]
 pub(crate) struct TileCaches {
     appearance_cache: HashMap<String, Appearance>,
-    plane_mesh_cache: HashMap<SpriteNumber, Handle<Mesh>>,
+    horizontal_plane_mesh_cache: HashMap<SpriteNumber, Handle<Mesh>>,
+    vertical_plane_mesh_cache: HashMap<SpriteNumber, Handle<Mesh>>,
     cuboid_mesh_cache: HashMap<SpriteNumber, Handle<Mesh>>,
 }
 
@@ -30,7 +31,14 @@ pub(crate) struct TileSpawner<'w, 's> {
 impl<'w, 's> TileSpawner<'w, 's> {
     fn get_tile_mesh(&mut self, model: &Model) -> Handle<Mesh> {
         match model.shape {
-            ModelShape::Plane { .. } => &mut self.caches.plane_mesh_cache,
+            ModelShape::Plane {
+                orientation: SpriteOrientation::Horizontal,
+                ..
+            } => &mut self.caches.horizontal_plane_mesh_cache,
+            ModelShape::Plane {
+                orientation: SpriteOrientation::Vertical,
+                ..
+            } => &mut self.caches.vertical_plane_mesh_cache,
             ModelShape::Cuboid { .. } => &mut self.caches.cuboid_mesh_cache,
         }
         .entry(model.sprite_number)

@@ -8,14 +8,62 @@ pub(crate) struct Transform2d {
 }
 
 impl Transform2d {
-    const fn to_scale(self, orientation: SpriteOrientation) -> Vec3 {
+    fn to_transform(
+        &self,
+        orientation: SpriteOrientation,
+        layer: &SpriteLayer,
+        vertical_offset: f32,
+    ) -> Transform {
+        Transform {
+            translation: self.to_translation(orientation, layer, vertical_offset),
+            scale: self.to_scale(orientation),
+            ..Transform::default()
+        }
+    }
+
+    const fn to_translation(
+        &self,
+        orientation: SpriteOrientation,
+        layer: &SpriteLayer,
+        vertical_offset: f32,
+    ) -> Vec3 {
+        match orientation {
+            SpriteOrientation::Horizontal => Vec3::new(
+                /*back*/ self.offset.y,
+                /*up*/
+                vertical_offset,
+                /*right*/ self.offset.x,
+            ),
+            SpriteOrientation::Vertical => Vec3::new(
+                /*back*/
+                match layer {
+                    SpriteLayer::Front => -0.41,
+                    SpriteLayer::Back => -0.4,
+                },
+                /*up*/
+                vertical_offset,
+                /*right*/ self.offset.x,
+            ),
+        }
+    }
+
+    const fn to_scale(&self, orientation: SpriteOrientation) -> Vec3 {
         match orientation {
             SpriteOrientation::Horizontal => {
-                Vec3::new(self.scale.x, /*thickness*/ 1.0, self.scale.y)
+                Vec3::new(self.scale.y, /*thickness*/ 1.0, self.scale.x)
             }
             SpriteOrientation::Vertical => {
                 Vec3::new(/*thickness*/ 1.0, self.scale.y, self.scale.x)
             }
+        }
+    }
+}
+
+impl Default for Transform2d {
+    fn default() -> Self {
+        Self {
+            scale: Vec2::ONE,
+            offset: Vec2::ZERO,
         }
     }
 }
@@ -43,31 +91,7 @@ impl ModelShape {
             Self::Plane {
                 orientation,
                 transform2d,
-            } => {
-                let translation = match orientation {
-                    SpriteOrientation::Horizontal => Vec3::new(
-                        /*back*/ transform2d.offset.y,
-                        /*up*/
-                        vertical_offset,
-                        /*right*/ transform2d.offset.x,
-                    ),
-                    SpriteOrientation::Vertical => Vec3::new(
-                        /*back*/
-                        match layer {
-                            SpriteLayer::Front => -0.41,
-                            SpriteLayer::Back => -0.4,
-                        },
-                        /*up*/
-                        vertical_offset,
-                        /*right*/ transform2d.offset.x,
-                    ),
-                };
-                Transform {
-                    translation,
-                    scale: transform2d.to_scale(orientation),
-                    ..Transform::default()
-                }
-            }
+            } => transform2d.to_transform(orientation, layer, vertical_offset),
             Self::Cuboid { height } => Transform {
                 scale: Vec3::new(ADJACENT.f32(), height, ADJACENT.f32()),
                 ..Transform::default()

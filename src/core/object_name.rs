@@ -74,12 +74,17 @@ impl ObjectName {
                 orientation: SpriteOrientation::Vertical,
                 transform2d: Transform2d {
                     scale: Vec2::new(ADJACENT.f32(), VERTICAL.f32()),
-                    offset: Vec2::new(0.0, 0.5 * (VERTICAL.f32() - ADJACENT.f32())),
+                    offset: Vec2::ZERO,
                 },
             }
         } else if self.0.starts_with("t_sewage_pipe") {
             ModelShape::Cuboid {
                 height: ADJACENT.f32(),
+            }
+        } else if self.0.starts_with("mon_") {
+            ModelShape::Plane {
+                orientation: SpriteOrientation::Vertical,
+                transform2d,
             }
         } else if layer == SpriteLayer::Back {
             ModelShape::Plane {
@@ -92,13 +97,20 @@ impl ObjectName {
             || self.0.starts_with("t_shrub")
             || self.0.starts_with("t_flower")
             || self.0.starts_with("f_plant")
-            || self.0.starts_with("mon_")
+            || self.0.starts_with("t_grass_long")
+            || self.0.starts_with("t_grass_tall")
         {
             ModelShape::Plane {
                 orientation: SpriteOrientation::Vertical,
                 transform2d,
             }
         } else {
+            assert!(
+                transform2d == Transform2d::default(),
+                "no standard transform for foreground of {:?}: {:?}",
+                self,
+                transform2d
+            );
             ModelShape::Plane {
                 orientation: SpriteOrientation::Horizontal,
                 transform2d,
