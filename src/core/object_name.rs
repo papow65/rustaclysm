@@ -47,13 +47,13 @@ impl ObjectName {
     pub(crate) fn to_shape(
         &self,
         layer: SpriteLayer,
-        transform2d: Transform2d,
+        transform2d: &Transform2d,
         specifier: &ObjectSpecifier,
     ) -> ModelShape {
         if specifier == &ObjectSpecifier::ZoneLevel || self.0.starts_with("t_rock_floor") {
             ModelShape::Plane {
                 orientation: SpriteOrientation::Horizontal,
-                transform2d,
+                transform2d: transform2d.clone(),
             }
         } else if self.0.starts_with("t_rock")
             || self.0.starts_with("t_wall")
@@ -84,12 +84,12 @@ impl ObjectName {
         } else if self.0.starts_with("mon_") {
             ModelShape::Plane {
                 orientation: SpriteOrientation::Vertical,
-                transform2d,
+                transform2d: transform2d.clone(),
             }
         } else if layer == SpriteLayer::Back {
             ModelShape::Plane {
                 orientation: SpriteOrientation::Horizontal,
-                transform2d,
+                transform2d: transform2d.clone(),
             }
         } else if 1.0 < transform2d.scale.x.max(transform2d.scale.y)
             || self.0.starts_with("t_fence")
@@ -102,18 +102,18 @@ impl ObjectName {
         {
             ModelShape::Plane {
                 orientation: SpriteOrientation::Vertical,
-                transform2d,
+                transform2d: transform2d.clone(),
             }
         } else {
             assert!(
-                transform2d == Transform2d::default(),
+                transform2d == &Transform2d::default(),
                 "no standard transform for foreground of {:?}: {:?}",
                 self,
                 transform2d
             );
             ModelShape::Plane {
                 orientation: SpriteOrientation::Horizontal,
-                transform2d,
+                transform2d: transform2d.clone(),
             }
         }
     }

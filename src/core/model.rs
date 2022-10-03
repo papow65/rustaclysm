@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use bevy::prelude::{AlphaMode, Mesh, Transform, Vec2, Vec3};
 
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Clone, Debug, PartialEq)]
 pub(crate) struct Transform2d {
     pub(crate) scale: Vec2,
     pub(crate) offset: Vec2,
@@ -74,7 +74,7 @@ pub(crate) enum SpriteOrientation {
     Vertical,
 }
 
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Clone)]
 pub(crate) enum ModelShape {
     Plane {
         orientation: SpriteOrientation,
@@ -86,14 +86,14 @@ pub(crate) enum ModelShape {
 }
 
 impl ModelShape {
-    fn to_transform(self, layer: &SpriteLayer, vertical_offset: f32) -> Transform {
+    fn to_transform(&self, layer: &SpriteLayer, vertical_offset: f32) -> Transform {
         match self {
             Self::Plane {
                 orientation,
                 transform2d,
-            } => transform2d.to_transform(orientation, layer, vertical_offset),
+            } => transform2d.to_transform(*orientation, layer, vertical_offset),
             Self::Cuboid { height } => Transform {
-                scale: Vec3::new(ADJACENT.f32(), height, ADJACENT.f32()),
+                scale: Vec3::new(ADJACENT.f32(), *height, ADJACENT.f32()),
                 ..Transform::default()
             },
         }
@@ -120,9 +120,11 @@ impl Model {
         texture_info: &TextureInfo,
     ) -> Self {
         Self {
-            shape: definition
-                .name
-                .to_shape(layer, texture_info.transform2d, &definition.specifier),
+            shape: definition.name.to_shape(
+                layer,
+                &texture_info.transform2d,
+                &definition.specifier,
+            ),
             layer,
             sprite_number,
             mesh_info: texture_info.mesh_info,

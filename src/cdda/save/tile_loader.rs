@@ -167,7 +167,7 @@ impl Atlas {
                 1 + self.range.1.to_usize() - self.range.0.to_usize(),
             ),
             image_path: self.image_path.clone(),
-            transform2d: self.transform2d,
+            transform2d: self.transform2d.clone(),
         }
     }
 }

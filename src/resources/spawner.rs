@@ -163,7 +163,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
                         }
                     } else {
                         TileSpawner::add_components_from_shape(
-                            models
+                            &models
                                 .iter()
                                 .find(|m| m.layer == SpriteLayer::Front)
                                 .unwrap()
@@ -178,7 +178,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
     }
 
     fn add_components_from_shape(
-        shape: ModelShape,
+        shape: &ModelShape,
         tile: Entity,
         child_builder: &mut ChildBuilder,
     ) {
@@ -187,7 +187,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
                 orientation,
                 transform2d,
             } => {
-                if orientation == SpriteOrientation::Vertical {
+                if orientation == &SpriteOrientation::Vertical {
                     match transform2d.scale.y {
                         y if 2.5 < y => {
                             child_builder.add_command(Insert {
