@@ -43,6 +43,10 @@ impl Paths {
         Self::asset_path().join("data")
     }
 
+    fn gfx_path() -> PathBuf {
+        Self::asset_path().join("gfx")
+    }
+
     fn save_path() -> PathBuf {
         Self::asset_path().join("save")
     }
@@ -71,56 +75,54 @@ impl Paths {
         if !Self::asset_path().is_dir() {
             eprintln!("Directory '{}' not found.", Self::asset_path().display());
             eprintln!("Please run this in the directory containing the 'assets' directory.");
-            Err(())
-        } else if !Self::data_path().is_dir() {
-            eprintln!("Directory '{}' not found.", Self::data_path().display());
-            eprintln!("Please make sure the '{}' directory contains a copy of (or a symlink to) Cataclysm-DDA's 'data' directory.", Self::asset_path().display());
-            Err(())
-        } else if !Self::save_path().is_dir() {
-            eprintln!("Directory '{}' not found.", Self::save_path().display());
-            eprintln!("Please make sure the '{}' directory contains a copy of (or a symlink to) Cataclysm-DDA's 'save' directory.", Self::asset_path().display());
-            Err(())
+            return Err(());
+        }
+
+        for asset_subdir in vec![Self::data_path(), Self::gfx_path(), Self::save_path()] {
+            if !asset_subdir.is_dir() {
+                eprintln!("Directory '{}/' not found.", asset_subdir.display());
+                eprintln!("Please make sure the '{}/' directory contains a copy of (or a symlink to) Cataclysm-DDA's '{}/' directory.", Self::asset_path().display(), asset_subdir.file_name().unwrap().to_str().unwrap());
+                return Err(());
+            }
+        }
+
+        let args: Vec<String> = args().collect();
+        if args.len() == 2 && !args[0].starts_with('-') {
+            Ok(Paths::new(&PathBuf::from(args[1].as_str())))
         } else {
-            let args: Vec<String> = args().collect();
-            if args.len() == 2 && !args[0].starts_with('-') {
-                Ok(Paths::new(&PathBuf::from(args[1].as_str())))
-            } else {
-                eprintln!("No (or too many) arguments speciefied");
-                let mut possibilites: Vec<PathBuf> = Vec::new();
-                let pattern = Self::save_path().join("**").join("#*.sav");
-                let pattern = pattern.to_str().unwrap();
-                for sav in glob(pattern).expect("Failed to read glob pattern") {
-                    possibilites.push(
-                        sav.expect("problem with path")
-                            .components()
-                            .skip(2)
-                            .collect::<PathBuf>(),
-                    );
+            eprintln!("No (or too many) arguments speciefied");
+            let mut possibilites: Vec<PathBuf> = Vec::new();
+            let pattern = Self::save_path().join("**").join("#*.sav");
+            let pattern = pattern.to_str().unwrap();
+            for sav in glob(pattern).expect("Failed to read glob pattern") {
+                possibilites.push(
+                    sav.expect("problem with path")
+                        .components()
+                        .skip(2)
+                        .collect::<PathBuf>(),
+                );
+            }
+            match possibilites.len() {
+                0 => {
+                    let example = Self::save_path().join("Boston").join("#VGFsZG9y.sav");
+                    eprintln!("A file like '{}' should exist. Create a world and a character save using Cataclysm-DDA.", example.display());
+                    Err(())
                 }
-                match possibilites.len() {
-                    0 => {
-                        let example = Self::save_path().join("Boston").join("#VGFsZG9y.sav");
-                        eprintln!("A file like '{}' should exist. Create a world and a character save using Cataclysm-DDA.", example.display());
-                        Err(())
+                1 => {
+                    println!("Found a single save files: {}", possibilites[0].display());
+                    Ok(Paths::new(&possibilites[0]))
+                }
+                n => {
+                    eprintln!(
+                        "Found {n} save files under {}:",
+                        Self::save_path().display()
+                    );
+                    for possibility in possibilites {
+                        eprintln!("'{}'", possibility.display());
                     }
-                    1 => {
-                        println!("Found a single save files: {}", possibilites[0].display());
-                        Ok(Paths::new(&possibilites[0]))
-                    }
-                    n => {
-                        eprintln!(
-                            "Found {n} save files under {}:",
-                            Self::save_path().display()
-                        );
-                        for possibility in possibilites {
-                            eprintln!("'{}'", possibility.display());
-                        }
-                        eprintln!("Please specify the one of the .sav files above to load as command line argument.");
-                        eprintln!(
-                            "Include quotes to prevent '#...' being interpreted as a comment."
-                        );
-                        Err(())
-                    }
+                    eprintln!("Please specify the one of the .sav files above to load as command line argument.");
+                    eprintln!("Include quotes to prevent '#...' being interpreted as a comment.");
+                    Err(())
                 }
             }
         }
