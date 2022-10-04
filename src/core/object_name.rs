@@ -61,6 +61,7 @@ impl ObjectName {
             || self.0.starts_with("t_concrete_wall")
             || self.0.starts_with("t_reinforced_glass")
             || self.0.starts_with("t_paper")
+            || self.0.starts_with("t_soil")
         {
             ModelShape::Cuboid {
                 height: VERTICAL.f32(),

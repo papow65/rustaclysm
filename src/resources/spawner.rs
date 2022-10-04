@@ -953,7 +953,11 @@ impl<'w, 's> Spawner<'w, 's> {
     pub(crate) fn spawn_characters(&mut self, offset: Pos) {
         self.spawn_character(
             Label::new(self.tile_spawner.sav.player.name.clone()),
-            Pos::new(45, Level::ZERO, 56).offset(offset).unwrap(),
+            Pos::new(45, Level::ZERO, 56)
+                .offset(offset)
+                .unwrap()
+                .offset(Pos::new(-9, Level::ZERO, 0))
+                .unwrap(),
             Health::new(10),
             Speed::from_h_kmph(6),
             Faction::Human,
