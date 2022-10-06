@@ -123,8 +123,8 @@ impl<'w, 's> Envir<'w, 's> {
     pub(crate) fn can_see(&self, from: Pos, to: Pos) -> Visible {
         if from == to {
             Visible::Seen
-        } else if 60 < from.x.abs_diff(to.x) || 60 < from.z.abs_diff(to.z) {
-            // more than 60 meter away
+        } else if 61 <= from.x.abs_diff(to.x) || 61 <= from.z.abs_diff(to.z) {
+            // 61 meter or more away
             Visible::Unseen
         } else {
             match self.relative_rays.ray(from, to) {

@@ -1,4 +1,4 @@
-use crate::prelude::{Distance, Millimeter, Milliseconds, ADJACENT, DIAGONAL, VERTICAL};
+use crate::prelude::{Distance, Millimeter, Milliseconds};
 use bevy::prelude::{Component, Vec3};
 use float_ord::FloatOrd;
 use pathfinding::{num_traits::Zero, prelude::astar};
@@ -83,7 +83,7 @@ impl Level {
     }
 
     pub(crate) fn f32(&self) -> f32 {
-        f32::from(self.h) as f32 * VERTICAL.f32()
+        f32::from(self.h) as f32 * Millimeter::VERTICAL.f32()
     }
 
     pub(crate) fn visible_from(&self, reference: Self) -> bool {
@@ -145,18 +145,22 @@ impl Nbor {
         match self {
             Self::Up => Distance {
                 horizontal: Millimeter(0),
-                up: VERTICAL,
+                up: Millimeter::VERTICAL,
                 down: Millimeter(0),
             },
             Self::Down => Distance {
                 horizontal: Millimeter(0),
                 up: Millimeter(0),
-                down: VERTICAL,
+                down: Millimeter::VERTICAL,
             },
             horizontal => {
                 let (x, z) = horizontal.horizontal_offset();
                 Distance {
-                    horizontal: if x == 0 || z == 0 { ADJACENT } else { DIAGONAL },
+                    horizontal: if x == 0 || z == 0 {
+                        Millimeter::ADJACENT
+                    } else {
+                        Millimeter::DIAGONAL
+                    },
                     up: Millimeter(0),
                     down: Millimeter(0),
                 }
@@ -186,12 +190,16 @@ impl Pos {
 
         Distance {
             horizontal: Millimeter(
-                std::cmp::max(dx, dz) * ADJACENT.0
-                    + std::cmp::min(dx, dz) * (DIAGONAL.0 - ADJACENT.0),
+                std::cmp::max(dx, dz) * Millimeter::ADJACENT.0
+                    + std::cmp::min(dx, dz) * (Millimeter::DIAGONAL.0 - Millimeter::ADJACENT.0),
             ),
-            up: Millimeter(if 0 < dy { VERTICAL.0 * dy as u64 } else { 0 }),
+            up: Millimeter(if 0 < dy {
+                Millimeter::VERTICAL.0 * dy as u64
+            } else {
+                0
+            }),
             down: Millimeter(if dy < 0 {
-                VERTICAL.0 * u64::from(dy.unsigned_abs())
+                Millimeter::VERTICAL.0 * u64::from(dy.unsigned_abs())
             } else {
                 0
             }),
@@ -230,9 +238,9 @@ impl Pos {
 
     pub(crate) fn vec3(self) -> Vec3 {
         Vec3::new(
-            f64::from(self.x) as f32 * ADJACENT.f32(),
+            f64::from(self.x) as f32 * Millimeter::ADJACENT.f32(),
             self.level.f32(),
-            f64::from(self.z) as f32 * ADJACENT.f32(),
+            f64::from(self.z) as f32 * Millimeter::ADJACENT.f32(),
         )
     }
 

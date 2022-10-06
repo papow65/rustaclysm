@@ -82,6 +82,8 @@ impl<'w, 's> TileSpawner<'w, 's> {
         self.commands.entity(parent).with_children(|child_builder| {
             let tile = child_builder
                 .spawn_bundle(SpatialBundle::default())
+                .insert(Visibility { is_visible: false })
+                .insert(LevelChanged)
                 .insert(
                     item_info
                         .map_or_else(|| definition.name.to_fallback_label(), |i| i.to_label(1)),
@@ -244,7 +246,8 @@ impl<'w, 's> TileSpawner<'w, 's> {
         zone_level: ZoneLevel,
     ) -> Result<(), serde_json::Error> {
         let map_path = MapPath::new(&self.paths.world_path(), zone_level);
-        if let Some(map) = Option::<Map>::try_from(map_path)? {
+        if let Some(map) = Option::<Map>::try_from(map_path)?.or_else(|| Map::fallback(zone_level))
+        {
             let zone_level_entity = self
                 .commands
                 .spawn_bundle(SpatialBundle::default())
@@ -458,36 +461,44 @@ impl CustomData {
             yellow: Appearance::new(material_assets, Color::rgb(0.8, 0.8, 0.4)),
             cube_mesh: mesh_assets.add(Mesh::from(shape::Cube { size: 1.0 })),
             wall_transform: Transform {
-                translation: Vec3::new(0.0, 0.495 * VERTICAL.f32(), 0.0),
-                scale: Vec3::new(ADJACENT.f32(), 0.99 * VERTICAL.f32(), ADJACENT.f32()),
+                translation: Vec3::new(0.0, 0.495 * Millimeter::VERTICAL.f32(), 0.0),
+                scale: Vec3::new(
+                    Millimeter::ADJACENT.f32(),
+                    0.99 * Millimeter::VERTICAL.f32(),
+                    Millimeter::ADJACENT.f32(),
+                ),
                 ..Transform::default()
             },
             window_pane_transform: Transform {
                 translation: Vec3::new(0.0, 0.75, 0.0),
                 rotation: Quat::from_rotation_y(-std::f32::consts::FRAC_PI_2),
                 scale: Vec3::new(
-                    0.99 * ADJACENT.f32(),
-                    0.99 * VERTICAL.f32(),
-                    0.99 * ADJACENT.f32(),
+                    0.99 * Millimeter::ADJACENT.f32(),
+                    0.99 * Millimeter::VERTICAL.f32(),
+                    0.99 * Millimeter::ADJACENT.f32(),
                 ),
             },
             stair_transform: Transform {
                 rotation: Quat::from_rotation_x(-0.12 * std::f32::consts::PI),
-                scale: Vec3::new(0.8, 1.2 * VERTICAL.f32(), 0.2),
+                scale: Vec3::new(0.8, 1.2 * Millimeter::VERTICAL.f32(), 0.2),
                 ..Transform::default()
             },
             rack_transform: Transform {
-                translation: Vec3::new(0.0, 0.45 * VERTICAL.f32(), 0.0),
+                translation: Vec3::new(0.0, 0.45 * Millimeter::VERTICAL.f32(), 0.0),
                 scale: Vec3::new(
-                    0.90 * ADJACENT.f32(),
-                    0.90 * VERTICAL.f32(),
-                    0.90 * ADJACENT.f32(),
+                    0.90 * Millimeter::ADJACENT.f32(),
+                    0.90 * Millimeter::VERTICAL.f32(),
+                    0.90 * Millimeter::ADJACENT.f32(),
                 ),
                 ..default()
             },
             table_transform: Transform {
-                translation: Vec3::new(0.0, 0.375 * ADJACENT.f32(), 0.0),
-                scale: Vec3::new(ADJACENT.f32(), 0.75 * ADJACENT.f32(), ADJACENT.f32()),
+                translation: Vec3::new(0.0, 0.375 * Millimeter::ADJACENT.f32(), 0.0),
+                scale: Vec3::new(
+                    Millimeter::ADJACENT.f32(),
+                    0.75 * Millimeter::ADJACENT.f32(),
+                    Millimeter::ADJACENT.f32(),
+                ),
                 ..Transform::default()
             },
         }
@@ -641,7 +652,7 @@ impl<'w, 's> Spawner<'w, 's> {
     }
 
     pub(crate) fn spawn_chair(&mut self, pos: Pos) {
-        let scale = 0.45 * ADJACENT.f32();
+        let scale = 0.45 * Millimeter::ADJACENT.f32();
 
         self.tile_spawner
             .commands

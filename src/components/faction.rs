@@ -111,7 +111,7 @@ impl Faction {
 
         let up_time: Milliseconds = Distance {
             horizontal: Millimeter(0),
-            up: VERTICAL,
+            up: Millimeter::VERTICAL,
             down: Millimeter(0),
         } / speed;
 

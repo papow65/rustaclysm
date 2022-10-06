@@ -4,6 +4,10 @@ use bevy::prelude::Component;
 pub(crate) struct Millimeter(pub(crate) u64);
 
 impl Millimeter {
+    pub(crate) const ADJACENT: Self = Self(1000);
+    pub(crate) const DIAGONAL: Self = Self(1414);
+    pub(crate) const VERTICAL: Self = Self(1800);
+
     pub(crate) fn f32(&self) -> f32 {
         0.001 * self.0 as f32
     }
@@ -58,10 +62,6 @@ impl std::ops::Div<MillimeterPerSecond> for Millimeter {
     }
 }
 
-pub(crate) const ADJACENT: Millimeter = Millimeter(1000);
-pub(crate) const DIAGONAL: Millimeter = Millimeter(1414);
-pub(crate) const VERTICAL: Millimeter = Millimeter(1800);
-
 #[derive(Clone, Copy)]
 pub(crate) struct Distance {
     pub(crate) horizontal: Millimeter,
@@ -93,11 +93,11 @@ impl Speed {
     }
 
     pub(crate) fn stay(&self) -> Milliseconds {
-        Millimeter(ADJACENT.0 / 2) / self.h
+        Millimeter(Millimeter::ADJACENT.0 / 2) / self.h
     }
 
     pub(crate) fn activate(&self) -> Milliseconds {
-        Millimeter(3 * ADJACENT.0) / self.h
+        Millimeter(3 * Millimeter::ADJACENT.0) / self.h
     }
 }
 

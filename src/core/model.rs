@@ -93,7 +93,11 @@ impl ModelShape {
                 transform2d,
             } => transform2d.to_transform(*orientation, layer, vertical_offset),
             Self::Cuboid { height } => Transform {
-                scale: Vec3::new(ADJACENT.f32(), *height, ADJACENT.f32()),
+                scale: Vec3::new(
+                    Millimeter::ADJACENT.f32(),
+                    *height,
+                    Millimeter::ADJACENT.f32(),
+                ),
                 ..Transform::default()
             },
         }

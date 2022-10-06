@@ -1,5 +1,6 @@
 use crate::prelude::{
-    At, AtVec, FieldVec, ObjectName, PathFor, Repetition, RepetitionBlock, WorldPath, ZoneLevel,
+    Amount, At, AtVec, FieldVec, FlatVec, Level, ObjectName, PathFor, Repetition, RepetitionBlock,
+    WorldPath, ZoneLevel,
 };
 use bevy::utils::HashMap;
 use serde::Deserialize;
@@ -32,7 +33,22 @@ impl MapPath {
 /** Corresponds to a 'map' in CDDA. It defines the layout of a `ZoneLevel`. */
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub(crate) struct Map(pub(crate) Vec<Submap>);
+pub(crate) struct Map(pub(crate) [Submap; 4]);
+
+impl Map {
+    pub(crate) fn fallback(zone_level: ZoneLevel) -> Option<Self> {
+        if zone_level.level == Level::ZERO {
+            Some(Map([
+                Submap::fallback(zone_level, 0, 0),
+                Submap::fallback(zone_level, 0, 1),
+                Submap::fallback(zone_level, 1, 0),
+                Submap::fallback(zone_level, 1, 1),
+            ]))
+        } else {
+            None
+        }
+    }
+}
 
 impl TryFrom<MapPath> for Option<Map> {
     type Error = serde_json::Error;
@@ -88,6 +104,35 @@ pub(crate) struct Submap {
 
     #[allow(unused)]
     computers: Option<Vec<serde_json::Value>>,
+}
+
+impl Submap {
+    pub(crate) fn fallback(zone_level: ZoneLevel, x: i32, z: i32) -> Self {
+        Submap {
+            version: 0,
+            turn_last_touched: 0,
+            coordinates: (
+                2 * zone_level.x + x,
+                2 * zone_level.z + z,
+                i32::from(zone_level.level.h),
+            ),
+            temperature: 0,
+            radiation: Vec::new(),
+            terrain: RepetitionBlock::new(Amount {
+                obj: ObjectName::new("unknown"),
+                amount: 144,
+            }),
+            furniture: Vec::new(),
+            items: FlatVec(Vec::new()),
+            traps: FlatVec(Vec::new()),
+            fields: FlatVec(Vec::new()),
+            cosmetics: Vec::new(),
+            spawns: Vec::new(),
+            vehicles: Vec::new(),
+            partial_constructions: Vec::new(),
+            computers: None,
+        }
+    }
 }
 
 #[derive(Debug)]

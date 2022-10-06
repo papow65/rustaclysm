@@ -41,7 +41,7 @@ impl ObjectName {
             || self.0.starts_with("t_ladder_down")
             || self.0.starts_with("t_ramp_down")
             || self.0.starts_with("t_slope_down")
-            || self.0.starts_with("t_gutter_downspout") // TODO
+            || self.0.starts_with("t_gutter_downspout")
     }
 
     pub(crate) fn to_shape(
@@ -64,7 +64,7 @@ impl ObjectName {
             || self.0.starts_with("t_soil")
         {
             ModelShape::Cuboid {
-                height: VERTICAL.f32(),
+                height: Millimeter::VERTICAL.f32(),
             }
         } else if self.0.starts_with("t_window")
             || self.0.starts_with("t_door")
@@ -74,13 +74,13 @@ impl ObjectName {
             ModelShape::Plane {
                 orientation: SpriteOrientation::Vertical,
                 transform2d: Transform2d {
-                    scale: Vec2::new(ADJACENT.f32(), VERTICAL.f32()),
+                    scale: Vec2::new(Millimeter::ADJACENT.f32(), Millimeter::VERTICAL.f32()),
                     offset: Vec2::ZERO,
                 },
             }
         } else if self.0.starts_with("t_sewage_pipe") {
             ModelShape::Cuboid {
-                height: ADJACENT.f32(),
+                height: Millimeter::ADJACENT.f32(),
             }
         } else if self.0.starts_with("mon_") {
             ModelShape::Plane {

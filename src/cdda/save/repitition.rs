@@ -48,6 +48,10 @@ impl<T> Repetition<T> {
 pub(crate) struct RepetitionBlock<T>(Vec<Repetition<T>>);
 
 impl<T> RepetitionBlock<T> {
+    pub(crate) fn new(amount: Amount<T>) -> Self {
+        Self(vec![Repetition::Multiple(amount)])
+    }
+
     pub(crate) fn load_as_subzone(&self, subzone_offset: Pos) -> HashMap<Pos, &T> {
         self.load(
             |x, z| {
