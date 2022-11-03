@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use bevy::prelude::*;
 
-const SPAWN_DISTANCE: u32 = 4;
+const SPAWN_DISTANCE: u32 = 5;
 const DESPAWN_DISTANCE: u32 = SPAWN_DISTANCE + 1;
 
 fn get_center_zones(pos: Pos, player: &Player) -> Vec<Zone> {

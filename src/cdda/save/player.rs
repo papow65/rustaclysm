@@ -92,7 +92,7 @@ pub(crate) struct CddaPlayer {
     pub(crate) martial_arts_data: serde_json::Value,
     pub(crate) max_power_level_modifier: serde_json::Value,
     pub(crate) melee_quiet: serde_json::Value,
-    pub(crate) moncams: serde_json::Value,
+    pub(crate) moncams: Option<serde_json::Value>,
     pub(crate) morale: serde_json::Value,
     pub(crate) move_mode: serde_json::Value,
     pub(crate) moves: serde_json::Value,
