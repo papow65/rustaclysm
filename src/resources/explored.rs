@@ -14,6 +14,10 @@ impl Explored {
         }
     }
 
+    pub(crate) fn mark_seen(&mut self, zone_level: ZoneLevel) {
+        self.explored.insert(zone_level, true);
+    }
+
     pub(crate) fn has_been_seen(&mut self, zone_level: ZoneLevel) -> bool {
         if !self.explored.contains_key(&zone_level) {
             let overzone = Overzone::from(Zone::from(zone_level));
