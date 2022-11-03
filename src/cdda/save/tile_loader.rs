@@ -180,7 +180,7 @@ pub(crate) struct TileLoader {
 impl TileLoader {
     pub(crate) fn new(asset_server: &AssetServer) -> Self {
         let filepath = "assets/gfx/UltimateCataclysm/tile_config.json";
-        let file_contents = read_to_string(&filepath).unwrap();
+        let file_contents = read_to_string(filepath).unwrap();
         let json: serde_json::Value = serde_json::from_str(&file_contents).unwrap();
         let json_atlases = json.as_object().unwrap()["tiles-new"].as_array().unwrap();
 
