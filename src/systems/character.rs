@@ -29,67 +29,74 @@ pub(crate) fn manage_characters(
     hierarchy: Hierarchy, // pickup
 ) {
     let start = Instant::now();
+    let mut counter = 0;
 
-    let entities = characters
-        .c
-        .iter()
-        .map(|(e, _, pos, _, _, _, _)| (e, pos))
-        .filter(|(e, &pos)| envir.has_floor(pos) || players.get(*e).is_ok())
-        .map(|(e, _)| e)
-        .collect::<Vec<Entity>>();
-    if let Some(character) = timeouts.next(&entities) {
-        let factions = characters.collect_factions();
-        let (entity, label, &pos, &speed, health, faction, container) =
-            characters.c.get(character).unwrap();
-        let action = if let Ok(ref mut player) = players.get_mut(entity) {
-            if let Some(instruction) = instruction_queue.pop() {
-                match player.behave(&envir, pos, instruction, timeouts.time()) {
-                    Ok(action) => action,
-                    Err(Some(message)) => {
-                        commands.spawn(message);
-                        return; // invalid instruction - wait for the user
+    while start.elapsed() < MAX_SYSTEM_DURATION / 2 {
+        let entities = characters
+            .c
+            .iter()
+            .map(|(e, _, pos, _, _, _, _)| (e, pos))
+            .filter(|(e, &pos)| envir.has_floor(pos) || players.get(*e).is_ok())
+            .map(|(e, _)| e)
+            .collect::<Vec<Entity>>();
+        if let Some(character) = timeouts.next(&entities) {
+            let factions = characters.collect_factions();
+            let (entity, label, &pos, &speed, health, faction, container) =
+                characters.c.get(character).unwrap();
+            let action = if let Ok(ref mut player) = players.get_mut(entity) {
+                if let Some(action) = player.plan_action(
+                    &mut commands,
+                    &mut envir,
+                    &mut instruction_queue,
+                    pos,
+                    timeouts.time(),
+                ) {
+                    action
+                } else if let PlayerActionState::Waiting(until) = player.state {
+                    if until <= timeouts.time() {
+                        instruction_queue.add(QueuedInstruction::Cancel);
+                        break; // process the cancellation next turn
+                    } else {
+                        Action::Stay
                     }
-                    Err(None) => {
-                        return; // valid instruction, but no action performed
-                    }
-                }
-            } else if let PlayerActionState::Waiting(until) = player.state {
-                if until <= timeouts.time() {
-                    instruction_queue.add(QueuedInstruction::Cancel);
-                    return; // process the cancellation next turn
                 } else {
-                    Action::Stay
+                    break; // no key pressed - wait for the user
                 }
             } else {
-                return; // no key pressed - wait for the user
-            }
-        } else {
-            let strategy = faction.behave(&envir, pos, speed, health, &factions);
-            println!(
-                "{} at {:?} plans {:?} and does {:?}",
-                &label, pos, strategy.intent, strategy.action
+                let strategy = faction.behave(&envir, pos, speed, health, &factions);
+                println!(
+                    "{} at {:?} plans {:?} and does {:?}",
+                    &label, pos, strategy.intent, strategy.action
+                );
+                strategy.action
+            };
+            let mut timeout = action.perform(
+                &mut commands,
+                &mut envir,
+                &dumpees,
+                &hierarchy,
+                character,
+                label,
+                pos,
+                speed,
+                container,
             );
-            strategy.action
-        };
-        let mut timeout = action.perform(
-            &mut commands,
-            &mut envir,
-            &dumpees,
-            &hierarchy,
-            character,
-            label,
-            pos,
-            speed,
-            container,
-        );
 
-        if timeout.0 == 0 && players.get(character).is_err() {
-            commands.spawn(Message::error("failed npc action"));
-            timeout.0 = 1000;
+            if timeout.0 == 0 && players.get(character).is_err() {
+                commands.spawn(Message::error("failed npc action"));
+                timeout.0 = 1000;
+            }
+
+            timeouts.add(character, timeout);
+
+            counter += 1;
+        } else {
+            // No characters!
+            break;
         }
-
-        timeouts.add(character, timeout);
     }
 
+    let duration = start.elapsed();
+    println!("manage_characters took {duration:?} (actions: {counter})");
     log_if_slow("manage_characters", start);
 }

@@ -10,9 +10,11 @@ use std::time::{Duration, Instant};
 
 pub(crate) use self::{character::*, check::*, hud::*, input::*, spawn::*, startup::*, update::*};
 
+pub(crate) const MAX_SYSTEM_DURATION: Duration = Duration::from_micros(500);
+
 fn log_if_slow(name: &str, start: Instant) {
     let duration = start.elapsed();
-    if Duration::new(0, 200_000) < duration {
+    if MAX_SYSTEM_DURATION < duration {
         println!("slow system: {name} took {duration:?}");
     }
 }

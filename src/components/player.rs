@@ -1,7 +1,8 @@
 use crate::prelude::{
-    Action, Direction, Envir, Level, Message, Milliseconds, Nbor, Pos, QueuedInstruction, ZoneLevel,
+    Action, Direction, Envir, InstructionQueue, Level, Message, Milliseconds, Nbor, Pos,
+    QueuedInstruction, ZoneLevel,
 };
-use bevy::ecs::component::Component;
+use bevy::prelude::{Commands, Component};
 use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
@@ -27,6 +28,12 @@ impl Display for PlayerActionState {
     }
 }
 
+pub(crate) enum PlayerBehavior {
+    Perform(Action),
+    Warning(Message),
+    NoEffect,
+}
+
 #[derive(Component)]
 pub(crate) struct Player {
     pub(crate) state: PlayerActionState,
@@ -44,32 +51,58 @@ impl Player {
         level.visible_from(reference.level)
     }
 
-    pub(crate) fn behave(
+    pub(crate) fn plan_action(
+        &mut self,
+        commands: &mut Commands,
+        envir: &mut Envir,
+        instruction_queue: &mut InstructionQueue,
+        pos: Pos,
+        now: Milliseconds,
+    ) -> Option<Action> {
+        loop {
+            if let Some(instruction) = instruction_queue.pop() {
+                match self.plan(envir, pos, instruction, now) {
+                    PlayerBehavior::Perform(action) => break Some(action),
+                    PlayerBehavior::Warning(message) => {
+                        commands.spawn(message);
+                        // invalid instruction -> next instruction
+                    }
+                    PlayerBehavior::NoEffect => {
+                        // valid instruction, but no action performed -> next instruction
+                    }
+                }
+            } else {
+                break None;
+            };
+        }
+    }
+
+    fn plan(
         &mut self,
         envir: &Envir,
         pos: Pos,
         instruction: QueuedInstruction,
         now: Milliseconds,
-    ) -> Result<Action, Option<Message>> {
+    ) -> PlayerBehavior {
         println!("processing instruction: {instruction:?}");
 
         match (self.state, instruction) {
             (PlayerActionState::Normal, QueuedInstruction::Offset(Direction::Here)) => {
-                Ok(Action::Stay)
+                PlayerBehavior::Perform(Action::Stay)
             }
             (PlayerActionState::Normal, QueuedInstruction::Wait) => {
                 self.state = PlayerActionState::Waiting(now + Milliseconds(60_000));
-                Err(Some(Message::new("Started waiting...")))
+                PlayerBehavior::Warning(Message::new("Started waiting..."))
             }
             (PlayerActionState::Attacking, QueuedInstruction::Offset(Direction::Here)) => {
-                Err(Some(Message::warn("can't attack self")))
+                PlayerBehavior::Warning(Message::warn("can't attack self"))
             }
             (PlayerActionState::ExaminingPos(curr), QueuedInstruction::Offset(direction)) => {
                 let nbor = direction.to_nbor();
                 self.handle_offset(envir.get_nbor(curr, &nbor), &nbor)
             }
             (PlayerActionState::Normal, QueuedInstruction::Cancel) => {
-                Err(Some(Message::warn("Press ctrl+c/d/q to exit")))
+                PlayerBehavior::Warning(Message::warn("Press ctrl+c/d/q to exit"))
             }
             (_, QueuedInstruction::Cancel | QueuedInstruction::Wait)
             | (PlayerActionState::Attacking, QueuedInstruction::Attack)
@@ -77,97 +110,95 @@ impl Player {
             | (PlayerActionState::ExaminingPos(_), QueuedInstruction::ExaminePos)
             | (PlayerActionState::ExaminingZoneLevel(_), QueuedInstruction::ExamineZoneLevel) => {
                 self.state = PlayerActionState::Normal;
-                Err(None)
+                PlayerBehavior::NoEffect
             }
             (_, QueuedInstruction::Offset(direction)) => {
                 let nbor = direction.to_nbor();
                 self.handle_offset(envir.get_nbor(pos, &nbor), &nbor)
             }
-            (_, QueuedInstruction::Pickup) => Ok(Action::Pickup),
-            (_, QueuedInstruction::Dump) => Ok(Action::Dump),
+            (_, QueuedInstruction::Pickup) => PlayerBehavior::Perform(Action::Pickup),
+            (_, QueuedInstruction::Dump) => PlayerBehavior::Perform(Action::Dump),
             (_, QueuedInstruction::Attack) => self.handle_attack(envir, pos),
             (_, QueuedInstruction::Smash) => self.handle_smash(envir, pos),
             (_, QueuedInstruction::ExaminePos) => {
                 self.state = PlayerActionState::ExaminingPos(pos);
-                Ok(Action::ExaminePos { target: pos })
+                PlayerBehavior::Perform(Action::ExaminePos { target: pos })
             }
             (_, QueuedInstruction::ExamineZoneLevel) => {
                 let target = ZoneLevel::from(pos);
                 self.state = PlayerActionState::ExaminingZoneLevel(target);
-                Ok(Action::ExamineZoneLevel { target })
+                PlayerBehavior::Perform(Action::ExamineZoneLevel { target })
             }
-            (_, QueuedInstruction::SwitchRunning) => Ok(Action::SwitchRunning),
+            (_, QueuedInstruction::SwitchRunning) => PlayerBehavior::Perform(Action::SwitchRunning),
         }
     }
 
-    fn handle_offset(
-        &mut self,
-        target: Result<Pos, Message>,
-        nbor: &Nbor,
-    ) -> Result<Action, Option<Message>> {
+    fn handle_offset(&mut self, target: Result<Pos, Message>, nbor: &Nbor) -> PlayerBehavior {
         match (self.state, target) {
             (PlayerActionState::ExaminingZoneLevel(current), _) => {
                 let target = current.nbor(nbor);
                 if let Some(target) = target {
                     self.state = PlayerActionState::ExaminingZoneLevel(target);
-                    Ok(Action::ExamineZoneLevel { target })
+                    PlayerBehavior::Perform(Action::ExamineZoneLevel { target })
                 } else {
-                    Err(Some(Message::warn("invalid zone level to examine")))
+                    PlayerBehavior::Warning(Message::warn("invalid zone level to examine"))
                 }
             }
             (PlayerActionState::ExaminingPos(current), target) => {
                 if let Some(target) = target.ok().or_else(|| current.raw_nbor(nbor)) {
                     self.state = PlayerActionState::ExaminingPos(target);
-                    Ok(Action::ExaminePos { target })
+                    PlayerBehavior::Perform(Action::ExaminePos { target })
                 } else {
-                    Err(Some(Message::warn("invalid position to examine")))
+                    PlayerBehavior::Warning(Message::warn("invalid position to examine"))
                 }
             }
-            (PlayerActionState::Normal, Ok(target)) => Ok(Action::Step { target }),
+            (PlayerActionState::Normal, Ok(target)) => {
+                PlayerBehavior::Perform(Action::Step { target })
+            }
             (PlayerActionState::Attacking, Ok(target)) => {
                 self.state = PlayerActionState::Normal;
-                Ok(Action::Attack { target })
+                PlayerBehavior::Perform(Action::Attack { target })
             }
             (PlayerActionState::Smashing, Ok(target)) => {
                 self.state = PlayerActionState::Normal;
-                Ok(Action::Smash { target })
+                PlayerBehavior::Perform(Action::Smash { target })
             }
             (PlayerActionState::Waiting(_), _) => {
                 self.state = PlayerActionState::Normal;
-                Err(None)
+                PlayerBehavior::NoEffect
             }
-            (_, Err(message)) => Err(Some(message)),
+            (_, Err(message)) => PlayerBehavior::Warning(message),
         }
     }
 
-    fn handle_attack(&mut self, envir: &Envir, pos: Pos) -> Result<Action, Option<Message>> {
+    fn handle_attack(&mut self, envir: &Envir, pos: Pos) -> PlayerBehavior {
         let attackable_nbors = envir
             .nbors_for_exploring(pos, QueuedInstruction::Attack)
             .collect::<Vec<Pos>>();
         match attackable_nbors.len() {
-            0 => Err(Some(Message::warn("no targets nearby"))),
-            1 => Ok(Action::Attack {
+            0 => PlayerBehavior::Warning(Message::warn("no targets nearby")),
+            1 => PlayerBehavior::Perform(Action::Attack {
                 target: attackable_nbors[0],
             }),
             _ => {
                 self.state = PlayerActionState::Attacking;
-                Err(None)
+                PlayerBehavior::NoEffect
             }
         }
     }
 
-    fn handle_smash(&mut self, envir: &Envir, pos: Pos) -> Result<Action, Option<Message>> {
+    fn handle_smash(&mut self, envir: &Envir, pos: Pos) -> PlayerBehavior {
         let smashable_nbors = envir
             .nbors_for_exploring(pos, QueuedInstruction::Smash)
             .collect::<Vec<Pos>>();
         match smashable_nbors.len() {
-            0 => Err(Some(Message::warn("no targets nearby"))),
-            1 => Ok(Action::Smash {
+            0 => PlayerBehavior::Warning(Message::warn("no targets nearby")),
+            1 => PlayerBehavior::Perform(Action::Smash {
                 target: smashable_nbors[0],
             }),
             _ => {
                 self.state = PlayerActionState::Smashing;
-                Err(None)
+                PlayerBehavior::NoEffect
             }
         }
     }
