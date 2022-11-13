@@ -1,6 +1,7 @@
 use crate::prelude::*;
-use bevy::utils::HashMap;
+use bevy::{ecs::system::Resource, utils::HashMap};
 
+#[derive(Resource)]
 pub(crate) struct ZoneLevelNames {
     world_path: WorldPath,
     names: HashMap<ZoneLevel, ObjectName>,

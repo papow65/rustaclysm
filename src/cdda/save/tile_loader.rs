@@ -172,6 +172,7 @@ impl Atlas {
     }
 }
 
+#[derive(Resource)]
 pub(crate) struct TileLoader {
     tiles: HashMap<ObjectName, TileInfo>,
     textures: HashMap<SpriteNumber, TextureInfo>,

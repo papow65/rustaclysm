@@ -1,7 +1,8 @@
 use crate::prelude::*;
-use bevy::utils::HashMap;
+use bevy::{ecs::system::Resource, utils::HashMap};
 use glob::glob;
 
+#[derive(Resource)]
 pub(crate) struct ItemInfos {
     infos: HashMap<ObjectName, ItemInfo>,
 }

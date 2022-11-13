@@ -1,4 +1,5 @@
 use crate::prelude::SavPath;
+use bevy::ecs::system::Resource;
 use glob::glob;
 use std::{
     any::type_name,
@@ -29,7 +30,7 @@ impl<T> fmt::Debug for PathFor<T> {
 pub(crate) type WorldPath = PathFor<()>;
 
 /// This represents a world and a save in that world
-#[derive(Clone)]
+#[derive(Clone, Resource)]
 pub(crate) struct Paths {
     sav_path: PathBuf,
 }

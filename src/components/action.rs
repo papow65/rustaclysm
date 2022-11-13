@@ -82,7 +82,7 @@ fn move_(
 ) -> Milliseconds {
     if !envir.are_nbors(from, to) {
         let message = format!("can't move to {to:?}, as it is not a nbor of {from:?}");
-        commands.spawn().insert(Message::error(message));
+        commands.spawn(Message::error(message));
         return Milliseconds(0);
     }
 
@@ -106,12 +106,12 @@ fn move_(
         }*/
         Collision::Blocked(obstacle) => {
             let message = format!("{label} crashes into {obstacle}");
-            commands.spawn().insert(Message::warn(message));
+            commands.spawn(Message::warn(message));
             Milliseconds(0)
         }
         Collision::Ledged => {
             let message = format!("{label} halts at the ledge");
-            commands.spawn().insert(Message::warn(message));
+            commands.spawn(Message::warn(message));
             Milliseconds(0)
         }
     }
@@ -136,9 +136,7 @@ fn attack(
         });
         pos.dist(target) / speed
     } else {
-        commands
-            .spawn()
-            .insert(Message::warn(format!("{a_label} attacks nothing")));
+        commands.spawn(Message::warn(format!("{a_label} attacks nothing")));
         Milliseconds(0)
     }
 }
@@ -158,11 +156,11 @@ fn smash(
     let stair_pos = Pos::new(target.x, pos.level, target.z);
     if pos.level.up() == Some(target.level) && envir.stairs_up_to(stair_pos).is_none() {
         let message = format!("{s_label} smashes the ceiling");
-        commands.spawn().insert(Message::warn(message));
+        commands.spawn(Message::warn(message));
         Milliseconds(0)
     } else if pos.level.down() == Some(target.level) && envir.stairs_down_to(stair_pos).is_none() {
         let message = format!("{s_label} smashes the floor");
-        commands.spawn().insert(Message::warn(message));
+        commands.spawn(Message::warn(message));
         Milliseconds(0)
     } else if let Some(smashable) = envir.find_item(target) {
         commands.entity(smashable).insert(Damage {
@@ -171,9 +169,7 @@ fn smash(
         });
         pos.dist(target) / speed
     } else {
-        commands
-            .spawn()
-            .insert(Message::warn(format!("{s_label} smashes nothing")));
+        commands.spawn(Message::warn(format!("{s_label} smashes nothing")));
         Milliseconds(0)
     }
 }
@@ -191,19 +187,15 @@ fn dump(
     if let Some((dumpee, _, dee_label)) =
         dumpees.iter().find(|(_, parent, _)| parent.get() == dumper)
     {
-        commands
-            .spawn()
-            .insert(Message::new(format!("{dr_label} drops {dee_label}")));
+        commands.spawn(Message::new(format!("{dr_label} drops {dee_label}")));
         commands.entity(dumper).remove_children(&[dumpee]);
         commands
             .entity(dumpee)
-            .insert_bundle(VisibilityBundle::default())
+            .insert(VisibilityBundle::default())
             .insert(pos);
         speed.stay()
     } else {
-        commands
-            .spawn()
-            .insert(Message::warn(format!("nothing to drop for {dr_label}")));
+        commands.spawn(Message::warn(format!("nothing to drop for {dr_label}")));
         Milliseconds(0)
     }
 }
@@ -235,11 +227,11 @@ fn pickup(
                 pd_containable.0,
                 &pd_label
             );
-            commands.spawn().insert(Message::warn(message));
+            commands.spawn(Message::warn(message));
             Milliseconds(0)
         } else {
             let message = format!("{pr_label} picks up {pd_label}", pd_label = &pd_label);
-            commands.spawn().insert(Message::new(message));
+            commands.spawn(Message::new(message));
             commands
                 .entity(pd_entity)
                 .remove::<Pos>()
@@ -249,7 +241,7 @@ fn pickup(
         }
     } else {
         let message = format!("nothing to pick up for {pr_label}");
-        commands.spawn().insert(Message::new(message));
+        commands.spawn(Message::new(message));
         Milliseconds(0)
     }
 }

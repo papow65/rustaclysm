@@ -35,7 +35,7 @@ pub(crate) fn check_overlap(all_obstacles: Query<(Entity, &Pos, Option<&Label>),
 
     for (a, &a_p, a_s) in all_obstacles.iter() {
         for (b, &b_p, b_s) in all_obstacles.iter() {
-            if a.id() < b.id() {
+            if a.index() < b.index() {
                 assert!(
                     a_p != b_p,
                     "Overlap of {} and {} at {:?}",

@@ -5,7 +5,7 @@ use bevy::prelude::*;
 use bevy::render::camera::{PerspectiveProjection, Projection::Perspective};
 use bevy::utils::HashMap;
 
-#[derive(Default)]
+#[derive(Default, Resource)]
 pub(crate) struct TileCaches {
     appearance_cache: HashMap<String, Appearance>,
     horizontal_plane_mesh_cache: HashMap<SpriteNumber, Handle<Mesh>>,
@@ -81,7 +81,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
 
         self.commands.entity(parent).with_children(|child_builder| {
             let tile = child_builder
-                .spawn_bundle(SpatialBundle::default())
+                .spawn(SpatialBundle::default())
                 .insert(Visibility { is_visible: false })
                 .insert(LevelChanged)
                 .insert(
@@ -92,7 +92,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
                 .insert(Transform::from_translation(pos.vec3()))
                 .with_children(|child_builder| {
                     for (pbr_bundle, apprearance) in child_info {
-                        child_builder.spawn_bundle(pbr_bundle).insert(apprearance);
+                        child_builder.spawn(pbr_bundle).insert(apprearance);
                     }
                 })
                 .id();
@@ -100,7 +100,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
             if definition.specifier.shading_applied() {
                 child_builder.add_command(Insert {
                     entity: tile,
-                    component: if self.explored.has_been_seen(ZoneLevel::from(pos)) {
+                    bundle: if self.explored.has_been_seen(ZoneLevel::from(pos)) {
                         LastSeen::Previously
                     } else {
                         LastSeen::Never
@@ -112,36 +112,36 @@ impl<'w, 's> TileSpawner<'w, 's> {
                 ObjectSpecifier::Character => {
                     child_builder.add_command(Insert {
                         entity: tile,
-                        component: Obstacle,
+                        bundle: Obstacle,
                     });
                     child_builder.add_command(Insert {
                         entity: tile,
-                        component: Health::new(5),
+                        bundle: Health::new(5),
                     });
                     child_builder.add_command(Insert {
                         entity: tile,
-                        component: Faction::Animal,
+                        bundle: Faction::Animal,
                     });
                     child_builder.add_command(Insert {
                         entity: tile,
-                        component: Speed::from_h_kmph(10),
+                        bundle: Speed::from_h_kmph(10),
                     });
                     child_builder.add_command(Insert {
                         entity: tile,
-                        component: Container(0),
+                        bundle: Container(0),
                     });
                 }
                 ObjectSpecifier::Item(item) => {
                     child_builder.add_command(Insert {
                         entity: tile,
-                        component: item,
+                        bundle: item,
                     });
                 }
                 _ => {
                     if definition.specifier == ObjectSpecifier::Terrain {
                         child_builder.add_command(Insert {
                             entity: tile,
-                            component: Floor,
+                            bundle: Floor,
                         });
                     }
 
@@ -153,14 +153,14 @@ impl<'w, 's> TileSpawner<'w, 's> {
                         if up {
                             child_builder.add_command(Insert {
                                 entity: tile,
-                                component: StairsUp,
+                                bundle: StairsUp,
                             });
                         }
 
                         if down {
                             child_builder.add_command(Insert {
                                 entity: tile,
-                                component: StairsDown,
+                                bundle: StairsDown,
                             });
                         }
                     } else {
@@ -194,7 +194,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
                         y if 2.5 < y => {
                             child_builder.add_command(Insert {
                                 entity: tile,
-                                component: Obstacle,
+                                bundle: Obstacle,
                             });
                             child_builder.add_command(Remove {
                                 entity: tile,
@@ -202,27 +202,27 @@ impl<'w, 's> TileSpawner<'w, 's> {
                             });
                             child_builder.add_command(Insert {
                                 entity: tile,
-                                component: Opaque,
+                                bundle: Opaque,
                             });
                         }
                         y if 2.0 < y => {
                             child_builder.add_command(Insert {
                                 entity: tile,
-                                component: Hurdle(2.0),
+                                bundle: Hurdle(2.0),
                             });
                             child_builder.add_command(Insert {
                                 entity: tile,
-                                component: Opaque,
+                                bundle: Opaque,
                             });
                         }
                         _ => {
                             child_builder.add_command(Insert {
                                 entity: tile,
-                                component: Hurdle(1.5),
+                                bundle: Hurdle(1.5),
                             });
                             child_builder.add_command(Insert {
                                 entity: tile,
-                                component: Integrity::new(10),
+                                bundle: Integrity::new(10),
                             });
                         }
                     }
@@ -231,11 +231,11 @@ impl<'w, 's> TileSpawner<'w, 's> {
             ModelShape::Cuboid { .. } => {
                 child_builder.add_command(Insert {
                     entity: tile,
-                    component: Obstacle,
+                    bundle: Obstacle,
                 });
                 child_builder.add_command(Insert {
                     entity: tile,
-                    component: Opaque,
+                    bundle: Opaque,
                 });
             }
         }
@@ -250,7 +250,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
         {
             let zone_level_entity = self
                 .commands
-                .spawn_bundle(SpatialBundle::default())
+                .spawn(SpatialBundle::default())
                 .insert(zone_level)
                 .id();
             let base = map.0[0].coordinates;
@@ -409,7 +409,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
         let item_info = self.item_infos.get(definition.name);
 
         self.commands
-            .spawn_bundle(SpatialBundle::default())
+            .spawn(SpatialBundle::default())
             .insert(
                 item_info.map_or_else(|| definition.name.to_fallback_label(), |i| i.to_label(1)),
             )
@@ -427,12 +427,13 @@ impl<'w, 's> TileSpawner<'w, 's> {
             })
             .with_children(|child_builder| {
                 for pbr_bundle in pbr_bundles {
-                    child_builder.spawn_bundle(pbr_bundle);
+                    child_builder.spawn(pbr_bundle);
                 }
             });
     }
 }
 
+#[derive(Resource)]
 pub(crate) struct CustomData {
     glass: Appearance,
     wood: Appearance,
@@ -537,7 +538,7 @@ impl<'w, 's> Spawner<'w, 's> {
     pub(crate) fn spawn_wall(&mut self, pos: Pos) {
         self.tile_spawner
             .commands
-            .spawn_bundle(SpatialBundle::default())
+            .spawn(SpatialBundle::default())
             .insert(Wall)
             .insert(pos)
             .insert(Integrity::new(1000))
@@ -547,7 +548,7 @@ impl<'w, 's> Spawner<'w, 's> {
             .insert(LastSeen::Previously)
             .with_children(|parent| {
                 parent
-                    .spawn_bundle(PbrBundle {
+                    .spawn(PbrBundle {
                         mesh: self.custom.cube_mesh.clone(),
                         transform: self.custom.wall_transform,
                         ..PbrBundle::default()
@@ -559,7 +560,7 @@ impl<'w, 's> Spawner<'w, 's> {
     pub(crate) fn spawn_window(&mut self, pos: Pos) {
         self.tile_spawner
             .commands
-            .spawn_bundle(SpatialBundle::default())
+            .spawn(SpatialBundle::default())
             .insert(Window)
             .insert(pos)
             .insert(Integrity::new(1))
@@ -569,7 +570,7 @@ impl<'w, 's> Spawner<'w, 's> {
             .insert(LastSeen::Previously)
             .with_children(|parent| {
                 parent
-                    .spawn_bundle(PbrBundle {
+                    .spawn(PbrBundle {
                         mesh: self.custom.cube_mesh.clone(),
                         transform: Transform::from_translation(Vec3::new(0.0, 0.5, 0.0)),
                         ..PbrBundle::default()
@@ -577,7 +578,7 @@ impl<'w, 's> Spawner<'w, 's> {
                     .insert(self.custom.wooden_wall.clone());
 
                 parent
-                    .spawn_bundle(PbrBundle {
+                    .spawn(PbrBundle {
                         mesh: self.custom.cube_mesh.clone(),
                         transform: self.custom.window_pane_transform,
                         ..PbrBundle::default()
@@ -590,7 +591,7 @@ impl<'w, 's> Spawner<'w, 's> {
     pub(crate) fn spawn_stairs(&mut self, pos: Pos) {
         self.tile_spawner
             .commands
-            .spawn_bundle(SpatialBundle::default())
+            .spawn(SpatialBundle::default())
             .insert(StairsUp)
             .insert(pos)
             .insert(Integrity::new(100))
@@ -599,7 +600,7 @@ impl<'w, 's> Spawner<'w, 's> {
             .insert(LastSeen::Previously)
             .with_children(|child_builder| {
                 child_builder
-                    .spawn_bundle(PbrBundle {
+                    .spawn(PbrBundle {
                         mesh: self.custom.cube_mesh.clone(),
                         transform: self.custom.stair_transform,
                         ..PbrBundle::default()
@@ -611,7 +612,7 @@ impl<'w, 's> Spawner<'w, 's> {
     pub(crate) fn spawn_rack(&mut self, pos: Pos) {
         self.tile_spawner
             .commands
-            .spawn_bundle(SpatialBundle::default())
+            .spawn(SpatialBundle::default())
             .insert(Rack)
             .insert(pos)
             .insert(Integrity::new(40))
@@ -621,7 +622,7 @@ impl<'w, 's> Spawner<'w, 's> {
             .insert(LastSeen::Previously)
             .with_children(|parent| {
                 parent
-                    .spawn_bundle(PbrBundle {
+                    .spawn(PbrBundle {
                         mesh: self.custom.cube_mesh.clone(),
                         transform: self.custom.rack_transform,
                         ..PbrBundle::default()
@@ -633,7 +634,7 @@ impl<'w, 's> Spawner<'w, 's> {
     pub(crate) fn spawn_table(&mut self, pos: Pos) {
         self.tile_spawner
             .commands
-            .spawn_bundle(SpatialBundle::default())
+            .spawn(SpatialBundle::default())
             .insert(Table)
             .insert(pos)
             .insert(Integrity::new(30))
@@ -642,7 +643,7 @@ impl<'w, 's> Spawner<'w, 's> {
             .insert(LastSeen::Previously)
             .with_children(|parent| {
                 parent
-                    .spawn_bundle(PbrBundle {
+                    .spawn(PbrBundle {
                         mesh: self.custom.cube_mesh.clone(),
                         transform: self.custom.table_transform,
                         ..PbrBundle::default()
@@ -656,7 +657,7 @@ impl<'w, 's> Spawner<'w, 's> {
 
         self.tile_spawner
             .commands
-            .spawn_bundle(SpatialBundle::default())
+            .spawn(SpatialBundle::default())
             .insert(Chair)
             .insert(pos)
             .insert(Integrity::new(10))
@@ -665,7 +666,7 @@ impl<'w, 's> Spawner<'w, 's> {
             .insert(LastSeen::Previously)
             .with_children(|child_builder| {
                 child_builder
-                    .spawn_bundle(PbrBundle {
+                    .spawn(PbrBundle {
                         mesh: self.custom.cube_mesh.clone(),
                         transform: Transform {
                             translation: Vec3::new(0.0, scale / 2.0, 0.0),
@@ -677,7 +678,7 @@ impl<'w, 's> Spawner<'w, 's> {
                     .insert(self.custom.whitish.clone());
 
                 child_builder
-                    .spawn_bundle(PbrBundle {
+                    .spawn(PbrBundle {
                         mesh: self.custom.cube_mesh.clone(),
                         transform: Transform {
                             translation: Vec3::new(0.0, 0.425, -0.23),
@@ -695,14 +696,14 @@ impl<'w, 's> Spawner<'w, 's> {
 
         self.tile_spawner
             .commands
-            .spawn_bundle(SpatialBundle::default())
+            .spawn(SpatialBundle::default())
             .insert(label)
             .insert(pos)
             .insert(containable)
             .insert(LastSeen::Previously)
             .with_children(|child_builder| {
                 child_builder
-                    .spawn_bundle(PbrBundle {
+                    .spawn(PbrBundle {
                         mesh: self.custom.cube_mesh.clone(),
                         // customizing the size using a transform allows better positioning
                         transform: Transform {
@@ -734,23 +735,21 @@ impl<'w, 's> Spawner<'w, 's> {
             .insert(ZoneChanged)
             .with_children(|child_builder| {
                 child_builder
-                    .spawn_bundle(SpatialBundle::default())
+                    .spawn(SpatialBundle::default())
                     .insert(CameraBase)
                     .with_children(|child_builder| {
-                        child_builder
-                            .spawn_bundle(cursor_bundle)
-                            .insert(ExamineCursor);
+                        child_builder.spawn(cursor_bundle).insert(ExamineCursor);
 
-                        let camera_direction = Transform::identity()
+                        let camera_direction = Transform::IDENTITY
                             .looking_at(Vec3::new(1.0, 0.0, 0.1), Vec3::Y)
                             * Transform::from_translation(Vec3::new(0.0, 1.0, 0.0));
                         child_builder
-                            .spawn_bundle(PbrBundle {
+                            .spawn(PbrBundle {
                                 transform: camera_direction,
                                 ..PbrBundle::default()
                             })
                             .with_children(|child_builder| {
-                                child_builder.spawn_bundle(Camera3dBundle {
+                                child_builder.spawn(Camera3dBundle {
                                     projection: Perspective(PerspectiveProjection {
                                         // more overview, less personal than the default
                                         fov: 0.3,
@@ -797,7 +796,7 @@ impl<'w, 's> Spawner<'w, 's> {
         let entity = self
             .tile_spawner
             .commands
-            .spawn_bundle(SpatialBundle::default())
+            .spawn(SpatialBundle::default())
             .insert(label)
             .insert(pos)
             .insert(LastSeen::Previously)
@@ -808,7 +807,7 @@ impl<'w, 's> Spawner<'w, 's> {
             .insert(Container(4))
             .with_children(|child_builder| {
                 child_builder
-                    .spawn_bundle(character_bundle)
+                    .spawn(character_bundle)
                     .insert(character_appearance);
             })
             .id();
@@ -826,33 +825,31 @@ impl<'w, 's> Spawner<'w, 's> {
             -std::f32::consts::FRAC_PI_4,
         ));
         //dbg!(&light_transform);
-        self.tile_spawner
-            .commands
-            .spawn_bundle(DirectionalLightBundle {
-                directional_light: DirectionalLight {
-                    illuminance: 50_000.0,
-                    shadow_projection: OrthographicProjection {
-                        left: -0.35,
-                        right: 500.35,
-                        bottom: -0.1,
-                        top: 5.0,
-                        near: -5.0,
-                        far: 5.0,
-                        ..OrthographicProjection::default()
-                    },
-                    //shadows_enabled: true, // TODO transparency should not be ignored
-                    ..DirectionalLight::default()
+        self.tile_spawner.commands.spawn(DirectionalLightBundle {
+            directional_light: DirectionalLight {
+                illuminance: 50_000.0,
+                shadow_projection: OrthographicProjection {
+                    left: -0.35,
+                    right: 500.35,
+                    bottom: -0.1,
+                    top: 5.0,
+                    near: -5.0,
+                    far: 5.0,
+                    ..OrthographicProjection::default()
                 },
-                transform: light_transform,
-                ..DirectionalLightBundle::default()
-            });
+                //shadows_enabled: true, // TODO transparency should not be ignored
+                ..DirectionalLight::default()
+            },
+            transform: light_transform,
+            ..DirectionalLightBundle::default()
+        });
     }
 
     pub(crate) fn spawn_floors(&mut self, offset: Pos) {
         let parent = self
             .tile_spawner
             .commands
-            .spawn_bundle(SpatialBundle::default())
+            .spawn(SpatialBundle::default())
             .id();
 
         for y in 1..=2 {

@@ -1,11 +1,14 @@
 use crate::prelude::{Pos, StairsDown, StairsUp};
-use bevy::ecs::query::{ROQueryItem, WorldQuery};
+use bevy::ecs::{
+    query::{ROQueryItem, ReadOnlyWorldQuery},
+    system::Resource,
+};
 use bevy::prelude::{Entity, Query};
 use bevy::utils::HashMap;
 
 const NOT_FOUND: &Vec<Entity> = &Vec::new();
 
-#[derive(Default)]
+#[derive(Default, Resource)]
 pub(crate) struct Location {
     objects: HashMap<Pos, Vec<Entity>>,
     positions: HashMap<Entity, Pos>,
@@ -39,8 +42,8 @@ impl Location {
 
     pub(crate) fn any<'w, 's, Q, F>(&self, pos: Pos, items: &'s Query<'w, 's, Q, F>) -> bool
     where
-        F: 'w + 's + WorldQuery,
-        Q: 'w + 's + WorldQuery,
+        F: 'w + 's + ReadOnlyWorldQuery,
+        Q: 'w + 's + ReadOnlyWorldQuery,
     {
         self.entities(pos).any(|&x| items.get(x).is_ok())
     }
@@ -51,8 +54,8 @@ impl Location {
         items: &'s Query<'w, 's, Q, F>,
     ) -> Option<ROQueryItem<'s, Q>>
     where
-        F: 'w + 's + WorldQuery,
-        Q: 'w + 's + WorldQuery,
+        F: 'w + 's + ReadOnlyWorldQuery,
+        Q: 'w + 's + ReadOnlyWorldQuery,
     {
         self.entities(pos).find_map(|&x| items.get(x).ok())
     }

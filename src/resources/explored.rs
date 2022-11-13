@@ -1,6 +1,7 @@
 use crate::prelude::*;
-use bevy::utils::HashMap;
+use bevy::{ecs::system::Resource, utils::HashMap};
 
+#[derive(Resource)]
 pub(crate) struct Explored {
     sav_path: SavPath,
     explored: HashMap<ZoneLevel, bool>,

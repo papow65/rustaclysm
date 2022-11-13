@@ -83,14 +83,20 @@ mod systems;
 
 use crate::prelude::{Paths, RustaclysmPlugin};
 use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
-use bevy::prelude::{App, DefaultPlugins};
+use bevy::prelude::{App, DefaultPlugins, PluginGroup, WindowDescriptor, WindowPlugin};
 
 fn main() -> Result<(), ()> {
     Paths::load().map(|paths| {
         App::new()
             .insert_resource(paths)
-            .add_plugin(RustaclysmPlugin) // before DefaultPlugins, to prevent vulkan errors
-            .add_plugins(DefaultPlugins)
+            .add_plugins(DefaultPlugins.set(WindowPlugin {
+                window: WindowDescriptor {
+                    present_mode: bevy::window::PresentMode::Mailbox, // much better responsiveness
+                    ..WindowDescriptor::default()
+                },
+                ..WindowPlugin::default()
+            }))
+            .add_plugin(RustaclysmPlugin)
             .add_plugin(FrameTimeDiagnosticsPlugin::default())
             .run();
     })

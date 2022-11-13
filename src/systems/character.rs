@@ -46,7 +46,7 @@ pub(crate) fn manage_characters(
                 match player.behave(&envir, pos, instruction, timeouts.time()) {
                     Ok(action) => action,
                     Err(Some(message)) => {
-                        commands.spawn().insert(message);
+                        commands.spawn(message);
                         return; // invalid instruction - wait for the user
                     }
                     Err(None) => {
@@ -84,7 +84,7 @@ pub(crate) fn manage_characters(
         );
 
         if timeout.0 == 0 && players.get(character).is_err() {
-            commands.spawn().insert(Message::error("failed npc action"));
+            commands.spawn(Message::error("failed npc action"));
             timeout.0 = 1000;
         }
 

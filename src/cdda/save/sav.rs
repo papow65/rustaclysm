@@ -1,11 +1,12 @@
 use crate::prelude::{CddaPlayer, PathFor};
+use bevy::ecs::system::Resource;
 use serde::Deserialize;
 use std::fs::read_to_string;
 
 pub(crate) type SavPath = PathFor<Sav>;
 
 /// This represents a .sav file
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Resource)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct Sav {
     #[allow(unused)]

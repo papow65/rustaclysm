@@ -7,7 +7,7 @@ mod spawner;
 mod zone_level_names;
 
 use crate::prelude::*;
-use bevy::ecs::system::SystemParam;
+use bevy::ecs::system::{Resource, SystemParam};
 use bevy::prelude::*;
 use bevy::utils::HashMap;
 
@@ -29,7 +29,7 @@ pub(crate) struct Hierarchy<'w, 's> {
     pub(crate) children: Query<'w, 's, (&'static Parent, &'static Containable)>,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Resource)]
 pub(crate) struct InstructionQueue {
     queue: Vec<QueuedInstruction>,
     continuous: Vec<QueuedInstruction>,
@@ -59,6 +59,7 @@ impl InstructionQueue {
     }
 }
 
+#[derive(Resource)]
 pub(crate) struct Timeouts {
     start: Milliseconds,
     m: HashMap<Entity, Milliseconds>,
@@ -118,6 +119,7 @@ impl<'w, 's> Characters<'w, 's> {
     }
 }
 
+#[derive(Resource)]
 pub(crate) struct RelativeRays(HashMap<Pos, (Vec<Pos>, Vec<(Pos, Pos)>)>);
 
 impl RelativeRays {

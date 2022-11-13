@@ -7,11 +7,7 @@ pub(crate) struct RustaclysmPlugin;
 
 impl Plugin for RustaclysmPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(Msaa { samples: 4 }) // early, to prevent a vulkan error
-            .insert_resource(WindowDescriptor {
-                present_mode: bevy::window::PresentMode::Mailbox, // much better responsiveness
-                ..WindowDescriptor::default()
-            })
+        app.insert_resource(Msaa::default())
             .insert_resource(AmbientLight {
                 brightness: 0.2,
                 ..AmbientLight::default()

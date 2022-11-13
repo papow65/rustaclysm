@@ -1,12 +1,13 @@
 use super::log_if_slow;
 use crate::prelude::*;
 use bevy::diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin};
-use bevy::ecs::system::EntityCommands;
+use bevy::ecs::system::{EntityCommands, Resource};
 use bevy::prelude::*;
 use chrono::prelude::{Datelike, Local};
 use std::collections::BTreeMap;
 use std::time::Instant;
 
+#[derive(Resource)]
 pub(crate) struct HudDefaults {
     text_style: TextStyle,
 }
@@ -27,7 +28,7 @@ fn spawn_log_display(parent: &mut EntityCommands) {
     // TODO properly use flex layout
     parent.with_children(|child_builder| {
         child_builder
-            .spawn_bundle(TextBundle {
+            .spawn(TextBundle {
                 text: Text {
                     sections: vec![],
                     ..Text::default()
@@ -52,7 +53,7 @@ fn spawn_status_display(hud_defaults: &HudDefaults, parent: &mut EntityCommands)
     // TODO properly use flex layout
     parent.with_children(|child_builder| {
         child_builder
-            .spawn_bundle(TextBundle {
+            .spawn(TextBundle {
                 text: Text {
                     sections: vec![
                         TextSection {
@@ -88,10 +89,10 @@ fn spawn_manual_display(
     background.style.position.left = Val::Px(0.0);
 
     commands
-        .spawn_bundle(background)
+        .spawn(background)
         .insert(ManualDisplay)
         .with_children(|parent| {
-            parent.spawn_bundle(TextBundle {
+            parent.spawn(TextBundle {
                 text: Text {
                     sections: vec![
                         TextSection {
@@ -117,7 +118,7 @@ pub(crate) fn spawn_hud(mut commands: Commands, mut asset_server: ResMut<AssetSe
             padding: UiRect::all(Val::Px(5.0)),
             ..default()
         },
-        color: Color::rgba(0.25, 0.25, 0.25, 0.6).into(),
+        background_color: Color::rgba(0.25, 0.25, 0.25, 0.6).into(),
         ..default()
     };
 
@@ -129,7 +130,7 @@ pub(crate) fn spawn_hud(mut commands: Commands, mut asset_server: ResMut<AssetSe
         width: Val::Px(353.0), // for 43 chars - determined by trial and error
         height: Val::Percent(100.0),
     };
-    let mut parent = commands.spawn_bundle(background);
+    let mut parent = commands.spawn(background);
     spawn_status_display(&hud_defaults, &mut parent);
     spawn_log_display(&mut parent);
 

@@ -261,10 +261,10 @@ pub(crate) fn update_damaged_characters(
                 "{} hits {label} for {} ({prev} -> {curr})",
                 damage.attacker, damage.amount
             );
-            commands.spawn().insert(Message::new(message));
+            commands.spawn(Message::new(message));
         } else {
             let message = format!("{attacker} kills {label}", attacker = damage.attacker);
-            commands.spawn().insert(Message::new(message));
+            commands.spawn(Message::new(message));
             transform.rotation = Quat::from_rotation_y(std::f32::consts::FRAC_PI_2)
                 * Quat::from_rotation_x(-std::f32::consts::FRAC_PI_2);
             commands
@@ -296,13 +296,13 @@ pub(crate) fn update_damaged_items(
                 "{attacker} hits {label} ({prev} -> {curr})",
                 attacker = damage.attacker
             );
-            commands.spawn().insert(Message::new(message));
+            commands.spawn(Message::new(message));
         } else {
             commands
                 .entity(item)
                 .insert(Hurdle(3.0))
                 .remove::<Obstacle>();
-            commands.spawn().insert(Message::new(format!(
+            commands.spawn(Message::new(format!(
                 "{} breaks {}",
                 damage.attacker, label
             )));
