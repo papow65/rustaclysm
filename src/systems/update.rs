@@ -122,14 +122,14 @@ fn update_visualization(
     let previously_seen = last_seen.clone();
 
     // TODO check if there is enough light
-    let visible = envir.can_see(player_pos, pos);
-    last_seen.update(&visible);
+    last_seen.update(&envir.can_see(player_pos, pos));
 
-    visibility.is_visible = level_shown && last_seen.shown(movable_items.contains(entity));
-    if visibility.is_visible && last_seen != &previously_seen {
+    if last_seen != &previously_seen && last_seen != &LastSeen::Never {
         // TODO select an appearance based on amount of perceived light
         update_material(commands, children, child_items, last_seen);
     }
+
+    visibility.is_visible = level_shown && last_seen.shown(movable_items.contains(entity));
 }
 
 #[allow(clippy::needless_pass_by_value)]
