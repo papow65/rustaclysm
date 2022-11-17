@@ -5,6 +5,13 @@ use bevy::prelude::*;
 use bevy::render::camera::{PerspectiveProjection, Projection::Perspective};
 use bevy::utils::HashMap;
 
+fn insert<T>(child_builder: &mut ChildBuilder, entity: Entity, bundle: T)
+where
+    T: Bundle + 'static,
+{
+    child_builder.add_command(Insert { entity, bundle });
+}
+
 #[derive(Default, Resource)]
 pub(crate) struct TileCaches {
     appearance_cache: HashMap<String, Appearance>,
@@ -61,10 +68,14 @@ impl<'w, 's> TileSpawner<'w, 's> {
             .clone()
     }
 
-    fn get_pbr_bundle(&mut self, model: &Model) -> PbrBundle {
+    fn get_pbr_bundle(&mut self, model: &Model, shaded: bool) -> PbrBundle {
         PbrBundle {
             mesh: self.get_tile_mesh(model),
-            material: self.get_appearance(model).material(&LastSeen::Currently), // required when not shaded
+            material: if shaded {
+                Handle::<StandardMaterial>::default()
+            } else {
+                self.get_appearance(model).material(&LastSeen::Currently)
+            },
             transform: model.to_transform(),
             ..PbrBundle::default()
         }
@@ -74,15 +85,31 @@ impl<'w, 's> TileSpawner<'w, 's> {
         let models = self.loader.get_models(&definition);
         let child_info = models
             .iter()
-            .map(|model| (self.get_pbr_bundle(model), self.get_appearance(model)))
+            .map(|model| (self.get_pbr_bundle(model, true), self.get_appearance(model)))
             .collect::<Vec<(PbrBundle, Appearance)>>();
 
         let item_info = self.item_infos.get(definition.name);
 
+        let last_seen = if definition.specifier.shading_applied() {
+            /*
+                TODO by pos instead of by zone level
+
+                if self.explored.has_been_seen(ZoneLevel::from(pos)) {
+                    LastSeen::Previously
+                } else {
+                    LastSeen::Never
+                },
+            */
+            LastSeen::Never
+        } else {
+            // cursor -> dummy value that gives normal material
+            LastSeen::Currently
+        };
+
         self.commands.entity(parent).with_children(|child_builder| {
             let tile = child_builder
                 .spawn(SpatialBundle::default())
-                .insert(Visibility { is_visible: false })
+                .insert(Visibility::INVISIBLE)
                 .insert(LevelChanged)
                 .insert(
                     item_info
@@ -92,57 +119,37 @@ impl<'w, 's> TileSpawner<'w, 's> {
                 .insert(Transform::from_translation(pos.vec3()))
                 .with_children(|child_builder| {
                     for (pbr_bundle, apprearance) in child_info {
-                        child_builder.spawn(pbr_bundle).insert(apprearance);
+                        let material = if last_seen == LastSeen::Never {
+                            None
+                        } else {
+                            Some(apprearance.material(&last_seen))
+                        };
+                        let child = child_builder.spawn(pbr_bundle).insert(apprearance).id();
+                        if let Some(material) = material {
+                            insert(child_builder, child, material);
+                        }
                     }
                 })
                 .id();
 
             if definition.specifier.shading_applied() {
-                child_builder.add_command(Insert {
-                    entity: tile,
-                    bundle: if self.explored.has_been_seen(ZoneLevel::from(pos)) {
-                        LastSeen::Previously
-                    } else {
-                        LastSeen::Never
-                    },
-                });
+                insert(child_builder, tile, last_seen);
             }
 
             match definition.specifier {
                 ObjectSpecifier::Character => {
-                    child_builder.add_command(Insert {
-                        entity: tile,
-                        bundle: Obstacle,
-                    });
-                    child_builder.add_command(Insert {
-                        entity: tile,
-                        bundle: Health::new(5),
-                    });
-                    child_builder.add_command(Insert {
-                        entity: tile,
-                        bundle: Faction::Animal,
-                    });
-                    child_builder.add_command(Insert {
-                        entity: tile,
-                        bundle: Speed::from_h_kmph(10),
-                    });
-                    child_builder.add_command(Insert {
-                        entity: tile,
-                        bundle: Container(0),
-                    });
+                    insert(child_builder, tile, Obstacle);
+                    insert(child_builder, tile, Health::new(5));
+                    insert(child_builder, tile, Faction::Animal);
+                    insert(child_builder, tile, Speed::from_h_kmph(10));
+                    insert(child_builder, tile, Container(0));
                 }
                 ObjectSpecifier::Item(item) => {
-                    child_builder.add_command(Insert {
-                        entity: tile,
-                        bundle: item,
-                    });
+                    insert(child_builder, tile, item);
                 }
                 _ => {
                     if definition.specifier == ObjectSpecifier::Terrain {
-                        child_builder.add_command(Insert {
-                            entity: tile,
-                            bundle: Floor,
-                        });
+                        insert(child_builder, tile, Floor);
                     }
 
                     let up = definition.name.is_stairs_up();
@@ -151,17 +158,11 @@ impl<'w, 's> TileSpawner<'w, 's> {
                         // can be both
 
                         if up {
-                            child_builder.add_command(Insert {
-                                entity: tile,
-                                bundle: StairsUp,
-                            });
+                            insert(child_builder, tile, StairsUp);
                         }
 
                         if down {
-                            child_builder.add_command(Insert {
-                                entity: tile,
-                                bundle: StairsDown,
-                            });
+                            insert(child_builder, tile, StairsDown);
                         }
                     } else {
                         TileSpawner::add_components_from_shape(
@@ -192,51 +193,27 @@ impl<'w, 's> TileSpawner<'w, 's> {
                 if orientation == &SpriteOrientation::Vertical {
                     match transform2d.scale.y {
                         y if 2.5 < y => {
-                            child_builder.add_command(Insert {
-                                entity: tile,
-                                bundle: Obstacle,
-                            });
+                            insert(child_builder, tile, Opaque);
+                            insert(child_builder, tile, Obstacle);
                             child_builder.add_command(Remove {
                                 entity: tile,
                                 phantom: core::marker::PhantomData::<Floor>,
                             });
-                            child_builder.add_command(Insert {
-                                entity: tile,
-                                bundle: Opaque,
-                            });
                         }
                         y if 2.0 < y => {
-                            child_builder.add_command(Insert {
-                                entity: tile,
-                                bundle: Hurdle(2.0),
-                            });
-                            child_builder.add_command(Insert {
-                                entity: tile,
-                                bundle: Opaque,
-                            });
+                            insert(child_builder, tile, Hurdle(2.0));
+                            insert(child_builder, tile, Opaque);
                         }
                         _ => {
-                            child_builder.add_command(Insert {
-                                entity: tile,
-                                bundle: Hurdle(1.5),
-                            });
-                            child_builder.add_command(Insert {
-                                entity: tile,
-                                bundle: Integrity::new(10),
-                            });
+                            insert(child_builder, tile, Hurdle(1.5));
+                            insert(child_builder, tile, Integrity::new(10));
                         }
                     }
                 }
             }
             ModelShape::Cuboid { .. } => {
-                child_builder.add_command(Insert {
-                    entity: tile,
-                    bundle: Obstacle,
-                });
-                child_builder.add_command(Insert {
-                    entity: tile,
-                    bundle: Opaque,
-                });
+                insert(child_builder, tile, Obstacle);
+                insert(child_builder, tile, Opaque);
             }
         }
     }
@@ -401,7 +378,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
                 self.loader
                     .get_models(definition)
                     .iter()
-                    .map(|model| self.get_pbr_bundle(model))
+                    .map(|model| self.get_pbr_bundle(model, false))
                     .collect::<Vec<PbrBundle>>()
             }
         };
@@ -421,9 +398,9 @@ impl<'w, 's> TileSpawner<'w, 's> {
                 ..Transform::default()
             })
             .insert(if self.explored.has_been_seen(zone_level) {
-                LastSeen::Previously
+                (LastSeen::Previously, Visibility::VISIBLE)
             } else {
-                LastSeen::Never
+                (LastSeen::Never, Visibility::INVISIBLE)
             })
             .with_children(|child_builder| {
                 for pbr_bundle in pbr_bundles {
@@ -545,7 +522,7 @@ impl<'w, 's> Spawner<'w, 's> {
             .insert(Obstacle)
             .insert(Opaque)
             .insert(Label::new("wall"))
-            .insert(LastSeen::Previously)
+            .insert(LastSeen::Never)
             .with_children(|parent| {
                 parent
                     .spawn(PbrBundle {
@@ -567,7 +544,7 @@ impl<'w, 's> Spawner<'w, 's> {
             .insert(Obstacle)
             .insert(Hurdle(2.5))
             .insert(Label::new("window"))
-            .insert(LastSeen::Previously)
+            .insert(LastSeen::Never)
             .with_children(|parent| {
                 parent
                     .spawn(PbrBundle {
@@ -597,7 +574,7 @@ impl<'w, 's> Spawner<'w, 's> {
             .insert(Integrity::new(100))
             .insert(Hurdle(1.5))
             .insert(Label::new("stairs"))
-            .insert(LastSeen::Previously)
+            .insert(LastSeen::Never)
             .with_children(|child_builder| {
                 child_builder
                     .spawn(PbrBundle {
@@ -619,7 +596,7 @@ impl<'w, 's> Spawner<'w, 's> {
             .insert(Obstacle)
             .insert(Opaque)
             .insert(Label::new("rack"))
-            .insert(LastSeen::Previously)
+            .insert(LastSeen::Never)
             .with_children(|parent| {
                 parent
                     .spawn(PbrBundle {
@@ -640,7 +617,7 @@ impl<'w, 's> Spawner<'w, 's> {
             .insert(Integrity::new(30))
             .insert(Hurdle(2.0))
             .insert(Label::new("table"))
-            .insert(LastSeen::Previously)
+            .insert(LastSeen::Never)
             .with_children(|parent| {
                 parent
                     .spawn(PbrBundle {
@@ -663,7 +640,7 @@ impl<'w, 's> Spawner<'w, 's> {
             .insert(Integrity::new(10))
             .insert(Hurdle(1.5))
             .insert(Label::new("chair"))
-            .insert(LastSeen::Previously)
+            .insert(LastSeen::Never)
             .with_children(|child_builder| {
                 child_builder
                     .spawn(PbrBundle {
@@ -700,7 +677,7 @@ impl<'w, 's> Spawner<'w, 's> {
             .insert(label)
             .insert(pos)
             .insert(containable)
-            .insert(LastSeen::Previously)
+            .insert(LastSeen::Never)
             .with_children(|child_builder| {
                 child_builder
                     .spawn(PbrBundle {
@@ -723,7 +700,7 @@ impl<'w, 's> Spawner<'w, 's> {
             specifier: ObjectSpecifier::Meta,
         };
         let cursor_model = &mut self.tile_spawner.loader.get_models(&cursor_definition)[0];
-        let mut cursor_bundle = self.tile_spawner.get_pbr_bundle(cursor_model);
+        let mut cursor_bundle = self.tile_spawner.get_pbr_bundle(cursor_model, false);
         cursor_bundle.transform.translation.y = 0.1;
         cursor_bundle.transform.scale = Vec3::new(1.1, 1.0, 1.1);
 
@@ -787,7 +764,7 @@ impl<'w, 's> Spawner<'w, 's> {
         {
             transform2d.scale *= character_scale;
         }
-        let mut character_bundle = self.tile_spawner.get_pbr_bundle(character_model);
+        let mut character_bundle = self.tile_spawner.get_pbr_bundle(character_model, false);
         character_bundle.transform.translation.y *= character_scale;
         println!("{:?}", character_bundle.transform);
 
@@ -799,7 +776,7 @@ impl<'w, 's> Spawner<'w, 's> {
             .spawn(SpatialBundle::default())
             .insert(label)
             .insert(pos)
-            .insert(LastSeen::Previously)
+            .insert(LastSeen::Never)
             .insert(health)
             .insert(speed)
             .insert(faction)

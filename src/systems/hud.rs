@@ -323,6 +323,8 @@ pub(crate) fn update_status_detais(
             Option<&Obstacle>,
             Option<&Hurdle>,
             Option<&Opaque>,
+            Option<&LastSeen>,
+            Option<&Visibility>,
         ),
         (Without<Health>, Without<Item>),
     >,
@@ -381,6 +383,8 @@ fn pos_info(
             Option<&Obstacle>,
             Option<&Hurdle>,
             Option<&Opaque>,
+            Option<&LastSeen>,
+            Option<&Visibility>,
         ),
         (Without<Health>, Without<Item>),
     >,
@@ -413,6 +417,8 @@ fn pos_info(
                 obstacle,
                 hurdle,
                 opaque,
+                last_seen,
+                visibility,
             )| {
                 let label = label.map_or_else(|| "?".to_string(), |l| l.0.clone());
                 let mut flags = Vec::new();
@@ -448,6 +454,20 @@ fn pos_info(
                 }
                 if opaque.is_some() {
                     flags.push("opaque");
+                }
+                if let Some(last_seen) = last_seen {
+                    match *last_seen {
+                        LastSeen::Currently => flags.push("currently seen"),
+                        LastSeen::Previously => flags.push("previously seen"),
+                        LastSeen::Never => flags.push("never seen"),
+                    }
+                }
+                if let Some(visibility) = visibility {
+                    if visibility.is_visible {
+                        flags.push("visible");
+                    } else {
+                        flags.push("invisible");
+                    }
                 }
                 label
                     + flags

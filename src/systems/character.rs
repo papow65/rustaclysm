@@ -29,7 +29,6 @@ pub(crate) fn manage_characters(
     hierarchy: Hierarchy, // pickup
 ) {
     let start = Instant::now();
-    let mut counter = 0;
 
     while start.elapsed() < MAX_SYSTEM_DURATION / 2 {
         let entities = characters
@@ -88,15 +87,11 @@ pub(crate) fn manage_characters(
             }
 
             timeouts.add(character, timeout);
-
-            counter += 1;
         } else {
             // No characters!
             break;
         }
     }
 
-    let duration = start.elapsed();
-    println!("manage_characters took {duration:?} (actions: {counter})");
     log_if_slow("manage_characters", start);
 }

@@ -52,45 +52,6 @@ pub(crate) fn update_visibility_for_hidden_items(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn update_visibility_on_item_y_change(
-    mut moved_items: Query<(&Pos, &mut Visibility), With<LevelChanged>>,
-    players: Query<&Pos, With<Player>>,
-) {
-    let start = Instant::now();
-
-    // TODO use update_visualization
-    if let Ok(&player_pos) = players.get_single() {
-        for (&pos, mut visibility) in moved_items.iter_mut() {
-            visibility.is_visible = pos.level.visible_from(player_pos.level);
-        }
-    }
-
-    log_if_slow("update_visibility_on_item_y_change", start);
-}
-
-#[allow(clippy::needless_pass_by_value)]
-pub(crate) fn update_visibility_on_player_y_change(
-    mut zone_levels: Query<
-        (&ZoneLevel, &LastSeen, &mut Visibility),
-        (With<Collapsed>, Without<Pos>),
-    >,
-    moved_players: Query<(&Pos, &Player), Or<(With<LevelChanged>, Changed<Player>)>>,
-) {
-    let start = Instant::now();
-
-    if let Ok((&player_pos, player)) = moved_players.get_single() {
-        println!("Level changed");
-
-        for (&zone_level, last_seen, mut visibility) in zone_levels.iter_mut() {
-            visibility.is_visible =
-                last_seen != &LastSeen::Never && player.is_shown(zone_level.level, player_pos);
-        }
-    }
-
-    log_if_slow("update_visibility_on_player_y_change", start);
-}
-
-#[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_cursor_visibility_on_player_change(
     mut curors: Query<(&mut Visibility, &mut Transform), With<ExamineCursor>>,
     players: Query<&Player, Changed<Player>>,
@@ -155,14 +116,17 @@ fn update_visualization(
     child_items: &Query<&Appearance, (With<Parent>, Without<Pos>)>,
     movable_items: &Query<(), With<Speed>>,
 ) {
+    // The player character can see things not shown to the player, like the top of a tower when standing next to it.
     let level_shown = player.is_shown(pos.level, player_pos);
+
+    let previously_seen = last_seen.clone();
 
     // TODO check if there is enough light
     let visible = envir.can_see(player_pos, pos);
     last_seen.update(&visible);
 
     visibility.is_visible = level_shown && last_seen.shown(movable_items.contains(entity));
-    if visibility.is_visible {
+    if visibility.is_visible && last_seen != &previously_seen {
         // TODO select an appearance based on amount of perceived light
         update_material(commands, children, child_items, last_seen);
     }

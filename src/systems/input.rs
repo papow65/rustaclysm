@@ -60,7 +60,7 @@ pub(crate) fn manage_keyboard_input(
 
     for key_event in key_events.iter() {
         let combo = KeyCombo::new(key_event, &keys);
-        println!("{:?} -> {}", &key_event, &combo);
+        //println!("{:?} -> {}", &key_event, &combo);
         if let Ok(instruction) = Instruction::try_from(&combo) {
             match key_event.state {
                 ButtonState::Pressed => {

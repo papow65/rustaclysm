@@ -143,7 +143,7 @@ pub(crate) struct CameraBase;
 #[derive(Component)]
 pub(crate) struct ExamineCursor;
 
-#[derive(Component, PartialEq, Eq, Debug)]
+#[derive(Component, Clone, PartialEq, Eq, Debug)]
 pub(crate) enum LastSeen {
     Currently,
     Previously, // TODO add timestamp
@@ -160,6 +160,7 @@ impl LastSeen {
     }
 
     pub(crate) fn shown(&self, can_move: bool) -> bool {
+        // NPCs should be hidden when out of sight.
         self == &Self::Currently || (self == &Self::Previously && !can_move)
     }
 }
@@ -198,7 +199,7 @@ impl Appearance {
         match last_seen {
             LastSeen::Currently => self.seen.clone(),
             LastSeen::Previously => self.remembered.clone(),
-            _ => panic!("material(...) called when never seen"),
+            LastSeen::Never => panic!("material(...) called when never seen"),
         }
     }
 
