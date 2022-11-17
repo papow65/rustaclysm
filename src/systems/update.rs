@@ -35,7 +35,7 @@ pub(crate) fn update_transforms(mut obstacles: Query<(&Pos, &mut Transform), Cha
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn update_visibility_for_hidden_items(
+pub(crate) fn update_hidden_item_visibility(
     mut hidden_items: Query<&mut Visibility, Without<Pos>>,
     removed_positions: RemovedComponents<Pos>,
 ) {
@@ -116,20 +116,23 @@ fn update_visualization(
     child_items: &Query<&Appearance, (With<Parent>, Without<Pos>)>,
     movable_items: &Query<(), With<Speed>>,
 ) {
-    // The player character can see things not shown to the player, like the top of a tower when standing next to it.
-    let level_shown = player.is_shown(pos.level, player_pos);
-
     let previously_seen = last_seen.clone();
 
     // TODO check if there is enough light
     last_seen.update(&envir.can_see(player_pos, pos));
 
-    if last_seen != &previously_seen && last_seen != &LastSeen::Never {
-        // TODO select an appearance based on amount of perceived light
-        update_material(commands, children, child_items, last_seen);
-    }
+    if last_seen == &LastSeen::Never {
+        visibility.is_visible = false;
+    } else {
+        if last_seen != &previously_seen {
+            // TODO select an appearance based on amount of perceived light
+            update_material(commands, children, child_items, last_seen);
+        }
 
-    visibility.is_visible = level_shown && last_seen.shown(movable_items.contains(entity));
+        // The player character can see things not shown to the player, like the top of a tower when standing next to it.
+        let level_shown = player.is_shown(pos.level, player_pos);
+        visibility.is_visible = level_shown && last_seen.shown(movable_items.contains(entity));
+    }
 }
 
 #[allow(clippy::needless_pass_by_value)]
@@ -184,7 +187,7 @@ pub(crate) fn update_visualization_on_player_move(
         Option<&Children>,
     )>,
     child_items: Query<&Appearance, (With<Parent>, Without<Pos>)>,
-    moved_players: Query<(&Pos, &Player), Or<(Changed<Pos>, With<LevelChanged>, Changed<Player>)>>,
+    moved_players: Query<(&Pos, &Player), Changed<Pos>>,
     movable_items: Query<(), With<Speed>>,
 ) {
     let start = Instant::now();

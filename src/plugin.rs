@@ -56,7 +56,7 @@ fn update_systems() -> SystemSet {
     SystemSet::new()
         .with_system(update_location)
         .with_system(update_transforms)
-        .with_system(update_visibility_for_hidden_items)
+        .with_system(update_hidden_item_visibility)
         .with_system(update_cursor_visibility_on_player_change)
         .with_system(update_visualization_on_item_move)
         .with_system(update_visualization_on_player_move)

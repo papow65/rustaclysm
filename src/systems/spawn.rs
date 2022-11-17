@@ -52,7 +52,7 @@ pub(crate) fn spawn_nearby_zones(
                                     &mut commands,
                                     &collapsed_zone_levels,
                                     zone_level,
-                                    false,
+                                    &Visibility::INVISIBLE,
                                 );
                             }
                             Err(e) => {
@@ -84,32 +84,33 @@ pub(crate) fn despawn_far_zones(
         };
         expanded_zone_levels
             .iter()
-            .filter(|(_, &checked_zone_level)| is_far_away(Zone::from(checked_zone_level)))
-            .for_each(|(e, &checked_zone_level)| {
+            .filter(|(_, &expanded_zone_level)| is_far_away(Zone::from(expanded_zone_level)))
+            .for_each(|(e, &expanded_zone_level)| {
                 commands.entity(e).despawn_recursive();
                 set_collapsed_zone_level_visibility(
                     &mut commands,
                     &collapsed_zone_levels,
-                    checked_zone_level,
-                    true,
+                    expanded_zone_level,
+                    &Visibility::VISIBLE,
                 );
             });
     }
 }
 
-// TODO remove when no longer glitching
+// TODO Doesn't work yet for initial zone levels
 fn set_collapsed_zone_level_visibility(
-    _commands: &mut Commands,
+    commands: &mut Commands,
     collapsed_zone_levels: &Query<(&ZoneLevel, &Children), With<Collapsed>>,
     expanded_zone_level: ZoneLevel,
-    _is_visible: bool,
+    visibility: &Visibility,
 ) {
     if let Some((_, children)) = collapsed_zone_levels
         .iter()
         .find(|(&zone_level, _)| zone_level == expanded_zone_level)
     {
-        for &_entity in children.iter() {
-            //commands.entity(entity).insert(Visibility { is_visible });
+        for &entity in children.iter() {
+            //println!("{expanded_zone_level:?} becomes {visibility:?}");
+            commands.entity(entity).insert(visibility.clone());
         }
     }
 }
