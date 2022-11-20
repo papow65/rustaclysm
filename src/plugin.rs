@@ -34,6 +34,7 @@ impl Plugin for RustaclysmPlugin {
             .add_system(manage_keyboard_input)
             .add_system(manage_characters)
             .add_system_set_to_stage(CoreStage::PostUpdate, update_systems())
+            .add_system_to_stage(CoreStage::Last, update_collapsed_zone_levels)
             /*.add_system_to_stage(CoreStage::Last, check_obstacle_location)
             .add_system_to_stage(CoreStage::Last, check_overlap)
             .add_system_to_stage(CoreStage::Last, check_hierarchy)

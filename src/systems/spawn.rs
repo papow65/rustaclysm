@@ -32,7 +32,6 @@ pub(crate) fn spawn_zones_for_camera(
     players: Query<&Pos, With<Player>>,
     cameras: Query<(&Camera, &GlobalTransform)>,
     expanded_zone_levels: Query<(Entity, &ZoneLevel), Without<Collapsed>>,
-    collapsed_zone_levels: Query<(&ZoneLevel, &Children), (With<Collapsed>, With<Visibility>)>,
 ) {
     let start = Instant::now();
 
@@ -66,14 +65,6 @@ pub(crate) fn spawn_zones_for_camera(
     despawn_expanded_zone_levels(
         &mut commands,
         &expanded_zone_levels,
-        expanded_start,
-        expanded_end,
-    );
-
-    update_collapsed_zone_levels(
-        &mut commands,
-        &mut tile_spawner.explored,
-        &collapsed_zone_levels,
         expanded_start,
         expanded_end,
     );
@@ -163,32 +154,36 @@ fn visible_area(
     camera: &Camera,
     global_transform: &GlobalTransform,
 ) -> (Vec<i32>, Vec<i32>) {
+    let Some((corner_a, corner_b)) = camera.logical_viewport_rect() else {
+        return (Vec::new(), Vec::new());
+    };
+
     let mut xs = Vec::new();
     let mut zs = Vec::new();
-    if let Some((corner_a, corner_b)) = camera.logical_viewport_rect() {
-        for corner in [
-            Vec2::new(corner_a.x, corner_a.y),
-            Vec2::new(corner_a.x, corner_b.y),
-            Vec2::new(corner_b.x, corner_a.y),
-            Vec2::new(corner_b.x, corner_b.y),
-        ] {
-            if let Some(Ray { origin, direction }) =
-                camera.viewport_to_world(global_transform, corner)
-            {
-                let k = (player_pos.level.f32() - origin.y) / direction.y;
-                {
-                    let ground_x = origin.x + k * direction.x;
-                    xs.push(ground_x.floor() as i32);
-                    xs.push(ground_x.ceil() as i32);
-                }
-                {
-                    let ground_z = origin.z + k * direction.z;
-                    zs.push(ground_z.floor() as i32);
-                    zs.push(ground_z.ceil() as i32);
-                }
-                //println!("Ray from {corner:?} points to {ground:?}");
-            }
+    for corner in [
+        Vec2::new(corner_a.x, corner_a.y),
+        Vec2::new(corner_a.x, corner_b.y),
+        Vec2::new(corner_b.x, corner_a.y),
+        Vec2::new(corner_b.x, corner_b.y),
+    ] {
+        let Some(Ray { origin, direction }) =
+            camera.viewport_to_world(global_transform, corner)
+        else {
+            continue;
+        };
+
+        let k = (player_pos.level.f32() - origin.y) / direction.y;
+        {
+            let ground_x = origin.x + k * direction.x;
+            xs.push(ground_x.floor() as i32);
+            xs.push(ground_x.ceil() as i32);
         }
+        {
+            let ground_z = origin.z + k * direction.z;
+            zs.push(ground_z.floor() as i32);
+            zs.push(ground_z.ceil() as i32);
+        }
+        //println!("Ray from {corner:?} points to {ground:?}");
     }
     (xs, zs)
 }
@@ -236,19 +231,35 @@ fn despawn_expanded_zone_levels(
         });
 }
 
-fn update_collapsed_zone_levels(
-    commands: &mut Commands,
-    explored: &mut Explored,
-    collapsed_zone_levels: &Query<(&ZoneLevel, &Children), (With<Collapsed>, With<Visibility>)>,
-    expanded_start: Zone,
-    expanded_end: Zone,
+#[allow(clippy::needless_pass_by_value)]
+pub(crate) fn update_collapsed_zone_levels(
+    mut commands: Commands,
+    mut explored: ResMut<Explored>,
+    mut previous_player_pos: Local<Pos>,
+    players: Query<&Pos, With<Player>>,
+    collapsed_zone_levels: Query<(&ZoneLevel, &Children), (With<Collapsed>, With<Visibility>)>,
 ) {
     // Collapsed zone level visibility: not SeenFrom::Never
     // Collapsed zone level child visibility: not expanded, even when zoomed out
 
-    for (&collapsed_zone_level, children) in collapsed_zone_levels {
-        let visibility = if Zone::from(collapsed_zone_level).in_range(expanded_start, expanded_end)
-        {
+    let start = Instant::now();
+
+    let Ok(&player_pos) = players.get_single() else {
+        return;
+    };
+    if player_pos == *previous_player_pos {
+        return;
+    }
+
+    let (maximal_start, maximal_end) = maximal_expanded_zones(player_pos);
+    println!(
+        "update_collapsed_zone_levels: {:?} {:?}",
+        &maximal_start, &maximal_end
+    );
+
+    for (&collapsed_zone_level, children) in collapsed_zone_levels.iter() {
+        //println!("{collapsed_zone_level:?} visibility?");
+        let visibility = if Zone::from(collapsed_zone_level).in_range(maximal_start, maximal_end) {
             if explored.has_zone_level_been_seen(collapsed_zone_level) == SeenFrom::FarAway {
                 Visibility::VISIBLE
             } else {
@@ -259,10 +270,14 @@ fn update_collapsed_zone_levels(
         };
 
         for &entity in children.iter() {
-            //println!("{expanded_zone_level:?} becomes {visibility:?}");
+            //println!("{collapsed_zone_level:?} becomes {visibility:?}");
             commands.entity(entity).insert(visibility.clone());
         }
     }
+
+    *previous_player_pos = player_pos;
+
+    log_if_slow("update_collapsed_zone_levels", start);
 }
 
 #[allow(clippy::needless_pass_by_value)]

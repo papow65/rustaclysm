@@ -15,7 +15,7 @@ fn straight_2d(from: (i32, i32), to: (i32, i32)) -> impl Iterator<Item = (i32, i
 }
 
 /// Vertical aspect
-#[derive(Copy, Clone, PartialOrd, Ord, PartialEq, Eq, Hash, Debug)]
+#[derive(Copy, Clone, Default, PartialOrd, Ord, PartialEq, Eq, Hash, Debug)]
 pub(crate) struct Level {
     pub(crate) h: i8,
 }
@@ -170,7 +170,7 @@ impl Nbor {
 }
 
 /// Y is vertical, like the bevy default
-#[derive(Component, Copy, Clone, PartialEq, Eq, Hash, Debug)]
+#[derive(Component, Copy, Clone, Default, PartialEq, Eq, Hash, Debug)]
 pub(crate) struct Pos {
     pub(crate) x: i32,
     pub(crate) level: Level,
