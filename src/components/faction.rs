@@ -109,7 +109,7 @@ impl Faction {
             return None;
         }
 
-        let up_time: Milliseconds = Distance {
+        let up_time: Milliseconds = WalkingDistance {
             horizontal: Millimeter(0),
             up: Millimeter::VERTICAL,
             down: Millimeter(0),
@@ -207,7 +207,7 @@ impl Faction {
             .copied()
             .filter(|enemy_pos| envir.can_see(start_pos, *enemy_pos) == Visible::Seen)
             .collect::<Vec<Pos>>();
-        println!("{self:?} can see {:?} enemies", enemies.len());
+        //println!("{self:?} can see {:?} enemies", enemies.len());
 
         self.intents(health)
             .find_map(|intent| self.attempt(intent, envir, start_pos, speed, factions, &enemies))

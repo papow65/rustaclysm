@@ -91,7 +91,7 @@ impl Player {
                 PlayerBehavior::Perform(Action::Stay)
             }
             (PlayerActionState::Normal, QueuedInstruction::Wait) => {
-                self.state = PlayerActionState::Waiting(now + Milliseconds(60_000));
+                self.state = PlayerActionState::Waiting(now + Milliseconds::MINUTE);
                 PlayerBehavior::Warning(Message::new("Started waiting..."))
             }
             (PlayerActionState::Attacking, QueuedInstruction::Offset(Direction::Here)) => {

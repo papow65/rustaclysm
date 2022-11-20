@@ -1,5 +1,7 @@
 use bevy::prelude::Component;
 
+pub(crate) const MAX_VISIBLE_DISTANCE: i32 = 60;
+
 #[derive(Clone, Copy, Debug)]
 pub(crate) struct Millimeter(pub(crate) u64);
 
@@ -30,6 +32,10 @@ impl std::fmt::Display for MillimeterPerSecond {
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub(crate) struct Milliseconds(pub(crate) u64);
+
+impl Milliseconds {
+    pub(crate) const MINUTE: Milliseconds = Milliseconds(60_000);
+}
 
 impl std::fmt::Debug for Milliseconds {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -63,14 +69,14 @@ impl std::ops::Div<MillimeterPerSecond> for Millimeter {
 }
 
 #[derive(Clone, Copy)]
-pub(crate) struct Distance {
+pub(crate) struct WalkingDistance {
     pub(crate) horizontal: Millimeter,
     pub(crate) up: Millimeter,
     pub(crate) down: Millimeter,
 }
 
-impl Distance {
-    pub(crate) fn equivalent(&self) -> Millimeter {
+impl WalkingDistance {
+    pub(crate) fn equivalent_effort(&self) -> Millimeter {
         Millimeter(self.horizontal.0 + 2 * self.up.0 + self.down.0)
     }
 }
@@ -101,7 +107,7 @@ impl Speed {
     }
 }
 
-impl std::ops::Div<Speed> for Distance {
+impl std::ops::Div<Speed> for WalkingDistance {
     type Output = Milliseconds;
 
     fn div(self, speed: Speed) -> Milliseconds {

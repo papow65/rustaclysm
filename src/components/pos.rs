@@ -1,4 +1,4 @@
-use crate::prelude::{Distance, Millimeter, Milliseconds};
+use crate::prelude::{Millimeter, Milliseconds, WalkingDistance, MAX_VISIBLE_DISTANCE};
 use bevy::prelude::{Component, Vec3};
 use float_ord::FloatOrd;
 use pathfinding::{num_traits::Zero, prelude::astar};
@@ -141,21 +141,21 @@ impl Nbor {
         }
     }
 
-    pub(crate) fn distance(&self) -> Distance {
+    pub(crate) fn distance(&self) -> WalkingDistance {
         match self {
-            Self::Up => Distance {
+            Self::Up => WalkingDistance {
                 horizontal: Millimeter(0),
                 up: Millimeter::VERTICAL,
                 down: Millimeter(0),
             },
-            Self::Down => Distance {
+            Self::Down => WalkingDistance {
                 horizontal: Millimeter(0),
                 up: Millimeter(0),
                 down: Millimeter::VERTICAL,
             },
             horizontal => {
                 let (x, z) = horizontal.horizontal_offset();
-                Distance {
+                WalkingDistance {
                     horizontal: if x == 0 || z == 0 {
                         Millimeter::ADJACENT
                     } else {
@@ -183,12 +183,12 @@ impl Pos {
     }
 
     /** Distance without regard for obstacles or stairs */
-    pub(crate) fn dist(&self, other: Self) -> Distance {
+    pub(crate) fn walking_distance(&self, other: Self) -> WalkingDistance {
         let dx = u64::from(self.x.abs_diff(other.x));
         let dy = self.level.h - other.level.h;
         let dz = u64::from(self.z.abs_diff(other.z));
 
-        Distance {
+        WalkingDistance {
             horizontal: Millimeter(
                 std::cmp::max(dx, dz) * Millimeter::ADJACENT.0
                     + std::cmp::min(dx, dz) * (Millimeter::DIAGONAL.0 - Millimeter::ADJACENT.0),
@@ -260,6 +260,14 @@ impl Pos {
             .zip(straight_2d((self.z, 0), (to.z, max_diff)))
             .map(|(((x, _), (y, _)), (z, _))| Self::new(x, Level::new(y as i8), z))
     }
+
+    /** Without regard of obstacles */
+    pub(crate) const fn in_visible_range(self, other: Self) -> bool {
+        Millimeter::ADJACENT.0.pow(2) * (self.x.abs_diff(other.x) as u64).pow(2)
+            + Millimeter::VERTICAL.0.pow(2) * (self.level.h.abs_diff(other.level.h) as u64).pow(2)
+            + Millimeter::ADJACENT.0.pow(2) * (self.z.abs_diff(other.z) as u64).pow(2)
+            < Millimeter::ADJACENT.0.pow(2) * ((MAX_VISIBLE_DISTANCE + 1) as u64).pow(2)
+    }
 }
 
 #[derive(Debug)]
@@ -329,7 +337,7 @@ impl Zone {
         }
     }
 
-    pub(crate) fn dist(&self, other: Self) -> u32 {
+    pub(crate) fn _dist(&self, other: Self) -> u32 {
         self.x.abs_diff(other.x).max(self.z.abs_diff(other.z))
     }
 
@@ -340,11 +348,8 @@ impl Zone {
         }
     }
 
-    pub(crate) fn nearby(&self, n: u32) -> Vec<Self> {
-        let n = i32::try_from(n).unwrap();
-        (-n..n)
-            .flat_map(move |x| (-n..n).map(move |z| self.offset(x, z)))
-            .collect()
+    pub(crate) fn in_range(&self, start: Zone, end: Zone) -> bool {
+        (start.x..=end.x).contains(&self.x) && (start.z..=end.z).contains(&self.z)
     }
 }
 
@@ -447,10 +452,6 @@ impl From<Zone> for Overzone {
 #[derive(Component)]
 pub(crate) struct LevelChanged;
 
-/** Indication that the player moved to or examined a new zone */
-#[derive(Component)]
-pub(crate) struct ZoneChanged;
-
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) struct Danger(FloatOrd<f32>);
 
@@ -460,7 +461,7 @@ impl Danger {
             time.0 as f32
                 * froms
                     .iter()
-                    .map(|from| 1.0 / (pos.dist(*from).equivalent().0 as f32))
+                    .map(|from| 1.0 / (pos.walking_distance(*from).equivalent_effort().0 as f32))
                     .sum::<f32>(),
         ))
     }

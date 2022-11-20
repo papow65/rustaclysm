@@ -29,7 +29,7 @@ pub(crate) struct TileSpawner<'w, 's> {
     loader: Res<'w, TileLoader>,
     caches: ResMut<'w, TileCaches>,
     zone_level_names: ResMut<'w, ZoneLevelNames>,
-    explored: ResMut<'w, Explored>,
+    pub(crate) explored: ResMut<'w, Explored>,
     item_infos: ResMut<'w, ItemInfos>,
     paths: Res<'w, Paths>,
     sav: Res<'w, Sav>,
@@ -77,6 +77,11 @@ impl<'w, 's> TileSpawner<'w, 's> {
                 self.get_appearance(model).material(&LastSeen::Currently)
             },
             transform: model.to_transform(),
+            visibility: if shaded {
+                Visibility::default()
+            } else {
+                Visibility::INVISIBLE
+            },
             ..PbrBundle::default()
         }
     }
@@ -91,16 +96,11 @@ impl<'w, 's> TileSpawner<'w, 's> {
         let item_info = self.item_infos.get(definition.name);
 
         let last_seen = if definition.specifier.shading_applied() {
-            /*
-                TODO by pos instead of by zone level
-
-                if self.explored.has_been_seen(ZoneLevel::from(pos)) {
-                    LastSeen::Previously
-                } else {
-                    LastSeen::Never
-                },
-            */
-            LastSeen::Never
+            if self.explored.has_pos_been_seen(pos) {
+                LastSeen::Previously
+            } else {
+                LastSeen::Never
+            }
         } else {
             // cursor -> dummy value that gives normal material
             LastSeen::Currently
@@ -397,11 +397,13 @@ impl<'w, 's> TileSpawner<'w, 's> {
                 scale: Vec3::splat(24.0),
                 ..Transform::default()
             })
-            .insert(if self.explored.has_been_seen(zone_level) {
-                (LastSeen::Previously, Visibility::VISIBLE)
-            } else {
-                (LastSeen::Never, Visibility::INVISIBLE)
-            })
+            .insert(
+                if self.explored.has_zone_level_been_seen(zone_level) == SeenFrom::Never {
+                    (LastSeen::Never, Visibility::INVISIBLE)
+                } else {
+                    (LastSeen::Previously, Visibility::VISIBLE)
+                },
+            )
             .with_children(|child_builder| {
                 for pbr_bundle in pbr_bundles {
                     child_builder.spawn(pbr_bundle);
@@ -709,7 +711,6 @@ impl<'w, 's> Spawner<'w, 's> {
             .entity(player_entity)
             .insert(player)
             .insert(LevelChanged)
-            .insert(ZoneChanged)
             .with_children(|child_builder| {
                 child_builder
                     .spawn(SpatialBundle::default())
@@ -785,6 +786,7 @@ impl<'w, 's> Spawner<'w, 's> {
             .with_children(|child_builder| {
                 child_builder
                     .spawn(character_bundle)
+                    .insert(Visibility::VISIBLE)
                     .insert(character_appearance);
             })
             .id();

@@ -157,7 +157,7 @@ impl<'w, 's> Envir<'w, 's> {
         }
     }
 
-    fn nbors(&'s self, pos: Pos) -> impl Iterator<Item = (Nbor, Pos, Distance)> + 's {
+    fn nbors(&'s self, pos: Pos) -> impl Iterator<Item = (Nbor, Pos, WalkingDistance)> + 's {
         Nbor::ALL.iter().filter_map(move |nbor| {
             self.get_nbor(pos, nbor)
                 .ok()
@@ -175,13 +175,14 @@ impl<'w, 's> Envir<'w, 's> {
         &'s self,
         pos: Pos,
         acceptable: F,
-    ) -> impl Iterator<Item = (Nbor, Pos, Distance)> + 's
+    ) -> impl Iterator<Item = (Nbor, Pos, WalkingDistance)> + 's
     where
         F: 'w + 's + Fn(Pos) -> bool,
     {
         self.nbors(pos)
             .filter(move |(_nbor, npos, _distance)| acceptable(*npos))
     }
+
     pub(crate) fn nbors_for_moving(
         &'s self,
         pos: Pos,
@@ -229,7 +230,7 @@ impl<'w, 's> Envir<'w, 's> {
         }
 
         let nbors_fn = |pos: &Pos| self.nbors_for_moving(*pos, Some(to), intelligence, speed);
-        let estimated_duration_fn = |pos: &Pos| pos.dist(to) / speed;
+        let estimated_duration_fn = |pos: &Pos| pos.walking_distance(to) / speed;
 
         //println!("dumb? {dumb:?} @{from:?}");
         match intelligence {

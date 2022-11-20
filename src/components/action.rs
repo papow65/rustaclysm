@@ -93,11 +93,8 @@ fn move_(
             if from.level != to.level {
                 commands.entity(mover).insert(LevelChanged);
             }
-            if Zone::from(from) != Zone::from(to) {
-                commands.entity(mover).insert(ZoneChanged);
-            }
 
-            from.dist(to) / speed
+            from.walking_distance(to) / speed
         }
         /*Collision::Fall(fall_pos) => {
             *pos = fall_pos;
@@ -134,7 +131,7 @@ fn attack(
             attacker: a_label.clone(),
             amount: 1,
         });
-        pos.dist(target) / speed
+        pos.walking_distance(target) / speed
     } else {
         commands.spawn(Message::warn(format!("{a_label} attacks nothing")));
         Milliseconds(0)
@@ -167,7 +164,7 @@ fn smash(
             attacker: s_label.clone(),
             amount: 1,
         });
-        pos.dist(target) / speed
+        pos.walking_distance(target) / speed
     } else {
         commands.spawn(Message::warn(format!("{s_label} smashes nothing")));
         Milliseconds(0)
@@ -251,9 +248,6 @@ fn examine(commands: &mut Commands, player: Entity, from: Pos, to: Pos) -> Milli
 
     if from.level != to.level {
         commands.entity(player).insert(LevelChanged);
-    }
-    if Zone::from(from) != Zone::from(to) {
-        commands.entity(player).insert(ZoneChanged);
     }
 
     Milliseconds(0)

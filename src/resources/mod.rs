@@ -124,22 +124,13 @@ pub(crate) struct RelativeRays(HashMap<Pos, (Vec<Pos>, Vec<(Pos, Pos)>)>);
 
 impl RelativeRays {
     pub(crate) fn new() -> Self {
-        let apporx_level_height_sq =
-            (Millimeter::VERTICAL.f32().powi(2) / Millimeter::ADJACENT.f32().powi(2) + 0.5) as i32;
         let mut map: HashMap<Pos, (Vec<Pos>, Vec<(Pos, Pos)>)> = HashMap::default();
         let origin = Pos::new(0, Level::ZERO, 0);
-        for x in -60..=60 {
+        for x in -MAX_VISIBLE_DISTANCE..=MAX_VISIBLE_DISTANCE {
             for y in Level::ALL {
-                for z in -60..=60 {
+                for z in -MAX_VISIBLE_DISTANCE..=MAX_VISIBLE_DISTANCE {
                     let to = Pos::new(x, y, z);
-
-                    // if 61² <= x² + h² + z² {
-                    if 61_i32.pow(2)
-                        <= to.x.pow(2)
-                            + apporx_level_height_sq * i32::from(to.level.h).pow(2)
-                            + to.z.pow(2)
-                    {
-                        // 61 meter or more away
+                    if !origin.in_visible_range(to) {
                         continue;
                     }
 

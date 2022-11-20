@@ -20,7 +20,7 @@ impl ObjectSpecifier {
 
     pub(crate) fn vertical_offset(&self, layer: &SpriteLayer) -> f32 {
         let level = match self {
-            Self::ZoneLevel => -60, // to prevent glitches
+            Self::ZoneLevel => -1,
             Self::Terrain => 0,
             Self::Furniture => 2,
             Self::Item(_) => 4,

@@ -92,20 +92,10 @@ fn update_material(
     }
 }
 
-/// If Obscuring? hidden
-/// Else
-///   PC: LastSeen(timestamp)
-///   if Seen now?
-///     light = light(here) + dist + light(target)
-///     if threshold < light?
-///     then visible(light)
-///     else hidden(too dark)
-///   else if Remembered? static?
-///   then visible(filter)
-///   else hidden(mobile)
 fn update_visualization(
     commands: &mut Commands,
     envir: &Envir,
+    explored: &mut Explored,
     player: &Player,
     player_pos: Pos,
     entity: Entity,
@@ -124,6 +114,8 @@ fn update_visualization(
     if last_seen == &LastSeen::Never {
         visibility.is_visible = false;
     } else {
+        explored.mark_pos_seen(pos);
+
         if last_seen != &previously_seen {
             // TODO select an appearance based on amount of perceived light
             update_material(commands, children, child_items, last_seen);
@@ -139,6 +131,7 @@ fn update_visualization(
 pub(crate) fn update_visualization_on_item_move(
     mut commands: Commands,
     envir: Envir,
+    mut explored: ResMut<Explored>,
     mut moved_items: Query<
         (
             Entity,
@@ -160,6 +153,7 @@ pub(crate) fn update_visualization_on_item_move(
         update_visualization(
             &mut commands,
             &envir,
+            &mut explored,
             player,
             player_pos,
             entity,
@@ -179,6 +173,7 @@ pub(crate) fn update_visualization_on_item_move(
 pub(crate) fn update_visualization_on_player_move(
     mut commands: Commands,
     envir: Envir,
+    mut explored: ResMut<Explored>,
     mut items: Query<(
         Entity,
         &Pos,
@@ -197,6 +192,7 @@ pub(crate) fn update_visualization_on_player_move(
             update_visualization(
                 &mut commands,
                 &envir,
+                &mut explored,
                 player,
                 player_pos,
                 entity,
