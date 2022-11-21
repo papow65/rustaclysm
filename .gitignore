@@ -2,6 +2,8 @@
 /assets/gfx
 /assets/data
 /assets/save
+/commands*
 /*.map
 /o.*
 /*.seen.*
+/*.tracy
