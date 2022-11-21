@@ -344,7 +344,16 @@ pub(crate) fn update_status_detais(
                     }
                 }*/
 
-                pos_info(&envir, &characters, &entities, &items, pos)
+                let all_here = envir.location.all(pos);
+                let characters = characters_info(&all_here, &characters);
+                let entities = all_here
+                    .iter()
+                    .flat_map(|&i| entities.get(i))
+                    .map(entity_info)
+                    .map(|s| s + "\n")
+                    .collect::<String>();
+                let items = items_info(&all_here, &items);
+                format!("{:?}\n{}{}{}", pos, characters, entities, items)
             }
             PlayerActionState::ExaminingZoneLevel(zone_level) => {
                 /*for (glob, z) in globs.iter() {
@@ -368,123 +377,115 @@ pub(crate) fn update_status_detais(
     log_if_slow("update_status_detais", start);
 }
 
-fn pos_info(
-    envir: &Envir,
+fn characters_info(
+    all_here: &[Entity],
     characters: &Query<(Option<&Label>, &Health), Without<Item>>,
-    entities: &Query<
-        (
-            Option<&Label>,
-            Option<&Health>,
-            Option<&Corpse>,
-            Option<&Action>,
-            Option<&Floor>,
-            Option<&StairsUp>,
-            Option<&StairsDown>,
-            Option<&Obstacle>,
-            Option<&Hurdle>,
-            Option<&Opaque>,
-            Option<&LastSeen>,
-            Option<&Visibility>,
-        ),
-        (Without<Health>, Without<Item>),
-    >,
-    items: &Query<(Option<&Label>, &Item), Without<Health>>,
-    pos: Pos,
 ) -> String {
-    let all_here = envir.location.all(pos);
-
-    let characters = all_here
+    all_here
         .iter()
         .flat_map(|&i| characters.get(i))
         .map(|(label, health)| {
             let label = label.map_or_else(|| "?".to_string(), |l| l.0.clone());
             format!("{} ({} health)\n", label, health)
         })
-        .collect::<String>();
+        .collect()
+}
 
-    let entities = all_here
-        .iter()
-        .flat_map(|&i| entities.get(i))
-        .map(
-            |(
-                label,
-                health,
-                corpse,
-                action,
-                floor,
-                stairs_up,
-                stairs_down,
-                obstacle,
-                hurdle,
-                opaque,
-                last_seen,
-                visibility,
-            )| {
-                let label = label.map_or_else(|| "?".to_string(), |l| l.0.clone());
-                let mut flags = Vec::new();
-                let health_str;
-                if let Some(health) = health {
-                    health_str = format!("health({})", health);
-                    flags.push(health_str.as_str());
-                }
-                if corpse.is_some() {
-                    flags.push("corpse");
-                }
-                let action_str;
-                if let Some(action) = action {
-                    action_str = format!("{:?}", action);
-                    flags.push(action_str.as_str());
-                }
-                if floor.is_some() {
-                    flags.push("floor");
-                }
-                if stairs_up.is_some() {
-                    flags.push("stairs up");
-                }
-                if stairs_down.is_some() {
-                    flags.push("stairs down");
-                }
-                if obstacle.is_some() {
-                    flags.push("obstacle");
-                }
-                let hurdle_str;
-                if let Some(hurdle) = hurdle {
-                    hurdle_str = format!("hurdle({})", hurdle.0);
-                    flags.push(hurdle_str.as_str());
-                }
-                if opaque.is_some() {
-                    flags.push("opaque");
-                }
-                if let Some(last_seen) = last_seen {
-                    match *last_seen {
-                        LastSeen::Currently => flags.push("currently seen"),
-                        LastSeen::Previously => flags.push("previously seen"),
-                        LastSeen::Never => flags.push("never seen"),
-                    }
-                }
-                if let Some(visibility) = visibility {
-                    if visibility.is_visible {
-                        flags.push("visible");
-                    } else {
-                        flags.push("invisible");
-                    }
-                }
-                label
-                    + flags
-                        .iter()
-                        .map(|s| format!("\n- {}", s))
-                        .collect::<String>()
-                        .as_str()
-                    + "\n"
-            },
-        )
-        .collect::<String>();
+fn entity_info(
+    (
+        label,
+        health,
+        corpse,
+        action,
+        floor,
+        stairs_up,
+        stairs_down,
+        obstacle,
+        hurdle,
+        opaque,
+        last_seen,
+        visibility,
+    ): (
+        Option<&Label>,
+        Option<&Health>,
+        Option<&Corpse>,
+        Option<&Action>,
+        Option<&Floor>,
+        Option<&StairsUp>,
+        Option<&StairsDown>,
+        Option<&Obstacle>,
+        Option<&Hurdle>,
+        Option<&Opaque>,
+        Option<&LastSeen>,
+        Option<&Visibility>,
+    ),
+) -> String {
+    let label = label.map_or_else(|| "?".to_string(), |l| l.0.clone());
+    let mut flags = Vec::new();
+    let health_str;
+    if let Some(health) = health {
+        health_str = format!("health({})", health);
+        flags.push(health_str.as_str());
+    }
+    if corpse.is_some() {
+        flags.push("corpse");
+    }
+    let action_str;
+    if let Some(action) = action {
+        action_str = format!("{:?}", action);
+        flags.push(action_str.as_str());
+    }
+    if floor.is_some() {
+        flags.push("floor");
+    }
+    if stairs_up.is_some() {
+        flags.push("stairs up");
+    }
+    if stairs_down.is_some() {
+        flags.push("stairs down");
+    }
+    if obstacle.is_some() {
+        flags.push("obstacle");
+    }
+    let hurdle_str;
+    if let Some(hurdle) = hurdle {
+        hurdle_str = format!("hurdle({})", hurdle.0);
+        flags.push(hurdle_str.as_str());
+    }
+    if opaque.is_some() {
+        flags.push("opaque");
+    }
+    if let Some(last_seen) = last_seen {
+        match *last_seen {
+            LastSeen::Currently => flags.push("currently seen"),
+            LastSeen::Previously => flags.push("previously seen"),
+            LastSeen::Never => flags.push("never seen"),
+        }
+    }
+    if let Some(visibility) = visibility {
+        if visibility.is_visible {
+            flags.push("visible");
+        } else {
+            flags.push("invisible");
+        }
+    }
+    label
+        + flags
+            .iter()
+            .map(|s| format!("\n- {}", s))
+            .collect::<String>()
+            .as_str()
+}
 
+fn items_info(
+    all_here: &[Entity],
+    items: &Query<(Option<&Label>, &Item), Without<Health>>,
+) -> String {
     let mut grouped_items = BTreeMap::<Option<&Label>, u32>::new();
     for (label, item) in all_here.iter().flat_map(|&i| items.get(i)) {
         *grouped_items.entry(label).or_insert(0) += item.amount;
     }
-    let items = grouped_items
+    grouped_items
         .iter()
         .map(|(label, amount)| {
             let label = label.map_or_else(|| "?".to_string(), |l| l.0.clone());
@@ -494,7 +495,5 @@ fn pos_info(
                 .unwrap_or_default();
             label + amount.as_str() + "\n"
         })
-        .collect::<String>();
-
-    format!("{:?}\n{}{}{}", pos, characters, entities, items)
+        .collect()
 }
