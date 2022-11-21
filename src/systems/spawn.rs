@@ -55,13 +55,7 @@ pub(crate) fn spawn_zones_for_camera(
     );
     println!("Expanded zones: {:?} - {:?}", expanded_start, expanded_end);
 
-    spawn_expanded_zone_levels(
-        &mut commands,
-        &location,
-        &mut tile_spawner,
-        expanded_start,
-        expanded_end,
-    );
+    spawn_expanded_zone_levels(&location, &mut tile_spawner, expanded_start, expanded_end);
     despawn_expanded_zone_levels(
         &mut commands,
         &expanded_zone_levels,
@@ -111,6 +105,7 @@ fn maximal_expanded_zones(player_pos: Pos) -> (Zone, Zone) {
     )
 }
 
+// TODO Can't we simply use `(maximal_start, maximal_end)`? For now this results in a drop from 9.5fps to 7.5fps
 fn expanded_zones(
     player_pos: Pos,
     camera: &Camera,
@@ -189,7 +184,6 @@ fn visible_area(
 }
 
 fn spawn_expanded_zone_levels(
-    _commands: &mut Commands,
     location: &Location,
     tile_spawner: &mut TileSpawner,
     expanded_start: Zone,
