@@ -24,3 +24,6 @@ float-ord = "0.3.*"
 
 [profile.dev]
 opt-level = 3 # inspired by https://bevy-cheatbook.github.io/pitfalls/performance.html
+
+[profile.release]
+lto = "thin"
