@@ -39,6 +39,7 @@ impl ObjectName {
         self.0.starts_with("t_stairs_down")
             || self.0.starts_with("t_wood_stairs_down")
             || self.0.starts_with("t_ladder_down")
+            || self.0.starts_with("t_ladder_up_down")
             || self.0.starts_with("t_ramp_down")
             || self.0.starts_with("t_slope_down")
             || self.0.starts_with("t_gutter_downspout")
@@ -94,6 +95,7 @@ impl ObjectName {
             }
         } else if 1.0 < transform2d.scale.x.max(transform2d.scale.y)
             || self.0.starts_with("t_fence")
+            || self.0.starts_with("t_chainfence")
             || self.0.starts_with("t_splitrail_fence")
             || self.0.starts_with("t_shrub")
             || self.0.starts_with("t_flower")
