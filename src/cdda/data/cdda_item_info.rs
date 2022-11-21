@@ -14,7 +14,7 @@ impl TryFrom<PathBuf> for CddaItemInfoList {
     fn try_from(path: PathBuf) -> Result<Self, Self::Error> {
         let file_contents =
             read_to_string(&path).unwrap_or_else(|_| panic!("Could not read {}", path.display()));
-        println!("Found items file: {}", path.display());
+        //println!("Found items file: {}", path.display());
         let mut list: Vec<CddaItemInfo> = Vec::new();
         serde_json::from_str::<Vec<serde_json::Value>>(file_contents.as_str())
             .unwrap_or_else(|e| panic!("Failed to parse file {}: {e}", path.display()))

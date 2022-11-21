@@ -55,10 +55,6 @@ impl TryFrom<MapPath> for Option<Map> {
     fn try_from(map_path: MapPath) -> Result<Option<Map>, Self::Error> {
         read_to_string(&map_path.0)
             .ok()
-            .map(|s| {
-                println!("Found map: {}", map_path.0.display());
-                s
-            })
             .map_or(std::result::Result::Ok(Option::None), |s| {
                 serde_json::from_str::<Map>(s.as_str()).map(Some)
             })

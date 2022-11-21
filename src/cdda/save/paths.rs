@@ -54,7 +54,7 @@ impl Paths {
 
     fn new(path: &PathBuf) -> Self {
         let sav_path = Self::save_path().join(path);
-        println!("Loading {}...", sav_path.display());
+        //println!("Loading {}...", sav_path.display());
         Self { sav_path }
     }
 

@@ -190,7 +190,7 @@ impl TileLoader {
 
         for json_atlas in json_atlases {
             if let Some(atlas) = Atlas::new(asset_server, json_atlas, &mut tiles) {
-                dbg!(&atlas);
+                //dbg!(&atlas);
                 atlases.push(atlas);
             }
         }
@@ -237,10 +237,10 @@ impl TileLoader {
             .iter()
             .find_map(|variant| self.tiles.get(variant))
             .unwrap_or_else(|| {
-                println!(
+                /*println!(
                     "{:?} not found, falling back to default sprite",
                     definition.name
-                );
+                );*/
                 self.tiles.get(&ObjectName::new("unknown")).unwrap()
             })
             .sprite_numbers();
