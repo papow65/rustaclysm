@@ -408,7 +408,7 @@ fn characters_info(
         .iter()
         .flat_map(|&i| characters.get(i))
         .map(|(label, health)| {
-            let label = label.map_or_else(|| "?".to_string(), |l| l.0.clone());
+            let label = label.map_or_else(|| String::from("?"), String::from);
             format!("{} ({} health)\n", label, health)
         })
         .collect()
@@ -443,7 +443,7 @@ fn entity_info(
         Option<&Visibility>,
     ),
 ) -> String {
-    let label = label.map_or_else(|| "?".to_string(), |l| l.0.clone());
+    let label = label.map_or_else(|| String::from("?"), String::from);
     let mut flags = Vec::new();
     let health_str;
     if let Some(health) = health {
@@ -511,7 +511,7 @@ fn items_info(
     grouped_items
         .iter()
         .map(|(label, amount)| {
-            let label = label.map_or_else(|| "?".to_string(), |l| l.0.clone());
+            let label = label.map_or_else(|| String::from("?"), String::from);
             let amount = Some(amount)
                 .filter(|&&a| 1 < a)
                 .map(|a| format!(" (x{})", a))

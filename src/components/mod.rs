@@ -9,7 +9,7 @@ use bevy::prelude::{AlphaMode, Assets, Color, Component, Handle, StandardMateria
 pub(crate) use {action::*, faction::*, player::*, pos::*};
 
 #[derive(Component, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub(crate) struct Label(pub(crate) String);
+pub(crate) struct Label(String);
 
 impl Label {
     pub(crate) fn new<S>(label: S) -> Self
@@ -23,6 +23,12 @@ impl Label {
 impl std::fmt::Display for Label {
     fn fmt(&self, formatter: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
         self.0.fmt(formatter)
+    }
+}
+
+impl From<&Label> for String {
+    fn from(label: &Label) -> String {
+        label.0.clone()
     }
 }
 
