@@ -56,6 +56,7 @@ fn update_systems() -> SystemSet {
         .with_system(update_camera)
         .with_system(update_log)
         .with_system(update_status_fps)
+        .with_system(update_status_entities)
         .with_system(update_status_time)
         .with_system(update_status_health)
         .with_system(update_status_speed)

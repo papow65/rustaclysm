@@ -60,7 +60,7 @@ fn spawn_status_display(hud_defaults: &HudDefaults, parent: &mut EntityCommands)
                             value: "\n".to_string(),
                             style: hud_defaults.text_style.clone(),
                         };
-                        6
+                        7
                     ],
                     ..Text::default()
                 },
@@ -226,6 +226,29 @@ pub(crate) fn update_status_fps(
 }
 
 #[allow(clippy::needless_pass_by_value)]
+pub(crate) fn update_status_entities(
+    entities: Query<()>,
+    visible: Query<&Visibility>,
+    rendered: Query<&ComputedVisibility>,
+    mut status_displays: Query<&mut Text, With<StatusDisplay>>,
+) {
+    let start = Instant::now();
+
+    // Sometimes this is 0 for an unknown reason.
+    let rendered = rendered.iter().filter(|v| v.is_visible()).count();
+    if 0 < rendered {
+        status_displays.iter_mut().next().unwrap().sections[1].value = format!(
+            "{}/{}/{}\n",
+            entities.iter().count(),
+            visible.iter().filter(|v| v.is_visible).count(),
+            rendered
+        );
+    }
+
+    log_if_slow("update_status_fps", start);
+}
+
+#[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_status_time(
     timeouts: Res<Timeouts>,
     mut status_displays: Query<&mut Text, With<StatusDisplay>>,
@@ -242,7 +265,7 @@ pub(crate) fn update_status_time(
     let seasons = days / season_length;
     let years = seasons / 4;
 
-    status_displays.iter_mut().next().unwrap().sections[1].value = format!(
+    status_displays.iter_mut().next().unwrap().sections[2].value = format!(
         "{:#04}-{}-{:#02} {:#02}:{:#02}:{:#02}.{}\n",
         years + Local::now().year() as u64 + 1, // based on https://cataclysmdda.org/lore-background.html
         match seasons % 4 {
@@ -270,7 +293,7 @@ pub(crate) fn update_status_health(
     let start = Instant::now();
 
     if let Some(health) = health.iter().next() {
-        status_displays.iter_mut().next().unwrap().sections[2].value =
+        status_displays.iter_mut().next().unwrap().sections[3].value =
             format!("{} health\n", health);
     }
 
@@ -285,7 +308,7 @@ pub(crate) fn update_status_speed(
     let start = Instant::now();
 
     if let Some(speed) = speed.iter().next() {
-        status_displays.iter_mut().next().unwrap().sections[3].value = format!("{}\n", speed.h);
+        status_displays.iter_mut().next().unwrap().sections[4].value = format!("{}\n", speed.h);
     }
 
     log_if_slow("update_status_speed", start);
@@ -299,7 +322,7 @@ pub(crate) fn update_status_player_state(
     let start = Instant::now();
 
     if let Some(player) = player.iter().next() {
-        status_displays.iter_mut().next().unwrap().sections[4].value =
+        status_displays.iter_mut().next().unwrap().sections[5].value =
             format!("{}\n", player.state);
     }
 
@@ -336,7 +359,7 @@ pub(crate) fn update_status_detais(
     let start = Instant::now();
 
     if let Some(player) = player.iter().next() {
-        status_displays.iter_mut().next().unwrap().sections[5].value = match player.state {
+        status_displays.iter_mut().next().unwrap().sections[6].value = match player.state {
             PlayerActionState::ExaminingPos(pos) => {
                 /*for ent in envir.location.all(pos) {
                     if let Ok((glob, _)) = globs.get(ent) {
