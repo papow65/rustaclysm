@@ -95,7 +95,7 @@ impl Atlas {
         if filename == "fallback.png" {
             return None;
         }
-        let image_path = "gfx/UltimateCataclysm/".to_string() + filename;
+        let image_path = String::from("gfx/UltimateCataclysm/") + filename;
 
         let from_to = if let Some(comment) = atlas.get("//") {
             comment

@@ -40,7 +40,7 @@ where
             fields[0] = element;
             for field in fields.iter_mut().take(N).skip(1) {
                 *field = seq.next_element::<serde_json::Value>()?.ok_or_else(|| {
-                    A::Error::custom("Missing value(s) at the end of the sequence".to_string())
+                    A::Error::custom(String::from("Missing value(s) at the end of the sequence"))
                 })?;
             }
             result.push(

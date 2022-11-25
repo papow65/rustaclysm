@@ -57,7 +57,7 @@ fn spawn_status_display(hud_defaults: &HudDefaults, parent: &mut EntityCommands)
                 text: Text {
                     sections: vec![
                         TextSection {
-                            value: "\n".to_string(),
+                            value: String::from("\n"),
                             style: hud_defaults.text_style.clone(),
                         };
                         7
@@ -96,7 +96,7 @@ fn spawn_manual_display(
                 text: Text {
                     sections: vec![
                         TextSection {
-                            value: "move         numpad\nup/down      r/f/</>\npick/drop    b/v\nattack       a\nsmash        s\nwait         |\nrun          +\nexamine      x\nexamine map  m\nzoom         (shift+)z\nzoom         scroll wheel\ntoggle this  h\nquit         ctrl+c/d/q".to_string(),
+                            value: String::from("move         numpad\nup/down      r/f/</>\npick/drop    b/v\nattack       a\nsmash        s\nwait         |\nrun          +\nexamine      x\nexamine map  m\nzoom         (shift+)z\nzoom         scroll wheel\ntoggle this  h\nquit         ctrl+c/d/q"),
                             style: hud_defaults.text_style.clone(),
                         },
                     ],
@@ -196,7 +196,7 @@ pub(crate) fn update_log(
             });
         }
         sections.push(TextSection {
-            value: "\n".to_string(),
+            value: String::from("\n"),
             style: hud_defaults.text_style.clone(),
         });
     }

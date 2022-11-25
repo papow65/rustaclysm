@@ -287,7 +287,7 @@ impl ItemInfo {
         ItemInfo {
             id: stack[0].id.clone().unwrap(),
             category: Self::first(stack, |c| c.category.clone())
-                .unwrap_or_else(|| "other".to_string()),
+                .unwrap_or_else(|| String::from("other")),
 
             effects: Self::first(stack, |c| c.effects.clone()),
             proportional: Self::first(stack, |c| c.proportional.clone()),

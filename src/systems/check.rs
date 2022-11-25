@@ -68,8 +68,8 @@ pub(crate) fn check_hierarchy(
                 || format!("entity {entity:?} without label"),
                 |label| format!("{label}")
             ),
-            parent.map_or_else(|| "without parent".to_string(), |p| format!("< {p:?}")),
-            pos.map_or_else(|| "without position".to_string(), |p| format!("at {p:?}"))
+            parent.map_or_else(|| String::from("without parent"), |p| format!("< {p:?}")),
+            pos.map_or_else(|| String::from("without position"), |p| format!("at {p:?}"))
         );
     }
 
