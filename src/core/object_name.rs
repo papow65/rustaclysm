@@ -96,6 +96,7 @@ impl ObjectName {
         } else if 1.0 < transform2d.scale.x.max(transform2d.scale.y)
             || self.0.starts_with("t_fence")
             || self.0.starts_with("t_chainfence")
+            || self.0.starts_with("t_chaingate")
             || self.0.starts_with("t_splitrail_fence")
             || self.0.starts_with("t_shrub")
             || self.0.starts_with("t_flower")
