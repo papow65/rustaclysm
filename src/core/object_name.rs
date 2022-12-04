@@ -22,6 +22,13 @@ impl ObjectName {
         result
     }
 
+    pub(crate) fn is_hidden_zone(&self) -> bool {
+        self.0 == "open_air"
+            || self.0 == "solid_earth"
+            || self.0 == "deep_rock"
+            || self.0 == "empty_rock"
+    }
+
     pub(crate) fn is_ground(&self) -> bool {
         self.0 == "t_grass" || self.0 == "t_dirt"
     }

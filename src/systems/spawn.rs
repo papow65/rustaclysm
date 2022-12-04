@@ -265,6 +265,8 @@ pub(crate) fn update_collapsed_zone_levels(
 
         for &entity in children.iter() {
             //println!("{collapsed_zone_level:?} becomes {visibility:?}");
+
+            // Removing 'Visibility' and 'ComputedVisibility' is not more performant in Bevy 0.9
             commands.entity(entity).insert(visibility.clone());
         }
     }

@@ -367,48 +367,46 @@ impl<'w, 's> TileSpawner<'w, 's> {
     }
 
     fn spawn_collaped_zone_level(&mut self, zone_level: ZoneLevel, definition: &ObjectDefinition) {
-        let pbr_bundles = match definition.name {
-            name if name == &ObjectName::new("open_air")
-                || name == &ObjectName::new("empty_rock") =>
-            {
-                Vec::new()
-            }
-            _ => {
-                //println!("{zone_level:?} {:?}", &definition);
-                self.loader
-                    .get_models(definition)
-                    .iter()
-                    .map(|model| self.get_pbr_bundle(model, false))
-                    .collect::<Vec<PbrBundle>>()
-            }
+        let pbr_bundles = if definition.name.is_hidden_zone() {
+            Vec::new()
+        } else {
+            println!("zone_level: {zone_level:?} {:?}", &definition);
+            self.loader
+                .get_models(definition)
+                .iter()
+                .map(|model| self.get_pbr_bundle(model, false))
+                .collect::<Vec<PbrBundle>>()
         };
 
-        let item_info = self.item_infos.get(definition.name);
+        let label = self
+            .item_infos
+            .get(definition.name)
+            .map_or_else(|| definition.name.to_fallback_label(), |i| i.to_label(1));
 
-        self.commands
-            .spawn(SpatialBundle::default())
-            .insert(
-                item_info.map_or_else(|| definition.name.to_fallback_label(), |i| i.to_label(1)),
-            )
-            .insert(zone_level)
-            .insert(Collapsed)
-            .insert(Transform {
-                translation: zone_level.base_pos().vec3() + Vec3::new(11.5, 0.0, 11.5),
-                scale: Vec3::splat(24.0),
-                ..Transform::default()
-            })
-            .insert(
-                if self.explored.has_zone_level_been_seen(zone_level) == SeenFrom::Never {
-                    (LastSeen::Never, Visibility::INVISIBLE)
-                } else {
-                    (LastSeen::Previously, Visibility::VISIBLE)
-                },
-            )
-            .with_children(|child_builder| {
-                for pbr_bundle in pbr_bundles {
-                    child_builder.spawn(pbr_bundle);
-                }
-            });
+        let mut entity = self.commands.spawn(zone_level);
+        entity.insert(Collapsed).insert(label);
+
+        if !pbr_bundles.is_empty() {
+            entity
+                .insert(SpatialBundle::default())
+                .insert(Transform {
+                    translation: zone_level.base_pos().vec3() + Vec3::new(11.5, 0.0, 11.5),
+                    scale: Vec3::splat(24.0),
+                    ..Transform::default()
+                })
+                .insert(
+                    if self.explored.has_zone_level_been_seen(zone_level) == SeenFrom::Never {
+                        (LastSeen::Never, Visibility::INVISIBLE)
+                    } else {
+                        (LastSeen::Previously, Visibility::VISIBLE)
+                    },
+                )
+                .with_children(|child_builder| {
+                    for pbr_bundle in pbr_bundles {
+                        child_builder.spawn(pbr_bundle);
+                    }
+                });
+        }
     }
 }
 
