@@ -370,7 +370,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
         let pbr_bundles = if definition.name.is_hidden_zone() {
             Vec::new()
         } else {
-            println!("zone_level: {zone_level:?} {:?}", &definition);
+            //println!("zone_level: {zone_level:?} {:?}", &definition);
             self.loader
                 .get_models(definition)
                 .iter()

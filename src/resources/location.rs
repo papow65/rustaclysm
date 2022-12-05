@@ -60,10 +60,6 @@ impl Location {
         self.entities(pos).find_map(|&x| items.get(x).ok())
     }
 
-    pub(crate) fn exists(&self, pos: Pos) -> bool {
-        0 < self.entities(pos).len()
-    }
-
     pub(crate) fn all(&self, pos: Pos) -> Vec<Entity> {
         self.entities(pos).copied().collect()
     }

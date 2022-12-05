@@ -9,14 +9,15 @@ const MAX_EXPAND_DISTANCE: i32 = 10;
 pub(crate) fn spawn_nearby_overzones(
     mut tile_spawner: TileSpawner,
     all_zone_levels: Query<(Entity, &ZoneLevel, Option<&Collapsed>)>,
-    players: Query<&Pos, With<Player>>,
+    players: Query<(&Pos, &Player)>,
 ) {
     let start = Instant::now();
 
     // TODO more than once
     if all_zone_levels.is_empty() {
-        if let Ok(&pos) = players.get_single() {
-            tile_spawner.spawn_zones_around(Zone::from(pos));
+        if let Ok((&player_pos, player)) = players.get_single() {
+            let focus = Focus::new(player, player_pos);
+            tile_spawner.spawn_zones_around(Zone::from(ZoneLevel::from(&focus)));
         }
     }
 
@@ -26,10 +27,9 @@ pub(crate) fn spawn_nearby_overzones(
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn spawn_zones_for_camera(
     mut commands: Commands,
-    location: Res<Location>,
     mut tile_spawner: TileSpawner,
     mut previous_camera_global_transform: Local<GlobalTransform>,
-    players: Query<&Pos, With<Player>>,
+    players: Query<(&Pos, &Player)>,
     cameras: Query<(&Camera, &GlobalTransform)>,
     expanded_zone_levels: Query<(Entity, &ZoneLevel), Without<Collapsed>>,
 ) {
@@ -41,11 +41,12 @@ pub(crate) fn spawn_zones_for_camera(
         return;
     }
 
-    let &player_pos = players.single();
-    let (minimal_start, minimal_end) = minimal_expanded_zones(player_pos);
-    let (maximal_start, maximal_end) = maximal_expanded_zones(player_pos);
-    let (expanded_start, expanded_end) = expanded_zones(
-        player_pos,
+    let (&player_pos, player) = players.single();
+    let focus = Focus::new(player, player_pos);
+    let (minimal_start, minimal_end) = minimal_expanded_zones(Pos::from(&focus));
+    let (maximal_start, maximal_end) = maximal_expanded_zones(Zone::from(ZoneLevel::from(&focus)));
+    let expanded_zones = expanded_zones(
+        &focus,
         camera,
         global_transform,
         maximal_start,
@@ -53,15 +54,10 @@ pub(crate) fn spawn_zones_for_camera(
         minimal_end,
         maximal_end,
     );
-    println!("Expanded zones: {:?} - {:?}", expanded_start, expanded_end);
+    //println!("Expanded zones: {:?}", expanded_zones);
 
-    spawn_expanded_zone_levels(&location, &mut tile_spawner, expanded_start, expanded_end);
-    despawn_expanded_zone_levels(
-        &mut commands,
-        &expanded_zone_levels,
-        expanded_start,
-        expanded_end,
-    );
+    spawn_expanded_zone_levels(&mut tile_spawner, &expanded_zone_levels, &expanded_zones);
+    despawn_expanded_zone_levels(&mut commands, &expanded_zone_levels, &expanded_zones);
 
     *previous_camera_global_transform = *global_transform;
 
@@ -91,8 +87,7 @@ fn minimal_expanded_zones(player_pos: Pos) -> (Zone, Zone) {
     )
 }
 
-fn maximal_expanded_zones(player_pos: Pos) -> (Zone, Zone) {
-    let player_zone = Zone::from(ZoneLevel::from(player_pos));
+fn maximal_expanded_zones(player_zone: Zone) -> (Zone, Zone) {
     (
         Zone {
             x: player_zone.x - MAX_EXPAND_DISTANCE,
@@ -105,16 +100,15 @@ fn maximal_expanded_zones(player_pos: Pos) -> (Zone, Zone) {
     )
 }
 
-// TODO Can't we simply use `(maximal_start, maximal_end)`? For now this results in a drop from 9.5fps to 7.5fps
 fn expanded_zones(
-    player_pos: Pos,
+    focus: &Focus,
     camera: &Camera,
     global_transform: &GlobalTransform,
     maximal_start: Zone,
     minimal_start: Zone,
     minimal_end: Zone,
     maximal_end: Zone,
-) -> (Zone, Zone) {
+) -> [(Zone, Zone); Level::AMOUNT] {
     assert!(maximal_start.x <= minimal_start.x);
     assert!(minimal_start.x <= minimal_end.x);
     assert!(minimal_end.x <= maximal_end.x);
@@ -123,81 +117,94 @@ fn expanded_zones(
     assert!(minimal_start.z <= minimal_end.z);
     assert!(minimal_end.z <= maximal_end.z);
 
-    let (visible_xs, visible_zs) = visible_area(player_pos, camera, global_transform);
-    println!("Visible: x {:?}, z {:?}", &visible_xs, visible_zs);
-    if visible_xs.len() < 2 || visible_zs.len() < 2 {
-        return (minimal_start, minimal_end);
-    }
+    let mut i = 0;
+    visible_area(camera, global_transform).map(|(visible_xs, visible_zs)| {
+        let level = Level::ALL[i];
+        i += 1;
 
-    let min_x = visible_xs.iter().copied().min().unwrap();
-    let min_z = visible_zs.iter().copied().min().unwrap();
-    let mut start = Zone::from(ZoneLevel::from(Pos::new(min_x, Level::ZERO, min_z)));
-    start.x = start.x.clamp(maximal_start.x, minimal_start.x);
-    start.z = start.z.clamp(maximal_start.z, minimal_start.z);
+        //println!("Visible: x {:?}, z {:?}", &visible_xs, visible_zs);
+        if !focus.is_shown(level) || visible_xs.len() < 2 || visible_zs.len() < 2 {
+            return (minimal_start, minimal_end);
+        }
 
-    let max_x = visible_xs.iter().copied().max().unwrap();
-    let max_z = visible_zs.iter().copied().max().unwrap();
-    let mut end = Zone::from(ZoneLevel::from(Pos::new(max_x, Level::ZERO, max_z)));
-    end.x = end.x.clamp(minimal_end.x, maximal_end.x);
-    end.z = end.z.clamp(minimal_end.z, maximal_end.z);
+        let min_x = visible_xs.iter().copied().min().unwrap();
+        let min_z = visible_zs.iter().copied().min().unwrap();
+        let mut start = Zone::from(ZoneLevel::from(Pos::new(min_x, Level::ZERO, min_z)));
+        start.x = start.x.clamp(maximal_start.x, minimal_start.x);
+        start.z = start.z.clamp(maximal_start.z, minimal_start.z);
 
-    (start, end)
+        let max_x = visible_xs.iter().copied().max().unwrap();
+        let max_z = visible_zs.iter().copied().max().unwrap();
+        let mut end = Zone::from(ZoneLevel::from(Pos::new(max_x, Level::ZERO, max_z)));
+        end.x = end.x.clamp(minimal_end.x, maximal_end.x);
+        end.z = end.z.clamp(minimal_end.z, maximal_end.z);
+
+        (start, end)
+    })
 }
 
 fn visible_area(
-    player_pos: Pos,
     camera: &Camera,
     global_transform: &GlobalTransform,
-) -> (Vec<i32>, Vec<i32>) {
+) -> [(Vec<i32>, Vec<i32>); Level::AMOUNT] {
     let Some((corner_a, corner_b)) = camera.logical_viewport_rect() else {
-        return (Vec::new(), Vec::new());
+        return [(); Level::AMOUNT].map(|_| (Vec::new(), Vec::new()));
     };
 
-    let mut xs = Vec::new();
-    let mut zs = Vec::new();
-    for corner in [
-        Vec2::new(corner_a.x, corner_a.y),
-        Vec2::new(corner_a.x, corner_b.y),
-        Vec2::new(corner_b.x, corner_a.y),
-        Vec2::new(corner_b.x, corner_b.y),
-    ] {
-        let Some(Ray { origin, direction }) =
-            camera.viewport_to_world(global_transform, corner)
-        else {
-            continue;
-        };
+    let mut i = 0;
+    [(); Level::AMOUNT]
+        .map(|_| {
+            let level = Level::ALL[i];
+            i += 1;
+            level
+        })
+        .map(|level| {
+            let mut xs = Vec::new();
+            let mut zs = Vec::new();
+            for corner in [
+                Vec2::new(corner_a.x, corner_a.y),
+                Vec2::new(corner_a.x, corner_b.y),
+                Vec2::new(corner_b.x, corner_a.y),
+                Vec2::new(corner_b.x, corner_b.y),
+            ] {
+                let Some(Ray { origin, direction }) =
+                    camera.viewport_to_world(global_transform, corner)
+                else {
+                    continue;
+                };
 
-        let k = (player_pos.level.f32() - origin.y) / direction.y;
-        {
-            let ground_x = origin.x + k * direction.x;
-            xs.push(ground_x.floor() as i32);
-            xs.push(ground_x.ceil() as i32);
-        }
-        {
-            let ground_z = origin.z + k * direction.z;
-            zs.push(ground_z.floor() as i32);
-            zs.push(ground_z.ceil() as i32);
-        }
-        //println!("Ray from {corner:?} points to {ground:?}");
-    }
-    (xs, zs)
+                let k = (level.f32() - origin.y) / direction.y;
+                // The camera only looks forward.
+                if 0.0 < k {
+                    {
+                        let ground_x = origin.x + k * direction.x;
+                        xs.push(ground_x.floor() as i32);
+                        xs.push(ground_x.ceil() as i32);
+                    }
+                    {
+                        let ground_z = origin.z + k * direction.z;
+                        zs.push(ground_z.floor() as i32);
+                        zs.push(ground_z.ceil() as i32);
+                    }
+                }
+            }
+            (xs, zs)
+        })
 }
 
 fn spawn_expanded_zone_levels(
-    location: &Location,
     tile_spawner: &mut TileSpawner,
-    expanded_start: Zone,
-    expanded_end: Zone,
+    expanded_zone_levels: &Query<(Entity, &ZoneLevel), Without<Collapsed>>,
+    expanded_zones: &[(Zone, Zone); Level::AMOUNT],
 ) {
-    for x in expanded_start.x..=expanded_end.x {
-        for z in expanded_start.z..=expanded_end.z {
-            let expanded_zone = Zone { x, z };
-            // level 0 always exists when the expanded zone exists.
-            let zone_exists = location.exists(expanded_zone.zone_level(Level::ZERO).base_pos());
-
-            for y in Level::ALL {
-                let zone_level = expanded_zone.zone_level(y);
-
+    for y in Level::ALL {
+        let (expanded_start, expanded_end) = expanded_zones[y.index()];
+        for x in expanded_start.x..=expanded_end.x {
+            for z in expanded_start.z..=expanded_end.z {
+                let zone_level = Zone { x, z }.zone_level(y);
+                let zone_exists = expanded_zone_levels
+                    .iter()
+                    .any(|(_, &expanded_zone_level)| expanded_zone_level == zone_level);
                 if !zone_exists {
                     if let Err(e) = tile_spawner.spawn_expanded_zone_level(zone_level) {
                         eprintln!("{e}");
@@ -212,12 +219,12 @@ fn spawn_expanded_zone_levels(
 fn despawn_expanded_zone_levels(
     commands: &mut Commands,
     expanded_zone_levels: &Query<(Entity, &ZoneLevel), Without<Collapsed>>,
-    expanded_start: Zone,
-    expanded_end: Zone,
+    expanded_zones: &[(Zone, Zone); Level::AMOUNT],
 ) {
     expanded_zone_levels
         .iter()
         .filter(|(_, &expanded_zone_level)| {
+            let (expanded_start, expanded_end) = expanded_zones[expanded_zone_level.level.index()];
             !Zone::from(expanded_zone_level).in_range(expanded_start, expanded_end)
         })
         .for_each(|(e, &_expanded_zone_level)| {
@@ -245,7 +252,8 @@ pub(crate) fn update_collapsed_zone_levels(
         return;
     }
 
-    let (maximal_start, maximal_end) = maximal_expanded_zones(player_pos);
+    let (maximal_start, maximal_end) =
+        maximal_expanded_zones(Zone::from(ZoneLevel::from(player_pos)));
     println!(
         "update_collapsed_zone_levels: {:?} {:?}",
         &maximal_start, &maximal_end

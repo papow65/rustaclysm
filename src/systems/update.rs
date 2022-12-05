@@ -92,12 +92,13 @@ fn update_material(
     }
 }
 
+/** This assumes that the player state is not examining a pos or zone. */
 fn update_visualization(
     commands: &mut Commands,
     envir: &Envir,
     explored: &mut Explored,
-    player: &Player,
-    player_pos: Pos,
+    focus: &Focus,
+    player_pos: &Pos,
     entity: Entity,
     pos: Pos,
     visibility: &mut Visibility,
@@ -109,7 +110,7 @@ fn update_visualization(
     let previously_seen = last_seen.clone();
 
     // TODO check if there is enough light
-    last_seen.update(&envir.can_see(player_pos, pos));
+    last_seen.update(&envir.can_see(*player_pos, pos));
 
     if last_seen == &LastSeen::Never {
         visibility.is_visible = false;
@@ -121,8 +122,8 @@ fn update_visualization(
             update_material(commands, children, child_items, last_seen);
         }
 
-        // The player character can see things not shown to the player, like the top of a tower when standing next to it.
-        let level_shown = player.is_shown(pos.level, player_pos);
+        // The player character can see things not shown to the player, like the top of a tower when walking next to it.
+        let level_shown = focus.is_shown(pos.level);
         visibility.is_visible = level_shown && last_seen.shown(movable_items.contains(entity));
     }
 }
@@ -149,13 +150,14 @@ pub(crate) fn update_visualization_on_item_move(
     let start = Instant::now();
 
     let (&player_pos, player) = players.single();
+    let focus = Focus::new(player, player_pos);
     for (entity, &pos, mut visibility, mut last_seen, children) in moved_items.iter_mut() {
         update_visualization(
             &mut commands,
             &envir,
             &mut explored,
-            player,
-            player_pos,
+            &focus,
+            &player_pos,
             entity,
             pos,
             &mut visibility,
@@ -170,10 +172,11 @@ pub(crate) fn update_visualization_on_item_move(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn update_visualization_on_player_move(
+pub(crate) fn update_visualization_on_focus_move(
     mut commands: Commands,
     envir: Envir,
     mut explored: ResMut<Explored>,
+    mut last_focus: Local<Focus>,
     mut items: Query<(
         Entity,
         &Pos,
@@ -182,31 +185,37 @@ pub(crate) fn update_visualization_on_player_move(
         Option<&Children>,
     )>,
     child_items: Query<&Appearance, (With<Parent>, Without<Pos>)>,
-    moved_players: Query<(&Pos, &Player), Changed<Pos>>,
+    players: Query<(&Pos, &Player)>,
     movable_items: Query<(), With<Speed>>,
 ) {
     let start = Instant::now();
 
-    if let Ok((&player_pos, player)) = moved_players.get_single() {
-        for (entity, &pos, mut visibility, mut last_seen, children) in items.iter_mut() {
-            update_visualization(
-                &mut commands,
-                &envir,
-                &mut explored,
-                player,
-                player_pos,
-                entity,
-                pos,
-                &mut visibility,
-                &mut last_seen,
-                children,
-                &child_items,
-                &movable_items,
-            );
+    if let Ok((&player_pos, player)) = players.get_single() {
+        let focus = Focus::new(player, player_pos);
+
+        if focus != *last_focus {
+            for (entity, &pos, mut visibility, mut last_seen, children) in items.iter_mut() {
+                update_visualization(
+                    &mut commands,
+                    &envir,
+                    &mut explored,
+                    &focus,
+                    &player_pos,
+                    entity,
+                    pos,
+                    &mut visibility,
+                    &mut last_seen,
+                    children,
+                    &child_items,
+                    &movable_items,
+                );
+            }
+
+            *last_focus = focus;
         }
     }
 
-    log_if_slow("update_visualization_on_player_move", start);
+    log_if_slow("update_visualization_on_focus_move", start);
 }
 
 #[allow(clippy::needless_pass_by_value)]

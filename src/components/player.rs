@@ -41,16 +41,6 @@ pub(crate) struct Player {
 }
 
 impl Player {
-    pub(crate) fn is_shown(&self, level: Level, player_pos: Pos) -> bool {
-        let reference = match self.state {
-            PlayerActionState::ExaminingPos(pos) => pos,
-            PlayerActionState::ExaminingZoneLevel(zone_level) => zone_level.base_pos(),
-            _ => player_pos,
-        };
-
-        level.visible_from(reference.level)
-    }
-
     pub(crate) fn plan_action(
         &mut self,
         commands: &mut Commands,
@@ -200,6 +190,54 @@ impl Player {
                 self.state = PlayerActionState::Smashing;
                 PlayerBehavior::NoEffect
             }
+        }
+    }
+}
+
+#[derive(PartialEq)]
+pub(crate) enum Focus {
+    Pos(Pos),
+    ZoneLevel(ZoneLevel),
+}
+
+impl Focus {
+    pub(crate) fn new(player: &Player, player_pos: Pos) -> Self {
+        match player.state {
+            PlayerActionState::ExaminingPos(target) => Focus::Pos(target),
+            PlayerActionState::ExaminingZoneLevel(zone_level) => Focus::ZoneLevel(zone_level),
+            _ => Focus::Pos(player_pos),
+        }
+    }
+
+    pub(crate) fn is_shown(&self, level: Level) -> bool {
+        let current_level = match self {
+            Focus::Pos(pos) => pos.level,
+            Focus::ZoneLevel(zone_level) => zone_level.level,
+        };
+        level == current_level || (Level::ZERO <= level && level < current_level)
+    }
+}
+
+impl Default for Focus {
+    fn default() -> Self {
+        Self::Pos(Pos::default())
+    }
+}
+
+impl From<&Focus> for Pos {
+    fn from(focus: &Focus) -> Self {
+        match focus {
+            Focus::Pos(pos) => *pos,
+            Focus::ZoneLevel(zone_level) => zone_level.base_pos(),
+        }
+    }
+}
+
+impl From<&Focus> for ZoneLevel {
+    fn from(focus: &Focus) -> Self {
+        match focus {
+            Focus::Pos(pos) => ZoneLevel::from(*pos),
+            Focus::ZoneLevel(zone_level) => *zone_level,
         }
     }
 }
