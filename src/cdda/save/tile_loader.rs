@@ -237,10 +237,11 @@ impl TileLoader {
             .iter()
             .find_map(|variant| self.tiles.get(variant))
             .unwrap_or_else(|| {
-                /*println!(
-                    "{:?} not found, falling back to default sprite",
-                    definition.name
-                );*/
+                eprintln!(
+                    "{:?} not found. Variants: {:?}. Falling back to default sprite",
+                    definition.name,
+                    definition.name.variants()
+                );
                 self.tiles.get(&ObjectName::new("unknown")).unwrap()
             })
             .sprite_numbers();
