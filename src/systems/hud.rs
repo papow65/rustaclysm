@@ -227,7 +227,6 @@ pub(crate) fn update_status_fps(
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_status_entities(
-    entities: Query<()>,
     visible: Query<&Visibility>,
     rendered: Query<&ComputedVisibility>,
     mut status_displays: Query<&mut Text, With<StatusDisplay>>,
@@ -238,8 +237,7 @@ pub(crate) fn update_status_entities(
     let rendered = rendered.iter().filter(|v| v.is_visible()).count();
     if 0 < rendered {
         status_displays.iter_mut().next().unwrap().sections[1].value = format!(
-            "{}/{}/{}\n",
-            entities.iter().count(),
+            "{} - {}\n",
             visible.iter().filter(|v| v.is_visible).count(),
             rendered
         );
