@@ -236,8 +236,8 @@ fn despawn_expanded_zone_levels(
 pub(crate) fn update_collapsed_zone_levels(
     mut commands: Commands,
     mut explored: ResMut<Explored>,
-    mut previous_player_pos: Local<Pos>,
-    players: Query<&Pos, With<Player>>,
+    mut previous_focus: Local<Focus>,
+    players: Query<(&Pos, &Player)>,
     collapsed_zone_levels: Query<(&ZoneLevel, &Children), (With<Collapsed>, With<Visibility>)>,
 ) {
     // Collapsed zone level visibility: not SeenFrom::Never
@@ -245,15 +245,14 @@ pub(crate) fn update_collapsed_zone_levels(
 
     let start = Instant::now();
 
-    let Ok(&player_pos) = players.get_single() else {
-        return;
-    };
-    if player_pos == *previous_player_pos {
+    let (&player_pos, player) = players.single();
+    let focus = Focus::new(player, player_pos);
+
+    if focus == *previous_focus {
         return;
     }
 
-    let (maximal_start, maximal_end) =
-        maximal_expanded_zones(Zone::from(ZoneLevel::from(player_pos)));
+    let (maximal_start, maximal_end) = maximal_expanded_zones(Zone::from(ZoneLevel::from(&focus)));
     println!(
         "update_collapsed_zone_levels: {:?} {:?}",
         &maximal_start, &maximal_end
@@ -279,7 +278,7 @@ pub(crate) fn update_collapsed_zone_levels(
         }
     }
 
-    *previous_player_pos = player_pos;
+    *previous_focus = focus;
 
     log_if_slow("update_collapsed_zone_levels", start);
 }
