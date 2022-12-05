@@ -245,7 +245,7 @@ pub(crate) fn update_status_entities(
         );
     }
 
-    log_if_slow("update_status_fps", start);
+    log_if_slow("update_status_entities", start);
 }
 
 #[allow(clippy::needless_pass_by_value)]
