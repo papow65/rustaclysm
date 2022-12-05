@@ -112,9 +112,7 @@ fn update_visualization(
     // TODO check if there is enough light
     last_seen.update(&envir.can_see(*player_pos, pos));
 
-    if last_seen == &LastSeen::Never {
-        visibility.is_visible = false;
-    } else {
+    if last_seen != &LastSeen::Never {
         explored.mark_pos_seen(pos);
 
         if last_seen != &previously_seen {

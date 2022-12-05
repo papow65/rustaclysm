@@ -523,6 +523,7 @@ impl<'w, 's> Spawner<'w, 's> {
             .insert(Opaque)
             .insert(Label::new("wall"))
             .insert(LastSeen::Never)
+            .insert(Visibility::INVISIBLE)
             .with_children(|parent| {
                 parent
                     .spawn(PbrBundle {
@@ -545,6 +546,7 @@ impl<'w, 's> Spawner<'w, 's> {
             .insert(Hurdle(2.5))
             .insert(Label::new("window"))
             .insert(LastSeen::Never)
+            .insert(Visibility::INVISIBLE)
             .with_children(|parent| {
                 parent
                     .spawn(PbrBundle {
@@ -575,6 +577,7 @@ impl<'w, 's> Spawner<'w, 's> {
             .insert(Hurdle(1.5))
             .insert(Label::new("stairs"))
             .insert(LastSeen::Never)
+            .insert(Visibility::INVISIBLE)
             .with_children(|child_builder| {
                 child_builder
                     .spawn(PbrBundle {
@@ -597,6 +600,7 @@ impl<'w, 's> Spawner<'w, 's> {
             .insert(Opaque)
             .insert(Label::new("rack"))
             .insert(LastSeen::Never)
+            .insert(Visibility::INVISIBLE)
             .with_children(|parent| {
                 parent
                     .spawn(PbrBundle {
@@ -618,6 +622,7 @@ impl<'w, 's> Spawner<'w, 's> {
             .insert(Hurdle(2.0))
             .insert(Label::new("table"))
             .insert(LastSeen::Never)
+            .insert(Visibility::INVISIBLE)
             .with_children(|parent| {
                 parent
                     .spawn(PbrBundle {
@@ -641,6 +646,7 @@ impl<'w, 's> Spawner<'w, 's> {
             .insert(Hurdle(1.5))
             .insert(Label::new("chair"))
             .insert(LastSeen::Never)
+            .insert(Visibility::INVISIBLE)
             .with_children(|child_builder| {
                 child_builder
                     .spawn(PbrBundle {
@@ -678,6 +684,7 @@ impl<'w, 's> Spawner<'w, 's> {
             .insert(pos)
             .insert(containable)
             .insert(LastSeen::Never)
+            .insert(Visibility::INVISIBLE)
             .with_children(|child_builder| {
                 child_builder
                     .spawn(PbrBundle {
