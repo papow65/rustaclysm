@@ -43,17 +43,7 @@ pub(crate) fn spawn_zones_for_camera(
 
     let (&player_pos, player) = players.single();
     let focus = Focus::new(player, player_pos);
-    let (minimal_start, minimal_end) = minimal_expanded_zones(Pos::from(&focus));
-    let (maximal_start, maximal_end) = maximal_expanded_zones(Zone::from(ZoneLevel::from(&focus)));
-    let expanded_zones = expanded_zones(
-        &focus,
-        camera,
-        global_transform,
-        maximal_start,
-        minimal_start,
-        minimal_end,
-        maximal_end,
-    );
+    let expanded_zones = expanded_zones(&focus, camera, global_transform);
     //println!("Expanded zones: {:?}", expanded_zones);
 
     spawn_expanded_zone_levels(&mut tile_spawner, &expanded_zone_levels, &expanded_zones);
@@ -104,11 +94,10 @@ fn expanded_zones(
     focus: &Focus,
     camera: &Camera,
     global_transform: &GlobalTransform,
-    maximal_start: Zone,
-    minimal_start: Zone,
-    minimal_end: Zone,
-    maximal_end: Zone,
 ) -> [(Zone, Zone); Level::AMOUNT] {
+    let (minimal_start, minimal_end) = minimal_expanded_zones(Pos::from(focus));
+    let (maximal_start, maximal_end) = maximal_expanded_zones(Zone::from(ZoneLevel::from(focus)));
+
     assert!(maximal_start.x <= minimal_start.x);
     assert!(minimal_start.x <= minimal_end.x);
     assert!(minimal_end.x <= maximal_end.x);
@@ -140,6 +129,33 @@ fn expanded_zones(
         end.z = end.z.clamp(minimal_end.z, maximal_end.z);
 
         (start, end)
+    })
+}
+
+fn collapsed_zones(
+    focus: &Focus,
+    camera: &Camera,
+    global_transform: &GlobalTransform,
+) -> [Option<(Zone, Zone)>; Level::AMOUNT] {
+    let mut i = 0;
+    visible_area(camera, global_transform).map(|(visible_xs, visible_zs)| {
+        let level = Level::ALL[i];
+        i += 1;
+
+        //println!("Collapsed visible: x {:?}, z {:?}", &visible_xs, visible_zs);
+        if !focus.is_shown(level) || visible_xs.len() < 2 || visible_zs.len() < 2 {
+            return None;
+        }
+
+        let min_x = visible_xs.iter().copied().min().unwrap();
+        let min_z = visible_zs.iter().copied().min().unwrap();
+        let start = Zone::from(ZoneLevel::from(Pos::new(min_x, Level::ZERO, min_z)));
+
+        let max_x = visible_xs.iter().copied().max().unwrap();
+        let max_z = visible_zs.iter().copied().max().unwrap();
+        let end = Zone::from(ZoneLevel::from(Pos::new(max_x, Level::ZERO, max_z)));
+
+        Some((start, end))
     })
 }
 
@@ -236,8 +252,9 @@ fn despawn_expanded_zone_levels(
 pub(crate) fn update_collapsed_zone_levels(
     mut commands: Commands,
     mut explored: ResMut<Explored>,
-    mut previous_focus: Local<Focus>,
+    mut previous_camera_global_transform: Local<GlobalTransform>,
     players: Query<(&Pos, &Player)>,
+    cameras: Query<(&Camera, &GlobalTransform)>,
     collapsed_zone_levels: Query<(&ZoneLevel, &Children), (With<Collapsed>, With<Visibility>)>,
 ) {
     // Collapsed zone level visibility: not SeenFrom::Never
@@ -245,29 +262,34 @@ pub(crate) fn update_collapsed_zone_levels(
 
     let start = Instant::now();
 
-    let (&player_pos, player) = players.single();
-    let focus = Focus::new(player, player_pos);
-
-    if focus == *previous_focus {
+    let (camera, global_transform) = cameras.single();
+    if *global_transform == *previous_camera_global_transform {
         return;
     }
 
-    let (maximal_start, maximal_end) = maximal_expanded_zones(Zone::from(ZoneLevel::from(&focus)));
-    println!(
-        "update_collapsed_zone_levels: {:?} {:?}",
-        &maximal_start, &maximal_end
-    );
+    let (&player_pos, player) = players.single();
+    let focus = Focus::new(player, player_pos);
+
+    let expanded_zones = expanded_zones(&focus, camera, global_transform);
+    let collapsed_zones = collapsed_zones(&focus, camera, global_transform);
+    //println!("Expanded zones: {:?}", expanded_zones);
 
     for (&collapsed_zone_level, children) in collapsed_zone_levels.iter() {
         //println!("{collapsed_zone_level:?} visibility?");
-        let visibility = if Zone::from(collapsed_zone_level).in_range(maximal_start, maximal_end) {
-            if explored.has_zone_level_been_seen(collapsed_zone_level) == SeenFrom::FarAway {
-                Visibility::VISIBLE
+
+        let (start_expanded, end_expanded) = expanded_zones[collapsed_zone_level.level.index()];
+        let zone = Zone::from(collapsed_zone_level);
+
+        let visibility = Visibility {
+            is_visible: if zone.in_range(start_expanded, end_expanded) {
+                explored.has_zone_level_been_seen(collapsed_zone_level) == SeenFrom::FarAway
             } else {
-                Visibility::INVISIBLE
-            }
-        } else {
-            Visibility::VISIBLE
+                collapsed_zones[collapsed_zone_level.level.index()]
+                    .filter(|(start_collapsed, end_collapsed)| {
+                        zone.in_range(*start_collapsed, *end_collapsed)
+                    })
+                    .is_some()
+            },
         };
 
         for &entity in children.iter() {
@@ -278,7 +300,7 @@ pub(crate) fn update_collapsed_zone_levels(
         }
     }
 
-    *previous_focus = focus;
+    *previous_camera_global_transform = *global_transform;
 
     log_if_slow("update_collapsed_zone_levels", start);
 }
