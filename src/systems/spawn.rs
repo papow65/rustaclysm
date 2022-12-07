@@ -223,8 +223,8 @@ fn spawn_expanded_zone_levels(
                     .any(|(_, &expanded_zone_level)| expanded_zone_level == zone_level);
                 if !zone_exists {
                     if let Err(e) = tile_spawner.spawn_expanded_zone_level(zone_level) {
-                        eprintln!("{e}");
-                        panic!("{e}");
+                        //eprintln!("While loading {zone_level:?}: {e}");
+                        panic!("While loading {zone_level:?}: {e}");
                     }
                 }
             }

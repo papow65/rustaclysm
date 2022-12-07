@@ -83,7 +83,7 @@ pub(crate) struct Submap {
     pub(crate) items: AtVec<Vec<Repetition<CddaItem>>>,
 
     #[allow(unused)]
-    traps: AtVec<ObjectName>,
+    traps: Vec<At<ObjectName>>,
 
     pub(crate) fields: AtVec<FieldVec>,
 
@@ -120,7 +120,7 @@ impl Submap {
             }),
             furniture: Vec::new(),
             items: FlatVec(Vec::new()),
-            traps: FlatVec(Vec::new()),
+            traps: Vec::new(),
             fields: FlatVec(Vec::new()),
             cosmetics: Vec::new(),
             spawns: Vec::new(),
