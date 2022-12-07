@@ -111,11 +111,12 @@ impl Player {
             (_, QueuedInstruction::Attack) => self.handle_attack(envir, pos),
             (_, QueuedInstruction::Smash) => self.handle_smash(envir, pos),
             (_, QueuedInstruction::ExaminePos) => {
+                let pos = Pos::from(&Focus::new(self, pos));
                 self.state = PlayerActionState::ExaminingPos(pos);
                 PlayerBehavior::Perform(Action::ExaminePos { target: pos })
             }
             (_, QueuedInstruction::ExamineZoneLevel) => {
-                let target = ZoneLevel::from(pos);
+                let target = ZoneLevel::from(&Focus::new(self, pos));
                 self.state = PlayerActionState::ExaminingZoneLevel(target);
                 PlayerBehavior::Perform(Action::ExamineZoneLevel { target })
             }
