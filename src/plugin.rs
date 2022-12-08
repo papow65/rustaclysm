@@ -38,7 +38,8 @@ impl Plugin for RustaclysmPlugin {
             /*.add_system_to_stage(CoreStage::Last, check_obstacle_location)
             .add_system_to_stage(CoreStage::Last, check_overlap)
             .add_system_to_stage(CoreStage::Last, check_hierarchy)
-            .add_system_to_stage(CoreStage::Last, check_characters)*/
+            .add_system_to_stage(CoreStage::Last, check_characters)
+            .add_system_to_stage(CoreStage::Last, check_zone_levels)*/
             .add_system_to_stage(CoreStage::Last, check_delay);
     }
 }

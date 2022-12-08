@@ -1,13 +1,16 @@
-use bevy::prelude::{Changed, Entity, Local, Or, Parent, Query, Res, With};
+use bevy::{
+    prelude::{Changed, Entity, Local, Or, Parent, Query, Res, Visibility, With, Without},
+    utils::HashSet,
+};
 use std::time::{Duration, Instant};
 
-use crate::components::{Action, Faction, Label, Obstacle, Pos};
-use crate::resources::{Location, StdInstant};
+use crate::prelude::{
+    Action, Collapsed, Faction, Label, Location, Obstacle, Pos, StdInstant, ZoneLevel,
+};
 
 use super::log_if_slow;
 
-#[allow(dead_code)]
-#[allow(clippy::needless_pass_by_value)]
+#[allow(dead_code, clippy::needless_pass_by_value)]
 pub(crate) fn check_obstacle_location(
     location: Res<Location>,
     items: Query<(Entity, &Pos, Option<&Label>), With<Obstacle>>,
@@ -28,8 +31,7 @@ pub(crate) fn check_obstacle_location(
     log_if_slow("check_obstacle_location", start);
 }
 
-#[allow(dead_code)]
-#[allow(clippy::needless_pass_by_value)]
+#[allow(dead_code, clippy::needless_pass_by_value)]
 pub(crate) fn check_overlap(all_obstacles: Query<(Entity, &Pos, Option<&Label>), With<Obstacle>>) {
     let start = Instant::now();
 
@@ -50,8 +52,7 @@ pub(crate) fn check_overlap(all_obstacles: Query<(Entity, &Pos, Option<&Label>),
     log_if_slow("check_overlap", start);
 }
 
-#[allow(dead_code)]
-#[allow(clippy::needless_pass_by_value)]
+#[allow(dead_code, clippy::needless_pass_by_value)]
 pub(crate) fn check_hierarchy(
     changed: Query<
         (Entity, Option<&Pos>, Option<&Parent>, Option<&Label>),
@@ -76,8 +77,7 @@ pub(crate) fn check_hierarchy(
     log_if_slow("check_hierarchy", start);
 }
 
-#[allow(dead_code)]
-#[allow(clippy::needless_pass_by_value)]
+#[allow(dead_code, clippy::needless_pass_by_value)]
 pub(crate) fn check_characters(
     characters: Query<
         (
@@ -103,6 +103,26 @@ pub(crate) fn check_characters(
     }
 
     log_if_slow("check_characters", start);
+}
+
+#[allow(dead_code, clippy::needless_pass_by_value)]
+pub(crate) fn check_zone_levels(
+    expanded_zone_levels: Query<&ZoneLevel, Without<Collapsed>>,
+    collapsed_zone_levels: Query<&ZoneLevel, (With<Collapsed>, With<Visibility>)>,
+) {
+    let start = Instant::now();
+
+    let mut all_expanded = HashSet::new();
+    for zone in expanded_zone_levels.iter() {
+        assert!(all_expanded.insert(zone), "Expanded duplicate {:?}", zone);
+    }
+
+    let mut all_collapsed = HashSet::new();
+    for zone in collapsed_zone_levels.iter() {
+        assert!(all_collapsed.insert(zone), "Expanded duplicate {:?}", zone);
+    }
+
+    log_if_slow("check_zone_levels", start);
 }
 
 #[allow(clippy::needless_pass_by_value)]

@@ -1,4 +1,4 @@
-use crate::prelude::{Millimeter, Milliseconds, WalkingDistance, MAX_VISIBLE_DISTANCE};
+use crate::prelude::{Millimeter, Milliseconds, WalkingDistance, MIN_INVISIBLE_DISTANCE};
 use bevy::prelude::{Component, Vec3};
 use float_ord::FloatOrd;
 use pathfinding::{num_traits::Zero, prelude::astar};
@@ -262,7 +262,7 @@ impl Pos {
         Millimeter::ADJACENT.0.pow(2) * (self.x.abs_diff(other.x) as u64).pow(2)
             + Millimeter::VERTICAL.0.pow(2) * (self.level.h.abs_diff(other.level.h) as u64).pow(2)
             + Millimeter::ADJACENT.0.pow(2) * (self.z.abs_diff(other.z) as u64).pow(2)
-            < Millimeter::ADJACENT.0.pow(2) * ((MAX_VISIBLE_DISTANCE + 1) as u64).pow(2)
+            < Millimeter::ADJACENT.0.pow(2) * (MIN_INVISIBLE_DISTANCE as u64).pow(2)
     }
 }
 
@@ -324,6 +324,14 @@ pub(crate) struct Zone {
 
 impl Zone {
     pub(crate) const SIZE: usize = 24;
+    pub(crate) const MIN: Self = Self {
+        x: i32::min_value(),
+        z: i32::min_value(),
+    };
+    pub(crate) const MAX: Self = Self {
+        x: i32::max_value(),
+        z: i32::max_value(),
+    };
 
     pub(crate) const fn zone_level(&self, level: Level) -> ZoneLevel {
         ZoneLevel {
@@ -342,10 +350,6 @@ impl Zone {
             x: self.x + x,
             z: self.z + z,
         }
-    }
-
-    pub(crate) fn in_range(&self, start: Zone, end: Zone) -> bool {
-        (start.x..=end.x).contains(&self.x) && (start.z..=end.z).contains(&self.z)
     }
 }
 

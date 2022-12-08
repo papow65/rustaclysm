@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use bevy::{ecs::system::Resource, utils::HashMap};
+use bevy::{prelude::Resource, utils::HashMap};
 
 #[derive(Resource)]
 pub(crate) struct ZoneLevelNames {
