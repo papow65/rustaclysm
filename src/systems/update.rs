@@ -99,13 +99,12 @@ fn update_visualization(
     explored: &mut Explored,
     focus: &Focus,
     player_pos: &Pos,
-    entity: Entity,
     pos: Pos,
     visibility: &mut Visibility,
     last_seen: &mut LastSeen,
+    speed: Option<&Speed>,
     children: Option<&Children>,
     child_items: &Query<&Appearance, (With<Parent>, Without<Pos>)>,
-    movable_items: &Query<(), With<Speed>>,
 ) {
     let previously_seen = last_seen.clone();
 
@@ -113,16 +112,18 @@ fn update_visualization(
     last_seen.update(&envir.can_see(*player_pos, pos));
 
     if last_seen != &LastSeen::Never {
-        explored.mark_pos_seen(pos);
+        // The player character can see things not shown to the player, like the top of a tower when walking next to it.
+        let level_shown = focus.is_shown(pos.level);
+        visibility.is_visible = level_shown && last_seen.shown(speed.is_some());
 
-        if last_seen != &previously_seen {
+        if visibility.is_visible {
             // TODO select an appearance based on amount of perceived light
             update_material(commands, children, child_items, last_seen);
         }
 
-        // The player character can see things not shown to the player, like the top of a tower when walking next to it.
-        let level_shown = focus.is_shown(pos.level);
-        visibility.is_visible = level_shown && last_seen.shown(movable_items.contains(entity));
+        if last_seen != &previously_seen {
+            explored.mark_pos_seen(pos);
+        }
     }
 }
 
@@ -133,36 +134,34 @@ pub(crate) fn update_visualization_on_item_move(
     mut explored: ResMut<Explored>,
     mut moved_items: Query<
         (
-            Entity,
             &Pos,
             &mut Visibility,
             &mut LastSeen,
+            Option<&Speed>,
             Option<&Children>,
         ),
         Changed<Pos>,
     >,
     child_items: Query<&Appearance, (With<Parent>, Without<Pos>)>,
     players: Query<(&Pos, &Player)>,
-    movable_items: Query<(), With<Speed>>,
 ) {
     let start = Instant::now();
 
     let (&player_pos, player) = players.single();
     let focus = Focus::new(player, player_pos);
-    for (entity, &pos, mut visibility, mut last_seen, children) in moved_items.iter_mut() {
+    for (&pos, mut visibility, mut last_seen, speed, children) in moved_items.iter_mut() {
         update_visualization(
             &mut commands,
             &envir,
             &mut explored,
             &focus,
             &player_pos,
-            entity,
             pos,
             &mut visibility,
             &mut last_seen,
+            speed,
             children,
             &child_items,
-            &movable_items,
         );
     }
 
@@ -176,15 +175,14 @@ pub(crate) fn update_visualization_on_focus_move(
     mut explored: ResMut<Explored>,
     mut last_focus: Local<Focus>,
     mut items: Query<(
-        Entity,
         &Pos,
         &mut Visibility,
         &mut LastSeen,
+        Option<&Speed>,
         Option<&Children>,
     )>,
     child_items: Query<&Appearance, (With<Parent>, Without<Pos>)>,
     players: Query<(&Pos, &Player)>,
-    movable_items: Query<(), With<Speed>>,
 ) {
     let start = Instant::now();
 
@@ -192,20 +190,19 @@ pub(crate) fn update_visualization_on_focus_move(
         let focus = Focus::new(player, player_pos);
 
         if focus != *last_focus {
-            for (entity, &pos, mut visibility, mut last_seen, children) in items.iter_mut() {
+            for (&pos, mut visibility, mut last_seen, speed, children) in items.iter_mut() {
                 update_visualization(
                     &mut commands,
                     &envir,
                     &mut explored,
                     &focus,
                     &player_pos,
-                    entity,
                     pos,
                     &mut visibility,
                     &mut last_seen,
+                    speed,
                     children,
                     &child_items,
-                    &movable_items,
                 );
             }
 
