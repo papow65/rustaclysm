@@ -2,20 +2,21 @@ use crate::prelude::{Millimeter, Milliseconds, WalkingDistance, MIN_INVISIBLE_DI
 use bevy::prelude::{Component, Vec3};
 use float_ord::FloatOrd;
 use pathfinding::{num_traits::Zero, prelude::astar};
-use std::ops::Add;
+use std::{iter::once, ops::Add};
 
+/** Does not include 'from', but does include 'to' */
 fn straight_2d(from: (i32, i32), to: (i32, i32)) -> impl Iterator<Item = (i32, i32)> {
     bresenham::Bresenham::new(
         (from.0 as isize, from.1 as isize),
         (to.0 as isize, to.1 as isize),
     )
-    .skip(1) // skip 'self'
+    .skip(1) // skip 'from'
     .map(|p| (p.0 as i32, p.1 as i32))
-    .chain(std::iter::once(to))
+    .chain(once(to))
 }
 
 /// Vertical aspect
-#[derive(Copy, Clone, Default, PartialOrd, Ord, PartialEq, Eq, Hash, Debug)]
+#[derive(Copy, Clone, PartialOrd, Ord, PartialEq, Eq, Hash, Debug)]
 pub(crate) struct Level {
     pub(crate) h: i8,
 }
@@ -165,8 +166,7 @@ impl Nbor {
     }
 }
 
-/// Y is vertical, like the bevy default
-#[derive(Component, Copy, Clone, Default, PartialEq, Eq, Hash, Debug)]
+#[derive(Component, Copy, Clone, PartialEq, Eq, Hash, Debug)]
 pub(crate) struct Pos {
     pub(crate) x: i32,
     pub(crate) level: Level,
@@ -174,6 +174,12 @@ pub(crate) struct Pos {
 }
 
 impl Pos {
+    pub(crate) const ORIGIN: Self = Self {
+        x: 0,
+        level: Level::ZERO,
+        z: 0,
+    };
+
     pub(crate) const fn new(x: i32, level: Level, z: i32) -> Self {
         Self { x, level, z }
     }
@@ -240,6 +246,7 @@ impl Pos {
         )
     }
 
+    /** Doe not include 'self', but includes 'to' */
     pub(crate) fn straight(self, to: Self) -> impl Iterator<Item = Self> {
         assert!(self != to);
 

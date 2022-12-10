@@ -200,12 +200,14 @@ impl Faction {
         health: &Health,
         factions: &[(Pos, &'f Self)],
     ) -> Strategy {
+        let currently_visible = envir.currently_visible(start_pos);
+
         let enemies = factions
             .iter()
             .filter(|(_, other_faction)| self.dislikes(other_faction))
             .map(|(enemy_pos, _)| enemy_pos)
             .copied()
-            .filter(|enemy_pos| envir.can_see(start_pos, *enemy_pos) == Visible::Seen)
+            .filter(|enemy_pos| currently_visible.can_see(*enemy_pos) == Visible::Seen)
             .collect::<Vec<Pos>>();
         //println!("{self:?} can see {:?} enemies", enemies.len());
 

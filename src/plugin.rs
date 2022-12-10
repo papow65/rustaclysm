@@ -15,7 +15,7 @@ impl Plugin for RustaclysmPlugin {
             .insert_resource(ItemInfos::new())
             .insert_resource(Location::default())
             .insert_resource(InstructionQueue::default())
-            .insert_resource(RelativeRays::new())
+            .insert_resource(RelativeSegments::new())
             .insert_resource(TileCaches::default());
 
         // executed once at startup

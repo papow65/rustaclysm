@@ -7,9 +7,12 @@ mod spawner;
 mod zone_level_names;
 
 use crate::prelude::*;
-use bevy::ecs::system::{Resource, SystemParam};
-use bevy::prelude::*;
-use bevy::utils::HashMap;
+use bevy::{
+    ecs::system::{Resource, SystemParam},
+    prelude::*,
+    utils::HashMap,
+};
+use std::iter::once;
 
 pub(crate) use self::{
     debug::*, envir::*, explored::*, item_infos::*, location::*, spawner::*, zone_level_names::*,
@@ -119,12 +122,75 @@ impl<'w, 's> Characters<'w, 's> {
     }
 }
 
-#[derive(Resource)]
-pub(crate) struct RelativeRays(HashMap<Pos, (Vec<Pos>, Vec<(Pos, Pos)>)>);
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct RelativeRay {
+    path: Vec<Pos>,
+}
 
-impl RelativeRays {
+impl RelativeRay {
+    fn to_segment(&self, others: &HashMap<Pos, Self>) -> RelativeSegment {
+        let mut preceding = None;
+        for potential_preceding in self.path.iter().rev().skip(1) {
+            let potential_sub_path = others.get(potential_preceding).unwrap();
+            if self.path.starts_with(&potential_sub_path.path) {
+                preceding = Some(*potential_preceding);
+                break; // stop at the first (longest) match
+            }
+        }
+
+        let skipped = if let Some(prededing) = preceding {
+            others.get(&prededing).unwrap().path.len() - 1
+        } else {
+            0
+        };
+
+        let mut segment = if skipped == 0 {
+            self.path.clone()
+        } else {
+            self.path[skipped..].to_vec()
+        };
+        // The last pos doen't need to be transparent.
+        segment.pop();
+
+        let down_pairs = once(Pos::ORIGIN)
+            .chain(self.path.iter().copied())
+            .zip(self.path.iter().copied())
+            .skip(skipped)
+            .filter(|(current, next)| current.level != next.level)
+            .map(|(current, next)| {
+                let level = current.level.max(next.level);
+                (
+                    Pos::new(current.x, level, current.z),
+                    Pos::new(next.x, level, next.z),
+                )
+            })
+            .collect::<Vec<_>>();
+
+        //println!("{:?} {:?} {}", &self.path, &preceding, skipped);
+
+        RelativeSegment {
+            preceding,
+            segment,
+            down_pairs,
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct RelativeSegment {
+    preceding: Option<Pos>,
+    segment: Vec<Pos>,
+    down_pairs: Vec<(Pos, Pos)>,
+}
+
+#[derive(Resource)]
+pub(crate) struct RelativeSegments {
+    segments: HashMap<Pos, RelativeSegment>,
+}
+
+impl RelativeSegments {
     pub(crate) fn new() -> Self {
-        let mut map: HashMap<Pos, (Vec<Pos>, Vec<(Pos, Pos)>)> = HashMap::default();
+        let mut rays = HashMap::default();
         let origin = Pos::new(0, Level::ZERO, 0);
         for x in -MAX_VISIBLE_DISTANCE..=MAX_VISIBLE_DISTANCE {
             for y in Level::ALL {
@@ -134,55 +200,91 @@ impl RelativeRays {
                         continue;
                     }
 
-                    let line = if to == origin {
-                        Vec::new()
-                    } else {
-                        origin.straight(to).collect::<Vec<Pos>>()
-                    };
-
-                    let down = std::iter::once(origin)
-                        .chain(line.iter().copied())
-                        .zip(line.iter().copied())
-                        .filter(|(a, b)| a.level != b.level)
-                        .map(|(a, b)| {
-                            let level = a.level.max(b.level);
-                            (Pos::new(a.x, level, a.z), Pos::new(b.x, level, b.z))
-                        })
-                        .collect::<Vec<(Pos, Pos)>>();
-
-                    let between = line
-                        .iter()
-                        .copied()
-                        .filter(|&pos| pos != to)
-                        .collect::<Vec<Pos>>();
-                    map.insert(to, (between, down));
+                    rays.insert(
+                        to,
+                        RelativeRay {
+                            path: if to == origin {
+                                vec![]
+                            } else {
+                                origin.straight(to).collect::<Vec<Pos>>()
+                            },
+                        },
+                    );
                 }
             }
         }
 
-        Self(map)
-    }
+        assert!(
+            rays.get(&Pos::ORIGIN) == Some(&RelativeRay { path: Vec::new() }),
+            "{:?}",
+            rays.get(&Pos::ORIGIN)
+        );
 
-    pub(crate) fn ray(
-        &self,
-        from: Pos,
-        to: Pos,
-    ) -> Option<(
-        impl Iterator<Item = Pos> + '_,
-        impl Iterator<Item = (Pos, Pos)> + '_,
-    )> {
-        self.0
-            .get(&Pos::new(
-                to.x - from.x,
-                Level::new(to.level.h - from.level.h),
-                to.z - from.z,
-            ))
-            .map(|(line, down)| {
-                (
-                    line.iter().map(move |pos| from.offset(*pos).unwrap()),
-                    down.iter()
-                        .map(move |(a, b)| (from.offset(*a).unwrap(), from.offset(*b).unwrap())),
-                )
-            })
+        assert!(
+            rays.get(&Pos::new(1, Level::ZERO, 0))
+                == Some(&RelativeRay {
+                    path: vec![Pos::new(1, Level::ZERO, 0)],
+                }),
+            "{:?}",
+            rays.get(&Pos::new(1, Level::ZERO, 0))
+        );
+
+        assert!(
+            rays.get(&Pos::new(2, Level::ZERO, 0))
+                == Some(&RelativeRay {
+                    path: vec![Pos::new(1, Level::ZERO, 0), Pos::new(2, Level::ZERO, 0)],
+                }),
+            "{:?}",
+            rays.get(&Pos::new(2, Level::ZERO, 0))
+        );
+
+        let lower_bound = (2 * MAX_VISIBLE_DISTANCE as usize + 1).pow(2) * Level::AMOUNT / 2;
+        let upper_bound = (2 * MAX_VISIBLE_DISTANCE as usize + 1).pow(2) * Level::AMOUNT;
+        assert!(lower_bound < rays.len(), "{} {}", lower_bound, rays.len());
+        assert!(rays.len() < upper_bound, "{} {}", rays.len(), upper_bound);
+        for nbor in Nbor::ALL {
+            let nbor = Pos::ORIGIN.raw_nbor(&nbor).unwrap();
+            assert!(rays.contains_key(&nbor), "{nbor:?}");
+        }
+
+        let mut segments = HashMap::<Pos, RelativeSegment>::default();
+        for (pos, relativeray) in rays.iter() {
+            segments.insert(*pos, relativeray.to_segment(&rays));
+        }
+
+        for i in 2..=60 {
+            let pos = Pos::new(i, Level::ZERO, 0);
+            assert!(
+                segments.get(&pos)
+                    == Some(&RelativeSegment {
+                        preceding: Some(Pos::new(i - 1, Level::ZERO, 0)),
+                        segment: vec![Pos::new(i - 1, Level::ZERO, 0)],
+                        down_pairs: Vec::new()
+                    }),
+                "{:?} -> {:?}",
+                pos,
+                segments.get(&pos)
+            );
+        }
+
+        for level in 2..=10 {
+            let level = Level::new(level);
+            let pos = Pos::new(0, level, 0);
+            assert!(
+                matches!(
+                    segments.get(&pos),
+                    Some(&RelativeSegment {
+                        ref preceding,
+                        ref segment,
+                        ..
+                    }) if preceding == &Some(Pos::new(0, Level::new(level.h - 1), 0)) && segment == &vec![Pos::new(0, Level::new(level.h - 1), 0)]
+                ),
+                "{:?} -> {:?}",
+                pos,
+                segments.get(&pos)
+            );
+        }
+
+        Self { segments }
     }
 }

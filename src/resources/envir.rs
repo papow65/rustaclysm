@@ -1,12 +1,11 @@
 use crate::prelude::*;
-use bevy::ecs::system::SystemParam;
-use bevy::prelude::*;
-use std::cmp::Ordering;
+use bevy::{ecs::system::SystemParam, prelude::*, utils::HashMap};
+use std::{cell::RefCell, cmp::Ordering};
 
 #[derive(SystemParam)]
 pub(crate) struct Envir<'w, 's> {
     pub(crate) location: ResMut<'w, Location>,
-    relative_rays: Res<'w, RelativeRays>,
+    relative_segments: Res<'w, RelativeSegments>,
     floors: Query<'w, 's, &'static Floor>,
     stairs_up: Query<'w, 's, &'static StairsUp>,
     stairs_down: Query<'w, 's, &'static StairsDown>,
@@ -118,29 +117,6 @@ impl<'w, 's> Envir<'w, 's> {
 
     pub(crate) fn can_see_down(&self, pos: Pos) -> bool {
         !self.has_floor(pos) || self.stairs_down_to(pos).is_some()
-    }
-
-    pub(crate) fn can_see(&self, from: Pos, to: Pos) -> Visible {
-        if from == to {
-            Visible::Seen
-        } else if MIN_INVISIBLE_DISTANCE <= from.x.abs_diff(to.x)
-            || MIN_INVISIBLE_DISTANCE <= from.z.abs_diff(to.z)
-        {
-            Visible::Unseen
-        } else {
-            match self.relative_rays.ray(from, to) {
-                Some((mut between, mut d_line)) => {
-                    if between.all(|pos| self.find_opaque(pos).is_none())
-                        && d_line.all(|(a, b)| self.can_see_down(a) || self.can_see_down(b))
-                    {
-                        Visible::Seen
-                    } else {
-                        Visible::Unseen
-                    }
-                }
-                None => Visible::Unseen,
-            }
-        }
     }
 
     pub(crate) fn get_nbor(&self, from: Pos, nbor: &Nbor) -> Result<Pos, Message> {
@@ -268,5 +244,81 @@ impl<'w, 's> Envir<'w, 's> {
                 }
             }
         }
+    }
+
+    pub(crate) fn currently_visible(&self, from: Pos) -> CurrentlyVisible {
+        CurrentlyVisible {
+            envir: self,
+            from,
+            cache: RefCell::default(),
+        }
+    }
+}
+
+pub(crate) struct CurrentlyVisible<'a> {
+    envir: &'a Envir<'a, 'a>,
+    from: Pos,
+    cache: RefCell<HashMap<Pos, Visible>>,
+}
+
+impl<'a> CurrentlyVisible<'a> {
+    pub(crate) fn can_see(&self, to: Pos) -> Visible {
+        if MIN_INVISIBLE_DISTANCE <= self.from.x.abs_diff(to.x)
+            || MIN_INVISIBLE_DISTANCE <= self.from.z.abs_diff(to.z)
+        {
+            Visible::Unseen
+        } else {
+            self.can_see_relative(Pos::new(
+                to.x - self.from.x,
+                Level::new(to.level.h - self.from.level.h),
+                to.z - self.from.z,
+            ))
+        }
+    }
+
+    pub(crate) fn can_see_relative(&self, relative_to: Pos) -> Visible {
+        if let Some(visible) = self.cache.borrow().get(&relative_to) {
+            return visible.clone();
+        }
+
+        let Some(relative_segment) = self.envir.relative_segments.segments.get(&relative_to) else {
+            return self.remember(relative_to, Visible::Unseen);
+        };
+
+        if relative_segment
+            .preceding
+            .map(|preceding| self.can_see_relative(preceding))
+            == Some(Visible::Unseen)
+        {
+            return self.remember(relative_to, Visible::Unseen);
+        }
+
+        if relative_segment.segment.iter().any(|relative_pos| {
+            let abs_pos = self.from.offset(*relative_pos).unwrap();
+            self.envir.find_opaque(abs_pos).is_some()
+        }) {
+            return self.remember(relative_to, Visible::Unseen);
+        }
+
+        let visible =
+            if relative_segment
+                .down_pairs
+                .iter()
+                .all(|(relative_pos_a, relative_pos_b)| {
+                    let abs_pos_a = self.from.offset(*relative_pos_a).unwrap();
+                    let abs_pos_b = self.from.offset(*relative_pos_b).unwrap();
+                    self.envir.can_see_down(abs_pos_a) || self.envir.can_see_down(abs_pos_b)
+                })
+            {
+                Visible::Seen
+            } else {
+                Visible::Unseen
+            };
+        self.remember(relative_to, visible)
+    }
+
+    fn remember(&self, relative_to: Pos, visible: Visible) -> Visible {
+        self.cache.borrow_mut().insert(relative_to, visible.clone());
+        visible
     }
 }

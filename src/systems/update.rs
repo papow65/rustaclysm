@@ -95,10 +95,9 @@ fn update_material(
 /** This assumes that the player state is not examining a pos or zone. */
 fn update_visualization(
     commands: &mut Commands,
-    envir: &Envir,
     explored: &mut Explored,
+    currently_visible: &CurrentlyVisible,
     focus: &Focus,
-    player_pos: &Pos,
     pos: Pos,
     visibility: &mut Visibility,
     last_seen: &mut LastSeen,
@@ -108,8 +107,10 @@ fn update_visualization(
 ) {
     let previously_seen = last_seen.clone();
 
+    let visible = currently_visible.can_see(pos);
+
     // TODO check if there is enough light
-    last_seen.update(&envir.can_see(*player_pos, pos));
+    last_seen.update(&visible);
 
     if last_seen != &LastSeen::Never {
         // The player character can see things not shown to the player, like the top of a tower when walking next to it.
@@ -149,13 +150,13 @@ pub(crate) fn update_visualization_on_item_move(
 
     let (&player_pos, player) = players.single();
     let focus = Focus::new(player, player_pos);
+    let currently_visible = envir.currently_visible(player_pos); // does not depend on focus
     for (&pos, mut visibility, mut last_seen, speed, children) in moved_items.iter_mut() {
         update_visualization(
             &mut commands,
-            &envir,
             &mut explored,
+            &currently_visible,
             &focus,
-            &player_pos,
             pos,
             &mut visibility,
             &mut last_seen,
@@ -188,15 +189,14 @@ pub(crate) fn update_visualization_on_focus_move(
 
     if let Ok((&player_pos, player)) = players.get_single() {
         let focus = Focus::new(player, player_pos);
-
         if focus != *last_focus {
+            let currently_visible = envir.currently_visible(player_pos); // does not depend on focus
             for (&pos, mut visibility, mut last_seen, speed, children) in items.iter_mut() {
                 update_visualization(
                     &mut commands,
-                    &envir,
                     &mut explored,
+                    &currently_visible,
                     &focus,
-                    &player_pos,
                     pos,
                     &mut visibility,
                     &mut last_seen,

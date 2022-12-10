@@ -221,7 +221,7 @@ impl Focus {
 
 impl Default for Focus {
     fn default() -> Self {
-        Self::Pos(Pos::default())
+        Self::Pos(Pos::ORIGIN)
     }
 }
 

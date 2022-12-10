@@ -19,7 +19,7 @@ pub(crate) enum SpriteLayer {
     Back,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) enum Visible {
     Seen,
     Unseen,
