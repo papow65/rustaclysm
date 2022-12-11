@@ -29,6 +29,7 @@ pub(crate) fn spawn_zones_for_camera(
     mut commands: Commands,
     mut tile_spawner: TileSpawner,
     mut previous_camera_global_transform: Local<GlobalTransform>,
+    mut previous_expanded_region: Local<Region>,
     players: Query<(&Pos, &Player)>,
     cameras: Query<(&Camera, &GlobalTransform)>,
     expanded_zone_levels: Query<(Entity, &ZoneLevel), Without<Collapsed>>,
@@ -44,11 +45,15 @@ pub(crate) fn spawn_zones_for_camera(
     let (&player_pos, player) = players.single();
     let focus = Focus::new(player, player_pos);
     let expanded_region = expanded_region(&focus, camera, &global_transform);
+    if expanded_region == *previous_expanded_region {
+        return;
+    }
 
     spawn_expanded_zone_levels(&mut tile_spawner, &expanded_zone_levels, &expanded_region);
     despawn_expanded_zone_levels(&mut commands, &expanded_zone_levels, &expanded_region);
 
     *previous_camera_global_transform = global_transform;
+    *previous_expanded_region = expanded_region;
 
     log_if_slow("spawn_zones_for_camera", start);
 }
@@ -182,7 +187,7 @@ fn despawn_expanded_zone_levels(
         .filter(|(_, &expanded_zone_level)| {
             !expanded_region.contains_zone_level(expanded_zone_level)
         })
-        .for_each(|(e, &_expanded_zone_level)| {
+        .for_each(|(e, _)| {
             commands.entity(e).despawn_recursive();
         });
 }

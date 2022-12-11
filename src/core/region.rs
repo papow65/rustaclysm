@@ -1,6 +1,6 @@
 use crate::prelude::{Level, Zone, ZoneLevel};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub(crate) struct ZoneRegion {
     from: Zone,
     /** including */
@@ -32,7 +32,7 @@ impl ZoneRegion {
     }
 }
 
-#[derive(Clone, Default, Debug)]
+#[derive(Clone, Default, Debug, PartialEq)]
 pub(crate) struct Region {
     zone_regions: [Option<ZoneRegion>; Level::AMOUNT],
 }
