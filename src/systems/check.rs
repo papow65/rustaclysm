@@ -130,7 +130,7 @@ pub(crate) fn check_delay(mut last_time: Local<StdInstant>) {
     let start = Instant::now();
 
     let delay = last_time.next();
-    if Duration::new(0, 20_000_000) < delay {
+    if Duration::from_millis(20) < delay {
         println!("Large delay: {delay:?}");
     }
 

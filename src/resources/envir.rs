@@ -311,18 +311,16 @@ impl<'a> CurrentlyVisible<'a> {
             return self.remember_visible(relative_to, Visible::Unseen);
         }
 
-        let visible =
-            if relative_segment
-                .down_pairs
-                .iter()
-                .all(|(offset_a, offset_b)| {
-                    self.can_look_down(*offset_a) || self.can_look_down(*offset_b)
-                })
-            {
-                Visible::Seen
-            } else {
-                Visible::Unseen
-            };
+        let visible = if relative_segment
+            .down_pairs
+            .iter()
+            .all(|(offset_a, offset_b)| {
+                self.can_look_down(*offset_a) || self.can_look_down(*offset_b)
+            }) {
+            Visible::Seen
+        } else {
+            Visible::Unseen
+        };
         self.remember_visible(relative_to, visible)
     }
 
