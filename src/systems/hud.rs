@@ -309,6 +309,7 @@ pub(crate) fn update_status_player_state(
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_status_detais(
     envir: Envir,
+    mut explored: ResMut<Explored>,
     mut labels: ResMut<ZoneLevelNames>,
     characters: Query<(Option<&Label>, &Health), Without<Item>>,
     entities: Query<
@@ -344,16 +345,20 @@ pub(crate) fn update_status_detais(
                     }
                 }*/
 
-                let all_here = envir.location.all(pos);
-                let characters = characters_info(&all_here, &characters);
-                let entities = all_here
-                    .iter()
-                    .flat_map(|&i| entities.get(i))
-                    .map(entity_info)
-                    .map(|s| s + "\n")
-                    .collect::<String>();
-                let items = items_info(&all_here, &items);
-                format!("{:?}\n{}{}{}", pos, characters, entities, items)
+                if explored.has_pos_been_seen(pos) {
+                    let all_here = envir.location.all(pos);
+                    let characters = characters_info(&all_here, &characters);
+                    let entities = all_here
+                        .iter()
+                        .flat_map(|&i| entities.get(i))
+                        .map(entity_info)
+                        .map(|s| s + "\n")
+                        .collect::<String>();
+                    let items = items_info(&all_here, &items);
+                    format!("{:?}\n{}{}{}", pos, characters, entities, items)
+                } else {
+                    format!("{:?}\nUnseen", pos)
+                }
             }
             PlayerActionState::ExaminingZoneLevel(zone_level) => {
                 /*for (glob, z) in globs.iter() {
@@ -362,13 +367,17 @@ pub(crate) fn update_status_detais(
                     }
                 }*/
 
-                format!(
-                    "{:?}\n{:?}",
-                    zone_level,
-                    labels
-                        .get(zone_level)
-                        .unwrap_or(&ObjectName::new("NOT FOUND"))
-                )
+                if explored.has_zone_level_been_seen(zone_level) == SeenFrom::Never {
+                    format!("{:?}\nUnseen", zone_level)
+                } else {
+                    format!(
+                        "{:?}\n{:?}",
+                        zone_level,
+                        labels
+                            .get(zone_level)
+                            .unwrap_or(&ObjectName::new("NOT FOUND"))
+                    )
+                }
             }
             _ => String::new(),
         };

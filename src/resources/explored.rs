@@ -67,7 +67,7 @@ impl Explored {
         self.zone_level.get(&zone_level).unwrap().clone()
     }
 
-    pub(crate) fn has_pos_been_seen(&mut self, pos: Pos) -> bool {
+    pub(crate) fn has_pos_been_seen(&self, pos: Pos) -> bool {
         self.pos.get(&pos) == Some(&true)
     }
 }
