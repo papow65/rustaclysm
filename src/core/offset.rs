@@ -1,5 +1,3 @@
-
-
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
 pub(crate) struct LevelOffset {
     pub(crate) h: i8,
