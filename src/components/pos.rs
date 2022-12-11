@@ -351,7 +351,7 @@ impl Path {
     }
 }
 
-#[derive(Component, Copy, Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub(crate) struct Zone {
     pub(crate) x: i32,
     pub(crate) z: i32,
