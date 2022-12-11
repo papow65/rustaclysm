@@ -113,12 +113,12 @@ impl Player {
             (_, QueuedInstruction::ExaminePos) => {
                 let pos = Pos::from(&Focus::new(self, pos));
                 self.state = PlayerActionState::ExaminingPos(pos);
-                PlayerBehavior::Perform(Action::ExaminePos { target: pos })
+                PlayerBehavior::NoEffect
             }
             (_, QueuedInstruction::ExamineZoneLevel) => {
                 let target = ZoneLevel::from(&Focus::new(self, pos));
                 self.state = PlayerActionState::ExaminingZoneLevel(target);
-                PlayerBehavior::Perform(Action::ExamineZoneLevel { target })
+                PlayerBehavior::NoEffect
             }
             (_, QueuedInstruction::SwitchRunning) => PlayerBehavior::Perform(Action::SwitchRunning),
         }
@@ -130,7 +130,7 @@ impl Player {
                 let target = current.nbor(nbor);
                 if let Some(target) = target {
                     self.state = PlayerActionState::ExaminingZoneLevel(target);
-                    PlayerBehavior::Perform(Action::ExamineZoneLevel { target })
+                    PlayerBehavior::NoEffect
                 } else {
                     PlayerBehavior::Warning(Message::warn("invalid zone level to examine"))
                 }
@@ -138,7 +138,7 @@ impl Player {
             (PlayerActionState::ExaminingPos(current), target) => {
                 if let Some(target) = target.ok().or_else(|| current.raw_nbor(nbor)) {
                     self.state = PlayerActionState::ExaminingPos(target);
-                    PlayerBehavior::Perform(Action::ExaminePos { target })
+                    PlayerBehavior::NoEffect
                 } else {
                     PlayerBehavior::Warning(Message::warn("invalid position to examine"))
                 }

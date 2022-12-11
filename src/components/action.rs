@@ -18,12 +18,6 @@ pub(crate) enum Action {
     Pickup,
     Dump,
     SwitchRunning,
-    ExaminePos {
-        target: Pos,
-    },
-    ExamineZoneLevel {
-        target: ZoneLevel,
-    },
 }
 
 impl Action {
@@ -55,8 +49,6 @@ impl Action {
                 pos,
                 speed,
             ),
-            Self::ExaminePos { target } => examine(commands, actor, pos, target),
-            Self::ExamineZoneLevel { target } => examine(commands, actor, pos, target.base_pos()),
             Self::SwitchRunning => switch_running(commands, actor),
         };
 
@@ -89,11 +81,6 @@ fn move_(
     match envir.collide(from, to, true) {
         Collision::Pass => {
             commands.entity(mover).insert(to);
-
-            if from.level != to.level {
-                commands.entity(mover).insert(LevelChanged);
-            }
-
             from.walking_distance(to) / speed
         }
         /*Collision::Fall(fall_pos) => {
@@ -241,16 +228,6 @@ fn pickup(
         commands.spawn(Message::new(message));
         Milliseconds(0)
     }
-}
-
-fn examine(commands: &mut Commands, player: Entity, from: Pos, to: Pos) -> Milliseconds {
-    // see update_status_detais() in systems/update.rs
-
-    if from.level != to.level {
-        commands.entity(player).insert(LevelChanged);
-    }
-
-    Milliseconds(0)
 }
 
 fn switch_running(commands: &mut Commands, switcher: Entity) -> Milliseconds {

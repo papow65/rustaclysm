@@ -28,7 +28,6 @@ impl Plugin for RustaclysmPlugin {
         // executed every frame
         app.add_system_to_stage(CoreStage::PreUpdate, spawn_nearby_overzones)
             .add_system_to_stage(CoreStage::PreUpdate, spawn_zones_for_camera)
-            .add_system_to_stage(CoreStage::PreUpdate, remove_changed_markers)
             .add_system(manage_game_over)
             .add_system(manage_mouse_input)
             .add_system(manage_keyboard_input)

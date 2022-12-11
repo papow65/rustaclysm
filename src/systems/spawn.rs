@@ -247,17 +247,3 @@ pub(crate) fn update_collapsed_zone_levels(
 
     log_if_slow("update_collapsed_zone_levels", start);
 }
-
-#[allow(clippy::needless_pass_by_value)]
-pub(crate) fn remove_changed_markers(
-    mut commands: Commands,
-    level_changers: Query<Entity, With<LevelChanged>>,
-) {
-    let start = Instant::now();
-
-    for entity in level_changers.iter() {
-        commands.entity(entity).remove::<LevelChanged>();
-    }
-
-    log_if_slow("remove_changed_markers", start);
-}

@@ -110,7 +110,6 @@ impl<'w, 's> TileSpawner<'w, 's> {
             let tile = child_builder
                 .spawn(SpatialBundle::default())
                 .insert(Visibility::INVISIBLE)
-                .insert(LevelChanged)
                 .insert(
                     item_info
                         .map_or_else(|| definition.name.to_fallback_label(), |i| i.to_label(1)),
@@ -721,7 +720,6 @@ impl<'w, 's> Spawner<'w, 's> {
             .commands
             .entity(player_entity)
             .insert(player)
-            .insert(LevelChanged)
             .with_children(|child_builder| {
                 child_builder
                     .spawn(SpatialBundle::default())
