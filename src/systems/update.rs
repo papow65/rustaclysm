@@ -77,17 +77,15 @@ pub(crate) fn update_cursor_visibility_on_player_change(
 
 fn update_material(
     commands: &mut Commands,
-    children: Option<&Children>,
+    children: &Children,
     child_items: &Query<&Appearance, (With<Parent>, Without<Pos>)>,
     last_seen: &LastSeen,
 ) {
-    if let Some(children) = children {
-        for &child in children.iter() {
-            if let Ok(child_appearance) = child_items.get(child) {
-                commands
-                    .entity(child)
-                    .insert(child_appearance.material(last_seen));
-            }
+    for &child in children.iter() {
+        if let Ok(child_appearance) = child_items.get(child) {
+            commands
+                .entity(child)
+                .insert(child_appearance.material(last_seen));
         }
     }
 }
@@ -102,29 +100,26 @@ fn update_visualization(
     visibility: &mut Visibility,
     last_seen: &mut LastSeen,
     speed: Option<&Speed>,
-    children: Option<&Children>,
+    children: &Children,
     child_items: &Query<&Appearance, (With<Parent>, Without<Pos>)>,
 ) {
     let previously_seen = last_seen.clone();
 
     let visible = currently_visible.can_see(pos);
-
     // TODO check if there is enough light
     last_seen.update(&visible);
 
     if last_seen != &LastSeen::Never {
-        // The player character can see things not shown to the player, like the top of a tower when walking next to it.
-        let level_shown = focus.is_shown(pos.level);
-        visibility.is_visible = level_shown && last_seen.shown(speed.is_some());
+        if last_seen != &previously_seen {
+            explored.mark_pos_seen(pos);
 
-        if visibility.is_visible {
             // TODO select an appearance based on amount of perceived light
             update_material(commands, children, child_items, last_seen);
         }
 
-        if last_seen != &previously_seen {
-            explored.mark_pos_seen(pos);
-        }
+        // The player character can see things not shown to the player, like the top of a tower when walking next to it.
+        let level_shown = focus.is_shown(pos.level);
+        visibility.is_visible = level_shown && last_seen.shown(speed.is_some());
     }
 }
 
@@ -139,7 +134,7 @@ pub(crate) fn update_visualization_on_item_move(
             &mut Visibility,
             &mut LastSeen,
             Option<&Speed>,
-            Option<&Children>,
+            &Children,
         ),
         Changed<Pos>,
     >,
@@ -148,22 +143,25 @@ pub(crate) fn update_visualization_on_item_move(
 ) {
     let start = Instant::now();
 
-    let (&player_pos, player) = players.single();
-    let focus = Focus::new(player, player_pos);
-    let currently_visible = envir.currently_visible(player_pos); // does not depend on focus
-    for (&pos, mut visibility, mut last_seen, speed, children) in moved_items.iter_mut() {
-        update_visualization(
-            &mut commands,
-            &mut explored,
-            &currently_visible,
-            &focus,
-            pos,
-            &mut visibility,
-            &mut last_seen,
-            speed,
-            children,
-            &child_items,
-        );
+    if moved_items.iter().peekable().peek().is_some() {
+        let (&player_pos, player) = players.single();
+        let focus = Focus::new(player, player_pos);
+        let currently_visible = envir.currently_visible(player_pos); // does not depend on focus
+
+        for (&pos, mut visibility, mut last_seen, speed, children) in moved_items.iter_mut() {
+            update_visualization(
+                &mut commands,
+                &mut explored,
+                &currently_visible,
+                &focus,
+                pos,
+                &mut visibility,
+                &mut last_seen,
+                speed,
+                children,
+                &child_items,
+            );
+        }
     }
 
     log_if_slow("update_visualization_on_item_move", start);
@@ -180,7 +178,7 @@ pub(crate) fn update_visualization_on_focus_move(
         &mut Visibility,
         &mut LastSeen,
         Option<&Speed>,
-        Option<&Children>,
+        &Children,
     )>,
     child_items: Query<&Appearance, (With<Parent>, Without<Pos>)>,
     players: Query<(&Pos, &Player)>,
@@ -191,6 +189,7 @@ pub(crate) fn update_visualization_on_focus_move(
         let focus = Focus::new(player, player_pos);
         if focus != *last_focus {
             let currently_visible = envir.currently_visible(player_pos); // does not depend on focus
+
             for (&pos, mut visibility, mut last_seen, speed, children) in items.iter_mut() {
                 update_visualization(
                     &mut commands,
