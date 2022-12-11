@@ -111,8 +111,8 @@ impl<'w, 's> Envir<'w, 's> {
         self.location.get_first(pos, &self.obstacles).cloned()
     }
 
-    fn find_opaque(&self, pos: Pos) -> Option<Label> {
-        self.location.get_first(pos, &self.opaques).cloned()
+    fn is_opaque(&self, pos: Pos) -> bool {
+        self.location.any(pos, &self.opaques)
     }
 
     pub(crate) fn find_character(&self, pos: Pos) -> Option<Entity> {
@@ -185,7 +185,7 @@ impl<'w, 's> Envir<'w, 's> {
                         self.has_floor(nbor)
                             && (at_destination || self.find_obstacle(nbor).is_none())
                     }
-                    Intelligence::Dumb => at_destination || self.find_opaque(nbor).is_none(),
+                    Intelligence::Dumb => at_destination || !self.is_opaque(nbor),
                 }
             }
         })
@@ -329,10 +329,7 @@ impl<'a> CurrentlyVisible<'a> {
             .opaque_cache
             .borrow_mut()
             .entry(offset)
-            .or_insert_with(|| {
-                let abs_pos = self.from.offset(offset).unwrap();
-                self.envir.find_opaque(abs_pos).is_some()
-            })
+            .or_insert_with(|| self.envir.is_opaque(self.from.offset(offset).unwrap()))
     }
 
     fn can_look_down(&self, offset: PosOffset) -> bool {
@@ -340,10 +337,7 @@ impl<'a> CurrentlyVisible<'a> {
             .down_cache
             .borrow_mut()
             .entry(offset)
-            .or_insert_with(|| {
-                let abs_pos = self.from.offset(offset).unwrap();
-                self.envir.can_see_down(abs_pos)
-            })
+            .or_insert_with(|| self.envir.can_see_down(self.from.offset(offset).unwrap()))
     }
 
     fn remember_visible(&self, relative_to: PosOffset, visible: Visible) -> Visible {
