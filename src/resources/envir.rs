@@ -53,7 +53,12 @@ impl<'w, 's> Envir<'w, 's> {
                 }
             }
 
-            panic!("No matching stairs down found");
+            eprintln!("No matching stairs down found");
+            pos.offset(PosOffset {
+                x: 0,
+                level: LevelOffset::DOWN,
+                z: 0,
+            })
         } else {
             None
         }
@@ -91,7 +96,12 @@ impl<'w, 's> Envir<'w, 's> {
                 }
             }
 
-            panic!("No matching stairs up found");
+            eprintln!("No matching stairs up found");
+            pos.offset(PosOffset {
+                x: 0,
+                level: LevelOffset::UP,
+                z: 0,
+            })
         } else {
             None
         }
