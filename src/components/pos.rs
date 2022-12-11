@@ -376,10 +376,6 @@ impl Zone {
         }
     }
 
-    pub(crate) fn _dist(&self, other: Self) -> u32 {
-        self.x.abs_diff(other.x).max(self.z.abs_diff(other.z))
-    }
-
     pub(crate) const fn offset(&self, x: i32, z: i32) -> Self {
         Self {
             x: self.x + x,

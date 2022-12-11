@@ -24,12 +24,6 @@ impl Explored {
         }
     }
 
-    pub(crate) fn _mark_zone_level_seen(&mut self, zone_level: ZoneLevel) {
-        self.zone_level
-            .entry(zone_level)
-            .or_insert(SeenFrom::FarAway);
-    }
-
     pub(crate) fn mark_pos_seen(&mut self, pos: Pos) {
         self.zone_level
             .insert(ZoneLevel::from(pos), SeenFrom::CloseBy);

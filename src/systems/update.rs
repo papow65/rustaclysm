@@ -251,11 +251,11 @@ pub(crate) fn update_damaged_characters(
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_damaged_items(
     mut commands: Commands,
-    mut windows: Query<(Entity, &Label, &mut Integrity, &Damage, Option<&Children>)>,
+    mut windows: Query<(Entity, &Label, &mut Integrity, &Damage)>,
 ) {
     let start = Instant::now();
 
-    for (item, label, mut integrity, damage, _children) in windows.iter_mut() {
+    for (item, label, mut integrity, damage) in windows.iter_mut() {
         let prev = format!("{integrity}", integrity = *integrity);
         if integrity.apply(damage) {
             let curr = format!("{integrity}", integrity = *integrity);

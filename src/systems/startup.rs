@@ -21,7 +21,7 @@ pub(crate) fn create_secondairy_resources(
     commands.insert_resource(CustomData::new(&mut materials, &mut meshes, &asset_server));
     commands.insert_resource(Explored::new(paths.sav_path()));
     commands.insert_resource(sav);
-    commands.insert_resource(TileLoader::new(&asset_server));
+    commands.insert_resource(TileLoader::new());
     commands.insert_resource(timouts);
     commands.insert_resource(ZoneLevelNames::new(paths.world_path()));
 }

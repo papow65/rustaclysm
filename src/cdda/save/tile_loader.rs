@@ -85,11 +85,7 @@ struct Atlas {
 }
 
 impl Atlas {
-    fn new(
-        _asset_server: &AssetServer,
-        json: &serde_json::Value,
-        tiles: &mut HashMap<ObjectName, TileInfo>,
-    ) -> Option<Self> {
+    fn new(json: &serde_json::Value, tiles: &mut HashMap<ObjectName, TileInfo>) -> Option<Self> {
         let atlas = json.as_object().unwrap();
         let filename = atlas["file"].as_str().unwrap();
         if filename == "fallback.png" {
@@ -179,7 +175,7 @@ pub(crate) struct TileLoader {
 }
 
 impl TileLoader {
-    pub(crate) fn new(asset_server: &AssetServer) -> Self {
+    pub(crate) fn new() -> Self {
         let filepath = "assets/gfx/UltimateCataclysm/tile_config.json";
         let file_contents = read_to_string(filepath).unwrap();
         let json: serde_json::Value = serde_json::from_str(&file_contents).unwrap();
@@ -189,7 +185,7 @@ impl TileLoader {
         let mut tiles = HashMap::default();
 
         for json_atlas in json_atlases {
-            if let Some(atlas) = Atlas::new(asset_server, json_atlas, &mut tiles) {
+            if let Some(atlas) = Atlas::new(json_atlas, &mut tiles) {
                 //dbg!(&atlas);
                 atlases.push(atlas);
             }
