@@ -260,7 +260,9 @@ impl<'w, 's> Envir<'w, 's> {
         CurrentlyVisible {
             envir: self,
             from,
-            cache: RefCell::default(),
+            opaque_cache: RefCell::default(),
+            down_cache: RefCell::default(),
+            visible_cache: RefCell::default(),
         }
     }
 }
@@ -268,7 +270,9 @@ impl<'w, 's> Envir<'w, 's> {
 pub(crate) struct CurrentlyVisible<'a> {
     envir: &'a Envir<'a, 'a>,
     from: Pos,
-    cache: RefCell<HashMap<PosOffset, Visible>>,
+    opaque_cache: RefCell<HashMap<PosOffset, bool>>, // is opaque
+    down_cache: RefCell<HashMap<PosOffset, bool>>,   // can see down
+    visible_cache: RefCell<HashMap<PosOffset, Visible>>,
 }
 
 impl<'a> CurrentlyVisible<'a> {
@@ -283,12 +287,12 @@ impl<'a> CurrentlyVisible<'a> {
     }
 
     pub(crate) fn can_see_relative(&self, relative_to: PosOffset) -> Visible {
-        if let Some(visible) = self.cache.borrow().get(&relative_to) {
+        if let Some(visible) = self.visible_cache.borrow().get(&relative_to) {
             return visible.clone();
         }
 
         let Some(relative_segment) = self.envir.relative_segments.segments.get(&relative_to) else {
-            return self.remember(relative_to, Visible::Unseen);
+            return self.remember_visible(relative_to, Visible::Unseen);
         };
 
         if relative_segment
@@ -296,35 +300,58 @@ impl<'a> CurrentlyVisible<'a> {
             .map(|preceding| self.can_see_relative(preceding))
             == Some(Visible::Unseen)
         {
-            return self.remember(relative_to, Visible::Unseen);
+            return self.remember_visible(relative_to, Visible::Unseen);
         }
 
-        if relative_segment.segment.iter().any(|relative_pos| {
-            let abs_pos = self.from.offset(*relative_pos).unwrap();
-            self.envir.find_opaque(abs_pos).is_some()
-        }) {
-            return self.remember(relative_to, Visible::Unseen);
+        if relative_segment
+            .segment
+            .iter()
+            .any(|offset| self.is_opaque(*offset))
+        {
+            return self.remember_visible(relative_to, Visible::Unseen);
         }
 
         let visible =
             if relative_segment
                 .down_pairs
                 .iter()
-                .all(|(relative_pos_a, relative_pos_b)| {
-                    let abs_pos_a = self.from.offset(*relative_pos_a).unwrap();
-                    let abs_pos_b = self.from.offset(*relative_pos_b).unwrap();
-                    self.envir.can_see_down(abs_pos_a) || self.envir.can_see_down(abs_pos_b)
+                .all(|(offset_a, offset_b)| {
+                    self.can_look_down(*offset_a) || self.can_look_down(*offset_b)
                 })
             {
                 Visible::Seen
             } else {
                 Visible::Unseen
             };
-        self.remember(relative_to, visible)
+        self.remember_visible(relative_to, visible)
     }
 
-    fn remember(&self, relative_to: PosOffset, visible: Visible) -> Visible {
-        self.cache.borrow_mut().insert(relative_to, visible.clone());
+    fn is_opaque(&self, offset: PosOffset) -> bool {
+        *self
+            .opaque_cache
+            .borrow_mut()
+            .entry(offset)
+            .or_insert_with(|| {
+                let abs_pos = self.from.offset(offset).unwrap();
+                self.envir.find_opaque(abs_pos).is_some()
+            })
+    }
+
+    fn can_look_down(&self, offset: PosOffset) -> bool {
+        *self
+            .down_cache
+            .borrow_mut()
+            .entry(offset)
+            .or_insert_with(|| {
+                let abs_pos = self.from.offset(offset).unwrap();
+                self.envir.can_see_down(abs_pos)
+            })
+    }
+
+    fn remember_visible(&self, relative_to: PosOffset, visible: Visible) -> Visible {
+        self.visible_cache
+            .borrow_mut()
+            .insert(relative_to, visible.clone());
         visible
     }
 }
