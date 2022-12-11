@@ -1,4 +1,4 @@
-use crate::prelude::{Level, Overzone, Pos, ZoneLevel};
+use crate::prelude::{Level, LevelOffset, Overzone, Pos, PosOffset, ZoneLevel};
 use bevy::utils::HashMap;
 use serde::de::Deserializer;
 use serde::Deserialize;
@@ -56,9 +56,9 @@ impl<T> RepetitionBlock<T> {
         self.load(
             |x, z| {
                 subzone_offset
-                    .offset(Pos {
+                    .offset(PosOffset {
                         x,
-                        level: Level::ZERO,
+                        level: LevelOffset::ZERO,
                         z,
                     })
                     .unwrap()
@@ -73,9 +73,9 @@ impl<T> RepetitionBlock<T> {
         self.load(
             |x, z| {
                 base_pos
-                    .offset(Pos {
+                    .offset(PosOffset {
                         x,
-                        level: Level::ZERO,
+                        level: LevelOffset::ZERO,
                         z,
                     })
                     .unwrap()

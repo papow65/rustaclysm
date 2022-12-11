@@ -133,13 +133,18 @@ impl RelativeRay {
         for potential_preceding in self.path.iter().rev().skip(1) {
             let potential_sub_path = others.get(potential_preceding).unwrap();
             if self.path.starts_with(&potential_sub_path.path) {
-                preceding = Some(*potential_preceding);
+                preceding = Some(*potential_preceding - Pos::ORIGIN);
                 break; // stop at the first (longest) match
             }
         }
 
-        let skipped = if let Some(prededing) = preceding {
-            others.get(&prededing).unwrap().path.len() - 1
+        let skipped = if let Some(preceding) = preceding {
+            others
+                .get(&Pos::ORIGIN.offset(preceding).unwrap())
+                .unwrap()
+                .path
+                .len()
+                - 1
         } else {
             0
         };
@@ -151,6 +156,10 @@ impl RelativeRay {
         };
         // The last pos doen't need to be transparent.
         segment.pop();
+        let segment = segment
+            .iter()
+            .map(|pos| *pos - Pos::ORIGIN)
+            .collect::<Vec<_>>();
 
         let down_pairs = once(Pos::ORIGIN)
             .chain(self.path.iter().copied())
@@ -160,8 +169,8 @@ impl RelativeRay {
             .map(|(current, next)| {
                 let level = current.level.max(next.level);
                 (
-                    Pos::new(current.x, level, current.z),
-                    Pos::new(next.x, level, next.z),
+                    Pos::new(current.x, level, current.z) - Pos::ORIGIN,
+                    Pos::new(next.x, level, next.z) - Pos::ORIGIN,
                 )
             })
             .collect::<Vec<_>>();
@@ -178,35 +187,34 @@ impl RelativeRay {
 
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct RelativeSegment {
-    preceding: Option<Pos>,
-    segment: Vec<Pos>,
-    down_pairs: Vec<(Pos, Pos)>,
+    preceding: Option<PosOffset>,
+    segment: Vec<PosOffset>,
+    down_pairs: Vec<(PosOffset, PosOffset)>,
 }
 
 #[derive(Resource)]
 pub(crate) struct RelativeSegments {
-    segments: HashMap<Pos, RelativeSegment>,
+    segments: HashMap<PosOffset, RelativeSegment>,
 }
 
 impl RelativeSegments {
     pub(crate) fn new() -> Self {
         let mut rays = HashMap::default();
-        let origin = Pos::new(0, Level::ZERO, 0);
         for x in -MAX_VISIBLE_DISTANCE..=MAX_VISIBLE_DISTANCE {
             for y in Level::ALL {
                 for z in -MAX_VISIBLE_DISTANCE..=MAX_VISIBLE_DISTANCE {
                     let to = Pos::new(x, y, z);
-                    if !origin.in_visible_range(to) {
+                    if !Pos::ORIGIN.in_visible_range(to) {
                         continue;
                     }
 
                     rays.insert(
                         to,
                         RelativeRay {
-                            path: if to == origin {
+                            path: if to == Pos::ORIGIN {
                                 vec![]
                             } else {
-                                origin.straight(to).collect::<Vec<Pos>>()
+                                Pos::ORIGIN.straight(to).collect::<Vec<Pos>>()
                             },
                         },
                     );
@@ -247,41 +255,49 @@ impl RelativeSegments {
             assert!(rays.contains_key(&nbor), "{nbor:?}");
         }
 
-        let mut segments = HashMap::<Pos, RelativeSegment>::default();
+        let mut segments = HashMap::<PosOffset, RelativeSegment>::default();
         for (pos, relativeray) in rays.iter() {
-            segments.insert(*pos, relativeray.to_segment(&rays));
+            segments.insert(*pos - Pos::ORIGIN, relativeray.to_segment(&rays));
         }
 
         for i in 2..=60 {
-            let pos = Pos::new(i, Level::ZERO, 0);
+            let offset = Pos::new(i, Level::ZERO, 0) - Pos::ORIGIN;
             assert!(
-                segments.get(&pos)
+                segments.get(&offset)
                     == Some(&RelativeSegment {
-                        preceding: Some(Pos::new(i - 1, Level::ZERO, 0)),
-                        segment: vec![Pos::new(i - 1, Level::ZERO, 0)],
+                        preceding: Some(PosOffset {
+                            x: i - 1,
+                            level: LevelOffset::ZERO,
+                            z: 0
+                        }),
+                        segment: vec![PosOffset {
+                            x: i - 1,
+                            level: LevelOffset::ZERO,
+                            z: 0
+                        }],
                         down_pairs: Vec::new()
                     }),
                 "{:?} -> {:?}",
-                pos,
-                segments.get(&pos)
+                offset,
+                segments.get(&offset)
             );
         }
 
         for level in 2..=10 {
             let level = Level::new(level);
-            let pos = Pos::new(0, level, 0);
+            let offset = Pos::new(0, level, 0) - Pos::ORIGIN;
             assert!(
                 matches!(
-                    segments.get(&pos),
+                    segments.get(&offset),
                     Some(&RelativeSegment {
                         ref preceding,
                         ref segment,
                         ..
-                    }) if preceding == &Some(Pos::new(0, Level::new(level.h - 1), 0)) && segment == &vec![Pos::new(0, Level::new(level.h - 1), 0)]
+                    }) if preceding == &Some(PosOffset{x: 0, level: LevelOffset{h: level.h - 1}, z: 0}) && segment == &vec![PosOffset{x: 0, level: LevelOffset{h: level.h - 1}, z: 0}]
                 ),
                 "{:?} -> {:?}",
-                pos,
-                segments.get(&pos)
+                offset,
+                segments.get(&offset)
             );
         }
 

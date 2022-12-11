@@ -36,14 +36,19 @@ pub(crate) fn spawn_initial_entities(sav: Res<Sav>, mut spawner: Spawner) {
     }
     .zone_level(Level::new(sav.levz))
     .base_pos()
-    .offset(Pos::new(
-        12 * (i32::from(sav.levx) % 2),
-        Level::ZERO,
-        12 * (i32::from(sav.levy) % 2),
-    ))
+    .offset(PosOffset {
+        x: 12 * (i32::from(sav.levx) % 2),
+        level: LevelOffset::ZERO,
+        z: 12 * (i32::from(sav.levy) % 2),
+    })
     .unwrap()
-    .offset(Pos::new(24, Level::ZERO, 24)) // experimental
-    .unwrap();
+    .offset(PosOffset {
+        x: 24,
+        level: LevelOffset::ZERO,
+        z: 24,
+    }) // experimental
+    .unwrap()
+        - Pos::ORIGIN;
     spawner.spawn_floors(offset);
     spawner.spawn_house(offset);
     spawner.spawn_characters(offset);

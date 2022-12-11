@@ -57,20 +57,20 @@ fn minimal_expanded_zones(player_pos: Pos) -> ZoneRegion {
     ZoneRegion::new(
         Zone::from(ZoneLevel::from(
             player_pos
-                .offset(Pos::new(
-                    -MAX_VISIBLE_DISTANCE,
-                    Level::ZERO,
-                    -MAX_VISIBLE_DISTANCE,
-                ))
+                .offset(PosOffset {
+                    x: -MAX_VISIBLE_DISTANCE,
+                    level: LevelOffset::ZERO,
+                    z: -MAX_VISIBLE_DISTANCE,
+                })
                 .unwrap(),
         )),
         Zone::from(ZoneLevel::from(
             player_pos
-                .offset(Pos::new(
-                    MAX_VISIBLE_DISTANCE,
-                    Level::ZERO,
-                    MAX_VISIBLE_DISTANCE,
-                ))
+                .offset(PosOffset {
+                    x: MAX_VISIBLE_DISTANCE,
+                    level: LevelOffset::ZERO,
+                    z: MAX_VISIBLE_DISTANCE,
+                })
                 .unwrap(),
         )),
     )

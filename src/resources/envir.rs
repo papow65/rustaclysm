@@ -25,9 +25,9 @@ impl<'w, 's> Envir<'w, 's> {
     pub(crate) fn stairs_up_to(&self, pos: Pos) -> Option<Pos> {
         if self.location.has_stairs_up(pos, &self.stairs_up) {
             let zone_level_up = ZoneLevel::from(pos)
-                .offset(ZoneLevel {
+                .offset(ZoneLevelOffset {
                     x: 0,
-                    level: Level::new(1),
+                    level: LevelOffset::UP,
                     z: 0,
                 })
                 .unwrap();
@@ -37,9 +37,9 @@ impl<'w, 's> Envir<'w, 's> {
                     for dz in -distance..=distance {
                         if dx.abs().max(dz.abs()) == distance {
                             let test_up = pos
-                                .offset(Pos {
+                                .offset(PosOffset {
                                     x: dx,
-                                    level: Level::new(1),
+                                    level: LevelOffset::UP,
                                     z: dz,
                                 })
                                 .unwrap();
@@ -62,9 +62,9 @@ impl<'w, 's> Envir<'w, 's> {
     pub(crate) fn stairs_down_to(&self, pos: Pos) -> Option<Pos> {
         if self.location.has_stairs_down(pos, &self.stairs_down) {
             let zone_level_down = ZoneLevel::from(pos)
-                .offset(ZoneLevel {
+                .offset(ZoneLevelOffset {
                     x: 0,
-                    level: Level::new(-1),
+                    level: LevelOffset::DOWN,
                     z: 0,
                 })
                 .unwrap();
@@ -75,9 +75,9 @@ impl<'w, 's> Envir<'w, 's> {
                     for dz in -distance..=distance {
                         if dx.abs().max(dz.abs()) == distance {
                             let test_down = pos
-                                .offset(Pos {
+                                .offset(PosOffset {
                                     x: dx,
-                                    level: Level::new(-1),
+                                    level: LevelOffset::DOWN,
                                     z: dz,
                                 })
                                 .unwrap();
@@ -258,7 +258,7 @@ impl<'w, 's> Envir<'w, 's> {
 pub(crate) struct CurrentlyVisible<'a> {
     envir: &'a Envir<'a, 'a>,
     from: Pos,
-    cache: RefCell<HashMap<Pos, Visible>>,
+    cache: RefCell<HashMap<PosOffset, Visible>>,
 }
 
 impl<'a> CurrentlyVisible<'a> {
@@ -268,15 +268,11 @@ impl<'a> CurrentlyVisible<'a> {
         {
             Visible::Unseen
         } else {
-            self.can_see_relative(Pos::new(
-                to.x - self.from.x,
-                Level::new(to.level.h - self.from.level.h),
-                to.z - self.from.z,
-            ))
+            self.can_see_relative(to - self.from)
         }
     }
 
-    pub(crate) fn can_see_relative(&self, relative_to: Pos) -> Visible {
+    pub(crate) fn can_see_relative(&self, relative_to: PosOffset) -> Visible {
         if let Some(visible) = self.cache.borrow().get(&relative_to) {
             return visible.clone();
         }
@@ -317,7 +313,7 @@ impl<'a> CurrentlyVisible<'a> {
         self.remember(relative_to, visible)
     }
 
-    fn remember(&self, relative_to: Pos, visible: Visible) -> Visible {
+    fn remember(&self, relative_to: PosOffset, visible: Visible) -> Visible {
         self.cache.borrow_mut().insert(relative_to, visible.clone());
         visible
     }

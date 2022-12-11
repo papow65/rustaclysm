@@ -1,8 +1,14 @@
-use crate::prelude::{Millimeter, Milliseconds, WalkingDistance, MIN_INVISIBLE_DISTANCE};
+use crate::prelude::{
+    LevelOffset, Millimeter, Milliseconds, PosOffset, WalkingDistance, ZoneLevelOffset,
+    MIN_INVISIBLE_DISTANCE,
+};
 use bevy::prelude::{Component, Vec3};
 use float_ord::FloatOrd;
 use pathfinding::{num_traits::Zero, prelude::astar};
-use std::{iter::once, ops::Add};
+use std::{
+    iter::once,
+    ops::{Add, Sub},
+};
 
 /** Does not include 'from', but does include 'to' */
 fn straight_2d(from: (i32, i32), to: (i32, i32)) -> impl Iterator<Item = (i32, i32)> {
@@ -68,9 +74,9 @@ impl Level {
         down.in_bounds().then_some(down)
     }
 
-    pub(crate) fn offset(&self, relative: Self) -> Option<Self> {
+    pub(crate) fn offset(&self, offset: LevelOffset) -> Option<Self> {
         let sum = Self {
-            h: self.h + relative.h,
+            h: self.h + offset.h,
         };
         sum.in_bounds().then_some(sum)
     }
@@ -85,6 +91,16 @@ impl Level {
 
     pub(crate) fn f32(&self) -> f32 {
         f32::from(self.h) as f32 * Millimeter::VERTICAL.f32()
+    }
+}
+
+impl Sub<Level> for Level {
+    type Output = LevelOffset;
+
+    fn sub(self, other: Level) -> LevelOffset {
+        LevelOffset {
+            h: self.h - other.h,
+        }
     }
 }
 
@@ -208,10 +224,10 @@ impl Pos {
         }
     }
 
-    pub(crate) fn offset(self, relative: Self) -> Option<Self> {
+    pub(crate) fn offset(self, offset: PosOffset) -> Option<Self> {
         self.level
-            .offset(relative.level)
-            .map(|level| Self::new(self.x + relative.x, level, self.z + relative.z))
+            .offset(offset.level)
+            .map(|level| Self::new(self.x + offset.x, level, self.z + offset.z))
     }
 
     /// Get nbor while ignoring stairs - meant for meta operations like examining
@@ -270,6 +286,18 @@ impl Pos {
             + Millimeter::VERTICAL.0.pow(2) * (self.level.h.abs_diff(other.level.h) as u64).pow(2)
             + Millimeter::ADJACENT.0.pow(2) * (self.z.abs_diff(other.z) as u64).pow(2)
             < Millimeter::ADJACENT.0.pow(2) * (MIN_INVISIBLE_DISTANCE as u64).pow(2)
+    }
+}
+
+impl Sub<Pos> for Pos {
+    type Output = PosOffset;
+
+    fn sub(self, other: Pos) -> PosOffset {
+        PosOffset {
+            x: self.x - other.x,
+            level: self.level - other.level,
+            z: self.z - other.z,
+        }
     }
 }
 
@@ -386,11 +414,11 @@ pub(crate) struct ZoneLevel {
 }
 
 impl ZoneLevel {
-    pub(crate) fn offset(self, relative: Self) -> Option<Self> {
-        self.level.offset(relative.level).map(|level| Self {
-            x: self.x + relative.x,
+    pub(crate) fn offset(self, offset: ZoneLevelOffset) -> Option<Self> {
+        self.level.offset(offset.level).map(|level| Self {
+            x: self.x + offset.x,
             level,
-            z: self.z + relative.z,
+            z: self.z + offset.z,
         })
     }
 

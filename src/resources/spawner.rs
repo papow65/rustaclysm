@@ -237,11 +237,11 @@ impl<'w, 's> TileSpawner<'w, 's> {
                     submap,
                     zone_level_entity,
                     zone_level,
-                    Pos::new(
-                        12 * (submap.coordinates.0 - base.0),
-                        Level::ZERO,
-                        12 * (submap.coordinates.1 - base.1),
-                    ),
+                    PosOffset {
+                        x: 12 * (submap.coordinates.0 - base.0),
+                        level: LevelOffset::ZERO,
+                        z: 12 * (submap.coordinates.1 - base.1),
+                    },
                 );
             }
         }
@@ -253,14 +253,20 @@ impl<'w, 's> TileSpawner<'w, 's> {
         submap: &Submap,
         parent_entity: Entity,
         zone_level: ZoneLevel,
-        subzone_offset: Pos,
+        subzone_offset: PosOffset,
     ) {
         let base_pos = zone_level.base_pos().offset(subzone_offset).unwrap();
         let terrain = submap.terrain.load_as_subzone(base_pos);
 
         for x in 0..12 {
             for z in 0..12 {
-                let pos = base_pos.offset(Pos::new(x, Level::ZERO, z)).unwrap();
+                let pos = base_pos
+                    .offset(PosOffset {
+                        x,
+                        level: LevelOffset::ZERO,
+                        z,
+                    })
+                    .unwrap();
                 let tile_name = terrain.get(&pos).unwrap();
                 if tile_name != &&ObjectName::new("t_open_air")
                     && tile_name != &&ObjectName::new("t_open_air_rooved")
@@ -829,7 +835,7 @@ impl<'w, 's> Spawner<'w, 's> {
         });
     }
 
-    pub(crate) fn spawn_floors(&mut self, offset: Pos) {
+    pub(crate) fn spawn_floors(&mut self, offset: PosOffset) {
         let parent = self
             .tile_spawner
             .commands
@@ -866,7 +872,7 @@ impl<'w, 's> Spawner<'w, 's> {
         }
     }
 
-    pub(crate) fn spawn_house(&mut self, offset: Pos) {
+    pub(crate) fn spawn_house(&mut self, offset: PosOffset) {
         self.spawn_wall(Pos::new(17, Level::ZERO, 17).offset(offset).unwrap());
         self.spawn_wall(Pos::new(17, Level::ZERO, 18).offset(offset).unwrap());
         self.spawn_wall(Pos::new(17, Level::ZERO, 19).offset(offset).unwrap());
@@ -942,13 +948,17 @@ impl<'w, 's> Spawner<'w, 's> {
         self.spawn_chair(Pos::new(21, Level::new(1), 23).offset(offset).unwrap());
     }
 
-    pub(crate) fn spawn_characters(&mut self, offset: Pos) {
+    pub(crate) fn spawn_characters(&mut self, offset: PosOffset) {
         self.spawn_character(
             Label::new(self.tile_spawner.sav.player.name.clone()),
             Pos::new(45, Level::ZERO, 56)
                 .offset(offset)
                 .unwrap()
-                .offset(Pos::new(-9, Level::ZERO, 0))
+                .offset(PosOffset {
+                    x: -9,
+                    level: LevelOffset::ZERO,
+                    z: 0,
+                })
                 .unwrap(),
             Health::new(10),
             Speed::from_h_kmph(6),
@@ -1008,7 +1018,7 @@ impl<'w, 's> Spawner<'w, 's> {
         );
     }
 
-    pub(crate) fn spawn_containables(&mut self, offset: Pos) {
+    pub(crate) fn spawn_containables(&mut self, offset: PosOffset) {
         self.spawn_containable(
             Label::new("large"),
             Pos::new(13, Level::ZERO, 13).offset(offset).unwrap(),
@@ -1026,7 +1036,7 @@ impl<'w, 's> Spawner<'w, 's> {
         );
     }
 
-    pub(crate) fn spawn_window_wall(&mut self, offset: Pos) {
+    pub(crate) fn spawn_window_wall(&mut self, offset: PosOffset) {
         for i in 0..48 {
             self.spawn_window(Pos::new(i, Level::ZERO, 15).offset(offset).unwrap());
         }
