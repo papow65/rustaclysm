@@ -1,5 +1,6 @@
 use crate::prelude::*;
 use bevy::{ecs::system::SystemParam, prelude::*, utils::HashMap};
+use pathfinding::prelude::astar;
 use std::{cell::RefCell, cmp::Ordering};
 
 #[derive(SystemParam)]
@@ -264,6 +265,56 @@ impl<'w, 's> Envir<'w, 's> {
             down_cache: RefCell::default(),
             visible_cache: RefCell::default(),
         }
+    }
+}
+
+#[derive(Debug)]
+pub(crate) struct Path {
+    pub(crate) first: Pos,
+    pub(crate) duration: Milliseconds,
+    pub(crate) destination: Pos,
+}
+
+impl Path {
+    pub(crate) fn plan<FN, IN, FH>(
+        from: Pos,
+        successors: FN,
+        heuristic: FH,
+        destination: Pos,
+    ) -> Option<Self>
+    where
+        FN: FnMut(&Pos) -> IN,
+        IN: Iterator<Item = (Pos, Milliseconds)>,
+        FH: FnMut(&Pos) -> Milliseconds,
+    {
+        if let Some((mut steps, duration)) =
+            astar(&from, successors, heuristic, |&pos| pos == destination)
+        {
+            assert!(!steps.is_empty());
+            assert!(steps.remove(0) == from);
+            assert!(!steps.is_empty());
+            Some(Self {
+                first: *steps.first().unwrap(),
+                duration,
+                destination,
+            })
+        } else {
+            None
+        }
+    }
+
+    pub(crate) fn improvize<I, FH>(nbors: I, mut heuristic: FH, destination: Pos) -> Option<Self>
+    where
+        I: Iterator<Item = (Pos, Milliseconds)>,
+        FH: FnMut(&Pos) -> Milliseconds,
+    {
+        nbors
+            .map(|(first, duration)| Self {
+                first,
+                duration: duration + heuristic(&first),
+                destination,
+            })
+            .min_by_key(|path| path.duration)
     }
 }
 

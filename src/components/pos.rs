@@ -1,14 +1,9 @@
 use crate::prelude::{
-    LevelOffset, Millimeter, Milliseconds, PosOffset, WalkingDistance, ZoneLevelOffset,
+    LevelOffset, Millimeter, Nbor, PosOffset, WalkingDistance, ZoneLevelOffset,
     MIN_INVISIBLE_DISTANCE,
 };
 use bevy::prelude::{Component, Vec3};
-use float_ord::FloatOrd;
-use pathfinding::{num_traits::Zero, prelude::astar};
-use std::{
-    iter::once,
-    ops::{Add, Sub},
-};
+use std::{iter::once, ops::Sub};
 
 /** Does not include 'from', but does include 'to' */
 fn straight_2d(from: (i32, i32), to: (i32, i32)) -> impl Iterator<Item = (i32, i32)> {
@@ -100,84 +95,6 @@ impl Sub<Level> for Level {
     fn sub(self, other: Level) -> LevelOffset {
         LevelOffset {
             h: self.h - other.h,
-        }
-    }
-}
-
-#[derive(Clone, PartialEq, Eq, Debug)]
-pub(crate) struct HorizontalNborOffset {
-    /*private*/ x: i32, // -1, 0, or 1
-    /*private*/ z: i32, // -1, 0, or 1
-}
-
-impl HorizontalNborOffset {
-    fn try_from(x: i32, z: i32) -> Option<HorizontalNborOffset> {
-        if x.abs().max(z.abs()) == 1 {
-            Some(HorizontalNborOffset { x, z })
-        } else {
-            None
-        }
-    }
-}
-
-#[derive(Clone, PartialEq, Eq, Debug)]
-pub(crate) enum Nbor {
-    Up,
-    Horizontal(HorizontalNborOffset),
-    Here,
-    Down,
-}
-
-impl Nbor {
-    pub(crate) const ALL: [Self; 11] = [
-        Self::Up,
-        Self::Horizontal(HorizontalNborOffset { x: 1, z: 0 }),
-        Self::Horizontal(HorizontalNborOffset { x: 1, z: 1 }),
-        Self::Horizontal(HorizontalNborOffset { x: 0, z: 1 }),
-        Self::Horizontal(HorizontalNborOffset { x: -1, z: 1 }),
-        Self::Horizontal(HorizontalNborOffset { x: -1, z: 0 }),
-        Self::Horizontal(HorizontalNborOffset { x: -1, z: -1 }),
-        Self::Horizontal(HorizontalNborOffset { x: 0, z: -1 }),
-        Self::Horizontal(HorizontalNborOffset { x: 1, z: -1 }),
-        Self::Here,
-        Self::Down,
-    ];
-
-    pub(crate) fn try_horizontal(x: i32, z: i32) -> Option<Self> {
-        HorizontalNborOffset::try_from(x, z).map(Self::Horizontal)
-    }
-
-    pub(crate) const fn horizontal_offset(&self) -> (i32, i32) {
-        match self {
-            Self::Horizontal(HorizontalNborOffset { x, z }) => (*x, *z),
-            _ => (0, 0),
-        }
-    }
-
-    pub(crate) fn distance(&self) -> WalkingDistance {
-        match self {
-            Self::Up => WalkingDistance {
-                horizontal: Millimeter(0),
-                up: Millimeter::VERTICAL,
-                down: Millimeter(0),
-            },
-            Self::Down => WalkingDistance {
-                horizontal: Millimeter(0),
-                up: Millimeter(0),
-                down: Millimeter::VERTICAL,
-            },
-            horizontal => {
-                let (x, z) = horizontal.horizontal_offset();
-                WalkingDistance {
-                    horizontal: if x == 0 || z == 0 {
-                        Millimeter::ADJACENT
-                    } else {
-                        Millimeter::DIAGONAL
-                    },
-                    up: Millimeter(0),
-                    down: Millimeter(0),
-                }
-            }
         }
     }
 }
@@ -298,56 +215,6 @@ impl Sub<Pos> for Pos {
             level: self.level - other.level,
             z: self.z - other.z,
         }
-    }
-}
-
-#[derive(Debug)]
-pub(crate) struct Path {
-    pub(crate) first: Pos,
-    pub(crate) duration: Milliseconds,
-    pub(crate) destination: Pos,
-}
-
-impl Path {
-    pub(crate) fn plan<FN, IN, FH>(
-        from: Pos,
-        successors: FN,
-        heuristic: FH,
-        destination: Pos,
-    ) -> Option<Self>
-    where
-        FN: FnMut(&Pos) -> IN,
-        IN: Iterator<Item = (Pos, Milliseconds)>,
-        FH: FnMut(&Pos) -> Milliseconds,
-    {
-        if let Some((mut steps, duration)) =
-            astar(&from, successors, heuristic, |&pos| pos == destination)
-        {
-            assert!(!steps.is_empty());
-            assert!(steps.remove(0) == from);
-            assert!(!steps.is_empty());
-            Some(Self {
-                first: *steps.first().unwrap(),
-                duration,
-                destination,
-            })
-        } else {
-            None
-        }
-    }
-
-    pub(crate) fn improvize<I, FH>(nbors: I, mut heuristic: FH, destination: Pos) -> Option<Self>
-    where
-        I: Iterator<Item = (Pos, Milliseconds)>,
-        FH: FnMut(&Pos) -> Milliseconds,
-    {
-        nbors
-            .map(|(first, duration)| Self {
-                first,
-                duration: duration + heuristic(&first),
-                destination,
-            })
-            .min_by_key(|path| path.duration)
     }
 }
 
@@ -476,46 +343,5 @@ impl From<Zone> for Overzone {
             x: zone.x.div_euclid(180),
             z: zone.z.div_euclid(180),
         }
-    }
-}
-
-/** Indication that the player moved to or examined another level */
-#[derive(Component)]
-pub(crate) struct LevelChanged;
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub(crate) struct Danger(FloatOrd<f32>);
-
-impl Danger {
-    pub(crate) fn new(time: &Milliseconds, pos: Pos, froms: &[Pos]) -> Self {
-        Self(FloatOrd(
-            time.0 as f32
-                * froms
-                    .iter()
-                    .map(|from| 1.0 / (pos.walking_distance(*from).equivalent_effort().0 as f32))
-                    .sum::<f32>(),
-        ))
-    }
-
-    pub(crate) fn average(&self, time: &Milliseconds) -> Self {
-        Self(FloatOrd(self.0 .0 / (time.0 as f32)))
-    }
-}
-
-impl Add<Self> for Danger {
-    type Output = Danger;
-
-    fn add(self, other: Self) -> Danger {
-        Danger(FloatOrd(self.0 .0 + other.0 .0))
-    }
-}
-
-impl Zero for Danger {
-    fn zero() -> Self {
-        Danger(FloatOrd(0.0))
-    }
-
-    fn is_zero(&self) -> bool {
-        self.0 == FloatOrd(0.0)
     }
 }

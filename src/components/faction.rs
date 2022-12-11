@@ -1,9 +1,13 @@
 use crate::prelude::*;
-use bevy::ecs::component::Component;
-use pathfinding::prelude::{build_path, dijkstra_all};
+use bevy::prelude::Component;
+use float_ord::FloatOrd;
+use pathfinding::{
+    num_traits::Zero,
+    prelude::{build_path, dijkstra_all},
+};
 use rand::prelude::*;
 use rand::seq::SliceRandom;
-use std::iter::once;
+use std::{iter::once, ops::Add};
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub(crate) enum Intelligence {
@@ -214,5 +218,42 @@ impl Faction {
         self.intents(health)
             .find_map(|intent| self.attempt(intent, envir, start_pos, speed, factions, &enemies))
             .expect("Fallback intent")
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub(crate) struct Danger(FloatOrd<f32>);
+
+impl Danger {
+    pub(crate) fn new(time: &Milliseconds, pos: Pos, froms: &[Pos]) -> Self {
+        Self(FloatOrd(
+            time.0 as f32
+                * froms
+                    .iter()
+                    .map(|from| 1.0 / (pos.walking_distance(*from).equivalent_effort().0 as f32))
+                    .sum::<f32>(),
+        ))
+    }
+
+    pub(crate) fn average(&self, time: &Milliseconds) -> Self {
+        Self(FloatOrd(self.0 .0 / (time.0 as f32)))
+    }
+}
+
+impl Add<Self> for Danger {
+    type Output = Danger;
+
+    fn add(self, other: Self) -> Danger {
+        Danger(FloatOrd(self.0 .0 + other.0 .0))
+    }
+}
+
+impl Zero for Danger {
+    fn zero() -> Self {
+        Danger(FloatOrd(0.0))
+    }
+
+    fn is_zero(&self) -> bool {
+        self.0 == FloatOrd(0.0)
     }
 }
