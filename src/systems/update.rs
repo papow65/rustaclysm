@@ -90,7 +90,6 @@ fn update_material(
     }
 }
 
-/** This assumes that the player state is not examining a pos or zone. */
 fn update_visualization(
     commands: &mut Commands,
     explored: &mut Explored,
