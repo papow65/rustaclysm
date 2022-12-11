@@ -110,7 +110,9 @@ fn update_visualization(
 
     if last_seen != &LastSeen::Never {
         if last_seen != &previously_seen {
-            explored.mark_pos_seen(pos);
+            if previously_seen == LastSeen::Never {
+                explored.mark_pos_seen(pos);
+            }
 
             // TODO select an appearance based on amount of perceived light
             update_material(commands, children, child_items, last_seen);
