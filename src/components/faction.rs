@@ -18,6 +18,7 @@ pub(crate) enum Intelligence {
 pub(crate) struct Strategy {
     pub(crate) intent: Intent,
     pub(crate) action: Action,
+    pub(crate) last_enemy: Option<LastEnemy>,
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -81,23 +82,35 @@ impl Faction {
         speed: Speed,
         factions: &[(Pos, &Self)],
         enemies: &[Pos],
-    ) -> Option<Action> {
+        last_enemy: Option<&LastEnemy>,
+    ) -> Option<(Action, LastEnemy)> {
         enemies
             .iter()
-            .filter_map(|enemy_pos| envir.path(start_pos, *enemy_pos, self.intelligence(), speed))
+            .copied()
+            .chain(last_enemy.iter().map(|l| l.0))
+            .filter_map(|enemy_pos| envir.path(start_pos, enemy_pos, self.intelligence(), speed))
             .min_by_key(|path| path.duration.0)
-            .map(|path| {
+            .and_then(|path| {
+                let last_enemy = LastEnemy(path.destination);
+
                 //println!("{:?}->{:?}", path.first, path.destination,);
                 if path.first == path.destination {
-                    Action::Attack { target: path.first }
-                } else if envir.find_obstacle(path.first).is_some() {
-                    if factions.iter().any(|(pos, _)| *pos == path.first) {
-                        Action::Stay
+                    if factions.iter().any(|(pos, _)| pos == &path.destination) {
+                        Some((Action::Attack { target: path.first }, last_enemy))
                     } else {
-                        Action::Smash { target: path.first }
+                        None
                     }
+                } else if envir.find_obstacle(path.first).is_some() {
+                    Some((
+                        if factions.iter().any(|(pos, _)| *pos == path.first) {
+                            Action::Stay
+                        } else {
+                            Action::Smash { target: path.first }
+                        },
+                        last_enemy,
+                    ))
                 } else {
-                    Action::Step { target: path.first }
+                    Some((Action::Step { target: path.first }, last_enemy))
                 }
             })
     }
@@ -186,14 +199,25 @@ impl Faction {
         speed: Speed,
         factions: &[(Pos, &Self)],
         enemies: &[Pos],
+        last_enemy: Option<&LastEnemy>,
     ) -> Option<Strategy> {
         match intent {
-            Intent::Attack => self.attack(envir, start_pos, speed, factions, enemies),
-            Intent::Flee => self.flee(envir, start_pos, speed, enemies),
-            Intent::Wander => self.wander(envir, start_pos, speed),
-            Intent::Wait => Some(Action::Stay),
+            Intent::Attack => self
+                .attack(envir, start_pos, speed, factions, enemies, last_enemy)
+                .map(|(action, last_enemy)| (action, Some(last_enemy))),
+            Intent::Flee => self
+                .flee(envir, start_pos, speed, enemies)
+                .map(|action| (action, None)),
+            Intent::Wander => self
+                .wander(envir, start_pos, speed)
+                .map(|action| (action, None)),
+            Intent::Wait => Some(Action::Stay).map(|action| (action, None)),
         }
-        .map(|action| Strategy { intent, action })
+        .map(|(action, last_enemy)| Strategy {
+            intent,
+            action,
+            last_enemy,
+        })
     }
 
     pub(crate) fn behave<'f>(
@@ -203,6 +227,7 @@ impl Faction {
         speed: Speed,
         health: &Health,
         factions: &[(Pos, &'f Self)],
+        last_enemy: Option<&LastEnemy>,
     ) -> Strategy {
         let currently_visible = envir.currently_visible(start_pos);
 
@@ -216,7 +241,11 @@ impl Faction {
         //println!("{self:?} can see {:?} enemies", enemies.len());
 
         self.intents(health)
-            .find_map(|intent| self.attempt(intent, envir, start_pos, speed, factions, &enemies))
+            .find_map(|intent| {
+                self.attempt(
+                    intent, envir, start_pos, speed, factions, &enemies, last_enemy,
+                )
+            })
             .expect("Fallback intent")
     }
 }
@@ -257,3 +286,6 @@ impl Zero for Danger {
         self.0 == FloatOrd(0.0)
     }
 }
+
+#[derive(Component, Debug)]
+pub(crate) struct LastEnemy(Pos);
