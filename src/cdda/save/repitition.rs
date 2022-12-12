@@ -1,4 +1,4 @@
-use crate::prelude::{Level, LevelOffset, Overzone, Pos, PosOffset, ZoneLevel};
+use crate::prelude::{Level, LevelOffset, Overzone, Pos, PosOffset, SubzoneLevel, ZoneLevel};
 use bevy::utils::HashMap;
 use serde::de::Deserializer;
 use serde::Deserialize;
@@ -52,10 +52,11 @@ impl<T> RepetitionBlock<T> {
         Self(vec![Repetition::Multiple(amount)])
     }
 
-    pub(crate) fn load_as_subzone(&self, subzone_offset: Pos) -> HashMap<Pos, &T> {
+    pub(crate) fn load_as_subzone(&self, subzone_level: SubzoneLevel) -> HashMap<Pos, &T> {
         self.load(
             |x, z| {
-                subzone_offset
+                subzone_level
+                    .base_pos()
                     .offset(PosOffset {
                         x,
                         level: LevelOffset::ZERO,

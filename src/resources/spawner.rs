@@ -217,45 +217,37 @@ impl<'w, 's> TileSpawner<'w, 's> {
         }
     }
 
-    pub(crate) fn spawn_expanded_zone_level(
+    pub(crate) fn spawn_expanded_subzone_level(
         &mut self,
-        zone_level: ZoneLevel,
+        subzone_level: SubzoneLevel,
     ) -> Result<(), serde_json::Error> {
-        let map_path = MapPath::new(&self.paths.world_path(), zone_level);
-        if let Some(map) = Option::<Map>::try_from(map_path)?.or_else(|| Map::fallback(zone_level))
+        println!("Spawning {:?}", subzone_level);
+
+        let map_path = MapPath::new(&self.paths.world_path(), ZoneLevel::from(subzone_level));
+        if let Some(submap) = Option::<Map>::try_from(map_path)?
+            .map(|map| map.0.into_iter().nth(subzone_level.index()).unwrap())
+            .or_else(|| Submap::fallback(subzone_level))
         {
-            let zone_level_entity = self
-                .commands
-                .spawn(SpatialBundle::default())
-                .insert(zone_level)
-                .id();
-            let base = map.0[0].coordinates;
-            for submap in &map.0 {
-                assert!(base.2 == submap.coordinates.2);
-                self.spawn_subzone(
-                    submap,
-                    zone_level_entity,
-                    zone_level,
-                    PosOffset {
-                        x: 12 * (submap.coordinates.0 - base.0),
-                        level: LevelOffset::ZERO,
-                        z: 12 * (submap.coordinates.1 - base.1),
-                    },
-                );
-            }
+            assert!(
+                submap.coordinates == subzone_level.coordinates(),
+                "{:?} {:?}",
+                submap.coordinates,
+                subzone_level.coordinates()
+            );
+            self.spawn_subzone(&submap, subzone_level);
         }
         Ok(())
     }
 
-    fn spawn_subzone(
-        &mut self,
-        submap: &Submap,
-        parent_entity: Entity,
-        zone_level: ZoneLevel,
-        subzone_offset: PosOffset,
-    ) {
-        let base_pos = zone_level.base_pos().offset(subzone_offset).unwrap();
-        let terrain = submap.terrain.load_as_subzone(base_pos);
+    fn spawn_subzone(&mut self, submap: &Submap, subzone_level: SubzoneLevel) {
+        let subzone_level_entity = self
+            .commands
+            .spawn(SpatialBundle::default())
+            .insert(subzone_level)
+            .id();
+
+        let base_pos = subzone_level.base_pos();
+        let terrain = submap.terrain.load_as_subzone(subzone_level);
 
         for x in 0..12 {
             for z in 0..12 {
@@ -271,7 +263,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
                     && tile_name != &&ObjectName::new("t_open_air_rooved")
                 {
                     self.spawn_tile(
-                        parent_entity,
+                        subzone_level_entity,
                         pos,
                         ObjectDefinition {
                             name: tile_name,
@@ -286,7 +278,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
                     .filter_map(|at| at.get(Pos::new(x, Level::ZERO, z)))
                 {
                     self.spawn_tile(
-                        parent_entity,
+                        subzone_level_entity,
                         pos,
                         ObjectDefinition {
                             name: tile_name,
@@ -304,7 +296,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
                     for repetition in repetitions {
                         let Amount { obj: item, amount } = repetition.as_amount();
                         self.spawn_tile(
-                            parent_entity,
+                            subzone_level_entity,
                             pos,
                             ObjectDefinition {
                                 name: tile_name,
@@ -322,7 +314,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
                     .filter(|spawn| spawn.x == x && spawn.z == z)
                 {
                     self.spawn_tile(
-                        parent_entity,
+                        subzone_level_entity,
                         pos,
                         ObjectDefinition {
                             name: &spawn.spawn_type,
@@ -339,7 +331,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
                 {
                     for field in &fields.0 {
                         self.spawn_tile(
-                            parent_entity,
+                            subzone_level_entity,
                             pos,
                             ObjectDefinition {
                                 name: &field.tile_name,

@@ -218,6 +218,44 @@ impl Sub<Pos> for Pos {
     }
 }
 
+#[derive(Component, Copy, Clone, Debug, PartialEq, Eq, Hash)]
+pub(crate) struct SubzoneLevel {
+    pub(crate) x: i32,
+    pub(crate) level: Level,
+    pub(crate) z: i32,
+}
+
+impl SubzoneLevel {
+    pub(crate) const SIZE: i32 = 12;
+
+    pub(crate) const fn index(&self) -> usize {
+        2 * (self.x as usize % 2) + (self.z as usize % 2)
+    }
+
+    /** CDDA */
+    pub(crate) const fn coordinates(&self) -> (i32, i32, i32) {
+        (self.x, self.z, self.level.h as i32)
+    }
+
+    pub(crate) const fn base_pos(&self) -> Pos {
+        Pos::new(
+            SubzoneLevel::SIZE * self.x,
+            self.level,
+            SubzoneLevel::SIZE * self.z,
+        )
+    }
+}
+
+impl From<Pos> for SubzoneLevel {
+    fn from(pos: Pos) -> Self {
+        Self {
+            x: pos.x.div_euclid(SubzoneLevel::SIZE),
+            level: pos.level,
+            z: pos.z.div_euclid(SubzoneLevel::SIZE),
+        }
+    }
+}
+
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub(crate) struct Zone {
     pub(crate) x: i32,
@@ -225,15 +263,7 @@ pub(crate) struct Zone {
 }
 
 impl Zone {
-    pub(crate) const SIZE: usize = 24;
-    pub(crate) const MIN: Self = Self {
-        x: i32::min_value(),
-        z: i32::min_value(),
-    };
-    pub(crate) const MAX: Self = Self {
-        x: i32::max_value(),
-        z: i32::max_value(),
-    };
+    pub(crate) const SIZE: i32 = 2 * SubzoneLevel::SIZE;
 
     pub(crate) const fn zone_level(&self, level: Level) -> ZoneLevel {
         ZoneLevel {
@@ -309,19 +339,55 @@ impl ZoneLevel {
     }
 
     pub(crate) const fn base_pos(&self) -> Pos {
-        Pos::new(24 * self.x, self.level, 24 * self.z)
+        Pos::new(Zone::SIZE * self.x, self.level, Zone::SIZE * self.z)
+    }
+
+    pub(crate) const fn subzone_levels(&self) -> [SubzoneLevel; 4] {
+        [
+            SubzoneLevel {
+                x: 2 * self.x,
+                level: self.level,
+                z: 2 * self.z,
+            },
+            SubzoneLevel {
+                x: 2 * self.x,
+                level: self.level,
+                z: 2 * self.z + 1,
+            },
+            SubzoneLevel {
+                x: 2 * self.x + 1,
+                level: self.level,
+                z: 2 * self.z,
+            },
+            SubzoneLevel {
+                x: 2 * self.x + 1,
+                level: self.level,
+                z: 2 * self.z + 1,
+            },
+        ]
     }
 }
 
 impl From<Pos> for ZoneLevel {
     fn from(pos: Pos) -> Self {
         Self {
-            x: pos.x.div_euclid(24),
+            x: pos.x.div_euclid(Zone::SIZE),
             level: pos.level,
-            z: pos.z.div_euclid(24),
+            z: pos.z.div_euclid(Zone::SIZE),
         }
     }
 }
+
+impl From<SubzoneLevel> for ZoneLevel {
+    fn from(subzone_level: SubzoneLevel) -> Self {
+        Self {
+            x: subzone_level.x.div_euclid(2),
+            level: subzone_level.level,
+            z: subzone_level.z.div_euclid(2),
+        }
+    }
+}
+
 #[derive(Component, Copy, Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub(crate) struct Overzone {
     pub(crate) x: i32,
