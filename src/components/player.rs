@@ -211,11 +211,11 @@ impl Focus {
     }
 
     pub(crate) fn is_shown(&self, level: Level) -> bool {
-        let current_level = match self {
+        let focus_level = match self {
             Focus::Pos(pos) => pos.level,
             Focus::ZoneLevel(zone_level) => zone_level.level,
         };
-        level == current_level || (Level::ZERO <= level && level < current_level)
+        level <= focus_level
     }
 }
 
