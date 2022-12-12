@@ -17,7 +17,7 @@ pub(crate) fn spawn_nearby_overzones(
     if all_zone_levels.is_empty() {
         if let Ok((&player_pos, player)) = players.get_single() {
             let focus = Focus::new(player, player_pos);
-            tile_spawner.spawn_zones_around(Zone::from(ZoneLevel::from(&focus)));
+            tile_spawner.spawn_zones_around(ZoneLevel::from(&focus).zone);
         }
     }
 

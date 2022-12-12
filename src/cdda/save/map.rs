@@ -16,13 +16,13 @@ impl MapPath {
                 .join("maps")
                 .join(format!(
                     "{}.{}.{}",
-                    zone_level.x.div_euclid(32),
-                    zone_level.z.div_euclid(32),
+                    zone_level.zone.x.div_euclid(32),
+                    zone_level.zone.z.div_euclid(32),
                     zone_level.level.h,
                 ))
                 .join(format!(
                     "{}.{}.{}.map",
-                    zone_level.x, zone_level.z, zone_level.level.h
+                    zone_level.zone.x, zone_level.zone.z, zone_level.level.h
                 )),
         )
     }

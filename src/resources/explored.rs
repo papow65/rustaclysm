@@ -32,7 +32,7 @@ impl Explored {
 
     pub(crate) fn has_zone_level_been_seen(&mut self, zone_level: ZoneLevel) -> SeenFrom {
         if !self.zone_level.contains_key(&zone_level) {
-            let overzone = Overzone::from(Zone::from(zone_level));
+            let overzone = Overzone::from(zone_level.zone);
             let overmap_buffer_path = OvermapBufferPath::new(&self.sav_path, overzone);
             let buffer =
                 OvermapBuffer::try_from(overmap_buffer_path).expect("Failed loading overzone");

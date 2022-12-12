@@ -15,10 +15,3 @@ pub(crate) struct PosOffset {
     pub(crate) level: LevelOffset,
     pub(crate) z: i32,
 }
-
-#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
-pub(crate) struct ZoneLevelOffset {
-    pub(crate) x: i32,
-    pub(crate) level: LevelOffset,
-    pub(crate) z: i32,
-}

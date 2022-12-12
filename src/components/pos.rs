@@ -1,6 +1,5 @@
 use crate::prelude::{
-    LevelOffset, Millimeter, Nbor, PosOffset, WalkingDistance, ZoneLevelOffset,
-    MIN_INVISIBLE_DISTANCE,
+    LevelOffset, Millimeter, Nbor, PosOffset, WalkingDistance, MIN_INVISIBLE_DISTANCE,
 };
 use bevy::prelude::{Component, Vec3};
 use std::{iter::once, ops::Sub};
@@ -228,11 +227,12 @@ pub(crate) struct SubzoneLevel {
 impl SubzoneLevel {
     pub(crate) const SIZE: i32 = 12;
 
+    /** CDDA index in map */
     pub(crate) const fn index(&self) -> usize {
         2 * (self.x as usize % 2) + (self.z as usize % 2)
     }
 
-    /** CDDA */
+    /** CDDA coordinates */
     pub(crate) const fn coordinates(&self) -> (i32, i32, i32) {
         (self.x, self.z, self.level.h as i32)
     }
@@ -266,11 +266,7 @@ impl Zone {
     pub(crate) const SIZE: i32 = 2 * SubzoneLevel::SIZE;
 
     pub(crate) const fn zone_level(&self, level: Level) -> ZoneLevel {
-        ZoneLevel {
-            x: self.x,
-            level,
-            z: self.z,
-        }
+        ZoneLevel { zone: *self, level }
     }
 
     pub(crate) const fn offset(&self, x: i32, z: i32) -> Self {
@@ -290,79 +286,69 @@ impl From<Pos> for Zone {
     }
 }
 
-impl From<ZoneLevel> for Zone {
-    fn from(zone_level: ZoneLevel) -> Self {
-        Self {
-            x: zone_level.x,
-            z: zone_level.z,
-        }
-    }
-}
-
 #[derive(Component, Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub(crate) struct ZoneLevel {
-    pub(crate) x: i32,
+    pub(crate) zone: Zone,
     pub(crate) level: Level,
-    pub(crate) z: i32,
 }
 
 impl ZoneLevel {
-    pub(crate) fn offset(self, offset: ZoneLevelOffset) -> Option<Self> {
-        self.level.offset(offset.level).map(|level| Self {
-            x: self.x + offset.x,
+    pub(crate) fn offset(self, offset: LevelOffset) -> Option<Self> {
+        self.level.offset(offset).map(|level| Self {
+            zone: self.zone,
             level,
-            z: self.z + offset.z,
         })
     }
 
     pub(crate) fn nbor(self, nbor: &Nbor) -> Option<Self> {
         match nbor {
             Nbor::Up => self.level.up().map(|level| Self {
-                x: self.x,
+                zone: self.zone,
                 level,
-                z: self.z,
             }),
             Nbor::Down => self.level.down().map(|level| Self {
-                x: self.x,
+                zone: self.zone,
                 level,
-                z: self.z,
             }),
             horizontal => {
                 let (x, z) = horizontal.horizontal_offset();
                 Some(Self {
-                    x: self.x + x,
+                    zone: self.zone.offset(x, z),
                     level: self.level,
-                    z: self.z + z,
                 })
             }
         }
     }
 
     pub(crate) const fn base_pos(&self) -> Pos {
-        Pos::new(Zone::SIZE * self.x, self.level, Zone::SIZE * self.z)
+        Pos::new(
+            Zone::SIZE * self.zone.x,
+            self.level,
+            Zone::SIZE * self.zone.z,
+        )
     }
 
     pub(crate) const fn subzone_levels(&self) -> [SubzoneLevel; 4] {
         [
             SubzoneLevel {
-                x: 2 * self.x,
+                x: 2 * self.zone.x,
                 level: self.level,
-                z: 2 * self.z,
+                z: 2 * self.zone.z,
             },
             SubzoneLevel {
-                x: 2 * self.x,
+                x: 2 * self.zone.x,
                 level: self.level,
-                z: 2 * self.z + 1,
+                z: 2 * self.zone.z + 1,
             },
             SubzoneLevel {
-                x: 2 * self.x + 1,
+                x: 2 * self.zone.x + 1,
                 level: self.level,
-                z: 2 * self.z,
+                z: 2 * self.zone.z,
             },
             SubzoneLevel {
-                x: 2 * self.x + 1,
+                x: 2 * self.zone.x + 1,
                 level: self.level,
-                z: 2 * self.z + 1,
+                z: 2 * self.zone.z + 1,
             },
         ]
     }
@@ -371,9 +357,8 @@ impl ZoneLevel {
 impl From<Pos> for ZoneLevel {
     fn from(pos: Pos) -> Self {
         Self {
-            x: pos.x.div_euclid(Zone::SIZE),
+            zone: Zone::from(pos),
             level: pos.level,
-            z: pos.z.div_euclid(Zone::SIZE),
         }
     }
 }
@@ -381,9 +366,11 @@ impl From<Pos> for ZoneLevel {
 impl From<SubzoneLevel> for ZoneLevel {
     fn from(subzone_level: SubzoneLevel) -> Self {
         Self {
-            x: subzone_level.x.div_euclid(2),
+            zone: Zone {
+                x: subzone_level.x.div_euclid(2),
+                z: subzone_level.z.div_euclid(2),
+            },
             level: subzone_level.level,
-            z: subzone_level.z.div_euclid(2),
         }
     }
 }

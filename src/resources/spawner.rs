@@ -221,8 +221,6 @@ impl<'w, 's> TileSpawner<'w, 's> {
         &mut self,
         subzone_level: SubzoneLevel,
     ) -> Result<(), serde_json::Error> {
-        println!("Spawning {:?}", subzone_level);
-
         let map_path = MapPath::new(&self.paths.world_path(), ZoneLevel::from(subzone_level));
         if let Some(submap) = Option::<Map>::try_from(map_path)?
             .map(|map| map.0.into_iter().nth(subzone_level.index()).unwrap())

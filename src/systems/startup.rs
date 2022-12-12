@@ -46,7 +46,7 @@ pub(crate) fn spawn_initial_entities(sav: Res<Sav>, mut spawner: Spawner) {
         x: 24,
         level: LevelOffset::ZERO,
         z: 24,
-    }) // experimental
+    })
     .unwrap()
         - Pos::ORIGIN;
     spawner.spawn_floors(offset);
