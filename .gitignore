@@ -7,3 +7,6 @@
 /o.*
 /*.seen.*
 /*.tracy
+/trace-*.json
+/perf*
+/flamegraph*
