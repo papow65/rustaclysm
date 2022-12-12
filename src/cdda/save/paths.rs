@@ -44,7 +44,11 @@ impl Paths {
         Self::asset_path().join("data")
     }
 
-    fn gfx_path() -> PathBuf {
+    pub(crate) fn fonts_path() -> PathBuf {
+        Self::asset_path().join("fonts")
+    }
+
+    pub(crate) fn gfx_path() -> PathBuf {
         Self::asset_path().join("gfx")
     }
 
@@ -60,6 +64,10 @@ impl Paths {
 
     pub(crate) fn sav_path(&self) -> SavPath {
         SavPath::init(self.sav_path.clone())
+    }
+
+    pub(crate) fn tiles_path() -> PathBuf {
+        Self::asset_path().join("tiles")
     }
 
     pub(crate) fn world_path(&self) -> WorldPath {

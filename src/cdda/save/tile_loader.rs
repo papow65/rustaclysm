@@ -2,7 +2,7 @@ use crate::prelude::*;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
 use rand::seq::SliceRandom;
-use std::fs::read_to_string;
+use std::{fs::read_to_string, path::PathBuf};
 
 #[derive(Debug)]
 struct TileInfo {
@@ -73,14 +73,14 @@ impl SpriteNumber {
 #[derive(Debug, Clone)]
 pub(crate) struct TextureInfo {
     pub(crate) mesh_info: MeshInfo,
-    pub(crate) image_path: String,
+    pub(crate) image_path: PathBuf,
     pub(crate) transform2d: Transform2d,
 }
 
 #[derive(Debug)]
 struct Atlas {
     range: (SpriteNumber, SpriteNumber),
-    image_path: String,
+    image_path: PathBuf,
     transform2d: Transform2d,
 }
 
@@ -91,7 +91,7 @@ impl Atlas {
         if filename == "fallback.png" {
             return None;
         }
-        let image_path = String::from("gfx/UltimateCataclysm/") + filename;
+        let image_path = Paths::gfx_path().join("UltimateCataclysm").join(filename);
 
         let from_to = if let Some(comment) = atlas.get("//") {
             comment
@@ -150,7 +150,7 @@ impl Atlas {
         TextureInfo {
             mesh_info: MeshInfo::new(
                 (*sprite_number).to_usize() - self.range.0.to_usize(),
-                match &self.image_path {
+                match self.image_path.display().to_string() {
                     p if p.ends_with("filler_tall.png") => 2,
                     p if p.ends_with("large_ridden.png") => 3,
                     p if p.ends_with("giant.png") => 4,
@@ -176,7 +176,9 @@ pub(crate) struct TileLoader {
 
 impl TileLoader {
     pub(crate) fn new() -> Self {
-        let filepath = "assets/gfx/UltimateCataclysm/tile_config.json";
+        let filepath = Paths::gfx_path()
+            .join("UltimateCataclysm")
+            .join("tile_config.json");
         let file_contents = read_to_string(filepath).unwrap();
         let json: serde_json::Value = serde_json::from_str(&file_contents).unwrap();
         let json_atlases = json.as_object().unwrap()["tiles-new"].as_array().unwrap();

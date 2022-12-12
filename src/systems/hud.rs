@@ -16,7 +16,7 @@ impl HudDefaults {
     pub(crate) fn new(asset_server: &mut AssetServer) -> Self {
         Self {
             text_style: TextStyle {
-                font: asset_server.load("fonts/FiraMono-Medium.otf"),
+                font: asset_server.load(Paths::fonts_path().join("FiraMono-Medium.otf")),
                 font_size: 16.0,
                 color: Color::rgb(0.8, 0.8, 0.8),
             },

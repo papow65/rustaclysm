@@ -1,9 +1,12 @@
 use crate::prelude::*;
-use bevy::ecs::system::{Insert, Remove, SystemParam};
-use bevy::math::Quat;
-use bevy::prelude::*;
-use bevy::render::camera::{PerspectiveProjection, Projection::Perspective};
-use bevy::utils::HashMap;
+use bevy::{
+    ecs::system::{Insert, Remove, SystemParam},
+    math::Quat,
+    prelude::*,
+    render::camera::{PerspectiveProjection, Projection::Perspective},
+    utils::HashMap,
+};
+use std::path::PathBuf;
 
 fn insert<T>(child_builder: &mut ChildBuilder, entity: Entity, bundle: T)
 where
@@ -14,7 +17,7 @@ where
 
 #[derive(Default, Resource)]
 pub(crate) struct TileCaches {
-    appearance_cache: HashMap<String, Appearance>,
+    appearance_cache: HashMap<PathBuf, Appearance>,
     horizontal_plane_mesh_cache: HashMap<SpriteNumber, Handle<Mesh>>,
     vertical_plane_mesh_cache: HashMap<SpriteNumber, Handle<Mesh>>,
     cuboid_mesh_cache: HashMap<SpriteNumber, Handle<Mesh>>,
@@ -56,10 +59,10 @@ impl<'w, 's> TileSpawner<'w, 's> {
     fn get_appearance(&mut self, model: &Model) -> Appearance {
         self.caches
             .appearance_cache
-            .entry(model.texture_path.to_string())
+            .entry(model.texture_path.clone())
             .or_insert_with(|| {
                 let material = StandardMaterial {
-                    base_color_texture: Some(self.asset_server.load(&model.texture_path)),
+                    base_color_texture: Some(self.asset_server.load(model.texture_path.clone())),
                     alpha_mode: model.alpha_mode,
                     ..StandardMaterial::default()
                 };
@@ -430,7 +433,10 @@ impl CustomData {
             glass: Appearance::new(material_assets, Color::rgba(0.8, 0.9, 1.0, 0.2)), // transparant blue
             wood: Appearance::new(material_assets, Color::rgb(0.7, 0.6, 0.5)),
             whitish: Appearance::new(material_assets, Color::rgb(0.95, 0.93, 0.88)),
-            wooden_wall: Appearance::new(material_assets, asset_server.load("tiles/wall.png")),
+            wooden_wall: Appearance::new(
+                material_assets,
+                asset_server.load(Paths::tiles_path().join("wall.png")),
+            ),
             yellow: Appearance::new(material_assets, Color::rgb(0.8, 0.8, 0.4)),
             cube_mesh: mesh_assets.add(Mesh::from(shape::Cube { size: 1.0 })),
             wall_transform: Transform {

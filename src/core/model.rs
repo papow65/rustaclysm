@@ -1,5 +1,6 @@
 use crate::prelude::*;
 use bevy::prelude::{AlphaMode, Mesh, Transform, Vec2, Vec3};
+use std::path::PathBuf;
 
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct Transform2d {
@@ -111,7 +112,7 @@ pub(crate) struct Model {
     pub(crate) layer: SpriteLayer,
     pub(crate) sprite_number: SpriteNumber,
     pub(crate) mesh_info: MeshInfo,
-    pub(crate) texture_path: String,
+    pub(crate) texture_path: PathBuf,
     pub(crate) vertical_offset: f32,
     pub(crate) alpha_mode: AlphaMode,
 }
