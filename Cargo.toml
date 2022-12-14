@@ -13,7 +13,7 @@ edition = "2021"
 [dependencies]
 # 'dynamic' for faster compilation
 bevy = { version = "0.9.*", features = [ "dynamic", "trace", "wayland" ] }
-pathfinding = "2.*"
+pathfinding = "4.*"
 bresenham = "0.1.*"
 rand = "0.8.*"
 serde = { version = "1.*", features = [ "derive" ] }
