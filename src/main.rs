@@ -6,7 +6,6 @@
 #![forbid(cenum_impl_drop_cast)]
 #![forbid(coherence_leak_check)]
 #![forbid(conflicting_repr_hints)]
-#![forbid(const_err)]
 #![forbid(const_evaluatable_unchecked)]
 #![forbid(deref_into_dyn_supertrait)]
 #![forbid(ellipsis_inclusive_range_patterns)]

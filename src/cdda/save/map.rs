@@ -38,7 +38,7 @@ pub(crate) struct Map(pub(crate) [Submap; 4]);
 impl TryFrom<MapPath> for Option<Map> {
     type Error = serde_json::Error;
     fn try_from(map_path: MapPath) -> Result<Option<Map>, Self::Error> {
-        read_to_string(&map_path.0)
+        read_to_string(map_path.0)
             .ok()
             .map_or(std::result::Result::Ok(Option::None), |s| {
                 serde_json::from_str::<Map>(s.as_str()).map(Some)

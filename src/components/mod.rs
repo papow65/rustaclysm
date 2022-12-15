@@ -97,7 +97,8 @@ impl Health {
     }
 
     pub(crate) fn apply(&mut self, damage: &Damage) -> bool {
-        self.curr -= damage.amount.min(self.curr).max(self.curr - self.max);
+        self.curr -= damage.amount;
+        self.curr = self.curr.clamp(0, self.max);
         0 < self.curr
     }
 }
@@ -121,9 +122,8 @@ impl Integrity {
 
     // TODO de-duplicate code with Health::apply
     pub(crate) fn apply(&mut self, damage: &Damage) -> bool {
-        self.curr -= i32::from(damage.amount)
-            .min(self.curr)
-            .max(self.max - self.curr);
+        self.curr -= i32::from(damage.amount);
+        self.curr = self.curr.clamp(0, self.max);
         0 < self.curr
     }
 }

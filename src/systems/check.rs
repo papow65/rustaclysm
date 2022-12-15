@@ -114,12 +114,12 @@ pub(crate) fn check_zone_levels(
 
     let mut all_expanded = HashSet::new();
     for zone in expanded_zone_levels.iter() {
-        assert!(all_expanded.insert(zone), "Expanded duplicate {:?}", zone);
+        assert!(all_expanded.insert(zone), "Expanded duplicate {zone:?}");
     }
 
     let mut all_collapsed = HashSet::new();
     for zone in collapsed_zone_levels.iter() {
-        assert!(all_collapsed.insert(zone), "Expanded duplicate {:?}", zone);
+        assert!(all_collapsed.insert(zone), "Expanded duplicate {zone:?}");
     }
 
     log_if_slow("check_zone_levels", start);

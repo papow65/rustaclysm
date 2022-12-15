@@ -191,7 +191,7 @@ pub(crate) fn update_log(
         });
         if 1 < *count {
             sections.push(TextSection {
-                value: format!(" ({}x)", count),
+                value: format!(" ({count}x)"),
                 style: hud_defaults.text_style.clone(),
             });
         }
@@ -270,8 +270,7 @@ pub(crate) fn update_status_health(
     let start = Instant::now();
 
     if let Some(health) = health.iter().next() {
-        status_displays.iter_mut().next().unwrap().sections[2].value =
-            format!("{} health\n", health);
+        status_displays.iter_mut().next().unwrap().sections[2].value = format!("{health} health\n");
     }
 
     log_if_slow("update_status_health", start);
@@ -355,9 +354,9 @@ pub(crate) fn update_status_detais(
                         .map(|s| s + "\n")
                         .collect::<String>();
                     let items = items_info(&all_here, &items);
-                    format!("{:?}\n{}{}{}", pos, characters, entities, items)
+                    format!("{pos:?}\n{characters}{entities}{items}")
                 } else {
-                    format!("{:?}\nUnseen", pos)
+                    format!("{pos:?}\nUnseen")
                 }
             }
             PlayerActionState::ExaminingZoneLevel(zone_level) => {
@@ -368,7 +367,7 @@ pub(crate) fn update_status_detais(
                 }*/
 
                 if explored.has_zone_level_been_seen(zone_level) == SeenFrom::Never {
-                    format!("{:?}\nUnseen", zone_level)
+                    format!("{zone_level:?}\nUnseen")
                 } else {
                     format!(
                         "{:?}\n{:?}",
@@ -395,7 +394,7 @@ fn characters_info(
         .flat_map(|&i| characters.get(i))
         .map(|(label, health)| {
             let label = label.map_or_else(|| String::from("?"), String::from);
-            format!("{} ({} health)\n", label, health)
+            format!("{label} ({health} health)\n")
         })
         .collect()
 }
@@ -433,7 +432,7 @@ fn entity_info(
     let mut flags = Vec::new();
     let health_str;
     if let Some(health) = health {
-        health_str = format!("health({})", health);
+        health_str = format!("health({health})");
         flags.push(health_str.as_str());
     }
     if corpse.is_some() {
@@ -441,7 +440,7 @@ fn entity_info(
     }
     let action_str;
     if let Some(action) = action {
-        action_str = format!("{:?}", action);
+        action_str = format!("{action:?}");
         flags.push(action_str.as_str());
     }
     if floor.is_some() {
@@ -481,7 +480,7 @@ fn entity_info(
     label
         + flags
             .iter()
-            .map(|s| format!("\n- {}", s))
+            .map(|s| format!("\n- {s}"))
             .collect::<String>()
             .as_str()
 }
@@ -500,7 +499,7 @@ fn items_info(
             let label = label.map_or_else(|| String::from("?"), String::from);
             let amount = Some(amount)
                 .filter(|&&a| 1 < a)
-                .map(|a| format!(" (x{})", a))
+                .map(|a| format!(" (x{a})"))
                 .unwrap_or_default();
             label + amount.as_str() + "\n"
         })

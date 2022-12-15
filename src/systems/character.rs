@@ -67,8 +67,8 @@ pub(crate) fn manage_characters(
                     commands.entity(character).insert(l);
                 }
                 println!(
-                    "{} at {:?} plans {:?} and does {:?}",
-                    &label, pos, strategy.intent, strategy.action
+                    "{} at {pos:?} plans {:?} and does {:?}",
+                    &label, strategy.intent, strategy.action
                 );
                 strategy.action
             };

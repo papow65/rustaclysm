@@ -269,10 +269,7 @@ pub(crate) fn update_damaged_items(
                 .entity(item)
                 .insert(Hurdle(3.0))
                 .remove::<Obstacle>();
-            commands.spawn(Message::new(format!(
-                "{} breaks {}",
-                damage.attacker, label
-            )));
+            commands.spawn(Message::new(format!("{} breaks {label}", damage.attacker)));
         }
         /*
         Causes a crash

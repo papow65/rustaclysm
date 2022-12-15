@@ -64,7 +64,7 @@ impl<'w, 's> Envir<'w, 's> {
             let zone_level_down = ZoneLevel::from(pos).offset(LevelOffset::DOWN).unwrap();
 
             // fast approach in most cases, otherwise fast enough
-            for distance in 0..Zone::SIZE as i32 {
+            for distance in 0..Zone::SIZE {
                 for dx in -distance..=distance {
                     for dz in -distance..=distance {
                         if dx.abs().max(dz.abs()) == distance {
@@ -189,7 +189,7 @@ impl<'w, 's> Envir<'w, 's> {
         self.nbors_if(pos, move |nbor| match instruction {
             QueuedInstruction::Attack => self.find_character(nbor).is_none(),
             QueuedInstruction::Smash => self.find_item(nbor).is_none(),
-            _ => panic!("unexpected instruction {:?}", instruction),
+            _ => panic!("unexpected instruction {instruction:?}"),
         })
         .map(move |(_nbor, npos, _distance)| npos)
     }

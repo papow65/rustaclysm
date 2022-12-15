@@ -84,7 +84,7 @@ impl Level {
     }
 
     pub(crate) fn f32(&self) -> f32 {
-        f32::from(self.h) as f32 * Millimeter::VERTICAL.f32()
+        f32::from(self.h) * Millimeter::VERTICAL.f32()
     }
 }
 
@@ -280,8 +280,8 @@ impl Zone {
 impl From<Pos> for Zone {
     fn from(pos: Pos) -> Self {
         Self {
-            x: pos.x.div_euclid(Self::SIZE as i32),
-            z: pos.z.div_euclid(Self::SIZE as i32),
+            x: pos.x.div_euclid(Self::SIZE),
+            z: pos.z.div_euclid(Self::SIZE),
         }
     }
 }

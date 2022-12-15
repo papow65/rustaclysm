@@ -249,8 +249,8 @@ impl RelativeSegments {
 
         let lower_bound = (2 * MAX_VISIBLE_DISTANCE as usize + 1).pow(2) * Level::AMOUNT / 2;
         let upper_bound = (2 * MAX_VISIBLE_DISTANCE as usize + 1).pow(2) * Level::AMOUNT;
-        assert!(lower_bound < rays.len(), "{} {}", lower_bound, rays.len());
-        assert!(rays.len() < upper_bound, "{} {}", rays.len(), upper_bound);
+        assert!(lower_bound < rays.len(), "{lower_bound} {}", rays.len());
+        assert!(rays.len() < upper_bound, "{} {upper_bound}", rays.len());
         for nbor in Nbor::ALL {
             let nbor = Pos::ORIGIN.raw_nbor(&nbor).unwrap();
             assert!(rays.contains_key(&nbor), "{nbor:?}");

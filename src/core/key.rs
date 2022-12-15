@@ -50,8 +50,8 @@ impl Key {
 impl fmt::Display for Key {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
         match self {
-            Self::KeyCode(key_code) => write!(formatter, "{:?}", key_code),
-            Self::ScanCode(code) => write!(formatter, "(scancode {:?})", code),
+            Self::KeyCode(key_code) => write!(formatter, "{key_code:?}"),
+            Self::ScanCode(code) => write!(formatter, "(scancode {code:?})"),
         }
     }
 }

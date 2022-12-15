@@ -14,7 +14,7 @@ impl MeshInfo {
         let index = index as f32;
         let size = size as f32;
         let width = width as f32; // tiles per row
-        let height = (size / width).ceil() as f32; // tiles per column
+        let height = (size / width).ceil(); // tiles per column
 
         let x_min = (index % width) / width;
         let y_min = (index / width).floor() / height;
