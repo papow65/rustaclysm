@@ -278,13 +278,13 @@ pub(crate) fn update_status_health(
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_status_speed(
-    speed: Query<&Speed, (With<Player>, Changed<Speed>)>,
+    speed: Query<&BaseSpeed, (With<Player>, Changed<BaseSpeed>)>,
     mut status_displays: Query<&mut Text, With<StatusDisplay>>,
 ) {
     let start = Instant::now();
 
     if let Some(speed) = speed.iter().next() {
-        status_displays.iter_mut().next().unwrap().sections[3].value = format!("{}\n", speed.h);
+        status_displays.iter_mut().next().unwrap().sections[3].value = format!("{speed}\n");
     }
 
     log_if_slow("update_status_speed", start);
@@ -440,9 +440,15 @@ fn entity_info(
         action_str = format!("{action:?}");
         flags.push(action_str.as_str());
     }
-    if floor.is_some() {
+    let hurdle_str: String;
+    if let Some(floor) = floor {
         flags.push("floor");
-    }
+        if MoveCost::default() < floor.move_cost {
+            let factor = f32::from(floor.move_cost.0) / f32::from(MoveCost::default().0);
+            hurdle_str = format!("hurlde (x{factor:.1})");
+            flags.push(hurdle_str.as_str());
+        }
+    };
     if stairs_up.is_some() {
         flags.push("stairs up");
     }
@@ -454,7 +460,7 @@ fn entity_info(
     }
     let hurdle_str;
     if let Some(hurdle) = hurdle {
-        hurdle_str = format!("hurdle({})", hurdle.0);
+        hurdle_str = format!("hurdle ({})", hurdle.0);
         flags.push(hurdle_str.as_str());
     }
     if opaque.is_some() {

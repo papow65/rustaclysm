@@ -3,8 +3,9 @@ mod faction;
 mod player;
 mod pos;
 
-use crate::prelude::{Partial, Visible};
+use crate::prelude::{MoveCost, Partial, Visible};
 use bevy::prelude::{AlphaMode, Assets, Color, Component, Handle, StandardMaterial};
+use std::fmt;
 
 pub(crate) use {action::*, faction::*, player::*, pos::*};
 
@@ -20,8 +21,8 @@ impl Label {
     }
 }
 
-impl std::fmt::Display for Label {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
+impl fmt::Display for Label {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         self.0.fmt(formatter)
     }
 }
@@ -34,7 +35,7 @@ impl From<&Label> for String {
 
 #[derive(Component)]
 pub(crate) struct Floor {
-    pub(crate) move_cost: u8,
+    pub(crate) move_cost: MoveCost,
 }
 
 #[derive(Component)]
@@ -103,8 +104,8 @@ impl Health {
     }
 }
 
-impl std::fmt::Display for Health {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+impl fmt::Display for Health {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{curr}", curr = self.curr)
     }
 }
@@ -128,8 +129,8 @@ impl Integrity {
     }
 }
 
-impl std::fmt::Display for Integrity {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+impl fmt::Display for Integrity {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{curr}", curr = self.curr)
     }
 }

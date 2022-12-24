@@ -79,7 +79,7 @@ impl Faction {
         &self,
         envir: &Envir,
         start_pos: Pos,
-        speed: Speed,
+        speed: BaseSpeed,
         factions: &[(Pos, &Self)],
         enemies: &[Pos],
         last_enemy: Option<&LastEnemy>,
@@ -119,18 +119,14 @@ impl Faction {
         &self,
         envir: &Envir,
         start_pos: Pos,
-        speed: Speed,
+        speed: BaseSpeed,
         enemies: &[Pos],
     ) -> Option<Action> {
         if enemies.is_empty() {
             return None;
         }
 
-        let up_time: Milliseconds = WalkingDistance {
-            horizontal: Millimeter(0),
-            up: Millimeter::VERTICAL,
-            down: Millimeter(0),
-        } / speed;
+        let up_time = WalkingCost::new(NborDistance::Up, MoveCost::default()).duration(speed);
 
         // Higher gives better results but is slower
         let planning_limit: u64 = 5;
@@ -145,7 +141,7 @@ impl Faction {
                     if max_time < total_ms {
                         None
                     } else {
-                        Some(((nbor, total_ms), Danger::new(&ms, nbor, enemies)))
+                        Some(((nbor, total_ms), Danger::new(envir, &ms, nbor, enemies)))
                     }
                 })
                 .collect::<Vec<((Pos, Milliseconds), Danger)>>()
@@ -168,7 +164,7 @@ impl Faction {
         })
     }
 
-    pub(crate) fn wander(&self, envir: &Envir, start_pos: Pos, speed: Speed) -> Option<Action> {
+    pub(crate) fn wander(&self, envir: &Envir, start_pos: Pos, speed: BaseSpeed) -> Option<Action> {
         let mut random = rand::thread_rng();
 
         if random.gen::<f32>() < 0.3 {
@@ -196,7 +192,7 @@ impl Faction {
         intent: Intent,
         envir: &Envir,
         start_pos: Pos,
-        speed: Speed,
+        speed: BaseSpeed,
         factions: &[(Pos, &Self)],
         enemies: &[Pos],
         last_enemy: Option<&LastEnemy>,
@@ -224,7 +220,7 @@ impl Faction {
         &self,
         envir: &Envir,
         start_pos: Pos,
-        speed: Speed,
+        speed: BaseSpeed,
         health: &Health,
         factions: &[(Pos, &'f Self)],
         last_enemy: Option<&LastEnemy>,
@@ -254,12 +250,12 @@ impl Faction {
 pub(crate) struct Danger(FloatOrd<f32>);
 
 impl Danger {
-    pub(crate) fn new(time: &Milliseconds, pos: Pos, froms: &[Pos]) -> Self {
+    pub(crate) fn new(envir: &Envir, time: &Milliseconds, pos: Pos, froms: &[Pos]) -> Self {
         Self(FloatOrd(
             time.0 as f32
                 * froms
                     .iter()
-                    .map(|from| 1.0 / (pos.walking_distance(*from).equivalent_effort().0 as f32))
+                    .map(|from| 1.0 / (envir.walking_cost(pos, *from).f32()))
                     .sum::<f32>(),
         ))
     }

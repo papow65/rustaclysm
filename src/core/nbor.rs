@@ -1,5 +1,3 @@
-use crate::prelude::{Millimeter, WalkingDistance};
-
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub(crate) struct HorizontalNborOffset {
     /*private*/ x: i32, // -1, 0, or 1
@@ -50,30 +48,27 @@ impl Nbor {
         }
     }
 
-    pub(crate) fn distance(&self) -> WalkingDistance {
-        match self {
-            Self::Up => WalkingDistance {
-                horizontal: Millimeter(0),
-                up: Millimeter::VERTICAL,
-                down: Millimeter(0),
-            },
-            Self::Down => WalkingDistance {
-                horizontal: Millimeter(0),
-                up: Millimeter(0),
-                down: Millimeter::VERTICAL,
-            },
-            horizontal => {
-                let (x, z) = horizontal.horizontal_offset();
-                WalkingDistance {
-                    horizontal: if x == 0 || z == 0 {
-                        Millimeter::ADJACENT
-                    } else {
-                        Millimeter::DIAGONAL
-                    },
-                    up: Millimeter(0),
-                    down: Millimeter(0),
-                }
+    pub(crate) fn distance(&self) -> NborDistance {
+        match &self {
+            Self::Up => NborDistance::Up,
+            Self::Horizontal(HorizontalNborOffset { x, z }) if *x == 0 || *z == 0 => {
+                NborDistance::Adjacent
             }
+            Self::Horizontal(HorizontalNborOffset { x, z }) => {
+                assert!(*x != 0 && *z != 0);
+                NborDistance::Diagonal
+            }
+            Self::Here => NborDistance::Zero,
+            Self::Down => NborDistance::Down,
         }
     }
+}
+
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub(crate) enum NborDistance {
+    Up,
+    Adjacent,
+    Diagonal,
+    Zero,
+    Down,
 }

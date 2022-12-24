@@ -8,11 +8,8 @@ pub(crate) enum CddaTerrainInfo {
     #[serde(rename(deserialize = "terrain"))]
     Terrain {
         name: ItemName,
-
-        move_cost: u8,
-
+        move_cost: MoveCost,
         coverage: Option<u8>,
-
         flags: Flags,
 
         #[allow(unused)]
@@ -37,6 +34,15 @@ impl CddaTerrainInfo {
                 intensity_levels, ..
             } => intensity_levels[0].name.as_ref().unwrap(),
         }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, PartialOrd)]
+pub(crate) struct MoveCost(pub(crate) u8);
+
+impl Default for MoveCost {
+    fn default() -> Self {
+        Self(2)
     }
 }
 

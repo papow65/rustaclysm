@@ -3,7 +3,7 @@ use crate::prelude::{
     QueuedInstruction, ZoneLevel,
 };
 use bevy::prelude::{Commands, Component};
-use std::fmt::{Display, Formatter};
+use std::fmt;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub(crate) enum PlayerActionState {
@@ -15,8 +15,8 @@ pub(crate) enum PlayerActionState {
     ExaminingZoneLevel(ZoneLevel),
 }
 
-impl Display for PlayerActionState {
-    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+impl fmt::Display for PlayerActionState {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.write_str(match self {
             Self::Normal => "",
             Self::Attacking => "Attacking",

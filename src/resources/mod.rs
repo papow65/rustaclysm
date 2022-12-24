@@ -105,7 +105,7 @@ pub(crate) struct Characters<'w, 's> {
             Entity,
             &'static Label,
             &'static Pos,
-            &'static Speed,
+            &'static BaseSpeed,
             &'static Health,
             &'static Faction,
             &'static Container,

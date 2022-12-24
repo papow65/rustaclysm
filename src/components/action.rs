@@ -30,7 +30,7 @@ impl Action {
         actor: Entity,
         label: &Label,
         pos: Pos,
-        speed: Speed,
+        speed: BaseSpeed,
         container: &Container,
     ) -> Milliseconds {
         let duration: Milliseconds = match self {
@@ -70,7 +70,7 @@ fn move_(
     label: &Label,
     from: Pos,
     to: Pos,
-    speed: Speed,
+    speed: BaseSpeed,
 ) -> Milliseconds {
     if !envir.are_nbors(from, to) {
         let message = format!("can't move to {to:?}, as it is not a nbor of {from:?}");
@@ -81,7 +81,7 @@ fn move_(
     match envir.collide(from, to, true) {
         Collision::Pass => {
             commands.entity(mover).insert(to);
-            from.walking_distance(to) / speed
+            envir.walking_cost(from, to).duration(speed)
         }
         /*Collision::Fall(fall_pos) => {
             *pos = fall_pos;
@@ -107,7 +107,7 @@ fn attack(
     a_label: &Label,
     pos: Pos,
     target: Pos,
-    speed: Speed,
+    speed: BaseSpeed,
 ) -> Milliseconds {
     if !envir.are_nbors(pos, target) {
         unimplemented!();
@@ -118,7 +118,7 @@ fn attack(
             attacker: a_label.clone(),
             amount: 1,
         });
-        pos.walking_distance(target) / speed
+        envir.walking_cost(pos, target).duration(speed)
     } else {
         commands.spawn(Message::warn(format!("{a_label} attacks nothing")));
         Milliseconds(0)
@@ -131,7 +131,7 @@ fn smash(
     s_label: &Label,
     pos: Pos,
     target: Pos,
-    speed: Speed,
+    speed: BaseSpeed,
 ) -> Milliseconds {
     if !envir.are_nbors(pos, target) && target != pos {
         unimplemented!();
@@ -151,7 +151,7 @@ fn smash(
             attacker: s_label.clone(),
             amount: 1,
         });
-        pos.walking_distance(target) / speed
+        envir.walking_cost(pos, target).duration(speed)
     } else {
         commands.spawn(Message::warn(format!("{s_label} smashes nothing")));
         Milliseconds(0)
@@ -164,7 +164,7 @@ fn dump(
     dumper: Entity,
     dr_label: &Label,
     pos: Pos,
-    speed: Speed,
+    speed: BaseSpeed,
 ) -> Milliseconds {
     // It seems impossible to remove something from 'Children', so we check 'Parent'.
 
@@ -192,7 +192,7 @@ fn pickup(
     pr_label: &Label,
     container: &Container,
     pr_pos: Pos,
-    speed: Speed,
+    speed: BaseSpeed,
 ) -> Milliseconds {
     if let Some((pd_entity, pd_label, pd_containable)) =
         location.get_first(pr_pos, &hierarchy.picked)
@@ -231,6 +231,6 @@ fn pickup(
 }
 
 fn switch_running(commands: &mut Commands, switcher: Entity) -> Milliseconds {
-    commands.entity(switcher).insert(Speed::from_h_kmph(11));
+    commands.entity(switcher).insert(BaseSpeed::from_h_kmph(11));
     Milliseconds(0)
 }

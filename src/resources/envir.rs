@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use bevy::{ecs::system::SystemParam, prelude::*, utils::HashMap};
 use pathfinding::prelude::astar;
-use std::{cell::RefCell, cmp::Ordering};
+use std::{cell::RefCell, cmp::Ordering, iter::repeat};
 
 #[derive(SystemParam)]
 pub(crate) struct Envir<'w, 's> {
@@ -133,11 +133,20 @@ impl<'w, 's> Envir<'w, 's> {
         }
     }
 
-    fn nbors(&'s self, pos: Pos) -> impl Iterator<Item = (Nbor, Pos, WalkingDistance)> + 's {
+    fn nbors(&'s self, pos: Pos) -> impl Iterator<Item = (Nbor, Pos, WalkingCost)> + 's {
         Nbor::ALL.iter().filter_map(move |nbor| {
-            self.get_nbor(pos, nbor)
-                .ok()
-                .map(|npos| (nbor.clone(), npos, nbor.distance()))
+            self.get_nbor(pos, nbor).ok().map(|npos| {
+                (
+                    nbor.clone(),
+                    npos,
+                    WalkingCost::new(
+                        nbor.distance(),
+                        self.location
+                            .get_first(npos, &self.floors)
+                            .map_or_else(MoveCost::default, |floor| floor.move_cost),
+                    ),
+                )
+            })
         })
     }
 
@@ -151,7 +160,7 @@ impl<'w, 's> Envir<'w, 's> {
         &'s self,
         pos: Pos,
         acceptable: F,
-    ) -> impl Iterator<Item = (Nbor, Pos, WalkingDistance)> + 's
+    ) -> impl Iterator<Item = (Nbor, Pos, WalkingCost)> + 's
     where
         F: 'w + 's + Fn(Pos) -> bool,
     {
@@ -164,7 +173,7 @@ impl<'w, 's> Envir<'w, 's> {
         pos: Pos,
         destination: Option<Pos>,
         intelligence: Intelligence,
-        speed: Speed,
+        speed: BaseSpeed,
     ) -> impl Iterator<Item = (Pos, Milliseconds)> + 's {
         self.nbors_if(pos, move |nbor| {
             (pos.level == Level::ZERO || !self.location.all(pos).is_empty()) && {
@@ -178,7 +187,7 @@ impl<'w, 's> Envir<'w, 's> {
                 }
             }
         })
-        .map(move |(_nbor, npos, distance)| (npos, distance / speed))
+        .map(move |(_nbor, npos, walking_cost)| (npos, walking_cost.duration(speed)))
     }
 
     pub(crate) fn nbors_for_exploring(
@@ -194,19 +203,48 @@ impl<'w, 's> Envir<'w, 's> {
         .map(move |(_nbor, npos, _distance)| npos)
     }
 
+    /** `WalkingCost` without regard for obstacles or stairs, unless they are nbors */
+    pub(crate) fn walking_cost(&self, from: Pos, to: Pos) -> WalkingCost {
+        let dx = from.x.abs_diff(to.x) as usize;
+        let dz = from.z.abs_diff(to.z) as usize;
+        let diagonal = dx.min(dz);
+        let adjacent = dx.max(dz) - diagonal;
+
+        let dy = (to.level - from.level).h;
+        let up = (dy as usize).min(0);
+        let down = (-dy as usize).min(0);
+
+        let move_cost = if diagonal + adjacent + up + down == 1 {
+            // nbors, the precise value matters in some cases
+            self.location.get_first(to, &self.floors).unwrap().move_cost
+        } else {
+            // estimate
+            MoveCost::default()
+        };
+
+        repeat(NborDistance::Up)
+            .take(up)
+            .chain(repeat(NborDistance::Adjacent).take(adjacent))
+            .chain(repeat(NborDistance::Diagonal).take(diagonal))
+            .chain(repeat(NborDistance::Down).take(down))
+            .map(|nd| WalkingCost::new(nd, move_cost))
+            .reduce(|total, item| total + item)
+            .unwrap_or_else(|| WalkingCost::new(NborDistance::Zero, move_cost))
+    }
+
     pub(crate) fn path(
         &self,
         from: Pos,
         to: Pos,
         intelligence: Intelligence,
-        speed: Speed,
+        speed: BaseSpeed,
     ) -> Option<Path> {
         if to == from {
             return None;
         }
 
         let nbors_fn = |pos: &Pos| self.nbors_for_moving(*pos, Some(to), intelligence, speed);
-        let estimated_duration_fn = |pos: &Pos| pos.walking_distance(to) / speed;
+        let estimated_duration_fn = |&pos: &Pos| self.walking_cost(pos, to).duration(speed);
 
         //println!("dumb? {dumb:?} @{from:?}");
         match intelligence {

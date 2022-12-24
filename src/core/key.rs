@@ -48,7 +48,7 @@ impl Key {
 }
 
 impl fmt::Display for Key {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
             Self::KeyCode(key_code) => write!(formatter, "{key_code:?}"),
             Self::ScanCode(code) => write!(formatter, "(scancode {code:?})"),
@@ -79,7 +79,7 @@ impl KeyCombo {
 }
 
 impl fmt::Display for KeyCombo {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             formatter,
             "{}{}{}",

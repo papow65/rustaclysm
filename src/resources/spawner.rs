@@ -153,7 +153,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
                         insert(child_builder, tile, Obstacle);
                         insert(child_builder, tile, Health::new(5));
                         insert(child_builder, tile, Faction::Animal);
-                        insert(child_builder, tile, Speed::from_h_kmph(10));
+                        insert(child_builder, tile, BaseSpeed::from_h_kmph(10));
                         insert(child_builder, tile, Container(0));
                     }
                     ObjectSpecifier::Terrain => {
@@ -168,7 +168,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
                             .unwrap_or_else(|| panic!("{:?}", definition.id))
                         {
                             let move_cost = *move_cost;
-                            if 0 < move_cost {
+                            if 0 < move_cost.0 {
                                 insert(child_builder, tile, Floor { move_cost });
                             }
 
@@ -779,7 +779,7 @@ impl<'w, 's> Spawner<'w, 's> {
         label: Label,
         pos: Pos,
         health: Health,
-        speed: Speed,
+        speed: BaseSpeed,
         faction: Faction,
         player: Option<Player>,
     ) {
@@ -984,7 +984,7 @@ impl<'w, 's> Spawner<'w, 's> {
                 })
                 .unwrap(),
             Health::new(10),
-            Speed::from_h_kmph(6),
+            BaseSpeed::from_h_kmph(6),
             Faction::Human,
             Some(Player {
                 state: PlayerActionState::Normal,
@@ -995,7 +995,7 @@ impl<'w, 's> Spawner<'w, 's> {
             Label::new("Survivor"),
             Pos::new(10, Level::ZERO, 10).offset(offset).unwrap(),
             Health::new(3),
-            Speed::from_h_kmph(7),
+            BaseSpeed::from_h_kmph(7),
             Faction::Human,
             None,
         );
@@ -1003,7 +1003,7 @@ impl<'w, 's> Spawner<'w, 's> {
             Label::new("Zombie one"),
             Pos::new(12, Level::ZERO, 16).offset(offset).unwrap(),
             Health::new(3),
-            Speed::from_h_kmph(5),
+            BaseSpeed::from_h_kmph(5),
             Faction::Zombie,
             None,
         );
@@ -1011,7 +1011,7 @@ impl<'w, 's> Spawner<'w, 's> {
             Label::new("Zombie two"),
             Pos::new(40, Level::ZERO, 40).offset(offset).unwrap(),
             Health::new(3),
-            Speed::from_h_kmph(7),
+            BaseSpeed::from_h_kmph(7),
             Faction::Zombie,
             None,
         );
@@ -1019,7 +1019,7 @@ impl<'w, 's> Spawner<'w, 's> {
             Label::new("Zombie three"),
             Pos::new(38, Level::ZERO, 39).offset(offset).unwrap(),
             Health::new(3),
-            Speed::from_h_kmph(8),
+            BaseSpeed::from_h_kmph(8),
             Faction::Zombie,
             None,
         );
@@ -1027,7 +1027,7 @@ impl<'w, 's> Spawner<'w, 's> {
             Label::new("Zombie four"),
             Pos::new(37, Level::ZERO, 37).offset(offset).unwrap(),
             Health::new(3),
-            Speed::from_h_kmph(9),
+            BaseSpeed::from_h_kmph(9),
             Faction::Zombie,
             None,
         );
@@ -1035,7 +1035,7 @@ impl<'w, 's> Spawner<'w, 's> {
             Label::new("Zombie five"),
             Pos::new(34, Level::ZERO, 34).offset(offset).unwrap(),
             Health::new(3),
-            Speed::from_h_kmph(3),
+            BaseSpeed::from_h_kmph(3),
             Faction::Zombie,
             None,
         );

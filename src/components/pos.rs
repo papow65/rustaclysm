@@ -1,6 +1,4 @@
-use crate::prelude::{
-    LevelOffset, Millimeter, Nbor, PosOffset, WalkingDistance, MIN_INVISIBLE_DISTANCE,
-};
+use crate::prelude::{LevelOffset, Millimeter, Nbor, PosOffset, MIN_INVISIBLE_DISTANCE};
 use bevy::prelude::{Component, Vec3};
 use std::{iter::once, ops::Sub};
 
@@ -114,30 +112,6 @@ impl Pos {
 
     pub(crate) const fn new(x: i32, level: Level, z: i32) -> Self {
         Self { x, level, z }
-    }
-
-    /** Distance without regard for obstacles or stairs */
-    pub(crate) fn walking_distance(&self, other: Self) -> WalkingDistance {
-        let dx = u64::from(self.x.abs_diff(other.x));
-        let dy = self.level.h - other.level.h;
-        let dz = u64::from(self.z.abs_diff(other.z));
-
-        WalkingDistance {
-            horizontal: Millimeter(
-                std::cmp::max(dx, dz) * Millimeter::ADJACENT.0
-                    + std::cmp::min(dx, dz) * (Millimeter::DIAGONAL.0 - Millimeter::ADJACENT.0),
-            ),
-            up: Millimeter(if 0 < dy {
-                Millimeter::VERTICAL.0 * dy as u64
-            } else {
-                0
-            }),
-            down: Millimeter(if dy < 0 {
-                Millimeter::VERTICAL.0 * u64::from(dy.unsigned_abs())
-            } else {
-                0
-            }),
-        }
     }
 
     pub(crate) fn offset(self, offset: PosOffset) -> Option<Self> {
