@@ -148,21 +148,6 @@ impl<'w, 's> TileSpawner<'w, 's> {
                     insert(child_builder, tile, last_seen);
                 }
 
-                if definition.specifier == ObjectSpecifier::Terrain
-                    && definition.id != &ObjectId::new("unknown")
-                {
-                    let terrain_info = self
-                        .infos
-                        .terrain(definition.id)
-                        .unwrap_or_else(|| panic!("{:?}", definition.id));
-
-                    if let CddaTerrainInfo::Terrain { coverage, .. } = terrain_info {
-                        if coverage.map(|c| 0 < c) == Some(true) {
-                            insert(child_builder, tile, Obstacle);
-                        }
-                    }
-                }
-
                 match definition.specifier {
                     ObjectSpecifier::Character => {
                         insert(child_builder, tile, Obstacle);
@@ -171,37 +156,53 @@ impl<'w, 's> TileSpawner<'w, 's> {
                         insert(child_builder, tile, Speed::from_h_kmph(10));
                         insert(child_builder, tile, Container(0));
                     }
-                    ObjectSpecifier::Item => {
-                        // pass
+                    ObjectSpecifier::Terrain => {
+                        if let CddaTerrainInfo::Terrain {
+                            move_cost,
+                            coverage,
+                            flags,
+                            ..
+                        } = self
+                            .infos
+                            .terrain(definition.id)
+                            .unwrap_or_else(|| panic!("{:?}", definition.id))
+                        {
+                            let move_cost = *move_cost;
+                            if 0 < move_cost {
+                                insert(child_builder, tile, Floor { move_cost });
+                            }
+
+                            if coverage.map(|c| 0 < c) == Some(true) {
+                                insert(child_builder, tile, Obstacle);
+                            }
+
+                            let up = flags.goes_up();
+                            let down = flags.goes_down();
+                            if up || down {
+                                // can be both
+
+                                if up {
+                                    insert(child_builder, tile, StairsUp);
+                                }
+
+                                if down {
+                                    insert(child_builder, tile, StairsDown);
+                                }
+                            } else {
+                                TileSpawner::add_components_from_shape(
+                                    &models
+                                        .iter()
+                                        .find(|m| m.layer == SpriteLayer::Front)
+                                        .unwrap()
+                                        .shape,
+                                    tile,
+                                    child_builder,
+                                );
+                            }
+                        }
                     }
                     _ => {
-                        if definition.specifier == ObjectSpecifier::Terrain {
-                            insert(child_builder, tile, Floor);
-                        }
-
-                        let up = definition.id.is_stairs_up();
-                        let down = definition.id.is_stairs_down();
-                        if up || down {
-                            // can be both
-
-                            if up {
-                                insert(child_builder, tile, StairsUp);
-                            }
-
-                            if down {
-                                insert(child_builder, tile, StairsDown);
-                            }
-                        } else {
-                            TileSpawner::add_components_from_shape(
-                                &models
-                                    .iter()
-                                    .find(|m| m.layer == SpriteLayer::Front)
-                                    .unwrap()
-                                    .shape,
-                                tile,
-                                child_builder,
-                            );
-                        }
+                        // pass
                     }
                 }
             })

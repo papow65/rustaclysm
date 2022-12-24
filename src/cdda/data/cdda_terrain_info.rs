@@ -1,4 +1,4 @@
-use crate::prelude::ItemName;
+use crate::prelude::{Flags, ItemName};
 use bevy::utils::HashMap;
 use serde::Deserialize;
 
@@ -9,7 +9,11 @@ pub(crate) enum CddaTerrainInfo {
     Terrain {
         name: ItemName,
 
+        move_cost: u8,
+
         coverage: Option<u8>,
+
+        flags: Flags,
 
         #[allow(unused)]
         #[serde(flatten)]

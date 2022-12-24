@@ -100,7 +100,7 @@ impl Submap {
             temperature: 0,
             radiation: Vec::new(),
             terrain: RepetitionBlock::new(CddaAmount {
-                obj: ObjectId::new("unknown"),
+                obj: ObjectId::new("t_dirt"),
                 amount: 144,
             }),
             furniture: Vec::new(),

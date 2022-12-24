@@ -33,7 +33,9 @@ impl From<&Label> for String {
 }
 
 #[derive(Component)]
-pub(crate) struct Floor;
+pub(crate) struct Floor {
+    pub(crate) move_cost: u8,
+}
 
 #[derive(Component)]
 pub(crate) struct Wall;
