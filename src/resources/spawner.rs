@@ -1,12 +1,12 @@
 use crate::prelude::*;
 use bevy::{
-    ecs::system::{Insert, Remove, SystemParam},
+    ecs::system::{Insert, SystemParam},
     math::Quat,
     prelude::*,
     render::camera::{PerspectiveProjection, Projection::Perspective},
     utils::HashMap,
 };
-use std::path::PathBuf;
+use std::{cmp::Ordering, path::PathBuf};
 
 fn insert<T>(child_builder: &mut ChildBuilder, entity: Entity, bundle: T)
 where
@@ -157,47 +157,49 @@ impl<'w, 's> TileSpawner<'w, 's> {
                         insert(child_builder, tile, Container(0));
                     }
                     ObjectSpecifier::Terrain => {
-                        if let CddaTerrainInfo::Terrain {
-                            move_cost,
-                            coverage,
-                            flags,
-                            ..
-                        } = self
+                        let terrain_info = self
                             .infos
                             .terrain(definition.id)
-                            .unwrap_or_else(|| panic!("{:?}", definition.id))
-                        {
-                            let move_cost = *move_cost;
-                            if 0 < move_cost.0 {
-                                insert(child_builder, tile, Floor { move_cost });
-                            }
+                            .unwrap_or_else(|| panic!("{:?}", definition.id));
+                        match terrain_info {
+                            CddaTerrainInfo::Terrain {
+                                move_cost, flags, ..
+                            } => {
+                                let move_cost = *move_cost;
+                                if 0 < move_cost.0 {
+                                    insert(child_builder, tile, Floor { move_cost });
+                                } else {
+                                    insert(child_builder, tile, Obstacle);
+                                }
 
-                            if coverage.map(|c| 0 < c) == Some(true) {
-                                insert(child_builder, tile, Obstacle);
-                            }
+                                if !flags.is_transparent() {
+                                    insert(child_builder, tile, Opaque);
+                                }
 
-                            let up = flags.goes_up();
-                            let down = flags.goes_down();
-                            if up || down {
-                                // can be both
-
-                                if up {
+                                if flags.goes_up() {
                                     insert(child_builder, tile, StairsUp);
                                 }
 
-                                if down {
+                                if flags.goes_down() {
                                     insert(child_builder, tile, StairsDown);
                                 }
-                            } else {
-                                TileSpawner::add_components_from_shape(
-                                    &models
-                                        .iter()
-                                        .find(|m| m.layer == SpriteLayer::Front)
-                                        .unwrap()
-                                        .shape,
-                                    tile,
-                                    child_builder,
-                                );
+                            }
+                            CddaTerrainInfo::FieldType { .. } => {}
+                        }
+                    }
+                    ObjectSpecifier::Furniture => {
+                        let furniture_info = self
+                            .infos
+                            .furniture(definition.id)
+                            .unwrap_or_else(|| panic!("{:?}", definition.id));
+
+                        match furniture_info.move_cost_mod.0.cmp(&0) {
+                            Ordering::Less => {
+                                insert(child_builder, tile, Obstacle);
+                            }
+                            Ordering::Equal => {}
+                            Ordering::Greater => {
+                                insert(child_builder, tile, Hurdle(furniture_info.move_cost_mod));
                             }
                         }
                     }
@@ -207,44 +209,6 @@ impl<'w, 's> TileSpawner<'w, 's> {
                 }
             })
             .id()
-    }
-
-    fn add_components_from_shape(
-        shape: &ModelShape,
-        tile: Entity,
-        child_builder: &mut ChildBuilder,
-    ) {
-        match shape {
-            ModelShape::Plane {
-                orientation,
-                transform2d,
-            } => {
-                if orientation == &SpriteOrientation::Vertical {
-                    match transform2d.scale.y {
-                        y if 2.5 < y => {
-                            insert(child_builder, tile, Opaque);
-                            //insert(child_builder, tile, Obstacle);
-                            child_builder.add_command(Remove {
-                                entity: tile,
-                                phantom: core::marker::PhantomData::<Floor>,
-                            });
-                        }
-                        y if 2.0 < y => {
-                            insert(child_builder, tile, Hurdle(2.0));
-                            insert(child_builder, tile, Opaque);
-                        }
-                        _ => {
-                            insert(child_builder, tile, Hurdle(1.5));
-                            insert(child_builder, tile, Integrity::new(10));
-                        }
-                    }
-                }
-            }
-            ModelShape::Cuboid { .. } => {
-                //insert(child_builder, tile, Obstacle);
-                insert(child_builder, tile, Opaque);
-            }
-        }
     }
 
     pub(crate) fn spawn_expanded_subzone_level(
@@ -573,7 +537,7 @@ impl<'w, 's> Spawner<'w, 's> {
             .insert(pos)
             .insert(Integrity::new(1))
             .insert(Obstacle)
-            .insert(Hurdle(2.5))
+            .insert(Hurdle(MoveCostMod(2)))
             .insert(Label::new("window"))
             .insert(LastSeen::Never)
             .insert(Visibility::INVISIBLE)
@@ -604,7 +568,7 @@ impl<'w, 's> Spawner<'w, 's> {
             .insert(StairsUp)
             .insert(pos)
             .insert(Integrity::new(100))
-            .insert(Hurdle(1.5))
+            .insert(Hurdle(MoveCostMod(1)))
             .insert(Label::new("stairs"))
             .insert(LastSeen::Never)
             .insert(Visibility::INVISIBLE)
@@ -649,7 +613,7 @@ impl<'w, 's> Spawner<'w, 's> {
             .insert(Table)
             .insert(pos)
             .insert(Integrity::new(30))
-            .insert(Hurdle(2.0))
+            .insert(Hurdle(MoveCostMod(2)))
             .insert(Label::new("table"))
             .insert(LastSeen::Never)
             .insert(Visibility::INVISIBLE)
@@ -673,7 +637,7 @@ impl<'w, 's> Spawner<'w, 's> {
             .insert(Chair)
             .insert(pos)
             .insert(Integrity::new(10))
-            .insert(Hurdle(1.5))
+            .insert(Hurdle(MoveCostMod(3)))
             .insert(Label::new("chair"))
             .insert(LastSeen::Never)
             .insert(Visibility::INVISIBLE)

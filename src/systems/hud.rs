@@ -460,7 +460,7 @@ fn entity_info(
     }
     let hurdle_str;
     if let Some(hurdle) = hurdle {
-        hurdle_str = format!("hurdle ({})", hurdle.0);
+        hurdle_str = format!("hurdle ({})", hurdle.0 .0);
         flags.push(hurdle_str.as_str());
     }
     if opaque.is_some() {

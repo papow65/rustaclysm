@@ -8,6 +8,7 @@ pub(crate) struct Envir<'w, 's> {
     pub(crate) location: ResMut<'w, Location>,
     relative_segments: Res<'w, RelativeSegments>,
     floors: Query<'w, 's, &'static Floor>,
+    hurdles: Query<'w, 's, &'static Hurdle>,
     stairs_up: Query<'w, 's, &'static StairsUp>,
     stairs_down: Query<'w, 's, &'static StairsDown>,
     obstacles: Query<'w, 's, &'static Label, With<Obstacle>>,
@@ -216,7 +217,11 @@ impl<'w, 's> Envir<'w, 's> {
 
         let move_cost = if diagonal + adjacent + up + down == 1 {
             // nbors, the precise value matters in some cases
-            self.location.get_first(to, &self.floors).unwrap().move_cost
+            self.location
+                .get_first(to, &self.floors)
+                .unwrap()
+                .move_cost
+                .adjust(self.location.get_first(to, &self.hurdles).map(|h| h.0))
         } else {
             // estimate
             MoveCost::default()

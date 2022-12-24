@@ -3,7 +3,7 @@ mod faction;
 mod player;
 mod pos;
 
-use crate::prelude::{MoveCost, Partial, Visible};
+use crate::prelude::{MoveCost, MoveCostMod, Partial, Visible};
 use bevy::prelude::{AlphaMode, Assets, Color, Component, Handle, StandardMaterial};
 use std::fmt;
 
@@ -66,7 +66,7 @@ pub(crate) struct WindowPane;
 pub(crate) struct Obstacle;
 
 #[derive(Component)]
-pub(crate) struct Hurdle(pub(crate) f32);
+pub(crate) struct Hurdle(pub(crate) MoveCostMod);
 
 #[derive(Component)]
 pub(crate) struct Opaque;

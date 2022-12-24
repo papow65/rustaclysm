@@ -24,4 +24,8 @@ impl Flags {
     pub(crate) fn goes_down(&self) -> bool {
         self.contains("GOES_DOWN") || self.contains("RAMP_DOWN") || self.contains("CLIMBABLE")
     }
+
+    pub(crate) fn is_transparent(&self) -> bool {
+        self.contains("TRANSPARENT")
+    }
 }

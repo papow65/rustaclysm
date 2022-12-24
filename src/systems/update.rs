@@ -267,7 +267,7 @@ pub(crate) fn update_damaged_items(
         } else {
             commands
                 .entity(item)
-                .insert(Hurdle(3.0))
+                .insert(Hurdle(MoveCostMod(3)))
                 .remove::<Obstacle>();
             commands.spawn(Message::new(format!("{} breaks {label}", damage.attacker)));
         }
