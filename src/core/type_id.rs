@@ -62,7 +62,7 @@ impl TypeId {
         ]
     }
 
-    pub(crate) fn get<'a>(value: &'a str) -> &Self {
+    pub(crate) fn get(value: &'_ str) -> &Self {
         Self::all()
             .iter()
             .copied()

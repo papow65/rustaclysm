@@ -141,7 +141,7 @@ impl<'w, 's> Envir<'w, 's> {
                     nbor.clone(),
                     npos,
                     WalkingCost::new(
-                        nbor.distance(),
+                        &nbor.distance(),
                         self.location
                             .get_first(npos, &self.floors)
                             .map_or_else(MoveCost::default, |floor| floor.move_cost),
@@ -232,9 +232,9 @@ impl<'w, 's> Envir<'w, 's> {
             .chain(repeat(NborDistance::Adjacent).take(adjacent))
             .chain(repeat(NborDistance::Diagonal).take(diagonal))
             .chain(repeat(NborDistance::Down).take(down))
-            .map(|nd| WalkingCost::new(nd, move_cost))
+            .map(|nd| WalkingCost::new(&nd, move_cost))
             .reduce(|total, item| total + item)
-            .unwrap_or_else(|| WalkingCost::new(NborDistance::Zero, move_cost))
+            .unwrap_or_else(|| WalkingCost::new(&NborDistance::Zero, move_cost))
     }
 
     pub(crate) fn path(

@@ -13,11 +13,8 @@ pub(crate) struct Infos {
 }
 
 impl Infos {
-    pub(crate) fn new() -> Self {
-        let mut literals: HashMap<
-            TypeId,
-            HashMap<String, serde_json::Map<String, serde_json::Value>>,
-        > = HashMap::default();
+    fn literals() -> HashMap<TypeId, HashMap<String, serde_json::Map<String, serde_json::Value>>> {
+        let mut literals = HashMap::default();
         for type_ids in TypeId::all() {
             for type_id in type_ids.iter() {
                 literals.insert(type_id.clone(), HashMap::default());
@@ -82,10 +79,10 @@ impl Infos {
                     let by_type = literals.get_mut(&type_.clone()).unwrap();
 
                     /*match by_type.entry(id.clone()) {
-                        Entry::Occupied(..) => panic!("double entry for {:?}", id),
-                        entry @ Entry::Vacant(..) => {
-                            entry.insert(content.clone());
-                        }
+                         *                        Entry::Occupied(..) => panic!("double entry for {:?}", id),
+                         *                        entry @ Entry::Vacant(..) => {
+                         *                            entry.insert(content.clone());
+                    }
                     }*/
 
                     assert!(by_type.get(&id).is_none(), "double entry for {:?}", &id);
@@ -94,11 +91,13 @@ impl Infos {
             }
         }
         assert!(!literals.is_empty());
+        literals
+    }
 
-        let mut enricheds: HashMap<
-            TypeId,
-            HashMap<ObjectId, serde_json::Map<String, serde_json::Value>>,
-        > = HashMap::default();
+    fn enricheds() -> HashMap<TypeId, HashMap<ObjectId, serde_json::Map<String, serde_json::Value>>>
+    {
+        let mut enricheds = HashMap::default();
+        let literals = Self::literals();
         for (type_id, literal_entry) in &literals {
             let enriched_of_type = enricheds
                 .entry(type_id.clone())
@@ -142,7 +141,11 @@ impl Infos {
                 enriched_of_type.insert(ObjectId::new(object_id), enriched);
             }
         }
+        enricheds
+    }
 
+    pub(crate) fn new() -> Self {
+        let mut enricheds = Self::enricheds();
         Self {
             items: Self::extract(&mut enricheds, TypeId::ITEM),
             furniture: Self::extract(&mut enricheds, TypeId::FURNITURE),

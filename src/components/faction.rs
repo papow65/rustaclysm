@@ -126,7 +126,7 @@ impl Faction {
             return None;
         }
 
-        let up_time = WalkingCost::new(NborDistance::Up, MoveCost::default()).duration(speed);
+        let up_time = WalkingCost::new(&NborDistance::Up, MoveCost::default()).duration(speed);
 
         // Higher gives better results but is slower
         let planning_limit: u64 = 5;
