@@ -116,8 +116,9 @@ impl ObjectId {
                 transform2d: transform2d.clone(),
             }
         } else {
-            assert!(
-                transform2d == &Transform2d::default(),
+            assert_eq!(
+                transform2d,
+                &Transform2d::default(),
                 "no standard transform for foreground of {:?}: {:?}",
                 self,
                 transform2d

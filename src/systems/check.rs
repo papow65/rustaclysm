@@ -19,8 +19,9 @@ pub(crate) fn check_obstacle_location(
 
     for (a, &a_p, a_s) in items.iter() {
         let (b, _, b_s) = location.get_first(a_p, &items).unwrap();
-        assert!(
-            a == b,
+        assert_eq!(
+            a,
+            b,
             "Overlap of {} and {} at {:?}",
             a_s.unwrap_or(&Label::new("?")),
             b_s.unwrap_or(&Label::new("?")),
@@ -38,8 +39,9 @@ pub(crate) fn check_overlap(all_obstacles: Query<(Entity, &Pos, Option<&Label>),
     for (a, &a_p, a_s) in all_obstacles.iter() {
         for (b, &b_p, b_s) in all_obstacles.iter() {
             if a.index() < b.index() {
-                assert!(
-                    a_p != b_p,
+                assert_ne!(
+                    a_p,
+                    b_p,
                     "Overlap of {} and {} at {:?}",
                     a_s.unwrap_or(&Label::new("?")),
                     b_s.unwrap_or(&Label::new("?")),
@@ -62,8 +64,9 @@ pub(crate) fn check_hierarchy(
     let start = Instant::now();
 
     for (entity, pos, parent, label) in changed.iter() {
-        assert!(
-            pos.is_some() != parent.is_some(),
+        assert_ne!(
+            pos.is_some(),
+            parent.is_some(),
             "hierarchy violation of {} {} {}",
             label.map_or_else(
                 || format!("entity {entity:?} without label"),

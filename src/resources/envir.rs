@@ -216,7 +216,7 @@ impl<'w, 's> Envir<'w, 's> {
     }
 
     pub(crate) fn collide(&self, from: Pos, to: Pos, controlled: bool) -> Collision {
-        assert!(from != to);
+        assert_ne!(from, to);
         assert!(self.are_nbors(from, to));
 
         match to.level.cmp(&from.level) {
@@ -279,7 +279,7 @@ impl Path {
             astar(&from, successors, heuristic, |&pos| pos == destination)
         {
             assert!(!steps.is_empty());
-            assert!(steps.remove(0) == from);
+            assert_eq!(steps.remove(0), from);
             assert!(!steps.is_empty());
             Some(Self {
                 first: *steps.first().unwrap(),

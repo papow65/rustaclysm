@@ -54,7 +54,10 @@ impl Infos {
                 let type_ = content.get("type").expect("type present");
                 let type_ = TypeId::get(type_.as_str().expect("string value for type"));
 
-                assert!(content.get("id").is_some() != content.get("abstract").is_some(),);
+                assert_ne!(
+                    content.get("id").is_some(),
+                    content.get("abstract").is_some()
+                );
 
                 let mut ids = Vec::new();
                 match content
@@ -140,18 +143,11 @@ impl Infos {
             }
         }
 
-        // TODO "enchantment" "fault" "item_group" "MIGRATION"
-
-        let items = Self::extract::<CddaItemInfo>(&mut enricheds, TypeId::ITEM);
-        let furniture = Self::extract::<CddaFurnitureInfo>(&mut enricheds, TypeId::FURNITURE);
-        let terrain = Self::extract::<CddaTerrainInfo>(&mut enricheds, TypeId::TERRAIN);
-        let zone_level = Self::extract::<CddaOvermapInfo>(&mut enricheds, TypeId::OVERMAP);
-
         Self {
-            items,
-            furniture,
-            terrain,
-            zone_level,
+            items: Self::extract(&mut enricheds, TypeId::ITEM),
+            furniture: Self::extract(&mut enricheds, TypeId::FURNITURE),
+            terrain: Self::extract(&mut enricheds, TypeId::TERRAIN),
+            zone_level: Self::extract(&mut enricheds, TypeId::OVERMAP),
         }
     }
 

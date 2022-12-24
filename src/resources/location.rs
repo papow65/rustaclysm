@@ -24,7 +24,7 @@ impl Location {
 
         if let Some(pos) = pos {
             if let Some(vec) = self.objects.get_mut(&pos) {
-                assert!(!vec.iter().any(|&x| x == entity));
+                assert!(!vec.contains(&entity));
                 vec.push(entity);
                 //println!("\n\rTogether {vec:?}");
             } else {

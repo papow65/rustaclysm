@@ -110,8 +110,8 @@ impl<T> RepetitionBlock<T> {
             }
             i += amount;
         }
-        assert!(i == size * size);
-        assert!(result.len() == i as usize, "{} <-> {i}", result.len());
+        assert_eq!(i, size * size);
+        assert_eq!(result.len(), i as usize);
         result
     }
 }

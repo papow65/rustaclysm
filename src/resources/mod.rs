@@ -223,28 +223,23 @@ impl RelativeSegments {
             }
         }
 
-        assert!(
-            rays.get(&Pos::ORIGIN) == Some(&RelativeRay { path: Vec::new() }),
-            "{:?}",
-            rays.get(&Pos::ORIGIN)
+        assert_eq!(
+            rays.get(&Pos::ORIGIN),
+            Some(&RelativeRay { path: Vec::new() })
         );
 
-        assert!(
-            rays.get(&Pos::new(1, Level::ZERO, 0))
-                == Some(&RelativeRay {
-                    path: vec![Pos::new(1, Level::ZERO, 0)],
-                }),
-            "{:?}",
-            rays.get(&Pos::new(1, Level::ZERO, 0))
+        assert_eq!(
+            rays.get(&Pos::new(1, Level::ZERO, 0)),
+            Some(&RelativeRay {
+                path: vec![Pos::new(1, Level::ZERO, 0)],
+            })
         );
 
-        assert!(
-            rays.get(&Pos::new(2, Level::ZERO, 0))
-                == Some(&RelativeRay {
-                    path: vec![Pos::new(1, Level::ZERO, 0), Pos::new(2, Level::ZERO, 0)],
-                }),
-            "{:?}",
-            rays.get(&Pos::new(2, Level::ZERO, 0))
+        assert_eq!(
+            rays.get(&Pos::new(2, Level::ZERO, 0)),
+            Some(&RelativeRay {
+                path: vec![Pos::new(1, Level::ZERO, 0), Pos::new(2, Level::ZERO, 0)],
+            })
         );
 
         let lower_bound = (2 * MAX_VISIBLE_DISTANCE as usize + 1).pow(2) * Level::AMOUNT / 2;
@@ -263,24 +258,21 @@ impl RelativeSegments {
 
         for i in 2..=60 {
             let offset = Pos::new(i, Level::ZERO, 0) - Pos::ORIGIN;
-            assert!(
-                segments.get(&offset)
-                    == Some(&RelativeSegment {
-                        preceding: Some(PosOffset {
-                            x: i - 1,
-                            level: LevelOffset::ZERO,
-                            z: 0
-                        }),
-                        segment: vec![PosOffset {
-                            x: i - 1,
-                            level: LevelOffset::ZERO,
-                            z: 0
-                        }],
-                        down_pairs: Vec::new()
+            assert_eq!(
+                segments.get(&offset),
+                Some(&RelativeSegment {
+                    preceding: Some(PosOffset {
+                        x: i - 1,
+                        level: LevelOffset::ZERO,
+                        z: 0
                     }),
-                "{:?} -> {:?}",
-                offset,
-                segments.get(&offset)
+                    segment: vec![PosOffset {
+                        x: i - 1,
+                        level: LevelOffset::ZERO,
+                        z: 0
+                    }],
+                    down_pairs: Vec::new()
+                }),
             );
         }
 

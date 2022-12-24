@@ -255,8 +255,9 @@ impl<'w, 's> TileSpawner<'w, 's> {
             .map(|map| map.0.into_iter().nth(subzone_level.index()).unwrap())
             .or_else(|| Submap::fallback(subzone_level))
         {
-            assert!(
-                submap.coordinates == subzone_level.coordinates(),
+            assert_eq!(
+                submap.coordinates,
+                subzone_level.coordinates(),
                 "{:?} {:?}",
                 submap.coordinates,
                 subzone_level.coordinates()
