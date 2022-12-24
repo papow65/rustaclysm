@@ -1,60 +1,9 @@
-use crate::prelude::ObjectName;
+use crate::prelude::{Label, ObjectId};
 use bevy::utils::HashMap;
 use serde::Deserialize;
-use std::fs::read_to_string;
-use std::path::PathBuf;
-
-/** Corresponds to an item file, under data/json/items/ . */
-#[derive(Debug, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub(crate) struct CddaItemInfoList(pub(crate) Vec<CddaItemInfo>);
-
-impl TryFrom<PathBuf> for CddaItemInfoList {
-    type Error = ();
-    fn try_from(path: PathBuf) -> Result<Self, Self::Error> {
-        let file_contents =
-            read_to_string(&path).unwrap_or_else(|_| panic!("Could not read {}", path.display()));
-        //println!("Found items file: {}", path.display());
-        let mut list: Vec<CddaItemInfo> = Vec::new();
-        serde_json::from_str::<Vec<serde_json::Value>>(file_contents.as_str())
-            .unwrap_or_else(|e| panic!("Failed to parse file {}: {e}", path.display()))
-            .into_iter()
-            .filter_map(|v| {
-                match v
-                    .get("type")
-                    .expect("element with type")
-                    .as_str()
-                    .expect("type is a str")
-                {
-                    "AMMO" | "ARMOR" | "BATTERY" | "BIONIC_ITEM" | "BOOK" | "COMESTIBLE"
-                    | "ENGINE" | "GENERIC" | "GUN" | "GUNMOD" | "MAGAZINE" | "PET_ARMOR"
-                    | "SPELL" | "TOOL" | "TOOLMOD" | "TOOL_ARMOR" | "WHEEL" => {
-                        serde_json::from_value(v.clone()).unwrap_or_else(|e| {
-                            panic!("Failed to parse element {}\n{e}\n{:?}", path.display(), &v)
-                        })
-                    }
-                    "MIGRATION" | "ammunition_type" | "enchantment" | "fault" | "item_group" => {
-                        // TODO using separate types
-                        None
-                    }
-                    other => panic!("unknown type {other}"),
-                }
-            })
-            .for_each(|c| list.push(c));
-        Ok(Self(list))
-    }
-}
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct CddaItemInfo {
-    pub(crate) id: Option<ObjectName>,
-
-    #[serde(rename(deserialize = "abstract"))]
-    pub(crate) abstract_: Option<ObjectName>,
-
-    #[serde(rename(deserialize = "copy-from"))]
-    pub(crate) copy_from: Option<ObjectName>,
-
     pub(crate) category: Option<String>,
     pub(crate) effects: Option<Vec<String>>,
 
@@ -121,7 +70,7 @@ pub(crate) struct CddaItemInfo {
     #[serde(rename(deserialize = "type"))]
     pub(crate) type_: String,
 
-    pub(crate) name: CddaItemName,
+    pub(crate) name: ItemName,
     pub(crate) description: Option<Description>,
     pub(crate) symbol: Option<char>,
     pub(crate) color: Option<String>,
@@ -154,7 +103,7 @@ pub(crate) struct CddaItemInfo {
     pub(crate) countdown_destroy: Option<serde_json::Value>,
     pub(crate) countdown_action: Option<serde_json::Value>,
     pub(crate) drop_action: Option<serde_json::Value>,
-    pub(crate) looks_like: Option<ObjectName>,
+    pub(crate) looks_like: Option<ObjectId>,
     pub(crate) conditional_names: Option<serde_json::Value>,
     pub(crate) armor_data: Option<serde_json::Value>,
     pub(crate) pet_armor_data: Option<serde_json::Value>,
@@ -199,6 +148,42 @@ pub(crate) enum CddaItemName {
         #[serde(rename(deserialize = "//~"))]
         comment: Option<String>,
     },
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(from = "CddaItemName")]
+pub(crate) struct ItemName {
+    single: String,
+    plural: String,
+}
+
+impl ItemName {
+    pub(crate) fn to_label(&self, amount: usize) -> Label {
+        Label::new(if amount == 1 {
+            &self.single
+        } else {
+            &self.plural
+        })
+    }
+}
+
+impl From<CddaItemName> for ItemName {
+    fn from(origin: CddaItemName) -> Self {
+        match origin {
+            CddaItemName::Simple(string) => ItemName {
+                single: string.clone(),
+                plural: string + "s",
+            },
+            CddaItemName::Both { str_sp, .. } => ItemName {
+                single: str_sp.clone(),
+                plural: str_sp,
+            },
+            CddaItemName::Split { str, str_pl, .. } => ItemName {
+                single: str.clone(),
+                plural: str_pl.unwrap_or_else(|| str.clone() + "s"),
+            },
+        }
+    }
 }
 
 #[derive(Clone, Debug, Deserialize)]

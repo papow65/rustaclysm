@@ -1,18 +1,18 @@
 mod instruction;
-mod item_info;
 mod key;
 mod mesh;
 mod model;
 mod nbor;
 mod object_definition;
-mod object_name;
+mod object_id;
 mod offset;
 mod region;
+mod type_id;
 mod unit;
 
 pub(crate) use self::{
-    instruction::*, item_info::*, key::*, mesh::*, model::*, nbor::*, object_definition::*,
-    object_name::*, offset::*, region::*, unit::*,
+    instruction::*, key::*, mesh::*, model::*, nbor::*, object_definition::*, object_id::*,
+    offset::*, region::*, type_id::*, unit::*,
 };
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]

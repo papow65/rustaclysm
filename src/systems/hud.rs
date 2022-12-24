@@ -309,8 +309,8 @@ pub(crate) fn update_status_player_state(
 pub(crate) fn update_status_detais(
     envir: Envir,
     mut explored: ResMut<Explored>,
-    mut labels: ResMut<ZoneLevelNames>,
-    characters: Query<(Option<&Label>, &Health), Without<Item>>,
+    mut labels: ResMut<ZoneLevelIds>,
+    characters: Query<(Option<&Label>, &Health)>,
     entities: Query<
         (
             Option<&Label>,
@@ -326,9 +326,9 @@ pub(crate) fn update_status_detais(
             Option<&LastSeen>,
             Option<&Visibility>,
         ),
-        (Without<Health>, Without<Item>),
+        (Without<Health>, Without<Amount>),
     >,
-    items: Query<(Option<&Label>, &Item), Without<Health>>,
+    items: Query<(Option<&Label>, &Amount), Without<Health>>,
     player: Query<&Player, Changed<Player>>,
     mut status_displays: Query<&mut Text, With<StatusDisplay>>,
     _globs: Query<(&GlobalTransform, Option<&ZoneLevel>)>,
@@ -374,7 +374,7 @@ pub(crate) fn update_status_detais(
                         zone_level,
                         labels
                             .get(zone_level)
-                            .unwrap_or(&ObjectName::new("NOT FOUND"))
+                            .unwrap_or(&ObjectId::new("NOT FOUND"))
                     )
                 }
             }
@@ -385,10 +385,7 @@ pub(crate) fn update_status_detais(
     log_if_slow("update_status_detais", start);
 }
 
-fn characters_info(
-    all_here: &[Entity],
-    characters: &Query<(Option<&Label>, &Health), Without<Item>>,
-) -> String {
+fn characters_info(all_here: &[Entity], characters: &Query<(Option<&Label>, &Health)>) -> String {
     all_here
         .iter()
         .flat_map(|&i| characters.get(i))
@@ -487,11 +484,11 @@ fn entity_info(
 
 fn items_info(
     all_here: &[Entity],
-    items: &Query<(Option<&Label>, &Item), Without<Health>>,
+    items: &Query<(Option<&Label>, &Amount), Without<Health>>,
 ) -> String {
     let mut grouped_items = BTreeMap::<Option<&Label>, u32>::new();
     for (label, item) in all_here.iter().flat_map(|&i| items.get(i)) {
-        *grouped_items.entry(label).or_insert(0) += item.amount;
+        *grouped_items.entry(label).or_insert(0) += item.0;
     }
     grouped_items
         .iter()

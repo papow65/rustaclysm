@@ -1,6 +1,6 @@
 use crate::prelude::{
-    Amount, At, AtVec, FieldVec, FlatVec, Level, ObjectName, PathFor, Repetition, RepetitionBlock,
-    SubzoneLevel, WorldPath, ZoneLevel,
+    At, AtVec, CddaAmount, FieldVec, FlatVec, Level, ObjectId, PathFor, Repetition,
+    RepetitionBlock, SubzoneLevel, WorldPath, ZoneLevel,
 };
 use bevy::utils::HashMap;
 use serde::Deserialize;
@@ -63,12 +63,12 @@ pub(crate) struct Submap {
     #[allow(unused)]
     radiation: Vec<i64>,
 
-    pub(crate) terrain: RepetitionBlock<ObjectName>,
-    pub(crate) furniture: Vec<At<ObjectName>>,
+    pub(crate) terrain: RepetitionBlock<ObjectId>,
+    pub(crate) furniture: Vec<At<ObjectId>>,
     pub(crate) items: AtVec<Vec<Repetition<CddaItem>>>,
 
     #[allow(unused)]
-    traps: Vec<At<ObjectName>>,
+    traps: Vec<At<ObjectId>>,
 
     pub(crate) fields: AtVec<FieldVec>,
 
@@ -99,8 +99,8 @@ impl Submap {
             coordinates: subzone_level.coordinates(),
             temperature: 0,
             radiation: Vec::new(),
-            terrain: RepetitionBlock::new(Amount {
-                obj: ObjectName::new("unknown"),
+            terrain: RepetitionBlock::new(CddaAmount {
+                obj: ObjectId::new("unknown"),
                 amount: 144,
             }),
             furniture: Vec::new(),
@@ -119,14 +119,14 @@ impl Submap {
 #[derive(Debug)]
 pub(crate) struct Furniture {
     #[allow(unused)]
-    tile_name: ObjectName,
+    id: ObjectId,
 }
 
 #[allow(unused)]
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct CddaItem {
-    pub(crate) typeid: ObjectName,
+    pub(crate) typeid: ObjectId,
     snip_id: Option<String>,
     pub(crate) charges: Option<u32>,
     active: Option<bool>,
@@ -188,7 +188,7 @@ pub(crate) struct Pocket {
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct Spawn {
-    pub(crate) spawn_type: ObjectName,
+    pub(crate) id: ObjectId,
 
     #[allow(unused)]
     count: i32,

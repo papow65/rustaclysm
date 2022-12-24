@@ -5,7 +5,7 @@ use serde::Deserialize;
 use std::hash::Hash;
 
 #[derive(Debug, Deserialize)]
-pub(crate) struct Amount<T> {
+pub(crate) struct CddaAmount<T> {
     pub(crate) obj: T,
 
     /// can be 1, should not be 0
@@ -13,7 +13,7 @@ pub(crate) struct Amount<T> {
 }
 
 #[derive(Debug)]
-pub(crate) struct Single<T>(Amount<T>);
+pub(crate) struct Single<T>(CddaAmount<T>);
 
 impl<'de, T> Deserialize<'de> for Single<T>
 where
@@ -24,7 +24,7 @@ where
         D: Deserializer<'de>,
     {
         let obj: T = Deserialize::deserialize(deserializer)?;
-        Ok(Single(Amount { obj, amount: 1 }))
+        Ok(Single(CddaAmount { obj, amount: 1 }))
     }
 }
 
@@ -32,11 +32,11 @@ where
 #[serde(untagged)]
 pub(crate) enum Repetition<T> {
     Single(Single<T>),
-    Multiple(Amount<T>),
+    Multiple(CddaAmount<T>),
 }
 
 impl<T> Repetition<T> {
-    pub(crate) fn as_amount(&self) -> &Amount<T> {
+    pub(crate) fn as_amount(&self) -> &CddaAmount<T> {
         match self {
             Self::Single(m) => &m.0,
             Self::Multiple(m) => m,
@@ -48,7 +48,7 @@ impl<T> Repetition<T> {
 pub(crate) struct RepetitionBlock<T>(Vec<Repetition<T>>);
 
 impl<T> RepetitionBlock<T> {
-    pub(crate) fn new(amount: Amount<T>) -> Self {
+    pub(crate) fn new(amount: CddaAmount<T>) -> Self {
         Self(vec![Repetition::Multiple(amount)])
     }
 
@@ -103,7 +103,7 @@ impl<T> RepetitionBlock<T> {
         let mut result = HashMap::new();
         let mut i: i32 = 0;
         for repetition in &self.0 {
-            let Amount { obj, amount } = repetition.as_amount();
+            let CddaAmount { obj, amount } = repetition.as_amount();
             let amount = *amount as i32;
             for j in i..i + amount {
                 result.insert(location(j.rem_euclid(size), j.div_euclid(size)), obj);

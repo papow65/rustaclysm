@@ -6,7 +6,7 @@ use std::{fs::read_to_string, path::PathBuf};
 
 #[derive(Debug)]
 struct TileInfo {
-    names: Vec<ObjectName>,
+    names: Vec<ObjectId>,
     foreground: Vec<SpriteNumber>,
     background: Vec<SpriteNumber>,
 }
@@ -19,11 +19,11 @@ impl TileInfo {
                 let mut tile_names = Vec::new();
                 match &tile["id"] {
                     serde_json::Value::String(s) => {
-                        tile_names.push(ObjectName::new(s));
+                        tile_names.push(ObjectId::new(s));
                     }
                     serde_json::Value::Array(list) => {
                         for item in list {
-                            tile_names.push(ObjectName::new(item.as_str().unwrap()));
+                            tile_names.push(ObjectId::new(item.as_str().unwrap()));
                         }
                     }
                     other => panic!("{other:?}"),
@@ -85,7 +85,7 @@ struct Atlas {
 }
 
 impl Atlas {
-    fn new(json: &serde_json::Value, tiles: &mut HashMap<ObjectName, TileInfo>) -> Option<Self> {
+    fn new(json: &serde_json::Value, tiles: &mut HashMap<ObjectId, TileInfo>) -> Option<Self> {
         let atlas = json.as_object().unwrap();
         let filename = atlas["file"].as_str().unwrap();
         if filename == "fallback.png" {
@@ -170,7 +170,7 @@ impl Atlas {
 
 #[derive(Resource)]
 pub(crate) struct TileLoader {
-    tiles: HashMap<ObjectName, TileInfo>,
+    tiles: HashMap<ObjectId, TileInfo>,
     textures: HashMap<SpriteNumber, TextureInfo>,
 }
 
@@ -230,17 +230,17 @@ impl TileLoader {
     pub(crate) fn get_models(&self, definition: &ObjectDefinition) -> Vec<Model> {
         let mut bundles = Vec::new();
         let (foreground, background) = definition
-            .name
+            .id
             .variants()
             .iter()
             .find_map(|variant| self.tiles.get(variant))
             .unwrap_or_else(|| {
                 eprintln!(
                     "{:?} not found. Variants: {:?}. Falling back to default sprite",
-                    definition.name,
-                    definition.name.variants()
+                    definition.id,
+                    definition.id.variants()
                 );
-                self.tiles.get(&ObjectName::new("unknown")).unwrap()
+                self.tiles.get(&ObjectId::new("unknown")).unwrap()
             })
             .sprite_numbers();
         /*if tile_name.0.as_str() != "t_dirt" && !tile_name.0.starts_with("t_grass") {

@@ -1,10 +1,10 @@
 mod debug;
 mod envir;
 mod explored;
-mod item_infos;
+mod infos;
 mod location;
 mod spawner;
-mod zone_level_names;
+mod zone_level_ids;
 
 use crate::prelude::*;
 use bevy::{
@@ -15,7 +15,7 @@ use bevy::{
 use std::iter::once;
 
 pub(crate) use self::{
-    debug::*, envir::*, explored::*, item_infos::*, location::*, spawner::*, zone_level_names::*,
+    debug::*, envir::*, explored::*, infos::*, location::*, spawner::*, zone_level_ids::*,
 };
 
 pub(crate) enum Collision {

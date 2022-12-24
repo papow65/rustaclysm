@@ -166,7 +166,10 @@ fn spawn_expanded_subzone_levels(
         if !expanded_zone_levels.contains(&subzone_level) {
             if let Err(e) = tile_spawner.spawn_expanded_subzone_level(subzone_level) {
                 //eprintln!("While loading {zone_level:?}: {e}");
-                panic!("While loading {subzone_level:?}: {e}");
+                panic!(
+                    "While loading {subzone_level:?} in {:?}: {e}",
+                    ZoneLevel::from(subzone_level)
+                );
             }
         }
     }

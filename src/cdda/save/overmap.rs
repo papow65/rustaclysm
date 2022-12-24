@@ -1,4 +1,4 @@
-use crate::prelude::{Level, ObjectName, Overzone, PathFor, RepetitionBlock, WorldPath};
+use crate::prelude::{Level, ObjectId, Overzone, PathFor, RepetitionBlock, WorldPath};
 use serde::Deserialize;
 use std::fs::read_to_string;
 
@@ -51,4 +51,4 @@ impl TryFrom<&OvermapPath> for Overmap {
 
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub(crate) struct OvermapLevel(pub(crate) RepetitionBlock<ObjectName>);
+pub(crate) struct OvermapLevel(pub(crate) RepetitionBlock<ObjectId>);

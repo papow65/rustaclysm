@@ -75,14 +75,12 @@ pub(crate) struct Container(pub(crate) u8);
 pub(crate) struct Containable(pub(crate) u8);
 
 #[derive(Component)]
+pub(crate) struct Amount(pub(crate) u32);
+
+#[derive(Component)]
 pub(crate) struct Health {
     curr: i8,
     max: i8,
-}
-
-#[derive(Component, Debug, PartialEq, Eq)]
-pub(crate) struct Item {
-    pub(crate) amount: u32,
 }
 
 impl Health {

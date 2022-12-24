@@ -17,10 +17,9 @@ for LINE in $(cat $TMP | grep -v "^$" | sort -u | sed -e 's#~#,#g' -e 's#(tilde)
     ATTRIBUTE=${LINE%%,*}
     TYPE=${LINE##*,}
     if grep --quiet "$ATTRIBUTE" src/cdda/data/cdda_item_info.rs ; then
-        #echo "$ATTRIBUTE exists"
-        :
+        echo "$ATTRIBUTE exists - $TYPE"
     else
-        echo "$ATTRIBUTE not found - $TYPE"
+        : #echo "$ATTRIBUTE not found - $TYPE"
     fi
 done
 

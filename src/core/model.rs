@@ -125,11 +125,9 @@ impl Model {
         texture_info: &TextureInfo,
     ) -> Self {
         Self {
-            shape: definition.name.to_shape(
-                layer,
-                &texture_info.transform2d,
-                &definition.specifier,
-            ),
+            shape: definition
+                .id
+                .to_shape(layer, &texture_info.transform2d, &definition.specifier),
             layer,
             sprite_number,
             mesh_info: texture_info.mesh_info,

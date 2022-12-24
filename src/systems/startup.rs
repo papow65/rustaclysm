@@ -23,7 +23,7 @@ pub(crate) fn create_secondairy_resources(
     commands.insert_resource(sav);
     commands.insert_resource(TileLoader::new());
     commands.insert_resource(timouts);
-    commands.insert_resource(ZoneLevelNames::new(paths.world_path()));
+    commands.insert_resource(ZoneLevelIds::new(paths.world_path()));
 }
 
 #[allow(clippy::needless_pass_by_value)]

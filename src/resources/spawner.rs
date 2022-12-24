@@ -31,9 +31,9 @@ pub(crate) struct TileSpawner<'w, 's> {
     asset_server: Res<'w, AssetServer>,
     loader: Res<'w, TileLoader>,
     caches: ResMut<'w, TileCaches>,
-    zone_level_names: ResMut<'w, ZoneLevelNames>,
+    zone_level_ids: ResMut<'w, ZoneLevelIds>,
     pub(crate) explored: ResMut<'w, Explored>,
-    item_infos: ResMut<'w, ItemInfos>,
+    infos: ResMut<'w, Infos>,
     paths: Res<'w, Paths>,
     sav: Res<'w, Sav>,
 }
@@ -89,14 +89,23 @@ impl<'w, 's> TileSpawner<'w, 's> {
         }
     }
 
-    fn spawn_tile(&mut self, parent: Entity, pos: Pos, definition: ObjectDefinition) {
-        let models = self.loader.get_models(&definition);
+    fn spawn_item(
+        &mut self,
+        parent: Entity,
+        pos: Pos,
+        definition: &ObjectDefinition,
+        amount: Amount,
+    ) {
+        let entity = self.spawn_tile(parent, pos, definition);
+        self.commands.entity(entity).insert(amount);
+    }
+
+    fn spawn_tile(&mut self, parent: Entity, pos: Pos, definition: &ObjectDefinition) -> Entity {
+        let models = self.loader.get_models(definition);
         let child_info = models
             .iter()
             .map(|model| (self.get_pbr_bundle(model, true), self.get_appearance(model)))
             .collect::<Vec<(PbrBundle, Appearance)>>();
-
-        let item_info = self.item_infos.get(definition.name);
 
         let last_seen = if definition.specifier.shading_applied() {
             if self.explored.has_pos_been_seen(pos) {
@@ -109,77 +118,94 @@ impl<'w, 's> TileSpawner<'w, 's> {
             LastSeen::Currently
         };
 
-        self.commands.entity(parent).with_children(|child_builder| {
-            let tile = child_builder
-                .spawn(SpatialBundle::default())
-                .insert(Visibility::INVISIBLE)
-                .insert(
-                    item_info
-                        .map_or_else(|| definition.name.to_fallback_label(), |i| i.to_label(1)),
-                )
-                .insert(pos)
-                .insert(Transform::from_translation(pos.vec3()))
-                .with_children(|child_builder| {
-                    for (pbr_bundle, apprearance) in child_info {
-                        let material = if last_seen == LastSeen::Never {
-                            None
+        let label = self.infos.label(definition, 1);
+
+        self.commands
+            .entity(parent)
+            .with_children(|child_builder| {
+                let tile = child_builder
+                    .spawn(SpatialBundle::default())
+                    .insert(Visibility::INVISIBLE)
+                    .insert(label)
+                    .insert(pos)
+                    .insert(Transform::from_translation(pos.vec3()))
+                    .with_children(|child_builder| {
+                        for (pbr_bundle, apprearance) in child_info {
+                            let material = if last_seen == LastSeen::Never {
+                                None
+                            } else {
+                                Some(apprearance.material(&last_seen))
+                            };
+                            let child = child_builder.spawn(pbr_bundle).insert(apprearance).id();
+                            if let Some(material) = material {
+                                insert(child_builder, child, material);
+                            }
+                        }
+                    })
+                    .id();
+
+                if definition.specifier.shading_applied() {
+                    insert(child_builder, tile, last_seen);
+                }
+
+                if definition.specifier == ObjectSpecifier::Terrain
+                    && definition.id != &ObjectId::new("unknown")
+                {
+                    let terrain_info = self
+                        .infos
+                        .terrain(definition.id)
+                        .unwrap_or_else(|| panic!("{:?}", definition.id));
+
+                    if let CddaTerrainInfo::Terrain { coverage, .. } = terrain_info {
+                        if coverage.map(|c| 0 < c) == Some(true) {
+                            insert(child_builder, tile, Obstacle);
+                        }
+                    }
+                }
+
+                match definition.specifier {
+                    ObjectSpecifier::Character => {
+                        insert(child_builder, tile, Obstacle);
+                        insert(child_builder, tile, Health::new(5));
+                        insert(child_builder, tile, Faction::Animal);
+                        insert(child_builder, tile, Speed::from_h_kmph(10));
+                        insert(child_builder, tile, Container(0));
+                    }
+                    ObjectSpecifier::Item => {
+                        // pass
+                    }
+                    _ => {
+                        if definition.specifier == ObjectSpecifier::Terrain {
+                            insert(child_builder, tile, Floor);
+                        }
+
+                        let up = definition.id.is_stairs_up();
+                        let down = definition.id.is_stairs_down();
+                        if up || down {
+                            // can be both
+
+                            if up {
+                                insert(child_builder, tile, StairsUp);
+                            }
+
+                            if down {
+                                insert(child_builder, tile, StairsDown);
+                            }
                         } else {
-                            Some(apprearance.material(&last_seen))
-                        };
-                        let child = child_builder.spawn(pbr_bundle).insert(apprearance).id();
-                        if let Some(material) = material {
-                            insert(child_builder, child, material);
+                            TileSpawner::add_components_from_shape(
+                                &models
+                                    .iter()
+                                    .find(|m| m.layer == SpriteLayer::Front)
+                                    .unwrap()
+                                    .shape,
+                                tile,
+                                child_builder,
+                            );
                         }
                     }
-                })
-                .id();
-
-            if definition.specifier.shading_applied() {
-                insert(child_builder, tile, last_seen);
-            }
-
-            match definition.specifier {
-                ObjectSpecifier::Character => {
-                    insert(child_builder, tile, Obstacle);
-                    insert(child_builder, tile, Health::new(5));
-                    insert(child_builder, tile, Faction::Animal);
-                    insert(child_builder, tile, Speed::from_h_kmph(10));
-                    insert(child_builder, tile, Container(0));
                 }
-                ObjectSpecifier::Item(item) => {
-                    insert(child_builder, tile, item);
-                }
-                _ => {
-                    if definition.specifier == ObjectSpecifier::Terrain {
-                        insert(child_builder, tile, Floor);
-                    }
-
-                    let up = definition.name.is_stairs_up();
-                    let down = definition.name.is_stairs_down();
-                    if up || down {
-                        // can be both
-
-                        if up {
-                            insert(child_builder, tile, StairsUp);
-                        }
-
-                        if down {
-                            insert(child_builder, tile, StairsDown);
-                        }
-                    } else {
-                        TileSpawner::add_components_from_shape(
-                            &models
-                                .iter()
-                                .find(|m| m.layer == SpriteLayer::Front)
-                                .unwrap()
-                                .shape,
-                            tile,
-                            child_builder,
-                        );
-                    }
-                }
-            }
-        });
+            })
+            .id()
     }
 
     fn add_components_from_shape(
@@ -196,7 +222,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
                     match transform2d.scale.y {
                         y if 2.5 < y => {
                             insert(child_builder, tile, Opaque);
-                            insert(child_builder, tile, Obstacle);
+                            //insert(child_builder, tile, Obstacle);
                             child_builder.add_command(Remove {
                                 entity: tile,
                                 phantom: core::marker::PhantomData::<Floor>,
@@ -214,7 +240,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
                 }
             }
             ModelShape::Cuboid { .. } => {
-                insert(child_builder, tile, Obstacle);
+                //insert(child_builder, tile, Obstacle);
                 insert(child_builder, tile, Opaque);
             }
         }
@@ -259,21 +285,20 @@ impl<'w, 's> TileSpawner<'w, 's> {
                         z,
                     })
                     .unwrap();
-                let tile_name = terrain.get(&pos).unwrap();
-                if tile_name != &&ObjectName::new("t_open_air")
-                    && tile_name != &&ObjectName::new("t_open_air_rooved")
+                let id = terrain.get(&pos).unwrap();
+                if id != &&ObjectId::new("t_open_air") && id != &&ObjectId::new("t_open_air_rooved")
                 {
                     self.spawn_tile(
                         subzone_level_entity,
                         pos,
-                        ObjectDefinition {
-                            name: tile_name,
+                        &ObjectDefinition {
+                            id,
                             specifier: ObjectSpecifier::Terrain,
                         },
                     );
                 }
 
-                for tile_name in submap
+                for id in submap
                     .furniture
                     .iter()
                     .filter_map(|at| at.get(Pos::new(x, Level::ZERO, z)))
@@ -281,8 +306,8 @@ impl<'w, 's> TileSpawner<'w, 's> {
                     self.spawn_tile(
                         subzone_level_entity,
                         pos,
-                        ObjectDefinition {
-                            name: tile_name,
+                        &ObjectDefinition {
+                            id,
                             specifier: ObjectSpecifier::Furniture,
                         },
                     );
@@ -295,16 +320,15 @@ impl<'w, 's> TileSpawner<'w, 's> {
                     .filter_map(|at| at.get(Pos::new(x, Level::ZERO, z)))
                 {
                     for repetition in repetitions {
-                        let Amount { obj: item, amount } = repetition.as_amount();
-                        self.spawn_tile(
+                        let CddaAmount { obj: item, amount } = repetition.as_amount();
+                        self.spawn_item(
                             subzone_level_entity,
                             pos,
-                            ObjectDefinition {
-                                name: tile_name,
-                                specifier: ObjectSpecifier::Item(Item {
-                                    amount: item.charges.unwrap_or(1) * amount,
-                                }),
+                            &ObjectDefinition {
+                                id,
+                                specifier: ObjectSpecifier::Item,
                             },
+                            Amount(item.charges.unwrap_or(1) * amount),
                         );
                     }
                 }
@@ -317,8 +341,8 @@ impl<'w, 's> TileSpawner<'w, 's> {
                     self.spawn_tile(
                         subzone_level_entity,
                         pos,
-                        ObjectDefinition {
-                            name: &spawn.spawn_type,
+                        &ObjectDefinition {
+                            id: &spawn.id,
                             specifier: ObjectSpecifier::Character,
                         },
                     );
@@ -334,8 +358,8 @@ impl<'w, 's> TileSpawner<'w, 's> {
                         self.spawn_tile(
                             subzone_level_entity,
                             pos,
-                            ObjectDefinition {
-                                name: &field.tile_name,
+                            &ObjectDefinition {
+                                id: &field.id,
                                 specifier: ObjectSpecifier::Terrain,
                             },
                         );
@@ -352,12 +376,18 @@ impl<'w, 's> TileSpawner<'w, 's> {
                 let zone = center.offset(x, z);
                 for level in Level::ALL {
                     let zone_level = zone.zone_level(level);
-                    if let Some(name) = self.zone_level_names.get(zone_level) {
-                        let definition = ObjectDefinition {
-                            name: &name.clone(),
-                            specifier: ObjectSpecifier::ZoneLevel,
-                        };
-                        self.spawn_collaped_zone_level(zone_level, &definition);
+                    let id = self
+                        .zone_level_ids
+                        .get(zone_level)
+                        .map(std::clone::Clone::clone);
+                    if let Some(id) = id {
+                        self.spawn_collaped_zone_level(
+                            zone_level,
+                            &ObjectDefinition {
+                                id: &id,
+                                specifier: ObjectSpecifier::ZoneLevel,
+                            },
+                        );
                     }
                 }
             }
@@ -365,7 +395,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
     }
 
     fn spawn_collaped_zone_level(&mut self, zone_level: ZoneLevel, definition: &ObjectDefinition) {
-        let pbr_bundles = if definition.name.is_hidden_zone() {
+        let pbr_bundles = if definition.id.is_hidden_zone() {
             Vec::new()
         } else {
             //println!("zone_level: {zone_level:?} {:?}", &definition);
@@ -376,10 +406,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
                 .collect::<Vec<PbrBundle>>()
         };
 
-        let label = self
-            .item_infos
-            .get(definition.name)
-            .map_or_else(|| definition.name.to_fallback_label(), |i| i.to_label(1));
+        let label = self.infos.label(definition, 1);
 
         let mut entity = self.commands.spawn(zone_level);
         entity.insert(Collapsed).insert(label);
@@ -495,8 +522,8 @@ impl<'w, 's> Spawner<'w, 's> {
         self.tile_spawner.spawn_tile(
             parent,
             pos,
-            ObjectDefinition {
-                name: &ObjectName::new("t_wood_stairs_down"),
+            &ObjectDefinition {
+                id: &ObjectId::new("t_wood_stairs_down"),
                 specifier: ObjectSpecifier::Terrain,
             },
         );
@@ -506,8 +533,8 @@ impl<'w, 's> Spawner<'w, 's> {
         self.tile_spawner.spawn_tile(
             parent,
             pos,
-            ObjectDefinition {
-                name: &ObjectName::new("t_shingle_flat_roof"),
+            &ObjectDefinition {
+                id: &ObjectId::new("t_shingle_flat_roof"),
                 specifier: ObjectSpecifier::Terrain,
             },
         );
@@ -704,7 +731,7 @@ impl<'w, 's> Spawner<'w, 's> {
 
     fn configure_player(&mut self, player_entity: Entity, player: Player) {
         let cursor_definition = ObjectDefinition {
-            name: &ObjectName::new("cursor"),
+            id: &ObjectId::new("cursor"),
             specifier: ObjectSpecifier::Meta,
         };
         let cursor_model = &mut self.tile_spawner.loader.get_models(&cursor_definition)[0];
@@ -756,9 +783,9 @@ impl<'w, 's> Spawner<'w, 's> {
     ) {
         let character_scale = 1.5;
         let character_definition = ObjectDefinition {
-            name: &match faction {
-                Faction::Human => ObjectName::new("overlay_male_mutation_SKIN_TAN"),
-                _ => ObjectName::new("mon_zombie"),
+            id: &match faction {
+                Faction::Human => ObjectId::new("overlay_male_mutation_SKIN_TAN"),
+                _ => ObjectId::new("mon_zombie"),
             },
             specifier: ObjectSpecifier::Character,
         };

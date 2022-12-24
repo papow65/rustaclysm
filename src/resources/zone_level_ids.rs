@@ -2,12 +2,12 @@ use crate::prelude::*;
 use bevy::{prelude::Resource, utils::HashMap};
 
 #[derive(Resource)]
-pub(crate) struct ZoneLevelNames {
+pub(crate) struct ZoneLevelIds {
     world_path: WorldPath,
-    names: HashMap<ZoneLevel, ObjectName>,
+    names: HashMap<ZoneLevel, ObjectId>,
 }
 
-impl ZoneLevelNames {
+impl ZoneLevelIds {
     pub(crate) fn new(world_path: WorldPath) -> Self {
         Self {
             world_path,
@@ -15,7 +15,7 @@ impl ZoneLevelNames {
         }
     }
 
-    pub(crate) fn get(&mut self, zone_level: ZoneLevel) -> Option<&ObjectName> {
+    pub(crate) fn get(&mut self, zone_level: ZoneLevel) -> Option<&ObjectId> {
         if !self.names.contains_key(&zone_level) {
             let overzone = Overzone::from(zone_level.zone);
             let overmap_path = OvermapPath::new(&self.world_path, overzone);

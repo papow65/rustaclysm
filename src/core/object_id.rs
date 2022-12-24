@@ -3,9 +3,9 @@ use bevy::prelude::Vec2;
 use serde::Deserialize;
 
 #[derive(Hash, PartialEq, Eq, Debug, Clone, Deserialize)]
-pub(crate) struct ObjectName(String);
+pub(crate) struct ObjectId(String);
 
-impl ObjectName {
+impl ObjectId {
     pub(crate) fn new<S: Into<String>>(value: S) -> Self {
         Self(value.into())
     }
