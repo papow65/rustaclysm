@@ -166,6 +166,58 @@ impl Infos {
         self.terrain.get(id)
     }
 
+    fn looks_like(&self, definition: &ObjectDefinition) -> Option<&ObjectId> {
+        match definition.specifier {
+            ObjectSpecifier::Item => self
+                .items
+                .get(definition.id)
+                .and_then(|o| o.looks_like.as_ref()),
+            ObjectSpecifier::Furniture => self
+                .furniture
+                .get(definition.id)
+                .and_then(|o| o.looks_like.as_ref()),
+            ObjectSpecifier::Terrain => self
+                .terrain
+                .get(definition.id)
+                .and_then(CddaTerrainInfo::looks_like),
+            ObjectSpecifier::ZoneLevel => self
+                .zone_level
+                .get(definition.id)
+                .and_then(|o| o.looks_like.as_ref()),
+            _ => unimplemented!("{:?}", definition.specifier),
+        }
+    }
+
+    pub(crate) fn variants(&self, definition: &ObjectDefinition) -> Vec<ObjectId> {
+        let current_id;
+        let mut current_definition;
+        let mut current_definition_ref = definition;
+        if definition.specifier == ObjectSpecifier::ZoneLevel {
+            current_id = current_definition_ref.id.truncate();
+            current_definition = ObjectDefinition {
+                id: &current_id,
+                specifier: definition.specifier.clone(),
+            };
+            current_definition_ref = &current_definition;
+        }
+
+        let mut variants = vec![
+            current_definition_ref.id.suffix("_season_summer"),
+            current_definition_ref.id.clone(),
+        ];
+
+        while let Some(other) = self.looks_like(current_definition_ref) {
+            variants.push(other.suffix("_season_summer"));
+            variants.push(other.clone());
+            current_definition = ObjectDefinition {
+                id: other,
+                specifier: definition.specifier.clone(),
+            };
+            current_definition_ref = &current_definition;
+        }
+        variants
+    }
+
     pub(crate) fn label<'a>(&'a self, definition: &'a ObjectDefinition, amount: usize) -> Label {
         let name = match definition.specifier {
             ObjectSpecifier::Item => self.items.get(definition.id).map(|o| &o.name),

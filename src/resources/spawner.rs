@@ -101,7 +101,9 @@ impl<'w, 's> TileSpawner<'w, 's> {
     }
 
     fn spawn_tile(&mut self, parent: Entity, pos: Pos, definition: &ObjectDefinition) -> Entity {
-        let models = self.loader.get_models(definition);
+        let models = self
+            .loader
+            .get_models(definition, &self.infos.variants(definition));
         let child_info = models
             .iter()
             .map(|model| (self.get_pbr_bundle(model, true), self.get_appearance(model)))
@@ -366,7 +368,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
         } else {
             //println!("zone_level: {zone_level:?} {:?}", &definition);
             self.loader
-                .get_models(definition)
+                .get_models(definition, &self.infos.variants(definition))
                 .iter()
                 .map(|model| self.get_pbr_bundle(model, false))
                 .collect::<Vec<PbrBundle>>()
@@ -700,7 +702,10 @@ impl<'w, 's> Spawner<'w, 's> {
             id: &ObjectId::new("cursor"),
             specifier: ObjectSpecifier::Meta,
         };
-        let cursor_model = &mut self.tile_spawner.loader.get_models(&cursor_definition)[0];
+        let cursor_model = &mut self
+            .tile_spawner
+            .loader
+            .get_models(&cursor_definition, &vec![cursor_definition.id.clone()])[0];
         let mut cursor_bundle = self.tile_spawner.get_pbr_bundle(cursor_model, false);
         cursor_bundle.transform.translation.y = 0.1;
         cursor_bundle.transform.scale = Vec3::new(1.1, 1.0, 1.1);
@@ -755,7 +760,10 @@ impl<'w, 's> Spawner<'w, 's> {
             },
             specifier: ObjectSpecifier::Character,
         };
-        let character_model = &mut self.tile_spawner.loader.get_models(&character_definition)[0];
+        let character_model = &mut self.tile_spawner.loader.get_models(
+            &character_definition,
+            &vec![character_definition.id.clone()],
+        )[0];
         if let ModelShape::Plane {
             ref mut transform2d,
             ..

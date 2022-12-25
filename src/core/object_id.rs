@@ -10,16 +10,35 @@ impl ObjectId {
         Self(value.into())
     }
 
-    pub(crate) fn to_fallback_label(&self) -> Label {
-        Label::new(self.0.clone())
+    pub(crate) fn suffix(&self, name: &str) -> Self {
+        Self(self.0.clone() + name)
     }
 
-    pub(crate) fn variants(&self) -> Vec<Self> {
-        let mut result = vec![Self(self.0.clone() + "_season_summer"), self.clone()];
-        if let Some(index) = self.0.rfind('_') {
-            result.push(Self(self.0[..index].to_string()));
-        }
-        result
+    pub(crate) fn truncate(&self) -> Self {
+        Self(
+            self.0
+                .clone()
+                .replace("_isolated", "")
+                .replace("_end_south", "")
+                .replace("_end_west", "")
+                .replace("_ne", "")
+                .replace("_end_north", "")
+                .replace("_ns", "")
+                .replace("_es", "")
+                .replace("_nes", "")
+                .replace("_end_east", "")
+                .replace("_wn", "")
+                .replace("_ew", "")
+                .replace("_new", "")
+                .replace("_sw", "")
+                .replace("_nsw", "")
+                .replace("_esw", "")
+                .replace("_nesw", ""),
+        )
+    }
+
+    pub(crate) fn to_fallback_label(&self) -> Label {
+        Label::new(self.0.clone())
     }
 
     pub(crate) fn is_hidden_zone(&self) -> bool {

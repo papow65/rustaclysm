@@ -1,4 +1,4 @@
-use crate::prelude::{Flags, ItemName};
+use crate::prelude::{Flags, ItemName, ObjectId};
 use bevy::utils::HashMap;
 use serde::Deserialize;
 
@@ -9,6 +9,7 @@ pub(crate) enum CddaTerrainInfo {
     Terrain {
         name: ItemName,
         move_cost: MoveCost,
+        looks_like: Option<ObjectId>,
         flags: Flags,
 
         #[allow(unused)]
@@ -18,6 +19,7 @@ pub(crate) enum CddaTerrainInfo {
     #[serde(rename(deserialize = "field_type"))]
     FieldType {
         intensity_levels: Vec<IntensityLevel>,
+        looks_like: Option<ObjectId>,
 
         #[allow(unused)]
         #[serde(flatten)]
@@ -32,6 +34,14 @@ impl CddaTerrainInfo {
             Self::FieldType {
                 intensity_levels, ..
             } => intensity_levels[0].name.as_ref().unwrap(),
+        }
+    }
+
+    pub(crate) fn looks_like(&self) -> Option<&ObjectId> {
+        match self {
+            Self::Terrain { looks_like, .. } | Self::FieldType { looks_like, .. } => {
+                looks_like.as_ref()
+            }
         }
     }
 }

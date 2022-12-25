@@ -1,10 +1,11 @@
-use crate::prelude::ItemName;
+use crate::prelude::{ItemName, ObjectId};
 use bevy::utils::HashMap;
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct CddaOvermapInfo {
     pub(crate) name: ItemName,
+    pub(crate) looks_like: Option<ObjectId>,
 
     #[allow(unused)]
     #[serde(flatten)]

@@ -227,19 +227,17 @@ impl TileLoader {
             )
     }
 
-    pub(crate) fn get_models(&self, definition: &ObjectDefinition) -> Vec<Model> {
+    pub(crate) fn get_models(
+        &self,
+        definition: &ObjectDefinition,
+        variants: &Vec<ObjectId>,
+    ) -> Vec<Model> {
         let mut bundles = Vec::new();
-        let (foreground, background) = definition
-            .id
-            .variants()
+        let (foreground, background) = variants
             .iter()
             .find_map(|variant| self.tiles.get(variant))
             .unwrap_or_else(|| {
-                eprintln!(
-                    "{:?} not found. Variants: {:?}. Falling back to default sprite",
-                    definition.id,
-                    definition.id.variants()
-                );
+                eprintln!("No variant found from {variants:?}. Falling back to default sprite");
                 self.tiles.get(&ObjectId::new("unknown")).unwrap()
             })
             .sprite_numbers();

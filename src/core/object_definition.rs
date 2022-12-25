@@ -3,7 +3,7 @@ use bevy::prelude::AlphaMode;
 
 const SEPARATION_OFFSET: f32 = 0.005;
 
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub(crate) enum ObjectSpecifier {
     Terrain,
     Furniture,
