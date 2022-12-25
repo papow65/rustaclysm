@@ -73,20 +73,35 @@ impl Infos {
                         unreachable!();
                     }
                 }
-
+                println!("Info abount {:?} > {:?}", &type_, &ids);
+                let by_type = literals.get_mut(&type_.clone()).unwrap();
                 for id in ids {
-                    println!("Info abount {:?} > {:?}", &type_, &id);
-                    let by_type = literals.get_mut(&type_.clone()).unwrap();
-
-                    /*match by_type.entry(id.clone()) {
-                         *                        Entry::Occupied(..) => panic!("double entry for {:?}", id),
-                         *                        entry @ Entry::Vacant(..) => {
-                         *                            entry.insert(content.clone());
-                    }
-                    }*/
-
                     assert!(by_type.get(&id).is_none(), "double entry for {:?}", &id);
                     by_type.insert(id.clone(), content.clone());
+                }
+
+                let mut aliases = Vec::new();
+                if let Some(alias) = content.get("alias") {
+                    match alias {
+                        serde_json::Value::String(id) => {
+                            aliases.push(String::from(id.as_str()));
+                        }
+                        serde_json::Value::Array(a) => {
+                            for id in a {
+                                aliases.push(String::from(id.as_str().unwrap()));
+                            }
+                        }
+                        _ => {
+                            unreachable!();
+                        }
+                    }
+                }
+                println!("Info abount {:?} > aliases {:?}", &type_, &aliases);
+                for alias in aliases {
+                    // Duplicates possible
+                    if by_type.get(&alias).is_none() {
+                        by_type.insert(alias.clone(), content.clone());
+                    }
                 }
             }
         }
