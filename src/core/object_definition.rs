@@ -4,7 +4,7 @@ use bevy::prelude::AlphaMode;
 const SEPARATION_OFFSET: f32 = 0.005;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub(crate) enum ObjectSpecifier {
+pub(crate) enum ObjectCategory {
     Terrain,
     Furniture,
     Item,
@@ -153,7 +153,7 @@ WHEEL
 widget
 */
 
-impl ObjectSpecifier {
+impl ObjectCategory {
     pub(crate) const fn shading_applied(&self) -> bool {
         !matches!(self, Self::ZoneLevel | Self::Meta)
     }
@@ -177,13 +177,13 @@ impl ObjectSpecifier {
 
 #[derive(Debug)]
 pub(crate) struct ObjectDefinition<'d> {
+    pub(crate) category: ObjectCategory,
     pub(crate) id: &'d ObjectId,
-    pub(crate) specifier: ObjectSpecifier,
 }
 
 impl<'d> ObjectDefinition<'d> {
     pub(crate) fn alpha_mode(&self) -> AlphaMode {
-        if self.specifier == ObjectSpecifier::Terrain && self.id.is_ground() {
+        if self.category == ObjectCategory::Terrain && self.id.is_ground() {
             AlphaMode::Opaque
         } else {
             AlphaMode::Blend

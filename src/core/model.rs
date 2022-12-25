@@ -127,12 +127,12 @@ impl Model {
         Self {
             shape: definition
                 .id
-                .to_shape(layer, &texture_info.transform2d, &definition.specifier),
+                .to_shape(layer, &texture_info.transform2d, &definition.category),
             layer,
             sprite_number,
             mesh_info: texture_info.mesh_info,
             texture_path: texture_info.image_path.clone(),
-            vertical_offset: definition.specifier.vertical_offset(&layer),
+            vertical_offset: definition.category.vertical_offset(&layer),
             alpha_mode: definition.alpha_mode(),
         }
     }

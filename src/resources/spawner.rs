@@ -109,7 +109,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
             .map(|model| (self.get_pbr_bundle(model, true), self.get_appearance(model)))
             .collect::<Vec<(PbrBundle, Appearance)>>();
 
-        let last_seen = if definition.specifier.shading_applied() {
+        let last_seen = if definition.category.shading_applied() {
             if self.explored.has_pos_been_seen(pos) {
                 LastSeen::Previously
             } else {
@@ -146,19 +146,19 @@ impl<'w, 's> TileSpawner<'w, 's> {
                     })
                     .id();
 
-                if definition.specifier.shading_applied() {
+                if definition.category.shading_applied() {
                     insert(child_builder, tile, last_seen);
                 }
 
-                match definition.specifier {
-                    ObjectSpecifier::Character => {
+                match definition.category {
+                    ObjectCategory::Character => {
                         insert(child_builder, tile, Obstacle);
                         insert(child_builder, tile, Health::new(5));
                         insert(child_builder, tile, Faction::Animal);
                         insert(child_builder, tile, BaseSpeed::from_h_kmph(10));
                         insert(child_builder, tile, Container(0));
                     }
-                    ObjectSpecifier::Terrain => {
+                    ObjectCategory::Terrain => {
                         let terrain_info = self
                             .infos
                             .terrain(definition.id)
@@ -189,7 +189,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
                             CddaTerrainInfo::FieldType { .. } => {}
                         }
                     }
-                    ObjectSpecifier::Furniture => {
+                    ObjectCategory::Furniture => {
                         let furniture_info = self
                             .infos
                             .furniture(definition.id)
@@ -260,8 +260,8 @@ impl<'w, 's> TileSpawner<'w, 's> {
                         subzone_level_entity,
                         pos,
                         &ObjectDefinition {
+                            category: ObjectCategory::Terrain,
                             id,
-                            specifier: ObjectSpecifier::Terrain,
                         },
                     );
                 }
@@ -275,8 +275,8 @@ impl<'w, 's> TileSpawner<'w, 's> {
                         subzone_level_entity,
                         pos,
                         &ObjectDefinition {
+                            category: ObjectCategory::Furniture,
                             id,
-                            specifier: ObjectSpecifier::Furniture,
                         },
                     );
                 }
@@ -293,8 +293,8 @@ impl<'w, 's> TileSpawner<'w, 's> {
                             subzone_level_entity,
                             pos,
                             &ObjectDefinition {
+                                category: ObjectCategory::Item,
                                 id,
-                                specifier: ObjectSpecifier::Item,
                             },
                             Amount(item.charges.unwrap_or(1) * amount),
                         );
@@ -310,8 +310,8 @@ impl<'w, 's> TileSpawner<'w, 's> {
                         subzone_level_entity,
                         pos,
                         &ObjectDefinition {
+                            category: ObjectCategory::Character,
                             id: &spawn.id,
-                            specifier: ObjectSpecifier::Character,
                         },
                     );
                 }
@@ -327,8 +327,8 @@ impl<'w, 's> TileSpawner<'w, 's> {
                             subzone_level_entity,
                             pos,
                             &ObjectDefinition {
+                                category: ObjectCategory::Terrain,
                                 id: &field.id,
-                                specifier: ObjectSpecifier::Terrain,
                             },
                         );
                     }
@@ -352,8 +352,8 @@ impl<'w, 's> TileSpawner<'w, 's> {
                         self.spawn_collaped_zone_level(
                             zone_level,
                             &ObjectDefinition {
+                                category: ObjectCategory::ZoneLevel,
                                 id: &id,
-                                specifier: ObjectSpecifier::ZoneLevel,
                             },
                         );
                     }
@@ -491,8 +491,8 @@ impl<'w, 's> Spawner<'w, 's> {
             parent,
             pos,
             &ObjectDefinition {
+                category: ObjectCategory::Terrain,
                 id: &ObjectId::new("t_wood_stairs_down"),
-                specifier: ObjectSpecifier::Terrain,
             },
         );
     }
@@ -502,8 +502,8 @@ impl<'w, 's> Spawner<'w, 's> {
             parent,
             pos,
             &ObjectDefinition {
+                category: ObjectCategory::Terrain,
                 id: &ObjectId::new("t_shingle_flat_roof"),
-                specifier: ObjectSpecifier::Terrain,
             },
         );
     }
@@ -699,8 +699,8 @@ impl<'w, 's> Spawner<'w, 's> {
 
     fn configure_player(&mut self, player_entity: Entity, player: Player) {
         let cursor_definition = ObjectDefinition {
+            category: ObjectCategory::Meta,
             id: &ObjectId::new("cursor"),
-            specifier: ObjectSpecifier::Meta,
         };
         let cursor_model = &mut self
             .tile_spawner
@@ -754,11 +754,11 @@ impl<'w, 's> Spawner<'w, 's> {
     ) {
         let character_scale = 1.5;
         let character_definition = ObjectDefinition {
+            category: ObjectCategory::Character,
             id: &match faction {
                 Faction::Human => ObjectId::new("overlay_male_mutation_SKIN_TAN"),
                 _ => ObjectId::new("mon_zombie"),
             },
-            specifier: ObjectSpecifier::Character,
         };
         let character_model = &mut self.tile_spawner.loader.get_models(
             &character_definition,
