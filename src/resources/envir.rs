@@ -217,11 +217,11 @@ impl<'w, 's> Envir<'w, 's> {
 
         let move_cost = if diagonal + adjacent + up + down == 1 {
             // nbors, the precise value matters in some cases
+            // Dumb creatures may try to use paths that do not have a floor.
             self.location
                 .get_first(to, &self.floors)
-                .unwrap()
-                .move_cost
-                .adjust(self.location.get_first(to, &self.hurdles).map(|h| h.0))
+                .map(|floor| floor.move_cost.adjust(self.location.get_first(to, &self.hurdles).map(|h| h.0)))
+                .unwrap_or_else(MoveCost::default)
         } else {
             // estimate
             MoveCost::default()
