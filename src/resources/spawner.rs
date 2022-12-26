@@ -413,7 +413,6 @@ pub(crate) struct CustomData {
     wood: Appearance,
     whitish: Appearance,
     wooden_wall: Appearance,
-    yellow: Appearance,
     cube_mesh: Handle<Mesh>,
     wall_transform: Transform,
     window_pane_transform: Transform,
@@ -436,7 +435,6 @@ impl CustomData {
                 material_assets,
                 asset_server.load(Paths::tiles_path().join("wall.png")),
             ),
-            yellow: Appearance::new(material_assets, Color::rgb(0.8, 0.8, 0.4)),
             cube_mesh: mesh_assets.add(Mesh::from(shape::Cube { size: 1.0 })),
             wall_transform: Transform {
                 translation: Vec3::new(0.0, 0.495 * Millimeter::VERTICAL.f32(), 0.0),
@@ -671,33 +669,6 @@ impl<'w, 's> Spawner<'w, 's> {
                         ..PbrBundle::default()
                     })
                     .insert(self.custom.whitish.clone());
-            });
-    }
-
-    pub(crate) fn spawn_containable(&mut self, label: Label, pos: Pos, containable: Containable) {
-        let size = f32::from(containable.0).min(64.0).powf(0.33) / 4.0;
-
-        self.tile_spawner
-            .commands
-            .spawn(SpatialBundle::default())
-            .insert(label)
-            .insert(pos)
-            .insert(containable)
-            .insert(LastSeen::Never)
-            .insert(Visibility::INVISIBLE)
-            .with_children(|child_builder| {
-                child_builder
-                    .spawn(PbrBundle {
-                        mesh: self.custom.cube_mesh.clone(),
-                        // customizing the size using a transform allows better positioning
-                        transform: Transform {
-                            translation: Vec3::new(0.0, size / 2.0, 0.0),
-                            scale: Vec3::splat(size),
-                            ..Transform::default()
-                        },
-                        ..PbrBundle::default()
-                    })
-                    .insert(self.custom.yellow.clone());
             });
     }
 
@@ -1015,29 +986,5 @@ impl<'w, 's> Spawner<'w, 's> {
             Faction::Zombie,
             None,
         );
-    }
-
-    pub(crate) fn spawn_containables(&mut self, offset: PosOffset) {
-        self.spawn_containable(
-            Label::new("large"),
-            Pos::new(13, Level::ZERO, 13).offset(offset).unwrap(),
-            Containable(4),
-        );
-        self.spawn_containable(
-            Label::new("small"),
-            Pos::new(13, Level::ZERO, 12).offset(offset).unwrap(),
-            Containable(1),
-        );
-        self.spawn_containable(
-            Label::new("medium"),
-            Pos::new(13, Level::ZERO, 10).offset(offset).unwrap(),
-            Containable(2),
-        );
-    }
-
-    pub(crate) fn spawn_window_wall(&mut self, offset: PosOffset) {
-        for i in 0..48 {
-            self.spawn_window(Pos::new(i, Level::ZERO, 15).offset(offset).unwrap());
-        }
     }
 }

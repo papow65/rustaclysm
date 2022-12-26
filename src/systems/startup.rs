@@ -52,6 +52,4 @@ pub(crate) fn spawn_initial_entities(sav: Res<Sav>, mut spawner: Spawner) {
     spawner.spawn_floors(offset);
     spawner.spawn_house(offset);
     spawner.spawn_characters(offset);
-    spawner.spawn_containables(offset);
-    spawner.spawn_window_wall(offset);
 }
