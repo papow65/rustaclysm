@@ -1,4 +1,4 @@
-use crate::prelude::{ItemName, MoveCostMod, ObjectId};
+use crate::prelude::{Flags, ItemName, MoveCostMod, ObjectId};
 use bevy::utils::HashMap;
 use serde::Deserialize;
 
@@ -7,6 +7,9 @@ pub(crate) struct CddaFurnitureInfo {
     pub(crate) name: ItemName,
     pub(crate) move_cost_mod: MoveCostMod,
     pub(crate) looks_like: Option<ObjectId>,
+
+    #[serde(default)]
+    pub(crate) flags: Flags,
 
     #[allow(unused)]
     #[serde(flatten)]

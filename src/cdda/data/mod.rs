@@ -9,7 +9,7 @@ pub(crate) use self::{
 
 use serde::Deserialize;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Default, Deserialize)]
 pub(crate) struct Flags(Vec<String>);
 
 impl Flags {

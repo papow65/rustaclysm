@@ -195,6 +195,10 @@ impl<'w, 's> TileSpawner<'w, 's> {
                             .furniture(definition.id)
                             .unwrap_or_else(|| panic!("{:?}", definition.id));
 
+                        if !furniture_info.flags.is_transparent() {
+                            insert(child_builder, tile, Opaque);
+                        }
+
                         match furniture_info.move_cost_mod.0.cmp(&0) {
                             Ordering::Less => {
                                 insert(child_builder, tile, Obstacle);
