@@ -94,11 +94,18 @@ impl ModelShape {
                 transform2d,
             } => transform2d.to_transform(*orientation, layer, vertical_offset),
             Self::Cuboid { height } => Transform {
-                scale: Vec3::new(
+                scale: match *layer {
+                    SpriteLayer::Front => 1.0,
+                    SpriteLayer::Back => 0.98,
+                } * Vec3::new(
                     Millimeter::ADJACENT.f32(),
                     *height,
                     Millimeter::ADJACENT.f32(),
                 ),
+                translation: match *layer {
+                    SpriteLayer::Front => Vec3::ZERO,
+                    SpriteLayer::Back => Vec3::new(0.01, 0.0, 0.0),
+                },
                 ..Transform::default()
             },
         }
