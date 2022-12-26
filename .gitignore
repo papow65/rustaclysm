@@ -10,3 +10,4 @@
 /trace-*.json
 /perf*
 /flamegraph*
+/*.dot*

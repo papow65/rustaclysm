@@ -41,7 +41,7 @@ impl Infos {
             }
             let file_contents = read_to_string(&json_path)
                 .unwrap_or_else(|_| panic!("Could not read {}", json_path.display()));
-            println!("Found info file: {}", json_path.display());
+            //println!("Found info file: {}", json_path.display());
             let contents = serde_json::from_str::<Vec<serde_json::Map<String, serde_json::Value>>>(
                 file_contents.as_str(),
             );
@@ -73,7 +73,7 @@ impl Infos {
                         unreachable!();
                     }
                 }
-                println!("Info abount {:?} > {:?}", &type_, &ids);
+                //println!("Info abount {:?} > {:?}", &type_, &ids);
                 let by_type = literals.get_mut(&type_.clone()).unwrap();
                 for id in ids {
                     assert!(by_type.get(&id).is_none(), "double entry for {:?}", &id);
@@ -96,7 +96,7 @@ impl Infos {
                         }
                     }
                 }
-                println!("Info abount {:?} > aliases {:?}", &type_, &aliases);
+                //println!("Info abount {:?} > aliases {:?}", &type_, &aliases);
                 for alias in aliases {
                     // Duplicates possible
                     if by_type.get(&alias).is_none() {
@@ -118,11 +118,11 @@ impl Infos {
                 .entry(type_id.clone())
                 .or_insert_with(HashMap::default);
             for (object_id, literal) in literal_entry {
-                println!("{:?}", &object_id);
+                //println!("{:?}", &object_id);
                 let mut enriched = literal.clone();
                 let mut ancestors = vec![object_id.clone()];
                 while let Some(copy_from) = enriched.remove("copy-from") {
-                    println!("Copy from {:?}", &copy_from);
+                    //println!("Copy from {:?}", &copy_from);
                     let copy_from = copy_from.as_str().expect("string value for copy-from");
                     ancestors.push(String::from(copy_from));
                     assert!(ancestors.len() < 10, "{ancestors:?}");
