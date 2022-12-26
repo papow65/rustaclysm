@@ -24,6 +24,13 @@ impl<'w, 's> Envir<'w, 's> {
         self.location.any(pos, &self.floors)
     }
 
+    pub(crate) fn is_water(&self, pos: Pos) -> bool {
+        self.location
+            .get_first(pos, &self.floors)
+            .map(|floor| floor.water)
+            == Some(true)
+    }
+
     pub(crate) fn stairs_up_to(&self, pos: Pos) -> Option<Pos> {
         if self.location.has_stairs_up(pos, &self.stairs_up) {
             let zone_level_up = ZoneLevel::from(pos).offset(LevelOffset::UP).unwrap();

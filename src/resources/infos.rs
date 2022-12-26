@@ -6,10 +6,11 @@ use std::fs::read_to_string;
 
 #[derive(Resource)]
 pub(crate) struct Infos {
-    items: HashMap<ObjectId, CddaItemInfo>,
-    furniture: HashMap<ObjectId, CddaFurnitureInfo>,
-    terrain: HashMap<ObjectId, CddaTerrainInfo>,
-    zone_level: HashMap<ObjectId, CddaOvermapInfo>,
+    characters: HashMap<ObjectId, CharacterInfo>,
+    items: HashMap<ObjectId, ItemInfo>,
+    furniture: HashMap<ObjectId, FurnitureInfo>,
+    terrain: HashMap<ObjectId, TerrainInfo>,
+    zone_level: HashMap<ObjectId, OvermapInfo>,
 }
 
 impl Infos {
@@ -30,6 +31,7 @@ impl Infos {
                     .display()
                     .to_string()
                     .contains("/furniture_and_terrain/")
+                || json_path.display().to_string().contains("/monsters/")
                 || json_path.display().to_string().contains("/vehicleparts/")
                 || json_path.ends_with("field_type.json"))
                 || json_path.ends_with("default_blacklist.json")
@@ -51,9 +53,16 @@ impl Infos {
                 let type_ = content.get("type").expect("type present");
                 let type_ = TypeId::get(type_.as_str().expect("string value for type"));
 
+                if type_ == TypeId::get("mapgen") {
+                    // TODO
+                    continue;
+                }
+
                 assert_ne!(
                     content.get("id").is_some(),
-                    content.get("abstract").is_some()
+                    content.get("abstract").is_some(),
+                    "{:?}",
+                    json_path
                 );
 
                 let mut ids = Vec::new();
@@ -162,6 +171,7 @@ impl Infos {
     pub(crate) fn new() -> Self {
         let mut enricheds = Self::enricheds();
         Self {
+            characters: Self::extract(&mut enricheds, TypeId::CHARACTER),
             items: Self::extract(&mut enricheds, TypeId::ITEM),
             furniture: Self::extract(&mut enricheds, TypeId::FURNITURE),
             terrain: Self::extract(&mut enricheds, TypeId::TERRAIN),
@@ -169,20 +179,28 @@ impl Infos {
         }
     }
 
-    pub(crate) fn item<'a>(&'a self, id: &'a ObjectId) -> Option<&'a CddaItemInfo> {
+    pub(crate) fn character<'a>(&'a self, id: &'a ObjectId) -> Option<&'a CharacterInfo> {
+        self.characters.get(id)
+    }
+
+    pub(crate) fn item<'a>(&'a self, id: &'a ObjectId) -> Option<&'a ItemInfo> {
         self.items.get(id)
     }
 
-    pub(crate) fn furniture<'a>(&'a self, id: &'a ObjectId) -> Option<&'a CddaFurnitureInfo> {
+    pub(crate) fn furniture<'a>(&'a self, id: &'a ObjectId) -> Option<&'a FurnitureInfo> {
         self.furniture.get(id)
     }
 
-    pub(crate) fn terrain<'a>(&'a self, id: &'a ObjectId) -> Option<&'a CddaTerrainInfo> {
+    pub(crate) fn terrain<'a>(&'a self, id: &'a ObjectId) -> Option<&'a TerrainInfo> {
         self.terrain.get(id)
     }
 
     fn looks_like(&self, definition: &ObjectDefinition) -> Option<&ObjectId> {
         match definition.category {
+            ObjectCategory::Character => self
+                .characters
+                .get(definition.id)
+                .and_then(|o| o.looks_like.as_ref()),
             ObjectCategory::Item => self
                 .items
                 .get(definition.id)
@@ -194,12 +212,12 @@ impl Infos {
             ObjectCategory::Terrain => self
                 .terrain
                 .get(definition.id)
-                .and_then(CddaTerrainInfo::looks_like),
+                .and_then(TerrainInfo::looks_like),
             ObjectCategory::ZoneLevel => self
                 .zone_level
                 .get(definition.id)
                 .and_then(|o| o.looks_like.as_ref()),
-            _ => unimplemented!("{:?}", definition.category),
+            _ => unimplemented!("{:?}", definition),
         }
     }
 
@@ -235,9 +253,10 @@ impl Infos {
 
     pub(crate) fn label<'a>(&'a self, definition: &'a ObjectDefinition, amount: usize) -> Label {
         let name = match definition.category {
+            ObjectCategory::Character => self.characters.get(definition.id).map(|o| &o.name),
             ObjectCategory::Item => self.items.get(definition.id).map(|o| &o.name),
             ObjectCategory::Furniture => self.furniture.get(definition.id).map(|o| &o.name),
-            ObjectCategory::Terrain => self.terrain.get(definition.id).map(CddaTerrainInfo::name),
+            ObjectCategory::Terrain => self.terrain.get(definition.id).map(TerrainInfo::name),
             ObjectCategory::ZoneLevel => self.zone_level.get(definition.id).map(|o| &o.name),
             _ => unimplemented!("{:?}", definition.category),
         };

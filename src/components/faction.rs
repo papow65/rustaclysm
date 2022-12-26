@@ -193,6 +193,7 @@ impl Faction {
         envir: &Envir,
         start_pos: Pos,
         speed: BaseSpeed,
+        aquatic: Option<&Aquatic>,
         factions: &[(Pos, &Self)],
         enemies: &[Pos],
         last_enemy: Option<&LastEnemy>,
@@ -214,6 +215,14 @@ impl Faction {
             action,
             last_enemy,
         })
+        .filter(|strategy| {
+            if let Action::Step { target } = strategy.action {
+                // prevent fish from walking on land
+                aquatic.is_none() || envir.is_water(target)
+            } else {
+                true
+            }
+        })
     }
 
     pub(crate) fn behave<'f>(
@@ -222,6 +231,7 @@ impl Faction {
         start_pos: Pos,
         speed: BaseSpeed,
         health: &Health,
+        aquatic: Option<&Aquatic>,
         factions: &[(Pos, &'f Self)],
         last_enemy: Option<&LastEnemy>,
     ) -> Strategy {
@@ -232,6 +242,7 @@ impl Faction {
             .filter(|(_, other_faction)| self.dislikes(other_faction))
             .map(|(enemy_pos, _)| enemy_pos)
             .copied()
+            .filter(|enemy_pos| aquatic.is_none() || envir.is_water(*enemy_pos))
             .filter(|enemy_pos| currently_visible.can_see(*enemy_pos) == Visible::Seen)
             .collect::<Vec<Pos>>();
         //println!("{self:?} can see {:?} enemies", enemies.len());
@@ -239,7 +250,7 @@ impl Faction {
         self.intents(health)
             .find_map(|intent| {
                 self.attempt(
-                    intent, envir, start_pos, speed, factions, &enemies, last_enemy,
+                    intent, envir, start_pos, speed, aquatic, factions, &enemies, last_enemy,
                 )
             })
             .expect("Fallback intent")

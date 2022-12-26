@@ -34,13 +34,13 @@ pub(crate) fn manage_characters(
         let entities = characters
             .c
             .iter()
-            .map(|(e, _, pos, _, _, _, _, _)| (e, pos))
+            .map(|(e, _, pos, ..)| (e, pos))
             .filter(|(e, &pos)| envir.has_floor(pos) || players.get(*e).is_ok())
             .map(|(e, _)| e)
             .collect::<Vec<Entity>>();
         if let Some(character) = timeouts.next(&entities) {
             let factions = characters.collect_factions();
-            let (entity, label, &pos, &speed, health, faction, container, last_enemy) =
+            let (entity, label, &pos, &speed, health, aquatic, faction, container, last_enemy) =
                 characters.c.get(character).unwrap();
             let action = if let Ok(ref mut player) = players.get_mut(entity) {
                 if let Some(action) = player.plan_action(
@@ -62,7 +62,8 @@ pub(crate) fn manage_characters(
                     break; // no key pressed - wait for the user
                 }
             } else {
-                let strategy = faction.behave(&envir, pos, speed, health, &factions, last_enemy);
+                let strategy =
+                    faction.behave(&envir, pos, speed, health, aquatic, &factions, last_enemy);
                 if let Some(l) = strategy.last_enemy {
                     commands.entity(character).insert(l);
                 }

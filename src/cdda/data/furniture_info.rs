@@ -3,7 +3,7 @@ use bevy::utils::HashMap;
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
-pub(crate) struct CddaFurnitureInfo {
+pub(crate) struct FurnitureInfo {
     pub(crate) name: ItemName,
     pub(crate) move_cost_mod: MoveCostMod,
     pub(crate) looks_like: Option<ObjectId>,

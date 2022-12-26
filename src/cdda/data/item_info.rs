@@ -3,7 +3,7 @@ use bevy::utils::HashMap;
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
-pub(crate) struct CddaItemInfo {
+pub(crate) struct ItemInfo {
     pub(crate) category: Option<String>,
     pub(crate) effects: Option<Vec<String>>,
 

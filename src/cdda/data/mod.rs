@@ -1,10 +1,11 @@
-mod cdda_furniture_info;
-mod cdda_item_info;
-mod cdda_overmap_info;
-mod cdda_terrain_info;
+mod character_info;
+mod furniture_info;
+mod item_info;
+mod overmap_info;
+mod terrain_info;
 
 pub(crate) use self::{
-    cdda_furniture_info::*, cdda_item_info::*, cdda_overmap_info::*, cdda_terrain_info::*,
+    character_info::*, furniture_info::*, item_info::*, overmap_info::*, terrain_info::*,
 };
 
 use serde::Deserialize;
@@ -17,6 +18,10 @@ impl Flags {
         self.0.contains(&String::from(value))
     }
 
+    pub(crate) fn aquatic(&self) -> bool {
+        self.contains("AQUATIC")
+    }
+
     pub(crate) fn goes_up(&self) -> bool {
         self.contains("GOES_UP") || self.contains("RAMP_UP") || self.contains("CLIMBABLE")
     }
@@ -25,7 +30,11 @@ impl Flags {
         self.contains("GOES_DOWN") || self.contains("RAMP_DOWN") || self.contains("CLIMBABLE")
     }
 
-    pub(crate) fn is_transparent(&self) -> bool {
+    pub(crate) fn transparent(&self) -> bool {
         self.contains("TRANSPARENT")
+    }
+
+    pub(crate) fn water(&self) -> bool {
+        self.contains("SHALLOW_WATER") || self.contains("DEEP_WATER")
     }
 }

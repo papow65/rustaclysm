@@ -35,6 +35,7 @@ impl From<&Label> for String {
 
 #[derive(Component)]
 pub(crate) struct Floor {
+    pub(crate) water: bool,
     pub(crate) move_cost: MoveCost,
 }
 
@@ -79,6 +80,9 @@ pub(crate) struct Containable(pub(crate) u8);
 
 #[derive(Component)]
 pub(crate) struct Amount(pub(crate) u32);
+
+#[derive(Component)]
+pub(crate) struct Aquatic;
 
 #[derive(Component)]
 pub(crate) struct Health {

@@ -4,6 +4,8 @@ use serde::Deserialize;
 pub(crate) struct TypeId(&'static str);
 
 impl TypeId {
+    pub(crate) const CHARACTER: &[Self] = &[TypeId("MONSTER")];
+
     pub(crate) const ITEM: &[Self] = &[
         TypeId("AMMO"),
         TypeId("ARMOR"),
@@ -43,16 +45,20 @@ impl TypeId {
 
     pub(crate) const UNUSED: &[Self] = &[
         TypeId("ammunition_type"),
+        TypeId("behavior"),
         TypeId("enchantment"),
+        TypeId("effect_on_condition"),
         TypeId("fault"),
         TypeId("item_group"),
         TypeId("json_flag"),
+        TypeId("mapgen"),
         TypeId("vehicle_part_category"),
         TypeId("vehicle_part_migration"),
     ];
 
     pub(crate) const fn all() -> &'static [&'static [Self]] {
         &[
+            Self::CHARACTER,
             Self::ITEM,
             Self::FURNITURE,
             Self::TERRAIN,

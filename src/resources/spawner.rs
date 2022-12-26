@@ -89,13 +89,34 @@ impl<'w, 's> TileSpawner<'w, 's> {
         }
     }
 
-    fn spawn_item(
-        &mut self,
-        parent: Entity,
-        pos: Pos,
-        definition: &ObjectDefinition,
-        amount: Amount,
-    ) {
+    fn spawn_character(&mut self, parent: Entity, pos: Pos, id: &ObjectId) {
+        let definition = &ObjectDefinition {
+            category: ObjectCategory::Character,
+            id,
+        };
+        let entity = self.spawn_tile(parent, pos, definition);
+        self.commands
+            .entity(entity)
+            .insert(Obstacle)
+            .insert(Health::new(5))
+            .insert(Faction::Animal)
+            .insert(BaseSpeed::from_h_kmph(10))
+            .insert(Container(0));
+
+        let character_info = self
+            .infos
+            .character(definition.id)
+            .unwrap_or_else(|| panic!("{:?}", definition.id));
+        if character_info.flags.aquatic() {
+            self.commands.entity(entity).insert(Aquatic);
+        }
+    }
+
+    fn spawn_item(&mut self, parent: Entity, pos: Pos, id: &ObjectId, amount: Amount) {
+        let definition = &ObjectDefinition {
+            category: ObjectCategory::Item,
+            id,
+        };
         let entity = self.spawn_tile(parent, pos, definition);
         self.commands.entity(entity).insert(amount);
     }
@@ -122,99 +143,97 @@ impl<'w, 's> TileSpawner<'w, 's> {
 
         let label = self.infos.label(definition, 1);
 
-        self.commands
-            .entity(parent)
+        let tile = self
+            .commands
+            .spawn(SpatialBundle::default())
+            .insert(Visibility::INVISIBLE)
+            .insert(label)
+            .insert(pos)
+            .insert(Transform::from_translation(pos.vec3()))
             .with_children(|child_builder| {
-                let tile = child_builder
-                    .spawn(SpatialBundle::default())
-                    .insert(Visibility::INVISIBLE)
-                    .insert(label)
-                    .insert(pos)
-                    .insert(Transform::from_translation(pos.vec3()))
-                    .with_children(|child_builder| {
-                        for (pbr_bundle, apprearance) in child_info {
-                            let material = if last_seen == LastSeen::Never {
-                                None
-                            } else {
-                                Some(apprearance.material(&last_seen))
-                            };
-                            let child = child_builder.spawn(pbr_bundle).insert(apprearance).id();
-                            if let Some(material) = material {
-                                insert(child_builder, child, material);
-                            }
-                        }
-                    })
-                    .id();
-
-                if definition.category.shading_applied() {
-                    insert(child_builder, tile, last_seen);
-                }
-
-                match definition.category {
-                    ObjectCategory::Character => {
-                        insert(child_builder, tile, Obstacle);
-                        insert(child_builder, tile, Health::new(5));
-                        insert(child_builder, tile, Faction::Animal);
-                        insert(child_builder, tile, BaseSpeed::from_h_kmph(10));
-                        insert(child_builder, tile, Container(0));
-                    }
-                    ObjectCategory::Terrain => {
-                        let terrain_info = self
-                            .infos
-                            .terrain(definition.id)
-                            .unwrap_or_else(|| panic!("{:?}", definition.id));
-                        match terrain_info {
-                            CddaTerrainInfo::Terrain {
-                                move_cost, flags, ..
-                            } => {
-                                let move_cost = *move_cost;
-                                if 0 < move_cost.0 {
-                                    insert(child_builder, tile, Floor { move_cost });
-                                } else {
-                                    insert(child_builder, tile, Obstacle);
-                                }
-
-                                if !flags.is_transparent() {
-                                    insert(child_builder, tile, Opaque);
-                                }
-
-                                if flags.goes_up() {
-                                    insert(child_builder, tile, StairsUp);
-                                }
-
-                                if flags.goes_down() {
-                                    insert(child_builder, tile, StairsDown);
-                                }
-                            }
-                            CddaTerrainInfo::FieldType { .. } => {}
-                        }
-                    }
-                    ObjectCategory::Furniture => {
-                        let furniture_info = self
-                            .infos
-                            .furniture(definition.id)
-                            .unwrap_or_else(|| panic!("{:?}", definition.id));
-
-                        if !furniture_info.flags.is_transparent() {
-                            insert(child_builder, tile, Opaque);
-                        }
-
-                        match furniture_info.move_cost_mod.0.cmp(&0) {
-                            Ordering::Less => {
-                                insert(child_builder, tile, Obstacle);
-                            }
-                            Ordering::Equal => {}
-                            Ordering::Greater => {
-                                insert(child_builder, tile, Hurdle(furniture_info.move_cost_mod));
-                            }
-                        }
-                    }
-                    _ => {
-                        // pass
+                for (pbr_bundle, apprearance) in child_info {
+                    let material = if last_seen == LastSeen::Never {
+                        None
+                    } else {
+                        Some(apprearance.material(&last_seen))
+                    };
+                    let child = child_builder.spawn(pbr_bundle).insert(apprearance).id();
+                    if let Some(material) = material {
+                        insert(child_builder, child, material);
                     }
                 }
             })
-            .id()
+            .id();
+
+        self.commands.entity(parent).add_child(tile);
+
+        if definition.category.shading_applied() {
+            self.commands.entity(tile).insert(last_seen);
+        }
+
+        match definition.category {
+            ObjectCategory::Terrain => {
+                let terrain_info = self
+                    .infos
+                    .terrain(definition.id)
+                    .unwrap_or_else(|| panic!("{:?}", definition.id));
+                match terrain_info {
+                    TerrainInfo::Terrain {
+                        move_cost, flags, ..
+                    } => {
+                        let move_cost = *move_cost;
+                        if 0 < move_cost.0 {
+                            self.commands.entity(tile).insert(Floor {
+                                water: flags.water(),
+                                move_cost,
+                            });
+                        } else {
+                            self.commands.entity(tile).insert(Obstacle);
+                        }
+
+                        if !flags.transparent() {
+                            self.commands.entity(tile).insert(Opaque);
+                        }
+
+                        if flags.goes_up() {
+                            self.commands.entity(tile).insert(StairsUp);
+                        }
+
+                        if flags.goes_down() {
+                            self.commands.entity(tile).insert(StairsDown);
+                        }
+                    }
+                    TerrainInfo::FieldType { .. } => {}
+                }
+            }
+            ObjectCategory::Furniture => {
+                let furniture_info = self
+                    .infos
+                    .furniture(definition.id)
+                    .unwrap_or_else(|| panic!("{:?}", definition.id));
+
+                if !furniture_info.flags.transparent() {
+                    self.commands.entity(tile).insert(Opaque);
+                }
+
+                match furniture_info.move_cost_mod.0.cmp(&0) {
+                    Ordering::Less => {
+                        self.commands.entity(tile).insert(Obstacle);
+                    }
+                    Ordering::Equal => {}
+                    Ordering::Greater => {
+                        self.commands
+                            .entity(tile)
+                            .insert(Hurdle(furniture_info.move_cost_mod));
+                    }
+                }
+            }
+            _ => {
+                // pass
+            }
+        };
+
+        tile
     }
 
     pub(crate) fn spawn_expanded_subzone_level(
@@ -296,10 +315,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
                         self.spawn_item(
                             subzone_level_entity,
                             pos,
-                            &ObjectDefinition {
-                                category: ObjectCategory::Item,
-                                id,
-                            },
+                            id,
                             Amount(item.charges.unwrap_or(1) * amount),
                         );
                     }
@@ -310,14 +326,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
                     .iter()
                     .filter(|spawn| spawn.x == x && spawn.z == z)
                 {
-                    self.spawn_tile(
-                        subzone_level_entity,
-                        pos,
-                        &ObjectDefinition {
-                            category: ObjectCategory::Character,
-                            id: &spawn.id,
-                        },
-                    );
+                    self.spawn_character(subzone_level_entity, pos, &spawn.id);
                 }
 
                 for fields in submap

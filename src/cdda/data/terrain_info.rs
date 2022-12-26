@@ -4,7 +4,7 @@ use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
 #[serde(tag = "type")]
-pub(crate) enum CddaTerrainInfo {
+pub(crate) enum TerrainInfo {
     #[serde(rename(deserialize = "terrain"))]
     Terrain {
         name: ItemName,
@@ -27,7 +27,7 @@ pub(crate) enum CddaTerrainInfo {
     },
 }
 
-impl CddaTerrainInfo {
+impl TerrainInfo {
     pub(crate) fn name(&self) -> &ItemName {
         match self {
             Self::Terrain { name, .. } => name,
