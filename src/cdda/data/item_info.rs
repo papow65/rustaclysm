@@ -215,7 +215,7 @@ pub(crate) enum Material {
 
         /// assume 1 when missing
         #[allow(unused)]
-        portion: Option<u8>,
+        portion: Option<u16>,
     },
 }
 
