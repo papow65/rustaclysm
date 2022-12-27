@@ -11,3 +11,4 @@
 /perf*
 /flamegraph*
 /*.dot*
+/heaptrack*
