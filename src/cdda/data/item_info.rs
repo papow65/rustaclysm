@@ -1,4 +1,4 @@
-use crate::prelude::{Label, ObjectId};
+use crate::prelude::{DeflatVec, Label, ObjectId};
 use bevy::utils::HashMap;
 use serde::Deserialize;
 
@@ -25,7 +25,7 @@ pub(crate) struct ItemInfo {
     pub(crate) count: Option<u32>,
     pub(crate) projectile_count: Option<u8>,
     pub(crate) stack_size: Option<u8>,
-    pub(crate) ammo_type: Option<AmmoType>,
+    pub(crate) ammo_type: Option<DeflatVec<String>>,
     pub(crate) casing: Option<String>,
     pub(crate) range: Option<i16>, // examples: -6, 140
     pub(crate) dispersion: Option<u16>,
@@ -74,7 +74,8 @@ pub(crate) struct ItemInfo {
     pub(crate) description: Option<Description>,
     pub(crate) symbol: Option<char>,
     pub(crate) color: Option<String>,
-    pub(crate) material: Option<Materials>,
+
+    pub(crate) material: Option<DeflatVec<Material>>,
     pub(crate) material_thickness: Option<f32>,
     pub(crate) chat_topics: Option<serde_json::Value>,
     pub(crate) phase: Option<String>,
@@ -189,23 +190,6 @@ impl From<CddaItemName> for ItemName {
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 #[serde(untagged)]
-pub(crate) enum Materials {
-    Single(Material),
-    Multi(Vec<Material>),
-}
-
-impl Materials {
-    pub(crate) fn to_vec(&self) -> Vec<Material> {
-        match self {
-            Self::Single(material) => vec![material.clone()],
-            Self::Multi(material) => material.clone(),
-        }
-    }
-}
-
-#[derive(Clone, Debug, Deserialize)]
-#[serde(deny_unknown_fields)]
-#[serde(untagged)]
 pub(crate) enum Material {
     Simple(String),
     Complex {
@@ -241,12 +225,4 @@ pub(crate) enum ToHit {
 pub(crate) enum Description {
     Simple(String),
     Complex(HashMap<String, String>),
-}
-
-#[derive(Clone, Debug, Deserialize)]
-#[serde(deny_unknown_fields)]
-#[serde(untagged)]
-pub(crate) enum AmmoType {
-    Sinlge(String),
-    Multi(Vec<String>),
 }
