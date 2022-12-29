@@ -31,7 +31,7 @@ pub(crate) struct TileSpawner<'w, 's> {
     asset_server: Res<'w, AssetServer>,
     loader: Res<'w, TileLoader>,
     caches: ResMut<'w, TileCaches>,
-    zone_level_ids: ResMut<'w, ZoneLevelIds>,
+    pub(crate) zone_level_ids: ResMut<'w, ZoneLevelIds>,
     pub(crate) explored: ResMut<'w, Explored>,
     infos: ResMut<'w, Infos>,
     paths: Res<'w, Paths>,

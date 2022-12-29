@@ -154,18 +154,24 @@ fn visible_area(camera: &Camera, global_transform: &GlobalTransform) -> Vec<Subz
 
 fn spawn_expanded_subzone_levels(
     tile_spawner: &mut TileSpawner,
-    expanded_zone_levels: &Query<(Entity, &SubzoneLevel), Without<Collapsed>>,
+    expanded_subzone_levels: &Query<(Entity, &SubzoneLevel), Without<Collapsed>>,
     expanded_region: &Region,
 ) {
-    let expanded_zone_levels = expanded_zone_levels
+    let expanded_subzone_levels = expanded_subzone_levels
         .iter()
         .map(|(_, &zone_level)| zone_level)
         .collect::<HashSet<_>>();
 
     for subzone_level in expanded_region.subzone_levels() {
-        if !expanded_zone_levels.contains(&subzone_level) {
+        let expanded = match tile_spawner
+            .zone_level_ids
+            .get(ZoneLevel::from(subzone_level))
+        {
+            Some(zone_level_id) => !zone_level_id.is_hidden_zone(),
+            None => false,
+        };
+        if expanded && !expanded_subzone_levels.contains(&subzone_level) {
             if let Err(e) = tile_spawner.spawn_expanded_subzone_level(subzone_level) {
-                //eprintln!("While loading {zone_level:?}: {e}");
                 panic!(
                     "While loading {subzone_level:?} in {:?}: {e}",
                     ZoneLevel::from(subzone_level)
