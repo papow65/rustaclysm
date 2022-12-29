@@ -12,7 +12,7 @@ edition = "2021"
 
 [dependencies]
 # 'dynamic' for faster compilation
-bevy = { version = "0.9.*", features = [ "dynamic", "trace", "wayland" ] }
+bevy = { version = "0.9.*", default-features = false, features = [ "bevy_asset", "dynamic", "png", "render", "wayland", "x11" ] }
 pathfinding = "4.*"
 bresenham = "0.1.*"
 rand = "0.8.*"
