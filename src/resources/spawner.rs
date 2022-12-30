@@ -198,17 +198,21 @@ impl<'w, 's> TileSpawner<'w, 's> {
                     TerrainInfo::Terrain {
                         move_cost,
                         open,
+                        close,
                         flags,
                         ..
                     } => {
                         let move_cost = *move_cost;
                         if 0 < move_cost.0 {
+                            if close.is_some() {
+                                self.commands.entity(tile).insert(Closeable);
+                            }
                             self.commands.entity(tile).insert(Floor {
                                 water: flags.water(),
                                 move_cost,
                             });
                         } else if open.is_some() {
-                            self.commands.entity(tile).insert(ClosedDoor);
+                            self.commands.entity(tile).insert(Openable);
                         } else {
                             self.commands.entity(tile).insert(Obstacle);
                         }

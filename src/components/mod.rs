@@ -67,7 +67,10 @@ pub(crate) struct WindowPane;
 pub(crate) struct Obstacle;
 
 #[derive(Component)]
-pub(crate) struct ClosedDoor;
+pub(crate) struct Openable;
+
+#[derive(Component)]
+pub(crate) struct Closeable;
 
 #[derive(Component)]
 pub(crate) struct Hurdle(pub(crate) MoveCostMod);
@@ -87,9 +90,12 @@ pub(crate) struct Amount(pub(crate) u32);
 #[derive(Component)]
 pub(crate) struct Aquatic;
 
-/** Marker to open or close a door */
+/** Marker to open or close something, like a door */
 #[derive(Component)]
-pub(crate) struct ToggleDoor;
+pub(crate) struct Toggle;
+
+#[derive(Component)]
+pub(crate) struct RefreshVisualizations;
 
 #[derive(Component)]
 pub(crate) struct Health {

@@ -9,9 +9,11 @@ pub(crate) struct Envir<'w, 's> {
     relative_segments: Res<'w, RelativeSegments>,
     floors: Query<'w, 's, &'static Floor>,
     hurdles: Query<'w, 's, &'static Hurdle>,
-    closed_doors: Query<'w, 's, Entity, With<ClosedDoor>>,
+    openables: Query<'w, 's, Entity, With<Openable>>,
+    closeables: Query<'w, 's, Entity, With<Closeable>>,
     stairs_up: Query<'w, 's, &'static StairsUp>,
     stairs_down: Query<'w, 's, &'static StairsDown>,
+    terrain: Query<'w, 's, &'static Label, (Without<Health>, Without<Amount>)>,
     obstacles: Query<'w, 's, &'static Label, With<Obstacle>>,
     opaques: Query<'w, 's, &'static Label, With<Opaque>>,
     characters: Query<'w, 's, Entity, With<Health>>,
@@ -105,12 +107,20 @@ impl<'w, 's> Envir<'w, 's> {
         }
     }
 
-    pub(crate) fn find_closed_door(&self, pos: Pos) -> Option<Entity> {
-        self.location.get_first(pos, &self.closed_doors)
+    pub(crate) fn find_openable(&self, pos: Pos) -> Option<Entity> {
+        self.location.get_first(pos, &self.openables)
     }
 
-    pub(crate) fn find_obstacle(&self, pos: Pos) -> Option<Label> {
-        self.location.get_first(pos, &self.obstacles).cloned()
+    pub(crate) fn find_closeable(&self, pos: Pos) -> Option<Entity> {
+        self.location.get_first(pos, &self.closeables)
+    }
+
+    pub(crate) fn find_terrain(&self, pos: Pos) -> Option<&Label> {
+        self.location.get_first(pos, &self.terrain)
+    }
+
+    pub(crate) fn find_obstacle(&self, pos: Pos) -> Option<&Label> {
+        self.location.get_first(pos, &self.obstacles)
     }
 
     fn is_opaque(&self, pos: Pos) -> bool {
@@ -209,8 +219,9 @@ impl<'w, 's> Envir<'w, 's> {
         instruction: QueuedInstruction,
     ) -> impl Iterator<Item = Pos> + 's {
         self.nbors_if(pos, move |nbor| match instruction {
-            QueuedInstruction::Attack => self.find_character(nbor).is_none(),
-            QueuedInstruction::Smash => self.find_item(nbor).is_none(),
+            QueuedInstruction::Attack => nbor != pos && self.find_character(nbor).is_some(),
+            QueuedInstruction::Smash => self.find_item(nbor).is_some(),
+            QueuedInstruction::Close => self.find_closeable(nbor).is_some(),
             _ => panic!("unexpected instruction {instruction:?}"),
         })
         .map(move |(_nbor, npos, _distance)| npos)
@@ -279,11 +290,11 @@ impl<'w, 's> Envir<'w, 's> {
 
         match to.level.cmp(&from.level) {
             Ordering::Greater | Ordering::Less => {
-                if self.find_closed_door(to).is_some() {
+                if self.find_openable(to).is_some() {
                     unimplemented!();
                 } else if controlled {
                     if let Some(obstacle) = self.find_obstacle(to) {
-                        Collision::Blocked(obstacle)
+                        Collision::Blocked(obstacle.clone())
                     } else {
                         Collision::Pass
                     }
@@ -292,11 +303,11 @@ impl<'w, 's> Envir<'w, 's> {
                 }
             }
             Ordering::Equal => {
-                let closed_door = self.find_closed_door(to);
-                if controlled && closed_door.is_some() {
-                    Collision::Opened(closed_door.unwrap())
+                let openable = self.find_openable(to);
+                if controlled && openable.is_some() {
+                    Collision::Opened(openable.unwrap())
                 } else if let Some(obstacle) = self.find_obstacle(to) {
-                    Collision::Blocked(obstacle)
+                    Collision::Blocked(obstacle.clone())
                 } else if self.has_floor(to) {
                     Collision::Pass
                 } else if controlled {

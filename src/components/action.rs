@@ -15,6 +15,9 @@ pub(crate) enum Action {
     Smash {
         target: Pos, // nbor pos
     },
+    Close {
+        target: Pos, // nbor pos
+    },
     Pickup,
     Dump,
     SwitchRunning,
@@ -38,6 +41,7 @@ impl Action {
             Self::Step { target } => move_(commands, envir, actor, label, pos, target, speed),
             Self::Attack { target } => attack(commands, envir, label, pos, target, speed),
             Self::Smash { target } => smash(commands, envir, label, pos, target, speed),
+            Self::Close { target } => close(commands, envir, label, pos, target, speed),
             Self::Dump => dump(commands, dumpees, actor, label, pos, speed),
             Self::Pickup => pickup(
                 commands,
@@ -99,7 +103,7 @@ fn move_(
             Milliseconds(0)
         }
         Collision::Opened(door) => {
-            commands.entity(door).insert(ToggleDoor);
+            commands.entity(door).insert(Toggle);
             envir.walking_cost(from, to).duration(speed)
         }
     }
@@ -158,6 +162,29 @@ fn smash(
         envir.walking_cost(pos, target).duration(speed)
     } else {
         commands.spawn(Message::warn(format!("{s_label} smashes nothing")));
+        Milliseconds(0)
+    }
+}
+
+fn close(
+    commands: &mut Commands,
+    envir: &mut Envir,
+    closer: &Label,
+    pos: Pos,
+    target: Pos,
+    speed: BaseSpeed,
+) -> Milliseconds {
+    if !envir.are_nbors(pos, target) && target != pos {
+        unimplemented!();
+    }
+
+    if let Some(smashable) = envir.find_closeable(target) {
+        commands.entity(smashable).insert(Toggle);
+        envir.walking_cost(pos, target).duration(speed)
+    } else {
+        let air = Label::new("the air");
+        let obstacle = envir.find_terrain(target).unwrap_or(&air);
+        commands.spawn(Message::warn(format!("{closer} can't close {obstacle}")));
         Milliseconds(0)
     }
 }

@@ -10,6 +10,7 @@ pub(crate) enum PlayerActionState {
     Normal,
     Attacking,
     Smashing,
+    Closing,
     Waiting(Milliseconds),
     ExaminingPos(Pos),
     ExaminingZoneLevel(ZoneLevel),
@@ -21,6 +22,7 @@ impl fmt::Display for PlayerActionState {
             Self::Normal => "",
             Self::Attacking => "Attacking",
             Self::Smashing => "Smashing",
+            Self::Closing => "Closing",
             Self::Waiting(_) => "Waiting",
             Self::ExaminingPos(_) => "Examining",
             Self::ExaminingZoneLevel(_) => "Examining map",
@@ -110,6 +112,7 @@ impl Player {
             (_, QueuedInstruction::Dump) => PlayerBehavior::Perform(Action::Dump),
             (_, QueuedInstruction::Attack) => self.handle_attack(envir, pos),
             (_, QueuedInstruction::Smash) => self.handle_smash(envir, pos),
+            (_, QueuedInstruction::Close) => self.handle_close(envir, pos),
             (_, QueuedInstruction::ExaminePos) => {
                 let pos = Pos::from(&Focus::new(self, pos));
                 self.state = PlayerActionState::ExaminingPos(pos);
@@ -154,6 +157,10 @@ impl Player {
                 self.state = PlayerActionState::Normal;
                 PlayerBehavior::Perform(Action::Smash { target })
             }
+            (PlayerActionState::Closing, Ok(target)) => {
+                self.state = PlayerActionState::Normal;
+                PlayerBehavior::Perform(Action::Close { target })
+            }
             (PlayerActionState::Waiting(_), _) => {
                 self.state = PlayerActionState::Normal;
                 PlayerBehavior::NoEffect
@@ -189,6 +196,22 @@ impl Player {
             }),
             _ => {
                 self.state = PlayerActionState::Smashing;
+                PlayerBehavior::NoEffect
+            }
+        }
+    }
+
+    fn handle_close(&mut self, envir: &Envir, pos: Pos) -> PlayerBehavior {
+        let closable_nbors = envir
+            .nbors_for_exploring(pos, QueuedInstruction::Close)
+            .collect::<Vec<Pos>>();
+        match closable_nbors.len() {
+            0 => PlayerBehavior::Warning(Message::warn("nothing to close nearby")),
+            1 => PlayerBehavior::Perform(Action::Close {
+                target: closable_nbors[0],
+            }),
+            _ => {
+                self.state = PlayerActionState::Closing;
                 PlayerBehavior::NoEffect
             }
         }

@@ -183,12 +183,18 @@ pub(crate) fn update_visualization_on_focus_move(
     )>,
     child_items: Query<&Appearance, (With<Parent>, Without<Pos>)>,
     players: Query<(&Pos, &Player)>,
+    refresh: Query<Entity, With<RefreshVisualizations>>,
 ) {
     let start = Instant::now();
 
     if let Ok((&player_pos, player)) = players.get_single() {
+        let mut refresh_needed = false;
+        for entity in refresh.iter() {
+            commands.entity(entity).despawn();
+            refresh_needed = true;
+        }
         let focus = Focus::new(player, player_pos);
-        if focus != *last_focus {
+        if focus != *last_focus || refresh_needed {
             let currently_visible = envir.currently_visible(player_pos); // does not depend on focus
 
             for (&pos, mut visibility, mut last_seen, speed, children) in items.iter_mut() {

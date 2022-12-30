@@ -5,6 +5,11 @@ use bevy::prelude::*;
 
 pub(crate) struct RustaclysmPlugin;
 
+impl RustaclysmPlugin {
+    const INPUT: &str = "input";
+    const EFFECT: &str = "effect";
+}
+
 impl Plugin for RustaclysmPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(Msaa::default())
@@ -25,13 +30,17 @@ impl Plugin for RustaclysmPlugin {
             .add_startup_system_set_to_stage(StartupStage::PostStartup, update_systems())
             .add_startup_system_to_stage(StartupStage::PostStartup, maximize_window);
 
+        app.add_stage_before(CoreStage::Update, Self::INPUT, SystemStage::parallel());
+        app.add_stage_after(CoreStage::Update, Self::EFFECT, SystemStage::parallel());
+
         // executed every frame
         app.add_system_to_stage(CoreStage::PreUpdate, spawn_nearby_overzones)
             .add_system_to_stage(CoreStage::PreUpdate, spawn_zones_for_camera)
-            .add_system(manage_game_over)
-            .add_system(manage_mouse_input)
-            .add_system(manage_keyboard_input)
+            .add_system_to_stage(Self::INPUT, manage_mouse_input)
+            .add_system_to_stage(Self::INPUT, manage_keyboard_input)
             .add_system(manage_characters)
+            .add_system_to_stage(Self::EFFECT, manage_game_over)
+            .add_system_to_stage(Self::EFFECT, toggle_doors)
             .add_system_set_to_stage(CoreStage::PostUpdate, update_systems())
             .add_system_to_stage(CoreStage::Last, update_collapsed_zone_levels)
             /*.add_system_to_stage(CoreStage::Last, check_obstacle_location)
@@ -45,7 +54,6 @@ impl Plugin for RustaclysmPlugin {
 
 fn update_systems() -> SystemSet {
     SystemSet::new()
-        .with_system(toggle_doors)
         .with_system(update_location)
         .with_system(update_transforms)
         .with_system(update_hidden_item_visibility)

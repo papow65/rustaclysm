@@ -269,22 +269,25 @@ pub(crate) fn toggle_doors(
             Entity,
             &ObjectDefinition,
             &Pos,
-            Option<&ClosedDoor>,
+            Option<&Openable>,
+            Option<&Closeable>,
             &Parent,
         ),
-        With<ToggleDoor>,
+        With<Toggle>,
     >,
 ) {
     let start = Instant::now();
 
-    for (entity, definition, &pos, closed, parent) in toggled.iter() {
+    for (entity, definition, &pos, openable, closeable, parent) in toggled.iter() {
+        assert_ne!(openable.is_some(), closeable.is_some());
         commands.entity(entity).despawn_recursive();
         let TerrainInfo::Terrain{close, open, ..} = tile_spawner.infos.terrain(&definition.id).unwrap() else {panic!()};
         let toggled_definition = ObjectDefinition {
-            id: closed.map_or(close, |_| open).as_ref().unwrap().clone(),
+            id: openable.map_or(close, |_| open).as_ref().unwrap().clone(),
             category: definition.category.clone(),
         };
         tile_spawner.spawn_tile(parent.get(), pos, &toggled_definition);
+        commands.spawn(RefreshVisualizations);
     }
 
     log_if_slow("toggle_doors", start);
