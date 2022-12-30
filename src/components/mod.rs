@@ -3,13 +3,13 @@ mod faction;
 mod player;
 mod pos;
 
-use crate::prelude::{MoveCost, MoveCostMod, Partial, Visible};
+use crate::prelude::{MoveCost, MoveCostMod, ObjectCategory, ObjectId, Partial, Visible};
 use bevy::prelude::{AlphaMode, Assets, Color, Component, Handle, StandardMaterial};
 use std::fmt;
 
 pub(crate) use {action::*, faction::*, player::*, pos::*};
 
-#[derive(Component, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Component, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) struct Label(String);
 
 impl Label {
@@ -67,6 +67,9 @@ pub(crate) struct WindowPane;
 pub(crate) struct Obstacle;
 
 #[derive(Component)]
+pub(crate) struct ClosedDoor;
+
+#[derive(Component)]
 pub(crate) struct Hurdle(pub(crate) MoveCostMod);
 
 #[derive(Component)]
@@ -78,16 +81,36 @@ pub(crate) struct Container(pub(crate) u8);
 #[derive(Component)]
 pub(crate) struct Containable(pub(crate) u8);
 
-#[derive(Component)]
+#[derive(Component, Debug)]
 pub(crate) struct Amount(pub(crate) u32);
 
 #[derive(Component)]
 pub(crate) struct Aquatic;
 
+/** Marker to open or close a door */
+#[derive(Component)]
+pub(crate) struct ToggleDoor;
+
 #[derive(Component)]
 pub(crate) struct Health {
     curr: i8,
     max: i8,
+}
+
+#[derive(Clone, Component, Debug, PartialEq)]
+pub(crate) struct ObjectDefinition {
+    pub(crate) category: ObjectCategory,
+    pub(crate) id: ObjectId,
+}
+
+impl ObjectDefinition {
+    pub(crate) fn alpha_mode(&self) -> AlphaMode {
+        if self.category == ObjectCategory::Terrain && self.id.is_ground() {
+            AlphaMode::Opaque
+        } else {
+            AlphaMode::Blend
+        }
+    }
 }
 
 impl Health {

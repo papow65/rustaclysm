@@ -25,7 +25,7 @@ pub(crate) fn manage_characters(
     mut timeouts: ResMut<Timeouts>,
     characters: Characters,
     mut players: Query<&mut Player>,
-    dumpees: Query<(Entity, &Parent, &Label)>,
+    dumpees: Query<(Entity, &Label, &Parent)>,
     hierarchy: Hierarchy, // pickup
 ) {
     let start = Instant::now();

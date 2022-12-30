@@ -1,9 +1,8 @@
 use crate::prelude::*;
-use bevy::prelude::AlphaMode;
 
 const SEPARATION_OFFSET: f32 = 0.005;
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, Hash, PartialEq, Eq)]
 pub(crate) enum ObjectCategory {
     Terrain,
     Furniture,
@@ -172,21 +171,5 @@ impl ObjectCategory {
         };
 
         level as f32 * SEPARATION_OFFSET
-    }
-}
-
-#[derive(Debug)]
-pub(crate) struct ObjectDefinition<'d> {
-    pub(crate) category: ObjectCategory,
-    pub(crate) id: &'d ObjectId,
-}
-
-impl<'d> ObjectDefinition<'d> {
-    pub(crate) fn alpha_mode(&self) -> AlphaMode {
-        if self.category == ObjectCategory::Terrain && self.id.is_ground() {
-            AlphaMode::Opaque
-        } else {
-            AlphaMode::Blend
-        }
     }
 }

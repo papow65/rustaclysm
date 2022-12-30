@@ -10,6 +10,8 @@ pub(crate) enum TerrainInfo {
         name: ItemName,
         move_cost: MoveCost,
         looks_like: Option<ObjectId>,
+        open: Option<ObjectId>,
+        close: Option<ObjectId>,
         flags: Flags,
 
         #[allow(unused)]

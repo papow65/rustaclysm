@@ -2,7 +2,7 @@ use crate::prelude::*;
 use bevy::prelude::Vec2;
 use serde::Deserialize;
 
-#[derive(Hash, PartialEq, Eq, Debug, Clone, Deserialize)]
+#[derive(Clone, Deserialize, Debug, Hash, PartialEq, Eq)]
 pub(crate) struct ObjectId(String);
 
 impl ObjectId {
@@ -116,13 +116,6 @@ impl ObjectId {
                 transform2d: transform2d.clone(),
             }
         } else {
-            assert_eq!(
-                transform2d,
-                &Transform2d::default(),
-                "no standard transform for foreground of {:?}: {:?}",
-                self,
-                transform2d
-            );
             ModelShape::Plane {
                 orientation: SpriteOrientation::Horizontal,
                 transform2d: transform2d.clone(),

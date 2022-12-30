@@ -199,23 +199,23 @@ impl Infos {
         match definition.category {
             ObjectCategory::Character => self
                 .characters
-                .get(definition.id)
+                .get(&definition.id)
                 .and_then(|o| o.looks_like.as_ref()),
             ObjectCategory::Item => self
                 .items
-                .get(definition.id)
+                .get(&definition.id)
                 .and_then(|o| o.looks_like.as_ref()),
             ObjectCategory::Furniture => self
                 .furniture
-                .get(definition.id)
+                .get(&definition.id)
                 .and_then(|o| o.looks_like.as_ref()),
             ObjectCategory::Terrain => self
                 .terrain
-                .get(definition.id)
+                .get(&definition.id)
                 .and_then(TerrainInfo::looks_like),
             ObjectCategory::ZoneLevel => self
                 .zone_level
-                .get(definition.id)
+                .get(&definition.id)
                 .and_then(|o| o.looks_like.as_ref()),
             _ => unimplemented!("{:?}", definition),
         }
@@ -229,7 +229,7 @@ impl Infos {
             current_id = current_definition_ref.id.truncate();
             current_definition = ObjectDefinition {
                 category: definition.category.clone(),
-                id: &current_id,
+                id: current_id,
             };
             current_definition_ref = &current_definition;
         }
@@ -240,24 +240,28 @@ impl Infos {
         ];
 
         while let Some(other) = self.looks_like(current_definition_ref) {
+            if variants.contains(other) {
+                eprintln!("Variants {:?} already contains {:?}", &variants, &other);
+                break;
+            }
             variants.push(other.suffix("_season_summer"));
             variants.push(other.clone());
             current_definition = ObjectDefinition {
                 category: definition.category.clone(),
-                id: other,
+                id: other.clone(),
             };
             current_definition_ref = &current_definition;
         }
         variants
     }
 
-    pub(crate) fn label<'a>(&'a self, definition: &'a ObjectDefinition, amount: usize) -> Label {
+    pub(crate) fn label(&self, definition: &ObjectDefinition, amount: usize) -> Label {
         let name = match definition.category {
-            ObjectCategory::Character => self.characters.get(definition.id).map(|o| &o.name),
-            ObjectCategory::Item => self.items.get(definition.id).map(|o| &o.name),
-            ObjectCategory::Furniture => self.furniture.get(definition.id).map(|o| &o.name),
-            ObjectCategory::Terrain => self.terrain.get(definition.id).map(TerrainInfo::name),
-            ObjectCategory::ZoneLevel => self.zone_level.get(definition.id).map(|o| &o.name),
+            ObjectCategory::Character => self.characters.get(&definition.id).map(|o| &o.name),
+            ObjectCategory::Item => self.items.get(&definition.id).map(|o| &o.name),
+            ObjectCategory::Furniture => self.furniture.get(&definition.id).map(|o| &o.name),
+            ObjectCategory::Terrain => self.terrain.get(&definition.id).map(TerrainInfo::name),
+            ObjectCategory::ZoneLevel => self.zone_level.get(&definition.id).map(|o| &o.name),
             _ => unimplemented!("{:?}", definition.category),
         };
 

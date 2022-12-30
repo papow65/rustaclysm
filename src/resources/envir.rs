@@ -9,6 +9,7 @@ pub(crate) struct Envir<'w, 's> {
     relative_segments: Res<'w, RelativeSegments>,
     floors: Query<'w, 's, &'static Floor>,
     hurdles: Query<'w, 's, &'static Hurdle>,
+    closed_doors: Query<'w, 's, Entity, With<ClosedDoor>>,
     stairs_up: Query<'w, 's, &'static StairsUp>,
     stairs_down: Query<'w, 's, &'static StairsDown>,
     obstacles: Query<'w, 's, &'static Label, With<Obstacle>>,
@@ -102,6 +103,10 @@ impl<'w, 's> Envir<'w, 's> {
         } else {
             None
         }
+    }
+
+    pub(crate) fn find_closed_door(&self, pos: Pos) -> Option<Entity> {
+        self.location.get_first(pos, &self.closed_doors)
     }
 
     pub(crate) fn find_obstacle(&self, pos: Pos) -> Option<Label> {
@@ -274,7 +279,9 @@ impl<'w, 's> Envir<'w, 's> {
 
         match to.level.cmp(&from.level) {
             Ordering::Greater | Ordering::Less => {
-                if controlled {
+                if self.find_closed_door(to).is_some() {
+                    unimplemented!();
+                } else if controlled {
                     if let Some(obstacle) = self.find_obstacle(to) {
                         Collision::Blocked(obstacle)
                     } else {
@@ -285,7 +292,10 @@ impl<'w, 's> Envir<'w, 's> {
                 }
             }
             Ordering::Equal => {
-                if let Some(obstacle) = self.find_obstacle(to) {
+                let closed_door = self.find_closed_door(to);
+                if controlled && closed_door.is_some() {
+                    Collision::Opened(closed_door.unwrap())
+                } else if let Some(obstacle) = self.find_obstacle(to) {
                     Collision::Blocked(obstacle)
                 } else if self.has_floor(to) {
                     Collision::Pass

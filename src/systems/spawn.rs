@@ -259,3 +259,33 @@ pub(crate) fn update_collapsed_zone_levels(
 
     log_if_slow("update_collapsed_zone_levels", start);
 }
+
+#[allow(clippy::needless_pass_by_value)]
+pub(crate) fn toggle_doors(
+    mut commands: Commands,
+    mut tile_spawner: TileSpawner,
+    toggled: Query<
+        (
+            Entity,
+            &ObjectDefinition,
+            &Pos,
+            Option<&ClosedDoor>,
+            &Parent,
+        ),
+        With<ToggleDoor>,
+    >,
+) {
+    let start = Instant::now();
+
+    for (entity, definition, &pos, closed, parent) in toggled.iter() {
+        commands.entity(entity).despawn_recursive();
+        let TerrainInfo::Terrain{close, open, ..} = tile_spawner.infos.terrain(&definition.id).unwrap() else {panic!()};
+        let toggled_definition = ObjectDefinition {
+            id: closed.map_or(close, |_| open).as_ref().unwrap().clone(),
+            category: definition.category.clone(),
+        };
+        tile_spawner.spawn_tile(parent.get(), pos, &toggled_definition);
+    }
+
+    log_if_slow("toggle_doors", start);
+}

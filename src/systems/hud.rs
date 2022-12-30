@@ -4,7 +4,6 @@ use bevy::diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin};
 use bevy::ecs::system::{EntityCommands, Resource};
 use bevy::prelude::*;
 use chrono::prelude::{Datelike, Local};
-use std::collections::BTreeMap;
 use std::time::Instant;
 
 #[derive(Resource)]
@@ -309,12 +308,12 @@ pub(crate) fn update_status_player_state(
 pub(crate) fn update_status_detais(
     envir: Envir,
     mut explored: ResMut<Explored>,
-    mut labels: ResMut<ZoneLevelIds>,
-    characters: Query<(Option<&Label>, &Health)>,
+    mut zone_level_ids: ResMut<ZoneLevelIds>,
+    characters: Query<(Option<&ObjectDefinition>, Option<&Label>, &Health)>,
     entities: Query<
         (
+            Option<&ObjectDefinition>,
             Option<&Label>,
-            Option<&Health>,
             Option<&Corpse>,
             Option<&Action>,
             Option<&Floor>,
@@ -328,10 +327,10 @@ pub(crate) fn update_status_detais(
         ),
         (Without<Health>, Without<Amount>),
     >,
-    items: Query<(Option<&Label>, &Amount), Without<Health>>,
+    items: Query<(Option<&ObjectDefinition>, &Label), (Without<Health>, With<Amount>)>,
     player: Query<&Player, Changed<Player>>,
     mut status_displays: Query<&mut Text, With<StatusDisplay>>,
-    _globs: Query<(&GlobalTransform, Option<&ZoneLevel>)>,
+    //_globs: Query<(&GlobalTransform, Option<&ZoneLevel>)>,
 ) {
     let start = Instant::now();
 
@@ -372,7 +371,7 @@ pub(crate) fn update_status_detais(
                     format!(
                         "{:?}\n{:?}",
                         zone_level,
-                        labels
+                        zone_level_ids
                             .get(zone_level)
                             .unwrap_or(&ObjectId::new("NOT FOUND"))
                     )
@@ -385,12 +384,15 @@ pub(crate) fn update_status_detais(
     log_if_slow("update_status_detais", start);
 }
 
-fn characters_info(all_here: &[Entity], characters: &Query<(Option<&Label>, &Health)>) -> String {
+fn characters_info(
+    all_here: &[Entity],
+    characters: &Query<(Option<&ObjectDefinition>, Option<&Label>, &Health)>,
+) -> String {
     all_here
         .iter()
         .flat_map(|&i| characters.get(i))
-        .map(|(label, health)| {
-            let label = label.map_or_else(|| String::from("?"), String::from);
+        .map(|(_definition, label, health)| {
+            let label = label.map_or_else(|| String::from("[Unknown]"), String::from);
             format!("{label} ({health} health)\n")
         })
         .collect()
@@ -398,8 +400,8 @@ fn characters_info(all_here: &[Entity], characters: &Query<(Option<&Label>, &Hea
 
 fn entity_info(
     (
+        definition,
         label,
-        health,
         corpse,
         action,
         floor,
@@ -411,8 +413,8 @@ fn entity_info(
         last_seen,
         visibility,
     ): (
+        Option<&ObjectDefinition>,
         Option<&Label>,
-        Option<&Health>,
         Option<&Corpse>,
         Option<&Action>,
         Option<&Floor>,
@@ -425,12 +427,11 @@ fn entity_info(
         Option<&Visibility>,
     ),
 ) -> String {
-    let label = label.map_or_else(|| String::from("?"), String::from);
     let mut flags = Vec::new();
-    let health_str;
-    if let Some(health) = health {
-        health_str = format!("health({health})");
-        flags.push(health_str.as_str());
+    let id_str;
+    if let Some(definition) = definition {
+        id_str = format!("{:?}", definition.id);
+        flags.push(id_str.as_str());
     }
     if corpse.is_some() {
         flags.push("corpse");
@@ -480,7 +481,8 @@ fn entity_info(
             flags.push("invisible");
         }
     }
-    label
+
+    label.map_or_else(|| String::from("[Unknown]"), String::from)
         + flags
             .iter()
             .map(|s| format!("\n- {s}"))
@@ -490,21 +492,16 @@ fn entity_info(
 
 fn items_info(
     all_here: &[Entity],
-    items: &Query<(Option<&Label>, &Amount), Without<Health>>,
+    items: &Query<(Option<&ObjectDefinition>, &Label), (Without<Health>, With<Amount>)>,
 ) -> String {
-    let mut grouped_items = BTreeMap::<Option<&Label>, u32>::new();
-    for (label, item) in all_here.iter().flat_map(|&i| items.get(i)) {
-        *grouped_items.entry(label).or_insert(0) += item.0;
-    }
-    grouped_items
+    all_here
         .iter()
-        .map(|(label, amount)| {
-            let label = label.map_or_else(|| String::from("?"), String::from);
-            let amount = Some(amount)
-                .filter(|&&a| 1 < a)
-                .map(|a| format!(" (x{a})"))
-                .unwrap_or_default();
-            label + amount.as_str() + "\n"
+        .flat_map(|e| items.get(*e))
+        .map(|(definition, label)| {
+            format!(
+                "{label}\n- {:?}\n",
+                definition.map_or(ObjectId::new("?"), |d| d.id.clone())
+            )
         })
         .collect()
 }

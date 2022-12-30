@@ -45,6 +45,7 @@ impl Plugin for RustaclysmPlugin {
 
 fn update_systems() -> SystemSet {
     SystemSet::new()
+        .with_system(toggle_doors)
         .with_system(update_location)
         .with_system(update_transforms)
         .with_system(update_hidden_item_visibility)

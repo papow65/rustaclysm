@@ -25,7 +25,7 @@ impl Action {
         self,
         commands: &mut Commands,
         envir: &mut Envir,
-        dumpees: &Query<(Entity, &Parent, &Label)>,
+        dumpees: &Query<(Entity, &Label, &Parent)>,
         hierarchy: &Hierarchy, // pickup
         actor: Entity,
         label: &Label,
@@ -98,6 +98,10 @@ fn move_(
             commands.spawn(Message::warn(message));
             Milliseconds(0)
         }
+        Collision::Opened(door) => {
+            commands.entity(door).insert(ToggleDoor);
+            envir.walking_cost(from, to).duration(speed)
+        }
     }
 }
 
@@ -160,7 +164,7 @@ fn smash(
 
 fn dump(
     commands: &mut Commands,
-    dumpees: &Query<(Entity, &Parent, &Label)>,
+    dumpees: &Query<(Entity, &Label, &Parent)>,
     dumper: Entity,
     dr_label: &Label,
     pos: Pos,
@@ -168,8 +172,7 @@ fn dump(
 ) -> Milliseconds {
     // It seems impossible to remove something from 'Children', so we check 'Parent'.
 
-    if let Some((dumpee, _, dee_label)) =
-        dumpees.iter().find(|(_, parent, _)| parent.get() == dumper)
+    if let Some((dumpee, dee_label, _)) = dumpees.iter().find(|(.., parent)| parent.get() == dumper)
     {
         commands.spawn(Message::new(format!("{dr_label} drops {dee_label}")));
         commands.entity(dumper).remove_children(&[dumpee]);
