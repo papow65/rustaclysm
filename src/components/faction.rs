@@ -7,7 +7,7 @@ use pathfinding::{
 };
 use rand::prelude::*;
 use rand::seq::SliceRandom;
-use std::{iter::once, ops::Add};
+use std::ops::Add;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub(crate) enum Intelligence {
@@ -27,6 +27,11 @@ pub(crate) enum Intent {
     Flee,
     Wander,
     Wait,
+}
+
+impl Intent {
+    /** in order of consideration */
+    const ALL: [Self; 4] = [Self::Attack, Self::Flee, Self::Wander, Self::Wait];
 }
 
 #[derive(Component, Debug, PartialEq)]
@@ -67,12 +72,13 @@ impl Faction {
         }
     }
 
-    fn intents(&self, health: &Health) -> impl Iterator<Item = Intent> {
-        once(self.is_aggressive(health).then_some(Intent::Attack))
-            .chain(once(self.can_fear().then_some(Intent::Flee)))
-            .chain(once(self.wanders().then_some(Intent::Wander)))
-            .flatten()
-            .chain(once(Intent::Wait))
+    fn consider(&self, intent: Intent, health: &Health) -> bool {
+        match intent {
+            Intent::Attack => self.is_aggressive(health),
+            Intent::Flee => self.can_fear(),
+            Intent::Wander => self.wanders(),
+            Intent::Wait => true,
+        }
     }
 
     pub(crate) fn attack(
@@ -225,18 +231,17 @@ impl Faction {
                 .map(|action| (action, None)),
             Intent::Wait => Some(Action::Stay).map(|action| (action, None)),
         }
+        .filter(|(action, _)| match action {
+            // prevent fish from acting on land
+            Action::Step { target } | Action::Attack { target } | Action::Smash { target } => {
+                aquatic.is_none() || envir.is_water(*target)
+            }
+            _ => true,
+        })
         .map(|(action, last_enemy)| Strategy {
             intent,
             action,
             last_enemy,
-        })
-        .filter(|strategy| {
-            if let Action::Step { target } = strategy.action {
-                // prevent fish from walking on land
-                aquatic.is_none() || envir.is_water(target)
-            } else {
-                true
-            }
         })
     }
 
@@ -262,7 +267,9 @@ impl Faction {
             .collect::<Vec<Pos>>();
         //println!("{self:?} can see {:?} enemies", enemies.len());
 
-        self.intents(health)
+        Intent::ALL
+            .into_iter()
+            .filter(|intent| self.consider(*intent, health))
             .find_map(|intent| {
                 self.attempt(
                     intent, envir, start_pos, speed, aquatic, factions, &enemies, last_enemy,
