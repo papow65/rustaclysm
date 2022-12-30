@@ -87,13 +87,17 @@ impl Faction {
         enemies
             .iter()
             .copied()
-            .chain(last_enemy.iter().map(|l| l.0))
-            .filter_map(|enemy_pos| envir.path(start_pos, enemy_pos, self.intelligence(), speed))
-            .min_by_key(|path| path.duration.0)
-            .and_then(|path| {
+            .map(|pos| (false, pos))
+            .chain(last_enemy.iter().map(|last_enemy| (true, last_enemy.0)))
+            .filter_map(|(memory, enemy_pos)| {
+                envir
+                    .path(start_pos, enemy_pos, self.intelligence(), speed)
+                    .map(|path| (memory, path))
+            })
+            .min_by_key(|(memory, path)| (*memory, path.duration.0))
+            .and_then(|(_, path)| {
                 let last_enemy = LastEnemy(path.destination);
 
-                //println!("{:?}->{:?}", path.first, path.destination,);
                 if path.first == path.destination {
                     if factions
                         .iter()
