@@ -29,7 +29,7 @@ pub(crate) enum Intent {
     Wait,
 }
 
-#[derive(Component, Debug)]
+#[derive(Component, Debug, PartialEq)]
 pub(crate) enum Faction {
     Human,
     Zombie,
@@ -95,7 +95,11 @@ impl Faction {
 
                 //println!("{:?}->{:?}", path.first, path.destination,);
                 if path.first == path.destination {
-                    if factions.iter().any(|(pos, _)| pos == &path.destination) {
+                    if factions
+                        .iter()
+                        .filter(|(_, faction)| faction != &self)
+                        .any(|(pos, _)| pos == &path.destination)
+                    {
                         Some((Action::Attack { target: path.first }, last_enemy))
                     } else {
                         None
@@ -164,12 +168,19 @@ impl Faction {
         })
     }
 
-    pub(crate) fn wander(&self, envir: &Envir, start_pos: Pos, speed: BaseSpeed) -> Option<Action> {
+    pub(crate) fn wander(
+        &self,
+        envir: &Envir,
+        start_pos: Pos,
+        speed: BaseSpeed,
+        factions: &[(Pos, &Self)],
+    ) -> Option<Action> {
         let mut random = rand::thread_rng();
 
         if random.gen::<f32>() < 0.3 {
             envir
                 .nbors_for_moving(start_pos, None, self.intelligence(), speed)
+                .filter(|(pos, _)| factions.iter().all(|(other_pos, _)| pos != other_pos))
                 .map(|(pos, _)| pos)
                 .collect::<Vec<Pos>>()
                 .choose(&mut random)
@@ -206,7 +217,7 @@ impl Faction {
                 .flee(envir, start_pos, speed, enemies)
                 .map(|action| (action, None)),
             Intent::Wander => self
-                .wander(envir, start_pos, speed)
+                .wander(envir, start_pos, speed, factions)
                 .map(|action| (action, None)),
             Intent::Wait => Some(Action::Stay).map(|action| (action, None)),
         }
