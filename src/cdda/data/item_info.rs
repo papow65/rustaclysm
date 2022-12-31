@@ -1,4 +1,4 @@
-use crate::prelude::{DeflatVec, Label, ObjectId};
+use crate::prelude::{DeflatVec, Label, Mass, ObjectId, Volume};
 use bevy::utils::HashMap;
 use serde::Deserialize;
 
@@ -35,10 +35,13 @@ pub(crate) struct ItemInfo {
     pub(crate) show_stats: Option<bool>,
 
     // The fields below are listed in load_basic_info as item_factory.cpp:3932
-    pub(crate) weight: Option<String>,
+    #[serde(rename = "weight")]
+    pub(crate) mass: Option<Mass>,
 
-    pub(crate) integral_weight: Option<serde_json::Value>,
-    pub(crate) volume: Option<String>,
+    #[serde(rename = "integral_weight")]
+    pub(crate) integral_mass: Option<serde_json::Value>,
+
+    pub(crate) volume: Option<Volume>,
     pub(crate) longest_side: Option<String>,
     pub(crate) price: Option<Price>,
     pub(crate) price_postapoc: Option<Price>,

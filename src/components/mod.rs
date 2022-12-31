@@ -3,7 +3,9 @@ mod faction;
 mod player;
 mod pos;
 
-use crate::prelude::{MoveCost, MoveCostMod, ObjectCategory, ObjectId, Partial, Visible};
+use crate::prelude::{
+    Mass, MoveCost, MoveCostMod, ObjectCategory, ObjectId, Partial, Visible, Volume,
+};
 use bevy::prelude::{AlphaMode, Assets, Color, Component, Handle, StandardMaterial};
 use std::fmt;
 
@@ -79,10 +81,16 @@ pub(crate) struct Hurdle(pub(crate) MoveCostMod);
 pub(crate) struct Opaque;
 
 #[derive(Component)]
-pub(crate) struct Container(pub(crate) u8);
+pub(crate) struct Container {
+    pub(crate) max_volume: Volume,
+    pub(crate) max_mass: Mass,
+}
 
 #[derive(Component)]
-pub(crate) struct Containable(pub(crate) u8);
+pub(crate) struct Containable {
+    pub(crate) volume: Volume,
+    pub(crate) mass: Mass,
+}
 
 #[derive(Component, Debug)]
 pub(crate) struct Amount(pub(crate) u32);

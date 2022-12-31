@@ -227,18 +227,18 @@ fn pickup(
     if let Some((pd_entity, pd_label, pd_containable)) =
         location.get_first(pr_pos, &hierarchy.picked)
     {
-        let space_used: u8 = hierarchy
+        let volume_used = hierarchy
             .children
             .iter()
             .filter(|(parent, _)| parent.get() == picker)
-            .map(|(_, containable)| containable.0)
+            .map(|(_, containable)| containable.volume)
             .sum();
-        if container.0 < space_used + pd_containable.0 {
+        if container.max_volume < volume_used + pd_containable.volume {
             let message = format!(
                 "{} has only {} space left, but {} needed to pick up {}",
                 pr_label,
-                container.0 - space_used,
-                pd_containable.0,
+                container.max_volume - volume_used,
+                pd_containable.volume,
                 &pd_label
             );
             commands.spawn(Message::warn(message));

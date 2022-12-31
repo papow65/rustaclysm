@@ -130,7 +130,7 @@ pub(crate) struct CddaItem {
     snip_id: Option<String>,
     pub(crate) charges: Option<u32>,
     active: Option<bool>,
-    corpse: Option<String>,
+    pub(crate) corpse: Option<ObjectId>,
     name: Option<String>,
     owner: Option<String>,
     bday: Option<i64>,

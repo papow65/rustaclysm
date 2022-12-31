@@ -101,7 +101,10 @@ impl<'w, 's> TileSpawner<'w, 's> {
             .insert(Health::new(5))
             .insert(Faction::Animal)
             .insert(BaseSpeed::from_h_kmph(10))
-            .insert(Container(0));
+            .insert(Container {
+                max_volume: Volume::from(String::from("20l")),
+                max_mass: Mass::from(String::from("50kg")),
+            });
 
         let character_info = self
             .infos
@@ -112,20 +115,35 @@ impl<'w, 's> TileSpawner<'w, 's> {
         }
     }
 
-    fn spawn_item(&mut self, parent: Entity, pos: Pos, id: ObjectId, amount: Amount) {
+    fn spawn_item(&mut self, parent: Entity, pos: Pos, item: &CddaItem, amount: Amount) {
         //println!("{:?} {:?} {:?} {:?}", &parent, pos, &id, &amount);
         let definition = &ObjectDefinition {
             category: ObjectCategory::Item,
-            id,
+            id: item.typeid.clone(),
         };
-        //println!("{:?}", &definition);
+        println!("{:?} @ {pos:?}", &definition);
         let entity = self.spawn_tile(parent, pos, definition);
+
+        let item_info = self.infos.item(&definition.id).unwrap();
+
+        let (volume, mass) = match &item.corpse {
+            Some(corpse_id) if corpse_id != &ObjectId::new("mon_null") => {
+                println!("{:?}", &corpse_id);
+                let monster_info = self.infos.character(corpse_id).unwrap();
+                (monster_info.volume, monster_info.mass)
+            }
+            _ => (item_info.volume, item_info.mass),
+        };
 
         // Overwrite the default label
         self.commands
             .entity(entity)
             .insert(self.infos.label(definition, amount.0 as usize))
-            .insert(amount);
+            .insert(amount)
+            .insert(Containable {
+                volume: volume.unwrap(),
+                mass: mass.unwrap(),
+            });
     }
 
     pub(crate) fn spawn_tile(
@@ -343,7 +361,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
                         self.spawn_item(
                             subzone_level_entity,
                             pos,
-                            item.typeid.clone(),
+                            item,
                             Amount(item.charges.unwrap_or(1) * amount),
                         );
                     }
@@ -803,7 +821,10 @@ impl<'w, 's> Spawner<'w, 's> {
             .insert(speed)
             .insert(faction)
             .insert(Obstacle)
-            .insert(Container(4))
+            .insert(Container {
+                max_volume: Volume::from(String::from("10 l")),
+                max_mass: Mass::from(String::from("10 kg")),
+            })
             .with_children(|child_builder| {
                 child_builder
                     .spawn(character_bundle)

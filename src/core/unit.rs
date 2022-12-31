@@ -1,9 +1,11 @@
 use crate::prelude::{MoveCost, NborDistance};
 use bevy::prelude::Component;
 use pathfinding::num_traits::Zero;
+use serde::Deserialize;
 use std::{
     fmt,
-    ops::{Add, Div},
+    iter::Sum,
+    ops::{Add, Div, Sub},
 };
 
 pub(crate) const MIN_INVISIBLE_DISTANCE: u32 = 61;
@@ -157,6 +159,201 @@ impl Add<WalkingCost> for WalkingCost {
     fn add(self, other: Self) -> Self {
         Self {
             equivalent_distance: self.equivalent_distance + other.equivalent_distance,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, PartialOrd)]
+#[serde(from = "String")]
+pub(crate) struct Volume {
+    milliliter: u64,
+}
+
+impl Add<Self> for Volume {
+    type Output = Self;
+    fn add(self, other: Self) -> Self {
+        Self {
+            milliliter: self.milliliter + other.milliliter,
+        }
+    }
+}
+
+impl Sub<Self> for Volume {
+    type Output = Self;
+    fn sub(self, other: Self) -> Self {
+        Self {
+            milliliter: self.milliliter - other.milliliter,
+        }
+    }
+}
+
+impl fmt::Display for Volume {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{} ml", self.milliliter)
+    }
+}
+
+impl From<String> for Volume {
+    fn from(value: String) -> Self {
+        let quantity = value.trim_matches(char::is_alphabetic).trim();
+        let unit: String = value.matches(char::is_alphabetic).collect();
+        println!("{value} {} {}", &quantity, &unit);
+
+        let quantity = quantity.parse::<f32>().unwrap();
+
+        Self {
+            milliliter: match unit.to_lowercase().as_str() {
+                "l" => 1000.0 * quantity,
+                "ml" => quantity,
+                _ => panic!("{value} {quantity} {}", &unit),
+            } as u64,
+        }
+    }
+}
+
+#[cfg(test)]
+mod volume_tests {
+    use super::*;
+    #[test]
+    fn it_works() {
+        _ = Volume::from(String::from("20 L"));
+        _ = Volume::from(String::from("20ml"));
+    }
+}
+
+impl Sum for Volume {
+    fn sum<V>(iter: V) -> Self
+    where
+        V: Iterator<Item = Self>,
+    {
+        iter.fold(Self { milliliter: 0 }, |a, b| Self {
+            milliliter: a.milliliter + b.milliliter,
+        })
+    }
+}
+
+#[derive(Clone, Copy, Debug, Deserialize)]
+#[serde(from = "String")]
+pub(crate) struct Mass {
+    milligram: u64,
+}
+
+impl fmt::Display for Mass {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{} mg", self.milligram)
+    }
+}
+
+impl From<String> for Mass {
+    fn from(value: String) -> Self {
+        let quantity = value.trim_matches(char::is_alphabetic).trim();
+        let unit: String = value.matches(char::is_alphabetic).collect();
+        println!("{value} {} {}", &quantity, &unit);
+
+        let quantity = quantity.parse::<f32>().unwrap();
+
+        Self {
+            milligram: match unit.to_lowercase().as_str() {
+                "mg" => 1_000_000.0 * quantity,
+                "g" => 1_000.0 * quantity,
+                "kg" => quantity,
+                _ => panic!("{value} {quantity} {}", &unit),
+            } as u64,
+        }
+    }
+}
+
+#[cfg(test)]
+mod mass_tests {
+    use super::*;
+    #[test]
+    fn it_works() {
+        _ = Mass::from(String::from("20 Kg"));
+        _ = Mass::from(String::from("20mg"));
+    }
+}
+
+pub(crate) struct Limited<T> {
+    curr: T,
+    max: T,
+}
+
+impl<T> Limited<T>
+where
+    T: Default,
+{
+    pub(crate) fn empty(max: T) -> Self {
+        Self {
+            curr: T::default(),
+            max,
+        }
+    }
+}
+
+impl<T> Limited<T>
+where
+    T: Clone,
+{
+    pub(crate) fn full(max: T) -> Self {
+        Self {
+            curr: max.clone(),
+            max,
+        }
+    }
+}
+
+impl<T> Limited<T>
+where
+    T: Copy + Sub<Output = T>,
+{
+    pub(crate) fn left(&self) -> T {
+        self.max - self.curr
+    }
+}
+
+impl<T> Limited<T>
+where
+    T: Clone,
+{
+    pub(crate) fn current(&self) -> T {
+        self.curr.clone()
+    }
+}
+
+impl<T> Limited<T>
+where
+    T: Clone,
+{
+    pub(crate) fn maximum(&self) -> T {
+        self.max.clone()
+    }
+}
+
+impl<T> Limited<T>
+where
+    T: Copy + PartialOrd + Add<Output = T>,
+{
+    pub(crate) fn try_add(&mut self, more: T) -> Result<(), ()> {
+        let sum = self.curr + more;
+        if self.max < sum {
+            Err(())
+        } else {
+            self.curr = sum;
+            Ok(())
+        }
+    }
+}
+
+impl<T> Limited<T>
+where
+    T: Copy + PartialOrd + Sub<Output = T>,
+{
+    pub(crate) fn try_substract(&mut self, less: T) -> Result<(), ()> {
+        if self.curr < less {
+            Err(())
+        } else {
+            self.curr = self.curr - less;
+            Ok(())
         }
     }
 }
