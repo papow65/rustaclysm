@@ -6,6 +6,8 @@ use bevy::prelude::*;
 use chrono::prelude::{Datelike, Local};
 use std::time::Instant;
 
+const TEXT_WIDTH: f32 = 8.0 * 43.0; // 43 chars
+
 #[derive(Resource)]
 pub(crate) struct HudDefaults {
     text_style: TextStyle,
@@ -39,7 +41,12 @@ fn spawn_log_display(parent: &mut EntityCommands) {
                         left: Val::Px(0.0),
                         ..UiRect::default()
                     },
+                    size: Size {
+                        width: Val::Px(TEXT_WIDTH),
+                        height: Val::Px(20.0 * 16.0),
+                    },
                     margin: UiRect::all(Val::Px(5.0)),
+                    flex_wrap: FlexWrap::Wrap,
                     ..Style::default()
                 },
                 ..TextBundle::default()
@@ -69,6 +76,10 @@ fn spawn_status_display(hud_defaults: &HudDefaults, parent: &mut EntityCommands)
                         top: Val::Px(0.0),
                         left: Val::Px(0.0),
                         ..UiRect::default()
+                    },
+                    size: Size {
+                        width: Val::Px(TEXT_WIDTH),
+                        height: Val::Percent(100.0),
                     },
                     margin: UiRect::all(Val::Px(5.0)),
                     ..Style::default()
@@ -126,7 +137,7 @@ pub(crate) fn spawn_hud(mut commands: Commands, mut asset_server: ResMut<AssetSe
     background.style.position.top = Val::Px(0.0);
     background.style.position.right = Val::Px(0.0);
     background.style.size = Size {
-        width: Val::Px(353.0), // for 43 chars - determined by trial and error
+        width: Val::Px(TEXT_WIDTH + 10.0), // 5px margin on both sides
         height: Val::Percent(100.0),
     };
     let mut parent = commands.spawn(background);
@@ -134,6 +145,12 @@ pub(crate) fn spawn_hud(mut commands: Commands, mut asset_server: ResMut<AssetSe
     spawn_log_display(&mut parent);
 
     commands.insert_resource(hud_defaults);
+
+    // Workaround to make sure the log starts at the bottom
+    for i in 0..20 {
+        // All different to make sure the messages are not bundled
+        commands.spawn(Message::new(" ".repeat(i)));
+    }
 }
 
 #[allow(clippy::needless_pass_by_value)]
