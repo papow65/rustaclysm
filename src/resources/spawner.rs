@@ -141,8 +141,9 @@ impl<'w, 's> TileSpawner<'w, 's> {
             .insert(self.infos.label(definition, amount.0 as usize))
             .insert(amount)
             .insert(Containable {
-                volume: volume.unwrap(),
-                mass: mass.unwrap(),
+                // Based on cataclysm-ddasrc/mtype.cpp lines 47-48
+                volume: volume.unwrap_or_else(|| Volume::from(String::from("62499 ml"))),
+                mass: mass.unwrap_or_else(|| Mass::from(String::from("81499 g"))),
             });
     }
 
