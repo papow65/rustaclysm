@@ -16,7 +16,7 @@ pub(crate) struct Envir<'w, 's> {
     terrain: Query<'w, 's, &'static Label, (Without<Health>, Without<Amount>)>,
     obstacles: Query<'w, 's, &'static Label, With<Obstacle>>,
     opaques: Query<'w, 's, &'static Label, With<Opaque>>,
-    characters: Query<'w, 's, Entity, With<Health>>,
+    characters: Query<'w, 's, (Entity, &'static Label), With<Health>>,
     items: Query<'w, 's, Entity, With<Integrity>>,
 }
 
@@ -127,7 +127,7 @@ impl<'w, 's> Envir<'w, 's> {
         self.location.any(pos, &self.opaques)
     }
 
-    pub(crate) fn find_character(&self, pos: Pos) -> Option<Entity> {
+    pub(crate) fn find_character(&self, pos: Pos) -> Option<(Entity, &Label)> {
         self.location.get_first(pos, &self.characters)
     }
 

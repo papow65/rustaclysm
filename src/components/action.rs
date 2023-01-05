@@ -121,7 +121,7 @@ fn attack(
         unimplemented!();
     }
 
-    if let Some(defender) = envir.find_character(target) {
+    if let Some((defender, _)) = envir.find_character(target) {
         commands.entity(defender).insert(Damage {
             attacker: a_label.clone(),
             amount: 1,
@@ -178,9 +178,18 @@ fn close(
         unimplemented!();
     }
 
-    if let Some(smashable) = envir.find_closeable(target) {
-        commands.entity(smashable).insert(Toggle);
-        envir.walking_cost(pos, target).duration(speed)
+    if let Some(closable) = envir.find_closeable(target) {
+        if let Some((_, character)) = envir.find_character(target) {
+            let air = Label::new("the air");
+            let obstacle = envir.find_terrain(target).unwrap_or(&air);
+            commands.spawn(Message::warn(format!(
+                "{closer} can't close {obstacle} on {character}"
+            )));
+            Milliseconds(0)
+        } else {
+            commands.entity(closable).insert(Toggle);
+            envir.walking_cost(pos, target).duration(speed)
+        }
     } else {
         let air = Label::new("the air");
         let obstacle = envir.find_terrain(target).unwrap_or(&air);
