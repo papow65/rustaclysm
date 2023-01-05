@@ -385,13 +385,7 @@ pub(crate) fn update_status_detais(
                 if explored.has_zone_level_been_seen(zone_level) == SeenFrom::Never {
                     format!("{zone_level:?}\nUnseen")
                 } else {
-                    format!(
-                        "{:?}\n{:?}",
-                        zone_level,
-                        zone_level_ids
-                            .get(zone_level)
-                            .unwrap_or(&ObjectId::new("NOT FOUND"))
-                    )
+                    format!("{zone_level:?}\n{:?}", zone_level_ids.get(zone_level))
                 }
             }
             _ => String::new(),

@@ -1,4 +1,4 @@
-use crate::prelude::{Level, ObjectId, Overzone, PathFor, RepetitionBlock, WorldPath};
+use crate::prelude::{CddaAmount, Level, ObjectId, Overzone, PathFor, RepetitionBlock, WorldPath};
 use serde::Deserialize;
 use std::fs::read_to_string;
 
@@ -31,10 +31,55 @@ pub(crate) struct Overmap {
     npcs: serde_json::Value,
     camps: serde_json::Value,
     overmap_special_placements: serde_json::Value,
-    mapgen_arg_storage: serde_json::Value,
-    mapgen_arg_index: serde_json::Value,
+    mapgen_arg_storage: Option<serde_json::Value>,
+    mapgen_arg_index: Option<serde_json::Value>,
     joins_used: Option<serde_json::Value>,
     predecessors: Option<serde_json::Value>,
+}
+
+impl Overmap {
+    pub(crate) fn fallback() -> Self {
+        Overmap {
+            layers: [
+                OvermapLevel::all(ObjectId::new("deep_rock")),
+                OvermapLevel::all(ObjectId::new("deep_rock")),
+                OvermapLevel::all(ObjectId::new("deep_rock")),
+                OvermapLevel::all(ObjectId::new("deep_rock")),
+                OvermapLevel::all(ObjectId::new("deep_rock")),
+                OvermapLevel::all(ObjectId::new("deep_rock")),
+                OvermapLevel::all(ObjectId::new("deep_rock")),
+                OvermapLevel::all(ObjectId::new("empty_rock")),
+                OvermapLevel::all(ObjectId::new("empty_rock")),
+                OvermapLevel::all(ObjectId::new("solid_earth")),
+                OvermapLevel::all(ObjectId::new("field")),
+                OvermapLevel::all(ObjectId::new("open_air")),
+                OvermapLevel::all(ObjectId::new("open_air")),
+                OvermapLevel::all(ObjectId::new("open_air")),
+                OvermapLevel::all(ObjectId::new("open_air")),
+                OvermapLevel::all(ObjectId::new("open_air")),
+                OvermapLevel::all(ObjectId::new("open_air")),
+                OvermapLevel::all(ObjectId::new("open_air")),
+                OvermapLevel::all(ObjectId::new("open_air")),
+                OvermapLevel::all(ObjectId::new("open_air")),
+                OvermapLevel::all(ObjectId::new("open_air")),
+            ],
+            region_id: serde_json::Value::Null,
+            monster_groups: serde_json::Value::Null,
+            cities: serde_json::Value::Null,
+            connections_out: serde_json::Value::Null,
+            radios: serde_json::Value::Null,
+            monster_map: serde_json::Value::Null,
+            tracked_vehicles: serde_json::Value::Null,
+            scent_traces: serde_json::Value::Null,
+            npcs: serde_json::Value::Null,
+            camps: serde_json::Value::Null,
+            overmap_special_placements: serde_json::Value::Null,
+            mapgen_arg_storage: None,
+            mapgen_arg_index: None,
+            joins_used: None,
+            predecessors: None,
+        }
+    }
 }
 
 impl TryFrom<&OvermapPath> for Overmap {
@@ -52,3 +97,12 @@ impl TryFrom<&OvermapPath> for Overmap {
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct OvermapLevel(pub(crate) RepetitionBlock<ObjectId>);
+
+impl OvermapLevel {
+    fn all(id: ObjectId) -> Self {
+        Self(RepetitionBlock::new(CddaAmount {
+            obj: id,
+            amount: 180 * 180,
+        }))
+    }
+}

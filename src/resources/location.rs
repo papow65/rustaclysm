@@ -1,10 +1,9 @@
 use crate::prelude::{Pos, StairsDown, StairsUp};
-use bevy::ecs::{
-    query::{ROQueryItem, ReadOnlyWorldQuery},
-    system::Resource,
+use bevy::{
+    ecs::query::{ROQueryItem, ReadOnlyWorldQuery},
+    prelude::{Entity, Query, Resource},
+    utils::HashMap,
 };
-use bevy::prelude::{Entity, Query};
-use bevy::utils::HashMap;
 
 const NOT_FOUND: &Vec<Entity> = &Vec::new();
 

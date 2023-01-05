@@ -197,7 +197,7 @@ impl From<String> for Volume {
     fn from(value: String) -> Self {
         let quantity = value.trim_matches(char::is_alphabetic).trim();
         let unit: String = value.matches(char::is_alphabetic).collect();
-        println!("{value} {} {}", &quantity, &unit);
+        //println!("{value} {} {}", &quantity, &unit);
 
         let quantity = quantity.parse::<f32>().unwrap();
 
@@ -248,7 +248,7 @@ impl From<String> for Mass {
     fn from(value: String) -> Self {
         let quantity = value.trim_matches(char::is_alphabetic).trim();
         let unit: String = value.matches(char::is_alphabetic).collect();
-        println!("{value} {} {}", &quantity, &unit);
+        //println!("{value} {} {}", &quantity, &unit);
 
         let quantity = quantity.parse::<f32>().unwrap();
 

@@ -400,44 +400,28 @@ impl<'w, 's> TileSpawner<'w, 's> {
         //println!("{:?} done", subzone_level);
     }
 
-    pub(crate) fn spawn_zones_around(&mut self, center: Zone) {
-        let distance = 100;
-        for x in -distance..=distance {
-            for z in -distance..=distance {
-                let zone = center.offset(x, z);
-                for level in Level::ALL {
-                    let zone_level = zone.zone_level(level);
-                    let id = self
-                        .zone_level_ids
-                        .get(zone_level)
-                        .map(std::clone::Clone::clone);
-                    if let Some(id) = id {
-                        self.spawn_collaped_zone_level(
-                            zone_level,
-                            &ObjectDefinition {
-                                category: ObjectCategory::ZoneLevel,
-                                id,
-                            },
-                        );
-                    }
-                }
-            }
-        }
-    }
+    pub(crate) fn spawn_collapsed_zone_level(
+        &mut self,
+        zone_level: ZoneLevel,
+        child_visibiltiy: &Visibility,
+    ) {
+        let definition = ObjectDefinition {
+            category: ObjectCategory::ZoneLevel,
+            id: self.zone_level_ids.get(zone_level).clone(),
+        };
 
-    fn spawn_collaped_zone_level(&mut self, zone_level: ZoneLevel, definition: &ObjectDefinition) {
         let pbr_bundles = if definition.id.is_hidden_zone() {
             Vec::new()
         } else {
             //println!("zone_level: {zone_level:?} {:?}", &definition);
             self.loader
-                .get_models(definition, &self.infos.variants(definition))
+                .get_models(&definition, &self.infos.variants(&definition))
                 .iter()
                 .map(|model| self.get_pbr_bundle(model, false))
                 .collect::<Vec<PbrBundle>>()
         };
 
-        let label = self.infos.label(definition, 1);
+        let label = self.infos.label(&definition, 1);
 
         let mut entity = self.commands.spawn(zone_level);
         entity.insert(Collapsed).insert(label);
@@ -459,7 +443,9 @@ impl<'w, 's> TileSpawner<'w, 's> {
                 )
                 .with_children(|child_builder| {
                     for pbr_bundle in pbr_bundles {
-                        child_builder.spawn(pbr_bundle);
+                        child_builder
+                            .spawn(pbr_bundle)
+                            .insert(child_visibiltiy.clone());
                     }
                 });
         }

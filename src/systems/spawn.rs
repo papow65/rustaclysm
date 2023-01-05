@@ -6,25 +6,6 @@ use std::time::Instant;
 const MAX_EXPAND_DISTANCE: i32 = 20;
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn spawn_nearby_overzones(
-    mut tile_spawner: TileSpawner,
-    all_zone_levels: Query<(Entity, &ZoneLevel, Option<&Collapsed>)>,
-    players: Query<(&Pos, &Player)>,
-) {
-    let start = Instant::now();
-
-    // TODO more than once
-    if all_zone_levels.is_empty() {
-        if let Ok((&player_pos, player)) = players.get_single() {
-            let focus = Focus::new(player, player_pos);
-            tile_spawner.spawn_zones_around(ZoneLevel::from(&focus).zone);
-        }
-    }
-
-    log_if_slow("spawn_nearby_overzones", start);
-}
-
-#[allow(clippy::needless_pass_by_value)]
 pub(crate) fn spawn_zones_for_camera(
     mut commands: Commands,
     mut tile_spawner: TileSpawner,
@@ -37,7 +18,6 @@ pub(crate) fn spawn_zones_for_camera(
     let start = Instant::now();
 
     let (camera, &global_transform) = cameras.single();
-
     if global_transform == *previous_camera_global_transform {
         return;
     }
@@ -163,13 +143,10 @@ fn spawn_expanded_subzone_levels(
         .collect::<HashSet<_>>();
 
     for subzone_level in expanded_region.subzone_levels() {
-        let expanded = match tile_spawner
+        let expanded = !tile_spawner
             .zone_level_ids
             .get(ZoneLevel::from(subzone_level))
-        {
-            Some(zone_level_id) => !zone_level_id.is_hidden_zone(),
-            None => false,
-        };
+            .is_hidden_zone();
         if expanded && !expanded_subzone_levels.contains(&subzone_level) {
             if let Err(e) = tile_spawner.spawn_expanded_subzone_level(subzone_level) {
                 panic!(
@@ -199,7 +176,8 @@ fn despawn_expanded_subzone_levels(
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_collapsed_zone_levels(
     mut commands: Commands,
-    mut explored: ResMut<Explored>,
+    mut tile_spawner: TileSpawner,
+    zone_level_entities: Res<ZoneLevelEntities>,
     mut previous_camera_global_transform: Local<GlobalTransform>,
     mut previous_visible_region: Local<Region>,
     players: Query<(&Pos, &Player)>,
@@ -218,11 +196,31 @@ pub(crate) fn update_collapsed_zone_levels(
 
     let (&player_pos, player) = players.single();
     let focus = Focus::new(player, player_pos);
-
-    let expanded_region = expanded_region(&focus, camera, &global_transform);
-    //println!("Expanded region: {:?}", &expanded_region);
     let visible_region = visible_region(&focus, camera, &global_transform);
     //println!("Visible region: {:?}", &visible_region);
+    if visible_region == *previous_visible_region {
+        return;
+    }
+    let expanded_region = expanded_region(&focus, camera, &global_transform);
+    //println!("Expanded region: {:?}", &expanded_region);
+
+    for zone_level in visible_region
+        .subzone_levels()
+        .into_iter()
+        .map(ZoneLevel::from)
+        .collect::<HashSet<_>>()
+    {
+        if zone_level_entities.get(zone_level).is_none() {
+            let visibility = visibility(
+                &mut tile_spawner.explored,
+                zone_level,
+                &expanded_region,
+                &visible_region,
+            );
+            tile_spawner.spawn_collapsed_zone_level(zone_level, &visibility);
+        }
+    }
+
     let recalculated_region = visible_region.clamp(&previous_visible_region, &Region::default());
     //println!("Recalculated region: {:?}", &recalculated_region);
 
@@ -231,20 +229,12 @@ pub(crate) fn update_collapsed_zone_levels(
             .contains_subzone_level(SubzoneLevel::from(collapsed_zone_level.base_pos()))
         {
             //println!("{collapsed_zone_level:?} visibility?");
-            let visibility = Visibility {
-                is_visible: collapsed_zone_level
-                    .subzone_levels()
-                    .iter()
-                    .all(|subzone_level| {
-                        if expanded_region.contains_subzone_level(*subzone_level) {
-                            explored.has_zone_level_been_seen(collapsed_zone_level)
-                                == SeenFrom::FarAway
-                        } else {
-                            visible_region.contains_subzone_level(*subzone_level)
-                        }
-                    }),
-            };
-
+            let visibility = visibility(
+                &mut tile_spawner.explored,
+                collapsed_zone_level,
+                &expanded_region,
+                &visible_region,
+            );
             for &entity in children.iter() {
                 //println!("{collapsed_zone_level:?} becomes {visibility:?}");
 
@@ -258,6 +248,23 @@ pub(crate) fn update_collapsed_zone_levels(
     *previous_visible_region = visible_region;
 
     log_if_slow("update_collapsed_zone_levels", start);
+}
+
+fn visibility(
+    explored: &mut Explored,
+    zone_level: ZoneLevel,
+    expanded_region: &Region,
+    visible_region: &Region,
+) -> Visibility {
+    Visibility {
+        is_visible: zone_level.subzone_levels().iter().all(|subzone_level| {
+            if expanded_region.contains_subzone_level(*subzone_level) {
+                explored.has_zone_level_been_seen(zone_level) == SeenFrom::FarAway
+            } else {
+                visible_region.contains_subzone_level(*subzone_level)
+            }
+        }),
+    }
 }
 
 #[allow(clippy::needless_pass_by_value)]

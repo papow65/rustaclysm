@@ -15,12 +15,47 @@ pub(crate) fn update_location(
     for (entity, &pos) in changed_positions.iter() {
         location.update(entity, Some(pos));
     }
-
     for entity in removed_positions.iter() {
         location.update(entity, None);
     }
 
     log_if_slow("update_location", start);
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub(crate) fn update_subzone_level_entities(
+    mut subzone_level_entities: ResMut<SubzoneLevelEntities>,
+    changed_subzone_levels: Query<(Entity, &SubzoneLevel), Changed<SubzoneLevel>>,
+    removed_subzone_levels: RemovedComponents<SubzoneLevel>,
+) {
+    let start = Instant::now();
+
+    for (entity, &subzone_level) in changed_subzone_levels.iter() {
+        subzone_level_entities.add(subzone_level, entity);
+    }
+    for entity in removed_subzone_levels.iter() {
+        subzone_level_entities.remove(entity);
+    }
+
+    log_if_slow("update_subzone_level_entities", start);
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub(crate) fn update_zone_level_entities(
+    mut zone_level_entities: ResMut<ZoneLevelEntities>,
+    changed_zone_levels: Query<(Entity, &ZoneLevel), Changed<ZoneLevel>>,
+    removed_zone_levels: RemovedComponents<ZoneLevel>,
+) {
+    let start = Instant::now();
+
+    for (entity, &zone_level) in changed_zone_levels.iter() {
+        zone_level_entities.add(zone_level, entity);
+    }
+    for entity in removed_zone_levels.iter() {
+        zone_level_entities.remove(entity);
+    }
+
+    log_if_slow("update_zone_level_entities", start);
 }
 
 #[allow(clippy::needless_pass_by_value)]
