@@ -88,8 +88,11 @@ impl TryFrom<&OvermapPath> for Overmap {
         //println!("Path: {filepath}");
         read_to_string(&overmap_path.0)
             .ok()
-            .map(|s| s.split_at(s.find('\n').unwrap()).1.to_string())
-            .map(|s| serde_json::from_str(s.as_str()).unwrap())
+            .map(|s| {
+                let first_newline = s.find('\n').unwrap();
+                let after_first_line = s.split_at(first_newline).1;
+                serde_json::from_str(after_first_line).unwrap_or_else(|err| panic!("{err:?}"))
+            })
             .ok_or(())
     }
 }

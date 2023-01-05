@@ -34,8 +34,9 @@ impl Explored {
         if !self.zone_level.contains_key(&zone_level) {
             let overzone = Overzone::from(zone_level.zone);
             let overmap_buffer_path = OvermapBufferPath::new(&self.sav_path, overzone);
-            let buffer =
-                OvermapBuffer::try_from(overmap_buffer_path).expect("Failed loading overzone");
+            let buffer = OvermapBuffer::try_from(overmap_buffer_path)
+                .ok()
+                .unwrap_or_else(OvermapBuffer::fallback);
             for level in Level::ALL {
                 self.zone_level.extend(
                     buffer
