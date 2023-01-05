@@ -286,7 +286,8 @@ pub(crate) fn update_status_health(
     let start = Instant::now();
 
     if let Some(health) = health.iter().next() {
-        status_displays.iter_mut().next().unwrap().sections[2].value = format!("{health} health\n");
+        status_displays.iter_mut().next().unwrap().sections[2].value =
+            format!("\n{health} health\n");
     }
 
     log_if_slow("update_status_health", start);
@@ -370,9 +371,9 @@ pub(crate) fn update_status_detais(
                         .map(|s| s + "\n")
                         .collect::<String>();
                     let items = items_info(&all_here, &items);
-                    format!("{pos:?}\n{characters}{entities}{items}")
+                    format!("\n{pos:?}\n{characters}{entities}{items}")
                 } else {
-                    format!("{pos:?}\nUnseen")
+                    format!("\n{pos:?}\nUnseen")
                 }
             }
             PlayerActionState::ExaminingZoneLevel(zone_level) => {
@@ -383,9 +384,9 @@ pub(crate) fn update_status_detais(
                 }*/
 
                 if explored.has_zone_level_been_seen(zone_level) == SeenFrom::Never {
-                    format!("{zone_level:?}\nUnseen")
+                    format!("\n{zone_level:?}\nUnseen")
                 } else {
-                    format!("{zone_level:?}\n{:?}", zone_level_ids.get(zone_level))
+                    format!("\n{zone_level:?}\n{:?}", zone_level_ids.get(zone_level))
                 }
             }
             _ => String::new(),

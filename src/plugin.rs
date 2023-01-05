@@ -83,8 +83,8 @@ fn check_systems() -> SystemSet {
 
 fn zone_level_systems() -> SystemSet {
     SystemSet::new()
-        .with_system(update_collapsed_zone_levels)
         .with_system(spawn_zones_for_camera)
+        .with_system(update_collapsed_zone_levels)
 }
 
 trait AppBuilderExt {
