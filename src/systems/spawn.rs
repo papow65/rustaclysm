@@ -211,7 +211,7 @@ pub(crate) fn update_collapsed_zone_levels(
         .collect::<HashSet<_>>()
     {
         if zone_level_entities.get(zone_level).is_none() {
-            let visibility = visibility(
+            let visibility = collapsed_visibility(
                 &mut tile_spawner.explored,
                 zone_level,
                 &expanded_region,
@@ -229,7 +229,7 @@ pub(crate) fn update_collapsed_zone_levels(
             .contains_subzone_level(SubzoneLevel::from(collapsed_zone_level.base_pos()))
         {
             //println!("{collapsed_zone_level:?} visibility?");
-            let visibility = visibility(
+            let visibility = collapsed_visibility(
                 &mut tile_spawner.explored,
                 collapsed_zone_level,
                 &expanded_region,
@@ -250,7 +250,7 @@ pub(crate) fn update_collapsed_zone_levels(
     log_if_slow("update_collapsed_zone_levels", start);
 }
 
-fn visibility(
+fn collapsed_visibility(
     explored: &mut Explored,
     zone_level: ZoneLevel,
     expanded_region: &Region,

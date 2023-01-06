@@ -24,13 +24,7 @@ impl Explored {
         }
     }
 
-    pub(crate) fn mark_pos_seen(&mut self, pos: Pos) {
-        self.zone_level
-            .insert(ZoneLevel::from(pos), SeenFrom::CloseBy);
-        self.pos.insert(pos, true);
-    }
-
-    pub(crate) fn has_zone_level_been_seen(&mut self, zone_level: ZoneLevel) -> SeenFrom {
+    fn load_if_missing(&mut self, zone_level: ZoneLevel) {
         if !self.zone_level.contains_key(&zone_level) {
             let overzone = Overzone::from(zone_level.zone);
             let overmap_buffer_path = OvermapBufferPath::new(&self.sav_path, overzone);
@@ -58,7 +52,20 @@ impl Explored {
                 );
             }
         }
+    }
 
+    pub(crate) fn mark_pos_seen(&mut self, pos: Pos) {
+        let zone_level = ZoneLevel::from(pos);
+
+        // Make sure the zone_level will not be overwritten later by loading a nearby zone_level.
+        self.load_if_missing(zone_level);
+
+        self.zone_level.insert(zone_level, SeenFrom::CloseBy);
+        self.pos.insert(pos, true);
+    }
+
+    pub(crate) fn has_zone_level_been_seen(&mut self, zone_level: ZoneLevel) -> SeenFrom {
+        self.load_if_missing(zone_level);
         self.zone_level.get(&zone_level).unwrap().clone()
     }
 
