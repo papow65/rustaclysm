@@ -147,12 +147,86 @@ impl<'w, 's> TileSpawner<'w, 's> {
             });
     }
 
-    pub(crate) fn spawn_tile(
-        &mut self,
-        parent: Entity,
-        pos: Pos,
-        definition: &ObjectDefinition,
-    ) -> Entity {
+    fn spawn_furniture(&mut self, parent: Entity, pos: Pos, id: ObjectId) {
+        let definition = &ObjectDefinition {
+            category: ObjectCategory::Furniture,
+            id,
+        };
+        let tile = self.spawn_tile(parent, pos, definition);
+
+        let furniture_info = self
+            .infos
+            .furniture(&definition.id)
+            .unwrap_or_else(|| panic!("{:?}", definition.id));
+
+        if !furniture_info.flags.transparent() {
+            self.commands.entity(tile).insert(Opaque);
+        }
+
+        match furniture_info.move_cost_mod.0.cmp(&0) {
+            Ordering::Less => {
+                self.commands.entity(tile).insert(Obstacle);
+            }
+            Ordering::Equal => {}
+            Ordering::Greater => {
+                self.commands
+                    .entity(tile)
+                    .insert(Hurdle(furniture_info.move_cost_mod));
+            }
+        }
+    }
+
+    pub(crate) fn spawn_terrain(&mut self, parent: Entity, pos: Pos, id: ObjectId) {
+        let definition = &ObjectDefinition {
+            category: ObjectCategory::Terrain,
+            id,
+        };
+        let tile = self.spawn_tile(parent, pos, definition);
+
+        let terrain_info = self
+            .infos
+            .terrain(&definition.id)
+            .unwrap_or_else(|| panic!("{:?}", definition.id));
+        match terrain_info {
+            TerrainInfo::Terrain {
+                move_cost,
+                open,
+                close,
+                flags,
+                ..
+            } => {
+                let move_cost = *move_cost;
+                if 0 < move_cost.0 {
+                    if close.is_some() {
+                        self.commands.entity(tile).insert(Closeable);
+                    }
+                    self.commands.entity(tile).insert(Floor {
+                        water: flags.water(),
+                        move_cost,
+                    });
+                } else if open.is_some() {
+                    self.commands.entity(tile).insert(Openable);
+                } else {
+                    self.commands.entity(tile).insert(Obstacle);
+                }
+
+                if !flags.transparent() {
+                    self.commands.entity(tile).insert(Opaque);
+                }
+
+                if flags.goes_up() {
+                    self.commands.entity(tile).insert(StairsUp);
+                }
+
+                if flags.goes_down() {
+                    self.commands.entity(tile).insert(StairsDown);
+                }
+            }
+            TerrainInfo::FieldType { .. } => {}
+        }
+    }
+
+    fn spawn_tile(&mut self, parent: Entity, pos: Pos, definition: &ObjectDefinition) -> Entity {
         //dbg!(&parent);
         //dbg!(pos);
         //dbg!(&definition);
@@ -207,77 +281,6 @@ impl<'w, 's> TileSpawner<'w, 's> {
             self.commands.entity(tile).insert(last_seen);
         }
 
-        match definition.category {
-            ObjectCategory::Terrain => {
-                let terrain_info = self
-                    .infos
-                    .terrain(&definition.id)
-                    .unwrap_or_else(|| panic!("{:?}", definition.id));
-                match terrain_info {
-                    TerrainInfo::Terrain {
-                        move_cost,
-                        open,
-                        close,
-                        flags,
-                        ..
-                    } => {
-                        let move_cost = *move_cost;
-                        if 0 < move_cost.0 {
-                            if close.is_some() {
-                                self.commands.entity(tile).insert(Closeable);
-                            }
-                            self.commands.entity(tile).insert(Floor {
-                                water: flags.water(),
-                                move_cost,
-                            });
-                        } else if open.is_some() {
-                            self.commands.entity(tile).insert(Openable);
-                        } else {
-                            self.commands.entity(tile).insert(Obstacle);
-                        }
-
-                        if !flags.transparent() {
-                            self.commands.entity(tile).insert(Opaque);
-                        }
-
-                        if flags.goes_up() {
-                            self.commands.entity(tile).insert(StairsUp);
-                        }
-
-                        if flags.goes_down() {
-                            self.commands.entity(tile).insert(StairsDown);
-                        }
-                    }
-                    TerrainInfo::FieldType { .. } => {}
-                }
-            }
-            ObjectCategory::Furniture => {
-                let furniture_info = self
-                    .infos
-                    .furniture(&definition.id)
-                    .unwrap_or_else(|| panic!("{:?}", definition.id));
-
-                if !furniture_info.flags.transparent() {
-                    self.commands.entity(tile).insert(Opaque);
-                }
-
-                match furniture_info.move_cost_mod.0.cmp(&0) {
-                    Ordering::Less => {
-                        self.commands.entity(tile).insert(Obstacle);
-                    }
-                    Ordering::Equal => {}
-                    Ordering::Greater => {
-                        self.commands
-                            .entity(tile)
-                            .insert(Hurdle(furniture_info.move_cost_mod));
-                    }
-                }
-            }
-            _ => {
-                // pass
-            }
-        };
-
         tile
     }
 
@@ -325,14 +328,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
                 //dbg!("{pos:?}");
                 let id = *terrain.get(&pos).unwrap();
                 if id != &ObjectId::new("t_open_air") && id != &ObjectId::new("t_open_air_rooved") {
-                    self.spawn_tile(
-                        subzone_level_entity,
-                        pos,
-                        &ObjectDefinition {
-                            category: ObjectCategory::Terrain,
-                            id: id.clone(),
-                        },
-                    );
+                    self.spawn_terrain(subzone_level_entity, pos, id.clone());
                 }
 
                 for id in submap
@@ -340,14 +336,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
                     .iter()
                     .filter_map(|at| at.get(Pos::new(x, Level::ZERO, z)))
                 {
-                    self.spawn_tile(
-                        subzone_level_entity,
-                        pos,
-                        &ObjectDefinition {
-                            category: ObjectCategory::Furniture,
-                            id: id.clone(),
-                        },
-                    );
+                    self.spawn_furniture(subzone_level_entity, pos, id.clone());
                 }
 
                 for repetitions in submap
@@ -385,14 +374,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
                 {
                     //dbg!(&fields);
                     for field in &fields.0 {
-                        self.spawn_tile(
-                            subzone_level_entity,
-                            pos,
-                            &ObjectDefinition {
-                                category: ObjectCategory::Terrain,
-                                id: field.id.clone(),
-                            },
-                        );
+                        self.spawn_terrain(subzone_level_entity, pos, field.id.clone());
                     }
                 }
             }

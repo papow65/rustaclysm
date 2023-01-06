@@ -289,11 +289,8 @@ pub(crate) fn toggle_doors(
         assert_ne!(openable.is_some(), closeable.is_some());
         commands.entity(entity).despawn_recursive();
         let TerrainInfo::Terrain{close, open, ..} = tile_spawner.infos.terrain(&definition.id).unwrap() else {panic!()};
-        let toggled_definition = ObjectDefinition {
-            id: openable.map_or(close, |_| open).as_ref().unwrap().clone(),
-            category: definition.category.clone(),
-        };
-        tile_spawner.spawn_tile(parent.get(), pos, &toggled_definition);
+        let toggled_id = openable.map_or(close, |_| open).as_ref().unwrap().clone();
+        tile_spawner.spawn_terrain(parent.get(), pos, toggled_id);
         commands.spawn(RefreshVisualizations);
     }
 
