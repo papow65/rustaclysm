@@ -273,6 +273,7 @@ mod mass_tests {
     }
 }
 
+#[allow(dead_code)] // TODO
 pub(crate) struct Limited<T> {
     curr: T,
     max: T,
@@ -282,6 +283,7 @@ impl<T> Limited<T>
 where
     T: Default,
 {
+    #[allow(dead_code)] // TODO
     pub(crate) fn empty(max: T) -> Self {
         Self {
             curr: T::default(),
@@ -294,6 +296,7 @@ impl<T> Limited<T>
 where
     T: Clone,
 {
+    #[allow(dead_code)] // TODO
     pub(crate) fn full(max: T) -> Self {
         Self {
             curr: max.clone(),
@@ -306,6 +309,7 @@ impl<T> Limited<T>
 where
     T: Copy + Sub<Output = T>,
 {
+    #[allow(dead_code)] // TODO
     pub(crate) fn left(&self) -> T {
         self.max - self.curr
     }
@@ -315,6 +319,7 @@ impl<T> Limited<T>
 where
     T: Clone,
 {
+    #[allow(dead_code)] // TODO
     pub(crate) fn current(&self) -> T {
         self.curr.clone()
     }
@@ -324,6 +329,7 @@ impl<T> Limited<T>
 where
     T: Clone,
 {
+    #[allow(dead_code)] // TODO
     pub(crate) fn maximum(&self) -> T {
         self.max.clone()
     }
@@ -333,6 +339,7 @@ impl<T> Limited<T>
 where
     T: Copy + PartialOrd + Add<Output = T>,
 {
+    #[allow(dead_code)] // TODO
     pub(crate) fn try_add(&mut self, more: T) -> Result<(), ()> {
         let sum = self.curr + more;
         if self.max < sum {
@@ -348,6 +355,7 @@ impl<T> Limited<T>
 where
     T: Copy + PartialOrd + Sub<Output = T>,
 {
+    #[allow(dead_code)] // TODO
     pub(crate) fn try_substract(&mut self, less: T) -> Result<(), ()> {
         if self.curr < less {
             Err(())
