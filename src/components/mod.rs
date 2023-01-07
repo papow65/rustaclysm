@@ -107,8 +107,8 @@ pub(crate) struct RefreshVisualizations;
 
 #[derive(Component)]
 pub(crate) struct Health {
-    curr: i8,
-    max: i8,
+    curr: i16,
+    max: i16,
 }
 
 #[derive(Clone, Component, Debug, PartialEq)]
@@ -128,14 +128,14 @@ impl ObjectDefinition {
 }
 
 impl Health {
-    pub(crate) fn new(max: i8) -> Self {
+    pub(crate) fn new(max: i16) -> Self {
         assert!(0 < max);
         Self { curr: max, max }
     }
 
     const fn relative_damage(&self) -> Partial {
         let damage = self.max - self.curr;
-        Partial::from_u8((255_i16 * damage as i16 / self.max as i16) as u8)
+        Partial::from_u8((255_i16 * damage / self.max) as u8)
     }
 
     pub(crate) fn apply(&mut self, damage: &Damage) -> bool {
@@ -179,7 +179,7 @@ impl fmt::Display for Integrity {
 #[derive(Component)]
 pub(crate) struct Damage {
     pub(crate) attacker: Label,
-    pub(crate) amount: i8, // TODO damage type
+    pub(crate) amount: i16, // TODO damage types
 }
 
 #[derive(Component)]

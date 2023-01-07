@@ -89,30 +89,60 @@ impl<'w, 's> TileSpawner<'w, 's> {
         }
     }
 
-    fn spawn_character(&mut self, parent: Entity, pos: Pos, id: ObjectId) {
+    fn spawn_character(&mut self, parent: Entity, pos: Pos, id: ObjectId) -> Entity {
         let definition = &ObjectDefinition {
             category: ObjectCategory::Character,
             id,
         };
         let entity = self.spawn_tile(parent, pos, definition);
+
+        let character_info_obj;
+        let character_info = if definition.id == ObjectId::new("human") {
+            character_info_obj = CharacterInfo {
+                name: ItemName::from(CddaItemName::Simple(String::from("Human"))),
+                default_faction: String::from("human"),
+                looks_like: Some(ObjectId::new("overlay_male_mutation_SKIN_TAN")),
+                volume: Some(Volume::from(String::from("80 l"))),
+                mass: Some(Mass::from(String::from("80 kg"))),
+                hp: Some(100),
+                speed: Some(100),
+                flags: Flags::default(),
+                extra: HashMap::default(),
+            };
+            &character_info_obj
+        } else {
+            self.infos
+                .character(&definition.id)
+                .unwrap_or_else(|| panic!("{:?}", definition.id))
+        };
+
         self.commands
             .entity(entity)
             .insert(Obstacle)
-            .insert(Health::new(5))
-            .insert(Faction::Animal)
-            .insert(BaseSpeed::from_h_kmph(10))
+            .insert(Health::new(character_info.hp.unwrap_or(60) as i16))
+            .insert(match character_info.default_faction.as_str() {
+                "human" => Faction::Human,
+                "zombie" => Faction::Zombie,
+                _ => Faction::Animal,
+            })
             .insert(Container {
-                max_volume: Volume::from(String::from("20l")),
+                max_volume: Volume::from(String::from("20 l")),
                 max_mass: Mass::from(String::from("50kg")),
             });
 
-        let character_info = self
-            .infos
-            .character(&definition.id)
-            .unwrap_or_else(|| panic!("{:?}", definition.id));
+        if let Some(speed) = character_info.speed {
+            if 0 < speed {
+                self.commands
+                    .entity(entity)
+                    .insert(BaseSpeed::from_h_kmph(speed / 12));
+            }
+        }
+
         if character_info.flags.aquatic() {
             self.commands.entity(entity).insert(Aquatic);
         }
+
+        entity
     }
 
     fn spawn_item(&mut self, parent: Entity, pos: Pos, item: &CddaItem, amount: Amount) {
@@ -699,7 +729,7 @@ impl<'w, 's> Spawner<'w, 's> {
             });
     }
 
-    fn configure_player(&mut self, player_entity: Entity, player: Player) {
+    fn configure_player(&mut self, player_entity: Entity) {
         let cursor_definition = ObjectDefinition {
             category: ObjectCategory::Meta,
             id: ObjectId::new("cursor"),
@@ -715,7 +745,10 @@ impl<'w, 's> Spawner<'w, 's> {
         self.tile_spawner
             .commands
             .entity(player_entity)
-            .insert(player)
+            .insert(Player {
+                state: PlayerActionState::Normal,
+                camera_distance: 7.1,
+            })
             .with_children(|child_builder| {
                 child_builder
                     .spawn(SpatialBundle::default())
@@ -743,68 +776,6 @@ impl<'w, 's> Spawner<'w, 's> {
                             });
                     });
             });
-    }
-
-    pub(crate) fn spawn_character(
-        &mut self,
-        label: Label,
-        pos: Pos,
-        health: Health,
-        speed: BaseSpeed,
-        faction: Faction,
-        player: Option<Player>,
-    ) {
-        let character_scale = 1.5;
-        let character_definition = ObjectDefinition {
-            category: ObjectCategory::Character,
-            id: match faction {
-                Faction::Human => ObjectId::new("overlay_male_mutation_SKIN_TAN"),
-                _ => ObjectId::new("mon_zombie"),
-            },
-        };
-        let character_model = &mut self.tile_spawner.loader.get_models(
-            &character_definition,
-            &vec![character_definition.id.clone()],
-        )[0];
-        if let ModelShape::Plane {
-            ref mut transform2d,
-            ..
-        } = character_model.shape
-        {
-            transform2d.scale *= character_scale;
-        }
-        let mut character_bundle = self.tile_spawner.get_pbr_bundle(character_model, false);
-        character_bundle.transform.translation.y *= character_scale;
-        println!("{:?}", character_bundle.transform);
-
-        let character_appearance = self.tile_spawner.get_appearance(character_model);
-
-        let entity = self
-            .tile_spawner
-            .commands
-            .spawn(SpatialBundle::default())
-            .insert(label)
-            .insert(pos)
-            .insert(LastSeen::Never)
-            .insert(health)
-            .insert(speed)
-            .insert(faction)
-            .insert(Obstacle)
-            .insert(Container {
-                max_volume: Volume::from(String::from("10 l")),
-                max_mass: Mass::from(String::from("10 kg")),
-            })
-            .with_children(|child_builder| {
-                child_builder
-                    .spawn(character_bundle)
-                    .insert(Visibility::VISIBLE)
-                    .insert(character_appearance);
-            })
-            .id();
-
-        if let Some(player) = player {
-            self.configure_player(entity, player);
-        }
     }
 
     pub(crate) fn spawn_light(&mut self) {
@@ -949,8 +920,14 @@ impl<'w, 's> Spawner<'w, 's> {
     }
 
     pub(crate) fn spawn_characters(&mut self, offset: PosOffset) {
-        self.spawn_character(
-            Label::new(self.tile_spawner.sav.player.name.clone()),
+        let custom_character_parent = self
+            .tile_spawner
+            .commands
+            .spawn(SpatialBundle::default())
+            .id();
+
+        let player = self.tile_spawner.spawn_character(
+            custom_character_parent,
             Pos::new(45, Level::ZERO, 56)
                 .offset(offset)
                 .unwrap()
@@ -960,61 +937,48 @@ impl<'w, 's> Spawner<'w, 's> {
                     z: 0,
                 })
                 .unwrap(),
-            Health::new(10),
-            BaseSpeed::from_h_kmph(6),
-            Faction::Human,
-            Some(Player {
-                state: PlayerActionState::Normal,
-                camera_distance: 7.1,
-            }),
+            ObjectId::new("human"),
         );
-        self.spawn_character(
-            Label::new("Survivor"),
+        self.tile_spawner
+            .commands
+            .entity(player)
+            .insert(Label::new(self.tile_spawner.sav.player.name.clone()));
+        self.configure_player(player);
+
+        let survivor = self.tile_spawner.spawn_character(
+            custom_character_parent,
             Pos::new(10, Level::ZERO, 10).offset(offset).unwrap(),
-            Health::new(3),
-            BaseSpeed::from_h_kmph(7),
-            Faction::Human,
-            None,
+            ObjectId::new("human"),
         );
-        self.spawn_character(
-            Label::new("Zombie one"),
+        self.tile_spawner
+            .commands
+            .entity(survivor)
+            .insert(Label::new("Survivor"));
+
+        self.tile_spawner.spawn_character(
+            custom_character_parent,
             Pos::new(12, Level::ZERO, 16).offset(offset).unwrap(),
-            Health::new(3),
-            BaseSpeed::from_h_kmph(5),
-            Faction::Zombie,
-            None,
+            ObjectId::new("mon_zombie"),
         );
-        self.spawn_character(
-            Label::new("Zombie two"),
+        self.tile_spawner.spawn_character(
+            custom_character_parent,
             Pos::new(40, Level::ZERO, 40).offset(offset).unwrap(),
-            Health::new(3),
-            BaseSpeed::from_h_kmph(7),
-            Faction::Zombie,
-            None,
+            ObjectId::new("mon_zombie"),
         );
-        self.spawn_character(
-            Label::new("Zombie three"),
+        self.tile_spawner.spawn_character(
+            custom_character_parent,
             Pos::new(38, Level::ZERO, 39).offset(offset).unwrap(),
-            Health::new(3),
-            BaseSpeed::from_h_kmph(8),
-            Faction::Zombie,
-            None,
+            ObjectId::new("mon_zombie"),
         );
-        self.spawn_character(
-            Label::new("Zombie four"),
+        self.tile_spawner.spawn_character(
+            custom_character_parent,
             Pos::new(37, Level::ZERO, 37).offset(offset).unwrap(),
-            Health::new(3),
-            BaseSpeed::from_h_kmph(9),
-            Faction::Zombie,
-            None,
+            ObjectId::new("mon_zombie"),
         );
-        self.spawn_character(
-            Label::new("Zombie five"),
+        self.tile_spawner.spawn_character(
+            custom_character_parent,
             Pos::new(34, Level::ZERO, 34).offset(offset).unwrap(),
-            Health::new(3),
-            BaseSpeed::from_h_kmph(3),
-            Faction::Zombie,
-            None,
+            ObjectId::new("mon_zombie"),
         );
     }
 }

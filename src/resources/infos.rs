@@ -170,13 +170,30 @@ impl Infos {
 
     pub(crate) fn new() -> Self {
         let mut enricheds = Self::enricheds();
-        Self {
+        let mut this = Self {
             characters: Self::extract(&mut enricheds, TypeId::CHARACTER),
             items: Self::extract(&mut enricheds, TypeId::ITEM),
             furniture: Self::extract(&mut enricheds, TypeId::FURNITURE),
             terrain: Self::extract(&mut enricheds, TypeId::TERRAIN),
             zone_level: Self::extract(&mut enricheds, TypeId::OVERMAP),
-        }
+        };
+
+        this.characters.insert(
+            ObjectId::new("human"),
+            CharacterInfo {
+                name: ItemName::from(CddaItemName::Simple(String::from("Human"))),
+                default_faction: String::from("human"),
+                looks_like: Some(ObjectId::new("overlay_male_mutation_SKIN_TAN")),
+                volume: Some(Volume::from(String::from("80 l"))),
+                mass: Some(Mass::from(String::from("80 kg"))),
+                hp: Some(100),
+                speed: Some(100),
+                flags: Flags::default(),
+                extra: HashMap::default(),
+            },
+        );
+
+        this
     }
 
     pub(crate) fn character<'a>(&'a self, id: &'a ObjectId) -> Option<&'a CharacterInfo> {

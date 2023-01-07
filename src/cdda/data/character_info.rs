@@ -5,16 +5,20 @@ use serde::Deserialize;
 #[derive(Debug, Deserialize)]
 pub(crate) struct CharacterInfo {
     pub(crate) name: ItemName,
+    pub(crate) default_faction: String,
     pub(crate) looks_like: Option<ObjectId>,
     pub(crate) volume: Option<Volume>,
 
     #[serde(rename = "weight")]
     pub(crate) mass: Option<Mass>,
 
+    pub(crate) hp: Option<u32>,
+    pub(crate) speed: Option<u64>,
+
     #[serde(default)]
     pub(crate) flags: Flags,
 
     #[allow(unused)]
     #[serde(flatten)]
-    extra: HashMap<String, serde_json::Value>,
+    pub(crate) extra: HashMap<String, serde_json::Value>,
 }
