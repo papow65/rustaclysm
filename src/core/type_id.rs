@@ -38,10 +38,15 @@ impl TypeId {
         TypeId("overmap_location"),
         TypeId("overmap_special"),
         TypeId("overmap_special_migration"),
-        TypeId("overmap_terrain"),
     ];
 
     pub(crate) const VEHICLE_PART: &[Self] = &[TypeId("vehicle_part")];
+
+    pub(crate) const MIGRATION: &[Self] = &[
+        TypeId("MIGRATION"),
+        TypeId("overmap_terrain"),
+        TypeId("vehicle_part_migration"),
+    ];
 
     pub(crate) const UNUSED: &[Self] = &[
         TypeId("ammunition_type"),
@@ -52,8 +57,8 @@ impl TypeId {
         TypeId("item_group"),
         TypeId("json_flag"),
         TypeId("mapgen"),
+        TypeId("TRAIT_MIGRATION"),
         TypeId("vehicle_part_category"),
-        TypeId("vehicle_part_migration"),
     ];
 
     pub(crate) const fn all() -> &'static [&'static [Self]] {
@@ -61,6 +66,7 @@ impl TypeId {
             Self::CHARACTER,
             Self::ITEM,
             Self::FURNITURE,
+            Self::MIGRATION,
             Self::TERRAIN,
             Self::OVERMAP,
             Self::VEHICLE_PART,

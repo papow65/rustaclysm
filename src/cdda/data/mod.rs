@@ -1,11 +1,13 @@
 mod character_info;
 mod furniture_info;
 mod item_info;
+mod migration;
 mod overmap_info;
 mod terrain_info;
 
 pub(crate) use self::{
-    character_info::*, furniture_info::*, item_info::*, overmap_info::*, terrain_info::*,
+    character_info::*, furniture_info::*, item_info::*, migration::*, overmap_info::*,
+    terrain_info::*,
 };
 
 use serde::Deserialize;

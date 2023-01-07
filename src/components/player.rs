@@ -76,8 +76,7 @@ impl Player {
         instruction: QueuedInstruction,
         now: Milliseconds,
     ) -> PlayerBehavior {
-        println!("processing instruction: {instruction:?}");
-
+        //println!("processing instruction: {instruction:?}");
         match (self.state, instruction) {
             (PlayerActionState::Normal, QueuedInstruction::Offset(Direction::Here)) => {
                 PlayerBehavior::Perform(Action::Stay)

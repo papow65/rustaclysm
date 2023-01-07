@@ -2,6 +2,7 @@ use crate::prelude::*;
 use bevy::{ecs::system::Resource, utils::HashMap};
 use glob::glob;
 use serde::de::DeserializeOwned;
+use serde_json::map::Entry;
 use std::fs::read_to_string;
 
 #[derive(Resource)]
@@ -11,6 +12,7 @@ pub(crate) struct Infos {
     furniture: HashMap<ObjectId, FurnitureInfo>,
     terrain: HashMap<ObjectId, TerrainInfo>,
     zone_level: HashMap<ObjectId, OvermapInfo>,
+    migrations: HashMap<ObjectId, Migration>,
 }
 
 impl Infos {
@@ -33,10 +35,10 @@ impl Infos {
                     .contains("/furniture_and_terrain/")
                 || json_path.display().to_string().contains("/monsters/")
                 || json_path.display().to_string().contains("/vehicleparts/")
+                || json_path.display().to_string().contains("/migration.json")
                 || json_path.ends_with("field_type.json"))
                 || json_path.ends_with("default_blacklist.json")
                 || json_path.ends_with("dreams.json")
-                || json_path.ends_with("migration.json")
                 || json_path.ends_with("effect_on_condition.json")
             {
                 continue;
@@ -52,23 +54,33 @@ impl Infos {
             for content in contents {
                 let type_ = content.get("type").expect("type present");
                 let type_ = TypeId::get(type_.as_str().expect("string value for type"));
-
                 if type_ == TypeId::get("mapgen") {
                     // TODO
                     continue;
                 }
 
-                assert_ne!(
-                    content.get("id").is_some(),
-                    content.get("abstract").is_some(),
-                    "{:?}",
-                    json_path
-                );
+                if content.get("from_variant").is_some() {
+                    // TODO
+                    continue;
+                }
+
+                let mut count = 0;
+                if content.get("id").is_some() {
+                    count += 1;
+                }
+                if content.get("abstract").is_some() {
+                    count += 1;
+                }
+                if content.get("from").is_some() {
+                    count += 1;
+                }
+                assert_eq!(count, 1, "{json_path:?}");
 
                 let mut ids = Vec::new();
                 match content
                     .get("id")
-                    .unwrap_or_else(|| content.get("abstract").expect("id or abstract"))
+                    .or(content.get("abstract"))
+                    .unwrap_or_else(|| content.get("from").expect("id, abstract, or from"))
                 {
                     serde_json::Value::String(id) => {
                         ids.push(String::from(id.as_str()));
@@ -159,8 +171,24 @@ impl Infos {
                     }
                 }
                 enriched.remove("id");
+                enriched.remove("from");
                 enriched.remove("abstract");
                 enriched.remove("copy-from");
+
+                if TypeId::MIGRATION.contains(type_id) {
+                    // new_id -> replace <- to
+                    if let Some(new_id) = enriched.remove("new_id") {
+                        assert!(!enriched.contains_key("to"));
+                        let replace = enriched.entry("replace");
+                        assert!(matches!(replace, Entry::Vacant { .. }));
+                        replace.or_insert(new_id);
+                    } else if let Some(to) = enriched.remove("to") {
+                        assert!(!enriched.contains_key("new_id"));
+                        let replace = enriched.entry("replace");
+                        assert!(matches!(replace, Entry::Vacant { .. }));
+                        replace.or_insert(to);
+                    }
+                }
 
                 enriched_of_type.insert(ObjectId::new(object_id), enriched);
             }
@@ -176,6 +204,7 @@ impl Infos {
             furniture: Self::extract(&mut enricheds, TypeId::FURNITURE),
             terrain: Self::extract(&mut enricheds, TypeId::TERRAIN),
             zone_level: Self::extract(&mut enricheds, TypeId::OVERMAP),
+            migrations: Self::extract(&mut enricheds, TypeId::MIGRATION),
         };
 
         this.characters.insert(
@@ -199,18 +228,22 @@ impl Infos {
     }
 
     pub(crate) fn character<'a>(&'a self, id: &'a ObjectId) -> Option<&'a CharacterInfo> {
+        let id = self.migrations.get(id).map_or(id, |m| &m.replace);
         self.characters.get(id)
     }
 
     pub(crate) fn item<'a>(&'a self, id: &'a ObjectId) -> Option<&'a ItemInfo> {
+        let id = self.migrations.get(id).map_or(id, |m| &m.replace);
         self.items.get(id)
     }
 
     pub(crate) fn furniture<'a>(&'a self, id: &'a ObjectId) -> Option<&'a FurnitureInfo> {
+        let id = self.migrations.get(id).map_or(id, |m| &m.replace);
         self.furniture.get(id)
     }
 
     pub(crate) fn terrain<'a>(&'a self, id: &'a ObjectId) -> Option<&'a TerrainInfo> {
+        let id = self.migrations.get(id).map_or(id, |m| &m.replace);
         self.terrain.get(id)
     }
 
