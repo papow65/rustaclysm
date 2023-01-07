@@ -34,13 +34,14 @@ impl Action {
         label: &Label,
         pos: Pos,
         speed: BaseSpeed,
+        melee: &Melee,
         container: &Container,
     ) -> Milliseconds {
         let duration: Milliseconds = match self {
             Self::Stay => speed.stay(),
             Self::Step { target } => move_(commands, envir, actor, label, pos, target, speed),
-            Self::Attack { target } => attack(commands, envir, label, pos, target, speed),
-            Self::Smash { target } => smash(commands, envir, label, pos, target, speed),
+            Self::Attack { target } => attack(commands, envir, label, pos, target, speed, melee),
+            Self::Smash { target } => smash(commands, envir, label, pos, target, speed, melee),
             Self::Close { target } => close(commands, envir, label, pos, target, speed),
             Self::Dump => dump(commands, dumpees, actor, label, pos, speed),
             Self::Pickup => pickup(
@@ -116,6 +117,7 @@ fn attack(
     pos: Pos,
     target: Pos,
     speed: BaseSpeed,
+    melee: &Melee,
 ) -> Milliseconds {
     if !envir.are_nbors(pos, target) {
         unimplemented!();
@@ -124,7 +126,7 @@ fn attack(
     if let Some((defender, _)) = envir.find_character(target) {
         commands.entity(defender).insert(Damage {
             attacker: a_label.clone(),
-            amount: 1,
+            amount: melee.damage(),
         });
         envir.walking_cost(pos, target).duration(speed)
     } else {
@@ -140,6 +142,7 @@ fn smash(
     pos: Pos,
     target: Pos,
     speed: BaseSpeed,
+    melee: &Melee,
 ) -> Milliseconds {
     if !envir.are_nbors(pos, target) && target != pos {
         unimplemented!();
@@ -157,7 +160,7 @@ fn smash(
     } else if let Some(smashable) = envir.find_item(target) {
         commands.entity(smashable).insert(Damage {
             attacker: s_label.clone(),
-            amount: 1,
+            amount: melee.damage(),
         });
         envir.walking_cost(pos, target).duration(speed)
     } else {

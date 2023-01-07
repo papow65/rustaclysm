@@ -96,25 +96,10 @@ impl<'w, 's> TileSpawner<'w, 's> {
         };
         let entity = self.spawn_tile(parent, pos, definition);
 
-        let character_info_obj;
-        let character_info = if definition.id == ObjectId::new("human") {
-            character_info_obj = CharacterInfo {
-                name: ItemName::from(CddaItemName::Simple(String::from("Human"))),
-                default_faction: String::from("human"),
-                looks_like: Some(ObjectId::new("overlay_male_mutation_SKIN_TAN")),
-                volume: Some(Volume::from(String::from("80 l"))),
-                mass: Some(Mass::from(String::from("80 kg"))),
-                hp: Some(100),
-                speed: Some(100),
-                flags: Flags::default(),
-                extra: HashMap::default(),
-            };
-            &character_info_obj
-        } else {
-            self.infos
-                .character(&definition.id)
-                .unwrap_or_else(|| panic!("{:?}", definition.id))
-        };
+        let character_info = self
+            .infos
+            .character(&definition.id)
+            .unwrap_or_else(|| panic!("{:?}", definition.id));
 
         self.commands
             .entity(entity)
@@ -127,15 +112,17 @@ impl<'w, 's> TileSpawner<'w, 's> {
             })
             .insert(Container {
                 max_volume: Volume::from(String::from("20 l")),
-                max_mass: Mass::from(String::from("50kg")),
+                max_mass: Mass::from(String::from("50 kg")),
+            })
+            .insert(Melee {
+                dices: character_info.melee_dice,
+                sides: character_info.melee_dice_sides,
             });
 
-        if let Some(speed) = character_info.speed {
-            if 0 < speed {
-                self.commands
-                    .entity(entity)
-                    .insert(BaseSpeed::from_h_kmph(speed / 12));
-            }
+        if 0 < character_info.speed {
+            self.commands
+                .entity(entity)
+                .insert(BaseSpeed::from_h_kmph(character_info.speed / 12));
         }
 
         if character_info.flags.aquatic() {

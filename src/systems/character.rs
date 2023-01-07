@@ -40,8 +40,18 @@ pub(crate) fn manage_characters(
             .collect::<Vec<Entity>>();
         if let Some(character) = timeouts.next(&entities) {
             let factions = characters.collect_factions();
-            let (entity, label, &pos, &speed, health, aquatic, faction, container, last_enemy) =
-                characters.c.get(character).unwrap();
+            let (
+                entity,
+                label,
+                &pos,
+                &speed,
+                health,
+                aquatic,
+                faction,
+                container,
+                melee,
+                last_enemy,
+            ) = characters.c.get(character).unwrap();
             let action = if let Ok(ref mut player) = players.get_mut(entity) {
                 if let Some(action) = player.plan_action(
                     &mut commands,
@@ -82,6 +92,7 @@ pub(crate) fn manage_characters(
                 label,
                 pos,
                 speed,
+                melee,
                 container,
             );
 

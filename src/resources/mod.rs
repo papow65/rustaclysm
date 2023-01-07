@@ -114,6 +114,7 @@ pub(crate) struct Characters<'w, 's> {
             Option<&'static Aquatic>,
             &'static Faction,
             &'static Container,
+            &'static Melee,
             Option<&'static LastEnemy>,
         ),
     >,

@@ -7,6 +7,10 @@ use crate::prelude::{
     Mass, MoveCost, MoveCostMod, ObjectCategory, ObjectId, Partial, Visible, Volume,
 };
 use bevy::prelude::{AlphaMode, Assets, Color, Component, Handle, StandardMaterial};
+use rand::{
+    distributions::{Distribution, Uniform},
+    thread_rng,
+};
 use std::fmt;
 
 pub(crate) use {action::*, faction::*, player::*, pos::*};
@@ -190,6 +194,23 @@ pub(crate) struct CameraBase;
 
 #[derive(Component)]
 pub(crate) struct ExamineCursor;
+
+#[derive(Component)]
+pub(crate) struct Melee {
+    pub(crate) dices: u16,
+    pub(crate) sides: u16,
+}
+
+impl Melee {
+    fn damage(&self) -> i16 {
+        let mut rng = thread_rng();
+        let between = Uniform::from(0..self.sides);
+        (0..self.dices)
+            .into_iter()
+            .map(|_| between.sample(&mut rng))
+            .sum::<u16>() as i16
+    }
+}
 
 #[derive(Component, Clone, PartialEq, Eq, Debug)]
 pub(crate) enum LastSeen {

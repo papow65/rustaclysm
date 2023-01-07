@@ -13,7 +13,15 @@ pub(crate) struct CharacterInfo {
     pub(crate) mass: Option<Mass>,
 
     pub(crate) hp: Option<u32>,
-    pub(crate) speed: Option<u64>,
+
+    #[serde(default)]
+    pub(crate) speed: u64,
+
+    #[serde(default)]
+    pub(crate) melee_dice: u16,
+
+    #[serde(default)]
+    pub(crate) melee_dice_sides: u16,
 
     #[serde(default)]
     pub(crate) flags: Flags,
