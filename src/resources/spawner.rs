@@ -138,7 +138,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
             category: ObjectCategory::Item,
             id: item.typeid.clone(),
         };
-        println!("{:?} @ {pos:?}", &definition);
+        //println!("{:?} @ {pos:?}", &definition);
         let entity = self.spawn_tile(parent, pos, definition);
 
         let item_info = self.infos.item(&definition.id).unwrap();

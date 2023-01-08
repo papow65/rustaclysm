@@ -17,6 +17,6 @@ fn log_if_slow(name: &str, start: Instant) {
     if 5 * MAX_SYSTEM_DURATION < duration {
         eprintln!("Very slow system: {name} took {duration:?}");
     } else if MAX_SYSTEM_DURATION < duration {
-        eprintln!("Slow system: {name} took {duration:?}");
+        println!("Slow system: {name} took {duration:?}");
     }
 }
