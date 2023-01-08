@@ -35,7 +35,8 @@ impl Action {
         pos: Pos,
         speed: BaseSpeed,
         melee: &Melee,
-        container: &Container,
+        _hands: Option<&Hands>,
+        clothing: Option<&Clothing>,
     ) -> Milliseconds {
         let duration: Milliseconds = match self {
             Self::Stay => speed.stay(),
@@ -50,7 +51,7 @@ impl Action {
                 hierarchy,
                 actor,
                 label,
-                container,
+                clothing.unwrap(),
                 pos,
                 speed,
             ),
@@ -232,38 +233,37 @@ fn pickup(
     hierarchy: &Hierarchy,
     picker: Entity,
     pr_label: &Label,
-    container: &Container,
+    clothing: &Clothing,
     pr_pos: Pos,
     speed: BaseSpeed,
 ) -> Milliseconds {
     if let Some((pd_entity, pd_label, pd_containable)) =
         location.get_first(pr_pos, &hierarchy.picked)
     {
-        let volume_used = hierarchy
+        let current_items = hierarchy
             .children
             .iter()
             .filter(|(parent, _)| parent.get() == picker)
-            .map(|(_, containable)| containable.volume)
-            .sum();
-        if container.max_volume < volume_used + pd_containable.volume {
-            let message = format!(
-                "{} has only {} space left, but {} needed to pick up {}",
-                pr_label,
-                container.max_volume - volume_used,
-                pd_containable.volume,
-                &pd_label
-            );
-            commands.spawn(Message::warn(message));
-            Milliseconds(0)
-        } else {
-            let message = format!("{pr_label} picks up {pd_label}", pd_label = &pd_label);
-            commands.spawn(Message::new(message));
-            commands
-                .entity(pd_entity)
-                .remove::<Pos>()
-                .remove::<Visibility>();
-            commands.entity(picker).push_children(&[pd_entity]);
-            speed.activate()
+            .map(|(_, containable)| containable);
+        match clothing
+            .0
+            .check_add(pr_label, current_items, pd_containable, pd_label)
+        {
+            Ok(()) => {
+                let message = format!("{pr_label} picks up {pd_label}", pd_label = &pd_label);
+                commands.spawn(Message::new(message));
+                commands
+                    .entity(pd_entity)
+                    .remove::<Pos>()
+                    .remove::<Visibility>();
+                commands.entity(picker).push_children(&[pd_entity]);
+                speed.activate()
+            }
+            Err(messages) => {
+                assert!(!messages.is_empty());
+                commands.spawn_batch(messages);
+                Milliseconds(0)
+            }
         }
     } else {
         let message = format!("nothing to pick up for {pr_label}");

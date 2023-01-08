@@ -110,10 +110,8 @@ impl<'w, 's> TileSpawner<'w, 's> {
                 "zombie" => Faction::Zombie,
                 _ => Faction::Animal,
             })
-            .insert(Container {
-                max_volume: Volume::from(String::from("20 l")),
-                max_mass: Mass::from(String::from("50 kg")),
-            })
+            .insert(Hands::default())
+            .insert(Clothing::default())
             .insert(Melee {
                 dices: character_info.melee_dice,
                 sides: character_info.melee_dice_sides,

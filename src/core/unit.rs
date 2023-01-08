@@ -169,6 +169,10 @@ pub(crate) struct Volume {
     milliliter: u64,
 }
 
+impl Volume {
+    pub(crate) const ZERO: Self = Self { milliliter: 0 };
+}
+
 impl Add<Self> for Volume {
     type Output = Self;
     fn add(self, other: Self) -> Self {
@@ -216,8 +220,14 @@ mod volume_tests {
     use super::*;
     #[test]
     fn it_works() {
-        _ = Volume::from(String::from("20 L"));
-        _ = Volume::from(String::from("20ml"));
+        assert_eq!(
+            Volume::from(String::from("21 ml")),
+            Volume { milliliter: 21 }
+        );
+        assert_eq!(
+            Volume::from(String::from("35.6L")),
+            Volume { milliliter: 35_600 }
+        );
     }
 }
 
@@ -232,10 +242,32 @@ impl Sum for Volume {
     }
 }
 
-#[derive(Clone, Copy, Debug, Deserialize)]
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, PartialOrd)]
 #[serde(from = "String")]
 pub(crate) struct Mass {
     milligram: u64,
+}
+
+impl Mass {
+    pub(crate) const ZERO: Self = Self { milligram: 0 };
+}
+
+impl Add<Self> for Mass {
+    type Output = Self;
+    fn add(self, other: Self) -> Self {
+        Self {
+            milligram: self.milligram + other.milligram,
+        }
+    }
+}
+
+impl Sub<Self> for Mass {
+    type Output = Self;
+    fn sub(self, other: Self) -> Self {
+        Self {
+            milligram: self.milligram - other.milligram,
+        }
+    }
 }
 
 impl fmt::Display for Mass {
@@ -254,9 +286,9 @@ impl From<String> for Mass {
 
         Self {
             milligram: match unit.to_lowercase().as_str() {
-                "mg" => 1_000_000.0 * quantity,
+                "mg" => quantity,
                 "g" => 1_000.0 * quantity,
-                "kg" => quantity,
+                "kg" => 1_000_000.0 * quantity,
                 _ => panic!("{value} {quantity} {}", &unit),
             } as u64,
         }
@@ -268,8 +300,13 @@ mod mass_tests {
     use super::*;
     #[test]
     fn it_works() {
-        _ = Mass::from(String::from("20 Kg"));
-        _ = Mass::from(String::from("20mg"));
+        assert_eq!(Mass::from(String::from("21mg")), Mass { milligram: 21 });
+        assert_eq!(
+            Mass::from(String::from("35.6 Kg")),
+            Mass {
+                milligram: 35_600_000
+            }
+        );
     }
 }
 

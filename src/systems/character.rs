@@ -46,10 +46,11 @@ pub(crate) fn manage_characters(
                 &pos,
                 &speed,
                 health,
-                aquatic,
                 faction,
-                container,
                 melee,
+                hands,
+                clothing,
+                aquatic,
                 last_enemy,
             ) = characters.c.get(character).unwrap();
             let action = if let Ok(ref mut player) = players.get_mut(entity) {
@@ -93,7 +94,8 @@ pub(crate) fn manage_characters(
                 pos,
                 speed,
                 melee,
-                container,
+                hands,
+                clothing,
             );
 
             if timeout.0 == 0 && players.get(character).is_err() {

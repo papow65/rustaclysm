@@ -111,10 +111,11 @@ pub(crate) struct Characters<'w, 's> {
             &'static Pos,
             &'static BaseSpeed,
             &'static Health,
-            Option<&'static Aquatic>,
             &'static Faction,
-            &'static Container,
             &'static Melee,
+            Option<&'static Hands>,
+            Option<&'static Clothing>,
+            Option<&'static Aquatic>,
             Option<&'static LastEnemy>,
         ),
     >,
@@ -124,7 +125,7 @@ impl<'w, 's> Characters<'w, 's> {
     pub(crate) fn collect_factions(&'s self) -> Vec<(Pos, &'s Faction)> {
         self.c
             .iter()
-            .map(|(_, _, p, _, _, _, f, ..)| (*p, f))
+            .map(|(_, _, p, _, _, f, ..)| (*p, f))
             .collect::<Vec<(Pos, &'s Faction)>>()
     }
 }
