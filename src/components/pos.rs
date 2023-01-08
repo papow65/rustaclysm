@@ -1,6 +1,6 @@
 use crate::prelude::{LevelOffset, Millimeter, Nbor, PosOffset, MIN_INVISIBLE_DISTANCE};
 use bevy::prelude::{Component, Vec3};
-use std::{iter::once, ops::Sub};
+use std::{fmt, iter::once, ops::Sub};
 
 /** Does not include 'from', but does include 'to' */
 fn straight_2d(from: (i32, i32), to: (i32, i32)) -> impl Iterator<Item = (i32, i32)> {
@@ -14,7 +14,7 @@ fn straight_2d(from: (i32, i32), to: (i32, i32)) -> impl Iterator<Item = (i32, i
 }
 
 /// Vertical aspect
-#[derive(Copy, Clone, PartialOrd, Ord, PartialEq, Eq, Hash, Debug)]
+#[derive(Copy, Clone, PartialOrd, Ord, PartialEq, Eq, Hash)]
 pub(crate) struct Level {
     pub(crate) h: i8,
 }
@@ -86,6 +86,12 @@ impl Level {
     }
 }
 
+impl fmt::Debug for Level {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Level {}", self.h)
+    }
+}
+
 impl Sub<Level> for Level {
     type Output = LevelOffset;
 
@@ -96,7 +102,7 @@ impl Sub<Level> for Level {
     }
 }
 
-#[derive(Component, Copy, Clone, PartialEq, Eq, Hash, Debug)]
+#[derive(Component, Copy, Clone, PartialEq, Eq, Hash)]
 pub(crate) struct Pos {
     pub(crate) x: i32,
     pub(crate) level: Level,
@@ -179,6 +185,12 @@ impl Pos {
     }
 }
 
+impl fmt::Debug for Pos {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Pos{{x: {}, {:?}, z: {}}}", self.x, self.level, self.z)
+    }
+}
+
 impl Sub<Pos> for Pos {
     type Output = PosOffset;
 
@@ -191,7 +203,7 @@ impl Sub<Pos> for Pos {
     }
 }
 
-#[derive(Component, Copy, Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Component, Copy, Clone, PartialEq, Eq, Hash)]
 pub(crate) struct SubzoneLevel {
     pub(crate) x: i32,
     pub(crate) level: Level,
@@ -220,6 +232,16 @@ impl SubzoneLevel {
     }
 }
 
+impl fmt::Debug for SubzoneLevel {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "SubzoneLevel{{x: {}, {:?}, z: {}}}",
+            self.x, self.level, self.z
+        )
+    }
+}
+
 impl From<Pos> for SubzoneLevel {
     fn from(pos: Pos) -> Self {
         Self {
@@ -230,7 +252,7 @@ impl From<Pos> for SubzoneLevel {
     }
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub(crate) struct Zone {
     pub(crate) x: i32,
     pub(crate) z: i32,
@@ -251,6 +273,12 @@ impl Zone {
     }
 }
 
+impl fmt::Debug for Zone {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Zone{{x: {}, z: {}}}", self.x, self.z)
+    }
+}
+
 impl From<Pos> for Zone {
     fn from(pos: Pos) -> Self {
         Self {
@@ -260,7 +288,7 @@ impl From<Pos> for Zone {
     }
 }
 
-#[derive(Component, Copy, Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Component, Copy, Clone, PartialEq, Eq, Hash)]
 pub(crate) struct ZoneLevel {
     pub(crate) zone: Zone,
     pub(crate) level: Level,
@@ -328,6 +356,16 @@ impl ZoneLevel {
     }
 }
 
+impl fmt::Debug for ZoneLevel {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "ZoneLevel{{x: {}, {:?}, z: {}}}",
+            self.zone.x, self.level, self.zone.z
+        )
+    }
+}
+
 impl From<Pos> for ZoneLevel {
     fn from(pos: Pos) -> Self {
         Self {
@@ -349,7 +387,7 @@ impl From<SubzoneLevel> for ZoneLevel {
     }
 }
 
-#[derive(Component, Copy, Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Component, Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub(crate) struct Overzone {
     pub(crate) x: i32,
     pub(crate) z: i32,
@@ -361,6 +399,12 @@ impl Overzone {
             x: 180 * self.x,
             z: 180 * self.z,
         }
+    }
+}
+
+impl fmt::Debug for Overzone {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Overzone{{x: {}, {}}}", self.x, self.z)
     }
 }
 
