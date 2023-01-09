@@ -1,3 +1,4 @@
+mod actor;
 mod container;
 mod instruction;
 mod key;
@@ -12,8 +13,8 @@ mod type_id;
 mod unit;
 
 pub(crate) use self::{
-    container::*, instruction::*, key::*, mesh::*, model::*, nbor::*, object_definition::*,
-    object_id::*, offset::*, region::*, type_id::*, unit::*,
+    actor::*, container::*, instruction::*, key::*, mesh::*, model::*, nbor::*,
+    object_definition::*, object_id::*, offset::*, region::*, type_id::*, unit::*,
 };
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]

@@ -101,29 +101,17 @@ impl Timeouts {
 }
 
 #[derive(SystemParam)]
-pub(crate) struct Characters<'w, 's> {
-    pub(crate) c: Query<
-        'w,
-        's,
-        (
-            Entity,
-            &'static Label,
-            &'static Pos,
-            &'static BaseSpeed,
-            &'static Health,
-            &'static Faction,
-            &'static Melee,
-            Option<&'static Hands>,
-            Option<&'static Clothing>,
-            Option<&'static Aquatic>,
-            Option<&'static LastEnemy>,
-        ),
-    >,
+pub(crate) struct Actors<'w, 's> {
+    pub(crate) q: Query<'w, 's, ActorTuple<'static>>,
 }
 
-impl<'w, 's> Characters<'w, 's> {
+impl<'w, 's> Actors<'w, 's> {
+    pub(crate) fn actors(&'s self) -> impl Iterator<Item = Actor<'s>> {
+        self.q.iter().map(Actor::from)
+    }
+
     pub(crate) fn collect_factions(&'s self) -> Vec<(Pos, &'s Faction)> {
-        self.c
+        self.q
             .iter()
             .map(|(_, _, p, _, _, f, ..)| (*p, f))
             .collect::<Vec<(Pos, &'s Faction)>>()

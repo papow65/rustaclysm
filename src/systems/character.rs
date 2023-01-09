@@ -23,7 +23,7 @@ pub(crate) fn manage_characters(
     mut envir: Envir,
     mut instruction_queue: ResMut<InstructionQueue>,
     mut timeouts: ResMut<Timeouts>,
-    characters: Characters,
+    actors: Actors,
     mut players: Query<&mut Player>,
     dumpees: Query<(Entity, &Label, &Parent)>,
     hierarchy: Hierarchy, // pickup
@@ -31,34 +31,20 @@ pub(crate) fn manage_characters(
     let start = Instant::now();
 
     while start.elapsed() < MAX_SYSTEM_DURATION / 2 {
-        let entities = characters
-            .c
-            .iter()
-            .map(|(e, _, pos, ..)| (e, pos))
-            .filter(|(e, &pos)| envir.has_floor(pos) || players.get(*e).is_ok())
-            .map(|(e, _)| e)
+        let entities = actors
+            .actors()
+            .filter(|a| envir.has_floor(a.pos) || players.get(a.entity).is_ok())
+            .map(|a| a.entity)
             .collect::<Vec<Entity>>();
-        if let Some(character) = timeouts.next(&entities) {
-            let factions = characters.collect_factions();
-            let (
-                entity,
-                label,
-                &pos,
-                &speed,
-                health,
-                faction,
-                melee,
-                hands,
-                clothing,
-                aquatic,
-                last_enemy,
-            ) = characters.c.get(character).unwrap();
-            let action = if let Ok(ref mut player) = players.get_mut(entity) {
+        if let Some(active_entity) = timeouts.next(&entities) {
+            let factions = actors.collect_factions();
+            let actor = Actor::from(actors.q.get(active_entity).unwrap());
+            let action = if let Ok(ref mut player) = players.get_mut(active_entity) {
                 if let Some(action) = player.plan_action(
                     &mut commands,
                     &mut envir,
                     &mut instruction_queue,
-                    pos,
+                    actor.pos,
                     timeouts.time(),
                 ) {
                     action
@@ -73,37 +59,25 @@ pub(crate) fn manage_characters(
                     break; // no key pressed - wait for the user
                 }
             } else {
-                let strategy =
-                    faction.behave(&envir, pos, speed, health, aquatic, &factions, last_enemy);
-                if let Some(l) = strategy.last_enemy {
-                    commands.entity(character).insert(l);
+                let strategy = actor.faction.strategize(&envir, &factions, &actor);
+                if let Some(last_enemy) = strategy.last_enemy {
+                    commands.entity(actor.entity).insert(last_enemy);
                 }
                 println!(
-                    "{} at {pos:?} plans {:?} and does {:?}",
-                    &label, strategy.intent, strategy.action
+                    "{} at {:?} plans {:?} and does {:?}",
+                    actor.label, actor.pos, strategy.intent, strategy.action
                 );
                 strategy.action
             };
-            let mut timeout = action.perform(
-                &mut commands,
-                &mut envir,
-                &dumpees,
-                &hierarchy,
-                character,
-                label,
-                pos,
-                speed,
-                melee,
-                hands,
-                clothing,
-            );
+            let mut timeout =
+                actor.perform(&mut commands, &mut envir, &dumpees, &hierarchy, &action);
 
-            if timeout.0 == 0 && players.get(character).is_err() {
+            if timeout.0 == 0 && players.get(active_entity).is_err() {
                 commands.spawn(Message::error("failed npc action"));
                 timeout.0 = 1000;
             }
 
-            timeouts.add(character, timeout);
+            timeouts.add(active_entity, timeout);
         } else {
             // No characters!
             break;

@@ -190,7 +190,7 @@ pub(crate) struct CameraBase;
 pub(crate) struct ExamineCursor;
 
 #[derive(Component)]
-pub(crate) struct Hands(Container);
+pub(crate) struct Hands(pub(crate) Container);
 
 impl Default for Hands {
     fn default() -> Self {
@@ -203,7 +203,7 @@ impl Default for Hands {
 }
 
 #[derive(Component)]
-pub(crate) struct Clothing(Container);
+pub(crate) struct Clothing(pub(crate) Container);
 
 impl Default for Clothing {
     fn default() -> Self {
@@ -222,7 +222,7 @@ pub(crate) struct Melee {
 }
 
 impl Melee {
-    fn damage(&self) -> i16 {
+    pub(crate) fn damage(&self) -> i16 {
         let mut rng = thread_rng();
         let between = Uniform::from(0..self.sides);
         (0..self.dices)

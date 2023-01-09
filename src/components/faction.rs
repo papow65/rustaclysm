@@ -84,20 +84,23 @@ impl Faction {
     pub(crate) fn attack(
         &self,
         envir: &Envir,
-        start_pos: Pos,
-        speed: BaseSpeed,
         factions: &[(Pos, &Self)],
         enemies: &[Pos],
-        last_enemy: Option<&LastEnemy>,
+        actor: &Actor,
     ) -> Option<(Action, LastEnemy)> {
         enemies
             .iter()
             .copied()
             .map(|pos| (false, pos))
-            .chain(last_enemy.iter().map(|last_enemy| (true, last_enemy.0)))
+            .chain(
+                actor
+                    .last_enemy
+                    .iter()
+                    .map(|last_enemy| (true, last_enemy.0)),
+            )
             .filter_map(|(memory, enemy_pos)| {
                 envir
-                    .path(start_pos, enemy_pos, self.intelligence(), speed)
+                    .path(actor.pos, enemy_pos, self.intelligence(), actor.speed)
                     .map(|path| (memory, path))
             })
             .min_by_key(|(memory, path)| (*memory, path.duration.0))
@@ -129,27 +132,22 @@ impl Faction {
             })
     }
 
-    pub(crate) fn flee(
-        &self,
-        envir: &Envir,
-        start_pos: Pos,
-        speed: BaseSpeed,
-        enemies: &[Pos],
-    ) -> Option<Action> {
+    pub(crate) fn flee(&self, envir: &Envir, enemies: &[Pos], actor: &Actor) -> Option<Action> {
         if enemies.is_empty() {
             return None;
         }
 
-        let up_time = WalkingCost::new(&NborDistance::Up, MoveCost::default()).duration(speed);
+        let up_time =
+            WalkingCost::new(&NborDistance::Up, MoveCost::default()).duration(actor.speed);
 
         // Higher gives better results but is slower
         let planning_limit: u64 = 5;
         let min_time = Milliseconds((planning_limit - 1) * up_time.0); // included
         let max_time = Milliseconds(planning_limit * up_time.0); // not included
 
-        let graph = dijkstra_all(&(start_pos, Milliseconds(0)), |(pos, prev_total_ms)| {
+        let graph = dijkstra_all(&(actor.pos, Milliseconds(0)), |(pos, prev_total_ms)| {
             envir
-                .nbors_for_moving(*pos, None, self.intelligence(), speed)
+                .nbors_for_moving(*pos, None, self.intelligence(), actor.speed)
                 .filter_map(|(nbor, ms)| {
                     let total_ms = *prev_total_ms + ms;
                     if max_time < total_ms {
@@ -171,7 +169,7 @@ impl Faction {
             .get(1)
             .expect("First step (after current position)")
             .0;
-        Some(if target == start_pos {
+        Some(if target == actor.pos {
             Action::Stay
         } else {
             Action::Step { target }
@@ -181,15 +179,14 @@ impl Faction {
     pub(crate) fn wander(
         &self,
         envir: &Envir,
-        start_pos: Pos,
-        speed: BaseSpeed,
         factions: &[(Pos, &Self)],
+        actor: &Actor,
     ) -> Option<Action> {
         let mut random = rand::thread_rng();
 
         if random.gen::<f32>() < 0.3 {
             envir
-                .nbors_for_moving(start_pos, None, self.intelligence(), speed)
+                .nbors_for_moving(actor.pos, None, self.intelligence(), actor.speed)
                 .filter(|(pos, _)| factions.iter().all(|(other_pos, _)| pos != other_pos))
                 .map(|(pos, _)| pos)
                 .collect::<Vec<Pos>>()
@@ -212,29 +209,26 @@ impl Faction {
         &self,
         intent: Intent,
         envir: &Envir,
-        start_pos: Pos,
-        speed: BaseSpeed,
-        aquatic: Option<&Aquatic>,
         factions: &[(Pos, &Self)],
         enemies: &[Pos],
-        last_enemy: Option<&LastEnemy>,
+        actor: &Actor,
     ) -> Option<Strategy> {
         match intent {
             Intent::Attack => self
-                .attack(envir, start_pos, speed, factions, enemies, last_enemy)
+                .attack(envir, factions, enemies, actor)
                 .map(|(action, last_enemy)| (action, Some(last_enemy))),
             Intent::Flee => self
-                .flee(envir, start_pos, speed, enemies)
+                .flee(envir, enemies, actor)
                 .map(|action| (action, None)),
             Intent::Wander => self
-                .wander(envir, start_pos, speed, factions)
+                .wander(envir, factions, actor)
                 .map(|action| (action, None)),
             Intent::Wait => Some(Action::Stay).map(|action| (action, None)),
         }
         .filter(|(action, _)| match action {
             // prevent fish from acting on land
             Action::Step { target } | Action::Attack { target } | Action::Smash { target } => {
-                aquatic.is_none() || envir.is_water(*target)
+                actor.aquatic.is_none() || envir.is_water(*target)
             }
             _ => true,
         })
@@ -245,36 +239,28 @@ impl Faction {
         })
     }
 
-    pub(crate) fn behave<'f>(
+    pub(crate) fn strategize<'f>(
         &self,
         envir: &Envir,
-        start_pos: Pos,
-        speed: BaseSpeed,
-        health: &Health,
-        aquatic: Option<&Aquatic>,
         factions: &[(Pos, &'f Self)],
-        last_enemy: Option<&LastEnemy>,
+        actor: &Actor,
     ) -> Strategy {
-        let currently_visible = envir.currently_visible(start_pos);
+        let currently_visible = envir.currently_visible(actor.pos);
 
         let enemies = factions
             .iter()
             .filter(|(_, other_faction)| self.dislikes(other_faction))
             .map(|(enemy_pos, _)| enemy_pos)
             .copied()
-            .filter(|enemy_pos| aquatic.is_none() || envir.is_water(*enemy_pos))
+            .filter(|enemy_pos| actor.aquatic.is_none() || envir.is_water(*enemy_pos))
             .filter(|enemy_pos| currently_visible.can_see(*enemy_pos) == Visible::Seen)
             .collect::<Vec<Pos>>();
         //println!("{self:?} can see {:?} enemies", enemies.len());
 
         Intent::ALL
             .into_iter()
-            .filter(|intent| self.consider(*intent, health))
-            .find_map(|intent| {
-                self.attempt(
-                    intent, envir, start_pos, speed, aquatic, factions, &enemies, last_enemy,
-                )
-            })
+            .filter(|intent| self.consider(*intent, actor.health))
+            .find_map(|intent| self.attempt(intent, envir, factions, &enemies, actor))
             .expect("Fallback intent")
     }
 }
