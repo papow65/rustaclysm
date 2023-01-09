@@ -106,7 +106,7 @@ fn spawn_manual_display(
                 text: Text {
                     sections: vec![
                         TextSection {
-                            value: String::from("move         numpad\nup/down      r/f/</>\npick/drop    b/v\nattack       a\nsmash        s\nwait         |\nrun          +\nexamine      x\nexamine map  m\nzoom         (shift+)z\nzoom         scroll wheel\ntoggle this  h\nquit         ctrl+c/d/q"),
+                            value: String::from("move         numpad\nup/down      r/f/</>\nwield        w\npick/drop    b/v\nattack       a\nsmash        s\nwait         |\nrun          +\nexamine      x\nexamine map  m\nzoom         (shift+)z\nzoom         scroll wheel\ntoggle this  h\nquit         ctrl+c/d/q"),
                             style: hud_defaults.text_style.clone(),
                         },
                     ],

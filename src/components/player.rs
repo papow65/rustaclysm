@@ -107,6 +107,7 @@ impl Player {
                 let nbor = direction.to_nbor();
                 self.handle_offset(envir.get_nbor(pos, &nbor), &nbor)
             }
+            (_, QueuedInstruction::Wield) => PlayerBehavior::Perform(Action::Wield),
             (_, QueuedInstruction::Pickup) => PlayerBehavior::Perform(Action::Pickup),
             (_, QueuedInstruction::Dump) => PlayerBehavior::Perform(Action::Dump),
             (_, QueuedInstruction::Attack) => self.handle_attack(envir, pos),

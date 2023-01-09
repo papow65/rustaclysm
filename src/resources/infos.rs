@@ -79,8 +79,9 @@ impl Infos {
                 let mut ids = Vec::new();
                 match content
                     .get("id")
-                    .or(content.get("abstract"))
-                    .unwrap_or_else(|| content.get("from").expect("id, abstract, or from"))
+                    .or_else(|| content.get("abstract"))
+                    .or_else(|| content.get("from"))
+                    .expect("id, abstract, or from")
                 {
                     serde_json::Value::String(id) => {
                         ids.push(String::from(id.as_str()));

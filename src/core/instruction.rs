@@ -65,6 +65,7 @@ impl TryFrom<&KeyCode> for Direction {
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub(crate) enum QueuedInstruction {
     Offset(Direction),
+    Wield,
     Pickup,
     Dump,
     Attack,
@@ -91,6 +92,7 @@ impl TryFrom<&KeyCombo> for QueuedInstruction {
             }
             KeyCombo(_, _, Key::PIPE) => Ok(Self::Wait),
             KeyCombo(Ctrl::Without, Shift::Without, Key::KeyCode(key_code)) => Ok(match key_code {
+                KeyCode::W => Self::Wield,
                 KeyCode::B => Self::Pickup,
                 KeyCode::V => Self::Dump,
                 KeyCode::A => Self::Attack,

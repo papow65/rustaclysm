@@ -18,6 +18,7 @@ pub(crate) enum Action {
     Close {
         target: Pos, // nbor pos
     },
+    Wield, // start wielding
     Pickup,
     Dump,
     SwitchRunning,
@@ -35,7 +36,7 @@ impl Action {
         pos: Pos,
         speed: BaseSpeed,
         melee: &Melee,
-        _hands: Option<&Hands>,
+        hands: Option<&Hands>,
         clothing: Option<&Clothing>,
     ) -> Milliseconds {
         let duration: Milliseconds = match self {
@@ -44,7 +45,16 @@ impl Action {
             Self::Attack { target } => attack(commands, envir, label, pos, target, speed, melee),
             Self::Smash { target } => smash(commands, envir, label, pos, target, speed, melee),
             Self::Close { target } => close(commands, envir, label, pos, target, speed),
-            Self::Dump => dump(commands, dumpees, actor, label, pos, speed),
+            Self::Wield => wield(
+                commands,
+                &mut envir.location,
+                hierarchy,
+                actor,
+                label,
+                hands.unwrap(),
+                pos,
+                speed,
+            ),
             Self::Pickup => pickup(
                 commands,
                 &mut envir.location,
@@ -55,6 +65,7 @@ impl Action {
                 pos,
                 speed,
             ),
+            Self::Dump => dump(commands, dumpees, actor, label, pos, speed),
             Self::SwitchRunning => switch_running(commands, actor),
         };
 
@@ -202,6 +213,85 @@ fn close(
     }
 }
 
+fn wield(
+    commands: &mut Commands,
+    location: &mut Location,
+    hierarchy: &Hierarchy,
+    picker: Entity,
+    pr_label: &Label,
+    hands: &Hands,
+    pr_pos: Pos,
+    speed: BaseSpeed,
+) -> Milliseconds {
+    take(
+        commands, location, hierarchy, picker, pr_label, &hands.0, pr_pos, speed,
+    )
+}
+
+fn pickup(
+    commands: &mut Commands,
+    location: &mut Location,
+    hierarchy: &Hierarchy,
+    picker: Entity,
+    pr_label: &Label,
+    clothing: &Clothing,
+    pr_pos: Pos,
+    speed: BaseSpeed,
+) -> Milliseconds {
+    take(
+        commands,
+        location,
+        hierarchy,
+        picker,
+        pr_label,
+        &clothing.0,
+        pr_pos,
+        speed,
+    )
+}
+
+fn take(
+    commands: &mut Commands,
+    location: &mut Location,
+    hierarchy: &Hierarchy,
+    picker: Entity,
+    pr_label: &Label,
+    container: &Container,
+    pr_pos: Pos,
+    speed: BaseSpeed,
+) -> Milliseconds {
+    if let Some((pd_entity, pd_label, pd_containable)) =
+        location.get_first(pr_pos, &hierarchy.picked)
+    {
+        let current_items = hierarchy
+            .children
+            .iter()
+            .filter(|(parent, _)| parent.get() == picker)
+            .map(|(_, containable)| containable);
+        match container.check_add(pr_label, current_items, pd_containable, pd_label) {
+            Ok(()) => {
+                let message = format!("{pr_label} picks up {pd_label}", pd_label = &pd_label);
+                commands.spawn(Message::new(message));
+                commands
+                    .entity(pd_entity)
+                    .remove::<Pos>()
+                    .remove::<Visibility>();
+                commands.entity(picker).push_children(&[pd_entity]);
+                speed.activate()
+            }
+            Err(messages) => {
+                assert!(!messages.is_empty());
+                commands.spawn_batch(messages);
+                Milliseconds(0)
+            }
+        }
+    } else {
+        let message = format!("nothing to pick up for {pr_label}");
+        commands.spawn(Message::new(message));
+        Milliseconds(0)
+    }
+}
+
 fn dump(
     commands: &mut Commands,
     dumpees: &Query<(Entity, &Label, &Parent)>,
@@ -223,51 +313,6 @@ fn dump(
         speed.stay()
     } else {
         commands.spawn(Message::warn(format!("nothing to drop for {dr_label}")));
-        Milliseconds(0)
-    }
-}
-
-fn pickup(
-    commands: &mut Commands,
-    location: &mut Location,
-    hierarchy: &Hierarchy,
-    picker: Entity,
-    pr_label: &Label,
-    clothing: &Clothing,
-    pr_pos: Pos,
-    speed: BaseSpeed,
-) -> Milliseconds {
-    if let Some((pd_entity, pd_label, pd_containable)) =
-        location.get_first(pr_pos, &hierarchy.picked)
-    {
-        let current_items = hierarchy
-            .children
-            .iter()
-            .filter(|(parent, _)| parent.get() == picker)
-            .map(|(_, containable)| containable);
-        match clothing
-            .0
-            .check_add(pr_label, current_items, pd_containable, pd_label)
-        {
-            Ok(()) => {
-                let message = format!("{pr_label} picks up {pd_label}", pd_label = &pd_label);
-                commands.spawn(Message::new(message));
-                commands
-                    .entity(pd_entity)
-                    .remove::<Pos>()
-                    .remove::<Visibility>();
-                commands.entity(picker).push_children(&[pd_entity]);
-                speed.activate()
-            }
-            Err(messages) => {
-                assert!(!messages.is_empty());
-                commands.spawn_batch(messages);
-                Milliseconds(0)
-            }
-        }
-    } else {
-        let message = format!("nothing to pick up for {pr_label}");
-        commands.spawn(Message::new(message));
         Milliseconds(0)
     }
 }
