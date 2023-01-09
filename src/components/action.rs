@@ -287,7 +287,7 @@ fn take(
         }
     } else {
         let message = format!("nothing to pick up for {pr_label}");
-        commands.spawn(Message::new(message));
+        commands.spawn(Message::warn(message));
         Milliseconds(0)
     }
 }
