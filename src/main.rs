@@ -83,7 +83,10 @@ mod systems;
 use crate::prelude::{Paths, RustaclysmPlugin};
 use bevy::{
     diagnostic::FrameTimeDiagnosticsPlugin,
-    prelude::{App, AssetPlugin, DefaultPlugins, PluginGroup, WindowDescriptor, WindowPlugin},
+    prelude::{
+        App, AssetPlugin, DefaultPlugins, PluginGroup, Vec2, WindowDescriptor, WindowPlugin,
+        WindowPosition,
+    },
     window::PresentMode,
 };
 
@@ -101,6 +104,9 @@ fn main() -> Result<(), ()> {
                     .set(WindowPlugin {
                         window: WindowDescriptor {
                             present_mode: PresentMode::Mailbox, // much better responsiveness
+                            width: 50.0,
+                            height: 40.0,
+                            position: WindowPosition::At(Vec2::new(10.0, 10.0)),
                             ..WindowDescriptor::default()
                         },
                         ..WindowPlugin::default()
