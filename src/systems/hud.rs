@@ -164,7 +164,7 @@ pub(crate) fn update_log(
 
     let mut new_messages = false;
     for message in changed.iter() {
-        if message.0.as_str() != "" {
+        if message.0.trim() != "" {
             println!("{string}", string = message.0);
         }
         new_messages = true;
