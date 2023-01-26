@@ -1,7 +1,7 @@
 use super::log_if_slow;
 use crate::prelude::*;
 use bevy::{ecs::system::SystemState, prelude::*};
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn manage_game_over(
@@ -31,8 +31,12 @@ pub(crate) fn manage_characters(world: &mut World) {
         Query<(Entity, &Label, &Parent)>,
         Hierarchy, // pickup
     )> = SystemState::new(world);
+    //println!("manage characters took {:?} to initialize", start.elapsed());
 
-    while start.elapsed() < MAX_SYSTEM_DURATION / 2 {
+    let mut count = 0;
+    loop {
+        let iteration = Instant::now();
+
         let (
             mut commands,
             mut envir,
@@ -93,8 +97,25 @@ pub(crate) fn manage_characters(world: &mut World) {
         }
 
         timeouts.add(active_entity, timeout);
+        println!(
+            "iteration of manage characters for {:?} took {:?} ({:?} since start)",
+            actor.label,
+            iteration.elapsed(),
+            start.elapsed(),
+        );
 
         system_state.apply(world);
+
+        count += 1;
+        println!(
+            "iteration of manage characters took {:?} after appling ({:?} since start)",
+            iteration.elapsed(),
+            start.elapsed(),
+        );
+        if Duration::from_millis(2) * 3 / 4 < start.elapsed() {
+            eprintln!("manage_characters could ony handle {count} iterations before the timeout");
+            break;
+        }
     }
 
     log_if_slow("manage_characters", start);
