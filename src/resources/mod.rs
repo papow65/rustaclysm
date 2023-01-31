@@ -277,9 +277,9 @@ impl RelativeSegments {
             assert!(
                 matches!(
                     segments.get(&offset),
-                    Some(&RelativeSegment {
-                        ref preceding,
-                        ref segment,
+                    Some(RelativeSegment {
+                        preceding,
+                        segment,
                         ..
                     }) if preceding == &Some(PosOffset{x: 0, level: LevelOffset{h: level.h - 1}, z: 0}) && segment == &vec![PosOffset{x: 0, level: LevelOffset{h: level.h - 1}, z: 0}]
                 ),
