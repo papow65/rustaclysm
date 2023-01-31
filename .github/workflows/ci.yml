@@ -7,7 +7,7 @@ jobs:
     name: Test and build on ubuntu
     runs-on: ubuntu-latest
     steps:
-      - run: sudo apt install libwayland-dev -y
+      - run: sudo apt install -y libwayland-dev libxkbcommon-dev
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
         with:
