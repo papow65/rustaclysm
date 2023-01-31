@@ -6,22 +6,44 @@ on:
 name: CI
 
 jobs:
-  test_build_and_release:
-    name: Test, build, and release
+  check_and_test:
+    name: Check and test
     runs-on: ubuntu-latest
+    env:
+      CARGO_TERM_COLOR: always
     steps:
       - name: 'Install required libraries'
         run: sudo apt install -y libwayland-dev libxkbcommon-dev
       - name: 'git checkout'
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: 'Install rust toolchain'
         uses: actions-rs/toolchain@v1
+      - name: 'Check'
+        uses: actions-rs/cargo@v1
         with:
-          toolchain: stable
+          command: check
       - name: 'Test'
         uses: actions-rs/cargo@v1
         with:
           command: test
+  build_and_release:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+      fail-fast: false
+    name: Build and release on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    env:
+      CARGO_TERM_COLOR: always
+    needs: check_and_test
+    steps:
+      - name: 'Install required libraries'
+        if: runner.os == 'Linux'
+        run: sudo apt install -y libwayland-dev libxkbcommon-dev
+      - name: 'git checkout'
+        uses: actions/checkout@v3
+      - name: 'Install rust toolchain'
+        uses: actions-rs/toolchain@v1
       - name: 'Build'
         uses: actions-rs/cargo@v1
         with:
@@ -31,3 +53,4 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           artifacts: "target/release/rustaclysm"
+          tag: ${{ github.run_id }}.${{ github.run_attempt }}
