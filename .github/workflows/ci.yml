@@ -34,9 +34,9 @@ jobs:
     env:
       CARGO_TERM_COLOR: always
     needs: check_and_test
-  permissions:
-    contents: write
-  steps:
+    permissions:
+      contents: write
+    steps:
       - name: 'Install required libraries'
         if: runner.os == 'Linux'
         run: sudo apt install -y libwayland-dev libxkbcommon-dev
