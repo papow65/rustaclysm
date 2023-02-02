@@ -43,6 +43,8 @@ jobs:
         run: sudo apt install -y libwayland-dev libxkbcommon-dev
       - name: 'git checkout'
         uses: actions/checkout@v3
+      - name: 'Print rustc verion'
+        run: 'rustc --version --verbose'
       - name: 'Build'
         uses: actions-rs/cargo@v1
         with:
@@ -50,11 +52,13 @@ jobs:
           args: --release
       - name: 'List built files'
         run: 'ls -l target/release'
+      - name: 'Rename'
+        run: mv target/release/rustaclysm${{ matrix.os.ext }} rustaclysm-${{ matrix.os.short }}${{ matrix.os.ext }}
       - name: 'Upload as artifact'
         uses: actions/upload-artifact@v3
         with:
-          name: rustaclysm-${{ matrix.os.short }}${{ matrix.os.ext }}
-          path: target/release/rustaclysm${{ matrix.os.ext }}
+          path: rustaclysm-${{ matrix.os.short }}${{ matrix.os.ext }}
+          if-no-files-found: error
   release:
     name: Release
     runs-on: ubuntu-latest
@@ -67,11 +71,11 @@ jobs:
       - name: 'Get all artifacts'
         uses: actions/download-artifact@v3
       - name: 'List files to release'
-        run: 'ls -l'
+        run: 'ls -l artifact'
       - name: 'Create a release'
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "*"
+          artifacts: "artifact/*"
           generateReleaseNotes: true
           makeLatest: true
           tag: ci-${{ github.run_number }}-${{ github.run_attempt }}
