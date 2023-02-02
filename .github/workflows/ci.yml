@@ -24,18 +24,19 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: test
-  build_and_release:
+  build:
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os:
+          - {github: ubuntu-latest, short: linux, ext: ''}
+          - {github: macos-latest, short: macos, ext: ''}
+          - {github: windows-latest, short: windows, ext: '.exe'}
       fail-fast: false
-    name: Build and release on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
+    name: Build and release on ${{ matrix.os.github }}
+    runs-on: ${{ matrix.os.github }}
     env:
       CARGO_TERM_COLOR: always
     needs: check_and_test
-    permissions:
-      contents: write
     steps:
       - name: 'Install required libraries'
         if: runner.os == 'Linux'
@@ -47,8 +48,30 @@ jobs:
         with:
           command: build
           args: --release
-      - name: 'Release'
+      - name: 'List built files'
+        run: 'ls -l target/release'
+      - name: 'Upload as artifact'
+        uses: actions/upload-artifact@v3
+        with:
+          name: rustaclysm-${{ matrix.os.short }}${{ matrix.os.ext }}
+          path: target/release/rustaclysm${{ matrix.os.ext }}
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    env:
+      CARGO_TERM_COLOR: always
+    needs: build
+    permissions:
+      contents: write
+    steps:
+      - name: 'Get all artifacts'
+        uses: actions/download-artifact@v3
+      - name: 'List files to release'
+        run: 'ls -l'
+      - name: 'Create a release'
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "target/release/rustaclysm"
-          tag: ${{ github.run_id }}.${{ github.run_attempt }}
+          artifacts: "*"
+          generateReleaseNotes: true
+          makeLatest: true
+          tag: ci-${{ github.run_number }}-${{ github.run_attempt }}
