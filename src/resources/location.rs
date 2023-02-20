@@ -63,18 +63,18 @@ impl Location {
         self.entities(pos).copied().collect()
     }
 
-    pub(crate) fn has_stairs_up<'w, 's>(
+    pub(crate) fn has_stairs_up<'s>(
         &self,
         from: Pos,
-        stairs_up: &'s Query<'w, 's, &'static StairsUp>,
+        stairs_up: &'s Query<'_, 's, &'static StairsUp>,
     ) -> bool {
         from.level.up().is_some() && self.any(from, stairs_up)
     }
 
-    pub(crate) fn has_stairs_down<'w, 's>(
+    pub(crate) fn has_stairs_down<'s>(
         &self,
         from: Pos,
-        stairs_down: &'s Query<'w, 's, &'static StairsDown>,
+        stairs_down: &'s Query<'_, 's, &'static StairsDown>,
     ) -> bool {
         from.level.down().is_some() && self.any(from, stairs_down)
     }

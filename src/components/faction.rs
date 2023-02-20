@@ -239,10 +239,10 @@ impl Faction {
         })
     }
 
-    pub(crate) fn strategize<'f>(
+    pub(crate) fn strategize(
         &self,
         envir: &Envir,
-        factions: &[(Pos, &'f Self)],
+        factions: &[(Pos, &Self)],
         actor: &Actor,
     ) -> Strategy {
         let currently_visible = envir.currently_visible(actor.pos);
