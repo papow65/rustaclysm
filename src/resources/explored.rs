@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use bevy::{ecs::system::Resource, utils::HashMap};
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub(crate) enum SeenFrom {
     FarAway,
     CloseBy,

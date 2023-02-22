@@ -178,6 +178,7 @@ pub(crate) fn update_collapsed_zone_levels(
     mut commands: Commands,
     mut tile_spawner: TileSpawner,
     zone_level_entities: Res<ZoneLevelEntities>,
+    mut skip_once: Local<bool>,
     mut previous_camera_global_transform: Local<GlobalTransform>,
     mut previous_visible_region: Local<Region>,
     players: Query<(&Pos, &Player)>,
@@ -188,6 +189,12 @@ pub(crate) fn update_collapsed_zone_levels(
     // Collapsed zone level child visibility: not expanded, even when zoomed out
 
     let start = Instant::now();
+
+    // We need to wait for a sync, after zones have been expanded.
+    if !*skip_once {
+        *skip_once = true;
+        return;
+    }
 
     let (camera, &global_transform) = cameras.single();
     if global_transform == *previous_camera_global_transform {
