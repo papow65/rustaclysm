@@ -50,7 +50,7 @@ pub(crate) fn manage_characters(world: &mut World) {
 
         let egible_entities = actors
             .actors()
-            .filter(|a| envir.has_floor(a.pos) || players.get(a.entity).is_ok())
+            .filter(|a| envir.is_accessible(a.pos) || players.get(a.entity).is_ok())
             .map(|a| a.entity)
             .collect::<Vec<Entity>>();
         let Some(active_entity) = timeouts.next(&egible_entities) else {

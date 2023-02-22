@@ -40,7 +40,7 @@ impl From<&Label> for String {
 }
 
 #[derive(Component)]
-pub(crate) struct Floor {
+pub(crate) struct Accessible {
     pub(crate) water: bool,
     pub(crate) move_cost: MoveCost,
 }
@@ -83,6 +83,9 @@ pub(crate) struct Hurdle(pub(crate) MoveCostMod);
 
 #[derive(Component)]
 pub(crate) struct Opaque;
+
+#[derive(Component)]
+pub(crate) struct OpaqueFloor;
 
 #[derive(Component)]
 pub(crate) struct Containable {

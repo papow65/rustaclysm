@@ -7,7 +7,7 @@ use std::{cell::RefCell, cmp::Ordering, iter::repeat};
 pub(crate) struct Envir<'w, 's> {
     pub(crate) location: ResMut<'w, Location>,
     relative_segments: Res<'w, RelativeSegments>,
-    floors: Query<'w, 's, &'static Floor>,
+    accessibles: Query<'w, 's, &'static Accessible>,
     hurdles: Query<'w, 's, &'static Hurdle>,
     openables: Query<'w, 's, Entity, With<Openable>>,
     closeables: Query<'w, 's, Entity, With<Closeable>>,
@@ -16,6 +16,7 @@ pub(crate) struct Envir<'w, 's> {
     terrain: Query<'w, 's, &'static Label, (Without<Health>, Without<Amount>)>,
     obstacles: Query<'w, 's, &'static Label, With<Obstacle>>,
     opaques: Query<'w, 's, &'static Label, With<Opaque>>,
+    opaque_floors: Query<'w, 's, &'static OpaqueFloor>,
     characters: Query<'w, 's, (Entity, &'static Label), With<Health>>,
     items: Query<'w, 's, Entity, With<Integrity>>,
 }
@@ -23,13 +24,13 @@ pub(crate) struct Envir<'w, 's> {
 impl<'w, 's> Envir<'w, 's> {
     // base methods
 
-    pub(crate) fn has_floor(&self, pos: Pos) -> bool {
-        self.location.any(pos, &self.floors)
+    pub(crate) fn is_accessible(&self, pos: Pos) -> bool {
+        self.location.any(pos, &self.accessibles)
     }
 
     pub(crate) fn is_water(&self, pos: Pos) -> bool {
         self.location
-            .get_first(pos, &self.floors)
+            .get_first(pos, &self.accessibles)
             .map(|floor| floor.water)
             == Some(true)
     }
@@ -127,6 +128,10 @@ impl<'w, 's> Envir<'w, 's> {
         self.location.any(pos, &self.opaques)
     }
 
+    pub(crate) fn has_opaque_floor(&self, pos: Pos) -> bool {
+        self.location.any(pos, &self.opaque_floors)
+    }
+
     pub(crate) fn find_character(&self, pos: Pos) -> Option<(Entity, &Label)> {
         self.location.get_first(pos, &self.characters)
     }
@@ -136,10 +141,6 @@ impl<'w, 's> Envir<'w, 's> {
     }
 
     // helper methods
-
-    pub(crate) fn can_see_down(&self, pos: Pos) -> bool {
-        !self.has_floor(pos) || self.stairs_down_to(pos).is_some()
-    }
 
     pub(crate) fn get_nbor(&self, from: Pos, nbor: &Nbor) -> Result<Pos, Message> {
         match nbor {
@@ -165,7 +166,7 @@ impl<'w, 's> Envir<'w, 's> {
                     WalkingCost::new(
                         &nbor.distance(),
                         self.location
-                            .get_first(npos, &self.floors)
+                            .get_first(npos, &self.accessibles)
                             .map_or_else(MoveCost::default, |floor| floor.move_cost),
                     ),
                 )
@@ -203,7 +204,7 @@ impl<'w, 's> Envir<'w, 's> {
                 let at_destination = Some(nbor) == destination;
                 match intelligence {
                     Intelligence::Smart => {
-                        self.has_floor(nbor)
+                        self.is_accessible(nbor)
                             && (at_destination || self.find_obstacle(nbor).is_none())
                     }
                     Intelligence::Dumb => at_destination || !self.is_opaque(nbor),
@@ -242,7 +243,7 @@ impl<'w, 's> Envir<'w, 's> {
             // nbors, the precise value matters in some cases
             // Dumb creatures may try to use paths that do not have a floor.
             self.location
-                .get_first(to, &self.floors)
+                .get_first(to, &self.accessibles)
                 .map_or_else(MoveCost::default, |floor| {
                     floor
                         .move_cost
@@ -308,7 +309,7 @@ impl<'w, 's> Envir<'w, 's> {
                     Collision::Opened(openable.unwrap())
                 } else if let Some(obstacle) = self.find_obstacle(to) {
                     Collision::Blocked(obstacle.clone())
-                } else if self.has_floor(to) {
+                } else if self.is_accessible(to) {
                     Collision::Pass
                 } else if controlled {
                     Collision::Ledged
@@ -450,7 +451,11 @@ impl<'a> CurrentlyVisible<'a> {
             .down_cache
             .borrow_mut()
             .entry(offset)
-            .or_insert_with(|| self.envir.can_see_down(self.from.offset(offset).unwrap()))
+            .or_insert_with(|| {
+                !self
+                    .envir
+                    .has_opaque_floor(self.from.offset(offset).unwrap())
+            })
     }
 
     fn remember_visible(&self, relative_to: PosOffset, visible: Visible) -> Visible {

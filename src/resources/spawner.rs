@@ -215,7 +215,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
                     if close.is_some() {
                         self.commands.entity(tile).insert(Closeable);
                     }
-                    self.commands.entity(tile).insert(Floor {
+                    self.commands.entity(tile).insert(Accessible {
                         water: flags.water(),
                         move_cost,
                     });
@@ -235,6 +235,8 @@ impl<'w, 's> TileSpawner<'w, 's> {
 
                 if flags.goes_down() {
                     self.commands.entity(tile).insert(StairsDown);
+                } else {
+                    self.commands.entity(tile).insert(OpaqueFloor);
                 }
             }
             TerrainInfo::FieldType { .. } => {}
