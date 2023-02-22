@@ -88,9 +88,13 @@ pub(crate) struct Submap {
 }
 
 impl Submap {
-    pub(crate) fn fallback(subzone_level: SubzoneLevel) -> Option<Self> {
-        if subzone_level.level != Level::ZERO {
+    pub(crate) fn fallback(subzone_level: SubzoneLevel, zone_object_id: &ObjectId) -> Option<Self> {
+        if zone_object_id.is_hidden_zone() {
             return None;
+        }
+
+        if subzone_level.level != Level::ZERO {
+            eprintln!("Fallback submap for {zone_object_id:?} at {subzone_level:?}");
         }
 
         Some(Submap {
@@ -100,7 +104,17 @@ impl Submap {
             temperature: 0,
             radiation: Vec::new(),
             terrain: RepetitionBlock::new(CddaAmount {
-                obj: ObjectId::new("t_dirt"),
+                obj: ObjectId::new(if zone_object_id.is_moving_deep_water_zone() {
+                    "t_water_moving_dp"
+                } else if zone_object_id.is_still_deep_water_zone() {
+                    "t_water_dp"
+                } else if zone_object_id.is_grassy_zone() {
+                    "t_grass"
+                } else if zone_object_id.is_road_zone() {
+                    "t_pavement"
+                } else {
+                    "t_dirt"
+                }),
                 amount: 144,
             }),
             furniture: Vec::new(),

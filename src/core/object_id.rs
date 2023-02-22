@@ -48,6 +48,22 @@ impl ObjectId {
             || self.0 == "deep_rock"
     }
 
+    pub(crate) fn is_moving_deep_water_zone(&self) -> bool {
+        self.0.starts_with("river_")
+    }
+
+    pub(crate) fn is_still_deep_water_zone(&self) -> bool {
+        self.0.starts_with("lake_")
+    }
+
+    pub(crate) fn is_grassy_zone(&self) -> bool {
+        self.0 == "field" || self.0.starts_with("forest")
+    }
+
+    pub(crate) fn is_road_zone(&self) -> bool {
+        self.0.starts_with("road_")
+    }
+
     pub(crate) fn is_ground(&self) -> bool {
         self.0 == "t_grass" || self.0 == "t_dirt"
     }

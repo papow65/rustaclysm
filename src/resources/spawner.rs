@@ -306,7 +306,10 @@ impl<'w, 's> TileSpawner<'w, 's> {
         let map_path = MapPath::new(&self.paths.world_path(), ZoneLevel::from(subzone_level));
         if let Some(submap) = Option::<Map>::try_from(map_path)?
             .map(|map| map.0.into_iter().nth(subzone_level.index()).unwrap())
-            .or_else(|| Submap::fallback(subzone_level))
+            .or_else(|| {
+                let object_id = self.zone_level_ids.get(ZoneLevel::from(subzone_level));
+                Submap::fallback(subzone_level, object_id)
+            })
         {
             assert_eq!(
                 submap.coordinates,
