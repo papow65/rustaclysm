@@ -294,9 +294,9 @@ impl Appearance {
 
     fn remembered(color: Color) -> Color {
         Color::rgba(
-            color.r() / 2.0,
-            color.g() / 2.0,
-            color.b() / 1.5,
+            color.r() / 1.4,
+            color.g() / 1.4,
+            color.b() / 1.2,
             0.5f32.mul_add(color.a(), 0.5),
         )
     }
