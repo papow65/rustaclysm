@@ -536,25 +536,13 @@ pub(crate) struct Spawner<'w, 's> {
 
 impl<'w, 's> Spawner<'w, 's> {
     pub(crate) fn spawn_stairs_down(&mut self, parent: Entity, pos: Pos) {
-        self.tile_spawner.spawn_tile(
-            parent,
-            pos,
-            &ObjectDefinition {
-                category: ObjectCategory::Terrain,
-                id: ObjectId::new("t_wood_stairs_down"),
-            },
-        );
+        self.tile_spawner
+            .spawn_terrain(parent, pos, ObjectId::new("t_wood_stairs_down"));
     }
 
     pub(crate) fn spawn_roofing(&mut self, parent: Entity, pos: Pos) {
-        self.tile_spawner.spawn_tile(
-            parent,
-            pos,
-            &ObjectDefinition {
-                category: ObjectCategory::Terrain,
-                id: ObjectId::new("t_shingle_flat_roof"),
-            },
-        );
+        self.tile_spawner
+            .spawn_terrain(parent, pos, ObjectId::new("t_shingle_flat_roof"));
     }
 
     pub(crate) fn spawn_wall(&mut self, pos: Pos) {
