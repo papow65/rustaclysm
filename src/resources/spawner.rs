@@ -549,11 +549,11 @@ impl<'w, 's> Spawner<'w, 's> {
         self.tile_spawner
             .commands
             .spawn(SpatialBundle::default())
-            .insert(Wall)
             .insert(pos)
             .insert(Integrity::new(1000))
             .insert(Obstacle)
             .insert(Opaque)
+            .insert(OpaqueFloor)
             .insert(Label::new("wall"))
             .insert(LastSeen::Never)
             .insert(Visibility::INVISIBLE)
@@ -572,11 +572,11 @@ impl<'w, 's> Spawner<'w, 's> {
         self.tile_spawner
             .commands
             .spawn(SpatialBundle::default())
-            .insert(Window)
             .insert(pos)
             .insert(Integrity::new(1))
             .insert(Obstacle)
             .insert(Hurdle(MoveCostMod(2)))
+            .insert(OpaqueFloor)
             .insert(Label::new("window"))
             .insert(LastSeen::Never)
             .insert(Visibility::INVISIBLE)
@@ -595,8 +595,7 @@ impl<'w, 's> Spawner<'w, 's> {
                         transform: self.custom.window_pane_transform,
                         ..PbrBundle::default()
                     })
-                    .insert(self.custom.glass.clone())
-                    .insert(WindowPane);
+                    .insert(self.custom.glass.clone());
             });
     }
 
@@ -626,7 +625,6 @@ impl<'w, 's> Spawner<'w, 's> {
         self.tile_spawner
             .commands
             .spawn(SpatialBundle::default())
-            .insert(Rack)
             .insert(pos)
             .insert(Integrity::new(40))
             .insert(Obstacle)
@@ -649,7 +647,6 @@ impl<'w, 's> Spawner<'w, 's> {
         self.tile_spawner
             .commands
             .spawn(SpatialBundle::default())
-            .insert(Table)
             .insert(pos)
             .insert(Integrity::new(30))
             .insert(Hurdle(MoveCostMod(2)))
@@ -673,7 +670,6 @@ impl<'w, 's> Spawner<'w, 's> {
         self.tile_spawner
             .commands
             .spawn(SpatialBundle::default())
-            .insert(Chair)
             .insert(pos)
             .insert(Integrity::new(10))
             .insert(Hurdle(MoveCostMod(3)))

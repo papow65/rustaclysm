@@ -46,29 +46,12 @@ pub(crate) struct Accessible {
 }
 
 #[derive(Component)]
-pub(crate) struct Wall;
-
-#[derive(Component)]
 pub(crate) struct StairsUp;
 
 #[derive(Component)]
 pub(crate) struct StairsDown;
 
-#[derive(Component)]
-pub(crate) struct Window;
-
-#[derive(Component)]
-pub(crate) struct Rack;
-
-#[derive(Component)]
-pub(crate) struct Table;
-
-#[derive(Component)]
-pub(crate) struct Chair;
-
-#[derive(Component)]
-pub(crate) struct WindowPane;
-
+/** Not accessible for any movement */
 #[derive(Component)]
 pub(crate) struct Obstacle;
 
@@ -81,9 +64,11 @@ pub(crate) struct Closeable;
 #[derive(Component)]
 pub(crate) struct Hurdle(pub(crate) MoveCostMod);
 
+/** Blocks vision (horizontally) */
 #[derive(Component)]
 pub(crate) struct Opaque;
 
+/** Blocks vision to and from the level below */
 #[derive(Component)]
 pub(crate) struct OpaqueFloor;
 
