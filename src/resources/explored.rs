@@ -1,6 +1,7 @@
 use crate::prelude::*;
 use bevy::{ecs::system::Resource, utils::HashMap};
 
+/** Ever seen by the player character */
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) enum SeenFrom {
     FarAway,

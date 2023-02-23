@@ -9,6 +9,7 @@ const MAX_EXPAND_DISTANCE: i32 = 20;
 pub(crate) fn spawn_zones_for_camera(
     mut commands: Commands,
     mut tile_spawner: TileSpawner,
+    zone_level_entities: Res<ZoneLevelEntities>,
     mut previous_camera_global_transform: Local<GlobalTransform>,
     mut previous_expanded_region: Local<Region>,
     players: Query<(&Pos, &Player)>,
@@ -34,7 +35,13 @@ pub(crate) fn spawn_zones_for_camera(
         &expanded_subzone_levels,
         &expanded_region,
     );
-    despawn_expanded_subzone_levels(&mut commands, &expanded_subzone_levels, &expanded_region);
+    despawn_expanded_subzone_levels(
+        &mut commands,
+        &mut tile_spawner,
+        &zone_level_entities,
+        &expanded_subzone_levels,
+        &expanded_region,
+    );
 
     *previous_camera_global_transform = global_transform;
     *previous_expanded_region = expanded_region;
@@ -160,6 +167,8 @@ fn spawn_expanded_subzone_levels(
 
 fn despawn_expanded_subzone_levels(
     commands: &mut Commands,
+    tile_spawner: &mut TileSpawner,
+    zone_level_entities: &ZoneLevelEntities,
     expanded_zone_levels: &Query<(Entity, &SubzoneLevel), Without<Collapsed>>,
     expanded_region: &Region,
 ) {
@@ -168,8 +177,18 @@ fn despawn_expanded_subzone_levels(
         .filter(|(_, &expanded_subzone_level)| {
             !expanded_region.contains_subzone_level(expanded_subzone_level)
         })
-        .for_each(|(e, _)| {
+        .for_each(|(e, &expanded_subzone_level)| {
             commands.entity(e).despawn_recursive();
+
+            let zone_level = ZoneLevel::from(expanded_subzone_level);
+            if tile_spawner.explored.has_zone_level_been_seen(zone_level) != SeenFrom::Never {
+                let visible = Visibility { is_visible: true };
+                if let Some(zone_level_entity) = zone_level_entities.get(zone_level) {
+                    commands.entity(zone_level_entity).insert(visible);
+                } else {
+                    tile_spawner.spawn_collapsed_zone_level(zone_level, &visible);
+                }
+            }
         });
 }
 
