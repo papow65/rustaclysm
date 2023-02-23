@@ -342,6 +342,7 @@ pub(crate) fn update_status_detais(
             Option<&Obstacle>,
             Option<&Hurdle>,
             Option<&Opaque>,
+            Option<&OpaqueFloor>,
             Option<&LastSeen>,
             Option<&Visibility>,
         ),
@@ -418,12 +419,13 @@ fn entity_info(
         label,
         corpse,
         action,
-        floor,
+        accessible,
         stairs_up,
         stairs_down,
         obstacle,
         hurdle,
         opaque,
+        opaque_floor,
         last_seen,
         visibility,
     ): (
@@ -437,6 +439,7 @@ fn entity_info(
         Option<&Obstacle>,
         Option<&Hurdle>,
         Option<&Opaque>,
+        Option<&OpaqueFloor>,
         Option<&LastSeen>,
         Option<&Visibility>,
     ),
@@ -455,13 +458,13 @@ fn entity_info(
         action_str = format!("{action:?}");
         flags.push(action_str.as_str());
     }
-    let hurdle_str: String;
-    if let Some(floor) = floor {
-        flags.push("floor");
-        if MoveCost::default() < floor.move_cost {
-            let factor = f32::from(floor.move_cost.0) / f32::from(MoveCost::default().0);
-            hurdle_str = format!("hurlde (x{factor:.1})");
-            flags.push(hurdle_str.as_str());
+    let accessible_str: String;
+    if let Some(accessible) = accessible {
+        flags.push("accessible");
+        if MoveCost::default() < accessible.move_cost {
+            let factor = f32::from(accessible.move_cost.0) / f32::from(MoveCost::default().0);
+            accessible_str = format!("hurlde (x{factor:.1})");
+            flags.push(accessible_str.as_str());
         }
     };
     if stairs_up.is_some() {
@@ -480,6 +483,9 @@ fn entity_info(
     }
     if opaque.is_some() {
         flags.push("opaque");
+    }
+    if opaque_floor.is_some() {
+        flags.push("opaque_floor");
     }
     if let Some(last_seen) = last_seen {
         match *last_seen {
