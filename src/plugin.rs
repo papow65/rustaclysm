@@ -44,6 +44,8 @@ impl Plugin for RustaclysmPlugin {
             .add_system(manage_characters)
             .add_system_to_stage(Self::EFFECT, manage_game_over)
             .add_system_to_stage(Self::EFFECT, toggle_doors)
+            .add_system_to_stage(Self::EFFECT, update_damaged_characters)
+            .add_system_to_stage(Self::EFFECT, update_damaged_items)
             .add_system_set_to_stage(Self::SYNC, sync_systems())
             .add_system_set_to_stage(CoreStage::Last, check_systems());
     }
@@ -59,8 +61,6 @@ fn sync_systems() -> SystemSet {
         .with_system(update_cursor_visibility_on_player_change)
         .with_system(update_visualization_on_item_move)
         .with_system(update_visualization_on_focus_move.after(update_location))
-        .with_system(update_damaged_characters)
-        .with_system(update_damaged_items)
         .with_system(update_camera)
         .with_system(update_log)
         .with_system(update_status_fps)
