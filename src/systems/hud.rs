@@ -386,10 +386,14 @@ pub(crate) fn update_status_detais(
                     }
                 }*/
 
-                if explored.has_zone_level_been_seen(zone_level) == SeenFrom::Never {
+                let seen_from = explored.has_zone_level_been_seen(zone_level);
+                if seen_from == SeenFrom::Never {
                     format!("\n{zone_level:?}\nUnseen")
                 } else {
-                    format!("\n{zone_level:?}\n{:?}", zone_level_ids.get(zone_level))
+                    format!(
+                        "\n{zone_level:?}\n{:?}\n{seen_from:?}",
+                        zone_level_ids.get(zone_level)
+                    )
                 }
             }
             _ => String::new(),
