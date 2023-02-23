@@ -58,7 +58,7 @@ fn sync_systems() -> SystemSet {
         .with_system(update_hidden_item_visibility)
         .with_system(update_cursor_visibility_on_player_change)
         .with_system(update_visualization_on_item_move)
-        .with_system(update_visualization_on_focus_move)
+        .with_system(update_visualization_on_focus_move.after(update_location))
         .with_system(update_damaged_characters)
         .with_system(update_damaged_items)
         .with_system(update_camera)
