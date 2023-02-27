@@ -17,7 +17,10 @@ impl ZoneLevelEntities {
 
     pub(crate) fn add(&mut self, zone_level: ZoneLevel, entity: Entity) {
         let entry = self.zone_levels.entry(zone_level);
-        assert!(matches!(entry, Entry::Vacant(..)));
+        assert!(
+            matches!(entry, Entry::Vacant(..)),
+            "Duplicate for {entry:?} - new: {entity:?}"
+        );
         entry.insert(entity);
 
         let reverse_entry = self.reverse.entry(entity);
