@@ -304,9 +304,12 @@ impl<'w, 's> Envir<'w, 's> {
                 }
             }
             Ordering::Equal => {
-                let openable = self.find_openable(to);
-                if controlled && openable.is_some() {
-                    Collision::Opened(openable.unwrap())
+                if let Some(openable) = if controlled {
+                    self.find_openable(to)
+                } else {
+                    None
+                } {
+                    Collision::Opened(openable)
                 } else if let Some(obstacle) = self.find_obstacle(to) {
                     Collision::Blocked(obstacle.clone())
                 } else if self.is_accessible(to) {
