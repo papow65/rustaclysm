@@ -32,7 +32,7 @@ impl<'s> Actor<'s> {
             Action::Close { target } => self.close(commands, envir, *target),
             Action::Wield => self.wield(commands, &mut envir.location, hierarchy),
             Action::Pickup => self.pickup(commands, &mut envir.location, hierarchy),
-            Action::Dump => self.dump(commands, dumpees),
+            Action::Dump => self.dump(commands, &mut envir.location, dumpees),
             Action::SwitchRunning => self.switch_running(commands),
         };
 
@@ -61,6 +61,7 @@ impl<'s> Actor<'s> {
         match envir.collide(from, to, true) {
             Collision::Pass => {
                 commands.entity(self.entity).insert(to);
+                envir.location.update(self.entity, Some(to));
                 envir.walking_cost(from, to).duration(self.speed)
             }
             /*Collision::Fall(fall_pos) => {
@@ -201,6 +202,7 @@ impl<'s> Actor<'s> {
                         .remove::<Pos>()
                         .remove::<Visibility>();
                     commands.entity(self.entity).push_children(&[pd_entity]);
+                    location.update(pd_entity, None);
                     self.speed.activate()
                 }
                 Err(messages) => {
@@ -219,6 +221,7 @@ impl<'s> Actor<'s> {
     fn dump(
         &'s self,
         commands: &mut Commands,
+        location: &mut Location,
         dumpees: &Query<(Entity, &Label, &Parent)>,
     ) -> Milliseconds {
         // It seems impossible to remove something from 'Children', so we check 'Parent'.
@@ -233,6 +236,7 @@ impl<'s> Actor<'s> {
                 .entity(dumpee)
                 .insert(VisibilityBundle::default())
                 .insert(self.pos);
+            location.update(dumpee, Some(self.pos));
             self.speed.stay()
         } else {
             commands.spawn(Message::warn(format!("nothing to drop for {}", self.label)));

@@ -31,7 +31,9 @@ pub(crate) struct TileSpawner<'w, 's> {
     asset_server: Res<'w, AssetServer>,
     loader: Res<'w, TileLoader>,
     caches: ResMut<'w, TileCaches>,
+    location: ResMut<'w, Location>,
     pub(crate) zone_level_ids: ResMut<'w, ZoneLevelIds>,
+    pub(crate) zone_level_entities: ResMut<'w, ZoneLevelEntities>,
     pub(crate) explored: ResMut<'w, Explored>,
     pub(crate) infos: ResMut<'w, Infos>,
     paths: Res<'w, Paths>,
@@ -298,6 +300,8 @@ impl<'w, 's> TileSpawner<'w, 's> {
             self.commands.entity(tile).insert(last_seen);
         }
 
+        self.location.update(tile, Some(pos));
+
         tile
     }
 
@@ -451,6 +455,8 @@ impl<'w, 's> TileSpawner<'w, 's> {
                     }
                 });
         }
+
+        self.zone_level_entities.add(zone_level, entity.id());
     }
 }
 
@@ -546,7 +552,8 @@ impl<'w, 's> Spawner<'w, 's> {
     }
 
     pub(crate) fn spawn_wall(&mut self, pos: Pos) {
-        self.tile_spawner
+        let tile = self
+            .tile_spawner
             .commands
             .spawn(SpatialBundle::default())
             .insert(pos)
@@ -565,11 +572,15 @@ impl<'w, 's> Spawner<'w, 's> {
                         ..PbrBundle::default()
                     })
                     .insert(self.custom.wooden_wall.clone());
-            });
+            })
+            .id();
+
+        self.tile_spawner.location.update(tile, Some(pos));
     }
 
     pub(crate) fn spawn_window(&mut self, pos: Pos) {
-        self.tile_spawner
+        let tile = self
+            .tile_spawner
             .commands
             .spawn(SpatialBundle::default())
             .insert(pos)
@@ -596,11 +607,15 @@ impl<'w, 's> Spawner<'w, 's> {
                         ..PbrBundle::default()
                     })
                     .insert(self.custom.glass.clone());
-            });
+            })
+            .id();
+
+        self.tile_spawner.location.update(tile, Some(pos));
     }
 
     pub(crate) fn spawn_stairs(&mut self, pos: Pos) {
-        self.tile_spawner
+        let tile = self
+            .tile_spawner
             .commands
             .spawn(SpatialBundle::default())
             .insert(StairsUp)
@@ -618,7 +633,10 @@ impl<'w, 's> Spawner<'w, 's> {
                         ..PbrBundle::default()
                     })
                     .insert(self.custom.wood.clone());
-            });
+            })
+            .id();
+
+        self.tile_spawner.location.update(tile, Some(pos));
     }
 
     pub(crate) fn spawn_rack(&mut self, pos: Pos) {
@@ -644,7 +662,8 @@ impl<'w, 's> Spawner<'w, 's> {
     }
 
     pub(crate) fn spawn_table(&mut self, pos: Pos) {
-        self.tile_spawner
+        let tile = self
+            .tile_spawner
             .commands
             .spawn(SpatialBundle::default())
             .insert(pos)
@@ -661,13 +680,17 @@ impl<'w, 's> Spawner<'w, 's> {
                         ..PbrBundle::default()
                     })
                     .insert(self.custom.wood.clone());
-            });
+            })
+            .id();
+
+        self.tile_spawner.location.update(tile, Some(pos));
     }
 
     pub(crate) fn spawn_chair(&mut self, pos: Pos) {
         let scale = 0.45 * Millimeter::ADJACENT.f32();
 
-        self.tile_spawner
+        let tile = self
+            .tile_spawner
             .commands
             .spawn(SpatialBundle::default())
             .insert(pos)
@@ -700,7 +723,10 @@ impl<'w, 's> Spawner<'w, 's> {
                         ..PbrBundle::default()
                     })
                     .insert(self.custom.whitish.clone());
-            });
+            })
+            .id();
+
+        self.tile_spawner.location.update(tile, Some(pos));
     }
 
     fn configure_player(&mut self, player_entity: Entity) {

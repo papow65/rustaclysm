@@ -28,6 +28,7 @@ impl ZoneLevelEntities {
         reverse_entry.insert(zone_level);
     }
 
+    #[allow(unused)]
     pub(crate) fn remove(&mut self, entity: Entity) {
         let zone_level = self.reverse.remove(&entity).unwrap();
         let removed = self.zone_levels.remove(&zone_level);

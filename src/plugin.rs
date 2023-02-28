@@ -30,7 +30,6 @@ impl Plugin for RustaclysmPlugin {
         app.add_startup_system_to_stage(StartupStage::PreStartup, create_secondairy_resources)
             .add_startup_system(spawn_hud)
             .add_startup_system(spawn_initial_entities)
-            .add_startup_system_set_to_stage(StartupStage::PostStartup, sync_systems())
             .add_startup_system_to_stage(StartupStage::PostStartup, maximize_window);
 
         app.add_stage_after(CoreStage::PreUpdate, Self::INPUT, SystemStage::parallel());
@@ -53,14 +52,11 @@ impl Plugin for RustaclysmPlugin {
 
 fn sync_systems() -> SystemSet {
     SystemSet::new()
-        .with_system(update_location)
-        .with_system(update_subzone_level_entities)
-        .with_system(update_zone_level_entities)
         .with_system(update_transforms)
         .with_system(update_hidden_item_visibility)
         .with_system(update_cursor_visibility_on_player_change)
         .with_system(update_visualization_on_item_move)
-        .with_system(update_visualization_on_focus_move.after(update_location))
+        .with_system(update_visualization_on_focus_move)
         .with_system(update_camera)
         .with_system(update_log)
         .with_system(update_status_fps)

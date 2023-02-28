@@ -11,10 +11,12 @@ pub(crate) struct SubzoneLevelEntities {
 }
 
 impl SubzoneLevelEntities {
+    #[allow(unused)]
     pub(crate) fn get(&self, subzone_level: SubzoneLevel) -> Option<Entity> {
         self.subzone_levels.get(&subzone_level).copied()
     }
 
+    #[allow(unused)]
     pub(crate) fn add(&mut self, subzone_level: SubzoneLevel, entity: Entity) {
         let entry = self.subzone_levels.entry(subzone_level);
         assert!(matches!(entry, Entry::Vacant(..)));
@@ -25,6 +27,7 @@ impl SubzoneLevelEntities {
         reverse_entry.insert(subzone_level);
     }
 
+    #[allow(unused)]
     pub(crate) fn remove(&mut self, entity: Entity) {
         let subzone_level = self.reverse.remove(&entity).unwrap();
         let removed = self.subzone_levels.remove(&subzone_level);
