@@ -29,11 +29,7 @@ pub(crate) fn spawn_zones_for_camera(
         return;
     }
 
-    spawn_expanded_subzone_levels(
-        &mut tile_spawner,
-        &expanded_subzone_levels,
-        &expanded_region,
-    );
+    spawn_expanded_subzone_levels(&mut tile_spawner, &expanded_region);
     despawn_expanded_subzone_levels(
         &mut commands,
         &mut tile_spawner,
@@ -137,27 +133,24 @@ fn visible_area(camera: &Camera, global_transform: &GlobalTransform) -> Vec<Subz
     subzone_levels
 }
 
-fn spawn_expanded_subzone_levels(
-    tile_spawner: &mut TileSpawner,
-    expanded_subzone_levels: &Query<(Entity, &SubzoneLevel), Without<Collapsed>>,
-    expanded_region: &Region,
-) {
-    let expanded_subzone_levels = expanded_subzone_levels
-        .iter()
-        .map(|(_, &zone_level)| zone_level)
-        .collect::<HashSet<_>>();
-
+fn spawn_expanded_subzone_levels(tile_spawner: &mut TileSpawner, expanded_region: &Region) {
     for subzone_level in expanded_region.subzone_levels() {
         let expanded = !tile_spawner
             .zone_level_ids
             .get(ZoneLevel::from(subzone_level))
             .is_hidden_zone();
-        if expanded && !expanded_subzone_levels.contains(&subzone_level) {
-            if let Err(e) = tile_spawner.spawn_expanded_subzone_level(subzone_level) {
-                panic!(
-                    "While loading {subzone_level:?} in {:?}: {e}",
-                    ZoneLevel::from(subzone_level)
-                );
+        if expanded {
+            let missing = tile_spawner
+                .subzone_level_entities
+                .get(subzone_level)
+                .is_none();
+            if missing {
+                if let Err(e) = tile_spawner.spawn_expanded_subzone_level(subzone_level) {
+                    panic!(
+                        "While loading {subzone_level:?} in {:?}: {e}",
+                        ZoneLevel::from(subzone_level)
+                    );
+                }
             }
         }
     }
@@ -176,6 +169,7 @@ fn despawn_expanded_subzone_levels(
         })
         .for_each(|(e, &expanded_subzone_level)| {
             commands.entity(e).despawn_recursive();
+            tile_spawner.subzone_level_entities.remove(e);
 
             let zone_level = ZoneLevel::from(expanded_subzone_level);
             if tile_spawner.explored.has_zone_level_been_seen(zone_level) != SeenFrom::Never {

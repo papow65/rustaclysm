@@ -34,6 +34,7 @@ pub(crate) struct TileSpawner<'w, 's> {
     location: ResMut<'w, Location>,
     pub(crate) zone_level_ids: ResMut<'w, ZoneLevelIds>,
     pub(crate) zone_level_entities: ResMut<'w, ZoneLevelEntities>,
+    pub(crate) subzone_level_entities: ResMut<'w, SubzoneLevelEntities>,
     pub(crate) explored: ResMut<'w, Explored>,
     pub(crate) infos: ResMut<'w, Infos>,
     paths: Res<'w, Paths>,
@@ -404,6 +405,9 @@ impl<'w, 's> TileSpawner<'w, 's> {
             }
         }
         //println!("{:?} done", subzone_level);
+
+        self.subzone_level_entities
+            .add(subzone_level, subzone_level_entity);
     }
 
     pub(crate) fn spawn_collapsed_zone_level(
