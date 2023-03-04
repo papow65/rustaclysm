@@ -103,6 +103,7 @@ fn main() -> Result<(), ()> {
                     })
                     .set(WindowPlugin {
                         window: WindowDescriptor {
+                            title: String::from("Rustaclysm"),
                             present_mode: PresentMode::Mailbox, // much better responsiveness
                             width: 50.0,
                             height: 40.0,
