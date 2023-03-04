@@ -395,9 +395,22 @@ pub(crate) struct CurrentlyVisible<'a> {
 }
 
 impl<'a> CurrentlyVisible<'a> {
-    pub(crate) fn can_see(&self, to: Pos) -> Visible {
+    pub(crate) fn can_see(&self, to: Pos, accessible: Option<&Accessible>) -> Visible {
+        let to = if accessible.is_some() && self.from.level < to.level {
+            // seen from below?
+            Pos {
+                x: to.x,
+                level: Level { h: to.level.h - 1 },
+                z: to.z,
+            }
+        } else {
+            // seen from above?
+            to
+        };
+
         if MIN_INVISIBLE_DISTANCE <= self.from.x.abs_diff(to.x)
             || MIN_INVISIBLE_DISTANCE <= self.from.z.abs_diff(to.z)
+            || (accessible.is_some() && self.envir.is_opaque(to))
         {
             Visible::Unseen
         } else {

@@ -233,12 +233,23 @@ impl Focus {
         }
     }
 
-    pub(crate) fn is_shown(&self, level: Level) -> bool {
-        let focus_level = match self {
-            Focus::Pos(pos) => pos.level,
-            Focus::ZoneLevel(zone_level) => zone_level.level,
-        };
-        level <= focus_level
+    pub(crate) fn is_pos_shown(&self, shown_pos: Pos) -> bool {
+        match self {
+            Focus::Pos(pos) => {
+                shown_pos.level <= pos.level
+                    || ((pos.x - shown_pos.x - i32::from((shown_pos.level - pos.level).h))
+                        < (pos.z - shown_pos.z).abs())
+            }
+            Focus::ZoneLevel(zone_level) => shown_pos.level <= zone_level.level,
+        }
+    }
+
+    pub(crate) fn is_zone_level_shown(&self, level: Level) -> bool {
+        level
+            <= match self {
+                Focus::Pos(pos) => pos.level,
+                Focus::ZoneLevel(zone_level) => zone_level.level,
+            }
     }
 }
 

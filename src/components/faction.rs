@@ -253,7 +253,7 @@ impl Faction {
             .map(|(enemy_pos, _)| enemy_pos)
             .copied()
             .filter(|enemy_pos| actor.aquatic.is_none() || envir.is_water(*enemy_pos))
-            .filter(|enemy_pos| currently_visible.can_see(*enemy_pos) == Visible::Seen)
+            .filter(|enemy_pos| currently_visible.can_see(*enemy_pos, None) == Visible::Seen)
             .collect::<Vec<Pos>>();
         //println!("{self:?} can see {:?} enemies", enemies.len());
 

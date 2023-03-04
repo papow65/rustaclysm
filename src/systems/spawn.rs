@@ -87,7 +87,7 @@ fn expanded_region(focus: &Focus, camera: &Camera, global_transform: &GlobalTran
 fn visible_region(focus: &Focus, camera: &Camera, global_transform: &GlobalTransform) -> Region {
     let zone_levels = visible_area(camera, global_transform)
         .into_iter()
-        .filter(|zone_level| focus.is_shown(zone_level.level))
+        .filter(|zone_level| focus.is_zone_level_shown(zone_level.level))
         .collect::<Vec<SubzoneLevel>>();
     Region::new(&zone_levels)
 }
