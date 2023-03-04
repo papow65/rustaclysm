@@ -142,7 +142,10 @@ impl<'w, 's> TileSpawner<'w, 's> {
         //println!("{:?} @ {pos:?}", &definition);
         let entity = self.spawn_tile(parent, pos, definition);
 
-        let item_info = self.infos.item(&definition.id).unwrap();
+        let Some(item_info) = self.infos.item(&definition.id) else {
+            eprintln!("No info found for {:?}, spawning skipped", &definition);
+            return;
+        };
 
         let (volume, mass) = match &item.corpse {
             Some(corpse_id) if corpse_id != &ObjectId::new("mon_null") => {
