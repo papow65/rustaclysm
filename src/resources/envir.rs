@@ -270,7 +270,7 @@ impl<'w, 's> Envir<'w, 's> {
         to: Pos,
         intelligence: Intelligence,
         speed: BaseSpeed,
-    ) -> Option<Path> {
+    ) -> Option<MovementPath> {
         if to == from {
             return None;
         }
@@ -280,8 +280,10 @@ impl<'w, 's> Envir<'w, 's> {
 
         //println!("dumb? {dumb:?} @{from:?}");
         match intelligence {
-            Intelligence::Smart => Path::plan(from, nbors_fn, estimated_duration_fn, to),
-            Intelligence::Dumb => Path::improvize(nbors_fn(&from), estimated_duration_fn, to),
+            Intelligence::Smart => MovementPath::plan(from, nbors_fn, estimated_duration_fn, to),
+            Intelligence::Dumb => {
+                MovementPath::improvize(nbors_fn(&from), estimated_duration_fn, to)
+            }
         }
     }
 
@@ -335,13 +337,13 @@ impl<'w, 's> Envir<'w, 's> {
 }
 
 #[derive(Debug)]
-pub(crate) struct Path {
+pub(crate) struct MovementPath {
     pub(crate) first: Pos,
     pub(crate) duration: Milliseconds,
     pub(crate) destination: Pos,
 }
 
-impl Path {
+impl MovementPath {
     pub(crate) fn plan<FN, IN, FH>(
         from: Pos,
         successors: FN,

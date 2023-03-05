@@ -24,20 +24,27 @@ impl Infos {
             }
         }
 
-        let pattern = Paths::data_path().join("json").join("**").join("*.json");
-        let pattern = pattern.as_path().to_str().expect("ASCII path");
-        for json_path in glob(pattern).expect("Failed to read glob pattern") {
+        let json_path = Paths::data_path().join("json");
+        let patterns = [
+            json_path.join("field_type.json"),
+            json_path
+                .join("furniture_and_terrain")
+                .join("**")
+                .join("*.json"),
+            json_path.join("items").join("**").join("*.json"),
+            json_path.join("monsters").join("**").join("*.json"),
+            json_path.join("vehicleparts").join("**").join("*.json"),
+        ];
+        let json_paths = patterns
+            .iter()
+            .map(|pattern| pattern.as_path().to_str().expect("ASCII path"))
+            .flat_map(|pattern| {
+                println!("Searching {pattern} for info files");
+                glob(pattern).expect("Failed to read glob pattern")
+            });
+        for json_path in json_paths {
             let json_path = json_path.expect("problem with json path for infos");
-            if !(json_path.display().to_string().contains("/items/")
-                || json_path
-                    .display()
-                    .to_string()
-                    .contains("/furniture_and_terrain/")
-                || json_path.display().to_string().contains("/monsters/")
-                || json_path.display().to_string().contains("/vehicleparts/")
-                || json_path.display().to_string().contains("/migration.json")
-                || json_path.ends_with("field_type.json"))
-                || json_path.ends_with("default_blacklist.json")
+            if json_path.ends_with("default_blacklist.json")
                 || json_path.ends_with("dreams.json")
                 || json_path.ends_with("effect_on_condition.json")
             {
@@ -45,7 +52,7 @@ impl Infos {
             }
             let file_contents = read_to_string(&json_path)
                 .unwrap_or_else(|_| panic!("Could not read {}", json_path.display()));
-            //println!("Found info file: {}", json_path.display());
+            println!("Found info file: {}", json_path.display());
             let contents = serde_json::from_str::<Vec<serde_json::Map<String, serde_json::Value>>>(
                 file_contents.as_str(),
             );
