@@ -12,3 +12,4 @@
 /flamegraph*
 /*.dot*
 /heaptrack*
+*.kate-swp
