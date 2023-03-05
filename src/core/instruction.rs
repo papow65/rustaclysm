@@ -121,6 +121,7 @@ pub(crate) enum ZoomDirection {
 pub(crate) enum Instruction {
     Queued(QueuedInstruction),
     Quit,
+    ToggleElevation,
     ToggleHelp,
     Zoom(ZoomDirection),
 }
@@ -139,6 +140,9 @@ impl TryFrom<&KeyCombo> for Instruction {
                 } else {
                     ZoomDirection::In
                 }))
+            }
+            KeyCombo(Ctrl::Without, Shift::Without, Key::KeyCode(KeyCode::E)) => {
+                Ok(Self::ToggleElevation)
             }
             KeyCombo(Ctrl::Without, Shift::Without, Key::KeyCode(KeyCode::H)) => {
                 Ok(Self::ToggleHelp)

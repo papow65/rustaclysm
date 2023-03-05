@@ -317,6 +317,9 @@ impl Message {
 }
 
 #[derive(Component)]
+pub(crate) struct HiddenElevation;
+
+#[derive(Component)]
 pub(crate) struct LogDisplay;
 
 #[derive(Component)]

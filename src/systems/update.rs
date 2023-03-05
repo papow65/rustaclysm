@@ -83,6 +83,7 @@ fn update_visualization(
     speed: Option<&BaseSpeed>,
     children: &Children,
     child_items: &Query<&Appearance, (With<Parent>, Without<Pos>)>,
+    hidden_elevation: &Query<(), With<HiddenElevation>>,
 ) {
     let previously_seen = last_seen.clone();
 
@@ -101,7 +102,11 @@ fn update_visualization(
         }
 
         // The player character can see things not shown to the player, like the top of a tower when walking next to it.
-        let pos_shown = focus.is_pos_shown(pos);
+        let pos_shown = if hidden_elevation.get_single().is_ok() {
+            focus.is_zone_level_shown(pos.level)
+        } else {
+            focus.is_pos_shown(pos)
+        };
         visibility.is_visible = pos_shown && last_seen.shown(speed.is_some());
     }
 }
@@ -124,6 +129,7 @@ pub(crate) fn update_visualization_on_item_move(
     >,
     child_items: Query<&Appearance, (With<Parent>, Without<Pos>)>,
     players: Query<(&Pos, &Player)>,
+    hidden_elevation: Query<(), With<HiddenElevation>>,
 ) {
     let start = Instant::now();
 
@@ -147,6 +153,7 @@ pub(crate) fn update_visualization_on_item_move(
                 speed,
                 children,
                 &child_items,
+                &hidden_elevation,
             );
         }
     }
@@ -171,6 +178,7 @@ pub(crate) fn update_visualization_on_focus_move(
     child_items: Query<&Appearance, (With<Parent>, Without<Pos>)>,
     players: Query<(&Pos, &Player)>,
     refresh: Query<Entity, With<RefreshVisualizations>>,
+    hidden_elevation: Query<(), With<HiddenElevation>>,
 ) {
     let start = Instant::now();
 
@@ -199,6 +207,7 @@ pub(crate) fn update_visualization_on_focus_move(
                     speed,
                     children,
                     &child_items,
+                    &hidden_elevation,
                 );
             }
 

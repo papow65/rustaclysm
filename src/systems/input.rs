@@ -1,9 +1,14 @@
 use crate::prelude::{
-    Instruction, InstructionQueue, KeyCombo, ManualDisplay, Player, ZoomDirection,
+    HiddenElevation, Instruction, InstructionQueue, KeyCombo, ManualDisplay, Player,
+    RefreshVisualizations, ZoomDirection,
 };
-use bevy::ecs::event::Events;
-use bevy::input::{keyboard::KeyboardInput, mouse::MouseWheel, ButtonState};
-use bevy::prelude::{EventReader, Input, KeyCode, Query, Res, ResMut, Visibility, With};
+use bevy::{
+    ecs::event::Events,
+    input::{keyboard::KeyboardInput, mouse::MouseWheel, ButtonState},
+    prelude::{
+        Commands, Entity, EventReader, Input, KeyCode, Query, Res, ResMut, Visibility, With,
+    },
+};
 use std::time::Instant;
 
 use super::log_if_slow;
@@ -19,6 +24,18 @@ fn zoom(player: &mut Query<&mut Player>, direction: ZoomDirection) {
     } else {
         -1
     });
+}
+
+fn toggle_elevation(
+    commands: &mut Commands,
+    hidden_elevation: &Query<Entity, With<HiddenElevation>>,
+) {
+    if let Ok(hidden_elevation) = hidden_elevation.get_single() {
+        commands.entity(hidden_elevation).despawn();
+    } else {
+        commands.spawn(HiddenElevation);
+    };
+    commands.spawn(RefreshVisualizations);
 }
 
 fn toggle_help(help: &mut Query<&mut Visibility, With<ManualDisplay>>) {
@@ -49,11 +66,13 @@ pub(crate) fn manage_mouse_input(
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn manage_keyboard_input(
+    mut commands: Commands,
     mut app_exit_events: ResMut<Events<bevy::app::AppExit>>,
     mut key_events: EventReader<KeyboardInput>,
     mut instruction_queue: ResMut<InstructionQueue>,
     keys: Res<Input<KeyCode>>,
     mut player: Query<&mut Player>,
+    hidden_elevation: Query<Entity, With<HiddenElevation>>,
     mut help: Query<&mut Visibility, With<ManualDisplay>>,
 ) {
     let start = Instant::now();
@@ -68,6 +87,9 @@ pub(crate) fn manage_keyboard_input(
                     match instruction {
                         Instruction::Quit => quit(&mut app_exit_events),
                         Instruction::Zoom(direction) => zoom(&mut player, direction),
+                        Instruction::ToggleElevation => {
+                            toggle_elevation(&mut commands, &hidden_elevation);
+                        }
                         Instruction::ToggleHelp => toggle_help(&mut help),
                         Instruction::Queued(instruction) => instruction_queue.add(instruction),
                     }
