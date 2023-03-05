@@ -3,8 +3,8 @@ use crate::prelude::*;
 use bevy::diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin};
 use bevy::ecs::system::{EntityCommands, Resource};
 use bevy::prelude::*;
-use chrono::prelude::{Datelike, Local};
 use std::time::Instant;
+use time::OffsetDateTime;
 
 const TEXT_WIDTH: f32 = 8.0 * 43.0; // 43 chars
 
@@ -262,7 +262,7 @@ pub(crate) fn update_status_time(
 
     status_displays.iter_mut().next().unwrap().sections[1].value = format!(
         "{:#04}-{}-{:#02} {:#02}:{:#02}:{:#02}.{}\n",
-        years + Local::now().year() as u64 + 1, // based on https://cataclysmdda.org/lore-background.html
+        years + OffsetDateTime::now_utc().year() as u64 + 1, // based on https://cataclysmdda.org/lore-background.html
         match seasons % 4 {
             0 => "Spring",
             1 => "Summer",
