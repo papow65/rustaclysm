@@ -11,7 +11,7 @@ exclude = [ "/screenshots/" ]
 edition = "2021"
 
 [dependencies]
-bevy = { version = "0.9", default-features = false, features = [ "bevy_asset", "png", "render", "wayland", "x11" ] }
+bevy = { version = "0.10", default-features = false, features = [ "bevy_asset", "bevy_core_pipeline", "bevy_pbr", "bevy_sprite", "bevy_text", "bevy_ui", "png", "wayland", "x11" ] }
 pathfinding = "4"
 bresenham = "0.1"
 rand = "0.8"

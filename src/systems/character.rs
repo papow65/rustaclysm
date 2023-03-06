@@ -28,7 +28,7 @@ pub(crate) fn manage_characters(world: &mut World) {
         ResMut<Timeouts>,
         Actors,
         Query<&mut Player>,
-        Query<(Entity, &Label, &Parent)>,
+        Query<(Entity, &TextLabel, &Parent)>,
         Hierarchy, // pickup
     )> = SystemState::new(world);
     //println!("manage characters took {:?} to initialize", start.elapsed());

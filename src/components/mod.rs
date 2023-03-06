@@ -6,7 +6,10 @@ mod pos;
 use crate::prelude::{
     Container, Mass, MoveCost, MoveCostMod, ObjectCategory, ObjectId, Partial, Visible, Volume,
 };
-use bevy::prelude::{AlphaMode, Assets, Color, Component, Handle, StandardMaterial};
+use bevy::{
+    pbr::StandardMaterial,
+    prelude::{AlphaMode, Assets, Color, Component, Handle},
+};
 use rand::{
     distributions::{Distribution, Uniform},
     thread_rng,
@@ -16,9 +19,9 @@ use std::fmt;
 pub(crate) use {action::*, faction::*, player::*, pos::*};
 
 #[derive(Clone, Component, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub(crate) struct Label(String);
+pub(crate) struct TextLabel(String);
 
-impl Label {
+impl TextLabel {
     pub(crate) fn new<S>(label: S) -> Self
     where
         S: Into<String>,
@@ -27,14 +30,14 @@ impl Label {
     }
 }
 
-impl fmt::Display for Label {
+impl fmt::Display for TextLabel {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         self.0.fmt(formatter)
     }
 }
 
-impl From<&Label> for String {
-    fn from(label: &Label) -> String {
+impl From<&TextLabel> for String {
+    fn from(label: &TextLabel) -> String {
         label.0.clone()
     }
 }
@@ -164,7 +167,7 @@ impl fmt::Display for Integrity {
 
 #[derive(Component)]
 pub(crate) struct Damage {
-    pub(crate) attacker: Label,
+    pub(crate) attacker: TextLabel,
     pub(crate) amount: i16, // TODO damage types
 }
 

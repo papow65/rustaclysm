@@ -1,4 +1,4 @@
-use crate::prelude::{Containable, Label, Mass, Message, Volume};
+use crate::prelude::{Containable, Mass, Message, TextLabel, Volume};
 
 pub(crate) struct Container {
     pub(crate) max_volume: Volume,
@@ -9,10 +9,10 @@ pub(crate) struct Container {
 impl Container {
     pub(crate) fn check_add<'a, I>(
         &self,
-        label: &Label,
+        label: &TextLabel,
         current_items: I,
         added: &Containable,
-        added_label: &Label,
+        added_label: &TextLabel,
     ) -> Result<(), Vec<Message>>
     where
         I: Iterator<Item = &'a Containable>,

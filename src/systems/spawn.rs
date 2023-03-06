@@ -173,7 +173,7 @@ fn despawn_expanded_subzone_levels(
 
             let zone_level = ZoneLevel::from(expanded_subzone_level);
             if tile_spawner.explored.has_zone_level_been_seen(zone_level) != SeenFrom::Never {
-                let visible = Visibility { is_visible: true };
+                let visible = Visibility::Inherited;
                 if let Some(zone_level_entity) = tile_spawner.zone_level_entities.get(zone_level) {
                     commands.entity(zone_level_entity).insert(visible);
                 } else {
@@ -187,7 +187,7 @@ fn despawn_expanded_subzone_levels(
 pub(crate) fn update_collapsed_zone_levels(
     mut commands: Commands,
     mut tile_spawner: TileSpawner,
-    mut skip_once: Local<bool>,
+    mut skip_twice: Local<u8>,
     mut previous_camera_global_transform: Local<GlobalTransform>,
     mut previous_visible_region: Local<Region>,
     players: Query<(&Pos, &Player)>,
@@ -199,9 +199,9 @@ pub(crate) fn update_collapsed_zone_levels(
 
     let start = Instant::now();
 
-    // We need to wait for a sync, after zones have been expanded.
-    if !*skip_once {
-        *skip_once = true;
+    // We need to skip a couple of iterations, after zones have been properly expanded to prevent visual glitches caused by overlapping expanded an collapsed zones.
+    if *skip_twice < 2 {
+        *skip_twice += 1;
         return;
     }
 
@@ -255,7 +255,7 @@ pub(crate) fn update_collapsed_zone_levels(
                 //println!("{collapsed_zone_level:?} becomes {visibility:?}");
 
                 // Removing 'Visibility' and 'ComputedVisibility' is not more performant in Bevy 0.9
-                commands.entity(entity).insert(visibility.clone());
+                commands.entity(entity).insert(visibility);
             }
         }
     }
@@ -272,14 +272,16 @@ fn collapsed_visibility(
     expanded_region: &Region,
     visible_region: &Region,
 ) -> Visibility {
-    Visibility {
-        is_visible: zone_level.subzone_levels().iter().all(|subzone_level| {
-            if expanded_region.contains_subzone_level(*subzone_level) {
-                explored.has_zone_level_been_seen(zone_level) == SeenFrom::FarAway
-            } else {
-                visible_region.contains_subzone_level(*subzone_level)
-            }
-        }),
+    if zone_level.subzone_levels().iter().all(|subzone_level| {
+        if expanded_region.contains_subzone_level(*subzone_level) {
+            explored.has_zone_level_been_seen(zone_level) == SeenFrom::FarAway
+        } else {
+            visible_region.contains_subzone_level(*subzone_level)
+        }
+    }) {
+        Visibility::Inherited
+    } else {
+        Visibility::Hidden
     }
 }
 

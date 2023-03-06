@@ -315,7 +315,7 @@ impl Infos {
         variants
     }
 
-    pub(crate) fn label(&self, definition: &ObjectDefinition, amount: usize) -> Label {
+    pub(crate) fn label(&self, definition: &ObjectDefinition, amount: usize) -> TextLabel {
         let name = match definition.category {
             ObjectCategory::Character => self.characters.get(&definition.id).map(|o| &o.name),
             ObjectCategory::Item => self.items.get(&definition.id).map(|o| &o.name),

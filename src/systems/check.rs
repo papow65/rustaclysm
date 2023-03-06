@@ -5,7 +5,7 @@ use bevy::{
 use std::time::{Duration, Instant};
 
 use crate::prelude::{
-    Action, Collapsed, Faction, Label, Location, Obstacle, Pos, StdInstant, ZoneLevel,
+    Action, Collapsed, Faction, Location, Obstacle, Pos, StdInstant, TextLabel, ZoneLevel,
 };
 
 use super::log_if_slow;
@@ -13,7 +13,7 @@ use super::log_if_slow;
 #[allow(dead_code, clippy::needless_pass_by_value)]
 pub(crate) fn check_obstacle_location(
     location: Res<Location>,
-    items: Query<(Entity, &Pos, Option<&Label>), With<Obstacle>>,
+    items: Query<(Entity, &Pos, Option<&TextLabel>), With<Obstacle>>,
 ) {
     let start = Instant::now();
 
@@ -23,8 +23,8 @@ pub(crate) fn check_obstacle_location(
             a,
             b,
             "Overlap of {} and {} at {:?}",
-            a_s.unwrap_or(&Label::new("?")),
-            b_s.unwrap_or(&Label::new("?")),
+            a_s.unwrap_or(&TextLabel::new("?")),
+            b_s.unwrap_or(&TextLabel::new("?")),
             a_p
         );
     }
@@ -33,7 +33,9 @@ pub(crate) fn check_obstacle_location(
 }
 
 #[allow(dead_code, clippy::needless_pass_by_value)]
-pub(crate) fn check_overlap(all_obstacles: Query<(Entity, &Pos, Option<&Label>), With<Obstacle>>) {
+pub(crate) fn check_overlap(
+    all_obstacles: Query<(Entity, &Pos, Option<&TextLabel>), With<Obstacle>>,
+) {
     let start = Instant::now();
 
     for (a, &a_p, a_s) in all_obstacles.iter() {
@@ -43,8 +45,8 @@ pub(crate) fn check_overlap(all_obstacles: Query<(Entity, &Pos, Option<&Label>),
                     a_p,
                     b_p,
                     "Overlap of {} and {} at {:?}",
-                    a_s.unwrap_or(&Label::new("?")),
-                    b_s.unwrap_or(&Label::new("?")),
+                    a_s.unwrap_or(&TextLabel::new("?")),
+                    b_s.unwrap_or(&TextLabel::new("?")),
                     a_p
                 );
             }
@@ -57,7 +59,7 @@ pub(crate) fn check_overlap(all_obstacles: Query<(Entity, &Pos, Option<&Label>),
 #[allow(dead_code, clippy::needless_pass_by_value)]
 pub(crate) fn check_hierarchy(
     changed: Query<
-        (Entity, Option<&Pos>, Option<&Parent>, Option<&Label>),
+        (Entity, Option<&Pos>, Option<&Parent>, Option<&TextLabel>),
         Or<(Changed<Pos>, Changed<Parent>)>,
     >,
 ) {
@@ -85,7 +87,7 @@ pub(crate) fn check_characters(
     characters: Query<
         (
             Entity,
-            Option<&Label>,
+            Option<&TextLabel>,
             Option<&Pos>,
             Option<&Faction>,
             Option<&Action>,

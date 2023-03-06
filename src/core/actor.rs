@@ -3,7 +3,7 @@ use bevy::prelude::{BuildChildren, Commands, Entity, Parent, Query, Visibility, 
 
 pub(crate) struct Actor<'s> {
     pub(crate) entity: Entity,
-    pub(crate) label: &'s Label,
+    pub(crate) label: &'s TextLabel,
     pub(crate) pos: Pos,
     pub(crate) speed: BaseSpeed,
     pub(crate) health: &'s Health,
@@ -20,7 +20,7 @@ impl<'s> Actor<'s> {
         &'s self,
         commands: &mut Commands,
         envir: &mut Envir,
-        dumpees: &Query<(Entity, &Label, &Parent)>,
+        dumpees: &Query<(Entity, &TextLabel, &Parent)>,
         hierarchy: &Hierarchy, // pickup
         action: &Action,
     ) -> Milliseconds {
@@ -138,7 +138,7 @@ impl<'s> Actor<'s> {
 
         if let Some(closable) = envir.find_closeable(target) {
             if let Some((_, character)) = envir.find_character(target) {
-                let air = Label::new("the air");
+                let air = TextLabel::new("the air");
                 let obstacle = envir.find_terrain(target).unwrap_or(&air);
                 commands.spawn(Message::warn(format!(
                     "{} can't close {obstacle} on {character}",
@@ -150,7 +150,7 @@ impl<'s> Actor<'s> {
                 envir.walking_cost(self.pos, target).duration(self.speed)
             }
         } else {
-            let air = Label::new("the air");
+            let air = TextLabel::new("the air");
             let obstacle = envir.find_terrain(target).unwrap_or(&air);
             commands.spawn(Message::warn(format!(
                 "{} can't close {obstacle}",
@@ -222,7 +222,7 @@ impl<'s> Actor<'s> {
         &'s self,
         commands: &mut Commands,
         location: &mut Location,
-        dumpees: &Query<(Entity, &Label, &Parent)>,
+        dumpees: &Query<(Entity, &TextLabel, &Parent)>,
     ) -> Milliseconds {
         // It seems impossible to remove something from 'Children', so we check 'Parent'.
 
@@ -254,7 +254,7 @@ impl<'s> Actor<'s> {
 
 pub(crate) type ActorTuple<'s> = (
     Entity,
-    &'s Label,
+    &'s TextLabel,
     &'s Pos,
     &'s BaseSpeed,
     &'s Health,

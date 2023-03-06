@@ -13,11 +13,11 @@ pub(crate) struct Envir<'w, 's> {
     closeables: Query<'w, 's, Entity, With<Closeable>>,
     stairs_up: Query<'w, 's, &'static StairsUp>,
     stairs_down: Query<'w, 's, &'static StairsDown>,
-    terrain: Query<'w, 's, &'static Label, (Without<Health>, Without<Amount>)>,
-    obstacles: Query<'w, 's, &'static Label, With<Obstacle>>,
-    opaques: Query<'w, 's, &'static Label, With<Opaque>>,
+    terrain: Query<'w, 's, &'static TextLabel, (Without<Health>, Without<Amount>)>,
+    obstacles: Query<'w, 's, &'static TextLabel, With<Obstacle>>,
+    opaques: Query<'w, 's, &'static TextLabel, With<Opaque>>,
     opaque_floors: Query<'w, 's, &'static OpaqueFloor>,
-    characters: Query<'w, 's, (Entity, &'static Label), With<Health>>,
+    characters: Query<'w, 's, (Entity, &'static TextLabel), With<Health>>,
     items: Query<'w, 's, Entity, With<Integrity>>,
 }
 
@@ -116,11 +116,11 @@ impl<'w, 's> Envir<'w, 's> {
         self.location.get_first(pos, &self.closeables)
     }
 
-    pub(crate) fn find_terrain(&self, pos: Pos) -> Option<&Label> {
+    pub(crate) fn find_terrain(&self, pos: Pos) -> Option<&TextLabel> {
         self.location.get_first(pos, &self.terrain)
     }
 
-    pub(crate) fn find_obstacle(&self, pos: Pos) -> Option<&Label> {
+    pub(crate) fn find_obstacle(&self, pos: Pos) -> Option<&TextLabel> {
         self.location.get_first(pos, &self.obstacles)
     }
 
@@ -132,7 +132,7 @@ impl<'w, 's> Envir<'w, 's> {
         self.location.any(pos, &self.opaque_floors)
     }
 
-    pub(crate) fn find_character(&self, pos: Pos) -> Option<(Entity, &Label)> {
+    pub(crate) fn find_character(&self, pos: Pos) -> Option<(Entity, &TextLabel)> {
         self.location.get_first(pos, &self.characters)
     }
 

@@ -40,7 +40,11 @@ fn toggle_elevation(
 
 fn toggle_help(help: &mut Query<&mut Visibility, With<ManualDisplay>>) {
     for mut visibility in help.iter_mut() {
-        visibility.is_visible ^= true; // XOR
+        *visibility = if *visibility == Visibility::Hidden {
+            Visibility::Inherited
+        } else {
+            Visibility::Hidden
+        };
     }
 }
 

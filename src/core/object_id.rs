@@ -37,8 +37,8 @@ impl ObjectId {
         )
     }
 
-    pub(crate) fn to_fallback_label(&self) -> Label {
-        Label::new(self.0.clone())
+    pub(crate) fn to_fallback_label(&self) -> TextLabel {
+        TextLabel::new(self.0.clone())
     }
 
     pub(crate) fn is_hidden_zone(&self) -> bool {

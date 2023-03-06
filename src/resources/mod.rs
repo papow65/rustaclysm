@@ -24,7 +24,7 @@ pub(crate) use self::{
 pub(crate) enum Collision {
     Pass,
     //Fall(Pos), // todo
-    Blocked(Label),
+    Blocked(TextLabel),
     Ledged,
     Opened(Entity),
 }
@@ -32,7 +32,7 @@ pub(crate) enum Collision {
 // pickup
 #[derive(SystemParam)]
 pub(crate) struct Hierarchy<'w, 's> {
-    pub(crate) picked: Query<'w, 's, (Entity, &'static Label, &'static Containable)>,
+    pub(crate) picked: Query<'w, 's, (Entity, &'static TextLabel, &'static Containable)>,
     pub(crate) children: Query<'w, 's, (&'static Parent, &'static Containable)>,
 }
 

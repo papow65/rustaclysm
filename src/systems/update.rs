@@ -18,14 +18,14 @@ pub(crate) fn update_transforms(mut obstacles: Query<(&Pos, &mut Transform), Cha
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_hidden_item_visibility(
     mut hidden_items: Query<&mut Visibility, Without<Pos>>,
-    removed_positions: RemovedComponents<Pos>,
+    mut removed_positions: RemovedComponents<Pos>,
 ) {
     let start = Instant::now();
 
     // TODO use update_visualization
     for entity in removed_positions.iter() {
         if let Ok(mut visibility) = hidden_items.get_mut(entity) {
-            visibility.is_visible = false;
+            *visibility = Visibility::Hidden;
         }
     }
 
@@ -40,11 +40,15 @@ pub(crate) fn update_cursor_visibility_on_player_change(
     let start = Instant::now();
 
     if let Ok(player) = players.get_single() {
-        if let Ok((mut visible, mut transform)) = curors.get_single_mut() {
+        if let Ok((mut visibility, mut transform)) = curors.get_single_mut() {
             let examine_pos = matches!(player.state, PlayerActionState::ExaminingPos(_));
             let examine_zone_level =
                 matches!(player.state, PlayerActionState::ExaminingZoneLevel(_));
-            visible.is_visible = examine_pos || examine_zone_level;
+            *visibility = if examine_pos || examine_zone_level {
+                Visibility::Inherited
+            } else {
+                Visibility::Hidden
+            };
             transform.scale = if examine_zone_level {
                 Vec3::splat(24.0)
             } else {
@@ -107,7 +111,11 @@ fn update_visualization(
         } else {
             focus.is_pos_shown(pos)
         };
-        visibility.is_visible = pos_shown && last_seen.shown(speed.is_some());
+        *visibility = if pos_shown && last_seen.shown(speed.is_some()) {
+            Visibility::Inherited
+        } else {
+            Visibility::Hidden
+        };
     }
 }
 
@@ -221,7 +229,10 @@ pub(crate) fn update_visualization_on_focus_move(
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_damaged_characters(
     mut commands: Commands,
-    mut characters: Query<(Entity, &Label, &mut Health, &Damage, &mut Transform), With<Faction>>,
+    mut characters: Query<
+        (Entity, &TextLabel, &mut Health, &Damage, &mut Transform),
+        With<Faction>,
+    >,
 ) {
     let start = Instant::now();
 
@@ -242,7 +253,7 @@ pub(crate) fn update_damaged_characters(
             commands
                 .entity(character)
                 .insert(Corpse)
-                .insert(Label::new("corpse"))
+                .insert(TextLabel::new("corpse"))
                 .remove::<Health>()
                 .remove::<Obstacle>();
         }
@@ -256,7 +267,7 @@ pub(crate) fn update_damaged_characters(
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_damaged_items(
     mut commands: Commands,
-    mut windows: Query<(Entity, &Label, &mut Integrity, &Damage)>,
+    mut windows: Query<(Entity, &TextLabel, &mut Integrity, &Damage)>,
 ) {
     let start = Instant::now();
 

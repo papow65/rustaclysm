@@ -84,10 +84,9 @@ use crate::prelude::{Paths, RustaclysmPlugin};
 use bevy::{
     diagnostic::FrameTimeDiagnosticsPlugin,
     prelude::{
-        App, AssetPlugin, DefaultPlugins, PluginGroup, Vec2, WindowDescriptor, WindowPlugin,
-        WindowPosition,
+        App, AssetPlugin, DefaultPlugins, IVec2, PluginGroup, Window, WindowPlugin, WindowPosition,
     },
-    window::PresentMode,
+    window::{PresentMode, WindowResolution},
 };
 
 fn main() -> Result<(), ()> {
@@ -102,14 +101,13 @@ fn main() -> Result<(), ()> {
                         ..AssetPlugin::default()
                     })
                     .set(WindowPlugin {
-                        window: WindowDescriptor {
+                        primary_window: Some(Window {
                             title: String::from("Rustaclysm"),
                             present_mode: PresentMode::Mailbox, // much better responsiveness
-                            width: 50.0,
-                            height: 40.0,
-                            position: WindowPosition::At(Vec2::new(10.0, 10.0)),
-                            ..WindowDescriptor::default()
-                        },
+                            resolution: WindowResolution::new(50.0, 40.0),
+                            position: WindowPosition::At(IVec2::new(10, 10)),
+                            ..Window::default()
+                        }),
                         ..WindowPlugin::default()
                     }),
             )

@@ -84,9 +84,9 @@ impl<'w, 's> TileSpawner<'w, 's> {
             },
             transform: model.to_transform(),
             visibility: if shaded {
-                Visibility::default()
+                Visibility::Inherited
             } else {
-                Visibility::INVISIBLE
+                Visibility::Hidden
             },
             ..PbrBundle::default()
         }
@@ -277,7 +277,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
         let tile = self
             .commands
             .spawn(SpatialBundle::default())
-            .insert(Visibility::INVISIBLE)
+            .insert(Visibility::Hidden)
             .insert(definition.clone())
             .insert(pos)
             .insert(Transform::from_translation(pos.vec3()))
@@ -449,16 +449,14 @@ impl<'w, 's> TileSpawner<'w, 's> {
                 })
                 .insert(
                     if self.explored.has_zone_level_been_seen(zone_level) == SeenFrom::Never {
-                        (LastSeen::Never, Visibility::INVISIBLE)
+                        (LastSeen::Never, Visibility::Hidden)
                     } else {
-                        (LastSeen::Previously, Visibility::VISIBLE)
+                        (LastSeen::Previously, Visibility::Inherited)
                     },
                 )
                 .with_children(|child_builder| {
                     for pbr_bundle in pbr_bundles {
-                        child_builder
-                            .spawn(pbr_bundle)
-                            .insert(child_visibiltiy.clone());
+                        child_builder.spawn(pbr_bundle).insert(*child_visibiltiy);
                     }
                 });
         }
@@ -568,9 +566,9 @@ impl<'w, 's> Spawner<'w, 's> {
             .insert(Obstacle)
             .insert(Opaque)
             .insert(OpaqueFloor)
-            .insert(Label::new("wall"))
+            .insert(TextLabel::new("wall"))
             .insert(LastSeen::Never)
-            .insert(Visibility::INVISIBLE)
+            .insert(Visibility::Hidden)
             .with_children(|parent| {
                 parent
                     .spawn(PbrBundle {
@@ -595,9 +593,9 @@ impl<'w, 's> Spawner<'w, 's> {
             .insert(Obstacle)
             .insert(Hurdle(MoveCostMod(2)))
             .insert(OpaqueFloor)
-            .insert(Label::new("window"))
+            .insert(TextLabel::new("window"))
             .insert(LastSeen::Never)
-            .insert(Visibility::INVISIBLE)
+            .insert(Visibility::Hidden)
             .with_children(|parent| {
                 parent
                     .spawn(PbrBundle {
@@ -629,9 +627,9 @@ impl<'w, 's> Spawner<'w, 's> {
             .insert(pos)
             .insert(Integrity::new(100))
             .insert(Hurdle(MoveCostMod(1)))
-            .insert(Label::new("stairs"))
+            .insert(TextLabel::new("stairs"))
             .insert(LastSeen::Never)
-            .insert(Visibility::INVISIBLE)
+            .insert(Visibility::Hidden)
             .with_children(|child_builder| {
                 child_builder
                     .spawn(PbrBundle {
@@ -654,9 +652,9 @@ impl<'w, 's> Spawner<'w, 's> {
             .insert(Integrity::new(40))
             .insert(Obstacle)
             .insert(Opaque)
-            .insert(Label::new("rack"))
+            .insert(TextLabel::new("rack"))
             .insert(LastSeen::Never)
-            .insert(Visibility::INVISIBLE)
+            .insert(Visibility::Hidden)
             .with_children(|parent| {
                 parent
                     .spawn(PbrBundle {
@@ -676,9 +674,9 @@ impl<'w, 's> Spawner<'w, 's> {
             .insert(pos)
             .insert(Integrity::new(30))
             .insert(Hurdle(MoveCostMod(2)))
-            .insert(Label::new("table"))
+            .insert(TextLabel::new("table"))
             .insert(LastSeen::Never)
-            .insert(Visibility::INVISIBLE)
+            .insert(Visibility::Hidden)
             .with_children(|parent| {
                 parent
                     .spawn(PbrBundle {
@@ -703,9 +701,9 @@ impl<'w, 's> Spawner<'w, 's> {
             .insert(pos)
             .insert(Integrity::new(10))
             .insert(Hurdle(MoveCostMod(3)))
-            .insert(Label::new("chair"))
+            .insert(TextLabel::new("chair"))
             .insert(LastSeen::Never)
-            .insert(Visibility::INVISIBLE)
+            .insert(Visibility::Hidden)
             .with_children(|child_builder| {
                 child_builder
                     .spawn(PbrBundle {
@@ -796,16 +794,7 @@ impl<'w, 's> Spawner<'w, 's> {
         self.tile_spawner.commands.spawn(DirectionalLightBundle {
             directional_light: DirectionalLight {
                 illuminance: 50_000.0,
-                shadow_projection: OrthographicProjection {
-                    left: -0.35,
-                    right: 500.35,
-                    bottom: -0.1,
-                    top: 5.0,
-                    near: -5.0,
-                    far: 5.0,
-                    ..OrthographicProjection::default()
-                },
-                //shadows_enabled: true, // TODO transparency should not be ignored
+                shadows_enabled: false, // TODO shadow direction does not match buildin shadows
                 ..DirectionalLight::default()
             },
             transform: light_transform,
@@ -949,7 +938,7 @@ impl<'w, 's> Spawner<'w, 's> {
         self.tile_spawner
             .commands
             .entity(player)
-            .insert(Label::new(self.tile_spawner.sav.player.name.clone()));
+            .insert(TextLabel::new(self.tile_spawner.sav.player.name.clone()));
         self.configure_player(player);
 
         let survivor = self.tile_spawner.spawn_character(
@@ -960,7 +949,7 @@ impl<'w, 's> Spawner<'w, 's> {
         self.tile_spawner
             .commands
             .entity(survivor)
-            .insert(Label::new("Survivor"));
+            .insert(TextLabel::new("Survivor"));
 
         self.tile_spawner.spawn_character(
             custom_character_parent,

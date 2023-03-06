@@ -329,11 +329,11 @@ pub(crate) fn update_status_detais(
     envir: Envir,
     mut explored: ResMut<Explored>,
     mut zone_level_ids: ResMut<ZoneLevelIds>,
-    characters: Query<(Option<&ObjectDefinition>, Option<&Label>, &Health)>,
+    characters: Query<(Option<&ObjectDefinition>, Option<&TextLabel>, &Health)>,
     entities: Query<
         (
             Option<&ObjectDefinition>,
-            Option<&Label>,
+            Option<&TextLabel>,
             Option<&Corpse>,
             Option<&Action>,
             Option<&Accessible>,
@@ -348,7 +348,7 @@ pub(crate) fn update_status_detais(
         ),
         (Without<Health>, Without<Amount>),
     >,
-    items: Query<(Option<&ObjectDefinition>, &Label), (Without<Health>, With<Amount>)>,
+    items: Query<(Option<&ObjectDefinition>, &TextLabel), (Without<Health>, With<Amount>)>,
     player: Query<&Player, Changed<Player>>,
     mut status_displays: Query<&mut Text, With<StatusDisplay>>,
     //_globs: Query<(&GlobalTransform, Option<&ZoneLevel>)>,
@@ -405,7 +405,7 @@ pub(crate) fn update_status_detais(
 
 fn characters_info(
     all_here: &[Entity],
-    characters: &Query<(Option<&ObjectDefinition>, Option<&Label>, &Health)>,
+    characters: &Query<(Option<&ObjectDefinition>, Option<&TextLabel>, &Health)>,
 ) -> String {
     all_here
         .iter()
@@ -434,7 +434,7 @@ fn entity_info(
         visibility,
     ): (
         Option<&ObjectDefinition>,
-        Option<&Label>,
+        Option<&TextLabel>,
         Option<&Corpse>,
         Option<&Action>,
         Option<&Accessible>,
@@ -499,10 +499,10 @@ fn entity_info(
         }
     }
     if let Some(visibility) = visibility {
-        if visibility.is_visible {
-            flags.push("visible");
-        } else {
+        if visibility == Visibility::Hidden {
             flags.push("invisible");
+        } else {
+            flags.push("visible");
         }
     }
 
@@ -516,7 +516,7 @@ fn entity_info(
 
 fn items_info(
     all_here: &[Entity],
-    items: &Query<(Option<&ObjectDefinition>, &Label), (Without<Health>, With<Amount>)>,
+    items: &Query<(Option<&ObjectDefinition>, &TextLabel), (Without<Health>, With<Amount>)>,
 ) -> String {
     all_here
         .iter()

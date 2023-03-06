@@ -2,8 +2,10 @@ use crate::prelude::*;
 use bevy::prelude::*;
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn maximize_window(mut windows: ResMut<Windows>) {
-    windows.primary_mut().set_maximized(true);
+pub(crate) fn maximize_window(mut windows: Query<&mut Window>) {
+    for mut window in windows.iter_mut() {
+        window.set_maximized(true);
+    }
 }
 
 /// Create resources that need other resources

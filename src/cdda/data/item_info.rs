@@ -1,4 +1,4 @@
-use crate::prelude::{DeflatVec, Label, Mass, ObjectId, Volume};
+use crate::prelude::{DeflatVec, Mass, ObjectId, TextLabel, Volume};
 use bevy::utils::HashMap;
 use serde::Deserialize;
 
@@ -330,8 +330,8 @@ pub(crate) struct ItemName {
 }
 
 impl ItemName {
-    pub(crate) fn to_label(&self, amount: usize) -> Label {
-        Label::new(if amount == 1 {
+    pub(crate) fn to_label(&self, amount: usize) -> TextLabel {
+        TextLabel::new(if amount == 1 {
             &self.single
         } else {
             &self.plural
