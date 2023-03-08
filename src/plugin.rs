@@ -1,6 +1,12 @@
 use crate::prelude::*;
 use bevy::prelude::*;
 
+#[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
+enum UpdateSet {
+    Behavior,
+    Sync,
+}
+
 pub(crate) struct RustaclysmPlugin;
 
 impl Plugin for RustaclysmPlugin {
@@ -34,6 +40,7 @@ impl Plugin for RustaclysmPlugin {
         app.add_system(manage_mouse_input.before(update_camera));
 
         // executed every frame
+
         app.add_systems(
             (
                 manage_keyboard_input,
@@ -45,6 +52,12 @@ impl Plugin for RustaclysmPlugin {
                 update_damaged_items,
                 //
                 apply_system_buffers,
+            )
+                .chain()
+                .in_set(UpdateSet::Behavior),
+        );
+        app.add_systems(
+            (
                 // Updates TODO in parallel
                 update_transforms,
                 update_hidden_item_visibility,
@@ -53,7 +66,8 @@ impl Plugin for RustaclysmPlugin {
                 update_visualization_on_focus_move,
                 update_camera,
             )
-                .chain(),
+                .in_set(UpdateSet::Sync)
+                .after(UpdateSet::Behavior),
         );
 
         app.add_system(update_log);
