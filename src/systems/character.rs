@@ -21,21 +21,20 @@ pub(crate) fn manage_game_over(
 pub(crate) fn manage_characters(world: &mut World) {
     let start = Instant::now();
 
-    let mut system_state: SystemState<(
-        Commands,
-        Envir,
-        ResMut<InstructionQueue>,
-        ResMut<Timeouts>,
-        Actors,
-        Query<&mut Player>,
-        Query<(Entity, &TextLabel, &Parent)>,
-        Hierarchy, // pickup
-    )> = SystemState::new(world);
-    //println!("manage characters took {:?} to initialize", start.elapsed());
-
     let mut count = 0;
     loop {
         let iteration = Instant::now();
+
+        let mut system_state: SystemState<(
+            Commands,
+            Envir,
+            ResMut<InstructionQueue>,
+            ResMut<Timeouts>,
+            Actors,
+            Query<&mut Player>,
+            Query<(Entity, &TextLabel, &Parent)>,
+            Hierarchy, // pickup
+        )> = SystemState::new(world);
 
         let (
             mut commands,
