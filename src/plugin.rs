@@ -1,10 +1,19 @@
 use crate::prelude::*;
-use bevy::prelude::*;
+use bevy::{ecs::system::SystemState, prelude::*};
+use std::time::{Duration, Instant};
 
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
 enum UpdateSet {
     Behavior,
     Sync,
+}
+
+#[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
+enum BehaviorSet {
+    Manage,
+    FlushManaged,
+    ApplyEffects,
+    FlushEffects,
 }
 
 pub(crate) struct RustaclysmPlugin;
@@ -24,6 +33,8 @@ impl Plugin for RustaclysmPlugin {
             .insert_resource(RelativeSegments::new())
             .insert_resource(TileCaches::default());
 
+        app.add_schedule(BehaviorSchedule, behavior_schedule());
+
         // executed once at startup
         app.add_startup_systems(
             (
@@ -36,23 +47,11 @@ impl Plugin for RustaclysmPlugin {
             )
                 .chain(),
         );
-
         app.add_system(manage_mouse_input.before(update_camera));
 
         // executed every frame
-
         app.add_systems(
-            (
-                manage_keyboard_input,
-                manage_characters,
-                // Effect systems TODO in parallel
-                manage_game_over,
-                toggle_doors,
-                update_damaged_characters,
-                update_damaged_items,
-                //
-                apply_system_buffers,
-            )
+            (manage_keyboard_input, run_behavior_schedule)
                 .chain()
                 .in_set(UpdateSet::Behavior),
         );
@@ -69,7 +68,6 @@ impl Plugin for RustaclysmPlugin {
                 .in_set(UpdateSet::Sync)
                 .after(UpdateSet::Behavior),
         );
-
         app.add_system(update_log);
         app.add_system(update_status_fps);
         app.add_system(update_status_time);
@@ -77,7 +75,6 @@ impl Plugin for RustaclysmPlugin {
         app.add_system(update_status_speed);
         app.add_system(update_status_player_state);
         app.add_system(update_status_detais);
-
         app.add_system(spawn_zones_for_camera.after(update_camera));
         app.add_system(update_collapsed_zone_levels.after(update_camera));
 
@@ -86,4 +83,65 @@ impl Plugin for RustaclysmPlugin {
         /*bevy_mod_debugdump::print_main_schedule(app);
         std::process::exit(0);*/
     }
+}
+
+fn behavior_schedule() -> Schedule {
+    let mut behavior_schedule = Schedule::new();
+    behavior_schedule.add_systems((manage_characters,).in_set(BehaviorSet::Manage));
+    behavior_schedule.add_systems(
+        (apply_system_buffers,)
+            .in_set(BehaviorSet::FlushManaged)
+            .after(BehaviorSet::Manage),
+    );
+    behavior_schedule.add_systems(
+        (
+            manage_game_over,
+            toggle_doors,
+            update_damaged_characters,
+            update_damaged_items,
+        )
+            .in_set(BehaviorSet::ApplyEffects)
+            .after(BehaviorSet::FlushManaged),
+    );
+    behavior_schedule.add_systems(
+        (apply_system_buffers,)
+            .in_set(BehaviorSet::FlushEffects)
+            .after(BehaviorSet::ApplyEffects),
+    );
+    behavior_schedule
+}
+
+fn run_behavior_schedule(world: &mut World) {
+    let start = Instant::now();
+
+    let mut count = 0;
+    while !waiting_for_user_input(world) && !over_time(&start, count) {
+        let iteration = Instant::now();
+
+        world.run_schedule(BehaviorSchedule);
+
+        count += 1;
+        println!(
+            "iteration {count} of run_behavior_schedule took {:?} after appling ({:?} since start)",
+            iteration.elapsed(),
+            start.elapsed(),
+        );
+    }
+
+    log_if_slow("run_behavior_schedule", start);
+}
+
+/** All NPC mave a timeout and the player has an empty instruction queue */
+fn waiting_for_user_input(world: &mut World) -> bool {
+    let mut system_state = SystemState::<(Res<InstructionQueue>,)>::new(world);
+    let (instruction_queue,) = system_state.get(world);
+    instruction_queue.is_waiting()
+}
+
+fn over_time(start: &Instant, count: usize) -> bool {
+    let over_time = Duration::from_millis(2) * 3 / 4 < start.elapsed();
+    if over_time {
+        eprintln!("run_behavior_schedule could ony handle {count} iterations before the timeout");
+    }
+    over_time
 }

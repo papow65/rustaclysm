@@ -8,6 +8,10 @@ mod subzone_level_entities;
 mod zone_level_entities;
 mod zone_level_ids;
 
+pub(crate) use self::{
+    debug::*, envir::*, explored::*, infos::*, location::*, spawner::*, subzone_level_entities::*,
+    zone_level_entities::*, zone_level_ids::*,
+};
 use crate::prelude::*;
 use bevy::{
     ecs::system::{Resource, SystemParam},
@@ -15,19 +19,6 @@ use bevy::{
     utils::HashMap,
 };
 use std::iter::once;
-
-pub(crate) use self::{
-    debug::*, envir::*, explored::*, infos::*, location::*, spawner::*, subzone_level_entities::*,
-    zone_level_entities::*, zone_level_ids::*,
-};
-
-pub(crate) enum Collision {
-    Pass,
-    //Fall(Pos), // todo
-    Blocked(TextLabel),
-    Ledged,
-    Opened(Entity),
-}
 
 // pickup
 #[derive(SystemParam)]
@@ -40,6 +31,7 @@ pub(crate) struct Hierarchy<'w, 's> {
 pub(crate) struct InstructionQueue {
     queue: Vec<QueuedInstruction>,
     continuous: Vec<QueuedInstruction>,
+    waiting_for_user: bool,
 }
 
 impl InstructionQueue {
@@ -49,6 +41,8 @@ impl InstructionQueue {
             self.queue.insert(0, instruction);
             self.continuous.push(instruction);
         }
+
+        self.waiting_for_user = false;
     }
 
     pub(crate) fn interrupt(&mut self, instruction: QueuedInstruction) {
@@ -63,6 +57,17 @@ impl InstructionQueue {
         if 1 < self.queue.len() {
             println!("Unprocessed key codes: {:?}", self.queue);
         }
+    }
+
+    pub(crate) fn start_waiting(&mut self) {
+        assert!(self.queue.is_empty());
+        assert!(!self.waiting_for_user);
+
+        self.waiting_for_user = true;
+    }
+
+    pub(crate) fn is_waiting(&self) -> bool {
+        self.waiting_for_user
     }
 }
 

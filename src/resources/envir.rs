@@ -3,6 +3,14 @@ use bevy::{ecs::system::SystemParam, prelude::*, utils::HashMap};
 use pathfinding::prelude::astar;
 use std::{cell::RefCell, cmp::Ordering, iter::repeat};
 
+pub(crate) enum Collision {
+    Pass,
+    //Fall(Pos), // todo
+    Blocked(TextLabel),
+    Ledged,
+    Opened(Entity),
+}
+
 #[derive(SystemParam)]
 pub(crate) struct Envir<'w, 's> {
     pub(crate) location: ResMut<'w, Location>,
