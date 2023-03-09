@@ -3,7 +3,7 @@ use bevy::{ecs::system::Resource, utils::HashMap};
 use glob::glob;
 use serde::de::DeserializeOwned;
 use serde_json::map::Entry;
-use std::fs::read_to_string;
+use std::{fs::read_to_string, path::PathBuf};
 
 #[derive(Resource)]
 pub(crate) struct Infos {
@@ -61,35 +61,12 @@ impl Infos {
             for content in contents {
                 let type_ = content.get("type").expect("type present");
                 let type_ = TypeId::get(type_.as_str().expect("string value for type"));
-                if type_ == TypeId::get("mapgen") {
-                    // TODO
-                    continue;
+                if type_ == TypeId::get("mapgen") || content.get("from_variant").is_some() {
+                    continue; // TODO
                 }
-
-                if content.get("from_variant").is_some() {
-                    // TODO
-                    continue;
-                }
-
-                let mut count = 0;
-                if content.get("id").is_some() {
-                    count += 1;
-                }
-                if content.get("abstract").is_some() {
-                    count += 1;
-                }
-                if content.get("from").is_some() {
-                    count += 1;
-                }
-                assert_eq!(count, 1, "{json_path:?}");
 
                 let mut ids = Vec::new();
-                match content
-                    .get("id")
-                    .or_else(|| content.get("abstract"))
-                    .or_else(|| content.get("from"))
-                    .expect("id, abstract, or from")
-                {
+                match id_value(&content, &json_path) {
                     serde_json::Value::String(id) => {
                         ids.push(String::from(id.as_str()));
                     }
@@ -354,4 +331,26 @@ impl Infos {
 
         result
     }
+}
+
+fn id_value<'a>(
+    content: &'a serde_json::Map<String, serde_json::Value>,
+    json_path: &'a PathBuf,
+) -> &'a serde_json::Value {
+    let mut count = 0;
+    if content.get("id").is_some() {
+        count += 1;
+    }
+    if content.get("abstract").is_some() {
+        count += 1;
+    }
+    if content.get("from").is_some() {
+        count += 1;
+    }
+    assert_eq!(count, 1, "{json_path:?}");
+    content
+        .get("id")
+        .or_else(|| content.get("abstract"))
+        .or_else(|| content.get("from"))
+        .expect("id, abstract, or from")
 }
