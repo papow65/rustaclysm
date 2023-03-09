@@ -4,14 +4,9 @@ use std::time::{Duration, Instant};
 
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
 enum UpdateSet {
-    Behavior,
-    Sync,
-}
-
-#[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
-enum BehaviorSet {
-    Manage,
-    FlushManaged,
+    ProcessKeyboard,
+    ManageBehavior,
+    FlushBehavior,
     ApplyEffects,
     FlushEffects,
 }
@@ -50,14 +45,10 @@ impl Plugin for RustaclysmPlugin {
         app.add_system(manage_mouse_input.before(update_camera));
 
         // executed every frame
-        app.add_systems(
-            (manage_keyboard_input, run_behavior_schedule)
-                .chain()
-                .in_set(UpdateSet::Behavior),
-        );
+        app.add_systems((manage_keyboard_input,).in_set(UpdateSet::ProcessKeyboard));
+        app.add_systems((run_behavior_schedule,).after(UpdateSet::ProcessKeyboard));
         app.add_systems(
             (
-                // Updates TODO in parallel
                 update_transforms,
                 update_hidden_item_visibility,
                 update_cursor_visibility_on_player_change,
@@ -65,8 +56,7 @@ impl Plugin for RustaclysmPlugin {
                 update_visualization_on_focus_move,
                 update_camera,
             )
-                .in_set(UpdateSet::Sync)
-                .after(UpdateSet::Behavior),
+                .after(UpdateSet::FlushEffects),
         );
         app.add_system(update_log);
         app.add_system(update_status_fps);
@@ -79,19 +69,16 @@ impl Plugin for RustaclysmPlugin {
         app.add_system(update_collapsed_zone_levels.after(update_camera));
 
         app.add_system(check_delay.in_base_set(CoreSet::Last));
-
-        /*bevy_mod_debugdump::print_main_schedule(app);
-        std::process::exit(0);*/
     }
 }
 
 fn behavior_schedule() -> Schedule {
     let mut behavior_schedule = Schedule::new();
-    behavior_schedule.add_systems((manage_characters,).in_set(BehaviorSet::Manage));
+    behavior_schedule.add_systems((manage_characters,).in_set(UpdateSet::ManageBehavior));
     behavior_schedule.add_systems(
         (apply_system_buffers,)
-            .in_set(BehaviorSet::FlushManaged)
-            .after(BehaviorSet::Manage),
+            .in_set(UpdateSet::FlushBehavior)
+            .after(UpdateSet::ManageBehavior),
     );
     behavior_schedule.add_systems(
         (
@@ -100,13 +87,13 @@ fn behavior_schedule() -> Schedule {
             update_damaged_characters,
             update_damaged_items,
         )
-            .in_set(BehaviorSet::ApplyEffects)
-            .after(BehaviorSet::FlushManaged),
+            .in_set(UpdateSet::ApplyEffects)
+            .after(UpdateSet::FlushBehavior),
     );
     behavior_schedule.add_systems(
         (apply_system_buffers,)
-            .in_set(BehaviorSet::FlushEffects)
-            .after(BehaviorSet::ApplyEffects),
+            .in_set(UpdateSet::FlushEffects)
+            .after(UpdateSet::ApplyEffects),
     );
     behavior_schedule
 }
