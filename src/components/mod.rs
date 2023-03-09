@@ -217,7 +217,6 @@ impl Melee {
         let mut rng = thread_rng();
         let between = Uniform::from(0..self.sides);
         (0..self.dices)
-            .into_iter()
             .map(|_| between.sample(&mut rng))
             .sum::<u16>() as i16
     }
