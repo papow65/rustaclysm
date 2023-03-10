@@ -106,11 +106,8 @@ fn update_visualization(
         }
 
         // The player character can see things not shown to the player, like the top of a tower when walking next to it.
-        let pos_shown = if hidden_elevation.get_single().is_ok() {
-            focus.is_zone_level_shown(pos.level)
-        } else {
-            focus.is_pos_shown(pos)
-        };
+        let hidden_elevation = hidden_elevation.get_single().ok();
+        let pos_shown = focus.is_pos_shown(pos, hidden_elevation);
         *visibility = if pos_shown && last_seen.shown(speed.is_some()) {
             Visibility::Inherited
         } else {

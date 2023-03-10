@@ -1,5 +1,5 @@
 use crate::prelude::{
-    Action, Direction, Envir, InstructionQueue, Level, Message, Milliseconds, Nbor, Pos,
+    Action, Direction, Envir, InstructionQueue, Message, Milliseconds, Nbor, Pos,
     QueuedInstruction, ZoneLevel,
 };
 use bevy::prelude::{Commands, Component};
@@ -233,23 +233,18 @@ impl Focus {
         }
     }
 
-    pub(crate) fn is_pos_shown(&self, shown_pos: Pos) -> bool {
+    pub(crate) fn is_pos_shown(&self, shown_pos: Pos, hidden_elevation: Option<()>) -> bool {
         match self {
             Focus::Pos(pos) => {
                 shown_pos.level <= pos.level
-                    || ((pos.x - shown_pos.x - i32::from((shown_pos.level - pos.level).h))
-                        < (pos.z - shown_pos.z).abs())
+                    || (hidden_elevation.is_none()
+                        && ((pos.x - shown_pos.x - i32::from((shown_pos.level - pos.level).h))
+                            < (pos.z - shown_pos.z).abs()))
             }
-            Focus::ZoneLevel(zone_level) => shown_pos.level <= zone_level.level,
+            Focus::ZoneLevel(zone_level) => {
+                shown_pos.level <= zone_level.level || hidden_elevation.is_none()
+            }
         }
-    }
-
-    pub(crate) fn is_zone_level_shown(&self, level: Level) -> bool {
-        level
-            <= match self {
-                Focus::Pos(pos) => pos.level,
-                Focus::ZoneLevel(zone_level) => zone_level.level,
-            }
     }
 }
 

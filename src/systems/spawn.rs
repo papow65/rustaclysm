@@ -78,18 +78,14 @@ fn expanded_region(focus: &Focus, camera: &Camera, global_transform: &GlobalTran
     let minimal_expanded_zones = minimal_expanded_zones(Pos::from(focus));
     let maximal_expanded_zones = maximal_expanded_zones(SubzoneLevel::from(Pos::from(focus)));
 
-    visible_region(focus, camera, global_transform).clamp(
+    visible_region(camera, global_transform).clamp(
         &Region::from(&minimal_expanded_zones),
         &Region::from(&maximal_expanded_zones),
     )
 }
 
-fn visible_region(focus: &Focus, camera: &Camera, global_transform: &GlobalTransform) -> Region {
-    let zone_levels = visible_area(camera, global_transform)
-        .into_iter()
-        .filter(|zone_level| focus.is_zone_level_shown(zone_level.level))
-        .collect::<Vec<SubzoneLevel>>();
-    Region::new(&zone_levels)
+fn visible_region(camera: &Camera, global_transform: &GlobalTransform) -> Region {
+    Region::new(&visible_area(camera, global_transform))
 }
 
 fn visible_area(camera: &Camera, global_transform: &GlobalTransform) -> Vec<SubzoneLevel> {
@@ -211,12 +207,12 @@ pub(crate) fn update_collapsed_zone_levels(
     }
 
     let (&player_pos, player) = players.single();
-    let focus = Focus::new(player, player_pos);
-    let visible_region = visible_region(&focus, camera, &global_transform);
+    let visible_region = visible_region(camera, &global_transform);
     //println!("Visible region: {:?}", &visible_region);
     if visible_region == *previous_visible_region {
         return;
     }
+    let focus = Focus::new(player, player_pos);
     let expanded_region = expanded_region(&focus, camera, &global_transform);
     //println!("Expanded region: {:?}", &expanded_region);
 
