@@ -92,17 +92,23 @@ impl<'w, 's> TileSpawner<'w, 's> {
         }
     }
 
-    fn spawn_character(&mut self, parent: Entity, pos: Pos, id: ObjectId) -> Entity {
+    fn spawn_character(&mut self, parent: Entity, pos: Pos, id: ObjectId) -> Option<Entity> {
         let definition = &ObjectDefinition {
             category: ObjectCategory::Character,
             id,
         };
+
         let entity = self.spawn_tile(parent, pos, definition);
 
-        let character_info = self
+        let Some(character_info) = self
             .infos
-            .character(&definition.id)
-            .unwrap_or_else(|| panic!("{:?}", definition.id));
+            .character(&definition.id) else {
+                self.commands.entity(entity).despawn_recursive();
+                println!("No info found for {:?}. Spawning skipped", definition.id);
+                return None;
+            };
+
+        println!("Spawned a {:?} at {pos:?}", definition.id);
 
         self.commands
             .entity(entity)
@@ -130,7 +136,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
             self.commands.entity(entity).insert(Aquatic);
         }
 
-        entity
+        Some(entity)
     }
 
     fn spawn_item(&mut self, parent: Entity, pos: Pos, item: &CddaItem, amount: Amount) {
@@ -139,11 +145,15 @@ impl<'w, 's> TileSpawner<'w, 's> {
             category: ObjectCategory::Item,
             id: item.typeid.clone(),
         };
+
         //println!("{:?} @ {pos:?}", &definition);
         let entity = self.spawn_tile(parent, pos, definition);
 
-        let Some(item_info) = self.infos.item(&definition.id) else {
-            eprintln!("No info found for {:?}, spawning skipped", &definition);
+        let Some(item_info) = self
+        .infos
+        .item(&definition.id) else {
+            self.commands.entity(entity).despawn_recursive();
+            println!("No info found for {:?}. Spawning skipped", definition.id);
             return;
         };
 
@@ -173,12 +183,16 @@ impl<'w, 's> TileSpawner<'w, 's> {
             category: ObjectCategory::Furniture,
             id,
         };
+
         let tile = self.spawn_tile(parent, pos, definition);
 
-        let furniture_info = self
-            .infos
-            .furniture(&definition.id)
-            .unwrap_or_else(|| panic!("{:?}", definition.id));
+        let Some(furniture_info) = self
+        .infos
+        .furniture(&definition.id) else {
+            self.commands.entity(tile).despawn_recursive();
+            println!("No info found for {:?}. Spawning skipped", definition.id);
+            return;
+        };
 
         if !furniture_info.flags.transparent() {
             self.commands.entity(tile).insert(Opaque);
@@ -202,12 +216,17 @@ impl<'w, 's> TileSpawner<'w, 's> {
             category: ObjectCategory::Terrain,
             id,
         };
+
         let tile = self.spawn_tile(parent, pos, definition);
 
-        let terrain_info = self
-            .infos
-            .terrain(&definition.id)
-            .unwrap_or_else(|| panic!("{:?}", definition.id));
+        let Some(terrain_info) = self
+        .infos
+        .terrain(&definition.id) else {
+            self.commands.entity(tile).despawn_recursive();
+            println!("No info found for {:?}. Spawning skipped", definition.id);
+            return;
+        };
+
         match terrain_info {
             TerrainInfo::Terrain {
                 move_cost,
@@ -922,30 +941,36 @@ impl<'w, 's> Spawner<'w, 's> {
             .spawn(SpatialBundle::default())
             .id();
 
-        let player = self.tile_spawner.spawn_character(
-            custom_character_parent,
-            Pos::new(45, Level::ZERO, 56)
-                .offset(offset)
-                .unwrap()
-                .offset(PosOffset {
-                    x: -9,
-                    level: LevelOffset::ZERO,
-                    z: 0,
-                })
-                .unwrap(),
-            ObjectId::new("human"),
-        );
+        let player = self
+            .tile_spawner
+            .spawn_character(
+                custom_character_parent,
+                Pos::new(45, Level::ZERO, 56)
+                    .offset(offset)
+                    .unwrap()
+                    .offset(PosOffset {
+                        x: -9,
+                        level: LevelOffset::ZERO,
+                        z: 0,
+                    })
+                    .unwrap(),
+                ObjectId::new("human"),
+            )
+            .unwrap();
         self.tile_spawner
             .commands
             .entity(player)
             .insert(TextLabel::new(self.tile_spawner.sav.player.name.clone()));
         self.configure_player(player);
 
-        let survivor = self.tile_spawner.spawn_character(
-            custom_character_parent,
-            Pos::new(10, Level::ZERO, 10).offset(offset).unwrap(),
-            ObjectId::new("human"),
-        );
+        let survivor = self
+            .tile_spawner
+            .spawn_character(
+                custom_character_parent,
+                Pos::new(10, Level::ZERO, 10).offset(offset).unwrap(),
+                ObjectId::new("human"),
+            )
+            .unwrap();
         self.tile_spawner
             .commands
             .entity(survivor)
