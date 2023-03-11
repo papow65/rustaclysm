@@ -78,6 +78,7 @@ mod core;
 mod plugin;
 mod prelude;
 mod resources;
+mod schedule;
 mod systems;
 
 use crate::prelude::{Paths, RustaclysmPlugin};
@@ -111,6 +112,12 @@ fn main() -> Result<(), ()> {
                         ..WindowPlugin::default()
                     }),
             )
+            /*.edit_schedule(bevy::prelude::CoreSchedule::Main, |schedule| {
+                schedule.set_build_settings(bevy::ecs::schedule::ScheduleBuildSettings {
+                    ambiguity_detection: bevy::ecs::schedule::LogLevel::Warn,
+                    ..bevy::ecs::schedule::ScheduleBuildSettings::default()
+                });
+            })*/
             .add_plugin(RustaclysmPlugin)
             .add_plugin(FrameTimeDiagnosticsPlugin::default())
             .run();

@@ -20,6 +20,7 @@ serde_json = "1"
 glob = "0.3"
 float-ord = "0.3"
 time = "0.3"
+#bevy_mod_debugdump = "0.7.0"
 
 [profile.dev]
 opt-level = 3 # inspired by https://bevy-cheatbook.github.io/pitfalls/performance.html
