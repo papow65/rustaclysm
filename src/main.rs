@@ -85,7 +85,8 @@ use crate::prelude::{Paths, RustaclysmPlugin};
 use bevy::{
     diagnostic::FrameTimeDiagnosticsPlugin,
     prelude::{
-        App, AssetPlugin, DefaultPlugins, IVec2, PluginGroup, Window, WindowPlugin, WindowPosition,
+        App, AssetPlugin, DefaultPlugins, IVec2, ImagePlugin, PluginGroup, Window, WindowPlugin,
+        WindowPosition,
     },
     window::{PresentMode, WindowResolution},
 };
@@ -101,6 +102,7 @@ fn main() -> Result<(), ()> {
                         asset_folder: String::from('.'), // We add 'assets/' ourselves.
                         ..AssetPlugin::default()
                     })
+                    .set(ImagePlugin::default_nearest())
                     .set(WindowPlugin {
                         primary_window: Some(Window {
                             title: String::from("Rustaclysm"),
