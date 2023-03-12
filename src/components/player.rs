@@ -1,5 +1,5 @@
 use crate::prelude::{
-    Action, Direction, Envir, InstructionQueue, Message, Milliseconds, Nbor, Pos,
+    Action, Direction, Envir, InstructionQueue, Level, Message, Milliseconds, Nbor, Pos,
     QueuedInstruction, ZoneLevel,
 };
 use bevy::prelude::{Commands, Component};
@@ -251,6 +251,15 @@ impl Focus {
 impl Default for Focus {
     fn default() -> Self {
         Self::Pos(Pos::ORIGIN)
+    }
+}
+
+impl From<&Focus> for Level {
+    fn from(focus: &Focus) -> Self {
+        match focus {
+            Focus::Pos(pos) => pos.level,
+            Focus::ZoneLevel(zone_level) => zone_level.level,
+        }
     }
 }
 

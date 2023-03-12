@@ -63,6 +63,17 @@ impl Region {
         }
     }
 
+    pub(crate) fn ground_only(&self) -> Self {
+        let mut i = 0;
+        Self {
+            subzone_regions: self.subzone_regions.clone().map(|subzone_region| {
+                let subzone_region = subzone_region.filter(|_| i <= Level::ZERO.index());
+                i += 1; // for next level
+                subzone_region
+            }),
+        }
+    }
+
     pub(crate) fn clamp(&self, inner: &Region, outer: &Region) -> Self {
         let mut i = 0;
         Self {

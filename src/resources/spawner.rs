@@ -437,6 +437,8 @@ impl<'w, 's> TileSpawner<'w, 's> {
         zone_level: ZoneLevel,
         child_visibiltiy: &Visibility,
     ) {
+        assert!(zone_level.level <= Level::ZERO);
+
         let definition = ObjectDefinition {
             category: ObjectCategory::ZoneLevel,
             id: self.zone_level_ids.get(zone_level).clone(),
