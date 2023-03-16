@@ -333,11 +333,16 @@ impl<'w, 's> TileSpawner<'w, 's> {
         subzone_level: SubzoneLevel,
     ) -> Result<(), serde_json::Error> {
         let map_path = MapPath::new(&self.paths.world_path(), ZoneLevel::from(subzone_level));
+
+        let object_id;
+        let fallback;
         if let Some(submap) = Option::<Map>::try_from(map_path)?
-            .map(|map| map.0.into_iter().nth(subzone_level.index()).unwrap())
-            .or_else(|| {
-                let object_id = self.zone_level_ids.get(ZoneLevel::from(subzone_level));
-                Submap::fallback(subzone_level, object_id)
+            .as_ref()
+            .map(|map| map.0.iter().nth(subzone_level.index()).unwrap())
+            .or({
+                object_id = self.zone_level_ids.get(ZoneLevel::from(subzone_level));
+                fallback = Submap::fallback(subzone_level, object_id);
+                Some(&fallback)
             })
         {
             assert_eq!(
@@ -347,7 +352,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
                 submap.coordinates,
                 subzone_level.coordinates()
             );
-            self.spawn_subzone(&submap, subzone_level);
+            self.spawn_subzone(submap, subzone_level);
         }
         Ok(())
     }
@@ -360,73 +365,77 @@ impl<'w, 's> TileSpawner<'w, 's> {
             .insert(subzone_level)
             .id();
 
-        let base_pos = subzone_level.base_pos();
-        let terrain = submap.terrain.load_as_subzone(subzone_level);
+        if submap.terrain.is_significant() {
+            let terrain = submap.terrain.load_as_subzone(subzone_level);
+            let base_pos = subzone_level.base_pos();
 
-        for x in 0..12 {
-            for z in 0..12 {
-                let pos = base_pos
-                    .offset(PosOffset {
-                        x,
-                        level: LevelOffset::ZERO,
-                        z,
-                    })
-                    .unwrap();
-                //dbg!("{pos:?}");
-                let id = *terrain.get(&pos).unwrap();
-                if id != &ObjectId::new("t_open_air") && id != &ObjectId::new("t_open_air_rooved") {
-                    self.spawn_terrain(subzone_level_entity, pos, id.clone());
-                }
-
-                for id in submap
-                    .furniture
-                    .iter()
-                    .filter_map(|at| at.get(Pos::new(x, Level::ZERO, z)))
-                {
-                    self.spawn_furniture(subzone_level_entity, pos, id.clone());
-                }
-
-                for repetitions in submap
-                    .items
-                    .0
-                    .iter()
-                    .filter_map(|at| at.get(Pos::new(x, Level::ZERO, z)))
-                {
-                    for repetition in repetitions {
-                        let CddaAmount { obj: item, amount } = repetition.as_amount();
-                        //dbg!(&item.typeid);
-                        self.spawn_item(
-                            subzone_level_entity,
-                            pos,
-                            item,
-                            Amount(item.charges.unwrap_or(1) * amount),
-                        );
+            for x in 0..12 {
+                for z in 0..12 {
+                    let pos = base_pos
+                        .offset(PosOffset {
+                            x,
+                            level: LevelOffset::ZERO,
+                            z,
+                        })
+                        .unwrap();
+                    //dbg!("{pos:?}");
+                    let id = *terrain.get(&pos).unwrap();
+                    if id != &ObjectId::new("t_open_air")
+                        && id != &ObjectId::new("t_open_air_rooved")
+                    {
+                        self.spawn_terrain(subzone_level_entity, pos, id.clone());
                     }
-                }
 
-                for spawn in submap
-                    .spawns
-                    .iter()
-                    .filter(|spawn| spawn.x == x && spawn.z == z)
-                {
-                    //dbg!(&spawn.id);
-                    self.spawn_character(subzone_level_entity, pos, spawn.id.clone());
-                }
+                    for id in submap
+                        .furniture
+                        .iter()
+                        .filter_map(|at| at.get(Pos::new(x, Level::ZERO, z)))
+                    {
+                        self.spawn_furniture(subzone_level_entity, pos, id.clone());
+                    }
 
-                for fields in submap
-                    .fields
-                    .0
-                    .iter()
-                    .filter_map(|at| at.get(Pos::new(x, Level::ZERO, z)))
-                {
-                    //dbg!(&fields);
-                    for field in &fields.0 {
-                        self.spawn_terrain(subzone_level_entity, pos, field.id.clone());
+                    for repetitions in submap
+                        .items
+                        .0
+                        .iter()
+                        .filter_map(|at| at.get(Pos::new(x, Level::ZERO, z)))
+                    {
+                        for repetition in repetitions {
+                            let CddaAmount { obj: item, amount } = repetition.as_amount();
+                            //dbg!(&item.typeid);
+                            self.spawn_item(
+                                subzone_level_entity,
+                                pos,
+                                item,
+                                Amount(item.charges.unwrap_or(1) * amount),
+                            );
+                        }
+                    }
+
+                    for spawn in submap
+                        .spawns
+                        .iter()
+                        .filter(|spawn| spawn.x == x && spawn.z == z)
+                    {
+                        //dbg!(&spawn.id);
+                        self.spawn_character(subzone_level_entity, pos, spawn.id.clone());
+                    }
+
+                    for fields in submap
+                        .fields
+                        .0
+                        .iter()
+                        .filter_map(|at| at.get(Pos::new(x, Level::ZERO, z)))
+                    {
+                        //dbg!(&fields);
+                        for field in &fields.0 {
+                            self.spawn_terrain(subzone_level_entity, pos, field.id.clone());
+                        }
                     }
                 }
             }
+            //println!("{:?} done", subzone_level);
         }
-        //println!("{:?} done", subzone_level);
 
         self.subzone_level_entities
             .add(subzone_level, subzone_level_entity);
@@ -444,16 +453,13 @@ impl<'w, 's> TileSpawner<'w, 's> {
             id: self.zone_level_ids.get(zone_level).clone(),
         };
 
-        let pbr_bundles = if definition.id.is_hidden_zone() {
-            Vec::new()
-        } else {
-            //println!("zone_level: {zone_level:?} {:?}", &definition);
-            self.loader
-                .get_models(&definition, &self.infos.variants(&definition))
-                .iter()
-                .map(|model| self.get_pbr_bundle(model, false))
-                .collect::<Vec<PbrBundle>>()
-        };
+        //println!("zone_level: {zone_level:?} {:?}", &definition);
+        let pbr_bundles = self
+            .loader
+            .get_models(&definition, &self.infos.variants(&definition))
+            .iter()
+            .map(|model| self.get_pbr_bundle(model, false))
+            .collect::<Vec<PbrBundle>>();
 
         let label = self.infos.label(&definition, 1);
 

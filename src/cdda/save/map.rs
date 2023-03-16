@@ -88,23 +88,27 @@ pub(crate) struct Submap {
 }
 
 impl Submap {
-    pub(crate) fn fallback(subzone_level: SubzoneLevel, zone_object_id: &ObjectId) -> Option<Self> {
-        if zone_object_id.is_hidden_zone() {
-            return None;
-        }
-
+    pub(crate) fn fallback(subzone_level: SubzoneLevel, zone_object_id: &ObjectId) -> Self {
         if subzone_level.level != Level::ZERO {
             eprintln!("Fallback submap for {zone_object_id:?} at {subzone_level:?}");
         }
 
-        Some(Submap {
+        Submap {
             version: 0,
             turn_last_touched: 0,
             coordinates: subzone_level.coordinates(),
             temperature: 0,
             radiation: Vec::new(),
             terrain: RepetitionBlock::new(CddaAmount {
-                obj: ObjectId::new(if zone_object_id.is_moving_deep_water_zone() {
+                obj: ObjectId::new(if zone_object_id == &ObjectId::new("open_air") {
+                    "t_open_air"
+                } else if zone_object_id == &ObjectId::new("solid_earth") {
+                    "t_soil"
+                } else if [ObjectId::new("empty_rock"), ObjectId::new("deep_rock")]
+                    .contains(zone_object_id)
+                {
+                    "t_rock"
+                } else if zone_object_id.is_moving_deep_water_zone() {
                     "t_water_moving_dp"
                 } else if zone_object_id.is_still_deep_water_zone() {
                     "t_water_dp"
@@ -126,7 +130,7 @@ impl Submap {
             vehicles: Vec::new(),
             partial_constructions: Vec::new(),
             computers: None,
-        })
+        }
     }
 }
 

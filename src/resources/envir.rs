@@ -469,7 +469,11 @@ impl<'a> CurrentlyVisible<'a> {
             .opaque_cache
             .borrow_mut()
             .entry(offset)
-            .or_insert_with(|| self.envir.is_opaque(self.from.offset(offset).unwrap()))
+            .or_insert_with(|| {
+                let to = self.from.offset(offset).unwrap();
+                self.envir.is_opaque(to)
+                    || (to.level < Level::ZERO && self.envir.find_terrain(to).is_none())
+            })
     }
 
     fn can_look_down(&self, offset: PosOffset) -> bool {
@@ -478,9 +482,9 @@ impl<'a> CurrentlyVisible<'a> {
             .borrow_mut()
             .entry(offset)
             .or_insert_with(|| {
-                !self
-                    .envir
-                    .has_opaque_floor(self.from.offset(offset).unwrap())
+                let to = self.from.offset(offset).unwrap();
+                !self.envir.has_opaque_floor(to)
+                    && (Level::ZERO <= to.level || self.envir.is_accessible(to))
             })
     }
 

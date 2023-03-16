@@ -1,4 +1,6 @@
-use crate::prelude::{Level, LevelOffset, Overzone, Pos, PosOffset, SubzoneLevel, ZoneLevel};
+use crate::prelude::{
+    Level, LevelOffset, ObjectId, Overzone, Pos, PosOffset, SubzoneLevel, ZoneLevel,
+};
 use bevy::utils::HashMap;
 use serde::de::Deserializer;
 use serde::Deserialize;
@@ -113,5 +115,17 @@ impl<T> RepetitionBlock<T> {
         assert_eq!(i, size * size);
         assert_eq!(result.len(), i as usize);
         result
+    }
+}
+
+impl RepetitionBlock<ObjectId> {
+    pub(crate) fn is_significant(&self) -> bool {
+        1 < self.0.len()
+            || ![
+                ObjectId::new("t_open_air"),
+                ObjectId::new("t_soil"),
+                ObjectId::new("t_rock"),
+            ]
+            .contains(&self.0.first().unwrap().as_amount().obj)
     }
 }

@@ -131,22 +131,16 @@ fn visible_area(camera: &Camera, global_transform: &GlobalTransform) -> Vec<Subz
 
 fn spawn_expanded_subzone_levels(tile_spawner: &mut TileSpawner, expanded_region: &Region) {
     for subzone_level in expanded_region.subzone_levels() {
-        let expanded = !tile_spawner
-            .zone_level_ids
-            .get(ZoneLevel::from(subzone_level))
-            .is_hidden_zone();
-        if expanded {
-            let missing = tile_spawner
-                .subzone_level_entities
-                .get(subzone_level)
-                .is_none();
-            if missing {
-                if let Err(e) = tile_spawner.spawn_expanded_subzone_level(subzone_level) {
-                    panic!(
-                        "While loading {subzone_level:?} in {:?}: {e}",
-                        ZoneLevel::from(subzone_level)
-                    );
-                }
+        let missing = tile_spawner
+            .subzone_level_entities
+            .get(subzone_level)
+            .is_none();
+        if missing {
+            if let Err(e) = tile_spawner.spawn_expanded_subzone_level(subzone_level) {
+                panic!(
+                    "While loading {subzone_level:?} in {:?}: {e}",
+                    ZoneLevel::from(subzone_level)
+                );
             }
         }
     }
