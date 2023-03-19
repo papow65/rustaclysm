@@ -79,6 +79,7 @@ fn update_visualization(
     commands: &mut Commands,
     explored: &mut Explored,
     currently_visible: &CurrentlyVisible,
+    elevation_visibility: ElevationVisibility,
     focus: &Focus,
     pos: Pos,
     visibility: &mut Visibility,
@@ -87,7 +88,6 @@ fn update_visualization(
     speed: Option<&BaseSpeed>,
     children: &Children,
     child_items: &Query<&Appearance, (With<Parent>, Without<Pos>)>,
-    hidden_elevation: &Query<(), With<HiddenElevation>>,
 ) {
     let previously_seen = last_seen.clone();
 
@@ -106,8 +106,7 @@ fn update_visualization(
         }
 
         // The player character can see things not shown to the player, like the top of a tower when walking next to it.
-        let hidden_elevation = hidden_elevation.get_single().ok();
-        let pos_shown = focus.is_pos_shown(pos, hidden_elevation);
+        let pos_shown = focus.is_pos_shown(pos, elevation_visibility);
         *visibility = if pos_shown && last_seen.shown(speed.is_some()) {
             Visibility::Inherited
         } else {
@@ -121,6 +120,7 @@ pub(crate) fn update_visualization_on_item_move(
     mut commands: Commands,
     envir: Envir,
     mut explored: ResMut<Explored>,
+    elevation_visibility: Res<ElevationVisibility>,
     mut moved_items: Query<
         (
             &Pos,
@@ -134,7 +134,6 @@ pub(crate) fn update_visualization_on_item_move(
     >,
     child_items: Query<&Appearance, (With<Parent>, Without<Pos>)>,
     players: Query<(&Pos, &Player)>,
-    hidden_elevation: Query<(), With<HiddenElevation>>,
 ) {
     let start = Instant::now();
 
@@ -150,6 +149,7 @@ pub(crate) fn update_visualization_on_item_move(
                 &mut commands,
                 &mut explored,
                 &currently_visible,
+                *elevation_visibility,
                 &focus,
                 pos,
                 &mut visibility,
@@ -158,7 +158,6 @@ pub(crate) fn update_visualization_on_item_move(
                 speed,
                 children,
                 &child_items,
-                &hidden_elevation,
             );
         }
     }
@@ -171,6 +170,7 @@ pub(crate) fn update_visualization_on_focus_move(
     mut commands: Commands,
     envir: Envir,
     mut explored: ResMut<Explored>,
+    elevation_visibility: Res<ElevationVisibility>,
     mut last_focus: Local<Focus>,
     mut items: Query<(
         &Pos,
@@ -183,7 +183,6 @@ pub(crate) fn update_visualization_on_focus_move(
     child_items: Query<&Appearance, (With<Parent>, Without<Pos>)>,
     players: Query<(&Pos, &Player)>,
     refresh: Query<Entity, With<RefreshVisualizations>>,
-    hidden_elevation: Query<(), With<HiddenElevation>>,
 ) {
     let start = Instant::now();
 
@@ -204,6 +203,7 @@ pub(crate) fn update_visualization_on_focus_move(
                     &mut commands,
                     &mut explored,
                     &currently_visible,
+                    *elevation_visibility,
                     &focus,
                     pos,
                     &mut visibility,
@@ -212,7 +212,6 @@ pub(crate) fn update_visualization_on_focus_move(
                     speed,
                     children,
                     &child_items,
-                    &hidden_elevation,
                 );
             }
 

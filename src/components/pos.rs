@@ -1,6 +1,6 @@
 use crate::prelude::{LevelOffset, Millimeter, Nbor, PosOffset, MIN_INVISIBLE_DISTANCE};
 use bevy::prelude::{Component, Vec3};
-use std::{fmt, iter::once, ops::Sub};
+use std::{cmp::Ordering, fmt, iter::once, ops::Sub};
 
 /** Does not include 'from', but does include 'to' */
 fn straight_2d(from: (i32, i32), to: (i32, i32)) -> impl Iterator<Item = (i32, i32)> {
@@ -79,6 +79,16 @@ impl Level {
 
     pub(crate) const fn index(&self) -> usize {
         (self.h + 10) as usize
+    }
+
+    pub(crate) const fn compare_to_ground(&self) -> Ordering {
+        if self.h == 0 {
+            Ordering::Equal
+        } else if self.h < 0 {
+            Ordering::Less
+        } else {
+            Ordering::Greater
+        }
     }
 
     pub(crate) fn f32(&self) -> f32 {

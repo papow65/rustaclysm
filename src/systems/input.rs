@@ -1,13 +1,11 @@
 use crate::prelude::{
-    HiddenElevation, Instruction, InstructionQueue, KeyCombo, ManualDisplay, Player,
+    ElevationVisibility, Instruction, InstructionQueue, KeyCombo, ManualDisplay, Player,
     RefreshVisualizations, ZoomDirection,
 };
 use bevy::{
     ecs::event::Events,
     input::{keyboard::KeyboardInput, mouse::MouseWheel, ButtonState},
-    prelude::{
-        Commands, Entity, EventReader, Input, KeyCode, Query, Res, ResMut, Visibility, With,
-    },
+    prelude::{Commands, EventReader, Input, KeyCode, Query, Res, ResMut, Visibility, With},
 };
 use std::time::Instant;
 
@@ -26,14 +24,10 @@ fn zoom(player: &mut Query<&mut Player>, direction: ZoomDirection) {
     });
 }
 
-fn toggle_elevation(
-    commands: &mut Commands,
-    hidden_elevation: &Query<Entity, With<HiddenElevation>>,
-) {
-    if let Ok(hidden_elevation) = hidden_elevation.get_single() {
-        commands.entity(hidden_elevation).despawn();
-    } else {
-        commands.spawn(HiddenElevation);
+fn toggle_elevation(commands: &mut Commands, elevation_visiblity: &mut ElevationVisibility) {
+    *elevation_visiblity = match elevation_visiblity {
+        ElevationVisibility::Shown => ElevationVisibility::Hidden,
+        ElevationVisibility::Hidden => ElevationVisibility::Shown,
     };
     commands.spawn(RefreshVisualizations);
 }
@@ -74,9 +68,9 @@ pub(crate) fn manage_keyboard_input(
     mut app_exit_events: ResMut<Events<bevy::app::AppExit>>,
     mut key_events: EventReader<KeyboardInput>,
     mut instruction_queue: ResMut<InstructionQueue>,
+    mut elevation_visibility: ResMut<ElevationVisibility>,
     keys: Res<Input<KeyCode>>,
     mut player: Query<&mut Player>,
-    hidden_elevation: Query<Entity, With<HiddenElevation>>,
     mut help: Query<&mut Visibility, With<ManualDisplay>>,
 ) {
     let start = Instant::now();
@@ -92,7 +86,7 @@ pub(crate) fn manage_keyboard_input(
                         Instruction::Quit => quit(&mut app_exit_events),
                         Instruction::Zoom(direction) => zoom(&mut player, direction),
                         Instruction::ToggleElevation => {
-                            toggle_elevation(&mut commands, &hidden_elevation);
+                            toggle_elevation(&mut commands, &mut elevation_visibility);
                         }
                         Instruction::ToggleHelp => toggle_help(&mut help),
                         Instruction::Queued(instruction) => instruction_queue.add(instruction),

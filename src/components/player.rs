@@ -1,9 +1,9 @@
 use crate::prelude::{
-    Action, Direction, Envir, InstructionQueue, Level, Message, Milliseconds, Nbor, Pos,
-    QueuedInstruction, ZoneLevel,
+    Action, Direction, ElevationVisibility, Envir, InstructionQueue, Level, Message, Milliseconds,
+    Nbor, Pos, QueuedInstruction, ZoneLevel,
 };
 use bevy::prelude::{Commands, Component};
-use std::fmt;
+use std::{cmp::Ordering, fmt};
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub(crate) enum PlayerActionState {
@@ -233,16 +233,37 @@ impl Focus {
         }
     }
 
-    pub(crate) fn is_pos_shown(&self, shown_pos: Pos, hidden_elevation: Option<()>) -> bool {
+    pub(crate) fn is_pos_shown(
+        &self,
+        shown_pos: Pos,
+        elevation_visibility: ElevationVisibility,
+    ) -> bool {
         match self {
-            Focus::Pos(pos) => {
-                shown_pos.level <= pos.level
-                    || (hidden_elevation.is_none()
-                        && ((pos.x - shown_pos.x - i32::from((shown_pos.level - pos.level).h))
-                            < (pos.z - shown_pos.z).abs()))
+            Focus::Pos(focus_pos) => {
+                shown_pos.level <= focus_pos.level
+                    || (elevation_visibility == ElevationVisibility::Shown
+                        && ((focus_pos.x
+                            - shown_pos.x
+                            - i32::from((shown_pos.level - focus_pos.level).h))
+                            < (focus_pos.z - shown_pos.z).abs()))
             }
             Focus::ZoneLevel(zone_level) => {
-                shown_pos.level <= zone_level.level || hidden_elevation.is_none()
+                let focus_level = zone_level.level;
+                match (focus_level.compare_to_ground(), elevation_visibility) {
+                    (Ordering::Less, _) | (Ordering::Equal, ElevationVisibility::Shown) => {
+                        // Below ground elevation is ignored, so only the current level is shown.
+                        // And on ground, with elevation hidden, show only the current level.
+                        shown_pos.level == focus_level
+                    }
+                    (Ordering::Equal | Ordering::Greater, ElevationVisibility::Hidden) => {
+                        // On or above ground, with elevation shown, show everything on or above ground
+                        Level::ZERO <= shown_pos.level
+                    }
+                    (Ordering::Greater, ElevationVisibility::Shown) => {
+                        // Above ground, with elevation hidden, show everything between ground and focus
+                        Level::ZERO <= shown_pos.level && shown_pos.level <= focus_level
+                    }
+                }
             }
         }
     }
