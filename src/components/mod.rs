@@ -1,4 +1,3 @@
-mod action;
 mod faction;
 mod player;
 mod pos;
@@ -16,7 +15,7 @@ use rand::{
 };
 use std::fmt;
 
-pub(crate) use {action::*, faction::*, player::*, pos::*};
+pub(crate) use {faction::*, player::*, pos::*};
 
 #[derive(Clone, Component, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) struct TextLabel(String);

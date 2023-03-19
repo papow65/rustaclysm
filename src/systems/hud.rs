@@ -335,7 +335,6 @@ pub(crate) fn update_status_detais(
             Option<&ObjectDefinition>,
             Option<&TextLabel>,
             Option<&Corpse>,
-            Option<&Action>,
             Option<&Accessible>,
             Option<&StairsUp>,
             Option<&StairsDown>,
@@ -422,7 +421,6 @@ fn entity_info(
         definition,
         label,
         corpse,
-        action,
         accessible,
         stairs_up,
         stairs_down,
@@ -436,7 +434,6 @@ fn entity_info(
         Option<&ObjectDefinition>,
         Option<&TextLabel>,
         Option<&Corpse>,
-        Option<&Action>,
         Option<&Accessible>,
         Option<&StairsUp>,
         Option<&StairsDown>,
@@ -456,11 +453,6 @@ fn entity_info(
     }
     if corpse.is_some() {
         flags.push("corpse");
-    }
-    let action_str;
-    if let Some(action) = action {
-        action_str = format!("{action:?}");
-        flags.push(action_str.as_str());
     }
     let accessible_str: String;
     if let Some(accessible) = accessible {

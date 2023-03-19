@@ -1,3 +1,4 @@
+mod action;
 mod actor;
 mod container;
 mod instruction;
@@ -13,7 +14,7 @@ mod type_id;
 mod unit;
 
 pub(crate) use self::{
-    actor::*, container::*, instruction::*, key::*, mesh::*, model::*, nbor::*,
+    action::*, actor::*, container::*, instruction::*, key::*, mesh::*, model::*, nbor::*,
     object_definition::*, object_id::*, offset::*, region::*, type_id::*, unit::*,
 };
 

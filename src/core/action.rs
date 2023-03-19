@@ -1,7 +1,6 @@
 use crate::prelude::Pos;
-use bevy::prelude::Component;
 
-#[derive(Component, Debug)]
+#[derive(Debug)]
 pub(crate) enum Action {
     Stay,
     Step {

@@ -5,7 +5,7 @@ use bevy::{
 use std::time::{Duration, Instant};
 
 use crate::prelude::{
-    Action, Collapsed, Faction, Location, Obstacle, Pos, StdInstant, TextLabel, ZoneLevel,
+    Collapsed, Faction, Location, Obstacle, Pos, StdInstant, TextLabel, ZoneLevel,
 };
 
 use super::log_if_slow;
@@ -84,27 +84,17 @@ pub(crate) fn check_hierarchy(
 
 #[allow(dead_code, clippy::needless_pass_by_value)]
 pub(crate) fn check_characters(
-    characters: Query<
-        (
-            Entity,
-            Option<&TextLabel>,
-            Option<&Pos>,
-            Option<&Faction>,
-            Option<&Action>,
-        ),
-        With<Faction>,
-    >,
+    characters: Query<(Entity, Option<&TextLabel>, Option<&Pos>, Option<&Faction>), With<Faction>>,
 ) {
     let start = Instant::now();
 
-    for (entity, label, pos, faction, action) in characters.iter() {
+    for (entity, label, pos, faction) in characters.iter() {
         let label = label.map_or_else(
             || format!("entity {entity:?} without label"),
             |label| format!("{label}"),
         );
         assert!(pos.is_some(), "{label} has no position");
         assert!(faction.is_some(), "{label} has no faction");
-        assert!(action.is_none(), "{label} has an action");
     }
 
     log_if_slow("check_characters", start);
