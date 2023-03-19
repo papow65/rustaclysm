@@ -239,7 +239,7 @@ impl LastSeen {
     }
 
     pub(crate) fn shown(&self, can_move: bool) -> bool {
-        // NPCs should be hidden when out of sight.
+        // Things that can move, like NPCs, are hidden when out of sight.
         self == &Self::Currently || (self == &Self::Previously && !can_move)
     }
 }
