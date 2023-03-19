@@ -92,9 +92,6 @@ pub(crate) struct Aquatic;
 pub(crate) struct Toggle;
 
 #[derive(Component)]
-pub(crate) struct RefreshVisualizations;
-
-#[derive(Component)]
 pub(crate) struct Health {
     curr: i16,
     max: i16,

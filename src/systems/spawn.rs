@@ -285,6 +285,7 @@ fn collapsed_visibility(
 pub(crate) fn toggle_doors(
     mut commands: Commands,
     mut tile_spawner: TileSpawner,
+    mut visualization_update: ResMut<VisualizationUpdate>,
     toggled: Query<
         (
             Entity,
@@ -305,7 +306,7 @@ pub(crate) fn toggle_doors(
         let TerrainInfo::Terrain{close, open, ..} = tile_spawner.infos.terrain(&definition.id).unwrap() else {panic!()};
         let toggled_id = openable.map_or(close, |_| open).as_ref().unwrap().clone();
         tile_spawner.spawn_terrain(parent.get(), pos, toggled_id);
-        commands.spawn(RefreshVisualizations);
+        *visualization_update = VisualizationUpdate::Forced;
     }
 
     log_if_slow("toggle_doors", start);

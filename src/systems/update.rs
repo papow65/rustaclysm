@@ -1,4 +1,4 @@
-use super::log_if_slow;
+pub(crate) use super::log_if_slow;
 use crate::prelude::*;
 use bevy::math::Quat;
 use bevy::prelude::*;
@@ -171,6 +171,7 @@ pub(crate) fn update_visualization_on_focus_move(
     envir: Envir,
     mut explored: ResMut<Explored>,
     elevation_visibility: Res<ElevationVisibility>,
+    mut visualization_update: ResMut<VisualizationUpdate>,
     mut last_focus: Local<Focus>,
     mut items: Query<(
         &Pos,
@@ -182,18 +183,12 @@ pub(crate) fn update_visualization_on_focus_move(
     )>,
     child_items: Query<&Appearance, (With<Parent>, Without<Pos>)>,
     players: Query<(&Pos, &Player)>,
-    refresh: Query<Entity, With<RefreshVisualizations>>,
 ) {
     let start = Instant::now();
 
     if let Ok((&player_pos, player)) = players.get_single() {
-        let mut refresh_needed = false;
-        for entity in refresh.iter() {
-            commands.entity(entity).despawn();
-            refresh_needed = true;
-        }
         let focus = Focus::new(player, player_pos);
-        if focus != *last_focus || refresh_needed {
+        if focus != *last_focus || *visualization_update == VisualizationUpdate::Forced {
             let currently_visible = envir.currently_visible(player_pos); // does not depend on focus
 
             for (&pos, mut visibility, mut last_seen, accessible, speed, children) in
@@ -217,6 +212,8 @@ pub(crate) fn update_visualization_on_focus_move(
 
             *last_focus = focus;
         }
+
+        *visualization_update = VisualizationUpdate::Smart;
     }
 
     log_if_slow("update_visualization_on_focus_move", start);

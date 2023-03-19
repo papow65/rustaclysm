@@ -26,7 +26,6 @@ pub(crate) fn create_secondairy_resources(
     commands.insert_resource(TileLoader::new());
     commands.insert_resource(timouts);
     commands.insert_resource(ZoneLevelIds::new(paths.world_path()));
-    commands.insert_resource(ElevationVisibility::Shown);
 }
 
 #[allow(clippy::needless_pass_by_value)]

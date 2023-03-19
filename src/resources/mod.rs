@@ -27,6 +27,13 @@ pub(crate) enum ElevationVisibility {
     Hidden,
 }
 
+//** Strategy to use when updating visualizations */
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Resource)]
+pub(crate) enum VisualizationUpdate {
+    Smart,
+    Forced,
+}
+
 // pickup
 #[derive(SystemParam)]
 pub(crate) struct Hierarchy<'w, 's> {

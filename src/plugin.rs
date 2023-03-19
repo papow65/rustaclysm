@@ -16,7 +16,9 @@ impl Plugin for RustaclysmPlugin {
             .insert_resource(ZoneLevelEntities::default())
             .insert_resource(InstructionQueue::default())
             .insert_resource(RelativeSegments::new())
-            .insert_resource(TileCaches::default());
+            .insert_resource(TileCaches::default())
+            .insert_resource(ElevationVisibility::Shown)
+            .insert_resource(VisualizationUpdate::Smart);
 
         app.add_schedule(BehaviorSchedule, behavior_schedule());
 

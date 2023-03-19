@@ -1,11 +1,11 @@
 use crate::prelude::{
     ElevationVisibility, Instruction, InstructionQueue, KeyCombo, ManualDisplay, Player,
-    RefreshVisualizations, ZoomDirection,
+    VisualizationUpdate, ZoomDirection,
 };
 use bevy::{
     ecs::event::Events,
     input::{keyboard::KeyboardInput, mouse::MouseWheel, ButtonState},
-    prelude::{Commands, EventReader, Input, KeyCode, Query, Res, ResMut, Visibility, With},
+    prelude::{EventReader, Input, KeyCode, Query, Res, ResMut, Visibility, With},
 };
 use std::time::Instant;
 
@@ -24,12 +24,15 @@ fn zoom(player: &mut Query<&mut Player>, direction: ZoomDirection) {
     });
 }
 
-fn toggle_elevation(commands: &mut Commands, elevation_visiblity: &mut ElevationVisibility) {
+fn toggle_elevation(
+    elevation_visiblity: &mut ElevationVisibility,
+    visualization_update: &mut VisualizationUpdate,
+) {
     *elevation_visiblity = match elevation_visiblity {
         ElevationVisibility::Shown => ElevationVisibility::Hidden,
         ElevationVisibility::Hidden => ElevationVisibility::Shown,
     };
-    commands.spawn(RefreshVisualizations);
+    *visualization_update = VisualizationUpdate::Forced;
 }
 
 fn toggle_help(help: &mut Query<&mut Visibility, With<ManualDisplay>>) {
@@ -64,11 +67,11 @@ pub(crate) fn manage_mouse_input(
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn manage_keyboard_input(
-    mut commands: Commands,
     mut app_exit_events: ResMut<Events<bevy::app::AppExit>>,
     mut key_events: EventReader<KeyboardInput>,
     mut instruction_queue: ResMut<InstructionQueue>,
     mut elevation_visibility: ResMut<ElevationVisibility>,
+    mut visualization_update: ResMut<VisualizationUpdate>,
     keys: Res<Input<KeyCode>>,
     mut player: Query<&mut Player>,
     mut help: Query<&mut Visibility, With<ManualDisplay>>,
@@ -86,7 +89,7 @@ pub(crate) fn manage_keyboard_input(
                         Instruction::Quit => quit(&mut app_exit_events),
                         Instruction::Zoom(direction) => zoom(&mut player, direction),
                         Instruction::ToggleElevation => {
-                            toggle_elevation(&mut commands, &mut elevation_visibility);
+                            toggle_elevation(&mut elevation_visibility, &mut visualization_update);
                         }
                         Instruction::ToggleHelp => toggle_help(&mut help),
                         Instruction::Queued(instruction) => instruction_queue.add(instruction),
