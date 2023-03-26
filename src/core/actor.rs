@@ -16,41 +16,16 @@ pub(crate) struct Actor<'s> {
 }
 
 impl<'s> Actor<'s> {
-    pub(crate) fn perform(
-        &'s self,
-        commands: &mut Commands,
-        envir: &mut Envir,
-        dumpees: &Query<(Entity, &TextLabel, &Parent)>,
-        hierarchy: &Hierarchy, // pickup
-        action: &Action,
-    ) -> Milliseconds {
-        let duration: Milliseconds = match action {
-            Action::Stay => self.stay(),
-            Action::Step { target } => self.move_(commands, envir, *target),
-            Action::Attack { target } => self.attack(commands, envir, *target),
-            Action::Smash { target } => self.smash(commands, envir, *target),
-            Action::Close { target } => self.close(commands, envir, *target),
-            Action::Wield => self.wield(commands, &mut envir.location, hierarchy),
-            Action::Pickup => self.pickup(commands, &mut envir.location, hierarchy),
-            Action::Dump => self.dump(commands, &mut envir.location, dumpees),
-            Action::SwitchRunning => self.switch_running(commands),
-        };
-
-        //println!("removing finished action: {action:?}");
-        /*commands.entity(actor).remove::<Action>();
-                *        if 0 < duration.0 {
-                *            commands.entity(actor).insert(Timeout {
-                *                until: game_progress.ms + duration,
-        });
-        }*/
-        duration
-    }
-
-    fn stay(&'s self) -> Milliseconds {
+    pub(crate) fn stay(&'s self) -> Milliseconds {
         self.speed.stay()
     }
 
-    fn move_(&'s self, commands: &mut Commands, envir: &mut Envir, to: Pos) -> Milliseconds {
+    pub(crate) fn move_(
+        &'s self,
+        commands: &mut Commands,
+        envir: &mut Envir,
+        to: Pos,
+    ) -> Milliseconds {
         let from = self.pos;
         if !envir.are_nbors(self.pos, to) {
             let message = format!("can't move to {to:?}, as it is not a nbor of {from:?}");
@@ -86,7 +61,12 @@ impl<'s> Actor<'s> {
         }
     }
 
-    fn attack(&'s self, commands: &mut Commands, envir: &mut Envir, target: Pos) -> Milliseconds {
+    pub(crate) fn attack(
+        &'s self,
+        commands: &mut Commands,
+        envir: &mut Envir,
+        target: Pos,
+    ) -> Milliseconds {
         if !envir.are_nbors(self.pos, target) {
             unimplemented!();
         }
@@ -103,7 +83,12 @@ impl<'s> Actor<'s> {
         }
     }
 
-    fn smash(&'s self, commands: &mut Commands, envir: &mut Envir, target: Pos) -> Milliseconds {
+    pub(crate) fn smash(
+        &'s self,
+        commands: &mut Commands,
+        envir: &mut Envir,
+        target: Pos,
+    ) -> Milliseconds {
         if !envir.are_nbors(self.pos, target) && target != self.pos {
             unimplemented!();
         }
@@ -131,7 +116,12 @@ impl<'s> Actor<'s> {
         }
     }
 
-    fn close(&'s self, commands: &mut Commands, envir: &mut Envir, target: Pos) -> Milliseconds {
+    pub(crate) fn close(
+        &'s self,
+        commands: &mut Commands,
+        envir: &mut Envir,
+        target: Pos,
+    ) -> Milliseconds {
         if !envir.are_nbors(self.pos, target) && target != self.pos {
             unimplemented!();
         }
@@ -160,7 +150,7 @@ impl<'s> Actor<'s> {
         }
     }
 
-    fn wield(
+    pub(crate) fn wield(
         &'s self,
         commands: &mut Commands,
         location: &mut Location,
@@ -169,7 +159,7 @@ impl<'s> Actor<'s> {
         self.take(commands, location, hierarchy, &self.hands.unwrap().0)
     }
 
-    fn pickup(
+    pub(crate) fn pickup(
         &'s self,
         commands: &mut Commands,
         location: &mut Location,
@@ -178,7 +168,7 @@ impl<'s> Actor<'s> {
         self.take(commands, location, hierarchy, &self.clothing.unwrap().0)
     }
 
-    fn take(
+    pub(crate) fn take(
         &'s self,
         commands: &mut Commands,
         location: &mut Location,
@@ -218,7 +208,7 @@ impl<'s> Actor<'s> {
         }
     }
 
-    fn dump(
+    pub(crate) fn dump(
         &'s self,
         commands: &mut Commands,
         location: &mut Location,
@@ -244,7 +234,7 @@ impl<'s> Actor<'s> {
         }
     }
 
-    fn switch_running(&'s self, commands: &mut Commands) -> Milliseconds {
+    pub(crate) fn switch_running(&'s self, commands: &mut Commands) -> Milliseconds {
         commands
             .entity(self.entity)
             .insert(BaseSpeed::from_h_kmph(11));

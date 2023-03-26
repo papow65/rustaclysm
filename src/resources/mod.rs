@@ -129,6 +129,10 @@ impl<'w, 's> Actors<'w, 's> {
         self.q.iter().map(Actor::from)
     }
 
+    pub(crate) fn get(&'s self, entity: Entity) -> Actor<'s> {
+        self.q.get(entity).map(Actor::from).unwrap()
+    }
+
     pub(crate) fn collect_factions(&'s self) -> Vec<(Pos, &'s Faction)> {
         self.q
             .iter()

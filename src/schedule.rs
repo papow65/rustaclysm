@@ -1,6 +1,13 @@
 use crate::prelude::*;
-use bevy::{ecs::system::SystemState, prelude::*};
+use bevy::{
+    ecs::{schedule::ScheduleLabel, system::SystemState},
+    prelude::*,
+};
 use std::time::{Duration, Instant};
+
+// A label for our new Schedule!
+#[derive(ScheduleLabel, Debug, Hash, PartialEq, Eq, Clone)]
+pub(crate) struct BehaviorSchedule;
 
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
 pub(crate) enum UpdateSet {
@@ -14,7 +21,9 @@ pub(crate) fn behavior_schedule() -> Schedule {
     let mut behavior_schedule = Schedule::new();
     behavior_schedule.set_default_base_set(CoreSet::Update);
 
-    behavior_schedule.add_systems((manage_characters,).in_set(UpdateSet::ManageBehavior));
+    behavior_schedule.add_systems(
+        (plan_action.pipe(perform_action).pipe(update_timeouts),).in_set(UpdateSet::ManageBehavior),
+    );
     behavior_schedule.add_systems(
         (apply_system_buffers,)
             .in_set(UpdateSet::FlushBehavior)
