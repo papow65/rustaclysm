@@ -32,16 +32,16 @@ impl MeshInfo {
         let extent = 0.5;
         let corners = match orientation {
             SpriteOrientation::Horizontal => [
+                [-extent, 0.0, extent],
                 [-extent, 0.0, -extent],
                 [extent, 0.0, -extent],
                 [extent, 0.0, extent],
-                [-extent, 0.0, extent],
             ],
             SpriteOrientation::Vertical => [
-                [0.0, 0.0, -extent],
-                [0.0, 1.0, -extent],
-                [0.0, 1.0, extent],
-                [0.0, 0.0, extent],
+                [-extent, 0.0, 0.0],
+                [-extent, 1.0, 0.0],
+                [extent, 1.0, 0.0],
+                [extent, 0.0, 0.0],
             ],
         };
 
@@ -74,26 +74,26 @@ impl MeshInfo {
     // Does not include the bottom face or the back face
     pub(crate) fn to_cube(self) -> Mesh {
         let vertices = [
-            // right
+            // back -> right
+            ([0.5, 1.0, -0.5], [1.0, 0., 0.], [self.x_max, self.y_min]),
+            ([0.5, 1.0, 0.5], [1.0, 0., 0.], [self.x_min, self.y_min]),
+            ([0.5, 0.0, 0.5], [1.0, 0., 0.], [self.x_min, self.y_max]),
+            ([0.5, 0.0, -0.5], [1.0, 0., 0.], [self.x_max, self.y_max]),
+            // front
             ([-0.5, 0.0, 0.5], [0., 0., 1.0], [self.x_min, self.y_max]),
             ([0.5, 0.0, 0.5], [0., 0., 1.0], [self.x_max, self.y_max]),
             ([0.5, 1.0, 0.5], [0., 0., 1.0], [self.x_max, self.y_min]),
             ([-0.5, 1.0, 0.5], [0., 0., 1.0], [self.x_min, self.y_min]),
             // left
-            ([-0.5, 1.0, -0.5], [0., 0., -1.0], [self.x_max, self.y_min]),
-            ([0.5, 1.0, -0.5], [0., 0., -1.0], [self.x_min, self.y_min]),
-            ([0.5, 0.0, -0.5], [0., 0., -1.0], [self.x_min, self.y_max]),
-            ([-0.5, 0.0, -0.5], [0., 0., -1.0], [self.x_max, self.y_max]),
-            // front
             ([-0.5, 0.0, 0.5], [-1.0, 0., 0.], [self.x_max, self.y_max]),
             ([-0.5, 1.0, 0.5], [-1.0, 0., 0.], [self.x_max, self.y_min]),
             ([-0.5, 1.0, -0.5], [-1.0, 0., 0.], [self.x_min, self.y_min]),
             ([-0.5, 0.0, -0.5], [-1.0, 0., 0.], [self.x_min, self.y_max]),
             // top
-            ([0.5, 1.0, -0.5], [0., 1.0, 0.], [self.x_min, self.y_min]),
-            ([-0.5, 1.0, -0.5], [0., 1.0, 0.], [self.x_min, self.y_max]),
-            ([-0.5, 1.0, 0.5], [0., 1.0, 0.], [self.x_max, self.y_max]),
-            ([0.5, 1.0, 0.5], [0., 1.0, 0.], [self.x_max, self.y_min]),
+            ([-0.5, 1.0, -0.5], [0., 1.0, 0.], [self.x_min, self.y_min]),
+            ([-0.5, 1.0, 0.5], [0., 1.0, 0.], [self.x_min, self.y_max]),
+            ([0.5, 1.0, 0.5], [0., 1.0, 0.], [self.x_max, self.y_max]),
+            ([0.5, 1.0, -0.5], [0., 1.0, 0.], [self.x_max, self.y_min]),
         ];
 
         let mut positions = Vec::with_capacity(24);
@@ -108,8 +108,8 @@ impl MeshInfo {
 
         let indices = Indices::U32(vec![
             0, 1, 2, 2, 3, 0, // right
-            4, 5, 6, 6, 7, 4, // left
-            8, 9, 10, 10, 11, 8, // front
+            4, 5, 6, 6, 7, 4, // front
+            8, 9, 10, 10, 11, 8, // left
             12, 13, 14, 14, 15, 12, // top
         ]);
 

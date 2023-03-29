@@ -24,13 +24,13 @@ impl Direction {
             Self::Here => Nbor::Here,
             _ => Nbor::try_horizontal(
                 match self {
-                    Self::CloserLeft | Self::Closer | Self::CloserRight => -1,
-                    Self::AwayLeft | Self::Away | Self::AwayRight => 1,
+                    Self::CloserLeft | Self::Left | Self::AwayLeft => -1,
+                    Self::CloserRight | Self::Right | Self::AwayRight => 1,
                     _ => 0,
                 },
                 match self {
-                    Self::CloserLeft | Self::Left | Self::AwayLeft => -1,
-                    Self::CloserRight | Self::Right | Self::AwayRight => 1,
+                    Self::AwayLeft | Self::Away | Self::AwayRight => -1,
+                    Self::CloserLeft | Self::Closer | Self::CloserRight => 1,
                     _ => 0,
                 },
             )

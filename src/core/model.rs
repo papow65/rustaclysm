@@ -22,7 +22,7 @@ impl Transform2d {
         }
     }
 
-    const fn to_translation(
+    fn to_translation(
         &self,
         orientation: SpriteOrientation,
         layer: &SpriteLayer,
@@ -30,20 +30,19 @@ impl Transform2d {
     ) -> Vec3 {
         match orientation {
             SpriteOrientation::Horizontal => Vec3::new(
-                /*back*/ self.offset.y,
+                /*right*/ self.offset.x,
                 /*up*/
                 vertical_offset,
-                /*right*/ self.offset.x,
+                /*front*/ -self.offset.y,
             ),
             SpriteOrientation::Vertical => Vec3::new(
-                /*back*/
-                match layer {
-                    SpriteLayer::Front => -0.41,
-                    SpriteLayer::Back => -0.4,
-                },
-                /*up*/
-                vertical_offset,
                 /*right*/ self.offset.x,
+                /*up*/ vertical_offset,
+                /*front*/
+                match layer {
+                    SpriteLayer::Front => 0.41,
+                    SpriteLayer::Back => 0.4,
+                },
             ),
         }
     }
@@ -51,10 +50,10 @@ impl Transform2d {
     const fn to_scale(&self, orientation: SpriteOrientation) -> Vec3 {
         match orientation {
             SpriteOrientation::Horizontal => {
-                Vec3::new(self.scale.y, /*thickness*/ 1.0, self.scale.x)
+                Vec3::new(self.scale.x, /*thickness*/ 1.0, self.scale.y)
             }
             SpriteOrientation::Vertical => {
-                Vec3::new(/*thickness*/ 1.0, self.scale.y, self.scale.x)
+                Vec3::new(self.scale.x, self.scale.y, /*thickness*/ 1.0)
             }
         }
     }
@@ -104,7 +103,7 @@ impl ModelShape {
                 ),
                 translation: match *layer {
                     SpriteLayer::Front => Vec3::ZERO,
-                    SpriteLayer::Back => Vec3::new(0.01, 0.0, 0.0),
+                    SpriteLayer::Back => Vec3::new(0.0, 0.0, -0.01),
                 },
                 ..Transform::default()
             },
