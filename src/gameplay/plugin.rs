@@ -1,9 +1,9 @@
 use crate::prelude::*;
 use bevy::prelude::*;
 
-pub(crate) struct RustaclysmPlugin;
+pub(crate) struct GameplayPlugin;
 
-impl Plugin for RustaclysmPlugin {
+impl Plugin for GameplayPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(Msaa::default())
             .insert_resource(AmbientLight {

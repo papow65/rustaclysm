@@ -72,16 +72,11 @@
 #![allow(clippy::type_complexity)] // doesn't work well with bevy
 #![allow(clippy::only_used_in_recursion)] // false positives
 
-mod cdda;
-mod components;
-mod core;
-mod plugin;
+mod gameplay;
+mod main_menu;
 mod prelude;
-mod resources;
-mod schedule;
-mod systems;
 
-use crate::prelude::{Paths, RustaclysmPlugin};
+use crate::prelude::{GameplayPlugin, MainMenuPlugin, Paths};
 use bevy::{
     diagnostic::FrameTimeDiagnosticsPlugin,
     prelude::{
@@ -120,7 +115,8 @@ fn main() -> Result<(), ()> {
                     ..bevy::ecs::schedule::ScheduleBuildSettings::default()
                 });
             })*/
-            .add_plugin(RustaclysmPlugin)
+            .add_plugin(MainMenuPlugin)
+            .add_plugin(GameplayPlugin)
             .add_plugin(FrameTimeDiagnosticsPlugin::default())
             .run();
     })
