@@ -135,11 +135,8 @@ fn spawn_expanded_subzone_levels(tile_spawner: &mut TileSpawner, expanded_region
             .get(subzone_level)
             .is_none();
         if missing {
-            if let Err(e) = tile_spawner.spawn_expanded_subzone_level(subzone_level) {
-                panic!(
-                    "While loading {subzone_level:?} in {:?}: {e}",
-                    ZoneLevel::from(subzone_level)
-                );
+            if let Some(message) = tile_spawner.spawn_expanded_subzone_level(subzone_level) {
+                tile_spawner.commands.spawn(message);
             }
         }
     }

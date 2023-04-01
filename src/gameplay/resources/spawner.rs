@@ -25,7 +25,7 @@ pub(crate) struct TileCaches {
 
 #[derive(SystemParam)]
 pub(crate) struct TileSpawner<'w, 's> {
-    commands: Commands<'w, 's>,
+    pub(crate) commands: Commands<'w, 's>,
     material_assets: ResMut<'w, Assets<StandardMaterial>>,
     mesh_assets: ResMut<'w, Assets<Mesh>>,
     asset_server: Res<'w, AssetServer>,
@@ -331,30 +331,41 @@ impl<'w, 's> TileSpawner<'w, 's> {
     pub(crate) fn spawn_expanded_subzone_level(
         &mut self,
         subzone_level: SubzoneLevel,
-    ) -> Result<(), serde_json::Error> {
+    ) -> Option<Message> {
         let map_path = MapPath::new(&self.paths.world_path(), ZoneLevel::from(subzone_level));
+
+        let mut possible_message = None;
+        let possible_map = match Option::<Map>::try_from(map_path) {
+            Ok(possible_map) => possible_map,
+            Err(err) => {
+                eprintln!("{err}");
+                possible_message = Some(Message::error(format!(
+                    "Failed loading {subzone_level:?}"
+                )));
+                None
+            }
+        };
 
         let object_id;
         let fallback;
-        if let Some(submap) = Option::<Map>::try_from(map_path)?
+        let submap = possible_map
             .as_ref()
-            .map(|map| map.0.iter().nth(subzone_level.index()).unwrap())
-            .or({
+            .map_or({
                 object_id = self.zone_level_ids.get(ZoneLevel::from(subzone_level));
                 fallback = Submap::fallback(subzone_level, object_id);
-                Some(&fallback)
-            })
-        {
-            assert_eq!(
-                submap.coordinates,
-                subzone_level.coordinates(),
-                "{:?} {:?}",
-                submap.coordinates,
-                subzone_level.coordinates()
-            );
-            self.spawn_subzone(submap, subzone_level);
-        }
-        Ok(())
+                &fallback
+            }, |map| map.0.iter().nth(subzone_level.index()).unwrap());
+
+        assert_eq!(
+            submap.coordinates,
+            subzone_level.coordinates(),
+            "{:?} {:?}",
+            submap.coordinates,
+            subzone_level.coordinates()
+        );
+        self.spawn_subzone(submap, subzone_level);
+
+        possible_message
     }
 
     fn spawn_subzone(&mut self, submap: &Submap, subzone_level: SubzoneLevel) {
