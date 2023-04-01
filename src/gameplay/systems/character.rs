@@ -1,4 +1,3 @@
-use super::log_if_slow;
 use crate::prelude::*;
 use bevy::{ecs::system::SystemState, prelude::*};
 use std::time::Instant;

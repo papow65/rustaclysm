@@ -583,7 +583,7 @@ impl<'w, 's> Spawner<'w, 's> {
             .spawn_terrain(parent, pos, ObjectId::new("t_shingle_flat_roof"));
     }
 
-    pub(crate) fn spawn_wall(&mut self, pos: Pos) {
+    pub(crate) fn spawn_wall(&mut self, parent: Entity, pos: Pos) {
         let tile = self
             .tile_spawner
             .commands
@@ -607,10 +607,11 @@ impl<'w, 's> Spawner<'w, 's> {
             })
             .id();
 
+        self.tile_spawner.commands.entity(parent).add_child(tile);
         self.tile_spawner.location.update(tile, Some(pos));
     }
 
-    pub(crate) fn spawn_window(&mut self, pos: Pos) {
+    pub(crate) fn spawn_window(&mut self, parent: Entity, pos: Pos) {
         let tile = self
             .tile_spawner
             .commands
@@ -642,10 +643,11 @@ impl<'w, 's> Spawner<'w, 's> {
             })
             .id();
 
+        self.tile_spawner.commands.entity(parent).add_child(tile);
         self.tile_spawner.location.update(tile, Some(pos));
     }
 
-    pub(crate) fn spawn_stairs(&mut self, pos: Pos) {
+    pub(crate) fn spawn_stairs(&mut self, parent: Entity, pos: Pos) {
         let tile = self
             .tile_spawner
             .commands
@@ -668,11 +670,13 @@ impl<'w, 's> Spawner<'w, 's> {
             })
             .id();
 
+        self.tile_spawner.commands.entity(parent).add_child(tile);
         self.tile_spawner.location.update(tile, Some(pos));
     }
 
-    pub(crate) fn spawn_rack(&mut self, pos: Pos) {
-        self.tile_spawner
+    pub(crate) fn spawn_rack(&mut self, parent: Entity, pos: Pos) {
+        let tile = self
+            .tile_spawner
             .commands
             .spawn(SpatialBundle::default())
             .insert(pos)
@@ -690,10 +694,14 @@ impl<'w, 's> Spawner<'w, 's> {
                         ..PbrBundle::default()
                     })
                     .insert(self.custom.wood.clone());
-            });
+            })
+            .id();
+
+        self.tile_spawner.commands.entity(parent).add_child(tile);
+        self.tile_spawner.location.update(tile, Some(pos));
     }
 
-    pub(crate) fn spawn_table(&mut self, pos: Pos) {
+    pub(crate) fn spawn_table(&mut self, parent: Entity, pos: Pos) {
         let tile = self
             .tile_spawner
             .commands
@@ -715,10 +723,11 @@ impl<'w, 's> Spawner<'w, 's> {
             })
             .id();
 
+        self.tile_spawner.commands.entity(parent).add_child(tile);
         self.tile_spawner.location.update(tile, Some(pos));
     }
 
-    pub(crate) fn spawn_chair(&mut self, pos: Pos) {
+    pub(crate) fn spawn_chair(&mut self, parent: Entity, pos: Pos) {
         let scale = 0.45 * Millimeter::ADJACENT.f32();
 
         let tile = self
@@ -758,6 +767,7 @@ impl<'w, 's> Spawner<'w, 's> {
             })
             .id();
 
+        self.tile_spawner.commands.entity(parent).add_child(tile);
         self.tile_spawner.location.update(tile, Some(pos));
     }
 
@@ -810,7 +820,7 @@ impl<'w, 's> Spawner<'w, 's> {
             });
     }
 
-    pub(crate) fn spawn_light(&mut self) {
+    pub(crate) fn spawn_light(&mut self, parent: Entity) {
         let light_transform = Transform::from_matrix(Mat4::from_euler(
             EulerRot::ZYX,
             0.0,
@@ -818,24 +828,24 @@ impl<'w, 's> Spawner<'w, 's> {
             -std::f32::consts::FRAC_PI_4,
         ));
         //dbg!(&light_transform);
-        self.tile_spawner.commands.spawn(DirectionalLightBundle {
-            directional_light: DirectionalLight {
-                illuminance: 50_000.0,
-                shadows_enabled: false, // TODO shadow direction does not match buildin shadows
-                ..DirectionalLight::default()
-            },
-            transform: light_transform,
-            ..DirectionalLightBundle::default()
-        });
-    }
-
-    pub(crate) fn spawn_floors(&mut self, offset: PosOffset) {
-        let parent = self
+        let light = self
             .tile_spawner
             .commands
-            .spawn(SpatialBundle::default())
+            .spawn(DirectionalLightBundle {
+                directional_light: DirectionalLight {
+                    illuminance: 50_000.0,
+                    shadows_enabled: false, // TODO shadow direction does not match buildin shadows
+                    ..DirectionalLight::default()
+                },
+                transform: light_transform,
+                ..DirectionalLightBundle::default()
+            })
             .id();
 
+        self.tile_spawner.commands.entity(parent).add_child(light);
+    }
+
+    pub(crate) fn spawn_floors(&mut self, parent: Entity, offset: PosOffset) {
         for y in 1..=2 {
             for x in 17..24 {
                 let z_range = match y {
@@ -866,93 +876,288 @@ impl<'w, 's> Spawner<'w, 's> {
         }
     }
 
-    pub(crate) fn spawn_house(&mut self, offset: PosOffset) {
-        self.spawn_wall(Pos::new(17, Level::ZERO, 17).offset(offset).unwrap());
-        self.spawn_wall(Pos::new(17, Level::ZERO, 18).offset(offset).unwrap());
-        self.spawn_wall(Pos::new(17, Level::ZERO, 19).offset(offset).unwrap());
-        self.spawn_wall(Pos::new(17, Level::ZERO, 20).offset(offset).unwrap());
+    pub(crate) fn spawn_house(&mut self, parent: Entity, offset: PosOffset) {
+        self.spawn_wall(
+            parent,
+            Pos::new(17, Level::ZERO, 17).offset(offset).unwrap(),
+        );
+        self.spawn_wall(
+            parent,
+            Pos::new(17, Level::ZERO, 18).offset(offset).unwrap(),
+        );
+        self.spawn_wall(
+            parent,
+            Pos::new(17, Level::ZERO, 19).offset(offset).unwrap(),
+        );
+        self.spawn_wall(
+            parent,
+            Pos::new(17, Level::ZERO, 20).offset(offset).unwrap(),
+        );
         // z 21: door
-        self.spawn_wall(Pos::new(17, Level::ZERO, 22).offset(offset).unwrap());
-        self.spawn_wall(Pos::new(17, Level::ZERO, 23).offset(offset).unwrap());
-        self.spawn_wall(Pos::new(17, Level::ZERO, 24).offset(offset).unwrap());
-        self.spawn_wall(Pos::new(17, Level::ZERO, 25).offset(offset).unwrap());
-        self.spawn_wall(Pos::new(18, Level::ZERO, 25).offset(offset).unwrap());
-        self.spawn_window(Pos::new(19, Level::ZERO, 25).offset(offset).unwrap());
-        self.spawn_wall(Pos::new(20, Level::ZERO, 25).offset(offset).unwrap());
-        self.spawn_wall(Pos::new(21, Level::ZERO, 25).offset(offset).unwrap());
+        self.spawn_wall(
+            parent,
+            Pos::new(17, Level::ZERO, 22).offset(offset).unwrap(),
+        );
+        self.spawn_wall(
+            parent,
+            Pos::new(17, Level::ZERO, 23).offset(offset).unwrap(),
+        );
+        self.spawn_wall(
+            parent,
+            Pos::new(17, Level::ZERO, 24).offset(offset).unwrap(),
+        );
+        self.spawn_wall(
+            parent,
+            Pos::new(17, Level::ZERO, 25).offset(offset).unwrap(),
+        );
+        self.spawn_wall(
+            parent,
+            Pos::new(18, Level::ZERO, 25).offset(offset).unwrap(),
+        );
+        self.spawn_window(
+            parent,
+            Pos::new(19, Level::ZERO, 25).offset(offset).unwrap(),
+        );
+        self.spawn_wall(
+            parent,
+            Pos::new(20, Level::ZERO, 25).offset(offset).unwrap(),
+        );
+        self.spawn_wall(
+            parent,
+            Pos::new(21, Level::ZERO, 25).offset(offset).unwrap(),
+        );
         // x 22: door
-        self.spawn_wall(Pos::new(23, Level::ZERO, 25).offset(offset).unwrap());
-        self.spawn_wall(Pos::new(23, Level::ZERO, 24).offset(offset).unwrap());
-        self.spawn_wall(Pos::new(23, Level::ZERO, 23).offset(offset).unwrap());
-        self.spawn_window(Pos::new(23, Level::ZERO, 22).offset(offset).unwrap());
-        self.spawn_window(Pos::new(23, Level::ZERO, 21).offset(offset).unwrap());
-        self.spawn_window(Pos::new(23, Level::ZERO, 20).offset(offset).unwrap());
-        self.spawn_wall(Pos::new(23, Level::ZERO, 19).offset(offset).unwrap());
-        self.spawn_wall(Pos::new(23, Level::ZERO, 18).offset(offset).unwrap());
-        self.spawn_wall(Pos::new(23, Level::ZERO, 17).offset(offset).unwrap());
-        self.spawn_wall(Pos::new(22, Level::ZERO, 17).offset(offset).unwrap());
-        self.spawn_wall(Pos::new(21, Level::ZERO, 17).offset(offset).unwrap());
-        self.spawn_window(Pos::new(20, Level::ZERO, 17).offset(offset).unwrap());
-        self.spawn_wall(Pos::new(19, Level::ZERO, 17).offset(offset).unwrap());
-        self.spawn_wall(Pos::new(18, Level::ZERO, 17).offset(offset).unwrap());
+        self.spawn_wall(
+            parent,
+            Pos::new(23, Level::ZERO, 25).offset(offset).unwrap(),
+        );
+        self.spawn_wall(
+            parent,
+            Pos::new(23, Level::ZERO, 24).offset(offset).unwrap(),
+        );
+        self.spawn_wall(
+            parent,
+            Pos::new(23, Level::ZERO, 23).offset(offset).unwrap(),
+        );
+        self.spawn_window(
+            parent,
+            Pos::new(23, Level::ZERO, 22).offset(offset).unwrap(),
+        );
+        self.spawn_window(
+            parent,
+            Pos::new(23, Level::ZERO, 21).offset(offset).unwrap(),
+        );
+        self.spawn_window(
+            parent,
+            Pos::new(23, Level::ZERO, 20).offset(offset).unwrap(),
+        );
+        self.spawn_wall(
+            parent,
+            Pos::new(23, Level::ZERO, 19).offset(offset).unwrap(),
+        );
+        self.spawn_wall(
+            parent,
+            Pos::new(23, Level::ZERO, 18).offset(offset).unwrap(),
+        );
+        self.spawn_wall(
+            parent,
+            Pos::new(23, Level::ZERO, 17).offset(offset).unwrap(),
+        );
+        self.spawn_wall(
+            parent,
+            Pos::new(22, Level::ZERO, 17).offset(offset).unwrap(),
+        );
+        self.spawn_wall(
+            parent,
+            Pos::new(21, Level::ZERO, 17).offset(offset).unwrap(),
+        );
+        self.spawn_window(
+            parent,
+            Pos::new(20, Level::ZERO, 17).offset(offset).unwrap(),
+        );
+        self.spawn_wall(
+            parent,
+            Pos::new(19, Level::ZERO, 17).offset(offset).unwrap(),
+        );
+        self.spawn_wall(
+            parent,
+            Pos::new(18, Level::ZERO, 17).offset(offset).unwrap(),
+        );
 
-        self.spawn_stairs(Pos::new(18, Level::ZERO, 24).offset(offset).unwrap());
-        self.spawn_rack(Pos::new(18, Level::ZERO, 18).offset(offset).unwrap());
-        self.spawn_rack(Pos::new(20, Level::ZERO, 24).offset(offset).unwrap());
-        self.spawn_chair(Pos::new(19, Level::ZERO, 20).offset(offset).unwrap());
-        self.spawn_table(Pos::new(19, Level::ZERO, 21).offset(offset).unwrap());
-        self.spawn_chair(Pos::new(19, Level::ZERO, 22).offset(offset).unwrap());
-        self.spawn_chair(Pos::new(20, Level::ZERO, 20).offset(offset).unwrap());
-        self.spawn_table(Pos::new(20, Level::ZERO, 21).offset(offset).unwrap());
-        self.spawn_chair(Pos::new(20, Level::ZERO, 22).offset(offset).unwrap());
-        self.spawn_table(Pos::new(22, Level::ZERO, 22).offset(offset).unwrap());
-        self.spawn_table(Pos::new(22, Level::ZERO, 21).offset(offset).unwrap());
-        self.spawn_table(Pos::new(22, Level::ZERO, 20).offset(offset).unwrap());
-        self.spawn_table(Pos::new(22, Level::ZERO, 19).offset(offset).unwrap());
-        self.spawn_table(Pos::new(22, Level::ZERO, 18).offset(offset).unwrap());
-        self.spawn_table(Pos::new(21, Level::ZERO, 18).offset(offset).unwrap());
-        self.spawn_table(Pos::new(20, Level::ZERO, 18).offset(offset).unwrap());
+        self.spawn_stairs(
+            parent,
+            Pos::new(18, Level::ZERO, 24).offset(offset).unwrap(),
+        );
+        self.spawn_rack(
+            parent,
+            Pos::new(18, Level::ZERO, 18).offset(offset).unwrap(),
+        );
+        self.spawn_rack(
+            parent,
+            Pos::new(20, Level::ZERO, 24).offset(offset).unwrap(),
+        );
+        self.spawn_chair(
+            parent,
+            Pos::new(19, Level::ZERO, 20).offset(offset).unwrap(),
+        );
+        self.spawn_table(
+            parent,
+            Pos::new(19, Level::ZERO, 21).offset(offset).unwrap(),
+        );
+        self.spawn_chair(
+            parent,
+            Pos::new(19, Level::ZERO, 22).offset(offset).unwrap(),
+        );
+        self.spawn_chair(
+            parent,
+            Pos::new(20, Level::ZERO, 20).offset(offset).unwrap(),
+        );
+        self.spawn_table(
+            parent,
+            Pos::new(20, Level::ZERO, 21).offset(offset).unwrap(),
+        );
+        self.spawn_chair(
+            parent,
+            Pos::new(20, Level::ZERO, 22).offset(offset).unwrap(),
+        );
+        self.spawn_table(
+            parent,
+            Pos::new(22, Level::ZERO, 22).offset(offset).unwrap(),
+        );
+        self.spawn_table(
+            parent,
+            Pos::new(22, Level::ZERO, 21).offset(offset).unwrap(),
+        );
+        self.spawn_table(
+            parent,
+            Pos::new(22, Level::ZERO, 20).offset(offset).unwrap(),
+        );
+        self.spawn_table(
+            parent,
+            Pos::new(22, Level::ZERO, 19).offset(offset).unwrap(),
+        );
+        self.spawn_table(
+            parent,
+            Pos::new(22, Level::ZERO, 18).offset(offset).unwrap(),
+        );
+        self.spawn_table(
+            parent,
+            Pos::new(21, Level::ZERO, 18).offset(offset).unwrap(),
+        );
+        self.spawn_table(
+            parent,
+            Pos::new(20, Level::ZERO, 18).offset(offset).unwrap(),
+        );
 
-        self.spawn_wall(Pos::new(17, Level::new(1), 21).offset(offset).unwrap());
-        self.spawn_wall(Pos::new(17, Level::new(1), 22).offset(offset).unwrap());
-        self.spawn_window(Pos::new(17, Level::new(1), 23).offset(offset).unwrap());
-        self.spawn_wall(Pos::new(17, Level::new(1), 24).offset(offset).unwrap());
-        self.spawn_wall(Pos::new(17, Level::new(1), 25).offset(offset).unwrap());
-        self.spawn_wall(Pos::new(18, Level::new(1), 25).offset(offset).unwrap());
-        self.spawn_window(Pos::new(19, Level::new(1), 25).offset(offset).unwrap());
-        self.spawn_window(Pos::new(20, Level::new(1), 25).offset(offset).unwrap());
-        self.spawn_window(Pos::new(21, Level::new(1), 25).offset(offset).unwrap());
-        self.spawn_wall(Pos::new(22, Level::new(1), 25).offset(offset).unwrap());
-        self.spawn_wall(Pos::new(23, Level::new(1), 25).offset(offset).unwrap());
-        self.spawn_wall(Pos::new(23, Level::new(1), 24).offset(offset).unwrap());
-        self.spawn_window(Pos::new(23, Level::new(1), 23).offset(offset).unwrap());
-        self.spawn_wall(Pos::new(23, Level::new(1), 22).offset(offset).unwrap());
-        self.spawn_wall(Pos::new(23, Level::new(1), 21).offset(offset).unwrap());
-        self.spawn_wall(Pos::new(22, Level::new(1), 21).offset(offset).unwrap());
-        self.spawn_wall(Pos::new(21, Level::new(1), 21).offset(offset).unwrap());
+        self.spawn_wall(
+            parent,
+            Pos::new(17, Level::new(1), 21).offset(offset).unwrap(),
+        );
+        self.spawn_wall(
+            parent,
+            Pos::new(17, Level::new(1), 22).offset(offset).unwrap(),
+        );
+        self.spawn_window(
+            parent,
+            Pos::new(17, Level::new(1), 23).offset(offset).unwrap(),
+        );
+        self.spawn_wall(
+            parent,
+            Pos::new(17, Level::new(1), 24).offset(offset).unwrap(),
+        );
+        self.spawn_wall(
+            parent,
+            Pos::new(17, Level::new(1), 25).offset(offset).unwrap(),
+        );
+        self.spawn_wall(
+            parent,
+            Pos::new(18, Level::new(1), 25).offset(offset).unwrap(),
+        );
+        self.spawn_window(
+            parent,
+            Pos::new(19, Level::new(1), 25).offset(offset).unwrap(),
+        );
+        self.spawn_window(
+            parent,
+            Pos::new(20, Level::new(1), 25).offset(offset).unwrap(),
+        );
+        self.spawn_window(
+            parent,
+            Pos::new(21, Level::new(1), 25).offset(offset).unwrap(),
+        );
+        self.spawn_wall(
+            parent,
+            Pos::new(22, Level::new(1), 25).offset(offset).unwrap(),
+        );
+        self.spawn_wall(
+            parent,
+            Pos::new(23, Level::new(1), 25).offset(offset).unwrap(),
+        );
+        self.spawn_wall(
+            parent,
+            Pos::new(23, Level::new(1), 24).offset(offset).unwrap(),
+        );
+        self.spawn_window(
+            parent,
+            Pos::new(23, Level::new(1), 23).offset(offset).unwrap(),
+        );
+        self.spawn_wall(
+            parent,
+            Pos::new(23, Level::new(1), 22).offset(offset).unwrap(),
+        );
+        self.spawn_wall(
+            parent,
+            Pos::new(23, Level::new(1), 21).offset(offset).unwrap(),
+        );
+        self.spawn_wall(
+            parent,
+            Pos::new(22, Level::new(1), 21).offset(offset).unwrap(),
+        );
+        self.spawn_wall(
+            parent,
+            Pos::new(21, Level::new(1), 21).offset(offset).unwrap(),
+        );
         // x 20: door
-        self.spawn_wall(Pos::new(19, Level::new(1), 21).offset(offset).unwrap());
-        self.spawn_wall(Pos::new(18, Level::new(1), 21).offset(offset).unwrap());
+        self.spawn_wall(
+            parent,
+            Pos::new(19, Level::new(1), 21).offset(offset).unwrap(),
+        );
+        self.spawn_wall(
+            parent,
+            Pos::new(18, Level::new(1), 21).offset(offset).unwrap(),
+        );
 
-        self.spawn_stairs(Pos::new(18, Level::new(1), 22).offset(offset).unwrap());
-        self.spawn_table(Pos::new(21, Level::new(1), 24).offset(offset).unwrap());
-        self.spawn_table(Pos::new(22, Level::new(1), 24).offset(offset).unwrap());
-        self.spawn_table(Pos::new(22, Level::new(1), 23).offset(offset).unwrap());
-        self.spawn_table(Pos::new(22, Level::new(1), 22).offset(offset).unwrap());
-        self.spawn_chair(Pos::new(21, Level::new(1), 23).offset(offset).unwrap());
+        self.spawn_stairs(
+            parent,
+            Pos::new(18, Level::new(1), 22).offset(offset).unwrap(),
+        );
+        self.spawn_table(
+            parent,
+            Pos::new(21, Level::new(1), 24).offset(offset).unwrap(),
+        );
+        self.spawn_table(
+            parent,
+            Pos::new(22, Level::new(1), 24).offset(offset).unwrap(),
+        );
+        self.spawn_table(
+            parent,
+            Pos::new(22, Level::new(1), 23).offset(offset).unwrap(),
+        );
+        self.spawn_table(
+            parent,
+            Pos::new(22, Level::new(1), 22).offset(offset).unwrap(),
+        );
+        self.spawn_chair(
+            parent,
+            Pos::new(21, Level::new(1), 23).offset(offset).unwrap(),
+        );
     }
 
-    pub(crate) fn spawn_characters(&mut self, offset: PosOffset) {
-        let custom_character_parent = self
-            .tile_spawner
-            .commands
-            .spawn(SpatialBundle::default())
-            .id();
-
+    pub(crate) fn spawn_characters(&mut self, parent: Entity, offset: PosOffset) {
         let player = self
             .tile_spawner
             .spawn_character(
-                custom_character_parent,
+                parent,
                 Pos::new(45, Level::ZERO, 56)
                     .offset(offset)
                     .unwrap()
@@ -974,7 +1179,7 @@ impl<'w, 's> Spawner<'w, 's> {
         let survivor = self
             .tile_spawner
             .spawn_character(
-                custom_character_parent,
+                parent,
                 Pos::new(10, Level::ZERO, 10).offset(offset).unwrap(),
                 ObjectId::new("human"),
             )
@@ -985,27 +1190,27 @@ impl<'w, 's> Spawner<'w, 's> {
             .insert(TextLabel::new("Survivor"));
 
         self.tile_spawner.spawn_character(
-            custom_character_parent,
+            parent,
             Pos::new(12, Level::ZERO, 16).offset(offset).unwrap(),
             ObjectId::new("mon_zombie"),
         );
         self.tile_spawner.spawn_character(
-            custom_character_parent,
+            parent,
             Pos::new(40, Level::ZERO, 40).offset(offset).unwrap(),
             ObjectId::new("mon_zombie"),
         );
         self.tile_spawner.spawn_character(
-            custom_character_parent,
+            parent,
             Pos::new(38, Level::ZERO, 39).offset(offset).unwrap(),
             ObjectId::new("mon_zombie"),
         );
         self.tile_spawner.spawn_character(
-            custom_character_parent,
+            parent,
             Pos::new(37, Level::ZERO, 37).offset(offset).unwrap(),
             ObjectId::new("mon_zombie"),
         );
         self.tile_spawner.spawn_character(
-            custom_character_parent,
+            parent,
             Pos::new(34, Level::ZERO, 34).offset(offset).unwrap(),
             ObjectId::new("mon_zombie"),
         );

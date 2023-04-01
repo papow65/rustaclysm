@@ -1,18 +1,18 @@
-use crate::prelude::{
-    ElevationVisibility, Instruction, InstructionQueue, KeyCombo, ManualDisplay, Player,
-    VisualizationUpdate, ZoomDirection,
-};
+use crate::prelude::*;
 use bevy::{
+    app::AppExit,
     ecs::event::Events,
     input::{keyboard::KeyboardInput, mouse::MouseWheel, ButtonState},
-    prelude::{EventReader, Input, KeyCode, Query, Res, ResMut, Visibility, With},
+    prelude::{EventReader, Input, KeyCode, NextState, Query, Res, ResMut, Visibility, With},
 };
 use std::time::Instant;
 
-use super::log_if_slow;
+fn quit(app_exit_events: &mut Events<AppExit>) {
+    app_exit_events.send(AppExit);
+}
 
-fn quit(app_exit_events: &mut Events<bevy::app::AppExit>) {
-    app_exit_events.send(bevy::app::AppExit);
+fn main_menu(next_state: &mut NextState<ApplicationState>) {
+    next_state.set(ApplicationState::MainMenu);
 }
 
 fn zoom(player: &mut Query<&mut Player>, direction: ZoomDirection) {
@@ -69,6 +69,7 @@ pub(crate) fn manage_mouse_input(
 pub(crate) fn manage_keyboard_input(
     mut app_exit_events: ResMut<Events<bevy::app::AppExit>>,
     mut key_events: EventReader<KeyboardInput>,
+    mut next_state: ResMut<NextState<ApplicationState>>,
     mut instruction_queue: ResMut<InstructionQueue>,
     mut elevation_visibility: ResMut<ElevationVisibility>,
     mut visualization_update: ResMut<VisualizationUpdate>,
@@ -87,6 +88,7 @@ pub(crate) fn manage_keyboard_input(
                     println!("{:?} -> {} -> {:?}", &key_event, &combo, &instruction);
                     match instruction {
                         Instruction::Quit => quit(&mut app_exit_events),
+                        Instruction::MainMenu => main_menu(&mut next_state),
                         Instruction::Zoom(direction) => zoom(&mut player, direction),
                         Instruction::ToggleElevation => {
                             toggle_elevation(&mut elevation_visibility, &mut visualization_update);

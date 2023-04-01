@@ -1,4 +1,3 @@
-use super::log_if_slow;
 use crate::prelude::*;
 use bevy::{prelude::*, utils::HashSet};
 use std::time::Instant;

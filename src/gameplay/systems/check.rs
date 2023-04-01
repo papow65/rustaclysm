@@ -5,10 +5,8 @@ use bevy::{
 use std::time::{Duration, Instant};
 
 use crate::prelude::{
-    Collapsed, Faction, Location, Obstacle, Pos, StdInstant, TextLabel, ZoneLevel,
+    log_if_slow, Collapsed, Faction, Location, Obstacle, Pos, StdInstant, TextLabel, ZoneLevel,
 };
-
-use super::log_if_slow;
 
 #[allow(dead_code, clippy::needless_pass_by_value)]
 pub(crate) fn check_obstacle_location(

@@ -16,7 +16,7 @@ Unfinished pre-alpha - Currently you can walk around an existing save from Catac
 1. Download and install the [experimental version](https://cataclysmdda.org/experimental/) of Cataclysm: Dark Days Ahead.
 2. Create a world in it and save a character in that world. An existing world and character will work as well. We will load this save later.
 3. Download the [latest release](https://github.com/papow65/rustaclysm/releases) of Rustaclysm.
-4. Run rustaclysm from the command line.
+4. Run rustaclysm
 5. Follow the instructions to set up the necessary symlinks or directories.
 
 ## Development
@@ -28,7 +28,6 @@ Unfinished pre-alpha - Currently you can walk around an existing save from Catac
 6. Navigate to the Rustaclism directory. When using the command line: `cd rustaclysm`
 7. Launch it by running the command `cargo run` on the command line.
 8. Follow the instructions to set up the necessary symlinks or directories in the `assets` directory.
-9. Run `cargo run` to launch Rustaclysm again.
 
 ## Screenshots
 

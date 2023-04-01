@@ -17,6 +17,9 @@ use std::fmt;
 
 pub(crate) use {faction::*, player::*, pos::*};
 
+#[derive(Component)]
+pub(crate) struct ManualRoot;
+
 #[derive(Clone, Component, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) struct TextLabel(String);
 

@@ -1,4 +1,3 @@
-use super::log_if_slow;
 use crate::prelude::*;
 use bevy::diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin};
 use bevy::ecs::system::{EntityCommands, Resource};
@@ -106,7 +105,7 @@ fn spawn_manual_display(
                 text: Text {
                     sections: vec![
                         TextSection {
-                            value: String::from("move          numpad\nup/down       r/f/</>\nwield         w\npick/drop     b/v\nattack        a\nsmash         s\nwait          |\nrun           +\nexamine       x\nexamine map   m\nzoom          (shift+)z\nzoom          scroll wheel\nshow elevated e\ntoggle this   h\nquit          ctrl+c/d/q"),
+                            value: String::from("move          numpad\nup/down       r/f/</>\nwield         w\npick/drop     b/v\nattack        a\nsmash         s\nwait          |\nrun           +\nexamine       x\nexamine map   m\nzoom          (shift+)z\nzoom          scroll wheel\nshow elevated e\ntoggle this   h\nmain menu     f12\nquit          ctrl+c/d/q"),
                             style: hud_defaults.text_style.clone(),
                         },
                     ],

@@ -1,7 +1,5 @@
-pub(crate) use super::log_if_slow;
 use crate::prelude::*;
-use bevy::math::Quat;
-use bevy::prelude::*;
+use bevy::{math::Quat, prelude::*};
 use std::time::Instant;
 
 #[allow(clippy::needless_pass_by_value)]

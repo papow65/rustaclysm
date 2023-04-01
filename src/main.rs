@@ -72,52 +72,13 @@
 #![allow(clippy::type_complexity)] // doesn't work well with bevy
 #![allow(clippy::only_used_in_recursion)] // false positives
 
+mod application;
 mod gameplay;
 mod main_menu;
 mod prelude;
 
-use crate::prelude::{GameplayPlugin, MainMenuPlugin, Paths};
-use bevy::{
-    diagnostic::FrameTimeDiagnosticsPlugin,
-    prelude::{
-        App, AssetPlugin, DefaultPlugins, IVec2, ImagePlugin, PluginGroup, Window, WindowPlugin,
-        WindowPosition,
-    },
-    window::{PresentMode, WindowResolution},
-};
+use crate::prelude::run_application;
 
-fn main() -> Result<(), ()> {
-    // Load paths first, because it may give an error about improper configuration.
-    Paths::load().map(|paths| {
-        App::new()
-            .insert_resource(paths)
-            .add_plugins(
-                DefaultPlugins
-                    .set(AssetPlugin {
-                        asset_folder: String::from('.'), // We add 'assets/' ourselves.
-                        ..AssetPlugin::default()
-                    })
-                    .set(ImagePlugin::default_nearest())
-                    .set(WindowPlugin {
-                        primary_window: Some(Window {
-                            title: String::from("Rustaclysm"),
-                            present_mode: PresentMode::Mailbox, // much better responsiveness
-                            resolution: WindowResolution::new(50.0, 40.0),
-                            position: WindowPosition::At(IVec2::new(10, 10)),
-                            ..Window::default()
-                        }),
-                        ..WindowPlugin::default()
-                    }),
-            )
-            /*.edit_schedule(bevy::prelude::CoreSchedule::Main, |schedule| {
-                schedule.set_build_settings(bevy::ecs::schedule::ScheduleBuildSettings {
-                    ambiguity_detection: bevy::ecs::schedule::LogLevel::Warn,
-                    ..bevy::ecs::schedule::ScheduleBuildSettings::default()
-                });
-            })*/
-            .add_plugin(MainMenuPlugin)
-            .add_plugin(GameplayPlugin)
-            .add_plugin(FrameTimeDiagnosticsPlugin::default())
-            .run();
-    })
+fn main() {
+    run_application();
 }

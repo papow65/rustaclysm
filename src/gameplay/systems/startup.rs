@@ -1,16 +1,21 @@
 use crate::prelude::*;
 use bevy::prelude::*;
 
+/// Create resources that do not need other resources and should not persist between two gameplays
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn maximize_window(mut windows: Query<&mut Window>) {
-    for mut window in windows.iter_mut() {
-        window.set_maximized(true);
-    }
+pub(crate) fn create_independent_resources(mut commands: Commands) {
+    commands.insert_resource(Infos::new());
+    commands.insert_resource(Location::default());
+    commands.insert_resource(SubzoneLevelEntities::default());
+    commands.insert_resource(ZoneLevelEntities::default());
+    commands.insert_resource(InstructionQueue::default());
+    commands.insert_resource(TileCaches::default());
+    commands.insert_resource(VisualizationUpdate::Smart);
 }
 
 /// Create resources that need other resources
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn create_secondairy_resources(
+pub(crate) fn create_dependent_resources(
     mut commands: Commands,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -29,8 +34,13 @@ pub(crate) fn create_secondairy_resources(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn spawn_initial_entities(sav: Res<Sav>, mut spawner: Spawner) {
-    spawner.spawn_light();
+pub(crate) fn spawn_initial_entities(mut commands: Commands, sav: Res<Sav>, mut spawner: Spawner) {
+    let root = commands
+        .spawn(SpatialBundle::default())
+        .insert(ManualRoot)
+        .id();
+
+    spawner.spawn_light(root);
 
     let offset = Zone {
         x: i32::from(sav.om_x) * 180 + i32::from(sav.levx) / 2,
@@ -51,7 +61,7 @@ pub(crate) fn spawn_initial_entities(sav: Res<Sav>, mut spawner: Spawner) {
     })
     .unwrap()
         - Pos::ORIGIN;
-    spawner.spawn_floors(offset);
-    spawner.spawn_house(offset);
-    spawner.spawn_characters(offset);
+    spawner.spawn_floors(root, offset);
+    spawner.spawn_house(root, offset);
+    spawner.spawn_characters(root, offset);
 }

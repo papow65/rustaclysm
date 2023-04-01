@@ -22,12 +22,15 @@ pub(crate) fn behavior_schedule() -> Schedule {
     behavior_schedule.set_default_base_set(CoreSet::Update);
 
     behavior_schedule.add_systems(
-        (plan_action.pipe(perform_action).pipe(update_timeouts),).in_set(UpdateSet::ManageBehavior),
+        (plan_action.pipe(perform_action).pipe(update_timeouts),)
+            .in_set(UpdateSet::ManageBehavior)
+            .in_set(OnUpdate(ApplicationState::Gameplay)),
     );
     behavior_schedule.add_systems(
         (apply_system_buffers,)
             .in_set(UpdateSet::FlushBehavior)
-            .after(UpdateSet::ManageBehavior),
+            .after(UpdateSet::ManageBehavior)
+            .in_set(OnUpdate(ApplicationState::Gameplay)),
     );
     behavior_schedule.add_systems(
         (
@@ -37,12 +40,14 @@ pub(crate) fn behavior_schedule() -> Schedule {
             update_damaged_items,
         )
             .in_set(UpdateSet::ApplyEffects)
-            .after(UpdateSet::FlushBehavior),
+            .after(UpdateSet::FlushBehavior)
+            .in_set(OnUpdate(ApplicationState::Gameplay)),
     );
     behavior_schedule.add_systems(
         (apply_system_buffers,)
             .in_set(UpdateSet::FlushEffects)
-            .after(UpdateSet::ApplyEffects),
+            .after(UpdateSet::ApplyEffects)
+            .in_set(OnUpdate(ApplicationState::Gameplay)),
     );
     behavior_schedule
 }
