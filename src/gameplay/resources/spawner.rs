@@ -339,22 +339,22 @@ impl<'w, 's> TileSpawner<'w, 's> {
             Ok(possible_map) => possible_map,
             Err(err) => {
                 eprintln!("{err}");
-                possible_message = Some(Message::error(format!(
-                    "Failed loading {subzone_level:?}"
-                )));
+                possible_message =
+                    Some(Message::error(format!("Failed loading {subzone_level:?}")));
                 None
             }
         };
 
         let object_id;
         let fallback;
-        let submap = possible_map
-            .as_ref()
-            .map_or({
+        let submap = possible_map.as_ref().map_or(
+            {
                 object_id = self.zone_level_ids.get(ZoneLevel::from(subzone_level));
                 fallback = Submap::fallback(subzone_level, object_id);
                 &fallback
-            }, |map| map.0.iter().nth(subzone_level.index()).unwrap());
+            },
+            |map| map.0.iter().nth(subzone_level.index()).unwrap(),
+        );
 
         assert_eq!(
             submap.coordinates,

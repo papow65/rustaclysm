@@ -1,9 +1,11 @@
 use crate::prelude::*;
+use base64::{engine::general_purpose::STANDARD as base64, Engine};
 use bevy::{
     app::AppExit,
     input::{keyboard::KeyboardInput, ButtonState},
     prelude::*,
 };
+use std::str::from_utf8;
 
 const FULL_WIDTH: f32 = 720.0;
 const SPACING: f32 = 20.0;
@@ -208,6 +210,7 @@ pub(crate) fn update_sav_files(
                                         style: Style {
                                             size: Size::width(Val::Px(400.0)),
                                             align_items: AlignItems::Center,
+                                            justify_content: JustifyContent::Center,
                                             margin: UiRect {
                                                 bottom: Val::Px(SPACING),
                                                 ..UiRect::default()
@@ -225,8 +228,25 @@ pub(crate) fn update_sav_files(
                                     })
                                     .insert(LoadButton { path: path.clone() })
                                     .with_children(|parent| {
+                                        let world = path.parent().expect("World required");
+                                        let encoded_character = path
+                                            .file_name()
+                                            .expect("Filename required")
+                                            .to_str()
+                                            .expect("Valid utf-8 filename required")
+                                            .strip_prefix('#')
+                                            .expect("Expected # prefix")
+                                            .strip_suffix(".sav")
+                                            .expect("Expected .sav suffix");
+                                        eprintln!("{encoded_character:?}");
+                                        let decoded_character = base64
+                                            .decode(encoded_character)
+                                            .expect("Valid base64 required");
+                                        let character = from_utf8(&decoded_character)
+                                            .expect("Valid utf8 required");
+
                                         parent.spawn(TextBundle::from_section(
-                                            format!("Load {}", path.display()),
+                                            format!("Load {} in {}", character, world.display()),
                                             TextStyle {
                                                 font: font(&asset_server),
                                                 font_size: 20.0,

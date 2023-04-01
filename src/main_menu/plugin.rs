@@ -10,6 +10,7 @@ impl Plugin for MainMenuPlugin {
         // Main menu startup
         app.add_systems(
             (spawn_main_menu, apply_system_buffers, update_sav_files)
+                .chain()
                 .in_schedule(OnEnter(ApplicationState::MainMenu)),
         );
 
