@@ -36,31 +36,33 @@ pub(crate) fn spawn_main_menu(mut commands: Commands, asset_server: Res<AssetSer
         })
         .with_children(|parent| {
             // Title
-            parent
-                .spawn(NodeBundle {
-                    style: Style {
-                        size: Size::width(Val::Px(FULL_WIDTH)),
-                        align_items: AlignItems::Center,
-                        justify_content: JustifyContent::Center,
-                        margin: UiRect {
-                            bottom: Val::Px(SPACING),
-                            ..UiRect::default()
-                        },
-                        ..default()
+            parent.spawn(TextBundle::from_section(
+                "Rustaclysm",
+                TextStyle {
+                    font: font(&asset_server),
+                    font_size: 120.0,
+                    color: TEXT_FOREGROUND,
+                },
+            ));
+
+            // Tagline
+            parent.spawn(
+                TextBundle::from_section(
+                    "A 3D reimplementation of Cataclysm: Dark Days Ahead",
+                    TextStyle {
+                        font: font(&asset_server),
+                        font_size: 22.0,
+                        color: TEXT_FOREGROUND,
                     },
-                    //background_color: NORMAL_BACKGROUND.into(),
+                )
+                .with_style(Style {
+                    margin: UiRect {
+                        bottom: Val::Px(2.0 * SPACING),
+                        ..UiRect::default()
+                    },
                     ..default()
-                })
-                .with_children(|parent| {
-                    parent.spawn(TextBundle::from_section(
-                        "Rustaclysm",
-                        TextStyle {
-                            font: font(&asset_server),
-                            font_size: 120.0,
-                            color: TEXT_FOREGROUND,
-                        },
-                    ));
-                });
+                }),
+            );
 
             // Load buttons
             parent
@@ -77,8 +79,6 @@ pub(crate) fn spawn_main_menu(mut commands: Commands, asset_server: Res<AssetSer
                     ..default()
                 })
                 .insert(LoadButtonArea);
-
-            // Spacing here is handled by the children of LoadButtonArea
 
             // Notification area
             parent
