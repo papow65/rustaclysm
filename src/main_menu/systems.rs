@@ -32,9 +32,10 @@ pub(crate) fn spawn_main_menu(mut commands: Commands, asset_server: Res<AssetSer
     let background_image = asset_server.load(Paths::backgrounds_path().join(BACKGROUND_NAME));
     commands
         .spawn(SpriteBundle {
-            texture: background_image.into(),
+            texture: background_image,
             ..Default::default()
-        }).insert(Background);
+        })
+        .insert(Background);
 
     commands
         .spawn(NodeBundle {
@@ -164,13 +165,18 @@ pub(crate) fn update_sav_files(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut last_error: Local<Option<LoadError>>,
-    mut load_button_areas: Query<(Entity, &mut Style), (With<LoadButtonArea>, Without<MessageWrapper>)>,
+    mut load_button_areas: Query<
+        (Entity, &mut Style),
+        (With<LoadButtonArea>, Without<MessageWrapper>),
+    >,
     mut message_wrappers: Query<&mut Style, (With<MessageWrapper>, Without<LoadButtonArea>)>,
     mut message_fields: Query<&mut Text, With<MessageField>>,
 ) {
     if let Ok(mut message_wrapper_style) = message_wrappers.get_single_mut() {
         if let Ok(mut message_text) = message_fields.get_single_mut() {
-            if let Ok((load_button_area, mut load_button_area_style)) = load_button_areas.get_single_mut() {
+            if let Ok((load_button_area, mut load_button_area_style)) =
+                load_button_areas.get_single_mut()
+            {
                 match Paths::list() {
                     Ok(list) => {
                         *last_error = None;
@@ -257,14 +263,14 @@ pub(crate) fn manage_main_menu_button_input(
     mut next_state: ResMut<NextState<ApplicationState>>,
     mut app_exit_events: ResMut<Events<AppExit>>,
     mut interaction_query: Query<
-    (
-        &Interaction,
-     &mut BackgroundColor,
-     Option<&LoadButton>,
-     Option<&QuitButton>,
-    ),
-    (Changed<Interaction>, With<Button>),
-                                            >,
+        (
+            &Interaction,
+            &mut BackgroundColor,
+            Option<&LoadButton>,
+            Option<&QuitButton>,
+        ),
+        (Changed<Interaction>, With<Button>),
+    >,
 ) {
     for (interaction, mut color, load_button, quit_button) in &mut interaction_query {
         match (*interaction, load_button, quit_button.is_some()) {
@@ -310,18 +316,19 @@ pub(crate) fn manage_main_menu_keyboard_input(
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn resize_background(
     cameras: Query<&Camera>,
-    mut backgrounds: Query<&mut Transform, With<Background>>
+    mut backgrounds: Query<&mut Transform, With<Background>>,
 ) {
     //for _ in resize_events.iter() {
-        for camera in cameras.iter() {
-            if let Some(camera_size) = &camera.physical_target_size() {
-                let scale = (camera_size.x as f32 / BACKGROUND_WIDTH).max(camera_size.y as f32 / BACKGROUND_HEIGHT);
+    for camera in cameras.iter() {
+        if let Some(camera_size) = &camera.physical_target_size() {
+            let scale = (camera_size.x as f32 / BACKGROUND_WIDTH)
+                .max(camera_size.y as f32 / BACKGROUND_HEIGHT);
 
-                for mut background in backgrounds.iter_mut() {
-                    *background = Transform::from_scale(Vec3::new(scale, scale, 1.0));
-                }
+            for mut background in backgrounds.iter_mut() {
+                *background = Transform::from_scale(Vec3::new(scale, scale, 1.0));
             }
         }
+    }
     //}
 }
 
