@@ -99,13 +99,12 @@ impl Paths {
             .collect::<Vec<_>>();
 
         if worlds.is_empty() {
-            Err(LoadError::new(vec![
+            Err(LoadError::new(
                 format!(
-                    "No Cataclysm: DDA worlds found to load under {}",
+                    "No Cataclysm: DDA worlds found to load under {}\nCreate a new world using Cataclysm: DDA to continue.",
                     Self::save_path().display()
-                ),
-                String::from("Create a new world using Cataclysm: DDA to continue."),
-            ]))
+                )
+            ))
         } else {
             let savs_pattern = worlds_pattern.join("#*.sav");
             let pattern = savs_pattern.to_str().unwrap();
@@ -120,13 +119,12 @@ impl Paths {
                 .collect::<Vec<_>>();
 
             if savs.is_empty() {
-                Err(LoadError::new(vec![
+                Err(LoadError::new(
                     format!(
-                        "No Cataclysm: DDA saves found to load in any world directory under {}",
+                        "No Cataclysm: DDA saves found to load in any world directory under {}\nCreate a new save file using Cataclysm: DDA to continue.",
                         Self::save_path().display()
-                    ),
-                    String::from("Create a new save file using Cataclysm: DDA to continue."),
-                ]))
+                    )
+                ))
             } else {
                 Ok(savs)
             }
@@ -135,18 +133,16 @@ impl Paths {
 
     fn check_dirs() -> Result<(), LoadError> {
         if !Self::asset_path().is_dir() {
-            return Err(LoadError::new(vec![
-                format!("Directory '{}' not found.", Self::asset_path().display()),
-                String::from("Please run this in the directory containing the 'assets' directory."),
-            ]));
+            return Err(LoadError::new(
+                format!("Directory '{}' not found.\nPlease run this in the directory containing the 'assets' directory.", Self::asset_path().display())
+            ));
         }
 
         for asset_subdir in vec![Self::data_path(), Self::gfx_path(), Self::save_path()] {
             if !asset_subdir.is_dir() {
-                return Err(LoadError::new(vec![
-                    format!("Directory '{}/' not found.", asset_subdir.display()),
-                        format!("Please make sure the '{}/' directory contains a copy of (or a symlink to) Cataclysm-DDA's '{}/' directory.", Self::asset_path().display(), asset_subdir.file_name().unwrap().to_str().unwrap())
-                ]));
+                return Err(LoadError::new(
+                    format!("Directory '{}/' not found.\nPlease make sure the '{}/' directory contains a copy of (or a symlink to) Cataclysm-DDA's '{}/' directory.", asset_subdir.display(), Self::asset_path().display(), asset_subdir.file_name().unwrap().to_str().unwrap())
+                ));
             }
         }
 
