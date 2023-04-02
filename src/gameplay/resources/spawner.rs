@@ -160,8 +160,10 @@ impl<'w, 's> TileSpawner<'w, 's> {
         let (volume, mass) = match &item.corpse {
             Some(corpse_id) if corpse_id != &ObjectId::new("mon_null") => {
                 println!("{:?}", &corpse_id);
-                let monster_info = self.infos.character(corpse_id).unwrap();
-                (monster_info.volume, monster_info.mass)
+                match self.infos.character(corpse_id) {
+                    Some(monster_info) => (monster_info.volume, monster_info.mass),
+                    None => (item_info.volume, item_info.mass),
+                }
             }
             _ => (item_info.volume, item_info.mass),
         };
