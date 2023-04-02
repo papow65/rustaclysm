@@ -2,6 +2,9 @@ use bevy::prelude::Component;
 use std::path::PathBuf;
 
 #[derive(Component)]
+pub(crate) struct Background;
+
+#[derive(Component)]
 pub(crate) struct LoadButtonArea;
 
 #[derive(Component, Debug)]

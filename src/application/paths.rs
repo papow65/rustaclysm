@@ -39,6 +39,10 @@ impl Paths {
         Path::new("assets")
     }
 
+    pub(crate) fn backgrounds_path() -> PathBuf {
+        Self::asset_path().join("backgrounds")
+    }
+
     pub(crate) fn data_path() -> PathBuf {
         Self::asset_path().join("data")
     }

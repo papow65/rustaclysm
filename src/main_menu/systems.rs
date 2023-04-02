@@ -10,6 +10,10 @@ use std::str::from_utf8;
 const FULL_WIDTH: f32 = 720.0;
 const SPACING: f32 = 20.0;
 
+const BACKGROUND_WIDTH: f32 = 1552.0;
+const BACKGROUND_HEIGHT: f32 = 1009.0;
+const BACKGROUND_NAME: &str = "on_the_run.png";
+
 const LOAD_FOREGROUND: Color = Color::rgb(0.35, 0.75, 0.35);
 const QUIT_FOREGROUND: Color = Color::rgb(0.75, 0.35, 0.35);
 const TEXT_FOREGROUND: Color = Color::rgb(1.0, 1.0, 1.0);
@@ -18,12 +22,19 @@ const NORMAL_BACKGROUND: Color = Color::rgb(0.15, 0.15, 0.15);
 const HOVERED_BACKGROUND: Color = Color::rgb(0.25, 0.25, 0.25);
 
 fn font(asset_server: &AssetServer) -> Handle<Font> {
-    asset_server.load("assets/fonts/FiraMono-Medium.otf")
+    asset_server.load(Paths::fonts_path().join("FiraMono-Medium.otf"))
 }
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn spawn_main_menu(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn(Camera2dBundle::default());
+
+    let background_image = asset_server.load(Paths::backgrounds_path().join(BACKGROUND_NAME));
+    commands
+        .spawn(SpriteBundle {
+            texture: background_image.into(),
+            ..Default::default()
+        }).insert(Background);
 
     commands
         .spawn(NodeBundle {
@@ -149,55 +160,21 @@ pub(crate) fn spawn_main_menu(mut commands: Commands, asset_server: Res<AssetSer
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn manage_main_menu_button_input(
-    mut commands: Commands,
-    mut next_state: ResMut<NextState<ApplicationState>>,
-    mut app_exit_events: ResMut<Events<AppExit>>,
-    mut interaction_query: Query<
-        (
-            &Interaction,
-            &mut BackgroundColor,
-            Option<&LoadButton>,
-            Option<&QuitButton>,
-        ),
-        (Changed<Interaction>, With<Button>),
-    >,
-) {
-    for (interaction, mut color, load_button, quit_button) in &mut interaction_query {
-        match (*interaction, load_button, quit_button.is_some()) {
-            (Interaction::Clicked, Some(load_button), false) => {
-                commands.insert_resource(Paths::new(&load_button.path));
-                next_state.set(ApplicationState::Gameplay);
-            }
-            (Interaction::Clicked, None, true) => app_exit_events.send(AppExit),
-            (Interaction::Clicked, play, quit) => {
-                panic!("{play:?} {quit:?}");
-            }
-            (Interaction::Hovered, ..) => {
-                *color = HOVERED_BACKGROUND.into();
-            }
-            (Interaction::None, ..) => {
-                *color = NORMAL_BACKGROUND.into();
-            }
-        }
-    }
-}
-
-#[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_sav_files(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut last_error: Local<Option<LoadError>>,
-    load_button_areas: Query<Entity, With<LoadButtonArea>>,
-    mut message_wrappers: Query<&mut Style, With<MessageWrapper>>,
+    mut load_button_areas: Query<(Entity, &mut Style), (With<LoadButtonArea>, Without<MessageWrapper>)>,
+    mut message_wrappers: Query<&mut Style, (With<MessageWrapper>, Without<LoadButtonArea>)>,
     mut message_fields: Query<&mut Text, With<MessageField>>,
 ) {
     if let Ok(mut message_wrapper_style) = message_wrappers.get_single_mut() {
         if let Ok(mut message_text) = message_fields.get_single_mut() {
-            if let Ok(load_button_area) = load_button_areas.get_single() {
+            if let Ok((load_button_area, mut load_button_area_style)) = load_button_areas.get_single_mut() {
                 match Paths::list() {
                     Ok(list) => {
                         *last_error = None;
+                        load_button_area_style.display = Display::Flex;
                         message_wrapper_style.display = Display::None;
 
                         commands.entity(load_button_area).despawn_descendants();
@@ -238,7 +215,6 @@ pub(crate) fn update_sav_files(
                                             .expect("Expected # prefix")
                                             .strip_suffix(".sav")
                                             .expect("Expected .sav suffix");
-                                        eprintln!("{encoded_character:?}");
                                         let decoded_character = base64
                                             .decode(encoded_character)
                                             .expect("Valid base64 required");
@@ -263,14 +239,48 @@ pub(crate) fn update_sav_files(
                             *last_error = Some(err.clone());
                         }
 
-                        if let Ok(load_button_area) = load_button_areas.get_single() {
-                            commands.entity(load_button_area).despawn_descendants();
-                        }
+                        commands.entity(load_button_area).despawn_descendants();
 
+                        load_button_area_style.display = Display::None;
                         message_wrapper_style.display = Display::Flex;
                         message_text.sections[0].value = err.to_string();
                     }
                 }
+            }
+        }
+    }
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub(crate) fn manage_main_menu_button_input(
+    mut commands: Commands,
+    mut next_state: ResMut<NextState<ApplicationState>>,
+    mut app_exit_events: ResMut<Events<AppExit>>,
+    mut interaction_query: Query<
+    (
+        &Interaction,
+     &mut BackgroundColor,
+     Option<&LoadButton>,
+     Option<&QuitButton>,
+    ),
+    (Changed<Interaction>, With<Button>),
+                                            >,
+) {
+    for (interaction, mut color, load_button, quit_button) in &mut interaction_query {
+        match (*interaction, load_button, quit_button.is_some()) {
+            (Interaction::Clicked, Some(load_button), false) => {
+                commands.insert_resource(Paths::new(&load_button.path));
+                next_state.set(ApplicationState::Gameplay);
+            }
+            (Interaction::Clicked, None, true) => app_exit_events.send(AppExit),
+            (Interaction::Clicked, play, quit) => {
+                panic!("{play:?} {quit:?}");
+            }
+            (Interaction::Hovered, ..) => {
+                *color = HOVERED_BACKGROUND.into();
+            }
+            (Interaction::None, ..) => {
+                *color = NORMAL_BACKGROUND.into();
             }
         }
     }
@@ -295,6 +305,24 @@ pub(crate) fn manage_main_menu_keyboard_input(
             _ => {}
         }
     }
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub(crate) fn resize_background(
+    cameras: Query<&Camera>,
+    mut backgrounds: Query<&mut Transform, With<Background>>
+) {
+    //for _ in resize_events.iter() {
+        for camera in cameras.iter() {
+            if let Some(camera_size) = &camera.physical_target_size() {
+                let scale = (camera_size.x as f32 / BACKGROUND_WIDTH).max(camera_size.y as f32 / BACKGROUND_HEIGHT);
+
+                for mut background in backgrounds.iter_mut() {
+                    *background = Transform::from_scale(Vec3::new(scale, scale, 1.0));
+                }
+            }
+        }
+    //}
 }
 
 #[allow(clippy::needless_pass_by_value)]
