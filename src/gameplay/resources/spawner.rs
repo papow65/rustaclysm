@@ -139,7 +139,13 @@ impl<'w, 's> TileSpawner<'w, 's> {
         Some(entity)
     }
 
-    fn spawn_item(&mut self, parent: Entity, pos: Pos, item: &CddaItem, amount: Amount) {
+    fn spawn_item(
+        &mut self,
+        parent: Entity,
+        pos: Pos,
+        item: &CddaItem,
+        amount: Amount,
+    ) -> Result<(), LoadError> {
         //println!("{:?} {:?} {:?} {:?}", &parent, pos, &id, &amount);
         let definition = &ObjectDefinition {
             category: ObjectCategory::Item,
@@ -153,8 +159,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
         .infos
         .item(&definition.id) else {
             self.commands.entity(entity).despawn_recursive();
-            println!("No info found for {:?}. Spawning skipped", definition.id);
-            return;
+            return Err(LoadError::new(format!("No info found for {:?}. Spawning skipped", definition.id)));
         };
 
         let (volume, mass) = match &item.corpse {
@@ -178,6 +183,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
                 volume: volume.unwrap_or_else(|| Volume::from(String::from("62499 ml"))),
                 mass: mass.unwrap_or_else(|| Mass::from(String::from("81499 g"))),
             });
+        Ok(())
     }
 
     fn spawn_furniture(&mut self, parent: Entity, pos: Pos, id: ObjectId) {
@@ -416,12 +422,14 @@ impl<'w, 's> TileSpawner<'w, 's> {
                         for repetition in repetitions {
                             let CddaAmount { obj: item, amount } = repetition.as_amount();
                             //dbg!(&item.typeid);
-                            self.spawn_item(
+                            if let Err(load_error) = self.spawn_item(
                                 subzone_level_entity,
                                 pos,
                                 item,
                                 Amount(item.charges.unwrap_or(1) * amount),
-                            );
+                            ) {
+                                eprintln!("{load_error}");
+                            }
                         }
                     }
 
