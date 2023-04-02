@@ -1,7 +1,9 @@
-mod data;
-mod save;
+mod info;
+mod plugin;
+mod tile;
+mod world;
 
-pub(crate) use self::{data::*, save::*};
+pub(crate) use self::{info::*, plugin::*, tile::*, world::*};
 
 use serde::Deserialize;
 

@@ -73,6 +73,7 @@
 #![allow(clippy::only_used_in_recursion)] // false positives
 
 mod application;
+mod cdda;
 mod gameplay;
 mod main_menu;
 mod prelude;
