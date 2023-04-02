@@ -242,10 +242,9 @@ impl Focus {
             Focus::Pos(focus_pos) => {
                 shown_pos.level <= focus_pos.level
                     || (elevation_visibility == ElevationVisibility::Shown
-                        && ((focus_pos.x
-                            - shown_pos.x
+                        && ((shown_pos.z - focus_pos.z
                             - i32::from((shown_pos.level - focus_pos.level).h))
-                            < (focus_pos.z - shown_pos.z).abs()))
+                            < (focus_pos.x - shown_pos.x).abs()))
             }
             Focus::ZoneLevel(zone_level) => {
                 let focus_level = zone_level.level;
