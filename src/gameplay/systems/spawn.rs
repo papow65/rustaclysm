@@ -336,6 +336,7 @@ pub(crate) fn handle_map_events(
                         tile_spawner.spawn_subzone(submap, subzone_level);
                     }
                 }
+                tile_spawner.maps.loading.retain(|h| h != handle);
             }
             AssetEvent::Modified { handle } => {
                 eprintln!("Map modified {map_asset_event:?} {handle:?}");

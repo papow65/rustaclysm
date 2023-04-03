@@ -25,7 +25,7 @@ pub(crate) struct TileCaches {
 
 #[derive(Default, Resource)]
 pub(crate) struct Maps {
-    persisted: Vec<Handle<Map>>,
+    pub(crate) loading: Vec<Handle<Map>>,
 }
 
 #[derive(SystemParam)]
@@ -35,7 +35,7 @@ pub(crate) struct TileSpawner<'w, 's> {
     mesh_assets: ResMut<'w, Assets<Mesh>>,
     asset_server: Res<'w, AssetServer>,
     loader: Res<'w, TileLoader>,
-    maps: ResMut<'w, Maps>,
+    pub(crate) maps: ResMut<'w, Maps>,
     caches: ResMut<'w, TileCaches>,
     location: ResMut<'w, Location>,
     pub(crate) zone_level_ids: ResMut<'w, ZoneLevelIds>,
@@ -354,7 +354,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
                 let submap = &map.0[subzone_level.index()];
                 self.spawn_subzone(submap, subzone_level);
             } else {
-                self.maps.persisted.push(self.asset_server.load(map_path.0));
+                self.maps.loading.push(self.asset_server.load(map_path.0));
                 // It will be spawned when it's fully loaded.
             }
         } else {
