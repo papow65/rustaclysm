@@ -49,7 +49,13 @@ impl AssetLoader for MapLoader {
         load_context: &'a mut LoadContext,
     ) -> BoxedFuture<'a, Result<(), bevy::asset::Error>> {
         Box::pin(async move {
-            let map = serde_json::from_slice::<Map>(bytes)?;
+            let map = serde_json::from_slice::<Map>(bytes).map_err(|e| {
+                eprintln!(
+                    "Map loading error: {:?} {e:?}",
+                    std::str::from_utf8(&bytes[0..40])
+                );
+                e
+            })?;
             load_context.set_default_asset(LoadedAsset::new(map));
             Ok(())
         })
@@ -150,38 +156,71 @@ pub(crate) struct Furniture {
     id: ObjectId,
 }
 
-#[allow(unused)]
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct CddaItem {
     pub(crate) typeid: ObjectId,
+
+    #[allow(unused)]
     snip_id: Option<String>,
+
     pub(crate) charges: Option<u32>,
+
+    #[allow(unused)]
     active: Option<bool>,
+
     pub(crate) corpse: Option<ObjectId>,
+
+    #[allow(unused)]
     name: Option<String>,
+    #[allow(unused)]
     owner: Option<String>,
+    #[allow(unused)]
     bday: Option<i64>,
+    #[allow(unused)]
     last_temp_check: Option<u64>,
+    #[allow(unused)]
     specific_energy: Option<Number>,
+    #[allow(unused)]
     temperature: Option<Number>,
+    #[allow(unused)]
     item_vars: Option<HashMap<String, String>>,
+    #[allow(unused)]
     item_tags: Option<Vec<String>>,
+    #[allow(unused)]
     contents: Option<CddaContainer>,
+    #[allow(unused)]
     components: Option<Vec<CddaItem>>,
+    #[allow(unused)]
     is_favorite: Option<bool>,
+    #[allow(unused)]
     relic_data: Option<serde_json::Value>,
+    #[allow(unused)]
     damaged: Option<i64>,
+    #[allow(unused)]
     current_phase: Option<u8>,
+    #[allow(unused)]
     faults: Option<Vec<String>>,
+    #[allow(unused)]
     rot: Option<i64>,
+    #[allow(unused)]
     curammo: Option<String>,
+    #[allow(unused)]
     item_counter: Option<u8>,
+    #[allow(unused)]
     variant: Option<String>,
+    #[allow(unused)]
     recipe_charges: Option<u8>,
+    #[allow(unused)]
     poison: Option<u8>,
+    #[allow(unused)]
     burnt: Option<serde_json::Value>,
+    #[allow(unused)]
     craft_data: Option<serde_json::Value>,
+    #[allow(unused)]
+    dropped_from: Option<String>,
+    #[allow(unused)]
+    degradation: Option<u32>,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -191,7 +230,7 @@ pub(crate) struct CddaContainer {
     contents: Vec<Pocket>,
 
     #[allow(unused)]
-    additional_pockets: Option<Vec<Pocket>>,
+    additional_pockets: Option<Vec<AdditionalPocket>>,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -211,6 +250,16 @@ pub(crate) struct Pocket {
 
     #[allow(unused)]
     favorite_settings: Option<serde_json::Value>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct AdditionalPocket {
+    #[allow(unused)]
+    pub(crate) typeid: ObjectId,
+
+    #[allow(unused)]
+    last_temp_check: Option<u64>,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -242,4 +291,15 @@ pub(crate) struct Spawn {
 pub(crate) enum Number {
     Int(i64),
     Text(String),
+}
+
+#[cfg(test)]
+mod container_tests {
+    use super::*;
+    #[test]
+    fn it_works() {
+        let json = include_str!("test_container.json");
+        let result = serde_json::from_str::<CddaContainer>(json);
+        assert!(result.is_ok(), "{result:?}");
+    }
 }

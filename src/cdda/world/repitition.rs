@@ -2,7 +2,7 @@ use crate::prelude::{
     Level, LevelOffset, ObjectId, Overzone, Pos, PosOffset, SubzoneLevel, ZoneLevel,
 };
 use bevy::utils::HashMap;
-use serde::de::Deserializer;
+use serde::de::{Deserializer, Error};
 use serde::Deserialize;
 use std::hash::Hash;
 
@@ -30,8 +30,7 @@ where
     }
 }
 
-#[derive(Debug, Deserialize)]
-#[serde(untagged)]
+#[derive(Debug)]
 pub(crate) enum Repetition<T> {
     Single(Single<T>),
     Multiple(CddaAmount<T>),
@@ -42,6 +41,26 @@ impl<T> Repetition<T> {
         match self {
             Self::Single(m) => &m.0,
             Self::Multiple(m) => m,
+        }
+    }
+}
+
+impl<'de, T> Deserialize<'de> for Repetition<T>
+where
+    T: serde::de::Deserialize<'de>,
+{
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = serde_json::Value::deserialize(deserializer)?;
+        match Single::deserialize(value.clone()) {
+            Ok(single) => Ok(Repetition::Single(single)),
+            Err(single_error) => match CddaAmount::deserialize(value) {
+                Ok(amount) => Ok(Repetition::Multiple(amount)),
+                Err(amount_error) => {
+                    eprintln!("{single_error:?}");
+                    eprintln!("{amount_error:?}");
+                    Err(amount_error).map_err(D::Error::custom)
+                }
+            },
         }
     }
 }

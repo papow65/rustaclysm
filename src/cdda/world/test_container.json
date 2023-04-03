@@ -1,0 +1,442 @@
+{
+  "contents": [
+    {
+      "pocket_type": 0,
+      "contents": [
+
+        {
+          "typeid": "legpouch_large",
+          "damaged": 267,
+          "last_temp_check": 0
+        },
+        {
+          "typeid": "molle_pack",
+          "damaged": 417,
+          "last_temp_check": 0,
+          "contents": {
+            "contents": [
+              {
+                "pocket_type": 0,
+                "contents": [
+                  {
+                    "typeid": "camelbak",
+                    "last_temp_check": 0
+                  }
+                ],
+                "_sealed": false,
+                "allowed": true
+              },
+              {
+                "pocket_type": 0,
+                "contents": [],
+                "_sealed": false,
+                "allowed": true
+              },
+              {
+                "pocket_type": 0,
+                "contents": [
+                  {
+                    "typeid": "m4_carbine",
+                    "item_vars": {
+                      "dirt": "1097",
+                      "magazine_converted": "1"
+                    },
+                    "damaged": 3718,
+                    "last_temp_check": 0,
+                    "faults": [
+                      "fault_gun_damaged",
+                      "fault_gun_dirt"
+                    ],
+                    "variant": "m4a1",
+                    "contents": {
+                      "contents": [
+                        {
+                          "pocket_type": 2,
+                          "contents": [
+                            {
+                              "typeid": "stanag30",
+                              "bday": 3495346,
+                              "last_temp_check": 0,
+                              "contents": {
+                                "contents": [
+                                  {
+                                    "pocket_type": 1,
+                                    "contents": [
+                                      {
+                                        "typeid": "556",
+                                        "charges": 30,
+                                        "bday": 3495346,
+                                        "last_temp_check": 0
+                                      }
+                                    ],
+                                    "_sealed": false,
+                                    "allowed": true,
+                                    "favorite_settings": {
+                                      "priority": 0,
+                                      "item_whitelist": [],
+                                      "item_blacklist": [],
+                                      "category_whitelist": [],
+                                      "category_blacklist": [],
+                                      "collapsed": true,
+                                      "disabled": false,
+                                      "unload": true
+                                    }
+                                  },
+                                  {
+                                    "pocket_type": 7,
+                                    "contents": [],
+                                    "_sealed": false,
+                                    "allowed": true
+                                  }
+                                ],
+                                "additional_pockets": []
+                              }
+                            }
+                          ],
+                          "_sealed": false,
+                          "allowed": true,
+                          "favorite_settings": {
+                            "priority": 0,
+                            "item_whitelist": [],
+                            "item_blacklist": [],
+                            "category_whitelist": [],
+                            "category_blacklist": [],
+                            "collapsed": true,
+                            "disabled": false,
+                            "unload": true
+                          }
+                        },
+                        {
+                          "pocket_type": 3,
+                          "contents": [
+                            {
+                              "typeid": "knife_combat",
+                              "item_vars": {
+                                "magazine_converted": "1"
+                              },
+                              "last_temp_check": 0
+                            }
+                          ],
+                          "_sealed": false,
+                          "allowed": true
+                        },
+                        {
+                          "pocket_type": 7,
+                          "contents": [],
+                          "_sealed": false,
+                          "allowed": true
+                        }
+                      ],
+                      "additional_pockets": []
+                    }
+                  }
+                ],
+                "_sealed": false,
+                "allowed": true
+              },
+              {
+                "pocket_type": 0,
+                "contents": [],
+                "_sealed": false,
+                "allowed": true
+              },
+              {
+                "pocket_type": 0,
+                "contents": [],
+                "_sealed": false,
+                "allowed": true
+              },
+              {
+                "pocket_type": 0,
+                "contents": [],
+                "_sealed": false,
+                "allowed": true
+              },
+              {
+                "pocket_type": 0,
+                "contents": [
+                  {
+                    "typeid": "wrapper",
+                    "last_temp_check": 0,
+                    "contents": {
+                      "contents": [
+                        {
+                          "pocket_type": 0,
+                          "contents": [
+                            {
+                              "typeid": "chocolate",
+                              "charges": 1,
+                              "active": true,
+                              "rot": 13997,
+                              "last_temp_check": 3511599,
+                              "specific_energy": "820.940369",
+                              "temperature": "285.569061"
+                            }
+                          ],
+                          "_sealed": false,
+                          "allowed": true
+                        },
+                        {
+                          "pocket_type": 7,
+                          "contents": [],
+                          "_sealed": false,
+                          "allowed": true
+                        }
+                      ],
+                      "additional_pockets": []
+                    }
+                  }
+                ],
+                "_sealed": false,
+                "allowed": true
+              },
+              {
+                "pocket_type": 0,
+                "contents": [],
+                "_sealed": false,
+                "allowed": true
+              },
+              {
+                "pocket_type": 0,
+                "contents": [],
+                "_sealed": false,
+                "allowed": true
+              },
+              {
+                "pocket_type": 7,
+                "contents": [],
+                "_sealed": false,
+                "allowed": true
+              }
+            ],
+            "additional_pockets": [
+              {
+                "typeid": "gas_mask_pouch",
+                "last_temp_check": 0
+              },
+              {
+                "typeid": "chestpouch",
+                "last_temp_check": 0
+              },
+              {
+                "typeid": "chestpouch",
+                "last_temp_check": 0
+              }
+            ]
+          }
+        },
+        {
+          "typeid": "ballistic_vest_esapi",
+          "damaged": 2062,
+          "last_temp_check": 0,
+          "variant": "us_ballistic_vest",
+          "contents": {
+            "contents": [
+              {
+                "pocket_type": 0,
+                "contents": [
+                  {
+                    "typeid": "esapi_plate",
+                    "last_temp_check": 0
+                  }
+                ],
+                "_sealed": false,
+                "allowed": true
+              },
+              {
+                "pocket_type": 0,
+                "contents": [
+                  {
+                    "typeid": "esapi_plate",
+                    "last_temp_check": 0
+                  }
+                ],
+                "_sealed": false,
+                "allowed": true
+              },
+              {
+                "pocket_type": 0,
+                "contents": [
+                  {
+                    "typeid": "destroyed_medium_ceramic_plate",
+                    "last_temp_check": 0
+                  }
+                ],
+                "_sealed": false,
+                "allowed": true
+              },
+              {
+                "pocket_type": 0,
+                "contents": [
+                  {
+                    "typeid": "esbi_plate",
+                    "last_temp_check": 0
+                  }
+                ],
+                "_sealed": false,
+                "allowed": true
+              },
+              {
+                "pocket_type": 0,
+                "contents": [],
+                "_sealed": false,
+                "allowed": true
+              },
+              {
+                "pocket_type": 0,
+                "contents": [],
+                "_sealed": false,
+                "allowed": true
+              },
+              {
+                "pocket_type": 0,
+                "contents": [],
+                "_sealed": false,
+                "allowed": true
+              },
+              {
+                "pocket_type": 0,
+                "contents": [],
+                "_sealed": false,
+                "allowed": true
+              },
+              {
+                "pocket_type": 7,
+                "contents": [],
+                "_sealed": false,
+                "allowed": true
+              }
+            ],
+            "additional_pockets": [
+              {
+                "typeid": "chestpouch",
+                "last_temp_check": 0
+              },
+              {
+                "typeid": "chestpouch",
+                "last_temp_check": 0
+              },
+              {
+                "typeid": "tactical_grenade_pouch",
+                "last_temp_check": 0
+              },
+              {
+                "typeid": "chestpouch",
+                "last_temp_check": 0
+              }
+            ]
+          }
+        },
+        {
+          "typeid": "gloves_tactical",
+          "damaged": 1648,
+          "last_temp_check": 0
+        },
+        {
+          "typeid": "knee_pads",
+          "damaged": 1021,
+          "last_temp_check": 0
+        },
+        {
+          "typeid": "sheath",
+          "last_temp_check": 0
+        },
+        {
+          "typeid": "webbing_belt",
+          "damaged": 2632,
+          "last_temp_check": 0
+        },
+        {
+          "typeid": "canteen",
+          "last_temp_check": 0,
+          "contents": {
+            "contents": [
+              {
+                "pocket_type": 0,
+                "contents": [
+                  {
+                    "typeid": "water_clean",
+                    "charges": 1,
+                    "active": true,
+                    "last_temp_check": 3511599,
+                    "specific_energy": "960.224915",
+                    "temperature": "285.434937"
+                  }
+                ],
+                "_sealed": false,
+                "allowed": true
+              },
+              {
+                "pocket_type": 7,
+                "contents": [],
+                "_sealed": false,
+                "allowed": true
+              }
+            ],
+            "additional_pockets": []
+          }
+        },
+        {
+          "typeid": "boots_combat",
+          "damaged": 3430,
+          "last_temp_check": 0,
+          "item_tags": [
+            "FIT"
+          ]
+        },
+        {
+          "typeid": "pants_army",
+          "snip_id": "apants_BDU",
+          "damaged": 654,
+          "last_temp_check": 0
+        },
+        {
+          "typeid": "boxer_briefs",
+          "damaged": 3140,
+          "last_temp_check": 0
+        },
+        {
+          "typeid": "nomex_socks",
+          "damaged": 1057,
+          "last_temp_check": 0
+        },
+        {
+          "typeid": "jacket_army_modern",
+          "damaged": 238,
+          "last_temp_check": 0,
+          "item_tags": [
+            "FIT"
+          ]
+        },
+        {
+          "typeid": "tshirt",
+          "damaged": 1204,
+          "last_temp_check": 0,
+          "variant": "generic_tshirt"
+        }
+      ],
+      "_sealed": false,
+      "allowed": true
+    },
+    {
+      "pocket_type": 4,
+      "contents": [
+        {
+          "typeid": "human_sample",
+          "bday": 3495346,
+          "dropped_from": "mutagen_group",
+          "last_temp_check": 0
+        }
+      ],
+      "_sealed": false,
+      "allowed": true
+    },
+    {
+      "pocket_type": 7,
+      "contents": [],
+      "_sealed": false,
+      "allowed": true
+    }
+  ],
+  "additional_pockets": []
+}
