@@ -23,6 +23,11 @@ pub(crate) struct TileCaches {
     cuboid_mesh_cache: HashMap<SpriteNumber, Handle<Mesh>>,
 }
 
+#[derive(Default, Resource)]
+pub(crate) struct Maps {
+    persisted: Vec<Handle<Map>>,
+}
+
 #[derive(SystemParam)]
 pub(crate) struct TileSpawner<'w, 's> {
     pub(crate) commands: Commands<'w, 's>,
@@ -30,6 +35,7 @@ pub(crate) struct TileSpawner<'w, 's> {
     mesh_assets: ResMut<'w, Assets<Mesh>>,
     asset_server: Res<'w, AssetServer>,
     loader: Res<'w, TileLoader>,
+    maps: ResMut<'w, Maps>,
     caches: ResMut<'w, TileCaches>,
     location: ResMut<'w, Location>,
     pub(crate) zone_level_ids: ResMut<'w, ZoneLevelIds>,
@@ -338,45 +344,27 @@ impl<'w, 's> TileSpawner<'w, 's> {
 
     pub(crate) fn spawn_expanded_subzone_level(
         &mut self,
+        map_assets: &Assets<Map>,
         subzone_level: SubzoneLevel,
-    ) -> Option<Message> {
+    ) {
         let map_path = MapPath::new(&self.paths.world_path(), ZoneLevel::from(subzone_level));
-
-        let mut possible_message = None;
-        let possible_map = match Option::<Map>::try_from(map_path) {
-            Ok(possible_map) => possible_map,
-            Err(err) => {
-                eprintln!("{err}");
-                possible_message =
-                    Some(Message::error(format!("Failed loading {subzone_level:?}")));
-                None
+        if map_path.0.exists() {
+            let map_handle = self.asset_server.load(map_path.0.as_path());
+            if let Some(map) = map_assets.get(&map_handle) {
+                let submap = &map.0[subzone_level.index()];
+                self.spawn_subzone(submap, subzone_level);
+            } else {
+                self.maps.persisted.push(self.asset_server.load(map_path.0));
+                // It will be spawned when it's fully loaded.
             }
-        };
-
-        let object_id;
-        let fallback;
-        let submap = possible_map.as_ref().map_or(
-            {
-                object_id = self.zone_level_ids.get(ZoneLevel::from(subzone_level));
-                fallback = Submap::fallback(subzone_level, object_id);
-                &fallback
-            },
-            |map| map.0.iter().nth(subzone_level.index()).unwrap(),
-        );
-
-        assert_eq!(
-            submap.coordinates,
-            subzone_level.coordinates(),
-            "{:?} {:?}",
-            submap.coordinates,
-            subzone_level.coordinates()
-        );
-        self.spawn_subzone(submap, subzone_level);
-
-        possible_message
+        } else {
+            let object_id = self.zone_level_ids.get(ZoneLevel::from(subzone_level));
+            let fallback = Submap::fallback(subzone_level, object_id);
+            self.spawn_subzone(&fallback, subzone_level);
+        }
     }
 
-    fn spawn_subzone(&mut self, submap: &Submap, subzone_level: SubzoneLevel) {
+    pub(crate) fn spawn_subzone(&mut self, submap: &Submap, subzone_level: SubzoneLevel) {
         //println!("{:?} started...", subzone_level);
         let subzone_level_entity = self
             .commands

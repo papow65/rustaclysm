@@ -8,6 +8,7 @@ const MAX_EXPAND_DISTANCE: i32 = 20;
 pub(crate) fn spawn_zones_for_camera(
     mut commands: Commands,
     mut tile_spawner: TileSpawner,
+    map_assets: Res<Assets<Map>>,
     mut previous_camera_global_transform: Local<GlobalTransform>,
     mut previous_expanded_region: Local<Region>,
     players: Query<(&Pos, &Player)>,
@@ -28,7 +29,7 @@ pub(crate) fn spawn_zones_for_camera(
         return;
     }
 
-    spawn_expanded_subzone_levels(&mut tile_spawner, &expanded_region);
+    spawn_expanded_subzone_levels(&mut tile_spawner, &map_assets, &expanded_region);
     despawn_expanded_subzone_levels(
         &mut commands,
         &mut tile_spawner,
@@ -128,16 +129,18 @@ fn visible_area(camera: &Camera, global_transform: &GlobalTransform) -> Vec<Subz
     subzone_levels
 }
 
-fn spawn_expanded_subzone_levels(tile_spawner: &mut TileSpawner, expanded_region: &Region) {
+fn spawn_expanded_subzone_levels(
+    tile_spawner: &mut TileSpawner,
+    map_assets: &Assets<Map>,
+    expanded_region: &Region,
+) {
     for subzone_level in expanded_region.subzone_levels() {
         let missing = tile_spawner
             .subzone_level_entities
             .get(subzone_level)
             .is_none();
         if missing {
-            if let Some(message) = tile_spawner.spawn_expanded_subzone_level(subzone_level) {
-                tile_spawner.commands.spawn(message);
-            }
+            tile_spawner.spawn_expanded_subzone_level(map_assets, subzone_level);
         }
     }
 }
@@ -306,4 +309,40 @@ pub(crate) fn toggle_doors(
     }
 
     log_if_slow("toggle_doors", start);
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub(crate) fn handle_map_events(
+    mut tile_spawner: TileSpawner,
+    mut map_asset_events: EventReader<AssetEvent<Map>>,
+    map_assets: Res<Assets<Map>>,
+) {
+    for map_asset_event in map_asset_events.iter() {
+        match map_asset_event {
+            AssetEvent::Created { handle } => {
+                let map = &map_assets.get(handle).expect("Map loaded");
+                for submap in &map.0 {
+                    let subzone_level = SubzoneLevel {
+                        x: submap.coordinates.0,
+                        level: Level::new(submap.coordinates.2),
+                        z: submap.coordinates.1,
+                    };
+                    if tile_spawner
+                        .subzone_level_entities
+                        .get(subzone_level)
+                        .is_none()
+                    {
+                        assert_eq!(submap.coordinates, subzone_level.coordinates());
+                        tile_spawner.spawn_subzone(submap, subzone_level);
+                    }
+                }
+            }
+            AssetEvent::Modified { handle } => {
+                eprintln!("Map modified {map_asset_event:?} {handle:?}");
+            }
+            AssetEvent::Removed { handle } => {
+                eprintln!("Map removed {map_asset_event:?} {handle:?}");
+            }
+        }
+    }
 }

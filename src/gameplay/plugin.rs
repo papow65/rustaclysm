@@ -58,6 +58,7 @@ impl Plugin for GameplayPlugin {
         );
         app.add_systems(
             (
+                handle_map_events,
                 update_log,
                 update_status_fps,
                 update_status_time,
@@ -76,7 +77,12 @@ impl Plugin for GameplayPlugin {
 
         // executed only at gameplay shutdown
         app.add_systems(
-            (remove_gameplay_resources, despawn_gameplay)
+            (
+                despawn_gameplay,
+                remove_gameplay_resources,
+                apply_system_buffers,
+                free_assets,
+            )
                 .in_schedule(OnExit(ApplicationState::Gameplay)),
         );
     }

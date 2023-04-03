@@ -31,12 +31,6 @@ pub(crate) fn run_application() {
                 }),
                 ..WindowPlugin::default()
             }),
-        /*.edit_schedule(bevy::prelude::CoreSchedule::Main, |schedule| {
-                 *            chedule.set_build_settings(bevy::ecs::*schedule::ScheduleBuildSettings {
-                 *                ambiguity_detection: bevy::ecs::schedule::LogLevel::Warn,
-                 *                ..bevy::ecs::schedule::ScheduleBuildSettings::default()
-        });
-        })*/
     );
 
     app.add_state::<ApplicationState>();

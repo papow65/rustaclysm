@@ -10,6 +10,7 @@ pub(crate) fn create_independent_resources(mut commands: Commands) {
     commands.insert_resource(ZoneLevelEntities::default());
     commands.insert_resource(InstructionQueue::default());
     commands.insert_resource(TileCaches::default());
+    commands.insert_resource(Maps::default());
     commands.insert_resource(VisualizationUpdate::Smart);
 }
 

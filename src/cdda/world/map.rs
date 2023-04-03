@@ -1,10 +1,13 @@
 use crate::prelude::{
-    At, AtVec, CddaAmount, FieldVec, FlatVec, Level, ObjectId, PathFor, Repetition,
-    RepetitionBlock, SubzoneLevel, WorldPath, ZoneLevel,
+    At, AtVec, CddaAmount, FieldVec, FlatVec, ObjectId, PathFor, Repetition, RepetitionBlock,
+    SubzoneLevel, WorldPath, ZoneLevel,
 };
-use bevy::utils::HashMap;
+use bevy::{
+    asset::{AssetLoader, BoxedFuture, LoadContext, LoadedAsset},
+    reflect::TypeUuid,
+    utils::HashMap,
+};
 use serde::Deserialize;
-use std::fs::read_to_string;
 
 pub(crate) type MapPath = PathFor<Map>;
 
@@ -31,18 +34,29 @@ impl MapPath {
 // Reference: https://github.com/CleverRaven/Cataclysm-DDA/blob/master/src/savegame_json.cpp
 
 /** Corresponds to a 'map' in CDDA. It defines the layout of a `ZoneLevel`. */
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, TypeUuid)]
 #[serde(deny_unknown_fields)]
+#[uuid = "0ba81e33-a7c0-4366-a061-c37b2b0af4fa"]
 pub(crate) struct Map(pub(crate) [Submap; 4]);
 
-impl TryFrom<MapPath> for Option<Map> {
-    type Error = serde_json::Error;
-    fn try_from(map_path: MapPath) -> Result<Option<Map>, Self::Error> {
-        read_to_string(map_path.0)
-            .ok()
-            .map_or(std::result::Result::Ok(Option::None), |s| {
-                serde_json::from_str::<Map>(s.as_str()).map(Some)
-            })
+#[derive(Default)]
+pub(crate) struct MapLoader;
+
+impl AssetLoader for MapLoader {
+    fn load<'a>(
+        &'a self,
+        bytes: &'a [u8],
+        load_context: &'a mut LoadContext,
+    ) -> BoxedFuture<'a, Result<(), bevy::asset::Error>> {
+        Box::pin(async move {
+            let map = serde_json::from_slice::<Map>(bytes)?;
+            load_context.set_default_asset(LoadedAsset::new(map));
+            Ok(())
+        })
+    }
+
+    fn extensions(&self) -> &[&str] {
+        &["map"]
     }
 }
 
@@ -52,7 +66,7 @@ pub(crate) struct Submap {
     #[allow(unused)]
     version: u64,
 
-    pub(crate) coordinates: (i32, i32, i32),
+    pub(crate) coordinates: (i32, i32, i8),
 
     #[allow(unused)]
     turn_last_touched: u64,
@@ -89,10 +103,6 @@ pub(crate) struct Submap {
 
 impl Submap {
     pub(crate) fn fallback(subzone_level: SubzoneLevel, zone_object_id: &ObjectId) -> Self {
-        if subzone_level.level != Level::ZERO {
-            eprintln!("Fallback submap for {zone_object_id:?} at {subzone_level:?}");
-        }
-
         Submap {
             version: 0,
             turn_last_touched: 0,

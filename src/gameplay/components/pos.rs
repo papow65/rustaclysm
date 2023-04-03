@@ -229,8 +229,8 @@ impl SubzoneLevel {
     }
 
     /** CDDA coordinates */
-    pub(crate) const fn coordinates(&self) -> (i32, i32, i32) {
-        (self.x, self.z, self.level.h as i32)
+    pub(crate) const fn coordinates(&self) -> (i32, i32, i8) {
+        (self.x, self.z, self.level.h)
     }
 
     pub(crate) const fn base_pos(&self) -> Pos {
