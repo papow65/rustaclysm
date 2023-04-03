@@ -49,114 +49,125 @@ pub(crate) fn spawn_main_menu(mut commands: Commands, asset_server: Res<AssetSer
             ..default()
         })
         .with_children(|parent| {
-            // Title
+            add_title(parent, &asset_server);
+            add_tagline(parent, &asset_server);
+            add_load_button_area(parent);
+            add_notification_area(parent, &asset_server);
+            add_quit_button(parent, &asset_server);
+        });
+}
+
+fn add_title(parent: &mut ChildBuilder, asset_server: &Res<AssetServer>) {
+    parent.spawn(TextBundle::from_section(
+        "Rustaclysm",
+        TextStyle {
+            font: font(asset_server),
+            font_size: 120.0,
+            color: TEXT_FOREGROUND,
+        },
+    ));
+}
+
+fn add_tagline(parent: &mut ChildBuilder, asset_server: &Res<AssetServer>) {
+    parent.spawn(
+        TextBundle::from_section(
+            "A 3D reimplementation of Cataclysm: Dark Days Ahead",
+            TextStyle {
+                font: font(asset_server),
+                font_size: 22.0,
+                color: TEXT_FOREGROUND,
+            },
+        )
+        .with_style(Style {
+            margin: UiRect {
+                bottom: Val::Px(2.0 * SPACING),
+                ..UiRect::default()
+            },
+            ..default()
+        }),
+    );
+}
+
+fn add_load_button_area(parent: &mut ChildBuilder) {
+    parent
+        .spawn(NodeBundle {
+            style: Style {
+                flex_direction: FlexDirection::Column,
+                size: Size::new(Val::Percent(100.0), Val::Px(400.0)),
+                align_items: AlignItems::Center,
+                flex_wrap: FlexWrap::Wrap,
+                align_content: AlignContent::Center,
+                gap: Size::width(Val::Px(SPACING)),
+                ..default()
+            },
+            ..default()
+        })
+        .insert(LoadButtonArea);
+}
+
+fn add_notification_area(parent: &mut ChildBuilder, asset_server: &Res<AssetServer>) {
+    parent
+        .spawn(NodeBundle {
+            style: Style {
+                size: Size::new(Val::Px(FULL_WIDTH), Val::Px(10.0 * SPACING)),
+                align_items: AlignItems::FlexStart,
+                justify_content: JustifyContent::FlexStart,
+                flex_direction: FlexDirection::Column,
+                padding: UiRect::all(Val::Px(SPACING)),
+                margin: UiRect {
+                    bottom: Val::Px(SPACING),
+                    ..UiRect::default()
+                },
+                ..default()
+            },
+            background_color: NORMAL_BACKGROUND.into(),
+            ..default()
+        })
+        .insert(MessageWrapper)
+        .with_children(|parent| {
+            parent
+                .spawn(TextBundle {
+                    text: Text::from_section(
+                        "",
+                        TextStyle {
+                            font: font(asset_server),
+                            font_size: 20.0,
+                            color: TEXT_FOREGROUND,
+                        },
+                    ),
+                    style: Style {
+                        size: Size::width(Val::Px(FULL_WIDTH - 2.0 * SPACING)),
+                        flex_wrap: FlexWrap::Wrap,
+                        ..Style::default()
+                    },
+                    ..TextBundle::default()
+                })
+                .insert(MessageField);
+        });
+}
+
+fn add_quit_button(parent: &mut ChildBuilder, asset_server: &AssetServer) {
+    parent
+        .spawn(ButtonBundle {
+            style: Style {
+                size: Size::new(Val::Px(200.0), Val::Px(70.0)),
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                ..default()
+            },
+            background_color: NORMAL_BACKGROUND.into(),
+            ..default()
+        })
+        .insert(QuitButton)
+        .with_children(|parent| {
             parent.spawn(TextBundle::from_section(
-                "Rustaclysm",
+                "Quit",
                 TextStyle {
-                    font: font(&asset_server),
-                    font_size: 120.0,
-                    color: TEXT_FOREGROUND,
+                    font: font(asset_server),
+                    font_size: 40.0,
+                    color: QUIT_FOREGROUND,
                 },
             ));
-
-            // Tagline
-            parent.spawn(
-                TextBundle::from_section(
-                    "A 3D reimplementation of Cataclysm: Dark Days Ahead",
-                    TextStyle {
-                        font: font(&asset_server),
-                        font_size: 22.0,
-                        color: TEXT_FOREGROUND,
-                    },
-                )
-                .with_style(Style {
-                    margin: UiRect {
-                        bottom: Val::Px(2.0 * SPACING),
-                        ..UiRect::default()
-                    },
-                    ..default()
-                }),
-            );
-
-            // Load buttons
-            parent
-                .spawn(NodeBundle {
-                    style: Style {
-                        flex_direction: FlexDirection::Column,
-                        size: Size::new(Val::Percent(100.0), Val::Px(400.0)),
-                        align_items: AlignItems::Center,
-                        flex_wrap: FlexWrap::Wrap,
-                        align_content: AlignContent::Center,
-                        gap: Size::width(Val::Px(SPACING)),
-                        ..default()
-                    },
-                    ..default()
-                })
-                .insert(LoadButtonArea);
-
-            // Notification area
-            parent
-                .spawn(NodeBundle {
-                    style: Style {
-                        size: Size::new(Val::Px(FULL_WIDTH), Val::Px(10.0 * SPACING)),
-                        align_items: AlignItems::FlexStart,
-                        justify_content: JustifyContent::FlexStart,
-                        flex_direction: FlexDirection::Column,
-                        padding: UiRect::all(Val::Px(SPACING)),
-                        margin: UiRect {
-                            bottom: Val::Px(SPACING),
-                            ..UiRect::default()
-                        },
-                        ..default()
-                    },
-                    background_color: NORMAL_BACKGROUND.into(),
-                    ..default()
-                })
-                .insert(MessageWrapper)
-                .with_children(|parent| {
-                    parent
-                        .spawn(TextBundle {
-                            text: Text::from_section(
-                                "",
-                                TextStyle {
-                                    font: font(&asset_server),
-                                    font_size: 20.0,
-                                    color: TEXT_FOREGROUND,
-                                },
-                            ),
-                            style: Style {
-                                size: Size::width(Val::Px(FULL_WIDTH - 2.0 * SPACING)),
-                                flex_wrap: FlexWrap::Wrap,
-                                ..Style::default()
-                            },
-                            ..TextBundle::default()
-                        })
-                        .insert(MessageField);
-                });
-
-            // Quit button
-            parent
-                .spawn(ButtonBundle {
-                    style: Style {
-                        size: Size::new(Val::Px(200.0), Val::Px(70.0)),
-                        justify_content: JustifyContent::Center,
-                        align_items: AlignItems::Center,
-                        ..default()
-                    },
-                    background_color: NORMAL_BACKGROUND.into(),
-                    ..default()
-                })
-                .insert(QuitButton)
-                .with_children(|parent| {
-                    parent.spawn(TextBundle::from_section(
-                        "Quit",
-                        TextStyle {
-                            font: font(&asset_server),
-                            font_size: 40.0,
-                            color: QUIT_FOREGROUND,
-                        },
-                    ));
-                });
         });
 }
 
