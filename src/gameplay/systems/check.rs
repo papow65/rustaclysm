@@ -123,8 +123,8 @@ pub(crate) fn check_delay(mut last_time: Local<StdInstant>) {
     let start = Instant::now();
 
     let delay = last_time.next();
-    if Duration::from_millis(20) < delay {
-        println!("Large delay: {delay:?}");
+    if Duration::from_millis(600) < delay {
+        eprintln!("Very large delay: {delay:?}");
     }
 
     log_if_slow("check_delay", start);
