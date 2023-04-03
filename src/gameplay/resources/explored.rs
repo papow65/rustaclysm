@@ -56,7 +56,11 @@ impl Explored {
     }
 
     pub(crate) fn mark_pos_seen(&mut self, pos: Pos) {
-        let zone_level = ZoneLevel::from(pos);
+        // Lower the zone level to the ground
+        let zone_level = ZoneLevel {
+            zone: Zone::from(pos),
+            level: pos.level.min(Level::ZERO),
+        };
 
         // Make sure the zone_level will not be overwritten later by loading a nearby zone_level.
         self.load_if_missing(zone_level);
