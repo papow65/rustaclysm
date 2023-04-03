@@ -1,7 +1,6 @@
 use crate::prelude::*;
 use bevy::{
     ecs::system::{Insert, SystemParam},
-    math::Quat,
     prelude::*,
     render::camera::{PerspectiveProjection, Projection::Perspective},
     utils::HashMap,
@@ -29,7 +28,7 @@ pub(crate) struct Maps {
 }
 
 #[derive(SystemParam)]
-pub(crate) struct TileSpawner<'w, 's> {
+pub(crate) struct Spawner<'w, 's> {
     pub(crate) commands: Commands<'w, 's>,
     material_assets: ResMut<'w, Assets<StandardMaterial>>,
     mesh_assets: ResMut<'w, Assets<Mesh>>,
@@ -47,7 +46,7 @@ pub(crate) struct TileSpawner<'w, 's> {
     sav: Res<'w, Sav>,
 }
 
-impl<'w, 's> TileSpawner<'w, 's> {
+impl<'w, 's> Spawner<'w, 's> {
     fn get_mesh(&mut self, model: &Model) -> Handle<Mesh> {
         match model.shape {
             ModelShape::Plane {
@@ -499,286 +498,6 @@ impl<'w, 's> TileSpawner<'w, 's> {
 
         self.zone_level_entities.add(zone_level, entity.id());
     }
-}
-
-#[derive(Resource)]
-pub(crate) struct CustomData {
-    glass: Appearance,
-    wood: Appearance,
-    whitish: Appearance,
-    wooden_wall: Appearance,
-    cube_mesh: Handle<Mesh>,
-    wall_transform: Transform,
-    window_pane_transform: Transform,
-    stair_transform: Transform,
-    rack_transform: Transform,
-    table_transform: Transform,
-}
-
-impl CustomData {
-    pub(crate) fn new(
-        material_assets: &mut Assets<StandardMaterial>,
-        mesh_assets: &mut Assets<Mesh>,
-        asset_server: &AssetServer,
-    ) -> Self {
-        Self {
-            glass: Appearance::new(material_assets, Color::rgba(0.8, 0.9, 1.0, 0.2)), // transparant blue
-            wood: Appearance::new(material_assets, Color::rgb(0.7, 0.6, 0.5)),
-            whitish: Appearance::new(material_assets, Color::rgb(0.95, 0.93, 0.88)),
-            wooden_wall: Appearance::new(
-                material_assets,
-                asset_server.load(Paths::tiles_path().join("wall.png")),
-            ),
-            cube_mesh: mesh_assets.add(Mesh::from(shape::Cube { size: 1.0 })),
-            wall_transform: Transform {
-                translation: Vec3::new(0.0, 0.495 * Millimeter::VERTICAL.f32(), 0.0),
-                scale: Vec3::new(
-                    Millimeter::ADJACENT.f32(),
-                    0.99 * Millimeter::VERTICAL.f32(),
-                    Millimeter::ADJACENT.f32(),
-                ),
-                ..Transform::default()
-            },
-            window_pane_transform: Transform {
-                translation: Vec3::new(0.0, 0.75, 0.0),
-                rotation: Quat::from_rotation_y(-std::f32::consts::FRAC_PI_2),
-                scale: Vec3::new(
-                    0.99 * Millimeter::ADJACENT.f32(),
-                    0.99 * Millimeter::VERTICAL.f32(),
-                    0.99 * Millimeter::ADJACENT.f32(),
-                ),
-            },
-            stair_transform: Transform {
-                rotation: Quat::from_rotation_x(-0.12 * std::f32::consts::PI),
-                scale: Vec3::new(0.8, 1.2 * Millimeter::VERTICAL.f32(), 0.2),
-                ..Transform::default()
-            },
-            rack_transform: Transform {
-                translation: Vec3::new(0.0, 0.45 * Millimeter::VERTICAL.f32(), 0.0),
-                scale: Vec3::new(
-                    0.90 * Millimeter::ADJACENT.f32(),
-                    0.90 * Millimeter::VERTICAL.f32(),
-                    0.90 * Millimeter::ADJACENT.f32(),
-                ),
-                ..default()
-            },
-            table_transform: Transform {
-                translation: Vec3::new(0.0, 0.375 * Millimeter::ADJACENT.f32(), 0.0),
-                scale: Vec3::new(
-                    Millimeter::ADJACENT.f32(),
-                    0.75 * Millimeter::ADJACENT.f32(),
-                    Millimeter::ADJACENT.f32(),
-                ),
-                ..Transform::default()
-            },
-        }
-    }
-}
-
-#[derive(SystemParam)]
-pub(crate) struct Spawner<'w, 's> {
-    tile_spawner: TileSpawner<'w, 's>,
-    custom: ResMut<'w, CustomData>,
-}
-
-impl<'w, 's> Spawner<'w, 's> {
-    pub(crate) fn spawn_stairs_down(&mut self, parent: Entity, pos: Pos) {
-        self.tile_spawner
-            .spawn_terrain(parent, pos, ObjectId::new("t_wood_stairs_down"));
-    }
-
-    pub(crate) fn spawn_roofing(&mut self, parent: Entity, pos: Pos) {
-        self.tile_spawner
-            .spawn_terrain(parent, pos, ObjectId::new("t_shingle_flat_roof"));
-    }
-
-    pub(crate) fn spawn_wall(&mut self, parent: Entity, pos: Pos) {
-        let tile = self
-            .tile_spawner
-            .commands
-            .spawn(SpatialBundle::default())
-            .insert(pos)
-            .insert(Integrity::new(1000))
-            .insert(Obstacle)
-            .insert(Opaque)
-            .insert(OpaqueFloor)
-            .insert(TextLabel::new("wall"))
-            .insert(LastSeen::Never)
-            .insert(Visibility::Hidden)
-            .with_children(|parent| {
-                parent
-                    .spawn(PbrBundle {
-                        mesh: self.custom.cube_mesh.clone(),
-                        transform: self.custom.wall_transform,
-                        ..PbrBundle::default()
-                    })
-                    .insert(self.custom.wooden_wall.clone());
-            })
-            .id();
-
-        self.tile_spawner.commands.entity(parent).add_child(tile);
-        self.tile_spawner.location.update(tile, Some(pos));
-    }
-
-    pub(crate) fn spawn_window(&mut self, parent: Entity, pos: Pos) {
-        let tile = self
-            .tile_spawner
-            .commands
-            .spawn(SpatialBundle::default())
-            .insert(pos)
-            .insert(Integrity::new(1))
-            .insert(Obstacle)
-            .insert(Hurdle(MoveCostMod(2)))
-            .insert(OpaqueFloor)
-            .insert(TextLabel::new("window"))
-            .insert(LastSeen::Never)
-            .insert(Visibility::Hidden)
-            .with_children(|parent| {
-                parent
-                    .spawn(PbrBundle {
-                        mesh: self.custom.cube_mesh.clone(),
-                        transform: Transform::from_translation(Vec3::new(0.0, 0.5, 0.0)),
-                        ..PbrBundle::default()
-                    })
-                    .insert(self.custom.wooden_wall.clone());
-
-                parent
-                    .spawn(PbrBundle {
-                        mesh: self.custom.cube_mesh.clone(),
-                        transform: self.custom.window_pane_transform,
-                        ..PbrBundle::default()
-                    })
-                    .insert(self.custom.glass.clone());
-            })
-            .id();
-
-        self.tile_spawner.commands.entity(parent).add_child(tile);
-        self.tile_spawner.location.update(tile, Some(pos));
-    }
-
-    pub(crate) fn spawn_stairs(&mut self, parent: Entity, pos: Pos) {
-        let tile = self
-            .tile_spawner
-            .commands
-            .spawn(SpatialBundle::default())
-            .insert(StairsUp)
-            .insert(pos)
-            .insert(Integrity::new(100))
-            .insert(Hurdle(MoveCostMod(1)))
-            .insert(TextLabel::new("stairs"))
-            .insert(LastSeen::Never)
-            .insert(Visibility::Hidden)
-            .with_children(|child_builder| {
-                child_builder
-                    .spawn(PbrBundle {
-                        mesh: self.custom.cube_mesh.clone(),
-                        transform: self.custom.stair_transform,
-                        ..PbrBundle::default()
-                    })
-                    .insert(self.custom.wood.clone());
-            })
-            .id();
-
-        self.tile_spawner.commands.entity(parent).add_child(tile);
-        self.tile_spawner.location.update(tile, Some(pos));
-    }
-
-    pub(crate) fn spawn_rack(&mut self, parent: Entity, pos: Pos) {
-        let tile = self
-            .tile_spawner
-            .commands
-            .spawn(SpatialBundle::default())
-            .insert(pos)
-            .insert(Integrity::new(40))
-            .insert(Obstacle)
-            .insert(Opaque)
-            .insert(TextLabel::new("rack"))
-            .insert(LastSeen::Never)
-            .insert(Visibility::Hidden)
-            .with_children(|parent| {
-                parent
-                    .spawn(PbrBundle {
-                        mesh: self.custom.cube_mesh.clone(),
-                        transform: self.custom.rack_transform,
-                        ..PbrBundle::default()
-                    })
-                    .insert(self.custom.wood.clone());
-            })
-            .id();
-
-        self.tile_spawner.commands.entity(parent).add_child(tile);
-        self.tile_spawner.location.update(tile, Some(pos));
-    }
-
-    pub(crate) fn spawn_table(&mut self, parent: Entity, pos: Pos) {
-        let tile = self
-            .tile_spawner
-            .commands
-            .spawn(SpatialBundle::default())
-            .insert(pos)
-            .insert(Integrity::new(30))
-            .insert(Hurdle(MoveCostMod(2)))
-            .insert(TextLabel::new("table"))
-            .insert(LastSeen::Never)
-            .insert(Visibility::Hidden)
-            .with_children(|parent| {
-                parent
-                    .spawn(PbrBundle {
-                        mesh: self.custom.cube_mesh.clone(),
-                        transform: self.custom.table_transform,
-                        ..PbrBundle::default()
-                    })
-                    .insert(self.custom.wood.clone());
-            })
-            .id();
-
-        self.tile_spawner.commands.entity(parent).add_child(tile);
-        self.tile_spawner.location.update(tile, Some(pos));
-    }
-
-    pub(crate) fn spawn_chair(&mut self, parent: Entity, pos: Pos) {
-        let scale = 0.45 * Millimeter::ADJACENT.f32();
-
-        let tile = self
-            .tile_spawner
-            .commands
-            .spawn(SpatialBundle::default())
-            .insert(pos)
-            .insert(Integrity::new(10))
-            .insert(Hurdle(MoveCostMod(3)))
-            .insert(TextLabel::new("chair"))
-            .insert(LastSeen::Never)
-            .insert(Visibility::Hidden)
-            .with_children(|child_builder| {
-                child_builder
-                    .spawn(PbrBundle {
-                        mesh: self.custom.cube_mesh.clone(),
-                        transform: Transform {
-                            translation: Vec3::new(0.0, scale / 2.0, 0.0),
-                            scale: Vec3::splat(scale),
-                            ..Transform::default()
-                        },
-                        ..PbrBundle::default()
-                    })
-                    .insert(self.custom.whitish.clone());
-
-                child_builder
-                    .spawn(PbrBundle {
-                        mesh: self.custom.cube_mesh.clone(),
-                        transform: Transform {
-                            translation: Vec3::new(0.0, 0.425, -0.23),
-                            scale: Vec3::new(scale, 0.85, 0.05),
-                            ..Transform::default()
-                        },
-                        ..PbrBundle::default()
-                    })
-                    .insert(self.custom.whitish.clone());
-            })
-            .id();
-
-        self.tile_spawner.commands.entity(parent).add_child(tile);
-        self.tile_spawner.location.update(tile, Some(pos));
-    }
 
     fn configure_player(&mut self, player_entity: Entity) {
         let cursor_definition = ObjectDefinition {
@@ -786,15 +505,13 @@ impl<'w, 's> Spawner<'w, 's> {
             id: ObjectId::new("cursor"),
         };
         let cursor_model = &mut self
-            .tile_spawner
             .loader
             .get_models(&cursor_definition, &vec![cursor_definition.id.clone()])[0];
-        let mut cursor_bundle = self.tile_spawner.get_pbr_bundle(cursor_model, false);
+        let mut cursor_bundle = self.get_pbr_bundle(cursor_model, false);
         cursor_bundle.transform.translation.y = 0.1;
         cursor_bundle.transform.scale = Vec3::new(1.1, 1.0, 1.1);
 
-        self.tile_spawner
-            .commands
+        self.commands
             .entity(player_entity)
             .insert(Player {
                 state: PlayerActionState::Normal,
@@ -838,7 +555,6 @@ impl<'w, 's> Spawner<'w, 's> {
         ));
         //dbg!(&light_transform);
         let light = self
-            .tile_spawner
             .commands
             .spawn(DirectionalLightBundle {
                 directional_light: DirectionalLight {
@@ -851,320 +567,11 @@ impl<'w, 's> Spawner<'w, 's> {
             })
             .id();
 
-        self.tile_spawner.commands.entity(parent).add_child(light);
-    }
-
-    pub(crate) fn spawn_floors(&mut self, parent: Entity, offset: PosOffset) {
-        for y in 1..=2 {
-            for x in 17..24 {
-                let z_range = match y {
-                    1 => 17..26,
-                    _ => 21..26,
-                };
-                for z in z_range {
-                    let pos = Pos::new(x, Level::new(y), z);
-                    match pos {
-                        Pos {
-                            x: 18,
-                            level: Level { h: 1 },
-                            z: 24,
-                        }
-                        | Pos {
-                            x: 18,
-                            level: Level { h: 2 },
-                            z: 22,
-                        } => {
-                            self.spawn_stairs_down(parent, pos.offset(offset).unwrap());
-                        }
-                        _ => {
-                            self.spawn_roofing(parent, pos.offset(offset).unwrap());
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    pub(crate) fn spawn_house(&mut self, parent: Entity, offset: PosOffset) {
-        self.spawn_wall(
-            parent,
-            Pos::new(17, Level::ZERO, 17).offset(offset).unwrap(),
-        );
-        self.spawn_wall(
-            parent,
-            Pos::new(17, Level::ZERO, 18).offset(offset).unwrap(),
-        );
-        self.spawn_wall(
-            parent,
-            Pos::new(17, Level::ZERO, 19).offset(offset).unwrap(),
-        );
-        self.spawn_wall(
-            parent,
-            Pos::new(17, Level::ZERO, 20).offset(offset).unwrap(),
-        );
-        // z 21: door
-        self.spawn_wall(
-            parent,
-            Pos::new(17, Level::ZERO, 22).offset(offset).unwrap(),
-        );
-        self.spawn_wall(
-            parent,
-            Pos::new(17, Level::ZERO, 23).offset(offset).unwrap(),
-        );
-        self.spawn_wall(
-            parent,
-            Pos::new(17, Level::ZERO, 24).offset(offset).unwrap(),
-        );
-        self.spawn_wall(
-            parent,
-            Pos::new(17, Level::ZERO, 25).offset(offset).unwrap(),
-        );
-        self.spawn_wall(
-            parent,
-            Pos::new(18, Level::ZERO, 25).offset(offset).unwrap(),
-        );
-        self.spawn_window(
-            parent,
-            Pos::new(19, Level::ZERO, 25).offset(offset).unwrap(),
-        );
-        self.spawn_wall(
-            parent,
-            Pos::new(20, Level::ZERO, 25).offset(offset).unwrap(),
-        );
-        self.spawn_wall(
-            parent,
-            Pos::new(21, Level::ZERO, 25).offset(offset).unwrap(),
-        );
-        // x 22: door
-        self.spawn_wall(
-            parent,
-            Pos::new(23, Level::ZERO, 25).offset(offset).unwrap(),
-        );
-        self.spawn_wall(
-            parent,
-            Pos::new(23, Level::ZERO, 24).offset(offset).unwrap(),
-        );
-        self.spawn_wall(
-            parent,
-            Pos::new(23, Level::ZERO, 23).offset(offset).unwrap(),
-        );
-        self.spawn_window(
-            parent,
-            Pos::new(23, Level::ZERO, 22).offset(offset).unwrap(),
-        );
-        self.spawn_window(
-            parent,
-            Pos::new(23, Level::ZERO, 21).offset(offset).unwrap(),
-        );
-        self.spawn_window(
-            parent,
-            Pos::new(23, Level::ZERO, 20).offset(offset).unwrap(),
-        );
-        self.spawn_wall(
-            parent,
-            Pos::new(23, Level::ZERO, 19).offset(offset).unwrap(),
-        );
-        self.spawn_wall(
-            parent,
-            Pos::new(23, Level::ZERO, 18).offset(offset).unwrap(),
-        );
-        self.spawn_wall(
-            parent,
-            Pos::new(23, Level::ZERO, 17).offset(offset).unwrap(),
-        );
-        self.spawn_wall(
-            parent,
-            Pos::new(22, Level::ZERO, 17).offset(offset).unwrap(),
-        );
-        self.spawn_wall(
-            parent,
-            Pos::new(21, Level::ZERO, 17).offset(offset).unwrap(),
-        );
-        self.spawn_window(
-            parent,
-            Pos::new(20, Level::ZERO, 17).offset(offset).unwrap(),
-        );
-        self.spawn_wall(
-            parent,
-            Pos::new(19, Level::ZERO, 17).offset(offset).unwrap(),
-        );
-        self.spawn_wall(
-            parent,
-            Pos::new(18, Level::ZERO, 17).offset(offset).unwrap(),
-        );
-
-        self.spawn_stairs(
-            parent,
-            Pos::new(18, Level::ZERO, 24).offset(offset).unwrap(),
-        );
-        self.spawn_rack(
-            parent,
-            Pos::new(18, Level::ZERO, 18).offset(offset).unwrap(),
-        );
-        self.spawn_rack(
-            parent,
-            Pos::new(20, Level::ZERO, 24).offset(offset).unwrap(),
-        );
-        self.spawn_chair(
-            parent,
-            Pos::new(19, Level::ZERO, 20).offset(offset).unwrap(),
-        );
-        self.spawn_table(
-            parent,
-            Pos::new(19, Level::ZERO, 21).offset(offset).unwrap(),
-        );
-        self.spawn_chair(
-            parent,
-            Pos::new(19, Level::ZERO, 22).offset(offset).unwrap(),
-        );
-        self.spawn_chair(
-            parent,
-            Pos::new(20, Level::ZERO, 20).offset(offset).unwrap(),
-        );
-        self.spawn_table(
-            parent,
-            Pos::new(20, Level::ZERO, 21).offset(offset).unwrap(),
-        );
-        self.spawn_chair(
-            parent,
-            Pos::new(20, Level::ZERO, 22).offset(offset).unwrap(),
-        );
-        self.spawn_table(
-            parent,
-            Pos::new(22, Level::ZERO, 22).offset(offset).unwrap(),
-        );
-        self.spawn_table(
-            parent,
-            Pos::new(22, Level::ZERO, 21).offset(offset).unwrap(),
-        );
-        self.spawn_table(
-            parent,
-            Pos::new(22, Level::ZERO, 20).offset(offset).unwrap(),
-        );
-        self.spawn_table(
-            parent,
-            Pos::new(22, Level::ZERO, 19).offset(offset).unwrap(),
-        );
-        self.spawn_table(
-            parent,
-            Pos::new(22, Level::ZERO, 18).offset(offset).unwrap(),
-        );
-        self.spawn_table(
-            parent,
-            Pos::new(21, Level::ZERO, 18).offset(offset).unwrap(),
-        );
-        self.spawn_table(
-            parent,
-            Pos::new(20, Level::ZERO, 18).offset(offset).unwrap(),
-        );
-
-        self.spawn_wall(
-            parent,
-            Pos::new(17, Level::new(1), 21).offset(offset).unwrap(),
-        );
-        self.spawn_wall(
-            parent,
-            Pos::new(17, Level::new(1), 22).offset(offset).unwrap(),
-        );
-        self.spawn_window(
-            parent,
-            Pos::new(17, Level::new(1), 23).offset(offset).unwrap(),
-        );
-        self.spawn_wall(
-            parent,
-            Pos::new(17, Level::new(1), 24).offset(offset).unwrap(),
-        );
-        self.spawn_wall(
-            parent,
-            Pos::new(17, Level::new(1), 25).offset(offset).unwrap(),
-        );
-        self.spawn_wall(
-            parent,
-            Pos::new(18, Level::new(1), 25).offset(offset).unwrap(),
-        );
-        self.spawn_window(
-            parent,
-            Pos::new(19, Level::new(1), 25).offset(offset).unwrap(),
-        );
-        self.spawn_window(
-            parent,
-            Pos::new(20, Level::new(1), 25).offset(offset).unwrap(),
-        );
-        self.spawn_window(
-            parent,
-            Pos::new(21, Level::new(1), 25).offset(offset).unwrap(),
-        );
-        self.spawn_wall(
-            parent,
-            Pos::new(22, Level::new(1), 25).offset(offset).unwrap(),
-        );
-        self.spawn_wall(
-            parent,
-            Pos::new(23, Level::new(1), 25).offset(offset).unwrap(),
-        );
-        self.spawn_wall(
-            parent,
-            Pos::new(23, Level::new(1), 24).offset(offset).unwrap(),
-        );
-        self.spawn_window(
-            parent,
-            Pos::new(23, Level::new(1), 23).offset(offset).unwrap(),
-        );
-        self.spawn_wall(
-            parent,
-            Pos::new(23, Level::new(1), 22).offset(offset).unwrap(),
-        );
-        self.spawn_wall(
-            parent,
-            Pos::new(23, Level::new(1), 21).offset(offset).unwrap(),
-        );
-        self.spawn_wall(
-            parent,
-            Pos::new(22, Level::new(1), 21).offset(offset).unwrap(),
-        );
-        self.spawn_wall(
-            parent,
-            Pos::new(21, Level::new(1), 21).offset(offset).unwrap(),
-        );
-        // x 20: door
-        self.spawn_wall(
-            parent,
-            Pos::new(19, Level::new(1), 21).offset(offset).unwrap(),
-        );
-        self.spawn_wall(
-            parent,
-            Pos::new(18, Level::new(1), 21).offset(offset).unwrap(),
-        );
-
-        self.spawn_stairs(
-            parent,
-            Pos::new(18, Level::new(1), 22).offset(offset).unwrap(),
-        );
-        self.spawn_table(
-            parent,
-            Pos::new(21, Level::new(1), 24).offset(offset).unwrap(),
-        );
-        self.spawn_table(
-            parent,
-            Pos::new(22, Level::new(1), 24).offset(offset).unwrap(),
-        );
-        self.spawn_table(
-            parent,
-            Pos::new(22, Level::new(1), 23).offset(offset).unwrap(),
-        );
-        self.spawn_table(
-            parent,
-            Pos::new(22, Level::new(1), 22).offset(offset).unwrap(),
-        );
-        self.spawn_chair(
-            parent,
-            Pos::new(21, Level::new(1), 23).offset(offset).unwrap(),
-        );
+        self.commands.entity(parent).add_child(light);
     }
 
     pub(crate) fn spawn_characters(&mut self, parent: Entity, offset: PosOffset) {
         let player = self
-            .tile_spawner
             .spawn_character(
                 parent,
                 Pos::new(45, Level::ZERO, 56)
@@ -1179,46 +586,43 @@ impl<'w, 's> Spawner<'w, 's> {
                 ObjectId::new("human"),
             )
             .unwrap();
-        self.tile_spawner
-            .commands
+        self.commands
             .entity(player)
-            .insert(TextLabel::new(self.tile_spawner.sav.player.name.clone()));
+            .insert(TextLabel::new(self.sav.player.name.clone()));
         self.configure_player(player);
 
         let survivor = self
-            .tile_spawner
             .spawn_character(
                 parent,
                 Pos::new(10, Level::ZERO, 10).offset(offset).unwrap(),
                 ObjectId::new("human"),
             )
             .unwrap();
-        self.tile_spawner
-            .commands
+        self.commands
             .entity(survivor)
             .insert(TextLabel::new("Survivor"));
 
-        self.tile_spawner.spawn_character(
+        self.spawn_character(
             parent,
             Pos::new(12, Level::ZERO, 16).offset(offset).unwrap(),
             ObjectId::new("mon_zombie"),
         );
-        self.tile_spawner.spawn_character(
+        self.spawn_character(
             parent,
             Pos::new(40, Level::ZERO, 40).offset(offset).unwrap(),
             ObjectId::new("mon_zombie"),
         );
-        self.tile_spawner.spawn_character(
+        self.spawn_character(
             parent,
             Pos::new(38, Level::ZERO, 39).offset(offset).unwrap(),
             ObjectId::new("mon_zombie"),
         );
-        self.tile_spawner.spawn_character(
+        self.spawn_character(
             parent,
             Pos::new(37, Level::ZERO, 37).offset(offset).unwrap(),
             ObjectId::new("mon_zombie"),
         );
-        self.tile_spawner.spawn_character(
+        self.spawn_character(
             parent,
             Pos::new(34, Level::ZERO, 34).offset(offset).unwrap(),
             ObjectId::new("mon_zombie"),

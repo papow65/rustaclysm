@@ -7,7 +7,7 @@ const MAX_EXPAND_DISTANCE: i32 = 20;
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn spawn_zones_for_camera(
     mut commands: Commands,
-    mut tile_spawner: TileSpawner,
+    mut spawner: Spawner,
     map_assets: Res<Assets<Map>>,
     mut previous_camera_global_transform: Local<GlobalTransform>,
     mut previous_expanded_region: Local<Region>,
@@ -29,10 +29,10 @@ pub(crate) fn spawn_zones_for_camera(
         return;
     }
 
-    spawn_expanded_subzone_levels(&mut tile_spawner, &map_assets, &expanded_region);
+    spawn_expanded_subzone_levels(&mut spawner, &map_assets, &expanded_region);
     despawn_expanded_subzone_levels(
         &mut commands,
-        &mut tile_spawner,
+        &mut spawner,
         &expanded_subzone_levels,
         &expanded_region,
     );
@@ -130,24 +130,21 @@ fn visible_area(camera: &Camera, global_transform: &GlobalTransform) -> Vec<Subz
 }
 
 fn spawn_expanded_subzone_levels(
-    tile_spawner: &mut TileSpawner,
+    spawner: &mut Spawner,
     map_assets: &Assets<Map>,
     expanded_region: &Region,
 ) {
     for subzone_level in expanded_region.subzone_levels() {
-        let missing = tile_spawner
-            .subzone_level_entities
-            .get(subzone_level)
-            .is_none();
+        let missing = spawner.subzone_level_entities.get(subzone_level).is_none();
         if missing {
-            tile_spawner.spawn_expanded_subzone_level(map_assets, subzone_level);
+            spawner.spawn_expanded_subzone_level(map_assets, subzone_level);
         }
     }
 }
 
 fn despawn_expanded_subzone_levels(
     commands: &mut Commands,
-    tile_spawner: &mut TileSpawner,
+    spawner: &mut Spawner,
     expanded_zone_levels: &Query<(Entity, &SubzoneLevel), Without<Collapsed>>,
     expanded_region: &Region,
 ) {
@@ -158,15 +155,15 @@ fn despawn_expanded_subzone_levels(
         })
         .for_each(|(e, &expanded_subzone_level)| {
             commands.entity(e).despawn_recursive();
-            tile_spawner.subzone_level_entities.remove(e);
+            spawner.subzone_level_entities.remove(e);
 
             let zone_level = ZoneLevel::from(expanded_subzone_level);
-            if tile_spawner.explored.has_zone_level_been_seen(zone_level) != SeenFrom::Never {
+            if spawner.explored.has_zone_level_been_seen(zone_level) != SeenFrom::Never {
                 let visible = Visibility::Inherited;
-                if let Some(zone_level_entity) = tile_spawner.zone_level_entities.get(zone_level) {
+                if let Some(zone_level_entity) = spawner.zone_level_entities.get(zone_level) {
                     commands.entity(zone_level_entity).insert(visible);
                 } else if zone_level.level <= Level::ZERO {
-                    tile_spawner.spawn_collapsed_zone_level(zone_level, &visible);
+                    spawner.spawn_collapsed_zone_level(zone_level, &visible);
                 }
             }
         });
@@ -175,7 +172,7 @@ fn despawn_expanded_subzone_levels(
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_collapsed_zone_levels(
     mut commands: Commands,
-    mut tile_spawner: TileSpawner,
+    mut spawner: Spawner,
     mut skip_twice: Local<u8>,
     mut previous_camera_global_transform: Local<GlobalTransform>,
     mut previous_visible_region: Local<Region>,
@@ -216,15 +213,15 @@ pub(crate) fn update_collapsed_zone_levels(
         .map(ZoneLevel::from)
         .collect::<HashSet<_>>()
     {
-        if tile_spawner.zone_level_entities.get(zone_level).is_none() {
+        if spawner.zone_level_entities.get(zone_level).is_none() {
             let visibility = collapsed_visibility(
-                &mut tile_spawner.explored,
+                &mut spawner.explored,
                 zone_level,
                 &expanded_region,
                 &visible_region,
                 &focus,
             );
-            tile_spawner.spawn_collapsed_zone_level(zone_level, &visibility);
+            spawner.spawn_collapsed_zone_level(zone_level, &visibility);
         }
     }
 
@@ -237,7 +234,7 @@ pub(crate) fn update_collapsed_zone_levels(
         {
             //println!("{collapsed_zone_level:?} visibility?");
             let visibility = collapsed_visibility(
-                &mut tile_spawner.explored,
+                &mut spawner.explored,
                 collapsed_zone_level,
                 &expanded_region,
                 &visible_region,
@@ -283,7 +280,7 @@ fn collapsed_visibility(
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn toggle_doors(
     mut commands: Commands,
-    mut tile_spawner: TileSpawner,
+    mut spawner: Spawner,
     mut visualization_update: ResMut<VisualizationUpdate>,
     toggled: Query<
         (
@@ -302,9 +299,9 @@ pub(crate) fn toggle_doors(
     for (entity, definition, &pos, openable, closeable, parent) in toggled.iter() {
         assert_ne!(openable.is_some(), closeable.is_some());
         commands.entity(entity).despawn_recursive();
-        let TerrainInfo::Terrain{close, open, ..} = tile_spawner.infos.terrain(&definition.id).unwrap() else {panic!()};
+        let TerrainInfo::Terrain{close, open, ..} = spawner.infos.terrain(&definition.id).unwrap() else {panic!()};
         let toggled_id = openable.map_or(close, |_| open).as_ref().unwrap().clone();
-        tile_spawner.spawn_terrain(parent.get(), pos, toggled_id);
+        spawner.spawn_terrain(parent.get(), pos, toggled_id);
         *visualization_update = VisualizationUpdate::Forced;
     }
 
@@ -313,7 +310,7 @@ pub(crate) fn toggle_doors(
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn handle_map_events(
-    mut tile_spawner: TileSpawner,
+    mut spawner: Spawner,
     mut map_asset_events: EventReader<AssetEvent<Map>>,
     map_assets: Res<Assets<Map>>,
 ) {
@@ -327,16 +324,12 @@ pub(crate) fn handle_map_events(
                         level: Level::new(submap.coordinates.2),
                         z: submap.coordinates.1,
                     };
-                    if tile_spawner
-                        .subzone_level_entities
-                        .get(subzone_level)
-                        .is_none()
-                    {
+                    if spawner.subzone_level_entities.get(subzone_level).is_none() {
                         assert_eq!(submap.coordinates, subzone_level.coordinates());
-                        tile_spawner.spawn_subzone(submap, subzone_level);
+                        spawner.spawn_subzone(submap, subzone_level);
                     }
                 }
-                tile_spawner.maps.loading.retain(|h| h != handle);
+                spawner.maps.loading.retain(|h| h != handle);
             }
             AssetEvent::Modified { handle } => {
                 eprintln!("Map modified {map_asset_event:?} {handle:?}");

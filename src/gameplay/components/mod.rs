@@ -146,10 +146,6 @@ pub(crate) struct Integrity {
 }
 
 impl Integrity {
-    pub(crate) const fn new(max: i32) -> Self {
-        Self { curr: max, max }
-    }
-
     // TODO de-duplicate code with Health::apply
     pub(crate) fn apply(&mut self, damage: &Damage) -> bool {
         self.curr -= i32::from(damage.amount);

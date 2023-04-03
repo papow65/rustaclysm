@@ -69,10 +69,6 @@ impl Paths {
         SavPath::init(self.sav_path.clone())
     }
 
-    pub(crate) fn tiles_path() -> PathBuf {
-        Self::asset_path().join("tiles")
-    }
-
     pub(crate) fn world_path(&self) -> WorldPath {
         WorldPath::init(
             self.sav_path

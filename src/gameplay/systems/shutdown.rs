@@ -10,11 +10,9 @@ pub(crate) fn remove_gameplay_resources(mut commands: Commands) {
     commands.remove_resource::<InstructionQueue>();
     commands.remove_resource::<TileCaches>();
     commands.remove_resource::<VisualizationUpdate>();
-    commands.remove_resource::<CustomData>();
     commands.remove_resource::<Explored>();
     commands.remove_resource::<Sav>();
     commands.remove_resource::<Timeouts>();
-    commands.remove_resource::<CustomData>();
     commands.remove_resource::<ZoneLevelIds>();
 }
 

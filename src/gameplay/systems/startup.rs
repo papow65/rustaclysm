@@ -16,21 +16,14 @@ pub(crate) fn create_independent_resources(mut commands: Commands) {
 
 /// Create resources that need other resources
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn create_dependent_resources(
-    mut commands: Commands,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    asset_server: Res<AssetServer>,
-    paths: Res<Paths>,
-) {
+pub(crate) fn create_dependent_resources(mut commands: Commands, paths: Res<Paths>) {
     let sav = Sav::try_from(&paths.sav_path()).expect("Loading sav file failed");
-    let timouts = Timeouts::new(sav.turn);
+    let turn = sav.turn;
 
-    commands.insert_resource(CustomData::new(&mut materials, &mut meshes, &asset_server));
     commands.insert_resource(Explored::new(paths.sav_path()));
     commands.insert_resource(sav);
     commands.insert_resource(TileLoader::new());
-    commands.insert_resource(timouts);
+    commands.insert_resource(Timeouts::new(turn));
     commands.insert_resource(ZoneLevelIds::new(paths.world_path()));
 }
 
@@ -62,7 +55,5 @@ pub(crate) fn spawn_initial_entities(mut commands: Commands, sav: Res<Sav>, mut 
     })
     .unwrap()
         - Pos::ORIGIN;
-    spawner.spawn_floors(root, offset);
-    spawner.spawn_house(root, offset);
     spawner.spawn_characters(root, offset);
 }
