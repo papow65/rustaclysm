@@ -54,10 +54,16 @@ jobs:
         run: 'ls -l target/release'
       - name: 'Rename'
         run: mv target/release/rustaclysm${{ matrix.os.ext }} rustaclysm-${{ matrix.os.short }}${{ matrix.os.ext }}
+      - name: 'Zip'
+        uses: thedoctor0/zip-release@0.7.1
+        with:
+          type: 'zip'
+          filename: "rustaclysm-${{ matrix.os.short }}.zip"
+          path: rustaclysm-${{ matrix.os.short }}* assets
       - name: 'Upload as artifact'
         uses: actions/upload-artifact@v3
         with:
-          path: rustaclysm-${{ matrix.os.short }}${{ matrix.os.ext }}
+          path: rustaclysm-${{ matrix.os.short }}.zip
           if-no-files-found: error
   release:
     name: Release
