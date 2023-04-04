@@ -62,7 +62,7 @@ impl TryFrom<&KeyCode> for Direction {
     }
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) enum QueuedInstruction {
     Offset(Direction),
     Wield,
@@ -76,6 +76,10 @@ pub(crate) enum QueuedInstruction {
     ExaminePos,
     ExamineZoneLevel,
     Cancel,
+    /** Set automatically */
+    Interrupted,
+    /** Set automatically */
+    Finished,
 }
 
 impl TryFrom<&KeyCombo> for QueuedInstruction {
@@ -117,7 +121,7 @@ pub(crate) enum ZoomDirection {
     Out,
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq)]
 pub(crate) enum Instruction {
     Queued(QueuedInstruction),
     Quit,

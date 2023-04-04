@@ -163,8 +163,8 @@ pub(crate) fn update_log(
 
     let mut new_messages = false;
     for message in changed.iter() {
-        if message.0.trim() != "" {
-            println!("{string}", string = message.0);
+        if message.text().trim() != "" {
+            println!("{string}", string = message.text());
         }
         new_messages = true;
     }
@@ -176,7 +176,7 @@ pub(crate) fn update_log(
     let mut shown_reverse = Vec::<(&Message, usize)>::new();
     for message in messages.iter().collect::<Vec<&Message>>().iter().rev() {
         match last {
-            Some((last_message, ref mut last_count)) if last_message.0 == message.0 => {
+            Some((last_message, ref mut last_count)) if last_message.text() == message.text() => {
                 *last_count += 1;
             }
             Some(message_and_count) => {
@@ -201,9 +201,9 @@ pub(crate) fn update_log(
     sections.clear();
     for (message, count) in shown_reverse.iter().rev() {
         let mut style = hud_defaults.text_style.clone();
-        style.color = message.1;
+        style.color = message.color();
         sections.push(TextSection {
-            value: message.0.clone(),
+            value: String::from(message.text()),
             style,
         });
         if 1 < *count {

@@ -32,7 +32,7 @@ impl fmt::Display for PlayerActionState {
 
 pub(crate) enum PlayerBehavior {
     Perform(Action),
-    Warning(Message),
+    Feedback(Message),
     NoEffect,
 }
 
@@ -55,7 +55,7 @@ impl Player {
             if let Some(instruction) = instruction_queue.pop() {
                 match self.plan(envir, pos, instruction, now) {
                     PlayerBehavior::Perform(action) => break Some(action),
-                    PlayerBehavior::Warning(message) => {
+                    PlayerBehavior::Feedback(message) => {
                         commands.spawn(message);
                         // invalid instruction -> next instruction
                     }
@@ -83,17 +83,17 @@ impl Player {
             }
             (PlayerActionState::Normal, QueuedInstruction::Wait) => {
                 self.state = PlayerActionState::Waiting(now + Milliseconds::MINUTE);
-                PlayerBehavior::Warning(Message::new("Started waiting..."))
+                PlayerBehavior::Feedback(Message::new("Started waiting..."))
             }
             (PlayerActionState::Attacking, QueuedInstruction::Offset(Direction::Here)) => {
-                PlayerBehavior::Warning(Message::warn("can't attack self"))
+                PlayerBehavior::Feedback(Message::warn("can't attack self"))
             }
             (PlayerActionState::ExaminingPos(curr), QueuedInstruction::Offset(direction)) => {
                 let nbor = direction.to_nbor();
                 self.handle_offset(envir.get_nbor(curr, &nbor), &nbor)
             }
             (PlayerActionState::Normal, QueuedInstruction::Cancel) => {
-                PlayerBehavior::Warning(Message::warn("Press ctrl+c/d/q to exit"))
+                PlayerBehavior::Feedback(Message::warn("Press ctrl+c/d/q to exit"))
             }
             (_, QueuedInstruction::Cancel | QueuedInstruction::Wait)
             | (PlayerActionState::Attacking, QueuedInstruction::Attack)
@@ -124,6 +124,22 @@ impl Player {
                 PlayerBehavior::NoEffect
             }
             (_, QueuedInstruction::SwitchRunning) => PlayerBehavior::Perform(Action::SwitchRunning),
+            (PlayerActionState::Waiting(_), QueuedInstruction::Interrupted) => {
+                self.state = PlayerActionState::Normal;
+                PlayerBehavior::Feedback(Message::new("You see an enemy and stop waiting"))
+            }
+            (PlayerActionState::Waiting(_), QueuedInstruction::Finished) => {
+                self.state = PlayerActionState::Normal;
+                PlayerBehavior::Feedback(Message::new("Finished waiting"))
+            }
+            (_, QueuedInstruction::Interrupted) => {
+                self.state = PlayerActionState::Normal;
+                PlayerBehavior::Feedback(Message::error("Iterrupted while not waiting"))
+            }
+            (_, QueuedInstruction::Finished) => {
+                self.state = PlayerActionState::Normal;
+                PlayerBehavior::Feedback(Message::error("Finished while not waiting"))
+            }
         }
     }
 
@@ -135,7 +151,7 @@ impl Player {
                     self.state = PlayerActionState::ExaminingZoneLevel(target);
                     PlayerBehavior::NoEffect
                 } else {
-                    PlayerBehavior::Warning(Message::warn("invalid zone level to examine"))
+                    PlayerBehavior::Feedback(Message::warn("invalid zone level to examine"))
                 }
             }
             (PlayerActionState::ExaminingPos(current), target) => {
@@ -143,7 +159,7 @@ impl Player {
                     self.state = PlayerActionState::ExaminingPos(target);
                     PlayerBehavior::NoEffect
                 } else {
-                    PlayerBehavior::Warning(Message::warn("invalid position to examine"))
+                    PlayerBehavior::Feedback(Message::warn("invalid position to examine"))
                 }
             }
             (PlayerActionState::Normal, Ok(target)) => {
@@ -165,7 +181,7 @@ impl Player {
                 self.state = PlayerActionState::Normal;
                 PlayerBehavior::NoEffect
             }
-            (_, Err(message)) => PlayerBehavior::Warning(message),
+            (_, Err(message)) => PlayerBehavior::Feedback(message),
         }
     }
 
@@ -174,7 +190,7 @@ impl Player {
             .nbors_for_exploring(pos, QueuedInstruction::Attack)
             .collect::<Vec<Pos>>();
         match attackable_nbors.len() {
-            0 => PlayerBehavior::Warning(Message::warn("no targets nearby")),
+            0 => PlayerBehavior::Feedback(Message::warn("no targets nearby")),
             1 => PlayerBehavior::Perform(Action::Attack {
                 target: attackable_nbors[0],
             }),
@@ -190,7 +206,7 @@ impl Player {
             .nbors_for_exploring(pos, QueuedInstruction::Smash)
             .collect::<Vec<Pos>>();
         match smashable_nbors.len() {
-            0 => PlayerBehavior::Warning(Message::warn("no targets nearby")),
+            0 => PlayerBehavior::Feedback(Message::warn("no targets nearby")),
             1 => PlayerBehavior::Perform(Action::Smash {
                 target: smashable_nbors[0],
             }),
@@ -206,7 +222,7 @@ impl Player {
             .nbors_for_exploring(pos, QueuedInstruction::Close)
             .collect::<Vec<Pos>>();
         match closable_nbors.len() {
-            0 => PlayerBehavior::Warning(Message::warn("nothing to close nearby")),
+            0 => PlayerBehavior::Feedback(Message::warn("nothing to close nearby")),
             1 => PlayerBehavior::Perform(Action::Close {
                 target: closable_nbors[0],
             }),

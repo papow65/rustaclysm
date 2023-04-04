@@ -245,16 +245,7 @@ impl Faction {
         factions: &[(Pos, &Self)],
         actor: &Actor,
     ) -> Strategy {
-        let currently_visible = envir.currently_visible(actor.pos);
-
-        let enemies = factions
-            .iter()
-            .filter(|(_, other_faction)| self.dislikes(other_faction))
-            .map(|(enemy_pos, _)| enemy_pos)
-            .copied()
-            .filter(|enemy_pos| actor.aquatic.is_none() || envir.is_water(*enemy_pos))
-            .filter(|enemy_pos| currently_visible.can_see(*enemy_pos, None) == Visible::Seen)
-            .collect::<Vec<Pos>>();
+        let enemies = self.enemies(envir, factions, actor);
         //println!("{self:?} can see {:?} enemies", enemies.len());
 
         Intent::ALL
@@ -262,6 +253,24 @@ impl Faction {
             .filter(|intent| self.consider(*intent, actor.health))
             .find_map(|intent| self.attempt(intent, envir, factions, &enemies, actor))
             .expect("Fallback intent")
+    }
+
+    pub(crate) fn enemies(
+        &self,
+        envir: &Envir,
+        factions: &[(Pos, &Faction)],
+        actor: &Actor,
+    ) -> Vec<Pos> {
+        let currently_visible = envir.currently_visible(actor.pos);
+
+        factions
+            .iter()
+            .filter(|(_, other_faction)| self.dislikes(other_faction))
+            .map(|(enemy_pos, _)| enemy_pos)
+            .copied()
+            .filter(|enemy_pos| actor.aquatic.is_none() || envir.is_water(*enemy_pos))
+            .filter(|enemy_pos| currently_visible.can_see(*enemy_pos, None) == Visible::Seen)
+            .collect::<Vec<Pos>>()
     }
 }
 

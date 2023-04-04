@@ -287,29 +287,54 @@ impl Appearance {
     }
 }
 
-#[derive(Component)]
-pub(crate) struct Message(pub(crate) String, pub(crate) Color); // shown to the player
+#[derive(Debug, PartialEq, Eq)]
+enum Serverity {
+    Info,
+    Warn,
+    Error,
+}
+
+impl Serverity {
+    fn color(&self) -> Color {
+        match self {
+            Self::Info => Color::WHITE,
+            Self::Warn => Color::rgb(1.0, 1.0, 0.4),
+            Self::Error => Color::rgb(1.0, 0.4, 0.4),
+        }
+    }
+}
+
+#[derive(Component, Debug, PartialEq, Eq)]
+pub(crate) struct Message(String, Serverity); // shown to the player
 
 impl Message {
     pub(crate) fn new<S>(s: S) -> Self
     where
         S: Into<String>,
     {
-        Self(s.into(), Color::WHITE)
+        Self(s.into(), Serverity::Info)
     }
 
     pub(crate) fn warn<S>(s: S) -> Self
     where
         S: Into<String>,
     {
-        Self(s.into(), Color::rgb(1.0, 1.0, 0.4))
+        Self(s.into(), Serverity::Warn)
     }
 
     pub(crate) fn error<S>(s: S) -> Self
     where
         S: Into<String>,
     {
-        Self(s.into(), Color::rgb(1.0, 0.4, 0.4))
+        Self(s.into(), Serverity::Error)
+    }
+
+    pub(crate) fn text(&self) -> &str {
+        &self.0
+    }
+
+    pub(crate) fn color(&self) -> Color {
+        self.1.color()
     }
 }
 

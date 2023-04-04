@@ -48,8 +48,11 @@ pub(crate) fn plan_action(
         ) {
             action
         } else if let PlayerActionState::Waiting(until) = player.state {
-            if until <= timeouts.time() {
-                instruction_queue.add(QueuedInstruction::Cancel);
+            if !Faction::Human.enemies(&envir, &factions, &actor).is_empty() {
+                instruction_queue.add(QueuedInstruction::Interrupted);
+                return None; // process the cancellation next turn
+            } else if until <= timeouts.time() {
+                instruction_queue.add(QueuedInstruction::Finished);
                 return None; // process the cancellation next turn
             } else {
                 Action::Stay

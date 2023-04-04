@@ -52,15 +52,15 @@ impl InstructionQueue {
     pub(crate) fn add(&mut self, instruction: QueuedInstruction) {
         // Wait for an instruction to be processed until adding a duplicate when holding a key down.
         if !self.continuous.contains(&instruction) || !self.queue.contains(&instruction) {
-            self.queue.insert(0, instruction);
+            self.queue.insert(0, instruction.clone());
             self.continuous.push(instruction);
         }
 
         self.waiting_for_user = false;
     }
 
-    pub(crate) fn interrupt(&mut self, instruction: QueuedInstruction) {
-        self.continuous.retain(|k| *k != instruction);
+    pub(crate) fn interrupt(&mut self, instruction: &QueuedInstruction) {
+        self.continuous.retain(|k| k != instruction);
     }
 
     pub(crate) fn pop(&mut self) -> Option<QueuedInstruction> {

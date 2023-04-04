@@ -104,7 +104,7 @@ pub(crate) fn manage_keyboard_input(
                 }
                 ButtonState::Released => {
                     if let Instruction::Queued(queued) = instruction {
-                        instruction_queue.interrupt(queued);
+                        instruction_queue.interrupt(&queued);
                     }
                 }
             }
