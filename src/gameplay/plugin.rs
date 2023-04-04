@@ -5,7 +5,13 @@ pub(crate) struct GameplayPlugin;
 
 impl Plugin for GameplayPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugin(FrameTimeDiagnosticsPlugin::default());
+        app.add_state::<GameplayScreenState>();
+
+        app.add_plugin(BaseScreenPlugin)
+            .add_plugin(CharacterScreenPlugin)
+            .add_plugin(InventoryScreenPlugin)
+            .add_plugin(MenuScreenPlugin)
+            .add_plugin(FrameTimeDiagnosticsPlugin::default());
 
         // These resources may persist between gameplays.
         app.insert_resource(AmbientLight {
@@ -20,6 +26,7 @@ impl Plugin for GameplayPlugin {
         // executed only at gameplay startup
         app.add_systems(
             (
+                initialize_screen_state,
                 create_independent_resources,
                 apply_system_buffers,
                 create_dependent_resources,
@@ -27,23 +34,13 @@ impl Plugin for GameplayPlugin {
                 spawn_initial_entities,
                 spawn_hud,
                 apply_system_buffers,
-                maximize_window,
+                finish_loading,
             )
                 .chain()
                 .in_schedule(OnEnter(ApplicationState::Gameplay)),
         );
 
         // executed every frame
-        app.add_system(
-            manage_mouse_input
-                .before(update_camera)
-                .run_if(in_state(ApplicationState::Gameplay)),
-        );
-        app.add_systems(
-            (manage_keyboard_input, run_behavior_schedule)
-                .chain()
-                .in_set(OnUpdate(ApplicationState::Gameplay)),
-        );
         app.add_systems(
             (
                 update_transforms,
@@ -78,10 +75,10 @@ impl Plugin for GameplayPlugin {
         // executed only at gameplay shutdown
         app.add_systems(
             (
+                disable_screen_state,
+                apply_system_buffers,
                 despawn_gameplay,
                 remove_gameplay_resources,
-                apply_system_buffers,
-                free_assets,
             )
                 .in_schedule(OnExit(ApplicationState::Gameplay)),
         );

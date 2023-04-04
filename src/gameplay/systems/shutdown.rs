@@ -35,6 +35,6 @@ pub(crate) fn despawn_gameplay(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn free_assets(asset_server: Res<AssetServer>) {
-    asset_server.free_unused_assets();
+pub(crate) fn disable_screen_state(mut next_state: ResMut<NextState<GameplayScreenState>>) {
+    next_state.set(GameplayScreenState::Inapplicable);
 }

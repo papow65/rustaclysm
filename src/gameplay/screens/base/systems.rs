@@ -3,9 +3,14 @@ use bevy::{
     app::AppExit,
     ecs::event::Events,
     input::{keyboard::KeyboardInput, mouse::MouseWheel, ButtonState},
-    prelude::{EventReader, Input, KeyCode, NextState, Query, Res, ResMut, Visibility, With},
+    prelude::*,
 };
 use std::time::Instant;
+
+#[allow(clippy::needless_pass_by_value)]
+pub(crate) fn create_base_resources(mut commands: Commands) {
+    commands.insert_resource(InstructionQueue::default());
+}
 
 fn quit(app_exit_events: &mut Events<AppExit>) {
     app_exit_events.send(AppExit);
@@ -109,4 +114,19 @@ pub(crate) fn manage_keyboard_input(
     instruction_queue.log_if_long();
 
     log_if_slow("manage_keyboard_input", start);
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub(crate) fn remove_base_resources(mut commands: Commands) {
+    commands.remove_resource::<Infos>();
+    commands.remove_resource::<Location>();
+    commands.remove_resource::<SubzoneLevelEntities>();
+    commands.remove_resource::<ZoneLevelEntities>();
+    commands.remove_resource::<InstructionQueue>();
+    commands.remove_resource::<TileCaches>();
+    commands.remove_resource::<VisualizationUpdate>();
+    commands.remove_resource::<Explored>();
+    commands.remove_resource::<Sav>();
+    commands.remove_resource::<Timeouts>();
+    commands.remove_resource::<ZoneLevelIds>();
 }

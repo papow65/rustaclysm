@@ -307,7 +307,7 @@ pub(crate) fn manage_main_menu_button_input(
 pub(crate) fn manage_main_menu_keyboard_input(
     mut app_exit_events: ResMut<Events<bevy::app::AppExit>>,
     mut key_events: EventReader<KeyboardInput>,
-    mut next_state: ResMut<NextState<ApplicationState>>,
+    _next_state: ResMut<NextState<ApplicationState>>,
 ) {
     for key_event in key_events.iter() {
         if key_event.state != ButtonState::Pressed {
@@ -316,9 +316,6 @@ pub(crate) fn manage_main_menu_keyboard_input(
 
         match key_event.key_code {
             Some(KeyCode::C | KeyCode::D | KeyCode::Q) => app_exit_events.send(AppExit),
-            Some(KeyCode::P | KeyCode::Space | KeyCode::Return) => {
-                next_state.set(ApplicationState::Gameplay);
-            }
             _ => {}
         }
     }
