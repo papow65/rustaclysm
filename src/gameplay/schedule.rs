@@ -34,7 +34,7 @@ pub(crate) fn behavior_schedule() -> Schedule {
     );
     behavior_schedule.add_systems(
         (
-            manage_game_over,
+            manage_player_death,
             toggle_doors,
             update_damaged_characters,
             update_damaged_items,

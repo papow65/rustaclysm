@@ -3,17 +3,17 @@ use bevy::{ecs::system::SystemState, prelude::*};
 use std::time::Instant;
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn manage_game_over(
-    mut app_exit_events: ResMut<bevy::ecs::event::Events<bevy::app::AppExit>>,
+pub(crate) fn manage_player_death(
     dead_players: Query<(), (With<Player>, Without<Health>)>,
+    mut next_state: ResMut<NextState<ApplicationState>>,
 ) {
     let start = Instant::now();
 
     if dead_players.get_single().is_ok() {
-        app_exit_events.send(bevy::app::AppExit);
+        next_state.set(ApplicationState::MainMenu);
     }
 
-    log_if_slow("manage_game_over", start);
+    log_if_slow("manage_player_death", start);
 }
 
 #[allow(clippy::needless_pass_by_value)]
