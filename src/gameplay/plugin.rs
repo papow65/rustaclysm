@@ -56,6 +56,7 @@ impl Plugin for GameplayPlugin {
         app.add_systems(
             (
                 handle_map_events,
+                handle_overmap_buffer_events,
                 update_log,
                 update_status_fps,
                 update_status_time,

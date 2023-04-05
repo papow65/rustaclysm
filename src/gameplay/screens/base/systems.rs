@@ -72,7 +72,7 @@ pub(crate) fn manage_mouse_input(
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn manage_keyboard_input(
-    mut app_exit_events: ResMut<Events<bevy::app::AppExit>>,
+    mut app_exit_events: ResMut<Events<AppExit>>,
     mut key_events: EventReader<KeyboardInput>,
     mut next_state: ResMut<NextState<ApplicationState>>,
     mut instruction_queue: ResMut<InstructionQueue>,

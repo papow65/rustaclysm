@@ -230,14 +230,14 @@ impl TileLoader {
     pub(crate) fn get_models(
         &self,
         definition: &ObjectDefinition,
-        variants: &Vec<ObjectId>,
+        variants: &[ObjectId],
     ) -> Vec<Model> {
         let mut bundles = Vec::new();
         let (foreground, background) = variants
             .iter()
             .find_map(|variant| self.tiles.get(variant))
             .unwrap_or_else(|| {
-                eprintln!("No variant found from {variants:?}. Falling back to default sprite");
+                //println!("No variant found from {variants:?}. Falling back to default sprite"); // TODO
                 self.tiles.get(&ObjectId::new("unknown")).unwrap()
             })
             .sprite_numbers();

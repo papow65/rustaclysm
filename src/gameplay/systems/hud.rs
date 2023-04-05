@@ -326,6 +326,7 @@ pub(crate) fn update_status_player_state(
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_status_detais(
     envir: Envir,
+    asset_server: Res<AssetServer>,
     mut explored: ResMut<Explored>,
     mut zone_level_ids: ResMut<ZoneLevelIds>,
     characters: Query<(Option<&ObjectDefinition>, Option<&TextLabel>, &Health)>,
@@ -384,14 +385,12 @@ pub(crate) fn update_status_detais(
                     }
                 }*/
 
-                let seen_from = explored.has_zone_level_been_seen(zone_level);
-                if seen_from == SeenFrom::Never {
-                    format!("\n{zone_level:?}\nUnseen")
-                } else {
-                    format!(
+                match explored.has_zone_level_been_seen(&asset_server, zone_level) {
+                    seen_from @ Some(SeenFrom::CloseBy | SeenFrom::FarAway) => format!(
                         "\n{zone_level:?}\n{:?}\n{seen_from:?}",
                         zone_level_ids.get(zone_level)
-                    )
+                    ),
+                    None | Some(SeenFrom::Never) => format!("\n{zone_level:?}\nUnseen"),
                 }
             }
             _ => String::new(),

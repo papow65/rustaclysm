@@ -305,7 +305,7 @@ pub(crate) fn manage_main_menu_button_input(
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn manage_main_menu_keyboard_input(
-    mut app_exit_events: ResMut<Events<bevy::app::AppExit>>,
+    mut app_exit_events: ResMut<Events<AppExit>>,
     mut key_events: EventReader<KeyboardInput>,
     _next_state: ResMut<NextState<ApplicationState>>,
 ) {

@@ -1,6 +1,11 @@
 use crate::prelude::{LevelOffset, Millimeter, Nbor, PosOffset, MIN_INVISIBLE_DISTANCE};
 use bevy::prelude::{Component, Vec3};
-use std::{cmp::Ordering, fmt, iter::once, ops::Sub};
+use std::{
+    cmp::Ordering,
+    fmt,
+    iter::once,
+    ops::{Range, Sub},
+};
 
 /** Does not include 'from', but does include 'to' */
 fn straight_2d(from: (i32, i32), to: (i32, i32)) -> impl Iterator<Item = (i32, i32)> {
@@ -21,9 +26,12 @@ pub(crate) struct Level {
 
 impl Level {
     pub(crate) const AMOUNT: usize = 21;
+    pub(crate) const GROUND_AMOUNT: usize = (Self::AMOUNT - 1) / 2 + 1;
+
     pub(crate) const ZERO: Self = Self::new(0);
     const LOWEST: Self = Self::new(-10);
     const HIGHEST: Self = Self::new(10);
+
     pub(crate) const ALL: [Self; Self::AMOUNT] = [
         Self::LOWEST,
         Self::new(-9),
@@ -35,7 +43,7 @@ impl Level {
         Self::new(-3),
         Self::new(-2),
         Self::new(-1),
-        Self::new(0),
+        Self::ZERO,
         Self::new(1),
         Self::new(2),
         Self::new(3),
@@ -46,6 +54,19 @@ impl Level {
         Self::new(8),
         Self::new(9),
         Self::HIGHEST,
+    ];
+    pub(crate) const GROUNDS: [Self; Self::GROUND_AMOUNT] = [
+        Self::LOWEST,
+        Self::new(-9),
+        Self::new(-8),
+        Self::new(-7),
+        Self::new(-6),
+        Self::new(-5),
+        Self::new(-4),
+        Self::new(-3),
+        Self::new(-2),
+        Self::new(-1),
+        Self::ZERO,
     ];
 
     pub(crate) const fn new(level: i8) -> Self {
@@ -409,6 +430,14 @@ impl Overzone {
             x: 180 * self.x,
             z: 180 * self.z,
         }
+    }
+
+    pub(crate) const fn xz_ranges(&self) -> (Range<i32>, Range<i32>) {
+        let base_zone = self.base_zone();
+        (
+            base_zone.x..(base_zone.x + 180),
+            base_zone.z..(base_zone.z + 180),
+        )
     }
 }
 

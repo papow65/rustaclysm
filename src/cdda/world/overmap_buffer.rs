@@ -1,6 +1,9 @@
 use crate::prelude::*;
+use bevy::{
+    asset::{AssetLoader, BoxedFuture, Error, LoadContext, LoadedAsset},
+    reflect::TypeUuid,
+};
 use serde::Deserialize;
-use std::fs::read_to_string;
 
 pub(crate) type OvermapBufferPath = PathFor<OvermapBuffer>;
 
@@ -13,8 +16,9 @@ impl OvermapBufferPath {
 }
 
 /** Corresponds to an 'overmapbuffer' in CDDA. It defines the save-specific information of a `Zone`. */
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, TypeUuid)]
 #[serde(deny_unknown_fields)]
+#[uuid = "e1ddd167-19aa-4abd-bdb6-bddcb65bc3ca"]
 pub(crate) struct OvermapBuffer {
     /// Visible on the overmap
     pub(crate) visible: [RepetitionBlock<bool>; Level::AMOUNT],
@@ -30,38 +34,49 @@ pub(crate) struct OvermapBuffer {
     pub(crate) extras: Vec<serde_json::Value>,
 }
 
-impl OvermapBuffer {
-    pub(crate) fn fallback() -> Self {
-        Self {
-            visible: [(); Level::AMOUNT].map(|_| {
-                RepetitionBlock::new(CddaAmount {
-                    obj: false,
-                    amount: 180 * 180,
-                })
-            }),
-            explored: [(); Level::AMOUNT].map(|_| {
-                RepetitionBlock::new(CddaAmount {
-                    obj: false,
-                    amount: 180 * 180,
-                })
-            }),
-            notes: Vec::new(),
-            extras: Vec::new(),
-        }
-    }
-}
+#[derive(Default)]
+pub(crate) struct OvermapBufferLoader;
 
-impl TryFrom<OvermapBufferPath> for OvermapBuffer {
-    type Error = ();
-    fn try_from(overmap_buffer_path: OvermapBufferPath) -> Result<Self, ()> {
-        //println!("Path: {overmap_buffer_path}");
-        read_to_string(overmap_buffer_path.0)
-            .ok()
-            .map(|s| {
-                let first_newline = s.find('\n').unwrap();
-                let after_first_line = s.split_at(first_newline).1;
-                serde_json::from_str(after_first_line).unwrap_or_else(|err| panic!("{err:?}"))
-            })
-            .ok_or(())
+impl AssetLoader for OvermapBufferLoader {
+    fn load<'a>(
+        &'a self,
+        bytes: &'a [u8],
+        load_context: &'a mut LoadContext,
+    ) -> BoxedFuture<'a, Result<(), Error>> {
+        Box::pin(async move {
+            eprintln!("Haystack: {:?}", &bytes[..25]);
+            eprintln!("Haystack: {:?}", String::from_utf8_lossy(&bytes[..25]));
+            eprintln!("Needle: {:?}", b"\n");
+            eprintln!("Needle: {:?}", String::from_utf8_lossy(b"\n"));
+
+            let newline_pos = bytes
+                .windows(1)
+                .position(|window| window == b"\n")
+                .expect("Version line");
+            let after_first_line = bytes.split_at(newline_pos).1;
+            let overmap_buffer_result = serde_json::from_slice::<OvermapBuffer>(after_first_line);
+            let overmap_buffer = overmap_buffer_result.map_err(|e| {
+                eprintln!(
+                    "Overmap buffer loading error: {:?} {e:?}",
+                    std::str::from_utf8(&bytes[0..40])
+                );
+                e
+            })?;
+            load_context.set_default_asset(LoadedAsset::new(overmap_buffer));
+            Ok(())
+        })
+    }
+
+    fn extensions(&self) -> &[&str] {
+        // TODO not manually
+        // TODO larger range
+        // TODO make this irrelevant
+        &[
+            "-30", "-29", "-28", "-27", "-26", "-25", "-24", "-23", "-22", "-21", "-20", "-19",
+            "-18", "-17", "-16", "-15", "-14", "-13", "-12", "-11", "-10", "-9", "-8", "-7", "-6",
+            "-5", "-4", "-3", "-2", "-1", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10",
+            "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24",
+            "25", "26", "27", "28", "29", "30",
+        ]
     }
 }

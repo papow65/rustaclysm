@@ -32,7 +32,7 @@ pub(crate) struct Spawner<'w, 's> {
     pub(crate) commands: Commands<'w, 's>,
     material_assets: ResMut<'w, Assets<StandardMaterial>>,
     mesh_assets: ResMut<'w, Assets<Mesh>>,
-    asset_server: Res<'w, AssetServer>,
+    pub(crate) asset_server: Res<'w, AssetServer>,
     loader: Res<'w, TileLoader>,
     pub(crate) maps: ResMut<'w, Maps>,
     caches: ResMut<'w, TileCaches>,
@@ -453,8 +453,14 @@ impl<'w, 's> Spawner<'w, 's> {
         &mut self,
         zone_level: ZoneLevel,
         child_visibiltiy: &Visibility,
-    ) {
+    ) -> Result<(), ()> {
         assert!(zone_level.level <= Level::ZERO);
+
+        let Some(seen_from) = self
+            .explored
+            .has_zone_level_been_seen(&self.asset_server, zone_level) else {
+                return Err(());
+        };
 
         let definition = ObjectDefinition {
             category: ObjectCategory::ZoneLevel,
@@ -482,13 +488,12 @@ impl<'w, 's> Spawner<'w, 's> {
                     scale: Vec3::splat(24.0),
                     ..Transform::default()
                 })
-                .insert(
-                    if self.explored.has_zone_level_been_seen(zone_level) == SeenFrom::Never {
-                        (LastSeen::Never, Visibility::Hidden)
-                    } else {
+                .insert(match seen_from {
+                    SeenFrom::CloseBy | SeenFrom::FarAway => {
                         (LastSeen::Previously, Visibility::Inherited)
-                    },
-                )
+                    }
+                    SeenFrom::Never => (LastSeen::Never, Visibility::Hidden),
+                })
                 .with_children(|child_builder| {
                     for pbr_bundle in pbr_bundles {
                         child_builder.spawn(pbr_bundle).insert(*child_visibiltiy);
@@ -497,6 +502,7 @@ impl<'w, 's> Spawner<'w, 's> {
         }
 
         self.zone_level_entities.add(zone_level, entity.id());
+        Ok(())
     }
 
     fn configure_player(&mut self, player_entity: Entity) {
@@ -506,7 +512,7 @@ impl<'w, 's> Spawner<'w, 's> {
         };
         let cursor_model = &mut self
             .loader
-            .get_models(&cursor_definition, &vec![cursor_definition.id.clone()])[0];
+            .get_models(&cursor_definition, &[cursor_definition.id.clone()])[0];
         let mut cursor_bundle = self.get_pbr_bundle(cursor_model, false);
         cursor_bundle.transform.translation.y = 0.1;
         cursor_bundle.transform.scale = Vec3::new(1.1, 1.0, 1.1);
