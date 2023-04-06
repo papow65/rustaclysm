@@ -263,30 +263,21 @@ pub(crate) fn manage_main_menu_button_input(
     mut next_state: ResMut<NextState<ApplicationState>>,
     mut app_exit_events: ResMut<Events<AppExit>>,
     mut interaction_query: Query<
-        (
-            &Interaction,
-            &mut BackgroundColor,
-            Option<&LoadButton>,
-            Option<&QuitButton>,
-        ),
+        (&Interaction, Option<&LoadButton>, Option<&QuitButton>),
         (Changed<Interaction>, With<Button>),
     >,
 ) {
-    for (interaction, mut color, load_button, quit_button) in &mut interaction_query {
-        match (*interaction, load_button, quit_button.is_some()) {
-            (Interaction::Clicked, Some(load_button), false) => {
-                commands.insert_resource(Paths::new(&load_button.path));
-                next_state.set(ApplicationState::Gameplay);
-            }
-            (Interaction::Clicked, None, true) => app_exit_events.send(AppExit),
-            (Interaction::Clicked, play, quit) => {
-                panic!("{play:?} {quit:?}");
-            }
-            (Interaction::Hovered, ..) => {
-                *color = HOVERED_BUTTON_COLOR.into();
-            }
-            (Interaction::None, ..) => {
-                *color = DEFAULT_BUTTON_COLOR.into();
+    for (interaction, load_button, quit_button) in &mut interaction_query {
+        if *interaction == Interaction::Clicked {
+            match (load_button, quit_button.is_some()) {
+                (Some(load_button), false) => {
+                    commands.insert_resource(Paths::new(&load_button.path));
+                    next_state.set(ApplicationState::Gameplay);
+                }
+                (None, true) => app_exit_events.send(AppExit),
+                (play, quit) => {
+                    panic!("{play:?} {quit:?}");
+                }
             }
         }
     }

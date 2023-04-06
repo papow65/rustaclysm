@@ -1,11 +1,6 @@
-use crate::prelude::{
-    maximize_window, ApplicationState, CddaPlugin, GameplayPlugin, MainMenuPlugin,
-};
+use crate::prelude::*;
 use bevy::{
-    prelude::{
-        App, AssetPlugin, DefaultPlugins, IVec2, ImagePlugin, Msaa, PluginGroup, Window,
-        WindowPlugin, WindowPosition,
-    },
+    prelude::*,
     window::{PresentMode, WindowResolution},
 };
 
@@ -39,7 +34,11 @@ pub(crate) fn run_application() {
         .add_plugin(CddaPlugin)
         .add_plugin(GameplayPlugin);
 
+    // once at startup
     app.add_startup_system(maximize_window);
+
+    // every frame
+    app.add_system(manage_button_hover);
 
     //bevy_mod_debugdump::print_main_schedule(app);
 

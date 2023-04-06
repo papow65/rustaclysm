@@ -67,10 +67,9 @@ pub(crate) fn manage_menu_button_input(
     mut next_application_state: ResMut<NextState<ApplicationState>>,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
     mut app_exit_events: ResMut<Events<AppExit>>,
-    mut interaction_query: Query<
+    interaction_query: Query<
         (
             &Interaction,
-            &mut BackgroundColor,
             Option<&ReturnButton>,
             Option<&MainMenuButton>,
             Option<&QuitButton>,
@@ -78,30 +77,23 @@ pub(crate) fn manage_menu_button_input(
         (Changed<Interaction>, With<Button>),
     >,
 ) {
-    for (interaction, mut color, return_button, main_menu_button, quit_button) in
-        &mut interaction_query
-    {
-        match (
-            *interaction,
-            return_button.is_some(),
-            main_menu_button.is_some(),
-            quit_button.is_some(),
-        ) {
-            (Interaction::Clicked, true, false, false) => {
-                next_gameplay_state.set(GameplayScreenState::Base);
-            }
-            (Interaction::Clicked, false, true, false) => {
-                next_application_state.set(ApplicationState::MainMenu);
-            }
-            (Interaction::Clicked, false, false, true) => app_exit_events.send(AppExit),
-            (Interaction::Clicked, return_button, main_menu_button, quit_button) => {
-                panic!("{return_button:?} {main_menu_button:?} {quit_button:?}");
-            }
-            (Interaction::Hovered, ..) => {
-                *color = HOVERED_BUTTON_COLOR.into();
-            }
-            (Interaction::None, ..) => {
-                *color = DEFAULT_BUTTON_COLOR.into();
+    for (interaction, return_button, main_menu_button, quit_button) in &interaction_query {
+        if *interaction == Interaction::Clicked {
+            match (
+                return_button.is_some(),
+                main_menu_button.is_some(),
+                quit_button.is_some(),
+            ) {
+                (true, false, false) => {
+                    next_gameplay_state.set(GameplayScreenState::Base);
+                }
+                (false, true, false) => {
+                    next_application_state.set(ApplicationState::MainMenu);
+                }
+                (false, false, true) => app_exit_events.send(AppExit),
+                (return_button, main_menu_button, quit_button) => {
+                    panic!("{return_button:?} {main_menu_button:?} {quit_button:?}");
+                }
             }
         }
     }
