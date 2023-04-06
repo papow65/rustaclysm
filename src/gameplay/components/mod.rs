@@ -2,9 +2,7 @@ mod faction;
 mod player;
 mod pos;
 
-use crate::prelude::{
-    Container, Mass, MoveCost, MoveCostMod, ObjectCategory, ObjectId, Partial, Visible, Volume,
-};
+use crate::prelude::*;
 use bevy::{
     pbr::StandardMaterial,
     prelude::{AlphaMode, Assets, Color, Component, Handle},
@@ -297,9 +295,9 @@ pub(crate) enum Severity {
 impl Severity {
     pub(crate) fn color(&self) -> Color {
         match self {
-            Self::Info => Color::WHITE,
-            Self::Warn => Color::rgb(1.0, 1.0, 0.4),
-            Self::Error => Color::rgb(1.0, 0.4, 0.4),
+            Self::Info => DEFAULT_TEXT_COLOR,
+            Self::Warn => WARN_TEXT_COLOR,
+            Self::Error => BAD_TEXT_COLOR,
         }
     }
 }

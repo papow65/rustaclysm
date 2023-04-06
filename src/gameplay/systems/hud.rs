@@ -13,12 +13,12 @@ pub(crate) struct HudDefaults {
 }
 
 impl HudDefaults {
-    pub(crate) fn new(asset_server: &mut AssetServer) -> Self {
+    pub(crate) fn new(asset_server: &AssetServer) -> Self {
         Self {
             text_style: TextStyle {
-                font: asset_server.load(Paths::fonts_path().join("FiraMono-Medium.otf")),
+                font: default_font(asset_server),
                 font_size: 16.0,
-                color: Color::rgb(0.8, 0.8, 0.8),
+                color: SOFT_TEXT_COLOR,
             },
         }
     }
@@ -105,7 +105,7 @@ fn spawn_manual_display(
                 text: Text {
                     sections: vec![
                         TextSection {
-                            value: String::from("move          numpad\nup/down       r/f/</>\nwield         w\npick/drop     b/v\nattack        a\nsmash         s\nwait          |\nrun           +\nexamine       x\nexamine map   m\nzoom          (shift+)z\nzoom          scroll wheel\nshow elevated e\ntoggle this   h\nmain menu     f12\nquit          ctrl+c/d/q"),
+                            value: String::from("move          numpad\nup/down       r/f/</>\nwield         w\npick/drop     b/v\nattack        a\nsmash         s\nwait          |\nrun           +\nexamine       x\nexamine map   m\nzoom          (shift+)z\nzoom          scroll wheel\nshow elevated e\ntoggle this   h\nmenu          esc\nmain menu     f12\nquit          ctrl+c/d/q"),
                             style: hud_defaults.text_style.clone(),
                         },
                     ],
@@ -127,7 +127,7 @@ pub(crate) fn spawn_hud(mut commands: Commands, mut asset_server: ResMut<AssetSe
             padding: UiRect::all(Val::Px(5.0)),
             ..default()
         },
-        background_color: Color::rgba(0.25, 0.25, 0.25, 0.6).into(),
+        background_color: PANEL_COLOR.into(),
         ..default()
     };
 

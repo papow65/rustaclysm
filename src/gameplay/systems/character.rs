@@ -19,6 +19,7 @@ pub(crate) fn manage_player_death(
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn plan_action(
     mut commands: Commands,
+    mut next_state: ResMut<NextState<GameplayScreenState>>,
     mut envir: Envir,
     mut instruction_queue: ResMut<InstructionQueue>,
     mut timeouts: ResMut<Timeouts>,
@@ -41,6 +42,7 @@ pub(crate) fn plan_action(
     let action = if let Ok(ref mut player) = players.get_mut(active_entity) {
         if let Some(action) = player.plan_action(
             &mut commands,
+            &mut next_state,
             &mut envir,
             &mut instruction_queue,
             actor.pos,

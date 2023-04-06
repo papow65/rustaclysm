@@ -14,17 +14,6 @@ const BACKGROUND_WIDTH: f32 = 1552.0;
 const BACKGROUND_HEIGHT: f32 = 1009.0;
 const BACKGROUND_NAME: &str = "on_the_run.png";
 
-const LOAD_FOREGROUND: Color = Color::rgb(0.35, 0.75, 0.35);
-const QUIT_FOREGROUND: Color = Color::rgb(0.75, 0.35, 0.35);
-const TEXT_FOREGROUND: Color = Color::rgb(1.0, 1.0, 1.0);
-
-const NORMAL_BACKGROUND: Color = Color::rgb(0.15, 0.15, 0.15);
-const HOVERED_BACKGROUND: Color = Color::rgb(0.25, 0.25, 0.25);
-
-fn font(asset_server: &AssetServer) -> Handle<Font> {
-    asset_server.load(Paths::fonts_path().join("FiraMono-Medium.otf"))
-}
-
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn spawn_main_menu(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn(Camera2dBundle::default());
@@ -61,9 +50,9 @@ fn add_title(parent: &mut ChildBuilder, asset_server: &Res<AssetServer>) {
     parent.spawn(TextBundle::from_section(
         "Rustaclysm",
         TextStyle {
-            font: font(asset_server),
+            font: default_font(asset_server),
             font_size: 120.0,
-            color: TEXT_FOREGROUND,
+            color: DEFAULT_TEXT_COLOR,
         },
     ));
 }
@@ -73,9 +62,9 @@ fn add_tagline(parent: &mut ChildBuilder, asset_server: &Res<AssetServer>) {
         TextBundle::from_section(
             "A 3D reimplementation of Cataclysm: Dark Days Ahead",
             TextStyle {
-                font: font(asset_server),
+                font: default_font(asset_server),
                 font_size: 22.0,
-                color: TEXT_FOREGROUND,
+                color: DEFAULT_TEXT_COLOR,
             },
         )
         .with_style(Style {
@@ -120,7 +109,7 @@ fn add_notification_area(parent: &mut ChildBuilder, asset_server: &Res<AssetServ
                 },
                 ..default()
             },
-            background_color: NORMAL_BACKGROUND.into(),
+            background_color: DEFAULT_BUTTON_COLOR.into(),
             ..default()
         })
         .insert(MessageWrapper)
@@ -130,9 +119,9 @@ fn add_notification_area(parent: &mut ChildBuilder, asset_server: &Res<AssetServ
                     text: Text::from_section(
                         "",
                         TextStyle {
-                            font: font(asset_server),
+                            font: default_font(asset_server),
                             font_size: 20.0,
-                            color: TEXT_FOREGROUND,
+                            color: DEFAULT_TEXT_COLOR,
                         },
                     ),
                     style: Style {
@@ -155,7 +144,7 @@ fn add_quit_button(parent: &mut ChildBuilder, asset_server: &AssetServer) {
                 align_items: AlignItems::Center,
                 ..default()
             },
-            background_color: NORMAL_BACKGROUND.into(),
+            background_color: DEFAULT_TEXT_COLOR.into(),
             ..default()
         })
         .insert(QuitButton)
@@ -163,9 +152,9 @@ fn add_quit_button(parent: &mut ChildBuilder, asset_server: &AssetServer) {
             parent.spawn(TextBundle::from_section(
                 "Quit",
                 TextStyle {
-                    font: font(asset_server),
+                    font: default_font(asset_server),
                     font_size: 40.0,
-                    color: QUIT_FOREGROUND,
+                    color: BAD_TEXT_COLOR,
                 },
             ));
         });
@@ -217,7 +206,7 @@ pub(crate) fn update_sav_files(
                                             },
                                             ..default()
                                         },
-                                        background_color: NORMAL_BACKGROUND.into(),
+                                        background_color: DEFAULT_BUTTON_COLOR.into(),
                                         ..default()
                                     })
                                     .insert(LoadButton { path: path.clone() })
@@ -241,9 +230,9 @@ pub(crate) fn update_sav_files(
                                         parent.spawn(TextBundle::from_section(
                                             format!("Load {} in {}", character, world.display()),
                                             TextStyle {
-                                                font: font(&asset_server),
+                                                font: default_font(&asset_server),
                                                 font_size: 20.0,
-                                                color: LOAD_FOREGROUND,
+                                                color: GOOD_TEXT_COLOR,
                                             },
                                         ));
                                     });
@@ -294,10 +283,10 @@ pub(crate) fn manage_main_menu_button_input(
                 panic!("{play:?} {quit:?}");
             }
             (Interaction::Hovered, ..) => {
-                *color = HOVERED_BACKGROUND.into();
+                *color = HOVERED_BUTTON_COLOR.into();
             }
             (Interaction::None, ..) => {
-                *color = NORMAL_BACKGROUND.into();
+                *color = DEFAULT_BUTTON_COLOR.into();
             }
         }
     }
@@ -307,7 +296,6 @@ pub(crate) fn manage_main_menu_button_input(
 pub(crate) fn manage_main_menu_keyboard_input(
     mut app_exit_events: ResMut<Events<AppExit>>,
     mut key_events: EventReader<KeyboardInput>,
-    _next_state: ResMut<NextState<ApplicationState>>,
 ) {
     for key_event in key_events.iter() {
         if key_event.state != ButtonState::Pressed {
@@ -326,18 +314,16 @@ pub(crate) fn resize_background(
     cameras: Query<&Camera>,
     mut backgrounds: Query<&mut Transform, With<Background>>,
 ) {
-    //for _ in resize_events.iter() {
-    for camera in cameras.iter() {
-        if let Some(camera_size) = &camera.physical_target_size() {
-            let scale = (camera_size.x as f32 / BACKGROUND_WIDTH)
-                .max(camera_size.y as f32 / BACKGROUND_HEIGHT);
+    let camera = cameras.single();
 
-            for mut background in backgrounds.iter_mut() {
-                *background = Transform::from_scale(Vec3::new(scale, scale, 1.0));
-            }
+    if let Some(camera_size) = &camera.physical_target_size() {
+        let scale =
+            (camera_size.x as f32 / BACKGROUND_WIDTH).max(camera_size.y as f32 / BACKGROUND_HEIGHT);
+
+        for mut background in backgrounds.iter_mut() {
+            *background = Transform::from_scale(Vec3::new(scale, scale, 1.0));
         }
     }
-    //}
 }
 
 #[allow(clippy::needless_pass_by_value)]

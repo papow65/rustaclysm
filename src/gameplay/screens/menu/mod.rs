@@ -1,4 +1,5 @@
+mod components;
 mod plugin;
 mod systems;
 
-pub(crate) use self::plugin::*;
+pub(crate) use self::{components::*, plugin::*, systems::*};

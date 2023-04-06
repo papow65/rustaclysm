@@ -1,8 +1,5 @@
-use crate::prelude::{
-    Action, Direction, ElevationVisibility, Envir, InstructionQueue, Level, Message, Milliseconds,
-    Nbor, Pos, QueuedInstruction, ZoneLevel,
-};
-use bevy::prelude::{Commands, Component};
+use crate::prelude::*;
+use bevy::prelude::{Commands, Component, NextState};
 use std::{cmp::Ordering, fmt};
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
@@ -46,6 +43,7 @@ impl Player {
     pub(crate) fn plan_action(
         &mut self,
         commands: &mut Commands,
+        next_state: &mut NextState<GameplayScreenState>,
         envir: &mut Envir,
         instruction_queue: &mut InstructionQueue,
         pos: Pos,
@@ -53,7 +51,7 @@ impl Player {
     ) -> Option<Action> {
         loop {
             if let Some(instruction) = instruction_queue.pop() {
-                match self.plan(envir, pos, instruction, now) {
+                match self.plan(next_state, envir, pos, instruction, now) {
                     PlayerBehavior::Perform(action) => break Some(action),
                     PlayerBehavior::Feedback(message) => {
                         commands.spawn(message);
@@ -71,6 +69,7 @@ impl Player {
 
     fn plan(
         &mut self,
+        next_state: &mut NextState<GameplayScreenState>,
         envir: &Envir,
         pos: Pos,
         instruction: QueuedInstruction,
@@ -93,7 +92,8 @@ impl Player {
                 self.handle_offset(envir.get_nbor(curr, &nbor), &nbor)
             }
             (PlayerActionState::Normal, QueuedInstruction::Cancel) => {
-                PlayerBehavior::Feedback(Message::warn("Press ctrl+c/d/q to exit"))
+                next_state.set(GameplayScreenState::Menu);
+                PlayerBehavior::NoEffect
             }
             (_, QueuedInstruction::Cancel | QueuedInstruction::Wait)
             | (PlayerActionState::Attacking, QueuedInstruction::Attack)
