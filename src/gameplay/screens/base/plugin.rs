@@ -11,11 +11,17 @@ impl Plugin for BaseScreenPlugin {
         // executed every frame
         app.add_system(
             manage_mouse_input
-                .before(update_camera)
+                .before(update_camera_base)
+                .before(update_camera_offset)
                 .run_if(in_state(GameplayScreenState::Base)),
         )
         .add_systems(
-            (manage_keyboard_input, run_behavior_schedule)
+            (
+                manage_keyboard_input
+                    .before(update_camera_base)
+                    .before(update_camera_offset),
+                run_behavior_schedule,
+            )
                 .chain()
                 .in_set(OnUpdate(GameplayScreenState::Base)),
         );

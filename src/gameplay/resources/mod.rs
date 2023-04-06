@@ -34,6 +34,29 @@ pub(crate) enum VisualizationUpdate {
     Forced,
 }
 
+#[derive(Debug, Resource)]
+pub(crate) struct CameraOffset(Vec3);
+
+impl CameraOffset {
+    pub(crate) fn zoom(&mut self, zoom_direction: ZoomDirection) {
+        self.0 *= 0.75_f32.powi(if zoom_direction == ZoomDirection::In {
+            1
+        } else {
+            -1
+        });
+    }
+
+    pub(crate) fn offset(&self) -> Vec3 {
+        self.0
+    }
+}
+
+impl Default for CameraOffset {
+    fn default() -> Self {
+        Self(Vec3::new(0.0, 28.4, 35.5))
+    }
+}
+
 // pickup
 #[derive(SystemParam)]
 pub(crate) struct Hierarchy<'w, 's> {

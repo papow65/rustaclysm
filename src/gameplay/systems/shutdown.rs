@@ -14,6 +14,7 @@ pub(crate) fn remove_gameplay_resources(mut commands: Commands) {
     commands.remove_resource::<Sav>();
     commands.remove_resource::<Timeouts>();
     commands.remove_resource::<ZoneLevelIds>();
+    commands.remove_resource::<CameraOffset>();
 }
 
 #[allow(clippy::needless_pass_by_value)]

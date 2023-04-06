@@ -36,7 +36,6 @@ pub(crate) enum PlayerBehavior {
 #[derive(Component)]
 pub(crate) struct Player {
     pub(crate) state: PlayerActionState,
-    pub(crate) camera_distance: f32,
 }
 
 impl Player {

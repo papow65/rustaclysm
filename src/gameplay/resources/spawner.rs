@@ -521,7 +521,6 @@ impl<'w, 's> Spawner<'w, 's> {
             .entity(player_entity)
             .insert(Player {
                 state: PlayerActionState::Normal,
-                camera_distance: 7.1,
             })
             .with_children(|child_builder| {
                 child_builder

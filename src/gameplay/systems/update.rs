@@ -294,10 +294,9 @@ pub(crate) fn update_damaged_items(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn update_camera(
+pub(crate) fn update_camera_base(
     changed_players: Query<(&Pos, &Player), Changed<Player>>,
     mut camera_bases: Query<&mut Transform, (With<CameraBase>, Without<Camera3d>)>,
-    mut cameras: Query<&mut Transform, With<Camera3d>>,
 ) {
     let start = Instant::now();
 
@@ -311,17 +310,21 @@ pub(crate) fn update_camera(
                 _ => Vec3::ZERO,
             };
         }
-
-        for mut transform in cameras.iter_mut() {
-            let view_direction = Vec3::new(
-                0.0 * player.camera_distance,
-                4.0 * player.camera_distance,
-                5.0 * player.camera_distance,
-            );
-            transform.translation = view_direction;
-            transform.look_at(Vec3::ZERO, Vec3::Y);
-        }
     }
+
+    log_if_slow("update_camera", start);
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub(crate) fn update_camera_offset(
+    camera_offset: Res<CameraOffset>,
+    mut cameras: Query<&mut Transform, With<Camera3d>>,
+) {
+    let start = Instant::now();
+
+    let mut transform = cameras.single_mut();
+    transform.translation = camera_offset.offset();
+    transform.look_at(Vec3::ZERO, Vec3::Y);
 
     log_if_slow("update_camera", start);
 }

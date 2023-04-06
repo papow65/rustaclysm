@@ -47,7 +47,8 @@ impl Plugin for GameplayPlugin {
                 update_cursor_visibility_on_player_change,
                 update_visualization_on_item_move,
                 update_visualization_on_focus_move,
-                update_camera,
+                update_camera_base,
+                update_camera_offset,
             )
                 .after(UpdateSet::FlushEffects)
                 .in_set(OnUpdate(ApplicationState::Gameplay)),
@@ -63,8 +64,12 @@ impl Plugin for GameplayPlugin {
                 update_status_speed,
                 update_status_player_state,
                 update_status_detais,
-                spawn_zones_for_camera.after(update_camera),
-                update_collapsed_zone_levels.after(update_camera),
+                spawn_zones_for_camera
+                    .after(update_camera_base)
+                    .after(update_camera_offset),
+                update_collapsed_zone_levels
+                    .after(update_camera_base)
+                    .after(update_camera_offset),
             )
                 .in_set(OnUpdate(ApplicationState::Gameplay)),
         );

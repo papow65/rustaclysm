@@ -20,13 +20,8 @@ fn main_menu(next_state: &mut NextState<ApplicationState>) {
     next_state.set(ApplicationState::MainMenu);
 }
 
-fn zoom(player: &mut Query<&mut Player>, direction: ZoomDirection) {
-    //println!("{direction:?}");
-    player.single_mut().camera_distance *= 0.75_f32.powi(if direction == ZoomDirection::In {
-        1
-    } else {
-        -1
-    });
+fn zoom(camera_offset: &mut CameraOffset, direction: ZoomDirection) {
+    camera_offset.zoom(direction);
 }
 
 fn toggle_elevation(
@@ -53,12 +48,12 @@ fn toggle_help(help: &mut Query<&mut Visibility, With<ManualDisplay>>) {
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn manage_mouse_input(
     mut mouse_wheel_events: EventReader<MouseWheel>,
-    mut player: Query<&mut Player>,
+    mut camera_offset: ResMut<CameraOffset>,
 ) {
     let start = Instant::now();
     for scroll_event in mouse_wheel_events.iter() {
         zoom(
-            &mut player,
+            &mut camera_offset,
             if 0.0 < scroll_event.y {
                 ZoomDirection::In
             } else {
@@ -78,8 +73,9 @@ pub(crate) fn manage_keyboard_input(
     mut instruction_queue: ResMut<InstructionQueue>,
     mut elevation_visibility: ResMut<ElevationVisibility>,
     mut visualization_update: ResMut<VisualizationUpdate>,
+    mut camera_offset: ResMut<CameraOffset>,
     keys: Res<Input<KeyCode>>,
-    mut player: Query<&mut Player>,
+    _player: Query<&mut Player>,
     mut help: Query<&mut Visibility, With<ManualDisplay>>,
 ) {
     let start = Instant::now();
@@ -94,7 +90,7 @@ pub(crate) fn manage_keyboard_input(
                     match instruction {
                         Instruction::Quit => quit(&mut app_exit_events),
                         Instruction::MainMenu => main_menu(&mut next_state),
-                        Instruction::Zoom(direction) => zoom(&mut player, direction),
+                        Instruction::Zoom(direction) => zoom(&mut camera_offset, direction),
                         Instruction::ToggleElevation => {
                             toggle_elevation(&mut elevation_visibility, &mut visualization_update);
                         }
