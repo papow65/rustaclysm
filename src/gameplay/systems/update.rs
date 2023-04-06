@@ -235,10 +235,10 @@ pub(crate) fn update_damaged_characters(
                 "{} hits {label} for {} ({prev} -> {curr})",
                 damage.attacker, damage.amount
             );
-            commands.spawn(Message::new(message));
+            commands.spawn(Message::warn(message));
         } else {
             let message = format!("{attacker} kills {label}", attacker = damage.attacker);
-            commands.spawn(Message::new(message));
+            commands.spawn(Message::warn(message));
             transform.rotation = Quat::from_rotation_y(std::f32::consts::FRAC_PI_2)
                 * Quat::from_rotation_x(-std::f32::consts::FRAC_PI_2);
             commands
@@ -270,13 +270,13 @@ pub(crate) fn update_damaged_items(
                 "{attacker} hits {label} ({prev} -> {curr})",
                 attacker = damage.attacker
             );
-            commands.spawn(Message::new(message));
+            commands.spawn(Message::warn(message));
         } else {
             commands
                 .entity(item)
                 .insert(Hurdle(MoveCostMod(3)))
                 .remove::<Obstacle>();
-            commands.spawn(Message::new(format!("{} breaks {label}", damage.attacker)));
+            commands.spawn(Message::warn(format!("{} breaks {label}", damage.attacker)));
         }
         /*
         Causes a crash

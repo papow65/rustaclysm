@@ -83,7 +83,7 @@ impl Player {
             }
             (PlayerActionState::Normal, QueuedInstruction::Wait) => {
                 self.state = PlayerActionState::Waiting(now + Milliseconds::MINUTE);
-                PlayerBehavior::Feedback(Message::new("Started waiting..."))
+                PlayerBehavior::Feedback(Message::info("Started waiting..."))
             }
             (PlayerActionState::Attacking, QueuedInstruction::Offset(Direction::Here)) => {
                 PlayerBehavior::Feedback(Message::warn("can't attack self"))
@@ -126,11 +126,11 @@ impl Player {
             (_, QueuedInstruction::SwitchRunning) => PlayerBehavior::Perform(Action::SwitchRunning),
             (PlayerActionState::Waiting(_), QueuedInstruction::Interrupted) => {
                 self.state = PlayerActionState::Normal;
-                PlayerBehavior::Feedback(Message::new("You see an enemy and stop waiting"))
+                PlayerBehavior::Feedback(Message::warn("You see an enemy and stop waiting"))
             }
             (PlayerActionState::Waiting(_), QueuedInstruction::Finished) => {
                 self.state = PlayerActionState::Normal;
-                PlayerBehavior::Feedback(Message::new("Finished waiting"))
+                PlayerBehavior::Feedback(Message::info("Finished waiting"))
             }
             (_, QueuedInstruction::Interrupted) => {
                 self.state = PlayerActionState::Normal;

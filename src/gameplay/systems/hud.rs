@@ -148,7 +148,7 @@ pub(crate) fn spawn_hud(mut commands: Commands, mut asset_server: ResMut<AssetSe
     // Workaround to make sure the log starts at the bottom
     for i in 0..20 {
         // All different to make sure the messages are not bundled
-        commands.spawn(Message::new(" ".repeat(i)));
+        commands.spawn(Message::info(" ".repeat(i)));
     }
 }
 
@@ -163,8 +163,12 @@ pub(crate) fn update_log(
 
     let mut new_messages = false;
     for message in changed.iter() {
-        if message.text().trim() != "" {
-            println!("{string}", string = message.text());
+        if message.text.trim() != "" {
+            if message.severity == Severity::Error {
+                eprintln!("{}", message.text);
+            } else {
+                println!("{}", message.text);
+            }
         }
         new_messages = true;
     }
@@ -176,7 +180,7 @@ pub(crate) fn update_log(
     let mut shown_reverse = Vec::<(&Message, usize)>::new();
     for message in messages.iter().collect::<Vec<&Message>>().iter().rev() {
         match last {
-            Some((last_message, ref mut last_count)) if last_message.text() == message.text() => {
+            Some((last_message, ref mut last_count)) if last_message.text == message.text => {
                 *last_count += 1;
             }
             Some(message_and_count) => {
@@ -201,9 +205,9 @@ pub(crate) fn update_log(
     sections.clear();
     for (message, count) in shown_reverse.iter().rev() {
         let mut style = hud_defaults.text_style.clone();
-        style.color = message.color();
+        style.color = message.severity.color();
         sections.push(TextSection {
-            value: String::from(message.text()),
+            value: message.text.clone(),
             style,
         });
         if 1 < *count {

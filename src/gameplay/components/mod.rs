@@ -288,14 +288,14 @@ impl Appearance {
 }
 
 #[derive(Debug, PartialEq, Eq)]
-enum Serverity {
+pub(crate) enum Severity {
     Info,
     Warn,
     Error,
 }
 
-impl Serverity {
-    fn color(&self) -> Color {
+impl Severity {
+    pub(crate) fn color(&self) -> Color {
         match self {
             Self::Info => Color::WHITE,
             Self::Warn => Color::rgb(1.0, 1.0, 0.4),
@@ -304,37 +304,45 @@ impl Serverity {
     }
 }
 
+/** Message shown to the player */
 #[derive(Component, Debug, PartialEq, Eq)]
-pub(crate) struct Message(String, Serverity); // shown to the player
+pub(crate) struct Message {
+    pub(crate) text: String,
+    pub(crate) severity: Severity,
+    _private: (),
+}
 
 impl Message {
-    pub(crate) fn new<S>(s: S) -> Self
+    pub(crate) fn new<S>(s: S, severity: Severity) -> Self
     where
         S: Into<String>,
     {
-        Self(s.into(), Serverity::Info)
+        Self {
+            text: s.into(),
+            severity,
+            _private: (),
+        }
+    }
+
+    pub(crate) fn info<S>(s: S) -> Self
+    where
+        S: Into<String>,
+    {
+        Self::new(s, Severity::Info)
     }
 
     pub(crate) fn warn<S>(s: S) -> Self
     where
         S: Into<String>,
     {
-        Self(s.into(), Serverity::Warn)
+        Self::new(s, Severity::Warn)
     }
 
     pub(crate) fn error<S>(s: S) -> Self
     where
         S: Into<String>,
     {
-        Self(s.into(), Serverity::Error)
-    }
-
-    pub(crate) fn text(&self) -> &str {
-        &self.0
-    }
-
-    pub(crate) fn color(&self) -> Color {
-        self.1.color()
+        Self::new(s, Severity::Error)
     }
 }
 

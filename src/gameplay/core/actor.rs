@@ -186,7 +186,7 @@ impl<'s> Actor<'s> {
             match container.check_add(self.label, current_items, pd_containable, pd_label) {
                 Ok(()) => {
                     let message = format!("{} picks up {}", self.label, &pd_label);
-                    commands.spawn(Message::new(message));
+                    commands.spawn(Message::info(message));
                     commands
                         .entity(pd_entity)
                         .remove::<Pos>()
@@ -220,7 +220,7 @@ impl<'s> Actor<'s> {
             .iter()
             .find(|(.., parent)| parent.get() == self.entity)
         {
-            commands.spawn(Message::new(format!("{} drops {dee_label}", self.label)));
+            commands.spawn(Message::info(format!("{} drops {dee_label}", self.label)));
             commands.entity(self.entity).remove_children(&[dumpee]);
             commands
                 .entity(dumpee)
