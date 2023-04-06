@@ -17,7 +17,6 @@ pub(crate) fn spawn_menu(mut commands: Commands, asset_server: Res<AssetServer>)
             align_items: AlignItems::Center,
             ..default()
         },
-        background_color: DEFAULT_TEXT_COLOR.into(),
         ..default()
     };
     let font = default_font(&asset_server);

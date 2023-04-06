@@ -109,7 +109,7 @@ fn add_notification_area(parent: &mut ChildBuilder, asset_server: &Res<AssetServ
                 },
                 ..default()
             },
-            background_color: DEFAULT_BUTTON_COLOR.into(),
+            background_color: PANEL_COLOR.into(),
             ..default()
         })
         .insert(MessageWrapper)
@@ -144,7 +144,6 @@ fn add_quit_button(parent: &mut ChildBuilder, asset_server: &AssetServer) {
                 align_items: AlignItems::Center,
                 ..default()
             },
-            background_color: DEFAULT_TEXT_COLOR.into(),
             ..default()
         })
         .insert(QuitButton)
@@ -206,7 +205,6 @@ pub(crate) fn update_sav_files(
                                             },
                                             ..default()
                                         },
-                                        background_color: DEFAULT_BUTTON_COLOR.into(),
                                         ..default()
                                     })
                                     .insert(LoadButton { path: path.clone() })
