@@ -7,11 +7,12 @@ const MAX_EXPAND_DISTANCE: i32 = 20;
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn spawn_zones_for_camera(
     mut commands: Commands,
+    player_action_state: Res<PlayerActionState>,
     mut spawner: Spawner,
     map_assets: Res<Assets<Map>>,
     mut previous_camera_global_transform: Local<GlobalTransform>,
     mut previous_expanded_region: Local<Region>,
-    players: Query<(&Pos, &Player)>,
+    players: Query<&Pos, With<Player>>,
     cameras: Query<(&Camera, &GlobalTransform)>,
     expanded_subzone_levels: Query<(Entity, &SubzoneLevel), Without<Collapsed>>,
 ) {
@@ -22,8 +23,8 @@ pub(crate) fn spawn_zones_for_camera(
         return;
     }
 
-    let (&player_pos, player) = players.single();
-    let focus = Focus::new(player, player_pos);
+    let &player_pos = players.single();
+    let focus = Focus::new(&player_action_state, player_pos);
     let expanded_region = expanded_region(&focus, camera, &global_transform);
     if expanded_region == *previous_expanded_region {
         return;
@@ -180,11 +181,12 @@ fn despawn_expanded_subzone_levels(
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_collapsed_zone_levels(
     mut commands: Commands,
+    player_action_state: Res<PlayerActionState>,
     mut spawner: Spawner,
     mut skip_twice: Local<u8>,
     mut previous_camera_global_transform: Local<GlobalTransform>,
     mut previous_visible_region: Local<Region>,
-    players: Query<(&Pos, &Player)>,
+    players: Query<&Pos, With<Player>>,
     cameras: Query<(&Camera, &GlobalTransform)>,
     collapsed_zone_levels: Query<(&ZoneLevel, &Children), (With<Collapsed>, With<Visibility>)>,
 ) {
@@ -204,14 +206,14 @@ pub(crate) fn update_collapsed_zone_levels(
         return;
     }
 
-    let (&player_pos, player) = players.single();
+    let &player_pos = players.single();
     // Collapsed zones above zero add little value, so we always skip these.
     let visible_region = visible_region(camera, &global_transform).ground_only();
     //println!("Visible region: {:?}", &visible_region);
     if visible_region == *previous_visible_region {
         return;
     }
-    let focus = Focus::new(player, player_pos);
+    let focus = Focus::new(&player_action_state, player_pos);
     let expanded_region = expanded_region(&focus, camera, &global_transform);
     //println!("Expanded region: {:?}", &expanded_region);
 
@@ -370,10 +372,11 @@ pub(crate) fn handle_map_events(
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn handle_overmap_buffer_events(
+    player_action_state: Res<PlayerActionState>,
     mut spawner: Spawner,
     mut overmap_buffer_asset_events: EventReader<AssetEvent<OvermapBuffer>>,
     overmap_buffer_assets: Res<Assets<OvermapBuffer>>,
-    players: Query<(&Pos, &Player)>,
+    players: Query<&Pos, With<Player>>,
     cameras: Query<(&Camera, &GlobalTransform)>,
 ) {
     for overmap_buffer_asset_event in overmap_buffer_asset_events.iter() {
@@ -382,9 +385,9 @@ pub(crate) fn handle_overmap_buffer_events(
             let overzone = spawner.explored.load(handle, overmap_buffer);
 
             let (camera, &global_transform) = cameras.single();
-            let (&player_pos, player) = players.single();
+            let &player_pos = players.single();
             let visible_region = visible_region(camera, &global_transform).ground_only();
-            let focus = Focus::new(player, player_pos);
+            let focus = Focus::new(&player_action_state, player_pos);
             let expanded_region = expanded_region(&focus, camera, &global_transform);
 
             let (x_range, z_range) = overzone.xz_ranges();

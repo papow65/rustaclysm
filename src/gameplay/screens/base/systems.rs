@@ -75,7 +75,6 @@ pub(crate) fn manage_keyboard_input(
     mut visualization_update: ResMut<VisualizationUpdate>,
     mut camera_offset: ResMut<CameraOffset>,
     keys: Res<Input<KeyCode>>,
-    _player: Query<&mut Player>,
     mut help: Query<&mut Visibility, With<ManualDisplay>>,
 ) {
     let start = Instant::now();

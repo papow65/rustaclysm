@@ -314,21 +314,20 @@ pub(crate) fn update_status_speed(
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_status_player_state(
-    player: Query<&Player, Changed<Player>>,
+    player_action_state: Res<PlayerActionState>,
     mut status_displays: Query<&mut Text, With<StatusDisplay>>,
 ) {
     let start = Instant::now();
 
-    if let Some(player) = player.iter().next() {
-        status_displays.iter_mut().next().unwrap().sections[4].value =
-            format!("{}\n", player.state);
-    }
+    status_displays.iter_mut().next().unwrap().sections[4].value =
+        format!("{}\n", *player_action_state);
 
     log_if_slow("update_status_player_state", start);
 }
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_status_detais(
+    player_action_state: Res<PlayerActionState>,
     envir: Envir,
     asset_server: Res<AssetServer>,
     mut explored: ResMut<Explored>,
@@ -352,54 +351,51 @@ pub(crate) fn update_status_detais(
         (Without<Health>, Without<Amount>),
     >,
     items: Query<(Option<&ObjectDefinition>, &TextLabel), (Without<Health>, With<Amount>)>,
-    player: Query<&Player, Changed<Player>>,
     mut status_displays: Query<&mut Text, With<StatusDisplay>>,
     //_globs: Query<(&GlobalTransform, Option<&ZoneLevel>)>,
 ) {
     let start = Instant::now();
 
-    if let Some(player) = player.iter().next() {
-        status_displays.iter_mut().next().unwrap().sections[5].value = match player.state {
-            PlayerActionState::ExaminingPos(pos) => {
-                /*for ent in envir.location.all(pos) {
-                    if let Ok((glob, _)) = globs.get(ent) {
-                        println!("Global transfrom: {glob:?}");
-                    }
-                }*/
-
-                if explored.has_pos_been_seen(pos) {
-                    let all_here = envir.location.all(pos);
-                    let characters = characters_info(&all_here, &characters);
-                    let entities = all_here
-                        .iter()
-                        .flat_map(|&i| entities.get(i))
-                        .map(entity_info)
-                        .map(|s| s + "\n")
-                        .collect::<String>();
-                    let items = items_info(&all_here, &items);
-                    format!("\n{pos:?}\n{characters}{entities}{items}")
-                } else {
-                    format!("\n{pos:?}\nUnseen")
+    status_displays.iter_mut().next().unwrap().sections[5].value = match *player_action_state {
+        PlayerActionState::ExaminingPos(pos) => {
+            /*for ent in envir.location.all(pos) {
+                if let Ok((glob, _)) = globs.get(ent) {
+                    println!("Global transfrom: {glob:?}");
                 }
-            }
-            PlayerActionState::ExaminingZoneLevel(zone_level) => {
-                /*for (glob, z) in globs.iter() {
-                    if z == Some(&zone_level) {
-                        println!("Global transfrom: {glob:?}");
-                    }
-                }*/
+            }*/
 
-                match explored.has_zone_level_been_seen(&asset_server, zone_level) {
-                    seen_from @ Some(SeenFrom::CloseBy | SeenFrom::FarAway) => format!(
-                        "\n{zone_level:?}\n{:?}\n{seen_from:?}",
-                        zone_level_ids.get(zone_level)
-                    ),
-                    None | Some(SeenFrom::Never) => format!("\n{zone_level:?}\nUnseen"),
-                }
+            if explored.has_pos_been_seen(pos) {
+                let all_here = envir.location.all(pos);
+                let characters = characters_info(&all_here, &characters);
+                let entities = all_here
+                    .iter()
+                    .flat_map(|&i| entities.get(i))
+                    .map(entity_info)
+                    .map(|s| s + "\n")
+                    .collect::<String>();
+                let items = items_info(&all_here, &items);
+                format!("\n{pos:?}\n{characters}{entities}{items}")
+            } else {
+                format!("\n{pos:?}\nUnseen")
             }
-            _ => String::new(),
-        };
-    }
+        }
+        PlayerActionState::ExaminingZoneLevel(zone_level) => {
+            /*for (glob, z) in globs.iter() {
+                if z == Some(&zone_level) {
+                    println!("Global transfrom: {glob:?}");
+                }
+            }*/
+
+            match explored.has_zone_level_been_seen(&asset_server, zone_level) {
+                seen_from @ Some(SeenFrom::CloseBy | SeenFrom::FarAway) => format!(
+                    "\n{zone_level:?}\n{:?}\n{seen_from:?}",
+                    zone_level_ids.get(zone_level)
+                ),
+                None | Some(SeenFrom::Never) => format!("\n{zone_level:?}\nUnseen"),
+            }
+        }
+        _ => String::new(),
+    };
 
     log_if_slow("update_status_detais", start);
 }

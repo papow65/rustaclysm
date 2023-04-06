@@ -47,8 +47,8 @@ impl Plugin for GameplayPlugin {
                 update_cursor_visibility_on_player_change,
                 update_visualization_on_item_move,
                 update_visualization_on_focus_move,
-                update_camera_base,
-                update_camera_offset,
+                update_camera_base.run_if(resource_exists_and_changed::<PlayerActionState>()),
+                update_camera_offset.run_if(resource_exists_and_changed::<CameraOffset>()),
             )
                 .after(UpdateSet::FlushEffects)
                 .in_set(OnUpdate(ApplicationState::Gameplay)),
@@ -59,11 +59,12 @@ impl Plugin for GameplayPlugin {
                 handle_overmap_buffer_events,
                 update_log,
                 update_status_fps,
-                update_status_time,
+                update_status_time.run_if(resource_exists_and_changed::<Timeouts>()),
                 update_status_health,
                 update_status_speed,
-                update_status_player_state,
-                update_status_detais,
+                update_status_player_state
+                    .run_if(resource_exists_and_changed::<PlayerActionState>()),
+                update_status_detais.run_if(resource_exists_and_changed::<PlayerActionState>()),
                 spawn_zones_for_camera
                     .after(update_camera_base)
                     .after(update_camera_offset),

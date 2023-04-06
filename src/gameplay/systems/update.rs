@@ -32,27 +32,27 @@ pub(crate) fn update_hidden_item_visibility(
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_cursor_visibility_on_player_change(
+    player_action_state: Res<PlayerActionState>,
     mut curors: Query<(&mut Visibility, &mut Transform), With<ExamineCursor>>,
-    players: Query<&Player, Changed<Player>>,
 ) {
     let start = Instant::now();
 
-    if let Ok(player) = players.get_single() {
-        if let Ok((mut visibility, mut transform)) = curors.get_single_mut() {
-            let examine_pos = matches!(player.state, PlayerActionState::ExaminingPos(_));
-            let examine_zone_level =
-                matches!(player.state, PlayerActionState::ExaminingZoneLevel(_));
-            *visibility = if examine_pos || examine_zone_level {
-                Visibility::Inherited
-            } else {
-                Visibility::Hidden
-            };
-            transform.scale = if examine_zone_level {
-                Vec3::splat(24.0)
-            } else {
-                Vec3::ONE
-            };
-        }
+    if let Ok((mut visibility, mut transform)) = curors.get_single_mut() {
+        let examine_pos = matches!(*player_action_state, PlayerActionState::ExaminingPos(_));
+        let examine_zone_level = matches!(
+            *player_action_state,
+            PlayerActionState::ExaminingZoneLevel(_)
+        );
+        *visibility = if examine_pos || examine_zone_level {
+            Visibility::Inherited
+        } else {
+            Visibility::Hidden
+        };
+        transform.scale = if examine_zone_level {
+            Vec3::splat(24.0)
+        } else {
+            Vec3::ONE
+        };
     }
 
     log_if_slow("update_cursor_visibility_on_player_change", start);
@@ -116,6 +116,7 @@ fn update_visualization(
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_visualization_on_item_move(
     mut commands: Commands,
+    player_action_state: Res<PlayerActionState>,
     envir: Envir,
     mut explored: ResMut<Explored>,
     elevation_visibility: Res<ElevationVisibility>,
@@ -131,13 +132,13 @@ pub(crate) fn update_visualization_on_item_move(
         Changed<Pos>,
     >,
     child_items: Query<&Appearance, (With<Parent>, Without<Pos>)>,
-    players: Query<(&Pos, &Player)>,
+    players: Query<&Pos, With<Player>>,
 ) {
     let start = Instant::now();
 
     if moved_items.iter().peekable().peek().is_some() {
-        let (&player_pos, player) = players.single();
-        let focus = Focus::new(player, player_pos);
+        let &player_pos = players.single();
+        let focus = Focus::new(&player_action_state, player_pos);
         let currently_visible = envir.currently_visible(player_pos); // does not depend on focus
 
         for (&pos, mut visibility, mut last_seen, accessible, speed, children) in
@@ -166,6 +167,7 @@ pub(crate) fn update_visualization_on_item_move(
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_visualization_on_focus_move(
     mut commands: Commands,
+    player_action_state: Res<PlayerActionState>,
     envir: Envir,
     mut explored: ResMut<Explored>,
     elevation_visibility: Res<ElevationVisibility>,
@@ -180,39 +182,36 @@ pub(crate) fn update_visualization_on_focus_move(
         &Children,
     )>,
     child_items: Query<&Appearance, (With<Parent>, Without<Pos>)>,
-    players: Query<(&Pos, &Player)>,
+    players: Query<&Pos, With<Player>>,
 ) {
     let start = Instant::now();
 
-    if let Ok((&player_pos, player)) = players.get_single() {
-        let focus = Focus::new(player, player_pos);
-        if focus != *last_focus || *visualization_update == VisualizationUpdate::Forced {
-            let currently_visible = envir.currently_visible(player_pos); // does not depend on focus
+    let &player_pos = players.single();
+    let focus = Focus::new(&player_action_state, player_pos);
+    if focus != *last_focus || *visualization_update == VisualizationUpdate::Forced {
+        let currently_visible = envir.currently_visible(player_pos); // does not depend on focus
 
-            for (&pos, mut visibility, mut last_seen, accessible, speed, children) in
-                items.iter_mut()
-            {
-                update_visualization(
-                    &mut commands,
-                    &mut explored,
-                    &currently_visible,
-                    *elevation_visibility,
-                    &focus,
-                    pos,
-                    &mut visibility,
-                    &mut last_seen,
-                    accessible,
-                    speed,
-                    children,
-                    &child_items,
-                );
-            }
-
-            *last_focus = focus;
+        for (&pos, mut visibility, mut last_seen, accessible, speed, children) in items.iter_mut() {
+            update_visualization(
+                &mut commands,
+                &mut explored,
+                &currently_visible,
+                *elevation_visibility,
+                &focus,
+                pos,
+                &mut visibility,
+                &mut last_seen,
+                accessible,
+                speed,
+                children,
+                &child_items,
+            );
         }
 
-        *visualization_update = VisualizationUpdate::Smart;
+        *last_focus = focus;
     }
+
+    *visualization_update = VisualizationUpdate::Smart;
 
     log_if_slow("update_visualization_on_focus_move", start);
 }
@@ -295,21 +294,22 @@ pub(crate) fn update_damaged_items(
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_camera_base(
-    changed_players: Query<(&Pos, &Player), Changed<Player>>,
+    player_state: Res<PlayerActionState>,
+    players: Query<&Pos, With<Player>>,
     mut camera_bases: Query<&mut Transform, (With<CameraBase>, Without<Camera3d>)>,
 ) {
     let start = Instant::now();
 
-    if let Ok((&pos, player)) = changed_players.get_single() {
-        for mut transform in camera_bases.iter_mut() {
-            transform.translation = match player.state {
-                PlayerActionState::ExaminingPos(target) => target.vec3() - pos.vec3(),
-                PlayerActionState::ExaminingZoneLevel(target) => {
-                    target.base_pos().vec3() - pos.vec3() + Vec3::new(11.5, 0.0, 11.5)
-                }
-                _ => Vec3::ZERO,
-            };
-        }
+    let pos = players.single();
+
+    for mut transform in camera_bases.iter_mut() {
+        transform.translation = match *player_state {
+            PlayerActionState::ExaminingPos(target) => target.vec3() - pos.vec3(),
+            PlayerActionState::ExaminingZoneLevel(target) => {
+                target.base_pos().vec3() - pos.vec3() + Vec3::new(11.5, 0.0, 11.5)
+            }
+            _ => Vec3::ZERO,
+        };
     }
 
     log_if_slow("update_camera", start);

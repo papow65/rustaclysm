@@ -20,11 +20,12 @@ pub(crate) fn manage_player_death(
 pub(crate) fn plan_action(
     mut commands: Commands,
     mut next_state: ResMut<NextState<GameplayScreenState>>,
+    mut player_action_state: ResMut<PlayerActionState>,
     mut envir: Envir,
     mut instruction_queue: ResMut<InstructionQueue>,
     mut timeouts: ResMut<Timeouts>,
     actors: Actors,
-    mut players: Query<&mut Player>,
+    mut players: Query<(), With<Player>>,
 ) -> Option<(Entity, Action)> {
     let start = Instant::now();
 
@@ -39,8 +40,8 @@ pub(crate) fn plan_action(
     };
     let factions = actors.collect_factions();
     let actor = actors.get(active_entity);
-    let action = if let Ok(ref mut player) = players.get_mut(active_entity) {
-        if let Some(action) = player.plan_action(
+    let action = if players.get_mut(active_entity).is_ok() {
+        if let Some(action) = player_action_state.plan_action(
             &mut commands,
             &mut next_state,
             &mut envir,
@@ -49,7 +50,7 @@ pub(crate) fn plan_action(
             timeouts.time(),
         ) {
             action
-        } else if let PlayerActionState::Waiting(until) = player.state {
+        } else if let PlayerActionState::Waiting(until) = *player_action_state {
             if !Faction::Human.enemies(&envir, &factions, &actor).is_empty() {
                 instruction_queue.add(QueuedInstruction::Interrupted);
                 return None; // process the cancellation next turn

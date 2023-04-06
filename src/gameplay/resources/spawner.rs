@@ -519,9 +519,7 @@ impl<'w, 's> Spawner<'w, 's> {
 
         self.commands
             .entity(player_entity)
-            .insert(Player {
-                state: PlayerActionState::Normal,
-            })
+            .insert(Player)
             .with_children(|child_builder| {
                 child_builder
                     .spawn(SpatialBundle::default())
