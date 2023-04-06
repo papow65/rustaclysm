@@ -26,7 +26,6 @@ impl Plugin for GameplayPlugin {
         // executed only at gameplay startup
         app.add_systems(
             (
-                initialize_screen_state,
                 create_independent_resources,
                 apply_system_buffers,
                 create_dependent_resources,

@@ -1,12 +1,6 @@
 use crate::prelude::*;
 use bevy::prelude::*;
 
-/** Necessary when the gameplay state was set to disabled */
-#[allow(clippy::needless_pass_by_value)]
-pub(crate) fn initialize_screen_state(mut next_state: ResMut<NextState<GameplayScreenState>>) {
-    next_state.set(GameplayScreenState::default());
-}
-
 /// Create resources that do not need other resources and should not persist between two gameplays
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn create_independent_resources(mut commands: Commands) {
