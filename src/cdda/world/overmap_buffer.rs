@@ -44,11 +44,6 @@ impl AssetLoader for OvermapBufferLoader {
         load_context: &'a mut LoadContext,
     ) -> BoxedFuture<'a, Result<(), Error>> {
         Box::pin(async move {
-            eprintln!("Haystack: {:?}", &bytes[..25]);
-            eprintln!("Haystack: {:?}", String::from_utf8_lossy(&bytes[..25]));
-            eprintln!("Needle: {:?}", b"\n");
-            eprintln!("Needle: {:?}", String::from_utf8_lossy(b"\n"));
-
             let newline_pos = bytes
                 .windows(1)
                 .position(|window| window == b"\n")

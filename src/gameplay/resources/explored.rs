@@ -48,22 +48,8 @@ impl Explored {
                 } else {
                     SeenFrom::Never
                 });
-                if 103 < zone_level.zone.x
-                    && zone_level.zone.x < 109
-                    && Level::new(-3) < zone_level.level
-                    && 215 < zone_level.zone.z
-                    && zone_level.zone.z < 221
-                {
-                    dbg!(zone_level);
-                    dbg!(self.zone_level.get(&zone_level));
-                }
             }
         }
-
-        dbg!(overzone);
-        dbg!(&self.loading);
-        dbg!(self.zone_level.len());
-
         overzone
     }
 

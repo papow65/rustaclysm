@@ -350,28 +350,20 @@ pub(crate) fn handle_map_events(
     map_assets: Res<Assets<Map>>,
 ) {
     for map_asset_event in map_asset_events.iter() {
-        match map_asset_event {
-            AssetEvent::Created { handle } => {
-                let map = &map_assets.get(handle).expect("Map loaded");
-                for submap in &map.0 {
-                    let subzone_level = SubzoneLevel {
-                        x: submap.coordinates.0,
-                        level: Level::new(submap.coordinates.2),
-                        z: submap.coordinates.1,
-                    };
-                    if spawner.subzone_level_entities.get(subzone_level).is_none() {
-                        assert_eq!(submap.coordinates, subzone_level.coordinates());
-                        spawner.spawn_subzone(submap, subzone_level);
-                    }
+        if let AssetEvent::Created { handle } = map_asset_event {
+            let map = &map_assets.get(handle).expect("Map loaded");
+            for submap in &map.0 {
+                let subzone_level = SubzoneLevel {
+                    x: submap.coordinates.0,
+                    level: Level::new(submap.coordinates.2),
+                    z: submap.coordinates.1,
+                };
+                if spawner.subzone_level_entities.get(subzone_level).is_none() {
+                    assert_eq!(submap.coordinates, subzone_level.coordinates());
+                    spawner.spawn_subzone(submap, subzone_level);
                 }
-                spawner.maps.loading.retain(|h| h != handle);
             }
-            AssetEvent::Modified { handle } => {
-                eprintln!("Map modified {map_asset_event:?} {handle:?}");
-            }
-            AssetEvent::Removed { handle } => {
-                eprintln!("Map removed {map_asset_event:?} {handle:?}");
-            }
+            spawner.maps.loading.retain(|h| h != handle);
         }
     }
 }
@@ -385,45 +377,37 @@ pub(crate) fn handle_overmap_buffer_events(
     cameras: Query<(&Camera, &GlobalTransform)>,
 ) {
     for overmap_buffer_asset_event in overmap_buffer_asset_events.iter() {
-        match overmap_buffer_asset_event {
-            AssetEvent::Created { handle } => {
-                let overmap_buffer = overmap_buffer_assets.get(handle).expect("Map loaded");
-                let overzone = spawner.explored.load(handle, overmap_buffer);
+        if let AssetEvent::Created { handle } = overmap_buffer_asset_event {
+            let overmap_buffer = overmap_buffer_assets.get(handle).expect("Map loaded");
+            let overzone = spawner.explored.load(handle, overmap_buffer);
 
-                let (camera, &global_transform) = cameras.single();
-                let (&player_pos, player) = players.single();
-                let visible_region = visible_region(camera, &global_transform).ground_only();
-                let focus = Focus::new(player, player_pos);
-                let expanded_region = expanded_region(&focus, camera, &global_transform);
+            let (camera, &global_transform) = cameras.single();
+            let (&player_pos, player) = players.single();
+            let visible_region = visible_region(camera, &global_transform).ground_only();
+            let focus = Focus::new(player, player_pos);
+            let expanded_region = expanded_region(&focus, camera, &global_transform);
 
-                let (x_range, z_range) = overzone.xz_ranges();
-                for x in x_range {
-                    for z in z_range.clone() {
-                        let zone = Zone { x, z };
-                        for level in Level::GROUNDS {
-                            let zone_level = ZoneLevel { zone, level };
-                            if spawner.zone_level_entities.get(zone_level).is_none() {
-                                let visibility = collapsed_visibility(
-                                    &spawner.asset_server,
-                                    &mut spawner.explored,
-                                    zone_level,
-                                    &expanded_region,
-                                    &visible_region,
-                                    &focus,
-                                );
-                                let result =
-                                    spawner.spawn_collapsed_zone_level(zone_level, &visibility);
-                                assert!(result.is_ok(), "{zone_level:?}");
-                            }
+            let (x_range, z_range) = overzone.xz_ranges();
+            for x in x_range {
+                for z in z_range.clone() {
+                    let zone = Zone { x, z };
+                    for level in Level::GROUNDS {
+                        let zone_level = ZoneLevel { zone, level };
+                        if spawner.zone_level_entities.get(zone_level).is_none() {
+                            let visibility = collapsed_visibility(
+                                &spawner.asset_server,
+                                &mut spawner.explored,
+                                zone_level,
+                                &expanded_region,
+                                &visible_region,
+                                &focus,
+                            );
+                            let result =
+                                spawner.spawn_collapsed_zone_level(zone_level, &visibility);
+                            assert!(result.is_ok(), "{zone_level:?}");
                         }
                     }
                 }
-            }
-            AssetEvent::Modified { handle } => {
-                eprintln!("Overmap buffer modified {overmap_buffer_asset_event:?} {handle:?}");
-            }
-            AssetEvent::Removed { handle } => {
-                eprintln!("Overmap buffer removed {overmap_buffer_asset_event:?} {handle:?}");
             }
         }
     }

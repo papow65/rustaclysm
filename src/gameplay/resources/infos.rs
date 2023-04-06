@@ -42,6 +42,8 @@ impl Infos {
                 println!("Searching {pattern} for info files");
                 glob(pattern).expect("Failed to read glob pattern")
             });
+        let mut file_count = 0;
+        let mut info_count = 0;
         for json_path in json_paths {
             let json_path = json_path.expect("problem with json path for infos");
             if json_path.ends_with("default_blacklist.json")
@@ -52,11 +54,11 @@ impl Infos {
             }
             let file_contents = read_to_string(&json_path)
                 .unwrap_or_else(|_| panic!("Could not read {}", json_path.display()));
-            println!("Found info file: {}", json_path.display());
             let contents = serde_json::from_str::<Vec<serde_json::Map<String, serde_json::Value>>>(
                 file_contents.as_str(),
             );
             let contents = contents.expect("Failed loading infos");
+            file_count += 1;
 
             for content in contents {
                 let type_ = content.get("type").expect("type present");
@@ -84,6 +86,7 @@ impl Infos {
                 for id in ids {
                     assert!(by_type.get(&id).is_none(), "double entry for {:?}", &id);
                     by_type.insert(id.clone(), content.clone());
+                    info_count += 1;
                 }
 
                 let mut aliases = Vec::new();
@@ -107,10 +110,12 @@ impl Infos {
                     // Duplicates possible
                     if by_type.get(&alias).is_none() {
                         by_type.insert(alias.clone(), content.clone());
+                        info_count += 1;
                     }
                 }
             }
         }
+        println!("Found {info_count} ids in {file_count} info files");
         assert!(!literals.is_empty());
         literals
     }
@@ -278,7 +283,7 @@ impl Infos {
 
         while let Some(other) = self.looks_like(current_definition_ref) {
             if variants.contains(other) {
-                eprintln!("Variants {:?} already contains {:?}", &variants, &other);
+                //eprintln!("Variants {:?} already contains {:?}", &variants, &other); // TODO
                 break;
             }
             variants.push(other.suffix("_season_summer"));
