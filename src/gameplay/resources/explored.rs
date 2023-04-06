@@ -75,7 +75,6 @@ impl Explored {
                 let handle = asset_server
                     .load::<OvermapBuffer, _>(OvermapBufferPath::new(&self.sav_path, overzone).0);
                 self.loading.insert(handle, overzone);
-                dbg!(&self.loading);
             }
             None
         })
