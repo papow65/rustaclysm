@@ -35,7 +35,7 @@ pub(crate) fn run_application() {
         .add_plugin(GameplayPlugin);
 
     // once at startup
-    app.add_startup_system(maximize_window);
+    app.add_startup_systems((maximize_window, load_fonts));
 
     // every frame
     app.add_system(manage_button_hover);

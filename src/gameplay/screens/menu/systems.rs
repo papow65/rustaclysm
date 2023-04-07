@@ -9,7 +9,7 @@ const SPACING: f32 = 20.0;
 const FONT_SIZE: f32 = 40.0;
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn spawn_menu(mut commands: Commands, asset_server: Res<AssetServer>) {
+pub(crate) fn spawn_menu(mut commands: Commands, fonts: Res<Fonts>) {
     let button = ButtonBundle {
         style: Style {
             size: Size::new(Val::Px(250.0), Val::Px(70.0)),
@@ -19,7 +19,7 @@ pub(crate) fn spawn_menu(mut commands: Commands, asset_server: Res<AssetServer>)
         },
         ..default()
     };
-    let font = default_font(&asset_server);
+    let font = fonts.default();
 
     commands
         .spawn(NodeBundle {

@@ -15,7 +15,11 @@ const BACKGROUND_HEIGHT: f32 = 1009.0;
 const BACKGROUND_NAME: &str = "on_the_run.png";
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn spawn_main_menu(mut commands: Commands, asset_server: Res<AssetServer>) {
+pub(crate) fn spawn_main_menu(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    fonts: Res<Fonts>,
+) {
     commands.spawn(Camera2dBundle::default());
 
     let background_image = asset_server.load(Paths::backgrounds_path().join(BACKGROUND_NAME));
@@ -38,31 +42,31 @@ pub(crate) fn spawn_main_menu(mut commands: Commands, asset_server: Res<AssetSer
             ..default()
         })
         .with_children(|parent| {
-            add_title(parent, &asset_server);
-            add_tagline(parent, &asset_server);
+            add_title(parent, fonts.default());
+            add_tagline(parent, fonts.default());
             add_load_button_area(parent);
-            add_notification_area(parent, &asset_server);
-            add_quit_button(parent, &asset_server);
+            add_notification_area(parent, fonts.default());
+            add_quit_button(parent, fonts.default());
         });
 }
 
-fn add_title(parent: &mut ChildBuilder, asset_server: &Res<AssetServer>) {
+fn add_title(parent: &mut ChildBuilder, font: Handle<Font>) {
     parent.spawn(TextBundle::from_section(
         "Rustaclysm",
         TextStyle {
-            font: default_font(asset_server),
+            font,
             font_size: 120.0,
             color: DEFAULT_TEXT_COLOR,
         },
     ));
 }
 
-fn add_tagline(parent: &mut ChildBuilder, asset_server: &Res<AssetServer>) {
+fn add_tagline(parent: &mut ChildBuilder, font: Handle<Font>) {
     parent.spawn(
         TextBundle::from_section(
             "A 3D reimplementation of Cataclysm: Dark Days Ahead",
             TextStyle {
-                font: default_font(asset_server),
+                font,
                 font_size: 22.0,
                 color: DEFAULT_TEXT_COLOR,
             },
@@ -94,7 +98,7 @@ fn add_load_button_area(parent: &mut ChildBuilder) {
         .insert(LoadButtonArea);
 }
 
-fn add_notification_area(parent: &mut ChildBuilder, asset_server: &Res<AssetServer>) {
+fn add_notification_area(parent: &mut ChildBuilder, font: Handle<Font>) {
     parent
         .spawn(NodeBundle {
             style: Style {
@@ -119,7 +123,7 @@ fn add_notification_area(parent: &mut ChildBuilder, asset_server: &Res<AssetServ
                     text: Text::from_section(
                         "",
                         TextStyle {
-                            font: default_font(asset_server),
+                            font,
                             font_size: 20.0,
                             color: DEFAULT_TEXT_COLOR,
                         },
@@ -135,7 +139,7 @@ fn add_notification_area(parent: &mut ChildBuilder, asset_server: &Res<AssetServ
         });
 }
 
-fn add_quit_button(parent: &mut ChildBuilder, asset_server: &AssetServer) {
+fn add_quit_button(parent: &mut ChildBuilder, font: Handle<Font>) {
     parent
         .spawn(ButtonBundle {
             style: Style {
@@ -151,7 +155,7 @@ fn add_quit_button(parent: &mut ChildBuilder, asset_server: &AssetServer) {
             parent.spawn(TextBundle::from_section(
                 "Quit",
                 TextStyle {
-                    font: default_font(asset_server),
+                    font,
                     font_size: 40.0,
                     color: BAD_TEXT_COLOR,
                 },
@@ -162,7 +166,7 @@ fn add_quit_button(parent: &mut ChildBuilder, asset_server: &AssetServer) {
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_sav_files(
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
+    fonts: Res<Fonts>,
     mut last_error: Local<Option<LoadError>>,
     mut load_button_areas: Query<
         (Entity, &mut Style),
@@ -228,7 +232,7 @@ pub(crate) fn update_sav_files(
                                         parent.spawn(TextBundle::from_section(
                                             format!("Load {} in {}", character, world.display()),
                                             TextStyle {
-                                                font: default_font(&asset_server),
+                                                font: fonts.default(),
                                                 font_size: 20.0,
                                                 color: GOOD_TEXT_COLOR,
                                             },

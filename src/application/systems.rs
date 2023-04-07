@@ -9,6 +9,11 @@ pub(crate) fn maximize_window(mut windows: Query<&mut Window>) {
 }
 
 #[allow(clippy::needless_pass_by_value)]
+pub(crate) fn load_fonts(mut commands: Commands, asset_server: Res<AssetServer>) {
+    commands.insert_resource(Fonts::new(&asset_server));
+}
+
+#[allow(clippy::needless_pass_by_value)]
 pub(crate) fn manage_button_hover(
     mut interaction_query: Query<
         (&Interaction, &mut BackgroundColor),

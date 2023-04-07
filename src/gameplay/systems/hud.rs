@@ -13,10 +13,10 @@ pub(crate) struct HudDefaults {
 }
 
 impl HudDefaults {
-    pub(crate) fn new(asset_server: &AssetServer) -> Self {
+    pub(crate) fn new(font: Handle<Font>) -> Self {
         Self {
             text_style: TextStyle {
-                font: default_font(asset_server),
+                font,
                 font_size: 16.0,
                 color: SOFT_TEXT_COLOR,
             },
@@ -118,8 +118,8 @@ fn spawn_manual_display(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn spawn_hud(mut commands: Commands, mut asset_server: ResMut<AssetServer>) {
-    let hud_defaults = HudDefaults::new(asset_server.as_mut());
+pub(crate) fn spawn_hud(mut commands: Commands, fonts: Res<Fonts>) {
+    let hud_defaults = HudDefaults::new(fonts.default());
 
     let mut background = NodeBundle {
         style: Style {

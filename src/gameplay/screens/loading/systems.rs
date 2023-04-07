@@ -4,9 +4,8 @@ use bevy::prelude::*;
 const FONT_SIZE: f32 = 40.0;
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn spawn_loading(mut commands: Commands, asset_server: Res<AssetServer>) {
+pub(crate) fn spawn_loading(mut commands: Commands, fonts: Res<Fonts>) {
     eprintln!("spawn_loading");
-    let font = default_font(&asset_server);
 
     commands
         .spawn(NodeBundle {
@@ -36,7 +35,7 @@ pub(crate) fn spawn_loading(mut commands: Commands, asset_server: Res<AssetServe
                     parent.spawn(TextBundle::from_section(
                         "Loading...",
                         TextStyle {
-                            font,
+                            font: fonts.default(),
                             font_size: FONT_SIZE,
                             color: DEFAULT_TEXT_COLOR,
                         },
