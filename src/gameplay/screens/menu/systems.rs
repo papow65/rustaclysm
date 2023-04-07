@@ -87,6 +87,7 @@ pub(crate) fn manage_menu_button_input(
                     next_gameplay_state.set(GameplayScreenState::Base);
                 }
                 (false, true, false) => {
+                    next_gameplay_state.set(GameplayScreenState::Inapplicable);
                     next_application_state.set(ApplicationState::MainMenu);
                 }
                 (false, false, true) => app_exit_events.send(AppExit),
@@ -112,7 +113,10 @@ pub(crate) fn manage_menu_keyboard_input(
 
         match key_event.key_code {
             Some(KeyCode::Escape) => next_gameplay_state.set(GameplayScreenState::Base),
-            Some(KeyCode::M) => next_application_state.set(ApplicationState::MainMenu),
+            Some(KeyCode::M) => {
+                next_gameplay_state.set(GameplayScreenState::Inapplicable);
+                next_application_state.set(ApplicationState::MainMenu);
+            }
             Some(KeyCode::C | KeyCode::D | KeyCode::Q) => app_exit_events.send(AppExit),
             _ => {}
         }

@@ -11,7 +11,6 @@ impl Plugin for MenuScreenPlugin {
         // every frame
         app.add_systems(
             (manage_menu_button_input, manage_menu_keyboard_input)
-                .in_set(OnUpdate(ApplicationState::Gameplay))
                 .in_set(OnUpdate(GameplayScreenState::Menu)),
         );
 

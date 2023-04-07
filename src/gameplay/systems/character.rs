@@ -4,13 +4,15 @@ use std::time::Instant;
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn manage_player_death(
+    mut next_application_state: ResMut<NextState<ApplicationState>>,
+    mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
     dead_players: Query<(), (With<Player>, Without<Health>)>,
-    mut next_state: ResMut<NextState<ApplicationState>>,
 ) {
     let start = Instant::now();
 
     if dead_players.get_single().is_ok() {
-        next_state.set(ApplicationState::MainMenu);
+        next_gameplay_state.set(GameplayScreenState::Inapplicable);
+        next_application_state.set(ApplicationState::MainMenu);
     }
 
     log_if_slow("manage_player_death", start);

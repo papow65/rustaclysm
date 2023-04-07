@@ -31,4 +31,8 @@ impl SubzoneLevelEntities {
         let removed = self.subzone_levels.remove(&subzone_level);
         assert!(removed.is_some());
     }
+
+    pub(crate) fn loaded(&self) -> bool {
+        !self.subzone_levels.is_empty()
+    }
 }

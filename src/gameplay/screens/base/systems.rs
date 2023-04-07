@@ -16,8 +16,12 @@ fn quit(app_exit_events: &mut Events<AppExit>) {
     app_exit_events.send(AppExit);
 }
 
-fn main_menu(next_state: &mut NextState<ApplicationState>) {
-    next_state.set(ApplicationState::MainMenu);
+fn main_menu(
+    next_application_state: &mut NextState<ApplicationState>,
+    next_gameplay_state: &mut NextState<GameplayScreenState>,
+) {
+    next_gameplay_state.set(GameplayScreenState::Inapplicable);
+    next_application_state.set(ApplicationState::MainMenu);
 }
 
 fn zoom(camera_offset: &mut CameraOffset, direction: ZoomDirection) {
@@ -67,9 +71,10 @@ pub(crate) fn manage_mouse_input(
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn manage_keyboard_input(
+    mut next_application_state: ResMut<NextState<ApplicationState>>,
+    mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
     mut app_exit_events: ResMut<Events<AppExit>>,
     mut key_events: EventReader<KeyboardInput>,
-    mut next_state: ResMut<NextState<ApplicationState>>,
     mut instruction_queue: ResMut<InstructionQueue>,
     mut elevation_visibility: ResMut<ElevationVisibility>,
     mut visualization_update: ResMut<VisualizationUpdate>,
@@ -88,7 +93,9 @@ pub(crate) fn manage_keyboard_input(
                     println!("{:?} -> {} -> {:?}", &key_event, &combo, &instruction);
                     match instruction {
                         Instruction::Quit => quit(&mut app_exit_events),
-                        Instruction::MainMenu => main_menu(&mut next_state),
+                        Instruction::MainMenu => {
+                            main_menu(&mut next_application_state, &mut next_gameplay_state);
+                        }
                         Instruction::Zoom(direction) => zoom(&mut camera_offset, direction),
                         Instruction::ToggleElevation => {
                             toggle_elevation(&mut elevation_visibility, &mut visualization_update);
@@ -113,15 +120,5 @@ pub(crate) fn manage_keyboard_input(
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn remove_base_resources(mut commands: Commands) {
-    commands.remove_resource::<Infos>();
-    commands.remove_resource::<Location>();
-    commands.remove_resource::<SubzoneLevelEntities>();
-    commands.remove_resource::<ZoneLevelEntities>();
     commands.remove_resource::<InstructionQueue>();
-    commands.remove_resource::<TileCaches>();
-    commands.remove_resource::<VisualizationUpdate>();
-    commands.remove_resource::<Explored>();
-    commands.remove_resource::<Sav>();
-    commands.remove_resource::<Timeouts>();
-    commands.remove_resource::<ZoneLevelIds>();
 }

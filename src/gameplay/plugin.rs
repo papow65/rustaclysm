@@ -7,7 +7,8 @@ impl Plugin for GameplayPlugin {
     fn build(&self, app: &mut App) {
         app.add_state::<GameplayScreenState>();
 
-        app.add_plugin(BaseScreenPlugin)
+        app.add_plugin(LoadingScreenPlugin)
+            .add_plugin(BaseScreenPlugin)
             .add_plugin(CharacterScreenPlugin)
             .add_plugin(InventoryScreenPlugin)
             .add_plugin(MenuScreenPlugin)
@@ -33,7 +34,6 @@ impl Plugin for GameplayPlugin {
                 spawn_initial_entities,
                 spawn_hud,
                 apply_system_buffers,
-                finish_loading,
             )
                 .chain()
                 .in_schedule(OnEnter(ApplicationState::Gameplay)),

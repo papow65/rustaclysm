@@ -83,4 +83,8 @@ impl Explored {
     pub(crate) fn has_pos_been_seen(&self, pos: Pos) -> bool {
         self.pos.get(&pos) == Some(&true)
     }
+
+    pub(crate) fn loaded(&self) -> bool {
+        self.loading.is_empty() && !self.zone_level.is_empty()
+    }
 }

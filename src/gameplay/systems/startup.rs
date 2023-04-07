@@ -59,8 +59,3 @@ pub(crate) fn spawn_initial_entities(mut commands: Commands, sav: Res<Sav>, mut 
         - Pos::ORIGIN;
     spawner.spawn_characters(root, offset);
 }
-
-#[allow(clippy::needless_pass_by_value)]
-pub(crate) fn finish_loading(mut next_state: ResMut<NextState<GameplayScreenState>>) {
-    next_state.set(GameplayScreenState::Base);
-}
