@@ -7,8 +7,7 @@ impl Plugin for GameplayPlugin {
     fn build(&self, app: &mut App) {
         app.add_state::<GameplayScreenState>();
 
-        app.add_plugin(LoadingScreenPlugin)
-            .add_plugin(BaseScreenPlugin)
+        app.add_plugin(BaseScreenPlugin)
             .add_plugin(CharacterScreenPlugin)
             .add_plugin(InventoryScreenPlugin)
             .add_plugin(MenuScreenPlugin)

@@ -3,7 +3,6 @@ use bevy::prelude::States;
 /** Conceptually, this is a child state of `ApplicationState::Gameplay` */
 #[derive(Clone, Copy, Default, Debug, PartialEq, Eq, Hash, States)]
 pub(crate) enum GameplayScreenState {
-    Loading,
     Base,
     Character,
     Inventory,

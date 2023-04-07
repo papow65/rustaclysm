@@ -28,11 +28,13 @@ pub(crate) fn run_application() {
             }),
     );
 
-    app.add_state::<ApplicationState>();
+    app.add_state::<ApplicationState>()
+        .add_state::<ProgressScreenState>();
 
     app.add_plugin(MainMenuPlugin)
         .add_plugin(CddaPlugin)
-        .add_plugin(GameplayPlugin);
+        .add_plugin(GameplayPlugin)
+        .add_plugin(LoadingIndicatorPlugin);
 
     // once at startup
     app.add_startup_systems((maximize_window, load_fonts));

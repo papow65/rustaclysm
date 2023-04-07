@@ -75,6 +75,7 @@
 mod application;
 mod cdda;
 mod gameplay;
+mod loading;
 mod main_menu;
 mod prelude;
 

@@ -262,8 +262,7 @@ pub(crate) fn update_sav_files(
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn manage_main_menu_button_input(
     mut commands: Commands,
-    mut next_application_state: ResMut<NextState<ApplicationState>>,
-    mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
+    mut next_progress_state: ResMut<NextState<ProgressScreenState>>,
     mut app_exit_events: ResMut<Events<AppExit>>,
     mut interaction_query: Query<
         (&Interaction, Option<&LoadButton>, Option<&QuitButton>),
@@ -275,8 +274,7 @@ pub(crate) fn manage_main_menu_button_input(
             match (load_button, quit_button.is_some()) {
                 (Some(load_button), false) => {
                     commands.insert_resource(Paths::new(&load_button.path));
-                    next_application_state.set(ApplicationState::Gameplay);
-                    next_gameplay_state.set(GameplayScreenState::Loading);
+                    next_progress_state.set(ProgressScreenState::Loading);
                 }
                 (None, true) => app_exit_events.send(AppExit),
                 (play, quit) => {
@@ -324,7 +322,13 @@ pub(crate) fn resize_background(
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn despawn_main_menu(
     mut commands: Commands,
-    root_entities: Query<Entity, Or<(With<Camera>, With<Node>)>>,
+    root_entities: Query<
+        Entity,
+        Or<(
+            With<Camera>,
+            (With<Node>, Without<Parent>, Without<LoadingRoot>),
+        )>,
+    >,
 ) {
     for root_entity in root_entities.iter() {
         commands.entity(root_entity).despawn_recursive();
