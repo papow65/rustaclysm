@@ -8,19 +8,19 @@ pub(crate) const DEFAULT_TEXT_COLOR: Color = Color::rgb(0.85, 0.85, 0.85);
 pub(crate) const SOFT_TEXT_COLOR: Color = Color::rgb(0.8, 0.8, 0.8);
 
 /** For playing the game */
-pub(crate) const GOOD_TEXT_COLOR: Color = Color::rgb(0.35, 0.85, 0.35);
+pub(crate) const GOOD_TEXT_COLOR: Color = Color::rgb(0.15, 0.8, 0.15);
 
 /** For aggression and failed user actions */
-pub(crate) const WARN_TEXT_COLOR: Color = Color::rgb(0.85, 0.85, 0.35);
+pub(crate) const WARN_TEXT_COLOR: Color = Color::rgb(0.8, 0.8, 0.15);
 
 /** For erros and for quitting */
-pub(crate) const BAD_TEXT_COLOR: Color = Color::rgb(0.85, 0.35, 0.35);
+pub(crate) const BAD_TEXT_COLOR: Color = Color::rgb(0.9, 0.15, 0.15);
 
 // Button colors
 
-pub(crate) const DEFAULT_BUTTON_COLOR: Color = Color::rgb(0.15, 0.15, 0.15);
+pub(crate) const DEFAULT_BUTTON_COLOR: Color = Color::rgb(0.2, 0.2, 0.2);
 pub(crate) const HOVERED_BUTTON_COLOR: Color = Color::rgb(0.25, 0.25, 0.25);
 
 // Panel colors
 
-pub(crate) const PANEL_COLOR: Color = Color::rgba(0.25, 0.25, 0.25, 0.6);
+pub(crate) const PANEL_COLOR: Color = Color::rgba(0.1, 0.1, 0.1, 0.7);
