@@ -147,10 +147,10 @@ impl TryFrom<&KeyCombo> for Instruction {
                     ZoomDirection::In
                 }))
             }
-            KeyCombo(Ctrl::Without, Shift::Without, Key::KeyCode(KeyCode::E)) => {
+            KeyCombo(Ctrl::Without, Shift::Without, Key::KeyCode(KeyCode::H)) => {
                 Ok(Self::ToggleElevation)
             }
-            KeyCombo(Ctrl::Without, Shift::Without, Key::KeyCode(KeyCode::H)) => {
+            KeyCombo(Ctrl::Without, Shift::Without, Key::KeyCode(KeyCode::F1)) => {
                 Ok(Self::ToggleHelp)
             }
             _ => QueuedInstruction::try_from(combo).map(Self::Queued),

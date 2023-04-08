@@ -101,19 +101,35 @@ fn spawn_manual_display(
         .spawn(background)
         .insert(ManualDisplay)
         .with_children(|parent| {
-            parent.spawn(TextBundle {
-                text: Text {
-                    sections: vec![
-                        TextSection {
-                            value: String::from("move          numpad\nup/down       r/f/</>\nwield         w\npick/drop     b/v\nattack        a\nsmash         s\nwait          |\nrun           +\nexamine       x\nexamine map   m\nzoom          (shift+)z\nzoom          scroll wheel\nshow elevated e\ntoggle this   h\nmenu          esc\nmain menu     f12\nquit          ctrl+c/d/q"),
+            parent
+                .spawn(TextBundle {
+                    text: Text {
+                        sections: vec![TextSection {
+                            value: String::new()
+                                + "move          numpad\n"
+                                + "up/down       r/f/</>\n"
+                                + "wield         w\n"
+                                + "pick/drop     b/v\n"
+                                + "attack        a\n"
+                                + "smash         s\n"
+                                + "wait          |\n"
+                                + "run           +\n"
+                                + "examine       x\n"
+                                + "examine map   m\n"
+                                + "zoom          (shift+)z\n"
+                                + "zoom          scroll wheel\n"
+                                + "show elevated h\n"
+                                + "toggle this   f1\n"
+                                + "menu          esc\n"
+                                + "main menu     f12\n"
+                                + "quit          ctrl+c/d/q",
                             style: hud_defaults.text_style.clone(),
-                        },
-                    ],
-                    ..Text::default()
-                },
-                ..default()
-            })
-            .insert(ManualDisplay);
+                        }],
+                        ..Text::default()
+                    },
+                    ..default()
+                })
+                .insert(ManualDisplay);
         });
 }
 
