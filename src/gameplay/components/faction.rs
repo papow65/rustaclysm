@@ -194,7 +194,7 @@ impl Faction {
                 .map(|&pos| {
                     if envir.find_character(pos).is_some() {
                         Action::Attack { target: pos }
-                    } else if envir.find_item(pos).is_some() {
+                    } else if envir.find_smashable(pos).is_some() {
                         Action::Smash { target: pos }
                     } else {
                         Action::Step { target: pos }

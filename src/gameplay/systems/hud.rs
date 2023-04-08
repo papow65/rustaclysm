@@ -389,6 +389,7 @@ pub(crate) fn update_status_detais(
             Option<&Accessible>,
             Option<&StairsUp>,
             Option<&StairsDown>,
+            Option<&Integrity>,
             Option<&Obstacle>,
             Option<&Hurdle>,
             Option<&Opaque>,
@@ -470,6 +471,7 @@ fn entity_info(
         accessible,
         stairs_up,
         stairs_down,
+        integrity,
         obstacle,
         hurdle,
         opaque,
@@ -483,6 +485,7 @@ fn entity_info(
         Option<&Accessible>,
         Option<&StairsUp>,
         Option<&StairsDown>,
+        Option<&Integrity>,
         Option<&Obstacle>,
         Option<&Hurdle>,
         Option<&Opaque>,
@@ -514,6 +517,11 @@ fn entity_info(
     }
     if stairs_down.is_some() {
         flags.push("stairs down");
+    }
+    let integrity_str;
+    if let Some(integrity) = integrity {
+        integrity_str = format!("integrity ({})", integrity.0.current());
+        flags.push(integrity_str.as_str());
     }
     if obstacle.is_some() {
         flags.push("obstacle");

@@ -26,7 +26,7 @@ pub(crate) struct Envir<'w, 's> {
     opaques: Query<'w, 's, &'static TextLabel, With<Opaque>>,
     opaque_floors: Query<'w, 's, &'static OpaqueFloor>,
     characters: Query<'w, 's, (Entity, &'static TextLabel), With<Health>>,
-    items: Query<'w, 's, Entity, With<Integrity>>,
+    smashables: Query<'w, 's, Entity, With<Integrity>>,
 }
 
 impl<'w, 's> Envir<'w, 's> {
@@ -144,8 +144,8 @@ impl<'w, 's> Envir<'w, 's> {
         self.location.get_first(pos, &self.characters)
     }
 
-    pub(crate) fn find_item(&self, pos: Pos) -> Option<Entity> {
-        self.location.get_first(pos, &self.items)
+    pub(crate) fn find_smashable(&self, pos: Pos) -> Option<Entity> {
+        self.location.get_first(pos, &self.smashables)
     }
 
     // helper methods
@@ -229,7 +229,7 @@ impl<'w, 's> Envir<'w, 's> {
     ) -> impl Iterator<Item = Pos> + 's {
         self.nbors_if(pos, move |nbor| match instruction {
             QueuedInstruction::Attack => nbor != pos && self.find_character(nbor).is_some(),
-            QueuedInstruction::Smash => self.find_item(nbor).is_some(),
+            QueuedInstruction::Smash => self.find_smashable(nbor).is_some(),
             QueuedInstruction::Close => self.find_closeable(nbor).is_some(),
             _ => panic!("unexpected instruction {instruction:?}"),
         })

@@ -11,6 +11,8 @@ pub(crate) struct FurnitureInfo {
     #[serde(default)]
     pub(crate) flags: Flags,
 
+    pub(crate) bash: Option<HashMap<String, serde_json::Value>>,
+
     #[allow(unused)]
     #[serde(flatten)]
     extra: HashMap<String, serde_json::Value>,

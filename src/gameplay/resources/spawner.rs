@@ -215,6 +215,13 @@ impl<'w, 's> Spawner<'w, 's> {
             self.commands.entity(tile).insert(Opaque);
         }
 
+        if furniture_info.bash.is_some() {
+            // TODO
+            self.commands
+                .entity(tile)
+                .insert(Integrity(Limited::full(10)));
+        }
+
         match furniture_info.move_cost_mod.0.cmp(&0) {
             Ordering::Less => {
                 self.commands.entity(tile).insert(Obstacle);
@@ -237,11 +244,11 @@ impl<'w, 's> Spawner<'w, 's> {
         let tile = self.spawn_tile(parent, pos, definition);
 
         let Some(terrain_info) = self
-        .infos
-        .terrain(&definition.id) else {
-            self.commands.entity(tile).despawn_recursive();
-            println!("No info found for {:?}. Spawning skipped", definition.id);
-            return;
+            .infos
+            .terrain(&definition.id) else {
+                self.commands.entity(tile).despawn_recursive();
+                println!("No info found for {:?}. Spawning skipped", definition.id);
+                return;
         };
 
         match terrain_info {
@@ -250,6 +257,7 @@ impl<'w, 's> Spawner<'w, 's> {
                 open,
                 close,
                 flags,
+                bash,
                 ..
             } => {
                 let move_cost = *move_cost;
@@ -279,6 +287,13 @@ impl<'w, 's> Spawner<'w, 's> {
                     self.commands.entity(tile).insert(StairsDown);
                 } else {
                     self.commands.entity(tile).insert(OpaqueFloor);
+                }
+
+                if bash.is_some() {
+                    // TODO
+                    self.commands
+                        .entity(tile)
+                        .insert(Integrity(Limited::full(10)));
                 }
             }
             TerrainInfo::FieldType { .. } => {}

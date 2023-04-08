@@ -194,7 +194,7 @@ impl<'s> Actor<'s> {
             let message = format!("{} smashes the floor", self.label);
             commands.spawn(Message::warn(message));
             None
-        } else if let Some(smashable) = envir.find_item(target) {
+        } else if let Some(smashable) = envir.find_smashable(target) {
             commands.entity(smashable).insert(Damage {
                 attacker: self.label.clone(),
                 amount: self.melee.damage(),

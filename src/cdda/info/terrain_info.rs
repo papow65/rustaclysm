@@ -13,6 +13,7 @@ pub(crate) enum TerrainInfo {
         open: Option<ObjectId>,
         close: Option<ObjectId>,
         flags: Flags,
+        bash: Option<HashMap<String, serde_json::Value>>,
 
         #[allow(unused)]
         #[serde(flatten)]
