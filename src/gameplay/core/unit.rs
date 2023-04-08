@@ -44,13 +44,13 @@ impl MillimeterPerSecond {
 
 impl fmt::Debug for MillimeterPerSecond {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:.00?} km/h", self.0 as f32 * 3_600.0 / 1_000_000.0)
+        write!(f, "{:.01?} km/h", self.0 as f32 * 3_600.0 / 1_000_000.0)
     }
 }
 
 impl fmt::Display for MillimeterPerSecond {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:.00?} km/h", self.0 as f32 * 3_600.0 / 1_000_000.0)
+        write!(f, "{:.01?} km/h", self.0 as f32 * 3_600.0 / 1_000_000.0)
     }
 }
 

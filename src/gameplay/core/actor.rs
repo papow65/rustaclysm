@@ -2,9 +2,16 @@ use crate::prelude::*;
 use bevy::prelude::*;
 
 #[derive(Copy, Clone, Debug)]
+pub(crate) enum Breath {
+    Normal,
+    Winded,
+}
+
+#[derive(Copy, Clone, Debug)]
 pub(crate) enum StaminaImpact {
     Rest,
     Light,
+    Neutral,
     Heavy,
 }
 
@@ -13,6 +20,7 @@ impl StaminaImpact {
         match self {
             Self::Rest => 2,
             Self::Light => 1,
+            Self::Neutral => 0,
             Self::Heavy => -12,
         }
     }
@@ -56,43 +64,27 @@ pub(crate) struct Actor<'s> {
     pub(crate) clothing: Option<&'s Clothing>,
     pub(crate) aquatic: Option<&'s Aquatic>,
     pub(crate) last_enemy: Option<&'s LastEnemy>,
-    pub(crate) stamina: Option<&'s Stamina>,
-    pub(crate) walking_mode: Option<&'s WalkingMode>,
+    pub(crate) stamina: &'s Stamina,
+    pub(crate) walking_mode: &'s WalkingMode,
 }
 
 impl<'s> Actor<'s> {
     pub(crate) fn speed(&'s self) -> MillimeterPerSecond {
-        match (self.stamina, self.walking_mode) {
-            (Some(stamina), Some(walking_mode)) => {
-                self.base_speed.player_speed(stamina, walking_mode)
-            }
-            (None, None) => self.base_speed.npc_speed(),
-            (stamina, walking_mode) => {
-                panic!("{stamina:?} {walking_mode:?}");
-            }
-        }
+        self.base_speed
+            .speed(self.walking_mode, self.stamina.breath())
     }
 
     fn high_speed(&'s self) -> Option<MillimeterPerSecond> {
-        match self.stamina {
-            Some(stamina) => {
-                if stamina.can_run() {
-                    Some(self.base_speed.player_speed(stamina, &WalkingMode::Running))
-                } else {
-                    None
-                }
-            }
-            None => Some(self.base_speed.npc_speed()),
+        match self.stamina.breath() {
+            Breath::Normal => Some(self.base_speed.speed(&WalkingMode::Running, Breath::Normal)),
+            Breath::Winded => None,
         }
     }
 
     fn standard_impact(&self, timeout: Milliseconds) -> Impact {
-        let stamina_impact = self
-            .walking_mode
-            .map_or(StaminaImpact::Light, WalkingMode::stamina_impact);
         Impact {
             timeout,
-            stamina_impact,
+            stamina_impact: self.walking_mode.stamina_impact(self.stamina.breath()),
         }
     }
 
@@ -341,7 +333,7 @@ impl<'s> Actor<'s> {
     pub(crate) fn switch_running(&'s self, commands: &mut Commands) -> Option<Impact> {
         commands
             .entity(self.entity)
-            .insert(self.walking_mode.expect("walking mode present").switch());
+            .insert(self.walking_mode.switch());
         None
     }
 }
@@ -358,8 +350,8 @@ pub(crate) type ActorTuple<'s> = (
     Option<&'s Clothing>,
     Option<&'s Aquatic>,
     Option<&'s LastEnemy>,
-    Option<&'s Stamina>,
-    Option<&'s WalkingMode>,
+    &'s Stamina,
+    &'s WalkingMode,
 );
 
 impl<'s> From<ActorTuple<'s>> for Actor<'s> {

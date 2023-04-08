@@ -65,7 +65,7 @@ fn spawn_status_display(hud_defaults: &HudDefaults, parent: &mut EntityCommands)
                             value: String::from("\n"),
                             style: hud_defaults.text_style.clone(),
                         };
-                        6
+                        9
                     ],
                     ..Text::default()
                 },
@@ -264,7 +264,7 @@ pub(crate) fn update_status_time(
     let years = seasons / 4;
 
     status_displays.iter_mut().next().unwrap().sections[1].value = format!(
-        "{:#04}-{}-{:#02} {:#02}:{:#02}:{:#02}.{}\n",
+        "{:#04}-{}-{:#02} {:#02}:{:#02}:{:#02}.{}\n\n",
         years + OffsetDateTime::now_utc().year() as u64 + 1, // based on https://cataclysmdda.org/lore-background.html
         match seasons % 4 {
             0 => "Spring",
@@ -291,12 +291,32 @@ pub(crate) fn update_status_health(
     let start = Instant::now();
 
     if let Some(health) = health.iter().next() {
-        let text_section = &mut status_displays.iter_mut().next().unwrap().sections[2];
-        text_section.value = format!("\n{} health\n", health.0.current());
-        text_section.style.color = health.0.color();
+        let sections = &mut status_displays.iter_mut().next().unwrap().sections;
+        sections[2].value = format!("{}", health.0.current());
+        sections[2].style.color = health.0.color();
+
+        sections[3].value = String::from(" health\n");
     }
 
     log_if_slow("update_status_health", start);
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub(crate) fn update_status_stamina(
+    player_staminas: Query<&Stamina, (With<Player>, Changed<Stamina>)>,
+    mut status_displays: Query<&mut Text, With<StatusDisplay>>,
+) {
+    let start = Instant::now();
+
+    if let Ok(Stamina::Limited(player_stamina)) = player_staminas.get_single() {
+        let sections = &mut status_displays.iter_mut().next().unwrap().sections;
+        sections[4].value = format!("{}", player_stamina.current());
+        sections[4].style.color = player_stamina.color();
+
+        sections[5].value = String::from(" stamina\n");
+    }
+
+    log_if_slow("update_status_stamina", start);
 }
 
 #[allow(clippy::needless_pass_by_value)]
@@ -312,25 +332,28 @@ pub(crate) fn update_status_speed(
 ) {
     let start = Instant::now();
 
-    if let Ok(actor_tuple) = player_actors.get_single() {
-        status_displays.iter_mut().next().unwrap().sections[3].value =
-            format!("{}\n", Actor::from(actor_tuple).speed());
-    }
+    if let Ok(player_tuple) = player_actors.get_single() {
+        let sections = &mut status_displays.iter_mut().next().unwrap().sections;
+        let player_actor = Actor::from(player_tuple);
+        let walking_mode = player_actor.walking_mode;
+        match player_actor.stamina.breath() {
+            Breath::Normal => {
+                sections[6].value = String::from(walking_mode.as_str());
+                sections[6].style.color = walking_mode.color();
 
-    log_if_slow("update_status_speed", start);
-}
+                sections[7].value = format!(" ({})\n", player_actor.speed());
+            }
+            Breath::Winded => {
+                sections[6].value = format!(
+                    "Winded {} ({})\n",
+                    String::from(walking_mode.as_str()),
+                    player_actor.speed()
+                );
+                sections[6].style.color = BAD_TEXT_COLOR;
 
-#[allow(clippy::needless_pass_by_value)]
-pub(crate) fn update_status_stamina(
-    player_staminas: Query<&Stamina, (With<Player>, Changed<Stamina>)>,
-    mut status_displays: Query<&mut Text, With<StatusDisplay>>,
-) {
-    let start = Instant::now();
-
-    if let Ok(player_stamina) = player_staminas.get_single() {
-        let text_section = &mut status_displays.iter_mut().next().unwrap().sections[4];
-        text_section.value = format!("{} stamina\n", player_stamina.0.current());
-        text_section.style.color = player_stamina.0.color();
+                sections[7].value = String::new();
+            }
+        }
     }
 
     log_if_slow("update_status_speed", start);
@@ -343,8 +366,9 @@ pub(crate) fn update_status_player_state(
 ) {
     let start = Instant::now();
 
-    status_displays.iter_mut().next().unwrap().sections[5].value =
-        format!("{}\n", *player_action_state);
+    let sections = &mut status_displays.iter_mut().next().unwrap().sections;
+    sections[8].value = format!("{}\n", *player_action_state);
+    sections[8].style.color = player_action_state.color();
 
     log_if_slow("update_status_player_state", start);
 }
@@ -380,7 +404,7 @@ pub(crate) fn update_status_detais(
 ) {
     let start = Instant::now();
 
-    status_displays.iter_mut().next().unwrap().sections[5].value = match *player_action_state {
+    status_displays.iter_mut().next().unwrap().sections[8].value = match *player_action_state {
         PlayerActionState::ExaminingPos(pos) => {
             /*for ent in envir.location.all(pos) {
                 if let Ok((glob, _)) = globs.get(ent) {

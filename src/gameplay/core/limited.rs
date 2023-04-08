@@ -88,9 +88,9 @@ impl Limited {
     pub(crate) fn color(&self) -> Color {
         let percent = self.percent();
         let (part, min_color, max_color) = if 0.5 <= percent {
-            (percent - 0.5, WARN_TEXT_COLOR, GOOD_TEXT_COLOR)
+            (2.0 * percent - 1.0, WARN_TEXT_COLOR, GOOD_TEXT_COLOR)
         } else {
-            (percent, BAD_TEXT_COLOR, WARN_TEXT_COLOR)
+            (2.0 * percent, BAD_TEXT_COLOR, WARN_TEXT_COLOR)
         };
 
         Color::rgb(

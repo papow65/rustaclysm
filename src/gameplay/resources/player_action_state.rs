@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use bevy::prelude::{Commands, NextState, Resource};
+use bevy::prelude::{Color, Commands, NextState, Resource};
 use std::fmt;
 
 enum PlayerBehavior {
@@ -214,6 +214,15 @@ impl PlayerActionState {
                 *self = PlayerActionState::Closing;
                 PlayerBehavior::NoEffect
             }
+        }
+    }
+
+    pub(crate) fn color(&self) -> Color {
+        match self {
+            Self::Normal | Self::Closing | Self::ExaminingPos(_) | Self::ExaminingZoneLevel(_) => {
+                DEFAULT_TEXT_COLOR
+            }
+            Self::Waiting(_) | Self::Smashing | Self::Attacking => WARN_TEXT_COLOR,
         }
     }
 }

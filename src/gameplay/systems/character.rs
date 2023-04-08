@@ -204,6 +204,7 @@ pub(crate) fn handle_impact(
     In(option): In<Option<(Entity, Option<Impact>)>>,
     mut commands: Commands,
     mut timeouts: ResMut<Timeouts>,
+    players: Query<(), With<Player>>,
     mut staminas: Query<&mut Stamina>,
 ) {
     let start = Instant::now();
@@ -215,8 +216,9 @@ pub(crate) fn handle_impact(
             if let Ok(mut stamina) = stamina {
                 stamina.apply(impact.stamina_impact);
             }
+            assert!(0 < impact.timeout.0, "{impact:?}");
             timeouts.add(actor_entity, impact.timeout);
-        } else if stamina.is_err() {
+        } else if players.get(actor_entity).is_err() {
             commands.spawn(Message::error("failed npc action"));
             timeouts.add(actor_entity, Milliseconds(1000));
         }

@@ -121,6 +121,8 @@ impl<'w, 's> Spawner<'w, 's> {
             .insert(Health(
                 Limited::full(character_info.hp.unwrap_or(60) as u16),
             ))
+            .insert(Stamina::Unlimited)
+            .insert(WalkingMode::Running)
             .insert(match character_info.default_faction.as_str() {
                 "human" => Faction::Human,
                 "zombie" => Faction::Zombie,
@@ -593,8 +595,8 @@ impl<'w, 's> Spawner<'w, 's> {
         self.commands
             .entity(player)
             .insert(Player)
-            .insert(Stamina(Limited::full(300)))
-            .insert(WalkingMode::Walking)
+            .insert(Stamina::Limited(Limited::full(300))) // override
+            .insert(WalkingMode::Walking) // override
             .insert(TextLabel::new(self.sav.player.name.clone()));
         self.configure_player(player);
 
