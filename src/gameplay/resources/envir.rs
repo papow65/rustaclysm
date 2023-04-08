@@ -290,7 +290,7 @@ impl<'w, 's> Envir<'w, 's> {
         match intelligence {
             Intelligence::Smart => MovementPath::plan(from, nbors_fn, estimated_duration_fn, to),
             Intelligence::Dumb => {
-                MovementPath::improvize(nbors_fn(&from), estimated_duration_fn, to)
+                MovementPath::improvize(nbors_fn(&from), estimated_duration_fn, from, to)
             }
         }
     }
@@ -379,7 +379,12 @@ impl MovementPath {
         }
     }
 
-    pub(crate) fn improvize<I, FH>(nbors: I, mut heuristic: FH, destination: Pos) -> Option<Self>
+    pub(crate) fn improvize<I, FH>(
+        nbors: I,
+        mut heuristic: FH,
+        from: Pos,
+        destination: Pos,
+    ) -> Option<Self>
     where
         I: Iterator<Item = (Pos, Milliseconds)>,
         FH: FnMut(&Pos) -> Milliseconds,
@@ -390,7 +395,7 @@ impl MovementPath {
                 duration: duration + heuristic(&first),
                 destination,
             })
-            .min_by_key(|path| path.duration)
+            .min_by_key(|path| (path.first == from, path.duration))
     }
 }
 
