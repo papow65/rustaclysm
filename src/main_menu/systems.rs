@@ -289,15 +289,21 @@ pub(crate) fn manage_main_menu_button_input(
 pub(crate) fn manage_main_menu_keyboard_input(
     mut app_exit_events: ResMut<Events<AppExit>>,
     mut key_events: EventReader<KeyboardInput>,
+    keys: Res<Input<KeyCode>>,
 ) {
     for key_event in key_events.iter() {
-        if key_event.state != ButtonState::Pressed {
-            continue;
-        }
-
-        match key_event.key_code {
-            Some(KeyCode::C | KeyCode::D | KeyCode::Q) => app_exit_events.send(AppExit),
-            _ => {}
+        if key_event.state == ButtonState::Pressed {
+            let combo = KeyCombo::new(key_event, &keys);
+            if matches!(
+                combo,
+                KeyCombo(
+                    Ctrl::With,
+                    _,
+                    Key::KeyCode(KeyCode::C | KeyCode::D | KeyCode::Q)
+                )
+            ) {
+                app_exit_events.send(AppExit);
+            }
         }
     }
 }

@@ -53,8 +53,7 @@ impl WalkingMode {
     pub(crate) fn stamina_impact(&self, breath: Breath) -> StaminaImpact {
         match breath {
             Breath::Normal => match self {
-                Self::Crouching => StaminaImpact::Light,
-                Self::Walking => StaminaImpact::Light,
+                Self::Crouching | Self::Walking => StaminaImpact::Light,
                 Self::SpeedWalking => StaminaImpact::Neutral,
                 Self::Running => StaminaImpact::Heavy,
             },

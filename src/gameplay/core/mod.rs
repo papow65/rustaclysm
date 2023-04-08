@@ -3,7 +3,6 @@ mod actor;
 mod container;
 mod focus;
 mod instruction;
-mod key;
 mod limited;
 mod mesh;
 mod model;
@@ -16,9 +15,8 @@ mod type_id;
 mod unit;
 
 pub(crate) use self::{
-    action::*, actor::*, container::*, focus::*, instruction::*, key::*, limited::*, mesh::*,
-    model::*, nbor::*, object_definition::*, object_id::*, offset::*, region::*, type_id::*,
-    unit::*,
+    action::*, actor::*, container::*, focus::*, instruction::*, limited::*, mesh::*, model::*,
+    nbor::*, object_definition::*, object_id::*, offset::*, region::*, type_id::*, unit::*,
 };
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
