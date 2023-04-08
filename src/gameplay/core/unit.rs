@@ -1,5 +1,4 @@
 use crate::prelude::{MoveCost, NborDistance};
-use bevy::prelude::Component;
 use pathfinding::num_traits::Zero;
 use serde::Deserialize;
 use std::{
@@ -40,6 +39,12 @@ pub(crate) struct MillimeterPerSecond(pub(crate) u64);
 impl MillimeterPerSecond {
     pub(crate) const fn from_kmph(n: u64) -> Self {
         Self(n * 1_000_000 / 3_600)
+    }
+}
+
+impl fmt::Debug for MillimeterPerSecond {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:.00?} km/h", self.0 as f32 * 3_600.0 / 1_000_000.0)
     }
 }
 
@@ -87,29 +92,6 @@ impl Div<MillimeterPerSecond> for Millimeter {
     }
 }
 
-#[derive(Component, Clone, Copy)]
-pub(crate) struct BaseSpeed(MillimeterPerSecond);
-
-impl BaseSpeed {
-    pub(crate) const fn from_h_kmph(s: u64) -> Self {
-        Self(MillimeterPerSecond::from_kmph(s))
-    }
-
-    pub(crate) fn stay(&self) -> Milliseconds {
-        Millimeter(Millimeter::ADJACENT.0 / 2) / self.0
-    }
-
-    pub(crate) fn activate(&self) -> Milliseconds {
-        Millimeter(3 * Millimeter::ADJACENT.0) / self.0
-    }
-}
-
-impl fmt::Display for BaseSpeed {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Max speed {}", self.0)
-    }
-}
-
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) struct Partial(u8);
 
@@ -144,8 +126,8 @@ impl WalkingCost {
         new
     }
 
-    pub(crate) fn duration(&self, speed: BaseSpeed) -> Milliseconds {
-        self.equivalent_distance / speed.0
+    pub(crate) fn duration(&self, speed: MillimeterPerSecond) -> Milliseconds {
+        self.equivalent_distance / speed
     }
 
     pub(crate) fn f32(&self) -> f32 {
@@ -307,98 +289,5 @@ mod mass_tests {
                 milligram: 35_600_000
             }
         );
-    }
-}
-
-#[allow(dead_code)] // TODO
-pub(crate) struct Limited<T> {
-    curr: T,
-    max: T,
-}
-
-impl<T> Limited<T>
-where
-    T: Default,
-{
-    #[allow(dead_code)] // TODO
-    pub(crate) fn empty(max: T) -> Self {
-        Self {
-            curr: T::default(),
-            max,
-        }
-    }
-}
-
-impl<T> Limited<T>
-where
-    T: Clone,
-{
-    #[allow(dead_code)] // TODO
-    pub(crate) fn full(max: T) -> Self {
-        Self {
-            curr: max.clone(),
-            max,
-        }
-    }
-}
-
-impl<T> Limited<T>
-where
-    T: Copy + Sub<Output = T>,
-{
-    #[allow(dead_code)] // TODO
-    pub(crate) fn left(&self) -> T {
-        self.max - self.curr
-    }
-}
-
-impl<T> Limited<T>
-where
-    T: Clone,
-{
-    #[allow(dead_code)] // TODO
-    pub(crate) fn current(&self) -> T {
-        self.curr.clone()
-    }
-}
-
-impl<T> Limited<T>
-where
-    T: Clone,
-{
-    #[allow(dead_code)] // TODO
-    pub(crate) fn maximum(&self) -> T {
-        self.max.clone()
-    }
-}
-
-impl<T> Limited<T>
-where
-    T: Copy + PartialOrd + Add<Output = T>,
-{
-    #[allow(dead_code)] // TODO
-    pub(crate) fn try_add(&mut self, more: T) -> Result<(), ()> {
-        let sum = self.curr + more;
-        if self.max < sum {
-            Err(())
-        } else {
-            self.curr = sum;
-            Ok(())
-        }
-    }
-}
-
-impl<T> Limited<T>
-where
-    T: Copy + PartialOrd + Sub<Output = T>,
-{
-    #[allow(dead_code)] // TODO
-    pub(crate) fn try_substract(&mut self, less: T) -> Result<(), ()> {
-        if self.curr < less {
-            Err(())
-        } else {
-            self.curr = self.curr - less;
-            Ok(())
-        }
     }
 }

@@ -1,11 +1,54 @@
 use crate::prelude::*;
-use bevy::prelude::{BuildChildren, Commands, Entity, Parent, Query, Visibility, VisibilityBundle};
+use bevy::prelude::*;
+
+#[derive(Copy, Clone, Debug)]
+pub(crate) enum StaminaImpact {
+    Rest,
+    Light,
+    Heavy,
+}
+
+impl StaminaImpact {
+    pub(crate) fn as_i16(&self) -> i16 {
+        match self {
+            Self::Rest => 2,
+            Self::Light => 1,
+            Self::Heavy => -12,
+        }
+    }
+}
+
+#[derive(Debug)]
+pub(crate) struct Impact {
+    pub(crate) timeout: Milliseconds,
+    pub(crate) stamina_impact: StaminaImpact,
+}
+
+impl Impact {
+    #[must_use]
+    fn new(timeout: Milliseconds, stamina_impact: StaminaImpact) -> Self {
+        Self {
+            timeout,
+            stamina_impact,
+        }
+    }
+
+    #[must_use]
+    fn rest(timeout: Milliseconds) -> Self {
+        Self::new(timeout, StaminaImpact::Rest)
+    }
+
+    #[must_use]
+    fn heavy(timeout: Milliseconds) -> Self {
+        Self::new(timeout, StaminaImpact::Heavy)
+    }
+}
 
 pub(crate) struct Actor<'s> {
     pub(crate) entity: Entity,
     pub(crate) label: &'s TextLabel,
     pub(crate) pos: Pos,
-    pub(crate) speed: BaseSpeed,
+    pub(crate) base_speed: BaseSpeed,
     pub(crate) health: &'s Health,
     pub(crate) faction: &'s Faction,
     pub(crate) melee: &'s Melee,
@@ -13,11 +56,54 @@ pub(crate) struct Actor<'s> {
     pub(crate) clothing: Option<&'s Clothing>,
     pub(crate) aquatic: Option<&'s Aquatic>,
     pub(crate) last_enemy: Option<&'s LastEnemy>,
+    pub(crate) stamina: Option<&'s Stamina>,
+    pub(crate) walking_mode: Option<&'s WalkingMode>,
 }
 
 impl<'s> Actor<'s> {
-    pub(crate) fn stay(&'s self) -> Milliseconds {
-        self.speed.stay()
+    pub(crate) fn speed(&'s self) -> MillimeterPerSecond {
+        match (self.stamina, self.walking_mode) {
+            (Some(stamina), Some(walking_mode)) => {
+                self.base_speed.player_speed(stamina, walking_mode)
+            }
+            (None, None) => self.base_speed.npc_speed(),
+            (stamina, walking_mode) => {
+                panic!("{stamina:?} {walking_mode:?}");
+            }
+        }
+    }
+
+    fn high_speed(&'s self) -> Option<MillimeterPerSecond> {
+        match self.stamina {
+            Some(stamina) => {
+                if stamina.can_run() {
+                    Some(self.base_speed.player_speed(stamina, &WalkingMode::Running))
+                } else {
+                    None
+                }
+            }
+            None => Some(self.base_speed.npc_speed()),
+        }
+    }
+
+    fn standard_impact(&self, timeout: Milliseconds) -> Impact {
+        let stamina_impact = self
+            .walking_mode
+            .map_or(StaminaImpact::Light, WalkingMode::stamina_impact);
+        Impact {
+            timeout,
+            stamina_impact,
+        }
+    }
+
+    pub(crate) fn stay(&self) -> Impact {
+        Impact::rest(
+            Millimeter(Millimeter::ADJACENT.0 / 2) / self.high_speed().unwrap_or(self.speed()),
+        )
+    }
+
+    fn activate(&self) -> Impact {
+        self.standard_impact(Millimeter(3 * Millimeter::ADJACENT.0) / self.speed())
     }
 
     pub(crate) fn move_(
@@ -25,19 +111,19 @@ impl<'s> Actor<'s> {
         commands: &mut Commands,
         envir: &mut Envir,
         to: Pos,
-    ) -> Milliseconds {
+    ) -> Option<Impact> {
         let from = self.pos;
         if !envir.are_nbors(self.pos, to) {
             let message = format!("can't move to {to:?}, as it is not a nbor of {from:?}");
             commands.spawn(Message::error(message));
-            return Milliseconds(0);
+            return None;
         }
 
         match envir.collide(from, to, true) {
             Collision::Pass => {
                 commands.entity(self.entity).insert(to);
                 envir.location.update(self.entity, Some(to));
-                envir.walking_cost(from, to).duration(self.speed)
+                Some(self.standard_impact(envir.walking_cost(from, to).duration(self.speed())))
             }
             /*Collision::Fall(fall_pos) => {
                  * pos = fall_pos;
@@ -47,16 +133,16 @@ impl<'s> Actor<'s> {
             Collision::Blocked(obstacle) => {
                 let message = format!("{} crashes into {obstacle}", self.label);
                 commands.spawn(Message::warn(message));
-                Milliseconds(0)
+                None
             }
             Collision::Ledged => {
                 let message = format!("{} halts at the ledge", self.label);
                 commands.spawn(Message::warn(message));
-                Milliseconds(0)
+                None
             }
             Collision::Opened(door) => {
                 commands.entity(door).insert(Toggle);
-                envir.walking_cost(from, to).duration(self.speed)
+                Some(self.standard_impact(envir.walking_cost(from, to).duration(self.speed())))
             }
         }
     }
@@ -66,7 +152,12 @@ impl<'s> Actor<'s> {
         commands: &mut Commands,
         envir: &mut Envir,
         target: Pos,
-    ) -> Milliseconds {
+    ) -> Option<Impact> {
+        let Some(high_speed) = self.high_speed() else {
+            commands.spawn(Message::warn(format!("{} is too exhausted to attack", self.label)));
+            return None;
+        };
+
         if !envir.are_nbors(self.pos, target) {
             unimplemented!();
         }
@@ -76,10 +167,12 @@ impl<'s> Actor<'s> {
                 attacker: self.label.clone(),
                 amount: self.melee.damage(),
             });
-            envir.walking_cost(self.pos, target).duration(self.speed)
+            Some(Impact::heavy(
+                envir.walking_cost(self.pos, target).duration(high_speed),
+            ))
         } else {
             commands.spawn(Message::warn(format!("{} attacks nothing", self.label)));
-            Milliseconds(0)
+            None
         }
     }
 
@@ -88,7 +181,12 @@ impl<'s> Actor<'s> {
         commands: &mut Commands,
         envir: &mut Envir,
         target: Pos,
-    ) -> Milliseconds {
+    ) -> Option<Impact> {
+        let Some(high_speed) = self.high_speed() else {
+            commands.spawn(Message::warn(format!("{} is too exhausted to smash", self.label)));
+            return None;
+        };
+
         if !envir.are_nbors(self.pos, target) && target != self.pos {
             unimplemented!();
         }
@@ -97,22 +195,24 @@ impl<'s> Actor<'s> {
         if self.pos.level.up() == Some(target.level) && envir.stairs_up_to(stair_pos).is_none() {
             let message = format!("{} smashes the ceiling", self.label);
             commands.spawn(Message::warn(message));
-            Milliseconds(0)
+            None
         } else if self.pos.level.down() == Some(target.level)
             && envir.stairs_down_to(stair_pos).is_none()
         {
             let message = format!("{} smashes the floor", self.label);
             commands.spawn(Message::warn(message));
-            Milliseconds(0)
+            None
         } else if let Some(smashable) = envir.find_item(target) {
             commands.entity(smashable).insert(Damage {
                 attacker: self.label.clone(),
                 amount: self.melee.damage(),
             });
-            envir.walking_cost(self.pos, target).duration(self.speed)
+            Some(Impact::heavy(
+                envir.walking_cost(self.pos, target).duration(high_speed),
+            ))
         } else {
             commands.spawn(Message::warn(format!("{} smashes nothing", self.label)));
-            Milliseconds(0)
+            None
         }
     }
 
@@ -121,7 +221,7 @@ impl<'s> Actor<'s> {
         commands: &mut Commands,
         envir: &mut Envir,
         target: Pos,
-    ) -> Milliseconds {
+    ) -> Option<Impact> {
         if !envir.are_nbors(self.pos, target) && target != self.pos {
             unimplemented!();
         }
@@ -134,10 +234,14 @@ impl<'s> Actor<'s> {
                     "{} can't close {obstacle} on {character}",
                     self.label
                 )));
-                Milliseconds(0)
+                None
             } else {
                 commands.entity(closable).insert(Toggle);
-                envir.walking_cost(self.pos, target).duration(self.speed)
+                Some(
+                    self.standard_impact(
+                        envir.walking_cost(self.pos, target).duration(self.speed()),
+                    ),
+                )
             }
         } else {
             let air = TextLabel::new("the air");
@@ -146,7 +250,7 @@ impl<'s> Actor<'s> {
                 "{} can't close {obstacle}",
                 self.label
             )));
-            Milliseconds(0)
+            None
         }
     }
 
@@ -155,7 +259,7 @@ impl<'s> Actor<'s> {
         commands: &mut Commands,
         location: &mut Location,
         hierarchy: &Hierarchy,
-    ) -> Milliseconds {
+    ) -> Option<Impact> {
         self.take(commands, location, hierarchy, &self.hands.unwrap().0)
     }
 
@@ -164,7 +268,7 @@ impl<'s> Actor<'s> {
         commands: &mut Commands,
         location: &mut Location,
         hierarchy: &Hierarchy,
-    ) -> Milliseconds {
+    ) -> Option<Impact> {
         self.take(commands, location, hierarchy, &self.clothing.unwrap().0)
     }
 
@@ -174,7 +278,7 @@ impl<'s> Actor<'s> {
         location: &mut Location,
         hierarchy: &Hierarchy,
         container: &Container,
-    ) -> Milliseconds {
+    ) -> Option<Impact> {
         if let Some((pd_entity, pd_label, pd_containable)) =
             location.get_first(self.pos, &hierarchy.picked)
         {
@@ -193,18 +297,18 @@ impl<'s> Actor<'s> {
                         .remove::<Visibility>();
                     commands.entity(self.entity).push_children(&[pd_entity]);
                     location.update(pd_entity, None);
-                    self.speed.activate()
+                    Some(self.activate())
                 }
                 Err(messages) => {
                     assert!(!messages.is_empty());
                     commands.spawn_batch(messages);
-                    Milliseconds(0)
+                    None
                 }
             }
         } else {
             let message = format!("nothing to pick up for {}", self.label);
             commands.spawn(Message::warn(message));
-            Milliseconds(0)
+            None
         }
     }
 
@@ -213,7 +317,7 @@ impl<'s> Actor<'s> {
         commands: &mut Commands,
         location: &mut Location,
         dumpees: &Query<(Entity, &TextLabel, &Parent)>,
-    ) -> Milliseconds {
+    ) -> Option<Impact> {
         // It seems impossible to remove something from 'Children', so we check 'Parent'.
 
         if let Some((dumpee, dee_label, _)) = dumpees
@@ -227,18 +331,18 @@ impl<'s> Actor<'s> {
                 .insert(VisibilityBundle::default())
                 .insert(self.pos);
             location.update(dumpee, Some(self.pos));
-            self.speed.stay()
+            Some(self.stay())
         } else {
             commands.spawn(Message::warn(format!("nothing to drop for {}", self.label)));
-            Milliseconds(0)
+            None
         }
     }
 
-    pub(crate) fn switch_running(&'s self, commands: &mut Commands) -> Milliseconds {
+    pub(crate) fn switch_running(&'s self, commands: &mut Commands) -> Option<Impact> {
         commands
             .entity(self.entity)
-            .insert(BaseSpeed::from_h_kmph(11));
-        Milliseconds(0)
+            .insert(self.walking_mode.expect("walking mode present").switch());
+        None
     }
 }
 
@@ -254,17 +358,17 @@ pub(crate) type ActorTuple<'s> = (
     Option<&'s Clothing>,
     Option<&'s Aquatic>,
     Option<&'s LastEnemy>,
+    Option<&'s Stamina>,
+    Option<&'s WalkingMode>,
 );
 
 impl<'s> From<ActorTuple<'s>> for Actor<'s> {
     fn from(
-        (entity, label, &pos, &speed, health, faction, melee, hands, clothing, aquatic, last_enemy): ActorTuple<'s>,
-    ) -> Self {
-        Self {
+        (
             entity,
             label,
-            pos,
-            speed,
+            &pos,
+            &base_speed,
             health,
             faction,
             melee,
@@ -272,6 +376,24 @@ impl<'s> From<ActorTuple<'s>> for Actor<'s> {
             clothing,
             aquatic,
             last_enemy,
+            stamina,
+            walking_mode,
+        ): ActorTuple<'s>,
+    ) -> Self {
+        Self {
+            entity,
+            label,
+            pos,
+            base_speed,
+            health,
+            faction,
+            melee,
+            hands,
+            clothing,
+            aquatic,
+            last_enemy,
+            stamina,
+            walking_mode,
         }
     }
 }

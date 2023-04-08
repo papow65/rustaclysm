@@ -1,6 +1,7 @@
 mod faction;
 mod player;
 mod pos;
+mod stats;
 
 use crate::prelude::*;
 use bevy::{
@@ -13,7 +14,7 @@ use rand::{
 };
 use std::fmt;
 
-pub(crate) use {faction::*, player::*, pos::*};
+pub(crate) use {faction::*, player::*, pos::*, stats::*};
 
 #[derive(Component)]
 pub(crate) struct ManualRoot;
@@ -84,18 +85,9 @@ pub(crate) struct Containable {
 #[derive(Component, Debug)]
 pub(crate) struct Amount(pub(crate) u32);
 
-#[derive(Component)]
-pub(crate) struct Aquatic;
-
 /** Marker to open or close something, like a door */
 #[derive(Component)]
 pub(crate) struct Toggle;
-
-#[derive(Component)]
-pub(crate) struct Health {
-    curr: i16,
-    max: i16,
-}
 
 #[derive(Clone, Component, Debug, PartialEq)]
 pub(crate) struct ObjectDefinition {
@@ -113,55 +105,20 @@ impl ObjectDefinition {
     }
 }
 
-impl Health {
-    pub(crate) fn new(max: i16) -> Self {
-        assert!(0 < max);
-        Self { curr: max, max }
-    }
-
-    const fn relative_damage(&self) -> Partial {
-        let damage = self.max - self.curr;
-        Partial::from_u8((255_i16 * damage / self.max) as u8)
-    }
-
-    pub(crate) fn apply(&mut self, damage: &Damage) -> bool {
-        self.curr -= damage.amount;
-        self.curr = self.curr.clamp(0, self.max);
-        0 < self.curr
-    }
-}
-
-impl fmt::Display for Health {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        write!(f, "{curr}", curr = self.curr)
-    }
-}
-
 #[derive(Component)]
-pub(crate) struct Integrity {
-    pub(crate) curr: i32,
-    pub(crate) max: i32,
-}
+pub(crate) struct Integrity(pub(crate) Limited);
 
 impl Integrity {
-    // TODO de-duplicate code with Health::apply
     pub(crate) fn apply(&mut self, damage: &Damage) -> bool {
-        self.curr -= i32::from(damage.amount);
-        self.curr = self.curr.clamp(0, self.max);
-        0 < self.curr
-    }
-}
-
-impl fmt::Display for Integrity {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        write!(f, "{curr}", curr = self.curr)
+        self.0.saturating_subtract(damage.amount);
+        self.0.is_nonzero()
     }
 }
 
 #[derive(Component)]
 pub(crate) struct Damage {
-    pub(crate) attacker: TextLabel,
-    pub(crate) amount: i16, // TODO damage types
+    pub(crate) attacker: TextLabel, // for logging
+    pub(crate) amount: i16,         // TODO damage types
 }
 
 #[derive(Component)]

@@ -227,9 +227,9 @@ pub(crate) fn update_damaged_characters(
     let start = Instant::now();
 
     for (character, label, mut health, damage, mut transform) in characters.iter_mut() {
-        let prev = format!("{health}", health = *health);
+        let prev = health.0.current();
         if health.apply(damage) {
-            let curr = format!("{health}", health = *health);
+            let curr = health.0.current();
             let message = format!(
                 "{} hits {label} for {} ({prev} -> {curr})",
                 damage.attacker, damage.amount
@@ -262,9 +262,9 @@ pub(crate) fn update_damaged_items(
     let start = Instant::now();
 
     for (item, label, mut integrity, damage) in windows.iter_mut() {
-        let prev = format!("{integrity}", integrity = *integrity);
+        let prev = integrity.0.current();
         if integrity.apply(damage) {
-            let curr = format!("{integrity}", integrity = *integrity);
+            let curr = integrity.0.current();
             let message = format!(
                 "{attacker} hits {label} ({prev} -> {curr})",
                 attacker = damage.attacker

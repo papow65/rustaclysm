@@ -12,7 +12,7 @@ impl Plugin for LoadingIndicatorPlugin {
         app.add_systems(
             (
                 start_gameplay,
-                finish_loading.run_if(resource_exists_and_changed::<Explored>()),
+                finish_loading.run_if(resource_exists::<Explored>()),
             )
                 .in_set(OnUpdate(ProgressScreenState::Loading)),
         );

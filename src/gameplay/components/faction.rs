@@ -48,7 +48,7 @@ impl Faction {
 
     pub(crate) fn is_aggressive(&self, health: &Health) -> bool {
         match self {
-            Self::Human => health.relative_damage() < Partial::from_u8(128),
+            Self::Human => health.0.partial() < Partial::from_u8(128),
             _ => true,
         }
     }
@@ -100,7 +100,7 @@ impl Faction {
             )
             .filter_map(|(memory, enemy_pos)| {
                 envir
-                    .path(actor.pos, enemy_pos, self.intelligence(), actor.speed)
+                    .path(actor.pos, enemy_pos, self.intelligence(), actor.speed())
                     .map(|path| (memory, path))
             })
             .min_by_key(|(memory, path)| (*memory, path.duration.0))
@@ -138,7 +138,7 @@ impl Faction {
         }
 
         let up_time =
-            WalkingCost::new(&NborDistance::Up, MoveCost::default()).duration(actor.speed);
+            WalkingCost::new(&NborDistance::Up, MoveCost::default()).duration(actor.speed());
 
         // Higher gives better results but is slower
         let planning_limit: u64 = 5;
@@ -147,7 +147,7 @@ impl Faction {
 
         let graph = dijkstra_all(&(actor.pos, Milliseconds(0)), |(pos, prev_total_ms)| {
             envir
-                .nbors_for_moving(*pos, None, self.intelligence(), actor.speed)
+                .nbors_for_moving(*pos, None, self.intelligence(), actor.speed())
                 .filter_map(|(nbor, ms)| {
                     let total_ms = *prev_total_ms + ms;
                     if max_time < total_ms {
@@ -186,7 +186,7 @@ impl Faction {
 
         if random.gen::<f32>() < 0.3 {
             envir
-                .nbors_for_moving(actor.pos, None, self.intelligence(), actor.speed)
+                .nbors_for_moving(actor.pos, None, self.intelligence(), actor.speed())
                 .filter(|(pos, _)| factions.iter().all(|(other_pos, _)| pos != other_pos))
                 .map(|(pos, _)| pos)
                 .collect::<Vec<Pos>>()

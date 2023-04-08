@@ -205,7 +205,7 @@ impl<'w, 's> Envir<'w, 's> {
         pos: Pos,
         destination: Option<Pos>,
         intelligence: Intelligence,
-        speed: BaseSpeed,
+        speed: MillimeterPerSecond,
     ) -> impl Iterator<Item = (Pos, Milliseconds)> + 's {
         self.nbors_if(pos, move |nbor| {
             (pos.level == Level::ZERO || !self.location.all(pos).is_empty()) && {
@@ -277,7 +277,7 @@ impl<'w, 's> Envir<'w, 's> {
         from: Pos,
         to: Pos,
         intelligence: Intelligence,
-        speed: BaseSpeed,
+        speed: MillimeterPerSecond,
     ) -> Option<MovementPath> {
         if to == from {
             return None;

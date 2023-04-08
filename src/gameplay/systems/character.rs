@@ -88,15 +88,15 @@ pub(crate) fn plan_action(
 pub(crate) fn perform_action(
     In(option): In<Option<(Entity, Action)>>,
     world: &mut World,
-) -> Option<(Entity, Milliseconds)> {
+) -> Option<(Entity, Option<Impact>)> {
     let start = Instant::now();
 
     let Some((actor_entity, action)) = option  else {
         return None;
     };
 
-    let timeout = match action {
-        Action::Stay => perform(world, actor_entity, |actor| actor.stay()),
+    let impact = match action {
+        Action::Stay => perform(world, actor_entity, |actor| Some(actor.stay())),
         Action::Step { target } => {
             perform_commands_envir(world, actor_entity, |actor, commands, envir| {
                 actor.move_(commands, envir, target)
@@ -135,12 +135,12 @@ pub(crate) fn perform_action(
                 Actors,
             )>::new(world);
             let (mut commands, mut envir, dumpees, actors) = system_state.get_mut(world);
-            let duration =
+            let impact =
                 actors
                     .get(actor_entity)
                     .dump(&mut commands, &mut envir.location, &dumpees);
             system_state.apply(world);
-            duration
+            impact
         }
         Action::SwitchRunning => {
             perform_commands_envir(world, actor_entity, |actor, commands, _| {
@@ -151,70 +151,75 @@ pub(crate) fn perform_action(
 
     log_if_slow("manage_characters", start);
 
-    Some((actor_entity, timeout))
+    Some((actor_entity, impact))
 }
 
 // TODO combine all versions of 'perform' in a generic function
 
-fn perform<F>(world: &mut World, actor_entity: Entity, act: F) -> Milliseconds
+fn perform<F>(world: &mut World, actor_entity: Entity, act: F) -> Option<Impact>
 where
-    F: Fn(Actor) -> Milliseconds,
+    F: Fn(Actor) -> Option<Impact>,
 {
     let mut system_state = SystemState::<(Actors,)>::new(world);
     let (actors,) = system_state.get_mut(world);
-    let duration = act(actors.get(actor_entity));
+    let impact = act(actors.get(actor_entity));
     system_state.apply(world);
-    duration
+    impact
 }
 
-fn perform_commands_envir<F>(world: &mut World, actor_entity: Entity, act: F) -> Milliseconds
+fn perform_commands_envir<F>(world: &mut World, actor_entity: Entity, act: F) -> Option<Impact>
 where
-    F: Fn(Actor, &mut Commands, &mut Envir) -> Milliseconds,
+    F: Fn(Actor, &mut Commands, &mut Envir) -> Option<Impact>,
 {
     let mut system_state = SystemState::<(Commands, Envir, Actors)>::new(world);
     let (mut commands, mut envir, actors) = system_state.get_mut(world);
-    let duration = act(actors.get(actor_entity), &mut commands, &mut envir);
+    let impact = act(actors.get(actor_entity), &mut commands, &mut envir);
     system_state.apply(world);
-    duration
+    impact
 }
 
 fn perform_commands_location_hierarchy<F>(
     world: &mut World,
     actor_entity: Entity,
     act: F,
-) -> Milliseconds
+) -> Option<Impact>
 where
-    F: Fn(Actor, &mut Commands, &mut Location, &Hierarchy) -> Milliseconds,
+    F: Fn(Actor, &mut Commands, &mut Location, &Hierarchy) -> Option<Impact>,
 {
     let mut system_state =
         SystemState::<(Commands, Envir, Hierarchy, Actors<'static, 'static>)>::new(world);
     let (mut commands, mut envir, hierarchy, actors) = system_state.get_mut(world);
-    let duration = act(
+    let impact = act(
         actors.get(actor_entity),
         &mut commands,
         &mut envir.location,
         &hierarchy,
     );
     system_state.apply(world);
-    duration
+    impact
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn update_timeouts(
-    In(option): In<Option<(Entity, Milliseconds)>>,
+pub(crate) fn handle_impact(
+    In(option): In<Option<(Entity, Option<Impact>)>>,
     mut commands: Commands,
     mut timeouts: ResMut<Timeouts>,
-    players: Query<&Player>,
+    mut staminas: Query<&mut Stamina>,
 ) {
     let start = Instant::now();
 
-    if let Some((actor_entity, mut timeout)) = option {
-        if timeout.0 == 0 && players.get(actor_entity).is_err() {
+    // None when waiting for player input
+    if let Some((actor_entity, impact)) = option {
+        let stamina = staminas.get_mut(actor_entity);
+        if let Some(impact) = impact {
+            if let Ok(mut stamina) = stamina {
+                stamina.apply(impact.stamina_impact);
+            }
+            timeouts.add(actor_entity, impact.timeout);
+        } else if stamina.is_err() {
             commands.spawn(Message::error("failed npc action"));
-            timeout.0 = 1000;
+            timeouts.add(actor_entity, Milliseconds(1000));
         }
-
-        timeouts.add(actor_entity, timeout);
     }
 
     log_if_slow("manage_characters", start);

@@ -61,6 +61,7 @@ impl Plugin for GameplayPlugin {
                 update_status_time.run_if(resource_exists_and_changed::<Timeouts>()),
                 update_status_health,
                 update_status_speed,
+                update_status_stamina,
                 update_status_player_state
                     .run_if(resource_exists_and_changed::<PlayerActionState>()),
                 update_status_detais.run_if(resource_exists_and_changed::<PlayerActionState>()),

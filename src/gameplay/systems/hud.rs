@@ -291,8 +291,9 @@ pub(crate) fn update_status_health(
     let start = Instant::now();
 
     if let Some(health) = health.iter().next() {
-        status_displays.iter_mut().next().unwrap().sections[2].value =
-            format!("\n{health} health\n");
+        let text_section = &mut status_displays.iter_mut().next().unwrap().sections[2];
+        text_section.value = format!("\n{} health\n", health.0.current());
+        text_section.style.color = health.0.color();
     }
 
     log_if_slow("update_status_health", start);
@@ -300,13 +301,36 @@ pub(crate) fn update_status_health(
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_status_speed(
-    speed: Query<&BaseSpeed, (With<Player>, Changed<BaseSpeed>)>,
+    player_actors: Query<
+        ActorTuple,
+        (
+            With<Player>,
+            Or<(Changed<BaseSpeed>, Changed<Stamina>, Changed<WalkingMode>)>,
+        ),
+    >,
     mut status_displays: Query<&mut Text, With<StatusDisplay>>,
 ) {
     let start = Instant::now();
 
-    if let Some(speed) = speed.iter().next() {
-        status_displays.iter_mut().next().unwrap().sections[3].value = format!("{speed}\n");
+    if let Ok(actor_tuple) = player_actors.get_single() {
+        status_displays.iter_mut().next().unwrap().sections[3].value =
+            format!("{}\n", Actor::from(actor_tuple).speed());
+    }
+
+    log_if_slow("update_status_speed", start);
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub(crate) fn update_status_stamina(
+    player_staminas: Query<&Stamina, (With<Player>, Changed<Stamina>)>,
+    mut status_displays: Query<&mut Text, With<StatusDisplay>>,
+) {
+    let start = Instant::now();
+
+    if let Ok(player_stamina) = player_staminas.get_single() {
+        let text_section = &mut status_displays.iter_mut().next().unwrap().sections[4];
+        text_section.value = format!("{} stamina\n", player_stamina.0.current());
+        text_section.style.color = player_stamina.0.color();
     }
 
     log_if_slow("update_status_speed", start);
@@ -319,7 +343,7 @@ pub(crate) fn update_status_player_state(
 ) {
     let start = Instant::now();
 
-    status_displays.iter_mut().next().unwrap().sections[4].value =
+    status_displays.iter_mut().next().unwrap().sections[5].value =
         format!("{}\n", *player_action_state);
 
     log_if_slow("update_status_player_state", start);
@@ -409,7 +433,7 @@ fn characters_info(
         .flat_map(|&i| characters.get(i))
         .map(|(_definition, label, health)| {
             let label = label.map_or_else(|| String::from("[Unknown]"), String::from);
-            format!("{label} ({health} health)\n")
+            format!("{label} ({} health)\n", health.0.current())
         })
         .collect()
 }

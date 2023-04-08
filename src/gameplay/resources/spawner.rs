@@ -118,7 +118,9 @@ impl<'w, 's> Spawner<'w, 's> {
         self.commands
             .entity(entity)
             .insert(Obstacle)
-            .insert(Health::new(character_info.hp.unwrap_or(60) as i16))
+            .insert(Health(
+                Limited::full(character_info.hp.unwrap_or(60) as u16),
+            ))
             .insert(match character_info.default_faction.as_str() {
                 "human" => Faction::Human,
                 "zombie" => Faction::Zombie,
@@ -134,7 +136,7 @@ impl<'w, 's> Spawner<'w, 's> {
         if 0 < character_info.speed {
             self.commands
                 .entity(entity)
-                .insert(BaseSpeed::from_h_kmph(character_info.speed / 12));
+                .insert(BaseSpeed::from_percent(character_info.speed));
         }
 
         if character_info.flags.aquatic() {
@@ -519,7 +521,6 @@ impl<'w, 's> Spawner<'w, 's> {
 
         self.commands
             .entity(player_entity)
-            .insert(Player)
             .with_children(|child_builder| {
                 child_builder
                     .spawn(SpatialBundle::default())
@@ -591,6 +592,9 @@ impl<'w, 's> Spawner<'w, 's> {
             .unwrap();
         self.commands
             .entity(player)
+            .insert(Player)
+            .insert(Stamina(Limited::full(300)))
+            .insert(WalkingMode::Walking)
             .insert(TextLabel::new(self.sav.player.name.clone()));
         self.configure_player(player);
 
