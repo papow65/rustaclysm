@@ -1,4 +1,4 @@
-use crate::prelude::{DeflatVec, Mass, ObjectId, TextLabel, Volume};
+use crate::prelude::{DeflatVec, Mass, ObjectId, Volume};
 use bevy::utils::HashMap;
 use serde::Deserialize;
 
@@ -322,21 +322,11 @@ pub(crate) enum CddaItemName {
     },
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 #[serde(from = "CddaItemName")]
 pub(crate) struct ItemName {
-    single: String,
-    plural: String,
-}
-
-impl ItemName {
-    pub(crate) fn to_label(&self, amount: usize) -> TextLabel {
-        TextLabel::new(if amount == 1 {
-            &self.single
-        } else {
-            &self.plural
-        })
-    }
+    pub(crate) single: String,
+    pub(crate) plural: String,
 }
 
 impl From<CddaItemName> for ItemName {

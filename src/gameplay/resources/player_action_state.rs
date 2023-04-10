@@ -66,10 +66,10 @@ impl PlayerActionState {
             }
             (PlayerActionState::Normal, QueuedInstruction::Wait) => {
                 *self = PlayerActionState::Waiting(now + Milliseconds::MINUTE);
-                PlayerBehavior::Feedback(Message::info("Started waiting..."))
+                PlayerBehavior::Feedback(Message::info().str("Started waiting..."))
             }
             (PlayerActionState::Attacking, QueuedInstruction::Offset(Direction::Here)) => {
-                PlayerBehavior::Feedback(Message::warn("can't attack self"))
+                PlayerBehavior::Feedback(Message::warn().str("can't attack self"))
             }
             (PlayerActionState::ExaminingPos(curr), QueuedInstruction::Offset(direction)) => {
                 let nbor = direction.to_nbor();
@@ -110,19 +110,19 @@ impl PlayerActionState {
             (_, QueuedInstruction::SwitchRunning) => PlayerBehavior::Perform(Action::SwitchRunning),
             (PlayerActionState::Waiting(_), QueuedInstruction::Interrupted) => {
                 *self = PlayerActionState::Normal;
-                PlayerBehavior::Feedback(Message::warn("You see an enemy and stop waiting"))
+                PlayerBehavior::Feedback(Message::warn().str("You spot an enemy and stop waiting"))
             }
             (PlayerActionState::Waiting(_), QueuedInstruction::Finished) => {
                 *self = PlayerActionState::Normal;
-                PlayerBehavior::Feedback(Message::info("Finished waiting"))
+                PlayerBehavior::Feedback(Message::info().str("Finished waiting"))
             }
             (_, QueuedInstruction::Interrupted) => {
                 *self = PlayerActionState::Normal;
-                PlayerBehavior::Feedback(Message::error("Iterrupted while not waiting"))
+                PlayerBehavior::Feedback(Message::error().str("Iterrupted while not waiting"))
             }
             (_, QueuedInstruction::Finished) => {
                 *self = PlayerActionState::Normal;
-                PlayerBehavior::Feedback(Message::error("Finished while not waiting"))
+                PlayerBehavior::Feedback(Message::error().str("Finished while not waiting"))
             }
         }
     }
@@ -135,7 +135,7 @@ impl PlayerActionState {
                     *self = PlayerActionState::ExaminingZoneLevel(target);
                     PlayerBehavior::NoEffect
                 } else {
-                    PlayerBehavior::Feedback(Message::warn("invalid zone level to examine"))
+                    PlayerBehavior::Feedback(Message::warn().str("invalid zone level to examine"))
                 }
             }
             (PlayerActionState::ExaminingPos(current), target) => {
@@ -143,7 +143,7 @@ impl PlayerActionState {
                     *self = PlayerActionState::ExaminingPos(target);
                     PlayerBehavior::NoEffect
                 } else {
-                    PlayerBehavior::Feedback(Message::warn("invalid position to examine"))
+                    PlayerBehavior::Feedback(Message::warn().str("invalid position to examine"))
                 }
             }
             (PlayerActionState::Normal, Ok(target)) => {
@@ -174,7 +174,7 @@ impl PlayerActionState {
             .nbors_for_exploring(pos, QueuedInstruction::Attack)
             .collect::<Vec<Pos>>();
         match attackable_nbors.len() {
-            0 => PlayerBehavior::Feedback(Message::warn("no targets nearby")),
+            0 => PlayerBehavior::Feedback(Message::warn().str("no targets nearby")),
             1 => PlayerBehavior::Perform(Action::Attack {
                 target: attackable_nbors[0],
             }),
@@ -190,7 +190,7 @@ impl PlayerActionState {
             .nbors_for_exploring(pos, QueuedInstruction::Smash)
             .collect::<Vec<Pos>>();
         match smashable_nbors.len() {
-            0 => PlayerBehavior::Feedback(Message::warn("no targets nearby")),
+            0 => PlayerBehavior::Feedback(Message::warn().str("no targets nearby")),
             1 => PlayerBehavior::Perform(Action::Smash {
                 target: smashable_nbors[0],
             }),
@@ -206,7 +206,7 @@ impl PlayerActionState {
             .nbors_for_exploring(pos, QueuedInstruction::Close)
             .collect::<Vec<Pos>>();
         match closable_nbors.len() {
-            0 => PlayerBehavior::Feedback(Message::warn("nothing to close nearby")),
+            0 => PlayerBehavior::Feedback(Message::warn().str("nothing to close nearby")),
             1 => PlayerBehavior::Perform(Action::Close {
                 target: closable_nbors[0],
             }),

@@ -319,7 +319,8 @@ impl Infos {
         variants
     }
 
-    pub(crate) fn label(&self, definition: &ObjectDefinition, amount: usize) -> TextLabel {
+    #[must_use]
+    pub(crate) fn name(&self, definition: &ObjectDefinition) -> ItemName {
         let name = match definition.category {
             ObjectCategory::Character => self.characters.get(&definition.id).map(|o| &o.name),
             ObjectCategory::Item => self.items.get(&definition.id).map(|o| &o.name),
@@ -330,11 +331,9 @@ impl Infos {
             _ => unimplemented!("{:?}", definition.category),
         };
 
-        if let Some(name) = name {
-            name.to_label(amount)
-        } else {
-            definition.id.to_fallback_label()
-        }
+        name.cloned().unwrap_or(ItemName::from(CddaItemName::Simple(
+            definition.id.fallback_name(),
+        )))
     }
 
     fn extract<T>(

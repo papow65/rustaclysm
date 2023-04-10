@@ -1,4 +1,5 @@
 mod faction;
+mod message;
 mod player;
 mod pos;
 mod stats;
@@ -12,39 +13,14 @@ use rand::{
     distributions::{Distribution, Uniform},
     thread_rng,
 };
-use std::fmt;
 
-pub(crate) use {faction::*, player::*, pos::*, stats::*};
+pub(crate) use {faction::*, message::*, player::*, pos::*, stats::*};
 
 #[derive(Component)]
 pub(crate) struct Filthy;
 
 #[derive(Component)]
 pub(crate) struct ManualRoot;
-
-#[derive(Clone, Component, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub(crate) struct TextLabel(String);
-
-impl TextLabel {
-    pub(crate) fn new<S>(label: S) -> Self
-    where
-        S: Into<String>,
-    {
-        Self(label.into())
-    }
-}
-
-impl fmt::Display for TextLabel {
-    fn fmt(&self, formatter: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        self.0.fmt(formatter)
-    }
-}
-
-impl From<&TextLabel> for String {
-    fn from(label: &TextLabel) -> String {
-        label.0.clone()
-    }
-}
 
 #[derive(Component)]
 pub(crate) struct Accessible {
@@ -120,8 +96,8 @@ impl Integrity {
 
 #[derive(Component)]
 pub(crate) struct Damage {
-    pub(crate) attacker: TextLabel, // for logging
-    pub(crate) amount: i16,         // TODO damage types
+    pub(crate) attacker: Fragment, // for logging
+    pub(crate) amount: i16,        // TODO damage types
 }
 
 #[derive(Component)]
@@ -247,70 +223,11 @@ impl Appearance {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
-pub(crate) enum Severity {
-    Info,
-    Warn,
-    Error,
-}
-
-impl Severity {
-    pub(crate) fn color(&self) -> Color {
-        match self {
-            Self::Info => DEFAULT_TEXT_COLOR,
-            Self::Warn => WARN_TEXT_COLOR,
-            Self::Error => BAD_TEXT_COLOR,
-        }
-    }
-}
-
-/** Message shown to the player */
-#[derive(Component, Debug, PartialEq, Eq)]
-pub(crate) struct Message {
-    pub(crate) text: String,
-    pub(crate) severity: Severity,
-    _private: (),
-}
-
-impl Message {
-    pub(crate) fn new<S>(s: S, severity: Severity) -> Self
-    where
-        S: Into<String>,
-    {
-        Self {
-            text: s.into(),
-            severity,
-            _private: (),
-        }
-    }
-
-    pub(crate) fn info<S>(s: S) -> Self
-    where
-        S: Into<String>,
-    {
-        Self::new(s, Severity::Info)
-    }
-
-    pub(crate) fn warn<S>(s: S) -> Self
-    where
-        S: Into<String>,
-    {
-        Self::new(s, Severity::Warn)
-    }
-
-    pub(crate) fn error<S>(s: S) -> Self
-    where
-        S: Into<String>,
-    {
-        Self::new(s, Severity::Error)
-    }
-}
+#[derive(Component)]
+pub(crate) struct StatusDisplay;
 
 #[derive(Component)]
 pub(crate) struct LogDisplay;
-
-#[derive(Component)]
-pub(crate) struct StatusDisplay;
 
 #[derive(Component)]
 pub(crate) struct ManualDisplay;

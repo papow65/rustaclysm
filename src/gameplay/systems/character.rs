@@ -74,8 +74,12 @@ pub(crate) fn plan_action(
         }
         println!(
             "{} at {:?} plans {:?} and does {:?}",
-            actor.label, actor.pos, strategy.intent, strategy.action
+            actor.name.single().text,
+            actor.pos,
+            strategy.intent,
+            strategy.action
         );
+
         strategy.action
     };
 
@@ -131,7 +135,7 @@ pub(crate) fn perform_action(
             let mut system_state = SystemState::<(
                 Commands,
                 Envir,
-                Query<(Entity, &TextLabel, &Parent)>,
+                Query<(Entity, &ObjectName, &Amount, Option<&Filthy>, &Parent)>,
                 Actors,
             )>::new(world);
             let (mut commands, mut envir, dumpees, actors) = system_state.get_mut(world);
@@ -219,7 +223,7 @@ pub(crate) fn handle_impact(
             assert!(0 < impact.timeout.0, "{impact:?}");
             timeouts.add(actor_entity, impact.timeout);
         } else if players.get(actor_entity).is_err() {
-            commands.spawn(Message::error("failed npc action"));
+            commands.spawn(Message::error().str("failed npc action"));
             timeouts.add(actor_entity, Milliseconds(1000));
         }
     }

@@ -145,7 +145,7 @@ impl Add<WalkingCost> for WalkingCost {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Eq, PartialOrd)]
 #[serde(from = "String")]
 pub(crate) struct Volume {
     milliliter: u64,
@@ -224,7 +224,7 @@ impl Sum for Volume {
     }
 }
 
-#[derive(Clone, Copy, Debug, Deserialize, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq, PartialOrd)]
 #[serde(from = "String")]
 pub(crate) struct Mass {
     milligram: u64,

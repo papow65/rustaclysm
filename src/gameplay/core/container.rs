@@ -1,4 +1,4 @@
-use crate::prelude::{Containable, Mass, Message, TextLabel, Volume};
+use crate::prelude::{Containable, Fragment, Mass, Message, Volume};
 
 pub(crate) struct Container {
     pub(crate) max_volume: Volume,
@@ -9,10 +9,10 @@ pub(crate) struct Container {
 impl Container {
     pub(crate) fn check_add<'a, I>(
         &self,
-        label: &TextLabel,
+        container_name: Fragment,
         current_items: I,
         added: &Containable,
-        added_label: &TextLabel,
+        added_name: Vec<Fragment>,
     ) -> Result<(), Vec<Message>>
     where
         I: Iterator<Item = &'a Containable>,
@@ -26,32 +26,57 @@ impl Container {
 
         let free_volume = self.max_volume - current_volume;
         if free_volume < added.volume {
-            messages.push(Message::warn(format!(
-                "{label} has only {free_volume} space left, but {} needed to pick up {added_label}",
-                added.volume
-            )));
+            let added_volume = added.volume;
+            if free_volume == Volume::ZERO {
+                String::from("no space left")
+            } else {
+                format!("only {free_volume} available")
+            };
+            messages.push(
+                Message::warn()
+                    .push(container_name.clone())
+                    .add(format!(
+                        "has {free_volume}, but {added_volume} needed to pick up"
+                    ))
+                    .extend(added_name.clone()),
+            );
         }
 
         let free_mass = self.max_mass - current_mass;
         if free_mass < added.mass {
-            messages.push(Message::warn(format!(
-                "{label} can bear only {free_mass} more, but {} needed to pick up {added_label}",
-                added.mass
-            )));
+            let added_mass = added.mass;
+            let free_mass = if free_mass == Mass::ZERO {
+                String::from("no more weight")
+            } else {
+                format!("only {free_mass} more")
+            };
+            messages.push(
+                Message::warn()
+                    .push(container_name.clone())
+                    .add(format!(
+                        "can bear {free_mass}, but {added_mass} needed to pick up",
+                    ))
+                    .extend(added_name.clone()),
+            );
         }
 
         if let Some(max_amount) = self.max_amount {
             let free_amount = max_amount - curent_amount;
             let added_amout = 1;
             if free_amount < added_amout {
-                messages.push(Message::warn(format!(
-                    "{label} can hold {}, but {added_amout} needed to pick up {added_label}",
-                    match free_amount {
-                        0 => String::from("no more items"),
-                        1 => String::from("only one more item"),
-                        _ => format!("only {free_amount} more items"),
-                    }
-                )));
+                let free_amount = match free_amount {
+                    0 => String::from("no more items"),
+                    1 => String::from("only one more item"),
+                    _ => format!("only {free_amount} more items"),
+                };
+                messages.push(
+                    Message::warn()
+                        .push(container_name)
+                        .add(format!(
+                            "can hold {free_amount}, but {added_amout} needed to pick up",
+                        ))
+                        .extend(added_name),
+                );
             }
         }
 

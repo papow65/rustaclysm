@@ -54,7 +54,7 @@ impl Impact {
 
 pub(crate) struct Actor<'s> {
     pub(crate) entity: Entity,
-    pub(crate) label: &'s TextLabel,
+    pub(crate) name: &'s ObjectName,
     pub(crate) pos: Pos,
     pub(crate) base_speed: BaseSpeed,
     pub(crate) health: &'s Health,
@@ -106,8 +106,9 @@ impl<'s> Actor<'s> {
     ) -> Option<Impact> {
         let from = self.pos;
         if !envir.are_nbors(self.pos, to) {
-            let message = format!("can't move to {to:?}, as it is not a nbor of {from:?}");
-            commands.spawn(Message::error(message));
+            commands.spawn(Message::error().push(self.name.single()).add(format!(
+                "can't move to {to:?}, as it is not a nbor of {from:?}"
+            )));
             return None;
         }
 
@@ -123,13 +124,20 @@ impl<'s> Actor<'s> {
                  *            VERTICAL
             }*/
             Collision::Blocked(obstacle) => {
-                let message = format!("{} crashes into {obstacle}", self.label);
-                commands.spawn(Message::warn(message));
+                commands.spawn(
+                    Message::warn()
+                        .push(self.name.single())
+                        .str("crashes into")
+                        .push(obstacle.single()),
+                );
                 None
             }
             Collision::Ledged => {
-                let message = format!("{} halts at the ledge", self.label);
-                commands.spawn(Message::warn(message));
+                commands.spawn(
+                    Message::warn()
+                        .push(self.name.single())
+                        .str("halts at the ledge"),
+                );
                 None
             }
             Collision::Opened(door) => {
@@ -146,7 +154,7 @@ impl<'s> Actor<'s> {
         target: Pos,
     ) -> Option<Impact> {
         let Some(high_speed) = self.high_speed() else {
-            commands.spawn(Message::warn(format!("{} is too exhausted to attack", self.label)));
+            commands.spawn(Message::warn().push(self.name.single()).str("is too exhausted to attack"));
             return None;
         };
 
@@ -156,14 +164,18 @@ impl<'s> Actor<'s> {
 
         if let Some((defender, _)) = envir.find_character(target) {
             commands.entity(defender).insert(Damage {
-                attacker: self.label.clone(),
+                attacker: self.name.single(),
                 amount: self.melee.damage(),
             });
             Some(Impact::heavy(
                 envir.walking_cost(self.pos, target).duration(high_speed),
             ))
         } else {
-            commands.spawn(Message::warn(format!("{} attacks nothing", self.label)));
+            commands.spawn(
+                Message::warn()
+                    .push(self.name.single())
+                    .str("attacks nothing"),
+            );
             None
         }
     }
@@ -175,7 +187,7 @@ impl<'s> Actor<'s> {
         target: Pos,
     ) -> Option<Impact> {
         let Some(high_speed) = self.high_speed() else {
-            commands.spawn(Message::warn(format!("{} is too exhausted to smash", self.label)));
+            commands.spawn(Message::warn().push(self.name.single()).str("is too exhausted to smash"));
             return None;
         };
 
@@ -185,25 +197,35 @@ impl<'s> Actor<'s> {
 
         let stair_pos = Pos::new(target.x, self.pos.level, target.z);
         if self.pos.level.up() == Some(target.level) && envir.stairs_up_to(stair_pos).is_none() {
-            let message = format!("{} smashes the ceiling", self.label);
-            commands.spawn(Message::warn(message));
+            commands.spawn(
+                Message::warn()
+                    .push(self.name.single())
+                    .str("smashes the ceiling"),
+            );
             None
         } else if self.pos.level.down() == Some(target.level)
             && envir.stairs_down_to(stair_pos).is_none()
         {
-            let message = format!("{} smashes the floor", self.label);
-            commands.spawn(Message::warn(message));
+            commands.spawn(
+                Message::warn()
+                    .push(self.name.single())
+                    .str("smashes the floor"),
+            );
             None
-        } else if let Some(smashable) = envir.find_smashable(target) {
+        } else if let Some((smashable, _)) = envir.find_smashable(target) {
             commands.entity(smashable).insert(Damage {
-                attacker: self.label.clone(),
+                attacker: self.name.single(),
                 amount: self.melee.damage(),
             });
             Some(Impact::heavy(
                 envir.walking_cost(self.pos, target).duration(high_speed),
             ))
         } else {
-            commands.spawn(Message::warn(format!("{} smashes nothing", self.label)));
+            commands.spawn(
+                Message::warn()
+                    .push(self.name.single())
+                    .str("smashes nothing"),
+            );
             None
         }
     }
@@ -218,17 +240,19 @@ impl<'s> Actor<'s> {
             unimplemented!();
         }
 
-        if let Some(closable) = envir.find_closeable(target) {
+        if let Some((closeable, closeable_name)) = envir.find_closeable(target) {
             if let Some((_, character)) = envir.find_character(target) {
-                let air = TextLabel::new("the air");
-                let obstacle = envir.find_terrain(target).unwrap_or(&air);
-                commands.spawn(Message::warn(format!(
-                    "{} can't close {obstacle} on {character}",
-                    self.label
-                )));
+                commands.spawn(
+                    Message::warn()
+                        .push(self.name.single())
+                        .str("can't close")
+                        .push(closeable_name.single())
+                        .str("on")
+                        .push(character.single()),
+                );
                 None
             } else {
-                commands.entity(closable).insert(Toggle);
+                commands.entity(closeable).insert(Toggle);
                 Some(
                     self.standard_impact(
                         envir.walking_cost(self.pos, target).duration(self.speed()),
@@ -236,12 +260,14 @@ impl<'s> Actor<'s> {
                 )
             }
         } else {
-            let air = TextLabel::new("the air");
+            let air = ObjectName::air();
             let obstacle = envir.find_terrain(target).unwrap_or(&air);
-            commands.spawn(Message::warn(format!(
-                "{} can't close {obstacle}",
-                self.label
-            )));
+            commands.spawn(
+                Message::warn()
+                    .push(self.name.single())
+                    .str("can't close")
+                    .push(obstacle.single()),
+            );
             None
         }
     }
@@ -271,7 +297,7 @@ impl<'s> Actor<'s> {
         hierarchy: &Hierarchy,
         container: &Container,
     ) -> Option<Impact> {
-        if let Some((pd_entity, pd_label, pd_containable)) =
+        if let Some((pd_entity, pd_name, pd_amount, pd_filthy, pd_containable)) =
             location.get_first(self.pos, &hierarchy.picked)
         {
             let current_items = hierarchy
@@ -279,10 +305,19 @@ impl<'s> Actor<'s> {
                 .iter()
                 .filter(|(parent, _)| parent.get() == self.entity)
                 .map(|(_, containable)| containable);
-            match container.check_add(self.label, current_items, pd_containable, pd_label) {
+            match container.check_add(
+                self.name.single(),
+                current_items,
+                pd_containable,
+                pd_name.as_item(pd_amount, pd_filthy),
+            ) {
                 Ok(()) => {
-                    let message = format!("{} picks up {}", self.label, &pd_label);
-                    commands.spawn(Message::info(message));
+                    commands.spawn(
+                        Message::info()
+                            .push(self.name.single())
+                            .str("picks up")
+                            .extend(pd_name.as_item(pd_amount, pd_filthy)),
+                    );
                     commands
                         .entity(pd_entity)
                         .remove::<Pos>()
@@ -298,8 +333,11 @@ impl<'s> Actor<'s> {
                 }
             }
         } else {
-            let message = format!("nothing to pick up for {}", self.label);
-            commands.spawn(Message::warn(message));
+            commands.spawn(
+                Message::warn()
+                    .str("nothing to pick up for")
+                    .push(self.name.single()),
+            );
             None
         }
     }
@@ -308,15 +346,20 @@ impl<'s> Actor<'s> {
         &'s self,
         commands: &mut Commands,
         location: &mut Location,
-        dumpees: &Query<(Entity, &TextLabel, &Parent)>,
+        dumpees: &Query<(Entity, &ObjectName, &Amount, Option<&Filthy>, &Parent)>,
     ) -> Option<Impact> {
         // It seems impossible to remove something from 'Children', so we check 'Parent'.
 
-        if let Some((dumpee, dee_label, _)) = dumpees
+        if let Some((dumpee, dee_name, dee_amount, dee_filthy, _)) = dumpees
             .iter()
             .find(|(.., parent)| parent.get() == self.entity)
         {
-            commands.spawn(Message::info(format!("{} drops {dee_label}", self.label)));
+            commands.spawn(
+                Message::info()
+                    .push(self.name.single())
+                    .str("nothing to pick up for")
+                    .extend(dee_name.as_item(dee_amount, dee_filthy)),
+            );
             commands.entity(self.entity).remove_children(&[dumpee]);
             commands
                 .entity(dumpee)
@@ -325,7 +368,11 @@ impl<'s> Actor<'s> {
             location.update(dumpee, Some(self.pos));
             Some(self.stay())
         } else {
-            commands.spawn(Message::warn(format!("nothing to drop for {}", self.label)));
+            commands.spawn(
+                Message::warn()
+                    .str("nothing to drop up for")
+                    .push(self.name.single()),
+            );
             None
         }
     }
@@ -340,7 +387,7 @@ impl<'s> Actor<'s> {
 
 pub(crate) type ActorTuple<'s> = (
     Entity,
-    &'s TextLabel,
+    &'s ObjectName,
     &'s Pos,
     &'s BaseSpeed,
     &'s Health,
@@ -358,7 +405,7 @@ impl<'s> From<ActorTuple<'s>> for Actor<'s> {
     fn from(
         (
             entity,
-            label,
+            name,
             &pos,
             &base_speed,
             health,
@@ -374,7 +421,7 @@ impl<'s> From<ActorTuple<'s>> for Actor<'s> {
     ) -> Self {
         Self {
             entity,
-            label,
+            name,
             pos,
             base_speed,
             health,

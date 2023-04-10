@@ -54,21 +54,12 @@ fn spawn_log_display(parent: &mut EntityCommands) {
     });
 }
 
-fn spawn_status_display(hud_defaults: &HudDefaults, parent: &mut EntityCommands) {
+fn spawn_status_display(parent: &mut EntityCommands) {
     // TODO properly use flex layout
     parent.with_children(|child_builder| {
         child_builder
             .spawn(TextBundle {
-                text: Text {
-                    sections: vec![
-                        TextSection {
-                            value: String::from("\n"),
-                            style: hud_defaults.text_style.clone(),
-                        };
-                        10
-                    ],
-                    ..Text::default()
-                },
+                text: Text::default(),
                 style: Style {
                     position_type: PositionType::Absolute,
                     position: UiRect {
@@ -134,8 +125,25 @@ fn spawn_manual_display(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn spawn_hud(mut commands: Commands, fonts: Res<Fonts>) {
+pub(crate) fn spawn_hud(
+    mut commands: Commands,
+    fonts: Res<Fonts>,
+    mut text_sections: ResMut<StatusTextSections>,
+) {
     let hud_defaults = HudDefaults::new(fonts.default());
+
+    text_sections.fps.style = hud_defaults.text_style.clone();
+    text_sections.time.style = hud_defaults.text_style.clone();
+    text_sections.state.style = hud_defaults.text_style.clone();
+    for section in &mut text_sections.health {
+        section.style = hud_defaults.text_style.clone();
+    }
+    for section in &mut text_sections.stamina {
+        section.style = hud_defaults.text_style.clone();
+    }
+    for section in &mut text_sections.speed {
+        section.style = hud_defaults.text_style.clone();
+    }
 
     let mut background = NodeBundle {
         style: Style {
@@ -156,7 +164,7 @@ pub(crate) fn spawn_hud(mut commands: Commands, fonts: Res<Fonts>) {
         height: Val::Percent(100.0),
     };
     let mut parent = commands.spawn(background);
-    spawn_status_display(&hud_defaults, &mut parent);
+    spawn_status_display(&mut parent);
     spawn_log_display(&mut parent);
 
     commands.insert_resource(hud_defaults);
@@ -164,7 +172,7 @@ pub(crate) fn spawn_hud(mut commands: Commands, fonts: Res<Fonts>) {
     // Workaround to make sure the log starts at the bottom
     for i in 0..20 {
         // All different to make sure the messages are not bundled
-        commands.spawn(Message::info(" ".repeat(i)));
+        commands.spawn(Message::info().add(" ".repeat(i)));
     }
 }
 
@@ -179,11 +187,11 @@ pub(crate) fn update_log(
 
     let mut new_messages = false;
     for message in changed.iter() {
-        if message.text.trim() != "" {
+        if message.to_string().trim() != "" {
             if message.severity == Severity::Error {
-                eprintln!("{}", message.text);
+                eprintln!("{}", &message);
             } else {
-                println!("{}", message.text);
+                println!("{}", &message);
             }
         }
         new_messages = true;
@@ -196,7 +204,9 @@ pub(crate) fn update_log(
     let mut shown_reverse = Vec::<(&Message, usize)>::new();
     for message in messages.iter().collect::<Vec<&Message>>().iter().rev() {
         match last {
-            Some((last_message, ref mut last_count)) if last_message.text == message.text => {
+            Some((last_message, ref mut last_count))
+                if last_message.fragments == message.fragments =>
+            {
                 *last_count += 1;
             }
             Some(message_and_count) => {
@@ -219,14 +229,15 @@ pub(crate) fn update_log(
 
     let sections = &mut logs.iter_mut().next().unwrap().sections;
     sections.clear();
-    for (message, count) in shown_reverse.iter().rev() {
+    for (message, count) in shown_reverse.into_iter().rev() {
         let mut style = hud_defaults.text_style.clone();
         style.color = message.severity.color();
-        sections.push(TextSection {
-            value: message.text.clone(),
-            style,
-        });
-        if 1 < *count {
+        let cloned_message = Message {
+            fragments: message.fragments.clone(),
+            severity: message.severity.clone(),
+        };
+        sections.extend(cloned_message.into_text_sections(&style));
+        if 1 < count {
             sections.push(TextSection {
                 value: format!(" ({count}x)"),
                 style: hud_defaults.text_style.clone(),
@@ -241,9 +252,23 @@ pub(crate) fn update_log(
     log_if_slow("update_log", start);
 }
 
+fn update_status_display(text_sections: &StatusTextSections, status_display: &mut Text) {
+    status_display.sections = vec![text_sections.fps.clone(), text_sections.time.clone()];
+    status_display.sections.extend(text_sections.health.clone());
+    status_display
+        .sections
+        .extend(text_sections.stamina.clone());
+    status_display.sections.extend(text_sections.speed.clone());
+    status_display.sections.push(text_sections.state.clone());
+    status_display
+        .sections
+        .extend(text_sections.details.clone());
+}
+
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_status_fps(
     diagnostics: Res<Diagnostics>,
+    mut text_sections: ResMut<StatusTextSections>,
     mut status_displays: Query<&mut Text, With<StatusDisplay>>,
 ) {
     let start = Instant::now();
@@ -253,10 +278,11 @@ pub(crate) fn update_status_fps(
             if let Some(average) = fps.average() {
                 // Precision of 0.1s
                 // Padding to 6 characters, aligned right
-                status_displays.iter_mut().next().unwrap().sections[0].value =
-                    format!("{average:05.1} fps\n");
+                text_sections.fps.value = format!("{average:05.1} fps\n");
             }
         }
+
+        update_status_display(&text_sections, &mut status_displays.single_mut());
     }
 
     log_if_slow("update_status_fps", start);
@@ -265,6 +291,7 @@ pub(crate) fn update_status_fps(
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_status_time(
     timeouts: Res<Timeouts>,
+    mut text_sections: ResMut<StatusTextSections>,
     mut status_displays: Query<&mut Text, With<StatusDisplay>>,
 ) {
     let start = Instant::now();
@@ -279,7 +306,7 @@ pub(crate) fn update_status_time(
     let seasons = days / season_length;
     let years = seasons / 4;
 
-    status_displays.iter_mut().next().unwrap().sections[1].value = format!(
+    text_sections.time.value = format!(
         "{:#04}-{}-{:#02} {:#02}:{:#02}:{:#02}.{}\n\n",
         years + OffsetDateTime::now_utc().year() as u64 + 1, // based on https://cataclysmdda.org/lore-background.html
         match seasons % 4 {
@@ -295,6 +322,7 @@ pub(crate) fn update_status_time(
         seconds % 60,
         tenth_seconds % 10
     );
+    update_status_display(&text_sections, &mut status_displays.single_mut());
 
     log_if_slow("update_status_time", start);
 }
@@ -302,16 +330,18 @@ pub(crate) fn update_status_time(
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_status_health(
     health: Query<&Health, (With<Player>, Changed<Health>)>,
+    mut text_sections: ResMut<StatusTextSections>,
     mut status_displays: Query<&mut Text, With<StatusDisplay>>,
 ) {
     let start = Instant::now();
 
     if let Some(health) = health.iter().next() {
-        let sections = &mut status_displays.iter_mut().next().unwrap().sections;
-        sections[2].value = format!("{}", health.0.current());
-        sections[2].style.color = health.0.color();
+        text_sections.health[0].value = format!("{}", health.0.current());
+        text_sections.health[0].style.color = health.0.color();
 
-        sections[3].value = String::from(" health\n");
+        text_sections.health[1].value = String::from(" health\n");
+
+        update_status_display(&text_sections, &mut status_displays.single_mut());
     }
 
     log_if_slow("update_status_health", start);
@@ -320,16 +350,18 @@ pub(crate) fn update_status_health(
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_status_stamina(
     player_staminas: Query<&Stamina, (With<Player>, Changed<Stamina>)>,
+    mut text_sections: ResMut<StatusTextSections>,
     mut status_displays: Query<&mut Text, With<StatusDisplay>>,
 ) {
     let start = Instant::now();
 
     if let Ok(Stamina::Limited(player_stamina)) = player_staminas.get_single() {
-        let sections = &mut status_displays.iter_mut().next().unwrap().sections;
-        sections[4].value = format!("{}", player_stamina.current());
-        sections[4].style.color = player_stamina.color();
+        text_sections.stamina[0].value = format!("{}", player_stamina.current());
+        text_sections.stamina[0].style.color = player_stamina.color();
 
-        sections[5].value = String::from(" stamina\n");
+        text_sections.stamina[1].value = String::from(" stamina\n");
+
+        update_status_display(&text_sections, &mut status_displays.single_mut());
     }
 
     log_if_slow("update_status_stamina", start);
@@ -344,32 +376,30 @@ pub(crate) fn update_status_speed(
             Or<(Changed<BaseSpeed>, Changed<Stamina>, Changed<WalkingMode>)>,
         ),
     >,
+    mut text_sections: ResMut<StatusTextSections>,
     mut status_displays: Query<&mut Text, With<StatusDisplay>>,
 ) {
     let start = Instant::now();
 
     if let Ok(player_tuple) = player_actors.get_single() {
-        let sections = &mut status_displays.iter_mut().next().unwrap().sections;
         let player_actor = Actor::from(player_tuple);
         let walking_mode = player_actor.walking_mode;
-        match player_actor.stamina.breath() {
-            Breath::Normal => {
-                sections[6].value = String::from(walking_mode.as_str());
-                sections[6].style.color = walking_mode.color();
+        text_sections.speed[0].value = match player_actor.stamina.breath() {
+            Breath::Normal => String::new(),
+            Breath::Winded => String::from("Winded "),
+        };
+        text_sections.speed[0].style.color = BAD_TEXT_COLOR;
 
-                sections[7].value = format!(" ({})\n", player_actor.speed());
-            }
-            Breath::Winded => {
-                sections[6].value = format!(
-                    "Winded {} ({})\n",
-                    String::from(walking_mode.as_str()),
-                    player_actor.speed()
-                );
-                sections[6].style.color = BAD_TEXT_COLOR;
+        text_sections.speed[1].value = String::from(walking_mode.as_str());
+        text_sections.speed[1].style.color = walking_mode.color();
 
-                sections[7].value = String::new();
-            }
-        }
+        text_sections.speed[2].value = format!(" ({})\n", player_actor.speed());
+        text_sections.speed[2].style.color = match player_actor.stamina.breath() {
+            Breath::Normal => DEFAULT_TEXT_COLOR,
+            Breath::Winded => BAD_TEXT_COLOR,
+        };
+
+        update_status_display(&text_sections, &mut status_displays.single_mut());
     }
 
     log_if_slow("update_status_speed", start);
@@ -378,13 +408,15 @@ pub(crate) fn update_status_speed(
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_status_player_state(
     player_action_state: Res<PlayerActionState>,
+    mut text_sections: ResMut<StatusTextSections>,
     mut status_displays: Query<&mut Text, With<StatusDisplay>>,
 ) {
     let start = Instant::now();
 
-    let sections = &mut status_displays.iter_mut().next().unwrap().sections;
-    sections[8].value = format!("{}\n", *player_action_state);
-    sections[8].style.color = player_action_state.color();
+    text_sections.state.value = format!("{}\n", *player_action_state);
+    text_sections.state.style.color = player_action_state.color();
+
+    update_status_display(&text_sections, &mut status_displays.single_mut());
 
     log_if_slow("update_status_player_state", start);
 }
@@ -394,13 +426,18 @@ pub(crate) fn update_status_detais(
     player_action_state: Res<PlayerActionState>,
     envir: Envir,
     asset_server: Res<AssetServer>,
+    hud_defaults: Res<HudDefaults>,
     mut explored: ResMut<Explored>,
     mut zone_level_ids: ResMut<ZoneLevelIds>,
-    characters: Query<(Option<&ObjectDefinition>, Option<&TextLabel>, &Health)>,
+    mut text_sections: ResMut<StatusTextSections>,
+    mut status_displays: Query<&mut Text, With<StatusDisplay>>,
+    characters: Query<(&ObjectDefinition, &ObjectName, &Health)>,
     entities: Query<
         (
             Option<&ObjectDefinition>,
-            Option<&TextLabel>,
+            Option<&ObjectName>,
+            Option<&Amount>,
+            Option<&Filthy>,
             Option<&Corpse>,
             Option<&Accessible>,
             Option<&StairsUp>,
@@ -415,66 +452,73 @@ pub(crate) fn update_status_detais(
         ),
         (Without<Health>, Without<Amount>),
     >,
-    items: Query<(Option<&ObjectDefinition>, &TextLabel), (Without<Health>, With<Amount>)>,
-    mut status_displays: Query<&mut Text, With<StatusDisplay>>,
-    //_globs: Query<(&GlobalTransform, Option<&ZoneLevel>)>,
+    items: Query<
+        (&ObjectDefinition, &ObjectName, &Amount, Option<&Filthy>),
+        (Without<Health>, With<Amount>),
+    >,
 ) {
     let start = Instant::now();
 
-    status_displays.iter_mut().next().unwrap().sections[9].value = match *player_action_state {
-        PlayerActionState::ExaminingPos(pos) => {
-            /*for ent in envir.location.all(pos) {
-                if let Ok((glob, _)) = globs.get(ent) {
-                    println!("Global transfrom: {glob:?}");
+    text_sections.details = Message::info()
+        .extend(match *player_action_state {
+            PlayerActionState::ExaminingPos(pos) => {
+                let mut total = vec![Fragment::new(format!("\n{pos:?}\n"), DEFAULT_TEXT_COLOR)];
+                if explored.has_pos_been_seen(pos) {
+                    let all_here = envir.location.all(pos);
+                    total.extend(characters_info(&all_here, &characters));
+                    total.extend(
+                        all_here
+                            .iter()
+                            .flat_map(|&i| entities.get(i))
+                            .flat_map(entity_info)
+                            .collect::<Vec<_>>(),
+                    );
+                    total.extend(items_info(&all_here, &items));
+                } else {
+                    total.push(Fragment::new(String::from("Unseen"), DEFAULT_TEXT_COLOR));
                 }
-            }*/
-
-            if explored.has_pos_been_seen(pos) {
-                let all_here = envir.location.all(pos);
-                let characters = characters_info(&all_here, &characters);
-                let entities = all_here
-                    .iter()
-                    .flat_map(|&i| entities.get(i))
-                    .map(entity_info)
-                    .map(|s| s + "\n")
-                    .collect::<String>();
-                let items = items_info(&all_here, &items);
-                format!("\n{pos:?}\n{characters}{entities}{items}")
-            } else {
-                format!("\n{pos:?}\nUnseen")
+                total
             }
-        }
-        PlayerActionState::ExaminingZoneLevel(zone_level) => {
-            /*for (glob, z) in globs.iter() {
-                if z == Some(&zone_level) {
-                    println!("Global transfrom: {glob:?}");
-                }
-            }*/
-
-            match explored.has_zone_level_been_seen(&asset_server, zone_level) {
-                seen_from @ Some(SeenFrom::CloseBy | SeenFrom::FarAway) => format!(
-                    "\n{zone_level:?}\n{:?}\n{seen_from:?}",
-                    zone_level_ids.get(zone_level)
-                ),
-                None | Some(SeenFrom::Never) => format!("\n{zone_level:?}\nUnseen"),
+            PlayerActionState::ExaminingZoneLevel(zone_level) => {
+                vec![Fragment::new(
+                    match explored.has_zone_level_been_seen(&asset_server, zone_level) {
+                        seen_from @ Some(SeenFrom::CloseBy | SeenFrom::FarAway) => format!(
+                            "\n{zone_level:?}\n{:?}\n{seen_from:?}",
+                            zone_level_ids.get(zone_level)
+                        ),
+                        None | Some(SeenFrom::Never) => format!("\n{zone_level:?}\nUnseen"),
+                    },
+                    DEFAULT_TEXT_COLOR,
+                )]
             }
-        }
-        _ => String::new(),
-    };
+            _ => Vec::new(),
+        })
+        .into_text_sections(&hud_defaults.text_style);
+
+    update_status_display(&text_sections, &mut status_displays.single_mut());
 
     log_if_slow("update_status_detais", start);
 }
 
 fn characters_info(
     all_here: &[Entity],
-    characters: &Query<(Option<&ObjectDefinition>, Option<&TextLabel>, &Health)>,
-) -> String {
+    characters: &Query<(&ObjectDefinition, &ObjectName, &Health)>,
+) -> Vec<Fragment> {
     all_here
         .iter()
         .flat_map(|&i| characters.get(i))
-        .map(|(_definition, label, health)| {
-            let label = label.map_or_else(|| String::from("[Unknown]"), String::from);
-            format!("{label} ({} health)\n", health.0.current())
+        .flat_map(|(definition, name, health)| {
+            Message::info()
+                .push(name.single())
+                .str("(")
+                .push(Fragment::new(
+                    format!("{}", health.0.current()),
+                    health.0.color(),
+                ))
+                .str("health)\n- ")
+                .add(definition.id.fallback_name())
+                .str("\n")
+                .fragments
         })
         .collect()
 }
@@ -482,7 +526,9 @@ fn characters_info(
 fn entity_info(
     (
         definition,
-        label,
+        name,
+        amount,
+        filthy,
         corpse,
         accessible,
         stairs_up,
@@ -496,7 +542,9 @@ fn entity_info(
         visibility,
     ): (
         Option<&ObjectDefinition>,
-        Option<&TextLabel>,
+        Option<&ObjectName>,
+        Option<&Amount>,
+        Option<&Filthy>,
         Option<&Corpse>,
         Option<&Accessible>,
         Option<&StairsUp>,
@@ -509,7 +557,7 @@ fn entity_info(
         Option<&LastSeen>,
         Option<&Visibility>,
     ),
-) -> String {
+) -> Vec<Fragment> {
     let mut flags = Vec::new();
     let id_str;
     if let Some(definition) = definition {
@@ -568,26 +616,35 @@ fn entity_info(
         }
     }
 
-    label.map_or_else(|| String::from("[Unknown]"), String::from)
-        + flags
-            .iter()
-            .map(|s| format!("\n- {s}"))
-            .collect::<String>()
-            .as_str()
+    let fallback_amount = Amount(1);
+    let fallbak_name = ObjectName::missing();
+    let mut output = Message::info().extend(
+        name.unwrap_or(&fallbak_name)
+            .as_item(amount.unwrap_or(&fallback_amount), filthy),
+    );
+    for flag in &flags {
+        output = output.add(format!("\n- {flag}"));
+    }
+    output.str("\n").fragments
 }
 
 fn items_info(
     all_here: &[Entity],
-    items: &Query<(Option<&ObjectDefinition>, &TextLabel), (Without<Health>, With<Amount>)>,
-) -> String {
+    items: &Query<
+        (&ObjectDefinition, &ObjectName, &Amount, Option<&Filthy>),
+        (Without<Health>, With<Amount>),
+    >,
+) -> Vec<Fragment> {
     all_here
         .iter()
         .flat_map(|e| items.get(*e))
-        .map(|(definition, label)| {
-            format!(
-                "{label}\n- {:?}\n",
-                definition.map_or(ObjectId::new("?"), |d| d.id.clone())
-            )
+        .flat_map(|(definition, name, amount, filthy)| {
+            Message::info()
+                .extend(name.as_item(amount, filthy))
+                .str("\n- ")
+                .add(definition.id.fallback_name())
+                .str("\n")
+                .fragments
         })
         .collect()
 }

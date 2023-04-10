@@ -108,9 +108,7 @@ impl<'w, 's> Spawner<'w, 's> {
         //println!("{:?} @ {pos:?}", &definition);
         let entity = self.spawn_tile(parent, pos, definition);
         let mut entity = self.commands.entity(entity);
-        entity
-            .insert(self.infos.label(definition, amount.0 as usize))
-            .insert(amount);
+        entity.insert(amount);
 
         let Some(item_info) = self
             .infos
@@ -343,7 +341,10 @@ impl<'w, 's> Spawner<'w, 's> {
             .insert(definition.clone())
             .insert(pos)
             .insert(Transform::from_translation(pos.vec3()))
-            .insert(self.infos.label(definition, 1))
+            .insert(ObjectName::new(
+                self.infos.name(definition),
+                DEFAULT_TEXT_COLOR,
+            ))
             .with_children(|child_builder| {
                 for (pbr_bundle, apprearance) in
                     self.model_factory.get_model_bundles(definition, true)
@@ -378,7 +379,9 @@ impl<'w, 's> Spawner<'w, 's> {
             category: ObjectCategory::Meta,
             id: ObjectId::new("cursor"),
         };
-        let mut cursor_bundle = self.model_factory.get_single_pbr_bundle(&cursor_definition, false);
+        let mut cursor_bundle = self
+            .model_factory
+            .get_single_pbr_bundle(&cursor_definition, false);
         cursor_bundle.transform.translation.y = 0.1;
         cursor_bundle.transform.scale = Vec3::new(1.1, 1.0, 1.1);
 
@@ -389,9 +392,7 @@ impl<'w, 's> Spawner<'w, 's> {
                     .spawn(SpatialBundle::default())
                     .insert(CameraBase)
                     .with_children(|child_builder| {
-                        child_builder
-                            .spawn(cursor_bundle)
-                            .insert(ExamineCursor);
+                        child_builder.spawn(cursor_bundle).insert(ExamineCursor);
 
                         let camera_direction = Transform::IDENTITY
                             .looking_at(Vec3::new(0.1, 0.0, -1.0), Vec3::Y)
@@ -460,7 +461,10 @@ impl<'w, 's> Spawner<'w, 's> {
             .insert(Player)
             .insert(Stamina::Limited(Limited::full(300))) // override
             .insert(WalkingMode::Walking) // override
-            .insert(TextLabel::new(self.sav.player.name.clone()));
+            .insert(ObjectName::from_str(
+                self.sav.player.name.as_str(),
+                GOOD_TEXT_COLOR,
+            ));
         self.configure_player(player);
 
         let survivor = self
@@ -472,7 +476,7 @@ impl<'w, 's> Spawner<'w, 's> {
             .unwrap();
         self.commands
             .entity(survivor)
-            .insert(TextLabel::new("Survivor"));
+            .insert(ObjectName::from_str("Survivor", DEFAULT_TEXT_COLOR));
 
         self.spawn_character(
             parent,
@@ -693,9 +697,10 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
         };
 
         let mut entity = self.spawner.commands.spawn(zone_level);
-        entity
-            .insert(Collapsed)
-            .insert(self.spawner.infos.label(&definition, 1));
+        entity.insert(Collapsed).insert(ObjectName::new(
+            self.spawner.infos.name(&definition),
+            DEFAULT_TEXT_COLOR,
+        ));
 
         let pbr_bundles = self
             .spawner

@@ -220,30 +220,36 @@ pub(crate) fn update_visualization_on_focus_move(
 pub(crate) fn update_damaged_characters(
     mut commands: Commands,
     mut characters: Query<
-        (Entity, &TextLabel, &mut Health, &Damage, &mut Transform),
+        (Entity, &ObjectName, &mut Health, &Damage, &mut Transform),
         With<Faction>,
     >,
 ) {
     let start = Instant::now();
 
-    for (character, label, mut health, damage, mut transform) in characters.iter_mut() {
+    for (character, name, mut health, damage, mut transform) in characters.iter_mut() {
         let prev = health.0.current();
         if health.apply(damage) {
             let curr = health.0.current();
-            let message = format!(
-                "{} hits {label} for {} ({prev} -> {curr})",
-                damage.attacker, damage.amount
+            commands.spawn(
+                Message::warn()
+                    .push(damage.attacker.clone())
+                    .str("hits")
+                    .push(name.single())
+                    .add(format!("for {} ({prev} -> {curr})", damage.amount)),
             );
-            commands.spawn(Message::warn(message));
         } else {
-            let message = format!("{attacker} kills {label}", attacker = damage.attacker);
-            commands.spawn(Message::warn(message));
+            commands.spawn(
+                Message::warn()
+                    .push(damage.attacker.clone())
+                    .str("kills")
+                    .push(name.single()),
+            );
             transform.rotation = Quat::from_rotation_y(std::f32::consts::FRAC_PI_2)
                 * Quat::from_rotation_x(-std::f32::consts::FRAC_PI_2);
             commands
                 .entity(character)
                 .insert(Corpse)
-                .insert(TextLabel::new("corpse"))
+                .insert(ObjectName::from_str("corpse", BAD_TEXT_COLOR))
                 .remove::<Health>()
                 .remove::<Obstacle>();
         }
@@ -259,10 +265,12 @@ pub(crate) fn update_damaged_items(
     mut commands: Commands,
     mut spawner: Spawner,
     infos: Res<Infos>,
-    mut windows: Query<(
+    mut damaged: Query<(
         Entity,
         &Pos,
-        &TextLabel,
+        &ObjectName,
+        &Amount,
+        Option<&Filthy>,
         &mut Integrity,
         &Damage,
         &ObjectDefinition,
@@ -271,17 +279,27 @@ pub(crate) fn update_damaged_items(
 ) {
     let start = Instant::now();
 
-    for (item, &pos, label, mut integrity, damage, definition, parent) in windows.iter_mut() {
+    for (item, &pos, name, amount, filthy, mut integrity, damage, definition, parent) in
+        damaged.iter_mut()
+    {
         let prev = integrity.0.current();
         if integrity.apply(damage) {
-            commands.spawn(Message::warn(format!(
-                "{attacker} hits {label} ({prev} -> {curr})",
-                attacker = damage.attacker,
-                curr = integrity.0.current()
-            )));
+            let curr = integrity.0.current();
+            commands.spawn(
+                Message::warn()
+                    .push(damage.attacker.clone())
+                    .str("hits")
+                    .extend(name.as_item(amount, filthy))
+                    .add(format!("for {} ({prev} -> {curr})", damage.amount)),
+            );
             commands.entity(item).remove::<Damage>();
         } else {
-            commands.spawn(Message::warn(format!("{} breaks {label}", damage.attacker)));
+            commands.spawn(
+                Message::warn()
+                    .push(damage.attacker.clone())
+                    .str("breaks")
+                    .extend(name.as_item(amount, filthy)),
+            );
             commands.entity(item).despawn_recursive();
 
             spawner.spawn_smashed(&infos, parent.get(), pos, definition);

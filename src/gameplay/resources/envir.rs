@@ -3,10 +3,10 @@ use bevy::{ecs::system::SystemParam, prelude::*, utils::HashMap};
 use pathfinding::prelude::astar;
 use std::{cell::RefCell, cmp::Ordering, iter::repeat};
 
-pub(crate) enum Collision {
+pub(crate) enum Collision<'a> {
     Pass,
     //Fall(Pos), // todo
-    Blocked(TextLabel),
+    Blocked(&'a ObjectName),
     Ledged,
     Opened(Entity),
 }
@@ -17,16 +17,16 @@ pub(crate) struct Envir<'w, 's> {
     relative_segments: Res<'w, RelativeSegments>,
     accessibles: Query<'w, 's, &'static Accessible>,
     hurdles: Query<'w, 's, &'static Hurdle>,
-    openables: Query<'w, 's, Entity, With<Openable>>,
-    closeables: Query<'w, 's, Entity, With<Closeable>>,
+    openables: Query<'w, 's, (Entity, &'static ObjectName), With<Openable>>,
+    closeables: Query<'w, 's, (Entity, &'static ObjectName), With<Closeable>>,
     stairs_up: Query<'w, 's, &'static StairsUp>,
     stairs_down: Query<'w, 's, &'static StairsDown>,
-    terrain: Query<'w, 's, &'static TextLabel, (Without<Health>, Without<Amount>)>,
-    obstacles: Query<'w, 's, &'static TextLabel, With<Obstacle>>,
-    opaques: Query<'w, 's, &'static TextLabel, With<Opaque>>,
+    terrain: Query<'w, 's, &'static ObjectName, (Without<Health>, Without<Amount>)>,
+    obstacles: Query<'w, 's, &'static ObjectName, With<Obstacle>>,
+    opaques: Query<'w, 's, &'static ObjectName, With<Opaque>>,
     opaque_floors: Query<'w, 's, &'static OpaqueFloor>,
-    characters: Query<'w, 's, (Entity, &'static TextLabel), With<Health>>,
-    smashables: Query<'w, 's, Entity, With<Integrity>>,
+    characters: Query<'w, 's, (Entity, &'static ObjectName), With<Health>>,
+    smashables: Query<'w, 's, (Entity, &'static ObjectName), With<Integrity>>,
 }
 
 impl<'w, 's> Envir<'w, 's> {
@@ -116,19 +116,19 @@ impl<'w, 's> Envir<'w, 's> {
         }
     }
 
-    pub(crate) fn find_openable(&self, pos: Pos) -> Option<Entity> {
+    pub(crate) fn find_openable(&self, pos: Pos) -> Option<(Entity, &ObjectName)> {
         self.location.get_first(pos, &self.openables)
     }
 
-    pub(crate) fn find_closeable(&self, pos: Pos) -> Option<Entity> {
+    pub(crate) fn find_closeable(&self, pos: Pos) -> Option<(Entity, &ObjectName)> {
         self.location.get_first(pos, &self.closeables)
     }
 
-    pub(crate) fn find_terrain(&self, pos: Pos) -> Option<&TextLabel> {
+    pub(crate) fn find_terrain(&self, pos: Pos) -> Option<&ObjectName> {
         self.location.get_first(pos, &self.terrain)
     }
 
-    pub(crate) fn find_obstacle(&self, pos: Pos) -> Option<&TextLabel> {
+    pub(crate) fn find_obstacle(&self, pos: Pos) -> Option<&ObjectName> {
         self.location.get_first(pos, &self.obstacles)
     }
 
@@ -140,11 +140,11 @@ impl<'w, 's> Envir<'w, 's> {
         self.location.any(pos, &self.opaque_floors)
     }
 
-    pub(crate) fn find_character(&self, pos: Pos) -> Option<(Entity, &TextLabel)> {
+    pub(crate) fn find_character(&self, pos: Pos) -> Option<(Entity, &ObjectName)> {
         self.location.get_first(pos, &self.characters)
     }
 
-    pub(crate) fn find_smashable(&self, pos: Pos) -> Option<Entity> {
+    pub(crate) fn find_smashable(&self, pos: Pos) -> Option<(Entity, &ObjectName)> {
         self.location.get_first(pos, &self.smashables)
     }
 
@@ -154,10 +154,10 @@ impl<'w, 's> Envir<'w, 's> {
         match nbor {
             Nbor::Up => self
                 .stairs_up_to(from)
-                .ok_or_else(|| Message::warn("No stairs up")),
+                .ok_or_else(|| Message::warn().str("No stairs up")),
             Nbor::Down => self
                 .stairs_down_to(from)
-                .ok_or_else(|| Message::warn("No stairs down")),
+                .ok_or_else(|| Message::warn().str("No stairs down")),
             horizontal => {
                 let (x, z) = horizontal.horizontal_offset();
                 Ok(Pos::new(from.x + x, from.level, from.z + z))
@@ -305,7 +305,7 @@ impl<'w, 's> Envir<'w, 's> {
                     unimplemented!();
                 } else if controlled {
                     if let Some(obstacle) = self.find_obstacle(to) {
-                        Collision::Blocked(obstacle.clone())
+                        Collision::Blocked(obstacle)
                     } else {
                         Collision::Pass
                     }
@@ -314,14 +314,14 @@ impl<'w, 's> Envir<'w, 's> {
                 }
             }
             Ordering::Equal => {
-                if let Some(openable) = if controlled {
+                if let Some((openable, _)) = if controlled {
                     self.find_openable(to)
                 } else {
                     None
                 } {
                     Collision::Opened(openable)
                 } else if let Some(obstacle) = self.find_obstacle(to) {
-                    Collision::Blocked(obstacle.clone())
+                    Collision::Blocked(obstacle)
                 } else if self.is_accessible(to) {
                     Collision::Pass
                 } else if controlled {

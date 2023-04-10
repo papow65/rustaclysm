@@ -37,8 +37,8 @@ impl ObjectId {
         )
     }
 
-    pub(crate) fn to_fallback_label(&self) -> TextLabel {
-        TextLabel::new(self.0.clone())
+    pub(crate) fn fallback_name(&self) -> String {
+        self.0.clone()
     }
 
     pub(crate) fn is_moving_deep_water_zone(&self) -> bool {
