@@ -8,7 +8,7 @@ const MAX_EXPAND_DISTANCE: i32 = 20;
 pub(crate) fn spawn_zones_for_camera(
     mut commands: Commands,
     player_action_state: Res<PlayerActionState>,
-    mut spawner: Spawner,
+    mut zone_spawner: ZoneSpawner,
     map_assets: Res<Assets<Map>>,
     mut previous_camera_global_transform: Local<GlobalTransform>,
     mut previous_expanded_region: Local<Region>,
@@ -30,10 +30,10 @@ pub(crate) fn spawn_zones_for_camera(
         return;
     }
 
-    spawn_expanded_subzone_levels(&mut spawner, &map_assets, &expanded_region);
+    spawn_expanded_subzone_levels(&mut zone_spawner, &map_assets, &expanded_region);
     despawn_expanded_subzone_levels(
         &mut commands,
-        &mut spawner,
+        &mut zone_spawner,
         &expanded_subzone_levels,
         &expanded_region,
     );
@@ -131,21 +131,24 @@ fn visible_area(camera: &Camera, global_transform: &GlobalTransform) -> Vec<Subz
 }
 
 fn spawn_expanded_subzone_levels(
-    spawner: &mut Spawner,
+    zone_spawner: &mut ZoneSpawner,
     map_assets: &Assets<Map>,
     expanded_region: &Region,
 ) {
     for subzone_level in expanded_region.subzone_levels() {
-        let missing = spawner.subzone_level_entities.get(subzone_level).is_none();
+        let missing = zone_spawner
+            .subzone_level_entities
+            .get(subzone_level)
+            .is_none();
         if missing {
-            spawner.spawn_expanded_subzone_level(map_assets, subzone_level);
+            zone_spawner.spawn_expanded_subzone_level(map_assets, subzone_level);
         }
     }
 }
 
 fn despawn_expanded_subzone_levels(
     commands: &mut Commands,
-    spawner: &mut Spawner,
+    zone_spawner: &mut ZoneSpawner,
     expanded_zone_levels: &Query<(Entity, &SubzoneLevel), Without<Collapsed>>,
     expanded_region: &Region,
 ) {
@@ -156,19 +159,22 @@ fn despawn_expanded_subzone_levels(
         })
         .for_each(|(e, &expanded_subzone_level)| {
             commands.entity(e).despawn_recursive();
-            spawner.subzone_level_entities.remove(e);
+            zone_spawner.subzone_level_entities.remove(e);
 
             let zone_level = ZoneLevel::from(expanded_subzone_level);
-            match spawner
+            match zone_spawner
+                .spawner
                 .explored
-                .has_zone_level_been_seen(&spawner.asset_server, zone_level)
+                .has_zone_level_been_seen(&zone_spawner.asset_server, zone_level)
             {
                 Some(SeenFrom::CloseBy | SeenFrom::FarAway) => {
                     let visible = Visibility::Inherited;
-                    if let Some(zone_level_entity) = spawner.zone_level_entities.get(zone_level) {
+                    if let Some(zone_level_entity) =
+                        zone_spawner.zone_level_entities.get(zone_level)
+                    {
                         commands.entity(zone_level_entity).insert(visible);
                     } else if zone_level.level <= Level::ZERO {
-                        spawner
+                        zone_spawner
                             .spawn_collapsed_zone_level(zone_level, &visible)
                             .ok();
                     }
@@ -182,7 +188,7 @@ fn despawn_expanded_subzone_levels(
 pub(crate) fn update_collapsed_zone_levels(
     mut commands: Commands,
     player_action_state: Res<PlayerActionState>,
-    mut spawner: Spawner,
+    mut zone_spawner: ZoneSpawner,
     mut skip_twice: Local<u8>,
     mut previous_camera_global_transform: Local<GlobalTransform>,
     mut previous_visible_region: Local<Region>,
@@ -223,16 +229,16 @@ pub(crate) fn update_collapsed_zone_levels(
         .map(ZoneLevel::from)
         .collect::<HashSet<_>>()
     {
-        if spawner.zone_level_entities.get(zone_level).is_none() {
+        if zone_spawner.zone_level_entities.get(zone_level).is_none() {
             let visibility = collapsed_visibility(
-                &spawner.asset_server,
-                &mut spawner.explored,
+                &zone_spawner.asset_server,
+                &mut zone_spawner.spawner.explored,
                 zone_level,
                 &expanded_region,
                 &visible_region,
                 &focus,
             );
-            spawner
+            zone_spawner
                 .spawn_collapsed_zone_level(zone_level, &visibility)
                 .ok();
         }
@@ -247,8 +253,8 @@ pub(crate) fn update_collapsed_zone_levels(
         {
             update_zone_level_visualization(
                 &mut commands,
-                &spawner.asset_server,
-                &mut spawner.explored,
+                &zone_spawner.asset_server,
+                &mut zone_spawner.spawner.explored,
                 collapsed_zone_level,
                 &expanded_region,
                 &visible_region,
@@ -354,7 +360,7 @@ pub(crate) fn toggle_doors(
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn handle_map_events(
-    mut spawner: Spawner,
+    mut zone_spawner: ZoneSpawner,
     mut map_asset_events: EventReader<AssetEvent<Map>>,
     map_assets: Res<Assets<Map>>,
 ) {
@@ -367,12 +373,16 @@ pub(crate) fn handle_map_events(
                     level: Level::new(submap.coordinates.2),
                     z: submap.coordinates.1,
                 };
-                if spawner.subzone_level_entities.get(subzone_level).is_none() {
+                if zone_spawner
+                    .subzone_level_entities
+                    .get(subzone_level)
+                    .is_none()
+                {
                     assert_eq!(submap.coordinates, subzone_level.coordinates());
-                    spawner.spawn_subzone(submap, subzone_level);
+                    zone_spawner.spawn_subzone(submap, subzone_level);
                 }
             }
-            spawner.maps.loading.retain(|h| h != handle);
+            zone_spawner.maps.loading.retain(|h| h != handle);
         }
     }
 }
@@ -380,7 +390,7 @@ pub(crate) fn handle_map_events(
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn handle_overmap_buffer_events(
     player_action_state: Res<PlayerActionState>,
-    mut spawner: Spawner,
+    mut zone_spawner: ZoneSpawner,
     mut overmap_buffer_asset_events: EventReader<AssetEvent<OvermapBuffer>>,
     overmap_buffer_assets: Res<Assets<OvermapBuffer>>,
     players: Query<&Pos, With<Player>>,
@@ -389,7 +399,7 @@ pub(crate) fn handle_overmap_buffer_events(
     for overmap_buffer_asset_event in overmap_buffer_asset_events.iter() {
         if let AssetEvent::Created { handle } = overmap_buffer_asset_event {
             let overmap_buffer = overmap_buffer_assets.get(handle).expect("Map loaded");
-            let overzone = spawner.explored.load(handle, overmap_buffer);
+            let overzone = zone_spawner.spawner.explored.load(handle, overmap_buffer);
 
             let (camera, &global_transform) = cameras.single();
             let &player_pos = players.single();
@@ -403,17 +413,17 @@ pub(crate) fn handle_overmap_buffer_events(
                     let zone = Zone { x, z };
                     for level in Level::GROUNDS {
                         let zone_level = ZoneLevel { zone, level };
-                        if spawner.zone_level_entities.get(zone_level).is_none() {
+                        if zone_spawner.zone_level_entities.get(zone_level).is_none() {
                             let visibility = collapsed_visibility(
-                                &spawner.asset_server,
-                                &mut spawner.explored,
+                                &zone_spawner.asset_server,
+                                &mut zone_spawner.spawner.explored,
                                 zone_level,
                                 &expanded_region,
                                 &visible_region,
                                 &focus,
                             );
                             let result =
-                                spawner.spawn_collapsed_zone_level(zone_level, &visibility);
+                                zone_spawner.spawn_collapsed_zone_level(zone_level, &visibility);
                             assert!(result.is_ok(), "{zone_level:?}");
                         }
                     }

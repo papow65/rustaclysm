@@ -13,24 +13,13 @@ where
     child_builder.add_command(Insert { entity, bundle });
 }
 
-#[derive(Default, Resource)]
-pub(crate) struct Maps {
-    pub(crate) loading: Vec<Handle<Map>>,
-}
-
 #[derive(SystemParam)]
 pub(crate) struct Spawner<'w, 's> {
     pub(crate) commands: Commands<'w, 's>,
-    pub(crate) asset_server: Res<'w, AssetServer>,
     loader: Res<'w, TileLoader>,
-    pub(crate) maps: ResMut<'w, Maps>,
     location: ResMut<'w, Location>,
-    pub(crate) zone_level_ids: ResMut<'w, ZoneLevelIds>,
-    pub(crate) zone_level_entities: ResMut<'w, ZoneLevelEntities>,
-    pub(crate) subzone_level_entities: ResMut<'w, SubzoneLevelEntities>,
     pub(crate) explored: ResMut<'w, Explored>,
     pub(crate) infos: Res<'w, Infos>,
-    paths: Res<'w, Paths>,
     sav: Res<'w, Sav>,
     model_factory: ModelFactory<'w>,
 }
@@ -393,170 +382,6 @@ impl<'w, 's> Spawner<'w, 's> {
         tile
     }
 
-    pub(crate) fn spawn_expanded_subzone_level(
-        &mut self,
-        map_assets: &Assets<Map>,
-        subzone_level: SubzoneLevel,
-    ) {
-        let map_path = MapPath::new(&self.paths.world_path(), ZoneLevel::from(subzone_level));
-        if map_path.0.exists() {
-            let map_handle = self.asset_server.load(map_path.0.as_path());
-            if let Some(map) = map_assets.get(&map_handle) {
-                let submap = &map.0[subzone_level.index()];
-                self.spawn_subzone(submap, subzone_level);
-            } else {
-                self.maps.loading.push(self.asset_server.load(map_path.0));
-                // It will be spawned when it's fully loaded.
-            }
-        } else {
-            let object_id = self.zone_level_ids.get(ZoneLevel::from(subzone_level));
-            let fallback = Submap::fallback(subzone_level, object_id);
-            self.spawn_subzone(&fallback, subzone_level);
-        }
-    }
-
-    pub(crate) fn spawn_subzone(&mut self, submap: &Submap, subzone_level: SubzoneLevel) {
-        //println!("{:?} started...", subzone_level);
-        let subzone_level_entity = self
-            .commands
-            .spawn(SpatialBundle::default())
-            .insert(subzone_level)
-            .id();
-
-        if submap.terrain.is_significant() {
-            let terrain = submap.terrain.load_as_subzone(subzone_level);
-            let base_pos = subzone_level.base_pos();
-
-            for x in 0..12 {
-                for z in 0..12 {
-                    let pos = base_pos
-                        .offset(PosOffset {
-                            x,
-                            level: LevelOffset::ZERO,
-                            z,
-                        })
-                        .unwrap();
-                    //dbg!("{pos:?}");
-                    let id = *terrain.get(&pos).unwrap();
-                    if id != &ObjectId::new("t_open_air")
-                        && id != &ObjectId::new("t_open_air_rooved")
-                    {
-                        self.spawn_terrain(subzone_level_entity, pos, id.clone());
-                    }
-
-                    for id in submap
-                        .furniture
-                        .iter()
-                        .filter_map(|at| at.get(Pos::new(x, Level::ZERO, z)))
-                    {
-                        self.spawn_furniture(subzone_level_entity, pos, id.clone());
-                    }
-
-                    for repetitions in submap
-                        .items
-                        .0
-                        .iter()
-                        .filter_map(|at| at.get(Pos::new(x, Level::ZERO, z)))
-                    {
-                        for repetition in repetitions {
-                            let CddaAmount { obj: item, amount } = repetition.as_amount();
-                            //dbg!(&item.typeid);
-                            if let Err(load_error) = self.spawn_existing_item(
-                                subzone_level_entity,
-                                pos,
-                                item,
-                                Amount(item.charges.unwrap_or(1) * amount),
-                            ) {
-                                eprintln!("{load_error}");
-                            }
-                        }
-                    }
-
-                    for spawn in submap
-                        .spawns
-                        .iter()
-                        .filter(|spawn| spawn.x == x && spawn.z == z)
-                    {
-                        //dbg!(&spawn.id);
-                        self.spawn_character(subzone_level_entity, pos, spawn.id.clone());
-                    }
-
-                    for fields in submap
-                        .fields
-                        .0
-                        .iter()
-                        .filter_map(|at| at.get(Pos::new(x, Level::ZERO, z)))
-                    {
-                        //dbg!(&fields);
-                        for field in &fields.0 {
-                            self.spawn_field(subzone_level_entity, pos, field.id.clone());
-                        }
-                    }
-                }
-            }
-            //println!("{:?} done", subzone_level);
-        }
-
-        self.subzone_level_entities
-            .add(subzone_level, subzone_level_entity);
-    }
-
-    pub(crate) fn spawn_collapsed_zone_level(
-        &mut self,
-        zone_level: ZoneLevel,
-        child_visibiltiy: &Visibility,
-    ) -> Result<(), ()> {
-        assert!(zone_level.level <= Level::ZERO);
-
-        let Some(seen_from) = self
-            .explored
-            .has_zone_level_been_seen(&self.asset_server, zone_level) else {
-                return Err(());
-        };
-
-        let definition = ObjectDefinition {
-            category: ObjectCategory::ZoneLevel,
-            id: self.zone_level_ids.get(zone_level).clone(),
-        };
-
-        //println!("zone_level: {zone_level:?} {:?}", &definition);
-        let pbr_bundles = self
-            .loader
-            .get_models(&definition, &self.infos.variants(&definition))
-            .iter()
-            .map(|model| self.model_factory.get_pbr_bundle(model, false))
-            .collect::<Vec<PbrBundle>>();
-
-        let label = self.infos.label(&definition, 1);
-
-        let mut entity = self.commands.spawn(zone_level);
-        entity.insert(Collapsed).insert(label);
-
-        if !pbr_bundles.is_empty() {
-            entity
-                .insert(SpatialBundle::default())
-                .insert(Transform {
-                    translation: zone_level.base_pos().vec3() + Vec3::new(11.5, 0.0, 11.5),
-                    scale: Vec3::splat(24.0),
-                    ..Transform::default()
-                })
-                .insert(match seen_from {
-                    SeenFrom::CloseBy | SeenFrom::FarAway => {
-                        (LastSeen::Previously, Visibility::Inherited)
-                    }
-                    SeenFrom::Never => (LastSeen::Never, Visibility::Hidden),
-                })
-                .with_children(|child_builder| {
-                    for pbr_bundle in pbr_bundles {
-                        child_builder.spawn(pbr_bundle).insert(*child_visibiltiy);
-                    }
-                });
-        }
-
-        self.zone_level_entities.add(zone_level, entity.id());
-        Ok(())
-    }
-
     fn configure_player(&mut self, player_entity: Entity) {
         let cursor_definition = ObjectDefinition {
             category: ObjectCategory::Meta,
@@ -725,5 +550,193 @@ impl<'w, 's> Spawner<'w, 's> {
                 }
             }
         }
+    }
+}
+
+#[derive(Default, Resource)]
+pub(crate) struct Maps {
+    pub(crate) loading: Vec<Handle<Map>>,
+}
+
+#[derive(SystemParam)]
+pub(crate) struct ZoneSpawner<'w, 's> {
+    pub(crate) asset_server: Res<'w, AssetServer>,
+    paths: Res<'w, Paths>,
+    pub(crate) maps: ResMut<'w, Maps>,
+    pub(crate) zone_level_ids: ResMut<'w, ZoneLevelIds>,
+    pub(crate) zone_level_entities: ResMut<'w, ZoneLevelEntities>,
+    pub(crate) subzone_level_entities: ResMut<'w, SubzoneLevelEntities>,
+    pub(crate) spawner: Spawner<'w, 's>,
+}
+
+impl<'w, 's> ZoneSpawner<'w, 's> {
+    pub(crate) fn spawn_expanded_subzone_level(
+        &mut self,
+        map_assets: &Assets<Map>,
+        subzone_level: SubzoneLevel,
+    ) {
+        let map_path = MapPath::new(&self.paths.world_path(), ZoneLevel::from(subzone_level));
+        if map_path.0.exists() {
+            let map_handle = self.asset_server.load(map_path.0.as_path());
+            if let Some(map) = map_assets.get(&map_handle) {
+                let submap = &map.0[subzone_level.index()];
+                self.spawn_subzone(submap, subzone_level);
+            } else {
+                self.maps.loading.push(self.asset_server.load(map_path.0));
+                // It will be spawned when it's fully loaded.
+            }
+        } else {
+            let object_id = self.zone_level_ids.get(ZoneLevel::from(subzone_level));
+            let fallback = Submap::fallback(subzone_level, object_id);
+            self.spawn_subzone(&fallback, subzone_level);
+        }
+    }
+
+    pub(crate) fn spawn_subzone(&mut self, submap: &Submap, subzone_level: SubzoneLevel) {
+        //println!("{:?} started...", subzone_level);
+        let subzone_level_entity = self
+            .spawner
+            .commands
+            .spawn(SpatialBundle::default())
+            .insert(subzone_level)
+            .id();
+
+        if submap.terrain.is_significant() {
+            let terrain = submap.terrain.load_as_subzone(subzone_level);
+            let base_pos = subzone_level.base_pos();
+
+            for x in 0..12 {
+                for z in 0..12 {
+                    let pos = base_pos
+                        .offset(PosOffset {
+                            x,
+                            level: LevelOffset::ZERO,
+                            z,
+                        })
+                        .unwrap();
+                    //dbg!("{pos:?}");
+                    let id = *terrain.get(&pos).unwrap();
+                    if id != &ObjectId::new("t_open_air")
+                        && id != &ObjectId::new("t_open_air_rooved")
+                    {
+                        self.spawner
+                            .spawn_terrain(subzone_level_entity, pos, id.clone());
+                    }
+
+                    for id in submap
+                        .furniture
+                        .iter()
+                        .filter_map(|at| at.get(Pos::new(x, Level::ZERO, z)))
+                    {
+                        self.spawner
+                            .spawn_furniture(subzone_level_entity, pos, id.clone());
+                    }
+
+                    for repetitions in submap
+                        .items
+                        .0
+                        .iter()
+                        .filter_map(|at| at.get(Pos::new(x, Level::ZERO, z)))
+                    {
+                        for repetition in repetitions {
+                            let CddaAmount { obj: item, amount } = repetition.as_amount();
+                            //dbg!(&item.typeid);
+                            if let Err(load_error) = self.spawner.spawn_existing_item(
+                                subzone_level_entity,
+                                pos,
+                                item,
+                                Amount(item.charges.unwrap_or(1) * amount),
+                            ) {
+                                eprintln!("{load_error}");
+                            }
+                        }
+                    }
+
+                    for spawn in submap
+                        .spawns
+                        .iter()
+                        .filter(|spawn| spawn.x == x && spawn.z == z)
+                    {
+                        //dbg!(&spawn.id);
+                        self.spawner
+                            .spawn_character(subzone_level_entity, pos, spawn.id.clone());
+                    }
+
+                    for fields in submap
+                        .fields
+                        .0
+                        .iter()
+                        .filter_map(|at| at.get(Pos::new(x, Level::ZERO, z)))
+                    {
+                        //dbg!(&fields);
+                        for field in &fields.0 {
+                            self.spawner
+                                .spawn_field(subzone_level_entity, pos, field.id.clone());
+                        }
+                    }
+                }
+            }
+            //println!("{:?} done", subzone_level);
+        }
+
+        self.subzone_level_entities
+            .add(subzone_level, subzone_level_entity);
+    }
+
+    pub(crate) fn spawn_collapsed_zone_level(
+        &mut self,
+        zone_level: ZoneLevel,
+        child_visibiltiy: &Visibility,
+    ) -> Result<(), ()> {
+        assert!(zone_level.level <= Level::ZERO);
+
+        let Some(seen_from) = self
+        .spawner.explored
+        .has_zone_level_been_seen(&self.asset_server, zone_level) else {
+            return Err(());
+        };
+
+        let definition = ObjectDefinition {
+            category: ObjectCategory::ZoneLevel,
+            id: self.zone_level_ids.get(zone_level).clone(),
+        };
+
+        //println!("zone_level: {zone_level:?} {:?}", &definition);
+        let pbr_bundles = self
+            .spawner
+            .loader
+            .get_models(&definition, &self.spawner.infos.variants(&definition))
+            .iter()
+            .map(|model| self.spawner.model_factory.get_pbr_bundle(model, false))
+            .collect::<Vec<PbrBundle>>();
+
+        let label = self.spawner.infos.label(&definition, 1);
+
+        let mut entity = self.spawner.commands.spawn(zone_level);
+        entity.insert(Collapsed).insert(label);
+
+        if !pbr_bundles.is_empty() {
+            entity
+                .insert(SpatialBundle::default())
+                .insert(Transform {
+                    translation: zone_level.base_pos().vec3() + Vec3::new(11.5, 0.0, 11.5),
+                    scale: Vec3::splat(24.0),
+                    ..Transform::default()
+                })
+                .insert(match seen_from {
+                    SeenFrom::CloseBy | SeenFrom::FarAway => {
+                        (LastSeen::Previously, Visibility::Inherited)
+                    }
+                    SeenFrom::Never => (LastSeen::Never, Visibility::Hidden),
+                })
+                .with_children(|child_builder| {
+                    for pbr_bundle in pbr_bundles {
+                        child_builder.spawn(pbr_bundle).insert(*child_visibiltiy);
+                    }
+                });
+        }
+
+        self.zone_level_entities.add(zone_level, entity.id());
+        Ok(())
     }
 }
