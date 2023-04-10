@@ -8,7 +8,8 @@ pub(crate) fn remove_gameplay_resources(mut commands: Commands) {
     commands.remove_resource::<SubzoneLevelEntities>();
     commands.remove_resource::<ZoneLevelEntities>();
     commands.remove_resource::<InstructionQueue>();
-    commands.remove_resource::<TileCaches>();
+    commands.remove_resource::<AppearanceCache>();
+    commands.remove_resource::<MeshCaches>();
     commands.remove_resource::<VisualizationUpdate>();
     commands.remove_resource::<Explored>();
     commands.remove_resource::<Sav>();

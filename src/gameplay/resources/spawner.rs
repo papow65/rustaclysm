@@ -3,23 +3,14 @@ use bevy::{
     ecs::system::{Insert, SystemParam},
     prelude::*,
     render::camera::{PerspectiveProjection, Projection::Perspective},
-    utils::HashMap,
 };
-use std::{cmp::Ordering, path::PathBuf};
+use std::cmp::Ordering;
 
 fn insert<T>(child_builder: &mut ChildBuilder, entity: Entity, bundle: T)
 where
     T: Bundle + 'static,
 {
     child_builder.add_command(Insert { entity, bundle });
-}
-
-#[derive(Default, Resource)]
-pub(crate) struct TileCaches {
-    appearance_cache: HashMap<PathBuf, Appearance>,
-    horizontal_plane_mesh_cache: HashMap<SpriteNumber, Handle<Mesh>>,
-    vertical_plane_mesh_cache: HashMap<SpriteNumber, Handle<Mesh>>,
-    cuboid_mesh_cache: HashMap<SpriteNumber, Handle<Mesh>>,
 }
 
 #[derive(Default, Resource)]
@@ -30,12 +21,9 @@ pub(crate) struct Maps {
 #[derive(SystemParam)]
 pub(crate) struct Spawner<'w, 's> {
     pub(crate) commands: Commands<'w, 's>,
-    material_assets: ResMut<'w, Assets<StandardMaterial>>,
-    mesh_assets: ResMut<'w, Assets<Mesh>>,
     pub(crate) asset_server: Res<'w, AssetServer>,
     loader: Res<'w, TileLoader>,
     pub(crate) maps: ResMut<'w, Maps>,
-    caches: ResMut<'w, TileCaches>,
     location: ResMut<'w, Location>,
     pub(crate) zone_level_ids: ResMut<'w, ZoneLevelIds>,
     pub(crate) zone_level_entities: ResMut<'w, ZoneLevelEntities>,
@@ -44,59 +32,10 @@ pub(crate) struct Spawner<'w, 's> {
     pub(crate) infos: Res<'w, Infos>,
     paths: Res<'w, Paths>,
     sav: Res<'w, Sav>,
+    model_factory: ModelFactory<'w>,
 }
 
 impl<'w, 's> Spawner<'w, 's> {
-    fn get_mesh(&mut self, model: &Model) -> Handle<Mesh> {
-        match model.shape {
-            ModelShape::Plane {
-                orientation: SpriteOrientation::Horizontal,
-                ..
-            } => &mut self.caches.horizontal_plane_mesh_cache,
-            ModelShape::Plane {
-                orientation: SpriteOrientation::Vertical,
-                ..
-            } => &mut self.caches.vertical_plane_mesh_cache,
-            ModelShape::Cuboid { .. } => &mut self.caches.cuboid_mesh_cache,
-        }
-        .entry(model.sprite_number)
-        .or_insert_with(|| self.mesh_assets.add(model.to_mesh()))
-        .clone()
-    }
-
-    fn get_appearance(&mut self, model: &Model) -> Appearance {
-        self.caches
-            .appearance_cache
-            .entry(model.texture_path.clone())
-            .or_insert_with(|| {
-                let material = StandardMaterial {
-                    base_color_texture: Some(self.asset_server.load(model.texture_path.clone())),
-                    alpha_mode: model.alpha_mode,
-                    ..StandardMaterial::default()
-                };
-                Appearance::new(&mut self.material_assets, material)
-            })
-            .clone()
-    }
-
-    fn get_pbr_bundle(&mut self, model: &Model, shaded: bool) -> PbrBundle {
-        PbrBundle {
-            mesh: self.get_mesh(model),
-            material: if shaded {
-                Handle::<StandardMaterial>::default()
-            } else {
-                self.get_appearance(model).material(&LastSeen::Currently)
-            },
-            transform: model.to_transform(),
-            visibility: if shaded {
-                Visibility::Inherited
-            } else {
-                Visibility::Hidden
-            },
-            ..PbrBundle::default()
-        }
-    }
-
     fn spawn_character(&mut self, parent: Entity, pos: Pos, id: ObjectId) -> Option<Entity> {
         let definition = &ObjectDefinition {
             category: ObjectCategory::Character,
@@ -399,7 +338,12 @@ impl<'w, 's> Spawner<'w, 's> {
         //dbg!(&models);
         let child_info = models
             .iter()
-            .map(|model| (self.get_pbr_bundle(model, true), self.get_appearance(model)))
+            .map(|model| {
+                (
+                    self.model_factory.get_pbr_bundle(model, true),
+                    self.model_factory.get_appearance(model),
+                )
+            })
             .collect::<Vec<(PbrBundle, Appearance)>>();
 
         let last_seen = if definition.category.shading_applied() {
@@ -580,7 +524,7 @@ impl<'w, 's> Spawner<'w, 's> {
             .loader
             .get_models(&definition, &self.infos.variants(&definition))
             .iter()
-            .map(|model| self.get_pbr_bundle(model, false))
+            .map(|model| self.model_factory.get_pbr_bundle(model, false))
             .collect::<Vec<PbrBundle>>();
 
         let label = self.infos.label(&definition, 1);
@@ -621,7 +565,7 @@ impl<'w, 's> Spawner<'w, 's> {
         let cursor_model = &mut self
             .loader
             .get_models(&cursor_definition, &[cursor_definition.id.clone()])[0];
-        let mut cursor_bundle = self.get_pbr_bundle(cursor_model, false);
+        let mut cursor_bundle = self.model_factory.get_pbr_bundle(cursor_model, false);
         cursor_bundle.transform.translation.y = 0.1;
         cursor_bundle.transform.scale = Vec3::new(1.1, 1.0, 1.1);
 

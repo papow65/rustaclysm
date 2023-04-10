@@ -3,6 +3,7 @@ mod envir;
 mod explored;
 mod infos;
 mod location;
+mod model_factory;
 mod player_action_state;
 mod spawner;
 mod subzone_level_entities;
@@ -10,8 +11,9 @@ mod zone_level_entities;
 mod zone_level_ids;
 
 pub(crate) use self::{
-    debug::*, envir::*, explored::*, infos::*, location::*, player_action_state::*, spawner::*,
-    subzone_level_entities::*, zone_level_entities::*, zone_level_ids::*,
+    debug::*, envir::*, explored::*, infos::*, location::*, model_factory::*,
+    player_action_state::*, spawner::*, subzone_level_entities::*, zone_level_entities::*,
+    zone_level_ids::*,
 };
 use crate::prelude::*;
 use bevy::{
