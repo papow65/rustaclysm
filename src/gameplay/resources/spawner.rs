@@ -16,7 +16,6 @@ where
 #[derive(SystemParam)]
 pub(crate) struct Spawner<'w, 's> {
     pub(crate) commands: Commands<'w, 's>,
-    loader: Res<'w, TileLoader>,
     location: ResMut<'w, Location>,
     pub(crate) explored: ResMut<'w, Explored>,
     pub(crate) infos: Res<'w, Infos>,
@@ -325,20 +324,6 @@ impl<'w, 's> Spawner<'w, 's> {
         //dbg!(&parent);
         //dbg!(pos);
         //dbg!(&definition);
-        let models = self
-            .loader
-            .get_models(definition, &self.infos.variants(definition));
-        //dbg!(&models);
-        let child_info = models
-            .iter()
-            .map(|model| {
-                (
-                    self.model_factory.get_pbr_bundle(model, true),
-                    self.model_factory.get_appearance(model),
-                )
-            })
-            .collect::<Vec<(PbrBundle, Appearance)>>();
-
         let last_seen = if definition.category.shading_applied() {
             if self.explored.has_pos_been_seen(pos) {
                 LastSeen::Previously
@@ -360,7 +345,9 @@ impl<'w, 's> Spawner<'w, 's> {
             .insert(Transform::from_translation(pos.vec3()))
             .insert(self.infos.label(definition, 1))
             .with_children(|child_builder| {
-                for (pbr_bundle, apprearance) in child_info {
+                for (pbr_bundle, apprearance) in
+                    self.model_factory.get_model_bundles(definition, true)
+                {
                     let material = if last_seen == LastSeen::Never {
                         None
                     } else {
@@ -391,10 +378,7 @@ impl<'w, 's> Spawner<'w, 's> {
             category: ObjectCategory::Meta,
             id: ObjectId::new("cursor"),
         };
-        let cursor_model = &mut self
-            .loader
-            .get_models(&cursor_definition, &[cursor_definition.id.clone()])[0];
-        let mut cursor_bundle = self.model_factory.get_pbr_bundle(cursor_model, false);
+        let mut cursor_bundle = self.model_factory.get_single_pbr_bundle(&cursor_definition, false);
         cursor_bundle.transform.translation.y = 0.1;
         cursor_bundle.transform.scale = Vec3::new(1.1, 1.0, 1.1);
 
@@ -405,7 +389,9 @@ impl<'w, 's> Spawner<'w, 's> {
                     .spawn(SpatialBundle::default())
                     .insert(CameraBase)
                     .with_children(|child_builder| {
-                        child_builder.spawn(cursor_bundle).insert(ExamineCursor);
+                        child_builder
+                            .spawn(cursor_bundle)
+                            .insert(ExamineCursor);
 
                         let camera_direction = Transform::IDENTITY
                             .looking_at(Vec3::new(0.1, 0.0, -1.0), Vec3::Y)
@@ -692,33 +678,32 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
         zone_level: ZoneLevel,
         child_visibiltiy: &Visibility,
     ) -> Result<(), ()> {
+        //println!("zone_level: {zone_level:?} {:?}", &definition);
         assert!(zone_level.level <= Level::ZERO);
 
         let Some(seen_from) = self
-        .spawner.explored
-        .has_zone_level_been_seen(&self.asset_server, zone_level) else {
-            return Err(());
-        };
+            .spawner.explored
+            .has_zone_level_been_seen(&self.asset_server, zone_level) else {
+                return Err(());
+            };
 
         let definition = ObjectDefinition {
             category: ObjectCategory::ZoneLevel,
             id: self.zone_level_ids.get(zone_level).clone(),
         };
 
-        //println!("zone_level: {zone_level:?} {:?}", &definition);
+        let mut entity = self.spawner.commands.spawn(zone_level);
+        entity
+            .insert(Collapsed)
+            .insert(self.spawner.infos.label(&definition, 1));
+
         let pbr_bundles = self
             .spawner
-            .loader
-            .get_models(&definition, &self.spawner.infos.variants(&definition))
-            .iter()
-            .map(|model| self.spawner.model_factory.get_pbr_bundle(model, false))
-            .collect::<Vec<PbrBundle>>();
-
-        let label = self.spawner.infos.label(&definition, 1);
-
-        let mut entity = self.spawner.commands.spawn(zone_level);
-        entity.insert(Collapsed).insert(label);
-
+            .model_factory
+            .get_model_bundles(&definition, false)
+            .into_iter()
+            .map(|(pbr, _)| pbr)
+            .collect::<Vec<_>>();
         if !pbr_bundles.is_empty() {
             entity
                 .insert(SpatialBundle::default())

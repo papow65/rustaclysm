@@ -282,6 +282,10 @@ impl Infos {
     }
 
     pub(crate) fn variants(&self, definition: &ObjectDefinition) -> Vec<ObjectId> {
+        if definition.category == ObjectCategory::Meta {
+            return vec![definition.id.clone()];
+        }
+
         let current_id;
         let mut current_definition;
         let mut current_definition_ref = definition;

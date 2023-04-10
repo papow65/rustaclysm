@@ -19,6 +19,8 @@ pub(crate) struct ModelFactory<'w> {
     material_assets: ResMut<'w, Assets<StandardMaterial>>,
     mesh_assets: ResMut<'w, Assets<Mesh>>,
     asset_server: Res<'w, AssetServer>,
+    infos: Res<'w, Infos>,
+    loader: Res<'w, TileLoader>,
 }
 
 impl<'w> ModelFactory<'w> {
@@ -39,7 +41,7 @@ impl<'w> ModelFactory<'w> {
         .clone()
     }
 
-    pub(crate) fn get_appearance(&mut self, model: &Model) -> Appearance {
+    fn get_appearance(&mut self, model: &Model) -> Appearance {
         self.appearance_cache
             .0
             .entry(model.texture_path.clone())
@@ -54,7 +56,7 @@ impl<'w> ModelFactory<'w> {
             .clone()
     }
 
-    pub(crate) fn get_pbr_bundle(&mut self, model: &Model, shaded: bool) -> PbrBundle {
+    fn get_pbr_bundle(&mut self, model: &Model, shaded: bool) -> PbrBundle {
         PbrBundle {
             mesh: self.get_mesh(model),
             material: if shaded {
@@ -70,5 +72,36 @@ impl<'w> ModelFactory<'w> {
             },
             ..PbrBundle::default()
         }
+    }
+
+    pub(crate) fn get_single_pbr_bundle(
+        &mut self,
+        definition: &ObjectDefinition,
+        shading: bool,
+    ) -> PbrBundle {
+        let models = self
+            .loader
+            .get_models(definition, &self.infos.variants(definition));
+        assert!(models.len() == 1, "{}", models.len());
+        self.get_pbr_bundle(&models[0], shading)
+    }
+
+    pub(crate) fn get_model_bundles(
+        &mut self,
+        definition: &ObjectDefinition,
+        shading: bool,
+    ) -> Vec<(PbrBundle, Appearance)> {
+        let models = self
+            .loader
+            .get_models(definition, &self.infos.variants(definition));
+        models
+            .iter()
+            .map(|model| {
+                (
+                    self.get_pbr_bundle(model, shading),
+                    self.get_appearance(model),
+                )
+            })
+            .collect::<Vec<(PbrBundle, Appearance)>>()
     }
 }
