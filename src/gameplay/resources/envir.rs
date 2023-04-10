@@ -244,8 +244,8 @@ impl<'w, 's> Envir<'w, 's> {
         let adjacent = dx.max(dz) - diagonal;
 
         let dy = (to.level - from.level).h;
-        let up = (dy as usize).min(0);
-        let down = (-dy as usize).min(0);
+        let up = dy.max(0) as usize;
+        let down = (-dy).max(0) as usize;
 
         let move_cost = if diagonal + adjacent + up + down == 1 {
             // nbors, the precise value matters in some cases
