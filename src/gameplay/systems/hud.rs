@@ -65,7 +65,7 @@ fn spawn_status_display(hud_defaults: &HudDefaults, parent: &mut EntityCommands)
                             value: String::from("\n"),
                             style: hud_defaults.text_style.clone(),
                         };
-                        9
+                        10
                     ],
                     ..Text::default()
                 },
@@ -421,7 +421,7 @@ pub(crate) fn update_status_detais(
 ) {
     let start = Instant::now();
 
-    status_displays.iter_mut().next().unwrap().sections[8].value = match *player_action_state {
+    status_displays.iter_mut().next().unwrap().sections[9].value = match *player_action_state {
         PlayerActionState::ExaminingPos(pos) => {
             /*for ent in envir.location.all(pos) {
                 if let Ok((glob, _)) = globs.get(ent) {
