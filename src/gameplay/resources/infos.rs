@@ -8,11 +8,13 @@ use std::{fs::read_to_string, path::PathBuf};
 #[derive(Resource)]
 pub(crate) struct Infos {
     characters: HashMap<ObjectId, CharacterInfo>,
-    items: HashMap<ObjectId, ItemInfo>,
+    fields: HashMap<ObjectId, FieldInfo>,
     furniture: HashMap<ObjectId, FurnitureInfo>,
+    items: HashMap<ObjectId, ItemInfo>,
     terrain: HashMap<ObjectId, TerrainInfo>,
-    zone_level: HashMap<ObjectId, OvermapInfo>,
+    zone_levels: HashMap<ObjectId, OvermapInfo>,
     migrations: HashMap<ObjectId, Migration>,
+    item_groups: HashMap<ObjectId, ItemGroup>,
 }
 
 impl Infos {
@@ -190,11 +192,13 @@ impl Infos {
         let mut enricheds = Self::enricheds();
         let mut this = Self {
             characters: Self::extract(&mut enricheds, TypeId::CHARACTER),
-            items: Self::extract(&mut enricheds, TypeId::ITEM),
+            fields: Self::extract(&mut enricheds, TypeId::FIELD),
             furniture: Self::extract(&mut enricheds, TypeId::FURNITURE),
+            items: Self::extract(&mut enricheds, TypeId::ITEM),
             terrain: Self::extract(&mut enricheds, TypeId::TERRAIN),
-            zone_level: Self::extract(&mut enricheds, TypeId::OVERMAP),
+            zone_levels: Self::extract(&mut enricheds, TypeId::OVERMAP),
             migrations: Self::extract(&mut enricheds, TypeId::MIGRATION),
+            item_groups: Self::extract(&mut enricheds, TypeId::ITEM_GROUP),
         };
 
         this.characters.insert(
@@ -222,14 +226,24 @@ impl Infos {
         self.characters.get(id)
     }
 
-    pub(crate) fn item<'a>(&'a self, id: &'a ObjectId) -> Option<&'a ItemInfo> {
+    pub(crate) fn field<'a>(&'a self, id: &'a ObjectId) -> Option<&'a FieldInfo> {
         let id = self.migrations.get(id).map_or(id, |m| &m.replace);
-        self.items.get(id)
+        self.fields.get(id)
     }
 
     pub(crate) fn furniture<'a>(&'a self, id: &'a ObjectId) -> Option<&'a FurnitureInfo> {
         let id = self.migrations.get(id).map_or(id, |m| &m.replace);
         self.furniture.get(id)
+    }
+
+    pub(crate) fn item<'a>(&'a self, id: &'a ObjectId) -> Option<&'a ItemInfo> {
+        let id = self.migrations.get(id).map_or(id, |m| &m.replace);
+        self.items.get(id)
+    }
+
+    pub(crate) fn item_group<'a>(&'a self, id: &'a ObjectId) -> Option<&'a ItemGroup> {
+        let id = self.migrations.get(id).map_or(id, |m| &m.replace);
+        self.item_groups.get(id)
     }
 
     pub(crate) fn terrain<'a>(&'a self, id: &'a ObjectId) -> Option<&'a TerrainInfo> {
@@ -254,9 +268,9 @@ impl Infos {
             ObjectCategory::Terrain => self
                 .terrain
                 .get(&definition.id)
-                .and_then(TerrainInfo::looks_like),
+                .and_then(|o| o.looks_like.as_ref()),
             ObjectCategory::ZoneLevel => self
-                .zone_level
+                .zone_levels
                 .get(&definition.id)
                 .and_then(|o| o.looks_like.as_ref()),
             _ => unimplemented!("{:?}", definition),
@@ -301,9 +315,10 @@ impl Infos {
         let name = match definition.category {
             ObjectCategory::Character => self.characters.get(&definition.id).map(|o| &o.name),
             ObjectCategory::Item => self.items.get(&definition.id).map(|o| &o.name),
+            ObjectCategory::Field => self.fields.get(&definition.id).map(FieldInfo::name),
             ObjectCategory::Furniture => self.furniture.get(&definition.id).map(|o| &o.name),
-            ObjectCategory::Terrain => self.terrain.get(&definition.id).map(TerrainInfo::name),
-            ObjectCategory::ZoneLevel => self.zone_level.get(&definition.id).map(|o| &o.name),
+            ObjectCategory::Terrain => self.terrain.get(&definition.id).map(|o| &o.name),
+            ObjectCategory::ZoneLevel => self.zone_levels.get(&definition.id).map(|o| &o.name),
             _ => unimplemented!("{:?}", definition.category),
         };
 

@@ -26,9 +26,9 @@ impl TypeId {
         TypeId("WHEEL"),
     ];
 
+    pub(crate) const FIELD: &[Self] = &[TypeId("field_type")];
     pub(crate) const FURNITURE: &[Self] = &[TypeId("furniture")];
-
-    pub(crate) const TERRAIN: &[Self] = &[TypeId("field_type"), TypeId("terrain")];
+    pub(crate) const ITEM_GROUP: &[Self] = &[TypeId("item_group")];
 
     pub(crate) const OVERMAP: &[Self] = &[
         TypeId("city_building"),
@@ -40,6 +40,7 @@ impl TypeId {
         TypeId("overmap_special_migration"),
     ];
 
+    pub(crate) const TERRAIN: &[Self] = &[TypeId("terrain")];
     pub(crate) const VEHICLE_PART: &[Self] = &[TypeId("vehicle_part")];
 
     pub(crate) const MIGRATION: &[Self] = &[
@@ -54,7 +55,6 @@ impl TypeId {
         TypeId("enchantment"),
         TypeId("effect_on_condition"),
         TypeId("fault"),
-        TypeId("item_group"),
         TypeId("json_flag"),
         TypeId("mapgen"),
         TypeId("TRAIT_MIGRATION"),
@@ -64,11 +64,13 @@ impl TypeId {
     pub(crate) const fn all() -> &'static [&'static [Self]] {
         &[
             Self::CHARACTER,
-            Self::ITEM,
+            Self::FIELD,
             Self::FURNITURE,
+            Self::ITEM,
+            Self::ITEM_GROUP,
             Self::MIGRATION,
-            Self::TERRAIN,
             Self::OVERMAP,
+            Self::TERRAIN,
             Self::VEHICLE_PART,
             Self::UNUSED,
         ]

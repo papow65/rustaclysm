@@ -162,65 +162,65 @@ pub(crate) struct CddaItem {
     pub(crate) typeid: ObjectId,
 
     #[allow(unused)]
-    snip_id: Option<String>,
+    pub(crate) snip_id: Option<String>,
 
     pub(crate) charges: Option<u32>,
 
     #[allow(unused)]
-    active: Option<bool>,
+    pub(crate) active: Option<bool>,
 
     pub(crate) corpse: Option<ObjectId>,
 
     #[allow(unused)]
-    name: Option<String>,
+    pub(crate) name: Option<String>,
     #[allow(unused)]
-    owner: Option<String>,
+    pub(crate) owner: Option<String>,
     #[allow(unused)]
-    bday: Option<i64>,
+    pub(crate) bday: Option<i64>,
     #[allow(unused)]
-    last_temp_check: Option<u64>,
+    pub(crate) last_temp_check: Option<u64>,
     #[allow(unused)]
-    specific_energy: Option<Number>,
+    pub(crate) specific_energy: Option<Number>,
     #[allow(unused)]
-    temperature: Option<Number>,
+    pub(crate) temperature: Option<Number>,
     #[allow(unused)]
-    item_vars: Option<HashMap<String, String>>,
+    pub(crate) item_vars: Option<HashMap<String, String>>,
     #[allow(unused)]
-    item_tags: Option<Vec<String>>,
+    pub(crate) item_tags: Option<Vec<String>>,
     #[allow(unused)]
-    contents: Option<CddaContainer>,
+    pub(crate) contents: Option<CddaContainer>,
     #[allow(unused)]
-    components: Option<Vec<CddaItem>>,
+    pub(crate) components: Option<Vec<CddaItem>>,
     #[allow(unused)]
-    is_favorite: Option<bool>,
+    pub(crate) is_favorite: Option<bool>,
     #[allow(unused)]
-    relic_data: Option<serde_json::Value>,
+    pub(crate) relic_data: Option<serde_json::Value>,
     #[allow(unused)]
-    damaged: Option<i64>,
+    pub(crate) damaged: Option<i64>,
     #[allow(unused)]
-    current_phase: Option<u8>,
+    pub(crate) current_phase: Option<u8>,
     #[allow(unused)]
-    faults: Option<Vec<String>>,
+    pub(crate) faults: Option<Vec<String>>,
     #[allow(unused)]
-    rot: Option<i64>,
+    pub(crate) rot: Option<i64>,
     #[allow(unused)]
-    curammo: Option<String>,
+    pub(crate) curammo: Option<String>,
     #[allow(unused)]
-    item_counter: Option<u8>,
+    pub(crate) item_counter: Option<u8>,
     #[allow(unused)]
-    variant: Option<String>,
+    pub(crate) variant: Option<String>,
     #[allow(unused)]
-    recipe_charges: Option<u8>,
+    pub(crate) recipe_charges: Option<u8>,
     #[allow(unused)]
-    poison: Option<u8>,
+    pub(crate) poison: Option<u8>,
     #[allow(unused)]
-    burnt: Option<serde_json::Value>,
+    pub(crate) burnt: Option<serde_json::Value>,
     #[allow(unused)]
-    craft_data: Option<serde_json::Value>,
+    pub(crate) craft_data: Option<serde_json::Value>,
     #[allow(unused)]
-    dropped_from: Option<String>,
+    pub(crate) dropped_from: Option<String>,
     #[allow(unused)]
-    degradation: Option<u32>,
+    pub(crate) degradation: Option<u32>,
 }
 
 #[derive(Clone, Debug, Deserialize)]

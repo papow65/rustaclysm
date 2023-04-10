@@ -57,16 +57,8 @@ pub(crate) fn run_behavior_schedule(world: &mut World) {
 
     let mut count = 0;
     while !waiting_for_user_input(world) && !over_time(&start, count) {
-        let iteration = Instant::now();
-
         world.run_schedule(BehaviorSchedule);
-
         count += 1;
-        println!(
-            "iteration {count} of run_behavior_schedule took {:?} after appling ({:?} since start)",
-            iteration.elapsed(),
-            start.elapsed(),
-        );
     }
 
     log_if_slow("run_behavior_schedule", start);

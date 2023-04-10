@@ -257,36 +257,35 @@ pub(crate) fn update_damaged_characters(
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_damaged_items(
     mut commands: Commands,
-    mut windows: Query<(Entity, &TextLabel, &mut Integrity, &Damage)>,
+    mut spawner: Spawner,
+    infos: Res<Infos>,
+    mut windows: Query<(
+        Entity,
+        &Pos,
+        &TextLabel,
+        &mut Integrity,
+        &Damage,
+        &ObjectDefinition,
+        &Parent,
+    )>,
 ) {
     let start = Instant::now();
 
-    for (item, label, mut integrity, damage) in windows.iter_mut() {
+    for (item, &pos, label, mut integrity, damage, definition, parent) in windows.iter_mut() {
         let prev = integrity.0.current();
         if integrity.apply(damage) {
-            let curr = integrity.0.current();
-            let message = format!(
+            commands.spawn(Message::warn(format!(
                 "{attacker} hits {label} ({prev} -> {curr})",
-                attacker = damage.attacker
-            );
-            commands.spawn(Message::warn(message));
+                attacker = damage.attacker,
+                curr = integrity.0.current()
+            )));
+            commands.entity(item).remove::<Damage>();
         } else {
-            commands
-                .entity(item)
-                .insert(Hurdle(MoveCostMod(3)))
-                .remove::<Obstacle>();
             commands.spawn(Message::warn(format!("{} breaks {label}", damage.attacker)));
-        }
-        /*
-        Causes a crash
-        TODO What was this supposed to do?
-        if let Some(children) = children {
-            for &child in children.iter() {
-                commands.entity(child).despawn();
-            }
-        }*/
+            commands.entity(item).despawn_recursive();
 
-        commands.entity(item).remove::<Damage>();
+            spawner.spawn_smashed(&infos, parent.get(), pos, definition);
+        }
     }
 
     log_if_slow("update_damaged_items", start);

@@ -1,0 +1,14 @@
+{
+    "str_min": 12,
+    "str_max": 50,
+    "sound": "smash!",
+    "sound_fail": "whump.",
+    "items": [
+        { "item": "2x4", "count": [ 1, 5 ] },
+        { "item": "nail", "charges": [ 5, 15 ] },
+        { "item": "splinter", "count": [ 20, 30 ] },
+        { "item": "sheet_metal_small", "count": [ 2, 3 ] },
+        { "item": "scrap", "count": [ 3, 5 ] },
+        { "item": "rock", "count": [ 8, 15 ] }
+    ]
+}

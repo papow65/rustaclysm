@@ -41,7 +41,7 @@ pub(crate) struct Spawner<'w, 's> {
     pub(crate) zone_level_entities: ResMut<'w, ZoneLevelEntities>,
     pub(crate) subzone_level_entities: ResMut<'w, SubzoneLevelEntities>,
     pub(crate) explored: ResMut<'w, Explored>,
-    pub(crate) infos: ResMut<'w, Infos>,
+    pub(crate) infos: Res<'w, Infos>,
     paths: Res<'w, Paths>,
     sav: Res<'w, Sav>,
 }
@@ -148,7 +148,24 @@ impl<'w, 's> Spawner<'w, 's> {
         Some(entity)
     }
 
-    fn spawn_item(
+    fn spawn_field(&mut self, parent: Entity, pos: Pos, id: ObjectId) {
+        let definition = &ObjectDefinition {
+            category: ObjectCategory::Field,
+            id,
+        };
+
+        let tile = self.spawn_tile(parent, pos, definition);
+
+        let Some(_field_info) = self
+        .infos
+        .field(&definition.id) else {
+            self.commands.entity(tile).despawn_recursive();
+            println!("No info found for field {:?}", definition.id);
+            return;
+        };
+    }
+
+    fn spawn_existing_item(
         &mut self,
         parent: Entity,
         pos: Pos,
@@ -193,6 +210,87 @@ impl<'w, 's> Spawner<'w, 's> {
                 mass: mass.unwrap_or_else(|| Mass::from(String::from("81499 g"))),
             });
         Ok(())
+    }
+
+    fn spawn_new_items(
+        &mut self,
+        infos: &Infos,
+        parent_entity: Entity,
+        pos: Pos,
+        items: &Vec<BashItem>,
+    ) {
+        for item in items {
+            match item {
+                BashItem::Single(ref item) => {
+                    if match &item.prob {
+                        Some(probability) => probability.random(),
+                        None => true,
+                    } {
+                        let amount = Amount(match &item.count {
+                            Some(count) => count.random(),
+                            None => 1,
+                        });
+                        self.spawn_existing_item(
+                            parent_entity,
+                            pos,
+                            &CddaItem {
+                                typeid: item.item.clone(),
+                                snip_id: None,
+                                charges: item.charges.as_ref().map(CountRange::random),
+                                active: None,
+                                corpse: None,
+                                name: None,
+                                owner: None,
+                                bday: None,
+                                last_temp_check: None,
+                                specific_energy: None,
+                                temperature: None,
+                                item_vars: None,
+                                item_tags: None,
+                                contents: None,
+                                components: None,
+                                is_favorite: None,
+                                relic_data: None,
+                                damaged: None,
+                                current_phase: None,
+                                faults: None,
+                                rot: None,
+                                curammo: None,
+                                item_counter: None,
+                                variant: None,
+                                recipe_charges: None,
+                                poison: None,
+                                burnt: None,
+                                craft_data: None,
+                                dropped_from: None,
+                                degradation: None,
+                            },
+                            amount,
+                        )
+                        .expect("Existing item id");
+                    }
+                }
+                BashItem::Group { ref group } => {
+                    self.spawn_item_collection(infos, parent_entity, pos, group);
+                }
+            }
+        }
+    }
+
+    fn spawn_item_collection(
+        &mut self,
+        infos: &Infos,
+        parent_entity: Entity,
+        pos: Pos,
+        id: &ObjectId,
+    ) {
+        let item_group = &infos.item_group(id).expect("Existing item group");
+        let items = item_group
+            .items
+            .as_ref()
+            .or(item_group.entries.as_ref())
+            .expect("items or entries");
+        self.spawn_new_items(infos, parent_entity, pos, items);
     }
 
     fn spawn_furniture(&mut self, parent: Entity, pos: Pos, id: ObjectId) {
@@ -247,56 +345,47 @@ impl<'w, 's> Spawner<'w, 's> {
             .infos
             .terrain(&definition.id) else {
                 self.commands.entity(tile).despawn_recursive();
-                println!("No info found for {:?}. Spawning skipped", definition.id);
+                println!("No info found for terrain {:?}", definition.id);
                 return;
         };
 
-        match terrain_info {
-            TerrainInfo::Terrain {
-                move_cost,
-                open,
-                close,
-                flags,
-                bash,
-                ..
-            } => {
-                let move_cost = *move_cost;
-                if 0 < move_cost.0 {
-                    if close.is_some() {
-                        self.commands.entity(tile).insert(Closeable);
-                    }
-                    self.commands.entity(tile).insert(Accessible {
-                        water: flags.water(),
-                        move_cost,
-                    });
-                } else if open.is_some() {
-                    self.commands.entity(tile).insert(Openable);
-                } else {
-                    self.commands.entity(tile).insert(Obstacle);
-                }
+        if 0 < terrain_info.move_cost.0 {
+            if terrain_info.close.is_some() {
+                self.commands.entity(tile).insert(Closeable);
+            }
+            self.commands.entity(tile).insert(Accessible {
+                water: terrain_info.flags.water(),
+                move_cost: terrain_info.move_cost,
+            });
+        } else if terrain_info.open.is_some() {
+            self.commands.entity(tile).insert(Openable);
+        } else {
+            self.commands.entity(tile).insert(Obstacle);
+        }
 
-                if !flags.transparent() {
-                    self.commands.entity(tile).insert(Opaque);
-                }
+        if !terrain_info.flags.transparent() {
+            self.commands.entity(tile).insert(Opaque);
+        }
 
-                if flags.goes_up() {
-                    self.commands.entity(tile).insert(StairsUp);
-                }
+        if terrain_info.flags.goes_up() {
+            self.commands.entity(tile).insert(StairsUp);
+        }
 
-                if flags.goes_down() {
-                    self.commands.entity(tile).insert(StairsDown);
-                } else {
-                    self.commands.entity(tile).insert(OpaqueFloor);
-                }
+        if terrain_info.flags.goes_down() {
+            self.commands.entity(tile).insert(StairsDown);
+        } else {
+            self.commands.entity(tile).insert(OpaqueFloor);
+        }
 
-                if bash.is_some() {
+        if let Some(bash) = &terrain_info.bash {
+            if let Some(ter_set) = &bash.ter_set {
+                if ter_set != &ObjectId::new("t_null") {
                     // TODO
                     self.commands
                         .entity(tile)
                         .insert(Integrity(Limited::full(10)));
                 }
             }
-            TerrainInfo::FieldType { .. } => {}
         }
     }
 
@@ -428,7 +517,7 @@ impl<'w, 's> Spawner<'w, 's> {
                         for repetition in repetitions {
                             let CddaAmount { obj: item, amount } = repetition.as_amount();
                             //dbg!(&item.typeid);
-                            if let Err(load_error) = self.spawn_item(
+                            if let Err(load_error) = self.spawn_existing_item(
                                 subzone_level_entity,
                                 pos,
                                 item,
@@ -456,7 +545,7 @@ impl<'w, 's> Spawner<'w, 's> {
                     {
                         //dbg!(&fields);
                         for field in &fields.0 {
-                            self.spawn_terrain(subzone_level_entity, pos, field.id.clone());
+                            self.spawn_field(subzone_level_entity, pos, field.id.clone());
                         }
                     }
                 }
@@ -651,5 +740,46 @@ impl<'w, 's> Spawner<'w, 's> {
             Pos::new(34, Level::ZERO, 34).offset(offset).unwrap(),
             ObjectId::new("mon_zombie"),
         );
+    }
+
+    pub(crate) fn spawn_smashed(
+        &mut self,
+        infos: &Infos,
+        parent_entity: Entity,
+        pos: Pos,
+        definition: &ObjectDefinition,
+    ) {
+        assert!(matches!(
+            definition.category,
+            ObjectCategory::Furniture | ObjectCategory::Terrain
+        ));
+
+        let bash = infos
+            .furniture(&definition.id)
+            .map(|f| f.bash.as_ref())
+            .or_else(|| infos.terrain(&definition.id).map(|f| f.bash.as_ref()))
+            .expect("Furniture, or terrain")
+            .expect("Smashable");
+
+        if let Some(terrain_id) = &bash.ter_set {
+            assert!(definition.category == ObjectCategory::Terrain);
+            self.spawn_terrain(parent_entity, pos, terrain_id.clone());
+        }
+
+        if let Some(furniture_id) = &bash.furn_set {
+            assert!(definition.category == ObjectCategory::Furniture);
+            self.spawn_furniture(parent_entity, pos, furniture_id.clone());
+        }
+
+        if let Some(items) = &bash.items {
+            match items {
+                BashItems::Explicit(item_vec) => {
+                    self.spawn_new_items(infos, parent_entity, pos, item_vec);
+                }
+                BashItems::Collection(id) => {
+                    self.spawn_item_collection(infos, parent_entity, pos, id);
+                }
+            }
+        }
     }
 }

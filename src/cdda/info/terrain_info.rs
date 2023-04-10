@@ -1,52 +1,20 @@
-use crate::prelude::{Flags, ItemName, ObjectId};
+use crate::prelude::{Bash, Flags, ItemName, ObjectId};
 use bevy::utils::HashMap;
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
-#[serde(tag = "type")]
-pub(crate) enum TerrainInfo {
-    #[serde(rename(deserialize = "terrain"))]
-    Terrain {
-        name: ItemName,
-        move_cost: MoveCost,
-        looks_like: Option<ObjectId>,
-        open: Option<ObjectId>,
-        close: Option<ObjectId>,
-        flags: Flags,
-        bash: Option<HashMap<String, serde_json::Value>>,
+pub(crate) struct TerrainInfo {
+    pub(crate) name: ItemName,
+    pub(crate) move_cost: MoveCost,
+    pub(crate) looks_like: Option<ObjectId>,
+    pub(crate) open: Option<ObjectId>,
+    pub(crate) close: Option<ObjectId>,
+    pub(crate) flags: Flags,
+    pub(crate) bash: Option<Bash>,
 
-        #[allow(unused)]
-        #[serde(flatten)]
-        extra: HashMap<String, serde_json::Value>,
-    },
-    #[serde(rename(deserialize = "field_type"))]
-    FieldType {
-        intensity_levels: Vec<IntensityLevel>,
-        looks_like: Option<ObjectId>,
-
-        #[allow(unused)]
-        #[serde(flatten)]
-        extra: HashMap<String, serde_json::Value>,
-    },
-}
-
-impl TerrainInfo {
-    pub(crate) fn name(&self) -> &ItemName {
-        match self {
-            Self::Terrain { name, .. } => name,
-            Self::FieldType {
-                intensity_levels, ..
-            } => intensity_levels[0].name.as_ref().unwrap(),
-        }
-    }
-
-    pub(crate) fn looks_like(&self) -> Option<&ObjectId> {
-        match self {
-            Self::Terrain { looks_like, .. } | Self::FieldType { looks_like, .. } => {
-                looks_like.as_ref()
-            }
-        }
-    }
+    #[allow(unused)]
+    #[serde(flatten)]
+    extra: HashMap<String, serde_json::Value>,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, PartialOrd)]
@@ -68,12 +36,3 @@ impl Default for MoveCost {
 
 #[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, PartialOrd)]
 pub(crate) struct MoveCostMod(pub(crate) i8);
-
-#[derive(Debug, Deserialize)]
-pub(crate) struct IntensityLevel {
-    name: Option<ItemName>,
-
-    #[allow(unused)]
-    #[serde(flatten)]
-    extra: HashMap<String, serde_json::Value>,
-}

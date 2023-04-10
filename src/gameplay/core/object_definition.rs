@@ -5,6 +5,7 @@ const SEPARATION_OFFSET: f32 = 0.005;
 #[derive(Clone, Debug, Hash, PartialEq, Eq)]
 pub(crate) enum ObjectCategory {
     Terrain,
+    Field,
     Furniture,
     Item,
     Character,
@@ -161,6 +162,7 @@ impl ObjectCategory {
         let level = match self {
             Self::ZoneLevel => -1,
             Self::Terrain => 0,
+            Self::Field => 1,
             Self::Furniture => 2,
             Self::Item => 4,
             Self::Character => 6,
