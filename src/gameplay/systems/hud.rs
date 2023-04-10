@@ -450,11 +450,7 @@ pub(crate) fn update_status_detais(
             Option<&LastSeen>,
             Option<&Visibility>,
         ),
-        (Without<Health>, Without<Amount>),
-    >,
-    items: Query<
-        (&ObjectDefinition, &ObjectName, &Amount, Option<&Filthy>),
-        (Without<Health>, With<Amount>),
+        Without<Health>,
     >,
 ) {
     let start = Instant::now();
@@ -473,7 +469,6 @@ pub(crate) fn update_status_detais(
                             .flat_map(entity_info)
                             .collect::<Vec<_>>(),
                     );
-                    total.extend(items_info(&all_here, &items));
                 } else {
                     total.push(Fragment::new(String::from("Unseen"), DEFAULT_TEXT_COLOR));
                 }
@@ -616,35 +611,10 @@ fn entity_info(
         }
     }
 
-    let fallback_amount = Amount(1);
     let fallbak_name = ObjectName::missing();
-    let mut output = Message::info().extend(
-        name.unwrap_or(&fallbak_name)
-            .as_item(amount.unwrap_or(&fallback_amount), filthy),
-    );
+    let mut output = Message::info().extend(name.unwrap_or(&fallbak_name).as_item(amount, filthy));
     for flag in &flags {
         output = output.add(format!("\n- {flag}"));
     }
     output.str("\n").fragments
-}
-
-fn items_info(
-    all_here: &[Entity],
-    items: &Query<
-        (&ObjectDefinition, &ObjectName, &Amount, Option<&Filthy>),
-        (Without<Health>, With<Amount>),
-    >,
-) -> Vec<Fragment> {
-    all_here
-        .iter()
-        .flat_map(|e| items.get(*e))
-        .flat_map(|(definition, name, amount, filthy)| {
-            Message::info()
-                .extend(name.as_item(amount, filthy))
-                .str("\n- ")
-                .add(definition.id.fallback_name())
-                .str("\n")
-                .fragments
-        })
-        .collect()
 }

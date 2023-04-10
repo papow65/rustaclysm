@@ -80,7 +80,7 @@ pub(crate) struct Hierarchy<'w, 's> {
         (
             Entity,
             &'static ObjectName,
-            &'static Amount,
+            Option<&'static Amount>,
             Option<&'static Filthy>,
             &'static Containable,
         ),

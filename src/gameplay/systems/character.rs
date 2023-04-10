@@ -135,7 +135,13 @@ pub(crate) fn perform_action(
             let mut system_state = SystemState::<(
                 Commands,
                 Envir,
-                Query<(Entity, &ObjectName, &Amount, Option<&Filthy>, &Parent)>,
+                Query<(
+                    Entity,
+                    &ObjectName,
+                    Option<&Amount>,
+                    Option<&Filthy>,
+                    &Parent,
+                )>,
                 Actors,
             )>::new(world);
             let (mut commands, mut envir, dumpees, actors) = system_state.get_mut(world);
@@ -228,5 +234,5 @@ pub(crate) fn handle_impact(
         }
     }
 
-    log_if_slow("manage_characters", start);
+    log_if_slow("handle_impact", start);
 }

@@ -346,7 +346,13 @@ impl<'s> Actor<'s> {
         &'s self,
         commands: &mut Commands,
         location: &mut Location,
-        dumpees: &Query<(Entity, &ObjectName, &Amount, Option<&Filthy>, &Parent)>,
+        dumpees: &Query<(
+            Entity,
+            &ObjectName,
+            Option<&Amount>,
+            Option<&Filthy>,
+            &Parent,
+        )>,
     ) -> Option<Impact> {
         // It seems impossible to remove something from 'Children', so we check 'Parent'.
 

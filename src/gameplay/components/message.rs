@@ -3,6 +3,7 @@ use crate::prelude::{
     DEFAULT_TEXT_COLOR, FILTHY_COLOR, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
 };
 use bevy::prelude::{Color, Component, TextSection, TextStyle};
+use regex::Regex;
 use std::fmt;
 
 #[derive(Component, Debug)]
@@ -21,18 +22,27 @@ impl ObjectName {
     }
 
     #[must_use]
-    pub(crate) fn as_item(&self, amount: &Amount, filthy: Option<&Filthy>) -> Vec<Fragment> {
+    pub(crate) fn as_item(
+        &self,
+        amount: Option<&Amount>,
+        filthy: Option<&Filthy>,
+    ) -> Vec<Fragment> {
+        let amount = match amount {
+            Some(Amount(n)) => *n,
+            _ => 1,
+        };
         let mut result = Vec::new();
-        if 1 < amount.0 {
-            result.push(Fragment::new(format!("{}", amount.0), DEFAULT_TEXT_COLOR));
+        if 1 < amount {
+            result.push(Fragment::new(format!("{amount}"), DEFAULT_TEXT_COLOR));
         }
         if filthy.is_some() {
             result.push(Fragment::new("filthy", FILTHY_COLOR));
         }
         result.push(Fragment::new(
-            match amount.0 {
-                1 => self.name.single.clone(),
-                _ => self.name.plural.clone(),
+            if amount == 1 {
+                self.name.single.clone()
+            } else {
+                self.name.plural.clone()
             },
             self.color,
         ));
@@ -139,20 +149,30 @@ impl Message {
 
     #[must_use]
     pub(crate) fn into_text_sections(self, fallback_style: &TextStyle) -> Vec<TextSection> {
+        let no_space_after = Regex::new(r"[( \n]$").expect("Valid regex after");
+        let no_space_before = Regex::new(r"^[) \n]").expect("Valid regex before");
+
         self.fragments
             .into_iter()
-            .enumerate()
-            .map(|(index, f)| TextSection {
-                value: match (index, f.text.as_bytes().first()) {
-                    (0, _) | (_, Some(b'\n')) => f.text,
-                    _ => String::from(" ") + &f.text,
-                },
-                style: TextStyle {
-                    color: f.color,
-                    ..fallback_style.clone()
-                },
+            .filter(|f| !f.text.is_empty())
+            .fold(Vec::new(), |mut vec, f| {
+                vec.push(TextSection {
+                    value: if vec
+                        .last()
+                        .map_or(true, |l| no_space_after.is_match(&l.value))
+                        || no_space_before.is_match(&f.text)
+                    {
+                        f.text
+                    } else {
+                        format!(" {}", f.text)
+                    },
+                    style: TextStyle {
+                        color: f.color,
+                        ..fallback_style.clone()
+                    },
+                });
+                vec
             })
-            .collect()
     }
 }
 

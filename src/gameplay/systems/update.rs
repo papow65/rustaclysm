@@ -269,7 +269,7 @@ pub(crate) fn update_damaged_items(
         Entity,
         &Pos,
         &ObjectName,
-        &Amount,
+        Option<&Amount>,
         Option<&Filthy>,
         &mut Integrity,
         &Damage,

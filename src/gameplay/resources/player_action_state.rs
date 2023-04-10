@@ -2,6 +2,7 @@ use crate::prelude::*;
 use bevy::prelude::{Color, Commands, NextState, Resource};
 use std::fmt;
 
+#[derive(Debug)]
 enum PlayerBehavior {
     Perform(Action),
     Feedback(Message),

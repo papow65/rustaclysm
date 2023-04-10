@@ -2093,6 +2093,7 @@ dependencies = [
  "glob",
  "pathfinding",
  "rand",
+ "regex",
  "serde",
  "serde_json",
  "time",
