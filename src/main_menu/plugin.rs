@@ -5,8 +5,6 @@ pub(crate) struct MainMenuPlugin;
 
 impl Plugin for MainMenuPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(FixedTime::new_from_secs(0.25));
-
         // startup
         app.add_systems(
             (

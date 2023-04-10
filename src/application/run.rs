@@ -31,6 +31,8 @@ pub(crate) fn run_application() {
     app.add_state::<ApplicationState>()
         .add_state::<ProgressScreenState>();
 
+    app.insert_resource(FixedTime::new_from_secs(0.25));
+
     app.add_plugin(MainMenuPlugin)
         .add_plugin(CddaPlugin)
         .add_plugin(GameplayPlugin)

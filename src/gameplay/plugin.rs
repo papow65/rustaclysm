@@ -57,7 +57,6 @@ impl Plugin for GameplayPlugin {
                 handle_map_events,
                 handle_overmap_buffer_events,
                 update_log,
-                update_status_fps,
                 update_status_time.run_if(resource_exists_and_changed::<Timeouts>()),
                 update_status_health,
                 update_status_speed,
@@ -73,6 +72,14 @@ impl Plugin for GameplayPlugin {
                     .after(update_camera_offset),
             )
                 .in_set(OnUpdate(ApplicationState::Gameplay)),
+        );
+
+        // executed at fixed interval
+        app.add_system(
+            update_status_fps
+                .run_if(resource_exists::<StatusTextSections>())
+                .in_set(OnUpdate(ApplicationState::Gameplay))
+                .in_schedule(CoreSchedule::FixedUpdate),
         );
 
         // This system may persist between gameplays.
