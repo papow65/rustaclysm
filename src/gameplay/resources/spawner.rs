@@ -108,14 +108,17 @@ impl<'w, 's> Spawner<'w, 's> {
 
         //println!("{:?} @ {pos:?}", &definition);
         let entity = self.spawn_tile(parent, pos, definition);
+        let mut entity = self.commands.entity(entity);
+        entity
+            .insert(self.infos.label(definition, amount.0 as usize))
+            .insert(amount);
 
         let Some(item_info) = self
-        .infos
-        .item(&definition.id) else {
-            self.commands.entity(entity).despawn_recursive();
-            return Err(LoadError::new(format!("No info found for {:?}. Spawning skipped", definition.id)));
+            .infos
+            .item(&definition.id) else {
+                entity.despawn_recursive();
+                return Err(LoadError::new(format!("No info found for {:?}. Spawning skipped", definition.id)));
         };
-
         let (volume, mass) = match &item.corpse {
             Some(corpse_id) if corpse_id != &ObjectId::new("mon_null") => {
                 println!("{:?}", &corpse_id);
@@ -126,17 +129,18 @@ impl<'w, 's> Spawner<'w, 's> {
             }
             _ => (item_info.volume, item_info.mass),
         };
+        entity.insert(Containable {
+            // Based on cataclysm-ddasrc/mtype.cpp lines 47-48
+            volume: volume.unwrap_or_else(|| Volume::from(String::from("62499 ml"))),
+            mass: mass.unwrap_or_else(|| Mass::from(String::from("81499 g"))),
+        });
 
-        // Overwrite the default label
-        self.commands
-            .entity(entity)
-            .insert(self.infos.label(definition, amount.0 as usize))
-            .insert(amount)
-            .insert(Containable {
-                // Based on cataclysm-ddasrc/mtype.cpp lines 47-48
-                volume: volume.unwrap_or_else(|| Volume::from(String::from("62499 ml"))),
-                mass: mass.unwrap_or_else(|| Mass::from(String::from("81499 g"))),
-            });
+        if let Some(item_tags) = &item.item_tags {
+            if item_tags.contains(&String::from("FILTHY")) {
+                entity.insert(Filthy);
+            }
+        }
+
         Ok(())
     }
 
