@@ -1,4 +1,4 @@
-use crate::prelude::ItemName;
+use crate::prelude::{ItemName, ObjectId};
 use bevy::utils::HashMap;
 use serde::Deserialize;
 
@@ -6,6 +6,7 @@ use serde::Deserialize;
 #[serde(tag = "type")]
 pub(crate) struct FieldInfo {
     pub(crate) intensity_levels: Vec<IntensityLevel>,
+    pub(crate) looks_like: Option<ObjectId>,
 
     #[allow(unused)]
     #[serde(flatten)]

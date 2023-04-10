@@ -261,6 +261,10 @@ impl Infos {
                 .items
                 .get(&definition.id)
                 .and_then(|o| o.looks_like.as_ref()),
+            ObjectCategory::Field => self
+                .fields
+                .get(&definition.id)
+                .and_then(|o| o.looks_like.as_ref()),
             ObjectCategory::Furniture => self
                 .furniture
                 .get(&definition.id)
