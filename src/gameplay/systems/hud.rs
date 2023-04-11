@@ -26,13 +26,10 @@ impl HudDefaults {
 
 fn spawn_log_display(parent: &mut EntityCommands) {
     // TODO properly use flex layout
+
     parent.with_children(|child_builder| {
         child_builder
-            .spawn(TextBundle {
-                text: Text {
-                    sections: vec![],
-                    ..Text::default()
-                },
+            .spawn(NodeBundle {
                 style: Style {
                     position_type: PositionType::Absolute,
                     position: UiRect {
@@ -45,12 +42,29 @@ fn spawn_log_display(parent: &mut EntityCommands) {
                         height: Val::Px(20.0 * 16.0),
                     },
                     margin: UiRect::all(Val::Px(5.0)),
-                    flex_wrap: FlexWrap::Wrap,
-                    ..Style::default()
+                    flex_direction: FlexDirection::Column,
+                    justify_content: JustifyContent::End,
+                    overflow: Overflow::Hidden,
+                    ..default()
                 },
-                ..TextBundle::default()
+                ..default()
             })
-            .insert(LogDisplay);
+            .with_children(|child_builder| {
+                child_builder
+                    .spawn(TextBundle {
+                        text: Text {
+                            sections: vec![],
+                            ..Text::default()
+                        },
+                        style: Style {
+                            size: Size::width(Val::Px(TEXT_WIDTH)),
+                            flex_wrap: FlexWrap::Wrap,
+                            ..Style::default()
+                        },
+                        ..TextBundle::default()
+                    })
+                    .insert(LogDisplay);
+            });
     });
 }
 
@@ -168,12 +182,6 @@ pub(crate) fn spawn_hud(
     spawn_log_display(&mut parent);
 
     commands.insert_resource(hud_defaults);
-
-    // Workaround to make sure the log starts at the bottom
-    for i in 0..20 {
-        // All different to make sure the messages are not bundled
-        commands.spawn(Message::info().add(" ".repeat(i)));
-    }
 }
 
 #[allow(clippy::needless_pass_by_value)]
