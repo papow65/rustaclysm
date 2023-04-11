@@ -264,6 +264,7 @@ pub(crate) fn update_damaged_characters(
 pub(crate) fn update_damaged_items(
     mut commands: Commands,
     mut spawner: Spawner,
+    mut visualization_update: ResMut<VisualizationUpdate>,
     infos: Res<Infos>,
     mut damaged: Query<(
         Entity,
@@ -303,6 +304,8 @@ pub(crate) fn update_damaged_items(
             commands.entity(item).despawn_recursive();
 
             spawner.spawn_smashed(&infos, parent.get(), pos, definition);
+
+            *visualization_update = VisualizationUpdate::Forced;
         }
     }
 
