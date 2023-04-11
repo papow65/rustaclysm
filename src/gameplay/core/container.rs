@@ -61,7 +61,7 @@ impl Container {
         }
 
         if let Some(max_amount) = self.max_amount {
-            let free_amount = max_amount - curent_amount;
+            let free_amount = max_amount.saturating_sub(curent_amount);
             let added_amout = 1;
             if free_amount < added_amout {
                 let free_amount = match free_amount {
