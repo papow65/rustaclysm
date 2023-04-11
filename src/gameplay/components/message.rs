@@ -1,6 +1,6 @@
 use crate::prelude::{
-    Amount, CddaItemName, Filthy, Fragment, ItemName, AIR_COLOR, BAD_TEXT_COLOR,
-    DEFAULT_TEXT_COLOR, FILTHY_COLOR, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
+    Amount, CddaItemName, Filthy, Fragment, ItemName, BAD_TEXT_COLOR, DEFAULT_TEXT_COLOR,
+    FILTHY_COLOR, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
 };
 use bevy::prelude::{Color, Component, TextSection, TextStyle};
 use regex::Regex;
@@ -63,8 +63,8 @@ impl ObjectName {
     }
 
     #[must_use]
-    pub(crate) fn air() -> Self {
-        Self::from_str("the air", AIR_COLOR)
+    pub(crate) fn corpse() -> Self {
+        Self::from_str("corpse", BAD_TEXT_COLOR)
     }
 
     #[must_use]

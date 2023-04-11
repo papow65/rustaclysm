@@ -320,7 +320,7 @@ impl Infos {
     }
 
     #[must_use]
-    pub(crate) fn name(&self, definition: &ObjectDefinition) -> ItemName {
+    pub(crate) fn name(&self, definition: &ObjectDefinition, color: Option<Color>) -> ObjectName {
         let name = match definition.category {
             ObjectCategory::Character => self.characters.get(&definition.id).map(|o| &o.name),
             ObjectCategory::Item => self.items.get(&definition.id).map(|o| &o.name),
@@ -331,9 +331,12 @@ impl Infos {
             _ => unimplemented!("{:?}", definition.category),
         };
 
-        name.cloned().unwrap_or(ItemName::from(CddaItemName::Simple(
-            definition.id.fallback_name(),
-        )))
+        ObjectName::new(
+            name.cloned().unwrap_or_else(|| {
+                ItemName::from(CddaItemName::Simple(definition.id.fallback_name()))
+            }),
+            color.unwrap_or(DEFAULT_TEXT_COLOR),
+        )
     }
 
     fn extract<T>(

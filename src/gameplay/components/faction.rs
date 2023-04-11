@@ -7,7 +7,7 @@ use pathfinding::{
 };
 use rand::prelude::*;
 use rand::seq::SliceRandom;
-use std::ops::Add;
+use std::{mem::discriminant, ops::Add};
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub(crate) enum Intelligence {
@@ -42,8 +42,9 @@ pub(crate) enum Faction {
 }
 
 impl Faction {
+    // like PartialEq and Eq, but private
     fn equals(&self, other: &Self) -> bool {
-        std::mem::discriminant(self) == std::mem::discriminant(other)
+        discriminant(self) == discriminant(other)
     }
 
     pub(crate) fn is_aggressive(&self, health: &Health) -> bool {
@@ -69,6 +70,14 @@ impl Faction {
         match self {
             Self::Zombie => Intelligence::Dumb,
             _ => Intelligence::Smart,
+        }
+    }
+
+    pub(crate) const fn color(&self) -> Color {
+        match self {
+            Self::Human => DEFAULT_TEXT_COLOR,
+            Self::Zombie => FILTHY_COLOR,
+            Self::Animal => WARN_TEXT_COLOR,
         }
     }
 

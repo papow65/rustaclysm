@@ -90,7 +90,8 @@ impl<'s> Actor<'s> {
 
     pub(crate) fn stay(&self) -> Impact {
         Impact::rest(
-            Millimeter(Millimeter::ADJACENT.0 / 2) / self.high_speed().unwrap_or(self.speed()),
+            Millimeter(Millimeter::ADJACENT.0 / 2)
+                / self.high_speed().unwrap_or_else(|| self.speed()),
         )
     }
 
@@ -260,8 +261,8 @@ impl<'s> Actor<'s> {
                 )
             }
         } else {
-            let air = ObjectName::air();
-            let obstacle = envir.find_terrain(target).unwrap_or(&air);
+            let missing = ObjectName::missing();
+            let obstacle = envir.find_terrain(target).unwrap_or(&missing);
             commands.spawn(
                 Message::warn()
                     .push(self.name.single())

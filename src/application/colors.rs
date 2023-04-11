@@ -19,9 +19,6 @@ pub(crate) const BAD_TEXT_COLOR: Color = Color::rgb(0.9, 0.15, 0.15);
 /** For zombies and stuff they touched */
 pub(crate) const FILTHY_COLOR: Color = Color::rgb(0.6, 0.0, 0.5);
 
-/** For useless actions */
-pub(crate) const AIR_COLOR: Color = Color::rgb(0.65, 0.80, 0.95);
-
 // Button colors
 
 pub(crate) const DEFAULT_BUTTON_COLOR: Color = Color::rgb(0.2, 0.2, 0.2);

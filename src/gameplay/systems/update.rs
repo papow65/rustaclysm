@@ -249,7 +249,7 @@ pub(crate) fn update_damaged_characters(
             commands
                 .entity(character)
                 .insert(Corpse)
-                .insert(ObjectName::from_str("corpse", BAD_TEXT_COLOR))
+                .insert(ObjectName::corpse())
                 .remove::<Health>()
                 .remove::<Obstacle>();
         }

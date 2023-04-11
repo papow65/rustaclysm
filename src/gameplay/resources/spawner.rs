@@ -24,24 +24,34 @@ pub(crate) struct Spawner<'w, 's> {
 }
 
 impl<'w, 's> Spawner<'w, 's> {
-    fn spawn_character(&mut self, parent: Entity, pos: Pos, id: ObjectId) -> Option<Entity> {
+    fn spawn_character(
+        &mut self,
+        parent: Entity,
+        pos: Pos,
+        id: ObjectId,
+        name: Option<ObjectName>,
+    ) -> Option<Entity> {
         let definition = &ObjectDefinition {
             category: ObjectCategory::Character,
             id,
         };
 
-        let entity = self.spawn_tile(parent, pos, definition);
-
         let Some(character_info) = self
             .infos
             .character(&definition.id) else {
-                self.commands.entity(entity).despawn_recursive();
                 println!("No info found for {:?}. Spawning skipped", definition.id);
                 return None;
             };
+        let faction = match character_info.default_faction.as_str() {
+            "human" => Faction::Human,
+            "zombie" => Faction::Zombie,
+            _ => Faction::Animal,
+        };
 
-        println!("Spawned a {:?} at {pos:?}", definition.id);
+        let entity = self.spawn_tile(parent, pos, definition, Some(faction.color()));
 
+        // duplicated lookup to make the borrow checker happy
+        let character_info = self.infos.character(&definition.id).unwrap();
         self.commands
             .entity(entity)
             .insert(Obstacle)
@@ -50,17 +60,17 @@ impl<'w, 's> Spawner<'w, 's> {
             ))
             .insert(Stamina::Unlimited)
             .insert(WalkingMode::Running)
-            .insert(match character_info.default_faction.as_str() {
-                "human" => Faction::Human,
-                "zombie" => Faction::Zombie,
-                _ => Faction::Animal,
-            })
+            .insert(faction)
             .insert(Hands::default())
             .insert(Clothing::default())
             .insert(Melee {
                 dices: character_info.melee_dice,
                 sides: character_info.melee_dice_sides,
             });
+
+        if let Some(name) = name {
+            self.commands.entity(entity).insert(name);
+        }
 
         if 0 < character_info.speed {
             self.commands
@@ -72,6 +82,7 @@ impl<'w, 's> Spawner<'w, 's> {
             self.commands.entity(entity).insert(Aquatic);
         }
 
+        println!("Spawned a {:?} at {pos:?}", definition.id);
         Some(entity)
     }
 
@@ -81,7 +92,7 @@ impl<'w, 's> Spawner<'w, 's> {
             id,
         };
 
-        let tile = self.spawn_tile(parent, pos, definition);
+        let tile = self.spawn_tile(parent, pos, definition, None);
 
         let Some(_field_info) = self
         .infos
@@ -106,7 +117,7 @@ impl<'w, 's> Spawner<'w, 's> {
         };
 
         //println!("{:?} @ {pos:?}", &definition);
-        let entity = self.spawn_tile(parent, pos, definition);
+        let entity = self.spawn_tile(parent, pos, definition, None);
         let mut entity = self.commands.entity(entity);
         entity.insert(amount);
 
@@ -228,7 +239,7 @@ impl<'w, 's> Spawner<'w, 's> {
             id,
         };
 
-        let tile = self.spawn_tile(parent, pos, definition);
+        let tile = self.spawn_tile(parent, pos, definition, None);
 
         let Some(furniture_info) = self
         .infos
@@ -268,7 +279,7 @@ impl<'w, 's> Spawner<'w, 's> {
             id,
         };
 
-        let tile = self.spawn_tile(parent, pos, definition);
+        let tile = self.spawn_tile(parent, pos, definition, None);
 
         let Some(terrain_info) = self
             .infos
@@ -318,7 +329,13 @@ impl<'w, 's> Spawner<'w, 's> {
         }
     }
 
-    fn spawn_tile(&mut self, parent: Entity, pos: Pos, definition: &ObjectDefinition) -> Entity {
+    fn spawn_tile(
+        &mut self,
+        parent: Entity,
+        pos: Pos,
+        definition: &ObjectDefinition,
+        color: Option<Color>,
+    ) -> Entity {
         //dbg!(&parent);
         //dbg!(pos);
         //dbg!(&definition);
@@ -341,10 +358,7 @@ impl<'w, 's> Spawner<'w, 's> {
             .insert(definition.clone())
             .insert(pos)
             .insert(Transform::from_translation(pos.vec3()))
-            .insert(ObjectName::new(
-                self.infos.name(definition),
-                DEFAULT_TEXT_COLOR,
-            ))
+            .insert(self.infos.name(definition, color))
             .with_children(|child_builder| {
                 for (pbr_bundle, apprearance) in
                     self.model_factory.get_model_bundles(definition, true)
@@ -454,54 +468,55 @@ impl<'w, 's> Spawner<'w, 's> {
                     })
                     .unwrap(),
                 ObjectId::new("human"),
+                Some(ObjectName::from_str(
+                    self.sav.player.name.as_str(),
+                    GOOD_TEXT_COLOR,
+                )),
             )
             .unwrap();
         self.commands
             .entity(player)
             .insert(Player)
             .insert(Stamina::Limited(Limited::full(300))) // override
-            .insert(WalkingMode::Walking) // override
-            .insert(ObjectName::from_str(
-                self.sav.player.name.as_str(),
-                GOOD_TEXT_COLOR,
-            ));
+            .insert(WalkingMode::Walking); // override
         self.configure_player(player);
 
-        let survivor = self
-            .spawn_character(
-                parent,
-                Pos::new(10, Level::ZERO, 10).offset(offset).unwrap(),
-                ObjectId::new("human"),
-            )
-            .unwrap();
-        self.commands
-            .entity(survivor)
-            .insert(ObjectName::from_str("Survivor", DEFAULT_TEXT_COLOR));
+        self.spawn_character(
+            parent,
+            Pos::new(10, Level::ZERO, 10).offset(offset).unwrap(),
+            ObjectId::new("human"),
+            Some(ObjectName::from_str("Survivor", DEFAULT_TEXT_COLOR)),
+        );
 
         self.spawn_character(
             parent,
             Pos::new(12, Level::ZERO, 16).offset(offset).unwrap(),
             ObjectId::new("mon_zombie"),
+            None,
         );
         self.spawn_character(
             parent,
             Pos::new(40, Level::ZERO, 40).offset(offset).unwrap(),
             ObjectId::new("mon_zombie"),
+            None,
         );
         self.spawn_character(
             parent,
             Pos::new(38, Level::ZERO, 39).offset(offset).unwrap(),
             ObjectId::new("mon_zombie"),
+            None,
         );
         self.spawn_character(
             parent,
             Pos::new(37, Level::ZERO, 37).offset(offset).unwrap(),
             ObjectId::new("mon_zombie"),
+            None,
         );
         self.spawn_character(
             parent,
             Pos::new(34, Level::ZERO, 34).offset(offset).unwrap(),
             ObjectId::new("mon_zombie"),
+            None,
         );
     }
 
@@ -652,8 +667,12 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
                         .filter(|spawn| spawn.x == x && spawn.z == z)
                     {
                         //dbg!(&spawn.id);
-                        self.spawner
-                            .spawn_character(subzone_level_entity, pos, spawn.id.clone());
+                        self.spawner.spawn_character(
+                            subzone_level_entity,
+                            pos,
+                            spawn.id.clone(),
+                            None,
+                        );
                     }
 
                     for fields in submap
@@ -697,10 +716,9 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
         };
 
         let mut entity = self.spawner.commands.spawn(zone_level);
-        entity.insert(Collapsed).insert(ObjectName::new(
-            self.spawner.infos.name(&definition),
-            DEFAULT_TEXT_COLOR,
-        ));
+        entity
+            .insert(Collapsed)
+            .insert(self.spawner.infos.name(&definition, None));
 
         let pbr_bundles = self
             .spawner
