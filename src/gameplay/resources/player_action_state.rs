@@ -20,6 +20,7 @@ pub(crate) enum PlayerActionState {
     Smashing,
     Closing,
     Waiting(Milliseconds),
+    Sleeping(Milliseconds),
     ExaminingPos(Pos),
     ExaminingZoneLevel(ZoneLevel),
 }
@@ -33,22 +34,53 @@ impl PlayerActionState {
         instruction_queue: &mut InstructionQueue,
         pos: Pos,
         now: Milliseconds,
+        enemies: Vec<Pos>,
     ) -> Option<Action> {
-        loop {
-            if let Some(instruction) = instruction_queue.pop() {
-                match self.plan(next_gameplay_state, envir, pos, instruction, now) {
-                    PlayerBehavior::Perform(action) => break Some(action),
-                    PlayerBehavior::Feedback(message) => {
-                        commands.spawn(message);
-                        // invalid instruction -> next instruction
-                    }
-                    PlayerBehavior::NoEffect => {
-                        // valid instruction, but no action performed -> next instruction
-                    }
+        while let Some(instruction) = instruction_queue.pop() {
+            match self.plan(next_gameplay_state, envir, pos, instruction, now) {
+                PlayerBehavior::Perform(action) => {
+                    return Some(action);
                 }
-            } else {
-                break None;
-            };
+                PlayerBehavior::Feedback(message) => {
+                    commands.spawn(message);
+                    // invalid instruction -> next instruction
+                }
+                PlayerBehavior::NoEffect => {
+                    // valid instruction, but no action performed -> next instruction
+                }
+            }
+        }
+
+        match self {
+            PlayerActionState::Waiting(until) => {
+                if !enemies.is_empty() {
+                    instruction_queue.add(QueuedInstruction::Interrupted);
+                    None // process the cancellation next turn
+                } else if *until <= now {
+                    instruction_queue.add(QueuedInstruction::Finished);
+                    None // process the cancellation next turn
+                } else {
+                    Some(Action::Stay {
+                        duration: StayDuration::Long,
+                    })
+                }
+            }
+            PlayerActionState::Sleeping(until) => {
+                // TODO interrupt on taking damage
+                if *until <= now {
+                    instruction_queue.add(QueuedInstruction::Finished);
+                    None // process the cancellation next turn
+                } else {
+                    Some(Action::Stay {
+                        duration: StayDuration::Long,
+                    })
+                }
+            }
+            _ => {
+                instruction_queue.start_waiting();
+                println!("Waiting for user action");
+                None // no key pressed - wait for the user
+            }
         }
     }
 
@@ -62,15 +94,29 @@ impl PlayerActionState {
     ) -> PlayerBehavior {
         //println!("processing instruction: {instruction:?}");
         match (&self, instruction) {
+            (PlayerActionState::Sleeping(_), QueuedInstruction::Finished) => {
+                *self = PlayerActionState::Normal;
+                PlayerBehavior::Feedback(Message::info().str("You wake up"))
+            }
+            (PlayerActionState::Sleeping(_), _) => {
+                // Can not be interrupted
+                PlayerBehavior::Feedback(Message::warn().str("You are still asleep. Zzz..."))
+            }
             (PlayerActionState::Normal, QueuedInstruction::Offset(Direction::Here)) => {
-                PlayerBehavior::Perform(Action::Stay)
+                PlayerBehavior::Perform(Action::Stay {
+                    duration: StayDuration::Short,
+                })
             }
             (PlayerActionState::Normal, QueuedInstruction::Wait) => {
                 *self = PlayerActionState::Waiting(now + Milliseconds::MINUTE);
                 PlayerBehavior::Feedback(Message::info().str("Started waiting..."))
             }
+            (PlayerActionState::Normal, QueuedInstruction::Sleep) => {
+                *self = PlayerActionState::Sleeping(now + Milliseconds::EIGHT_HOURS);
+                PlayerBehavior::Feedback(Message::info().str("Started sleeping... Zzz..."))
+            }
             (PlayerActionState::Attacking, QueuedInstruction::Offset(Direction::Here)) => {
-                PlayerBehavior::Feedback(Message::warn().str("can't attack self"))
+                PlayerBehavior::Feedback(Message::warn().str("You can't attack yourself"))
             }
             (PlayerActionState::ExaminingPos(curr), QueuedInstruction::Offset(direction)) => {
                 let nbor = direction.to_nbor();
@@ -80,7 +126,7 @@ impl PlayerActionState {
                 next_gameplay_state.set(GameplayScreenState::Menu);
                 PlayerBehavior::NoEffect
             }
-            (_, QueuedInstruction::Cancel | QueuedInstruction::Wait)
+            (_, QueuedInstruction::Cancel | QueuedInstruction::Wait | QueuedInstruction::Sleep)
             | (PlayerActionState::Attacking, QueuedInstruction::Attack)
             | (PlayerActionState::Smashing, QueuedInstruction::Smash)
             | (PlayerActionState::ExaminingPos(_), QueuedInstruction::ExaminePos)
@@ -130,6 +176,9 @@ impl PlayerActionState {
 
     fn handle_offset(&mut self, target: Result<Pos, Message>, nbor: &Nbor) -> PlayerBehavior {
         match (&self, target) {
+            (PlayerActionState::Sleeping(_), target) => {
+                panic!("{:?} {:?}", &self, target);
+            }
             (PlayerActionState::ExaminingZoneLevel(current), _) => {
                 let target = current.nbor(nbor);
                 if let Some(target) = target {
@@ -223,7 +272,9 @@ impl PlayerActionState {
             Self::Normal | Self::Closing | Self::ExaminingPos(_) | Self::ExaminingZoneLevel(_) => {
                 DEFAULT_TEXT_COLOR
             }
-            Self::Waiting(_) | Self::Smashing | Self::Attacking => WARN_TEXT_COLOR,
+            Self::Waiting(_) | Self::Sleeping(_) | Self::Smashing | Self::Attacking => {
+                WARN_TEXT_COLOR
+            }
         }
     }
 }
@@ -236,6 +287,7 @@ impl fmt::Display for PlayerActionState {
             Self::Smashing => "Smashing",
             Self::Closing => "Closing",
             Self::Waiting(_) => "Waiting",
+            Self::Sleeping(_) => "Sleeping",
             Self::ExaminingPos(_) => "Examining",
             Self::ExaminingZoneLevel(_) => "Examining map",
         })

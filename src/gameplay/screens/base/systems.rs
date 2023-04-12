@@ -75,6 +75,7 @@ pub(crate) fn manage_keyboard_input(
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
     mut app_exit_events: ResMut<Events<AppExit>>,
     mut key_events: EventReader<KeyboardInput>,
+    mut character_events: EventReader<ReceivedCharacter>,
     mut instruction_queue: ResMut<InstructionQueue>,
     mut elevation_visibility: ResMut<ElevationVisibility>,
     mut visualization_update: ResMut<VisualizationUpdate>,
@@ -84,38 +85,88 @@ pub(crate) fn manage_keyboard_input(
 ) {
     let start = Instant::now();
 
+    // Escape, F-keys, and numpad, with support for modifier keys and holding keys down
     for key_event in key_events.iter() {
-        let combo = KeyCombo::new(key_event, &keys);
-        //println!("{:?} -> {}", &key_event, &combo);
-        if let Ok(instruction) = Instruction::try_from(&combo) {
-            match key_event.state {
-                ButtonState::Pressed => {
-                    println!("{:?} -> {} -> {:?}", &key_event, &combo, &instruction);
-                    match instruction {
-                        Instruction::Quit => quit(&mut app_exit_events),
-                        Instruction::MainMenu => {
-                            main_menu(&mut next_application_state, &mut next_gameplay_state);
-                        }
-                        Instruction::Zoom(direction) => zoom(&mut camera_offset, direction),
-                        Instruction::ToggleElevation => {
-                            toggle_elevation(&mut elevation_visibility, &mut visualization_update);
-                        }
-                        Instruction::ToggleHelp => toggle_help(&mut help),
-                        Instruction::Queued(instruction) => instruction_queue.add(instruction),
+        if let KeyboardInput {
+            state: button_state,
+            key_code: Some(key_code),
+            ..
+        } = key_event
+        {
+            let combo = KeyCombo::new(*key_code, &keys);
+            if let Ok(instruction) = Instruction::try_from(&combo) {
+                match button_state {
+                    ButtonState::Pressed => {
+                        println!("Key event: {:?} -> {:?}", &key_event, &instruction);
+                        handle_instruction(
+                            instruction,
+                            &mut app_exit_events,
+                            &mut next_application_state,
+                            &mut next_gameplay_state,
+                            &mut camera_offset,
+                            &mut elevation_visibility,
+                            &mut visualization_update,
+                            &mut help,
+                            &mut instruction_queue,
+                        );
                     }
-                }
-                ButtonState::Released => {
-                    if let Instruction::Queued(queued) = instruction {
-                        instruction_queue.interrupt(&queued);
+                    ButtonState::Released => {
+                        if let Instruction::Queued(queued) = instruction {
+                            instruction_queue.interrupt(&queued);
+                        }
                     }
                 }
             }
         }
     }
 
+    // Character keys, with support for special characters
+    for character_event in character_events.iter() {
+        //println!("{:?} -> {}", &key_event, &combo);
+        if let Ok(instruction) = Instruction::try_from(character_event.char) {
+            println!("{:?} -> {:?}", &character_event, &instruction);
+            handle_instruction(
+                instruction,
+                &mut app_exit_events,
+                &mut next_application_state,
+                &mut next_gameplay_state,
+                &mut camera_offset,
+                &mut elevation_visibility,
+                &mut visualization_update,
+                &mut help,
+                &mut instruction_queue,
+            );
+        }
+    }
+
     instruction_queue.log_if_long();
 
     log_if_slow("manage_keyboard_input", start);
+}
+
+fn handle_instruction(
+    instruction: Instruction,
+    app_exit_events: &mut ResMut<Events<AppExit>>,
+    next_application_state: &mut ResMut<NextState<ApplicationState>>,
+    next_gameplay_state: &mut ResMut<NextState<GameplayScreenState>>,
+    camera_offset: &mut ResMut<CameraOffset>,
+    elevation_visibility: &mut ResMut<ElevationVisibility>,
+    visualization_update: &mut ResMut<VisualizationUpdate>,
+    help: &mut Query<&mut Visibility, With<ManualDisplay>>,
+    instruction_queue: &mut ResMut<InstructionQueue>,
+) {
+    match instruction {
+        Instruction::Quit => quit(app_exit_events),
+        Instruction::MainMenu => {
+            main_menu(next_application_state, next_gameplay_state);
+        }
+        Instruction::Zoom(direction) => zoom(camera_offset, direction),
+        Instruction::ToggleElevation => {
+            toggle_elevation(elevation_visibility, visualization_update);
+        }
+        Instruction::ToggleHelp => toggle_help(help),
+        Instruction::Queued(instruction) => instruction_queue.add(instruction),
+    }
 }
 
 #[allow(clippy::needless_pass_by_value)]

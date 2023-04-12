@@ -9,6 +9,7 @@ pub(crate) enum Breath {
 
 #[derive(Copy, Clone, Debug)]
 pub(crate) enum StaminaImpact {
+    FullRest,
     Rest,
     Light,
     Neutral,
@@ -18,6 +19,7 @@ pub(crate) enum StaminaImpact {
 impl StaminaImpact {
     pub(crate) fn as_i16(&self) -> i16 {
         match self {
+            Self::FullRest => 100,
             Self::Rest => 2,
             Self::Light => 1,
             Self::Neutral => 0,
@@ -44,6 +46,11 @@ impl Impact {
     #[must_use]
     fn rest(timeout: Milliseconds) -> Self {
         Self::new(timeout, StaminaImpact::Rest)
+    }
+
+    #[must_use]
+    fn full_rest(timeout: Milliseconds) -> Self {
+        Self::new(timeout, StaminaImpact::FullRest)
     }
 
     #[must_use]
@@ -88,11 +95,14 @@ impl<'s> Actor<'s> {
         }
     }
 
-    pub(crate) fn stay(&self) -> Impact {
-        Impact::rest(
-            Millimeter(Millimeter::ADJACENT.0 / 2)
-                / self.high_speed().unwrap_or_else(|| self.speed()),
-        )
+    pub(crate) fn stay(&self, duration: StayDuration) -> Impact {
+        match duration {
+            StayDuration::Short => {
+                Impact::rest(Millimeter(Millimeter::ADJACENT.0 / 2)
+                    / self.high_speed().unwrap_or_else(|| self.speed()))
+            }
+            StayDuration::Long => Impact::full_rest(Milliseconds::MINUTE)
+        }
     }
 
     fn activate(&self) -> Impact {
@@ -373,7 +383,7 @@ impl<'s> Actor<'s> {
                 .insert(VisibilityBundle::default())
                 .insert(self.pos);
             location.update(dumpee, Some(self.pos));
-            Some(self.stay())
+            Some(self.activate())
         } else {
             commands.spawn(
                 Message::warn()

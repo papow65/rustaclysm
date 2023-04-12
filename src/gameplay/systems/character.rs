@@ -42,31 +42,17 @@ pub(crate) fn plan_action(
     };
     let factions = actors.collect_factions();
     let actor = actors.get(active_entity);
+    let enemies = Faction::Human.enemies(&envir, &factions, &actor);
     let action = if players.get_mut(active_entity).is_ok() {
-        if let Some(action) = player_action_state.plan_action(
+        player_action_state.plan_action(
             &mut commands,
             &mut next_state,
             &mut envir,
             &mut instruction_queue,
             actor.pos,
             timeouts.time(),
-        ) {
-            action
-        } else if let PlayerActionState::Waiting(until) = *player_action_state {
-            if !Faction::Human.enemies(&envir, &factions, &actor).is_empty() {
-                instruction_queue.add(QueuedInstruction::Interrupted);
-                return None; // process the cancellation next turn
-            } else if until <= timeouts.time() {
-                instruction_queue.add(QueuedInstruction::Finished);
-                return None; // process the cancellation next turn
-            } else {
-                Action::Stay
-            }
-        } else {
-            instruction_queue.start_waiting();
-            println!("Waiting for user action");
-            return None; // no key pressed - wait for the user
-        }
+            enemies,
+        )?
     } else {
         let strategy = actor.faction.strategize(&envir, &factions, &actor);
         if let Some(last_enemy) = strategy.last_enemy {
@@ -100,7 +86,9 @@ pub(crate) fn perform_action(
     };
 
     let impact = match action {
-        Action::Stay => perform(world, actor_entity, |actor| Some(actor.stay())),
+        Action::Stay { duration } => {
+            perform(world, actor_entity, |actor| Some(actor.stay(duration)))
+        }
         Action::Step { target } => {
             perform_commands_envir(world, actor_entity, |actor, commands, envir| {
                 actor.move_(commands, envir, target)

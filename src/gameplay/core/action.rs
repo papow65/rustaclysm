@@ -1,8 +1,16 @@
 use crate::prelude::Pos;
 
+#[derive(Copy, Clone, Debug)]
+pub(crate) enum StayDuration {
+    Short,
+    Long,
+}
+
 #[derive(Debug)]
 pub(crate) enum Action {
-    Stay,
+    Stay {
+        duration: StayDuration,
+    },
     Step {
         target: Pos, // nbor pos
     },

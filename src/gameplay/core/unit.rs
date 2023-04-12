@@ -58,7 +58,8 @@ impl fmt::Display for MillimeterPerSecond {
 pub(crate) struct Milliseconds(pub(crate) u64);
 
 impl Milliseconds {
-    pub(crate) const MINUTE: Milliseconds = Milliseconds(60_000);
+    pub(crate) const MINUTE: Milliseconds = Milliseconds(60 * 1000);
+    pub(crate) const EIGHT_HOURS: Milliseconds = Milliseconds(8 * 60 * 60 * 1000);
 }
 
 impl fmt::Debug for Milliseconds {

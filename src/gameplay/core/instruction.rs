@@ -1,4 +1,4 @@
-use crate::prelude::{Ctrl, Key, KeyCombo, Nbor, Shift};
+use crate::prelude::{Ctrl, KeyCombo, Nbor};
 use bevy::prelude::KeyCode;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -72,6 +72,7 @@ pub(crate) enum QueuedInstruction {
     Smash,
     Close,
     Wait,
+    Sleep,
     SwitchRunning,
     ExaminePos,
     ExamineZoneLevel,
@@ -82,34 +83,35 @@ pub(crate) enum QueuedInstruction {
     Finished,
 }
 
-impl TryFrom<&KeyCombo> for QueuedInstruction {
+impl TryFrom<&KeyCode> for QueuedInstruction {
     type Error = ();
 
-    fn try_from(combo: &KeyCombo) -> Result<Self, ()> {
-        match combo {
-            KeyCombo(Ctrl::Without, shift, Key::LESS_THAN) => {
-                Ok(Self::Offset(if shift == &Shift::With {
-                    Direction::Above
-                } else {
-                    Direction::Below
-                }))
-            }
-            KeyCombo(_, _, Key::PIPE) => Ok(Self::Wait),
-            KeyCombo(Ctrl::Without, Shift::Without, Key::KeyCode(key_code)) => Ok(match key_code {
-                KeyCode::W => Self::Wield,
-                KeyCode::B => Self::Pickup,
-                KeyCode::V => Self::Dump,
-                KeyCode::A => Self::Attack,
-                KeyCode::S => Self::Smash,
-                KeyCode::C => Self::Close,
-                KeyCode::X => Self::ExaminePos,
-                KeyCode::M => Self::ExamineZoneLevel,
-                KeyCode::NumpadAdd => Self::SwitchRunning,
-                KeyCode::Escape => Self::Cancel,
-                key_code => {
-                    return Direction::try_from(key_code).map(Self::Offset);
-                }
-            }),
+    fn try_from(key_code: &KeyCode) -> Result<Self, ()> {
+        match key_code {
+            KeyCode::Escape => Ok(Self::Cancel),
+            _ => Direction::try_from(key_code).map(Self::Offset),
+        }
+    }
+}
+
+impl TryFrom<char> for QueuedInstruction {
+    type Error = ();
+
+    fn try_from(input: char) -> Result<Self, ()> {
+        match input {
+            '<' => Ok(Direction::Above).map(Self::Offset),
+            '>' => Ok(Direction::Below).map(Self::Offset),
+            '|' => Ok(Self::Wait),
+            '$' => Ok(Self::Sleep),
+            'w' => Ok(Self::Wield),
+            'b' => Ok(Self::Pickup),
+            'v' => Ok(Self::Dump),
+            'a' => Ok(Self::Attack),
+            's' => Ok(Self::Smash),
+            'c' => Ok(Self::Close),
+            'x' => Ok(Self::ExaminePos),
+            'm' => Ok(Self::ExamineZoneLevel),
+            '+' => Ok(Self::SwitchRunning),
             _ => Err(()),
         }
     }
@@ -136,24 +138,23 @@ impl TryFrom<&KeyCombo> for Instruction {
 
     fn try_from(combo: &KeyCombo) -> Result<Self, ()> {
         match combo {
-            KeyCombo(Ctrl::With, _, Key::KeyCode(KeyCode::C | KeyCode::D | KeyCode::Q)) => {
-                Ok(Self::Quit)
-            }
-            KeyCombo(_, _, Key::KeyCode(KeyCode::F12)) => Ok(Self::MainMenu),
-            KeyCombo(Ctrl::Without, shift, Key::KeyCode(KeyCode::Z)) => {
-                Ok(Self::Zoom(if shift == &Shift::With {
-                    ZoomDirection::Out
-                } else {
-                    ZoomDirection::In
-                }))
-            }
-            KeyCombo(Ctrl::Without, Shift::Without, Key::KeyCode(KeyCode::H)) => {
-                Ok(Self::ToggleElevation)
-            }
-            KeyCombo(Ctrl::Without, Shift::Without, Key::KeyCode(KeyCode::F1)) => {
-                Ok(Self::ToggleHelp)
-            }
-            _ => QueuedInstruction::try_from(combo).map(Self::Queued),
+            KeyCombo(Ctrl::With, KeyCode::C | KeyCode::Q) => Ok(Self::Quit),
+            KeyCombo(_, KeyCode::F1) => Ok(Self::ToggleHelp),
+            KeyCombo(_, KeyCode::F12) => Ok(Self::MainMenu),
+            _ => QueuedInstruction::try_from(&combo.1).map(Self::Queued),
+        }
+    }
+}
+
+impl TryFrom<char> for Instruction {
+    type Error = ();
+
+    fn try_from(input: char) -> Result<Self, ()> {
+        match input {
+            'Z' => Ok(Self::Zoom(ZoomDirection::Out)),
+            'z' => Ok(Self::Zoom(ZoomDirection::In)),
+            'h' => Ok(Self::ToggleElevation),
+            _ => QueuedInstruction::try_from(input).map(Self::Queued),
         }
     }
 }

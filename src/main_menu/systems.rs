@@ -292,16 +292,14 @@ pub(crate) fn manage_main_menu_keyboard_input(
     keys: Res<Input<KeyCode>>,
 ) {
     for key_event in key_events.iter() {
-        if key_event.state == ButtonState::Pressed {
-            let combo = KeyCombo::new(key_event, &keys);
-            if matches!(
-                combo,
-                KeyCombo(
-                    Ctrl::With,
-                    _,
-                    Key::KeyCode(KeyCode::C | KeyCode::D | KeyCode::Q)
-                )
-            ) {
+        if let KeyboardInput {
+            state: ButtonState::Pressed,
+            key_code: Some(key_code),
+            ..
+        } = key_event
+        {
+            let combo = KeyCombo::new(*key_code, &keys);
+            if matches!(combo, KeyCombo(Ctrl::With, KeyCode::C | KeyCode::Q)) {
                 app_exit_events.send(AppExit);
             }
         }
