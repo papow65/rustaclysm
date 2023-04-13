@@ -2,6 +2,22 @@ use crate::prelude::*;
 use bevy::prelude::Local;
 use std::time::{Duration, Instant};
 
+pub(crate) struct StdInstant(Instant);
+
+impl Default for StdInstant {
+    fn default() -> Self {
+        Self(Instant::now())
+    }
+}
+
+impl StdInstant {
+    pub(crate) fn next(&mut self) -> Duration {
+        let previous = self.0;
+        self.0 = Instant::now();
+        self.0 - previous
+    }
+}
+
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn check_delay(mut last_time: Local<StdInstant>) {
     let start = Instant::now();

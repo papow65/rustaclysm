@@ -92,15 +92,14 @@ impl<'w, 's> Spawner<'w, 's> {
             id,
         };
 
-        let tile = self.spawn_tile(parent, pos, definition, None);
-
         let Some(_field_info) = self
         .infos
         .field(&definition.id) else {
-            self.commands.entity(tile).despawn_recursive();
             println!("No info found for field {:?}", definition.id);
             return;
         };
+
+        self.spawn_tile(parent, pos, definition, None);
     }
 
     fn spawn_existing_item(

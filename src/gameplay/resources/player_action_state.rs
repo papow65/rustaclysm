@@ -34,7 +34,7 @@ impl PlayerActionState {
         instruction_queue: &mut InstructionQueue,
         pos: Pos,
         now: Milliseconds,
-        enemies: Vec<Pos>,
+        enemies: &[Pos],
     ) -> Option<Action> {
         while let Some(instruction) = instruction_queue.pop() {
             match self.plan(next_gameplay_state, envir, pos, instruction, now) {

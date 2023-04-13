@@ -51,7 +51,7 @@ pub(crate) fn plan_action(
             &mut instruction_queue,
             actor.pos,
             timeouts.time(),
-            enemies,
+            &enemies,
         )?
     } else {
         let strategy = actor.faction.strategize(&envir, &factions, &actor);
