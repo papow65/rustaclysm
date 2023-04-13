@@ -97,11 +97,11 @@ impl<'s> Actor<'s> {
 
     pub(crate) fn stay(&self, duration: StayDuration) -> Impact {
         match duration {
-            StayDuration::Short => {
-                Impact::rest(Millimeter(Millimeter::ADJACENT.0 / 2)
-                    / self.high_speed().unwrap_or_else(|| self.speed()))
-            }
-            StayDuration::Long => Impact::full_rest(Milliseconds::MINUTE)
+            StayDuration::Short => Impact::rest(
+                Millimeter(Millimeter::ADJACENT.0 / 2)
+                    / self.high_speed().unwrap_or_else(|| self.speed()),
+            ),
+            StayDuration::Long => Impact::full_rest(Milliseconds::MINUTE),
         }
     }
 
