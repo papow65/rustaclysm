@@ -321,44 +321,6 @@ fn collapsed_visibility(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn toggle_doors(
-    mut commands: Commands,
-    mut spawner: Spawner,
-    mut visualization_update: ResMut<VisualizationUpdate>,
-    toggled: Query<
-        (
-            Entity,
-            &ObjectDefinition,
-            &Pos,
-            Option<&Openable>,
-            Option<&Closeable>,
-            &Parent,
-        ),
-        With<Toggle>,
-    >,
-) {
-    let start = Instant::now();
-
-    for (entity, definition, &pos, openable, closeable, parent) in toggled.iter() {
-        assert_ne!(openable.is_some(), closeable.is_some());
-        commands.entity(entity).despawn_recursive();
-        let terrain_info = spawner
-            .infos
-            .terrain(&definition.id)
-            .expect("Valid terrain");
-        let toggled_id = openable
-            .map_or(&terrain_info.close, |_| &terrain_info.open)
-            .as_ref()
-            .unwrap()
-            .clone();
-        spawner.spawn_terrain(parent.get(), pos, toggled_id);
-        *visualization_update = VisualizationUpdate::Forced;
-    }
-
-    log_if_slow("toggle_doors", start);
-}
-
-#[allow(clippy::needless_pass_by_value)]
 pub(crate) fn handle_map_events(
     mut zone_spawner: ZoneSpawner,
     mut map_asset_events: EventReader<AssetEvent<Map>>,
