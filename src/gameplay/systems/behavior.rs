@@ -228,18 +228,19 @@ pub(crate) fn manage_player_death(
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn toggle_doors(
     mut commands: Commands,
+    infos: Res<Infos>,
     mut spawner: Spawner,
     mut visualization_update: ResMut<VisualizationUpdate>,
     toggled: Query<
-    (
-        Entity,
-     &ObjectDefinition,
-     &Pos,
-     Option<&Openable>,
-     Option<&Closeable>,
-     &Parent,
-    ),
-    With<Toggle>,
+        (
+            Entity,
+            &ObjectDefinition,
+            &Pos,
+            Option<&Openable>,
+            Option<&Closeable>,
+            &Parent,
+        ),
+        With<Toggle>,
     >,
 ) {
     let start = Instant::now();
@@ -247,16 +248,12 @@ pub(crate) fn toggle_doors(
     for (entity, definition, &pos, openable, closeable, parent) in toggled.iter() {
         assert_ne!(openable.is_some(), closeable.is_some());
         commands.entity(entity).despawn_recursive();
-        let terrain_info = spawner
-        .infos
-        .terrain(&definition.id)
-        .expect("Valid terrain");
+        let terrain_info = infos.terrain(&definition.id).expect("Valid terrain");
         let toggled_id = openable
-        .map_or(&terrain_info.close, |_| &terrain_info.open)
-        .as_ref()
-        .unwrap()
-        .clone();
-        spawner.spawn_terrain(parent.get(), pos, toggled_id);
+            .map_or(&terrain_info.close, |_| &terrain_info.open)
+            .as_ref()
+            .unwrap();
+        spawner.spawn_terrain(&infos, parent.get(), pos, toggled_id);
         *visualization_update = VisualizationUpdate::Forced;
     }
 
@@ -267,9 +264,9 @@ pub(crate) fn toggle_doors(
 pub(crate) fn update_damaged_characters(
     mut commands: Commands,
     mut characters: Query<
-    (Entity, &ObjectName, &mut Health, &Damage, &mut Transform),
-                                        With<Faction>,
-                                        >,
+        (Entity, &ObjectName, &mut Health, &Damage, &mut Transform),
+        With<Faction>,
+    >,
 ) {
     let start = Instant::now();
 
@@ -279,26 +276,26 @@ pub(crate) fn update_damaged_characters(
             let curr = health.0.current();
             commands.spawn(
                 Message::warn()
-                .push(damage.attacker.clone())
-                .str("hits")
-                .push(name.single())
-                .add(format!("for {} ({prev} -> {curr})", damage.amount)),
+                    .push(damage.attacker.clone())
+                    .str("hits")
+                    .push(name.single())
+                    .add(format!("for {} ({prev} -> {curr})", damage.amount)),
             );
         } else {
             commands.spawn(
                 Message::warn()
-                .push(damage.attacker.clone())
-                .str("kills")
-                .push(name.single()),
+                    .push(damage.attacker.clone())
+                    .str("kills")
+                    .push(name.single()),
             );
             transform.rotation = Quat::from_rotation_y(std::f32::consts::FRAC_PI_2)
-            * Quat::from_rotation_x(-std::f32::consts::FRAC_PI_2);
+                * Quat::from_rotation_x(-std::f32::consts::FRAC_PI_2);
             commands
-            .entity(character)
-            .insert(Corpse)
-            .insert(ObjectName::corpse())
-            .remove::<Health>()
-            .remove::<Obstacle>();
+                .entity(character)
+                .insert(Corpse)
+                .insert(ObjectName::corpse())
+                .remove::<Health>()
+                .remove::<Obstacle>();
         }
 
         commands.entity(character).remove::<Damage>();
@@ -329,32 +326,32 @@ pub(crate) fn update_damaged_items(
 
     for (item, &pos, name, amount, filthy, mut integrity, damage, definition, parent) in
         damaged.iter_mut()
-        {
-            let prev = integrity.0.current();
-            if integrity.apply(damage) {
-                let curr = integrity.0.current();
-                commands.spawn(
-                    Message::warn()
+    {
+        let prev = integrity.0.current();
+        if integrity.apply(damage) {
+            let curr = integrity.0.current();
+            commands.spawn(
+                Message::warn()
                     .push(damage.attacker.clone())
                     .str("hits")
                     .extend(name.as_item(amount, filthy))
                     .add(format!("for {} ({prev} -> {curr})", damage.amount)),
-                );
-                commands.entity(item).remove::<Damage>();
-            } else {
-                commands.spawn(
-                    Message::warn()
+            );
+            commands.entity(item).remove::<Damage>();
+        } else {
+            commands.spawn(
+                Message::warn()
                     .push(damage.attacker.clone())
                     .str("breaks")
                     .extend(name.as_item(amount, filthy)),
-                );
-                commands.entity(item).despawn_recursive();
+            );
+            commands.entity(item).despawn_recursive();
 
-                spawner.spawn_smashed(&infos, parent.get(), pos, definition);
+            spawner.spawn_smashed(&infos, parent.get(), pos, definition);
 
-                *visualization_update = VisualizationUpdate::Forced;
-            }
+            *visualization_update = VisualizationUpdate::Forced;
         }
+    }
 
-        log_if_slow("update_damaged_items", start);
+    log_if_slow("update_damaged_items", start);
 }

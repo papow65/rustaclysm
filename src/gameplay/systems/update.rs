@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use bevy::{math::Quat, prelude::*};
+use bevy::prelude::*;
 use std::time::Instant;
 
 #[allow(clippy::needless_pass_by_value)]

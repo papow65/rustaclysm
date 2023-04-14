@@ -251,6 +251,11 @@ impl Infos {
         self.terrain.get(id)
     }
 
+    pub(crate) fn zone_level<'a>(&'a self, id: &'a ObjectId) -> Option<&'a OvermapInfo> {
+        let id = self.migrations.get(id).map_or(id, |m| &m.replace);
+        self.zone_levels.get(id)
+    }
+
     fn looks_like(&self, definition: &ObjectDefinition) -> Option<&ObjectId> {
         match definition.category {
             ObjectCategory::Character => self
@@ -317,26 +322,6 @@ impl Infos {
             current_definition_ref = &current_definition;
         }
         variants
-    }
-
-    #[must_use]
-    pub(crate) fn name(&self, definition: &ObjectDefinition, color: Option<Color>) -> ObjectName {
-        let name = match definition.category {
-            ObjectCategory::Character => self.characters.get(&definition.id).map(|o| &o.name),
-            ObjectCategory::Item => self.items.get(&definition.id).map(|o| &o.name),
-            ObjectCategory::Field => self.fields.get(&definition.id).map(FieldInfo::name),
-            ObjectCategory::Furniture => self.furniture.get(&definition.id).map(|o| &o.name),
-            ObjectCategory::Terrain => self.terrain.get(&definition.id).map(|o| &o.name),
-            ObjectCategory::ZoneLevel => self.zone_levels.get(&definition.id).map(|o| &o.name),
-            _ => unimplemented!("{:?}", definition.category),
-        };
-
-        ObjectName::new(
-            name.cloned().unwrap_or_else(|| {
-                ItemName::from(CddaItemName::Simple(definition.id.fallback_name()))
-            }),
-            color.unwrap_or(DEFAULT_TEXT_COLOR),
-        )
     }
 
     fn extract<T>(

@@ -18,7 +18,6 @@ pub(crate) struct Spawner<'w, 's> {
     pub(crate) commands: Commands<'w, 's>,
     location: ResMut<'w, Location>,
     pub(crate) explored: ResMut<'w, Explored>,
-    pub(crate) infos: Res<'w, Infos>,
     sav: Res<'w, Sav>,
     model_factory: ModelFactory<'w>,
 }
@@ -26,20 +25,16 @@ pub(crate) struct Spawner<'w, 's> {
 impl<'w, 's> Spawner<'w, 's> {
     fn spawn_character(
         &mut self,
+        infos: &Infos,
         parent: Entity,
         pos: Pos,
-        id: ObjectId,
+        id: &ObjectId,
         name: Option<ObjectName>,
     ) -> Option<Entity> {
-        let definition = &ObjectDefinition {
-            category: ObjectCategory::Character,
-            id,
-        };
-
-        let Some(character_info) = self
-            .infos
-            .character(&definition.id) else {
-                println!("No info found for {:?}. Spawning skipped", definition.id);
+        let Some(character_info) =
+            infos
+            .character(id) else {
+                println!("No info found for {id:?}. Spawning skipped");
                 return None;
             };
         let faction = match character_info.default_faction.as_str() {
@@ -47,11 +42,14 @@ impl<'w, 's> Spawner<'w, 's> {
             "zombie" => Faction::Zombie,
             _ => Faction::Animal,
         };
+        let object_name = ObjectName::new(character_info.name.clone(), faction.color());
 
-        let entity = self.spawn_tile(parent, pos, definition, Some(faction.color()));
+        let definition = &ObjectDefinition {
+            category: ObjectCategory::Character,
+            id: id.clone(),
+        };
+        let entity = self.spawn_tile(parent, pos, definition, object_name);
 
-        // duplicated lookup to make the borrow checker happy
-        let character_info = self.infos.character(&definition.id).unwrap();
         self.commands
             .entity(entity)
             .insert(Obstacle)
@@ -86,50 +84,51 @@ impl<'w, 's> Spawner<'w, 's> {
         Some(entity)
     }
 
-    fn spawn_field(&mut self, parent: Entity, pos: Pos, id: ObjectId) {
-        let definition = &ObjectDefinition {
-            category: ObjectCategory::Field,
-            id,
-        };
-
-        let Some(_field_info) = self
-        .infos
-        .field(&definition.id) else {
-            println!("No info found for field {:?}", definition.id);
+    fn spawn_field(&mut self, infos: &Infos, parent: Entity, pos: Pos, id: &ObjectId) {
+        let Some(field_info) =
+        infos
+        .field(id) else {
+            println!("No info found for field {id:?}");
             return;
         };
+        let object_name = ObjectName::new(field_info.name().clone(), BAD_TEXT_COLOR);
 
-        self.spawn_tile(parent, pos, definition, None);
+        let definition = &ObjectDefinition {
+            category: ObjectCategory::Field,
+            id: id.clone(),
+        };
+        self.spawn_tile(parent, pos, definition, object_name);
     }
 
     fn spawn_existing_item(
         &mut self,
+        infos: &Infos,
         parent: Entity,
         pos: Pos,
         item: &CddaItem,
         amount: Amount,
     ) -> Result<(), LoadError> {
+        let Some(item_info) =
+        infos
+        .item(&item.typeid) else {
+            return Err(LoadError::new(format!("No info found for {:?}. Spawning skipped", &item.typeid)));
+        };
+
         //println!("{:?} {:?} {:?} {:?}", &parent, pos, &id, &amount);
         let definition = &ObjectDefinition {
             category: ObjectCategory::Item,
             id: item.typeid.clone(),
         };
-
         //println!("{:?} @ {pos:?}", &definition);
-        let entity = self.spawn_tile(parent, pos, definition, None);
+        let object_name = ObjectName::new(item_info.name.clone(), DEFAULT_TEXT_COLOR);
+        let entity = self.spawn_tile(parent, pos, definition, object_name);
         let mut entity = self.commands.entity(entity);
         entity.insert(amount);
 
-        let Some(item_info) = self
-            .infos
-            .item(&definition.id) else {
-                entity.despawn_recursive();
-                return Err(LoadError::new(format!("No info found for {:?}. Spawning skipped", definition.id)));
-        };
         let (volume, mass) = match &item.corpse {
             Some(corpse_id) if corpse_id != &ObjectId::new("mon_null") => {
                 println!("{:?}", &corpse_id);
-                match self.infos.character(corpse_id) {
+                match infos.character(corpse_id) {
                     Some(monster_info) => (monster_info.volume, monster_info.mass),
                     None => (item_info.volume, item_info.mass),
                 }
@@ -170,6 +169,7 @@ impl<'w, 's> Spawner<'w, 's> {
                             None => 1,
                         });
                         self.spawn_existing_item(
+                            infos,
                             parent_entity,
                             pos,
                             &CddaItem {
@@ -232,21 +232,18 @@ impl<'w, 's> Spawner<'w, 's> {
         self.spawn_new_items(infos, parent_entity, pos, items);
     }
 
-    fn spawn_furniture(&mut self, parent: Entity, pos: Pos, id: ObjectId) {
-        let definition = &ObjectDefinition {
-            category: ObjectCategory::Furniture,
-            id,
-        };
-
-        let tile = self.spawn_tile(parent, pos, definition, None);
-
-        let Some(furniture_info) = self
-        .infos
-        .furniture(&definition.id) else {
-            self.commands.entity(tile).despawn_recursive();
-            println!("No info found for {:?}. Spawning skipped", definition.id);
+    fn spawn_furniture(&mut self, infos: &Infos, parent: Entity, pos: Pos, id: &ObjectId) {
+        let Some(furniture_info) = infos.furniture(id) else {
+            println!("No info found for {id:?}. Spawning skipped");
             return;
         };
+
+        let definition = &ObjectDefinition {
+            category: ObjectCategory::Furniture,
+            id: id.clone(),
+        };
+        let object_name = ObjectName::new(furniture_info.name.clone(), DEFAULT_TEXT_COLOR);
+        let tile = self.spawn_tile(parent, pos, definition, object_name);
 
         if !furniture_info.flags.transparent() {
             self.commands.entity(tile).insert(Opaque);
@@ -272,21 +269,20 @@ impl<'w, 's> Spawner<'w, 's> {
         }
     }
 
-    pub(crate) fn spawn_terrain(&mut self, parent: Entity, pos: Pos, id: ObjectId) {
+    pub(crate) fn spawn_terrain(&mut self, infos: &Infos, parent: Entity, pos: Pos, id: &ObjectId) {
+        let Some(terrain_info) =
+        infos
+        .terrain(id) else {
+            println!("No info found for terrain {:?}", &id);
+            return;
+        };
+
         let definition = &ObjectDefinition {
             category: ObjectCategory::Terrain,
-            id,
+            id: id.clone(),
         };
-
-        let tile = self.spawn_tile(parent, pos, definition, None);
-
-        let Some(terrain_info) = self
-            .infos
-            .terrain(&definition.id) else {
-                self.commands.entity(tile).despawn_recursive();
-                println!("No info found for terrain {:?}", definition.id);
-                return;
-        };
+        let object_name = ObjectName::new(terrain_info.name.clone(), DEFAULT_TEXT_COLOR);
+        let tile = self.spawn_tile(parent, pos, definition, object_name);
 
         if 0 < terrain_info.move_cost.0 {
             if terrain_info.close.is_some() {
@@ -333,7 +329,7 @@ impl<'w, 's> Spawner<'w, 's> {
         parent: Entity,
         pos: Pos,
         definition: &ObjectDefinition,
-        color: Option<Color>,
+        object_name: ObjectName,
     ) -> Entity {
         //dbg!(&parent);
         //dbg!(pos);
@@ -357,7 +353,7 @@ impl<'w, 's> Spawner<'w, 's> {
             .insert(definition.clone())
             .insert(pos)
             .insert(Transform::from_translation(pos.vec3()))
-            .insert(self.infos.name(definition, color))
+            .insert(object_name)
             .with_children(|child_builder| {
                 for (pbr_bundle, apprearance) in
                     self.model_factory.get_model_bundles(definition, true)
@@ -453,9 +449,10 @@ impl<'w, 's> Spawner<'w, 's> {
         self.commands.entity(parent).add_child(light);
     }
 
-    pub(crate) fn spawn_characters(&mut self, parent: Entity, offset: PosOffset) {
+    pub(crate) fn spawn_characters(&mut self, infos: &Infos, parent: Entity, offset: PosOffset) {
         let player = self
             .spawn_character(
+                infos,
                 parent,
                 Pos::new(45, Level::ZERO, 56)
                     .offset(offset)
@@ -466,7 +463,7 @@ impl<'w, 's> Spawner<'w, 's> {
                         z: 0,
                     })
                     .unwrap(),
-                ObjectId::new("human"),
+                &ObjectId::new("human"),
                 Some(ObjectName::from_str(
                     self.sav.player.name.as_str(),
                     GOOD_TEXT_COLOR,
@@ -481,40 +478,46 @@ impl<'w, 's> Spawner<'w, 's> {
         self.configure_player(player);
 
         self.spawn_character(
+            infos,
             parent,
             Pos::new(10, Level::ZERO, 10).offset(offset).unwrap(),
-            ObjectId::new("human"),
+            &ObjectId::new("human"),
             Some(ObjectName::from_str("Survivor", DEFAULT_TEXT_COLOR)),
         );
 
         self.spawn_character(
+            infos,
             parent,
             Pos::new(12, Level::ZERO, 16).offset(offset).unwrap(),
-            ObjectId::new("mon_zombie"),
+            &ObjectId::new("mon_zombie"),
             None,
         );
         self.spawn_character(
+            infos,
             parent,
             Pos::new(40, Level::ZERO, 40).offset(offset).unwrap(),
-            ObjectId::new("mon_zombie"),
+            &ObjectId::new("mon_zombie"),
             None,
         );
         self.spawn_character(
+            infos,
             parent,
             Pos::new(38, Level::ZERO, 39).offset(offset).unwrap(),
-            ObjectId::new("mon_zombie"),
+            &ObjectId::new("mon_zombie"),
             None,
         );
         self.spawn_character(
+            infos,
             parent,
             Pos::new(37, Level::ZERO, 37).offset(offset).unwrap(),
-            ObjectId::new("mon_zombie"),
+            &ObjectId::new("mon_zombie"),
             None,
         );
         self.spawn_character(
+            infos,
             parent,
             Pos::new(34, Level::ZERO, 34).offset(offset).unwrap(),
-            ObjectId::new("mon_zombie"),
+            &ObjectId::new("mon_zombie"),
             None,
         );
     }
@@ -540,12 +543,12 @@ impl<'w, 's> Spawner<'w, 's> {
 
         if let Some(terrain_id) = &bash.ter_set {
             assert!(definition.category == ObjectCategory::Terrain);
-            self.spawn_terrain(parent_entity, pos, terrain_id.clone());
+            self.spawn_terrain(infos, parent_entity, pos, terrain_id);
         }
 
         if let Some(furniture_id) = &bash.furn_set {
             assert!(definition.category == ObjectCategory::Furniture);
-            self.spawn_furniture(parent_entity, pos, furniture_id.clone());
+            self.spawn_furniture(infos, parent_entity, pos, furniture_id);
         }
 
         if let Some(items) = &bash.items {
@@ -570,6 +573,7 @@ pub(crate) struct Maps {
 pub(crate) struct ZoneSpawner<'w, 's> {
     pub(crate) asset_server: Res<'w, AssetServer>,
     paths: Res<'w, Paths>,
+    infos: Res<'w, Infos>,
     pub(crate) maps: ResMut<'w, Maps>,
     pub(crate) zone_level_ids: ResMut<'w, ZoneLevelIds>,
     pub(crate) zone_level_entities: ResMut<'w, ZoneLevelEntities>,
@@ -628,7 +632,7 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
                         && id != &ObjectId::new("t_open_air_rooved")
                     {
                         self.spawner
-                            .spawn_terrain(subzone_level_entity, pos, id.clone());
+                            .spawn_terrain(&self.infos, subzone_level_entity, pos, id);
                     }
 
                     for id in submap
@@ -637,7 +641,7 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
                         .filter_map(|at| at.get(Pos::new(x, Level::ZERO, z)))
                     {
                         self.spawner
-                            .spawn_furniture(subzone_level_entity, pos, id.clone());
+                            .spawn_furniture(&self.infos, subzone_level_entity, pos, id);
                     }
 
                     for repetitions in submap
@@ -650,6 +654,7 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
                             let CddaAmount { obj: item, amount } = repetition.as_amount();
                             //dbg!(&item.typeid);
                             if let Err(load_error) = self.spawner.spawn_existing_item(
+                                &self.infos,
                                 subzone_level_entity,
                                 pos,
                                 item,
@@ -667,9 +672,10 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
                     {
                         //dbg!(&spawn.id);
                         self.spawner.spawn_character(
+                            &self.infos,
                             subzone_level_entity,
                             pos,
-                            spawn.id.clone(),
+                            &spawn.id,
                             None,
                         );
                     }
@@ -682,8 +688,12 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
                     {
                         //dbg!(&fields);
                         for field in &fields.0 {
-                            self.spawner
-                                .spawn_field(subzone_level_entity, pos, field.id.clone());
+                            self.spawner.spawn_field(
+                                &self.infos,
+                                subzone_level_entity,
+                                pos,
+                                &field.id,
+                            );
                         }
                     }
                 }
@@ -703,6 +713,17 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
         //println!("zone_level: {zone_level:?} {:?}", &definition);
         assert!(zone_level.level <= Level::ZERO);
 
+        let id = self.zone_level_ids.get(zone_level);
+        let zone_level_info = self.infos.zone_level(id);
+
+        let name = ObjectName::new(
+            zone_level_info.map_or_else(
+                || ItemName::from(CddaItemName::Simple(id.fallback_name())),
+                |z| z.name.clone(),
+            ),
+            DEFAULT_TEXT_COLOR,
+        );
+
         let Some(seen_from) = self
             .spawner.explored
             .has_zone_level_been_seen(&self.asset_server, zone_level) else {
@@ -711,13 +732,11 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
 
         let definition = ObjectDefinition {
             category: ObjectCategory::ZoneLevel,
-            id: self.zone_level_ids.get(zone_level).clone(),
+            id: id.clone(),
         };
 
         let mut entity = self.spawner.commands.spawn(zone_level);
-        entity
-            .insert(Collapsed)
-            .insert(self.spawner.infos.name(&definition, None));
+        entity.insert(Collapsed).insert(name);
 
         let pbr_bundles = self
             .spawner
