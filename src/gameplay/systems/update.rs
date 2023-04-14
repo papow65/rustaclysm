@@ -222,13 +222,13 @@ pub(crate) fn update_visualization_on_focus_move(
 pub(crate) fn update_visualization_on_weather_change(
     clock: Clock,
     mut visualization_update: ResMut<VisualizationUpdate>,
-    mut last_sunlight_percentage: Local<f32>,
+    mut last_viewing_disttance: Local<usize>,
 ) {
     let start = Instant::now();
 
-    let sunlight_percentage = clock.sunlight_percentage();
-    if *last_sunlight_percentage != sunlight_percentage {
-        *last_sunlight_percentage = sunlight_percentage;
+    let viewing_disttance = CurrentlyVisible::viewing_distance(clock.sunlight_percentage());
+    if *last_viewing_disttance != viewing_disttance {
+        *last_viewing_disttance = viewing_disttance;
 
         // Handled by update_visualization_on_focus_move next frame
         *visualization_update = VisualizationUpdate::Forced;

@@ -408,11 +408,14 @@ pub(crate) struct CurrentlyVisible<'a> {
 impl<'a> CurrentlyVisible<'a> {
     const MIN_DISTANCE: f32 = 3.0;
 
+    pub(crate) fn viewing_distance(sunlight_percentage: f32) -> usize {
+        (sunlight_percentage * MAX_VISIBLE_DISTANCE as f32
+            + (1.0 - sunlight_percentage) * Self::MIN_DISTANCE) as usize
+    }
+
     fn new(envir: &'a Envir<'a, 'a>, clock: &Clock, from: Pos) -> Self {
         let sunlight_percentage = clock.sunlight_percentage();
-        let viewing_distance = (sunlight_percentage * MAX_VISIBLE_DISTANCE as f32
-            + (1.0 - sunlight_percentage) * Self::MIN_DISTANCE)
-            as usize;
+        let viewing_distance = Self::viewing_distance(sunlight_percentage);
         let segments = envir
             .relative_segments
             .segments
