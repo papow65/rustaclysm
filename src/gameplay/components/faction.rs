@@ -258,10 +258,11 @@ impl Faction {
     pub(crate) fn strategize(
         &self,
         envir: &Envir,
+        clock: &Clock,
         factions: &[(Pos, &Self)],
         actor: &Actor,
     ) -> Strategy {
-        let enemies = self.enemies(envir, factions, actor);
+        let enemies = self.enemies(envir, clock, factions, actor);
         //println!("{self:?} can see {:?} enemies", enemies.len());
 
         Intent::ALL
@@ -274,10 +275,11 @@ impl Faction {
     pub(crate) fn enemies(
         &self,
         envir: &Envir,
+        clock: &Clock,
         factions: &[(Pos, &Faction)],
         actor: &Actor,
     ) -> Vec<Pos> {
-        let currently_visible = envir.currently_visible(actor.pos);
+        let currently_visible = envir.currently_visible(clock, actor.pos);
 
         factions
             .iter()

@@ -7,9 +7,7 @@ use std::{
     ops::{Add, Div, Sub},
 };
 
-pub(crate) const MIN_INVISIBLE_DISTANCE: u32 = 61;
-/** Approximate, prefer `MIN_INVISIBLE_DISTANCE`  */
-pub(crate) const MAX_VISIBLE_DISTANCE: i32 = MIN_INVISIBLE_DISTANCE as i32 - 1;
+pub(crate) const MAX_VISIBLE_DISTANCE: i32 = 60;
 
 #[derive(Clone, Copy, Debug)]
 pub(crate) struct Millimeter(pub(crate) u64);

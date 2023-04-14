@@ -66,7 +66,7 @@ pub(crate) fn finish_loading(
     mut counter: Local<u8>,
 ) {
     if 3 < *counter {
-        eprintln!(
+        println!(
             "Loading {} {:?} {:?} {:?}",
             *counter,
             explored.loaded(),

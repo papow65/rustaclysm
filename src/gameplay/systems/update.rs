@@ -118,6 +118,7 @@ pub(crate) fn update_visualization_on_item_move(
     mut commands: Commands,
     player_action_state: Res<PlayerActionState>,
     envir: Envir,
+    clock: Clock,
     mut explored: ResMut<Explored>,
     elevation_visibility: Res<ElevationVisibility>,
     mut moved_items: Query<
@@ -139,7 +140,7 @@ pub(crate) fn update_visualization_on_item_move(
     if moved_items.iter().peekable().peek().is_some() {
         let &player_pos = players.single();
         let focus = Focus::new(&player_action_state, player_pos);
-        let currently_visible = envir.currently_visible(player_pos); // does not depend on focus
+        let currently_visible = envir.currently_visible(&clock, player_pos); // does not depend on focus
 
         for (&pos, mut visibility, mut last_seen, accessible, speed, children) in
             moved_items.iter_mut()
@@ -169,6 +170,7 @@ pub(crate) fn update_visualization_on_focus_move(
     mut commands: Commands,
     player_action_state: Res<PlayerActionState>,
     envir: Envir,
+    clock: Clock,
     mut explored: ResMut<Explored>,
     elevation_visibility: Res<ElevationVisibility>,
     mut visualization_update: ResMut<VisualizationUpdate>,
@@ -189,7 +191,7 @@ pub(crate) fn update_visualization_on_focus_move(
     let &player_pos = players.single();
     let focus = Focus::new(&player_action_state, player_pos);
     if focus != *last_focus || *visualization_update == VisualizationUpdate::Forced {
-        let currently_visible = envir.currently_visible(player_pos); // does not depend on focus
+        let currently_visible = envir.currently_visible(&clock, player_pos); // does not depend on focus
 
         for (&pos, mut visibility, mut last_seen, accessible, speed, children) in items.iter_mut() {
             update_visualization(
@@ -214,6 +216,25 @@ pub(crate) fn update_visualization_on_focus_move(
     *visualization_update = VisualizationUpdate::Smart;
 
     log_if_slow("update_visualization_on_focus_move", start);
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub(crate) fn update_visualization_on_weather_change(
+    clock: Clock,
+    mut visualization_update: ResMut<VisualizationUpdate>,
+    mut last_sunlight_percentage: Local<f32>,
+) {
+    let start = Instant::now();
+
+    let sunlight_percentage = clock.sunlight_percentage();
+    if *last_sunlight_percentage != sunlight_percentage {
+        *last_sunlight_percentage = sunlight_percentage;
+
+        // Handled by update_visualization_on_focus_move next frame
+        *visualization_update = VisualizationUpdate::Forced;
+    }
+
+    log_if_slow("update_visualization_on_weather_change", start);
 }
 
 #[allow(clippy::needless_pass_by_value)]

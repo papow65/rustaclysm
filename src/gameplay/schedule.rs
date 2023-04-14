@@ -22,7 +22,10 @@ pub(crate) fn behavior_schedule() -> Schedule {
     behavior_schedule.set_default_base_set(CoreSet::Update);
 
     behavior_schedule.add_systems(
-        (plan_action.pipe(perform_action).pipe(handle_impact),)
+        (egible_character
+            .pipe(plan_action)
+            .pipe(perform_action)
+            .pipe(handle_impact),)
             .in_set(UpdateSet::ManageBehavior)
             .in_set(OnUpdate(ApplicationState::Gameplay)),
     );

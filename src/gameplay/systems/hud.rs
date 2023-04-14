@@ -299,7 +299,7 @@ pub(crate) fn update_status_fps(
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_status_time(
-    timeouts: Res<Timeouts>,
+    clock: Clock,
     mut text_sections: ResMut<StatusTextSections>,
     mut status_displays: Query<&mut Text, With<StatusDisplay>>,
 ) {
@@ -307,7 +307,7 @@ pub(crate) fn update_status_time(
 
     let season_length = 91; // TODO load from worldoptions.json
 
-    let tenth_seconds = timeouts.time().0 / 100;
+    let tenth_seconds = clock.time().0 / 100;
     let seconds = tenth_seconds / 10;
     let minutes = seconds / 60;
     let hours = minutes / 60;
@@ -316,7 +316,7 @@ pub(crate) fn update_status_time(
     let years = seasons / 4;
 
     text_sections.time.value = format!(
-        "{:#04}-{}-{:#02} {:#02}:{:#02}:{:#02}.{}\n\n",
+        "{:#04}-{}-{:#02} {:#02}:{:#02}:{:#02}.{} ({:.0}% sunlight)\n\n",
         years + OffsetDateTime::now_utc().year() as u64 + 1, // based on https://cataclysmdda.org/lore-background.html
         match seasons % 4 {
             0 => "Spring",
@@ -329,7 +329,8 @@ pub(crate) fn update_status_time(
         hours % 24,
         minutes % 60,
         seconds % 60,
-        tenth_seconds % 10
+        tenth_seconds % 10,
+        100.0 * clock.sunlight_percentage()
     );
     update_status_display(&text_sections, &mut status_displays.single_mut());
 

@@ -3,30 +3,42 @@ use bevy::{ecs::system::SystemState, prelude::*};
 use std::time::Instant;
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn plan_action(
-    mut commands: Commands,
-    mut next_state: ResMut<NextState<GameplayScreenState>>,
-    mut player_action_state: ResMut<PlayerActionState>,
-    mut envir: Envir,
-    mut instruction_queue: ResMut<InstructionQueue>,
+pub(crate) fn egible_character(
+    envir: Envir,
     mut timeouts: ResMut<Timeouts>,
     actors: Actors,
-    mut players: Query<(), With<Player>>,
-) -> Option<(Entity, Action)> {
-    let start = Instant::now();
-
+    players: Query<(), With<Player>>,
+) -> Option<Entity> {
     let egible_entities = actors
         .actors()
         .filter(|a| envir.is_accessible(a.pos) || players.get(a.entity).is_ok())
         .map(|a| a.entity)
         .collect::<Vec<Entity>>();
-    let Some(active_entity) = timeouts.next(&egible_entities) else {
+    timeouts.next(&egible_entities)
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub(crate) fn plan_action(
+    In(option): In<Option<Entity>>,
+    mut commands: Commands,
+    mut next_state: ResMut<NextState<GameplayScreenState>>,
+    mut player_action_state: ResMut<PlayerActionState>,
+    mut envir: Envir,
+    clock: Clock,
+    mut instruction_queue: ResMut<InstructionQueue>,
+    actors: Actors,
+    mut players: Query<(), With<Player>>,
+) -> Option<(Entity, Action)> {
+    let start = Instant::now();
+
+    let Some(active_entity) = option else {
         eprintln!("No egible characters!");
         return None;
     };
+
     let factions = actors.collect_factions();
     let actor = actors.get(active_entity);
-    let enemies = Faction::Human.enemies(&envir, &factions, &actor);
+    let enemies = Faction::Human.enemies(&envir, &clock, &factions, &actor);
     let action = if players.get_mut(active_entity).is_ok() {
         player_action_state.plan_action(
             &mut commands,
@@ -34,11 +46,11 @@ pub(crate) fn plan_action(
             &mut envir,
             &mut instruction_queue,
             actor.pos,
-            timeouts.time(),
+            clock.time(),
             &enemies,
         )?
     } else {
-        let strategy = actor.faction.strategize(&envir, &factions, &actor);
+        let strategy = actor.faction.strategize(&envir, &clock, &factions, &actor);
         if let Some(last_enemy) = strategy.last_enemy {
             commands.entity(actor.entity).insert(last_enemy);
         }

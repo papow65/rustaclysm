@@ -46,6 +46,8 @@ impl Plugin for GameplayPlugin {
                 update_cursor_visibility_on_player_change,
                 update_visualization_on_item_move,
                 update_visualization_on_focus_move,
+                update_visualization_on_weather_change
+                    .run_if(resource_exists_and_changed::<Timeouts>()),
                 update_camera_base.run_if(resource_exists_and_changed::<PlayerActionState>()),
                 update_camera_offset.run_if(resource_exists_and_changed::<CameraOffset>()),
             )

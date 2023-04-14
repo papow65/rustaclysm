@@ -1,4 +1,4 @@
-use crate::prelude::{LevelOffset, Millimeter, Nbor, PosOffset, MIN_INVISIBLE_DISTANCE};
+use crate::prelude::{LevelOffset, Millimeter, Nbor, PosOffset};
 use bevy::prelude::{Component, Vec3};
 use std::{
     cmp::Ordering,
@@ -208,11 +208,15 @@ impl Pos {
     }
 
     /** Without regard of obstacles */
-    pub(crate) const fn in_visible_range(self, other: Self) -> bool {
-        Millimeter::ADJACENT.0.pow(2) * (self.x.abs_diff(other.x) as u64).pow(2)
-            + Millimeter::VERTICAL.0.pow(2) * (self.level.h.abs_diff(other.level.h) as u64).pow(2)
-            + Millimeter::ADJACENT.0.pow(2) * (self.z.abs_diff(other.z) as u64).pow(2)
-            < Millimeter::ADJACENT.0.pow(2) * (MIN_INVISIBLE_DISTANCE as u64).pow(2)
+    pub(crate) fn vision_distance(self, other: Self) -> usize {
+        ((Millimeter::ADJACENT.0.pow(2) * u64::from(self.x.abs_diff(other.x)).pow(2)
+            + Millimeter::VERTICAL.0.pow(2)
+                * u64::from(self.level.h.abs_diff(other.level.h)).pow(2)
+            + Millimeter::ADJACENT.0.pow(2) * u64::from(self.z.abs_diff(other.z)).pow(2))
+            as f32
+            / Millimeter::ADJACENT.0.pow(2) as f32)
+            .sqrt()
+            .floor() as usize
     }
 }
 

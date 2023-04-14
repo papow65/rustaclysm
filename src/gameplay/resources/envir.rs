@@ -333,14 +333,8 @@ impl<'w, 's> Envir<'w, 's> {
         }
     }
 
-    pub(crate) fn currently_visible(&self, from: Pos) -> CurrentlyVisible {
-        CurrentlyVisible {
-            envir: self,
-            from,
-            opaque_cache: RefCell::default(),
-            down_cache: RefCell::default(),
-            visible_cache: RefCell::default(),
-        }
+    pub(crate) fn currently_visible(&'s self, clock: &'s Clock, from: Pos) -> CurrentlyVisible {
+        CurrentlyVisible::new(self, clock, from)
     }
 }
 
@@ -401,6 +395,10 @@ impl MovementPath {
 
 pub(crate) struct CurrentlyVisible<'a> {
     envir: &'a Envir<'a, 'a>,
+    segments: &'a HashMap<PosOffset, RelativeSegment>,
+
+    /** Rounded up in calculations */
+    viewing_distance: usize,
     from: Pos,
     opaque_cache: RefCell<HashMap<PosOffset, bool>>, // is opaque
     down_cache: RefCell<HashMap<PosOffset, bool>>,   // can see down
@@ -408,6 +406,30 @@ pub(crate) struct CurrentlyVisible<'a> {
 }
 
 impl<'a> CurrentlyVisible<'a> {
+    const MIN_DISTANCE: f32 = 3.0;
+
+    fn new(envir: &'a Envir<'a, 'a>, clock: &Clock, from: Pos) -> Self {
+        let sunlight_percentage = clock.sunlight_percentage();
+        let viewing_distance = (sunlight_percentage * MAX_VISIBLE_DISTANCE as f32
+            + (1.0 - sunlight_percentage) * Self::MIN_DISTANCE)
+            as usize;
+        let segments = envir
+            .relative_segments
+            .segments
+            .get(viewing_distance)
+            .unwrap_or_else(|| panic!("{viewing_distance}"));
+
+        Self {
+            envir,
+            segments,
+            viewing_distance,
+            from,
+            opaque_cache: RefCell::default(),
+            down_cache: RefCell::default(),
+            visible_cache: RefCell::default(),
+        }
+    }
+
     pub(crate) fn can_see(&self, to: Pos, accessible: Option<&Accessible>) -> Visible {
         let to = if accessible.is_some() && self.from.level < to.level {
             // seen from below?
@@ -421,8 +443,8 @@ impl<'a> CurrentlyVisible<'a> {
             to
         };
 
-        if MIN_INVISIBLE_DISTANCE <= self.from.x.abs_diff(to.x)
-            || MIN_INVISIBLE_DISTANCE <= self.from.z.abs_diff(to.z)
+        if self.viewing_distance < self.from.x.abs_diff(to.x) as usize
+            || self.viewing_distance < self.from.z.abs_diff(to.z) as usize
             || (accessible.is_some() && self.envir.is_opaque(to))
         {
             Visible::Unseen
@@ -436,7 +458,7 @@ impl<'a> CurrentlyVisible<'a> {
             return visible.clone();
         }
 
-        let Some(relative_segment) = self.envir.relative_segments.segments.get(&relative_to) else {
+        let Some(relative_segment) = self.segments.get(&relative_to) else {
             return self.remember_visible(relative_to, Visible::Unseen);
         };
 
