@@ -124,7 +124,7 @@ fn spawn_manual_display(
                                 + "examine map   m\n"
                                 + "zoom          (shift+)z\n"
                                 + "zoom          scroll wheel\n"
-                                + "show elevated h\n<"
+                                + "show elevated h\n"
                                 + "toggle this   f1\n"
                                 + "menu          esc\n"
                                 + "main menu     f12\n"
