@@ -30,6 +30,7 @@ pub(crate) fn despawn_gameplay(
             With<SubzoneLevel>,
             With<ManualRoot>,
             With<Node>,
+            With<Message>,
         )>,
     >,
 ) {
