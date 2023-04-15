@@ -2,7 +2,7 @@ use crate::prelude::*;
 use bevy::{
     app::AppExit,
     ecs::event::Events,
-    input::{keyboard::KeyboardInput, mouse::MouseWheel, ButtonState},
+    input::{mouse::MouseWheel, ButtonState},
     prelude::*,
 };
 use std::time::Instant;
@@ -74,68 +74,42 @@ pub(crate) fn manage_keyboard_input(
     mut next_application_state: ResMut<NextState<ApplicationState>>,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
     mut app_exit_events: ResMut<Events<AppExit>>,
-    mut key_events: EventReader<KeyboardInput>,
-    mut character_events: EventReader<ReceivedCharacter>,
+    mut keys: Keys,
     mut instruction_queue: ResMut<InstructionQueue>,
     mut elevation_visibility: ResMut<ElevationVisibility>,
     mut visualization_update: ResMut<VisualizationUpdate>,
     mut camera_offset: ResMut<CameraOffset>,
-    keys: Res<Input<KeyCode>>,
     mut help: Query<&mut Visibility, With<ManualDisplay>>,
 ) {
     let start = Instant::now();
 
-    // Escape, F-keys, and numpad, with support for modifier keys and holding keys down
-    for key_event in key_events.iter() {
-        if let KeyboardInput {
-            state: button_state,
-            key_code: Some(key_code),
-            ..
-        } = key_event
-        {
-            let combo = KeyCombo::new(*key_code, &keys);
-            if let Ok(instruction) = Instruction::try_from(&combo) {
-                match button_state {
-                    ButtonState::Pressed => {
-                        println!("Key event: {:?} -> {:?}", &key_event, &instruction);
-                        handle_instruction(
-                            instruction,
-                            &mut app_exit_events,
-                            &mut next_application_state,
-                            &mut next_gameplay_state,
-                            &mut camera_offset,
-                            &mut elevation_visibility,
-                            &mut visualization_update,
-                            &mut help,
-                            &mut instruction_queue,
-                        );
-                    }
-                    ButtonState::Released => {
-                        if let Instruction::Queued(queued) = instruction {
-                            instruction_queue.interrupt(&queued);
-                        }
-                    }
+    for (button_state, combo) in keys.combos() {
+        let Ok(instruction) = Instruction::try_from(&combo) else {
+            if button_state == ButtonState::Pressed {
+                println!("{:?} not recognized", &combo);
+            }
+            continue;
+        };
+        match button_state {
+            ButtonState::Pressed => {
+                println!("{:?} -> {:?}", &combo, &instruction);
+                handle_instruction(
+                    instruction,
+                    &mut app_exit_events,
+                    &mut next_application_state,
+                    &mut next_gameplay_state,
+                    &mut camera_offset,
+                    &mut elevation_visibility,
+                    &mut visualization_update,
+                    &mut help,
+                    &mut instruction_queue,
+                );
+            }
+            ButtonState::Released => {
+                if let Instruction::Queued(queued) = instruction {
+                    instruction_queue.interrupt(&queued);
                 }
             }
-        }
-    }
-
-    // Character keys, with support for special characters
-    for character_event in character_events.iter() {
-        //println!("{:?} -> {}", &key_event, &combo);
-        if let Ok(instruction) = Instruction::try_from(character_event.char) {
-            println!("{:?} -> {:?}", &character_event, &instruction);
-            handle_instruction(
-                instruction,
-                &mut app_exit_events,
-                &mut next_application_state,
-                &mut next_gameplay_state,
-                &mut camera_offset,
-                &mut elevation_visibility,
-                &mut visualization_update,
-                &mut help,
-                &mut instruction_queue,
-            );
         }
     }
 

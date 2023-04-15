@@ -1,10 +1,6 @@
 use crate::prelude::*;
 use base64::{engine::general_purpose::STANDARD as base64, Engine};
-use bevy::{
-    app::AppExit,
-    input::{keyboard::KeyboardInput, ButtonState},
-    prelude::*,
-};
+use bevy::{app::AppExit, prelude::*};
 use std::str::from_utf8;
 
 const FULL_WIDTH: f32 = 720.0;
@@ -287,21 +283,15 @@ pub(crate) fn manage_main_menu_button_input(
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn manage_main_menu_keyboard_input(
+    mut keys: Keys,
     mut app_exit_events: ResMut<Events<AppExit>>,
-    mut key_events: EventReader<KeyboardInput>,
-    keys: Res<Input<KeyCode>>,
 ) {
-    for key_event in key_events.iter() {
-        if let KeyboardInput {
-            state: ButtonState::Pressed,
-            key_code: Some(key_code),
-            ..
-        } = key_event
-        {
-            let combo = KeyCombo::new(*key_code, &keys);
-            if matches!(combo, KeyCombo(Ctrl::With, KeyCode::C | KeyCode::Q)) {
-                app_exit_events.send(AppExit);
-            }
+    for (_, combo) in keys.combos() {
+        if matches!(
+            combo,
+            KeyCombo::KeyCode(Ctrl::With, KeyCode::C | KeyCode::Q)
+        ) {
+            app_exit_events.send(AppExit);
         }
     }
 }

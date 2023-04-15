@@ -39,22 +39,22 @@ impl Direction {
     }
 }
 
-impl TryFrom<&KeyCode> for Direction {
+impl TryFrom<&KeyCombo> for Direction {
     type Error = ();
 
-    fn try_from(key_code: &KeyCode) -> Result<Self, ()> {
-        Ok(match key_code {
-            KeyCode::Numpad1 => Self::CloserLeft,
-            KeyCode::Numpad2 => Self::Closer,
-            KeyCode::Numpad3 => Self::CloserRight,
-            KeyCode::Numpad4 => Self::Left,
-            KeyCode::Numpad5 => Self::Here,
-            KeyCode::Numpad6 => Self::Right,
-            KeyCode::Numpad7 => Self::AwayLeft,
-            KeyCode::Numpad8 => Self::Away,
-            KeyCode::Numpad9 => Self::AwayRight,
-            KeyCode::R => Self::Above,
-            KeyCode::F => Self::Below,
+    fn try_from(combo: &KeyCombo) -> Result<Self, ()> {
+        Ok(match combo {
+            KeyCombo::KeyCode(Ctrl::Without, KeyCode::Numpad1) => Self::CloserLeft,
+            KeyCombo::KeyCode(Ctrl::Without, KeyCode::Numpad2) => Self::Closer,
+            KeyCombo::KeyCode(Ctrl::Without, KeyCode::Numpad3) => Self::CloserRight,
+            KeyCombo::KeyCode(Ctrl::Without, KeyCode::Numpad4) => Self::Left,
+            KeyCombo::KeyCode(Ctrl::Without, KeyCode::Numpad5) => Self::Here,
+            KeyCombo::KeyCode(Ctrl::Without, KeyCode::Numpad6) => Self::Right,
+            KeyCombo::KeyCode(Ctrl::Without, KeyCode::Numpad7) => Self::AwayLeft,
+            KeyCombo::KeyCode(Ctrl::Without, KeyCode::Numpad8) => Self::Away,
+            KeyCombo::KeyCode(Ctrl::Without, KeyCode::Numpad9) => Self::AwayRight,
+            KeyCombo::Character('<') => Direction::Above,
+            KeyCombo::Character('>') => Direction::Below,
             _ => {
                 return Err(());
             }
@@ -83,36 +83,24 @@ pub(crate) enum QueuedInstruction {
     Finished,
 }
 
-impl TryFrom<&KeyCode> for QueuedInstruction {
+impl TryFrom<&KeyCombo> for QueuedInstruction {
     type Error = ();
 
-    fn try_from(key_code: &KeyCode) -> Result<Self, ()> {
-        match key_code {
-            KeyCode::Escape => Ok(Self::Cancel),
-            _ => Direction::try_from(key_code).map(Self::Offset),
-        }
-    }
-}
-
-impl TryFrom<char> for QueuedInstruction {
-    type Error = ();
-
-    fn try_from(input: char) -> Result<Self, ()> {
-        match input {
-            '<' => Ok(Direction::Above).map(Self::Offset),
-            '>' => Ok(Direction::Below).map(Self::Offset),
-            '|' => Ok(Self::Wait),
-            '$' => Ok(Self::Sleep),
-            'w' => Ok(Self::Wield),
-            'b' => Ok(Self::Pickup),
-            'v' => Ok(Self::Dump),
-            'a' => Ok(Self::Attack),
-            's' => Ok(Self::Smash),
-            'c' => Ok(Self::Close),
-            'x' => Ok(Self::ExaminePos),
-            'm' => Ok(Self::ExamineZoneLevel),
-            '+' => Ok(Self::SwitchRunning),
-            _ => Err(()),
+    fn try_from(combo: &KeyCombo) -> Result<Self, ()> {
+        match combo {
+            KeyCombo::KeyCode(Ctrl::Without, KeyCode::Escape) => Ok(Self::Cancel),
+            KeyCombo::Character('|') => Ok(Self::Wait),
+            KeyCombo::Character('$') => Ok(Self::Sleep),
+            KeyCombo::Character('w') => Ok(Self::Wield),
+            KeyCombo::Character('b') => Ok(Self::Pickup),
+            KeyCombo::Character('v') => Ok(Self::Dump),
+            KeyCombo::Character('a') => Ok(Self::Attack),
+            KeyCombo::Character('s') => Ok(Self::Smash),
+            KeyCombo::Character('c') => Ok(Self::Close),
+            KeyCombo::Character('x') => Ok(Self::ExaminePos),
+            KeyCombo::Character('m') => Ok(Self::ExamineZoneLevel),
+            KeyCombo::Character('+') => Ok(Self::SwitchRunning),
+            _ => Direction::try_from(combo).map(Self::Offset),
         }
     }
 }
@@ -138,23 +126,13 @@ impl TryFrom<&KeyCombo> for Instruction {
 
     fn try_from(combo: &KeyCombo) -> Result<Self, ()> {
         match combo {
-            KeyCombo(Ctrl::With, KeyCode::C | KeyCode::Q) => Ok(Self::Quit),
-            KeyCombo(_, KeyCode::F1) => Ok(Self::ToggleHelp),
-            KeyCombo(_, KeyCode::F12) => Ok(Self::MainMenu),
-            _ => QueuedInstruction::try_from(&combo.1).map(Self::Queued),
-        }
-    }
-}
-
-impl TryFrom<char> for Instruction {
-    type Error = ();
-
-    fn try_from(input: char) -> Result<Self, ()> {
-        match input {
-            'Z' => Ok(Self::Zoom(ZoomDirection::Out)),
-            'z' => Ok(Self::Zoom(ZoomDirection::In)),
-            'h' => Ok(Self::ToggleElevation),
-            _ => QueuedInstruction::try_from(input).map(Self::Queued),
+            KeyCombo::KeyCode(Ctrl::With, KeyCode::C | KeyCode::Q) => Ok(Self::Quit),
+            KeyCombo::KeyCode(Ctrl::Without, KeyCode::F1) => Ok(Self::ToggleHelp),
+            KeyCombo::KeyCode(Ctrl::Without, KeyCode::F12) => Ok(Self::MainMenu),
+            KeyCombo::Character('Z') => Ok(Self::Zoom(ZoomDirection::Out)),
+            KeyCombo::Character('z') => Ok(Self::Zoom(ZoomDirection::In)),
+            KeyCombo::Character('h') => Ok(Self::ToggleElevation),
+            _ => QueuedInstruction::try_from(combo).map(Self::Queued),
         }
     }
 }

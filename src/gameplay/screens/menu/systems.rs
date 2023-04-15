@@ -1,9 +1,5 @@
 use crate::prelude::*;
-use bevy::{
-    app::AppExit,
-    input::{keyboard::KeyboardInput, ButtonState},
-    prelude::*,
-};
+use bevy::{app::AppExit, input::ButtonState, prelude::*};
 
 const SPACING: f32 = 20.0;
 const FONT_SIZE: f32 = 40.0;
@@ -101,23 +97,27 @@ pub(crate) fn manage_menu_button_input(
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn manage_menu_keyboard_input(
-    mut key_events: EventReader<KeyboardInput>,
+    mut keys: Keys,
     mut next_application_state: ResMut<NextState<ApplicationState>>,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
     mut app_exit_events: ResMut<Events<AppExit>>,
 ) {
-    for key_event in key_events.iter() {
-        if key_event.state != ButtonState::Pressed {
+    for (state, combo) in keys.combos() {
+        if state != ButtonState::Pressed {
             continue;
         }
 
-        match key_event.key_code {
-            Some(KeyCode::Escape) => next_gameplay_state.set(GameplayScreenState::Base),
-            Some(KeyCode::M) => {
+        match combo {
+            KeyCombo::KeyCode(Ctrl::Without, KeyCode::Escape) => {
+                next_gameplay_state.set(GameplayScreenState::Base)
+            }
+            KeyCombo::Character('m') => {
                 next_gameplay_state.set(GameplayScreenState::Inapplicable);
                 next_application_state.set(ApplicationState::MainMenu);
             }
-            Some(KeyCode::C | KeyCode::D | KeyCode::Q) => app_exit_events.send(AppExit),
+            KeyCombo::KeyCode(Ctrl::Without, KeyCode::C | KeyCode::Q) => {
+                app_exit_events.send(AppExit)
+            }
             _ => {}
         }
     }
