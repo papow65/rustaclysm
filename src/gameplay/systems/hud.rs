@@ -122,13 +122,13 @@ fn spawn_manual_display(
                                 + "sleep         $\n"
                                 + "examine       x\n"
                                 + "examine map   X\n"
-                                + "zoom          (shift+)z\n"
+                                + "zoom          z/Z\n"
                                 + "zoom          scroll wheel\n"
                                 + "show elevated h\n"
                                 + "toggle this   f1\n"
                                 + "menu          esc\n"
                                 + "main menu     f12\n"
-                                + "quit          ctrl+c/d/q",
+                                + "quit          ctrl+c/q",
                             style: hud_defaults.text_style.clone(),
                         }],
                         ..Text::default()
