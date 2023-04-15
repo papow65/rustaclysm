@@ -98,7 +98,7 @@ impl TryFrom<&KeyCombo> for QueuedInstruction {
             KeyCombo::Character('s') => Ok(Self::Smash),
             KeyCombo::Character('c') => Ok(Self::Close),
             KeyCombo::Character('x') => Ok(Self::ExaminePos),
-            KeyCombo::Character('m') => Ok(Self::ExamineZoneLevel),
+            KeyCombo::Character('X') => Ok(Self::ExamineZoneLevel),
             KeyCombo::Character('+') => Ok(Self::SwitchRunning),
             _ => Direction::try_from(combo).map(Self::Offset),
         }

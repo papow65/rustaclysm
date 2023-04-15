@@ -121,7 +121,7 @@ fn spawn_manual_display(
                                 + "wait          |\n"
                                 + "sleep         $\n"
                                 + "examine       x\n"
-                                + "examine map   m\n"
+                                + "examine map   X\n"
                                 + "zoom          (shift+)z\n"
                                 + "zoom          scroll wheel\n"
                                 + "show elevated h\n"
