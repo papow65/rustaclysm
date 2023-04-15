@@ -94,6 +94,13 @@ impl PlayerActionState {
     ) -> PlayerBehavior {
         //println!("processing instruction: {instruction:?}");
         match (&self, instruction) {
+            (
+                PlayerActionState::Normal | PlayerActionState::Sleeping(_),
+                QueuedInstruction::Cancel,
+            ) => {
+                next_gameplay_state.set(GameplayScreenState::Menu);
+                PlayerBehavior::NoEffect
+            }
             (PlayerActionState::Sleeping(_), QueuedInstruction::Finished) => {
                 *self = PlayerActionState::Normal;
                 PlayerBehavior::Feedback(Message::info().str("You wake up"))
@@ -109,11 +116,11 @@ impl PlayerActionState {
             }
             (PlayerActionState::Normal, QueuedInstruction::Wait) => {
                 *self = PlayerActionState::Waiting(now + Milliseconds::MINUTE);
-                PlayerBehavior::Feedback(Message::info().str("Started waiting..."))
+                PlayerBehavior::Feedback(Message::info().str("You wait..."))
             }
             (PlayerActionState::Normal, QueuedInstruction::Sleep) => {
                 *self = PlayerActionState::Sleeping(now + Milliseconds::EIGHT_HOURS);
-                PlayerBehavior::Feedback(Message::info().str("Started sleeping... Zzz..."))
+                PlayerBehavior::Feedback(Message::info().str("You fall asleep... Zzz..."))
             }
             (PlayerActionState::Attacking, QueuedInstruction::Offset(Direction::Here)) => {
                 PlayerBehavior::Feedback(Message::warn().str("You can't attack yourself"))
@@ -121,10 +128,6 @@ impl PlayerActionState {
             (PlayerActionState::ExaminingPos(curr), QueuedInstruction::Offset(direction)) => {
                 let nbor = direction.to_nbor();
                 self.handle_offset(envir.get_nbor(*curr, &nbor), &nbor)
-            }
-            (PlayerActionState::Normal, QueuedInstruction::Cancel) => {
-                next_gameplay_state.set(GameplayScreenState::Menu);
-                PlayerBehavior::NoEffect
             }
             (_, QueuedInstruction::Cancel | QueuedInstruction::Wait | QueuedInstruction::Sleep)
             | (PlayerActionState::Attacking, QueuedInstruction::Attack)
