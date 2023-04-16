@@ -1,5 +1,7 @@
 use crate::prelude::{Containable, Fragment, Mass, Message, Volume};
+use bevy::prelude::{Component, Entity};
 
+#[derive(Component)]
 pub(crate) struct Container {
     pub(crate) max_volume: Volume,
     pub(crate) max_mass: Mass,
@@ -84,6 +86,30 @@ impl Container {
             Ok(())
         } else {
             Err(messages)
+        }
+    }
+}
+
+#[derive(Component)]
+pub(crate) struct BodyContainers {
+    pub(crate) hands: Entity,
+    pub(crate) clothing: Entity,
+}
+
+impl BodyContainers {
+    pub(crate) fn default_hands_container() -> Container {
+        Container {
+            max_volume: Volume::from(String::from("100 L")),
+            max_mass: Mass::from(String::from("50 kg")),
+            max_amount: Some(1),
+        }
+    }
+
+    pub(crate) fn default_clothing_container() -> Container {
+        Container {
+            max_volume: Volume::from(String::from("100 L")),
+            max_mass: Mass::from(String::from("50 kg")),
+            max_amount: None,
         }
     }
 }

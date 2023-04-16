@@ -222,6 +222,14 @@ impl<'w, 's> Envir<'w, 's> {
         .map(move |(_nbor, npos, walking_cost)| (npos, walking_cost.duration(speed)))
     }
 
+    pub(crate) fn nbors_for_item_handling(
+        &'s self,
+        pos: Pos,
+    ) -> impl Iterator<Item = (Nbor, Pos)> + 's {
+        self.nbors_if(pos, move |nbor| pos.level == nbor.level)
+            .map(move |(nbor, npos, _)| (nbor, npos))
+    }
+
     pub(crate) fn nbors_for_exploring(
         &'s self,
         pos: Pos,

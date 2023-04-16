@@ -76,6 +76,7 @@ pub(crate) enum QueuedInstruction {
     SwitchRunning,
     ExaminePos,
     ExamineZoneLevel,
+    Inventory,
     Cancel,
     /** Set automatically */
     Interrupted,
@@ -89,6 +90,7 @@ impl TryFrom<&KeyCombo> for QueuedInstruction {
     fn try_from(combo: &KeyCombo) -> Result<Self, ()> {
         match combo {
             KeyCombo::KeyCode(Ctrl::Without, KeyCode::Escape) => Ok(Self::Cancel),
+            KeyCombo::Character('i') => Ok(Self::Inventory),
             KeyCombo::Character('|') => Ok(Self::Wait),
             KeyCombo::Character('$') => Ok(Self::Sleep),
             KeyCombo::Character('w') => Ok(Self::Wield),

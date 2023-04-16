@@ -50,34 +50,50 @@ impl<'w, 's> Spawner<'w, 's> {
         };
         let entity = self.spawn_tile(parent, pos, definition, object_name);
 
-        self.commands
-            .entity(entity)
+        let mut entity = self.commands.entity(entity);
+        entity
             .insert(Obstacle)
             .insert(Health(
                 Limited::full(character_info.hp.unwrap_or(60) as u16),
             ))
             .insert(Stamina::Unlimited)
             .insert(WalkingMode::Running)
-            .insert(faction)
-            .insert(Hands::default())
-            .insert(Clothing::default())
+            .insert(faction.clone())
             .insert(Melee {
                 dices: character_info.melee_dice,
                 sides: character_info.melee_dice_sides,
             });
 
         if let Some(name) = name {
-            self.commands.entity(entity).insert(name);
+            entity.insert(name);
         }
 
         if 0 < character_info.speed {
-            self.commands
-                .entity(entity)
-                .insert(BaseSpeed::from_percent(character_info.speed));
+            entity.insert(BaseSpeed::from_percent(character_info.speed));
         }
 
         if character_info.flags.aquatic() {
-            self.commands.entity(entity).insert(Aquatic);
+            entity.insert(Aquatic);
+        }
+
+        let entity = entity.id();
+
+        if faction == Faction::Human {
+            let hands = self
+                .commands
+                .spawn(BodyContainers::default_hands_container())
+                .insert(SpatialBundle::HIDDEN_IDENTITY)
+                .set_parent(entity)
+                .id();
+            let clothing = self
+                .commands
+                .spawn(BodyContainers::default_clothing_container())
+                .insert(SpatialBundle::HIDDEN_IDENTITY)
+                .set_parent(entity)
+                .id();
+            self.commands
+                .entity(entity)
+                .insert(BodyContainers { hands, clothing });
         }
 
         println!("Spawned a {:?} at {pos:?}", definition.id);

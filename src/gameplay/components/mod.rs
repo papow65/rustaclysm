@@ -1,3 +1,4 @@
+mod container;
 mod faction;
 mod message;
 mod player;
@@ -14,7 +15,7 @@ use rand::{
     thread_rng,
 };
 
-pub(crate) use {faction::*, message::*, player::*, pos::*, stats::*};
+pub(crate) use {container::*, faction::*, message::*, player::*, pos::*, stats::*};
 
 #[derive(Component)]
 pub(crate) struct Filthy;
@@ -108,32 +109,6 @@ pub(crate) struct CameraBase;
 
 #[derive(Component)]
 pub(crate) struct ExamineCursor;
-
-#[derive(Component)]
-pub(crate) struct Hands(pub(crate) Container);
-
-impl Default for Hands {
-    fn default() -> Self {
-        Self(Container {
-            max_volume: Volume::from(String::from("100 L")),
-            max_mass: Mass::from(String::from("50 kg")),
-            max_amount: Some(1),
-        })
-    }
-}
-
-#[derive(Component)]
-pub(crate) struct Clothing(pub(crate) Container);
-
-impl Default for Clothing {
-    fn default() -> Self {
-        Self(Container {
-            max_volume: Volume::from(String::from("100 L")),
-            max_mass: Mass::from(String::from("50 kg")),
-            max_amount: None,
-        })
-    }
-}
 
 #[derive(Component)]
 pub(crate) struct Melee {

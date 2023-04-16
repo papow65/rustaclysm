@@ -1,11 +1,11 @@
-#[derive(Clone, PartialEq, Eq, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub(crate) struct HorizontalNborOffset {
     /*private*/ x: i32, // -1, 0, or 1
     /*private*/ z: i32, // -1, 0, or 1
 }
 
 impl HorizontalNborOffset {
-    fn try_from(x: i32, z: i32) -> Option<HorizontalNborOffset> {
+    pub(crate) fn try_from(x: i32, z: i32) -> Option<HorizontalNborOffset> {
         if x.abs().max(z.abs()) == 1 {
             Some(HorizontalNborOffset { x, z })
         } else {
@@ -14,7 +14,7 @@ impl HorizontalNborOffset {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub(crate) enum Nbor {
     Up,
     Horizontal(HorizontalNborOffset),

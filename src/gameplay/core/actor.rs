@@ -67,8 +67,7 @@ pub(crate) struct Actor<'s> {
     pub(crate) health: &'s Health,
     pub(crate) faction: &'s Faction,
     pub(crate) melee: &'s Melee,
-    pub(crate) hands: Option<&'s Hands>,
-    pub(crate) clothing: Option<&'s Clothing>,
+    pub(crate) body_containers: Option<&'s BodyContainers>,
     pub(crate) aquatic: Option<&'s Aquatic>,
     pub(crate) last_enemy: Option<&'s LastEnemy>,
     pub(crate) stamina: &'s Stamina,
@@ -289,7 +288,12 @@ impl<'s> Actor<'s> {
         location: &mut Location,
         hierarchy: &Hierarchy,
     ) -> Option<Impact> {
-        self.take(commands, location, hierarchy, &self.hands.unwrap().0)
+        self.take(
+            commands,
+            location,
+            hierarchy,
+            self.body_containers.unwrap().hands,
+        )
     }
 
     pub(crate) fn pickup(
@@ -298,7 +302,12 @@ impl<'s> Actor<'s> {
         location: &mut Location,
         hierarchy: &Hierarchy,
     ) -> Option<Impact> {
-        self.take(commands, location, hierarchy, &self.clothing.unwrap().0)
+        self.take(
+            commands,
+            location,
+            hierarchy,
+            self.body_containers.unwrap().clothing,
+        )
     }
 
     pub(crate) fn take(
@@ -306,35 +315,42 @@ impl<'s> Actor<'s> {
         commands: &mut Commands,
         location: &mut Location,
         hierarchy: &Hierarchy,
-        container: &Container,
+        container_entity: Entity,
     ) -> Option<Impact> {
-        if let Some((pd_entity, pd_name, pd_amount, pd_filthy, pd_containable)) =
-            location.get_first(self.pos, &hierarchy.picked)
+        if let Some((
+            taken_entity,
+            taken_object_name,
+            taken_amount,
+            taken_filthy,
+            taken_containable,
+        )) = location.get_first(self.pos, &hierarchy.picked)
         {
             let current_items = hierarchy
                 .children
                 .iter()
-                .filter(|(parent, _)| parent.get() == self.entity)
+                .filter(|(parent, _)| parent.get() == container_entity)
                 .map(|(_, containable)| containable);
+
+            let container = hierarchy.containers.get(container_entity).unwrap();
+            let taken_name = taken_object_name.as_item(taken_amount, taken_filthy);
             match container.check_add(
                 self.name.single(),
                 current_items,
-                pd_containable,
-                pd_name.as_item(pd_amount, pd_filthy),
+                taken_containable,
+                taken_name.clone(),
             ) {
                 Ok(()) => {
                     commands.spawn(
                         Message::info()
                             .push(self.name.single())
                             .str("picks up")
-                            .extend(pd_name.as_item(pd_amount, pd_filthy)),
+                            .extend(taken_name),
                     );
                     commands
-                        .entity(pd_entity)
-                        .remove::<Pos>()
-                        .remove::<Visibility>();
-                    commands.entity(self.entity).push_children(&[pd_entity]);
-                    location.update(pd_entity, None);
+                        .entity(container_entity)
+                        .push_children(&[taken_entity]);
+                    commands.entity(taken_entity).remove::<Pos>();
+                    location.update(taken_entity, None);
                     Some(self.activate())
                 }
                 Err(messages) => {
@@ -346,7 +362,7 @@ impl<'s> Actor<'s> {
         } else {
             commands.spawn(
                 Message::warn()
-                    .str("nothing to pick up for")
+                    .str("Nothing to pick up for")
                     .push(self.name.single()),
             );
             None
@@ -367,31 +383,36 @@ impl<'s> Actor<'s> {
     ) -> Option<Impact> {
         // It seems impossible to remove something from 'Children', so we check 'Parent'.
 
-        if let Some((dumpee, dee_name, dee_amount, dee_filthy, _)) = dumpees
-            .iter()
-            .find(|(.., parent)| parent.get() == self.entity)
-        {
-            commands.spawn(
-                Message::info()
-                    .push(self.name.single())
-                    .str("nothing to pick up for")
-                    .extend(dee_name.as_item(dee_amount, dee_filthy)),
-            );
-            commands.entity(self.entity).remove_children(&[dumpee]);
-            commands
-                .entity(dumpee)
-                .insert(VisibilityBundle::default())
-                .insert(self.pos);
-            location.update(dumpee, Some(self.pos));
-            Some(self.activate())
-        } else {
-            commands.spawn(
-                Message::warn()
-                    .str("nothing to drop up for")
-                    .push(self.name.single()),
-            );
-            None
+        for container in [
+            self.body_containers.unwrap().clothing,
+            self.body_containers.unwrap().hands,
+        ] {
+            if let Some((dumpee, dee_name, dee_amount, dee_filthy, _)) = dumpees
+                .iter()
+                .find(|(.., parent)| parent.get() == container)
+            {
+                commands.spawn(
+                    Message::info()
+                        .push(self.name.single())
+                        .str("drops")
+                        .extend(dee_name.as_item(dee_amount, dee_filthy)),
+                );
+                commands.entity(container).remove_children(&[dumpee]);
+                commands
+                    .entity(dumpee)
+                    .insert(VisibilityBundle::default())
+                    .insert(self.pos);
+                location.update(dumpee, Some(self.pos));
+                return Some(self.activate());
+            }
         }
+
+        commands.spawn(
+            Message::warn()
+                .str("nothing to drop up for")
+                .push(self.name.single()),
+        );
+        None
     }
 
     pub(crate) fn switch_running(&'s self, commands: &mut Commands) -> Option<Impact> {
@@ -410,8 +431,7 @@ pub(crate) type ActorTuple<'s> = (
     &'s Health,
     &'s Faction,
     &'s Melee,
-    Option<&'s Hands>,
-    Option<&'s Clothing>,
+    Option<&'s BodyContainers>,
     Option<&'s Aquatic>,
     Option<&'s LastEnemy>,
     &'s Stamina,
@@ -428,8 +448,7 @@ impl<'s> From<ActorTuple<'s>> for Actor<'s> {
             health,
             faction,
             melee,
-            hands,
-            clothing,
+            body_containers,
             aquatic,
             last_enemy,
             stamina,
@@ -444,8 +463,7 @@ impl<'s> From<ActorTuple<'s>> for Actor<'s> {
             health,
             faction,
             melee,
-            hands,
-            clothing,
+            body_containers,
             aquatic,
             last_enemy,
             stamina,

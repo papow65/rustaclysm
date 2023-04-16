@@ -83,6 +83,7 @@ pub(crate) struct Hierarchy<'w, 's> {
             &'static Containable,
         ),
     >,
+    pub(crate) containers: Query<'w, 's, &'static Container>,
     pub(crate) children: Query<'w, 's, (&'static Parent, &'static Containable)>,
 }
 

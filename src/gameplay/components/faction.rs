@@ -34,7 +34,7 @@ impl Intent {
     const ALL: [Self; 4] = [Self::Attack, Self::Flee, Self::Wander, Self::Wait];
 }
 
-#[derive(Component, Debug, PartialEq)]
+#[derive(Clone, Component, Debug, PartialEq)]
 pub(crate) enum Faction {
     Human,
     Zombie,

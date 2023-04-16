@@ -166,6 +166,10 @@ impl PlayerActionState {
                 *self = PlayerActionState::Normal;
                 PlayerBehavior::Feedback(Message::info().str("Finished waiting"))
             }
+            (_, QueuedInstruction::Inventory) => {
+                next_gameplay_state.set(GameplayScreenState::Inventory);
+                PlayerBehavior::NoEffect
+            }
             (_, QueuedInstruction::Interrupted) => {
                 *self = PlayerActionState::Normal;
                 PlayerBehavior::Feedback(Message::error().str("Iterrupted while not waiting"))
