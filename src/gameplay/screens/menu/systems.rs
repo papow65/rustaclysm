@@ -109,14 +109,14 @@ pub(crate) fn manage_menu_keyboard_input(
 
         match combo {
             KeyCombo::KeyCode(Ctrl::Without, KeyCode::Escape) => {
-                next_gameplay_state.set(GameplayScreenState::Base)
+                next_gameplay_state.set(GameplayScreenState::Base);
             }
             KeyCombo::Character('m') => {
                 next_gameplay_state.set(GameplayScreenState::Inapplicable);
                 next_application_state.set(ApplicationState::MainMenu);
             }
             KeyCombo::KeyCode(Ctrl::Without, KeyCode::C | KeyCode::Q) => {
-                app_exit_events.send(AppExit)
+                app_exit_events.send(AppExit);
             }
             _ => {}
         }

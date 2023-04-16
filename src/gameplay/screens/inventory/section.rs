@@ -1,7 +1,7 @@
 use crate::prelude::Nbor;
 use std::{cmp::Ordering, fmt};
 
-#[derive(Clone, Debug, Eq, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub(crate) enum InventorySection {
     Nbor(Nbor), // not up or down
     Hands,
@@ -51,11 +51,5 @@ impl Ord for InventorySection {
 impl PartialOrd for InventorySection {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
-    }
-}
-
-impl PartialEq for InventorySection {
-    fn eq(&self, other: &Self) -> bool {
-        self.cmp(other) == Ordering::Equal
     }
 }

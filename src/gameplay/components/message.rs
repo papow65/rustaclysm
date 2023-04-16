@@ -75,6 +75,7 @@ impl ObjectName {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) enum Severity {
+    #[allow(unused)]
     Low,
     Info,
     Warn,

@@ -141,7 +141,7 @@ pub(crate) fn manage_inventory_keyboard_input(
                 next_gameplay_state.set(GameplayScreenState::Base);
             }
             KeyCombo::KeyCode(Ctrl::Without, KeyCode::C | KeyCode::Q) => {
-                app_exit_events.send(AppExit)
+                app_exit_events.send(AppExit);
             }
             _ => {}
         }
