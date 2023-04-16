@@ -227,8 +227,23 @@ impl<'s> Actor<'s> {
                 attacker: self.name.single(),
                 amount: self.melee.damage(),
             });
+
+            // Needed when a character smashes something at it's own position
+            let cost_target = if self.pos == target {
+                self.pos
+                    .offset(PosOffset {
+                        x: 1,
+                        level: LevelOffset::ZERO,
+                        z: 0,
+                    })
+                    .unwrap()
+            } else {
+                target
+            };
             Some(Impact::heavy(
-                envir.walking_cost(self.pos, target).duration(high_speed),
+                envir
+                    .walking_cost(self.pos, cost_target)
+                    .duration(high_speed),
             ))
         } else {
             commands.spawn(
