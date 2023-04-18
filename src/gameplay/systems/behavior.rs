@@ -1,5 +1,8 @@
 use crate::prelude::*;
-use bevy::{ecs::system::SystemState, prelude::*};
+use bevy::{
+    ecs::system::{SystemParam, SystemState},
+    prelude::*,
+};
 use std::time::Instant;
 
 #[allow(clippy::needless_pass_by_value)]
@@ -83,42 +86,46 @@ pub(crate) fn perform_action(
 
     let impact = match action {
         Action::Stay { duration } => {
-            perform(world, actor_entity, |actor| Some(actor.stay(duration)))
+            perform::<(), _>(world, actor_entity, |actor, ()| Some(actor.stay(duration)))
         }
-        Action::Step { target } => {
-            perform_commands_envir(world, actor_entity, |actor, commands, envir| {
-                actor.move_(commands, envir, target)
-            })
-        }
-        Action::Attack { target } => {
-            perform_commands_envir(world, actor_entity, |actor, commands, envir| {
-                actor.attack(commands, envir, target)
-            })
-        }
-        Action::Smash { target } => {
-            perform_commands_envir(world, actor_entity, |actor, commands, envir| {
-                actor.smash(commands, envir, target)
-            })
-        }
-        Action::Close { target } => {
-            perform_commands_envir(world, actor_entity, |actor, commands, envir| {
-                actor.close(commands, envir, target)
-            })
-        }
-        Action::Wield => perform_commands_location_hierarchy(
+        Action::Step { target } => perform::<(Commands, Envir), _>(
             world,
             actor_entity,
-            |actor, commands, location, hierarchy| actor.wield(commands, location, hierarchy),
+            |actor, (mut commands, mut envir)| actor.move_(&mut commands, &mut envir, target),
         ),
-        Action::Pickup => perform_commands_location_hierarchy(
+        Action::Attack { target } => perform::<(Commands, Envir), _>(
             world,
             actor_entity,
-            |actor, commands, location, hierarchy| actor.pickup(commands, location, hierarchy),
+            |actor, (mut commands, mut envir)| actor.attack(&mut commands, &mut envir, target),
         ),
-        Action::Dump => {
-            let mut system_state = SystemState::<(
+        Action::Smash { target } => perform::<(Commands, Envir), _>(
+            world,
+            actor_entity,
+            |actor, (mut commands, mut envir)| actor.smash(&mut commands, &mut envir, target),
+        ),
+        Action::Close { target } => perform::<(Commands, Envir), _>(
+            world,
+            actor_entity,
+            |actor, (mut commands, mut envir)| actor.close(&mut commands, &mut envir, target),
+        ),
+        Action::Wield => perform::<(Commands, ResMut<Location>, Hierarchy), _>(
+            world,
+            actor_entity,
+            |actor, (mut commands, mut location, hierarchy)| {
+                actor.wield(&mut commands, &mut location, &hierarchy)
+            },
+        ),
+        Action::Pickup => perform::<(Commands, ResMut<Location>, Hierarchy), _>(
+            world,
+            actor_entity,
+            |actor, (mut commands, mut location, hierarchy)| {
+                actor.pickup(&mut commands, &mut location, &hierarchy)
+            },
+        ),
+        Action::Dump => perform::<
+            (
                 Commands,
-                Envir,
+                ResMut<Location>,
                 Query<(
                     Entity,
                     &ObjectName,
@@ -126,19 +133,18 @@ pub(crate) fn perform_action(
                     Option<&Filthy>,
                     &Parent,
                 )>,
-                Actors,
-            )>::new(world);
-            let (mut commands, mut envir, dumpees, actors) = system_state.get_mut(world);
-            let impact =
-                actors
-                    .get(actor_entity)
-                    .dump(&mut commands, &mut envir.location, &dumpees);
-            system_state.apply(world);
-            impact
-        }
+            ),
+            _,
+        >(
+            world,
+            actor_entity,
+            |actor, (mut commands, mut location, dumpees)| {
+                actor.dump(&mut commands, &mut location, &dumpees)
+            },
+        ),
         Action::SwitchRunning => {
-            perform_commands_envir(world, actor_entity, |actor, commands, _| {
-                actor.switch_running(commands)
+            perform::<Commands, _>(world, actor_entity, |actor, mut commands| {
+                actor.switch_running(&mut commands)
             })
         }
     };
@@ -148,47 +154,14 @@ pub(crate) fn perform_action(
     Some((actor_entity, impact))
 }
 
-// TODO combine all versions of 'perform' in a generic function
-
-fn perform<F>(world: &mut World, actor_entity: Entity, act: F) -> Option<Impact>
+fn perform<P, F>(world: &mut World, actor_entity: Entity, act: F) -> Option<Impact>
 where
-    F: Fn(Actor) -> Option<Impact>,
+    P: SystemParam + 'static,
+    for<'a, 'b> F: Fn(Actor, <P as SystemParam>::Item<'a, 'b>) -> Option<Impact>,
 {
-    let mut system_state = SystemState::<(Actors,)>::new(world);
-    let (actors,) = system_state.get_mut(world);
-    let impact = act(actors.get(actor_entity));
-    system_state.apply(world);
-    impact
-}
-
-fn perform_commands_envir<F>(world: &mut World, actor_entity: Entity, act: F) -> Option<Impact>
-where
-    F: Fn(Actor, &mut Commands, &mut Envir) -> Option<Impact>,
-{
-    let mut system_state = SystemState::<(Commands, Envir, Actors)>::new(world);
-    let (mut commands, mut envir, actors) = system_state.get_mut(world);
-    let impact = act(actors.get(actor_entity), &mut commands, &mut envir);
-    system_state.apply(world);
-    impact
-}
-
-fn perform_commands_location_hierarchy<F>(
-    world: &mut World,
-    actor_entity: Entity,
-    act: F,
-) -> Option<Impact>
-where
-    F: Fn(Actor, &mut Commands, &mut Location, &Hierarchy) -> Option<Impact>,
-{
-    let mut system_state =
-        SystemState::<(Commands, Envir, Hierarchy, Actors<'static, 'static>)>::new(world);
-    let (mut commands, mut envir, hierarchy, actors) = system_state.get_mut(world);
-    let impact = act(
-        actors.get(actor_entity),
-        &mut commands,
-        &mut envir.location,
-        &hierarchy,
-    );
+    let mut system_state = SystemState::<(P, Actors)>::new(world);
+    let (p, actors) = system_state.get_mut(world);
+    let impact = act(actors.get(actor_entity), p);
     system_state.apply(world);
     impact
 }
