@@ -113,8 +113,6 @@ fn spawn_manual_display(
                             value: String::new()
                                 + "move          numpad\n"
                                 + "up/down       </>\n"
-                                + "wield         w\n"
-                                + "pick/drop     b/v\n"
                                 + "attack        a\n"
                                 + "smash         s\n"
                                 + "toggle speed  +\n"

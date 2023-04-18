@@ -10,7 +10,11 @@ impl Plugin for InventoryScreenPlugin {
 
         // every frame
         app.add_systems(
-            (manage_inventory_keyboard_input,).in_set(OnUpdate(GameplayScreenState::Inventory)),
+            (
+                manage_inventory_keyboard_input,
+                manage_inventory_button_input,
+            )
+                .in_set(OnUpdate(GameplayScreenState::Inventory)),
         );
 
         // shutdown

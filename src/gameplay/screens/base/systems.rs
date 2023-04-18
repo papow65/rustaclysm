@@ -7,11 +7,6 @@ use bevy::{
 };
 use std::time::Instant;
 
-#[allow(clippy::needless_pass_by_value)]
-pub(crate) fn create_base_resources(mut commands: Commands) {
-    commands.insert_resource(InstructionQueue::default());
-}
-
 fn quit(app_exit_events: &mut Events<AppExit>) {
     app_exit_events.send(AppExit);
 }
@@ -141,9 +136,4 @@ fn handle_instruction(
         Instruction::ToggleHelp => toggle_help(help),
         Instruction::Queued(instruction) => instruction_queue.add(instruction),
     }
-}
-
-#[allow(clippy::needless_pass_by_value)]
-pub(crate) fn remove_base_resources(mut commands: Commands) {
-    commands.remove_resource::<InstructionQueue>();
 }

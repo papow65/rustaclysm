@@ -72,19 +72,20 @@ impl Default for CameraOffset {
 // pickup
 #[derive(SystemParam)]
 pub(crate) struct Hierarchy<'w, 's> {
-    pub(crate) picked: Query<
+    pub(crate) items: Query<
         'w,
         's,
         (
             Entity,
             &'static ObjectName,
+            Option<&'static Pos>,
             Option<&'static Amount>,
             Option<&'static Filthy>,
             &'static Containable,
+            Option<&'static Parent>,
         ),
     >,
     pub(crate) containers: Query<'w, 's, &'static Container>,
-    pub(crate) children: Query<'w, 's, (&'static Parent, &'static Containable)>,
 }
 
 #[derive(SystemParam)]

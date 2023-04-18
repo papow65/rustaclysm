@@ -1,5 +1,5 @@
 use crate::prelude::{Ctrl, KeyCombo, Nbor};
-use bevy::prelude::KeyCode;
+use bevy::prelude::{Entity, KeyCode};
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub(crate) enum Direction {
@@ -65,15 +65,17 @@ impl TryFrom<&KeyCombo> for Direction {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) enum QueuedInstruction {
     Offset(Direction),
-    Wield,
-    Pickup,
-    Dump,
+    Wield(Entity),
+    Unwield(Entity),
+    Pickup(Entity),
+    Dump(Entity),
     Attack,
     Smash,
     Close,
     Wait,
     Sleep,
     SwitchRunning,
+    ExamineItem(Entity),
     ExaminePos,
     ExamineZoneLevel,
     Inventory,
@@ -93,9 +95,6 @@ impl TryFrom<&KeyCombo> for QueuedInstruction {
             KeyCombo::Character('i') => Ok(Self::Inventory),
             KeyCombo::Character('|') => Ok(Self::Wait),
             KeyCombo::Character('$') => Ok(Self::Sleep),
-            KeyCombo::Character('w') => Ok(Self::Wield),
-            KeyCombo::Character('b') => Ok(Self::Pickup),
-            KeyCombo::Character('v') => Ok(Self::Dump),
             KeyCombo::Character('a') => Ok(Self::Attack),
             KeyCombo::Character('s') => Ok(Self::Smash),
             KeyCombo::Character('c') => Ok(Self::Close),

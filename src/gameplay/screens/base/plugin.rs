@@ -5,9 +5,6 @@ pub(crate) struct BaseScreenPlugin;
 
 impl Plugin for BaseScreenPlugin {
     fn build(&self, app: &mut App) {
-        // executed only at startup
-        app.add_systems((create_base_resources,).in_schedule(OnEnter(GameplayScreenState::Base)));
-
         // executed every frame
         app.add_system(
             manage_mouse_input
@@ -25,8 +22,5 @@ impl Plugin for BaseScreenPlugin {
                 .chain()
                 .in_set(OnUpdate(GameplayScreenState::Base)),
         );
-
-        // executed only at shutdown
-        app.add_systems((remove_base_resources,).in_schedule(OnExit(ApplicationState::Gameplay)));
     }
 }

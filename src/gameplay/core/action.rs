@@ -1,4 +1,5 @@
 use crate::prelude::Pos;
+use bevy::prelude::Entity;
 
 #[derive(Copy, Clone, Debug)]
 pub(crate) enum StayDuration {
@@ -23,8 +24,20 @@ pub(crate) enum Action {
     Close {
         target: Pos, // nbor pos
     },
-    Wield, // start wielding
-    Pickup,
-    Dump,
+    Wield {
+        entity: Entity,
+    },
+    Unwield {
+        entity: Entity,
+    },
+    Pickup {
+        entity: Entity,
+    },
+    Dump {
+        entity: Entity,
+    },
+    ExamineItem {
+        entity: Entity,
+    },
     SwitchRunning,
 }

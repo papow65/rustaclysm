@@ -302,12 +302,30 @@ impl<'s> Actor<'s> {
         commands: &mut Commands,
         location: &mut Location,
         hierarchy: &Hierarchy,
+        wielded: Entity,
     ) -> Option<Impact> {
         self.take(
             commands,
             location,
             hierarchy,
             self.body_containers.unwrap().hands,
+            wielded,
+        )
+    }
+
+    pub(crate) fn unwield(
+        &'s self,
+        commands: &mut Commands,
+        location: &mut Location,
+        hierarchy: &Hierarchy,
+        unwielded: Entity,
+    ) -> Option<Impact> {
+        self.take(
+            commands,
+            location,
+            hierarchy,
+            self.body_containers.unwrap().clothing,
+            unwielded,
         )
     }
 
@@ -316,12 +334,14 @@ impl<'s> Actor<'s> {
         commands: &mut Commands,
         location: &mut Location,
         hierarchy: &Hierarchy,
+        pickedup: Entity,
     ) -> Option<Impact> {
         self.take(
             commands,
             location,
             hierarchy,
             self.body_containers.unwrap().clothing,
+            pickedup,
         )
     }
 
@@ -331,20 +351,39 @@ impl<'s> Actor<'s> {
         location: &mut Location,
         hierarchy: &Hierarchy,
         container_entity: Entity,
+        taken: Entity,
     ) -> Option<Impact> {
-        if let Some((
+        if let Ok((
             taken_entity,
             taken_object_name,
+            taken_pos,
             taken_amount,
             taken_filthy,
             taken_containable,
-        )) = location.get_first(self.pos, &hierarchy.picked)
+            taken_parent,
+        )) = hierarchy.items.get(taken)
         {
+            if let Some(&taken_pos) = taken_pos {
+                let offset = taken_pos - self.pos;
+                assert!(offset.x.abs() <= 1);
+                assert!(offset.level == LevelOffset::ZERO);
+                assert!(offset.z.abs() <= 1);
+            } else {
+                assert!(taken_parent.is_some());
+                let taken_parent = taken_parent.unwrap();
+                assert!(
+                    taken_parent.get() == self.body_containers.unwrap().hands
+                        || taken_parent.get() == self.body_containers.unwrap().clothing
+                );
+            }
+
             let current_items = hierarchy
-                .children
+                .items
                 .iter()
-                .filter(|(parent, _)| parent.get() == container_entity)
-                .map(|(_, containable)| containable);
+                .filter(|(.., parent)| {
+                    parent.map(bevy::prelude::Parent::get) == Some(container_entity)
+                })
+                .map(|(.., containable, _)| containable);
 
             let container = hierarchy.containers.get(container_entity).unwrap();
             let taken_name = taken_object_name.as_item(taken_amount, taken_filthy);
@@ -388,53 +427,67 @@ impl<'s> Actor<'s> {
         &'s self,
         commands: &mut Commands,
         location: &mut Location,
-        dumpees: &Query<(
-            Entity,
-            &ObjectName,
-            Option<&Amount>,
-            Option<&Filthy>,
-            &Parent,
-        )>,
-    ) -> Option<Impact> {
-        // It seems impossible to remove something from 'Children', so we check 'Parent'.
+        hierarchy: &Hierarchy,
+        dumped: Entity,
+    ) -> Impact {
+        let (_, dumped_name, _, dumped_amount, dumped_filthy, _, dumped_parent) =
+            hierarchy.items.get(dumped).unwrap();
+        let dumped_parent = dumped_parent.unwrap().get();
 
-        for container in [
-            self.body_containers.unwrap().clothing,
-            self.body_containers.unwrap().hands,
-        ] {
-            if let Some((dumpee, dee_name, dee_amount, dee_filthy, _)) = dumpees
-                .iter()
-                .find(|(.., parent)| parent.get() == container)
-            {
-                commands.spawn(
-                    Message::info()
-                        .push(self.name.single())
-                        .str("drops")
-                        .extend(dee_name.as_item(dee_amount, dee_filthy)),
-                );
-                commands.entity(container).remove_children(&[dumpee]);
-                commands
-                    .entity(dumpee)
-                    .insert(VisibilityBundle::default())
-                    .insert(self.pos);
-                location.update(dumpee, Some(self.pos));
-                return Some(self.activate());
-            }
-        }
+        assert!(
+            dumped_parent == self.body_containers.unwrap().hands
+                || dumped_parent == self.body_containers.unwrap().clothing
+        );
 
         commands.spawn(
-            Message::warn()
-                .str("nothing to drop up for")
-                .push(self.name.single()),
+            Message::info()
+                .push(self.name.single())
+                .str("drops")
+                .extend(dumped_name.as_item(dumped_amount, dumped_filthy)),
         );
-        None
+        commands.entity(dumped_parent).remove_children(&[dumped]);
+        commands
+            .entity(dumped)
+            .insert(VisibilityBundle::default())
+            .insert(self.pos);
+        location.update(dumped, Some(self.pos));
+        self.activate()
     }
 
-    pub(crate) fn switch_running(&'s self, commands: &mut Commands) -> Option<Impact> {
+    pub(crate) fn examine_item(
+        &'s self,
+        commands: &mut Commands,
+        infos: &Infos,
+        definitions: &Query<&ObjectDefinition>,
+        entity: Entity,
+    ) {
+        if let Ok(definition) = definitions.get(entity) {
+            if let Some(item_info) = infos.item(&definition.id) {
+                if let Some(description) = &item_info.description {
+                    commands.spawn(
+                        Message::info().str(
+                            match description {
+                                Description::Simple(simple) => simple,
+                                Description::Complex(complex) => complex.get("str").unwrap(),
+                            }
+                            .as_str(),
+                        ),
+                    );
+                } else {
+                    eprintln!("No description");
+                }
+            } else {
+                eprintln!("No info");
+            }
+        } else {
+            eprintln!("No definition");
+        }
+    }
+
+    pub(crate) fn switch_running(&'s self, commands: &mut Commands) {
         commands
             .entity(self.entity)
             .insert(self.walking_mode.switch());
-        None
     }
 }
 

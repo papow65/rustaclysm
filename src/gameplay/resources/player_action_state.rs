@@ -141,12 +141,24 @@ impl PlayerActionState {
                 let nbor = direction.to_nbor();
                 self.handle_offset(envir.get_nbor(pos, &nbor), &nbor)
             }
-            (_, QueuedInstruction::Wield) => PlayerBehavior::Perform(Action::Wield),
-            (_, QueuedInstruction::Pickup) => PlayerBehavior::Perform(Action::Pickup),
-            (_, QueuedInstruction::Dump) => PlayerBehavior::Perform(Action::Dump),
+            (_, QueuedInstruction::Wield(entity)) => {
+                PlayerBehavior::Perform(Action::Wield { entity })
+            }
+            (_, QueuedInstruction::Unwield(entity)) => {
+                PlayerBehavior::Perform(Action::Unwield { entity })
+            }
+            (_, QueuedInstruction::Pickup(entity)) => {
+                PlayerBehavior::Perform(Action::Pickup { entity })
+            }
+            (_, QueuedInstruction::Dump(entity)) => {
+                PlayerBehavior::Perform(Action::Dump { entity })
+            }
             (_, QueuedInstruction::Attack) => self.handle_attack(envir, pos),
             (_, QueuedInstruction::Smash) => self.handle_smash(envir, pos),
             (_, QueuedInstruction::Close) => self.handle_close(envir, pos),
+            (_, QueuedInstruction::ExamineItem(entity)) => {
+                PlayerBehavior::Perform(Action::ExamineItem { entity })
+            }
             (_, QueuedInstruction::ExaminePos) => {
                 let pos = Pos::from(&Focus::new(self, pos));
                 *self = PlayerActionState::ExaminingPos(pos);

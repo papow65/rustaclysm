@@ -15,12 +15,12 @@ pub(crate) fn load_fonts(mut commands: Commands, asset_server: Res<AssetServer>)
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn manage_button_hover(
-    mut interaction_query: Query<
+    mut interactions: Query<
         (&Interaction, &mut BackgroundColor),
         (Changed<Interaction>, With<Button>),
     >,
 ) {
-    for (interaction, mut color) in &mut interaction_query {
+    for (interaction, mut color) in &mut interactions {
         match *interaction {
             Interaction::Hovered => {
                 *color = HOVERED_BUTTON_COLOR.into();

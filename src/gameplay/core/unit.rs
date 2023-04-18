@@ -174,7 +174,13 @@ impl Sub<Self> for Volume {
 
 impl fmt::Display for Volume {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{} ml", self.milliliter)
+        if 10_000 <= self.milliliter {
+            write!(f, "{} l", self.milliliter / 1000)
+        } else if 1_000 <= self.milliliter {
+            write!(f, "{:.1} l", self.milliliter as f32 * 0.001)
+        } else {
+            write!(f, "{} ml", self.milliliter)
+        }
     }
 }
 
@@ -188,7 +194,7 @@ impl From<String> for Volume {
 
         Self {
             milliliter: match unit.to_lowercase().as_str() {
-                "l" => 1000.0 * quantity,
+                "l" => 1_000.0 * quantity,
                 "ml" => quantity,
                 _ => panic!("{value} {quantity} {}", &unit),
             } as u64,
@@ -253,7 +259,15 @@ impl Sub<Self> for Mass {
 
 impl fmt::Display for Mass {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{} mg", self.milligram)
+        if 10_000_000 <= self.milligram {
+            write!(f, "{} kg", self.milligram / 1_000_000)
+        } else if 1_000_000 <= self.milligram {
+            write!(f, "{:.1} kg", self.milligram as f32 * 0.000_001)
+        } else if 1_000 <= self.milligram {
+            write!(f, "{} g", self.milligram / 1000)
+        } else {
+            write!(f, "{} mg", self.milligram)
+        }
     }
 }
 

@@ -108,43 +108,48 @@ pub(crate) fn perform_action(
             actor_entity,
             |actor, (mut commands, mut envir)| actor.close(&mut commands, &mut envir, target),
         ),
-        Action::Wield => perform::<(Commands, ResMut<Location>, Hierarchy), _>(
+        Action::Wield { entity } => perform::<(Commands, ResMut<Location>, Hierarchy), _>(
             world,
             actor_entity,
             |actor, (mut commands, mut location, hierarchy)| {
-                actor.wield(&mut commands, &mut location, &hierarchy)
+                actor.wield(&mut commands, &mut location, &hierarchy, entity)
             },
         ),
-        Action::Pickup => perform::<(Commands, ResMut<Location>, Hierarchy), _>(
+        Action::Unwield { entity } => perform::<(Commands, ResMut<Location>, Hierarchy), _>(
             world,
             actor_entity,
             |actor, (mut commands, mut location, hierarchy)| {
-                actor.pickup(&mut commands, &mut location, &hierarchy)
+                actor.unwield(&mut commands, &mut location, &hierarchy, entity)
             },
         ),
-        Action::Dump => perform::<
-            (
-                Commands,
-                ResMut<Location>,
-                Query<(
-                    Entity,
-                    &ObjectName,
-                    Option<&Amount>,
-                    Option<&Filthy>,
-                    &Parent,
-                )>,
-            ),
-            _,
-        >(
+        Action::Pickup { entity } => perform::<(Commands, ResMut<Location>, Hierarchy), _>(
             world,
             actor_entity,
-            |actor, (mut commands, mut location, dumpees)| {
-                actor.dump(&mut commands, &mut location, &dumpees)
+            |actor, (mut commands, mut location, hierarchy)| {
+                actor.pickup(&mut commands, &mut location, &hierarchy, entity)
             },
         ),
+        Action::Dump { entity } => perform::<(Commands, ResMut<Location>, Hierarchy), _>(
+            world,
+            actor_entity,
+            |actor, (mut commands, mut location, hierarchy)| {
+                Some(actor.dump(&mut commands, &mut location, &hierarchy, entity))
+            },
+        ),
+        Action::ExamineItem { entity } => {
+            perform::<(Commands, Res<Infos>, Query<&ObjectDefinition>), _>(
+                world,
+                actor_entity,
+                |actor, (mut commands, infos, definitions)| {
+                    actor.examine_item(&mut commands, &infos, &definitions, entity);
+                    None
+                },
+            )
+        }
         Action::SwitchRunning => {
             perform::<Commands, _>(world, actor_entity, |actor, mut commands| {
-                actor.switch_running(&mut commands)
+                actor.switch_running(&mut commands);
+                None
             })
         }
     };
