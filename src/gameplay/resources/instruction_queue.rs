@@ -11,11 +11,9 @@ pub(crate) struct InstructionQueue {
 impl InstructionQueue {
     pub(crate) fn add(&mut self, instruction: QueuedInstruction) {
         // Wait for an instruction to be processed until adding a duplicate when holding a key down.
-        if !dbg!(&mut self.continuous).contains(&instruction)
-            || !dbg!(&mut self.queue).contains(&instruction)
-        {
+        if !self.continuous.contains(&instruction) || !self.queue.contains(&instruction) {
             self.queue.insert(0, instruction.clone());
-            self.continuous.push(dbg!(instruction));
+            self.continuous.push(instruction);
         }
 
         self.waiting_for_user = false;
@@ -26,7 +24,6 @@ impl InstructionQueue {
     }
 
     pub(crate) fn pop(&mut self) -> Option<QueuedInstruction> {
-        eprintln!("Len: {}", self.queue.len());
         self.queue.pop()
     }
 
