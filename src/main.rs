@@ -38,7 +38,6 @@
 #![forbid(semicolon_in_expressions_from_macros)]
 #![forbid(soft_unstable)]
 #![forbid(tyvar_behind_raw_pointer)]
-#![forbid(unaligned_references)]
 #![forbid(uninhabited_static)]
 #![forbid(unstable_name_collisions)]
 #![forbid(unsupported_calling_conventions)]
