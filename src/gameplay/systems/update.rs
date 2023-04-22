@@ -223,12 +223,15 @@ pub(crate) fn update_visualization_on_weather_change(
     clock: Clock,
     mut visualization_update: ResMut<VisualizationUpdate>,
     mut last_viewing_disttance: Local<usize>,
+    players: Query<&Pos, With<Player>>,
 ) {
     let start = Instant::now();
 
-    let viewing_disttance = CurrentlyVisible::viewing_distance(clock.sunlight_percentage());
-    if *last_viewing_disttance != viewing_disttance {
-        *last_viewing_disttance = viewing_disttance;
+    let player_pos = players.single();
+    let viewing_distance =
+        CurrentlyVisible::viewing_distance(player_pos.level, clock.sunlight_percentage());
+    if *last_viewing_disttance != viewing_distance {
+        *last_viewing_disttance = viewing_distance;
 
         // Handled by update_visualization_on_focus_move next frame
         *visualization_update = VisualizationUpdate::Forced;
