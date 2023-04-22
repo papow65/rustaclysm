@@ -13,6 +13,11 @@ impl Plugin for InventoryScreenPlugin {
             (manage_inventory_keyboard_input,).in_set(OnUpdate(GameplayScreenState::Inventory)),
         )
         .add_systems(
+            (clear_inventory.pipe(update_inventory),)
+                .after(UpdateSet::FlushEffects)
+                .in_set(OnUpdate(GameplayScreenState::Inventory)),
+        )
+        .add_systems(
             (manage_inventory_button_input, run_behavior_schedule)
                 .chain()
                 .in_set(OnUpdate(GameplayScreenState::Inventory)),

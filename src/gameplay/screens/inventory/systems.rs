@@ -5,11 +5,69 @@ const SPACING: f32 = 5.0;
 const FONT_SIZE: f32 = 16.0;
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn spawn_inventory(
+pub(crate) fn spawn_inventory(mut commands: Commands, fonts: Res<Fonts>) {
+    let root = commands
+        .spawn(NodeBundle {
+            style: Style {
+                size: Size::width(Val::Percent(100.0)),
+                flex_direction: FlexDirection::Column,
+                align_items: AlignItems::Start,
+                justify_content: JustifyContent::Start,
+                margin: UiRect::horizontal(Val::Px(360.0)),
+                padding: UiRect::all(Val::Px(SPACING)),
+                ..default()
+            },
+            background_color: PANEL_COLOR.into(),
+            ..default()
+        })
+        .id();
+
+    commands.insert_resource(InventoryScreen {
+        root,
+        section_text_style: TextStyle {
+            font: fonts.default(),
+            font_size: FONT_SIZE,
+            color: DEFAULT_TEXT_COLOR,
+        },
+        item_text_style: TextStyle {
+            font: fonts.default(),
+            font_size: FONT_SIZE,
+            color: DEFAULT_TEXT_COLOR,
+        },
+    });
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub(crate) fn clear_inventory(
+    clock: Clock,
+    inventory: Res<InventoryScreen>,
+    mut last_time: Local<Milliseconds>,
+    children: Query<&Children>,
+    mut styles: Query<&mut Style>,
+) -> bool {
+    if *last_time == clock.time() {
+        return false;
+    }
+    *last_time = clock.time();
+
+    if let Ok(children) = children.get(inventory.root) {
+        for &child in children {
+            if let Ok(mut style) = styles.get_mut(child) {
+                style.display = Display::None;
+            }
+        }
+    }
+
+    true
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub(crate) fn update_inventory(
+    run: In<bool>,
     mut commands: Commands,
-    fonts: Res<Fonts>,
     envir: Envir,
     infos: Res<Infos>,
+    inventory: Res<InventoryScreen>,
     players: Query<(&Pos, &BodyContainers), With<Player>>,
     items: Query<(
         Entity,
@@ -24,59 +82,39 @@ pub(crate) fn spawn_inventory(
         &LastSeen,
     )>,
 ) {
-    let item_text_syle = TextStyle {
-        font: fonts.default(),
-        font_size: FONT_SIZE,
-        color: DEFAULT_TEXT_COLOR,
-    };
-    let location_text_syle = TextStyle {
-        color: WARN_TEXT_COLOR,
-        ..item_text_syle.clone()
-    };
+    if !run.0 {
+        return;
+    }
 
     let (&player_pos, body_containers) = players.single();
     let items_by_section = items_by_section(&envir, &items, player_pos, body_containers);
 
-    commands
-        .spawn(NodeBundle {
-            style: Style {
-                size: Size::width(Val::Percent(100.0)),
-                flex_direction: FlexDirection::Column,
-                align_items: AlignItems::Start,
-                justify_content: JustifyContent::Start,
-                margin: UiRect::horizontal(Val::Px(360.0)),
-                padding: UiRect::all(Val::Px(SPACING)),
-                ..default()
-            },
-            background_color: PANEL_COLOR.into(),
-            ..default()
-        })
-        .insert(InventoryRoot)
-        .with_children(|parent| {
-            let mut items_by_section = items_by_section.into_iter().collect::<Vec<_>>();
-            items_by_section.sort_by_key(|(section, _)| (*section).clone());
-            for (section, items) in items_by_section {
-                if !items.is_empty() {
-                    parent.spawn(TextBundle::from_section(
-                        format!("[{section}]"),
-                        location_text_syle.clone(),
-                    ));
+    let mut items_by_section = items_by_section.into_iter().collect::<Vec<_>>();
+    items_by_section.sort_by_key(|(section, _)| (*section).clone());
 
-                    for (entity, defintion, item_message) in items {
-                        if let Some(item_info) = infos.item(&defintion.id) {
-                            add_row(
-                                &section,
-                                parent,
-                                entity,
-                                item_message,
-                                item_info,
-                                &item_text_syle,
-                            );
-                        }
+    commands.entity(inventory.root).with_children(|parent| {
+        for (section, items) in items_by_section {
+            if !items.is_empty() {
+                parent.spawn(TextBundle::from_section(
+                    format!("[{section}]"),
+                    inventory.section_text_style.clone(),
+                ));
+
+                for (entity, id, item_message) in items {
+                    if let Some(item_info) = infos.item(id) {
+                        add_row(
+                            &section,
+                            parent,
+                            entity,
+                            item_message,
+                            item_info,
+                            &inventory.item_text_style,
+                        );
                     }
                 }
             }
-        });
+        }
+    });
 }
 
 fn items_by_section<'a>(
@@ -95,7 +133,7 @@ fn items_by_section<'a>(
     )>,
     player_pos: Pos,
     body_containers: &'a BodyContainers,
-) -> HashMap<InventorySection, Vec<(Entity, &'a ObjectDefinition, Message)>> {
+) -> HashMap<InventorySection, Vec<(Entity, &'a ObjectId, Message)>> {
     let mut fields_by_section = HashMap::default();
     for (nbor, nbor_pos) in envir.nbors_for_item_handling(player_pos) {
         fields_by_section.insert(
@@ -131,7 +169,7 @@ fn items_by_section<'a>(
                 |(entity, _parent, _pos, definition, name, amount, filthy, ..)| {
                     (
                         entity,
-                        definition,
+                        &definition.id,
                         Message::info().extend(name.as_item(Some(amount), filthy)),
                     )
                 },
@@ -299,11 +337,7 @@ pub(crate) fn manage_inventory_button_input(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn despawn_inventory(
-    mut commands: Commands,
-    root_entities: Query<Entity, With<InventoryRoot>>,
-) {
-    if let Ok(root_entity) = root_entities.get_single() {
-        commands.entity(root_entity).despawn_recursive();
-    }
+pub(crate) fn despawn_inventory(mut commands: Commands, inventory: Res<InventoryScreen>) {
+    commands.entity(inventory.root).despawn_recursive();
+    commands.remove_resource::<InventoryScreen>();
 }

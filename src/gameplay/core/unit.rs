@@ -52,7 +52,7 @@ impl fmt::Display for MillimeterPerSecond {
     }
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub(crate) struct Milliseconds(pub(crate) u64);
 
 impl Milliseconds {

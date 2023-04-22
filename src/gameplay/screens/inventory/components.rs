@@ -24,6 +24,3 @@ impl fmt::Display for InventoryAction {
 
 #[derive(Component, Debug)]
 pub(crate) struct ActionButton(pub(crate) Entity, pub(crate) InventoryAction);
-
-#[derive(Component, Debug)]
-pub(crate) struct InventoryRoot;
