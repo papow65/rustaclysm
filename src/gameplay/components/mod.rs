@@ -117,11 +117,12 @@ pub(crate) struct Melee {
 }
 
 impl Melee {
-    pub(crate) fn damage(&self) -> i16 {
+    pub(crate) fn damage(&self, melee_weapon: Option<&ItemInfo>) -> i16 {
         assert!(0 < self.dices, "{}", self.dices);
         assert!(0 < self.sides, "{}", self.sides);
         let mut rng = thread_rng();
-        let between = Uniform::from(1..=self.sides);
+        let between =
+            Uniform::from(1..=self.sides + melee_weapon.map(|w| w.melee_damage()).unwrap_or(0));
         (1..=self.dices)
             .map(|_| between.sample(&mut rng))
             .sum::<u16>() as i16

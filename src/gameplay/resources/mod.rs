@@ -77,6 +77,7 @@ pub(crate) struct Hierarchy<'w, 's> {
         's,
         (
             Entity,
+            &'static ObjectDefinition,
             &'static ObjectName,
             Option<&'static Pos>,
             Option<&'static Amount>,
@@ -85,7 +86,7 @@ pub(crate) struct Hierarchy<'w, 's> {
             Option<&'static Parent>,
         ),
     >,
-    pub(crate) containers: Query<'w, 's, &'static Container>,
+    pub(crate) containers: Query<'w, 's, (&'static Container, Option<&'static Children>)>,
 }
 
 #[derive(SystemParam)]

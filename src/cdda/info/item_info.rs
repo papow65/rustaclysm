@@ -91,10 +91,7 @@ pub(crate) struct ItemInfo {
     #[allow(dead_code)] // TODO
     pub(crate) integral_longest_side: Option<serde_json::Value>,
 
-    #[allow(dead_code)] // TODO
     pub(crate) bashing: Option<u16>,
-
-    #[allow(dead_code)] // TODO
     pub(crate) cutting: Option<u16>,
 
     #[allow(dead_code)] // TODO
@@ -296,6 +293,12 @@ pub(crate) struct ItemInfo {
     #[allow(unused)]
     #[serde(flatten)]
     extra: HashMap<String, serde_json::Value>,
+}
+
+impl ItemInfo {
+    pub(crate) fn melee_damage(&self) -> u16 {
+        self.bashing.unwrap_or(0).max(self.cutting.unwrap_or(0))
+    }
 }
 
 #[derive(Debug, Deserialize)]

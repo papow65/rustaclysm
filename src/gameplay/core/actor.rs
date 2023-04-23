@@ -157,10 +157,53 @@ impl<'s> Actor<'s> {
         }
     }
 
+    fn damage(
+        &'s self,
+        commands: &mut Commands,
+        envir: &Envir,
+        infos: &Infos,
+        hierarchy: &Hierarchy,
+        damaged: Entity,
+        damaged_pos: Pos,
+        speed: MillimeterPerSecond,
+    ) -> Impact {
+        let mut melee_weapon = None;
+        if let Some(body_containers) = self.body_containers {
+            let (_, hands_children) = hierarchy.containers.get(body_containers.hands).unwrap();
+            if let Some(hands_children) = hands_children {
+                if let Some(&weapon) = hands_children.iter().next() {
+                    let (_, definition, ..) = hierarchy.items.get(weapon).unwrap();
+                    melee_weapon = infos.item(&definition.id);
+                }
+            }
+        }
+
+        commands.entity(damaged).insert(Damage {
+            attacker: self.name.single(),
+            amount: self.melee.damage(melee_weapon),
+        });
+
+        // Needed when a character smashes something at it's own position
+        let cost_pos = if self.pos == damaged_pos {
+            self.pos
+                .offset(PosOffset {
+                    x: 1,
+                    level: LevelOffset::ZERO,
+                    z: 0,
+                })
+                .unwrap()
+        } else {
+            damaged_pos
+        };
+        Impact::heavy(envir.walking_cost(self.pos, cost_pos).duration(speed))
+    }
+
     pub(crate) fn attack(
         &'s self,
         commands: &mut Commands,
-        envir: &mut Envir,
+        envir: &Envir,
+        infos: &Infos,
+        hierarchy: &Hierarchy,
         target: Pos,
     ) -> Option<Impact> {
         let Some(high_speed) = self.high_speed() else {
@@ -173,12 +216,8 @@ impl<'s> Actor<'s> {
         }
 
         if let Some((defender, _)) = envir.find_character(target) {
-            commands.entity(defender).insert(Damage {
-                attacker: self.name.single(),
-                amount: self.melee.damage(),
-            });
-            Some(Impact::heavy(
-                envir.walking_cost(self.pos, target).duration(high_speed),
+            Some(self.damage(
+                commands, envir, infos, hierarchy, defender, target, high_speed,
             ))
         } else {
             commands.spawn(
@@ -193,7 +232,9 @@ impl<'s> Actor<'s> {
     pub(crate) fn smash(
         &'s self,
         commands: &mut Commands,
-        envir: &mut Envir,
+        envir: &Envir,
+        infos: &Infos,
+        hierarchy: &Hierarchy,
         target: Pos,
     ) -> Option<Impact> {
         let Some(high_speed) = self.high_speed() else {
@@ -223,27 +264,8 @@ impl<'s> Actor<'s> {
             );
             None
         } else if let Some((smashable, _)) = envir.find_smashable(target) {
-            commands.entity(smashable).insert(Damage {
-                attacker: self.name.single(),
-                amount: self.melee.damage(),
-            });
-
-            // Needed when a character smashes something at it's own position
-            let cost_target = if self.pos == target {
-                self.pos
-                    .offset(PosOffset {
-                        x: 1,
-                        level: LevelOffset::ZERO,
-                        z: 0,
-                    })
-                    .unwrap()
-            } else {
-                target
-            };
-            Some(Impact::heavy(
-                envir
-                    .walking_cost(self.pos, cost_target)
-                    .duration(high_speed),
+            Some(self.damage(
+                commands, envir, infos, hierarchy, smashable, target, high_speed,
             ))
         } else {
             commands.spawn(
@@ -355,6 +377,7 @@ impl<'s> Actor<'s> {
     ) -> Option<Impact> {
         if let Ok((
             taken_entity,
+            _,
             taken_object_name,
             taken_pos,
             taken_amount,
@@ -385,7 +408,7 @@ impl<'s> Actor<'s> {
                 })
                 .map(|(.., containable, _)| containable);
 
-            let container = hierarchy.containers.get(container_entity).unwrap();
+            let (container, _) = hierarchy.containers.get(container_entity).unwrap();
             let taken_name = taken_object_name.as_item(taken_amount, taken_filthy);
             match container.check_add(
                 self.name.single(),
@@ -430,7 +453,7 @@ impl<'s> Actor<'s> {
         hierarchy: &Hierarchy,
         dumped: Entity,
     ) -> Impact {
-        let (_, dumped_name, _, dumped_amount, dumped_filthy, _, dumped_parent) =
+        let (_, _, dumped_name, _, dumped_amount, dumped_filthy, _, dumped_parent) =
             hierarchy.items.get(dumped).unwrap();
         let dumped_parent = dumped_parent.unwrap().get();
 

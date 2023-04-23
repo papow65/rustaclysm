@@ -93,15 +93,19 @@ pub(crate) fn perform_action(
             actor_entity,
             |actor, (mut commands, mut envir)| actor.move_(&mut commands, &mut envir, target),
         ),
-        Action::Attack { target } => perform::<(Commands, Envir), _>(
+        Action::Attack { target } => perform::<(Commands, Envir, Res<Infos>, Hierarchy), _>(
             world,
             actor_entity,
-            |actor, (mut commands, mut envir)| actor.attack(&mut commands, &mut envir, target),
+            |actor, (mut commands, envir, infos, hierarchy)| {
+                actor.attack(&mut commands, &envir, &infos, &hierarchy, target)
+            },
         ),
-        Action::Smash { target } => perform::<(Commands, Envir), _>(
+        Action::Smash { target } => perform::<(Commands, Envir, Res<Infos>, Hierarchy), _>(
             world,
             actor_entity,
-            |actor, (mut commands, mut envir)| actor.smash(&mut commands, &mut envir, target),
+            |actor, (mut commands, envir, infos, hierarchy)| {
+                actor.smash(&mut commands, &envir, &infos, &hierarchy, target)
+            },
         ),
         Action::Close { target } => perform::<(Commands, Envir), _>(
             world,
