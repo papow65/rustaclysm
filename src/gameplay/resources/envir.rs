@@ -392,9 +392,9 @@ impl MovementPath {
         FH: FnMut(&Pos) -> Milliseconds,
     {
         nbors
-            .map(|(first, duration)| Self {
+            .map(|(first, _)| Self {
                 first,
-                duration: duration + heuristic(&first),
+                duration: heuristic(&first),
                 destination,
             })
             .min_by_key(|path| (path.first == from, path.duration))
