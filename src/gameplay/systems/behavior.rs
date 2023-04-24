@@ -225,28 +225,17 @@ pub(crate) fn toggle_doors(
     infos: Res<Infos>,
     mut spawner: Spawner,
     mut visualization_update: ResMut<VisualizationUpdate>,
-    toggled: Query<
-        (
-            Entity,
-            &ObjectDefinition,
-            &Pos,
-            Option<&Openable>,
-            Option<&Closeable>,
-            &Parent,
-        ),
-        With<Toggle>,
-    >,
+    toggled: Query<(Entity, &ObjectDefinition, &Pos, &Toggle, &Parent)>,
 ) {
     let start = Instant::now();
 
-    for (entity, definition, &pos, openable, closeable, parent) in toggled.iter() {
-        assert_ne!(openable.is_some(), closeable.is_some());
+    for (entity, definition, &pos, toggle, parent) in toggled.iter() {
         commands.entity(entity).despawn_recursive();
         let terrain_info = infos.terrain(&definition.id).expect("Valid terrain");
-        let toggled_id = openable
-            .map_or(&terrain_info.close, |_| &terrain_info.open)
-            .as_ref()
-            .unwrap();
+        let toggled_id = match toggle {
+            Toggle::Open => terrain_info.open.as_ref().expect("Openable"),
+            Toggle::Close => terrain_info.close.as_ref().expect("Closeable"),
+        };
         spawner.spawn_terrain(&infos, parent.get(), pos, toggled_id);
         *visualization_update = VisualizationUpdate::Forced;
     }

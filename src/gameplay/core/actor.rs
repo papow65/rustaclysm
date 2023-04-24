@@ -151,7 +151,7 @@ impl<'s> Actor<'s> {
                 None
             }
             Collision::Opened(door) => {
-                commands.entity(door).insert(Toggle);
+                commands.entity(door).insert(Toggle::Open);
                 Some(self.standard_impact(envir.walking_cost(from, to).duration(self.speed())))
             }
         }
@@ -299,7 +299,7 @@ impl<'s> Actor<'s> {
                 );
                 None
             } else {
-                commands.entity(closeable).insert(Toggle);
+                commands.entity(closeable).insert(Toggle::Close);
                 Some(
                     self.standard_impact(
                         envir.walking_cost(self.pos, target).duration(self.speed()),

@@ -66,8 +66,11 @@ pub(crate) struct Containable {
 pub(crate) struct Amount(pub(crate) u32);
 
 /** Marker to open or close something, like a door */
-#[derive(Component)]
-pub(crate) struct Toggle;
+#[derive(Component, Debug, PartialEq)]
+pub(crate) enum Toggle {
+    Open,
+    Close,
+}
 
 #[derive(Clone, Component, Debug, PartialEq)]
 pub(crate) struct ObjectDefinition {
