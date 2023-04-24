@@ -41,21 +41,7 @@ impl Plugin for GameplayPlugin {
         // executed every frame
         app.add_systems(
             (
-                update_transforms,
-                update_hidden_item_visibility,
-                update_cursor_visibility_on_player_change,
-                update_visualization_on_item_move,
-                update_visualization_on_focus_move,
-                update_visualization_on_weather_change
-                    .run_if(resource_exists_and_changed::<Timeouts>()),
-                update_camera_base.run_if(resource_exists_and_changed::<PlayerActionState>()),
                 update_camera_offset.run_if(resource_exists_and_changed::<CameraOffset>()),
-            )
-                .after(UpdateSet::FlushEffects)
-                .in_set(OnUpdate(ApplicationState::Gameplay)),
-        );
-        app.add_systems(
-            (
                 handle_map_events,
                 handle_overmap_buffer_events,
                 update_log,

@@ -15,6 +15,7 @@ pub(crate) enum UpdateSet {
     FlushBehavior,
     ApplyEffects,
     FlushEffects,
+    UpdateVisuals,
 }
 
 pub(crate) fn behavior_schedule() -> Schedule {
@@ -52,6 +53,22 @@ pub(crate) fn behavior_schedule() -> Schedule {
             .after(UpdateSet::ApplyEffects)
             .in_set(OnUpdate(ApplicationState::Gameplay)),
     );
+    behavior_schedule.add_systems(
+        (
+            update_transforms,
+            update_hidden_item_visibility,
+            update_cursor_visibility_on_player_change,
+            update_visualization_on_item_move,
+            update_visualization_on_focus_move,
+            update_visualization_on_weather_change
+                .run_if(resource_exists_and_changed::<Timeouts>()),
+            update_camera_base.run_if(resource_exists_and_changed::<PlayerActionState>()),
+        )
+            .in_set(UpdateSet::UpdateVisuals)
+            .after(UpdateSet::FlushEffects)
+            .in_set(OnUpdate(ApplicationState::Gameplay)),
+    );
+
     behavior_schedule
 }
 
