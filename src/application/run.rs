@@ -44,7 +44,5 @@ pub(crate) fn run_application() {
     // every frame
     app.add_system(manage_button_hover);
 
-    //bevy_mod_debugdump::print_main_schedule(&mut app);
-
     app.run();
 }
