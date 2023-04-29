@@ -1,4 +1,4 @@
-use crate::prelude::{DeflatVec, Mass, ObjectId, Volume};
+use crate::prelude::*;
 use bevy::utils::HashMap;
 use serde::Deserialize;
 
@@ -298,6 +298,16 @@ pub(crate) struct ItemInfo {
 impl ItemInfo {
     pub(crate) fn melee_damage(&self) -> u16 {
         self.bashing.unwrap_or(0).max(self.cutting.unwrap_or(0))
+    }
+
+    pub(crate) fn text_color(&self) -> Color {
+        if self.category == Some(String::from("manuals")) {
+            GOOD_TEXT_COLOR
+        } else if self.category == Some(String::from("bionics")) {
+            WARN_TEXT_COLOR
+        } else {
+            DEFAULT_TEXT_COLOR
+        }
     }
 }
 

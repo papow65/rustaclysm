@@ -136,7 +136,7 @@ impl<'w, 's> Spawner<'w, 's> {
             id: item.typeid.clone(),
         };
         //println!("{:?} @ {pos:?}", &definition);
-        let object_name = ObjectName::new(item_info.name.clone(), DEFAULT_TEXT_COLOR);
+        let object_name = ObjectName::new(item_info.name.clone(), item_info.text_color());
         let entity = self.spawn_tile(parent, pos, definition, object_name);
         let mut entity = self.commands.entity(entity);
         entity.insert(amount);

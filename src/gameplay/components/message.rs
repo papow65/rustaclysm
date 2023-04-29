@@ -1,7 +1,4 @@
-use crate::prelude::{
-    Amount, CddaItemName, Filthy, Fragment, ItemName, BAD_TEXT_COLOR, DEFAULT_TEXT_COLOR,
-    FILTHY_COLOR, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
-};
+use crate::prelude::*;
 use bevy::prelude::{Color, Component, TextSection, TextStyle};
 use regex::Regex;
 use std::fmt;
