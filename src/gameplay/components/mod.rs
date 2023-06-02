@@ -125,7 +125,7 @@ impl Melee {
         assert!(0 < self.sides, "{}", self.sides);
         let mut rng = thread_rng();
         let between =
-            Uniform::from(1..=self.sides + melee_weapon.map(|w| w.melee_damage()).unwrap_or(0));
+            Uniform::from(1..=self.sides + melee_weapon.map_or(0, ItemInfo::melee_damage));
         (1..=self.dices)
             .map(|_| between.sample(&mut rng))
             .sum::<u16>() as i16
