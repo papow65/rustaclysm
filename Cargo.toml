@@ -15,7 +15,7 @@ bevy = { version = "0.10", default-features = false, features = [ "bevy_asset", 
 pathfinding = "4"
 bresenham = "0.1"
 rand = "0.8"
-serde = { version = "1", features = [ "derive" ] }
+serde = { version = "1", features = [ "derive", "rc" ] }
 serde_json = "1"
 glob = "0.3"
 float-ord = "0.3"

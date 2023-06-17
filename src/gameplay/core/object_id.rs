@@ -1,23 +1,23 @@
 use crate::prelude::*;
 use bevy::prelude::Vec2;
 use serde::Deserialize;
+use std::sync::Arc;
 
 #[derive(Clone, Deserialize, Debug, Hash, PartialEq, Eq)]
-pub(crate) struct ObjectId(String);
+pub(crate) struct ObjectId(Arc<str>);
 
 impl ObjectId {
-    pub(crate) fn new<S: Into<String>>(value: S) -> Self {
+    pub(crate) fn new(value: &str) -> Self {
         Self(value.into())
     }
 
     pub(crate) fn suffix(&self, name: &str) -> Self {
-        Self(self.0.clone() + name)
+        Self((String::from(&*self.0) + name).into())
     }
 
     pub(crate) fn truncate(&self) -> Self {
         Self(
-            self.0
-                .clone()
+            String::from(&*self.0)
                 .replace("_isolated", "")
                 .replace("_end_south", "")
                 .replace("_end_west", "")
@@ -33,12 +33,13 @@ impl ObjectId {
                 .replace("_sw", "")
                 .replace("_nsw", "")
                 .replace("_esw", "")
-                .replace("_nesw", ""),
+                .replace("_nesw", "")
+                .into(),
         )
     }
 
     pub(crate) fn fallback_name(&self) -> String {
-        self.0.clone()
+        String::from(&*self.0)
     }
 
     pub(crate) fn is_moving_deep_water_zone(&self) -> bool {
@@ -50,7 +51,7 @@ impl ObjectId {
     }
 
     pub(crate) fn is_grassy_zone(&self) -> bool {
-        self.0 == "field" || self.0.starts_with("forest")
+        &*self.0 == "field" || self.0.starts_with("forest")
     }
 
     pub(crate) fn is_road_zone(&self) -> bool {
@@ -58,7 +59,7 @@ impl ObjectId {
     }
 
     pub(crate) fn is_ground(&self) -> bool {
-        self.0 == "t_grass" || self.0 == "t_dirt"
+        &*self.0 == "t_grass" || &*self.0 == "t_dirt"
     }
 
     pub(crate) fn to_shape(
