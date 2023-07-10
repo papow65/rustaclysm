@@ -21,7 +21,7 @@ impl Plugin for GameplayPlugin {
             ..AmbientLight::default()
         })
         .insert_resource(RelativeSegments::new())
-        .insert_resource(ElevationVisibility::Shown);
+        .insert_resource(ElevationVisibility::default());
 
         create_behavior_schedule(app);
 
@@ -55,6 +55,8 @@ impl Plugin for GameplayPlugin {
                 update_status_player_state
                     .run_if(resource_exists_and_changed::<PlayerActionState>()),
                 update_status_detais.run_if(resource_exists_and_changed::<PlayerActionState>()),
+                update_visualization_on_focus_move
+                    .run_if(resource_exists_and_changed::<ElevationVisibility>()),
                 spawn_zones_for_camera
                     .after(update_camera_base)
                     .after(update_camera_offset),

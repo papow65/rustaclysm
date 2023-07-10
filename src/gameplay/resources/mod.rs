@@ -22,8 +22,9 @@ use crate::prelude::*;
 use bevy::{ecs::system::SystemParam, prelude::*};
 
 //** Visibility of tiles above the player character */
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Resource)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Resource)]
 pub(crate) enum ElevationVisibility {
+    #[default]
     Shown,
     Hidden,
 }

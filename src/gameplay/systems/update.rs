@@ -175,6 +175,7 @@ pub(crate) fn update_visualization_on_focus_move(
     elevation_visibility: Res<ElevationVisibility>,
     mut visualization_update: ResMut<VisualizationUpdate>,
     mut last_focus: Local<Focus>,
+    mut last_elevation_visibility: Local<ElevationVisibility>,
     mut items: Query<(
         &Pos,
         &mut Visibility,
@@ -190,7 +191,10 @@ pub(crate) fn update_visualization_on_focus_move(
 
     let &player_pos = players.single();
     let focus = Focus::new(&player_action_state, player_pos);
-    if focus != *last_focus || *visualization_update == VisualizationUpdate::Forced {
+    if focus != *last_focus
+        || *elevation_visibility != *last_elevation_visibility
+        || *visualization_update == VisualizationUpdate::Forced
+    {
         let currently_visible = envir.currently_visible(&clock, player_pos); // does not depend on focus
 
         for (&pos, mut visibility, mut last_seen, accessible, speed, children) in items.iter_mut() {
@@ -211,9 +215,9 @@ pub(crate) fn update_visualization_on_focus_move(
         }
 
         *last_focus = focus;
+        *last_elevation_visibility = *elevation_visibility;
+        *visualization_update = VisualizationUpdate::Smart;
     }
-
-    *visualization_update = VisualizationUpdate::Smart;
 
     log_if_slow("update_visualization_on_focus_move", start);
 }
