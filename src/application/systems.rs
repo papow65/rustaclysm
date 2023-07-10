@@ -28,7 +28,7 @@ pub(crate) fn manage_button_hover(
             Interaction::None => {
                 *color = DEFAULT_BUTTON_COLOR.into();
             }
-            Interaction::Clicked => {}
+            Interaction::Pressed => {}
         }
     }
 }

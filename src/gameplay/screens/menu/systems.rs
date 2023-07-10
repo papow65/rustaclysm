@@ -8,7 +8,8 @@ const FONT_SIZE: f32 = 40.0;
 pub(crate) fn spawn_menu(mut commands: Commands, fonts: Res<Fonts>) {
     let button = ButtonBundle {
         style: Style {
-            size: Size::new(Val::Px(250.0), Val::Px(70.0)),
+            width: Val::Px(250.0),
+            height: Val::Px(70.0),
             justify_content: JustifyContent::Center,
             align_items: AlignItems::Center,
             ..default()
@@ -20,11 +21,11 @@ pub(crate) fn spawn_menu(mut commands: Commands, fonts: Res<Fonts>) {
     commands
         .spawn(NodeBundle {
             style: Style {
-                size: Size::width(Val::Percent(100.0)),
+                width: Val::Percent(100.0),
                 flex_direction: FlexDirection::Column,
                 align_items: AlignItems::Center,
                 justify_content: JustifyContent::Center,
-                gap: Size::height(Val::Px(SPACING)),
+                row_gap: Val::Px(SPACING),
                 ..default()
             },
             ..default()
@@ -73,7 +74,7 @@ pub(crate) fn manage_menu_button_input(
     >,
 ) {
     for (interaction, return_button, main_menu_button, quit_button) in &interaction_query {
-        if *interaction == Interaction::Clicked {
+        if *interaction == Interaction::Pressed {
             match (
                 return_button.is_some(),
                 main_menu_button.is_some(),

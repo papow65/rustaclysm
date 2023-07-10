@@ -9,7 +9,8 @@ pub(crate) fn spawn_loading(mut commands: Commands, fonts: Res<Fonts>) {
         .spawn(NodeBundle {
             style: Style {
                 position_type: PositionType::Absolute,
-                size: Size::all(Val::Percent(100.0)),
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
                 align_items: AlignItems::Center,
                 justify_content: JustifyContent::Center,
                 ..default()
@@ -21,7 +22,8 @@ pub(crate) fn spawn_loading(mut commands: Commands, fonts: Res<Fonts>) {
             parent
                 .spawn(NodeBundle {
                     style: Style {
-                        size: Size::new(Val::Px(250.0), Val::Px(70.0)),
+                        width: Val::Px(250.0),
+                        height: Val::Px(70.0),
                         justify_content: JustifyContent::Center,
                         align_items: AlignItems::Center,
                         ..default()
@@ -49,7 +51,7 @@ pub(crate) fn start_gameplay(
     mut next_application_state: ResMut<NextState<ApplicationState>>,
     mut delay: Local<bool>,
 ) {
-    if *delay && application_state.0 != ApplicationState::Gameplay {
+    if *delay && application_state.get() != &ApplicationState::Gameplay {
         next_application_state.set(ApplicationState::Gameplay);
     } else {
         *delay = true;

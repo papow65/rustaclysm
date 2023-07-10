@@ -9,7 +9,7 @@ pub(crate) fn spawn_inventory(mut commands: Commands, fonts: Res<Fonts>) {
     let root = commands
         .spawn(NodeBundle {
             style: Style {
-                size: Size::width(Val::Percent(100.0)),
+                width: Val::Percent(100.0),
                 flex_direction: FlexDirection::Column,
                 align_items: AlignItems::Start,
                 justify_content: JustifyContent::Start,
@@ -192,10 +192,10 @@ fn add_row(
     parent
         .spawn(NodeBundle {
             style: Style {
-                size: Size::width(Val::Percent(100.0)),
+                width: Val::Percent(100.0),
                 align_items: AlignItems::Start,
                 justify_content: JustifyContent::Start,
-                gap: Size::width(Val::Px(SPACING)),
+                column_gap: Val::Px(SPACING),
                 ..default()
             },
             ..default()
@@ -204,8 +204,8 @@ fn add_row(
             parent
                 .spawn(NodeBundle {
                     style: Style {
-                        size: Size::width(Val::Px(200.0)),
-                        overflow: Overflow::Hidden,
+                        width: Val::Px(200.0),
+                        overflow: Overflow::clip(),
                         ..Style::default()
                     },
                     ..default()
@@ -219,8 +219,8 @@ fn add_row(
             parent
                 .spawn(NodeBundle {
                     style: Style {
-                        size: Size::width(Val::Px(60.0)),
-                        overflow: Overflow::Hidden,
+                        width: Val::Px(60.0),
+                        overflow: Overflow::clip(),
                         justify_content: JustifyContent::End,
                         ..Style::default()
                     },
@@ -240,8 +240,8 @@ fn add_row(
             parent
                 .spawn(NodeBundle {
                     style: Style {
-                        size: Size::width(Val::Px(60.0)),
-                        overflow: Overflow::Hidden,
+                        width: Val::Px(60.0),
+                        overflow: Overflow::clip(),
                         justify_content: JustifyContent::End,
                         ..Style::default()
                     },
@@ -274,7 +274,7 @@ fn add_row(
                 parent
                     .spawn(ButtonBundle {
                         style: Style {
-                            size: Size::width(Val::Px(70.0)),
+                            width: Val::Px(70.0),
                             justify_content: JustifyContent::Center,
                             ..default()
                         },
@@ -322,7 +322,7 @@ pub(crate) fn manage_inventory_button_input(
     interactions: Query<(&Interaction, &ActionButton), (Changed<Interaction>, With<Button>)>,
 ) {
     for (&interaction, &ActionButton(entity, ref inventory_action)) in interactions.iter() {
-        if interaction == Interaction::Clicked {
+        if interaction == Interaction::Pressed {
             println!("{inventory_action} {entity:?}");
             let instruction = match inventory_action {
                 InventoryAction::Examine => QueuedInstruction::ExamineItem(entity),

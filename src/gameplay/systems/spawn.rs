@@ -90,17 +90,17 @@ fn visible_region(camera: &Camera, global_transform: &GlobalTransform) -> Region
 }
 
 fn visible_area(camera: &Camera, global_transform: &GlobalTransform) -> Vec<SubzoneLevel> {
-    let Some((corner_a, corner_b)) = camera.logical_viewport_rect() else {
+    let Some(Rect{min: corner_min, max: corner_max}) = camera.logical_viewport_rect() else {
         return Vec::new();
     };
 
     let mut subzone_levels = Vec::new();
     for level in Level::ALL {
         for corner in [
-            Vec2::new(corner_a.x, corner_a.y),
-            Vec2::new(corner_a.x, corner_b.y),
-            Vec2::new(corner_b.x, corner_a.y),
-            Vec2::new(corner_b.x, corner_b.y),
+            Vec2::new(corner_min.x, corner_min.y),
+            Vec2::new(corner_min.x, corner_max.y),
+            Vec2::new(corner_max.x, corner_min.y),
+            Vec2::new(corner_max.x, corner_max.y),
         ] {
             let Some(Ray { origin, direction }) =
                 camera.viewport_to_world(global_transform, corner)

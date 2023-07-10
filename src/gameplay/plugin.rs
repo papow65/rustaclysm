@@ -7,11 +7,13 @@ impl Plugin for GameplayPlugin {
     fn build(&self, app: &mut App) {
         app.add_state::<GameplayScreenState>();
 
-        app.add_plugin(BaseScreenPlugin)
-            .add_plugin(CharacterScreenPlugin)
-            .add_plugin(InventoryScreenPlugin)
-            .add_plugin(MenuScreenPlugin)
-            .add_plugin(FrameTimeDiagnosticsPlugin::default());
+        app.add_plugins((
+            BaseScreenPlugin,
+            CharacterScreenPlugin,
+            InventoryScreenPlugin,
+            MenuScreenPlugin,
+            FrameTimeDiagnosticsPlugin::default(),
+        ));
 
         // These resources may persist between gameplays.
         app.insert_resource(AmbientLight {
@@ -25,21 +27,22 @@ impl Plugin for GameplayPlugin {
 
         // executed only at gameplay startup
         app.add_systems(
+            OnEnter(ApplicationState::Gameplay),
             (
                 create_independent_resources,
-                apply_system_buffers,
+                apply_deferred,
                 create_dependent_resources,
-                apply_system_buffers,
+                apply_deferred,
                 spawn_initial_entities,
                 spawn_hud,
-                apply_system_buffers,
+                apply_deferred,
             )
-                .chain()
-                .in_schedule(OnEnter(ApplicationState::Gameplay)),
+                .chain(),
         );
 
         // executed every frame
         app.add_systems(
+            Update,
             (
                 update_camera_offset.run_if(resource_exists_and_changed::<CameraOffset>()),
                 handle_map_events,
@@ -59,29 +62,31 @@ impl Plugin for GameplayPlugin {
                     .after(update_camera_base)
                     .after(update_camera_offset),
             )
-                .in_set(OnUpdate(ApplicationState::Gameplay)),
+                .run_if(in_state(ApplicationState::Gameplay)),
         );
 
         // executed at fixed interval
-        app.add_system(
-            update_status_fps
-                .run_if(resource_exists::<StatusTextSections>())
-                .in_set(OnUpdate(ApplicationState::Gameplay))
-                .in_schedule(CoreSchedule::FixedUpdate),
+        app.add_systems(
+            FixedUpdate,
+            update_status_fps.run_if(
+                in_state(ApplicationState::Gameplay)
+                    .and_then(resource_exists::<StatusTextSections>()),
+            ),
         );
 
         // This system may persist between gameplays.
-        app.add_system(check_delay.in_base_set(CoreSet::Last));
+        app.add_systems(Last, check_delay);
 
         // executed only at gameplay shutdown
         app.add_systems(
+            OnExit(ApplicationState::Gameplay),
             (
                 disable_screen_state,
-                apply_system_buffers,
+                apply_deferred,
                 despawn_gameplay,
                 remove_gameplay_resources,
             )
-                .in_schedule(OnExit(ApplicationState::Gameplay)),
+                .chain(),
         );
     }
 }

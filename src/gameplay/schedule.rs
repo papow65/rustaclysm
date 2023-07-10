@@ -20,21 +20,20 @@ pub(crate) enum UpdateSet {
 
 pub(crate) fn behavior_schedule() -> Schedule {
     let mut behavior_schedule = Schedule::new();
-    behavior_schedule.set_default_base_set(CoreSet::Update);
 
     behavior_schedule.add_systems(
-        (egible_character
+        egible_character
             .pipe(plan_action)
             .pipe(perform_action)
-            .pipe(handle_impact),)
+            .pipe(handle_impact)
             .in_set(UpdateSet::ManageBehavior)
-            .in_set(OnUpdate(ApplicationState::Gameplay)),
+            .run_if(in_state(ApplicationState::Gameplay)),
     );
     behavior_schedule.add_systems(
-        (apply_system_buffers,)
+        apply_deferred
             .in_set(UpdateSet::FlushBehavior)
             .after(UpdateSet::ManageBehavior)
-            .in_set(OnUpdate(ApplicationState::Gameplay)),
+            .run_if(in_state(ApplicationState::Gameplay)),
     );
     behavior_schedule.add_systems(
         (
@@ -45,13 +44,13 @@ pub(crate) fn behavior_schedule() -> Schedule {
         )
             .in_set(UpdateSet::ApplyEffects)
             .after(UpdateSet::FlushBehavior)
-            .in_set(OnUpdate(ApplicationState::Gameplay)),
+            .run_if(in_state(ApplicationState::Gameplay)),
     );
     behavior_schedule.add_systems(
-        (apply_system_buffers,)
+        apply_deferred
             .in_set(UpdateSet::FlushEffects)
             .after(UpdateSet::ApplyEffects)
-            .in_set(OnUpdate(ApplicationState::Gameplay)),
+            .run_if(in_state(ApplicationState::Gameplay)),
     );
     behavior_schedule.add_systems(
         (
@@ -66,7 +65,7 @@ pub(crate) fn behavior_schedule() -> Schedule {
         )
             .in_set(UpdateSet::UpdateVisuals)
             .after(UpdateSet::FlushEffects)
-            .in_set(OnUpdate(ApplicationState::Gameplay)),
+            .run_if(in_state(ApplicationState::Gameplay)),
     );
 
     behavior_schedule

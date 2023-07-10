@@ -375,7 +375,8 @@ impl<'w, 's> Spawner<'w, 's> {
                     self.model_factory.get_model_bundles(definition, true)
                 {
                     let material = if last_seen == LastSeen::Never {
-                        None
+                        Some(apprearance.material(&LastSeen::Currently))
+                        //None // TODO
                     } else {
                         Some(apprearance.material(&last_seen))
                     };

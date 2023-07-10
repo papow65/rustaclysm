@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use bevy::diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin};
+use bevy::diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin};
 use bevy::ecs::system::{EntityCommands, Resource};
 use bevy::prelude::*;
 use std::time::Instant;
@@ -32,19 +32,14 @@ fn spawn_log_display(parent: &mut EntityCommands) {
             .spawn(NodeBundle {
                 style: Style {
                     position_type: PositionType::Absolute,
-                    position: UiRect {
-                        bottom: Val::Px(0.0),
-                        left: Val::Px(0.0),
-                        ..UiRect::default()
-                    },
-                    size: Size {
-                        width: Val::Px(TEXT_WIDTH),
-                        height: Val::Px(20.0 * 16.0),
-                    },
+                    bottom: Val::Px(0.0),
+                    left: Val::Px(0.0),
+                    width: Val::Px(TEXT_WIDTH),
+                    height: Val::Px(20.0 * 16.0),
                     margin: UiRect::all(Val::Px(5.0)),
                     flex_direction: FlexDirection::Column,
                     justify_content: JustifyContent::End,
-                    overflow: Overflow::Hidden,
+                    overflow: Overflow::clip(),
                     ..default()
                 },
                 ..default()
@@ -57,7 +52,7 @@ fn spawn_log_display(parent: &mut EntityCommands) {
                             ..Text::default()
                         },
                         style: Style {
-                            size: Size::width(Val::Px(TEXT_WIDTH)),
+                            width: Val::Px(TEXT_WIDTH),
                             flex_wrap: FlexWrap::Wrap,
                             ..Style::default()
                         },
@@ -76,15 +71,10 @@ fn spawn_status_display(parent: &mut EntityCommands) {
                 text: Text::default(),
                 style: Style {
                     position_type: PositionType::Absolute,
-                    position: UiRect {
-                        top: Val::Px(0.0),
-                        left: Val::Px(0.0),
-                        ..UiRect::default()
-                    },
-                    size: Size {
-                        width: Val::Px(TEXT_WIDTH),
-                        height: Val::Percent(100.0),
-                    },
+                    top: Val::Px(0.0),
+                    left: Val::Px(0.0),
+                    width: Val::Px(TEXT_WIDTH),
+                    height: Val::Percent(100.0),
                     margin: UiRect::all(Val::Px(5.0)),
                     ..Style::default()
                 },
@@ -99,8 +89,8 @@ fn spawn_manual_display(
     hud_defaults: &HudDefaults,
     mut background: NodeBundle,
 ) {
-    background.style.position.bottom = Val::Px(0.0);
-    background.style.position.left = Val::Px(0.0);
+    background.style.bottom = Val::Px(0.0);
+    background.style.left = Val::Px(0.0);
 
     commands
         .spawn(background)
@@ -171,12 +161,10 @@ pub(crate) fn spawn_hud(
 
     spawn_manual_display(&mut commands, &hud_defaults, background.clone());
 
-    background.style.position.top = Val::Px(0.0);
-    background.style.position.right = Val::Px(0.0);
-    background.style.size = Size {
-        width: Val::Px(TEXT_WIDTH + 10.0), // 5px margin on both sides
-        height: Val::Percent(100.0),
-    };
+    background.style.top = Val::Px(0.0);
+    background.style.right = Val::Px(0.0);
+    background.style.width = Val::Px(TEXT_WIDTH + 10.0); // 5px margin on both sides
+    background.style.height = Val::Percent(100.0);
     let mut parent = commands.spawn(background);
     spawn_status_display(&mut parent);
     spawn_log_display(&mut parent);
@@ -275,7 +263,7 @@ fn update_status_display(text_sections: &StatusTextSections, status_display: &mu
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_status_fps(
-    diagnostics: Res<Diagnostics>,
+    diagnostics: Res<DiagnosticsStore>,
     mut text_sections: ResMut<StatusTextSections>,
     mut status_displays: Query<&mut Text, With<StatusDisplay>>,
 ) {

@@ -48,7 +48,7 @@ pub(crate) enum Ctrl {
 
 impl From<&Input<KeyCode>> for Ctrl {
     fn from(keys: &Input<KeyCode>) -> Self {
-        if keys.pressed(KeyCode::LControl) || keys.pressed(KeyCode::RControl) {
+        if keys.pressed(KeyCode::ControlLeft) || keys.pressed(KeyCode::ControlRight) {
             Self::With
         } else {
             Self::Without

@@ -30,7 +30,7 @@ pub(crate) fn spawn_main_menu(
         .spawn(NodeBundle {
             style: Style {
                 flex_direction: FlexDirection::Column,
-                size: Size::width(Val::Percent(100.0)),
+                width: Val::Percent(100.0),
                 align_items: AlignItems::Center,
                 justify_content: JustifyContent::Center,
                 ..default()
@@ -82,11 +82,12 @@ fn add_load_button_area(parent: &mut ChildBuilder) {
         .spawn(NodeBundle {
             style: Style {
                 flex_direction: FlexDirection::Column,
-                size: Size::new(Val::Percent(100.0), Val::Px(400.0)),
+                width: Val::Percent(100.0),
+                height: Val::Px(400.0),
                 align_items: AlignItems::Center,
                 flex_wrap: FlexWrap::Wrap,
                 align_content: AlignContent::Center,
-                gap: Size::width(Val::Px(SPACING)),
+                column_gap: Val::Px(SPACING),
                 ..default()
             },
             ..default()
@@ -98,7 +99,8 @@ fn add_notification_area(parent: &mut ChildBuilder, font: Handle<Font>) {
     parent
         .spawn(NodeBundle {
             style: Style {
-                size: Size::new(Val::Px(FULL_WIDTH), Val::Px(10.0 * SPACING)),
+                width: Val::Px(FULL_WIDTH),
+                height: Val::Px(10.0 * SPACING),
                 align_items: AlignItems::FlexStart,
                 justify_content: JustifyContent::FlexStart,
                 flex_direction: FlexDirection::Column,
@@ -125,7 +127,7 @@ fn add_notification_area(parent: &mut ChildBuilder, font: Handle<Font>) {
                         },
                     ),
                     style: Style {
-                        size: Size::width(Val::Px(FULL_WIDTH - 2.0 * SPACING)),
+                        width: Val::Px(FULL_WIDTH - 2.0 * SPACING),
                         flex_wrap: FlexWrap::Wrap,
                         ..Style::default()
                     },
@@ -139,7 +141,8 @@ fn add_quit_button(parent: &mut ChildBuilder, font: Handle<Font>) {
     parent
         .spawn(ButtonBundle {
             style: Style {
-                size: Size::new(Val::Px(200.0), Val::Px(70.0)),
+                width: Val::Px(200.0),
+                height: Val::Px(70.0),
                 justify_content: JustifyContent::Center,
                 align_items: AlignItems::Center,
                 ..default()
@@ -190,7 +193,7 @@ pub(crate) fn update_sav_files(
                                 parent
                                     .spawn(ButtonBundle {
                                         style: Style {
-                                            size: Size::width(Val::Px(400.0)),
+                                            width: Val::Px(400.0),
                                             align_items: AlignItems::Center,
                                             justify_content: JustifyContent::Center,
                                             margin: UiRect {
@@ -266,7 +269,7 @@ pub(crate) fn manage_main_menu_button_input(
     >,
 ) {
     for (interaction, load_button, quit_button) in &mut interaction_query {
-        if *interaction == Interaction::Clicked {
+        if *interaction == Interaction::Pressed {
             match (load_button, quit_button.is_some()) {
                 (Some(load_button), false) => {
                     commands.insert_resource(Paths::new(&load_button.path));

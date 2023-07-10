@@ -33,16 +33,18 @@ pub(crate) fn run_application() {
 
     app.insert_resource(FixedTime::new_from_secs(0.25));
 
-    app.add_plugin(MainMenuPlugin)
-        .add_plugin(CddaPlugin)
-        .add_plugin(GameplayPlugin)
-        .add_plugin(LoadingIndicatorPlugin);
+    app.add_plugins((
+        MainMenuPlugin,
+        CddaPlugin,
+        GameplayPlugin,
+        LoadingIndicatorPlugin,
+    ));
 
     // once at startup
-    app.add_startup_systems((maximize_window, load_fonts));
+    app.add_systems(Startup, (maximize_window, load_fonts));
 
     // every frame
-    app.add_system(manage_button_hover);
+    app.add_systems(Update, manage_button_hover);
 
     app.run();
 }
