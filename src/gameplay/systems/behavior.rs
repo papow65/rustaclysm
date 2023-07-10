@@ -86,72 +86,81 @@ pub(crate) fn perform_action(
 
     let impact = match action {
         Action::Stay { duration } => {
-            perform::<(), _>(world, actor_entity, |actor, ()| Some(actor.stay(duration)))
+            perform_with_actor::<(), _>(world, actor_entity, |actor, ()| Some(actor.stay(duration)))
         }
-        Action::Step { target } => perform::<(Commands, Envir), _>(
+        Action::Step { target } => perform_with_actor::<(Commands, Envir), _>(
             world,
             actor_entity,
             |actor, (mut commands, mut envir)| actor.move_(&mut commands, &mut envir, target),
         ),
-        Action::Attack { target } => perform::<(Commands, Envir, Res<Infos>, Hierarchy), _>(
-            world,
-            actor_entity,
-            |actor, (mut commands, envir, infos, hierarchy)| {
-                actor.attack(&mut commands, &envir, &infos, &hierarchy, target)
-            },
-        ),
-        Action::Smash { target } => perform::<(Commands, Envir, Res<Infos>, Hierarchy), _>(
-            world,
-            actor_entity,
-            |actor, (mut commands, envir, infos, hierarchy)| {
-                actor.smash(&mut commands, &envir, &infos, &hierarchy, target)
-            },
-        ),
-        Action::Close { target } => perform::<(Commands, Envir), _>(
+        Action::Attack { target } => {
+            perform_with_actor::<(Commands, Envir, Res<Infos>, Hierarchy), _>(
+                world,
+                actor_entity,
+                |actor, (mut commands, envir, infos, hierarchy)| {
+                    actor.attack(&mut commands, &envir, &infos, &hierarchy, target)
+                },
+            )
+        }
+        Action::Smash { target } => {
+            perform_with_actor::<(Commands, Envir, Res<Infos>, Hierarchy), _>(
+                world,
+                actor_entity,
+                |actor, (mut commands, envir, infos, hierarchy)| {
+                    actor.smash(&mut commands, &envir, &infos, &hierarchy, target)
+                },
+            )
+        }
+        Action::Close { target } => perform_with_actor::<(Commands, Envir), _>(
             world,
             actor_entity,
             |actor, (mut commands, mut envir)| actor.close(&mut commands, &mut envir, target),
         ),
-        Action::Wield { entity } => perform::<(Commands, ResMut<Location>, Hierarchy), _>(
-            world,
-            actor_entity,
-            |actor, (mut commands, mut location, hierarchy)| {
-                actor.wield(&mut commands, &mut location, &hierarchy, entity)
-            },
-        ),
-        Action::Unwield { entity } => perform::<(Commands, ResMut<Location>, Hierarchy), _>(
-            world,
-            actor_entity,
-            |actor, (mut commands, mut location, hierarchy)| {
-                actor.unwield(&mut commands, &mut location, &hierarchy, entity)
-            },
-        ),
-        Action::Pickup { entity } => perform::<(Commands, ResMut<Location>, Hierarchy), _>(
-            world,
-            actor_entity,
-            |actor, (mut commands, mut location, hierarchy)| {
-                actor.pickup(&mut commands, &mut location, &hierarchy, entity)
-            },
-        ),
-        Action::Dump { entity } => perform::<(Commands, ResMut<Location>, Hierarchy), _>(
-            world,
-            actor_entity,
-            |actor, (mut commands, mut location, hierarchy)| {
-                Some(actor.dump(&mut commands, &mut location, &hierarchy, entity))
-            },
-        ),
-        Action::ExamineItem { entity } => {
-            perform::<(Commands, Res<Infos>, Query<&ObjectDefinition>), _>(
+        Action::Wield { entity } => {
+            perform_with_actor::<(Commands, ResMut<Location>, Hierarchy), _>(
                 world,
                 actor_entity,
-                |actor, (mut commands, infos, definitions)| {
-                    actor.examine_item(&mut commands, &infos, &definitions, entity);
-                    None
+                |actor, (mut commands, mut location, hierarchy)| {
+                    actor.wield(&mut commands, &mut location, &hierarchy, entity)
                 },
             )
         }
+        Action::Unwield { entity } => {
+            perform_with_actor::<(Commands, ResMut<Location>, Hierarchy), _>(
+                world,
+                actor_entity,
+                |actor, (mut commands, mut location, hierarchy)| {
+                    actor.unwield(&mut commands, &mut location, &hierarchy, entity)
+                },
+            )
+        }
+        Action::Pickup { entity } => {
+            perform_with_actor::<(Commands, ResMut<Location>, Hierarchy), _>(
+                world,
+                actor_entity,
+                |actor, (mut commands, mut location, hierarchy)| {
+                    actor.pickup(&mut commands, &mut location, &hierarchy, entity)
+                },
+            )
+        }
+        Action::Dump { entity } => {
+            perform_with_actor::<(Commands, ResMut<Location>, Hierarchy), _>(
+                world,
+                actor_entity,
+                |actor, (mut commands, mut location, hierarchy)| {
+                    Some(actor.dump(&mut commands, &mut location, &hierarchy, entity))
+                },
+            )
+        }
+        Action::ExamineItem { entity } => perform::<
+            (Commands, Res<Infos>, Query<&ObjectDefinition>),
+            _,
+        >(world, |(mut commands, infos, definitions)| {
+            Actor::examine_item(&mut commands, &infos, &definitions, entity);
+            None
+        }),
         Action::SwitchRunning => {
-            perform::<Commands, _>(world, actor_entity, |actor, mut commands| {
+            perform_with_actor::<Commands, _>(world, actor_entity, |actor, mut commands| {
                 actor.switch_running(&mut commands);
                 None
             })
@@ -163,14 +172,22 @@ pub(crate) fn perform_action(
     Some((actor_entity, impact))
 }
 
-fn perform<P, F>(world: &mut World, actor_entity: Entity, act: F) -> Option<Impact>
+fn perform_with_actor<P, F>(world: &mut World, actor_entity: Entity, act: F) -> Option<Impact>
 where
     P: SystemParam + 'static,
     for<'a, 'b> F: Fn(Actor, <P as SystemParam>::Item<'a, 'b>) -> Option<Impact>,
 {
-    let mut system_state = SystemState::<(P, Actors)>::new(world);
-    let (p, actors) = system_state.get_mut(world);
-    let impact = act(actors.get(actor_entity), p);
+    perform::<(Actors, P), _>(world, |(actors, p)| act(actors.get(actor_entity), p))
+}
+
+fn perform<P, F>(world: &mut World, act: F) -> Option<Impact>
+where
+    P: SystemParam + 'static,
+    for<'a, 'b> F: Fn(<P as SystemParam>::Item<'a, 'b>) -> Option<Impact>,
+{
+    let mut system_state = SystemState::<P>::new(world);
+    let p = system_state.get_mut(world);
+    let impact = act(p);
     system_state.apply(world);
     impact
 }

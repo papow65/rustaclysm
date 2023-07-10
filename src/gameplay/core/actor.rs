@@ -478,7 +478,6 @@ impl<'s> Actor<'s> {
     }
 
     pub(crate) fn examine_item(
-        &'s self,
         commands: &mut Commands,
         infos: &Infos,
         definitions: &Query<&ObjectDefinition>,
