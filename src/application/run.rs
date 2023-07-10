@@ -46,5 +46,7 @@ pub(crate) fn run_application() {
     // every frame
     app.add_systems(Update, manage_button_hover);
 
+    app.add_systems(Last, check_delay);
+
     app.run();
 }

@@ -1,3 +1,4 @@
+mod check;
 mod colors;
 mod error;
 mod fonts;
@@ -9,5 +10,6 @@ mod systems;
 mod util;
 
 pub(crate) use self::{
-    colors::*, error::*, fonts::*, key::*, paths::*, run::*, states::*, systems::*, util::*,
+    check::*, colors::*, error::*, fonts::*, key::*, paths::*, run::*, states::*, systems::*,
+    util::*,
 };

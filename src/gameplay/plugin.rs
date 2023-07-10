@@ -74,9 +74,6 @@ impl Plugin for GameplayPlugin {
             ),
         );
 
-        // This system may persist between gameplays.
-        app.add_systems(Last, check_delay);
-
         // executed only at gameplay shutdown
         app.add_systems(
             OnExit(ApplicationState::Gameplay),
