@@ -23,7 +23,7 @@ impl Plugin for GameplayPlugin {
         .insert_resource(RelativeSegments::new())
         .insert_resource(ElevationVisibility::Shown);
 
-        app.add_schedule(BehaviorSchedule, behavior_schedule());
+        create_behavior_schedule(app);
 
         // executed only at gameplay startup
         app.add_systems(

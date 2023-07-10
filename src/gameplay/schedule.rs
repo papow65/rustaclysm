@@ -5,14 +5,14 @@ use bevy::{
 };
 use std::time::{Duration, Instant};
 
-// A label for our new Schedule!
 #[derive(ScheduleLabel, Debug, Hash, PartialEq, Eq, Clone)]
-pub(crate) struct BehaviorSchedule;
+struct BehaviorSchedule;
 
-pub(crate) fn behavior_schedule() -> Schedule {
-    let mut behavior_schedule = Schedule::new();
+pub(crate) fn create_behavior_schedule(app: &mut App) {
+    app.init_schedule(BehaviorSchedule);
 
-    behavior_schedule.add_systems(
+    app.add_systems(
+        BehaviorSchedule,
         (
             egible_character
                 .pipe(plan_action)
@@ -40,8 +40,6 @@ pub(crate) fn behavior_schedule() -> Schedule {
             .chain()
             .run_if(in_state(ApplicationState::Gameplay)),
     );
-
-    behavior_schedule
 }
 
 pub(crate) fn run_behavior_schedule(world: &mut World) {
