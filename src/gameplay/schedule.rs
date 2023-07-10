@@ -9,62 +9,35 @@ use std::time::{Duration, Instant};
 #[derive(ScheduleLabel, Debug, Hash, PartialEq, Eq, Clone)]
 pub(crate) struct BehaviorSchedule;
 
-#[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
-pub(crate) enum UpdateSet {
-    ManageBehavior,
-    FlushBehavior,
-    ApplyEffects,
-    FlushEffects,
-    UpdateVisuals,
-}
-
 pub(crate) fn behavior_schedule() -> Schedule {
     let mut behavior_schedule = Schedule::new();
 
     behavior_schedule.add_systems(
-        egible_character
-            .pipe(plan_action)
-            .pipe(perform_action)
-            .pipe(handle_impact)
-            .in_set(UpdateSet::ManageBehavior)
-            .run_if(in_state(ApplicationState::Gameplay)),
-    );
-    behavior_schedule.add_systems(
-        apply_deferred
-            .in_set(UpdateSet::FlushBehavior)
-            .after(UpdateSet::ManageBehavior)
-            .run_if(in_state(ApplicationState::Gameplay)),
-    );
-    behavior_schedule.add_systems(
         (
-            manage_player_death,
-            toggle_doors,
-            update_damaged_characters,
-            update_damaged_items,
+            egible_character
+                .pipe(plan_action)
+                .pipe(perform_action)
+                .pipe(handle_impact),
+            apply_deferred,
+            (
+                manage_player_death,
+                toggle_doors,
+                update_damaged_characters,
+                update_damaged_items,
+            ),
+            apply_deferred,
+            (
+                update_transforms,
+                update_hidden_item_visibility,
+                update_cursor_visibility_on_player_change,
+                update_visualization_on_item_move,
+                update_visualization_on_focus_move,
+                update_visualization_on_weather_change
+                    .run_if(resource_exists_and_changed::<Timeouts>()),
+                update_camera_base.run_if(resource_exists_and_changed::<PlayerActionState>()),
+            ),
         )
-            .in_set(UpdateSet::ApplyEffects)
-            .after(UpdateSet::FlushBehavior)
-            .run_if(in_state(ApplicationState::Gameplay)),
-    );
-    behavior_schedule.add_systems(
-        apply_deferred
-            .in_set(UpdateSet::FlushEffects)
-            .after(UpdateSet::ApplyEffects)
-            .run_if(in_state(ApplicationState::Gameplay)),
-    );
-    behavior_schedule.add_systems(
-        (
-            update_transforms,
-            update_hidden_item_visibility,
-            update_cursor_visibility_on_player_change,
-            update_visualization_on_item_move,
-            update_visualization_on_focus_move,
-            update_visualization_on_weather_change
-                .run_if(resource_exists_and_changed::<Timeouts>()),
-            update_camera_base.run_if(resource_exists_and_changed::<PlayerActionState>()),
-        )
-            .in_set(UpdateSet::UpdateVisuals)
-            .after(UpdateSet::FlushEffects)
+            .chain()
             .run_if(in_state(ApplicationState::Gameplay)),
     );
 

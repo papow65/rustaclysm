@@ -11,19 +11,13 @@ impl Plugin for InventoryScreenPlugin {
         // every frame
         app.add_systems(
             Update,
-            manage_inventory_keyboard_input.run_if(in_state(GameplayScreenState::Inventory)),
-        )
-        .add_systems(
-            Update,
-            clear_inventory
-                .pipe(update_inventory)
-                .after(UpdateSet::FlushEffects)
-                .run_if(in_state(GameplayScreenState::Inventory)),
-        )
-        .add_systems(
-            Update,
-            (manage_inventory_button_input, run_behavior_schedule)
-                .chain()
+            (
+                manage_inventory_keyboard_input.run_if(in_state(GameplayScreenState::Inventory)),
+                clear_inventory
+                    .pipe(update_inventory)
+                    .run_if(in_state(GameplayScreenState::Inventory)),
+                (manage_inventory_button_input, run_behavior_schedule).chain(),
+            )
                 .run_if(in_state(GameplayScreenState::Inventory)),
         );
 
