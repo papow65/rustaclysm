@@ -1,9 +1,9 @@
-use crate::prelude::Nbor;
+use crate::prelude::HorizontalNborOffset;
 use std::{cmp::Ordering, fmt};
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub(crate) enum InventorySection {
-    Nbor(Nbor), // not up or down
+    Nbor(HorizontalNborOffset),
     Hands,
     Clothing,
 }
@@ -14,20 +14,20 @@ impl fmt::Display for InventorySection {
             f,
             "{}",
             match self {
-                Self::Nbor(n) => match n.horizontal_offset() {
-                    (-1, -1) => "NW",
-                    (-1, 0) => "W",
-                    (-1, 1) => "SW",
-                    (0, -1) => "N",
-                    (0, 0) => "Here",
-                    (0, 1) => "S",
-                    (1, -1) => "NE",
-                    (1, 0) => "E",
-                    (1, 1) => "SE",
+                Self::Nbor(n) => match n.offset() {
+                    (-1, -1) => "NW (7)",
+                    (-1, 0) => "W (4)",
+                    (-1, 1) => "SW (1)",
+                    (0, -1) => "N (8)",
+                    (0, 0) => "Here (5)",
+                    (0, 1) => "S (2)",
+                    (1, -1) => "NE (9)",
+                    (1, 0) => "E (6)",
+                    (1, 1) => "SE (3)",
                     _ => panic!("{self:?}"),
                 },
-                Self::Hands => "Hands",
-                Self::Clothing => "Clothing",
+                Self::Hands => "Hands (H)",
+                Self::Clothing => "Clothing (C)",
             }
         )
     }
@@ -36,7 +36,7 @@ impl fmt::Display for InventorySection {
 impl Ord for InventorySection {
     fn cmp(&self, other: &Self) -> Ordering {
         match (self, other) {
-            (Self::Nbor(a), Self::Nbor(b)) => a.horizontal_offset().cmp(&b.horizontal_offset()),
+            (Self::Nbor(a), Self::Nbor(b)) => a.offset().cmp(&b.offset()),
             (Self::Nbor(_) | Self::Hands, Self::Clothing) | (Self::Nbor(_), Self::Hands) => {
                 Ordering::Less
             }

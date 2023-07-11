@@ -1,16 +1,22 @@
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub(crate) struct HorizontalNborOffset {
     /*private*/ x: i32, // -1, 0, or 1
     /*private*/ z: i32, // -1, 0, or 1
 }
 
 impl HorizontalNborOffset {
+    pub(crate) const ZERO: Self = Self { x: 0, z: 0 };
+
     pub(crate) fn try_from(x: i32, z: i32) -> Option<HorizontalNborOffset> {
         if x.abs().max(z.abs()) == 1 {
             Some(HorizontalNborOffset { x, z })
         } else {
             None
         }
+    }
+
+    pub(crate) const fn offset(&self) -> (i32, i32) {
+        (self.x, self.z)
     }
 }
 
@@ -41,10 +47,10 @@ impl Nbor {
         HorizontalNborOffset::try_from(x, z).map(Self::Horizontal)
     }
 
-    pub(crate) const fn horizontal_offset(&self) -> (i32, i32) {
+    pub(crate) const fn horizontal_projection(&self) -> HorizontalNborOffset {
         match self {
-            Self::Horizontal(HorizontalNborOffset { x, z }) => (*x, *z),
-            _ => (0, 0),
+            Self::Horizontal(horizontal) => *horizontal,
+            _ => HorizontalNborOffset::ZERO,
         }
     }
 

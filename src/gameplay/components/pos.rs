@@ -171,7 +171,7 @@ impl Pos {
                 z: self.z,
             }),
             horizontal => {
-                let (x, z) = horizontal.horizontal_offset();
+                let (x, z) = horizontal.horizontal_projection().offset();
                 Some(Self {
                     x: self.x + x,
                     level: self.level,
@@ -348,7 +348,7 @@ impl ZoneLevel {
                 level,
             }),
             horizontal => {
-                let (x, z) = horizontal.horizontal_offset();
+                let (x, z) = horizontal.horizontal_projection().offset();
                 Some(Self {
                     zone: self.zone.offset(x, z),
                     level: self.level,

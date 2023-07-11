@@ -150,6 +150,7 @@ impl<'w, 's> Envir<'w, 's> {
 
     // helper methods
 
+    /** Follow stairs, even when they do not go staight up or down. */
     pub(crate) fn get_nbor(&self, from: Pos, nbor: &Nbor) -> Result<Pos, Message> {
         match nbor {
             Nbor::Up => self
@@ -158,9 +159,9 @@ impl<'w, 's> Envir<'w, 's> {
             Nbor::Down => self
                 .stairs_down_to(from)
                 .ok_or_else(|| Message::warn().str("No stairs down")),
-            horizontal => {
-                let (x, z) = horizontal.horizontal_offset();
-                Ok(Pos::new(from.x + x, from.level, from.z + z))
+            _ => {
+                // No stairs
+                Ok(from.raw_nbor(nbor).unwrap())
             }
         }
     }

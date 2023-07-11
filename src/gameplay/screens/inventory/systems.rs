@@ -34,6 +34,7 @@ pub(crate) fn spawn_inventory(mut commands: Commands, fonts: Res<Fonts>) {
             font_size: FONT_SIZE,
             color: DEFAULT_TEXT_COLOR,
         },
+        drop_direction: HorizontalNborOffset::ZERO,
     });
 }
 
@@ -94,25 +95,36 @@ pub(crate) fn update_inventory(
 
     commands.entity(inventory.root).with_children(|parent| {
         for (section, items) in items_by_section {
-            if !items.is_empty() {
+            parent.spawn(TextBundle::from_section(
+                format!("[{section}]"),
+                inventory.section_text_style.clone(),
+            ));
+
+            if section == InventorySection::Nbor(inventory.drop_direction) {
                 parent.spawn(TextBundle::from_section(
-                    format!("[{section}]"),
+                    String::from("(dropping here)"),
                     inventory.section_text_style.clone(),
                 ));
+            }
 
-                for (entity, id, item_message) in items {
-                    if let Some(item_info) = infos.item(id) {
-                        add_row(
-                            &section,
-                            parent,
-                            entity,
-                            item_message,
-                            item_info,
-                            &inventory.item_text_style,
-                        );
-                    }
+            for (entity, id, item_message) in items {
+                if let Some(item_info) = infos.item(id) {
+                    add_row(
+                        &section,
+                        parent,
+                        entity,
+                        item_message,
+                        item_info,
+                        &inventory.item_text_style,
+                    );
                 }
             }
+
+            // empty line
+            parent.spawn(TextBundle::from_section(
+                String::from(" "),
+                inventory.section_text_style.clone(),
+            ));
         }
     });
 }
@@ -137,7 +149,7 @@ fn items_by_section<'a>(
     let mut fields_by_section = HashMap::default();
     for (nbor, nbor_pos) in envir.nbors_for_item_handling(player_pos) {
         fields_by_section.insert(
-            InventorySection::Nbor(nbor),
+            InventorySection::Nbor(nbor.horizontal_projection()),
             items
                 .iter()
                 .filter(|(_, _, pos, .., last_seen)| {
