@@ -31,6 +31,19 @@ pub(crate) enum PlayerActionState {
 }
 
 impl PlayerActionState {
+    fn start_waiting(now: Milliseconds) -> Self {
+        Self::Waiting {
+            until: now + Milliseconds::MINUTE,
+        }
+    }
+
+    fn start_sleeping(now: Milliseconds) -> Self {
+        Self::Sleeping {
+            healing_from: now,
+            until: now + Milliseconds::EIGHT_HOURS,
+        }
+    }
+
     pub(crate) fn plan_action(
         &mut self,
         commands: &mut Commands,
@@ -117,52 +130,44 @@ impl PlayerActionState {
     ) -> PlayerBehavior {
         //println!("processing instruction: {instruction:?}");
         match (&self, instruction) {
-            (
-                PlayerActionState::Normal | PlayerActionState::Sleeping { .. },
-                QueuedInstruction::Cancel,
-            ) => {
+            (Self::Normal | Self::Sleeping { .. }, QueuedInstruction::Cancel) => {
                 next_gameplay_state.set(GameplayScreenState::Menu);
                 PlayerBehavior::NoEffect
             }
-            (PlayerActionState::Sleeping { .. }, QueuedInstruction::Finished) => {
+            (Self::Sleeping { .. }, QueuedInstruction::Finished) => {
                 *self = PlayerActionState::Normal;
                 PlayerBehavior::Feedback(Message::info().str("You wake up"))
             }
-            (PlayerActionState::Sleeping { .. }, _) => {
+            (Self::Sleeping { .. }, _) => {
                 // Can not be interrupted
                 PlayerBehavior::Feedback(Message::warn().str("You are still asleep. Zzz..."))
             }
-            (PlayerActionState::Normal, QueuedInstruction::Offset(PlayerDirection::Here)) => {
+            (Self::Normal, QueuedInstruction::Offset(PlayerDirection::Here)) => {
                 PlayerBehavior::Perform(Action::Stay {
                     duration: StayDuration::Short,
                 })
             }
-            (PlayerActionState::Normal, QueuedInstruction::Wait) => {
-                *self = PlayerActionState::Waiting {
-                    until: now + Milliseconds::MINUTE,
-                };
+            (Self::Normal, QueuedInstruction::Wait) => {
+                *self = Self::start_waiting(now);
                 PlayerBehavior::Feedback(Message::info().str("You wait..."))
             }
-            (PlayerActionState::Normal, QueuedInstruction::Sleep) => {
-                *self = PlayerActionState::Sleeping {
-                    healing_from: now,
-                    until: now + Milliseconds::EIGHT_HOURS,
-                };
+            (Self::Normal, QueuedInstruction::Sleep) => {
+                *self = Self::start_sleeping(now);
                 PlayerBehavior::Feedback(Message::info().str("You fall asleep... Zzz..."))
             }
-            (PlayerActionState::Attacking, QueuedInstruction::Offset(PlayerDirection::Here)) => {
+            (Self::Attacking, QueuedInstruction::Offset(PlayerDirection::Here)) => {
                 PlayerBehavior::Feedback(Message::warn().str("You can't attack yourself"))
             }
-            (PlayerActionState::ExaminingPos(curr), QueuedInstruction::Offset(direction)) => {
+            (Self::ExaminingPos(curr), QueuedInstruction::Offset(direction)) => {
                 let nbor = direction.to_nbor();
                 self.handle_offset(envir.get_nbor(*curr, &nbor), &nbor)
             }
             (_, QueuedInstruction::Cancel | QueuedInstruction::Wait | QueuedInstruction::Sleep)
-            | (PlayerActionState::Attacking, QueuedInstruction::Attack)
-            | (PlayerActionState::Smashing, QueuedInstruction::Smash)
-            | (PlayerActionState::ExaminingPos(_), QueuedInstruction::ExaminePos)
-            | (PlayerActionState::ExaminingZoneLevel(_), QueuedInstruction::ExamineZoneLevel) => {
-                *self = PlayerActionState::Normal;
+            | (Self::Attacking, QueuedInstruction::Attack)
+            | (Self::Smashing, QueuedInstruction::Smash)
+            | (Self::ExaminingPos(_), QueuedInstruction::ExaminePos)
+            | (Self::ExaminingZoneLevel(_), QueuedInstruction::ExamineZoneLevel) => {
+                *self = Self::Normal;
                 PlayerBehavior::NoEffect
             }
             (_, QueuedInstruction::Offset(direction)) => {
@@ -189,21 +194,21 @@ impl PlayerActionState {
             }
             (_, QueuedInstruction::ExaminePos) => {
                 let pos = Pos::from(&Focus::new(self, pos));
-                *self = PlayerActionState::ExaminingPos(pos);
+                *self = Self::ExaminingPos(pos);
                 PlayerBehavior::NoEffect
             }
             (_, QueuedInstruction::ExamineZoneLevel) => {
                 let target = ZoneLevel::from(&Focus::new(self, pos));
-                *self = PlayerActionState::ExaminingZoneLevel(target);
+                *self = Self::ExaminingZoneLevel(target);
                 PlayerBehavior::NoEffect
             }
             (_, QueuedInstruction::SwitchRunning) => PlayerBehavior::Perform(Action::SwitchRunning),
-            (PlayerActionState::Waiting { .. }, QueuedInstruction::Interrupted) => {
-                *self = PlayerActionState::Normal;
+            (Self::Waiting { .. }, QueuedInstruction::Interrupted) => {
+                *self = Self::Normal;
                 PlayerBehavior::Feedback(Message::warn().str("You spot an enemy and stop waiting"))
             }
-            (PlayerActionState::Waiting { .. }, QueuedInstruction::Finished) => {
-                *self = PlayerActionState::Normal;
+            (Self::Waiting { .. }, QueuedInstruction::Finished) => {
+                *self = Self::Normal;
                 PlayerBehavior::Feedback(Message::info().str("Finished waiting"))
             }
             (_, QueuedInstruction::Inventory) => {
@@ -211,11 +216,11 @@ impl PlayerActionState {
                 PlayerBehavior::NoEffect
             }
             (_, QueuedInstruction::Interrupted) => {
-                *self = PlayerActionState::Normal;
+                *self = Self::Normal;
                 PlayerBehavior::Feedback(Message::error().str("Iterrupted while not waiting"))
             }
             (_, QueuedInstruction::Finished) => {
-                *self = PlayerActionState::Normal;
+                *self = Self::Normal;
                 PlayerBehavior::Feedback(Message::error().str("Finished while not waiting"))
             }
         }
