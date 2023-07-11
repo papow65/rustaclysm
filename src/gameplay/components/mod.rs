@@ -92,16 +92,22 @@ impl ObjectDefinition {
 pub(crate) struct Integrity(pub(crate) Limited);
 
 impl Integrity {
-    pub(crate) fn apply(&mut self, damage: &Damage) -> bool {
-        self.0.saturating_subtract(damage.amount);
-        self.0.is_nonzero()
+    pub(crate) fn lower(&mut self, damage: &Damage) -> Evolution {
+        self.0.lower(damage.amount)
     }
+    // TODO raising (not with Healing)
 }
 
-#[derive(Component)]
+#[derive(Component, Debug)]
 pub(crate) struct Damage {
+    // TODO damage types
     pub(crate) attacker: Fragment, // for logging
-    pub(crate) amount: i16,        // TODO damage types
+    pub(crate) amount: u16,
+}
+
+#[derive(Component, Debug)]
+pub(crate) struct Healing {
+    pub(crate) amount: u16,
 }
 
 #[derive(Component)]
@@ -120,15 +126,13 @@ pub(crate) struct Melee {
 }
 
 impl Melee {
-    pub(crate) fn damage(&self, melee_weapon: Option<&ItemInfo>) -> i16 {
+    pub(crate) fn damage(&self, melee_weapon: Option<&ItemInfo>) -> u16 {
         assert!(0 < self.dices, "{}", self.dices);
         assert!(0 < self.sides, "{}", self.sides);
         let mut rng = thread_rng();
         let between =
             Uniform::from(1..=self.sides + melee_weapon.map_or(0, ItemInfo::melee_damage));
-        (1..=self.dices)
-            .map(|_| between.sample(&mut rng))
-            .sum::<u16>() as i16
+        (1..=self.dices).map(|_| between.sample(&mut rng)).sum()
     }
 }
 

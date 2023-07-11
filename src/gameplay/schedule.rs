@@ -20,9 +20,13 @@ pub(crate) fn create_behavior_schedule(app: &mut App) {
                 .pipe(handle_impact),
             apply_deferred,
             (
-                manage_player_death,
+                (
+                    update_damaged_characters,
+                    apply_deferred,
+                    (manage_player_death, update_healed_characters),
+                )
+                    .chain(),
                 toggle_doors,
-                update_damaged_characters,
                 update_damaged_items,
             ),
             apply_deferred,

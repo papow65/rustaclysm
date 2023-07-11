@@ -113,7 +113,7 @@ impl Stamina {
 
     pub(crate) fn apply(&mut self, stamina_impact: StaminaImpact) {
         if let Self::Limited(ref mut limited) = self {
-            limited.saturating_add(stamina_impact.as_i16());
+            limited.adjust(stamina_impact.as_i16());
         }
     }
 }
@@ -122,9 +122,12 @@ impl Stamina {
 pub(crate) struct Health(pub(crate) Limited);
 
 impl Health {
-    pub(crate) fn apply(&mut self, damage: &Damage) -> bool {
-        self.0.saturating_subtract(damage.amount);
-        self.0.is_nonzero()
+    pub(crate) fn lower(&mut self, damage: &Damage) -> Evolution {
+        self.0.lower(damage.amount)
+    }
+
+    pub(crate) fn raise(&mut self, healing: &Healing) -> Evolution {
+        self.0.raise(healing.amount)
     }
 }
 

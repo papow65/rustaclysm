@@ -1,12 +1,14 @@
 use crate::prelude::*;
 use bevy::prelude::*;
 
+/** Derived from stamina */
 #[derive(Copy, Clone, Debug)]
 pub(crate) enum Breath {
     Normal,
     Winded,
 }
 
+/** Like a component, but for performance we handle it as a special case. Since it is used at almost every action. */
 #[derive(Copy, Clone, Debug)]
 pub(crate) enum StaminaImpact {
     FullRest,

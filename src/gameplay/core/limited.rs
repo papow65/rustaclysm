@@ -1,6 +1,18 @@
 use crate::prelude::{Partial, BAD_TEXT_COLOR, GOOD_TEXT_COLOR, WARN_TEXT_COLOR};
 use bevy::prelude::Color;
 
+#[derive(Clone, Debug)]
+pub(crate) struct Evolution {
+    pub(crate) before: u16,
+    pub(crate) after: u16,
+}
+
+impl Evolution {
+    pub(crate) fn changed(&self) -> bool {
+        self.before != self.after
+    }
+}
+
 #[derive(Debug)]
 pub(crate) struct Limited {
     current: u16,
@@ -31,14 +43,23 @@ impl Limited {
         f32::from(self.current) / f32::from(self.max)
     }
 
-    pub(crate) fn saturating_add(&mut self, amount: i16) {
+    pub(crate) fn adjust(&mut self, added_amount: i16) -> Evolution {
+        let before = self.current;
         self.current = (self.current as i16)
-            .saturating_add(amount)
+            .saturating_add(added_amount)
             .clamp(0, self.max as i16) as u16;
+        Evolution {
+            before,
+            after: self.current,
+        }
     }
 
-    pub(crate) fn saturating_subtract(&mut self, amount: i16) {
-        self.saturating_add(-amount);
+    pub(crate) fn raise(&mut self, amount: u16) -> Evolution {
+        self.adjust(amount as i16)
+    }
+
+    pub(crate) fn lower(&mut self, amount: u16) -> Evolution {
+        self.adjust(-(amount as i16))
     }
 
     #[allow(unused)]
@@ -81,11 +102,11 @@ impl Limited {
         self.max - self.current
     }
 
-    #[allow(unused)]
     pub(crate) const fn is_zero(&self) -> bool {
         self.current == 0
     }
 
+    #[allow(unused)]
     pub(crate) const fn is_nonzero(&self) -> bool {
         0 < self.current
     }

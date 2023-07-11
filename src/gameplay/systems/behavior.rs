@@ -198,15 +198,15 @@ pub(crate) fn handle_impact(
     mut commands: Commands,
     mut timeouts: ResMut<Timeouts>,
     players: Query<(), With<Player>>,
+    _healths: Query<&mut Health>,
     mut staminas: Query<&mut Stamina>,
 ) {
     let start = Instant::now();
 
     // None when waiting for player input
     if let Some((actor_entity, impact)) = option {
-        let stamina = staminas.get_mut(actor_entity);
         if let Some(impact) = impact {
-            if let Ok(mut stamina) = stamina {
+            if let Ok(mut stamina) = staminas.get_mut(actor_entity) {
                 stamina.apply(impact.stamina_impact);
             }
             assert!(0 < impact.timeout.0, "{impact:?}");
@@ -271,17 +271,8 @@ pub(crate) fn update_damaged_characters(
     let start = Instant::now();
 
     for (character, name, mut health, damage, mut transform) in characters.iter_mut() {
-        let prev = health.0.current();
-        if health.apply(damage) {
-            let curr = health.0.current();
-            commands.spawn(
-                Message::warn()
-                    .push(damage.attacker.clone())
-                    .str("hits")
-                    .push(name.single())
-                    .add(format!("for {} ({prev} -> {curr})", damage.amount)),
-            );
-        } else {
+        let evolution = health.lower(damage);
+        if health.0.is_zero() {
             commands.spawn(
                 Message::warn()
                     .push(damage.attacker.clone())
@@ -296,12 +287,56 @@ pub(crate) fn update_damaged_characters(
                 .insert(ObjectName::corpse())
                 .remove::<Health>()
                 .remove::<Obstacle>();
+        } else {
+            commands.spawn({
+                let begin = Message::warn()
+                    .push(damage.attacker.clone())
+                    .str("hits")
+                    .push(name.single());
+
+                if evolution.changed() {
+                    begin.add(format!(
+                        "for {} ({} -> {})",
+                        evolution.before - evolution.after,
+                        evolution.before,
+                        evolution.after
+                    ))
+                } else {
+                    begin.add(String::from("but it has no effect"))
+                }
+            });
         }
 
         commands.entity(character).remove::<Damage>();
     }
 
     log_if_slow("update_damaged_characters", start);
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub(crate) fn update_healed_characters(
+    mut commands: Commands,
+    mut characters: Query<
+        (Entity, &ObjectName, &mut Health, &Healing, &mut Transform),
+        With<Faction>,
+    >,
+) {
+    let start = Instant::now();
+
+    for (character, name, mut health, healing, _transform) in characters.iter_mut() {
+        let evolution = health.raise(healing);
+        if evolution.changed() {
+            commands.spawn(Message::warn().push(name.single()).add(format!(
+                "heals for {} ({} -> {})",
+                evolution.after - evolution.before,
+                evolution.before,
+                evolution.after
+            )));
+        }
+        commands.entity(character).remove::<Healing>();
+    }
+
+    log_if_slow("update_healed_characters", start);
 }
 
 #[allow(clippy::needless_pass_by_value)]
@@ -327,18 +362,8 @@ pub(crate) fn update_damaged_items(
     for (item, &pos, name, amount, filthy, mut integrity, damage, definition, parent) in
         damaged.iter_mut()
     {
-        let prev = integrity.0.current();
-        if integrity.apply(damage) {
-            let curr = integrity.0.current();
-            commands.spawn(
-                Message::warn()
-                    .push(damage.attacker.clone())
-                    .str("hits")
-                    .extend(name.as_item(amount, filthy))
-                    .add(format!("for {} ({prev} -> {curr})", damage.amount)),
-            );
-            commands.entity(item).remove::<Damage>();
-        } else {
+        let evolution = integrity.lower(damage);
+        if integrity.0.is_zero() {
             commands.spawn(
                 Message::warn()
                     .push(damage.attacker.clone())
@@ -346,10 +371,26 @@ pub(crate) fn update_damaged_items(
                     .extend(name.as_item(amount, filthy)),
             );
             commands.entity(item).despawn_recursive();
-
             spawner.spawn_smashed(&infos, parent.get(), pos, definition);
-
             *visualization_update = VisualizationUpdate::Forced;
+        } else {
+            commands.spawn({
+                let begin = Message::warn()
+                    .push(damage.attacker.clone())
+                    .str("hits")
+                    .extend(name.as_item(amount, filthy));
+
+                if evolution.changed() {
+                    begin.add(format!(
+                        "for {} ({} -> {})",
+                        evolution.before - evolution.after,
+                        evolution.before,
+                        evolution.after
+                    ))
+                } else {
+                    begin.add(String::from("but it has no effect"))
+                }
+            });
         }
     }
 
