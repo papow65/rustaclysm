@@ -8,8 +8,12 @@ pub(crate) struct Evolution {
 }
 
 impl Evolution {
+    pub(crate) fn change_abs(&self) -> u16 {
+        self.after.abs_diff(self.before)
+    }
+
     pub(crate) fn changed(&self) -> bool {
-        self.before != self.after
+        self.after != self.before
     }
 }
 

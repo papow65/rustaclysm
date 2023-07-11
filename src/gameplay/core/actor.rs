@@ -8,7 +8,7 @@ pub(crate) enum Breath {
     Winded,
 }
 
-/** Like a component, but for performance we handle it as a special case. Since it is used at almost every action. */
+/** Like a component, but for performance we handle it as a special case. Since it is easy to forget and used at almost every action. */
 #[derive(Copy, Clone, Debug)]
 pub(crate) enum StaminaImpact {
     FullRest,

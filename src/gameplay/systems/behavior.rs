@@ -48,6 +48,7 @@ pub(crate) fn plan_action(
             &mut next_state,
             &mut envir,
             &mut instruction_queue,
+            actor.entity,
             actor.pos,
             clock.time(),
             &enemies,
@@ -297,12 +298,12 @@ pub(crate) fn update_damaged_characters(
                 if evolution.changed() {
                     begin.add(format!(
                         "for {} ({} -> {})",
-                        evolution.before - evolution.after,
+                        evolution.change_abs(),
                         evolution.before,
                         evolution.after
                     ))
                 } else {
-                    begin.add(String::from("but it has no effect"))
+                    begin.str("but it has no effect")
                 }
             });
         }
@@ -326,12 +327,19 @@ pub(crate) fn update_healed_characters(
     for (character, name, mut health, healing, _transform) in characters.iter_mut() {
         let evolution = health.raise(healing);
         if evolution.changed() {
-            commands.spawn(Message::warn().push(name.single()).add(format!(
-                "heals for {} ({} -> {})",
-                evolution.after - evolution.before,
-                evolution.before,
-                evolution.after
-            )));
+            commands.spawn({
+                let begin = Message::info().push(name.single());
+                if evolution.change_abs() == 1 {
+                    begin.str("heals a bit")
+                } else {
+                    begin.add(format!(
+                        "heals for {} ({} -> {})",
+                        evolution.change_abs(),
+                        evolution.before,
+                        evolution.after
+                    ))
+                }
+            });
         }
         commands.entity(character).remove::<Healing>();
     }
@@ -383,12 +391,12 @@ pub(crate) fn update_damaged_items(
                 if evolution.changed() {
                     begin.add(format!(
                         "for {} ({} -> {})",
-                        evolution.before - evolution.after,
+                        evolution.change_abs(),
                         evolution.before,
                         evolution.after
                     ))
                 } else {
-                    begin.add(String::from("but it has no effect"))
+                    begin.str("but it has no effect")
                 }
             });
         }
