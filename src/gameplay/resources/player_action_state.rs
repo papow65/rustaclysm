@@ -109,7 +109,7 @@ impl PlayerActionState {
                 // Can not be interrupted
                 PlayerBehavior::Feedback(Message::warn().str("You are still asleep. Zzz..."))
             }
-            (PlayerActionState::Normal, QueuedInstruction::Offset(Direction::Here)) => {
+            (PlayerActionState::Normal, QueuedInstruction::Offset(PlayerDirection::Here)) => {
                 PlayerBehavior::Perform(Action::Stay {
                     duration: StayDuration::Short,
                 })
@@ -122,7 +122,7 @@ impl PlayerActionState {
                 *self = PlayerActionState::Sleeping(now + Milliseconds::EIGHT_HOURS);
                 PlayerBehavior::Feedback(Message::info().str("You fall asleep... Zzz..."))
             }
-            (PlayerActionState::Attacking, QueuedInstruction::Offset(Direction::Here)) => {
+            (PlayerActionState::Attacking, QueuedInstruction::Offset(PlayerDirection::Here)) => {
                 PlayerBehavior::Feedback(Message::warn().str("You can't attack yourself"))
             }
             (PlayerActionState::ExaminingPos(curr), QueuedInstruction::Offset(direction)) => {

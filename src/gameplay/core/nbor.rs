@@ -1,70 +1,75 @@
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub(crate) struct HorizontalNborOffset {
-    /*private*/ x: i32, // -1, 0, or 1
-    /*private*/ z: i32, // -1, 0, or 1
+pub(crate) enum HorizontalDirection {
+    NorthWest,
+    North,
+    NorthEast,
+    West,
+    Here,
+    East,
+    SouthWest,
+    South,
+    SouthEast,
 }
 
-impl HorizontalNborOffset {
-    pub(crate) const ZERO: Self = Self { x: 0, z: 0 };
-
-    pub(crate) fn try_from(x: i32, z: i32) -> Option<HorizontalNborOffset> {
-        if x.abs().max(z.abs()) == 1 {
-            Some(HorizontalNborOffset { x, z })
-        } else {
-            None
-        }
-    }
-
+impl HorizontalDirection {
+    /** (x: \[-1, 0, or 1\], z: \[-1, 0, or 1\]) */
     pub(crate) const fn offset(&self) -> (i32, i32) {
-        (self.x, self.z)
+        (
+            match self {
+                Self::NorthWest | Self::West | Self::SouthWest => -1,
+                Self::North | Self::Here | Self::South => 0,
+                Self::NorthEast | Self::East | Self::SouthEast => 1,
+            },
+            match self {
+                Self::NorthWest | Self::North | Self::NorthEast => -1,
+                Self::West | Self::Here | Self::East => 0,
+                Self::SouthWest | Self::South | Self::SouthEast => 1,
+            },
+        )
     }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub(crate) enum Nbor {
     Up,
-    Horizontal(HorizontalNborOffset),
-    Here,
+    Horizontal(HorizontalDirection),
     Down,
 }
 
 impl Nbor {
     pub(crate) const ALL: [Self; 11] = [
         Self::Up,
-        Self::Horizontal(HorizontalNborOffset { x: 1, z: 0 }),
-        Self::Horizontal(HorizontalNborOffset { x: 1, z: 1 }),
-        Self::Horizontal(HorizontalNborOffset { x: 0, z: 1 }),
-        Self::Horizontal(HorizontalNborOffset { x: -1, z: 1 }),
-        Self::Horizontal(HorizontalNborOffset { x: -1, z: 0 }),
-        Self::Horizontal(HorizontalNborOffset { x: -1, z: -1 }),
-        Self::Horizontal(HorizontalNborOffset { x: 0, z: -1 }),
-        Self::Horizontal(HorizontalNborOffset { x: 1, z: -1 }),
-        Self::Here,
+        Self::Horizontal(HorizontalDirection::NorthWest),
+        Self::Horizontal(HorizontalDirection::North),
+        Self::Horizontal(HorizontalDirection::NorthEast),
+        Self::Horizontal(HorizontalDirection::West),
+        Self::Horizontal(HorizontalDirection::Here),
+        Self::Horizontal(HorizontalDirection::East),
+        Self::Horizontal(HorizontalDirection::SouthWest),
+        Self::Horizontal(HorizontalDirection::South),
+        Self::Horizontal(HorizontalDirection::SouthEast),
         Self::Down,
     ];
 
-    pub(crate) fn try_horizontal(x: i32, z: i32) -> Option<Self> {
-        HorizontalNborOffset::try_from(x, z).map(Self::Horizontal)
-    }
-
-    pub(crate) const fn horizontal_projection(&self) -> HorizontalNborOffset {
+    pub(crate) const fn horizontal_projection(&self) -> HorizontalDirection {
         match self {
             Self::Horizontal(horizontal) => *horizontal,
-            _ => HorizontalNborOffset::ZERO,
+            _ => HorizontalDirection::Here,
         }
     }
 
     pub(crate) fn distance(&self) -> NborDistance {
         match &self {
             Self::Up => NborDistance::Up,
-            Self::Horizontal(HorizontalNborOffset { x, z }) if *x == 0 || *z == 0 => {
-                NborDistance::Adjacent
+            Self::Horizontal(horizontal) => {
+                let (x, z) = horizontal.offset();
+                match x.unsigned_abs() + z.unsigned_abs() {
+                    0 => NborDistance::Zero,
+                    1 => NborDistance::Adjacent,
+                    2 => NborDistance::Diagonal,
+                    _ => panic!("{x} {z}"),
+                }
             }
-            Self::Horizontal(HorizontalNborOffset { x, z }) => {
-                assert!(*x != 0 && *z != 0);
-                NborDistance::Diagonal
-            }
-            Self::Here => NborDistance::Zero,
             Self::Down => NborDistance::Down,
         }
     }

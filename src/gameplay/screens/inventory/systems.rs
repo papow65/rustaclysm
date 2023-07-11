@@ -34,7 +34,7 @@ pub(crate) fn spawn_inventory(mut commands: Commands, fonts: Res<Fonts>) {
             font_size: FONT_SIZE,
             color: DEFAULT_TEXT_COLOR,
         },
-        drop_direction: HorizontalNborOffset::ZERO,
+        drop_direction: HorizontalDirection::Here,
     });
 }
 

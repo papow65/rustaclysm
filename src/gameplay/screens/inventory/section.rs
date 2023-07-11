@@ -1,9 +1,9 @@
-use crate::prelude::HorizontalNborOffset;
+use crate::prelude::HorizontalDirection;
 use std::{cmp::Ordering, fmt};
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub(crate) enum InventorySection {
-    Nbor(HorizontalNborOffset),
+    Nbor(HorizontalDirection),
     Hands,
     Clothing,
 }

@@ -1,45 +1,42 @@
 use crate::prelude::{Ctrl, KeyCombo, Nbor};
 use bevy::prelude::{Entity, KeyCode};
 
+use super::HorizontalDirection;
+
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub(crate) enum Direction {
-    Here,
+pub(crate) enum PlayerDirection {
+    Above,
+    AwayLeft,
     Away,
     AwayRight,
-    Right,
-    CloserRight,
-    Closer,
-    CloserLeft,
     Left,
-    AwayLeft,
-    Above,
+    Here,
+    Right,
+    CloserLeft,
+    Closer,
+    CloserRight,
     Below,
 }
 
-impl Direction {
+impl PlayerDirection {
     pub(crate) fn to_nbor(self) -> Nbor {
         match self {
             Self::Above => Nbor::Up,
+            Self::AwayLeft => Nbor::Horizontal(HorizontalDirection::NorthWest),
+            Self::Away => Nbor::Horizontal(HorizontalDirection::North),
+            Self::AwayRight => Nbor::Horizontal(HorizontalDirection::NorthEast),
+            Self::Left => Nbor::Horizontal(HorizontalDirection::West),
+            Self::Here => Nbor::Horizontal(HorizontalDirection::Here),
+            Self::Right => Nbor::Horizontal(HorizontalDirection::East),
+            Self::CloserLeft => Nbor::Horizontal(HorizontalDirection::SouthWest),
+            Self::Closer => Nbor::Horizontal(HorizontalDirection::South),
+            Self::CloserRight => Nbor::Horizontal(HorizontalDirection::SouthEast),
             Self::Below => Nbor::Down,
-            Self::Here => Nbor::Here,
-            _ => Nbor::try_horizontal(
-                match self {
-                    Self::CloserLeft | Self::Left | Self::AwayLeft => -1,
-                    Self::CloserRight | Self::Right | Self::AwayRight => 1,
-                    _ => 0,
-                },
-                match self {
-                    Self::AwayLeft | Self::Away | Self::AwayRight => -1,
-                    Self::CloserLeft | Self::Closer | Self::CloserRight => 1,
-                    _ => 0,
-                },
-            )
-            .unwrap_or_else(|| panic!("{self:?} should have a matching nbor")),
         }
     }
 }
 
-impl TryFrom<&KeyCombo> for Direction {
+impl TryFrom<&KeyCombo> for PlayerDirection {
     type Error = ();
 
     fn try_from(combo: &KeyCombo) -> Result<Self, ()> {
@@ -53,8 +50,8 @@ impl TryFrom<&KeyCombo> for Direction {
             KeyCombo::KeyCode(Ctrl::Without, KeyCode::Numpad7) => Self::AwayLeft,
             KeyCombo::KeyCode(Ctrl::Without, KeyCode::Numpad8) => Self::Away,
             KeyCombo::KeyCode(Ctrl::Without, KeyCode::Numpad9) => Self::AwayRight,
-            KeyCombo::Character('<') => Direction::Above,
-            KeyCombo::Character('>') => Direction::Below,
+            KeyCombo::Character('<') => PlayerDirection::Above,
+            KeyCombo::Character('>') => PlayerDirection::Below,
             _ => {
                 return Err(());
             }
@@ -64,7 +61,7 @@ impl TryFrom<&KeyCombo> for Direction {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) enum QueuedInstruction {
-    Offset(Direction),
+    Offset(PlayerDirection),
     Wield(Entity),
     Unwield(Entity),
     Pickup(Entity),
@@ -101,7 +98,7 @@ impl TryFrom<&KeyCombo> for QueuedInstruction {
             KeyCombo::Character('x') => Ok(Self::ExaminePos),
             KeyCombo::Character('X') => Ok(Self::ExamineZoneLevel),
             KeyCombo::Character('+') => Ok(Self::SwitchRunning),
-            _ => Direction::try_from(combo).map(Self::Offset),
+            _ => PlayerDirection::try_from(combo).map(Self::Offset),
         }
     }
 }
