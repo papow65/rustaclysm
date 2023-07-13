@@ -48,11 +48,16 @@ pub(crate) struct Sav {
     #[allow(unused)]
     pub(crate) kill_tracker: serde_json::Value,
 
+    /** Overmap x */
     pub(crate) om_x: i16,
+    /** Overmap y -> z */
     pub(crate) om_y: i16,
 
-    pub(crate) levx: i16,
-    pub(crate) levy: i16,
+    /** Subzone coordinate x, 0 <= levx < 360 */
+    pub(crate) levx: u16,
+    /** Subzone coordinate y -> z, 0 <= levy < 360 */
+    pub(crate) levy: u16,
+    /** Level */
     pub(crate) levz: i8,
 
     #[allow(unused)]
@@ -101,7 +106,7 @@ impl TryFrom<&SavPath> for Sav {
                 println!("Loading {}...", sav_path.0.display());
                 s
             })
-            .map(|s| s.split_at(s.find('\n').unwrap()).1.to_string())
+            .map(|s| String::from(s.split_at(s.find('\n').unwrap()).1))
             .map(|s| serde_json::from_str::<Self>(s.as_str()))
             .expect(".sav file could not be read")
     }

@@ -53,9 +53,9 @@ pub(crate) fn spawn_initial_entities(
     .zone_level(Level::new(sav.levz))
     .base_pos()
     .offset(PosOffset {
-        x: 12 * (i32::from(sav.levx) % 2),
+        x: 12 * i32::from(sav.levx % 2),
         level: LevelOffset::ZERO,
-        z: 12 * (i32::from(sav.levy) % 2),
+        z: 12 * i32::from(sav.levy % 2),
     })
     .unwrap()
     .offset(PosOffset {

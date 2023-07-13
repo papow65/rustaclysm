@@ -10,20 +10,21 @@ pub(crate) struct MeshInfo {
 }
 
 impl MeshInfo {
-    pub(crate) fn new(index: usize, width: usize, size: usize) -> Self {
-        let index = index as f32;
-        let size = size as f32;
-        let width = width as f32; // tiles per row
-        let height = (size / width).ceil(); // tiles per column
+    pub(crate) fn new(index: usize, tiles_per_row: usize, size: usize) -> Self {
+        // rounding up 'size / tiles_per_row'
+        let tiles_per_column = (size + tiles_per_row - 1) / tiles_per_row;
 
-        let x_min = (index % width) / width;
-        let y_min = (index / width).floor() / height;
+        let tile_width = 1.0 / tiles_per_row as f32;
+        let tile_height = 1.0 / tiles_per_column as f32;
+
+        let x_min = (index % tiles_per_row) as f32 * tile_width;
+        let y_min = (index / tiles_per_row) as f32 * tile_height;
 
         Self {
             x_min,
-            x_max: x_min + 1.0 / width,
+            x_max: x_min + tile_width,
             y_min,
-            y_max: y_min + 1.0 / height,
+            y_max: y_min + tile_height,
         }
     }
 

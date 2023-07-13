@@ -51,12 +51,17 @@
 #![deny(unused_attributes)]
 #![deny(unused_extern_crates)]
 #![deny(unused_macros)]
+// Denied clippy categories
 #![deny(clippy::complexity)]
 #![deny(clippy::correctness)]
 #![deny(clippy::pedantic)]
 #![deny(clippy::perf)]
 #![deny(clippy::style)]
 #![deny(clippy::suspicious)]
+// Denied clippy lints from allowed categories
+#![deny(clippy::modulo_arithmetic)]
+#![deny(clippy::str_to_string)]
+// Exceptions for allowed lints from denied categories
 #![allow(clippy::cast_possible_truncation)]
 #![allow(clippy::cast_precision_loss)]
 #![allow(clippy::cast_possible_wrap)]
