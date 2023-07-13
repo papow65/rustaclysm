@@ -24,7 +24,6 @@ pub(crate) fn egible_character(
 pub(crate) fn plan_action(
     In(option): In<Option<Entity>>,
     mut commands: Commands,
-    mut next_state: ResMut<NextState<GameplayScreenState>>,
     mut player_action_state: ResMut<PlayerActionState>,
     mut envir: Envir,
     clock: Clock,
@@ -45,7 +44,6 @@ pub(crate) fn plan_action(
     let action = if players.get_mut(active_entity).is_ok() {
         player_action_state.plan_action(
             &mut commands,
-            &mut next_state,
             &mut envir,
             &mut instruction_queue,
             actor.entity,

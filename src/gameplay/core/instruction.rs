@@ -4,6 +4,12 @@ use bevy::prelude::{Entity, KeyCode};
 use super::HorizontalDirection;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub(crate) enum CancelContext {
+    State,
+    Action,
+}
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub(crate) enum PlayerDirection {
     Above,
     AwayLeft,
@@ -75,8 +81,7 @@ pub(crate) enum QueuedInstruction {
     ExamineItem(Entity),
     ExaminePos,
     ExamineZoneLevel,
-    Inventory,
-    Cancel,
+    CancelAction,
     /** Set automatically */
     Interrupted,
     /** Set automatically */
@@ -88,8 +93,7 @@ impl TryFrom<&KeyCombo> for QueuedInstruction {
 
     fn try_from(combo: &KeyCombo) -> Result<Self, ()> {
         match combo {
-            KeyCombo::KeyCode(Ctrl::Without, KeyCode::Escape) => Ok(Self::Cancel),
-            KeyCombo::Character('i') => Ok(Self::Inventory),
+            KeyCombo::KeyCode(Ctrl::Without, KeyCode::Escape) => Ok(Self::CancelAction),
             KeyCombo::Character('|') => Ok(Self::Wait),
             KeyCombo::Character('$') => Ok(Self::Sleep),
             KeyCombo::Character('a') => Ok(Self::Attack),
@@ -114,22 +118,28 @@ pub(crate) enum Instruction {
     Queued(QueuedInstruction),
     Quit,
     MainMenu,
+    CancelState,
+    Inventory,
     ToggleElevation,
     ToggleHelp,
     Zoom(ZoomDirection),
 }
 
-impl TryFrom<&KeyCombo> for Instruction {
+impl TryFrom<(&KeyCombo, CancelContext)> for Instruction {
     type Error = ();
 
-    fn try_from(combo: &KeyCombo) -> Result<Self, ()> {
-        match combo {
-            KeyCombo::KeyCode(Ctrl::With, KeyCode::C | KeyCode::Q) => Ok(Self::Quit),
-            KeyCombo::KeyCode(Ctrl::Without, KeyCode::F1) => Ok(Self::ToggleHelp),
-            KeyCombo::KeyCode(Ctrl::Without, KeyCode::F12) => Ok(Self::MainMenu),
-            KeyCombo::Character('Z') => Ok(Self::Zoom(ZoomDirection::Out)),
-            KeyCombo::Character('z') => Ok(Self::Zoom(ZoomDirection::In)),
-            KeyCombo::Character('h') => Ok(Self::ToggleElevation),
+    fn try_from((combo, context): (&KeyCombo, CancelContext)) -> Result<Self, ()> {
+        match (combo, context) {
+            (KeyCombo::KeyCode(Ctrl::With, KeyCode::C | KeyCode::Q), _) => Ok(Self::Quit),
+            (KeyCombo::KeyCode(Ctrl::Without, KeyCode::Escape), CancelContext::State) => {
+                Ok(Self::CancelState)
+            }
+            (KeyCombo::KeyCode(Ctrl::Without, KeyCode::F1), _) => Ok(Self::ToggleHelp),
+            (KeyCombo::KeyCode(Ctrl::Without, KeyCode::F12), _) => Ok(Self::MainMenu),
+            (KeyCombo::Character('i'), _) => Ok(Self::Inventory),
+            (KeyCombo::Character('Z'), _) => Ok(Self::Zoom(ZoomDirection::Out)),
+            (KeyCombo::Character('z'), _) => Ok(Self::Zoom(ZoomDirection::In)),
+            (KeyCombo::Character('h'), _) => Ok(Self::ToggleElevation),
             _ => QueuedInstruction::try_from(combo).map(Self::Queued),
         }
     }

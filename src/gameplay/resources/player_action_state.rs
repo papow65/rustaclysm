@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use bevy::prelude::{Color, Commands, Entity, NextState, Resource};
+use bevy::prelude::{Color, Commands, Entity, Resource};
 use std::fmt;
 
 #[derive(Debug)]
@@ -44,10 +44,16 @@ impl PlayerActionState {
         }
     }
 
+    pub(crate) fn cancel_context(&self) -> CancelContext {
+        match self {
+            Self::Normal | Self::Sleeping { .. } => CancelContext::State,
+            _ => CancelContext::Action,
+        }
+    }
+
     pub(crate) fn plan_action(
         &mut self,
         commands: &mut Commands,
-        next_gameplay_state: &mut NextState<GameplayScreenState>,
         envir: &mut Envir,
         instruction_queue: &mut InstructionQueue,
         actor: Entity,
@@ -56,7 +62,7 @@ impl PlayerActionState {
         enemies: &[Pos],
     ) -> Option<Action> {
         while let Some(instruction) = instruction_queue.pop() {
-            match self.plan(next_gameplay_state, envir, pos, instruction, now) {
+            match self.plan(envir, pos, instruction, now) {
                 PlayerBehavior::Perform(action) => {
                     return Some(action);
                 }
@@ -122,18 +128,18 @@ impl PlayerActionState {
 
     fn plan(
         &mut self,
-        next_gameplay_state: &mut NextState<GameplayScreenState>,
         envir: &Envir,
         pos: Pos,
         instruction: QueuedInstruction,
         now: Milliseconds,
     ) -> PlayerBehavior {
         //println!("processing instruction: {instruction:?}");
+        assert!(
+            instruction != QueuedInstruction::CancelAction
+                || self.cancel_context() == CancelContext::Action,
+            "{self:?} is not an action to cancel"
+        );
         match (&self, instruction) {
-            (Self::Normal | Self::Sleeping { .. }, QueuedInstruction::Cancel) => {
-                next_gameplay_state.set(GameplayScreenState::Menu);
-                PlayerBehavior::NoEffect
-            }
             (Self::Sleeping { .. }, QueuedInstruction::Finished) => {
                 *self = PlayerActionState::Normal;
                 PlayerBehavior::Feedback(Message::info().str("You wake up"))
@@ -162,7 +168,12 @@ impl PlayerActionState {
                 let nbor = direction.to_nbor();
                 self.handle_offset(envir.get_nbor(*curr, &nbor), &nbor)
             }
-            (_, QueuedInstruction::Cancel | QueuedInstruction::Wait | QueuedInstruction::Sleep)
+            (
+                _,
+                QueuedInstruction::CancelAction
+                | QueuedInstruction::Wait
+                | QueuedInstruction::Sleep,
+            )
             | (Self::Attacking, QueuedInstruction::Attack)
             | (Self::Smashing, QueuedInstruction::Smash)
             | (Self::ExaminingPos(_), QueuedInstruction::ExaminePos)
@@ -210,10 +221,6 @@ impl PlayerActionState {
             (Self::Waiting { .. }, QueuedInstruction::Finished) => {
                 *self = Self::Normal;
                 PlayerBehavior::Feedback(Message::info().str("Finished waiting"))
-            }
-            (_, QueuedInstruction::Inventory) => {
-                next_gameplay_state.set(GameplayScreenState::Inventory);
-                PlayerBehavior::NoEffect
             }
             (_, QueuedInstruction::Interrupted) => {
                 *self = Self::Normal;

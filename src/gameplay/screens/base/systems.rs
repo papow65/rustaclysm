@@ -11,12 +11,20 @@ fn quit(app_exit_events: &mut Events<AppExit>) {
     app_exit_events.send(AppExit);
 }
 
-fn main_menu(
+fn open_main_menu(
     next_application_state: &mut NextState<ApplicationState>,
     next_gameplay_state: &mut NextState<GameplayScreenState>,
 ) {
     next_gameplay_state.set(GameplayScreenState::Inapplicable);
     next_application_state.set(ApplicationState::MainMenu);
+}
+
+fn open_menu(next_gameplay_state: &mut NextState<GameplayScreenState>) {
+    next_gameplay_state.set(GameplayScreenState::Menu);
+}
+
+fn open_inventory(next_gameplay_state: &mut NextState<GameplayScreenState>) {
+    next_gameplay_state.set(GameplayScreenState::Inventory);
 }
 
 fn zoom(camera_offset: &mut CameraOffset, direction: ZoomDirection) {
@@ -74,12 +82,13 @@ pub(crate) fn manage_keyboard_input(
     mut elevation_visibility: ResMut<ElevationVisibility>,
     mut visualization_update: ResMut<VisualizationUpdate>,
     mut camera_offset: ResMut<CameraOffset>,
+    player_action_state: Res<PlayerActionState>,
     mut help: Query<&mut Visibility, With<ManualDisplay>>,
 ) {
     let start = Instant::now();
 
     for (button_state, combo) in keys.combos() {
-        let Ok(instruction) = Instruction::try_from(&combo) else {
+        let Ok(instruction) = Instruction::try_from((&combo, player_action_state.cancel_context())) else {
             if button_state == ButtonState::Pressed {
                 println!("{:?} not recognized", &combo);
             }
@@ -127,8 +136,10 @@ fn handle_instruction(
     match instruction {
         Instruction::Quit => quit(app_exit_events),
         Instruction::MainMenu => {
-            main_menu(next_application_state, next_gameplay_state);
+            open_main_menu(next_application_state, next_gameplay_state);
         }
+        Instruction::CancelState => open_menu(next_gameplay_state),
+        Instruction::Inventory => open_inventory(next_gameplay_state),
         Instruction::Zoom(direction) => zoom(camera_offset, direction),
         Instruction::ToggleElevation => {
             toggle_elevation(elevation_visibility, visualization_update);
