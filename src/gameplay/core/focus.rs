@@ -8,7 +8,7 @@ pub(crate) enum Focus {
 }
 
 impl Focus {
-    pub(crate) fn new(player_action_state: &PlayerActionState, player_pos: Pos) -> Self {
+    pub(crate) const fn new(player_action_state: &PlayerActionState, player_pos: Pos) -> Self {
         match player_action_state {
             PlayerActionState::ExaminingPos(target) => Focus::Pos(*target),
             PlayerActionState::ExaminingZoneLevel(zone_level) => Focus::ZoneLevel(*zone_level),

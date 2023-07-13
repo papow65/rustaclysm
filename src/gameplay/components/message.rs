@@ -47,7 +47,7 @@ impl ObjectName {
     }
 
     #[must_use]
-    pub(crate) fn new(name: ItemName, color: Color) -> Self {
+    pub(crate) const fn new(name: ItemName, color: Color) -> Self {
         Self { name, color }
     }
 
@@ -81,7 +81,7 @@ pub(crate) enum Severity {
 
 impl Severity {
     #[must_use]
-    pub(crate) fn color(&self) -> Color {
+    pub(crate) const fn color(&self) -> Color {
         match self {
             Self::Low => SOFT_TEXT_COLOR,
             Self::Info => DEFAULT_TEXT_COLOR,
@@ -100,7 +100,7 @@ pub(crate) struct Message {
 
 impl Message {
     #[must_use]
-    fn new(severity: Severity) -> Self {
+    const fn new(severity: Severity) -> Self {
         Self {
             fragments: Vec::new(),
             severity,
@@ -108,17 +108,17 @@ impl Message {
     }
 
     #[must_use]
-    pub(crate) fn info() -> Self {
+    pub(crate) const fn info() -> Self {
         Self::new(Severity::Info)
     }
 
     #[must_use]
-    pub(crate) fn warn() -> Self {
+    pub(crate) const fn warn() -> Self {
         Self::new(Severity::Warn)
     }
 
     #[must_use]
-    pub(crate) fn error() -> Self {
+    pub(crate) const fn error() -> Self {
         Self::new(Severity::Error)
     }
 

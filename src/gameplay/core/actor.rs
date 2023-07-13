@@ -19,7 +19,7 @@ pub(crate) enum StaminaImpact {
 }
 
 impl StaminaImpact {
-    pub(crate) fn as_i16(&self) -> i16 {
+    pub(crate) const fn as_i16(&self) -> i16 {
         match self {
             Self::FullRest => 100,
             Self::Rest => 2,
@@ -38,7 +38,7 @@ pub(crate) struct Impact {
 
 impl Impact {
     #[must_use]
-    fn new(timeout: Milliseconds, stamina_impact: StaminaImpact) -> Self {
+    const fn new(timeout: Milliseconds, stamina_impact: StaminaImpact) -> Self {
         Self {
             timeout,
             stamina_impact,
@@ -46,17 +46,17 @@ impl Impact {
     }
 
     #[must_use]
-    fn rest(timeout: Milliseconds) -> Self {
+    const fn rest(timeout: Milliseconds) -> Self {
         Self::new(timeout, StaminaImpact::Rest)
     }
 
     #[must_use]
-    fn full_rest(timeout: Milliseconds) -> Self {
+    const fn full_rest(timeout: Milliseconds) -> Self {
         Self::new(timeout, StaminaImpact::FullRest)
     }
 
     #[must_use]
-    fn heavy(timeout: Milliseconds) -> Self {
+    const fn heavy(timeout: Milliseconds) -> Self {
         Self::new(timeout, StaminaImpact::Heavy)
     }
 }
@@ -89,7 +89,7 @@ impl<'s> Actor<'s> {
         }
     }
 
-    fn standard_impact(&self, timeout: Milliseconds) -> Impact {
+    const fn standard_impact(&self, timeout: Milliseconds) -> Impact {
         Impact {
             timeout,
             stamina_impact: self.walking_mode.stamina_impact(self.stamina.breath()),

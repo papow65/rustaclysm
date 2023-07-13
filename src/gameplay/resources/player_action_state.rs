@@ -44,7 +44,7 @@ impl PlayerActionState {
         }
     }
 
-    pub(crate) fn cancel_context(&self) -> CancelContext {
+    pub(crate) const fn cancel_context(&self) -> CancelContext {
         match self {
             Self::Normal | Self::Sleeping { .. } => CancelContext::State,
             _ => CancelContext::Action,
@@ -326,7 +326,7 @@ impl PlayerActionState {
         }
     }
 
-    pub(crate) fn color(&self) -> Color {
+    pub(crate) const fn color(&self) -> Color {
         match self {
             Self::Normal | Self::Closing | Self::ExaminingPos(_) | Self::ExaminingZoneLevel(_) => {
                 DEFAULT_TEXT_COLOR

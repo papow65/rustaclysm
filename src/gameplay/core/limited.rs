@@ -8,11 +8,11 @@ pub(crate) struct Evolution {
 }
 
 impl Evolution {
-    pub(crate) fn change_abs(&self) -> u16 {
+    pub(crate) const fn change_abs(&self) -> u16 {
         self.after.abs_diff(self.before)
     }
 
-    pub(crate) fn changed(&self) -> bool {
+    pub(crate) const fn changed(&self) -> bool {
         self.after != self.before
     }
 }
@@ -25,11 +25,11 @@ pub(crate) struct Limited {
 
 impl Limited {
     #[allow(unused)]
-    pub(crate) fn empty(max: u16) -> Self {
+    pub(crate) const fn empty(max: u16) -> Self {
         Self { current: 0, max }
     }
 
-    pub(crate) fn full(max: u16) -> Self {
+    pub(crate) const fn full(max: u16) -> Self {
         Self { current: max, max }
     }
 
@@ -92,12 +92,12 @@ impl Limited {
         self.try_add(-amount)
     }
 
-    pub(crate) fn current(&self) -> u16 {
+    pub(crate) const fn current(&self) -> u16 {
         self.current
     }
 
     #[allow(unused)]
-    pub(crate) fn max(&self) -> u16 {
+    pub(crate) const fn max(&self) -> u16 {
         self.max
     }
 

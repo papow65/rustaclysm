@@ -11,7 +11,7 @@ use std::{
 pub(crate) struct PathFor<T>(pub(crate) PathBuf, PhantomData<T>);
 
 impl<T> PathFor<T> {
-    pub(crate) fn init(path: PathBuf) -> PathFor<T> {
+    pub(crate) const fn init(path: PathBuf) -> PathFor<T> {
         PathFor(path, PhantomData)
     }
 }

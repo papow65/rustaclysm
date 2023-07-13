@@ -25,7 +25,7 @@ pub(crate) enum PlayerDirection {
 }
 
 impl PlayerDirection {
-    pub(crate) fn to_nbor(self) -> Nbor {
+    pub(crate) const fn to_nbor(self) -> Nbor {
         match self {
             Self::Above => Nbor::Up,
             Self::AwayLeft => Nbor::Horizontal(HorizontalDirection::NorthWest),

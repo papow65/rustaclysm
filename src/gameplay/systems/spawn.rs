@@ -66,7 +66,7 @@ fn minimal_expanded_zones(player_pos: Pos) -> SubzoneRegion {
     SubzoneRegion::new(from.x..=to.x, from.z..=to.z)
 }
 
-fn maximal_expanded_zones(player_subzone_level: SubzoneLevel) -> SubzoneRegion {
+const fn maximal_expanded_zones(player_subzone_level: SubzoneLevel) -> SubzoneRegion {
     let x_from = player_subzone_level.x - MAX_EXPAND_DISTANCE;
     let x_to = player_subzone_level.x + MAX_EXPAND_DISTANCE;
     let z_from = player_subzone_level.z - MAX_EXPAND_DISTANCE;

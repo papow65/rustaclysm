@@ -40,7 +40,7 @@ impl InstructionQueue {
         self.waiting_for_user = true;
     }
 
-    pub(crate) fn is_waiting(&self) -> bool {
+    pub(crate) const fn is_waiting(&self) -> bool {
         self.waiting_for_user
     }
 }

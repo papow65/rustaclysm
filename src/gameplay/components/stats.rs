@@ -37,7 +37,7 @@ pub(crate) enum WalkingMode {
 
 impl WalkingMode {
     #[must_use]
-    pub(crate) fn speed_factor(&self, breath: Breath) -> f32 {
+    pub(crate) const fn speed_factor(&self, breath: Breath) -> f32 {
         match breath {
             Breath::Normal => match self {
                 Self::Crouching => 0.25,
@@ -50,7 +50,7 @@ impl WalkingMode {
     }
 
     #[must_use]
-    pub(crate) fn stamina_impact(&self, breath: Breath) -> StaminaImpact {
+    pub(crate) const fn stamina_impact(&self, breath: Breath) -> StaminaImpact {
         match breath {
             Breath::Normal => match self {
                 Self::Crouching | Self::Walking => StaminaImpact::Light,
@@ -62,7 +62,7 @@ impl WalkingMode {
     }
 
     #[must_use]
-    pub(crate) fn switch(&self) -> Self {
+    pub(crate) const fn switch(&self) -> Self {
         match self {
             Self::Crouching => Self::Walking,
             Self::Walking => Self::SpeedWalking,
@@ -72,7 +72,7 @@ impl WalkingMode {
     }
 
     #[must_use]
-    pub(crate) fn as_str(&self) -> &str {
+    pub(crate) const fn as_str(&self) -> &str {
         match self {
             Self::Crouching => "Crouching",
             Self::Walking => "Walking",
@@ -82,7 +82,7 @@ impl WalkingMode {
     }
 
     #[must_use]
-    pub(crate) fn color(&self) -> Color {
+    pub(crate) const fn color(&self) -> Color {
         match self {
             Self::Walking => DEFAULT_TEXT_COLOR,
             Self::Crouching | Self::SpeedWalking | Self::Running => WARN_TEXT_COLOR,
@@ -97,7 +97,7 @@ pub(crate) enum Stamina {
 }
 
 impl Stamina {
-    pub(crate) fn breath(&self) -> Breath {
+    pub(crate) const fn breath(&self) -> Breath {
         match self {
             Self::Unlimited => Breath::Normal,
             Self::Limited(limited) => {

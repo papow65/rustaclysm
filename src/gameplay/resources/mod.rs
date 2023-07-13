@@ -59,7 +59,7 @@ impl CameraOffset {
         });
     }
 
-    pub(crate) fn offset(&self) -> Vec3 {
+    pub(crate) const fn offset(&self) -> Vec3 {
         self.0
     }
 }

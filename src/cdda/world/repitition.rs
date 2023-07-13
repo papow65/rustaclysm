@@ -37,7 +37,7 @@ pub(crate) enum Repetition<T> {
 }
 
 impl<T> Repetition<T> {
-    pub(crate) fn as_amount(&self) -> &CddaAmount<T> {
+    pub(crate) const fn as_amount(&self) -> &CddaAmount<T> {
         match self {
             Self::Single(m) => &m.0,
             Self::Multiple(m) => m,
