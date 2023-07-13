@@ -12,7 +12,7 @@ impl Plugin for GameplayPlugin {
             CharacterScreenPlugin,
             InventoryScreenPlugin,
             MenuScreenPlugin,
-            FrameTimeDiagnosticsPlugin::default(),
+            FrameTimeDiagnosticsPlugin,
         ));
 
         // These resources may persist between gameplays.
