@@ -5,7 +5,6 @@ description = "A 3D reimplementation of Cataclysm: Dark Days Ahead using Bevy"
 license = "AGPL-3.0-or-later"
 readme = "readme.md"
 repository = "https://github.com/papow65/rustaclysm"
-homepage = "https://github.com/papow65/rustaclysm"
 authors = [ "papow65 <papow65@protonmail.com>" ]
 exclude = [ "/screenshots/" ]
 edition = "2021"
