@@ -4,61 +4,61 @@ use serde::Deserialize;
 pub(crate) struct TypeId(&'static str);
 
 impl TypeId {
-    pub(crate) const CHARACTER: &[Self] = &[TypeId("MONSTER")];
+    pub(crate) const CHARACTER: &[Self] = &[Self("MONSTER")];
 
     pub(crate) const ITEM: &[Self] = &[
-        TypeId("AMMO"),
-        TypeId("ARMOR"),
-        TypeId("BATTERY"),
-        TypeId("BIONIC_ITEM"),
-        TypeId("BOOK"),
-        TypeId("COMESTIBLE"),
-        TypeId("ENGINE"),
-        TypeId("GENERIC"),
-        TypeId("GUN"),
-        TypeId("GUNMOD"),
-        TypeId("MAGAZINE"),
-        TypeId("PET_ARMOR"),
-        TypeId("SPELL"),
-        TypeId("TOOL"),
-        TypeId("TOOL_ARMOR"),
-        TypeId("TOOLMOD"),
-        TypeId("WHEEL"),
+        Self("AMMO"),
+        Self("ARMOR"),
+        Self("BATTERY"),
+        Self("BIONIC_ITEM"),
+        Self("BOOK"),
+        Self("COMESTIBLE"),
+        Self("ENGINE"),
+        Self("GENERIC"),
+        Self("GUN"),
+        Self("GUNMOD"),
+        Self("MAGAZINE"),
+        Self("PET_ARMOR"),
+        Self("SPELL"),
+        Self("TOOL"),
+        Self("TOOL_ARMOR"),
+        Self("TOOLMOD"),
+        Self("WHEEL"),
     ];
 
-    pub(crate) const FIELD: &[Self] = &[TypeId("field_type")];
-    pub(crate) const FURNITURE: &[Self] = &[TypeId("furniture")];
-    pub(crate) const ITEM_GROUP: &[Self] = &[TypeId("item_group")];
+    pub(crate) const FIELD: &[Self] = &[Self("field_type")];
+    pub(crate) const FURNITURE: &[Self] = &[Self("furniture")];
+    pub(crate) const ITEM_GROUP: &[Self] = &[Self("item_group")];
 
     pub(crate) const OVERMAP: &[Self] = &[
-        TypeId("city_building"),
-        TypeId("map_extra"),
-        TypeId("overmap_connection"),
-        TypeId("overmap_land_use_code"),
-        TypeId("overmap_location"),
-        TypeId("overmap_special"),
-        TypeId("overmap_special_migration"),
+        Self("city_building"),
+        Self("map_extra"),
+        Self("overmap_connection"),
+        Self("overmap_land_use_code"),
+        Self("overmap_location"),
+        Self("overmap_special"),
+        Self("overmap_special_migration"),
     ];
 
-    pub(crate) const TERRAIN: &[Self] = &[TypeId("terrain")];
-    pub(crate) const VEHICLE_PART: &[Self] = &[TypeId("vehicle_part")];
+    pub(crate) const TERRAIN: &[Self] = &[Self("terrain")];
+    pub(crate) const VEHICLE_PART: &[Self] = &[Self("vehicle_part")];
 
     pub(crate) const MIGRATION: &[Self] = &[
-        TypeId("MIGRATION"),
-        TypeId("overmap_terrain"),
-        TypeId("vehicle_part_migration"),
+        Self("MIGRATION"),
+        Self("overmap_terrain"),
+        Self("vehicle_part_migration"),
     ];
 
     pub(crate) const UNUSED: &[Self] = &[
-        TypeId("ammunition_type"),
-        TypeId("behavior"),
-        TypeId("enchantment"),
-        TypeId("effect_on_condition"),
-        TypeId("fault"),
-        TypeId("json_flag"),
-        TypeId("mapgen"),
-        TypeId("TRAIT_MIGRATION"),
-        TypeId("vehicle_part_category"),
+        Self("ammunition_type"),
+        Self("behavior"),
+        Self("enchantment"),
+        Self("effect_on_condition"),
+        Self("fault"),
+        Self("json_flag"),
+        Self("mapgen"),
+        Self("TRAIT_MIGRATION"),
+        Self("vehicle_part_category"),
     ];
 
     pub(crate) const fn all() -> &'static [&'static [Self]] {

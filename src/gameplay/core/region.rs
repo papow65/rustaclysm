@@ -74,7 +74,7 @@ impl Region {
         }
     }
 
-    pub(crate) fn clamp(&self, inner: &Region, outer: &Region) -> Self {
+    pub(crate) fn clamp(&self, inner: &Self, outer: &Self) -> Self {
         let mut i = 0;
         Self {
             subzone_regions: self.subzone_regions.clone().map(move |region_level| {

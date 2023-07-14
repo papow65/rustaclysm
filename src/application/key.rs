@@ -70,14 +70,14 @@ impl TryFrom<(Ctrl, &KeyboardInput)> for KeyCombo {
     fn try_from((ctrl, input): (Ctrl, &KeyboardInput)) -> Result<Self, Self::Error> {
         input
             .key_code
-            .map(|key_code| KeyCombo::KeyCode(ctrl, key_code))
+            .map(|key_code| Self::KeyCode(ctrl, key_code))
             .ok_or(())
     }
 }
 
 impl From<&ReceivedCharacter> for KeyCombo {
     fn from(received_character: &ReceivedCharacter) -> Self {
-        KeyCombo::Character(received_character.char)
+        Self::Character(received_character.char)
     }
 }
 

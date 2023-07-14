@@ -110,7 +110,7 @@ pub(crate) struct Submap {
 
 impl Submap {
     pub(crate) fn fallback(subzone_level: SubzoneLevel, zone_object_id: &ObjectId) -> Self {
-        Submap {
+        Self {
             version: 0,
             turn_last_touched: 0,
             coordinates: subzone_level.coordinates(),

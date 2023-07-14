@@ -10,9 +10,9 @@ pub(crate) enum Focus {
 impl Focus {
     pub(crate) const fn new(player_action_state: &PlayerActionState, player_pos: Pos) -> Self {
         match player_action_state {
-            PlayerActionState::ExaminingPos(target) => Focus::Pos(*target),
-            PlayerActionState::ExaminingZoneLevel(zone_level) => Focus::ZoneLevel(*zone_level),
-            _ => Focus::Pos(player_pos),
+            PlayerActionState::ExaminingPos(target) => Self::Pos(*target),
+            PlayerActionState::ExaminingZoneLevel(zone_level) => Self::ZoneLevel(*zone_level),
+            _ => Self::Pos(player_pos),
         }
     }
 
@@ -22,7 +22,7 @@ impl Focus {
         elevation_visibility: ElevationVisibility,
     ) -> bool {
         match self {
-            Focus::Pos(focus_pos) => {
+            Self::Pos(focus_pos) => {
                 shown_pos.level <= focus_pos.level
                     || (elevation_visibility == ElevationVisibility::Shown
                         && ((shown_pos.z
@@ -30,7 +30,7 @@ impl Focus {
                             - i32::from((shown_pos.level - focus_pos.level).h))
                             < (focus_pos.x - shown_pos.x).abs()))
             }
-            Focus::ZoneLevel(zone_level) => {
+            Self::ZoneLevel(zone_level) => {
                 let focus_level = zone_level.level;
                 match (focus_level.compare_to_ground(), elevation_visibility) {
                     (Ordering::Less, _) | (Ordering::Equal, ElevationVisibility::Shown) => {
@@ -79,7 +79,7 @@ impl From<&Focus> for Pos {
 impl From<&Focus> for ZoneLevel {
     fn from(focus: &Focus) -> Self {
         match focus {
-            Focus::Pos(pos) => ZoneLevel::from(*pos),
+            Focus::Pos(pos) => Self::from(*pos),
             Focus::ZoneLevel(zone_level) => *zone_level,
         }
     }

@@ -62,6 +62,7 @@
 #![deny(clippy::modulo_arithmetic)]
 #![deny(clippy::str_to_string)]
 #![deny(clippy::missing_const_for_fn)]
+#![deny(clippy::use_self)]
 // Exceptions for allowed lints from denied categories
 #![allow(clippy::cast_possible_truncation)]
 #![allow(clippy::cast_precision_loss)]

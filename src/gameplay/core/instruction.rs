@@ -56,8 +56,8 @@ impl TryFrom<&KeyCombo> for PlayerDirection {
             KeyCombo::KeyCode(Ctrl::Without, KeyCode::Numpad7) => Self::AwayLeft,
             KeyCombo::KeyCode(Ctrl::Without, KeyCode::Numpad8) => Self::Away,
             KeyCombo::KeyCode(Ctrl::Without, KeyCode::Numpad9) => Self::AwayRight,
-            KeyCombo::Character('<') => PlayerDirection::Above,
-            KeyCombo::Character('>') => PlayerDirection::Below,
+            KeyCombo::Character('<') => Self::Above,
+            KeyCombo::Character('>') => Self::Below,
             _ => {
                 return Err(());
             }

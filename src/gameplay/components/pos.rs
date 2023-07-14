@@ -123,10 +123,10 @@ impl fmt::Debug for Level {
     }
 }
 
-impl Sub<Level> for Level {
+impl Sub<Self> for Level {
     type Output = LevelOffset;
 
-    fn sub(self, other: Level) -> LevelOffset {
+    fn sub(self, other: Self) -> LevelOffset {
         LevelOffset {
             h: self.h - other.h,
         }
@@ -226,10 +226,10 @@ impl fmt::Debug for Pos {
     }
 }
 
-impl Sub<Pos> for Pos {
+impl Sub<Self> for Pos {
     type Output = PosOffset;
 
-    fn sub(self, other: Pos) -> PosOffset {
+    fn sub(self, other: Self) -> PosOffset {
         PosOffset {
             x: self.x - other.x,
             level: self.level - other.level,
@@ -259,11 +259,7 @@ impl SubzoneLevel {
     }
 
     pub(crate) const fn base_pos(&self) -> Pos {
-        Pos::new(
-            SubzoneLevel::SIZE * self.x,
-            self.level,
-            SubzoneLevel::SIZE * self.z,
-        )
+        Pos::new(Self::SIZE * self.x, self.level, Self::SIZE * self.z)
     }
 }
 
@@ -280,9 +276,9 @@ impl fmt::Debug for SubzoneLevel {
 impl From<Pos> for SubzoneLevel {
     fn from(pos: Pos) -> Self {
         Self {
-            x: pos.x.div_euclid(SubzoneLevel::SIZE),
+            x: pos.x.div_euclid(Self::SIZE),
             level: pos.level,
-            z: pos.z.div_euclid(SubzoneLevel::SIZE),
+            z: pos.z.div_euclid(Self::SIZE),
         }
     }
 }

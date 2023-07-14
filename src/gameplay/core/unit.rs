@@ -23,7 +23,7 @@ impl Millimeter {
     }
 }
 
-impl Add<Millimeter> for Millimeter {
+impl Add<Self> for Millimeter {
     type Output = Self;
 
     fn add(self, other: Self) -> Self {
@@ -56,8 +56,8 @@ impl fmt::Display for MillimeterPerSecond {
 pub(crate) struct Milliseconds(pub(crate) u64);
 
 impl Milliseconds {
-    pub(crate) const MINUTE: Milliseconds = Milliseconds(60 * 1000);
-    pub(crate) const EIGHT_HOURS: Milliseconds = Milliseconds(8 * 60 * 60 * 1000);
+    pub(crate) const MINUTE: Self = Self(60 * 1000);
+    pub(crate) const EIGHT_HOURS: Self = Self(8 * 60 * 60 * 1000);
 }
 
 impl fmt::Debug for Milliseconds {
@@ -134,7 +134,7 @@ impl WalkingCost {
     }
 }
 
-impl Add<WalkingCost> for WalkingCost {
+impl Add<Self> for WalkingCost {
     type Output = Self;
 
     fn add(self, other: Self) -> Self {

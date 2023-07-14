@@ -79,7 +79,7 @@ impl PlayerActionState {
         }
 
         match self {
-            PlayerActionState::Waiting { until } => {
+            Self::Waiting { until } => {
                 if !enemies.is_empty() {
                     instruction_queue.add(QueuedInstruction::Interrupted);
                     None // process the cancellation next turn
@@ -92,7 +92,7 @@ impl PlayerActionState {
                     })
                 }
             }
-            PlayerActionState::Sleeping {
+            Self::Sleeping {
                 healing_from,
                 until,
             } => {
@@ -141,7 +141,7 @@ impl PlayerActionState {
         );
         match (&self, instruction) {
             (Self::Sleeping { .. }, QueuedInstruction::Finished) => {
-                *self = PlayerActionState::Normal;
+                *self = Self::Normal;
                 PlayerBehavior::Feedback(Message::info().str("You wake up"))
             }
             (Self::Sleeping { .. }, _) => {
@@ -235,43 +235,41 @@ impl PlayerActionState {
 
     fn handle_offset(&mut self, target: Result<Pos, Message>, nbor: &Nbor) -> PlayerBehavior {
         match (&self, target) {
-            (PlayerActionState::Sleeping { .. }, target) => {
+            (Self::Sleeping { .. }, target) => {
                 panic!("{:?} {:?}", &self, target);
             }
-            (PlayerActionState::ExaminingZoneLevel(current), _) => {
+            (Self::ExaminingZoneLevel(current), _) => {
                 let target = current.nbor(nbor);
                 if let Some(target) = target {
-                    *self = PlayerActionState::ExaminingZoneLevel(target);
+                    *self = Self::ExaminingZoneLevel(target);
                     PlayerBehavior::NoEffect
                 } else {
                     PlayerBehavior::Feedback(Message::warn().str("invalid zone level to examine"))
                 }
             }
-            (PlayerActionState::ExaminingPos(current), target) => {
+            (Self::ExaminingPos(current), target) => {
                 if let Some(target) = target.ok().or_else(|| current.raw_nbor(nbor)) {
-                    *self = PlayerActionState::ExaminingPos(target);
+                    *self = Self::ExaminingPos(target);
                     PlayerBehavior::NoEffect
                 } else {
                     PlayerBehavior::Feedback(Message::warn().str("invalid position to examine"))
                 }
             }
-            (PlayerActionState::Normal, Ok(target)) => {
-                PlayerBehavior::Perform(Action::Step { target })
-            }
-            (PlayerActionState::Attacking, Ok(target)) => {
-                *self = PlayerActionState::Normal;
+            (Self::Normal, Ok(target)) => PlayerBehavior::Perform(Action::Step { target }),
+            (Self::Attacking, Ok(target)) => {
+                *self = Self::Normal;
                 PlayerBehavior::Perform(Action::Attack { target })
             }
-            (PlayerActionState::Smashing, Ok(target)) => {
-                *self = PlayerActionState::Normal;
+            (Self::Smashing, Ok(target)) => {
+                *self = Self::Normal;
                 PlayerBehavior::Perform(Action::Smash { target })
             }
-            (PlayerActionState::Closing, Ok(target)) => {
-                *self = PlayerActionState::Normal;
+            (Self::Closing, Ok(target)) => {
+                *self = Self::Normal;
                 PlayerBehavior::Perform(Action::Close { target })
             }
-            (PlayerActionState::Waiting { .. }, _) => {
-                *self = PlayerActionState::Normal;
+            (Self::Waiting { .. }, _) => {
+                *self = Self::Normal;
                 PlayerBehavior::NoEffect
             }
             (_, Err(message)) => PlayerBehavior::Feedback(message),
@@ -288,7 +286,7 @@ impl PlayerActionState {
                 target: attackable_nbors[0],
             }),
             _ => {
-                *self = PlayerActionState::Attacking;
+                *self = Self::Attacking;
                 PlayerBehavior::NoEffect
             }
         }
@@ -304,7 +302,7 @@ impl PlayerActionState {
                 target: smashable_nbors[0],
             }),
             _ => {
-                *self = PlayerActionState::Smashing;
+                *self = Self::Smashing;
                 PlayerBehavior::NoEffect
             }
         }
@@ -320,7 +318,7 @@ impl PlayerActionState {
                 target: closable_nbors[0],
             }),
             _ => {
-                *self = PlayerActionState::Closing;
+                *self = Self::Closing;
                 PlayerBehavior::NoEffect
             }
         }

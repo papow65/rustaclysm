@@ -26,7 +26,7 @@ where
         D: Deserializer<'de>,
     {
         let obj: T = Deserialize::deserialize(deserializer)?;
-        Ok(Single(CddaAmount { obj, amount: 1 }))
+        Ok(Self(CddaAmount { obj, amount: 1 }))
     }
 }
 
@@ -52,9 +52,9 @@ where
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let value = serde_json::Value::deserialize(deserializer)?;
         match Single::deserialize(value.clone()) {
-            Ok(single) => Ok(Repetition::Single(single)),
+            Ok(single) => Ok(Self::Single(single)),
             Err(single_error) => match CddaAmount::deserialize(value) {
-                Ok(amount) => Ok(Repetition::Multiple(amount)),
+                Ok(amount) => Ok(Self::Multiple(amount)),
                 Err(amount_error) => {
                     eprintln!("{single_error:?}");
                     eprintln!("{amount_error:?}");

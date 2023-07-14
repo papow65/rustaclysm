@@ -39,7 +39,7 @@ pub(crate) struct Overmap {
 
 impl Overmap {
     pub(crate) fn fallback() -> Self {
-        Overmap {
+        Self {
             layers: [
                 OvermapLevel::all(ObjectId::new("deep_rock")),
                 OvermapLevel::all(ObjectId::new("deep_rock")),

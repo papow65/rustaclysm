@@ -345,15 +345,15 @@ pub(crate) struct ItemName {
 impl From<CddaItemName> for ItemName {
     fn from(origin: CddaItemName) -> Self {
         match origin {
-            CddaItemName::Simple(string) => ItemName {
+            CddaItemName::Simple(string) => Self {
                 single: string.clone(),
                 plural: string + "s",
             },
-            CddaItemName::Both { str_sp, .. } => ItemName {
+            CddaItemName::Both { str_sp, .. } => Self {
                 single: str_sp.clone(),
                 plural: str_sp,
             },
-            CddaItemName::Split { str, str_pl, .. } => ItemName {
+            CddaItemName::Split { str, str_pl, .. } => Self {
                 single: str.clone(),
                 plural: str_pl.unwrap_or_else(|| str.clone() + "s"),
             },

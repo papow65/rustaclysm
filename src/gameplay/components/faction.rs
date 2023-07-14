@@ -276,7 +276,7 @@ impl Faction {
         &self,
         envir: &Envir,
         clock: &Clock,
-        factions: &[(Pos, &Faction)],
+        factions: &[(Pos, &Self)],
         actor: &Actor,
     ) -> Vec<Pos> {
         let currently_visible = envir.currently_visible(clock, actor.pos);
@@ -312,16 +312,16 @@ impl Danger {
 }
 
 impl Add<Self> for Danger {
-    type Output = Danger;
+    type Output = Self;
 
-    fn add(self, other: Self) -> Danger {
-        Danger(FloatOrd(self.0 .0 + other.0 .0))
+    fn add(self, other: Self) -> Self {
+        Self(FloatOrd(self.0 .0 + other.0 .0))
     }
 }
 
 impl Zero for Danger {
     fn zero() -> Self {
-        Danger(FloatOrd(0.0))
+        Self(FloatOrd(0.0))
     }
 
     fn is_zero(&self) -> bool {
