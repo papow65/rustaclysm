@@ -49,7 +49,7 @@ impl Faction {
 
     pub(crate) fn is_aggressive(&self, health: &Health) -> bool {
         match self {
-            Self::Human => health.0.partial() < Partial::from_u8(128),
+            Self::Human => health.0.percent() < 0.5,
             _ => true,
         }
     }

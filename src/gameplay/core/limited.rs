@@ -1,4 +1,4 @@
-use crate::prelude::{Partial, BAD_TEXT_COLOR, GOOD_TEXT_COLOR, WARN_TEXT_COLOR};
+use crate::prelude::{BAD_TEXT_COLOR, GOOD_TEXT_COLOR, WARN_TEXT_COLOR};
 use bevy::prelude::Color;
 
 #[derive(Clone, Debug)]
@@ -31,10 +31,6 @@ impl Limited {
 
     pub(crate) const fn full(max: u16) -> Self {
         Self { current: max, max }
-    }
-
-    pub(crate) const fn partial(&self) -> Partial {
-        Partial::from_u8((255_u32 * self.current as u32 / self.max as u32) as u8)
     }
 
     pub(crate) fn percent(&self) -> f32 {

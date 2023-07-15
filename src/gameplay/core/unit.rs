@@ -91,15 +91,6 @@ impl Div<MillimeterPerSecond> for Millimeter {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub(crate) struct Partial(u8);
-
-impl Partial {
-    pub(crate) const fn from_u8(from: u8) -> Self {
-        Self(from)
-    }
-}
-
 #[derive(Clone, Copy, Debug)]
 pub(crate) struct WalkingCost {
     /** Contains the move cost of every step and double cost for going up */
