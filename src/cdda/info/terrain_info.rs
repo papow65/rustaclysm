@@ -1,4 +1,4 @@
-use crate::prelude::{Bash, Flags, ItemName, ObjectId};
+use crate::prelude::{Bash, Flags, ItemName, MoveCostIncrease, ObjectId};
 use bevy::utils::HashMap;
 use serde::Deserialize;
 
@@ -21,10 +21,9 @@ pub(crate) struct TerrainInfo {
 pub(crate) struct MoveCost(pub(crate) u8);
 
 impl MoveCost {
-    pub(crate) fn adjust(&self, cost_mod: Option<MoveCostMod>) -> Self {
+    pub(crate) fn adjust(&self, cost_mod: Option<MoveCostIncrease>) -> Self {
         let extra = cost_mod.map_or(0, |c| c.0);
-        assert!(0 <= extra);
-        Self(self.0 + extra as u8)
+        Self(self.0 + extra)
     }
 }
 
@@ -33,6 +32,3 @@ impl Default for MoveCost {
         Self(2)
     }
 }
-
-#[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, PartialOrd)]
-pub(crate) struct MoveCostMod(pub(crate) i8);

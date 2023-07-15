@@ -24,7 +24,10 @@ impl ZoneLevelEntities {
         entry.insert(entity);
 
         let reverse_entry = self.reverse.entry(entity);
-        assert!(matches!(reverse_entry, Entry::Vacant(..)));
+        assert!(
+            matches!(reverse_entry, Entry::Vacant(..)),
+            "There shouldn't be a reverse entry"
+        );
         reverse_entry.insert(zone_level);
     }
 
@@ -32,6 +35,9 @@ impl ZoneLevelEntities {
     pub(crate) fn remove(&mut self, entity: Entity) {
         let zone_level = self.reverse.remove(&entity).unwrap();
         let removed = self.zone_levels.remove(&zone_level);
-        assert!(removed.is_some());
+        assert!(
+            removed.is_some(),
+            "The removed zone level entity should have been found"
+        );
     }
 }

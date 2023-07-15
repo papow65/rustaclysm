@@ -23,7 +23,10 @@ impl Location {
 
         if let Some(pos) = pos {
             if let Some(vec) = self.objects.get_mut(&pos) {
-                assert!(!vec.contains(&entity));
+                assert!(
+                    !vec.contains(&entity),
+                    "The given entity shouldn't alrady be at this position"
+                );
                 vec.push(entity);
                 //println!("\n\rTogether {vec:?}");
             } else {

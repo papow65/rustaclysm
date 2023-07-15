@@ -4,7 +4,6 @@ use bevy::{
     prelude::*,
     render::camera::{PerspectiveProjection, Projection::Perspective},
 };
-use std::cmp::Ordering;
 
 fn insert<T>(child_builder: &mut ChildBuilder, entity: Entity, bundle: T)
 where
@@ -272,15 +271,13 @@ impl<'w, 's> Spawner<'w, 's> {
                 .insert(Integrity(Limited::full(10)));
         }
 
-        match furniture_info.move_cost_mod.0.cmp(&0) {
-            Ordering::Less => {
+        match furniture_info.move_cost_mod {
+            None => {}
+            Some(MoveCostMod::Impossible(_)) => {
                 self.commands.entity(tile).insert(Obstacle);
             }
-            Ordering::Equal => {}
-            Ordering::Greater => {
-                self.commands
-                    .entity(tile)
-                    .insert(Hurdle(furniture_info.move_cost_mod));
+            Some(MoveCostMod::Slower(increase)) => {
+                self.commands.entity(tile).insert(Hurdle(increase));
             }
         }
     }
@@ -546,10 +543,13 @@ impl<'w, 's> Spawner<'w, 's> {
         pos: Pos,
         definition: &ObjectDefinition,
     ) {
-        assert!(matches!(
-            definition.category,
-            ObjectCategory::Furniture | ObjectCategory::Terrain
-        ));
+        assert!(
+            matches!(
+                definition.category,
+                ObjectCategory::Furniture | ObjectCategory::Terrain
+            ),
+            "Only furniture and terrain can be smashed"
+        );
 
         let bash = infos
             .furniture(&definition.id)
@@ -559,12 +559,18 @@ impl<'w, 's> Spawner<'w, 's> {
             .expect("Smashable");
 
         if let Some(terrain_id) = &bash.ter_set {
-            assert!(definition.category == ObjectCategory::Terrain);
+            assert_eq!(
+                definition.category,
+                ObjectCategory::Terrain,
+                "The terrain field requires a terrain category"
+            );
             self.spawn_terrain(infos, parent_entity, pos, terrain_id);
-        }
-
-        if let Some(furniture_id) = &bash.furn_set {
-            assert!(definition.category == ObjectCategory::Furniture);
+        } else if let Some(furniture_id) = &bash.furn_set {
+            assert_eq!(
+                definition.category,
+                ObjectCategory::Furniture,
+                "The furniture field requires a furniture category"
+            );
             self.spawn_furniture(infos, parent_entity, pos, furniture_id);
         }
 
@@ -728,7 +734,10 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
         child_visibiltiy: &Visibility,
     ) -> Result<(), ()> {
         //println!("zone_level: {zone_level:?} {:?}", &definition);
-        assert!(zone_level.level <= Level::ZERO);
+        assert!(
+            zone_level.level <= Level::ZERO,
+            "Collapsed zone levels above ground may not be spawned"
+        );
 
         let id = self.zone_level_ids.get(zone_level);
         let zone_level_info = self.infos.zone_level(id);

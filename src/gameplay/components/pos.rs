@@ -191,7 +191,7 @@ impl Pos {
 
     /** Doe not include 'self', but includes 'to' */
     pub(crate) fn straight(self, to: Self) -> impl Iterator<Item = Self> {
-        assert_ne!(self, to);
+        assert_ne!(self, to, "The begin and end should be different positions");
 
         let max_diff = self
             .x

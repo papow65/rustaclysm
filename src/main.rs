@@ -61,6 +61,7 @@
 // Denied clippy lints from allowed categories
 #![deny(clippy::modulo_arithmetic)]
 #![deny(clippy::str_to_string)]
+#![deny(clippy::missing_assert_message)]
 #![deny(clippy::missing_const_for_fn)]
 #![deny(clippy::use_self)]
 // Exceptions for allowed lints from denied categories

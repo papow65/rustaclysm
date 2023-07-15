@@ -33,12 +33,6 @@ impl Limited {
         Self { current: max, max }
     }
 
-    #[allow(unused)]
-    pub(crate) fn new_in_fraction_order(current: u16, max: u16) -> Self {
-        assert!(current <= max);
-        Self { current, max }
-    }
-
     pub(crate) const fn partial(&self) -> Partial {
         Partial::from_u8((255_u32 * self.current as u32 / self.max as u32) as u8)
     }

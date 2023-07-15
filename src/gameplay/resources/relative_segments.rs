@@ -124,18 +124,27 @@ impl RelativeSegments {
 
         assert_eq!(
             rays.get(&Pos::ORIGIN),
-            Some(&RelativeRay { path: Vec::new() })
+            Some(&RelativeRay { path: Vec::new() }),
+            "The ray at the origin should be empty"
         );
 
         let relative_ray = RelativeRay {
             path: vec![Pos::new(1, Level::ZERO, 0)],
         };
-        assert_eq!(rays.get(&Pos::new(1, Level::ZERO, 0)), Some(&relative_ray));
+        assert_eq!(
+            rays.get(&Pos::new(1, Level::ZERO, 0)),
+            Some(&relative_ray),
+            "The ray at (1, 0, 0) should consist of only (1, 0, 0) itself"
+        );
 
         let relative_ray = RelativeRay {
             path: vec![Pos::new(1, Level::ZERO, 0), Pos::new(2, Level::ZERO, 0)],
         };
-        assert_eq!(rays.get(&Pos::new(2, Level::ZERO, 0)), Some(&relative_ray));
+        assert_eq!(
+            rays.get(&Pos::new(2, Level::ZERO, 0)),
+            Some(&relative_ray),
+            "The ray at (2, 0, 0) should consist of only (1, 0, 0) and (2, 0, 0)"
+        );
 
         let upper_bound = (2 * MAX_VISIBLE_DISTANCE as usize + 1).pow(2) * Level::AMOUNT;
         assert!(

@@ -46,7 +46,7 @@ pub(crate) struct Openable;
 pub(crate) struct Closeable;
 
 #[derive(Component)]
-pub(crate) struct Hurdle(pub(crate) MoveCostMod);
+pub(crate) struct Hurdle(pub(crate) MoveCostIncrease);
 
 /** Blocks vision (horizontally) */
 #[derive(Component)]

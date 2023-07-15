@@ -305,8 +305,11 @@ impl<'w, 's> Envir<'w, 's> {
     }
 
     pub(crate) fn collide(&self, from: Pos, to: Pos, controlled: bool) -> Collision {
-        assert_ne!(from, to);
-        assert!(self.are_nbors(from, to));
+        assert_ne!(from, to, "Collisions require movement");
+        assert!(
+            self.are_nbors(from, to),
+            "Collisions require neighbor positions"
+        );
 
         match to.level.cmp(&from.level) {
             Ordering::Greater | Ordering::Less => {
@@ -369,9 +372,15 @@ impl MovementPath {
         if let Some((mut steps, duration)) =
             astar(&from, successors, heuristic, |&pos| pos == destination)
         {
-            assert!(!steps.is_empty());
-            assert_eq!(steps.remove(0), from);
-            assert!(!steps.is_empty());
+            assert!(
+                2 <= steps.len(),
+                "Movement steps should contain both the start and end point"
+            );
+            assert_eq!(
+                steps.remove(0),
+                from,
+                "The first step should match the starting point"
+            );
             Some(Self {
                 first: *steps.first().unwrap(),
                 duration,

@@ -390,15 +390,28 @@ impl<'s> Actor<'s> {
         {
             if let Some(&taken_pos) = taken_pos {
                 let offset = taken_pos - self.pos;
-                assert!(offset.x.abs() <= 1);
-                assert!(offset.level == LevelOffset::ZERO);
-                assert!(offset.z.abs() <= 1);
+                assert!(
+                    offset.x.abs() <= 1,
+                    "Taking is not possible from more than one tile away"
+                );
+                assert!(
+                    offset.level == LevelOffset::ZERO,
+                    "Taking is only possible on the same level"
+                );
+                assert!(
+                    offset.z.abs() <= 1,
+                    "Taking is not possible from more than one tile away"
+                );
             } else {
-                assert!(taken_parent.is_some());
+                assert!(
+                    taken_parent.is_some(),
+                    "Items without a position should have a parent"
+                );
                 let taken_parent = taken_parent.unwrap();
                 assert!(
                     taken_parent.get() == self.body_containers.unwrap().hands
-                        || taken_parent.get() == self.body_containers.unwrap().clothing
+                        || taken_parent.get() == self.body_containers.unwrap().clothing,
+                    "Item parents should be part of the body"
                 );
             }
 
@@ -433,7 +446,7 @@ impl<'s> Actor<'s> {
                     Some(self.activate())
                 }
                 Err(messages) => {
-                    assert!(!messages.is_empty());
+                    assert!(!messages.is_empty(), "Empty messages are not allowed");
                     commands.spawn_batch(messages);
                     None
                 }
@@ -461,7 +474,8 @@ impl<'s> Actor<'s> {
 
         assert!(
             dumped_parent == self.body_containers.unwrap().hands
-                || dumped_parent == self.body_containers.unwrap().clothing
+                || dumped_parent == self.body_containers.unwrap().clothing,
+            "Item parents should be part of the body"
         );
 
         commands.spawn(

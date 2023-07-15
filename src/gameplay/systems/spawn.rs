@@ -340,7 +340,11 @@ pub(crate) fn handle_map_events(
                     .get(subzone_level)
                     .is_none()
                 {
-                    assert_eq!(submap.coordinates, subzone_level.coordinates());
+                    assert_eq!(
+                        submap.coordinates,
+                        subzone_level.coordinates(),
+                        "The stored coordinates and calculated coordinated should match"
+                    );
                     zone_spawner.spawn_subzone(submap, subzone_level);
                 }
             }

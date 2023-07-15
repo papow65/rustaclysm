@@ -34,8 +34,14 @@ impl InstructionQueue {
     }
 
     pub(crate) fn start_waiting(&mut self) {
-        assert!(self.queue.is_empty());
-        assert!(!self.waiting_for_user);
+        assert!(
+            self.queue.is_empty(),
+            "The player character must be present"
+        );
+        assert!(
+            !self.waiting_for_user,
+            "Waiting for user input shouldn't alrady be in effect"
+        );
 
         self.waiting_for_user = true;
     }

@@ -1,4 +1,4 @@
-use crate::prelude::{Flags, ItemName, MoveCostMod, ObjectId};
+use crate::prelude::{Flags, ItemName, ObjectId};
 use bevy::utils::HashMap;
 use rand::{thread_rng, Rng};
 use serde::Deserialize;
@@ -6,7 +6,7 @@ use serde::Deserialize;
 #[derive(Debug, Deserialize)]
 pub(crate) struct FurnitureInfo {
     pub(crate) name: ItemName,
-    pub(crate) move_cost_mod: MoveCostMod,
+    pub(crate) move_cost_mod: Option<MoveCostMod>,
     pub(crate) looks_like: Option<ObjectId>,
 
     #[serde(default)]
@@ -18,6 +18,16 @@ pub(crate) struct FurnitureInfo {
     #[serde(flatten)]
     extra: HashMap<String, serde_json::Value>,
 }
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, PartialOrd)]
+#[serde(untagged)]
+pub(crate) enum MoveCostMod {
+    Slower(MoveCostIncrease),
+    Impossible(i8), // -1
+}
+
+#[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, PartialOrd)]
+pub(crate) struct MoveCostIncrease(pub(crate) u8);
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct Bash {

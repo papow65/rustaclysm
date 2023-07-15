@@ -131,8 +131,16 @@ impl<T> RepetitionBlock<T> {
             }
             i += amount;
         }
-        assert_eq!(i, size * size);
-        assert_eq!(result.len(), i as usize);
+        assert_eq!(
+            i,
+            size * size,
+            "The repetion count should be the square of given size"
+        );
+        assert_eq!(
+            result.len(),
+            i as usize,
+            "The amount of entries in the result should match the repitition count"
+        );
         result
     }
 }

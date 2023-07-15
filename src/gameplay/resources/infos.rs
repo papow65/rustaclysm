@@ -118,7 +118,7 @@ impl Infos {
             }
         }
         println!("Found {info_count} ids in {file_count} info files");
-        assert!(!literals.is_empty());
+        assert!(!literals.is_empty(), "Some info should have been found");
         literals
     }
 
@@ -170,14 +170,26 @@ impl Infos {
                 if TypeId::MIGRATION.contains(type_id) {
                     // new_id -> replace <- to
                     if let Some(new_id) = enriched.remove("new_id") {
-                        assert!(!enriched.contains_key("to"));
+                        assert!(
+                            !enriched.contains_key("to"),
+                            "'to' and 'new_id' can not be combined"
+                        );
                         let replace = enriched.entry("replace");
-                        assert!(matches!(replace, Entry::Vacant { .. }));
+                        assert!(
+                            matches!(replace, Entry::Vacant { .. }),
+                            "'replace' and 'new_id' can not be combined"
+                        );
                         replace.or_insert(new_id);
                     } else if let Some(to) = enriched.remove("to") {
-                        assert!(!enriched.contains_key("new_id"));
+                        assert!(
+                            !enriched.contains_key("new_id"),
+                            "'to' a..   ..nd 'new_id' can not be combined"
+                        );
                         let replace = enriched.entry("replace");
-                        assert!(matches!(replace, Entry::Vacant { .. }));
+                        assert!(
+                            matches!(replace, Entry::Vacant { .. }),
+                            "'to' and 'replace' can not be combined"
+                        );
                         replace.or_insert(to);
                     }
                 }
