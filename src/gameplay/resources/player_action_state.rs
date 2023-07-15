@@ -20,24 +20,24 @@ pub(crate) enum PlayerActionState {
     Smashing,
     Closing,
     Waiting {
-        until: Milliseconds,
+        until: Timestamp,
     },
     Sleeping {
-        healing_from: Milliseconds,
-        until: Milliseconds,
+        healing_from: Timestamp,
+        until: Timestamp,
     },
     ExaminingPos(Pos),
     ExaminingZoneLevel(ZoneLevel),
 }
 
 impl PlayerActionState {
-    fn start_waiting(now: Milliseconds) -> Self {
+    fn start_waiting(now: Timestamp) -> Self {
         Self::Waiting {
             until: now + Milliseconds::MINUTE,
         }
     }
 
-    fn start_sleeping(now: Milliseconds) -> Self {
+    fn start_sleeping(now: Timestamp) -> Self {
         Self::Sleeping {
             healing_from: now,
             until: now + Milliseconds::EIGHT_HOURS,
@@ -58,7 +58,7 @@ impl PlayerActionState {
         instruction_queue: &mut InstructionQueue,
         actor: Entity,
         pos: Pos,
-        now: Milliseconds,
+        now: Timestamp,
         enemies: &[Pos],
     ) -> Option<Action> {
         while let Some(instruction) = instruction_queue.pop() {
@@ -98,20 +98,23 @@ impl PlayerActionState {
             } => {
                 // TODO interrupt on taking damage
 
-                assert!(healing_from < until, "{healing_from:?} {until:?}");
-                let sleeping_duration = now.0 - healing_from.0;
+                assert!(healing_from < until, "{healing_from:?} < {until:?}");
+                assert!(*healing_from <= now, "{healing_from:?} <= {now:?}");
+                eprintln!("{healing_from:?} <= {now:?}");
+                let sleeping_duration = now - *healing_from;
 
-                let healing_amount = sleeping_duration / 1_000_000;
+                let healing_amount = sleeping_duration.0 / 1_000_000;
                 commands.entity(actor).insert(Healing {
-                    amount: healing_amount as u16,
+                    amount: dbg!(healing_amount) as u16,
                 });
 
                 if *until <= now {
                     instruction_queue.add(QueuedInstruction::Finished);
                     None // process the cancellation next turn
                 } else {
-                    let healing_duration = healing_amount * 1_000_000;
-                    healing_from.0 += healing_duration;
+                    let healing_duration = Milliseconds(healing_amount * 1_000_000);
+                    *healing_from += dbg!(healing_duration);
+                    dbg!(healing_from);
 
                     Some(Action::Stay {
                         duration: StayDuration::Long,
@@ -131,7 +134,7 @@ impl PlayerActionState {
         envir: &Envir,
         pos: Pos,
         instruction: QueuedInstruction,
-        now: Milliseconds,
+        now: Timestamp,
     ) -> PlayerBehavior {
         //println!("processing instruction: {instruction:?}");
         assert!(

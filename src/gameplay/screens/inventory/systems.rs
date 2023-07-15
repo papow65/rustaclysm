@@ -42,7 +42,7 @@ pub(crate) fn spawn_inventory(mut commands: Commands, fonts: Res<Fonts>) {
 pub(crate) fn clear_inventory(
     clock: Clock,
     inventory: Res<InventoryScreen>,
-    mut last_time: Local<Milliseconds>,
+    mut last_time: Local<Timestamp>,
     children: Query<&Children>,
     mut styles: Query<&mut Style>,
 ) -> bool {

@@ -294,30 +294,27 @@ pub(crate) fn update_status_time(
 
     let season_length = 91; // TODO load from worldoptions.json
 
-    let tenth_seconds = clock.time().0 / 100;
-    let seconds = tenth_seconds / 10;
-    let minutes = seconds / 60;
-    let hours = minutes / 60;
-    let days = hours / 24;
-    let seasons = days / season_length;
-    let years = seasons / 4;
+    let (day, hours, minutes, seconds, deciseconds) = clock.time().day_and_time();
+    let seasons = day / season_length;
+
+    // based on https://cataclysmdda.org/lore-background.html
+    let year = seasons / 4 + OffsetDateTime::now_utc().year() as u64 + 1;
+
+    let season_name = match seasons % 4 {
+        0 => "Spring",
+        1 => "Summer",
+        2 => "Autumn",
+        3 => "Winter",
+        _ => panic!("Modulo error"),
+    };
+    let day_of_season = day % season_length + 1; // 1-based
+
+    let sunlight = 100.0 * clock.sunlight_percentage();
 
     text_sections.time.value = format!(
-        "{:#04}-{}-{:#02} {:#02}:{:#02}:{:#02}.{} ({:.0}% sunlight)\n\n",
-        years + OffsetDateTime::now_utc().year() as u64 + 1, // based on https://cataclysmdda.org/lore-background.html
-        match seasons % 4 {
-            0 => "Spring",
-            1 => "Summer",
-            2 => "Autumn",
-            3 => "Winter",
-            _ => panic!("Modulo error"),
-        },
-        days % season_length + 1, // 1-based
-        hours % 24,
-        minutes % 60,
-        seconds % 60,
-        tenth_seconds % 10,
-        100.0 * clock.sunlight_percentage()
+        "{year:#04}-{season_name}-{day_of_season:#02} \
+            {hours:#02}:{minutes:#02}:{seconds:#02}.{deciseconds} \
+            ({sunlight:.0}% sunlight)\n\n"
     );
     update_status_display(&text_sections, &mut status_displays.single_mut());
 

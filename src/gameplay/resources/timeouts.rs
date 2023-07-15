@@ -1,4 +1,4 @@
-use crate::prelude::Milliseconds;
+use crate::prelude::{Milliseconds, Timestamp};
 use bevy::{
     ecs::system::SystemParam,
     prelude::{Entity, Res, Resource},
@@ -7,20 +7,20 @@ use bevy::{
 
 #[derive(Resource)]
 pub(crate) struct Timeouts {
-    start: Milliseconds,
-    m: HashMap<Entity, Milliseconds>,
+    start: Timestamp,
+    m: HashMap<Entity, Timestamp>,
 }
 
 impl Timeouts {
     pub(crate) fn new(turn: u64) -> Self {
         Self {
-            start: Milliseconds(1000 * turn),
+            start: Timestamp::from(turn),
             m: HashMap::default(),
         }
     }
 
     pub(crate) fn add(&mut self, entity: Entity, timeout: Milliseconds) {
-        self.m.get_mut(&entity).unwrap().0 += timeout.0;
+        *self.m.get_mut(&entity).unwrap() += timeout;
     }
 
     /// Does not 'pop' the entity
@@ -35,7 +35,7 @@ impl Timeouts {
     }
 
     /** Private, use Clock.time */
-    fn time(&self) -> Milliseconds {
+    fn time(&self) -> Timestamp {
         self.m.values().min().copied().unwrap_or(self.start)
     }
 }
@@ -46,7 +46,7 @@ pub(crate) struct Clock<'w> {
 }
 
 impl<'w> Clock<'w> {
-    pub(crate) fn time(&self) -> Milliseconds {
+    pub(crate) fn time(&self) -> Timestamp {
         self.timeouts.time()
     }
 
@@ -62,8 +62,7 @@ impl<'w> Clock<'w> {
         const FULL_SUN_DIFF: u64 = 3 * 60; // Full daylight up to than 3 hours away from solar noon
         const SUNSET_DIFF: u64 = 7 * 60; // No daylight more than 7 hours away from solar noon
 
-        let minute_of_day = self.time().0 / (1000 * 60) % (24 * 60);
-        let minutes_from_noon = SOLAR_NOON.abs_diff(minute_of_day);
+        let minutes_from_noon = SOLAR_NOON.abs_diff(self.time().minute_of_day());
 
         (SUNSET_DIFF.saturating_sub(minutes_from_noon) as f32
             / SUNSET_DIFF.abs_diff(FULL_SUN_DIFF) as f32)
