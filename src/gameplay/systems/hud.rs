@@ -3,7 +3,6 @@ use bevy::diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin};
 use bevy::ecs::system::{EntityCommands, Resource};
 use bevy::prelude::*;
 use std::time::Instant;
-use time::OffsetDateTime;
 
 const TEXT_WIDTH: f32 = 8.0 * 43.0; // 43 chars
 
@@ -292,30 +291,9 @@ pub(crate) fn update_status_time(
 ) {
     let start = Instant::now();
 
-    let season_length = 91; // TODO load from worldoptions.json
-
-    let (day, hours, minutes, seconds, deciseconds) = clock.time().day_and_time();
-    let seasons = day / season_length;
-
-    // based on https://cataclysmdda.org/lore-background.html
-    let year = seasons / 4 + OffsetDateTime::now_utc().year() as u64 + 1;
-
-    let season_name = match seasons % 4 {
-        0 => "Spring",
-        1 => "Summer",
-        2 => "Autumn",
-        3 => "Winter",
-        _ => panic!("Modulo error"),
-    };
-    let day_of_season = day % season_length + 1; // 1-based
-
+    let now = clock.time();
     let sunlight = 100.0 * clock.sunlight_percentage();
-
-    text_sections.time.value = format!(
-        "{year:#04}-{season_name}-{day_of_season:#02} \
-            {hours:#02}:{minutes:#02}:{seconds:#02}.{deciseconds} \
-            ({sunlight:.0}% sunlight)\n\n"
-    );
+    text_sections.time.value = format!("{now} ({sunlight:.0}% sunlight)\n\n");
     update_status_display(&text_sections, &mut status_displays.single_mut());
 
     log_if_slow("update_status_time", start);

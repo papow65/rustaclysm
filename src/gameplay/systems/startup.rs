@@ -23,12 +23,13 @@ pub(crate) fn create_independent_resources(mut commands: Commands) {
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn create_dependent_resources(mut commands: Commands, paths: Res<Paths>) {
     let sav = Sav::try_from(&paths.sav_path()).expect("Loading sav file failed");
-    let turn = sav.turn;
+    let season_length = 91; // TODO load from worldoptions.json
+    let timestamp = Timestamp::new(sav.turn, season_length);
 
     commands.insert_resource(Explored::new(paths.sav_path()));
     commands.insert_resource(sav);
     commands.insert_resource(TileLoader::new());
-    commands.insert_resource(Timeouts::new(turn));
+    commands.insert_resource(Timeouts::new(timestamp));
     commands.insert_resource(ZoneLevelIds::new(paths.world_path()));
 }
 

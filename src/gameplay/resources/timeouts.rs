@@ -12,9 +12,9 @@ pub(crate) struct Timeouts {
 }
 
 impl Timeouts {
-    pub(crate) fn new(turn: u64) -> Self {
+    pub(crate) fn new(timestamp: Timestamp) -> Self {
         Self {
-            start: Timestamp::from(turn),
+            start: timestamp,
             m: HashMap::default(),
         }
     }
