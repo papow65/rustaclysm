@@ -169,7 +169,7 @@ impl PlayerActionState {
             }
             (Self::ExaminingPos(curr), QueuedInstruction::Offset(direction)) => {
                 let nbor = direction.to_nbor();
-                self.handle_offset(envir.get_nbor(*curr, &nbor), &nbor)
+                self.handle_offset(envir.get_nbor(*curr, nbor), nbor)
             }
             (
                 _,
@@ -186,7 +186,7 @@ impl PlayerActionState {
             }
             (_, QueuedInstruction::Offset(direction)) => {
                 let nbor = direction.to_nbor();
-                self.handle_offset(envir.get_nbor(pos, &nbor), &nbor)
+                self.handle_offset(envir.get_nbor(pos, nbor), nbor)
             }
             (_, QueuedInstruction::Wield(entity)) => {
                 PlayerBehavior::Perform(Action::Wield { entity })
@@ -197,8 +197,8 @@ impl PlayerActionState {
             (_, QueuedInstruction::Pickup(entity)) => {
                 PlayerBehavior::Perform(Action::Pickup { entity })
             }
-            (_, QueuedInstruction::Dump(entity)) => {
-                PlayerBehavior::Perform(Action::Dump { entity })
+            (_, QueuedInstruction::Dump(entity, direction)) => {
+                PlayerBehavior::Perform(Action::Dump { entity, direction })
             }
             (_, QueuedInstruction::Attack) => self.handle_attack(envir, pos),
             (_, QueuedInstruction::Smash) => self.handle_smash(envir, pos),
@@ -236,7 +236,7 @@ impl PlayerActionState {
         }
     }
 
-    fn handle_offset(&mut self, target: Result<Pos, Message>, nbor: &Nbor) -> PlayerBehavior {
+    fn handle_offset(&mut self, target: Result<Pos, Message>, nbor: Nbor) -> PlayerBehavior {
         match (&self, target) {
             (Self::Sleeping { .. }, target) => {
                 panic!("{:?} {:?}", &self, target);

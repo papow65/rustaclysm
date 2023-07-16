@@ -29,7 +29,7 @@ impl HorizontalDirection {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub(crate) enum Nbor {
     Up,
     Horizontal(HorizontalDirection),
@@ -75,7 +75,7 @@ impl Nbor {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub(crate) enum NborDistance {
     Up,
     Adjacent,

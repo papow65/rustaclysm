@@ -158,7 +158,7 @@ impl Pos {
     }
 
     /// Get nbor while ignoring stairs - meant for meta operations like examining
-    pub(crate) fn raw_nbor(self, nbor: &Nbor) -> Option<Self> {
+    pub(crate) fn raw_nbor(self, nbor: Nbor) -> Option<Self> {
         match nbor {
             Nbor::Up => self.level.up().map(|level| Self {
                 x: self.x,
@@ -333,7 +333,7 @@ impl ZoneLevel {
         })
     }
 
-    pub(crate) fn nbor(self, nbor: &Nbor) -> Option<Self> {
+    pub(crate) fn nbor(self, nbor: Nbor) -> Option<Self> {
         match nbor {
             Nbor::Up => self.level.up().map(|level| Self {
                 zone: self.zone,

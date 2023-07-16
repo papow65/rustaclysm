@@ -115,6 +115,8 @@ pub(crate) struct Timestamp {
 }
 
 impl Timestamp {
+    pub(crate) const ZERO: Self = Self::new(0, 1);
+
     pub(crate) const fn new(turn: u64, season_length: u64) -> Self {
         Self {
             offset: Milliseconds(1000 * turn),
@@ -211,7 +213,7 @@ pub(crate) struct WalkingCost {
 }
 
 impl WalkingCost {
-    pub(crate) fn new(nbor_distance: &NborDistance, move_cost: MoveCost) -> Self {
+    pub(crate) fn new(nbor_distance: NborDistance, move_cost: MoveCost) -> Self {
         let mut new = Self {
             equivalent_distance: match nbor_distance {
                 NborDistance::Up | NborDistance::Down => Millimeter::VERTICAL,
@@ -221,7 +223,7 @@ impl WalkingCost {
             },
         };
         new.equivalent_distance.0 *= u64::from(move_cost.0);
-        if nbor_distance != &NborDistance::Up {
+        if nbor_distance != NborDistance::Up {
             // 2 is both the penalty for muving up and default move cost.
             new.equivalent_distance.0 /= 2;
         }

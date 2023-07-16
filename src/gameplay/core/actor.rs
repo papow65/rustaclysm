@@ -467,6 +467,7 @@ impl<'s> Actor<'s> {
         location: &mut Location,
         hierarchy: &Hierarchy,
         dumped: Entity,
+        direction: HorizontalDirection,
     ) -> Impact {
         let (_, _, dumped_name, _, dumped_amount, dumped_filthy, _, dumped_parent) =
             hierarchy.items.get(dumped).unwrap();
@@ -478,6 +479,9 @@ impl<'s> Actor<'s> {
             "Item parents should be part of the body"
         );
 
+        // TODO Check for obstacles
+        let dumped_pos = self.pos.raw_nbor(Nbor::Horizontal(direction)).unwrap();
+
         commands.spawn(
             Message::info()
                 .push(self.name.single())
@@ -488,7 +492,7 @@ impl<'s> Actor<'s> {
         commands
             .entity(dumped)
             .insert(VisibilityBundle::default())
-            .insert(self.pos);
+            .insert(dumped_pos);
         location.update(dumped, Some(self.pos));
         self.activate()
     }

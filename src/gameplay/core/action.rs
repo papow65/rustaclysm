@@ -1,6 +1,8 @@
 use crate::prelude::Pos;
 use bevy::prelude::Entity;
 
+use super::HorizontalDirection;
+
 #[derive(Copy, Clone, Debug)]
 pub(crate) enum StayDuration {
     Short,
@@ -35,6 +37,7 @@ pub(crate) enum Action {
     },
     Dump {
         entity: Entity,
+        direction: HorizontalDirection,
     },
     ExamineItem {
         entity: Entity,

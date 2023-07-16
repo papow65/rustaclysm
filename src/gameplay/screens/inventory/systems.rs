@@ -24,32 +24,45 @@ pub(crate) fn spawn_inventory(mut commands: Commands, fonts: Res<Fonts>) {
 
     commands.insert_resource(InventoryScreen {
         root,
+        selected_item: None,
+        previous_items: HashMap::default(),
+        next_items: HashMap::default(),
+        drop_direction: HorizontalDirection::Here,
         section_text_style: TextStyle {
             font: fonts.default(),
             font_size: FONT_SIZE,
-            color: DEFAULT_TEXT_COLOR,
+            color: SOFT_TEXT_COLOR,
+        },
+        selected_section_text_style: TextStyle {
+            font: fonts.default(),
+            font_size: FONT_SIZE,
+            color: WARN_TEXT_COLOR,
         },
         item_text_style: TextStyle {
             font: fonts.default(),
             font_size: FONT_SIZE,
             color: DEFAULT_TEXT_COLOR,
         },
-        drop_direction: HorizontalDirection::Here,
+        selected_item_text_style: TextStyle {
+            font: fonts.default(),
+            font_size: FONT_SIZE,
+            color: GOOD_TEXT_COLOR,
+        },
+        last_time: Timestamp::ZERO,
     });
 }
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn clear_inventory(
     clock: Clock,
-    inventory: Res<InventoryScreen>,
-    mut last_time: Local<Timestamp>,
+    mut inventory: ResMut<InventoryScreen>,
     children: Query<&Children>,
     mut styles: Query<&mut Style>,
 ) -> bool {
-    if *last_time == clock.time() {
+    if inventory.last_time == clock.time() {
         return false;
     }
-    *last_time = clock.time();
+    inventory.last_time = clock.time();
 
     if let Ok(children) = children.get(inventory.root) {
         for &child in children {
@@ -68,7 +81,7 @@ pub(crate) fn update_inventory(
     mut commands: Commands,
     envir: Envir,
     infos: Res<Infos>,
-    inventory: Res<InventoryScreen>,
+    mut inventory: ResMut<InventoryScreen>,
     players: Query<(&Pos, &BodyContainers), With<Player>>,
     items: Query<(
         Entity,
@@ -87,37 +100,72 @@ pub(crate) fn update_inventory(
         return;
     }
 
+    inventory.previous_items.clear();
+    inventory.next_items.clear();
+
     let (&player_pos, body_containers) = players.single();
     let items_by_section = items_by_section(&envir, &items, player_pos, body_containers);
-
     let mut items_by_section = items_by_section.into_iter().collect::<Vec<_>>();
     items_by_section.sort_by_key(|(section, _)| (*section).clone());
 
-    commands.entity(inventory.root).with_children(|parent| {
-        for (section, items) in items_by_section {
-            parent.spawn(TextBundle::from_section(
-                format!("[{section}]"),
-                inventory.section_text_style.clone(),
-            ));
+    let selected_item_present = items_by_section.iter().any(|(_, items)| {
+        items
+            .iter()
+            .any(|(e, _, _)| Some(*e) == inventory.selected_item)
+    });
 
+    commands.entity(inventory.root).with_children(|parent| {
+        let mut first_item = None;
+        let mut previous_item = None;
+
+        for (section, items) in items_by_section {
+            let section_style = if section == InventorySection::Nbor(inventory.drop_direction) {
+                &inventory.selected_section_text_style
+            } else {
+                &inventory.section_text_style
+            };
+
+            let mut text_sections = vec![TextSection::new(
+                format!("[{section}]"),
+                section_style.clone(),
+            )];
             if section == InventorySection::Nbor(inventory.drop_direction) {
-                parent.spawn(TextBundle::from_section(
+                text_sections.push(TextSection::new(
                     String::from("(dropping here)"),
-                    inventory.section_text_style.clone(),
+                    section_style.clone(),
                 ));
             }
+            parent.spawn(TextBundle::from_sections(text_sections));
 
             for (entity, id, item_message) in items {
+                if first_item.is_none() {
+                    first_item = Some(entity);
+                    if !selected_item_present {
+                        inventory.selected_item = Some(entity);
+                    }
+                }
+
                 if let Some(item_info) = infos.item(id) {
+                    let item_style = if Some(entity) == inventory.selected_item {
+                        &inventory.selected_item_text_style
+                    } else {
+                        &inventory.item_text_style
+                    };
+
                     add_row(
                         &section,
                         parent,
                         entity,
                         item_message,
                         item_info,
-                        &inventory.item_text_style,
+                        item_style,
                     );
                 }
+                if let Some(previous_item) = previous_item {
+                    inventory.previous_items.insert(entity, previous_item);
+                    inventory.next_items.insert(previous_item, entity);
+                }
+                previous_item = Some(entity);
             }
 
             // empty line
@@ -125,6 +173,20 @@ pub(crate) fn update_inventory(
                 String::from(" "),
                 inventory.section_text_style.clone(),
             ));
+        }
+
+        assert_eq!(
+            first_item.is_some(),
+            previous_item.is_some(),
+            "If there is a first item, there also should be a last item."
+        );
+        if let Some(previous_item) = previous_item {
+            inventory
+                .previous_items
+                .insert(first_item.unwrap(), previous_item);
+            inventory
+                .next_items
+                .insert(previous_item, first_item.unwrap());
         }
     });
 }
@@ -307,9 +369,9 @@ fn add_row(
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn manage_inventory_keyboard_input(
     mut keys: Keys,
-    _next_application_state: ResMut<NextState<ApplicationState>>,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
     mut app_exit_events: ResMut<Events<AppExit>>,
+    mut inventory: ResMut<InventoryScreen>,
 ) {
     for (state, combo) in keys.combos() {
         if state != ButtonState::Pressed {
@@ -323,8 +385,55 @@ pub(crate) fn manage_inventory_keyboard_input(
             KeyCombo::KeyCode(Ctrl::Without, KeyCode::C | KeyCode::Q) => {
                 app_exit_events.send(AppExit);
             }
+            KeyCombo::KeyCode(
+                Ctrl::Without,
+                KeyCode::Numpad1
+                | KeyCode::Numpad2
+                | KeyCode::Numpad3
+                | KeyCode::Numpad4
+                | KeyCode::Numpad5
+                | KeyCode::Numpad6
+                | KeyCode::Numpad7
+                | KeyCode::Numpad8
+                | KeyCode::Numpad9,
+            ) => {
+                drop_at(&mut inventory, &combo);
+            }
+            KeyCombo::KeyCode(Ctrl::Without, KeyCode::Up) => {
+                select_up(&mut inventory);
+            }
+            KeyCombo::KeyCode(Ctrl::Without, KeyCode::Down) => {
+                select_down(&mut inventory);
+            }
             _ => {}
         }
+    }
+}
+
+fn drop_at(inventory: &mut InventoryScreen, combo: &KeyCombo) {
+    let nbor = PlayerDirection::try_from(combo)
+        .expect("The direction should be valid ({combo:?})")
+        .to_nbor();
+    match nbor {
+        Nbor::Horizontal(horizontal_direction) => {
+            inventory.drop_direction = horizontal_direction;
+            inventory.last_time = Timestamp::ZERO;
+        }
+        _ => panic!("Only horizontal dropping allowed"),
+    }
+}
+
+fn select_up(inventory: &mut InventoryScreen) {
+    if let Some(selected) = inventory.selected_item {
+        inventory.selected_item = inventory.previous_items.get(&selected).copied();
+        inventory.last_time = Timestamp::ZERO;
+    }
+}
+
+fn select_down(inventory: &mut InventoryScreen) {
+    if let Some(selected) = inventory.selected_item {
+        inventory.selected_item = inventory.next_items.get(&selected).copied();
+        inventory.last_time = Timestamp::ZERO;
     }
 }
 
@@ -332,6 +441,7 @@ pub(crate) fn manage_inventory_keyboard_input(
 pub(crate) fn manage_inventory_button_input(
     mut instruction_queue: ResMut<InstructionQueue>,
     interactions: Query<(&Interaction, &ActionButton), (Changed<Interaction>, With<Button>)>,
+    inventory: Res<InventoryScreen>,
 ) {
     for (&interaction, &ActionButton(entity, ref inventory_action)) in interactions.iter() {
         if interaction == Interaction::Pressed {
@@ -339,7 +449,7 @@ pub(crate) fn manage_inventory_button_input(
             let instruction = match inventory_action {
                 InventoryAction::Examine => QueuedInstruction::ExamineItem(entity),
                 InventoryAction::Take => QueuedInstruction::Pickup(entity),
-                InventoryAction::Drop => QueuedInstruction::Dump(entity),
+                InventoryAction::Drop => QueuedInstruction::Dump(entity, inventory.drop_direction),
                 InventoryAction::Wield => QueuedInstruction::Wield(entity),
                 InventoryAction::Unwield => QueuedInstruction::Unwield(entity),
             };

@@ -71,7 +71,7 @@ pub(crate) enum QueuedInstruction {
     Wield(Entity),
     Unwield(Entity),
     Pickup(Entity),
-    Dump(Entity),
+    Dump(Entity, HorizontalDirection),
     Attack,
     Smash,
     Close,

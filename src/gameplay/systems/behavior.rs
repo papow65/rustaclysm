@@ -142,12 +142,12 @@ pub(crate) fn perform_action(
                 },
             )
         }
-        Action::Dump { entity } => {
+        Action::Dump { entity, direction } => {
             perform_with_actor::<(Commands, ResMut<Location>, Hierarchy), _>(
                 world,
                 actor_entity,
                 |actor, (mut commands, mut location, hierarchy)| {
-                    Some(actor.dump(&mut commands, &mut location, &hierarchy, entity))
+                    Some(actor.dump(&mut commands, &mut location, &hierarchy, entity, direction))
                 },
             )
         }

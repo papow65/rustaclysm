@@ -154,7 +154,7 @@ impl RelativeSegments {
         );
 
         for nbor in Nbor::ALL {
-            let nbor = Pos::ORIGIN.raw_nbor(&nbor).unwrap();
+            let nbor = Pos::ORIGIN.raw_nbor(nbor).unwrap();
             assert!(rays.contains_key(&nbor), "{MAX_VISIBLE_DISTANCE} {nbor:?}");
         }
 
