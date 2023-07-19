@@ -118,9 +118,9 @@ impl<'s> Actor<'s> {
     ) -> Option<Impact> {
         let from = self.pos;
         if !envir.are_nbors(self.pos, to) {
-            commands.spawn(Message::error().push(self.name.single()).add(format!(
+            commands.spawn(Message::error(Phrase::from_name(self.name).add(format!(
                 "can't move to {to:?}, as it is not a nbor of {from:?}"
-            )));
+            ))));
             return None;
         }
 
@@ -136,20 +136,17 @@ impl<'s> Actor<'s> {
                  *            VERTICAL
             }*/
             Collision::Blocked(obstacle) => {
-                commands.spawn(
-                    Message::warn()
-                        .push(self.name.single())
-                        .str("crashes into")
+                commands.spawn(Message::warn(
+                    Phrase::from_name(self.name)
+                        .add("crashes into")
                         .push(obstacle.single()),
-                );
+                ));
                 None
             }
             Collision::Ledged => {
-                commands.spawn(
-                    Message::warn()
-                        .push(self.name.single())
-                        .str("halts at the ledge"),
-                );
+                commands.spawn(Message::warn(
+                    Phrase::from_name(self.name).add("halts at the ledge"),
+                ));
                 None
             }
             Collision::Opened(door) => {
@@ -209,7 +206,8 @@ impl<'s> Actor<'s> {
         target: Pos,
     ) -> Option<Impact> {
         let Some(high_speed) = self.high_speed() else {
-            commands.spawn(Message::warn().push(self.name.single()).str("is too exhausted to attack"));
+            commands.spawn(Message::warn(
+                Phrase::from_name(self.name).add("is too exhausted to attack")));
             return None;
         };
 
@@ -222,11 +220,9 @@ impl<'s> Actor<'s> {
                 commands, envir, infos, hierarchy, defender, target, high_speed,
             ))
         } else {
-            commands.spawn(
-                Message::warn()
-                    .push(self.name.single())
-                    .str("attacks nothing"),
-            );
+            commands.spawn(Message::warn(
+                Phrase::from_name(self.name).add("attacks nothing"),
+            ));
             None
         }
     }
@@ -240,7 +236,7 @@ impl<'s> Actor<'s> {
         target: Pos,
     ) -> Option<Impact> {
         let Some(high_speed) = self.high_speed() else {
-            commands.spawn(Message::warn().push(self.name.single()).str("is too exhausted to smash"));
+            commands.spawn(Message::warn(Phrase::from_name(self.name).add("is too exhausted to smash")));
             return None;
         };
 
@@ -250,31 +246,25 @@ impl<'s> Actor<'s> {
 
         let stair_pos = Pos::new(target.x, self.pos.level, target.z);
         if self.pos.level.up() == Some(target.level) && envir.stairs_up_to(stair_pos).is_none() {
-            commands.spawn(
-                Message::warn()
-                    .push(self.name.single())
-                    .str("smashes the ceiling"),
-            );
+            commands.spawn(Message::warn(
+                Phrase::from_name(self.name).add("smashes the ceiling"),
+            ));
             None
         } else if self.pos.level.down() == Some(target.level)
             && envir.stairs_down_to(stair_pos).is_none()
         {
-            commands.spawn(
-                Message::warn()
-                    .push(self.name.single())
-                    .str("smashes the floor"),
-            );
+            commands.spawn(Message::warn(
+                Phrase::from_name(self.name).add("smashes the floor"),
+            ));
             None
         } else if let Some((smashable, _)) = envir.find_smashable(target) {
             Some(self.damage(
                 commands, envir, infos, hierarchy, smashable, target, high_speed,
             ))
         } else {
-            commands.spawn(
-                Message::warn()
-                    .push(self.name.single())
-                    .str("smashes nothing"),
-            );
+            commands.spawn(Message::warn(
+                Phrase::from_name(self.name).add("smashes nothing"),
+            ));
             None
         }
     }
@@ -291,14 +281,13 @@ impl<'s> Actor<'s> {
 
         if let Some((closeable, closeable_name)) = envir.find_closeable(target) {
             if let Some((_, character)) = envir.find_character(target) {
-                commands.spawn(
-                    Message::warn()
-                        .push(self.name.single())
-                        .str("can't close")
+                commands.spawn(Message::warn(
+                    Phrase::from_name(self.name)
+                        .add("can't close")
                         .push(closeable_name.single())
-                        .str("on")
+                        .add("on")
                         .push(character.single()),
-                );
+                ));
                 None
             } else {
                 commands.entity(closeable).insert(Toggle::Close);
@@ -311,12 +300,11 @@ impl<'s> Actor<'s> {
         } else {
             let missing = ObjectName::missing();
             let obstacle = envir.find_terrain(target).unwrap_or(&missing);
-            commands.spawn(
-                Message::warn()
-                    .push(self.name.single())
-                    .str("can't close")
+            commands.spawn(Message::warn(
+                Phrase::from_name(self.name)
+                    .add("can't close")
                     .push(obstacle.single()),
-            );
+            ));
             None
         }
     }
@@ -432,12 +420,11 @@ impl<'s> Actor<'s> {
                 taken_name.clone(),
             ) {
                 Ok(()) => {
-                    commands.spawn(
-                        Message::info()
-                            .push(self.name.single())
-                            .str("picks up")
+                    commands.spawn(Message::info(
+                        Phrase::from_name(self.name)
+                            .add("picks up")
                             .extend(taken_name),
-                    );
+                    ));
                     commands
                         .entity(container_entity)
                         .push_children(&[taken_entity]);
@@ -452,11 +439,9 @@ impl<'s> Actor<'s> {
                 }
             }
         } else {
-            commands.spawn(
-                Message::warn()
-                    .str("Nothing to pick up for")
-                    .push(self.name.single()),
-            );
+            commands.spawn(Message::warn(
+                Phrase::new("Nothing to pick up for").push(self.name.single()),
+            ));
             None
         }
     }
@@ -482,12 +467,11 @@ impl<'s> Actor<'s> {
         // TODO Check for obstacles
         let dumped_pos = self.pos.raw_nbor(Nbor::Horizontal(direction)).unwrap();
 
-        commands.spawn(
-            Message::info()
-                .push(self.name.single())
-                .str("drops")
+        commands.spawn(Message::info(
+            Phrase::from_name(self.name)
+                .add("drops")
                 .extend(dumped_name.as_item(dumped_amount, dumped_filthy)),
-        );
+        ));
         commands.entity(dumped_parent).remove_children(&[dumped]);
         commands
             .entity(dumped)
@@ -506,15 +490,13 @@ impl<'s> Actor<'s> {
         if let Ok(definition) = definitions.get(entity) {
             if let Some(item_info) = infos.item(&definition.id) {
                 if let Some(description) = &item_info.description {
-                    commands.spawn(
-                        Message::info().str(
-                            match description {
-                                Description::Simple(simple) => simple,
-                                Description::Complex(complex) => complex.get("str").unwrap(),
-                            }
-                            .as_str(),
-                        ),
-                    );
+                    commands.spawn(Message::info(Phrase::new(
+                        match description {
+                            Description::Simple(simple) => simple,
+                            Description::Complex(complex) => complex.get("str").unwrap(),
+                        }
+                        .as_str(),
+                    )));
                 } else {
                     eprintln!("No description");
                 }

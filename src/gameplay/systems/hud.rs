@@ -182,11 +182,11 @@ pub(crate) fn update_log(
 
     let mut new_messages = false;
     for message in changed.iter() {
-        if message.to_string().trim() != "" {
+        if message.phrase.to_string().trim() != "" {
             if message.severity == Severity::Error {
-                eprintln!("{}", &message);
+                eprintln!("{}", &message.phrase);
             } else {
-                println!("{}", &message);
+                println!("{}", &message.phrase);
             }
         }
         new_messages = true;
@@ -197,11 +197,9 @@ pub(crate) fn update_log(
 
     let mut last: Option<(&Message, usize)> = None;
     let mut shown_reverse = Vec::<(&Message, usize)>::new();
-    for message in messages.iter().collect::<Vec<&Message>>().iter().rev() {
+    for &message in messages.iter().collect::<Vec<&Message>>().iter().rev() {
         match last {
-            Some((last_message, ref mut last_count))
-                if last_message.fragments == message.fragments =>
-            {
+            Some((last_message, ref mut last_count)) if last_message == message => {
                 *last_count += 1;
             }
             Some(message_and_count) => {
@@ -227,11 +225,7 @@ pub(crate) fn update_log(
     for (message, count) in shown_reverse.into_iter().rev() {
         let mut style = hud_defaults.text_style.clone();
         style.color = message.severity.color();
-        let cloned_message = Message {
-            fragments: message.fragments.clone(),
-            severity: message.severity.clone(),
-        };
-        sections.extend(cloned_message.into_text_sections(&style));
+        sections.extend(message.phrase.clone().into_text_sections(&style));
         if 1 < count {
             sections.push(TextSection {
                 value: format!(" ({count}x)"),
@@ -427,40 +421,38 @@ pub(crate) fn update_status_detais(
 ) {
     let start = Instant::now();
 
-    text_sections.details = Message::info()
-        .extend(match *player_action_state {
-            PlayerActionState::ExaminingPos(pos) => {
-                let mut total = vec![Fragment::new(format!("\n{pos:?}\n"), DEFAULT_TEXT_COLOR)];
-                if explored.has_pos_been_seen(pos) {
-                    let all_here = envir.location.all(pos);
-                    total.extend(characters_info(&all_here, &characters));
-                    total.extend(
-                        all_here
-                            .iter()
-                            .flat_map(|&i| entities.get(i))
-                            .flat_map(entity_info)
-                            .collect::<Vec<_>>(),
-                    );
-                } else {
-                    total.push(Fragment::new(String::from("Unseen"), DEFAULT_TEXT_COLOR));
-                }
-                total
+    text_sections.details = Phrase::from_fragments(match *player_action_state {
+        PlayerActionState::ExaminingPos(pos) => {
+            let mut total = vec![Fragment::new(format!("\n{pos:?}\n"))];
+            if explored.has_pos_been_seen(pos) {
+                let all_here = envir.location.all(pos);
+                total.extend(characters_info(&all_here, &characters));
+                total.extend(
+                    all_here
+                        .iter()
+                        .flat_map(|&i| entities.get(i))
+                        .flat_map(entity_info)
+                        .collect::<Vec<_>>(),
+                );
+            } else {
+                total.push(Fragment::new(String::from("Unseen")));
             }
-            PlayerActionState::ExaminingZoneLevel(zone_level) => {
-                vec![Fragment::new(
-                    match explored.has_zone_level_been_seen(&asset_server, zone_level) {
-                        seen_from @ Some(SeenFrom::CloseBy | SeenFrom::FarAway) => format!(
-                            "\n{zone_level:?}\n{:?}\n{seen_from:?}",
-                            zone_level_ids.get(zone_level)
-                        ),
-                        None | Some(SeenFrom::Never) => format!("\n{zone_level:?}\nUnseen"),
-                    },
-                    DEFAULT_TEXT_COLOR,
-                )]
-            }
-            _ => Vec::new(),
-        })
-        .into_text_sections(&hud_defaults.text_style);
+            total
+        }
+        PlayerActionState::ExaminingZoneLevel(zone_level) => {
+            vec![Fragment::new(
+                match explored.has_zone_level_been_seen(&asset_server, zone_level) {
+                    seen_from @ Some(SeenFrom::CloseBy | SeenFrom::FarAway) => format!(
+                        "\n{zone_level:?}\n{:?}\n{seen_from:?}",
+                        zone_level_ids.get(zone_level)
+                    ),
+                    None | Some(SeenFrom::Never) => format!("\n{zone_level:?}\nUnseen"),
+                },
+            )]
+        }
+        _ => Vec::new(),
+    })
+    .into_text_sections(&hud_defaults.text_style);
 
     update_status_display(&text_sections, &mut status_displays.single_mut());
 
@@ -475,16 +467,15 @@ fn characters_info(
         .iter()
         .flat_map(|&i| characters.get(i))
         .flat_map(|(definition, name, health)| {
-            Message::info()
-                .push(name.single())
-                .str("(")
-                .push(Fragment::new(
+            Phrase::from_name(name)
+                .add("(")
+                .push(Fragment::colorized(
                     format!("{}", health.0.current()),
                     health.0.color(),
                 ))
-                .str("health)\n- ")
+                .add("health)\n- ")
                 .add(definition.id.fallback_name())
-                .str("\n")
+                .add("\n")
                 .fragments
         })
         .collect()
@@ -584,9 +575,9 @@ fn entity_info(
     }
 
     let fallbak_name = ObjectName::missing();
-    let mut output = Message::info().extend(name.unwrap_or(&fallbak_name).as_item(amount, filthy));
+    let mut output = Phrase::from_fragments(name.unwrap_or(&fallbak_name).as_item(amount, filthy));
     for flag in &flags {
         output = output.add(format!("\n- {flag}"));
     }
-    output.str("\n").fragments
+    output.add("\n").fragments
 }

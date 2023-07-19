@@ -155,10 +155,10 @@ impl<'w, 's> Envir<'w, 's> {
         match nbor {
             Nbor::Up => self
                 .stairs_up_to(from)
-                .ok_or_else(|| Message::warn().str("No stairs up")),
+                .ok_or_else(|| Message::warn(Phrase::new("No stairs up"))),
             Nbor::Down => self
                 .stairs_down_to(from)
-                .ok_or_else(|| Message::warn().str("No stairs down")),
+                .ok_or_else(|| Message::warn(Phrase::new("No stairs down"))),
             _ => {
                 // No stairs
                 Ok(from.raw_nbor(nbor).unwrap())

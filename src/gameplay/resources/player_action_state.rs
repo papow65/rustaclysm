@@ -145,11 +145,11 @@ impl PlayerActionState {
         match (&self, instruction) {
             (Self::Sleeping { .. }, QueuedInstruction::Finished) => {
                 *self = Self::Normal;
-                PlayerBehavior::Feedback(Message::info().str("You wake up"))
+                PlayerBehavior::Feedback(Message::info(Phrase::new("You wake up")))
             }
             (Self::Sleeping { .. }, _) => {
                 // Can not be interrupted
-                PlayerBehavior::Feedback(Message::warn().str("You are still asleep. Zzz..."))
+                PlayerBehavior::Feedback(Message::warn(Phrase::new("You are still asleep. Zzz...")))
             }
             (Self::Normal, QueuedInstruction::Offset(PlayerDirection::Here)) => {
                 PlayerBehavior::Perform(Action::Stay {
@@ -158,14 +158,14 @@ impl PlayerActionState {
             }
             (Self::Normal, QueuedInstruction::Wait) => {
                 *self = Self::start_waiting(now);
-                PlayerBehavior::Feedback(Message::info().str("You wait..."))
+                PlayerBehavior::Feedback(Message::info(Phrase::new("You wait...")))
             }
             (Self::Normal, QueuedInstruction::Sleep) => {
                 *self = Self::start_sleeping(now);
-                PlayerBehavior::Feedback(Message::info().str("You fall asleep... Zzz..."))
+                PlayerBehavior::Feedback(Message::info(Phrase::new("You fall asleep... Zzz...")))
             }
             (Self::Attacking, QueuedInstruction::Offset(PlayerDirection::Here)) => {
-                PlayerBehavior::Feedback(Message::warn().str("You can't attack yourself"))
+                PlayerBehavior::Feedback(Message::warn(Phrase::new("You can't attack yourself")))
             }
             (Self::ExaminingPos(curr), QueuedInstruction::Offset(direction)) => {
                 let nbor = direction.to_nbor();
@@ -219,19 +219,23 @@ impl PlayerActionState {
             (_, QueuedInstruction::SwitchRunning) => PlayerBehavior::Perform(Action::SwitchRunning),
             (Self::Waiting { .. }, QueuedInstruction::Interrupted) => {
                 *self = Self::Normal;
-                PlayerBehavior::Feedback(Message::warn().str("You spot an enemy and stop waiting"))
+                PlayerBehavior::Feedback(Message::warn(Phrase::new(
+                    "You spot an enemy and stop waiting",
+                )))
             }
             (Self::Waiting { .. }, QueuedInstruction::Finished) => {
                 *self = Self::Normal;
-                PlayerBehavior::Feedback(Message::info().str("Finished waiting"))
+                PlayerBehavior::Feedback(Message::info(Phrase::new("Finished waiting")))
             }
             (_, QueuedInstruction::Interrupted) => {
                 *self = Self::Normal;
-                PlayerBehavior::Feedback(Message::error().str("Iterrupted while not waiting"))
+                PlayerBehavior::Feedback(Message::error(Phrase::new(
+                    "Iterrupted while not waiting",
+                )))
             }
             (_, QueuedInstruction::Finished) => {
                 *self = Self::Normal;
-                PlayerBehavior::Feedback(Message::error().str("Finished while not waiting"))
+                PlayerBehavior::Feedback(Message::error(Phrase::new("Finished while not waiting")))
             }
         }
     }
@@ -247,7 +251,9 @@ impl PlayerActionState {
                     *self = Self::ExaminingZoneLevel(target);
                     PlayerBehavior::NoEffect
                 } else {
-                    PlayerBehavior::Feedback(Message::warn().str("invalid zone level to examine"))
+                    PlayerBehavior::Feedback(Message::warn(Phrase::new(
+                        "invalid zone level to examine",
+                    )))
                 }
             }
             (Self::ExaminingPos(current), target) => {
@@ -255,7 +261,9 @@ impl PlayerActionState {
                     *self = Self::ExaminingPos(target);
                     PlayerBehavior::NoEffect
                 } else {
-                    PlayerBehavior::Feedback(Message::warn().str("invalid position to examine"))
+                    PlayerBehavior::Feedback(Message::warn(Phrase::new(
+                        "invalid position to examine",
+                    )))
                 }
             }
             (Self::Normal, Ok(target)) => PlayerBehavior::Perform(Action::Step { target }),
@@ -284,7 +292,7 @@ impl PlayerActionState {
             .nbors_for_exploring(pos, QueuedInstruction::Attack)
             .collect::<Vec<Pos>>();
         match attackable_nbors.len() {
-            0 => PlayerBehavior::Feedback(Message::warn().str("no targets nearby")),
+            0 => PlayerBehavior::Feedback(Message::warn(Phrase::new("no targets nearby"))),
             1 => PlayerBehavior::Perform(Action::Attack {
                 target: attackable_nbors[0],
             }),
@@ -300,7 +308,7 @@ impl PlayerActionState {
             .nbors_for_exploring(pos, QueuedInstruction::Smash)
             .collect::<Vec<Pos>>();
         match smashable_nbors.len() {
-            0 => PlayerBehavior::Feedback(Message::warn().str("no targets nearby")),
+            0 => PlayerBehavior::Feedback(Message::warn(Phrase::new("no targets nearby"))),
             1 => PlayerBehavior::Perform(Action::Smash {
                 target: smashable_nbors[0],
             }),
@@ -316,7 +324,7 @@ impl PlayerActionState {
             .nbors_for_exploring(pos, QueuedInstruction::Close)
             .collect::<Vec<Pos>>();
         match closable_nbors.len() {
-            0 => PlayerBehavior::Feedback(Message::warn().str("nothing to close nearby")),
+            0 => PlayerBehavior::Feedback(Message::warn(Phrase::new("nothing to close nearby"))),
             1 => PlayerBehavior::Perform(Action::Close {
                 target: closable_nbors[0],
             }),

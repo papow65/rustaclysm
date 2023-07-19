@@ -1,7 +1,5 @@
 use crate::prelude::*;
-use bevy::prelude::{Color, Component, TextSection, TextStyle};
-use regex::Regex;
-use std::fmt;
+use bevy::prelude::{Color, Component};
 
 #[derive(Component, Debug)]
 pub(crate) struct ObjectName {
@@ -12,10 +10,7 @@ pub(crate) struct ObjectName {
 impl ObjectName {
     #[must_use]
     pub(crate) fn single(&self) -> Fragment {
-        Fragment {
-            text: self.name.single.clone(),
-            color: self.color,
-        }
+        Fragment::colorized(self.name.single.clone(), self.color)
     }
 
     #[must_use]
@@ -30,12 +25,12 @@ impl ObjectName {
         };
         let mut result = Vec::new();
         if 1 < amount {
-            result.push(Fragment::new(format!("{amount}"), DEFAULT_TEXT_COLOR));
+            result.push(Fragment::new(format!("{amount}")));
         }
         if filthy.is_some() {
-            result.push(Fragment::new("filthy", FILTHY_COLOR));
+            result.push(Fragment::colorized("filthy", FILTHY_COLOR));
         }
-        result.push(Fragment::new(
+        result.push(Fragment::colorized(
             if amount == 1 {
                 self.name.single.clone()
             } else {
@@ -94,94 +89,32 @@ impl Severity {
 /** Message shown to the player */
 #[derive(Component, Debug, PartialEq, Eq)]
 pub(crate) struct Message {
-    pub(crate) fragments: Vec<Fragment>,
+    pub(crate) phrase: Phrase,
     pub(crate) severity: Severity,
 }
 
 impl Message {
     #[must_use]
-    const fn new(severity: Severity) -> Self {
+    pub(crate) const fn info(phrase: Phrase) -> Self {
         Self {
-            fragments: Vec::new(),
-            severity,
+            phrase,
+            severity: Severity::Info,
         }
     }
 
     #[must_use]
-    pub(crate) const fn info() -> Self {
-        Self::new(Severity::Info)
+    pub(crate) const fn warn(phrase: Phrase) -> Self {
+        Self {
+            phrase,
+            severity: Severity::Warn,
+        }
     }
 
     #[must_use]
-    pub(crate) const fn warn() -> Self {
-        Self::new(Severity::Warn)
-    }
-
-    #[must_use]
-    pub(crate) const fn error() -> Self {
-        Self::new(Severity::Error)
-    }
-
-    #[must_use]
-    pub(crate) fn str(self, s: &str) -> Self {
-        self.add(String::from(s))
-    }
-
-    #[must_use]
-    pub(crate) fn add(self, text: String) -> Self {
-        let color = self.severity.color();
-        self.push(Fragment::new(text, color))
-    }
-
-    #[must_use]
-    pub(crate) fn push(mut self, fragment: Fragment) -> Self {
-        self.fragments.push(fragment);
-        self
-    }
-
-    #[must_use]
-    pub(crate) fn extend(mut self, fragments: Vec<Fragment>) -> Self {
-        self.fragments.extend(fragments);
-        self
-    }
-
-    #[must_use]
-    pub(crate) fn into_text_sections(self, fallback_style: &TextStyle) -> Vec<TextSection> {
-        let no_space_after = Regex::new(r"[( \n]$").expect("Valid regex after");
-        let no_space_before = Regex::new(r"^[) \n]").expect("Valid regex before");
-
-        self.fragments
-            .into_iter()
-            .filter(|f| !f.text.is_empty())
-            .fold(Vec::new(), |mut vec, f| {
-                vec.push(TextSection {
-                    value: if vec
-                        .last()
-                        .map_or(true, |l| no_space_after.is_match(&l.value))
-                        || no_space_before.is_match(&f.text)
-                    {
-                        f.text
-                    } else {
-                        format!(" {}", f.text)
-                    },
-                    style: TextStyle {
-                        color: f.color,
-                        ..fallback_style.clone()
-                    },
-                });
-                vec
-            })
-    }
-}
-
-impl fmt::Display for Message {
-    fn fmt(&self, formatter: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        self.fragments
-            .iter()
-            .map(|fragment| &fragment.text)
-            .cloned()
-            .collect::<Vec<_>>()
-            .join(" ")
-            .fmt(formatter)
+    pub(crate) const fn error(phrase: Phrase) -> Self {
+        Self {
+            phrase,
+            severity: Severity::Error,
+        }
     }
 }

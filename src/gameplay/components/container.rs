@@ -1,4 +1,4 @@
-use crate::prelude::{Containable, Fragment, Mass, Message, Volume};
+use crate::prelude::{Containable, Fragment, Mass, Message, Phrase, Volume};
 use bevy::prelude::{Component, Entity};
 
 #[derive(Component)]
@@ -34,14 +34,13 @@ impl Container {
             } else {
                 format!("only {free_volume} available")
             };
-            messages.push(
-                Message::warn()
-                    .push(container_name.clone())
+            messages.push(Message::warn(
+                Phrase::from_fragment(container_name.clone())
                     .add(format!(
                         "has {free_volume}, but {added_volume} needed to pick up"
                     ))
                     .extend(added_name.clone()),
-            );
+            ));
         }
 
         let free_mass = self.max_mass - current_mass;
@@ -52,14 +51,13 @@ impl Container {
             } else {
                 format!("only {free_mass} more")
             };
-            messages.push(
-                Message::warn()
-                    .push(container_name.clone())
+            messages.push(Message::warn(
+                Phrase::from_fragment(container_name.clone())
                     .add(format!(
                         "can bear {free_mass}, but {added_mass} needed to pick up",
                     ))
                     .extend(added_name.clone()),
-            );
+            ));
         }
 
         if let Some(max_amount) = self.max_amount {
@@ -71,14 +69,13 @@ impl Container {
                     1 => String::from("only one more item"),
                     _ => format!("only {free_amount} more items"),
                 };
-                messages.push(
-                    Message::warn()
-                        .push(container_name)
+                messages.push(Message::warn(
+                    Phrase::from_fragment(container_name)
                         .add(format!(
                             "can hold {free_amount}, but {added_amout} needed to pick up",
                         ))
                         .extend(added_name),
-                );
+                ));
             }
         }
 

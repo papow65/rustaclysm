@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use bevy::utils::HashMap;
+use bevy::{prelude::Color, utils::HashMap};
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]

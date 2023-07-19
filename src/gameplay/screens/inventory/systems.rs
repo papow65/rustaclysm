@@ -137,7 +137,7 @@ pub(crate) fn update_inventory(
             }
             parent.spawn(TextBundle::from_sections(text_sections));
 
-            for (entity, id, item_message) in items {
+            for (entity, id, item_phrase) in items {
                 if first_item.is_none() {
                     first_item = Some(entity);
                     if !selected_item_present {
@@ -152,14 +152,7 @@ pub(crate) fn update_inventory(
                         &inventory.item_text_style
                     };
 
-                    add_row(
-                        &section,
-                        parent,
-                        entity,
-                        item_message,
-                        item_info,
-                        item_style,
-                    );
+                    add_row(&section, parent, entity, item_phrase, item_info, item_style);
                 }
                 if let Some(previous_item) = previous_item {
                     inventory.previous_items.insert(entity, previous_item);
@@ -207,7 +200,7 @@ fn items_by_section<'a>(
     )>,
     player_pos: Pos,
     body_containers: &'a BodyContainers,
-) -> HashMap<InventorySection, Vec<(Entity, &'a ObjectId, Message)>> {
+) -> HashMap<InventorySection, Vec<(Entity, &'a ObjectId, Phrase)>> {
     let mut fields_by_section = HashMap::default();
     for (nbor, nbor_pos) in envir.nbors_for_item_handling(player_pos) {
         fields_by_section.insert(
@@ -244,12 +237,12 @@ fn items_by_section<'a>(
                     (
                         entity,
                         &definition.id,
-                        Message::info().extend(name.as_item(Some(amount), filthy)),
+                        Phrase::from_fragments(name.as_item(Some(amount), filthy)),
                     )
                 },
             )
             .collect::<Vec<_>>();
-        items.sort_by_key(|(.., message)| format!("{}", &message));
+        items.sort_by_key(|(.., phrase)| format!("{phrase}"));
         items_by_section.insert(section, items);
     }
     items_by_section
@@ -259,7 +252,7 @@ fn add_row(
     section: &InventorySection,
     parent: &mut ChildBuilder,
     entity: Entity,
-    item_message: Message,
+    item_phrase: Phrase,
     item_info: &ItemInfo,
     item_syle: &TextStyle,
 ) {
@@ -286,7 +279,7 @@ fn add_row(
                 })
                 .with_children(|parent| {
                     parent.spawn(TextBundle::from_sections(
-                        item_message.into_text_sections(item_syle),
+                        item_phrase.into_text_sections(item_syle),
                     ));
                 });
 

@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use bevy::prelude::Component;
+use bevy::prelude::{Color, Component};
 use float_ord::FloatOrd;
 use pathfinding::{
     num_traits::Zero,
