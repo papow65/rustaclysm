@@ -371,6 +371,7 @@ pub(crate) fn manage_inventory_keyboard_input(
     mut keys: Keys,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
     mut app_exit_events: ResMut<Events<AppExit>>,
+    mut instruction_queue: ResMut<InstructionQueue>,
     mut inventory: ResMut<InventoryScreen>,
 ) {
     for (state, combo) in keys.combos() {
@@ -405,6 +406,16 @@ pub(crate) fn manage_inventory_keyboard_input(
             KeyCombo::KeyCode(Ctrl::Without, KeyCode::Down) => {
                 select_down(&mut inventory);
             }
+            KeyCombo::KeyCode(
+                Ctrl::Without,
+                key_code @ (KeyCode::D | KeyCode::T | KeyCode::U | KeyCode::W),
+            ) => {
+                handle_selected_item(&mut inventory, &mut instruction_queue, key_code);
+            }
+            KeyCombo::KeyCode(Ctrl::Without, KeyCode::E) => {
+                // Special case, because we don't want to select another item after the action.
+                examine_selected_item(&inventory, &mut instruction_queue);
+            }
             _ => {}
         }
     }
@@ -434,6 +445,33 @@ fn select_down(inventory: &mut InventoryScreen) {
     if let Some(selected) = inventory.selected_item {
         inventory.selected_item = inventory.next_items.get(&selected).copied();
         inventory.last_time = Timestamp::ZERO;
+    }
+}
+
+fn handle_selected_item(
+    inventory: &mut ResMut<InventoryScreen>,
+    instruction_queue: &mut ResMut<InstructionQueue>,
+    key_code: KeyCode,
+) {
+    if let Some(selected_item) = inventory.selected_item {
+        let next_item = inventory.next_items.get(&selected_item).copied();
+        instruction_queue.add(match key_code {
+            KeyCode::D => QueuedInstruction::Dump(selected_item, inventory.drop_direction),
+            KeyCode::T => QueuedInstruction::Pickup(selected_item),
+            KeyCode::U => QueuedInstruction::Unwield(selected_item),
+            KeyCode::W => QueuedInstruction::Wield(selected_item),
+            _ => panic!("Unexpected key {key_code:?}"),
+        });
+        inventory.selected_item = next_item;
+    }
+}
+
+fn examine_selected_item(
+    inventory: &ResMut<InventoryScreen>,
+    instruction_queue: &mut ResMut<InstructionQueue>,
+) {
+    if let Some(selected_item) = inventory.selected_item {
+        instruction_queue.add(QueuedInstruction::ExamineItem(selected_item));
     }
 }
 
