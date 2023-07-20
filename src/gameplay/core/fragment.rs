@@ -84,14 +84,13 @@ impl Phrase {
     }
 
     #[must_use]
-    pub(crate) fn into_text_sections(self, text_style: &TextStyle) -> Vec<TextSection> {
-        let no_space_after = Regex::new(r"[( \n]$").expect("Valid regex after");
-        let no_space_before = Regex::new(r"^[) \n]").expect("Valid regex before");
+    pub(crate) fn as_text_sections(&self, text_style: &TextStyle) -> Vec<TextSection> {
+        let no_space_after = Regex::new(r"[(\[{ \n]$").expect("Valid regex after");
+        let no_space_before = Regex::new(r"^[)\]},;\. \n]").expect("Valid regex before");
 
-        self.fragments
-            .into_iter()
-            .filter(|f| !f.text.is_empty())
-            .fold(Vec::new(), |mut text_sections, f| {
+        self.fragments.iter().filter(|f| !f.text.is_empty()).fold(
+            Vec::new(),
+            |mut text_sections, f| {
                 let text_style = text_style.clone();
 
                 text_sections.push(TextSection {
@@ -100,7 +99,7 @@ impl Phrase {
                         .map_or(true, |l| no_space_after.is_match(&l.value))
                         || no_space_before.is_match(&f.text)
                     {
-                        f.text
+                        f.text.clone()
                     } else {
                         format!(" {}", f.text)
                     },
@@ -111,18 +110,79 @@ impl Phrase {
                     },
                 });
                 text_sections
-            })
+            },
+        )
+    }
+
+    #[must_use]
+    pub(crate) fn as_string(&self) -> String {
+        self.as_text_sections(&TextStyle::default())
+            .into_iter()
+            .map(|text_section| text_section.value)
+            .collect::<String>()
     }
 }
 
 impl fmt::Display for Phrase {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        self.fragments
-            .iter()
-            .map(|fragment| &fragment.text)
-            .cloned()
-            .collect::<Vec<_>>()
-            .join(" ")
-            .fmt(formatter)
+        self.as_string().fmt(formatter)
+    }
+}
+
+#[cfg(test)]
+mod container_tests {
+    use super::*;
+
+    #[test]
+    fn words() {
+        let phrase = Phrase::new("one")
+            .add("two")
+            .push(Fragment::new("three"))
+            .extend(vec![Fragment::new("four"), Fragment::new("five")]);
+        assert_eq!(&phrase.as_string(), "one two three four five");
+    }
+
+    #[test]
+    fn punctuation() {
+        let phrase = Phrase::new("A")
+            .add(",")
+            .push(Fragment::new("B"))
+            .add(".")
+            .extend(vec![
+                Fragment::new("C"),
+                Fragment::new(";"),
+                Fragment::new("D"),
+            ]);
+        assert_eq!(&phrase.as_string(), "A, B. C; D");
+    }
+
+    #[test]
+    fn brackets() {
+        let phrase = Phrase::new("(a)")
+            .add("(")
+            .add("b")
+            .add(")")
+            .push(Fragment::new("[c]"))
+            .push(Fragment::new("["))
+            .push(Fragment::new("d"))
+            .push(Fragment::new("]"))
+            .extend(vec![
+                Fragment::new("{e}"),
+                Fragment::new("{"),
+                Fragment::new("f"),
+                Fragment::new("}"),
+                Fragment::new("(g)"),
+            ]);
+        assert_eq!(&phrase.as_string(), "(a) (b) [c] [d] {e} {f} (g)");
+    }
+
+    #[test]
+    fn mix() {
+        let phrase = Phrase::new("one")
+            .add("2")
+            .add(",")
+            .push(Fragment::new("three"))
+            .extend(vec![Fragment::new("(four)"), Fragment::new("five")]);
+        assert_eq!(&phrase.as_string(), "one 2, three (four) five");
     }
 }

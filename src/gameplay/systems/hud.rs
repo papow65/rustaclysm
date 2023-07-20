@@ -225,7 +225,7 @@ pub(crate) fn update_log(
     for (message, count) in shown_reverse.into_iter().rev() {
         let mut style = hud_defaults.text_style.clone();
         style.color = message.severity.color();
-        sections.extend(message.phrase.clone().into_text_sections(&style));
+        sections.extend(message.phrase.clone().as_text_sections(&style));
         if 1 < count {
             sections.push(TextSection {
                 value: format!(" ({count}x)"),
@@ -413,7 +413,7 @@ pub(crate) fn update_status_player_wielded(
     .add("\n");
 
     let text_style = HudDefaults::new(fonts.default()).text_style;
-    text_sections.wielded = phrase.into_text_sections(&text_style);
+    text_sections.wielded = phrase.as_text_sections(&text_style);
 
     update_status_display(&text_sections, &mut status_displays.single_mut());
 
@@ -446,18 +446,19 @@ pub(crate) fn update_status_enemies(
             enemies
                 .iter()
                 .map(|&pos| (pos, envir.find_character(pos).unwrap()))
-                .flat_map(|(pos, (_, name))| {
+                .map(|(pos, (_, name))| {
                     Phrase::from_name(name)
                         .add((pos - player_pos).player_hint())
                         .fragments
                 })
-                .collect(),
+                .collect::<Vec<_>>()
+                .join(&Fragment::new(",")),
         )
     }
     .add("\n");
 
     let text_style = HudDefaults::new(fonts.default()).text_style;
-    text_sections.enemies = phrase.into_text_sections(&text_style);
+    text_sections.enemies = phrase.as_text_sections(&text_style);
 
     update_status_display(&text_sections, &mut status_displays.single_mut());
 
@@ -529,7 +530,7 @@ pub(crate) fn update_status_detais(
         }
         _ => Vec::new(),
     })
-    .into_text_sections(&hud_defaults.text_style);
+    .as_text_sections(&hud_defaults.text_style);
 
     update_status_display(&text_sections, &mut status_displays.single_mut());
 

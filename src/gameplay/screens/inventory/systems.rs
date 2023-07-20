@@ -152,7 +152,14 @@ pub(crate) fn update_inventory(
                         &inventory.item_text_style
                     };
 
-                    add_row(&section, parent, entity, item_phrase, item_info, item_style);
+                    add_row(
+                        &section,
+                        parent,
+                        entity,
+                        &item_phrase,
+                        item_info,
+                        item_style,
+                    );
                 }
                 if let Some(previous_item) = previous_item {
                     inventory.previous_items.insert(entity, previous_item);
@@ -252,7 +259,7 @@ fn add_row(
     section: &InventorySection,
     parent: &mut ChildBuilder,
     entity: Entity,
-    item_phrase: Phrase,
+    item_phrase: &Phrase,
     item_info: &ItemInfo,
     item_syle: &TextStyle,
 ) {
@@ -279,7 +286,7 @@ fn add_row(
                 })
                 .with_children(|parent| {
                     parent.spawn(TextBundle::from_sections(
-                        item_phrase.into_text_sections(item_syle),
+                        item_phrase.as_text_sections(item_syle),
                     ));
                 });
 
