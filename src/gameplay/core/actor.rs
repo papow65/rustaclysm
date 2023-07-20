@@ -461,16 +461,23 @@ impl<'s> Actor<'s> {
         hierarchy: &Hierarchy,
         dumped: Entity,
         direction: HorizontalDirection,
-    ) -> Impact {
+    ) -> Option<Impact> {
         let (_, _, dumped_name, _, dumped_amount, dumped_filthy, _, dumped_parent) =
             hierarchy.items.get(dumped).unwrap();
-        let dumped_parent = dumped_parent.unwrap().get();
+        let dumped_parent = dumped_parent.map(Parent::get);
 
-        assert!(
-            dumped_parent == self.body_containers.unwrap().hands
-                || dumped_parent == self.body_containers.unwrap().clothing,
-            "Item parents should be part of the body"
-        );
+        if dumped_parent.is_none()
+            || (dumped_parent != Some(self.body_containers.unwrap().hands)
+                && dumped_parent != Some(self.body_containers.unwrap().clothing))
+        {
+            commands.spawn(Message::info(
+                Phrase::from_name(self.name)
+                    .add("can't drop")
+                    .extend(dumped_name.as_item(dumped_amount, dumped_filthy))
+                    .add(", because (s)he does not have it"),
+            ));
+            return None;
+        }
 
         // TODO Check for obstacles
         let dumped_pos = self.pos.raw_nbor(Nbor::Horizontal(direction)).unwrap();
@@ -480,13 +487,15 @@ impl<'s> Actor<'s> {
                 .add("drops")
                 .extend(dumped_name.as_item(dumped_amount, dumped_filthy)),
         ));
-        commands.entity(dumped_parent).remove_children(&[dumped]);
+        commands
+            .entity(dumped_parent.unwrap())
+            .remove_children(&[dumped]);
         commands
             .entity(dumped)
             .insert(VisibilityBundle::default())
             .insert(dumped_pos);
         location.update(dumped, Some(self.pos));
-        self.activate()
+        Some(self.activate())
     }
 
     pub(crate) fn examine_item(

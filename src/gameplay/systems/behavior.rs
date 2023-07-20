@@ -147,7 +147,7 @@ pub(crate) fn perform_action(
                 world,
                 actor_entity,
                 |actor, (mut commands, mut location, hierarchy)| {
-                    Some(actor.dump(&mut commands, &mut location, &hierarchy, entity, direction))
+                    actor.dump(&mut commands, &mut location, &hierarchy, entity, direction)
                 },
             )
         }
