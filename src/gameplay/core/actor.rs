@@ -316,13 +316,17 @@ impl<'s> Actor<'s> {
         hierarchy: &Hierarchy,
         wielded: Entity,
     ) -> Option<Impact> {
-        self.take(
+        let impact = self.take(
             commands,
             location,
             hierarchy,
             self.body_containers.unwrap().hands,
             wielded,
-        )
+        );
+        if impact.is_some() {
+            commands.entity(wielded).insert(PlayerWielded);
+        }
+        impact
     }
 
     pub(crate) fn unwield(
@@ -332,13 +336,17 @@ impl<'s> Actor<'s> {
         hierarchy: &Hierarchy,
         unwielded: Entity,
     ) -> Option<Impact> {
-        self.take(
+        let impact = self.take(
             commands,
             location,
             hierarchy,
             self.body_containers.unwrap().clothing,
             unwielded,
-        )
+        );
+        if impact.is_some() {
+            commands.entity(unwielded).remove::<PlayerWielded>();
+        }
+        impact
     }
 
     pub(crate) fn pickup(

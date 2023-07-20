@@ -15,3 +15,38 @@ pub(crate) struct PosOffset {
     pub(crate) level: LevelOffset,
     pub(crate) z: i32,
 }
+
+impl PosOffset {
+    pub(crate) fn player_hint(&self) -> &str {
+        if self.x == 0 && self.z == 0 {
+            "V"
+        } else if 2 * self.z.abs() <= self.x.abs() {
+            if 0 < self.x {
+                "E"
+            } else {
+                "W"
+            }
+        } else if 2 * self.x.abs() <= self.z.abs() {
+            if 0 < self.z {
+                "S"
+            } else {
+                "N"
+            }
+        } else if 0 < self.x {
+            if 0 < self.z {
+                "SE"
+            } else {
+                assert!(self.z < 0, "Unexpected offset: {self:?}");
+                "NE"
+            }
+        } else {
+            assert!(self.x < 0, "Unexpected offset: {self:?}");
+            if 0 < self.z {
+                "SW"
+            } else {
+                assert!(self.z < 0, "Unexpected offset: {self:?}");
+                "NW"
+            }
+        }
+    }
+}

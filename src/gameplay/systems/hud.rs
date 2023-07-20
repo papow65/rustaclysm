@@ -137,7 +137,7 @@ pub(crate) fn spawn_hud(
 
     text_sections.fps.style = hud_defaults.text_style.clone();
     text_sections.time.style = hud_defaults.text_style.clone();
-    text_sections.state.style = hud_defaults.text_style.clone();
+    text_sections.player_action_state.style = hud_defaults.text_style.clone();
     for section in &mut text_sections.health {
         section.style = hud_defaults.text_style.clone();
     }
@@ -248,7 +248,15 @@ fn update_status_display(text_sections: &StatusTextSections, status_display: &mu
         .sections
         .extend(text_sections.stamina.clone());
     status_display.sections.extend(text_sections.speed.clone());
-    status_display.sections.push(text_sections.state.clone());
+    status_display
+        .sections
+        .push(text_sections.player_action_state.clone());
+    status_display
+        .sections
+        .extend(text_sections.wielded.clone());
+    status_display
+        .sections
+        .extend(text_sections.enemies.clone());
     status_display
         .sections
         .extend(text_sections.details.clone());
@@ -372,19 +380,88 @@ pub(crate) fn update_status_speed(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn update_status_player_state(
+pub(crate) fn update_status_player_action_state(
     player_action_state: Res<PlayerActionState>,
     mut text_sections: ResMut<StatusTextSections>,
     mut status_displays: Query<&mut Text, With<StatusDisplay>>,
 ) {
     let start = Instant::now();
 
-    text_sections.state.value = format!("{}\n", *player_action_state);
-    text_sections.state.style.color = player_action_state.color();
+    text_sections.player_action_state.value = format!("{}\n", *player_action_state);
+    text_sections.player_action_state.style.color = player_action_state.color();
 
     update_status_display(&text_sections, &mut status_displays.single_mut());
 
-    log_if_slow("update_status_player_state", start);
+    log_if_slow("update_status_player_action_state", start);
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub(crate) fn update_status_player_wielded(
+    fonts: Res<Fonts>,
+    mut text_sections: ResMut<StatusTextSections>,
+    mut status_displays: Query<&mut Text, With<StatusDisplay>>,
+    player_weapon: Query<(&ObjectName, Option<&Amount>, Option<&Filthy>), With<PlayerWielded>>,
+) {
+    let start = Instant::now();
+
+    let begin = Phrase::new("Weapon:");
+    let phrase = if let Ok((name, amount, filthy)) = player_weapon.get_single() {
+        begin.extend(name.as_item(amount, filthy))
+    } else {
+        begin.add("(none)")
+    }
+    .add("\n");
+
+    let text_style = HudDefaults::new(fonts.default()).text_style;
+    text_sections.wielded = phrase.into_text_sections(&text_style);
+
+    update_status_display(&text_sections, &mut status_displays.single_mut());
+
+    log_if_slow("update_status_wielded", start);
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub(crate) fn update_status_enemies(
+    envir: Envir,
+    clock: Clock,
+    actors: Actors,
+    fonts: Res<Fonts>,
+    mut text_sections: ResMut<StatusTextSections>,
+    mut status_displays: Query<&mut Text, With<StatusDisplay>>,
+    players: Query<(Entity, &Pos), With<Player>>,
+) {
+    let start = Instant::now();
+
+    let factions = actors.collect_factions();
+    let (player_entity, &player_pos) = players.single();
+    let player_actor = actors.get(player_entity);
+    let mut enemies = Faction::Human.enemies(&envir, &clock, &factions, &player_actor);
+    enemies.sort_by_key(|&pos| pos.vision_distance(player_pos));
+
+    let begin = Phrase::new("Enemies:");
+    let phrase = if enemies.is_empty() {
+        begin.add("(none)")
+    } else {
+        begin.extend(
+            enemies
+                .iter()
+                .map(|&pos| (pos, envir.find_character(pos).unwrap()))
+                .flat_map(|(pos, (_, name))| {
+                    Phrase::from_name(name)
+                        .add((pos - player_pos).player_hint())
+                        .fragments
+                })
+                .collect(),
+        )
+    }
+    .add("\n");
+
+    let text_style = HudDefaults::new(fonts.default()).text_style;
+    text_sections.enemies = phrase.into_text_sections(&text_style);
+
+    update_status_display(&text_sections, &mut status_displays.single_mut());
+
+    log_if_slow("update_status_enemies", start);
 }
 
 #[allow(clippy::needless_pass_by_value)]

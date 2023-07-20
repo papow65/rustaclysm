@@ -52,8 +52,10 @@ impl Plugin for GameplayPlugin {
                 update_status_health,
                 update_status_speed,
                 update_status_stamina,
-                update_status_player_state
+                update_status_player_action_state
                     .run_if(resource_exists_and_changed::<PlayerActionState>()),
+                update_status_player_wielded.run_if(resource_exists_and_changed::<Timeouts>()),
+                update_status_enemies.run_if(resource_exists_and_changed::<Timeouts>()),
                 update_status_detais.run_if(resource_exists_and_changed::<PlayerActionState>()),
                 update_visualization_on_focus_move
                     .run_if(resource_exists_and_changed::<ElevationVisibility>()),
