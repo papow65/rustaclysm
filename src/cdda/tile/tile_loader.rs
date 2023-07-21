@@ -231,8 +231,7 @@ impl TileLoader {
         &self,
         definition: &ObjectDefinition,
         variants: &[ObjectId],
-    ) -> Vec<Model> {
-        let mut bundles = Vec::new();
+    ) -> Layers<Model> {
         let (foreground, background) = variants
             .iter()
             .find_map(|variant| self.tiles.get(variant))
@@ -245,20 +244,38 @@ impl TileLoader {
             println!("{tile_name:?} {foreground:?} {background:?}");
         }*/
 
-        for (sprite_numbers, layer) in [
-            (foreground, SpriteLayer::Front),
-            (background, SpriteLayer::Back),
-        ] {
-            bundles.extend(sprite_numbers.map(|sprite_number| {
-                Model::new(
-                    definition,
-                    layer,
-                    sprite_number,
-                    &self.textures[&sprite_number],
-                )
-            }));
+        let foreground_model = self
+            .to_model(foreground, definition, SpriteLayer::Front)
+            .unwrap();
+        let background_model = self.to_model(background, definition, SpriteLayer::Back);
+
+        if let Some(background_model) = background_model {
+            Layers {
+                base: background_model,
+                overlay: Some(foreground_model),
+            }
+        } else {
+            Layers {
+                base: foreground_model,
+                overlay: None,
+            }
         }
-        bundles
+    }
+
+    fn to_model(
+        &self,
+        sprite_number: Option<SpriteNumber>,
+        definition: &ObjectDefinition,
+        layer: SpriteLayer,
+    ) -> Option<Model> {
+        sprite_number.map(|sprite_number| {
+            Model::new(
+                definition,
+                layer,
+                sprite_number,
+                &self.textures[&sprite_number],
+            )
+        })
     }
 }
 

@@ -359,6 +359,22 @@ impl<'w, 's> Spawner<'w, 's> {
         };
         //dbg!(&last_seen);
 
+        let layers =
+            self.model_factory
+                .get_layers(definition, true)
+                .map(|(pbr_bundle, apprearance)| {
+                    (
+                        pbr_bundle,
+                        apprearance.clone(),
+                        if last_seen == LastSeen::Never {
+                            Some(apprearance.material(&LastSeen::Currently))
+                            //None // TODO
+                        } else {
+                            Some(apprearance.material(&last_seen))
+                        },
+                    )
+                });
+
         let tile = self
             .commands
             .spawn(SpatialBundle::default())
@@ -368,16 +384,15 @@ impl<'w, 's> Spawner<'w, 's> {
             .insert(Transform::from_translation(pos.vec3()))
             .insert(object_name)
             .with_children(|child_builder| {
-                for (pbr_bundle, apprearance) in
-                    self.model_factory.get_model_bundles(definition, true)
                 {
-                    let material = if last_seen == LastSeen::Never {
-                        Some(apprearance.material(&LastSeen::Currently))
-                        //None // TODO
-                    } else {
-                        Some(apprearance.material(&last_seen))
-                    };
-                    let child = child_builder.spawn(pbr_bundle).insert(apprearance).id();
+                    let (pbr_bundle, appearance, material) = layers.base;
+                    let child = child_builder.spawn(pbr_bundle).insert(appearance).id();
+                    if let Some(material) = material {
+                        insert(child_builder, child, material);
+                    }
+                }
+                if let Some((pbr_bundle, appearance, material)) = layers.overlay {
+                    let child = child_builder.spawn(pbr_bundle).insert(appearance).id();
                     if let Some(material) = material {
                         insert(child_builder, child, material);
                     }
@@ -767,30 +782,30 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
         let pbr_bundles = self
             .spawner
             .model_factory
-            .get_model_bundles(&definition, false)
-            .into_iter()
-            .map(|(pbr, _)| pbr)
-            .collect::<Vec<_>>();
-        if !pbr_bundles.is_empty() {
-            entity
-                .insert(SpatialBundle::default())
-                .insert(Transform {
-                    translation: zone_level.base_pos().vec3() + Vec3::new(11.5, 0.0, 11.5),
-                    scale: Vec3::splat(24.0),
-                    ..Transform::default()
-                })
-                .insert(match seen_from {
-                    SeenFrom::CloseBy | SeenFrom::FarAway => {
-                        (LastSeen::Previously, Visibility::Inherited)
-                    }
-                    SeenFrom::Never => (LastSeen::Never, Visibility::Hidden),
-                })
-                .with_children(|child_builder| {
-                    for pbr_bundle in pbr_bundles {
-                        child_builder.spawn(pbr_bundle).insert(*child_visibiltiy);
-                    }
-                });
-        }
+            .get_layers(&definition, false)
+            .map(|(pbr, _)| pbr);
+
+        entity
+            .insert(SpatialBundle::default())
+            .insert(Transform {
+                translation: zone_level.base_pos().vec3() + Vec3::new(11.5, 0.0, 11.5),
+                scale: Vec3::splat(24.0),
+                ..Transform::default()
+            })
+            .insert(match seen_from {
+                SeenFrom::CloseBy | SeenFrom::FarAway => {
+                    (LastSeen::Previously, Visibility::Inherited)
+                }
+                SeenFrom::Never => (LastSeen::Never, Visibility::Hidden),
+            })
+            .with_children(|child_builder| {
+                child_builder
+                    .spawn(pbr_bundles.base)
+                    .insert(*child_visibiltiy);
+                if let Some(pbr_bundle) = pbr_bundles.overlay {
+                    child_builder.spawn(pbr_bundle).insert(*child_visibiltiy);
+                }
+            });
 
         self.zone_level_entities.add(zone_level, entity.id());
         Ok(())

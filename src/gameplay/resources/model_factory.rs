@@ -82,26 +82,23 @@ impl<'w> ModelFactory<'w> {
         let models = self
             .loader
             .get_models(definition, &self.infos.variants(definition));
-        assert!(models.len() == 1, "{}", models.len());
-        self.get_pbr_bundle(&models[0], shading)
+        assert!(models.overlay.is_none(), "{models:?}");
+        self.get_pbr_bundle(&models.base, shading)
     }
 
-    pub(crate) fn get_model_bundles(
+    pub(crate) fn get_layers(
         &mut self,
         definition: &ObjectDefinition,
         shading: bool,
-    ) -> Vec<(PbrBundle, Appearance)> {
+    ) -> Layers<(PbrBundle, Appearance)> {
         let models = self
             .loader
             .get_models(definition, &self.infos.variants(definition));
-        models
-            .iter()
-            .map(|model| {
-                (
-                    self.get_pbr_bundle(model, shading),
-                    self.get_appearance(model),
-                )
-            })
-            .collect::<Vec<(PbrBundle, Appearance)>>()
+        models.map_mut(|model| {
+            (
+                self.get_pbr_bundle(&model, shading),
+                self.get_appearance(&model),
+            )
+        })
     }
 }

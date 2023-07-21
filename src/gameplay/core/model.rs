@@ -2,6 +2,30 @@ use crate::prelude::*;
 use bevy::prelude::{AlphaMode, Mesh, Transform, Vec2, Vec3};
 use std::path::PathBuf;
 
+#[derive(Debug)]
+pub(crate) struct Layers<T> {
+    pub(crate) base: T,
+    pub(crate) overlay: Option<T>,
+}
+
+impl<T> Layers<T> {
+    pub(crate) fn map<U>(self, f: impl Fn(T) -> U) -> Layers<U> {
+        let Self { base, overlay } = self;
+        Layers {
+            base: f(base),
+            overlay: overlay.map(f),
+        }
+    }
+
+    pub(crate) fn map_mut<U>(self, mut f: impl FnMut(T) -> U) -> Layers<U> {
+        let Self { base, overlay } = self;
+        Layers {
+            base: f(base),
+            overlay: overlay.map(f),
+        }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct Transform2d {
     pub(crate) scale: Vec2,
