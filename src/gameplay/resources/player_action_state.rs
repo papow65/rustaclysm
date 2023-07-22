@@ -88,7 +88,7 @@ impl PlayerActionState {
                     None // process the cancellation next turn
                 } else {
                     Some(Action::Stay {
-                        duration: StayDuration::Long,
+                        duration: StayDuration::Short,
                     })
                 }
             }
