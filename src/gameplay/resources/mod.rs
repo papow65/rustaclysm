@@ -91,25 +91,3 @@ pub(crate) struct Hierarchy<'w, 's> {
     >,
     pub(crate) containers: Query<'w, 's, (&'static Container, Option<&'static Children>)>,
 }
-
-#[derive(SystemParam)]
-pub(crate) struct Actors<'w, 's> {
-    pub(crate) q: Query<'w, 's, ActorTuple<'static>>,
-}
-
-impl<'w, 's> Actors<'w, 's> {
-    pub(crate) fn actors(&'s self) -> impl Iterator<Item = Actor<'s>> {
-        self.q.iter().map(Actor::from)
-    }
-
-    pub(crate) fn get(&'s self, entity: Entity) -> Actor<'s> {
-        self.q.get(entity).map(Actor::from).unwrap()
-    }
-
-    pub(crate) fn collect_factions(&'s self) -> Vec<(Pos, &'s Faction)> {
-        self.q
-            .iter()
-            .map(|(_, _, p, _, _, f, ..)| (*p, f))
-            .collect::<Vec<(Pos, &'s Faction)>>()
-    }
-}

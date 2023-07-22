@@ -9,12 +9,12 @@ use std::time::Instant;
 pub(crate) fn egible_character(
     envir: Envir,
     mut timeouts: ResMut<Timeouts>,
-    actors: Actors,
+    actors: Query<Actor>,
     players: Query<(), With<Player>>,
 ) -> Option<Entity> {
     let egible_entities = actors
-        .actors()
-        .filter(|a| envir.is_accessible(a.pos) || players.get(a.entity).is_ok())
+        .iter()
+        .filter(|a| envir.is_accessible(*a.pos) || players.get(a.entity).is_ok())
         .map(|a| a.entity)
         .collect::<Vec<Entity>>();
     timeouts.next(&egible_entities)
@@ -28,7 +28,8 @@ pub(crate) fn plan_action(
     mut envir: Envir,
     clock: Clock,
     mut instruction_queue: ResMut<InstructionQueue>,
-    actors: Actors,
+    actors: Query<Actor>,
+    factions: Query<(&Pos, &Faction), With<Health>>,
     mut players: Query<(), With<Player>>,
 ) -> Option<(Entity, Action)> {
     let start = Instant::now();
@@ -38,21 +39,21 @@ pub(crate) fn plan_action(
         return None;
     };
 
-    let factions = actors.collect_factions();
-    let actor = actors.get(active_entity);
-    let enemies = Faction::Human.enemies(&envir, &clock, &factions, &actor);
+    let factions = &factions.iter().map(|(p, f)| (*p, f)).collect::<Vec<_>>();
+    let actor = actors.get(active_entity).unwrap();
+    let enemies = Faction::Human.enemies(&envir, &clock, factions, &actor);
     let action = if players.get_mut(active_entity).is_ok() {
         player_action_state.plan_action(
             &mut commands,
             &mut envir,
             &mut instruction_queue,
             actor.entity,
-            actor.pos,
+            *actor.pos,
             clock.time(),
             &enemies,
         )?
     } else {
-        let strategy = actor.faction.strategize(&envir, &clock, &factions, &actor);
+        let strategy = actor.faction.strategize(&envir, &clock, factions, &actor);
         if let Some(last_enemy) = strategy.last_enemy {
             commands.entity(actor.entity).insert(last_enemy);
         }
@@ -155,7 +156,7 @@ pub(crate) fn perform_action(
             (Commands, Res<Infos>, Query<&ObjectDefinition>),
             _,
         >(world, |(mut commands, infos, definitions)| {
-            Actor::examine_item(&mut commands, &infos, &definitions, entity);
+            ActorItem::examine_item(&mut commands, &infos, &definitions, entity);
             None
         }),
         Action::SwitchRunning => {
@@ -174,9 +175,12 @@ pub(crate) fn perform_action(
 fn perform_with_actor<P, F>(world: &mut World, actor_entity: Entity, act: F) -> Option<Impact>
 where
     P: SystemParam + 'static,
-    for<'a, 'b> F: Fn(Actor, <P as SystemParam>::Item<'a, 'b>) -> Option<Impact>,
+    for<'a, 'b> F: Fn(ActorItem, <P as SystemParam>::Item<'a, 'b>) -> Option<Impact>,
 {
-    perform::<(Actors, P), _>(world, |(actors, p)| act(actors.get(actor_entity), p))
+    perform::<(Query<Actor>, P), _>(world, |(actors, p)| {
+        let actor = actors.get(actor_entity).unwrap();
+        act(actor, p)
+    })
 }
 
 fn perform<P, F>(world: &mut World, act: F) -> Option<Impact>

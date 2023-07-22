@@ -344,7 +344,7 @@ pub(crate) fn update_status_stamina(
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_status_speed(
     player_actors: Query<
-        ActorTuple,
+        Actor,
         (
             With<Player>,
             Or<(Changed<BaseSpeed>, Changed<Stamina>, Changed<WalkingMode>)>,
@@ -355,8 +355,7 @@ pub(crate) fn update_status_speed(
 ) {
     let start = Instant::now();
 
-    if let Ok(player_tuple) = player_actors.get_single() {
-        let player_actor = Actor::from(player_tuple);
+    if let Ok(player_actor) = player_actors.get_single() {
         let walking_mode = player_actor.walking_mode;
         text_sections.speed[0].value = match player_actor.stamina.breath() {
             Breath::Normal => String::new(),
@@ -424,19 +423,18 @@ pub(crate) fn update_status_player_wielded(
 pub(crate) fn update_status_enemies(
     envir: Envir,
     clock: Clock,
-    actors: Actors,
+    player_actors: Query<Actor, With<Player>>,
+    factions: Query<(&Pos, &Faction), With<Health>>,
     fonts: Res<Fonts>,
     mut text_sections: ResMut<StatusTextSections>,
     mut status_displays: Query<&mut Text, With<StatusDisplay>>,
-    players: Query<(Entity, &Pos), With<Player>>,
 ) {
     let start = Instant::now();
 
-    let factions = actors.collect_factions();
-    let (player_entity, &player_pos) = players.single();
-    let player_actor = actors.get(player_entity);
+    let factions = factions.iter().map(|(p, f)| (*p, f)).collect::<Vec<_>>();
+    let player_actor = player_actors.single();
     let mut enemies = Faction::Human.enemies(&envir, &clock, &factions, &player_actor);
-    enemies.sort_by_key(|&pos| pos.vision_distance(player_pos));
+    enemies.sort_by_key(|&pos| pos.vision_distance(*player_actor.pos));
 
     let begin = Phrase::new("Enemies:");
     let phrase = if enemies.is_empty() {
@@ -448,7 +446,7 @@ pub(crate) fn update_status_enemies(
                 .map(|&pos| (pos, envir.find_character(pos).unwrap()))
                 .map(|(pos, (_, name))| {
                     Phrase::from_name(name)
-                        .add((pos - player_pos).player_hint())
+                        .add((pos - *player_actor.pos).player_hint())
                         .fragments
                 })
                 .collect::<Vec<_>>()

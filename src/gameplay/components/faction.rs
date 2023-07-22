@@ -95,7 +95,7 @@ impl Faction {
         envir: &Envir,
         factions: &[(Pos, &Self)],
         enemies: &[Pos],
-        actor: &Actor,
+        actor: &ActorItem,
     ) -> Option<(Action, LastEnemy)> {
         enemies
             .iter()
@@ -109,7 +109,7 @@ impl Faction {
             )
             .filter_map(|(memory, enemy_pos)| {
                 envir
-                    .path(actor.pos, enemy_pos, self.intelligence(), actor.speed())
+                    .path(*actor.pos, enemy_pos, self.intelligence(), actor.speed())
                     .map(|path| (memory, path))
             })
             .min_by_key(|(memory, path)| (*memory, path.duration.0))
@@ -143,7 +143,7 @@ impl Faction {
             })
     }
 
-    pub(crate) fn flee(&self, envir: &Envir, enemies: &[Pos], actor: &Actor) -> Option<Action> {
+    pub(crate) fn flee(&self, envir: &Envir, enemies: &[Pos], actor: &ActorItem) -> Option<Action> {
         if enemies.is_empty() {
             return None;
         }
@@ -156,7 +156,7 @@ impl Faction {
         let min_time = Milliseconds((planning_limit - 1) * up_time.0); // included
         let max_time = Milliseconds(planning_limit * up_time.0); // not included
 
-        let graph = dijkstra_all(&(actor.pos, Milliseconds(0)), |(pos, prev_total_ms)| {
+        let graph = dijkstra_all(&(*actor.pos, Milliseconds(0)), |(pos, prev_total_ms)| {
             envir
                 .nbors_for_moving(*pos, None, self.intelligence(), actor.speed())
                 .filter_map(|(nbor, ms)| {
@@ -180,7 +180,7 @@ impl Faction {
             .get(1)
             .expect("First step (after current position)")
             .0;
-        Some(if target == actor.pos {
+        Some(if target == *actor.pos {
             Action::Stay {
                 duration: StayDuration::Short,
             }
@@ -193,13 +193,13 @@ impl Faction {
         &self,
         envir: &Envir,
         factions: &[(Pos, &Self)],
-        actor: &Actor,
+        actor: &ActorItem,
     ) -> Option<Action> {
         let mut random = rand::thread_rng();
 
         if random.gen::<f32>() < 0.3 {
             envir
-                .nbors_for_moving(actor.pos, None, self.intelligence(), actor.speed())
+                .nbors_for_moving(*actor.pos, None, self.intelligence(), actor.speed())
                 .filter(|(pos, _)| factions.iter().all(|(other_pos, _)| pos != other_pos))
                 .map(|(pos, _)| pos)
                 .collect::<Vec<Pos>>()
@@ -224,7 +224,7 @@ impl Faction {
         envir: &Envir,
         factions: &[(Pos, &Self)],
         enemies: &[Pos],
-        actor: &Actor,
+        actor: &ActorItem,
     ) -> Option<Strategy> {
         match intent {
             Intent::Attack => self
@@ -260,7 +260,7 @@ impl Faction {
         envir: &Envir,
         clock: &Clock,
         factions: &[(Pos, &Self)],
-        actor: &Actor,
+        actor: &ActorItem,
     ) -> Strategy {
         let enemies = self.enemies(envir, clock, factions, actor);
         //println!("{self:?} can see {:?} enemies", enemies.len());
@@ -277,9 +277,9 @@ impl Faction {
         envir: &Envir,
         clock: &Clock,
         factions: &[(Pos, &Self)],
-        actor: &Actor,
+        actor: &ActorItem,
     ) -> Vec<Pos> {
-        let currently_visible = envir.currently_visible(clock, actor.pos);
+        let currently_visible = envir.currently_visible(clock, *actor.pos);
 
         factions
             .iter()

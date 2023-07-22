@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use bevy::prelude::*;
+use bevy::{ecs::query::WorldQuery, prelude::*};
 
 /** Derived from stamina */
 #[derive(Copy, Clone, Debug)]
@@ -61,28 +61,29 @@ impl Impact {
     }
 }
 
-pub(crate) struct Actor<'s> {
+#[derive(WorldQuery)]
+pub(crate) struct Actor {
     pub(crate) entity: Entity,
-    pub(crate) name: &'s ObjectName,
-    pub(crate) pos: Pos,
-    pub(crate) base_speed: BaseSpeed,
-    pub(crate) health: &'s Health,
-    pub(crate) faction: &'s Faction,
-    pub(crate) melee: &'s Melee,
-    pub(crate) body_containers: Option<&'s BodyContainers>,
-    pub(crate) aquatic: Option<&'s Aquatic>,
-    pub(crate) last_enemy: Option<&'s LastEnemy>,
-    pub(crate) stamina: &'s Stamina,
-    pub(crate) walking_mode: &'s WalkingMode,
+    pub(crate) name: &'static ObjectName,
+    pub(crate) pos: &'static Pos,
+    pub(crate) base_speed: &'static BaseSpeed,
+    pub(crate) health: &'static Health,
+    pub(crate) faction: &'static Faction,
+    pub(crate) melee: &'static Melee,
+    pub(crate) body_containers: Option<&'static BodyContainers>,
+    pub(crate) aquatic: Option<&'static Aquatic>,
+    pub(crate) last_enemy: Option<&'static LastEnemy>,
+    pub(crate) stamina: &'static Stamina,
+    pub(crate) walking_mode: &'static WalkingMode,
 }
 
-impl<'s> Actor<'s> {
-    pub(crate) fn speed(&'s self) -> MillimeterPerSecond {
+impl ActorItem<'_> {
+    pub(crate) fn speed(&self) -> MillimeterPerSecond {
         self.base_speed
             .speed(self.walking_mode, self.stamina.breath())
     }
 
-    fn high_speed(&'s self) -> Option<MillimeterPerSecond> {
+    fn high_speed(&self) -> Option<MillimeterPerSecond> {
         match self.stamina.breath() {
             Breath::Normal => Some(self.base_speed.speed(&WalkingMode::Running, Breath::Normal)),
             Breath::Winded => None,
@@ -111,13 +112,13 @@ impl<'s> Actor<'s> {
     }
 
     pub(crate) fn move_(
-        &'s self,
+        &self,
         commands: &mut Commands,
         envir: &mut Envir,
         to: Pos,
     ) -> Option<Impact> {
-        let from = self.pos;
-        if !envir.are_nbors(self.pos, to) {
+        let from = *self.pos;
+        if !envir.are_nbors(*self.pos, to) {
             commands.spawn(Message::error(Phrase::from_name(self.name).add(format!(
                 "can't move to {to:?}, as it is not a nbor of {from:?}"
             ))));
@@ -157,7 +158,7 @@ impl<'s> Actor<'s> {
     }
 
     fn damage(
-        &'s self,
+        &self,
         commands: &mut Commands,
         envir: &Envir,
         infos: &Infos,
@@ -183,7 +184,7 @@ impl<'s> Actor<'s> {
         });
 
         // Needed when a character smashes something at it's own position
-        let cost_pos = if self.pos == damaged_pos {
+        let cost_pos = if *self.pos == damaged_pos {
             self.pos
                 .offset(PosOffset {
                     x: 1,
@@ -194,11 +195,11 @@ impl<'s> Actor<'s> {
         } else {
             damaged_pos
         };
-        Impact::heavy(envir.walking_cost(self.pos, cost_pos).duration(speed))
+        Impact::heavy(envir.walking_cost(*self.pos, cost_pos).duration(speed))
     }
 
     pub(crate) fn attack(
-        &'s self,
+        &self,
         commands: &mut Commands,
         envir: &Envir,
         infos: &Infos,
@@ -211,7 +212,7 @@ impl<'s> Actor<'s> {
             return None;
         };
 
-        if !envir.are_nbors(self.pos, target) {
+        if !envir.are_nbors(*self.pos, target) {
             unimplemented!();
         }
 
@@ -228,7 +229,7 @@ impl<'s> Actor<'s> {
     }
 
     pub(crate) fn smash(
-        &'s self,
+        &self,
         commands: &mut Commands,
         envir: &Envir,
         infos: &Infos,
@@ -240,7 +241,7 @@ impl<'s> Actor<'s> {
             return None;
         };
 
-        if !envir.are_nbors(self.pos, target) && target != self.pos {
+        if !envir.are_nbors(*self.pos, target) && target != *self.pos {
             unimplemented!();
         }
 
@@ -270,12 +271,12 @@ impl<'s> Actor<'s> {
     }
 
     pub(crate) fn close(
-        &'s self,
+        &self,
         commands: &mut Commands,
         envir: &mut Envir,
         target: Pos,
     ) -> Option<Impact> {
-        if !envir.are_nbors(self.pos, target) && target != self.pos {
+        if !envir.are_nbors(*self.pos, target) && target != *self.pos {
             unimplemented!();
         }
 
@@ -293,7 +294,7 @@ impl<'s> Actor<'s> {
                 commands.entity(closeable).insert(Toggle::Close);
                 Some(
                     self.standard_impact(
-                        envir.walking_cost(self.pos, target).duration(self.speed()),
+                        envir.walking_cost(*self.pos, target).duration(self.speed()),
                     ),
                 )
             }
@@ -310,7 +311,7 @@ impl<'s> Actor<'s> {
     }
 
     pub(crate) fn wield(
-        &'s self,
+        &self,
         commands: &mut Commands,
         location: &mut Location,
         hierarchy: &Hierarchy,
@@ -330,7 +331,7 @@ impl<'s> Actor<'s> {
     }
 
     pub(crate) fn unwield(
-        &'s self,
+        &self,
         commands: &mut Commands,
         location: &mut Location,
         hierarchy: &Hierarchy,
@@ -350,7 +351,7 @@ impl<'s> Actor<'s> {
     }
 
     pub(crate) fn pickup(
-        &'s self,
+        &self,
         commands: &mut Commands,
         location: &mut Location,
         hierarchy: &Hierarchy,
@@ -366,7 +367,7 @@ impl<'s> Actor<'s> {
     }
 
     pub(crate) fn take(
-        &'s self,
+        &self,
         commands: &mut Commands,
         location: &mut Location,
         hierarchy: &Hierarchy,
@@ -385,7 +386,7 @@ impl<'s> Actor<'s> {
         )) = hierarchy.items.get(taken)
         {
             if let Some(&taken_pos) = taken_pos {
-                let offset = taken_pos - self.pos;
+                let offset = taken_pos - *self.pos;
                 assert!(
                     offset.x.abs() <= 1,
                     "Taking is not possible from more than one tile away"
@@ -455,7 +456,7 @@ impl<'s> Actor<'s> {
     }
 
     pub(crate) fn dump(
-        &'s self,
+        &self,
         commands: &mut Commands,
         location: &mut Location,
         hierarchy: &Hierarchy,
@@ -494,7 +495,7 @@ impl<'s> Actor<'s> {
             .entity(dumped)
             .insert(VisibilityBundle::default())
             .insert(dumped_pos);
-        location.update(dumped, Some(self.pos));
+        location.update(dumped, Some(*self.pos));
         Some(self.activate())
     }
 
@@ -525,58 +526,9 @@ impl<'s> Actor<'s> {
         }
     }
 
-    pub(crate) fn switch_running(&'s self, commands: &mut Commands) {
+    pub(crate) fn switch_running(&self, commands: &mut Commands) {
         commands
             .entity(self.entity)
             .insert(self.walking_mode.switch());
-    }
-}
-
-pub(crate) type ActorTuple<'s> = (
-    Entity,
-    &'s ObjectName,
-    &'s Pos,
-    &'s BaseSpeed,
-    &'s Health,
-    &'s Faction,
-    &'s Melee,
-    Option<&'s BodyContainers>,
-    Option<&'s Aquatic>,
-    Option<&'s LastEnemy>,
-    &'s Stamina,
-    &'s WalkingMode,
-);
-
-impl<'s> From<ActorTuple<'s>> for Actor<'s> {
-    fn from(
-        (
-            entity,
-            name,
-            &pos,
-            &base_speed,
-            health,
-            faction,
-            melee,
-            body_containers,
-            aquatic,
-            last_enemy,
-            stamina,
-            walking_mode,
-        ): ActorTuple<'s>,
-    ) -> Self {
-        Self {
-            entity,
-            name,
-            pos,
-            base_speed,
-            health,
-            faction,
-            melee,
-            body_containers,
-            aquatic,
-            last_enemy,
-            stamina,
-            walking_mode,
-        }
     }
 }
