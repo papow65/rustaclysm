@@ -93,7 +93,7 @@ pub(crate) fn update_inventory(
         Option<&Filthy>,
         Option<&Corpse>,
         Option<&Integrity>,
-        &LastSeen,
+        Option<&LastSeen>,
     )>,
 ) {
     if !run.0 {
@@ -203,7 +203,7 @@ fn items_by_section<'a>(
         Option<&Filthy>,
         Option<&Corpse>,
         Option<&Integrity>,
-        &LastSeen,
+        Option<&LastSeen>,
     )>,
     player_pos: Pos,
     body_containers: &'a BodyContainers,
@@ -215,7 +215,7 @@ fn items_by_section<'a>(
             items
                 .iter()
                 .filter(|(_, _, pos, .., last_seen)| {
-                    last_seen == &&LastSeen::Currently && &Some(&nbor_pos) == pos
+                    last_seen == &Some(&LastSeen::Currently) && &Some(&nbor_pos) == pos
                 })
                 .collect::<Vec<_>>(),
         );

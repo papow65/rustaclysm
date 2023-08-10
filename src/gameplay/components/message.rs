@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use bevy::prelude::{Color, Component};
 
-#[derive(Component, Debug)]
+#[derive(Clone, Component, Debug)]
 pub(crate) struct ObjectName {
     name: ItemName,
     color: Color,

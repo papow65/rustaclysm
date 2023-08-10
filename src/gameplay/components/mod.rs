@@ -14,6 +14,7 @@ use rand::{
     distributions::{Distribution, Uniform},
     thread_rng,
 };
+use std::ops::Sub;
 
 pub(crate) use {container::*, faction::*, message::*, player::*, pos::*, stats::*};
 
@@ -56,14 +57,21 @@ pub(crate) struct Opaque;
 #[derive(Component)]
 pub(crate) struct OpaqueFloor;
 
-#[derive(Component)]
+#[derive(Clone, Component)]
 pub(crate) struct Containable {
     pub(crate) volume: Volume,
     pub(crate) mass: Mass,
 }
 
-#[derive(Component, Debug)]
+#[derive(Component, Debug, PartialEq, PartialOrd)]
 pub(crate) struct Amount(pub(crate) u32);
+
+impl Sub<Self> for &Amount {
+    type Output = Amount;
+    fn sub(self, other: Self) -> Self::Output {
+        Amount(self.0 - other.0)
+    }
+}
 
 /** Marker to open or close something, like a door */
 #[derive(Component, Debug, PartialEq)]

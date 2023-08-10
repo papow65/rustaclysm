@@ -376,7 +376,7 @@ impl ActorItem<'_> {
     ) -> Option<Impact> {
         if let Ok((
             taken_entity,
-            _,
+            taken_definition,
             taken_object_name,
             taken_pos,
             taken_amount,
@@ -385,8 +385,11 @@ impl ActorItem<'_> {
             taken_parent,
         )) = hierarchy.items.get(taken)
         {
-            if let Some(&taken_pos) = taken_pos {
-                let offset = taken_pos - *self.pos;
+            let taken_amount = taken_amount.unwrap_or(&Amount(1));
+            let taken_parent = taken_parent.expect("Parent entity required");
+
+            if let Some(taken_pos) = taken_pos {
+                let offset = *taken_pos - *self.pos;
                 assert!(
                     offset.x.abs() <= 1,
                     "Taking is not possible from more than one tile away"
@@ -401,11 +404,6 @@ impl ActorItem<'_> {
                 );
             } else {
                 assert!(
-                    taken_parent.is_some(),
-                    "Items without a position should have a parent"
-                );
-                let taken_parent = taken_parent.unwrap();
-                assert!(
                     taken_parent.get() == self.body_containers.unwrap().hands
                         || taken_parent.get() == self.body_containers.unwrap().clothing,
                     "Item parents should be part of the body"
@@ -415,30 +413,43 @@ impl ActorItem<'_> {
             let current_items = hierarchy
                 .items
                 .iter()
-                .filter(|(.., parent)| {
-                    parent.map(bevy::prelude::Parent::get) == Some(container_entity)
-                })
+                .filter(|(.., parent)| parent.map(Parent::get) == Some(container_entity))
                 .map(|(.., containable, _)| containable);
 
             let (container, _) = hierarchy.containers.get(container_entity).unwrap();
-            let taken_name = taken_object_name.as_item(taken_amount, taken_filthy);
             match container.check_add(
                 self.name.single(),
                 current_items,
                 taken_containable,
-                taken_name.clone(),
+                taken_amount,
             ) {
-                Ok(()) => {
-                    commands.spawn(Message::info(
-                        Phrase::from_name(self.name)
-                            .add("picks up")
-                            .extend(taken_name),
-                    ));
-                    commands
-                        .entity(container_entity)
-                        .push_children(&[taken_entity]);
-                    commands.entity(taken_entity).remove::<Pos>();
-                    location.update(taken_entity, None);
+                Ok(allowed_amount) => {
+                    if &allowed_amount < taken_amount {
+                        self.take_some(
+                            commands,
+                            location,
+                            container_entity,
+                            allowed_amount,
+                            taken_entity,
+                            taken_definition.clone(),
+                            taken_object_name.clone(),
+                            taken_pos,
+                            taken_amount,
+                            taken_filthy,
+                            taken_containable.clone(),
+                            taken_parent,
+                        );
+                    } else {
+                        let taken_name =
+                            taken_object_name.as_item(Some(taken_amount), taken_filthy);
+                        self.take_all(
+                            commands,
+                            location,
+                            container_entity,
+                            taken_entity,
+                            taken_name,
+                        );
+                    }
                     Some(self.activate())
                 }
                 Err(messages) => {
@@ -453,6 +464,70 @@ impl ActorItem<'_> {
             ));
             None
         }
+    }
+
+    fn take_some(
+        &self,
+        commands: &mut Commands,
+        location: &mut Location,
+        container_entity: Entity,
+        allowed_amount: Amount,
+        taken_entity: Entity,
+        definition: ObjectDefinition,
+        object_name: ObjectName,
+        taken_pos: Option<&Pos>,
+        split_amount: &Amount,
+        filthy: Option<&Filthy>,
+        containable: Containable,
+        taken_parent: &Parent,
+    ) {
+        let taken_name = object_name.as_item(Some(&allowed_amount), filthy);
+        commands.spawn(Message::info(
+            Phrase::from_name(self.name)
+                .add("picks up")
+                .extend(taken_name),
+        ));
+
+        let left_over_amount = split_amount - &allowed_amount;
+        let left_over_entity = commands
+            .spawn((definition, object_name, left_over_amount, containable))
+            .id();
+        if filthy.is_some() {
+            commands.entity(left_over_entity).insert(Filthy);
+        }
+        if let Some(&taken_pos) = taken_pos {
+            commands.entity(left_over_entity).insert(taken_pos);
+            location.update(left_over_entity, Some(taken_pos));
+        }
+        commands
+            .entity(taken_parent.get())
+            .push_children(&[left_over_entity]);
+
+        commands.entity(taken_entity).insert(allowed_amount);
+        commands
+            .entity(container_entity)
+            .push_children(&[taken_entity]);
+        location.update(taken_entity, None);
+    }
+
+    fn take_all(
+        &self,
+        commands: &mut Commands,
+        location: &mut Location,
+        container_entity: Entity,
+        taken_entity: Entity,
+        taken_name: Vec<Fragment>,
+    ) {
+        commands.spawn(Message::info(
+            Phrase::from_name(self.name)
+                .add("picks up")
+                .extend(taken_name),
+        ));
+        commands
+            .entity(container_entity)
+            .push_children(&[taken_entity]);
+        commands.entity(taken_entity).remove::<Pos>();
+        location.update(taken_entity, None);
     }
 
     pub(crate) fn dump(

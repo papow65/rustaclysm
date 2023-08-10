@@ -278,6 +278,13 @@ impl Sub<Self> for Volume {
     }
 }
 
+impl Div<Self> for Volume {
+    type Output = u32;
+    fn div(self, other: Self) -> Self::Output {
+        (self.milliliter / other.milliliter) as Self::Output
+    }
+}
+
 impl fmt::Display for Volume {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if 10_000 <= self.milliliter {
@@ -360,6 +367,13 @@ impl Sub<Self> for Mass {
         Self {
             milligram: self.milligram - other.milligram,
         }
+    }
+}
+
+impl Div<Self> for Mass {
+    type Output = u32;
+    fn div(self, other: Self) -> Self::Output {
+        (self.milligram / other.milligram) as Self::Output
     }
 }
 
