@@ -27,7 +27,7 @@ pub(crate) fn create_behavior_schedule(app: &mut App) {
                 )
                     .chain(),
                 toggle_doors,
-                update_damaged_items,
+                (update_damaged_items, combine_items).chain(),
             ),
             apply_deferred,
             (

@@ -491,6 +491,7 @@ impl ActorItem<'_> {
         let left_over_amount = split_amount - &allowed_amount;
         let left_over_entity = commands
             .spawn((definition, object_name, left_over_amount, containable))
+            .set_parent(taken_parent.get())
             .id();
         if filthy.is_some() {
             commands.entity(left_over_entity).insert(Filthy);
@@ -499,14 +500,11 @@ impl ActorItem<'_> {
             commands.entity(left_over_entity).insert(taken_pos);
             location.update(left_over_entity, Some(taken_pos));
         }
-        commands
-            .entity(taken_parent.get())
-            .push_children(&[left_over_entity]);
 
-        commands.entity(taken_entity).insert(allowed_amount);
         commands
-            .entity(container_entity)
-            .push_children(&[taken_entity]);
+            .entity(taken_entity)
+            .insert(allowed_amount)
+            .set_parent(container_entity);
         location.update(taken_entity, None);
     }
 

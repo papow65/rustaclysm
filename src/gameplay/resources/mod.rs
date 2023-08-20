@@ -90,4 +90,5 @@ pub(crate) struct Hierarchy<'w, 's> {
         ),
     >,
     pub(crate) containers: Query<'w, 's, (&'static Container, Option<&'static Children>)>,
+    pub(crate) parents: Query<'w, 's, (Option<&'static Container>, &'static Children)>,
 }

@@ -14,11 +14,11 @@ use rand::{
     distributions::{Distribution, Uniform},
     thread_rng,
 };
-use std::ops::Sub;
+use std::ops::{Add, Sub};
 
 pub(crate) use {container::*, faction::*, message::*, player::*, pos::*, stats::*};
 
-#[derive(Component)]
+#[derive(PartialEq, Component)]
 pub(crate) struct Filthy;
 
 #[derive(Component)]
@@ -66,6 +66,13 @@ pub(crate) struct Containable {
 #[derive(Component, Debug, PartialEq, PartialOrd)]
 pub(crate) struct Amount(pub(crate) u32);
 
+impl Add<Self> for &Amount {
+    type Output = Amount;
+    fn add(self, other: Self) -> Self::Output {
+        Amount(self.0 + other.0)
+    }
+}
+
 impl Sub<Self> for &Amount {
     type Output = Amount;
     fn sub(self, other: Self) -> Self::Output {
@@ -96,7 +103,7 @@ impl ObjectDefinition {
     }
 }
 
-#[derive(Component)]
+#[derive(PartialEq, Component)]
 pub(crate) struct Integrity(pub(crate) Limited);
 
 impl Integrity {

@@ -201,7 +201,6 @@ pub(crate) fn handle_impact(
     mut commands: Commands,
     mut timeouts: ResMut<Timeouts>,
     players: Query<(), With<Player>>,
-    _healths: Query<&mut Health>,
     mut staminas: Query<&mut Stamina>,
 ) {
     let start = Instant::now();
@@ -398,6 +397,108 @@ pub(crate) fn update_damaged_items(
                     begin.add("but it has no effect")
                 })
             });
+        }
+    }
+
+    log_if_slow("update_damaged_items", start);
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub(crate) fn combine_items(
+    mut commands: Commands,
+    hierarchy: Hierarchy,
+    moved_items: Query<
+        (
+            Entity,
+            &ObjectDefinition,
+            &ObjectName,
+            Option<&Pos>,
+            Option<&Amount>,
+            Option<&Filthy>,
+            &Parent,
+        ),
+        (
+            Changed<Parent>,
+            Without<Container>, /*, With<Container>*/
+        ), //TODO this takes very long for initial entities
+    >,
+) {
+    let start = Instant::now();
+
+    let mut all_merged = Vec::new();
+
+    for (
+        moved_entity,
+        moved_definition,
+        moved_name,
+        moved_pos,
+        moved_amount,
+        moved_filthy,
+        moved_parent,
+    ) in moved_items.iter()
+    {
+        if moved_definition.category == ObjectCategory::Item && !all_merged.contains(&moved_entity)
+        {
+            let (_, siblings) = hierarchy
+                .parents
+                .get(moved_parent.get())
+                .unwrap_or_else(|_| {
+                    //TODO fix this panic after moving items around
+
+                    panic!(
+                        "Parent of {} could not be found",
+                        Phrase::from_fragments(moved_name.as_item(moved_amount, moved_filthy))
+                    )
+                });
+
+            let mut merges = vec![moved_entity];
+            let mut total_amount = &Amount(0) + moved_amount.unwrap_or(&Amount(1));
+
+            for sibling in siblings.iter() {
+                // Note that sibling may be any kind of entity
+                if let Ok((
+                    some_entity,
+                    some_definition,
+                    _,
+                    some_pos,
+                    some_amount,
+                    some_filthy,
+                    _,
+                    _,
+                )) = hierarchy.items.get(*sibling)
+                {
+                    // Note that the positions may differ when the parents are the same.
+                    if some_entity != moved_entity
+                        && moved_definition == some_definition
+                        && moved_pos == some_pos
+                        && moved_filthy == some_filthy
+                        && !all_merged.contains(&some_entity)
+                    {
+                        merges.push(some_entity);
+                        total_amount = &total_amount + some_amount.unwrap_or(&Amount(1));
+                        all_merged.push(some_entity);
+                    }
+                }
+            }
+
+            if 1 < merges.len() {
+                let keep = *merges.iter().max().unwrap();
+
+                println!(
+                    "Combined {} with {} others to {}",
+                    Phrase::from_fragments(moved_name.as_item(moved_amount, moved_filthy)),
+                    merges.len() - 1,
+                    Phrase::from_fragments(moved_name.as_item(Some(&total_amount), moved_filthy)),
+                );
+
+                commands.entity(keep).insert(total_amount);
+
+                for merge in merges {
+                    if merge != keep {
+                        commands.entity(merge).despawn_recursive();
+                    }
+                }
+            }
         }
     }
 

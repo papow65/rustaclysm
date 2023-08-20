@@ -17,7 +17,7 @@ impl Evolution {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub(crate) struct Limited {
     current: u16,
     max: u16,
