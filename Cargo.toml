@@ -14,10 +14,10 @@ bevy = { version = "0.11", default-features = false, features = [ "bevy_asset", 
 pathfinding = "4"
 bresenham = "0.1"
 rand = "0.8"
-serde = { version = "1", features = [ "derive", "rc" ] }
 serde_json = "1"
 glob = "0.3"
 float-ord = "0.3"
+serde = { version = "1, < 1.0.172", features = ["derive", "rc" ] }
 time = "0.3"
 base64 = "0.21"
 regex = "1.*"
