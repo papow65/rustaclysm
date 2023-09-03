@@ -290,7 +290,7 @@ fn update_zone_level_visualization(
         focus,
     );
     //println!("{collapsed_zone_level:?} becomes {visibility:?}");
-    for &entity in children.iter() {
+    for &entity in children {
         // Removing 'Visibility' and 'ComputedVisibility' is not more performant in Bevy 0.9
         commands.entity(entity).insert(visibility);
     }
@@ -326,7 +326,7 @@ pub(crate) fn handle_map_events(
     mut map_asset_events: EventReader<AssetEvent<Map>>,
     map_assets: Res<Assets<Map>>,
 ) {
-    for map_asset_event in map_asset_events.iter() {
+    for map_asset_event in &mut map_asset_events {
         if let AssetEvent::Created { handle } = map_asset_event {
             let map = &map_assets.get(handle).expect("Map loaded");
             for submap in &map.0 {
@@ -362,7 +362,7 @@ pub(crate) fn handle_overmap_buffer_events(
     players: Query<&Pos, With<Player>>,
     cameras: Query<(&Camera, &GlobalTransform)>,
 ) {
-    for overmap_buffer_asset_event in overmap_buffer_asset_events.iter() {
+    for overmap_buffer_asset_event in &mut overmap_buffer_asset_events {
         if let AssetEvent::Created { handle } = overmap_buffer_asset_event {
             let overmap_buffer = overmap_buffer_assets.get(handle).expect("Map loaded");
             let overzone = zone_spawner.spawner.explored.load(handle, overmap_buffer);

@@ -3,7 +3,7 @@ use bevy::prelude::*;
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn maximize_window(mut windows: Query<&mut Window>) {
-    for mut window in windows.iter_mut() {
+    for mut window in &mut windows {
         window.set_maximized(true);
     }
 }

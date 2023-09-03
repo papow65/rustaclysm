@@ -6,7 +6,7 @@ use std::time::Instant;
 pub(crate) fn update_transforms(mut obstacles: Query<(&Pos, &mut Transform), Changed<Pos>>) {
     let start = Instant::now();
 
-    for (&pos, mut transform) in obstacles.iter_mut() {
+    for (&pos, mut transform) in &mut obstacles {
         transform.translation = pos.vec3();
     }
 
@@ -21,7 +21,7 @@ pub(crate) fn update_hidden_item_visibility(
     let start = Instant::now();
 
     // TODO use update_visualization
-    for entity in removed_positions.iter() {
+    for entity in &mut removed_positions {
         if let Ok(mut visibility) = hidden_items.get_mut(entity) {
             *visibility = Visibility::Hidden;
         }
@@ -64,7 +64,7 @@ fn update_material(
     child_items: &Query<&Appearance, (With<Parent>, Without<Pos>)>,
     last_seen: &LastSeen,
 ) {
-    for &child in children.iter() {
+    for &child in children {
         if let Ok(child_appearance) = child_items.get(child) {
             commands
                 .entity(child)
@@ -143,7 +143,7 @@ pub(crate) fn update_visualization_on_item_move(
         let currently_visible = envir.currently_visible(&clock, player_pos); // does not depend on focus
 
         for (&pos, mut visibility, mut last_seen, accessible, speed, children) in
-            moved_items.iter_mut()
+            &mut moved_items
         {
             update_visualization(
                 &mut commands,
@@ -197,7 +197,7 @@ pub(crate) fn update_visualization_on_focus_move(
     {
         let currently_visible = envir.currently_visible(&clock, player_pos); // does not depend on focus
 
-        for (&pos, mut visibility, mut last_seen, accessible, speed, children) in items.iter_mut() {
+        for (&pos, mut visibility, mut last_seen, accessible, speed, children) in &mut items {
             update_visualization(
                 &mut commands,
                 &mut explored,
@@ -254,7 +254,7 @@ pub(crate) fn update_camera_base(
 
     let pos = players.single();
 
-    for mut transform in camera_bases.iter_mut() {
+    for mut transform in &mut camera_bases {
         transform.translation = match *player_state {
             PlayerActionState::ExaminingPos(target) => target.vec3() - pos.vec3(),
             PlayerActionState::ExaminingZoneLevel(target) => {

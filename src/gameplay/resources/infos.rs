@@ -21,7 +21,7 @@ impl Infos {
     fn literals() -> HashMap<TypeId, HashMap<String, serde_json::Map<String, serde_json::Value>>> {
         let mut literals = HashMap::default();
         for type_ids in TypeId::all() {
-            for type_id in type_ids.iter() {
+            for type_id in *type_ids {
                 literals.insert(type_id.clone(), HashMap::default());
             }
         }

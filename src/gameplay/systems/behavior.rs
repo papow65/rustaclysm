@@ -272,7 +272,7 @@ pub(crate) fn update_damaged_characters(
 ) {
     let start = Instant::now();
 
-    for (character, name, mut health, damage, mut transform) in characters.iter_mut() {
+    for (character, name, mut health, damage, mut transform) in &mut characters {
         let evolution = health.lower(damage);
         if health.0.is_zero() {
             commands.spawn(Message::warn(
@@ -323,7 +323,7 @@ pub(crate) fn update_healed_characters(
 ) {
     let start = Instant::now();
 
-    for (character, name, mut health, healing, _transform) in characters.iter_mut() {
+    for (character, name, mut health, healing, _transform) in &mut characters {
         let evolution = health.raise(healing);
         if evolution.changed() {
             commands.spawn({
@@ -368,7 +368,7 @@ pub(crate) fn update_damaged_items(
     let start = Instant::now();
 
     for (item, &pos, name, amount, filthy, mut integrity, damage, definition, parent) in
-        damaged.iter_mut()
+        &mut damaged
     {
         let evolution = integrity.lower(damage);
         if integrity.0.is_zero() {
@@ -454,7 +454,7 @@ pub(crate) fn combine_items(
             let mut merges = vec![moved_entity];
             let mut total_amount = &Amount(0) + moved_amount.unwrap_or(&Amount(1));
 
-            for sibling in siblings.iter() {
+            for sibling in siblings {
                 // Note that sibling may be any kind of entity
                 if let Ok((
                     some_entity,

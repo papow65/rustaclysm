@@ -43,7 +43,7 @@ fn toggle_elevation(
 }
 
 fn toggle_help(help: &mut Query<&mut Visibility, With<ManualDisplay>>) {
-    for mut visibility in help.iter_mut() {
+    for mut visibility in &mut *help {
         *visibility = if *visibility == Visibility::Hidden {
             Visibility::Inherited
         } else {
@@ -58,7 +58,7 @@ pub(crate) fn manage_mouse_input(
     mut camera_offset: ResMut<CameraOffset>,
 ) {
     let start = Instant::now();
-    for scroll_event in mouse_wheel_events.iter() {
+    for scroll_event in &mut mouse_wheel_events {
         zoom(
             &mut camera_offset,
             if 0.0 < scroll_event.y {

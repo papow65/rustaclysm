@@ -310,7 +310,7 @@ pub(crate) fn resize_background(
         let scale =
             (camera_size.x as f32 / BACKGROUND_WIDTH).max(camera_size.y as f32 / BACKGROUND_HEIGHT);
 
-        for mut background in backgrounds.iter_mut() {
+        for mut background in &mut backgrounds {
             *background = Transform::from_scale(Vec3::new(scale, scale, 1.0));
         }
     }

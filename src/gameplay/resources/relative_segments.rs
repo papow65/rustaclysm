@@ -84,7 +84,7 @@ impl RelativeSegments {
         let rays = Self::rays();
 
         let mut segments = array::from_fn(|_| HashMap::<PosOffset, RelativeSegment>::default());
-        for (pos, relativeray) in rays.iter() {
+        for (pos, relativeray) in &rays {
             let segment = relativeray.to_segment(&rays);
             let distance = Pos::ORIGIN.vision_distance(*pos);
             for index in distance..=(MAX_VISIBLE_DISTANCE as usize) {

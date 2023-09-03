@@ -134,7 +134,7 @@ impl Paths {
             ));
         }
 
-        for asset_subdir in vec![Self::data_path(), Self::gfx_path(), Self::save_path()] {
+        for asset_subdir in [Self::data_path(), Self::gfx_path(), Self::save_path()] {
             if !asset_subdir.is_dir() {
                 return Err(LoadError::new(
                     format!("Directory '{}/' not found.\nPlease make sure the '{}/' directory contains a copy of (or a symlink to) Cataclysm-DDA's '{}/' directory.", asset_subdir.display(), Self::asset_path().display(), asset_subdir.file_name().unwrap().to_str().unwrap())
