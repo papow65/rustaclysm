@@ -90,7 +90,11 @@ fn visible_region(camera: &Camera, global_transform: &GlobalTransform) -> Region
 }
 
 fn visible_area(camera: &Camera, global_transform: &GlobalTransform) -> Vec<SubzoneLevel> {
-    let Some(Rect{min: corner_min, max: corner_max}) = camera.logical_viewport_rect() else {
+    let Some(Rect {
+        min: corner_min,
+        max: corner_max,
+    }) = camera.logical_viewport_rect()
+    else {
         return Vec::new();
     };
 

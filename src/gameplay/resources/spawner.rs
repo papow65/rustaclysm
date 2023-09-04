@@ -30,12 +30,10 @@ impl<'w, 's> Spawner<'w, 's> {
         id: &ObjectId,
         name: Option<ObjectName>,
     ) -> Option<Entity> {
-        let Some(character_info) =
-            infos
-            .character(id) else {
-                println!("No info found for {id:?}. Spawning skipped");
-                return None;
-            };
+        let Some(character_info) = infos.character(id) else {
+            println!("No info found for {id:?}. Spawning skipped");
+            return None;
+        };
         let faction = match character_info.default_faction.as_str() {
             "human" => Faction::Human,
             "zombie" => Faction::Zombie,
@@ -100,9 +98,7 @@ impl<'w, 's> Spawner<'w, 's> {
     }
 
     fn spawn_field(&mut self, infos: &Infos, parent: Entity, pos: Pos, id: &ObjectId) {
-        let Some(field_info) =
-        infos
-        .field(id) else {
+        let Some(field_info) = infos.field(id) else {
             println!("No info found for field {id:?}");
             return;
         };
@@ -123,10 +119,11 @@ impl<'w, 's> Spawner<'w, 's> {
         item: &CddaItem,
         amount: Amount,
     ) -> Result<(), LoadError> {
-        let Some(item_info) =
-        infos
-        .item(&item.typeid) else {
-            return Err(LoadError::new(format!("No info found for {:?}. Spawning skipped", &item.typeid)));
+        let Some(item_info) = infos.item(&item.typeid) else {
+            return Err(LoadError::new(format!(
+                "No info found for {:?}. Spawning skipped",
+                &item.typeid
+            )));
         };
 
         //println!("{:?} {:?} {:?} {:?}", &parent, pos, &id, &amount);
@@ -283,9 +280,7 @@ impl<'w, 's> Spawner<'w, 's> {
     }
 
     pub(crate) fn spawn_terrain(&mut self, infos: &Infos, parent: Entity, pos: Pos, id: &ObjectId) {
-        let Some(terrain_info) =
-        infos
-        .terrain(id) else {
+        let Some(terrain_info) = infos.terrain(id) else {
             println!("No info found for terrain {:?}", &id);
             return;
         };
@@ -766,10 +761,12 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
         );
 
         let Some(seen_from) = self
-            .spawner.explored
-            .has_zone_level_been_seen(&self.asset_server, zone_level) else {
-                return Err(());
-            };
+            .spawner
+            .explored
+            .has_zone_level_been_seen(&self.asset_server, zone_level)
+        else {
+            return Err(());
+        };
 
         let definition = ObjectDefinition {
             category: ObjectCategory::ZoneLevel,

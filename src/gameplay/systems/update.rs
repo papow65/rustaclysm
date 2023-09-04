@@ -142,9 +142,7 @@ pub(crate) fn update_visualization_on_item_move(
         let focus = Focus::new(&player_action_state, player_pos);
         let currently_visible = envir.currently_visible(&clock, player_pos); // does not depend on focus
 
-        for (&pos, mut visibility, mut last_seen, accessible, speed, children) in
-            &mut moved_items
-        {
+        for (&pos, mut visibility, mut last_seen, accessible, speed, children) in &mut moved_items {
             update_visualization(
                 &mut commands,
                 &mut explored,

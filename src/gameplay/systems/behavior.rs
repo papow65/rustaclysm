@@ -80,7 +80,7 @@ pub(crate) fn perform_action(
 ) -> Option<(Entity, Option<Impact>)> {
     let start = Instant::now();
 
-    let Some((actor_entity, action)) = option  else {
+    let Some((actor_entity, action)) = option else {
         return None;
     };
 

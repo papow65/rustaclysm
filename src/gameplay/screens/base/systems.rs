@@ -88,7 +88,8 @@ pub(crate) fn manage_keyboard_input(
     let start = Instant::now();
 
     for (button_state, combo) in keys.combos() {
-        let Ok(instruction) = Instruction::try_from((&combo, player_action_state.cancel_context())) else {
+        let Ok(instruction) = Instruction::try_from((&combo, player_action_state.cancel_context()))
+        else {
             if button_state == ButtonState::Pressed {
                 println!("{:?} not recognized", &combo);
             }

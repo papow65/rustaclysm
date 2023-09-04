@@ -208,7 +208,8 @@ impl ActorItem<'_> {
     ) -> Option<Impact> {
         let Some(high_speed) = self.high_speed() else {
             commands.spawn(Message::warn(
-                Phrase::from_name(self.name).add("is too exhausted to attack")));
+                Phrase::from_name(self.name).add("is too exhausted to attack"),
+            ));
             return None;
         };
 
@@ -237,7 +238,9 @@ impl ActorItem<'_> {
         target: Pos,
     ) -> Option<Impact> {
         let Some(high_speed) = self.high_speed() else {
-            commands.spawn(Message::warn(Phrase::from_name(self.name).add("is too exhausted to smash")));
+            commands.spawn(Message::warn(
+                Phrase::from_name(self.name).add("is too exhausted to smash"),
+            ));
             return None;
         };
 
