@@ -34,7 +34,7 @@ impl RelativeRay {
         } else {
             self.path[skipped..].to_vec()
         };
-        // The last pos doen't need to be transparent.
+        // The last pos is not required to be transparent.
         segment.pop();
         let segment = segment
             .iter()
