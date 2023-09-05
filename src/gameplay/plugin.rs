@@ -21,7 +21,6 @@ impl Plugin for GameplayPlugin {
             brightness: 0.2,
             ..AmbientLight::default()
         })
-        .insert_resource(RelativeSegments::new())
         .insert_resource(ElevationVisibility::default());
 
         create_behavior_schedule(app);

@@ -1,9 +1,10 @@
 use crate::prelude::*;
 use bevy::prelude::*;
 
-/// Create resources that do not need other resources and should not persist between two gameplays
+/// Create resources that do not need other resources
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn create_independent_resources(mut commands: Commands) {
+    // Not persisted between gameplays
     commands.insert_resource(Infos::new());
     commands.insert_resource(Location::default());
     commands.insert_resource(SubzoneLevelEntities::default());
@@ -17,6 +18,10 @@ pub(crate) fn create_independent_resources(mut commands: Commands) {
     commands.insert_resource(PlayerActionState::default());
     commands.insert_resource(StatusTextSections::default());
     commands.insert_resource(VisualizationUpdate::Smart);
+
+    // The creation of RelativeSegments takes about 2 seconds, and loading it earlier affects application startup time.
+    // 'init_resource' only loads a resource if it does not yet exist.
+    commands.init_resource::<RelativeSegments>();
 }
 
 /// Create resources that need other resources

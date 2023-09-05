@@ -1,6 +1,6 @@
 use crate::prelude::*;
-use bevy::{ecs::system::Resource, utils::HashMap};
-use std::{array, iter::once};
+use bevy::{ecs::system::Resource, prelude::*, utils::HashMap};
+use std::{array, iter::once, time::Instant};
 
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct RelativeRay {
@@ -80,7 +80,9 @@ pub(crate) struct RelativeSegments {
 impl RelativeSegments {
     const SIZE: usize = MAX_VISIBLE_DISTANCE as usize + 1;
 
-    pub(crate) fn new() -> Self {
+    fn new() -> Self {
+        let start = Instant::now();
+
         let rays = Self::rays();
 
         let mut segments = array::from_fn(|_| HashMap::<PosOffset, RelativeSegment>::default());
@@ -94,6 +96,9 @@ impl RelativeSegments {
                     .insert(*pos - Pos::ORIGIN, segment.clone());
             }
         }
+
+        let duration = start.elapsed();
+        println!("The creation of RelativeSegments took {duration:?}");
 
         Self { segments }
     }
@@ -159,5 +164,11 @@ impl RelativeSegments {
         }
 
         rays
+    }
+}
+
+impl FromWorld for RelativeSegments {
+    fn from_world(_world: &mut World) -> Self {
+        Self::new()
     }
 }
