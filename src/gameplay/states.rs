@@ -10,6 +10,7 @@ pub(crate) enum GameplayScreenState {
     /** Different from the main menu */
     Menu,
     //Saving, // TODO
+    Death,
     /** When not ApplicationState::Gameplay */
     #[default]
     Inapplicable,

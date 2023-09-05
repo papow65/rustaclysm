@@ -116,7 +116,6 @@ pub(crate) enum ZoomDirection {
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) enum Instruction {
     Queued(QueuedInstruction),
-    Quit,
     MainMenu,
     CancelState,
     Inventory,
@@ -130,7 +129,6 @@ impl TryFrom<(&KeyCombo, CancelContext)> for Instruction {
 
     fn try_from((combo, context): (&KeyCombo, CancelContext)) -> Result<Self, ()> {
         match (combo, context) {
-            (KeyCombo::KeyCode(Ctrl::With, KeyCode::C | KeyCode::Q), _) => Ok(Self::Quit),
             (KeyCombo::KeyCode(Ctrl::Without, KeyCode::Escape), CancelContext::State) => {
                 Ok(Self::CancelState)
             }

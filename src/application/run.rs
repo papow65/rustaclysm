@@ -40,12 +40,8 @@ pub(crate) fn run_application() {
         LoadingIndicatorPlugin,
     ));
 
-    // once at startup
     app.add_systems(Startup, (maximize_window, load_fonts));
-
-    // every frame
-    app.add_systems(Update, manage_button_hover);
-
+    app.add_systems(Update, (manage_button_hover, manage_global_keyboard_input));
     app.add_systems(Last, check_delay);
 
     app.run();

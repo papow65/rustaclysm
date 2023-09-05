@@ -23,7 +23,7 @@ pub(crate) fn create_behavior_schedule(app: &mut App) {
                 (
                     update_damaged_characters,
                     apply_deferred,
-                    (manage_player_death, update_healed_characters),
+                    update_healed_characters,
                 )
                     .chain(),
                 toggle_doors,

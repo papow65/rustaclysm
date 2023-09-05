@@ -101,7 +101,6 @@ pub(crate) fn manage_menu_keyboard_input(
     mut keys: Keys,
     mut next_application_state: ResMut<NextState<ApplicationState>>,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
-    mut app_exit_events: ResMut<Events<AppExit>>,
 ) {
     for (state, combo) in keys.combos() {
         if state != ButtonState::Pressed {
@@ -115,9 +114,6 @@ pub(crate) fn manage_menu_keyboard_input(
             KeyCombo::Character('m') => {
                 next_gameplay_state.set(GameplayScreenState::Inapplicable);
                 next_application_state.set(ApplicationState::MainMenu);
-            }
-            KeyCombo::KeyCode(Ctrl::Without, KeyCode::C | KeyCode::Q) => {
-                app_exit_events.send(AppExit);
             }
             _ => {}
         }

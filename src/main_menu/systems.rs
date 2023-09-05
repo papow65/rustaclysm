@@ -285,21 +285,6 @@ pub(crate) fn manage_main_menu_button_input(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn manage_main_menu_keyboard_input(
-    mut keys: Keys,
-    mut app_exit_events: ResMut<Events<AppExit>>,
-) {
-    for (_, combo) in keys.combos() {
-        if matches!(
-            combo,
-            KeyCombo::KeyCode(Ctrl::With, KeyCode::C | KeyCode::Q)
-        ) {
-            app_exit_events.send(AppExit);
-        }
-    }
-}
-
-#[allow(clippy::needless_pass_by_value)]
 pub(crate) fn resize_background(
     cameras: Query<&Camera>,
     mut backgrounds: Query<&mut Transform, With<Background>>,

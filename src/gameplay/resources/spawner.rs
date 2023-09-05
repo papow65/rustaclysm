@@ -49,6 +49,7 @@ impl<'w, 's> Spawner<'w, 's> {
 
         let mut entity = self.commands.entity(entity);
         entity
+            .insert(Life)
             .insert(Obstacle)
             .insert(Health(
                 Limited::full(character_info.hp.unwrap_or(60) as u16),

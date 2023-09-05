@@ -75,6 +75,7 @@ pub(crate) struct Actor {
     pub(crate) last_enemy: Option<&'static LastEnemy>,
     pub(crate) stamina: &'static Stamina,
     pub(crate) walking_mode: &'static WalkingMode,
+    pub(crate) life: &'static Life,
 }
 
 impl ActorItem<'_> {

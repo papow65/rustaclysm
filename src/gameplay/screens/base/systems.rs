@@ -1,15 +1,9 @@
 use crate::prelude::*;
 use bevy::{
-    app::AppExit,
-    ecs::event::Events,
     input::{mouse::MouseWheel, ButtonState},
     prelude::*,
 };
 use std::time::Instant;
-
-fn quit(app_exit_events: &mut Events<AppExit>) {
-    app_exit_events.send(AppExit);
-}
 
 fn open_main_menu(
     next_application_state: &mut NextState<ApplicationState>,
@@ -76,7 +70,6 @@ pub(crate) fn manage_mouse_input(
 pub(crate) fn manage_keyboard_input(
     mut next_application_state: ResMut<NextState<ApplicationState>>,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
-    mut app_exit_events: ResMut<Events<AppExit>>,
     mut keys: Keys,
     mut instruction_queue: ResMut<InstructionQueue>,
     mut elevation_visibility: ResMut<ElevationVisibility>,
@@ -98,17 +91,19 @@ pub(crate) fn manage_keyboard_input(
         match button_state {
             ButtonState::Pressed => {
                 println!("{:?} -> {:?}", &combo, &instruction);
-                handle_instruction(
-                    instruction,
-                    &mut app_exit_events,
-                    &mut next_application_state,
-                    &mut next_gameplay_state,
-                    &mut camera_offset,
-                    &mut elevation_visibility,
-                    &mut visualization_update,
-                    &mut help,
-                    &mut instruction_queue,
-                );
+                match instruction {
+                    Instruction::MainMenu => {
+                        open_main_menu(&mut next_application_state, &mut next_gameplay_state);
+                    }
+                    Instruction::CancelState => open_menu(&mut next_gameplay_state),
+                    Instruction::Inventory => open_inventory(&mut next_gameplay_state),
+                    Instruction::Zoom(direction) => zoom(&mut camera_offset, direction),
+                    Instruction::ToggleElevation => {
+                        toggle_elevation(&mut elevation_visibility, &mut visualization_update);
+                    }
+                    Instruction::ToggleHelp => toggle_help(&mut help),
+                    Instruction::Queued(instruction) => instruction_queue.add(instruction),
+                }
             }
             ButtonState::Released => {
                 if let Instruction::Queued(queued) = instruction {
@@ -121,31 +116,4 @@ pub(crate) fn manage_keyboard_input(
     instruction_queue.log_if_long();
 
     log_if_slow("manage_keyboard_input", start);
-}
-
-fn handle_instruction(
-    instruction: Instruction,
-    app_exit_events: &mut ResMut<Events<AppExit>>,
-    next_application_state: &mut ResMut<NextState<ApplicationState>>,
-    next_gameplay_state: &mut ResMut<NextState<GameplayScreenState>>,
-    camera_offset: &mut ResMut<CameraOffset>,
-    elevation_visibility: &mut ResMut<ElevationVisibility>,
-    visualization_update: &mut ResMut<VisualizationUpdate>,
-    help: &mut Query<&mut Visibility, With<ManualDisplay>>,
-    instruction_queue: &mut ResMut<InstructionQueue>,
-) {
-    match instruction {
-        Instruction::Quit => quit(app_exit_events),
-        Instruction::MainMenu => {
-            open_main_menu(next_application_state, next_gameplay_state);
-        }
-        Instruction::CancelState => open_menu(next_gameplay_state),
-        Instruction::Inventory => open_inventory(next_gameplay_state),
-        Instruction::Zoom(direction) => zoom(camera_offset, direction),
-        Instruction::ToggleElevation => {
-            toggle_elevation(elevation_visibility, visualization_update);
-        }
-        Instruction::ToggleHelp => toggle_help(help),
-        Instruction::Queued(instruction) => instruction_queue.add(instruction),
-    }
 }

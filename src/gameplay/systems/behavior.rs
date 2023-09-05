@@ -223,22 +223,6 @@ pub(crate) fn handle_impact(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn manage_player_death(
-    mut next_application_state: ResMut<NextState<ApplicationState>>,
-    mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
-    dead_players: Query<(), (With<Player>, Without<Health>)>,
-) {
-    let start = Instant::now();
-
-    if dead_players.get_single().is_ok() {
-        next_gameplay_state.set(GameplayScreenState::Inapplicable);
-        next_application_state.set(ApplicationState::MainMenu);
-    }
-
-    log_if_slow("manage_player_death", start);
-}
-
-#[allow(clippy::needless_pass_by_value)]
 pub(crate) fn toggle_doors(
     mut commands: Commands,
     infos: Res<Infos>,
@@ -264,15 +248,23 @@ pub(crate) fn toggle_doors(
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_damaged_characters(
+    mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
     mut commands: Commands,
     mut characters: Query<
-        (Entity, &ObjectName, &mut Health, &Damage, &mut Transform),
-        With<Faction>,
+        (
+            Entity,
+            &ObjectName,
+            &mut Health,
+            &Damage,
+            &mut Transform,
+            Option<&Player>,
+        ),
+        (With<Faction>, With<Life>),
     >,
 ) {
     let start = Instant::now();
 
-    for (character, name, mut health, damage, mut transform) in &mut characters {
+    for (character, name, mut health, damage, mut transform, player) in &mut characters {
         let evolution = health.lower(damage);
         if health.0.is_zero() {
             commands.spawn(Message::warn(
@@ -286,8 +278,12 @@ pub(crate) fn update_damaged_characters(
                 .entity(character)
                 .insert(Corpse)
                 .insert(ObjectName::corpse())
-                .remove::<Health>()
+                .remove::<Life>()
                 .remove::<Obstacle>();
+
+            if player.is_some() {
+                next_gameplay_state.set(GameplayScreenState::Death);
+            }
         } else {
             commands.spawn({
                 let begin = Phrase::from_fragment(damage.attacker.clone())
@@ -318,7 +314,7 @@ pub(crate) fn update_healed_characters(
     mut commands: Commands,
     mut characters: Query<
         (Entity, &ObjectName, &mut Health, &Healing, &mut Transform),
-        With<Faction>,
+        (With<Faction>, With<Life>),
     >,
 ) {
     let start = Instant::now();

@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use bevy::{app::AppExit, input::ButtonState, prelude::*, utils::HashMap};
+use bevy::{input::ButtonState, prelude::*, utils::HashMap};
 
 const SPACING: f32 = 5.0;
 const FONT_SIZE: f32 = 16.0;
@@ -370,7 +370,6 @@ fn add_row(
 pub(crate) fn manage_inventory_keyboard_input(
     mut keys: Keys,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
-    mut app_exit_events: ResMut<Events<AppExit>>,
     mut instruction_queue: ResMut<InstructionQueue>,
     mut inventory: ResMut<InventoryScreen>,
 ) {
@@ -382,9 +381,6 @@ pub(crate) fn manage_inventory_keyboard_input(
         match combo {
             KeyCombo::KeyCode(Ctrl::Without, KeyCode::Escape) | KeyCombo::Character('i') => {
                 next_gameplay_state.set(GameplayScreenState::Base);
-            }
-            KeyCombo::KeyCode(Ctrl::Without, KeyCode::C | KeyCode::Q) => {
-                app_exit_events.send(AppExit);
             }
             KeyCombo::KeyCode(
                 Ctrl::Without,

@@ -309,7 +309,7 @@ pub(crate) fn update_status_health(
 ) {
     let start = Instant::now();
 
-    if let Some(health) = health.iter().next() {
+    if let Ok(health) = health.get_single() {
         text_sections.health[0].value = format!("{}", health.0.current());
         text_sections.health[0].style.color = health.0.color();
 

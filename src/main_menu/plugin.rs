@@ -20,15 +20,11 @@ impl Plugin for MainMenuPlugin {
         // every frame
         app.add_systems(
             Update,
-            (
-                manage_main_menu_button_input,
-                manage_main_menu_keyboard_input,
-            )
-                .run_if(in_state(ApplicationState::MainMenu)),
+            manage_main_menu_button_input.run_if(in_state(ApplicationState::MainMenu)),
         );
 
-        // frequent, but not every frame
         app.add_systems(
+            // frequent, but not every frame
             FixedUpdate,
             (update_sav_files, resize_background).run_if(in_state(ApplicationState::MainMenu)),
         );

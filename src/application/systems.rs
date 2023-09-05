@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use bevy::prelude::*;
+use bevy::{app::AppExit, input::ButtonState, prelude::*};
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn maximize_window(mut windows: Query<&mut Window>) {
@@ -29,6 +29,22 @@ pub(crate) fn manage_button_hover(
                 *color = DEFAULT_BUTTON_COLOR.into();
             }
             Interaction::Pressed => {}
+        }
+    }
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub(crate) fn manage_global_keyboard_input(
+    mut keys: Keys,
+    mut app_exit_events: ResMut<Events<AppExit>>,
+) {
+    for (state, combo) in keys.combos() {
+        if state != ButtonState::Pressed {
+            continue;
+        }
+
+        if let KeyCombo::KeyCode(Ctrl::With, KeyCode::C | KeyCode::Q) = combo {
+            app_exit_events.send(AppExit);
         }
     }
 }

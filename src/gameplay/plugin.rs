@@ -10,6 +10,7 @@ impl Plugin for GameplayPlugin {
         app.add_plugins((
             BaseScreenPlugin,
             CharacterScreenPlugin,
+            DeathScreenPlugin,
             InventoryScreenPlugin,
             MenuScreenPlugin,
             FrameTimeDiagnosticsPlugin,
@@ -44,27 +45,32 @@ impl Plugin for GameplayPlugin {
         app.add_systems(
             Update,
             (
-                update_camera_offset.run_if(resource_exists_and_changed::<CameraOffset>()),
-                handle_map_events,
-                handle_overmap_buffer_events,
-                update_log,
-                update_status_time.run_if(resource_exists_and_changed::<Timeouts>()),
-                update_status_health,
-                update_status_speed,
-                update_status_stamina,
-                update_status_player_action_state
-                    .run_if(resource_exists_and_changed::<PlayerActionState>()),
-                update_status_player_wielded.run_if(resource_exists_and_changed::<Timeouts>()),
-                update_status_enemies.run_if(resource_exists_and_changed::<Timeouts>()),
-                update_status_detais.run_if(resource_exists_and_changed::<PlayerActionState>()),
-                update_visualization_on_focus_move
-                    .run_if(resource_exists_and_changed::<ElevationVisibility>()),
-                spawn_zones_for_camera
-                    .after(update_camera_base)
-                    .after(update_camera_offset),
-                update_collapsed_zone_levels
-                    .after(update_camera_base)
-                    .after(update_camera_offset),
+                (
+                    handle_map_events,
+                    handle_overmap_buffer_events,
+                    update_status_player_action_state
+                        .run_if(resource_exists_and_changed::<PlayerActionState>()),
+                    update_status_player_wielded.run_if(resource_exists_and_changed::<Timeouts>()),
+                    update_status_enemies.run_if(resource_exists_and_changed::<Timeouts>()),
+                    update_status_detais.run_if(resource_exists_and_changed::<PlayerActionState>()),
+                    update_visualization_on_focus_move
+                        .run_if(resource_exists_and_changed::<ElevationVisibility>()),
+                    spawn_zones_for_camera
+                        .after(update_camera_base)
+                        .after(update_camera_offset),
+                    update_collapsed_zone_levels
+                        .after(update_camera_base)
+                        .after(update_camera_offset),
+                )
+                    .run_if(not(in_state(GameplayScreenState::Death))),
+                (
+                    update_camera_offset.run_if(resource_exists_and_changed::<CameraOffset>()),
+                    update_log,
+                    update_status_time.run_if(resource_exists_and_changed::<Timeouts>()),
+                    update_status_health,
+                    update_status_speed,
+                    update_status_stamina,
+                ),
             )
                 .run_if(in_state(ApplicationState::Gameplay)),
         );

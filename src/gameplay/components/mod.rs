@@ -126,6 +126,9 @@ pub(crate) struct Healing {
 }
 
 #[derive(Component)]
+pub(crate) struct Life;
+
+#[derive(Component)]
 pub(crate) struct Corpse;
 
 #[derive(Component)]

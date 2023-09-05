@@ -5,7 +5,6 @@ pub(crate) struct BaseScreenPlugin;
 
 impl Plugin for BaseScreenPlugin {
     fn build(&self, app: &mut App) {
-        // executed every frame
         app.add_systems(
             Update,
             (
