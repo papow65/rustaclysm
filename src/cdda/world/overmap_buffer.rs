@@ -4,6 +4,7 @@ use bevy::{
     reflect::{TypePath, TypeUuid},
 };
 use serde::Deserialize;
+use std::{str::from_utf8, sync::OnceLock};
 
 pub(crate) type OvermapBufferPath = PathFor<OvermapBuffer>;
 
@@ -38,6 +39,11 @@ pub(crate) struct OvermapBuffer {
 #[derive(Default)]
 pub(crate) struct OvermapBufferLoader;
 
+impl OvermapBufferLoader {
+    const EXTENSION_MAX: usize = 1000;
+    const EXTENSION_COUNT: usize = 2 * Self::EXTENSION_MAX + 1;
+}
+
 impl AssetLoader for OvermapBufferLoader {
     fn load<'a>(
         &'a self,
@@ -54,7 +60,7 @@ impl AssetLoader for OvermapBufferLoader {
             let overmap_buffer = overmap_buffer_result.map_err(|e| {
                 eprintln!(
                     "Overmap buffer loading error: {:?} {e:?}",
-                    std::str::from_utf8(&bytes[0..40])
+                    from_utf8(&bytes[0..40])
                 );
                 e
             })?;
@@ -64,15 +70,51 @@ impl AssetLoader for OvermapBufferLoader {
     }
 
     fn extensions(&self) -> &[&str] {
-        // TODO not manually
-        // TODO larger range
-        // TODO make this irrelevant
-        &[
-            "-30", "-29", "-28", "-27", "-26", "-25", "-24", "-23", "-22", "-21", "-20", "-19",
-            "-18", "-17", "-16", "-15", "-14", "-13", "-12", "-11", "-10", "-9", "-8", "-7", "-6",
-            "-5", "-4", "-3", "-2", "-1", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10",
-            "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24",
-            "25", "26", "27", "28", "29", "30",
-        ]
+        static STRINGS: OnceLock<[String; OvermapBufferLoader::EXTENSION_COUNT]> = OnceLock::new();
+        static EXTENSIONS: OnceLock<[&str; OvermapBufferLoader::EXTENSION_COUNT]> = OnceLock::new();
+
+        EXTENSIONS.get_or_init(|| {
+            let strings = STRINGS.get_or_init(|| {
+                let mut i = -(Self::EXTENSION_MAX as isize);
+                [(); Self::EXTENSION_COUNT].map(|_| {
+                    let string = i.to_string();
+                    i += 1;
+                    string
+                })
+            });
+
+            let mut j = 0;
+            [(); Self::EXTENSION_COUNT].map(|_| {
+                let extension = strings[j].as_str();
+                j += 1;
+                extension
+            })
+        })
+    }
+}
+
+#[cfg(test)]
+mod overmap_buffer_tests {
+    use super::*;
+    #[test]
+    fn check_extensions() {
+        let extensions = OvermapBufferLoader.extensions();
+        assert_eq!(
+            extensions.len(),
+            OvermapBufferLoader::EXTENSION_COUNT,
+            "{extensions:?}"
+        );
+        assert_eq!(
+            extensions[0],
+            (-(OvermapBufferLoader::EXTENSION_MAX as isize))
+                .to_string()
+                .as_str(),
+            "{extensions:?}"
+        );
+        assert_eq!(
+            extensions.last().expect("many items"),
+            &OvermapBufferLoader::EXTENSION_MAX.to_string().as_str(),
+            "{extensions:?}"
+        );
     }
 }
