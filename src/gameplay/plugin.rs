@@ -45,19 +45,22 @@ impl Plugin for GameplayPlugin {
             Update,
             (
                 (
-                    handle_map_events,
                     handle_overmap_buffer_events,
                     update_status_player_action_state
                         .run_if(resource_exists_and_changed::<PlayerActionState>()),
                     update_status_player_wielded.run_if(resource_exists_and_changed::<Timeouts>()),
                     update_status_enemies.run_if(resource_exists_and_changed::<Timeouts>()),
                     update_status_detais.run_if(resource_exists_and_changed::<PlayerActionState>()),
-                    update_visualization_on_focus_move
-                        .run_if(resource_exists_and_changed::<ElevationVisibility>()),
-                    spawn_zones_for_camera
-                        .after(update_camera_base)
-                        .after(update_camera_offset),
-                    update_collapsed_zone_levels
+                    (
+                        handle_map_events,
+                        spawn_subzones_for_camera,
+                        apply_deferred,
+                        update_visualization_on_focus_move
+                            .run_if(resource_exists_and_changed::<ElevationVisibility>()),
+                        apply_deferred,
+                        update_collapsed_zone_levels,
+                    )
+                        .chain()
                         .after(update_camera_base)
                         .after(update_camera_offset),
                 )

@@ -623,12 +623,12 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
     ) {
         let map_path = MapPath::new(&self.paths.world_path(), ZoneLevel::from(subzone_level));
         if map_path.0.exists() {
-            let map_handle = self.asset_server.load(map_path.0.as_path());
+            let map_handle = self.asset_server.load(map_path.0);
             if let Some(map) = map_assets.get(&map_handle) {
                 let submap = &map.0[subzone_level.index()];
                 self.spawn_subzone(submap, subzone_level);
             } else {
-                self.maps.loading.push(self.asset_server.load(map_path.0));
+                self.maps.loading.push(map_handle);
                 // It will be spawned when it's fully loaded.
             }
         } else {

@@ -173,6 +173,7 @@ pub(crate) fn update_visualization_on_focus_move(
     elevation_visibility: Res<ElevationVisibility>,
     mut visualization_update: ResMut<VisualizationUpdate>,
     mut last_focus: Local<Focus>,
+    mut previous_camera_global_transform: Local<GlobalTransform>,
     mut last_elevation_visibility: Local<ElevationVisibility>,
     mut items: Query<(
         &Pos,
@@ -184,12 +185,15 @@ pub(crate) fn update_visualization_on_focus_move(
     )>,
     child_items: Query<&Appearance, (With<Parent>, Without<Pos>)>,
     players: Query<&Pos, With<Player>>,
+    cameras: Query<&GlobalTransform, With<Camera>>,
 ) {
     let start = Instant::now();
 
     let &player_pos = players.single();
     let focus = Focus::new(&player_action_state, player_pos);
+    let &camera_global_transform = cameras.single();
     if focus != *last_focus
+        || camera_global_transform != *previous_camera_global_transform
         || *elevation_visibility != *last_elevation_visibility
         || *visualization_update == VisualizationUpdate::Forced
     {
@@ -213,6 +217,7 @@ pub(crate) fn update_visualization_on_focus_move(
         }
 
         *last_focus = focus;
+        *previous_camera_global_transform = camera_global_transform;
         *last_elevation_visibility = *elevation_visibility;
         *visualization_update = VisualizationUpdate::Smart;
     }
