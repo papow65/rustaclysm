@@ -100,12 +100,12 @@ impl PlayerActionState {
 
                 assert!(healing_from < until, "{healing_from:?} < {until:?}");
                 assert!(*healing_from <= now, "{healing_from:?} <= {now:?}");
-                eprintln!("{healing_from:?} <= {now:?}");
+                //eprintln!("{healing_from:?} <= {now:?}");
                 let sleeping_duration = now - *healing_from;
 
                 let healing_amount = sleeping_duration.0 / 1_000_000;
                 commands.entity(actor).insert(Healing {
-                    amount: dbg!(healing_amount) as u16,
+                    amount: healing_amount as u16,
                 });
 
                 if *until <= now {
@@ -113,8 +113,8 @@ impl PlayerActionState {
                     None // process the cancellation next turn
                 } else {
                     let healing_duration = Milliseconds(healing_amount * 1_000_000);
-                    *healing_from += dbg!(healing_duration);
-                    dbg!(healing_from);
+                    *healing_from += healing_duration;
+                    // dbg!(healing_from);
 
                     Some(Action::Stay {
                         duration: StayDuration::Long,
