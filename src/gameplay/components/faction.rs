@@ -258,17 +258,15 @@ impl Faction {
     pub(crate) fn strategize(
         &self,
         envir: &Envir,
-        clock: &Clock,
         factions: &[(Pos, &Self)],
+        enemies: &[Pos],
         actor: &ActorItem,
     ) -> Strategy {
-        let enemies = self.enemies(envir, clock, factions, actor);
-        //println!("{self:?} can see {:?} enemies", enemies.len());
-
+        // println!("{self:?} can see {:?} enemies", enemies.len());
         Intent::ALL
             .into_iter()
             .filter(|intent| self.consider(*intent, actor.health))
-            .find_map(|intent| self.attempt(intent, envir, factions, &enemies, actor))
+            .find_map(|intent| self.attempt(intent, envir, factions, enemies, actor))
             .expect("Fallback intent")
     }
 

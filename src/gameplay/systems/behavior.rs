@@ -41,7 +41,7 @@ pub(crate) fn plan_action(
 
     let factions = &factions.iter().map(|(p, f)| (*p, f)).collect::<Vec<_>>();
     let actor = actors.get(active_entity).unwrap();
-    let enemies = Faction::Human.enemies(&envir, &clock, factions, &actor);
+    let enemies = actor.faction.enemies(&envir, &clock, factions, &actor);
     let action = if players.get_mut(active_entity).is_ok() {
         player_action_state.plan_action(
             &mut commands,
@@ -53,7 +53,7 @@ pub(crate) fn plan_action(
             &enemies,
         )?
     } else {
-        let strategy = actor.faction.strategize(&envir, &clock, factions, &actor);
+        let strategy = actor.faction.strategize(&envir, factions, &enemies, &actor);
         if let Some(last_enemy) = strategy.last_enemy {
             commands.entity(actor.entity).insert(last_enemy);
         }
