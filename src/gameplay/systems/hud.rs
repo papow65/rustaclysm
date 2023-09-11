@@ -432,33 +432,34 @@ pub(crate) fn update_status_enemies(
     let start = Instant::now();
 
     let factions = factions.iter().map(|(p, f)| (*p, f)).collect::<Vec<_>>();
-    let player_actor = player_actors.single();
-    let mut enemies = Faction::Human.enemies(&envir, &clock, &factions, &player_actor);
-    enemies.sort_by_key(|&pos| pos.vision_distance(*player_actor.pos));
+    if let Ok(player_actor) = player_actors.get_single() {
+        let mut enemies = Faction::Human.enemies(&envir, &clock, &factions, &player_actor);
+        enemies.sort_by_key(|&pos| pos.vision_distance(*player_actor.pos));
 
-    let begin = Phrase::new("Enemies:");
-    let phrase = if enemies.is_empty() {
-        begin.add("(none)")
-    } else {
-        begin.extend(
-            enemies
-                .iter()
-                .map(|&pos| (pos, envir.find_character(pos).unwrap()))
-                .map(|(pos, (_, name))| {
-                    Phrase::from_name(name)
-                        .add((pos - *player_actor.pos).player_hint())
-                        .fragments
-                })
-                .collect::<Vec<_>>()
-                .join(&Fragment::new(",")),
-        )
+        let begin = Phrase::new("Enemies:");
+        let phrase = if enemies.is_empty() {
+            begin.add("(none)")
+        } else {
+            begin.extend(
+                enemies
+                    .iter()
+                    .map(|&pos| (pos, envir.find_character(pos).unwrap()))
+                    .map(|(pos, (_, name))| {
+                        Phrase::from_name(name)
+                            .add((pos - *player_actor.pos).player_hint())
+                            .fragments
+                    })
+                    .collect::<Vec<_>>()
+                    .join(&Fragment::new(",")),
+            )
+        }
+        .add("\n");
+
+        let text_style = HudDefaults::new(fonts.default()).text_style;
+        text_sections.enemies = phrase.as_text_sections(&text_style);
+
+        update_status_display(&text_sections, &mut status_displays.single_mut());
     }
-    .add("\n");
-
-    let text_style = HudDefaults::new(fonts.default()).text_style;
-    text_sections.enemies = phrase.as_text_sections(&text_style);
-
-    update_status_display(&text_sections, &mut status_displays.single_mut());
 
     log_if_slow("update_status_enemies", start);
 }
