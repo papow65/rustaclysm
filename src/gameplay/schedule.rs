@@ -5,8 +5,13 @@ use bevy::{
 };
 use std::time::{Duration, Instant};
 
+/** This is only run when the game when any character acts, sometimes multiple times per tick. */
 #[derive(ScheduleLabel, Debug, Hash, PartialEq, Eq, Clone)]
 struct BehaviorSchedule;
+
+/** This is run after the behavior schedule, but no more than once per tick. */
+#[derive(ScheduleLabel, Debug, Hash, PartialEq, Eq, Clone)]
+struct DisplayBehaviorSchedule;
 
 pub(crate) fn create_behavior_schedule(app: &mut App) {
     app.init_schedule(BehaviorSchedule);
@@ -30,19 +35,36 @@ pub(crate) fn create_behavior_schedule(app: &mut App) {
                 (update_damaged_items, combine_items).chain(),
             ),
             apply_deferred,
-            (
-                update_transforms,
-                update_hidden_item_visibility,
-                update_cursor_visibility_on_player_change,
-                update_visualization_on_item_move,
-                update_visualization_on_focus_move,
-                update_visualization_on_weather_change
-                    .run_if(resource_exists_and_changed::<Timeouts>()),
-                update_camera_base.run_if(resource_exists_and_changed::<PlayerActionState>()),
-            ),
         )
-            .chain()
-            .run_if(in_state(ApplicationState::Gameplay)),
+            .chain(),
+    );
+
+    app.init_schedule(DisplayBehaviorSchedule);
+
+    app.add_systems(
+        DisplayBehaviorSchedule,
+        (
+            update_transforms,
+            update_hidden_item_visibility,
+            update_cursor_visibility_on_player_change,
+            update_visualization_on_item_move,
+            update_visualization_on_focus_move,
+            update_visualization_on_weather_change
+                .run_if(resource_exists_and_changed::<Timeouts>()),
+            update_camera_base.run_if(resource_exists_and_changed::<PlayerActionState>()),
+            // sidebar components, in order:
+            // (fps is handled elsewhere)
+            update_status_time.run_if(resource_exists_and_changed::<Timeouts>()),
+            update_status_health,
+            update_status_stamina,
+            update_status_speed,
+            update_status_player_action_state
+                .run_if(resource_exists_and_changed::<PlayerActionState>()),
+            update_status_player_wielded.run_if(resource_exists_and_changed::<Timeouts>()),
+            update_status_enemies.run_if(resource_exists_and_changed::<Timeouts>()),
+            update_status_detais.run_if(resource_exists_and_changed::<PlayerActionState>()),
+            update_log,
+        ),
     );
 }
 
@@ -53,6 +75,10 @@ pub(crate) fn run_behavior_schedule(world: &mut World) {
     while !waiting_for_user_input(world) && !over_time(&start, count) {
         world.run_schedule(BehaviorSchedule);
         count += 1;
+    }
+
+    if 0 < count {
+        world.run_schedule(DisplayBehaviorSchedule);
     }
 
     log_if_slow("run_behavior_schedule", start);

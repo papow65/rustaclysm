@@ -44,35 +44,13 @@ impl Plugin for GameplayPlugin {
         app.add_systems(
             Update,
             (
-                (
-                    handle_overmap_buffer_events,
-                    update_status_player_action_state
-                        .run_if(resource_exists_and_changed::<PlayerActionState>()),
-                    update_status_player_wielded.run_if(resource_exists_and_changed::<Timeouts>()),
-                    update_status_enemies.run_if(resource_exists_and_changed::<Timeouts>()),
-                    update_status_detais.run_if(resource_exists_and_changed::<PlayerActionState>()),
-                    (
-                        handle_map_events,
-                        spawn_subzones_for_camera,
-                        apply_deferred,
-                        update_visualization_on_focus_move
-                            .run_if(resource_exists_and_changed::<ElevationVisibility>()),
-                        apply_deferred,
-                        update_collapsed_zone_levels,
-                    )
-                        .chain()
-                        .after(update_camera_base)
-                        .after(update_camera_offset),
-                )
-                    .run_if(not(in_state(GameplayScreenState::Death))),
-                (
-                    update_camera_offset.run_if(resource_exists_and_changed::<CameraOffset>()),
-                    update_log,
-                    update_status_time.run_if(resource_exists_and_changed::<Timeouts>()),
-                    update_status_health,
-                    update_status_speed,
-                    update_status_stamina,
-                ),
+                handle_overmap_buffer_events,
+                handle_map_events,
+                spawn_subzones_for_camera,
+                update_visualization_on_focus_move
+                    .run_if(resource_exists_and_changed::<ElevationVisibility>()),
+                update_collapsed_zone_levels,
+                update_camera_offset.run_if(resource_exists_and_changed::<CameraOffset>()),
             )
                 .run_if(in_state(ApplicationState::Gameplay)),
         );
