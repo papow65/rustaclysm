@@ -72,17 +72,14 @@ impl Container {
             }
 
             if max_amount_by_amount == 0 {
-                let free_amount = 0;
-                if free_amount < added_amount.0 {
-                    let free_amount = match free_amount {
-                        0 => String::from("no more items"),
-                        1 => String::from("only one more item"),
-                        _ => format!("only {free_amount} more items"),
-                    };
-                    messages.push(Message::warn(Phrase::from_fragment(container_name).add(
-                        format!("can hold {free_amount}, but {} needed", added_amount.0),
-                    )));
-                }
+                let free_amount = match max_amount_by_amount {
+                    0 => String::from("no more items"),
+                    1 => String::from("only one more item"),
+                    _ => format!("only {max_amount_by_amount} more items"),
+                };
+                messages.push(Message::warn(Phrase::from_fragment(container_name).add(
+                    format!("can hold {free_amount}, but {} needed", added_amount.0),
+                )));
             }
 
             Err(messages)
