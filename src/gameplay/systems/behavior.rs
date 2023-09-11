@@ -29,7 +29,7 @@ pub(crate) fn plan_action(
     clock: Clock,
     mut instruction_queue: ResMut<InstructionQueue>,
     actors: Query<Actor>,
-    factions: Query<(&Pos, &Faction), With<Health>>,
+    factions: Query<(&Pos, &Faction), With<Life>>,
     mut players: Query<(), With<Player>>,
 ) -> Option<(Entity, Action)> {
     let start = Instant::now();

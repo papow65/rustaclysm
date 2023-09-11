@@ -25,7 +25,7 @@ pub(crate) struct Envir<'w, 's> {
     obstacles: Query<'w, 's, &'static ObjectName, With<Obstacle>>,
     opaques: Query<'w, 's, &'static ObjectName, With<Opaque>>,
     opaque_floors: Query<'w, 's, &'static OpaqueFloor>,
-    characters: Query<'w, 's, (Entity, &'static ObjectName), With<Health>>,
+    characters: Query<'w, 's, (Entity, &'static ObjectName), With<Life>>,
     smashables: Query<'w, 's, (Entity, &'static ObjectName), With<Integrity>>,
 }
 

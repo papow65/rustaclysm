@@ -424,7 +424,7 @@ pub(crate) fn update_status_enemies(
     envir: Envir,
     clock: Clock,
     player_actors: Query<Actor, With<Player>>,
-    factions: Query<(&Pos, &Faction), With<Health>>,
+    factions: Query<(&Pos, &Faction), With<Life>>,
     fonts: Res<Fonts>,
     mut text_sections: ResMut<StatusTextSections>,
     mut status_displays: Query<&mut Text, With<StatusDisplay>>,
