@@ -52,7 +52,7 @@ impl<'w> Clock<'w> {
 
     /** Roughly matches New England, centered around 1 PM, ignoring seasons
 
-    Source: https://www.suncalc.org */
+    Source: <https://www.suncalc.org> */
     pub(crate) fn sunlight_percentage(&self) -> f32 {
         // Calculation in minutes
 
