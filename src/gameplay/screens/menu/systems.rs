@@ -30,7 +30,7 @@ pub(crate) fn spawn_menu(mut commands: Commands, fonts: Res<Fonts>) {
             },
             ..default()
         })
-        .insert(MenuRoot)
+        .insert(StateBound::<GameplayScreenState>::default())
         .with_children(|parent| {
             parent
                 .spawn(button.clone())
@@ -117,12 +117,5 @@ pub(crate) fn manage_menu_keyboard_input(
             }
             _ => {}
         }
-    }
-}
-
-#[allow(clippy::needless_pass_by_value)]
-pub(crate) fn despawn_menu(mut commands: Commands, root_entities: Query<Entity, With<MenuRoot>>) {
-    if let Ok(root_entity) = root_entities.get_single() {
-        commands.entity(root_entity).despawn_recursive();
     }
 }

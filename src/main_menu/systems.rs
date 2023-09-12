@@ -16,7 +16,9 @@ pub(crate) fn spawn_main_menu(
     asset_server: Res<AssetServer>,
     fonts: Res<Fonts>,
 ) {
-    commands.spawn(Camera2dBundle::default());
+    commands
+        .spawn(Camera2dBundle::default())
+        .insert(StateBound::<ApplicationState>::default());
 
     let background_image = asset_server.load(Paths::backgrounds_path().join(BACKGROUND_NAME));
     commands
@@ -24,7 +26,8 @@ pub(crate) fn spawn_main_menu(
             texture: background_image,
             ..Default::default()
         })
-        .insert(Background);
+        .insert(Background)
+        .insert(StateBound::<ApplicationState>::default());
 
     commands
         .spawn(NodeBundle {
@@ -37,6 +40,7 @@ pub(crate) fn spawn_main_menu(
             },
             ..default()
         })
+        .insert(StateBound::<ApplicationState>::default())
         .with_children(|parent| {
             add_title(parent, fonts.default());
             add_tagline(parent, fonts.default());
@@ -298,21 +302,5 @@ pub(crate) fn resize_background(
         for mut background in &mut backgrounds {
             *background = Transform::from_scale(Vec3::new(scale, scale, 1.0));
         }
-    }
-}
-
-#[allow(clippy::needless_pass_by_value)]
-pub(crate) fn despawn_main_menu(
-    mut commands: Commands,
-    root_entities: Query<
-        Entity,
-        Or<(
-            With<Camera>,
-            (With<Node>, Without<Parent>, Without<LoadingRoot>),
-        )>,
-    >,
-) {
-    for root_entity in root_entities.iter() {
-        commands.entity(root_entity).despawn_recursive();
     }
 }

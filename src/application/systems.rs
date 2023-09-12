@@ -48,3 +48,13 @@ pub(crate) fn manage_global_keyboard_input(
         }
     }
 }
+
+#[allow(clippy::needless_pass_by_value)]
+pub(crate) fn despawn<T: States>(
+    mut commands: Commands,
+    entities: Query<Entity, With<StateBound<T>>>,
+) {
+    for entity in entities.iter() {
+        commands.entity(entity).despawn_recursive();
+    }
+}

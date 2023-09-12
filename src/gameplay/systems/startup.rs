@@ -39,18 +39,8 @@ pub(crate) fn create_dependent_resources(mut commands: Commands, paths: Res<Path
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn spawn_initial_entities(
-    mut commands: Commands,
-    infos: Res<Infos>,
-    sav: Res<Sav>,
-    mut spawner: Spawner,
-) {
-    let root = commands
-        .spawn(SpatialBundle::default())
-        .insert(ManualRoot)
-        .id();
-
-    spawner.spawn_light(root);
+pub(crate) fn spawn_initial_entities(infos: Res<Infos>, sav: Res<Sav>, mut spawner: Spawner) {
+    spawner.spawn_light();
 
     let offset = Zone {
         x: i32::from(sav.om_x) * 180 + i32::from(sav.levx) / 2,
@@ -71,5 +61,5 @@ pub(crate) fn spawn_initial_entities(
     })
     .unwrap()
         - Pos::ORIGIN;
-    spawner.spawn_characters(&infos, root, offset);
+    spawner.spawn_characters(&infos, offset);
 }

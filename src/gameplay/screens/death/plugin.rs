@@ -13,6 +13,9 @@ impl Plugin for DeathScreenPlugin {
                 .run_if(in_state(GameplayScreenState::Death)),
         );
 
-        app.add_systems(OnExit(GameplayScreenState::Death), despawn_death_screen);
+        app.add_systems(
+            OnExit(GameplayScreenState::Death),
+            despawn::<GameplayScreenState>,
+        );
     }
 }

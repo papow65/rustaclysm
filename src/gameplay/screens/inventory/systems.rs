@@ -20,6 +20,7 @@ pub(crate) fn spawn_inventory(mut commands: Commands, fonts: Res<Fonts>) {
             background_color: PANEL_COLOR.into(),
             ..default()
         })
+        .insert(StateBound::<GameplayScreenState>::default())
         .id();
 
     commands.insert_resource(InventoryScreen {
@@ -493,7 +494,6 @@ pub(crate) fn manage_inventory_button_input(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn despawn_inventory(mut commands: Commands, inventory: Res<InventoryScreen>) {
-    commands.entity(inventory.root).despawn_recursive();
+pub(crate) fn remove_inventory_resource(mut commands: Commands) {
     commands.remove_resource::<InventoryScreen>();
 }

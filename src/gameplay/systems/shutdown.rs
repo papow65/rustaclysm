@@ -24,25 +24,6 @@ pub(crate) fn remove_gameplay_resources(mut commands: Commands) {
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn despawn_gameplay(
-    mut commands: Commands,
-    root_entities: Query<
-        Entity,
-        Or<(
-            With<ZoneLevel>,
-            With<SubzoneLevel>,
-            With<ManualRoot>,
-            With<Node>,
-            With<Message>,
-        )>,
-    >,
-) {
-    for root_entity in root_entities.iter() {
-        commands.entity(root_entity).despawn_recursive();
-    }
-}
-
-#[allow(clippy::needless_pass_by_value)]
 pub(crate) fn disable_screen_state(mut next_state: ResMut<NextState<GameplayScreenState>>) {
     next_state.set(GameplayScreenState::Inapplicable);
 }

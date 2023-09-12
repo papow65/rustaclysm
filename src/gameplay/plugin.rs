@@ -25,7 +25,6 @@ impl Plugin for GameplayPlugin {
 
         create_behavior_schedule(app);
 
-        // executed only at gameplay startup
         app.add_systems(
             OnEnter(ApplicationState::Gameplay),
             (
@@ -40,7 +39,6 @@ impl Plugin for GameplayPlugin {
                 .chain(),
         );
 
-        // executed every frame
         app.add_systems(
             Update,
             (
@@ -64,13 +62,12 @@ impl Plugin for GameplayPlugin {
             ),
         );
 
-        // executed only at gameplay shutdown
         app.add_systems(
             OnExit(ApplicationState::Gameplay),
             (
                 disable_screen_state,
                 apply_deferred,
-                despawn_gameplay,
+                despawn::<ApplicationState>,
                 remove_gameplay_resources,
             )
                 .chain(),

@@ -450,7 +450,7 @@ impl<'w, 's> Spawner<'w, 's> {
             });
     }
 
-    pub(crate) fn spawn_light(&mut self, parent: Entity) {
+    pub(crate) fn spawn_light(&mut self) {
         let light_transform = Transform::from_matrix(Mat4::from_euler(
             EulerRot::ZYX,
             0.0,
@@ -458,8 +458,7 @@ impl<'w, 's> Spawner<'w, 's> {
             -std::f32::consts::FRAC_PI_4,
         ));
         //dbg!(&light_transform);
-        let light = self
-            .commands
+        self.commands
             .spawn(DirectionalLightBundle {
                 directional_light: DirectionalLight {
                     illuminance: 50_000.0,
@@ -469,16 +468,20 @@ impl<'w, 's> Spawner<'w, 's> {
                 transform: light_transform,
                 ..DirectionalLightBundle::default()
             })
-            .id();
-
-        self.commands.entity(parent).add_child(light);
+            .insert(StateBound::<ApplicationState>::default());
     }
 
-    pub(crate) fn spawn_characters(&mut self, infos: &Infos, parent: Entity, offset: PosOffset) {
+    pub(crate) fn spawn_characters(&mut self, infos: &Infos, offset: PosOffset) {
+        let root = self
+            .commands
+            .spawn(SpatialBundle::default())
+            .insert(StateBound::<ApplicationState>::default())
+            .id();
+
         let player = self
             .spawn_character(
                 infos,
-                parent,
+                root,
                 Pos::new(45, Level::ZERO, 56)
                     .offset(offset)
                     .unwrap()
@@ -504,7 +507,7 @@ impl<'w, 's> Spawner<'w, 's> {
 
         self.spawn_character(
             infos,
-            parent,
+            root,
             Pos::new(10, Level::ZERO, 10).offset(offset).unwrap(),
             &ObjectId::new("human"),
             Some(ObjectName::from_str("Survivor", DEFAULT_TEXT_COLOR)),
@@ -512,35 +515,35 @@ impl<'w, 's> Spawner<'w, 's> {
 
         self.spawn_character(
             infos,
-            parent,
+            root,
             Pos::new(12, Level::ZERO, 16).offset(offset).unwrap(),
             &ObjectId::new("mon_zombie"),
             None,
         );
         self.spawn_character(
             infos,
-            parent,
+            root,
             Pos::new(40, Level::ZERO, 40).offset(offset).unwrap(),
             &ObjectId::new("mon_zombie"),
             None,
         );
         self.spawn_character(
             infos,
-            parent,
+            root,
             Pos::new(38, Level::ZERO, 39).offset(offset).unwrap(),
             &ObjectId::new("mon_zombie"),
             None,
         );
         self.spawn_character(
             infos,
-            parent,
+            root,
             Pos::new(37, Level::ZERO, 37).offset(offset).unwrap(),
             &ObjectId::new("mon_zombie"),
             None,
         );
         self.spawn_character(
             infos,
-            parent,
+            root,
             Pos::new(34, Level::ZERO, 34).offset(offset).unwrap(),
             &ObjectId::new("mon_zombie"),
             None,
@@ -645,6 +648,7 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
             .commands
             .spawn(SpatialBundle::default())
             .insert(subzone_level)
+            .insert(StateBound::<ApplicationState>::default())
             .id();
 
         if submap.terrain.is_significant() {
@@ -796,6 +800,7 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
                 }
                 SeenFrom::Never => (LastSeen::Never, Visibility::Hidden),
             })
+            .insert(StateBound::<ApplicationState>::default())
             .with_children(|child_builder| {
                 child_builder
                     .spawn(pbr_bundles.base)

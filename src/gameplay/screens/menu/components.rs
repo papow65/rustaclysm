@@ -1,9 +1,6 @@
 use bevy::prelude::Component;
 
 #[derive(Component)]
-pub(crate) struct MenuRoot;
-
-#[derive(Component)]
 pub(crate) struct ReturnButton;
 
 #[derive(Component)]

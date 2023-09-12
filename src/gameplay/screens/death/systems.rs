@@ -8,7 +8,7 @@ const FONT_SIZE: f32 = 16.0;
 pub(crate) fn spawn_death_screen(mut commands: Commands, fonts: Res<Fonts>) {
     let font = fonts.default();
 
-    let root = commands
+    commands
         .spawn(NodeBundle {
             style: Style {
                 width: Val::Percent(100.0),
@@ -79,10 +79,7 @@ pub(crate) fn spawn_death_screen(mut commands: Commands, fonts: Res<Fonts>) {
                             ));
                         });
                 });
-        })
-        .id();
-
-    commands.insert_resource(DeathScreen { root });
+        });
 }
 
 #[allow(clippy::needless_pass_by_value)]
@@ -117,10 +114,4 @@ pub(crate) fn manage_death_button_input(
             next_gameplay_state.set(GameplayScreenState::Inapplicable);
         }
     }
-}
-
-#[allow(clippy::needless_pass_by_value)]
-pub(crate) fn despawn_death_screen(mut commands: Commands, death_screen: Res<DeathScreen>) {
-    commands.entity(death_screen.root).despawn_recursive();
-    commands.remove_resource::<DeathScreen>();
 }

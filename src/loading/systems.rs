@@ -17,7 +17,7 @@ pub(crate) fn spawn_loading(mut commands: Commands, fonts: Res<Fonts>) {
             },
             ..default()
         })
-        .insert(LoadingRoot)
+        .insert(StateBound::<ProgressScreenState>::default())
         .with_children(|parent| {
             parent
                 .spawn(NodeBundle {
@@ -87,14 +87,4 @@ pub(crate) fn finish_loading(
     }
 
     *counter = counter.saturating_add(1);
-}
-
-#[allow(clippy::needless_pass_by_value)]
-pub(crate) fn despawn_loading(
-    mut commands: Commands,
-    root_entities: Query<Entity, With<LoadingRoot>>,
-) {
-    if let Ok(root_entity) = root_entities.get_single() {
-        commands.entity(root_entity).despawn_recursive();
-    }
 }

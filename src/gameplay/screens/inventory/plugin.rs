@@ -17,6 +17,9 @@ impl Plugin for InventoryScreenPlugin {
                 .run_if(in_state(GameplayScreenState::Inventory)),
         );
 
-        app.add_systems(OnExit(GameplayScreenState::Inventory), despawn_inventory);
+        app.add_systems(
+            OnExit(GameplayScreenState::Inventory),
+            (despawn::<GameplayScreenState>, remove_inventory_resource),
+        );
     }
 }

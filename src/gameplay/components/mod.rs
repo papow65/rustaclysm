@@ -22,9 +22,6 @@ pub(crate) use {container::*, faction::*, message::*, player::*, pos::*, stats::
 pub(crate) struct Filthy;
 
 #[derive(Component)]
-pub(crate) struct ManualRoot;
-
-#[derive(Component)]
 pub(crate) struct Accessible {
     pub(crate) water: bool,
     pub(crate) move_cost: MoveCost,

@@ -94,36 +94,35 @@ fn spawn_manual_display(
     commands
         .spawn(background)
         .insert(ManualDisplay)
+        .insert(StateBound::<ApplicationState>::default())
         .with_children(|parent| {
-            parent
-                .spawn(TextBundle {
-                    text: Text {
-                        sections: vec![TextSection {
-                            value: String::new()
-                                + "move          numpad\n"
-                                + "up/down       </>\n"
-                                + "attack        a\n"
-                                + "smash         s\n"
-                                + "toggle speed  +\n"
-                                + "wait          |\n"
-                                + "sleep         $\n"
-                                + "zoom          z/Z\n"
-                                + "zoom          scroll wheel\n"
-                                + "show elevated h\n"
-                                + "toggle this   f1\n"
-                                + "examine       x\n"
-                                + "examine map   X\n"
-                                + "inventory     i\n"
-                                + "menu          esc\n"
-                                + "main menu     f12\n"
-                                + "quit          ctrl+c/q",
-                            style: hud_defaults.text_style.clone(),
-                        }],
-                        ..Text::default()
-                    },
-                    ..default()
-                })
-                .insert(ManualDisplay);
+            parent.spawn(TextBundle {
+                text: Text {
+                    sections: vec![TextSection {
+                        value: String::new()
+                            + "move          numpad\n"
+                            + "up/down       </>\n"
+                            + "attack        a\n"
+                            + "smash         s\n"
+                            + "toggle speed  +\n"
+                            + "wait          |\n"
+                            + "sleep         $\n"
+                            + "zoom          z/Z\n"
+                            + "zoom          scroll wheel\n"
+                            + "show elevated h\n"
+                            + "toggle this   f1\n"
+                            + "examine       x\n"
+                            + "examine map   X\n"
+                            + "inventory     i\n"
+                            + "menu          esc\n"
+                            + "main menu     f12\n"
+                            + "quit          ctrl+c/q",
+                        style: hud_defaults.text_style.clone(),
+                    }],
+                    ..Text::default()
+                },
+                ..default()
+            });
         });
 }
 
@@ -165,6 +164,7 @@ pub(crate) fn spawn_hud(
     background.style.width = Val::Px(TEXT_WIDTH + 10.0); // 5px margin on both sides
     background.style.height = Val::Percent(100.0);
     let mut parent = commands.spawn(background);
+    parent.insert(StateBound::<ApplicationState>::default());
     spawn_status_display(&mut parent);
     spawn_log_display(&mut parent);
 
