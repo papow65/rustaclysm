@@ -115,12 +115,13 @@ impl ActorItem<'_> {
     pub(crate) fn move_(
         &self,
         commands: &mut Commands,
+        message_writer: &mut EventWriter<Message>,
         envir: &mut Envir,
         to: Pos,
     ) -> Option<Impact> {
         let from = *self.pos;
         if !envir.are_nbors(*self.pos, to) {
-            commands.spawn(Message::error(Phrase::from_name(self.name).add(format!(
+            message_writer.send(Message::error(Phrase::from_name(self.name).add(format!(
                 "can't move to {to:?}, as it is not a nbor of {from:?}"
             ))));
             return None;
@@ -138,7 +139,7 @@ impl ActorItem<'_> {
                  *            VERTICAL
             }*/
             Collision::Blocked(obstacle) => {
-                commands.spawn(Message::warn(
+                message_writer.send(Message::warn(
                     Phrase::from_name(self.name)
                         .add("crashes into")
                         .push(obstacle.single()),
@@ -146,7 +147,7 @@ impl ActorItem<'_> {
                 None
             }
             Collision::Ledged => {
-                commands.spawn(Message::warn(
+                message_writer.send(Message::warn(
                     Phrase::from_name(self.name).add("halts at the ledge"),
                 ));
                 None
@@ -202,13 +203,14 @@ impl ActorItem<'_> {
     pub(crate) fn attack(
         &self,
         commands: &mut Commands,
+        message_writer: &mut EventWriter<Message>,
         envir: &Envir,
         infos: &Infos,
         hierarchy: &Hierarchy,
         target: Pos,
     ) -> Option<Impact> {
         let Some(high_speed) = self.high_speed() else {
-            commands.spawn(Message::warn(
+            message_writer.send(Message::warn(
                 Phrase::from_name(self.name).add("is too exhausted to attack"),
             ));
             return None;
@@ -223,7 +225,7 @@ impl ActorItem<'_> {
                 commands, envir, infos, hierarchy, defender, target, high_speed,
             ))
         } else {
-            commands.spawn(Message::warn(
+            message_writer.send(Message::warn(
                 Phrase::from_name(self.name).add("attacks nothing"),
             ));
             None
@@ -233,13 +235,14 @@ impl ActorItem<'_> {
     pub(crate) fn smash(
         &self,
         commands: &mut Commands,
+        message_writer: &mut EventWriter<Message>,
         envir: &Envir,
         infos: &Infos,
         hierarchy: &Hierarchy,
         target: Pos,
     ) -> Option<Impact> {
         let Some(high_speed) = self.high_speed() else {
-            commands.spawn(Message::warn(
+            message_writer.send(Message::warn(
                 Phrase::from_name(self.name).add("is too exhausted to smash"),
             ));
             return None;
@@ -251,14 +254,14 @@ impl ActorItem<'_> {
 
         let stair_pos = Pos::new(target.x, self.pos.level, target.z);
         if self.pos.level.up() == Some(target.level) && envir.stairs_up_to(stair_pos).is_none() {
-            commands.spawn(Message::warn(
+            message_writer.send(Message::warn(
                 Phrase::from_name(self.name).add("smashes the ceiling"),
             ));
             None
         } else if self.pos.level.down() == Some(target.level)
             && envir.stairs_down_to(stair_pos).is_none()
         {
-            commands.spawn(Message::warn(
+            message_writer.send(Message::warn(
                 Phrase::from_name(self.name).add("smashes the floor"),
             ));
             None
@@ -267,7 +270,7 @@ impl ActorItem<'_> {
                 commands, envir, infos, hierarchy, smashable, target, high_speed,
             ))
         } else {
-            commands.spawn(Message::warn(
+            message_writer.send(Message::warn(
                 Phrase::from_name(self.name).add("smashes nothing"),
             ));
             None
@@ -277,6 +280,7 @@ impl ActorItem<'_> {
     pub(crate) fn close(
         &self,
         commands: &mut Commands,
+        message_writer: &mut EventWriter<Message>,
         envir: &mut Envir,
         target: Pos,
     ) -> Option<Impact> {
@@ -286,7 +290,7 @@ impl ActorItem<'_> {
 
         if let Some((closeable, closeable_name)) = envir.find_closeable(target) {
             if let Some((_, character)) = envir.find_character(target) {
-                commands.spawn(Message::warn(
+                message_writer.send(Message::warn(
                     Phrase::from_name(self.name)
                         .add("can't close")
                         .push(closeable_name.single())
@@ -305,7 +309,7 @@ impl ActorItem<'_> {
         } else {
             let missing = ObjectName::missing();
             let obstacle = envir.find_terrain(target).unwrap_or(&missing);
-            commands.spawn(Message::warn(
+            message_writer.send(Message::warn(
                 Phrase::from_name(self.name)
                     .add("can't close")
                     .push(obstacle.single()),
@@ -317,12 +321,14 @@ impl ActorItem<'_> {
     pub(crate) fn wield(
         &self,
         commands: &mut Commands,
+        message_writer: &mut EventWriter<Message>,
         location: &mut Location,
         hierarchy: &Hierarchy,
         wielded: Entity,
     ) -> Option<Impact> {
         let impact = self.take(
             commands,
+            message_writer,
             location,
             hierarchy,
             self.body_containers.unwrap().hands,
@@ -337,12 +343,14 @@ impl ActorItem<'_> {
     pub(crate) fn unwield(
         &self,
         commands: &mut Commands,
+        message_writer: &mut EventWriter<Message>,
         location: &mut Location,
         hierarchy: &Hierarchy,
         unwielded: Entity,
     ) -> Option<Impact> {
         let impact = self.take(
             commands,
+            message_writer,
             location,
             hierarchy,
             self.body_containers.unwrap().clothing,
@@ -357,12 +365,14 @@ impl ActorItem<'_> {
     pub(crate) fn pickup(
         &self,
         commands: &mut Commands,
+        message_writer: &mut EventWriter<Message>,
         location: &mut Location,
         hierarchy: &Hierarchy,
         pickedup: Entity,
     ) -> Option<Impact> {
         self.take(
             commands,
+            message_writer,
             location,
             hierarchy,
             self.body_containers.unwrap().clothing,
@@ -373,6 +383,7 @@ impl ActorItem<'_> {
     pub(crate) fn take(
         &self,
         commands: &mut Commands,
+        message_writer: &mut EventWriter<Message>,
         location: &mut Location,
         hierarchy: &Hierarchy,
         container_entity: Entity,
@@ -431,6 +442,7 @@ impl ActorItem<'_> {
                     if &allowed_amount < taken_amount {
                         self.take_some(
                             commands,
+                            message_writer,
                             location,
                             container_entity,
                             allowed_amount,
@@ -448,6 +460,7 @@ impl ActorItem<'_> {
                             taken_object_name.as_item(Some(taken_amount), taken_filthy);
                         self.take_all(
                             commands,
+                            message_writer,
                             location,
                             container_entity,
                             taken_entity,
@@ -458,12 +471,12 @@ impl ActorItem<'_> {
                 }
                 Err(messages) => {
                     assert!(!messages.is_empty(), "Empty messages are not allowed");
-                    commands.spawn_batch(messages);
+                    message_writer.send_batch(messages);
                     None
                 }
             }
         } else {
-            commands.spawn(Message::warn(
+            message_writer.send(Message::warn(
                 Phrase::new("Nothing to pick up for").push(self.name.single()),
             ));
             None
@@ -473,6 +486,7 @@ impl ActorItem<'_> {
     fn take_some(
         &self,
         commands: &mut Commands,
+        message_writer: &mut EventWriter<Message>,
         location: &mut Location,
         container_entity: Entity,
         allowed_amount: Amount,
@@ -486,7 +500,7 @@ impl ActorItem<'_> {
         taken_parent: &Parent,
     ) {
         let taken_name = object_name.as_item(Some(&allowed_amount), filthy);
-        commands.spawn(Message::info(
+        message_writer.send(Message::info(
             Phrase::from_name(self.name)
                 .add("picks up")
                 .extend(taken_name),
@@ -515,12 +529,13 @@ impl ActorItem<'_> {
     fn take_all(
         &self,
         commands: &mut Commands,
+        message_writer: &mut EventWriter<Message>,
         location: &mut Location,
         container_entity: Entity,
         taken_entity: Entity,
         taken_name: Vec<Fragment>,
     ) {
-        commands.spawn(Message::info(
+        message_writer.send(Message::info(
             Phrase::from_name(self.name)
                 .add("picks up")
                 .extend(taken_name),
@@ -535,6 +550,7 @@ impl ActorItem<'_> {
     pub(crate) fn dump(
         &self,
         commands: &mut Commands,
+        message_writer: &mut EventWriter<Message>,
         location: &mut Location,
         hierarchy: &Hierarchy,
         dumped: Entity,
@@ -548,7 +564,7 @@ impl ActorItem<'_> {
             || (dumped_parent != Some(self.body_containers.unwrap().hands)
                 && dumped_parent != Some(self.body_containers.unwrap().clothing))
         {
-            commands.spawn(Message::info(
+            message_writer.send(Message::info(
                 Phrase::from_name(self.name)
                     .add("can't drop")
                     .extend(dumped_name.as_item(dumped_amount, dumped_filthy))
@@ -560,7 +576,7 @@ impl ActorItem<'_> {
         // TODO Check for obstacles
         let dumped_pos = self.pos.raw_nbor(Nbor::Horizontal(direction)).unwrap();
 
-        commands.spawn(Message::info(
+        message_writer.send(Message::info(
             Phrase::from_name(self.name)
                 .add("drops")
                 .extend(dumped_name.as_item(dumped_amount, dumped_filthy)),
@@ -577,7 +593,7 @@ impl ActorItem<'_> {
     }
 
     pub(crate) fn examine_item(
-        commands: &mut Commands,
+        message_writer: &mut EventWriter<Message>,
         infos: &Infos,
         definitions: &Query<&ObjectDefinition>,
         entity: Entity,
@@ -585,7 +601,7 @@ impl ActorItem<'_> {
         if let Ok(definition) = definitions.get(entity) {
             if let Some(item_info) = infos.item(&definition.id) {
                 if let Some(description) = &item_info.description {
-                    commands.spawn(Message::info(Phrase::new(
+                    message_writer.send(Message::info(Phrase::new(
                         match description {
                             Description::Simple(simple) => simple,
                             Description::Complex(complex) => complex.get("str").unwrap(),

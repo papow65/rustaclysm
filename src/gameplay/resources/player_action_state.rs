@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use bevy::prelude::{Color, Commands, Entity, Resource};
+use bevy::prelude::{Color, Commands, Entity, EventWriter, Resource};
 use std::fmt;
 
 #[derive(Debug)]
@@ -54,6 +54,7 @@ impl PlayerActionState {
     pub(crate) fn plan_action(
         &mut self,
         commands: &mut Commands,
+        message_writer: &mut EventWriter<Message>,
         envir: &mut Envir,
         instruction_queue: &mut InstructionQueue,
         actor: Entity,
@@ -67,7 +68,7 @@ impl PlayerActionState {
                     return Some(action);
                 }
                 PlayerBehavior::Feedback(message) => {
-                    commands.spawn(message);
+                    message_writer.send(message);
                     // Invalid instruction
                     // Continue with next instruction
                 }

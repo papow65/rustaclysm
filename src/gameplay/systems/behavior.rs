@@ -24,6 +24,7 @@ pub(crate) fn egible_character(
 pub(crate) fn plan_action(
     In(option): In<Option<Entity>>,
     mut commands: Commands,
+    mut message_writer: EventWriter<Message>,
     mut player_action_state: ResMut<PlayerActionState>,
     mut envir: Envir,
     clock: Clock,
@@ -45,6 +46,7 @@ pub(crate) fn plan_action(
     let action = if players.get_mut(active_entity).is_ok() {
         player_action_state.plan_action(
             &mut commands,
+            &mut message_writer,
             &mut envir,
             &mut instruction_queue,
             actor.entity,
@@ -85,91 +87,167 @@ pub(crate) fn perform_action(
     };
 
     let impact = match action {
-        Action::Stay { duration } => {
-            perform_with_actor::<(), _>(world, actor_entity, |actor, ()| Some(actor.stay(duration)))
-        }
-        Action::Step { target } => perform_with_actor::<(Commands, Envir), _>(
-            world,
-            actor_entity,
-            |actor, (mut commands, mut envir)| actor.move_(&mut commands, &mut envir, target),
-        ),
-        Action::Attack { target } => {
-            perform_with_actor::<(Commands, Envir, Res<Infos>, Hierarchy), _>(
-                world,
-                actor_entity,
-                |actor, (mut commands, envir, infos, hierarchy)| {
-                    actor.attack(&mut commands, &envir, &infos, &hierarchy, target)
-                },
-            )
-        }
-        Action::Smash { target } => {
-            perform_with_actor::<(Commands, Envir, Res<Infos>, Hierarchy), _>(
-                world,
-                actor_entity,
-                |actor, (mut commands, envir, infos, hierarchy)| {
-                    actor.smash(&mut commands, &envir, &infos, &hierarchy, target)
-                },
-            )
-        }
-        Action::Close { target } => perform_with_actor::<(Commands, Envir), _>(
-            world,
-            actor_entity,
-            |actor, (mut commands, mut envir)| actor.close(&mut commands, &mut envir, target),
-        ),
-        Action::Wield { entity } => {
-            perform_with_actor::<(Commands, ResMut<Location>, Hierarchy), _>(
-                world,
-                actor_entity,
-                |actor, (mut commands, mut location, hierarchy)| {
-                    actor.wield(&mut commands, &mut location, &hierarchy, entity)
-                },
-            )
-        }
-        Action::Unwield { entity } => {
-            perform_with_actor::<(Commands, ResMut<Location>, Hierarchy), _>(
-                world,
-                actor_entity,
-                |actor, (mut commands, mut location, hierarchy)| {
-                    actor.unwield(&mut commands, &mut location, &hierarchy, entity)
-                },
-            )
-        }
-        Action::Pickup { entity } => {
-            perform_with_actor::<(Commands, ResMut<Location>, Hierarchy), _>(
-                world,
-                actor_entity,
-                |actor, (mut commands, mut location, hierarchy)| {
-                    actor.pickup(&mut commands, &mut location, &hierarchy, entity)
-                },
-            )
-        }
-        Action::Dump { entity, direction } => {
-            perform_with_actor::<(Commands, ResMut<Location>, Hierarchy), _>(
-                world,
-                actor_entity,
-                |actor, (mut commands, mut location, hierarchy)| {
-                    actor.dump(&mut commands, &mut location, &hierarchy, entity, direction)
-                },
-            )
-        }
-        Action::ExamineItem { entity } => perform::<
-            (Commands, Res<Infos>, Query<&ObjectDefinition>),
-            _,
-        >(world, |(mut commands, infos, definitions)| {
-            ActorItem::examine_item(&mut commands, &infos, &definitions, entity);
-            None
-        }),
-        Action::SwitchRunning => {
-            perform_with_actor::<Commands, _>(world, actor_entity, |actor, mut commands| {
-                actor.switch_running(&mut commands);
-                None
-            })
-        }
+        Action::Stay { duration } => perform_stay(world, actor_entity, duration),
+        Action::Step { target } => perform_stap(world, actor_entity, target),
+        Action::Attack { target } => perform_attack(world, actor_entity, target),
+        Action::Smash { target } => perform_smash(world, actor_entity, target),
+        Action::Close { target } => perform_close(world, actor_entity, target),
+        Action::Wield { entity } => perform_wield(world, actor_entity, entity),
+        Action::Unwield { entity } => perform_unwield(world, actor_entity, entity),
+        Action::Pickup { entity } => perform_pickup(world, actor_entity, entity),
+        Action::Dump { entity, direction } => perform_dump(world, actor_entity, entity, direction),
+        Action::ExamineItem { entity } => perform_examine_item(world, entity),
+        Action::SwitchRunning => perform_switch_running(world, actor_entity),
     };
 
-    log_if_slow("manage_characters", start);
+    log_if_slow("perform_action", start);
 
     Some((actor_entity, impact))
+}
+
+fn perform_stay(world: &mut World, actor_entity: Entity, duration: StayDuration) -> Option<Impact> {
+    perform_with_actor::<(), _>(world, actor_entity, |actor, ()| Some(actor.stay(duration)))
+}
+
+fn perform_stap(world: &mut World, actor_entity: Entity, target: Pos) -> Option<Impact> {
+    perform_with_actor::<(Commands, EventWriter<Message>, Envir), _>(
+        world,
+        actor_entity,
+        |actor, (mut commands, mut message_writer, mut envir)| {
+            actor.move_(&mut commands, &mut message_writer, &mut envir, target)
+        },
+    )
+}
+
+fn perform_attack(world: &mut World, actor_entity: Entity, target: Pos) -> Option<Impact> {
+    perform_with_actor::<(Commands, EventWriter<Message>, Envir, Res<Infos>, Hierarchy), _>(
+        world,
+        actor_entity,
+        |actor, (mut commands, mut message_writer, envir, infos, hierarchy)| {
+            actor.attack(
+                &mut commands,
+                &mut message_writer,
+                &envir,
+                &infos,
+                &hierarchy,
+                target,
+            )
+        },
+    )
+}
+
+fn perform_smash(world: &mut World, actor_entity: Entity, target: Pos) -> Option<Impact> {
+    perform_with_actor::<(Commands, EventWriter<Message>, Envir, Res<Infos>, Hierarchy), _>(
+        world,
+        actor_entity,
+        |actor, (mut commands, mut message_writer, envir, infos, hierarchy)| {
+            actor.smash(
+                &mut commands,
+                &mut message_writer,
+                &envir,
+                &infos,
+                &hierarchy,
+                target,
+            )
+        },
+    )
+}
+
+fn perform_close(world: &mut World, actor_entity: Entity, target: Pos) -> Option<Impact> {
+    perform_with_actor::<(Commands, EventWriter<Message>, Envir), _>(
+        world,
+        actor_entity,
+        |actor, (mut commands, mut message_writer, mut envir)| {
+            actor.close(&mut commands, &mut message_writer, &mut envir, target)
+        },
+    )
+}
+
+fn perform_wield(world: &mut World, actor_entity: Entity, entity: Entity) -> Option<Impact> {
+    perform_with_actor::<(Commands, EventWriter<Message>, ResMut<Location>, Hierarchy), _>(
+        world,
+        actor_entity,
+        |actor, (mut commands, mut message_writer, mut location, hierarchy)| {
+            actor.wield(
+                &mut commands,
+                &mut message_writer,
+                &mut location,
+                &hierarchy,
+                entity,
+            )
+        },
+    )
+}
+
+fn perform_unwield(world: &mut World, actor_entity: Entity, entity: Entity) -> Option<Impact> {
+    perform_with_actor::<(Commands, EventWriter<Message>, ResMut<Location>, Hierarchy), _>(
+        world,
+        actor_entity,
+        |actor, (mut commands, mut message_writer, mut location, hierarchy)| {
+            actor.unwield(
+                &mut commands,
+                &mut message_writer,
+                &mut location,
+                &hierarchy,
+                entity,
+            )
+        },
+    )
+}
+
+fn perform_pickup(world: &mut World, actor_entity: Entity, entity: Entity) -> Option<Impact> {
+    perform_with_actor::<(Commands, EventWriter<Message>, ResMut<Location>, Hierarchy), _>(
+        world,
+        actor_entity,
+        |actor, (mut commands, mut message_writer, mut location, hierarchy)| {
+            actor.pickup(
+                &mut commands,
+                &mut message_writer,
+                &mut location,
+                &hierarchy,
+                entity,
+            )
+        },
+    )
+}
+
+fn perform_dump(
+    world: &mut World,
+    actor_entity: Entity,
+    entity: Entity,
+    direction: HorizontalDirection,
+) -> Option<Impact> {
+    perform_with_actor::<(Commands, EventWriter<Message>, ResMut<Location>, Hierarchy), _>(
+        world,
+        actor_entity,
+        |actor, (mut commands, mut message_writer, mut location, hierarchy)| {
+            actor.dump(
+                &mut commands,
+                &mut message_writer,
+                &mut location,
+                &hierarchy,
+                entity,
+                direction,
+            )
+        },
+    )
+}
+
+fn perform_examine_item(world: &mut World, entity: Entity) -> Option<Impact> {
+    perform::<(EventWriter<Message>, Res<Infos>, Query<&ObjectDefinition>), _>(
+        world,
+        |(mut message_writer, infos, definitions)| {
+            ActorItem::examine_item(&mut message_writer, &infos, &definitions, entity);
+            None
+        },
+    )
+}
+
+fn perform_switch_running(world: &mut World, actor_entity: Entity) -> Option<Impact> {
+    perform_with_actor::<Commands, _>(world, actor_entity, |actor, mut commands| {
+        actor.switch_running(&mut commands);
+        None
+    })
 }
 
 fn perform_with_actor<P, F>(world: &mut World, actor_entity: Entity, act: F) -> Option<Impact>
@@ -198,7 +276,7 @@ where
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn handle_impact(
     In(option): In<Option<(Entity, Option<Impact>)>>,
-    mut commands: Commands,
+    mut message_writer: EventWriter<Message>,
     mut timeouts: ResMut<Timeouts>,
     players: Query<(), With<Player>>,
     mut staminas: Query<&mut Stamina>,
@@ -214,7 +292,7 @@ pub(crate) fn handle_impact(
             assert!(0 < impact.timeout.0, "{impact:?}");
             timeouts.add(actor_entity, impact.timeout);
         } else if players.get(actor_entity).is_err() {
-            commands.spawn(Message::error(Phrase::new("NPC action failed")));
+            message_writer.send(Message::error(Phrase::new("NPC action failed")));
             timeouts.add(actor_entity, Milliseconds(1000));
         }
     }
@@ -248,8 +326,9 @@ pub(crate) fn toggle_doors(
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_damaged_characters(
-    mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
     mut commands: Commands,
+    mut message_writer: EventWriter<Message>,
+    mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
     mut characters: Query<
         (
             Entity,
@@ -267,7 +346,7 @@ pub(crate) fn update_damaged_characters(
     for (character, name, mut health, damage, mut transform, player) in &mut characters {
         let evolution = health.lower(damage);
         if health.0.is_zero() {
-            commands.spawn(Message::warn(
+            message_writer.send(Message::warn(
                 Phrase::from_fragment(damage.attacker.clone())
                     .add("kills")
                     .push(name.single()),
@@ -285,7 +364,7 @@ pub(crate) fn update_damaged_characters(
                 next_gameplay_state.set(GameplayScreenState::Death);
             }
         } else {
-            commands.spawn({
+            message_writer.send({
                 let begin = Phrase::from_fragment(damage.attacker.clone())
                     .add("hits")
                     .push(name.single());
@@ -312,6 +391,7 @@ pub(crate) fn update_damaged_characters(
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_healed_characters(
     mut commands: Commands,
+    mut message_writer: EventWriter<Message>,
     mut characters: Query<
         (Entity, &ObjectName, &mut Health, &Healing, &mut Transform),
         (With<Faction>, With<Life>),
@@ -322,7 +402,7 @@ pub(crate) fn update_healed_characters(
     for (character, name, mut health, healing, _transform) in &mut characters {
         let evolution = health.raise(healing);
         if evolution.changed() {
-            commands.spawn({
+            message_writer.send({
                 let begin = Phrase::from_name(name);
 
                 Message::info(if evolution.change_abs() == 1 {
@@ -346,6 +426,7 @@ pub(crate) fn update_healed_characters(
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_damaged_items(
     mut commands: Commands,
+    mut message_writer: EventWriter<Message>,
     mut spawner: Spawner,
     mut visualization_update: ResMut<VisualizationUpdate>,
     infos: Res<Infos>,
@@ -368,7 +449,7 @@ pub(crate) fn update_damaged_items(
     {
         let evolution = integrity.lower(damage);
         if integrity.0.is_zero() {
-            commands.spawn(Message::warn(
+            message_writer.send(Message::warn(
                 Phrase::from_fragment(damage.attacker.clone())
                     .add("breaks")
                     .extend(name.as_item(amount, filthy)),
@@ -377,7 +458,7 @@ pub(crate) fn update_damaged_items(
             spawner.spawn_smashed(&infos, parent.get(), pos, definition);
             *visualization_update = VisualizationUpdate::Forced;
         } else {
-            commands.spawn({
+            message_writer.send({
                 let begin = Phrase::from_fragment(damage.attacker.clone())
                     .add("hits")
                     .extend(name.as_item(amount, filthy));

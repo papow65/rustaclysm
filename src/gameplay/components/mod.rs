@@ -1,6 +1,6 @@
 mod container;
 mod faction;
-mod message;
+mod object_name;
 mod player;
 mod pos;
 mod stats;
@@ -16,7 +16,7 @@ use rand::{
 };
 use std::ops::{Add, Sub};
 
-pub(crate) use {container::*, faction::*, message::*, player::*, pos::*, stats::*};
+pub(crate) use {container::*, faction::*, object_name::*, player::*, pos::*, stats::*};
 
 #[derive(PartialEq, Component)]
 pub(crate) struct Filthy;

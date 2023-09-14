@@ -18,6 +18,7 @@ pub(crate) fn create_independent_resources(mut commands: Commands) {
     commands.insert_resource(PlayerActionState::default());
     commands.insert_resource(StatusTextSections::default());
     commands.insert_resource(VisualizationUpdate::Smart);
+    commands.insert_resource(Events::<Message>::default());
 
     // The creation of RelativeSegments takes about 2 seconds, and loading it earlier affects application startup time.
     // 'init_resource' only loads a resource if it does not yet exist.

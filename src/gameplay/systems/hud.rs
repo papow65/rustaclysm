@@ -173,15 +173,14 @@ pub(crate) fn spawn_hud(
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_log(
+    mut new_messages: EventReader<Message>,
     hud_defaults: Res<HudDefaults>,
+    mut message_log: Local<Vec<Message>>,
     mut logs: Query<&mut Text, With<LogDisplay>>,
-    messages: Query<&Message>,
-    changed: Query<&Message, Changed<Message>>,
 ) {
     let start = Instant::now();
 
-    let mut new_messages = false;
-    for message in changed.iter() {
+    for message in &mut new_messages {
         if message.phrase.to_string().trim() != "" {
             if message.severity == Severity::Error {
                 eprintln!("{}", &message.phrase);
@@ -189,15 +188,12 @@ pub(crate) fn update_log(
                 println!("{}", &message.phrase);
             }
         }
-        new_messages = true;
-    }
-    if !new_messages {
-        return;
+        message_log.push(message.clone());
     }
 
     let mut last: Option<(&Message, usize)> = None;
     let mut shown_reverse = Vec::<(&Message, usize)>::new();
-    for &message in messages.iter().collect::<Vec<&Message>>().iter().rev() {
+    for message in message_log.iter().rev() {
         match last {
             Some((last_message, ref mut last_count)) if last_message == message => {
                 *last_count += 1;

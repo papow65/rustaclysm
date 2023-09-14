@@ -1,5 +1,6 @@
 mod components;
 mod core;
+mod message;
 mod plugin;
 mod resources;
 mod schedule;
@@ -8,5 +9,6 @@ mod states;
 mod systems;
 
 pub(crate) use self::{
-    components::*, core::*, plugin::*, resources::*, schedule::*, screens::*, states::*, systems::*,
+    components::*, core::*, message::*, plugin::*, resources::*, schedule::*, screens::*,
+    states::*, systems::*,
 };
