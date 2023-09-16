@@ -19,11 +19,57 @@ pub(crate) fn create_behavior_schedule(app: &mut App) {
     app.add_systems(
         BehaviorSchedule,
         (
-            egible_character
-                .pipe(plan_action)
-                .pipe(perform_action)
-                .pipe(handle_impact),
-            apply_deferred,
+            egible_character.pipe(plan_action).pipe(send_action_event),
+            (
+                check_action_plan_amount,
+                single_action
+                    .pipe(perform_stay)
+                    .pipe(proces_impact)
+                    .run_if(on_event::<ActorEvent<Stay>>()),
+                single_action
+                    .pipe(perform_step)
+                    .pipe(proces_impact)
+                    .run_if(on_event::<ActorEvent<Step>>()),
+                single_action
+                    .pipe(perform_attack)
+                    .pipe(proces_impact)
+                    .run_if(on_event::<ActorEvent<Attack>>()),
+                single_action
+                    .pipe(perform_smash)
+                    .pipe(proces_impact)
+                    .run_if(on_event::<ActorEvent<Smash>>()),
+                single_action
+                    .pipe(perform_close)
+                    .pipe(proces_impact)
+                    .run_if(on_event::<ActorEvent<Close>>()),
+                single_action
+                    .pipe(perform_wield)
+                    .pipe(proces_impact)
+                    .run_if(on_event::<ActorEvent<Wield>>()),
+                single_action
+                    .pipe(perform_unwield)
+                    .pipe(proces_impact)
+                    .run_if(on_event::<ActorEvent<Unwield>>()),
+                single_action
+                    .pipe(perform_pickup)
+                    .pipe(proces_impact)
+                    .run_if(on_event::<ActorEvent<Pickup>>()),
+                single_action
+                    .pipe(perform_dump)
+                    .pipe(proces_impact)
+                    .run_if(on_event::<ActorEvent<Dump>>()),
+                single_action
+                    .pipe(perform_examine_item)
+                    .run_if(on_event::<ActorEvent<ExamineItem>>()),
+                single_action
+                    .pipe(perform_change_pace)
+                    .run_if(on_event::<ActorEvent<ChangePace>>()),
+            ),
+            (
+                update_timeout.run_if(on_event::<ActorEvent<Timeout>>()),
+                update_stamina.run_if(on_event::<ActorEvent<StaminaImpact>>()),
+            ),
+            apply_deferred, // TODO still required?
             (
                 (
                     update_damaged_characters,

@@ -20,6 +20,19 @@ pub(crate) fn remove_gameplay_resources(mut commands: Commands) {
     commands.remove_resource::<PlayerActionState>();
     commands.remove_resource::<StatusTextSections>();
     commands.remove_resource::<Events<Message>>();
+    commands.remove_resource::<Events<ActorEvent<Stay>>>();
+    commands.remove_resource::<Events<ActorEvent<Step>>>();
+    commands.remove_resource::<Events<ActorEvent<Attack>>>();
+    commands.remove_resource::<Events<ActorEvent<Smash>>>();
+    commands.remove_resource::<Events<ActorEvent<Close>>>();
+    commands.remove_resource::<Events<ActorEvent<Wield>>>();
+    commands.remove_resource::<Events<ActorEvent<Unwield>>>();
+    commands.remove_resource::<Events<ActorEvent<Pickup>>>();
+    commands.remove_resource::<Events<ActorEvent<Dump>>>();
+    commands.remove_resource::<Events<ActorEvent<ExamineItem>>>();
+    commands.remove_resource::<Events<ActorEvent<ChangePace>>>();
+    commands.remove_resource::<Events<ActorEvent<StaminaImpact>>>();
+    commands.remove_resource::<Events<ActorEvent<Timeout>>>();
 
     // RelativeSegments has to stay loaded, because it takes about 2 seconds to create and only contains static data.
 }

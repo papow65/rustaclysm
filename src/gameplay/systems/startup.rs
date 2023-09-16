@@ -19,6 +19,19 @@ pub(crate) fn create_independent_resources(mut commands: Commands) {
     commands.insert_resource(StatusTextSections::default());
     commands.insert_resource(VisualizationUpdate::Smart);
     commands.insert_resource(Events::<Message>::default());
+    commands.insert_resource(Events::<ActorEvent<Stay>>::default());
+    commands.insert_resource(Events::<ActorEvent<Step>>::default());
+    commands.insert_resource(Events::<ActorEvent<Attack>>::default());
+    commands.insert_resource(Events::<ActorEvent<Smash>>::default());
+    commands.insert_resource(Events::<ActorEvent<Close>>::default());
+    commands.insert_resource(Events::<ActorEvent<Wield>>::default());
+    commands.insert_resource(Events::<ActorEvent<Unwield>>::default());
+    commands.insert_resource(Events::<ActorEvent<Pickup>>::default());
+    commands.insert_resource(Events::<ActorEvent<Dump>>::default());
+    commands.insert_resource(Events::<ActorEvent<ExamineItem>>::default());
+    commands.insert_resource(Events::<ActorEvent<ChangePace>>::default());
+    commands.insert_resource(Events::<ActorEvent<StaminaImpact>>::default());
+    commands.insert_resource(Events::<ActorEvent<Timeout>>::default());
 
     // The creation of RelativeSegments takes about 2 seconds, and loading it earlier affects application startup time.
     // 'init_resource' only loads a resource if it does not yet exist.

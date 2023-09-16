@@ -4,7 +4,7 @@ use std::fmt;
 
 #[derive(Debug)]
 enum PlayerBehavior {
-    Perform(Action),
+    Perform(PlannedAction),
     Feedback(Message),
     NoEffect,
 }
@@ -61,7 +61,7 @@ impl PlayerActionState {
         pos: Pos,
         now: Timestamp,
         enemies: &[Pos],
-    ) -> Option<Action> {
+    ) -> Option<PlannedAction> {
         while let Some(instruction) = instruction_queue.pop() {
             match self.plan(envir, pos, instruction, now) {
                 PlayerBehavior::Perform(action) => {
@@ -88,7 +88,7 @@ impl PlayerActionState {
                     instruction_queue.add(QueuedInstruction::Finished);
                     None // process the cancellation next turn
                 } else {
-                    Some(Action::Stay {
+                    Some(PlannedAction::Stay {
                         duration: StayDuration::Short,
                     })
                 }
@@ -117,7 +117,7 @@ impl PlayerActionState {
                     *healing_from += healing_duration;
                     // dbg!(healing_from);
 
-                    Some(Action::Stay {
+                    Some(PlannedAction::Stay {
                         duration: StayDuration::Long,
                     })
                 }
@@ -130,6 +130,7 @@ impl PlayerActionState {
         }
     }
 
+    #[allow(clippy::too_many_lines)]
     fn plan(
         &mut self,
         envir: &Envir,
@@ -153,7 +154,7 @@ impl PlayerActionState {
                 PlayerBehavior::Feedback(Message::warn(Phrase::new("You are still asleep. Zzz...")))
             }
             (Self::Normal, QueuedInstruction::Offset(PlayerDirection::Here)) => {
-                PlayerBehavior::Perform(Action::Stay {
+                PlayerBehavior::Perform(PlannedAction::Stay {
                     duration: StayDuration::Short,
                 })
             }
@@ -190,22 +191,22 @@ impl PlayerActionState {
                 self.handle_offset(envir.get_nbor(pos, nbor), nbor)
             }
             (_, QueuedInstruction::Wield(entity)) => {
-                PlayerBehavior::Perform(Action::Wield { entity })
+                PlayerBehavior::Perform(PlannedAction::Wield { entity })
             }
             (_, QueuedInstruction::Unwield(entity)) => {
-                PlayerBehavior::Perform(Action::Unwield { entity })
+                PlayerBehavior::Perform(PlannedAction::Unwield { entity })
             }
             (_, QueuedInstruction::Pickup(entity)) => {
-                PlayerBehavior::Perform(Action::Pickup { entity })
+                PlayerBehavior::Perform(PlannedAction::Pickup { entity })
             }
             (_, QueuedInstruction::Dump(entity, direction)) => {
-                PlayerBehavior::Perform(Action::Dump { entity, direction })
+                PlayerBehavior::Perform(PlannedAction::Dump { entity, direction })
             }
             (_, QueuedInstruction::Attack) => self.handle_attack(envir, pos),
             (_, QueuedInstruction::Smash) => self.handle_smash(envir, pos),
             (_, QueuedInstruction::Close) => self.handle_close(envir, pos),
             (_, QueuedInstruction::ExamineItem(entity)) => {
-                PlayerBehavior::Perform(Action::ExamineItem { entity })
+                PlayerBehavior::Perform(PlannedAction::ExamineItem { entity })
             }
             (_, QueuedInstruction::ExaminePos) => {
                 let pos = Pos::from(&Focus::new(self, pos));
@@ -217,7 +218,9 @@ impl PlayerActionState {
                 *self = Self::ExaminingZoneLevel(target);
                 PlayerBehavior::NoEffect
             }
-            (_, QueuedInstruction::SwitchRunning) => PlayerBehavior::Perform(Action::SwitchRunning),
+            (_, QueuedInstruction::ChangePace) => {
+                PlayerBehavior::Perform(PlannedAction::ChangePace)
+            }
             (Self::Waiting { .. }, QueuedInstruction::Interrupted) => {
                 *self = Self::Normal;
                 PlayerBehavior::Feedback(Message::warn(Phrase::new(
@@ -267,18 +270,18 @@ impl PlayerActionState {
                     )))
                 }
             }
-            (Self::Normal, Ok(target)) => PlayerBehavior::Perform(Action::Step { target }),
+            (Self::Normal, Ok(to)) => PlayerBehavior::Perform(PlannedAction::Step { to }),
             (Self::Attacking, Ok(target)) => {
                 *self = Self::Normal;
-                PlayerBehavior::Perform(Action::Attack { target })
+                PlayerBehavior::Perform(PlannedAction::Attack { target })
             }
             (Self::Smashing, Ok(target)) => {
                 *self = Self::Normal;
-                PlayerBehavior::Perform(Action::Smash { target })
+                PlayerBehavior::Perform(PlannedAction::Smash { target })
             }
             (Self::Closing, Ok(target)) => {
                 *self = Self::Normal;
-                PlayerBehavior::Perform(Action::Close { target })
+                PlayerBehavior::Perform(PlannedAction::Close { target })
             }
             (Self::Waiting { .. }, _) => {
                 *self = Self::Normal;
@@ -294,7 +297,7 @@ impl PlayerActionState {
             .collect::<Vec<Pos>>();
         match attackable_nbors.len() {
             0 => PlayerBehavior::Feedback(Message::warn(Phrase::new("no targets nearby"))),
-            1 => PlayerBehavior::Perform(Action::Attack {
+            1 => PlayerBehavior::Perform(PlannedAction::Attack {
                 target: attackable_nbors[0],
             }),
             _ => {
@@ -310,7 +313,7 @@ impl PlayerActionState {
             .collect::<Vec<Pos>>();
         match smashable_nbors.len() {
             0 => PlayerBehavior::Feedback(Message::warn(Phrase::new("no targets nearby"))),
-            1 => PlayerBehavior::Perform(Action::Smash {
+            1 => PlayerBehavior::Perform(PlannedAction::Smash {
                 target: smashable_nbors[0],
             }),
             _ => {
@@ -326,7 +329,7 @@ impl PlayerActionState {
             .collect::<Vec<Pos>>();
         match closable_nbors.len() {
             0 => PlayerBehavior::Feedback(Message::warn(Phrase::new("nothing to close nearby"))),
-            1 => PlayerBehavior::Perform(Action::Close {
+            1 => PlayerBehavior::Perform(PlannedAction::Close {
                 target: closable_nbors[0],
             }),
             _ => {

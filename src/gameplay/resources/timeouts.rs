@@ -1,9 +1,16 @@
-use crate::prelude::{Milliseconds, Timestamp};
+use crate::prelude::{ActorChange, Milliseconds, Timestamp};
 use bevy::{
     ecs::system::SystemParam,
     prelude::{Entity, Res, Resource},
     utils::HashMap,
 };
+
+#[derive(Clone, Debug)]
+pub(crate) struct Timeout {
+    pub(crate) delay: Milliseconds,
+}
+
+impl ActorChange for Timeout {}
 
 #[derive(Resource)]
 pub(crate) struct Timeouts {
@@ -30,8 +37,8 @@ impl Timeouts {
         let time = self.time();
         entities
             .iter()
+            .min_by_key(|&e| (*self.m.entry(*e).or_insert(time), e))
             .copied()
-            .min_by_key(|e| *self.m.entry(*e).or_insert(time))
     }
 
     /** Private, use Clock.time */

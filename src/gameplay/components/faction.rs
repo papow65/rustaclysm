@@ -17,7 +17,7 @@ pub(crate) enum Intelligence {
 
 pub(crate) struct Strategy {
     pub(crate) intent: Intent,
-    pub(crate) action: Action,
+    pub(crate) action: PlannedAction,
     pub(crate) last_enemy: Option<LastEnemy>,
 }
 
@@ -96,7 +96,7 @@ impl Faction {
         factions: &[(Pos, &Self)],
         enemies: &[Pos],
         actor: &ActorItem,
-    ) -> Option<(Action, LastEnemy)> {
+    ) -> Option<(PlannedAction, LastEnemy)> {
         enemies
             .iter()
             .copied()
@@ -122,28 +122,33 @@ impl Faction {
                         .filter(|(_, faction)| faction != &self)
                         .any(|(pos, _)| pos == &path.destination)
                     {
-                        Some((Action::Attack { target: path.first }, last_enemy))
+                        Some((PlannedAction::Attack { target: path.first }, last_enemy))
                     } else {
                         None
                     }
                 } else if envir.find_obstacle(path.first).is_some() {
                     Some((
                         if factions.iter().any(|(pos, _)| *pos == path.first) {
-                            Action::Stay {
+                            PlannedAction::Stay {
                                 duration: StayDuration::Short,
                             }
                         } else {
-                            Action::Smash { target: path.first }
+                            PlannedAction::Smash { target: path.first }
                         },
                         last_enemy,
                     ))
                 } else {
-                    Some((Action::Step { target: path.first }, last_enemy))
+                    Some((PlannedAction::Step { to: path.first }, last_enemy))
                 }
             })
     }
 
-    pub(crate) fn flee(&self, envir: &Envir, enemies: &[Pos], actor: &ActorItem) -> Option<Action> {
+    pub(crate) fn flee(
+        &self,
+        envir: &Envir,
+        enemies: &[Pos],
+        actor: &ActorItem,
+    ) -> Option<PlannedAction> {
         if enemies.is_empty() {
             return None;
         }
@@ -181,11 +186,11 @@ impl Faction {
             .expect("First step (after current position)")
             .0;
         Some(if target == *actor.pos {
-            Action::Stay {
+            PlannedAction::Stay {
                 duration: StayDuration::Short,
             }
         } else {
-            Action::Step { target }
+            PlannedAction::Step { to: target }
         })
     }
 
@@ -194,7 +199,7 @@ impl Faction {
         envir: &Envir,
         factions: &[(Pos, &Self)],
         actor: &ActorItem,
-    ) -> Option<Action> {
+    ) -> Option<PlannedAction> {
         let mut random = rand::thread_rng();
 
         if random.gen::<f32>() < 0.3 {
@@ -206,11 +211,11 @@ impl Faction {
                 .choose(&mut random)
                 .map(|&pos| {
                     if envir.find_character(pos).is_some() {
-                        Action::Attack { target: pos }
+                        PlannedAction::Attack { target: pos }
                     } else if envir.find_smashable(pos).is_some() {
-                        Action::Smash { target: pos }
+                        PlannedAction::Smash { target: pos }
                     } else {
-                        Action::Step { target: pos }
+                        PlannedAction::Step { to: pos }
                     }
                 })
         } else {
@@ -236,15 +241,17 @@ impl Faction {
             Intent::Wander => self
                 .wander(envir, factions, actor)
                 .map(|action| (action, None)),
-            Intent::Wait => Some(Action::Stay {
+            Intent::Wait => Some(PlannedAction::Stay {
                 duration: StayDuration::Short,
             })
             .map(|action| (action, None)),
         }
         .filter(|(action, _)| match action {
             // prevent fish from acting on land
-            Action::Step { target } | Action::Attack { target } | Action::Smash { target } => {
-                actor.aquatic.is_none() || envir.is_water(*target)
+            PlannedAction::Step { to: pos }
+            | PlannedAction::Attack { target: pos }
+            | PlannedAction::Smash { target: pos } => {
+                actor.aquatic.is_none() || envir.is_water(*pos)
             }
             _ => true,
         })

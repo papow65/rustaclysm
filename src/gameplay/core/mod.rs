@@ -11,12 +11,14 @@ mod object_definition;
 mod object_id;
 mod offset;
 mod region;
+mod stamina_impact;
 mod type_id;
 mod unit;
 
 pub(crate) use self::{
     action::*, actor::*, focus::*, fragment::*, instruction::*, limited::*, mesh::*, model::*,
-    nbor::*, object_definition::*, object_id::*, offset::*, region::*, type_id::*, unit::*,
+    nbor::*, object_definition::*, object_id::*, offset::*, region::*, stamina_impact::*,
+    type_id::*, unit::*,
 };
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]

@@ -65,6 +65,7 @@ impl TryFrom<&KeyCombo> for PlayerDirection {
     }
 }
 
+/** All instructions where the order matters */
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) enum QueuedInstruction {
     Offset(PlayerDirection),
@@ -77,7 +78,7 @@ pub(crate) enum QueuedInstruction {
     Close,
     Wait,
     Sleep,
-    SwitchRunning,
+    ChangePace,
     ExamineItem(Entity),
     ExaminePos,
     ExamineZoneLevel,
@@ -101,7 +102,7 @@ impl TryFrom<&KeyCombo> for QueuedInstruction {
             KeyCombo::Character('c') => Ok(Self::Close),
             KeyCombo::Character('x') => Ok(Self::ExaminePos),
             KeyCombo::Character('X') => Ok(Self::ExamineZoneLevel),
-            KeyCombo::Character('+') => Ok(Self::SwitchRunning),
+            KeyCombo::Character('+') => Ok(Self::ChangePace),
             _ => PlayerDirection::try_from(combo).map(Self::Offset),
         }
     }
