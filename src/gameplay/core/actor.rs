@@ -1,5 +1,6 @@
 use crate::prelude::*;
 use bevy::{ecs::query::WorldQuery, prelude::*};
+use either::Either;
 
 /** Derived from stamina */
 #[derive(Copy, Clone, Debug)]
@@ -149,7 +150,10 @@ impl ActorItem<'_> {
 
     fn damage(
         &self,
-        commands: &mut Commands,
+        damage_writer: Either<
+            &mut EventWriter<ActorEvent<Damage>>,
+            &mut EventWriter<ItemEvent<Damage>>,
+        >,
         envir: &Envir,
         infos: &Infos,
         hierarchy: &Hierarchy,
@@ -168,10 +172,17 @@ impl ActorItem<'_> {
             }
         }
 
-        commands.entity(damaged).insert(Damage {
+        let damage = Damage {
             attacker: self.name.single(),
             amount: self.melee.damage(melee_weapon),
-        });
+        };
+        match damage_writer {
+            Either::Left(damage_writer) => damage_writer.send(ActorEvent::new(damaged, damage)),
+            Either::Right(damage_writer) => damage_writer.send(ItemEvent {
+                item_entity: damaged,
+                change: damage,
+            }),
+        }
 
         // Needed when a character smashes something at it's own position
         let cost_pos = if *self.pos == damaged_pos {
@@ -193,8 +204,8 @@ impl ActorItem<'_> {
 
     pub(crate) fn attack(
         &self,
-        commands: &mut Commands,
         message_writer: &mut EventWriter<Message>,
+        damage_writer: &mut EventWriter<ActorEvent<Damage>>,
         envir: &Envir,
         infos: &Infos,
         hierarchy: &Hierarchy,
@@ -213,7 +224,7 @@ impl ActorItem<'_> {
 
         if let Some((defender, _)) = envir.find_character(attack.target) {
             Some(self.damage(
-                commands,
+                Either::Left(damage_writer),
                 envir,
                 infos,
                 hierarchy,
@@ -231,8 +242,8 @@ impl ActorItem<'_> {
 
     pub(crate) fn smash(
         &self,
-        commands: &mut Commands,
         message_writer: &mut EventWriter<Message>,
+        damage_writer: &mut EventWriter<ItemEvent<Damage>>,
         envir: &Envir,
         infos: &Infos,
         hierarchy: &Hierarchy,
@@ -266,7 +277,7 @@ impl ActorItem<'_> {
             None
         } else if let Some((smashable, _)) = envir.find_smashable(smash.target) {
             Some(self.damage(
-                commands,
+                Either::Right(damage_writer),
                 envir,
                 infos,
                 hierarchy,

@@ -69,16 +69,20 @@ pub(crate) fn create_behavior_schedule(app: &mut App) {
                 update_timeout.run_if(on_event::<ActorEvent<Timeout>>()),
                 update_stamina.run_if(on_event::<ActorEvent<StaminaImpact>>()),
             ),
-            apply_deferred, // TODO still required?
             (
                 (
-                    update_damaged_characters,
+                    update_damaged_characters.run_if(on_event::<ActorEvent<Damage>>()),
                     apply_deferred,
-                    update_healed_characters,
+                    update_healed_characters.run_if(on_event::<ActorEvent<Healing>>()),
                 )
                     .chain(),
                 toggle_doors.run_if(on_event::<TerrainEvent<Toggle>>()),
-                (update_damaged_items, combine_items).chain(),
+                (
+                    update_damaged_items.run_if(on_event::<ItemEvent<Damage>>()),
+                    apply_deferred,
+                    combine_items,
+                )
+                    .chain(),
             ),
             apply_deferred,
         )

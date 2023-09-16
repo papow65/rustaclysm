@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use bevy::prelude::{Color, Commands, Entity, EventWriter, Resource};
+use bevy::prelude::{Color, Entity, EventWriter, Resource};
 use std::fmt;
 
 #[derive(Debug)]
@@ -53,8 +53,8 @@ impl PlayerActionState {
 
     pub(crate) fn plan_action(
         &mut self,
-        commands: &mut Commands,
         message_writer: &mut EventWriter<Message>,
+        healing_writer: &mut EventWriter<ActorEvent<Healing>>,
         envir: &mut Envir,
         instruction_queue: &mut InstructionQueue,
         actor: Entity,
@@ -105,9 +105,12 @@ impl PlayerActionState {
                 let sleeping_duration = now - *healing_from;
 
                 let healing_amount = sleeping_duration.0 / 1_000_000;
-                commands.entity(actor).insert(Healing {
-                    amount: healing_amount as u16,
-                });
+                healing_writer.send(ActorEvent::new(
+                    actor,
+                    Healing {
+                        amount: healing_amount as u16,
+                    },
+                ));
 
                 if *until <= now {
                     instruction_queue.add(QueuedInstruction::Finished);

@@ -33,6 +33,9 @@ pub(crate) fn remove_gameplay_resources(mut commands: Commands) {
     commands.remove_resource::<Events<ActorEvent<ChangePace>>>();
     commands.remove_resource::<Events<ActorEvent<StaminaImpact>>>();
     commands.remove_resource::<Events<ActorEvent<Timeout>>>();
+    commands.remove_resource::<Events<ActorEvent<Damage>>>();
+    commands.remove_resource::<Events<ActorEvent<Healing>>>();
+    commands.remove_resource::<Events<ItemEvent<Damage>>>();
     commands.remove_resource::<Events<TerrainEvent<Toggle>>>();
 
     // RelativeSegments has to stay loaded, because it takes about 2 seconds to create and only contains static data.

@@ -22,6 +22,7 @@ pub(crate) fn plan_action(
     In(active_actor): In<Option<Entity>>,
     mut commands: Commands,
     mut message_writer: EventWriter<Message>,
+    mut healing_writer: EventWriter<ActorEvent<Healing>>,
     mut player_action_state: ResMut<PlayerActionState>,
     mut envir: Envir,
     clock: Clock,
@@ -42,8 +43,8 @@ pub(crate) fn plan_action(
     let enemies = actor.faction.enemies(&envir, &clock, factions, &actor);
     let action = if players.get_mut(active_actor).is_ok() {
         player_action_state.plan_action(
-            &mut commands,
             &mut message_writer,
+            &mut healing_writer,
             &mut envir,
             &mut instruction_queue,
             actor.entity,
@@ -199,16 +200,16 @@ pub(crate) fn perform_step(
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn perform_attack(
     In(attack): In<ActorEvent<Attack>>,
-    mut commands: Commands,
     mut message_writer: EventWriter<Message>,
+    mut damage_writer: EventWriter<ActorEvent<Damage>>,
     envir: Envir,
     infos: Res<Infos>,
     hierarchy: Hierarchy,
     actors: Query<Actor>,
 ) -> Option<Impact> {
     attack.actor(&actors).attack(
-        &mut commands,
         &mut message_writer,
+        &mut damage_writer,
         &envir,
         &infos,
         &hierarchy,
@@ -219,16 +220,16 @@ pub(crate) fn perform_attack(
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn perform_smash(
     In(smash): In<ActorEvent<Smash>>,
-    mut commands: Commands,
     mut message_writer: EventWriter<Message>,
+    mut damage_writer: EventWriter<ItemEvent<Damage>>,
     envir: Envir,
     infos: Res<Infos>,
     hierarchy: Hierarchy,
     actors: Query<Actor>,
 ) -> Option<Impact> {
     smash.actor(&actors).smash(
-        &mut commands,
         &mut message_writer,
+        &mut damage_writer,
         &envir,
         &infos,
         &hierarchy,
@@ -461,13 +462,13 @@ pub(crate) fn toggle_doors(
 pub(crate) fn update_damaged_characters(
     mut commands: Commands,
     mut message_writer: EventWriter<Message>,
+    mut damage_reader: EventReader<ActorEvent<Damage>>,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
     mut characters: Query<
         (
             Entity,
             &ObjectName,
             &mut Health,
-            &Damage,
             &mut Transform,
             Option<&Player>,
         ),
@@ -476,11 +477,14 @@ pub(crate) fn update_damaged_characters(
 ) {
     let start = Instant::now();
 
-    for (character, name, mut health, damage, mut transform, player) in &mut characters {
-        let evolution = health.lower(damage);
+    for damage in &mut damage_reader {
+        let (character, name, mut health, mut transform, player) = characters
+            .get_mut(damage.actor_entity)
+            .expect("Actor found");
+        let evolution = health.lower(&damage.change);
         if health.0.is_zero() {
             message_writer.send(Message::warn(
-                Phrase::from_fragment(damage.attacker.clone())
+                Phrase::from_fragment(damage.change.attacker.clone())
                     .add("kills")
                     .push(name.single()),
             ));
@@ -498,7 +502,7 @@ pub(crate) fn update_damaged_characters(
             }
         } else {
             message_writer.send({
-                let begin = Phrase::from_fragment(damage.attacker.clone())
+                let begin = Phrase::from_fragment(damage.change.attacker.clone())
                     .add("hits")
                     .push(name.single());
 
@@ -514,8 +518,6 @@ pub(crate) fn update_damaged_characters(
                 })
             });
         }
-
-        commands.entity(character).remove::<Damage>();
     }
 
     log_if_slow("update_damaged_characters", start);
@@ -523,17 +525,17 @@ pub(crate) fn update_damaged_characters(
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_healed_characters(
-    mut commands: Commands,
     mut message_writer: EventWriter<Message>,
-    mut characters: Query<
-        (Entity, &ObjectName, &mut Health, &Healing, &mut Transform),
-        (With<Faction>, With<Life>),
-    >,
+    mut healing_reader: EventReader<ActorEvent<Healing>>,
+    mut characters: Query<(&ObjectName, &mut Health), (With<Faction>, With<Life>)>,
 ) {
     let start = Instant::now();
 
-    for (character, name, mut health, healing, _transform) in &mut characters {
-        let evolution = health.raise(healing);
+    for healing in &mut healing_reader {
+        let (name, mut health) = characters
+            .get_mut(healing.actor_entity)
+            .expect("Actor found");
+        let evolution = health.raise(&healing.change);
         if evolution.changed() {
             message_writer.send({
                 let begin = Phrase::from_name(name);
@@ -550,7 +552,6 @@ pub(crate) fn update_healed_characters(
                 })
             });
         }
-        commands.entity(character).remove::<Healing>();
     }
 
     log_if_slow("update_healed_characters", start);
@@ -560,30 +561,30 @@ pub(crate) fn update_healed_characters(
 pub(crate) fn update_damaged_items(
     mut commands: Commands,
     mut message_writer: EventWriter<Message>,
+    mut damage_reader: EventReader<ItemEvent<Damage>>,
     mut spawner: Spawner,
     mut visualization_update: ResMut<VisualizationUpdate>,
     infos: Res<Infos>,
-    mut damaged: Query<(
+    mut items: Query<(
         Entity,
         &Pos,
         &ObjectName,
         Option<&Amount>,
         Option<&Filthy>,
         &mut Integrity,
-        &Damage,
         &ObjectDefinition,
         &Parent,
     )>,
 ) {
     let start = Instant::now();
 
-    for (item, &pos, name, amount, filthy, mut integrity, damage, definition, parent) in
-        &mut damaged
-    {
-        let evolution = integrity.lower(damage);
+    for damage in &mut damage_reader {
+        let (item, &pos, name, amount, filthy, mut integrity, definition, parent) =
+            items.get_mut(damage.item_entity).expect("Item found");
+        let evolution = integrity.lower(&damage.change);
         if integrity.0.is_zero() {
             message_writer.send(Message::warn(
-                Phrase::from_fragment(damage.attacker.clone())
+                Phrase::from_fragment(damage.change.attacker.clone())
                     .add("breaks")
                     .extend(name.as_item(amount, filthy)),
             ));
@@ -592,7 +593,7 @@ pub(crate) fn update_damaged_items(
             *visualization_update = VisualizationUpdate::Forced;
         } else {
             message_writer.send({
-                let begin = Phrase::from_fragment(damage.attacker.clone())
+                let begin = Phrase::from_fragment(damage.change.attacker.clone())
                     .add("hits")
                     .extend(name.as_item(amount, filthy));
 

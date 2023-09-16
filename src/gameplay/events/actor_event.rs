@@ -3,6 +3,7 @@ use bevy::prelude::{Entity, Event, Query};
 
 pub(crate) trait ActorChange: Clone + Send + Sync + 'static {}
 
+#[must_use]
 #[derive(Clone, Debug, Event)]
 pub(crate) struct ActorEvent<T: ActorChange> {
     pub(crate) actor_entity: Entity,

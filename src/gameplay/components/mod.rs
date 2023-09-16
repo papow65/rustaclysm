@@ -103,18 +103,6 @@ impl Integrity {
     // TODO raising (not with Healing)
 }
 
-#[derive(Component, Debug)]
-pub(crate) struct Damage {
-    // TODO damage types
-    pub(crate) attacker: Fragment, // for logging
-    pub(crate) amount: u16,
-}
-
-#[derive(Component, Debug)]
-pub(crate) struct Healing {
-    pub(crate) amount: u16,
-}
-
 #[derive(Component)]
 pub(crate) struct Life;
 
