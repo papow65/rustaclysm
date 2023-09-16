@@ -77,7 +77,7 @@ pub(crate) fn create_behavior_schedule(app: &mut App) {
                     update_healed_characters,
                 )
                     .chain(),
-                toggle_doors,
+                toggle_doors.run_if(on_event::<TerrainEvent<Toggle>>()),
                 (update_damaged_items, combine_items).chain(),
             ),
             apply_deferred,

@@ -183,11 +183,17 @@ pub(crate) fn perform_step(
     In(step): In<ActorEvent<Step>>,
     mut commands: Commands,
     mut message_writer: EventWriter<Message>,
+    mut toggle_writer: EventWriter<TerrainEvent<Toggle>>,
     mut envir: Envir,
     actors: Query<Actor>,
 ) -> Option<Impact> {
-    step.actor(&actors)
-        .step(&mut commands, &mut message_writer, &mut envir, &step.change)
+    step.actor(&actors).step(
+        &mut commands,
+        &mut message_writer,
+        &mut toggle_writer,
+        &mut envir,
+        &step.change,
+    )
 }
 
 #[allow(clippy::needless_pass_by_value)]
@@ -233,15 +239,15 @@ pub(crate) fn perform_smash(
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn perform_close(
     In(close): In<ActorEvent<Close>>,
-    mut commands: Commands,
     mut message_writer: EventWriter<Message>,
-    mut envir: Envir,
+    mut toggle_writer: EventWriter<TerrainEvent<Toggle>>,
+    envir: Envir,
     actors: Query<Actor>,
 ) -> Option<Impact> {
     close.actor(&actors).close(
-        &mut commands,
         &mut message_writer,
-        &mut envir,
+        &mut toggle_writer,
+        &envir,
         &close.change,
     )
 }
@@ -427,17 +433,20 @@ pub(crate) fn update_stamina(
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn toggle_doors(
     mut commands: Commands,
+    mut toggle_reader: EventReader<TerrainEvent<Toggle>>,
     infos: Res<Infos>,
     mut spawner: Spawner,
     mut visualization_update: ResMut<VisualizationUpdate>,
-    toggled: Query<(Entity, &ObjectDefinition, &Pos, &Toggle, &Parent)>,
+    terrain: Query<(Entity, &ObjectDefinition, &Pos, &Parent)>,
 ) {
     let start = Instant::now();
 
-    for (entity, definition, &pos, toggle, parent) in toggled.iter() {
+    for toggle in &mut toggle_reader {
+        let (entity, definition, &pos, parent) = terrain.get(toggle.terrain_entity).expect("Found");
+
         commands.entity(entity).despawn_recursive();
         let terrain_info = infos.terrain(&definition.id).expect("Valid terrain");
-        let toggled_id = match toggle {
+        let toggled_id = match toggle.change {
             Toggle::Open => terrain_info.open.as_ref().expect("Openable"),
             Toggle::Close => terrain_info.close.as_ref().expect("Closeable"),
         };

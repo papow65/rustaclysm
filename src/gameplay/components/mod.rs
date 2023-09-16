@@ -77,13 +77,6 @@ impl Sub<Self> for &Amount {
     }
 }
 
-/** Marker to open or close something, like a door */
-#[derive(Component, Debug, PartialEq)]
-pub(crate) enum Toggle {
-    Open,
-    Close,
-}
-
 #[derive(Clone, Component, Debug, PartialEq)]
 pub(crate) struct ObjectDefinition {
     pub(crate) category: ObjectCategory,

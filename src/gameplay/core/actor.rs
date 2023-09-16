@@ -99,6 +99,7 @@ impl ActorItem<'_> {
         &self,
         commands: &mut Commands,
         message_writer: &mut EventWriter<Message>,
+        toggle_writer: &mut EventWriter<TerrainEvent<Toggle>>,
         envir: &mut Envir,
         step: &Step,
     ) -> Option<Impact> {
@@ -137,7 +138,10 @@ impl ActorItem<'_> {
                 None
             }
             Collision::Opened(door) => {
-                commands.entity(door).insert(Toggle::Open);
+                toggle_writer.send(TerrainEvent {
+                    terrain_entity: door,
+                    change: Toggle::Open,
+                });
                 Some(self.standard_impact(envir.walking_cost(from, step.to).duration(self.speed())))
             }
         }
@@ -280,9 +284,9 @@ impl ActorItem<'_> {
 
     pub(crate) fn close(
         &self,
-        commands: &mut Commands,
         message_writer: &mut EventWriter<Message>,
-        envir: &mut Envir,
+        toggle_writer: &mut EventWriter<TerrainEvent<Toggle>>,
+        envir: &Envir,
         close: &Close,
     ) -> Option<Impact> {
         if !envir.are_nbors(*self.pos, close.target) && close.target != *self.pos {
@@ -300,7 +304,10 @@ impl ActorItem<'_> {
                 ));
                 None
             } else {
-                commands.entity(closeable).insert(Toggle::Close);
+                toggle_writer.send(TerrainEvent {
+                    terrain_entity: closeable,
+                    change: Toggle::Close,
+                });
                 Some(
                     self.standard_impact(
                         envir

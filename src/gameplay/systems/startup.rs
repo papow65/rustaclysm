@@ -32,6 +32,7 @@ pub(crate) fn create_independent_resources(mut commands: Commands) {
     commands.insert_resource(Events::<ActorEvent<ChangePace>>::default());
     commands.insert_resource(Events::<ActorEvent<StaminaImpact>>::default());
     commands.insert_resource(Events::<ActorEvent<Timeout>>::default());
+    commands.insert_resource(Events::<TerrainEvent<Toggle>>::default());
 
     // The creation of RelativeSegments takes about 2 seconds, and loading it earlier affects application startup time.
     // 'init_resource' only loads a resource if it does not yet exist.
