@@ -1,5 +1,10 @@
 use crate::prelude::*;
-use bevy::{ecs::system::Resource, prelude::*, utils::HashMap};
+use bevy::{
+    asset::{AssetLoader, LoadContext, LoadedAsset},
+    prelude::*,
+    reflect::{TypePath, TypeUuid},
+    utils::{BoxedFuture, HashMap},
+};
 use std::{array, iter::once, time::Instant};
 
 #[derive(Clone, Debug, PartialEq)]
@@ -72,7 +77,9 @@ pub(crate) struct RelativeSegment {
     pub(crate) down_pairs: Vec<(PosOffset, PosOffset)>,
 }
 
-#[derive(Resource)]
+#[derive(Debug, Resource, TypePath, TypeUuid)]
+#[type_path = "cdda::world::Map"]
+#[uuid = "b6afaa00-31ce-4553-99ab-4df240a292a3"]
 pub(crate) struct RelativeSegments {
     pub(crate) segments: [HashMap<PosOffset, RelativeSegment>; Self::SIZE],
 }
@@ -167,8 +174,22 @@ impl RelativeSegments {
     }
 }
 
-impl FromWorld for RelativeSegments {
-    fn from_world(_world: &mut World) -> Self {
-        Self::new()
+#[derive(Default)]
+pub(crate) struct RelativeSegmentsLoader;
+
+impl AssetLoader for RelativeSegmentsLoader {
+    fn load<'a>(
+        &'a self,
+        _bytes: &'a [u8],
+        load_context: &'a mut LoadContext,
+    ) -> BoxedFuture<'a, Result<(), bevy::asset::Error>> {
+        Box::pin(async move {
+            load_context.set_default_asset(LoadedAsset::new(RelativeSegments::new()));
+            Ok(())
+        })
+    }
+
+    fn extensions(&self) -> &[&str] {
+        &["relsegs"]
     }
 }

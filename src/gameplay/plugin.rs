@@ -25,6 +25,15 @@ impl Plugin for GameplayPlugin {
 
         create_behavior_schedule(app);
 
+        // Loading is slow, so we start loading it immediately.
+        // Loading is slow, so we load it in the background as an asset.
+        app.add_asset::<RelativeSegments>();
+        app.init_asset_loader::<RelativeSegmentsLoader>();
+        app.add_systems(
+            Update,
+            create_relative_segments.run_if(not(resource_exists::<RelativeSegments>())),
+        );
+
         app.add_systems(
             OnEnter(ApplicationState::Gameplay),
             (

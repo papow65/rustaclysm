@@ -35,7 +35,7 @@ pub(crate) struct Paths {
 }
 
 impl Paths {
-    fn asset_path() -> &'static Path {
+    pub(crate) fn asset_path() -> &'static Path {
         Path::new("assets")
     }
 

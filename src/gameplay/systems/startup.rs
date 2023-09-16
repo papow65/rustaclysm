@@ -3,6 +3,20 @@ use bevy::prelude::*;
 
 /// Create resources that do not need other resources
 #[allow(clippy::needless_pass_by_value)]
+pub(crate) fn create_relative_segments(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut assets: ResMut<Assets<RelativeSegments>>,
+) {
+    let handle = asset_server.load(Paths::asset_path().join("dummy.relsegs"));
+    if assets.get(&handle).is_some() {
+        let relative_segments = assets.remove(&handle).expect("RelativeSegments present");
+        commands.insert_resource(relative_segments);
+    }
+}
+
+/// Create resources that do not need other resources
+#[allow(clippy::needless_pass_by_value)]
 pub(crate) fn create_independent_resources(mut commands: Commands) {
     // Not persisted between gameplays
     commands.insert_resource(Infos::new());
@@ -36,10 +50,6 @@ pub(crate) fn create_independent_resources(mut commands: Commands) {
     commands.insert_resource(Events::<ActorEvent<Healing>>::default());
     commands.insert_resource(Events::<ItemEvent<Damage>>::default());
     commands.insert_resource(Events::<TerrainEvent<Toggle>>::default());
-
-    // The creation of RelativeSegments takes about 2 seconds, and loading it earlier affects application startup time.
-    // 'init_resource' only loads a resource if it does not yet exist.
-    commands.init_resource::<RelativeSegments>();
 }
 
 /// Create resources that need other resources

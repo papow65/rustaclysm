@@ -3,7 +3,7 @@ use bevy::{ecs::system::Resource, utils::HashMap};
 use glob::glob;
 use serde::de::DeserializeOwned;
 use serde_json::map::Entry;
-use std::{fs::read_to_string, path::PathBuf};
+use std::{fs::read_to_string, path::PathBuf, time::Instant};
 
 #[derive(Resource)]
 pub(crate) struct Infos {
@@ -201,6 +201,8 @@ impl Infos {
     }
 
     pub(crate) fn new() -> Self {
+        let start = Instant::now();
+
         let mut enricheds = Self::enricheds();
         let mut this = Self {
             characters: Self::extract(&mut enricheds, TypeId::CHARACTER),
@@ -229,6 +231,9 @@ impl Infos {
                 extra: HashMap::default(),
             },
         );
+
+        let duration = start.elapsed();
+        println!("The creation of Infos took {duration:?}");
 
         this
     }
