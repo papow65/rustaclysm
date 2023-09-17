@@ -246,7 +246,7 @@ impl TileLoader {
 
         let foreground_model = self
             .to_model(foreground, definition, SpriteLayer::Front)
-            .unwrap();
+            .expect(format!("Foreground present for {foreground:?} with {definition:?}").as_str());
         let background_model = self.to_model(background, definition, SpriteLayer::Back);
 
         if let Some(background_model) = background_model {
