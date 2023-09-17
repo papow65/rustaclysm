@@ -235,9 +235,7 @@ pub(crate) fn update_collapsed_zone_levels(
     {
         if zone_spawner.zone_level_entities.get(zone_level).is_none() {
             let visibility = collapsed_visibility(
-                &zone_spawner.asset_server,
-                &mut zone_spawner.overmap_buffer_manager,
-                &mut zone_spawner.spawner.explored,
+                &mut zone_spawner,
                 zone_level,
                 &sight_region,
                 &visible_region,
@@ -258,9 +256,7 @@ pub(crate) fn update_collapsed_zone_levels(
         {
             update_zone_level_visualization(
                 &mut commands,
-                &zone_spawner.asset_server,
-                &mut zone_spawner.overmap_buffer_manager,
-                &mut zone_spawner.spawner.explored,
+                &mut zone_spawner,
                 collapsed_zone_level,
                 &sight_region,
                 &visible_region,
@@ -278,9 +274,7 @@ pub(crate) fn update_collapsed_zone_levels(
 
 fn update_zone_level_visualization(
     commands: &mut Commands,
-    asset_server: &AssetServer,
-    overzone_buffer_manager: &mut OvermapBufferManager,
-    explored: &mut Explored,
+    zone_spawner: &mut ZoneSpawner,
     collapsed_zone_level: ZoneLevel,
     sight_region: &Region,
     visible_region: &Region,
@@ -289,9 +283,7 @@ fn update_zone_level_visualization(
 ) {
     //println!("{collapsed_zone_level:?} visibility?");
     let visibility = collapsed_visibility(
-        asset_server,
-        overzone_buffer_manager,
-        explored,
+        zone_spawner,
         collapsed_zone_level,
         sight_region,
         visible_region,
@@ -305,9 +297,7 @@ fn update_zone_level_visualization(
 }
 
 fn collapsed_visibility(
-    asset_server: &AssetServer,
-    overzone_buffer_manager: &mut OvermapBufferManager,
-    explored: &mut Explored,
+    zone_spawner: &mut ZoneSpawner,
     zone_level: ZoneLevel,
     sight_region: &Region,
     visible_region: &Region,
@@ -317,9 +307,9 @@ fn collapsed_visibility(
         && zone_level.subzone_levels().iter().all(|subzone_level| {
             visible_region.contains_subzone_level(*subzone_level)
                 && !sight_region.contains_subzone_level(*subzone_level)
-                && explored.has_zone_level_been_seen(
-                    asset_server,
-                    overzone_buffer_manager,
+                && zone_spawner.spawner.explored.has_zone_level_been_seen(
+                    &zone_spawner.asset_server,
+                    &mut zone_spawner.overmap_buffer_manager,
                     zone_level,
                 ) == Some(SeenFrom::FarAway)
         })
@@ -392,9 +382,7 @@ pub(crate) fn handle_overmap_buffer_events(
                         let zone_level = ZoneLevel { zone, level };
                         if zone_spawner.zone_level_entities.get(zone_level).is_none() {
                             let visibility = collapsed_visibility(
-                                &zone_spawner.asset_server,
-                                &mut zone_spawner.overmap_buffer_manager,
-                                &mut zone_spawner.spawner.explored,
+                                &mut zone_spawner,
                                 zone_level,
                                 &sight_region,
                                 &visible_region,
