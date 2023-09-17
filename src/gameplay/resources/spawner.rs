@@ -754,6 +754,14 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
             "Collapsed zone levels above ground may not be spawned"
         );
 
+        let Some(seen_from) = self
+            .spawner
+            .explored
+            .has_zone_level_been_seen(&self.asset_server, zone_level)
+        else {
+            return Err(());
+        };
+
         let id = self.zone_level_ids.get(zone_level);
         let zone_level_info = self.infos.zone_level(id);
 
@@ -764,14 +772,6 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
             ),
             DEFAULT_TEXT_COLOR,
         );
-
-        let Some(seen_from) = self
-            .spawner
-            .explored
-            .has_zone_level_been_seen(&self.asset_server, zone_level)
-        else {
-            return Err(());
-        };
 
         let definition = ObjectDefinition {
             category: ObjectCategory::ZoneLevel,
