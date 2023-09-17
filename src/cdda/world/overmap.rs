@@ -15,25 +15,54 @@ impl OvermapPath {
 }
 
 /** Corresponds to an 'overmap' in CDDA. It defines the layout of 180x180 `Zone`s. */
-#[allow(unused)]
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct Overmap {
     pub(crate) layers: [OvermapLevel; Level::AMOUNT],
+
+    #[allow(unused)] // TODO
     region_id: serde_json::Value,
+
+    #[allow(unused)] // TODO
     monster_groups: serde_json::Value,
+
+    #[allow(unused)] // TODO
     cities: serde_json::Value,
+
+    #[allow(unused)] // TODO
     connections_out: serde_json::Value,
+
+    #[allow(unused)] // TODO
     radios: serde_json::Value,
+
+    #[allow(unused)] // TODO
     monster_map: serde_json::Value,
+
+    #[allow(unused)] // TODO
     tracked_vehicles: serde_json::Value,
+
+    #[allow(unused)] // TODO
     scent_traces: serde_json::Value,
+
+    #[allow(unused)] // TODO
     npcs: serde_json::Value,
+
+    #[allow(unused)] // TODO
     camps: serde_json::Value,
+
+    #[allow(unused)] // TODO
     overmap_special_placements: serde_json::Value,
+
+    #[allow(unused)] // TODO
     mapgen_arg_storage: Option<serde_json::Value>,
+
+    #[allow(unused)] // TODO
     mapgen_arg_index: Option<serde_json::Value>,
+
+    #[allow(unused)] // TODO
     joins_used: Option<serde_json::Value>,
+
+    #[allow(unused)] // TODO
     predecessors: Option<serde_json::Value>,
 }
 
