@@ -1,4 +1,7 @@
-use crate::prelude::{CddaAmount, Level, ObjectId, Overzone, PathFor, RepetitionBlock, WorldPath};
+use crate::prelude::{
+    CddaAmount, FlatVec, Level, ObjectId, Overzone, PathFor, RepetitionBlock, WorldPath,
+};
+use bevy::utils::HashMap;
 use serde::Deserialize;
 use std::fs::read_to_string;
 
@@ -36,7 +39,7 @@ pub(crate) struct Overmap {
     radios: serde_json::Value,
 
     #[allow(unused)] // TODO
-    monster_map: serde_json::Value,
+    monster_map: FlatVec<(SubzoneOffset, Monster), 2>,
 
     #[allow(unused)] // TODO
     tracked_vehicles: serde_json::Value,
@@ -97,7 +100,7 @@ impl Overmap {
             cities: serde_json::Value::Null,
             connections_out: serde_json::Value::Null,
             radios: serde_json::Value::Null,
-            monster_map: serde_json::Value::Null,
+            monster_map: FlatVec(Vec::new()),
             tracked_vehicles: serde_json::Value::Null,
             scent_traces: serde_json::Value::Null,
             npcs: serde_json::Value::Null,
@@ -114,13 +117,14 @@ impl Overmap {
 impl TryFrom<&OvermapPath> for Overmap {
     type Error = ();
     fn try_from(overmap_path: &OvermapPath) -> Result<Self, ()> {
-        //println!("Path: {filepath}");
         read_to_string(&overmap_path.0)
             .ok()
             .map(|s| {
                 let first_newline = s.find('\n').unwrap();
                 let after_first_line = s.split_at(first_newline).1;
-                serde_json::from_str(after_first_line).unwrap_or_else(|err| panic!("{err:?}"))
+                serde_json::from_str(after_first_line).unwrap_or_else(|err| {
+                    panic!("Failed to deserialize overmap at {overmap_path:?}: {err:?}")
+                })
             })
             .ok_or(())
     }
@@ -137,4 +141,80 @@ impl OvermapLevel {
             amount: 180 * 180,
         }))
     }
+}
+
+/** Offset of the subzone from the overmap */
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct SubzoneOffset(u16, u16, i8);
+
+#[allow(unused)]
+#[allow(clippy::struct_excessive_bools)]
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct Monster {
+    location: (i32, i32, i8),
+    moves: i16,
+    pain: u32,
+    effects: HashMap<String, serde_json::Value>,
+    damage_over_time_map: Vec<serde_json::Value>,
+    values: HashMap<String, serde_json::Value>,
+    blocks_left: u8,
+    dodges_left: u8,
+    num_blocks_bonus: u8,
+    num_dodges_bonus: u8,
+    armor_bash_bonus: u8,
+    armor_cut_bonus: u8,
+    armor_bullet_bonus: u8,
+    speed: u16,
+    speed_bonus: i8,
+    dodge_bonus: f32,
+    block_bonus: u8,
+    hit_bonus: f32,
+    bash_bonus: u8,
+    cut_bonus: u8,
+    bash_mult: f32,
+    cut_mult: f32,
+    melee_quiet: bool,
+    throw_resist: u8,
+    archery_aim_counter: u8,
+    last_updated: u32,
+    body: HashMap<String, serde_json::Value>,
+    typeid: String,
+    unique_name: String,
+    nickname: String,
+    goal: Option<serde_json::Value>,
+    wander_pos: (i32, i32, i32),
+    wandf: u32,
+    provocative_sound: bool,
+    hp: u16,
+    special_attacks: HashMap<String, serde_json::Value>,
+    friendly: i8,
+    fish_population: u8,
+    faction: String,
+    mission_ids: Vec<serde_json::Value>,
+    mission_fused: Vec<serde_json::Value>,
+    no_extra_death_drops: bool,
+    dead: bool,
+    anger: i16,
+    morale: i8,
+    hallucination: bool,
+    ammo: HashMap<String, i16>,
+    underwater: bool,
+    upgrades: bool,
+    upgrade_time: i32,
+    reproduces: bool,
+    baby_timer: Option<serde_json::Value>,
+    biosignatures: bool,
+    biosig_timer: i32,
+    udder_timer: u32,
+    summon_time_limit: Option<serde_json::Value>,
+    inv: Vec<serde_json::Value>,
+    dragged_foe_id: i8,
+    mounted_player_id: i8,
+    dissectable_inv: Option<serde_json::Value>,
+    lifespan_end: Option<serde_json::Value>,
+    next_patrol_point: Option<serde_json::Value>,
+    patrol_route: Option<serde_json::Value>,
+    horde_attraction: Option<serde_json::Value>,
 }
