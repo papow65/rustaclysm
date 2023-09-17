@@ -65,7 +65,7 @@ impl TryFrom<&KeyCombo> for PlayerDirection {
     }
 }
 
-/** All instructions where the order matters */
+/** All instructions where the order of execution matters */
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) enum QueuedInstruction {
     Offset(PlayerDirection),
