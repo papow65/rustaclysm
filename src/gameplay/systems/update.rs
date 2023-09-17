@@ -199,7 +199,9 @@ pub(crate) fn update_visualization_on_focus_move(
     {
         let currently_visible = envir.currently_visible(&clock, player_pos); // does not depend on focus
 
+        let mut count = 0;
         for (&pos, mut visibility, mut last_seen, accessible, speed, children) in &mut items {
+            count += 1;
             update_visualization(
                 &mut commands,
                 &mut explored,
@@ -220,6 +222,8 @@ pub(crate) fn update_visualization_on_focus_move(
         *previous_camera_global_transform = camera_global_transform;
         *last_elevation_visibility = *elevation_visibility;
         *visualization_update = VisualizationUpdate::Smart;
+
+        println!("{count} visualization updated");
     }
 
     log_if_slow("update_visualization_on_focus_move", start);
