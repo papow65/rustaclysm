@@ -1,8 +1,10 @@
 use crate::prelude::*;
 use bevy::{
-    prelude::{AssetServer, Handle, Resource},
+    prelude::{AssetServer, Resource},
     utils::HashMap,
 };
+
+use super::overmap_buffer_manager::OvermapBufferManager;
 
 /** Ever seen by the player character */
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -12,30 +14,14 @@ pub(crate) enum SeenFrom {
     Never,
 }
 
-#[derive(Resource)]
+#[derive(Default, Resource)]
 pub(crate) struct Explored {
-    sav_path: SavPath,
     zone_level: HashMap<ZoneLevel, SeenFrom>,
     pos: HashMap<Pos, bool>,
-    loading: HashMap<Handle<OvermapBuffer>, Overzone>,
 }
 
 impl Explored {
-    pub(crate) fn new(sav_path: SavPath) -> Self {
-        Self {
-            sav_path,
-            zone_level: HashMap::default(),
-            pos: HashMap::default(),
-            loading: HashMap::default(),
-        }
-    }
-
-    pub(crate) fn load(
-        &mut self,
-        handle: &Handle<OvermapBuffer>,
-        overmap_buffer: &OvermapBuffer,
-    ) -> Overzone {
-        let overzone = self.loading.remove(handle).expect("Loading overmap buffer");
+    pub(crate) fn load(&mut self, overzone: Overzone, overmap_buffer: &OvermapBuffer) {
         for level in Level::GROUNDS {
             let overmap = overmap_buffer
                 .visible
@@ -50,7 +36,6 @@ impl Explored {
                 });
             }
         }
-        overzone
     }
 
     pub(crate) fn mark_pos_seen(&mut self, pos: Pos) {
@@ -67,15 +52,12 @@ impl Explored {
     pub(crate) fn has_zone_level_been_seen(
         &mut self,
         asset_server: &AssetServer,
+        overzone_buffer_manager: &mut OvermapBufferManager,
         zone_level: ZoneLevel,
     ) -> Option<SeenFrom> {
         self.zone_level.get(&zone_level).copied().or_else(|| {
             let overzone = Overzone::from(zone_level.zone);
-            if !self.loading.values().any(|o| *o == overzone) {
-                let handle = asset_server
-                    .load::<OvermapBuffer, _>(OvermapBufferPath::new(&self.sav_path, overzone).0);
-                self.loading.insert(handle, overzone);
-            }
+            overzone_buffer_manager.start_loading(asset_server, overzone);
             None
         })
     }
@@ -85,6 +67,6 @@ impl Explored {
     }
 
     pub(crate) fn loaded(&self) -> bool {
-        self.loading.is_empty() && !self.zone_level.is_empty()
+        !self.zone_level.is_empty()
     }
 }

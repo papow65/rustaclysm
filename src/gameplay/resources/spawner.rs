@@ -604,8 +604,8 @@ impl<'w, 's> Spawner<'w, 's> {
 #[derive(SystemParam)]
 pub(crate) struct ZoneSpawner<'w, 's> {
     pub(crate) asset_server: Res<'w, AssetServer>,
-    paths: Res<'w, Paths>,
     infos: Res<'w, Infos>,
+    pub(crate) overmap_buffer_manager: ResMut<'w, OvermapBufferManager>,
     pub(crate) map_manager: ResMut<'w, MapManager>,
     pub(crate) zone_level_ids: ResMut<'w, ZoneLevelIds>,
     pub(crate) zone_level_entities: ResMut<'w, ZoneLevelEntities>,
@@ -619,12 +619,10 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
         map_assets: &Assets<Map>,
         subzone_level: SubzoneLevel,
     ) {
-        match self.map_manager.get_subzone_level(
-            &self.asset_server,
-            map_assets,
-            &self.paths,
-            subzone_level,
-        ) {
+        match self
+            .map_manager
+            .get_subzone_level(&self.asset_server, map_assets, subzone_level)
+        {
             AssetState::Available { asset: submap } => {
                 self.spawn_subzone(submap, subzone_level);
             }
@@ -752,11 +750,11 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
             "Collapsed zone levels above ground may not be spawned"
         );
 
-        let Some(seen_from) = self
-            .spawner
-            .explored
-            .has_zone_level_been_seen(&self.asset_server, zone_level)
-        else {
+        let Some(seen_from) = self.spawner.explored.has_zone_level_been_seen(
+            &self.asset_server,
+            &mut self.overmap_buffer_manager,
+            zone_level,
+        ) else {
             return Err(());
         };
 
