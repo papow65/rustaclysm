@@ -601,17 +601,12 @@ impl<'w, 's> Spawner<'w, 's> {
     }
 }
 
-#[derive(Default, Resource)]
-pub(crate) struct Maps {
-    pub(crate) loading: Vec<Handle<Map>>,
-}
-
 #[derive(SystemParam)]
 pub(crate) struct ZoneSpawner<'w, 's> {
     pub(crate) asset_server: Res<'w, AssetServer>,
     paths: Res<'w, Paths>,
     infos: Res<'w, Infos>,
-    pub(crate) maps: ResMut<'w, Maps>,
+    pub(crate) map_manager: ResMut<'w, MapManager>,
     pub(crate) zone_level_ids: ResMut<'w, ZoneLevelIds>,
     pub(crate) zone_level_entities: ResMut<'w, ZoneLevelEntities>,
     pub(crate) subzone_level_entities: ResMut<'w, SubzoneLevelEntities>,
@@ -624,20 +619,23 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
         map_assets: &Assets<Map>,
         subzone_level: SubzoneLevel,
     ) {
-        let map_path = MapPath::new(&self.paths.world_path(), ZoneLevel::from(subzone_level));
-        if map_path.0.exists() {
-            let map_handle = self.asset_server.load(map_path.0);
-            if let Some(map) = map_assets.get(&map_handle) {
-                let submap = &map.0[subzone_level.index()];
+        match self.map_manager.get_subzone_level(
+            &self.asset_server,
+            map_assets,
+            &self.paths,
+            subzone_level,
+        ) {
+            AssetState::Available { asset: submap } => {
                 self.spawn_subzone(submap, subzone_level);
-            } else {
-                self.maps.loading.push(map_handle);
+            }
+            AssetState::Loading => {
                 // It will be spawned when it's fully loaded.
             }
-        } else {
-            let object_id = self.zone_level_ids.get(ZoneLevel::from(subzone_level));
-            let fallback = Submap::fallback(subzone_level, object_id);
-            self.spawn_subzone(&fallback, subzone_level);
+            AssetState::Nonexistent => {
+                let object_id = self.zone_level_ids.get(ZoneLevel::from(subzone_level));
+                let fallback = Submap::fallback(subzone_level, object_id);
+                self.spawn_subzone(&fallback, subzone_level);
+            }
         }
     }
 

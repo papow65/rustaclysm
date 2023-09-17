@@ -64,7 +64,7 @@ pub(crate) fn finish_loading(
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
     explored: Res<Explored>,
     subzone_level_entities: Res<SubzoneLevelEntities>,
-    maps: Res<Maps>,
+    map_manager: Res<MapManager>,
     mut counter: Local<u8>,
 ) {
     if 3 < *counter {
@@ -73,13 +73,13 @@ pub(crate) fn finish_loading(
             *counter,
             explored.loaded(),
             subzone_level_entities.loaded(),
-            maps.loading.is_empty()
+            map_manager.loading.is_empty()
         );
 
         // subzone_level_entities sometimes fails to load for unknown reason. In that case, we give control back to the user after a delay.
         let subzones_loaded = subzone_level_entities.loaded() || *counter == u8::MAX;
 
-        if subzones_loaded && explored.loaded() && maps.loading.is_empty() {
+        if subzones_loaded && explored.loaded() && map_manager.loading.is_empty() {
             eprintln!("Loading complete");
             next_progress_state.set(ProgressScreenState::Complete);
             next_gameplay_state.set(GameplayScreenState::Base);

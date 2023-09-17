@@ -3,7 +3,10 @@ mod explored;
 mod infos;
 mod instruction_queue;
 mod location;
+mod map_manager;
 mod model_factory;
+mod overmap_buffer_manager;
+mod overmap_manager;
 mod player_action_state;
 mod relative_segments;
 mod spawner;
@@ -13,9 +16,11 @@ mod zone_level_entities;
 mod zone_level_ids;
 
 pub(crate) use self::{
-    envir::*, explored::*, infos::*, instruction_queue::*, location::*, model_factory::*,
-    player_action_state::*, relative_segments::*, spawner::*, subzone_level_entities::*,
-    timeouts::*, zone_level_entities::*, zone_level_ids::*,
+    envir::*, explored::*, infos::*, instruction_queue::*, location::*, map_manager::*,
+    model_factory::*,
+    /*overmap_buffer_manager::*, overmap_manager::*,*/ player_action_state::*,
+    relative_segments::*, spawner::*, subzone_level_entities::*, timeouts::*,
+    zone_level_entities::*, zone_level_ids::*,
 };
 
 use crate::prelude::*;

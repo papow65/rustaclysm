@@ -350,7 +350,7 @@ pub(crate) fn handle_map_events(
                     zone_spawner.spawn_subzone(submap, subzone_level);
                 }
             }
-            zone_spawner.maps.loading.retain(|h| h != handle);
+            zone_spawner.map_manager.loading.retain(|h| h != handle);
         }
     }
 }
