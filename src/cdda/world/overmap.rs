@@ -260,7 +260,7 @@ pub(crate) struct Monster {
     armor_cut_bonus: u8,
     armor_bullet_bonus: u8,
     speed: u16,
-    speed_bonus: i8,
+    speed_bonus: i16,
     dodge_bonus: f32,
     block_bonus: u8,
     hit_bonus: f32,
@@ -290,7 +290,7 @@ pub(crate) struct Monster {
     no_extra_death_drops: bool,
     dead: bool,
     anger: i16,
-    morale: i8,
+    morale: i16,
     hallucination: bool,
     ammo: HashMap<String, i16>,
     underwater: bool,
@@ -310,4 +310,5 @@ pub(crate) struct Monster {
     next_patrol_point: Option<serde_json::Value>,
     patrol_route: Option<serde_json::Value>,
     horde_attraction: Option<serde_json::Value>,
+    battery_item: Option<serde_json::Value>,
 }
