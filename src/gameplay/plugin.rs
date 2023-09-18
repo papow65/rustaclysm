@@ -51,8 +51,9 @@ impl Plugin for GameplayPlugin {
         app.add_systems(
             Update,
             (
-                handle_overmap_buffer_events,
-                handle_map_events,
+                handle_overmap_buffer_events.run_if(on_event::<AssetEvent<OvermapBuffer>>()),
+                handle_overmap_events.run_if(on_event::<AssetEvent<Overmap>>()),
+                handle_map_events.run_if(on_event::<AssetEvent<Map>>()),
                 spawn_subzones_for_camera,
                 update_visualization_on_focus_move
                     .run_if(resource_exists_and_changed::<ElevationVisibility>()),

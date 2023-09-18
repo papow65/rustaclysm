@@ -52,7 +52,8 @@ impl AssetLoader for MapLoader {
         Box::pin(async move {
             let map = serde_json::from_slice::<Map>(bytes).map_err(|e| {
                 eprintln!(
-                    "Map loading error: {:?} {e:?}",
+                    "Map loading error: {:?} {:?} {e:?}",
+                    load_context.path(),
                     std::str::from_utf8(&bytes[0..40])
                 );
                 e

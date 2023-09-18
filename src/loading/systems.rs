@@ -63,19 +63,21 @@ pub(crate) fn finish_loading(
     mut next_progress_state: ResMut<NextState<ProgressScreenState>>,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
     overmap_buffer_manager: Res<OvermapBufferManager>,
+    overmap_manager: Res<OvermapManager>,
+    map_manager: Res<MapManager>,
     explored: Res<Explored>,
     subzone_level_entities: Res<SubzoneLevelEntities>,
-    map_manager: Res<MapManager>,
     mut counter: Local<u8>,
 ) {
     if 3 < *counter {
         println!(
-            "Loading {} {:?} {:?} {:?} {:?}",
+            "Loading status {}: {:?}, {:?}, {:?}, {:?}, and {:?}",
             *counter,
             overmap_buffer_manager.loaded(),
+            overmap_manager.loaded(),
+            map_manager.loaded(),
             explored.loaded(),
             subzone_level_entities.loaded(),
-            map_manager.loaded()
         );
 
         // subzone_level_entities sometimes fails to load for unknown reason. In that case, we give control back to the user after a delay.
@@ -83,8 +85,9 @@ pub(crate) fn finish_loading(
 
         if subzones_loaded
             && overmap_buffer_manager.loaded()
-            && explored.loaded()
+            && overmap_manager.loaded()
             && map_manager.loaded()
+            && explored.loaded()
         {
             eprintln!("Loading complete");
             next_progress_state.set(ProgressScreenState::Complete);

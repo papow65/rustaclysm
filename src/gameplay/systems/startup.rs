@@ -24,6 +24,7 @@ pub(crate) fn create_independent_resources(mut commands: Commands) {
     commands.insert_resource(SubzoneLevelEntities::default());
     commands.insert_resource(ZoneLevelEntities::default());
     commands.insert_resource(Explored::default());
+    commands.insert_resource(ZoneLevelIds::default());
     commands.insert_resource(InstructionQueue::default());
     commands.insert_resource(AppearanceCache::default());
     commands.insert_resource(MeshCaches::default());
@@ -60,11 +61,11 @@ pub(crate) fn create_dependent_resources(mut commands: Commands, paths: Res<Path
     let timestamp = Timestamp::new(sav.turn, season_length);
 
     commands.insert_resource(sav);
-    commands.insert_resource(MapManager::new(paths.world_path()));
     commands.insert_resource(OvermapBufferManager::new(paths.sav_path()));
+    commands.insert_resource(OvermapManager::new(paths.world_path()));
+    commands.insert_resource(MapManager::new(paths.world_path()));
     commands.insert_resource(TileLoader::new());
     commands.insert_resource(Timeouts::new(timestamp));
-    commands.insert_resource(ZoneLevelIds::new(paths.world_path()));
 }
 
 #[allow(clippy::needless_pass_by_value)]

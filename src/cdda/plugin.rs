@@ -1,4 +1,4 @@
-use crate::prelude::{Map, MapLoader, OvermapBuffer, OvermapBufferLoader};
+use crate::prelude::{Map, MapLoader, Overmap, OvermapBuffer, OvermapLoader};
 use bevy::prelude::*;
 
 pub(crate) struct CddaPlugin;
@@ -9,6 +9,7 @@ impl Plugin for CddaPlugin {
         app.init_asset_loader::<MapLoader>();
 
         app.add_asset::<OvermapBuffer>();
-        app.init_asset_loader::<OvermapBufferLoader>();
+        app.add_asset::<Overmap>();
+        app.init_asset_loader::<OvermapLoader>();
     }
 }

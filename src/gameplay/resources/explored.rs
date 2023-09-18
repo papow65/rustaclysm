@@ -1,6 +1,6 @@
 use crate::prelude::*;
 use bevy::{
-    prelude::{AssetServer, Resource},
+    prelude::{AssetServer, Assets, Resource},
     utils::HashMap,
 };
 
@@ -52,12 +52,13 @@ impl Explored {
     pub(crate) fn has_zone_level_been_seen(
         &mut self,
         asset_server: &AssetServer,
+        overzone_buffer_assets: &Assets<OvermapBuffer>,
         overzone_buffer_manager: &mut OvermapBufferManager,
         zone_level: ZoneLevel,
     ) -> Option<SeenFrom> {
         self.zone_level.get(&zone_level).copied().or_else(|| {
             let overzone = Overzone::from(zone_level.zone);
-            overzone_buffer_manager.start_loading(asset_server, overzone);
+            overzone_buffer_manager.get(asset_server, overzone_buffer_assets, overzone);
             None
         })
     }

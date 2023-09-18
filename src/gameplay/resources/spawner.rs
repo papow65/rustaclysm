@@ -604,8 +604,11 @@ impl<'w, 's> Spawner<'w, 's> {
 #[derive(SystemParam)]
 pub(crate) struct ZoneSpawner<'w, 's> {
     pub(crate) asset_server: Res<'w, AssetServer>,
+    pub(crate) overmap_buffer_assets: Res<'w, Assets<OvermapBuffer>>,
+    pub(crate) overmap_assets: Res<'w, Assets<Overmap>>,
     infos: Res<'w, Infos>,
     pub(crate) overmap_buffer_manager: ResMut<'w, OvermapBufferManager>,
+    pub(crate) overmap_manager: ResMut<'w, OvermapManager>,
     pub(crate) map_manager: ResMut<'w, MapManager>,
     pub(crate) zone_level_ids: ResMut<'w, ZoneLevelIds>,
     pub(crate) zone_level_entities: ResMut<'w, ZoneLevelEntities>,
@@ -630,9 +633,15 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
                 // It will be spawned when it's fully loaded.
             }
             AssetState::Nonexistent => {
-                let object_id = self.zone_level_ids.get(ZoneLevel::from(subzone_level));
-                let fallback = Submap::fallback(subzone_level, object_id);
-                self.spawn_subzone(&fallback, subzone_level);
+                if let Some(object_id) = self.zone_level_ids.get(
+                    &self.asset_server,
+                    &self.overmap_assets,
+                    &mut self.overmap_manager,
+                    ZoneLevel::from(subzone_level),
+                ) {
+                    let fallback = Submap::fallback(subzone_level, object_id);
+                    self.spawn_subzone(&fallback, subzone_level);
+                }
             }
         }
     }
@@ -752,13 +761,21 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
 
         let Some(seen_from) = self.spawner.explored.has_zone_level_been_seen(
             &self.asset_server,
+            &self.overmap_buffer_assets,
             &mut self.overmap_buffer_manager,
             zone_level,
         ) else {
             return Err(());
         };
 
-        let id = self.zone_level_ids.get(zone_level);
+        let Some(id) = self.zone_level_ids.get(
+            &self.asset_server,
+            &self.overmap_assets,
+            &mut self.overmap_manager,
+            zone_level,
+        ) else {
+            return Err(());
+        };
         let zone_level_info = self.infos.zone_level(id);
 
         let name = ObjectName::new(

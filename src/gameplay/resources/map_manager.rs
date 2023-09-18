@@ -25,6 +25,7 @@ impl MapManager {
         if map_path.0.exists() {
             let map_handle = asset_server.load(map_path.0);
             if let Some(map) = map_assets.get(&map_handle) {
+                self.mark_loaded(&map_handle);
                 AssetState::Available { asset: map }
             } else {
                 self.loading.push(map_handle);
@@ -51,7 +52,7 @@ impl MapManager {
         }
     }
 
-    pub(crate) fn finish_loading(&mut self, handle: &Handle<Map>) {
+    pub(crate) fn mark_loaded(&mut self, handle: &Handle<Map>) {
         self.loading.retain(|h| h != handle);
     }
 
