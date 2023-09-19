@@ -330,7 +330,7 @@ pub(crate) fn handle_map_events(
 ) {
     for map_asset_event in &mut map_asset_events {
         if let AssetEvent::Created { handle } = map_asset_event {
-            let map = &map_assets.get(handle).expect("Map loaded");
+            let map = map_assets.get(handle).expect("Map loaded");
             for submap in &map.0 {
                 let subzone_level = SubzoneLevel {
                     x: submap.coordinates.0,
@@ -358,7 +358,9 @@ pub(crate) fn handle_map_events(
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn handle_overmap_buffer_events(
     mut overmap_buffer_asset_events: EventReader<AssetEvent<OvermapBuffer>>,
+    asset_server: Res<AssetServer>,
     overmap_buffer_assets: Res<Assets<OvermapBuffer>>,
+    overmap_assets: Res<Assets<Overmap>>,
     player_action_state: Res<PlayerActionState>,
     mut zone_spawner: ZoneSpawner,
     players: Query<&Pos, With<Player>>,
@@ -366,17 +368,24 @@ pub(crate) fn handle_overmap_buffer_events(
 ) {
     for overmap_buffer_asset_event in &mut overmap_buffer_asset_events {
         if let AssetEvent::Created { handle } = overmap_buffer_asset_event {
-            let overmap_buffer = overmap_buffer_assets.get(handle).expect("Map loaded");
             let overzone = zone_spawner.overmap_buffer_manager.mark_loaded(handle);
+
+            let overmap_buffer = overmap_buffer_assets.get(handle).expect("Map loaded");
             zone_spawner.spawner.explored.load(overzone, overmap_buffer);
 
-            load_overmap(
-                &player_action_state,
-                &mut zone_spawner,
-                &players,
-                &cameras,
-                overzone,
-            );
+            if let AssetState::Available { .. } =
+                zone_spawner
+                    .overmap_manager
+                    .get_overmap(&asset_server, &overmap_assets, overzone)
+            {
+                load_overmap(
+                    &player_action_state,
+                    &mut zone_spawner,
+                    &players,
+                    &cameras,
+                    overzone,
+                );
+            }
         }
     }
 }
@@ -385,7 +394,7 @@ pub(crate) fn handle_overmap_buffer_events(
 pub(crate) fn handle_overmap_events(
     mut overmap_asset_events: EventReader<AssetEvent<Overmap>>,
     asset_server: Res<AssetServer>,
-    overmap_bufer_assets: Res<Assets<OvermapBuffer>>,
+    overmap_buffer_assets: Res<Assets<OvermapBuffer>>,
     overmap_assets: Res<Assets<Overmap>>,
     player_action_state: Res<PlayerActionState>,
     mut zone_spawner: ZoneSpawner,
@@ -394,21 +403,24 @@ pub(crate) fn handle_overmap_events(
 ) {
     for overmap_asset_event in &mut overmap_asset_events {
         if let AssetEvent::Created { handle } = overmap_asset_event {
-            let overmap = overmap_assets.get(handle).expect("Overmap loaded");
             let overzone = zone_spawner.overmap_manager.mark_loaded(handle);
+
+            let overmap = overmap_assets.get(handle).expect("Overmap loaded");
             zone_spawner.zone_level_ids.load(overzone, overmap);
 
-            zone_spawner
-                .overmap_buffer_manager
-                .get(&asset_server, &overmap_bufer_assets, overzone);
-
-            load_overmap(
-                &player_action_state,
-                &mut zone_spawner,
-                &players,
-                &cameras,
+            if let AssetState::Available { .. } = zone_spawner.overmap_buffer_manager.get(
+                &asset_server,
+                &overmap_buffer_assets,
                 overzone,
-            );
+            ) {
+                load_overmap(
+                    &player_action_state,
+                    &mut zone_spawner,
+                    &players,
+                    &cameras,
+                    overzone,
+                );
+            }
         }
     }
 }
@@ -440,9 +452,8 @@ fn load_overmap(
                         &visible_region,
                         &focus,
                     );
-                    zone_spawner
-                        .spawn_collapsed_zone_level(zone_level, &visibility)
-                        .ok();
+                    let result = zone_spawner.spawn_collapsed_zone_level(zone_level, &visibility);
+                    assert!(result.is_ok(), "{zone_level:?}");
                 }
             }
         }

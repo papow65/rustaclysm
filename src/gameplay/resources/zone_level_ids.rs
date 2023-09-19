@@ -7,6 +7,7 @@ use bevy::{
 #[derive(Default, Resource)]
 pub(crate) struct ZoneLevelIds {
     names: HashMap<ZoneLevel, ObjectId>,
+    loaded_overzones: Vec<Overzone>,
 }
 
 impl ZoneLevelIds {
@@ -37,14 +38,17 @@ impl ZoneLevelIds {
     }
 
     pub(crate) fn load(&mut self, overzone: Overzone, overmap: &Overmap) {
-        for level in Level::ALL {
-            self.names.extend(
-                overmap.layers[level.index()]
-                    .0
-                    .load_as_overzone(overzone, level)
-                    .into_iter()
-                    .map(|(k, v)| (k, v.clone())),
-            );
+        if !self.loaded_overzones.contains(&overzone) {
+            for level in Level::ALL {
+                self.names.extend(
+                    overmap.layers[level.index()]
+                        .0
+                        .load_as_overzone(overzone, level)
+                        .into_iter()
+                        .map(|(k, v)| (k, v.clone())),
+                );
+            }
+            self.loaded_overzones.push(overzone);
         }
     }
 }
