@@ -4,7 +4,6 @@ use bevy::{
     utils::{Entry, HashMap},
 };
 
-// TODO Are the tracked entities useful somewhere?
 #[derive(Default, Resource)]
 pub(crate) struct SubzoneLevelEntities {
     subzone_levels: HashMap<SubzoneLevel, Entity>,

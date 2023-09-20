@@ -2,7 +2,7 @@ use crate::prelude::*;
 use bevy::{prelude::*, utils::HashSet};
 use std::time::Instant;
 
-const MAX_EXPAND_DISTANCE: i32 = 20;
+const MAX_EXPAND_DISTANCE: i32 = 10;
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn spawn_subzones_for_camera(
@@ -46,8 +46,8 @@ pub(crate) fn spawn_subzones_for_camera(
     log_if_slow("spawn_subzones_for_camera", start);
 }
 
-fn subzones_in_sight_distance(focus_pos: Pos) -> Region {
-    let from = SubzoneLevel::from(
+fn zones_in_sight_distance(focus_pos: Pos) -> Region {
+    let from = Zone::from(
         focus_pos
             .offset(PosOffset {
                 x: -MAX_VISIBLE_DISTANCE,
@@ -56,7 +56,7 @@ fn subzones_in_sight_distance(focus_pos: Pos) -> Region {
             })
             .unwrap(),
     );
-    let to = SubzoneLevel::from(
+    let to = Zone::from(
         focus_pos
             .offset(PosOffset {
                 x: MAX_VISIBLE_DISTANCE,
@@ -65,26 +65,25 @@ fn subzones_in_sight_distance(focus_pos: Pos) -> Region {
             })
             .unwrap(),
     );
-    Region::from(&SubzoneRegion::new(from.x..=to.x, from.z..=to.z))
+    Region::from(&ZoneRegion::new(from.x..=to.x, from.z..=to.z))
 }
 
 /** Upper limit for expanding subzones */
-fn maximal_expanded_subzones(player_subzone_level: SubzoneLevel) -> Region {
-    let x_from = player_subzone_level.x - MAX_EXPAND_DISTANCE;
-    let x_to = player_subzone_level.x + MAX_EXPAND_DISTANCE;
-    let z_from = player_subzone_level.z - MAX_EXPAND_DISTANCE;
-    let z_to = player_subzone_level.z + MAX_EXPAND_DISTANCE;
+fn maximal_expanded_zones(player_zone: Zone) -> Region {
+    let x_from = player_zone.x - MAX_EXPAND_DISTANCE;
+    let x_to = player_zone.x + MAX_EXPAND_DISTANCE;
+    let z_from = player_zone.z - MAX_EXPAND_DISTANCE;
+    let z_to = player_zone.z + MAX_EXPAND_DISTANCE;
 
-    Region::from(&SubzoneRegion::new(x_from..=x_to, z_from..=z_to))
+    Region::from(&ZoneRegion::new(x_from..=x_to, z_from..=z_to))
 }
 
-/** Region of expanded subzones */
+/** Region of expanded zones */
 fn expanded_region(focus: &Focus, camera: &Camera, global_transform: &GlobalTransform) -> Region {
-    let minimal_expanded_subzones = subzones_in_sight_distance(Pos::from(focus));
-    let maximal_expanded_subzones = maximal_expanded_subzones(SubzoneLevel::from(Pos::from(focus)));
+    let minimal_expanded_zones = zones_in_sight_distance(Pos::from(focus));
+    let maximal_expanded_zones = maximal_expanded_zones(Zone::from(Pos::from(focus)));
 
-    visible_region(camera, global_transform)
-        .clamp(&minimal_expanded_subzones, &maximal_expanded_subzones)
+    visible_region(camera, global_transform).clamp(&minimal_expanded_zones, &maximal_expanded_zones)
 }
 
 /** Region visible on the camera, for both expanded subzones and collapsed zones */
@@ -97,7 +96,7 @@ fn visible_region(camera: &Camera, global_transform: &GlobalTransform) -> Region
         return Region::new(&Vec::new());
     };
 
-    let mut subzone_levels = Vec::new();
+    let mut zone_levels = Vec::new();
     for level in Level::ALL {
         for corner in [
             Vec2::new(corner_min.x, corner_min.y),
@@ -116,12 +115,12 @@ fn visible_region(camera: &Camera, global_transform: &GlobalTransform) -> Region
             if 0.0 < k {
                 let ground_x = origin.x + k * direction.x;
                 let ground_z = origin.z + k * direction.z;
-                subzone_levels.push(SubzoneLevel::from(Pos {
+                zone_levels.push(ZoneLevel::from(Pos {
                     x: ground_x.floor() as i32,
                     level,
                     z: ground_z.floor() as i32,
                 }));
-                subzone_levels.push(SubzoneLevel::from(Pos {
+                zone_levels.push(ZoneLevel::from(Pos {
                     x: ground_x.ceil() as i32,
                     level,
                     z: ground_z.ceil() as i32,
@@ -130,7 +129,7 @@ fn visible_region(camera: &Camera, global_transform: &GlobalTransform) -> Region
         }
     }
 
-    Region::new(&subzone_levels)
+    Region::new(&zone_levels)
 }
 
 fn spawn_expanded_subzone_levels(
@@ -138,13 +137,16 @@ fn spawn_expanded_subzone_levels(
     zone_spawner: &mut ZoneSpawner,
     expanded_region: &Region,
 ) {
-    for subzone_level in expanded_region.subzone_levels() {
-        let missing = zone_spawner
-            .subzone_level_entities
-            .get(subzone_level)
-            .is_none();
-        if missing {
-            zone_spawner.spawn_expanded_subzone_level(map_assets, subzone_level);
+    for zone_level in expanded_region.zone_levels() {
+        for subzone_level in zone_level.subzone_levels() {
+            let missing = zone_spawner
+                .subzone_level_entities
+                .get(subzone_level)
+                .is_none();
+            if missing {
+                // TODO subzone spawn event
+                zone_spawner.spawn_expanded_subzone_level(map_assets, subzone_level);
+            }
         }
     }
 }
@@ -152,15 +154,16 @@ fn spawn_expanded_subzone_levels(
 fn despawn_expanded_subzone_levels(
     commands: &mut Commands,
     zone_spawner: &mut ZoneSpawner,
-    expanded_zone_levels: &Query<(Entity, &SubzoneLevel), Without<Collapsed>>,
+    expanded_subzone_levels: &Query<(Entity, &SubzoneLevel), Without<Collapsed>>,
     expanded_region: &Region,
 ) {
-    expanded_zone_levels
+    expanded_subzone_levels
         .iter()
         .filter(|(_, &expanded_subzone_level)| {
-            !expanded_region.contains_subzone_level(expanded_subzone_level)
+            !expanded_region.contains_zone_level(ZoneLevel::from(expanded_subzone_level))
         })
         .for_each(|(e, &expanded_subzone_level)| {
+            // TODO collapse zone event
             commands.entity(e).despawn_recursive();
             zone_spawner.subzone_level_entities.remove(e);
 
@@ -225,16 +228,17 @@ pub(crate) fn update_collapsed_zone_levels(
     }
     //println!("update_collapsed_zone_levels refresh");
     let focus = Focus::new(&player_action_state, player_pos);
-    let sight_region = subzones_in_sight_distance(Pos::from(&focus));
+    let sight_region = zones_in_sight_distance(Pos::from(&focus));
     //println!("Sight region: {:?}", &sight_region);
 
     for zone_level in visible_region
-        .subzone_levels()
+        .zone_levels()
         .into_iter()
         .map(ZoneLevel::from)
         .collect::<HashSet<_>>()
     {
         if zone_spawner.zone_level_entities.get(zone_level).is_none() {
+            // TODO collasped zone spawn event
             let visibility = collapsed_visibility(
                 &mut zone_spawner,
                 zone_level,
@@ -252,9 +256,8 @@ pub(crate) fn update_collapsed_zone_levels(
     //println!("Recalculated region: {:?}", &recalculated_region);
 
     for (&collapsed_zone_level, children) in collapsed_zone_levels.iter() {
-        if recalculated_region
-            .contains_subzone_level(SubzoneLevel::from(collapsed_zone_level.base_pos()))
-        {
+        if recalculated_region.contains_zone_level(collapsed_zone_level) {
+            // TODO update visualization event
             update_zone_level_visualization(
                 &mut commands,
                 &mut zone_spawner,
@@ -306,8 +309,8 @@ fn collapsed_visibility(
 ) -> Visibility {
     if zone_level.level == Level::from(focus).min(Level::ZERO)
         && zone_level.subzone_levels().iter().all(|subzone_level| {
-            visible_region.contains_subzone_level(*subzone_level)
-                && !sight_region.contains_subzone_level(*subzone_level)
+            visible_region.contains_zone_level(ZoneLevel::from(*subzone_level))
+                && !sight_region.contains_zone_level(ZoneLevel::from(*subzone_level))
                 && zone_spawner.spawner.explored.has_zone_level_been_seen(
                     &zone_spawner.asset_server,
                     &zone_spawner.overmap_buffer_assets,
@@ -436,7 +439,7 @@ fn load_overmap(
     let &player_pos = players.single();
     let visible_region = visible_region(camera, &global_transform).ground_only();
     let focus = Focus::new(player_action_state, player_pos);
-    let sight_region = subzones_in_sight_distance(Pos::from(&focus));
+    let sight_region = zones_in_sight_distance(Pos::from(&focus));
 
     let (x_range, z_range) = overzone.xz_ranges();
     for x in x_range {
