@@ -34,6 +34,10 @@ pub(crate) fn create_independent_resources(mut commands: Commands) {
     commands.insert_resource(StatusTextSections::default());
     commands.insert_resource(VisualizationUpdate::Smart);
     commands.insert_resource(Events::<Message>::default());
+    commands.insert_resource(Events::<SpawnSubzoneLevel>::default());
+    commands.insert_resource(Events::<CollapseZoneLevel>::default());
+    commands.insert_resource(Events::<SpawnZoneLevel>::default());
+    commands.insert_resource(Events::<UpdateZoneLevelVisibility>::default());
     commands.insert_resource(Events::<ActorEvent<Stay>>::default());
     commands.insert_resource(Events::<ActorEvent<Step>>::default());
     commands.insert_resource(Events::<ActorEvent<Attack>>::default());

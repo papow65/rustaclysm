@@ -54,10 +54,36 @@ impl Plugin for GameplayPlugin {
                 handle_overmap_buffer_events.run_if(on_event::<AssetEvent<OvermapBuffer>>()),
                 handle_overmap_events.run_if(on_event::<AssetEvent<Overmap>>()),
                 handle_map_events.run_if(on_event::<AssetEvent<Map>>()),
-                spawn_subzones_for_camera,
+                (
+                    spawn_subzones_for_camera,
+                    (
+                        spawn_subzone_levels.run_if(
+                            resource_exists::<Events<SpawnSubzoneLevel>>()
+                                .and_then(on_event::<SpawnSubzoneLevel>()),
+                        ),
+                        collapse_zone_levels.run_if(
+                            resource_exists::<Events<CollapseZoneLevel>>()
+                                .and_then(on_event::<CollapseZoneLevel>()),
+                        ),
+                    ),
+                )
+                    .chain(),
                 update_visualization_on_focus_move
                     .run_if(resource_exists_and_changed::<ElevationVisibility>()),
-                update_collapsed_zone_levels,
+                (
+                    update_collapsed_zone_levels,
+                    (
+                        spawn_zone_levels.run_if(
+                            resource_exists::<Events<SpawnZoneLevel>>()
+                                .and_then(on_event::<SpawnZoneLevel>()),
+                        ),
+                        update_zone_level_visibility.run_if(
+                            resource_exists::<Events<UpdateZoneLevelVisibility>>()
+                                .and_then(on_event::<UpdateZoneLevelVisibility>()),
+                        ),
+                    ),
+                )
+                    .chain(),
                 update_camera_offset.run_if(resource_exists_and_changed::<CameraOffset>()),
             )
                 .run_if(in_state(ApplicationState::Gameplay)),
