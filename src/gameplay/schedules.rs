@@ -5,6 +5,21 @@ use bevy::{
 };
 use std::time::{Duration, Instant};
 
+#[derive(Debug, PartialEq)]
+pub(crate) enum DisplayHandling {
+    Refresh,
+    Keep,
+}
+
+impl From<usize> for DisplayHandling {
+    fn from(value: usize) -> Self {
+        match value {
+            0 => Self::Keep,
+            _ => Self::Refresh,
+        }
+    }
+}
+
 /** This is only run when the game when any character acts, sometimes multiple times per tick. */
 #[derive(ScheduleLabel, Debug, Hash, PartialEq, Eq, Clone)]
 struct BehaviorSchedule;
@@ -13,7 +28,7 @@ struct BehaviorSchedule;
 #[derive(ScheduleLabel, Debug, Hash, PartialEq, Eq, Clone)]
 struct DisplayBehaviorSchedule;
 
-pub(crate) fn create_behavior_schedule(app: &mut App) {
+pub(crate) fn create_schedules(app: &mut App) {
     app.init_schedule(BehaviorSchedule);
 
     app.add_systems(
@@ -124,7 +139,7 @@ pub(crate) fn create_behavior_schedule(app: &mut App) {
     );
 }
 
-pub(crate) fn run_behavior_schedule(world: &mut World) {
+pub(crate) fn run_behavior_schedule(world: &mut World) -> DisplayHandling {
     let start = Instant::now();
 
     let mut count = 0;
@@ -133,11 +148,22 @@ pub(crate) fn run_behavior_schedule(world: &mut World) {
         count += 1;
     }
 
-    if 0 < count {
+    log_if_slow("run_behavior_schedule", start);
+
+    DisplayHandling::from(count)
+}
+
+pub(crate) fn run_behavior_display_schedule(
+    In(display_handling): In<DisplayHandling>,
+    world: &mut World,
+) {
+    let start = Instant::now();
+
+    if display_handling == DisplayHandling::Refresh {
         world.run_schedule(DisplayBehaviorSchedule);
     }
 
-    log_if_slow("run_behavior_schedule", start);
+    log_if_slow("run_behavior_display_schedule", start);
 }
 
 /** All NPC mave a timeout and the player has an empty instruction queue */
@@ -148,7 +174,7 @@ fn waiting_for_user_input(world: &mut World) -> bool {
 }
 
 fn over_time(start: &Instant, count: usize) -> bool {
-    let over_time = Duration::from_millis(2) * 3 / 4 < start.elapsed();
+    let over_time = Duration::from_secs_f32(0.0008) < start.elapsed();
     if over_time {
         eprintln!("run_behavior_schedule could ony handle {count} iterations before the timeout");
     }

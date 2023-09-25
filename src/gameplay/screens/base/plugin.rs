@@ -13,7 +13,7 @@ impl Plugin for BaseScreenPlugin {
                     manage_keyboard_input
                         .before(/* process examining input */ update_camera_base)
                         .before(/* process zooming input */ update_camera_offset),
-                    run_behavior_schedule,
+                    run_behavior_schedule.pipe(run_behavior_display_schedule),
                 )
                     .chain(),
             )

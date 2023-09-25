@@ -3,12 +3,12 @@ mod core;
 mod events;
 mod plugin;
 mod resources;
-mod schedule;
+mod schedules;
 mod screens;
 mod states;
 mod systems;
 
 pub(crate) use self::{
-    components::*, core::*, events::*, plugin::*, resources::*, schedule::*, screens::*, states::*,
-    systems::*,
+    components::*, core::*, events::*, plugin::*, resources::*, schedules::*, screens::*,
+    states::*, systems::*,
 };

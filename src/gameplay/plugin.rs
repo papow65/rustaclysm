@@ -23,7 +23,7 @@ impl Plugin for GameplayPlugin {
         })
         .insert_resource(ElevationVisibility::default());
 
-        create_behavior_schedule(app);
+        create_schedules(app);
 
         // Loading is slow, so we start loading it immediately.
         // Loading is slow, so we load it in the background as an asset.

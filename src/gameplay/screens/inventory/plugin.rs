@@ -12,7 +12,11 @@ impl Plugin for InventoryScreenPlugin {
             (
                 manage_inventory_keyboard_input,
                 clear_inventory.pipe(update_inventory),
-                (manage_inventory_button_input, run_behavior_schedule).chain(),
+                (
+                    manage_inventory_button_input,
+                    run_behavior_schedule.pipe(run_behavior_display_schedule),
+                )
+                    .chain(),
             )
                 .run_if(in_state(GameplayScreenState::Inventory)),
         );
