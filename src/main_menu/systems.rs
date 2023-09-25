@@ -280,8 +280,8 @@ pub(crate) fn manage_main_menu_button_input(
                     next_progress_state.set(ProgressScreenState::Loading);
                 }
                 (None, true) => app_exit_events.send(AppExit),
-                (play, quit) => {
-                    panic!("{play:?} {quit:?}");
+                _ => {
+                    // This may happen when a button click causes a return to the main menu
                 }
             }
         }
