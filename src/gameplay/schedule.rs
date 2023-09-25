@@ -119,7 +119,7 @@ pub(crate) fn create_behavior_schedule(app: &mut App) {
             update_status_player_wielded.run_if(resource_exists_and_changed::<Timeouts>()),
             update_status_enemies.run_if(resource_exists_and_changed::<Timeouts>()),
             update_status_detais.run_if(resource_exists_and_changed::<PlayerActionState>()),
-            update_log,
+            update_log.run_if(on_event::<Message>()),
         ),
     );
 }
