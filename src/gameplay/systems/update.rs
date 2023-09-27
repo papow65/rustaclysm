@@ -103,13 +103,22 @@ fn update_visualization(
             update_material(commands, children, child_items, last_seen);
         }
 
-        // The player character can see things not shown to the player, like the top of a tower when walking next to it.
-        let pos_shown = focus.is_pos_shown(pos, elevation_visibility);
-        *visibility = if pos_shown && last_seen.shown(speed.is_some()) {
-            Visibility::Inherited
-        } else {
-            Visibility::Hidden
-        };
+        *visibility = calculate_visibility(focus, pos, elevation_visibility, last_seen, speed);
+    }
+}
+
+fn calculate_visibility(
+    focus: &Focus,
+    pos: Pos,
+    elevation_visibility: ElevationVisibility,
+    last_seen: &LastSeen,
+    speed: Option<&BaseSpeed>,
+) -> Visibility {
+    // The player character can see things not shown to the player, like the top of a tower when walking next to it.
+    if focus.is_pos_shown(pos, elevation_visibility) && last_seen.shown(speed.is_some()) {
+        Visibility::Inherited
+    } else {
+        Visibility::Hidden
     }
 }
 
@@ -197,33 +206,50 @@ pub(crate) fn update_visualization_on_focus_move(
         || *elevation_visibility != *last_elevation_visibility
         || *visualization_update == VisualizationUpdate::Forced
     {
-        let currently_visible = envir.currently_visible(&clock, player_pos); // does not depend on focus
+        if let (
+            &PlayerActionState::ExaminingPos(_) | &PlayerActionState::ExaminingZoneLevel(_),
+            VisualizationUpdate::Smart,
+        ) = (&*player_action_state, *visualization_update)
+        {
+            let mut count = 0;
+            for (&pos, mut visibility, last_seen, _, speed, _) in &mut items {
+                count += 1;
+                if *last_seen != LastSeen::Never {
+                    *visibility =
+                        calculate_visibility(&focus, pos, *elevation_visibility, &last_seen, speed);
+                }
+            }
 
-        let mut count = 0;
-        for (&pos, mut visibility, mut last_seen, accessible, speed, children) in &mut items {
-            count += 1;
-            update_visualization(
-                &mut commands,
-                &mut explored,
-                &currently_visible,
-                *elevation_visibility,
-                &focus,
-                pos,
-                &mut visibility,
-                &mut last_seen,
-                accessible,
-                speed,
-                children,
-                &child_items,
-            );
+            println!("{count}x visibility updated");
+        } else {
+            let currently_visible = envir.currently_visible(&clock, player_pos); // does not depend on focus
+
+            let mut count = 0;
+            for (&pos, mut visibility, mut last_seen, accessible, speed, children) in &mut items {
+                count += 1;
+                update_visualization(
+                    &mut commands,
+                    &mut explored,
+                    &currently_visible,
+                    *elevation_visibility,
+                    &focus,
+                    pos,
+                    &mut visibility,
+                    &mut last_seen,
+                    accessible,
+                    speed,
+                    children,
+                    &child_items,
+                );
+            }
+
+            println!("{count}x visualization updated");
         }
 
         *last_focus = focus;
         *previous_camera_global_transform = camera_global_transform;
         *last_elevation_visibility = *elevation_visibility;
         *visualization_update = VisualizationUpdate::Smart;
-
-        println!("{count} visualization updated");
     }
 
     log_if_slow("update_visualization_on_focus_move", start);
