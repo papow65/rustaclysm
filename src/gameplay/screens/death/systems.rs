@@ -19,6 +19,7 @@ pub(crate) fn spawn_death_screen(mut commands: Commands, fonts: Res<Fonts>) {
             },
             ..default()
         })
+        .insert(StateBound::<GameplayScreenState>::default())
         .with_children(|parent| {
             parent
                 .spawn(NodeBundle {
