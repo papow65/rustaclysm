@@ -10,10 +10,6 @@ use bevy::{
     pbr::StandardMaterial,
     prelude::{AlphaMode, Assets, Color, Component, Handle},
 };
-use rand::{
-    distributions::{Distribution, Uniform},
-    thread_rng,
-};
 use std::ops::{Add, Sub};
 
 pub(crate) use {container::*, faction::*, object_name::*, player::*, pos::*, stats::*};
@@ -125,10 +121,9 @@ impl Melee {
     pub(crate) fn damage(&self, melee_weapon: Option<&ItemInfo>) -> u16 {
         assert!(0 < self.dices, "{}", self.dices);
         assert!(0 < self.sides, "{}", self.sides);
-        let mut rng = thread_rng();
-        let between =
-            Uniform::from(1..=self.sides + melee_weapon.map_or(0, ItemInfo::melee_damage));
-        (1..=self.dices).map(|_| between.sample(&mut rng)).sum()
+        (1..=self.dices)
+            .map(|_| fastrand::u16(1..=self.sides + melee_weapon.map_or(0, ItemInfo::melee_damage)))
+            .sum()
     }
 }
 

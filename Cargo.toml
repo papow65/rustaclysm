@@ -17,7 +17,7 @@ either = "1"
 float-ord = "0.3"
 glob = "0.3"
 pathfinding = "4"
-rand = "0.8"
+fastrand = "2"
 regex = "1"
 serde = { version = "1", features = ["derive", "rc" ] }
 serde_json = "1"

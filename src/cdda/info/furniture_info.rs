@@ -1,6 +1,5 @@
 use crate::prelude::{Flags, ItemName, ObjectId};
 use bevy::utils::HashMap;
-use rand::{thread_rng, Rng};
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
@@ -73,7 +72,7 @@ impl CountRange {
     pub(crate) fn random(&self) -> u32 {
         match self {
             Self::Fixed(fixed) => *fixed,
-            Self::FromTo(from, to) => thread_rng().gen_range(*from..=*to),
+            Self::FromTo(from, to) => fastrand::u32(*from..=*to),
         }
     }
 }
@@ -83,7 +82,7 @@ pub(crate) struct Probability(u8);
 
 impl Probability {
     pub(crate) fn random(&self) -> bool {
-        thread_rng().gen_range(0..=100) <= self.0
+        fastrand::u8(0..100) < self.0
     }
 }
 

@@ -5,8 +5,6 @@ use pathfinding::{
     num_traits::Zero,
     prelude::{build_path, dijkstra_all},
 };
-use rand::prelude::*;
-use rand::seq::SliceRandom;
 use std::{mem::discriminant, ops::Add};
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -200,24 +198,22 @@ impl Faction {
         factions: &[(Pos, &Self)],
         actor: &ActorItem,
     ) -> Option<PlannedAction> {
-        let mut random = rand::thread_rng();
-
-        if random.gen::<f32>() < 0.3 {
-            envir
+        if fastrand::u8(0..10) < 3 {
+            let wander_options = envir
                 .nbors_for_moving(*actor.pos, None, self.intelligence(), actor.speed())
                 .filter(|(pos, _)| factions.iter().all(|(other_pos, _)| pos != other_pos))
                 .map(|(pos, _)| pos)
-                .collect::<Vec<Pos>>()
-                .choose(&mut random)
-                .map(|&pos| {
-                    if envir.find_character(pos).is_some() {
-                        PlannedAction::Attack { target: pos }
-                    } else if envir.find_smashable(pos).is_some() {
-                        PlannedAction::Smash { target: pos }
-                    } else {
-                        PlannedAction::Step { to: pos }
-                    }
-                })
+                .collect::<Vec<Pos>>();
+
+            fastrand::choice(wander_options).map(|pos| {
+                if envir.find_character(pos).is_some() {
+                    PlannedAction::Attack { target: pos }
+                } else if envir.find_smashable(pos).is_some() {
+                    PlannedAction::Smash { target: pos }
+                } else {
+                    PlannedAction::Step { to: pos }
+                }
+            })
         } else {
             None
         }

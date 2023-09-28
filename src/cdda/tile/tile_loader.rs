@@ -1,7 +1,6 @@
 use crate::prelude::*;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
-use rand::seq::SliceRandom;
 use std::{fs::read_to_string, path::PathBuf};
 
 #[derive(Debug)]
@@ -37,8 +36,8 @@ impl TileInfo {
 
     fn sprite_numbers(&self) -> (Option<SpriteNumber>, Option<SpriteNumber>) {
         (
-            self.foreground.choose(&mut rand::thread_rng()).copied(),
-            self.background.choose(&mut rand::thread_rng()).copied(),
+            fastrand::choice(&self.foreground).copied(),
+            fastrand::choice(&self.background).copied(),
         )
     }
 }
