@@ -10,18 +10,18 @@ exclude = [ "/screenshots/" ]
 edition = "2021"
 
 [dependencies]
-bevy = { version = "0.11", default-features = false, features = [ "bevy_asset", "bevy_core_pipeline", "bevy_pbr", "bevy_sprite", "bevy_text", "bevy_ui", "ktx2", "png", "tonemapping_luts", "wayland", "x11", "zstd" ] }
-pathfinding = "4"
-bresenham = "0.1"
-rand = "0.8"
-serde_json = "1"
-glob = "0.3"
-float-ord = "0.3"
-serde = { version = "1", features = ["derive", "rc" ] }
-time = "0.3"
 base64 = "0.21"
-regex = "1"
+bevy = { version = "0.11", default-features = false, features = [ "bevy_asset", "bevy_core_pipeline", "bevy_pbr", "bevy_sprite", "bevy_text", "bevy_ui", "ktx2", "png", "tonemapping_luts", "wayland", "x11", "zstd" ] }
+bresenham = "0.1"
 either = "1"
+float-ord = "0.3"
+glob = "0.3"
+pathfinding = "4"
+rand = "0.8"
+regex = "1"
+serde = { version = "1", features = ["derive", "rc" ] }
+serde_json = "1"
+time = "0.3"
 
 [profile.dev]
 opt-level = 3 # inspired by https://bevy-cheatbook.github.io/pitfalls/performance.html
