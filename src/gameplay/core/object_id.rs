@@ -68,7 +68,10 @@ impl ObjectId {
         transform2d: &Transform2d,
         category: &ObjectCategory,
     ) -> ModelShape {
-        if category == &ObjectCategory::ZoneLevel || self.0.starts_with("t_rock_floor") {
+        if category == &ObjectCategory::ZoneLevel
+            || self.0.starts_with("t_rock_floor")
+            || self.0.starts_with("t_rock_roof")
+        {
             ModelShape::Plane {
                 orientation: SpriteOrientation::Horizontal,
                 transform2d: transform2d.clone(),
