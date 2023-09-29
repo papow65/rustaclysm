@@ -1,5 +1,5 @@
 use crate::prelude::{Level, Zone, ZoneLevel};
-use std::ops::RangeInclusive;
+use std::{fmt, ops::RangeInclusive};
 
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct ZoneRegion {
@@ -29,7 +29,7 @@ impl ZoneRegion {
     }
 }
 
-#[derive(Clone, Default, Debug, PartialEq)]
+#[derive(Clone, Default, PartialEq)]
 pub(crate) struct Region {
     zone_regions: [Option<ZoneRegion>; Level::AMOUNT],
 }
@@ -38,27 +38,19 @@ impl Region {
     pub(crate) fn new(zone_levels: &[ZoneLevel]) -> Self {
         Self {
             zone_regions: Level::ALL.map(|level| {
-                let zone_levels = zone_levels
+                let zones = zone_levels
                     .iter()
                     .filter(|zone_level| zone_level.level == level)
-                    .copied()
-                    .collect::<Vec<ZoneLevel>>();
-                if zone_levels.is_empty() {
-                    return None;
+                    .map(|zone_level| zone_level.zone);
+                let xs = zones.clone().map(|zone| zone.x);
+                let zs = zones.map(|zone| zone.z);
+                if let (Some(x_min), Some(x_max), Some(z_min), Some(z_max)) =
+                    (xs.clone().min(), xs.max(), zs.clone().min(), zs.max())
+                {
+                    Some(ZoneRegion::new(x_min..=x_max, z_min..=z_max))
+                } else {
+                    None
                 }
-                let xs = zone_levels
-                    .iter()
-                    .map(|zone_level| zone_level.zone.x)
-                    .collect::<Vec<i32>>();
-                let zs = zone_levels
-                    .iter()
-                    .map(|zone_level| zone_level.zone.z)
-                    .collect::<Vec<i32>>();
-
-                Some(ZoneRegion::new(
-                    *xs.iter().min().unwrap()..=*xs.iter().max().unwrap(),
-                    *zs.iter().min().unwrap()..=*zs.iter().max().unwrap(),
-                ))
             }),
         }
     }
@@ -139,5 +131,14 @@ impl From<&ZoneRegion> for Region {
         Self {
             zone_regions: Level::ALL.map(|_| Some(zone_region.clone())),
         }
+    }
+}
+
+impl fmt::Debug for Region {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // 'format!' prevents spreading the output over too many lines
+        f.debug_list()
+            .entries(self.zone_regions.iter().map(|zr| format!("{zr:?}")))
+            .finish()
     }
 }

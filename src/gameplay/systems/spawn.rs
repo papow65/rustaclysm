@@ -100,33 +100,28 @@ fn visible_region(camera: &Camera, global_transform: &GlobalTransform) -> Region
     };
 
     let mut zone_levels = Vec::new();
+    let floor: fn(f32) -> f32 = f32::floor;
+    let ceil: fn(f32) -> f32 = f32::ceil;
     for level in Level::ALL {
-        for corner in [
-            Vec2::new(corner_min.x, corner_min.y),
-            Vec2::new(corner_min.x, corner_max.y),
-            Vec2::new(corner_max.x, corner_min.y),
-            Vec2::new(corner_max.x, corner_max.y),
+        for (corner, round_x, round_z) in [
+            (Vec2::new(corner_min.x, corner_min.y), floor, floor),
+            (Vec2::new(corner_min.x, corner_max.y), floor, ceil),
+            (Vec2::new(corner_max.x, corner_min.y), ceil, floor),
+            (Vec2::new(corner_max.x, corner_max.y), ceil, ceil),
         ] {
-            let Some(Ray { origin, direction }) =
-                camera.viewport_to_world(global_transform, corner)
-            else {
+            let Some(ray) = camera.viewport_to_world(global_transform, corner) else {
                 continue;
             };
 
-            let k = (level.f32() - origin.y) / direction.y;
+            let ray_distance = (level.f32() - ray.origin.y) / ray.direction.y;
             // The camera only looks forward.
-            if 0.0 < k {
-                let ground_x = origin.x + k * direction.x;
-                let ground_z = origin.z + k * direction.z;
+            if 0.0 < ray_distance {
+                let floor = ray.get_point(ray_distance);
+                //dbg!((level, ray_distance, floor.x, floor.z));
                 zone_levels.push(ZoneLevel::from(Pos {
-                    x: ground_x.floor() as i32,
+                    x: round_x(floor.x) as i32,
                     level,
-                    z: ground_z.floor() as i32,
-                }));
-                zone_levels.push(ZoneLevel::from(Pos {
-                    x: ground_x.ceil() as i32,
-                    level,
-                    z: ground_z.ceil() as i32,
+                    z: round_z(floor.z) as i32,
                 }));
             }
         }
@@ -271,6 +266,7 @@ pub(crate) fn update_collapsed_zone_levels(
         return;
     }
     //println!("update_collapsed_zone_levels refresh");
+    //dbg!(&visible_region);
 
     for zone_level in visible_region
         .zone_levels()
