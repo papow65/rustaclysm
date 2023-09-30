@@ -29,84 +29,101 @@ impl Plugin for GameplayPlugin {
         // Loading is slow, so we load it in the background as an asset.
         app.add_asset::<RelativeSegments>();
         app.init_asset_loader::<RelativeSegmentsLoader>();
-        app.add_systems(
-            Update,
-            create_relative_segments.run_if(not(resource_exists::<RelativeSegments>())),
-        );
 
-        app.add_systems(
-            OnEnter(ApplicationState::Gameplay),
+        add_systems(app);
+    }
+}
+
+fn add_systems(app: &mut App) {
+    app.add_systems(
+        Update,
+        create_relative_segments.run_if(not(resource_exists::<RelativeSegments>())),
+    );
+
+    app.add_systems(
+        OnEnter(ApplicationState::Gameplay),
+        (
+            create_independent_resources,
+            apply_deferred,
+            create_dependent_resources,
+            apply_deferred,
+            spawn_initial_entities,
+            spawn_hud,
+            apply_deferred,
+        )
+            .chain(),
+    );
+
+    app.add_systems(
+        Update,
+        (
             (
-                create_independent_resources,
-                apply_deferred,
-                create_dependent_resources,
-                apply_deferred,
-                spawn_initial_entities,
-                spawn_hud,
-                apply_deferred,
+                (
+                    handle_overmap_buffer_events.run_if(on_event::<AssetEvent<OvermapBuffer>>()),
+                    handle_overmap_events.run_if(on_event::<AssetEvent<Overmap>>()),
+                ),
+                update_zone_levels_with_missing_assets.run_if(
+                    on_event::<AssetEvent<OvermapBuffer>>()
+                        .or_else(on_event::<AssetEvent<Overmap>>()),
+                ),
             )
                 .chain(),
-        );
-
-        app.add_systems(
-            Update,
+            handle_map_events.run_if(on_event::<AssetEvent<Map>>()),
             (
-                handle_overmap_buffer_events.run_if(on_event::<AssetEvent<OvermapBuffer>>()),
-                handle_overmap_events.run_if(on_event::<AssetEvent<Overmap>>()),
-                handle_map_events.run_if(on_event::<AssetEvent<Map>>()),
+                spawn_subzones_for_camera,
                 (
-                    spawn_subzones_for_camera,
-                    (
-                        spawn_subzone_levels.run_if(
-                            resource_exists::<Events<SpawnSubzoneLevel>>()
-                                .and_then(on_event::<SpawnSubzoneLevel>()),
-                        ),
-                        collapse_zone_levels.run_if(
-                            resource_exists::<Events<CollapseZoneLevel>>()
-                                .and_then(on_event::<CollapseZoneLevel>()),
-                        ),
+                    spawn_subzone_levels.run_if(
+                        resource_exists::<Events<SpawnSubzoneLevel>>()
+                            .and_then(on_event::<SpawnSubzoneLevel>()),
                     ),
-                )
-                    .chain(),
-                update_visualization_on_focus_move
-                    .run_if(resource_exists_and_changed::<ElevationVisibility>()),
-                (
-                    update_collapsed_zone_levels,
-                    (
-                        spawn_zone_levels.run_if(
-                            resource_exists::<Events<SpawnZoneLevel>>()
-                                .and_then(on_event::<SpawnZoneLevel>()),
-                        ),
-                        update_zone_level_visibility.run_if(
-                            resource_exists::<Events<UpdateZoneLevelVisibility>>()
-                                .and_then(on_event::<UpdateZoneLevelVisibility>()),
-                        ),
+                    collapse_zone_levels.run_if(
+                        resource_exists::<Events<CollapseZoneLevel>>()
+                            .and_then(on_event::<CollapseZoneLevel>()),
                     ),
-                )
-                    .chain(),
-                update_camera_offset.run_if(resource_exists_and_changed::<CameraOffset>()),
+                ),
             )
-                .run_if(in_state(ApplicationState::Gameplay)),
-        );
+                .chain(),
+            update_visualization_on_focus_move
+                .run_if(resource_exists_and_changed::<ElevationVisibility>()),
+            (
+                update_collapsed_zone_levels,
+                (
+                    spawn_zone_levels.run_if(
+                        resource_exists::<Events<SpawnZoneLevel>>()
+                            .and_then(on_event::<SpawnZoneLevel>()),
+                    ),
+                    update_zone_level_visibility.run_if(
+                        resource_exists::<Events<UpdateZoneLevelVisibility>>()
+                            .and_then(on_event::<UpdateZoneLevelVisibility>()),
+                    ),
+                ),
+            )
+                .chain(),
+            update_camera_offset.run_if(resource_exists_and_changed::<CameraOffset>()),
+        )
+            .run_if(in_state(ApplicationState::Gameplay)),
+    );
 
-        // executed at fixed interval
-        app.add_systems(
-            FixedUpdate,
+    // executed at fixed interval
+    app.add_systems(
+        FixedUpdate,
+        (
             update_status_fps.run_if(
                 in_state(ApplicationState::Gameplay)
                     .and_then(resource_exists::<StatusTextSections>()),
             ),
-        );
+            count_entities,
+        ),
+    );
 
-        app.add_systems(
-            OnExit(ApplicationState::Gameplay),
-            (
-                disable_screen_state,
-                apply_deferred,
-                despawn::<ApplicationState>,
-                remove_gameplay_resources,
-            )
-                .chain(),
-        );
-    }
+    app.add_systems(
+        OnExit(ApplicationState::Gameplay),
+        (
+            disable_screen_state,
+            apply_deferred,
+            despawn::<ApplicationState>,
+            remove_gameplay_resources,
+        )
+            .chain(),
+    );
 }

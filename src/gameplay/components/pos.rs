@@ -1,11 +1,6 @@
 use crate::prelude::{LevelOffset, Millimeter, Nbor, PosOffset};
 use bevy::prelude::{Component, Vec3};
-use std::{
-    cmp::Ordering,
-    fmt,
-    iter::once,
-    ops::{Range, Sub},
-};
+use std::{cmp::Ordering, fmt, iter::once, ops::Sub};
 
 /** Does not include 'from', but does include 'to' */
 fn straight_2d(from: (i32, i32), to: (i32, i32)) -> impl Iterator<Item = (i32, i32)> {
@@ -418,7 +413,7 @@ impl From<SubzoneLevel> for ZoneLevel {
     }
 }
 
-#[derive(Component, Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub(crate) struct Overzone {
     pub(crate) x: i32,
     pub(crate) z: i32,
@@ -430,14 +425,6 @@ impl Overzone {
             x: 180 * self.x,
             z: 180 * self.z,
         }
-    }
-
-    pub(crate) const fn xz_ranges(&self) -> (Range<i32>, Range<i32>) {
-        let base_zone = self.base_zone();
-        (
-            base_zone.x..(base_zone.x + 180),
-            base_zone.z..(base_zone.z + 180),
-        )
     }
 }
 

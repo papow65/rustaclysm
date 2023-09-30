@@ -752,12 +752,15 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
         &mut self,
         zone_level: ZoneLevel,
         child_visibiltiy: &Visibility,
-    ) -> Result<(), ()> {
+    ) {
         //println!("zone_level: {zone_level:?} {:?}", &definition);
         assert!(
             zone_level.level <= Level::ZERO,
             "Collapsed zone levels above ground may not be spawned"
         );
+
+        let mut entity = self.spawner.commands.spawn(zone_level);
+        self.zone_level_entities.add(zone_level, entity.id());
 
         let Some(seen_from) = self.spawner.explored.has_zone_level_been_seen(
             &self.asset_server,
@@ -765,39 +768,62 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
             &mut self.overmap_buffer_manager,
             zone_level,
         ) else {
-            return Err(());
+            entity.insert(MissingAsset);
+            return;
         };
 
-        let Some(id) = self.zone_level_ids.get(
-            &self.asset_server,
-            &self.overmap_assets,
-            &mut self.overmap_manager,
-            zone_level,
-        ) else {
-            return Err(());
+        let Some(definition) = self
+            .zone_level_ids
+            .get(
+                &self.asset_server,
+                &self.overmap_assets,
+                &mut self.overmap_manager,
+                zone_level,
+            )
+            .map(|object_id| ObjectDefinition {
+                category: ObjectCategory::ZoneLevel,
+                id: object_id.clone(),
+            })
+        else {
+            entity.insert(MissingAsset);
+            return;
         };
-        let zone_level_info = self.infos.zone_level(id);
+
+        let entity = entity.id();
+        self.complete_collapsed_zone_level(
+            entity,
+            zone_level,
+            seen_from,
+            &definition,
+            child_visibiltiy,
+        );
+    }
+
+    pub(crate) fn complete_collapsed_zone_level(
+        &mut self,
+        entity: Entity,
+        zone_level: ZoneLevel,
+        seen_from: SeenFrom,
+        definition: &ObjectDefinition,
+        child_visibiltiy: &Visibility,
+    ) {
+        let zone_level_info = self.infos.zone_level(&definition.id);
 
         let name = ObjectName::new(
             zone_level_info.map_or_else(
-                || ItemName::from(CddaItemName::Simple(id.fallback_name())),
+                || ItemName::from(CddaItemName::Simple(definition.id.fallback_name())),
                 |z| z.name.clone(),
             ),
             DEFAULT_TEXT_COLOR,
         );
 
-        let definition = ObjectDefinition {
-            category: ObjectCategory::ZoneLevel,
-            id: id.clone(),
-        };
-
-        let mut entity = self.spawner.commands.spawn(zone_level);
+        let mut entity = self.spawner.commands.entity(entity);
         entity.insert(Collapsed).insert(name);
 
         let pbr_bundles = self
             .spawner
             .model_factory
-            .get_layers(&definition, false)
+            .get_layers(definition, false)
             .map(|(pbr, _)| pbr);
 
         entity
@@ -822,8 +848,5 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
                     child_builder.spawn(pbr_bundle).insert(*child_visibiltiy);
                 }
             });
-
-        self.zone_level_entities.add(zone_level, entity.id());
-        Ok(())
     }
 }

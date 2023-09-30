@@ -205,3 +205,6 @@ pub(crate) struct LogDisplay;
 
 #[derive(Component)]
 pub(crate) struct ManualDisplay;
+
+#[derive(Component)]
+pub(crate) struct MissingAsset;

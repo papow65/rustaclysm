@@ -220,9 +220,7 @@ pub(crate) fn collapse_zone_levels(
                 {
                     commands.entity(zone_level_entity).insert(visible);
                 } else if collapse_event.zone_level.level <= Level::ZERO {
-                    zone_spawner
-                        .spawn_collapsed_zone_level(collapse_event.zone_level, &visible)
-                        .ok();
+                    zone_spawner.spawn_collapsed_zone_level(collapse_event.zone_level, &visible);
                 }
             }
             None | Some(SeenFrom::Never) => {}
@@ -323,9 +321,7 @@ pub(crate) fn spawn_zone_levels(
             &visible_region,
             &focus,
         );
-        zone_spawner
-            .spawn_collapsed_zone_level(spawn_event.zone_level, &visibility)
-            .ok();
+        zone_spawner.spawn_collapsed_zone_level(spawn_event.zone_level, &visibility);
     }
 
     log_if_slow("spawn_zone_levels", start);
@@ -432,104 +428,112 @@ pub(crate) fn handle_map_events(
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn handle_overmap_buffer_events(
     mut overmap_buffer_asset_events: EventReader<AssetEvent<OvermapBuffer>>,
-    asset_server: Res<AssetServer>,
     overmap_buffer_assets: Res<Assets<OvermapBuffer>>,
-    overmap_assets: Res<Assets<Overmap>>,
-    player_action_state: Res<PlayerActionState>,
-    mut zone_spawner: ZoneSpawner,
-    players: Query<&Pos, With<Player>>,
-    cameras: Query<(&Camera, &GlobalTransform)>,
+    mut overmap_buffer_manager: ResMut<OvermapBufferManager>,
+    mut explored: ResMut<Explored>,
 ) {
+    let start = Instant::now();
+
     for overmap_buffer_asset_event in &mut overmap_buffer_asset_events {
         if let AssetEvent::Created { handle } = overmap_buffer_asset_event {
-            let overzone = zone_spawner.overmap_buffer_manager.mark_loaded(handle);
-
-            let overmap_buffer = overmap_buffer_assets.get(handle).expect("Map loaded");
-            zone_spawner.spawner.explored.load(overzone, overmap_buffer);
-
-            if let AssetState::Available { .. } =
-                zone_spawner
-                    .overmap_manager
-                    .get_overmap(&asset_server, &overmap_assets, overzone)
-            {
-                load_overmap(
-                    &player_action_state,
-                    &mut zone_spawner,
-                    &players,
-                    &cameras,
-                    overzone,
-                );
-            }
+            let overzone = overmap_buffer_manager.mark_loaded(handle);
+            let overmap_buffer = overmap_buffer_assets
+                .get(handle)
+                .expect("Overmap buffer loaded");
+            explored.load(overzone, overmap_buffer);
         }
     }
+
+    log_if_slow("update_zone_level_visibility", start);
 }
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn handle_overmap_events(
     mut overmap_asset_events: EventReader<AssetEvent<Overmap>>,
-    asset_server: Res<AssetServer>,
-    overmap_buffer_assets: Res<Assets<OvermapBuffer>>,
     overmap_assets: Res<Assets<Overmap>>,
+    mut overmap_manager: ResMut<OvermapManager>,
+    mut zone_level_ids: ResMut<ZoneLevelIds>,
+) {
+    let start = Instant::now();
+
+    for overmap_asset_event in &mut overmap_asset_events {
+        if let AssetEvent::Created { handle } = overmap_asset_event {
+            let overzone = overmap_manager.mark_loaded(handle);
+            let overmap = overmap_assets.get(handle).expect("Overmap loaded");
+            zone_level_ids.load(overzone, overmap);
+        }
+    }
+
+    log_if_slow("update_zone_level_visibility", start);
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub(crate) fn update_zone_levels_with_missing_assets(
     player_action_state: Res<PlayerActionState>,
     mut zone_spawner: ZoneSpawner,
+    zone_levels: Query<(Entity, &ZoneLevel), With<MissingAsset>>,
     players: Query<&Pos, With<Player>>,
     cameras: Query<(&Camera, &GlobalTransform)>,
 ) {
-    for overmap_asset_event in &mut overmap_asset_events {
-        if let AssetEvent::Created { handle } = overmap_asset_event {
-            let overzone = zone_spawner.overmap_manager.mark_loaded(handle);
+    let start = Instant::now();
 
-            let overmap = overmap_assets.get(handle).expect("Overmap loaded");
-            zone_spawner.zone_level_ids.load(overzone, overmap);
-
-            if let AssetState::Available { .. } = zone_spawner.overmap_buffer_manager.get(
-                &asset_server,
-                &overmap_buffer_assets,
-                overzone,
-            ) {
-                load_overmap(
-                    &player_action_state,
-                    &mut zone_spawner,
-                    &players,
-                    &cameras,
-                    overzone,
-                );
-            }
-        }
+    if zone_levels.iter().len() == 0 {
+        return;
     }
-}
 
-fn load_overmap(
-    player_action_state: &PlayerActionState,
-    zone_spawner: &mut ZoneSpawner,
-    players: &Query<&Pos, With<Player>>,
-    cameras: &Query<(&Camera, &GlobalTransform)>,
-    overzone: Overzone,
-) {
     let (camera, &global_transform) = cameras.single();
     let &player_pos = players.single();
     let visible_region = visible_region(camera, &global_transform).ground_only();
-    let focus = Focus::new(player_action_state, player_pos);
+    let focus = Focus::new(&player_action_state, player_pos);
     let sight_region = zones_in_sight_distance(Pos::from(&focus));
 
-    let (x_range, z_range) = overzone.xz_ranges();
-    for x in x_range {
-        for z in z_range.clone() {
-            let zone = Zone { x, z };
-            for level in Level::GROUNDS {
-                let zone_level = ZoneLevel { zone, level };
-                if zone_spawner.zone_level_entities.get(zone_level).is_none() {
-                    let visibility = collapsed_visibility(
-                        zone_spawner,
-                        zone_level,
-                        &sight_region,
-                        &visible_region,
-                        &focus,
-                    );
-                    let result = zone_spawner.spawn_collapsed_zone_level(zone_level, &visibility);
-                    assert!(result.is_ok(), "{zone_level:?}");
-                }
-            }
-        }
+    for (entity, &zone_level) in &zone_levels {
+        let Some(seen_from) = zone_spawner.spawner.explored.has_zone_level_been_seen(
+            &zone_spawner.asset_server,
+            &zone_spawner.overmap_buffer_assets,
+            &mut zone_spawner.overmap_buffer_manager,
+            zone_level,
+        ) else {
+            continue;
+        };
+
+        let Some(definition) = zone_spawner
+            .zone_level_ids
+            .get(
+                &zone_spawner.asset_server,
+                &zone_spawner.overmap_assets,
+                &mut zone_spawner.overmap_manager,
+                zone_level,
+            )
+            .map(|object_id| ObjectDefinition {
+                category: ObjectCategory::ZoneLevel,
+                id: object_id.clone(),
+            })
+        else {
+            continue;
+        };
+
+        let child_visibility = collapsed_visibility(
+            &mut zone_spawner,
+            zone_level,
+            &sight_region,
+            &visible_region,
+            &focus,
+        );
+
+        zone_spawner.complete_collapsed_zone_level(
+            entity,
+            zone_level,
+            seen_from,
+            &definition,
+            &child_visibility,
+        );
+        zone_spawner
+            .spawner
+            .commands
+            .entity(entity)
+            .remove::<MissingAsset>();
     }
+
+    log_if_slow("update_zone_level_visibility", start);
 }
