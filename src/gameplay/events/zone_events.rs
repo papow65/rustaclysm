@@ -21,3 +21,8 @@ pub(crate) struct UpdateZoneLevelVisibility {
     pub(crate) zone_level: ZoneLevel,
     pub(crate) children: Vec<Entity>,
 }
+
+#[derive(Debug, Event)]
+pub(crate) struct DespawnZoneLevel {
+    pub(crate) entity: Entity,
+}

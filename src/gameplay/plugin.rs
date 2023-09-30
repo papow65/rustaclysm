@@ -96,6 +96,14 @@ fn add_systems(app: &mut App) {
                         resource_exists::<Events<UpdateZoneLevelVisibility>>()
                             .and_then(on_event::<UpdateZoneLevelVisibility>()),
                     ),
+                    despawn_zone_level.run_if(
+                        resource_exists::<Events<DespawnZoneLevel>>()
+                            .and_then(on_event::<DespawnZoneLevel>()),
+                    ),
+                    count_entities.run_if(
+                        resource_exists::<Events<DespawnZoneLevel>>()
+                            .and_then(on_event::<DespawnZoneLevel>()),
+                    ),
                 ),
             )
                 .chain(),
@@ -107,12 +115,8 @@ fn add_systems(app: &mut App) {
     // executed at fixed interval
     app.add_systems(
         FixedUpdate,
-        (
-            update_status_fps.run_if(
-                in_state(ApplicationState::Gameplay)
-                    .and_then(resource_exists::<StatusTextSections>()),
-            ),
-            count_entities,
+        update_status_fps.run_if(
+            in_state(ApplicationState::Gameplay).and_then(resource_exists::<StatusTextSections>()),
         ),
     );
 

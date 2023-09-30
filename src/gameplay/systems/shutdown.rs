@@ -25,6 +25,7 @@ pub(crate) fn remove_gameplay_resources(mut commands: Commands) {
     commands.remove_resource::<Events<CollapseZoneLevel>>();
     commands.remove_resource::<Events<SpawnZoneLevel>>();
     commands.remove_resource::<Events<UpdateZoneLevelVisibility>>();
+    commands.remove_resource::<Events<DespawnZoneLevel>>();
     commands.remove_resource::<Events<ActorEvent<Stay>>>();
     commands.remove_resource::<Events<ActorEvent<Step>>>();
     commands.remove_resource::<Events<ActorEvent<Attack>>>();

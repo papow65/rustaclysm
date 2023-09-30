@@ -234,13 +234,17 @@ pub(crate) fn collapse_zone_levels(
 pub(crate) fn update_collapsed_zone_levels(
     mut spawn_zone_level_writer: EventWriter<SpawnZoneLevel>,
     mut update_zone_level_visibility_writer: EventWriter<UpdateZoneLevelVisibility>,
+    mut despawn_zone_level_writer: EventWriter<DespawnZoneLevel>,
     player_action_state: Res<PlayerActionState>,
     zone_level_entities: Res<ZoneLevelEntities>,
     mut previous_camera_global_transform: Local<GlobalTransform>,
     mut previous_visible_region: Local<Region>,
     players: Query<&Pos, With<Player>>,
     cameras: Query<(&Camera, &GlobalTransform)>,
-    collapsed_zone_levels: Query<(&ZoneLevel, &Children), (With<Collapsed>, With<Visibility>)>,
+    collapsed_zone_levels: Query<
+        (Entity, &ZoneLevel, &Children),
+        (With<Collapsed>, With<Visibility>),
+    >,
     new_subzone_levels: Query<(), Added<SubzoneLevel>>,
 ) {
     // Collapsed zone level visibility: not SeenFrom::Never and not open sky, deep rock, etc.
@@ -286,15 +290,14 @@ pub(crate) fn update_collapsed_zone_levels(
         }
     }
 
-    let recalculated_region = visible_region.clamp(&previous_visible_region, &Region::default());
-    //println!("Recalculated region: {:?}", &recalculated_region);
-
-    for (&zone_level, children) in collapsed_zone_levels.iter() {
-        if recalculated_region.contains_zone_level(zone_level) {
+    for (entity, &zone_level, children) in collapsed_zone_levels.iter() {
+        if visible_region.contains_zone_level(zone_level) {
             update_zone_level_visibility_writer.send(UpdateZoneLevelVisibility {
                 zone_level,
                 children: children.iter().copied().collect(),
             });
+        } else {
+            despawn_zone_level_writer.send(DespawnZoneLevel { entity });
         }
     }
 
@@ -374,6 +377,25 @@ pub(crate) fn update_zone_level_visibility(
     }
 
     log_if_slow("update_zone_level_visibility", start);
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub(crate) fn despawn_zone_level(
+    mut commands: Commands,
+    mut despawn_zone_level_reader: EventReader<DespawnZoneLevel>,
+    mut zone_level_entities: ResMut<ZoneLevelEntities>,
+) {
+    let start = Instant::now();
+
+    println!("Despawning {} zone levels", despawn_zone_level_reader.len());
+
+    for despawn_zone_level_event in &mut despawn_zone_level_reader {
+        let entity = despawn_zone_level_event.entity;
+        commands.entity(entity).despawn_recursive();
+        zone_level_entities.remove(entity);
+    }
+
+    log_if_slow("despawn_zone_level", start);
 }
 
 fn collapsed_visibility(
