@@ -1,6 +1,6 @@
 use crate::prelude::*;
-use bevy::{prelude::*, utils::HashSet};
-use std::time::Instant;
+use bevy::prelude::*;
+use std::{cmp::Ordering, time::Instant};
 
 const MAX_EXPAND_DISTANCE: i32 = 10;
 
@@ -234,9 +234,11 @@ pub(crate) fn collapse_zone_levels(
 pub(crate) fn update_collapsed_zone_levels(
     mut spawn_zone_level_writer: EventWriter<SpawnZoneLevel>,
     mut update_zone_level_visibility_writer: EventWriter<UpdateZoneLevelVisibility>,
+    player_action_state: Res<PlayerActionState>,
     zone_level_entities: Res<ZoneLevelEntities>,
     mut previous_camera_global_transform: Local<GlobalTransform>,
     mut previous_visible_region: Local<Region>,
+    players: Query<&Pos, With<Player>>,
     cameras: Query<(&Camera, &GlobalTransform)>,
     collapsed_zone_levels: Query<(&ZoneLevel, &Children), (With<Collapsed>, With<Visibility>)>,
     new_subzone_levels: Query<(), Added<SubzoneLevel>>,
@@ -266,11 +268,18 @@ pub(crate) fn update_collapsed_zone_levels(
     //println!("update_collapsed_zone_levels refresh");
     //dbg!(&visible_region);
 
+    let &player_pos = players.single();
+    let focus = Focus::new(&player_action_state, player_pos);
+    let shown_level = if let Ordering::Less = Level::from(&focus).compare_to_ground() {
+        Level::from(&focus)
+    } else {
+        Level::ZERO
+    };
+
     for zone_level in visible_region
         .zone_levels()
         .into_iter()
-        .map(ZoneLevel::from)
-        .collect::<HashSet<_>>()
+        .filter(|zone_level| zone_level.level == shown_level)
     {
         if zone_level_entities.get(zone_level).is_none() {
             spawn_zone_level_writer.send(SpawnZoneLevel { zone_level });
