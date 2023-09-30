@@ -211,22 +211,18 @@ pub(crate) fn update_visualization_on_focus_move(
             VisualizationUpdate::Smart,
         ) = (&*player_action_state, *visualization_update)
         {
-            let mut count = 0;
             for (&pos, mut visibility, last_seen, _, speed, _) in &mut items {
-                count += 1;
                 if *last_seen != LastSeen::Never {
                     *visibility =
                         calculate_visibility(&focus, pos, *elevation_visibility, &last_seen, speed);
                 }
             }
 
-            println!("{count}x visibility updated");
+            println!("{}x visibility updated", items.iter().len());
         } else {
             let currently_visible = envir.currently_visible(&clock, player_pos); // does not depend on focus
 
-            let mut count = 0;
             for (&pos, mut visibility, mut last_seen, accessible, speed, children) in &mut items {
-                count += 1;
                 update_visualization(
                     &mut commands,
                     &mut explored,
@@ -243,7 +239,7 @@ pub(crate) fn update_visualization_on_focus_move(
                 );
             }
 
-            println!("{count}x visualization updated");
+            println!("{}x visualization updated", items.iter().len());
         }
 
         *last_focus = focus;
