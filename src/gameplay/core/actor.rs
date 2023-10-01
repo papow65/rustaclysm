@@ -528,8 +528,18 @@ impl ActorItem<'_> {
         ));
 
         let left_over_amount = split_amount - &allowed_amount;
+        //dbg!(&split_amount);
+        //dbg!(&allowed_amount);
+        //dbg!(&left_over_amount);
         let left_over_entity = commands
-            .spawn((definition, object_name, left_over_amount, containable))
+            .spawn((
+                definition,
+                object_name,
+                left_over_amount,
+                containable,
+                LastSeen::Currently,
+                SpatialBundle::default(),
+            ))
             .set_parent(taken_parent.get())
             .id();
         if filthy.is_some() {
@@ -537,12 +547,13 @@ impl ActorItem<'_> {
         }
         if let Some(&taken_pos) = taken_pos {
             commands.entity(left_over_entity).insert(taken_pos);
-            location.update(left_over_entity, Some(taken_pos));
         }
+        location.update(left_over_entity, taken_pos.copied());
 
         commands
             .entity(taken_entity)
             .insert(allowed_amount)
+            .remove::<Pos>()
             .set_parent(container_entity);
         location.update(taken_entity, None);
     }
