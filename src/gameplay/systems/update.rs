@@ -222,6 +222,7 @@ pub(crate) fn update_visualization_on_focus_move(
         } else {
             let currently_visible = envir.currently_visible(&clock, player_pos); // does not depend on focus
 
+            // Using parallel iteration was worse for performance using bevy 0.11
             for (&pos, mut visibility, mut last_seen, accessible, speed, children) in &mut items {
                 update_visualization(
                     &mut commands,
