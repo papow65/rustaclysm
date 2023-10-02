@@ -70,9 +70,9 @@ pub(crate) fn create_schedules(app: &mut App) {
                     .pipe(proces_impact)
                     .run_if(on_event::<ActorEvent<Pickup>>()),
                 single_action
-                    .pipe(perform_dump)
+                    .pipe(perform_move_item)
                     .pipe(proces_impact)
-                    .run_if(on_event::<ActorEvent<Dump>>()),
+                    .run_if(on_event::<ActorEvent<MoveItem>>()),
                 single_action
                     .pipe(perform_examine_item)
                     .run_if(on_event::<ActorEvent<ExamineItem>>()),

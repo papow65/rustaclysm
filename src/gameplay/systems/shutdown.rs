@@ -34,7 +34,7 @@ pub(crate) fn remove_gameplay_resources(mut commands: Commands) {
     commands.remove_resource::<Events<ActorEvent<Wield>>>();
     commands.remove_resource::<Events<ActorEvent<Unwield>>>();
     commands.remove_resource::<Events<ActorEvent<Pickup>>>();
-    commands.remove_resource::<Events<ActorEvent<Dump>>>();
+    commands.remove_resource::<Events<ActorEvent<MoveItem>>>();
     commands.remove_resource::<Events<ActorEvent<ExamineItem>>>();
     commands.remove_resource::<Events<ActorEvent<ChangePace>>>();
     commands.remove_resource::<Events<ActorEvent<StaminaImpact>>>();

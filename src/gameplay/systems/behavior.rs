@@ -84,7 +84,7 @@ pub(crate) fn send_action_event(
     mut wield_writer: EventWriter<ActorEvent<Wield>>,
     mut unwield_writer: EventWriter<ActorEvent<Unwield>>,
     mut pickup_writer: EventWriter<ActorEvent<Pickup>>,
-    mut dump_writer: EventWriter<ActorEvent<Dump>>,
+    mut move_item_writer: EventWriter<ActorEvent<MoveItem>>,
     mut examine_item_writer: EventWriter<ActorEvent<ExamineItem>>,
     mut change_pace_writer: EventWriter<ActorEvent<ChangePace>>,
 ) {
@@ -111,20 +111,20 @@ pub(crate) fn send_action_event(
         PlannedAction::Close { target } => {
             close_writer.send(ActorEvent::new(actor_entity, Close { target }));
         }
-        PlannedAction::Wield { entity } => {
-            wield_writer.send(ActorEvent::new(actor_entity, Wield { entity }));
+        PlannedAction::Wield { item } => {
+            wield_writer.send(ActorEvent::new(actor_entity, Wield { item }));
         }
-        PlannedAction::Unwield { entity } => {
-            unwield_writer.send(ActorEvent::new(actor_entity, Unwield { entity }));
+        PlannedAction::Unwield { item } => {
+            unwield_writer.send(ActorEvent::new(actor_entity, Unwield { item }));
         }
-        PlannedAction::Pickup { entity } => {
-            pickup_writer.send(ActorEvent::new(actor_entity, Pickup { entity }));
+        PlannedAction::Pickup { item } => {
+            pickup_writer.send(ActorEvent::new(actor_entity, Pickup { item }));
         }
-        PlannedAction::Dump { entity, direction } => {
-            dump_writer.send(ActorEvent::new(actor_entity, Dump { entity, direction }));
+        PlannedAction::MoveItem { item, to } => {
+            move_item_writer.send(ActorEvent::new(actor_entity, MoveItem { item, to }));
         }
-        PlannedAction::ExamineItem { entity } => {
-            examine_item_writer.send(ActorEvent::new(actor_entity, ExamineItem { entity }));
+        PlannedAction::ExamineItem { item } => {
+            examine_item_writer.send(ActorEvent::new(actor_entity, ExamineItem { item }));
         }
         PlannedAction::ChangePace => {
             change_pace_writer.send(ActorEvent::new(actor_entity, ChangePace));
@@ -144,7 +144,7 @@ pub(crate) fn check_action_plan_amount(
     mut wield_reader: EventReader<ActorEvent<Wield>>,
     mut unwield_reader: EventReader<ActorEvent<Unwield>>,
     mut pickup_reader: EventReader<ActorEvent<Pickup>>,
-    mut dump_reader: EventReader<ActorEvent<Dump>>,
+    mut move_item_reader: EventReader<ActorEvent<MoveItem>>,
     mut examine_item_reader: EventReader<ActorEvent<ExamineItem>>,
     mut change_pace_reader: EventReader<ActorEvent<ChangePace>>,
 ) {
@@ -158,7 +158,7 @@ pub(crate) fn check_action_plan_amount(
         .chain(wield_reader.iter().map(|a| format!("{a:?}")))
         .chain(unwield_reader.iter().map(|a| format!("{a:?}")))
         .chain(pickup_reader.iter().map(|a| format!("{a:?}")))
-        .chain(dump_reader.iter().map(|a| format!("{a:?}")))
+        .chain(move_item_reader.iter().map(|a| format!("{a:?}")))
         .chain(examine_item_reader.iter().map(|a| format!("{a:?}")))
         .chain(change_pace_reader.iter().map(|a| format!("{a:?}")))
         .collect::<Vec<_>>();
@@ -308,20 +308,20 @@ pub(crate) fn perform_pickup(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn perform_dump(
-    In(dump): In<ActorEvent<Dump>>,
+pub(crate) fn perform_move_item(
+    In(move_item): In<ActorEvent<MoveItem>>,
     mut commands: Commands,
     mut message_writer: EventWriter<Message>,
     mut location: ResMut<Location>,
     hierarchy: Hierarchy,
     actors: Query<Actor>,
 ) -> Option<Impact> {
-    dump.actor(&actors).dump(
+    move_item.actor(&actors).move_item(
         &mut commands,
         &mut message_writer,
         &mut location,
         &hierarchy,
-        &dump.change,
+        &move_item.change,
     )
 }
 

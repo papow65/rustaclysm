@@ -105,19 +105,13 @@ impl ActorItem<'_> {
         step: &Step,
     ) -> Option<Impact> {
         let from = *self.pos;
-        if !envir.are_nbors(*self.pos, step.to) {
-            message_writer.send(Message::error(Phrase::from_name(self.name).add(format!(
-                "can't move to {:?}, as it is not a nbor of {from:?}",
-                step.to
-            ))));
-            return None;
-        }
+        let to = envir.get_nbor(from, step.to).expect("Valid pos");
 
-        match envir.collide(from, step.to, true) {
+        match envir.collide(from, to, true) {
             Collision::Pass => {
-                commands.entity(self.entity).insert(step.to);
-                envir.location.update(self.entity, Some(step.to));
-                Some(self.standard_impact(envir.walking_cost(from, step.to).duration(self.speed())))
+                commands.entity(self.entity).insert(to);
+                envir.location.update(self.entity, Some(to));
+                Some(self.standard_impact(envir.walking_cost(from, to).duration(self.speed())))
             }
             /*Collision::Fall(fall_pos) => {
                  * pos = fall_pos;
@@ -143,7 +137,7 @@ impl ActorItem<'_> {
                     terrain_entity: door,
                     change: Toggle::Open,
                 });
-                Some(self.standard_impact(envir.walking_cost(from, step.to).duration(self.speed())))
+                Some(self.standard_impact(envir.walking_cost(from, to).duration(self.speed())))
             }
         }
     }
@@ -218,18 +212,16 @@ impl ActorItem<'_> {
             return None;
         };
 
-        if !envir.are_nbors(*self.pos, attack.target) {
-            unimplemented!();
-        }
+        let target = envir.get_nbor(*self.pos, attack.target).expect("Valid pos");
 
-        if let Some((defender, _)) = envir.find_character(attack.target) {
+        if let Some((defender, _)) = envir.find_character(target) {
             Some(self.damage(
                 Either::Left(damage_writer),
                 envir,
                 infos,
                 hierarchy,
                 defender,
-                attack.target,
+                target,
                 high_speed,
             ))
         } else {
@@ -256,33 +248,29 @@ impl ActorItem<'_> {
             return None;
         };
 
-        if !envir.are_nbors(*self.pos, smash.target) && smash.target != *self.pos {
-            unimplemented!();
-        }
+        let target = envir.get_nbor(*self.pos, smash.target).expect("Valid pos");
 
-        let stair_pos = Pos::new(smash.target.x, self.pos.level, smash.target.z);
-        if self.pos.level.up() == Some(smash.target.level)
-            && envir.stairs_up_to(stair_pos).is_none()
-        {
+        let stair_pos = Pos::new(target.x, self.pos.level, target.z);
+        if self.pos.level.up() == Some(target.level) && envir.stairs_up_to(stair_pos).is_none() {
             message_writer.send(Message::warn(
                 Phrase::from_name(self.name).add("smashes the ceiling"),
             ));
             None
-        } else if self.pos.level.down() == Some(smash.target.level)
+        } else if self.pos.level.down() == Some(target.level)
             && envir.stairs_down_to(stair_pos).is_none()
         {
             message_writer.send(Message::warn(
                 Phrase::from_name(self.name).add("smashes the floor"),
             ));
             None
-        } else if let Some((smashable, _)) = envir.find_smashable(smash.target) {
+        } else if let Some((smashable, _)) = envir.find_smashable(target) {
             Some(self.damage(
                 Either::Right(damage_writer),
                 envir,
                 infos,
                 hierarchy,
                 smashable,
-                smash.target,
+                target,
                 high_speed,
             ))
         } else {
@@ -300,12 +288,10 @@ impl ActorItem<'_> {
         envir: &Envir,
         close: &Close,
     ) -> Option<Impact> {
-        if !envir.are_nbors(*self.pos, close.target) && close.target != *self.pos {
-            unimplemented!();
-        }
+        let target = envir.get_nbor(*self.pos, close.target).expect("Valid pos");
 
-        if let Some((closeable, closeable_name)) = envir.find_closeable(close.target) {
-            if let Some((_, character)) = envir.find_character(close.target) {
+        if let Some((closeable, closeable_name)) = envir.find_closeable(target) {
+            if let Some((_, character)) = envir.find_character(target) {
                 message_writer.send(Message::warn(
                     Phrase::from_name(self.name)
                         .add("can't close")
@@ -321,15 +307,13 @@ impl ActorItem<'_> {
                 });
                 Some(
                     self.standard_impact(
-                        envir
-                            .walking_cost(*self.pos, close.target)
-                            .duration(self.speed()),
+                        envir.walking_cost(*self.pos, target).duration(self.speed()),
                     ),
                 )
             }
         } else {
             let missing = ObjectName::missing();
-            let obstacle = envir.find_terrain(close.target).unwrap_or(&missing);
+            let obstacle = envir.find_terrain(target).unwrap_or(&missing);
             message_writer.send(Message::warn(
                 Phrase::from_name(self.name)
                     .add("can't close")
@@ -353,10 +337,10 @@ impl ActorItem<'_> {
             location,
             hierarchy,
             self.body_containers.unwrap().hands,
-            wield.entity,
+            wield.item,
         );
         if impact.is_some() {
-            commands.entity(wield.entity).insert(PlayerWielded);
+            commands.entity(wield.item).insert(PlayerWielded);
         }
         impact
     }
@@ -375,10 +359,10 @@ impl ActorItem<'_> {
             location,
             hierarchy,
             self.body_containers.unwrap().clothing,
-            unwield.entity,
+            unwield.item,
         );
         if impact.is_some() {
-            commands.entity(unwield.entity).remove::<PlayerWielded>();
+            commands.entity(unwield.item).remove::<PlayerWielded>();
         }
         impact
     }
@@ -397,7 +381,7 @@ impl ActorItem<'_> {
             location,
             hierarchy,
             self.body_containers.unwrap().clothing,
-            pickup.entity,
+            pickup.item,
         )
     }
 
@@ -579,47 +563,48 @@ impl ActorItem<'_> {
         location.update(taken_entity, None);
     }
 
-    pub(crate) fn dump(
+    pub(crate) fn move_item(
         &self,
         commands: &mut Commands,
         message_writer: &mut EventWriter<Message>,
         location: &mut Location,
         hierarchy: &Hierarchy,
-        dump: &Dump,
+        move_item: &MoveItem,
     ) -> Option<Impact> {
-        let (_, _, dumped_name, _, dumped_amount, dumped_filthy, _, dumped_parent) =
-            hierarchy.items.get(dump.entity).unwrap();
-        let dumped_parent = dumped_parent.map(Parent::get);
+        let (_, _, moved_name, from, moved_amount, moved_filthy, _, moved_parent) =
+            hierarchy.items.get(move_item.item).unwrap();
 
-        if dumped_parent.is_none()
-            || (dumped_parent != Some(self.body_containers.unwrap().hands)
-                && dumped_parent != Some(self.body_containers.unwrap().clothing))
-        {
-            message_writer.send(Message::info(
-                Phrase::from_name(self.name)
-                    .add("can't drop")
-                    .extend(dumped_name.as_item(dumped_amount, dumped_filthy))
-                    .add(", because (s)he does not have it"),
-            ));
-            return None;
+        if let Some(from) = from {
+            let offset = *from - *self.pos;
+            let potentially_valid = HorizontalDirection::try_from(offset).is_ok()
+                || matches!(offset.level, LevelOffset { h: -1 | 1 });
+            if !potentially_valid {
+                message_writer.send(Message::error(Phrase::new("Too far to move")));
+                return None;
+            }
         }
+        let moved_parent = moved_parent.map(Parent::get);
+        let dump = moved_parent == Some(self.body_containers.unwrap().hands)
+            || moved_parent == Some(self.body_containers.unwrap().clothing);
 
         // TODO Check for obstacles
-        let dumped_pos = self.pos.raw_nbor(Nbor::Horizontal(dump.direction)).unwrap();
+        let to = self.pos.raw_nbor(move_item.to).unwrap();
 
         message_writer.send(Message::info(
             Phrase::from_name(self.name)
-                .add("drops")
-                .extend(dumped_name.as_item(dumped_amount, dumped_filthy)),
+                .add(if dump { "drops" } else { "moves" })
+                .extend(moved_name.as_item(moved_amount, moved_filthy)),
         ));
+        if dump {
+            commands
+                .entity(moved_parent.unwrap())
+                .remove_children(&[move_item.item]);
+        }
         commands
-            .entity(dumped_parent.unwrap())
-            .remove_children(&[dump.entity]);
-        commands
-            .entity(dump.entity)
+            .entity(move_item.item)
             .insert(VisibilityBundle::default())
-            .insert(dumped_pos);
-        location.update(dump.entity, Some(*self.pos));
+            .insert(to);
+        location.update(move_item.item, Some(*self.pos));
         Some(self.activate())
     }
 
@@ -629,7 +614,7 @@ impl ActorItem<'_> {
         definitions: &Query<&ObjectDefinition>,
         examine_item: &ExamineItem,
     ) {
-        if let Ok(definition) = definitions.get(examine_item.entity) {
+        if let Ok(definition) = definitions.get(examine_item.item) {
             if let Some(item_info) = infos.item(&definition.id) {
                 if let Some(description) = &item_info.description {
                     message_writer.send(Message::info(Phrase::new(

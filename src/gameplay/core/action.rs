@@ -1,7 +1,5 @@
-use crate::prelude::{ActorChange, Pos};
+use crate::prelude::{ActorChange, Nbor};
 use bevy::prelude::Entity;
-
-use super::HorizontalDirection;
 
 #[derive(Copy, Clone, Debug)]
 pub(crate) enum StayDuration {
@@ -15,32 +13,34 @@ pub(crate) enum PlannedAction {
         duration: StayDuration,
     },
     Step {
-        to: Pos, // nbor pos
+        to: Nbor,
     },
     Attack {
-        target: Pos, // nbor pos
+        target: Nbor,
     },
     Smash {
-        target: Pos, // nbor pos
+        target: Nbor,
     },
     Close {
-        target: Pos, // nbor pos
+        target: Nbor,
     },
     Wield {
-        entity: Entity,
+        item: Entity,
     },
     Unwield {
-        entity: Entity,
+        item: Entity,
     },
     Pickup {
-        entity: Entity,
+        item: Entity,
     },
-    Dump {
-        entity: Entity,
-        direction: HorizontalDirection,
+    /** Redundantly named to avoid confusion */
+    MoveItem {
+        item: Entity,
+        to: Nbor,
     },
+    /** Redundantly named to avoid confusion */
     ExamineItem {
-        entity: Entity,
+        item: Entity,
     },
     ChangePace,
 }
@@ -54,64 +54,66 @@ impl ActorChange for Stay {}
 
 #[derive(Clone, Debug)]
 pub(crate) struct Step {
-    pub(crate) to: Pos, // nbor pos
+    pub(crate) to: Nbor,
 }
 
 impl ActorChange for Step {}
 
 #[derive(Clone, Debug)]
 pub(crate) struct Attack {
-    pub(crate) target: Pos, // nbor pos
+    pub(crate) target: Nbor,
 }
 
 impl ActorChange for Attack {}
 
 #[derive(Clone, Debug)]
 pub(crate) struct Smash {
-    pub(crate) target: Pos, // nbor pos
+    pub(crate) target: Nbor,
 }
 
 impl ActorChange for Smash {}
 
 #[derive(Clone, Debug)]
 pub(crate) struct Close {
-    pub(crate) target: Pos, // nbor pos
+    pub(crate) target: Nbor,
 }
 
 impl ActorChange for Close {}
 
 #[derive(Clone, Debug)]
 pub(crate) struct Wield {
-    pub(crate) entity: Entity,
+    pub(crate) item: Entity,
 }
 
 impl ActorChange for Wield {}
 
 #[derive(Clone, Debug)]
 pub(crate) struct Unwield {
-    pub(crate) entity: Entity,
+    pub(crate) item: Entity,
 }
 
 impl ActorChange for Unwield {}
 
 #[derive(Clone, Debug)]
 pub(crate) struct Pickup {
-    pub(crate) entity: Entity,
+    pub(crate) item: Entity,
 }
 
 impl ActorChange for Pickup {}
 
+/** Redundantly named to avoid confusion */
 #[derive(Clone, Debug)]
-pub(crate) struct Dump {
-    pub(crate) entity: Entity,
-    pub(crate) direction: HorizontalDirection,
+pub(crate) struct MoveItem {
+    pub(crate) item: Entity,
+    pub(crate) to: Nbor,
 }
 
-impl ActorChange for Dump {}
+impl ActorChange for MoveItem {}
 
+/** Redundantly named to avoid confusion */
 #[derive(Clone, Debug)]
 pub(crate) struct ExamineItem {
-    pub(crate) entity: Entity,
+    pub(crate) item: Entity,
 }
 
 impl ActorChange for ExamineItem {}

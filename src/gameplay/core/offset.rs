@@ -19,7 +19,11 @@ pub(crate) struct PosOffset {
 impl PosOffset {
     pub(crate) fn player_hint(&self) -> &str {
         if self.x == 0 && self.z == 0 {
-            "V"
+            match self.level {
+                LevelOffset { h } if h > 0 => "U",
+                LevelOffset::ZERO => "H",
+                _ => "D",
+            }
         } else if 2 * self.z.abs() <= self.x.abs() {
             if 0 < self.x {
                 "E"

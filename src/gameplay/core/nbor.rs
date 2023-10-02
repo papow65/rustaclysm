@@ -1,3 +1,5 @@
+use crate::prelude::PosOffset;
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub(crate) enum HorizontalDirection {
     NorthWest,
@@ -29,6 +31,25 @@ impl HorizontalDirection {
     }
 }
 
+impl TryFrom<PosOffset> for HorizontalDirection {
+    type Error = ();
+
+    fn try_from(value: PosOffset) -> Result<Self, Self::Error> {
+        Ok(match (value.x, value.z) {
+            (-1, -1) => Self::NorthWest,
+            (-1, 0) => Self::West,
+            (-1, 1) => Self::SouthWest,
+            (0, -1) => Self::North,
+            (0, 0) => Self::Here,
+            (0, 1) => Self::South,
+            (1, -1) => Self::NorthEast,
+            (1, 0) => Self::East,
+            (1, 1) => Self::SouthEast,
+            _ => return Err(()),
+        })
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub(crate) enum Nbor {
     Up,
@@ -37,13 +58,14 @@ pub(crate) enum Nbor {
 }
 
 impl Nbor {
+    pub(crate) const HERE: Self = Self::Horizontal(HorizontalDirection::Here);
     pub(crate) const ALL: [Self; 11] = [
         Self::Up,
         Self::Horizontal(HorizontalDirection::NorthWest),
         Self::Horizontal(HorizontalDirection::North),
         Self::Horizontal(HorizontalDirection::NorthEast),
         Self::Horizontal(HorizontalDirection::West),
-        Self::Horizontal(HorizontalDirection::Here),
+        Self::HERE,
         Self::Horizontal(HorizontalDirection::East),
         Self::Horizontal(HorizontalDirection::SouthWest),
         Self::Horizontal(HorizontalDirection::South),

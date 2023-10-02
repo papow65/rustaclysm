@@ -113,14 +113,14 @@ impl Faction {
             .min_by_key(|(memory, path)| (*memory, path.duration.0))
             .and_then(|(_, path)| {
                 let last_enemy = LastEnemy(path.destination);
-
+                let nbor = envir.to_nbor(*actor.pos, path.first).expect("Nbors");
                 if path.first == path.destination {
                     if factions
                         .iter()
                         .filter(|(_, faction)| faction != &self)
                         .any(|(pos, _)| pos == &path.destination)
                     {
-                        Some((PlannedAction::Attack { target: path.first }, last_enemy))
+                        Some((PlannedAction::Attack { target: nbor }, last_enemy))
                     } else {
                         None
                     }
@@ -131,12 +131,12 @@ impl Faction {
                                 duration: StayDuration::Short,
                             }
                         } else {
-                            PlannedAction::Smash { target: path.first }
+                            PlannedAction::Smash { target: nbor }
                         },
                         last_enemy,
                     ))
                 } else {
-                    Some((PlannedAction::Step { to: path.first }, last_enemy))
+                    Some((PlannedAction::Step { to: nbor }, last_enemy))
                 }
             })
     }
@@ -179,16 +179,17 @@ impl Faction {
             .min_by_key(|((_, ms), (_, danger))| danger.average(ms))
             .expect("Non-empty graph")
             .0;
-        let target = build_path(safest_longtime_pos, &graph)
+        let to = build_path(safest_longtime_pos, &graph)
             .get(1)
             .expect("First step (after current position)")
             .0;
-        Some(if target == *actor.pos {
+        let nbor = envir.to_nbor(*actor.pos, to).expect("Nbors");
+        Some(if nbor == Nbor::HERE {
             PlannedAction::Stay {
                 duration: StayDuration::Short,
             }
         } else {
-            PlannedAction::Step { to: target }
+            PlannedAction::Step { to: nbor }
         })
     }
 
@@ -206,12 +207,13 @@ impl Faction {
                 .collect::<Vec<Pos>>();
 
             fastrand::choice(wander_options).map(|pos| {
+                let nbor = envir.to_nbor(*actor.pos, pos).expect("Nbors");
                 if envir.find_character(pos).is_some() {
-                    PlannedAction::Attack { target: pos }
+                    PlannedAction::Attack { target: nbor }
                 } else if envir.find_smashable(pos).is_some() {
-                    PlannedAction::Smash { target: pos }
+                    PlannedAction::Smash { target: nbor }
                 } else {
-                    PlannedAction::Step { to: pos }
+                    PlannedAction::Step { to: nbor }
                 }
             })
         } else {
@@ -244,10 +246,11 @@ impl Faction {
         }
         .filter(|(action, _)| match action {
             // prevent fish from acting on land
-            PlannedAction::Step { to: pos }
-            | PlannedAction::Attack { target: pos }
-            | PlannedAction::Smash { target: pos } => {
-                actor.aquatic.is_none() || envir.is_water(*pos)
+            PlannedAction::Step { to: nbor }
+            | PlannedAction::Attack { target: nbor }
+            | PlannedAction::Smash { target: nbor } => {
+                let pos = envir.get_nbor(*actor.pos, *nbor).expect("Valid pos");
+                actor.aquatic.is_none() || envir.is_water(pos)
             }
             _ => true,
         })

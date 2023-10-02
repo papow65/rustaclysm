@@ -27,6 +27,7 @@ pub(crate) struct Envir<'w, 's> {
     opaque_floors: Query<'w, 's, &'static OpaqueFloor>,
     characters: Query<'w, 's, (Entity, &'static ObjectName), With<Life>>,
     smashables: Query<'w, 's, (Entity, &'static ObjectName), With<Integrity>>,
+    items: Query<'w, 's, Entity, With<Containable>>,
 }
 
 impl<'w, 's> Envir<'w, 's> {
@@ -148,6 +149,10 @@ impl<'w, 's> Envir<'w, 's> {
         self.location.get_first(pos, &self.smashables)
     }
 
+    pub(crate) fn find_item(&self, pos: Pos) -> Option<Entity> {
+        self.location.get_first(pos, &self.items)
+    }
+
     // helper methods
 
     /** Follow stairs, even when they do not go staight up or down. */
@@ -163,6 +168,19 @@ impl<'w, 's> Envir<'w, 's> {
                 // No stairs
                 Ok(from.raw_nbor(nbor).unwrap())
             }
+        }
+    }
+
+    /** Follow stairs, even when they do not go staight up or down. */
+    pub(crate) fn to_nbor(&self, from: Pos, to: Pos) -> Option<Nbor> {
+        let offset = to - from;
+        match offset.level {
+            LevelOffset::UP if self.get_nbor(from, Nbor::Up) == Ok(to) => Some(Nbor::Up),
+            LevelOffset::ZERO => HorizontalDirection::try_from(offset)
+                .ok()
+                .map(Nbor::Horizontal),
+            LevelOffset::DOWN if self.get_nbor(from, Nbor::Down) == Ok(to) => Some(Nbor::Down),
+            _ => None, // multiple floors
         }
     }
 
@@ -235,14 +253,14 @@ impl<'w, 's> Envir<'w, 's> {
         &'s self,
         pos: Pos,
         instruction: QueuedInstruction,
-    ) -> impl Iterator<Item = Pos> + 's {
+    ) -> impl Iterator<Item = Nbor> + 's {
         self.nbors_if(pos, move |nbor| match instruction {
             QueuedInstruction::Attack => nbor != pos && self.find_character(nbor).is_some(),
             QueuedInstruction::Smash => self.find_smashable(nbor).is_some(),
             QueuedInstruction::Close => self.find_closeable(nbor).is_some(),
             _ => panic!("unexpected instruction {instruction:?}"),
         })
-        .map(move |(_nbor, npos, _distance)| npos)
+        .map(move |(nbor, _npos, _distance)| nbor)
     }
 
     /** `WalkingCost` without regard for obstacles or stairs, unless they are nbors */

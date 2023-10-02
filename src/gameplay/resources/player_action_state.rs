@@ -19,6 +19,11 @@ pub(crate) enum PlayerActionState {
     Attacking,
     Smashing,
     Closing,
+    Dragging {
+        /// None: intent to drag on next move
+        /// Some: moving items from previous to current position
+        active_from: Option<Pos>,
+    },
     Waiting {
         until: Timestamp,
     },
@@ -58,12 +63,12 @@ impl PlayerActionState {
         envir: &mut Envir,
         instruction_queue: &mut InstructionQueue,
         actor: Entity,
-        pos: Pos,
+        player_pos: Pos,
         now: Timestamp,
         enemies: &[Pos],
     ) -> Option<PlannedAction> {
         while let Some(instruction) = instruction_queue.pop() {
-            match self.plan(envir, pos, instruction, now) {
+            match self.plan(envir, player_pos, instruction, now) {
                 PlayerBehavior::Perform(action) => {
                     return Some(action);
                 }
@@ -80,6 +85,19 @@ impl PlayerActionState {
         }
 
         match self {
+            Self::Dragging {
+                active_from: Some(from),
+            } => {
+                if let Some(item) = envir.find_item(*from) {
+                    Some(PlannedAction::MoveItem {
+                        item,
+                        to: Nbor::HERE,
+                    })
+                } else {
+                    instruction_queue.add(QueuedInstruction::Finished);
+                    None // process the cancellation next turn
+                }
+            }
             Self::Waiting { until } => {
                 if !enemies.is_empty() {
                     instruction_queue.add(QueuedInstruction::Interrupted);
@@ -133,11 +151,10 @@ impl PlayerActionState {
         }
     }
 
-    #[allow(clippy::too_many_lines)]
     fn plan(
         &mut self,
         envir: &Envir,
-        pos: Pos,
+        player_pos: Pos,
         instruction: QueuedInstruction,
         now: Timestamp,
     ) -> PlayerBehavior {
@@ -172,58 +189,6 @@ impl PlayerActionState {
             (Self::Attacking, QueuedInstruction::Offset(PlayerDirection::Here)) => {
                 PlayerBehavior::Feedback(Message::warn(Phrase::new("You can't attack yourself")))
             }
-            (Self::ExaminingPos(curr), QueuedInstruction::Offset(direction)) => {
-                let nbor = direction.to_nbor();
-                self.handle_offset(envir.get_nbor(*curr, nbor), nbor)
-            }
-            (
-                _,
-                QueuedInstruction::CancelAction
-                | QueuedInstruction::Wait
-                | QueuedInstruction::Sleep,
-            )
-            | (Self::Attacking, QueuedInstruction::Attack)
-            | (Self::Smashing, QueuedInstruction::Smash)
-            | (Self::ExaminingPos(_), QueuedInstruction::ExaminePos)
-            | (Self::ExaminingZoneLevel(_), QueuedInstruction::ExamineZoneLevel) => {
-                *self = Self::Normal;
-                PlayerBehavior::NoEffect
-            }
-            (_, QueuedInstruction::Offset(direction)) => {
-                let nbor = direction.to_nbor();
-                self.handle_offset(envir.get_nbor(pos, nbor), nbor)
-            }
-            (_, QueuedInstruction::Wield(entity)) => {
-                PlayerBehavior::Perform(PlannedAction::Wield { entity })
-            }
-            (_, QueuedInstruction::Unwield(entity)) => {
-                PlayerBehavior::Perform(PlannedAction::Unwield { entity })
-            }
-            (_, QueuedInstruction::Pickup(entity)) => {
-                PlayerBehavior::Perform(PlannedAction::Pickup { entity })
-            }
-            (_, QueuedInstruction::Dump(entity, direction)) => {
-                PlayerBehavior::Perform(PlannedAction::Dump { entity, direction })
-            }
-            (_, QueuedInstruction::Attack) => self.handle_attack(envir, pos),
-            (_, QueuedInstruction::Smash) => self.handle_smash(envir, pos),
-            (_, QueuedInstruction::Close) => self.handle_close(envir, pos),
-            (_, QueuedInstruction::ExamineItem(entity)) => {
-                PlayerBehavior::Perform(PlannedAction::ExamineItem { entity })
-            }
-            (_, QueuedInstruction::ExaminePos) => {
-                let pos = Pos::from(&Focus::new(self, pos));
-                *self = Self::ExaminingPos(pos);
-                PlayerBehavior::NoEffect
-            }
-            (_, QueuedInstruction::ExamineZoneLevel) => {
-                let target = ZoneLevel::from(&Focus::new(self, pos));
-                *self = Self::ExaminingZoneLevel(target);
-                PlayerBehavior::NoEffect
-            }
-            (_, QueuedInstruction::ChangePace) => {
-                PlayerBehavior::Perform(PlannedAction::ChangePace)
-            }
             (Self::Waiting { .. }, QueuedInstruction::Interrupted) => {
                 *self = Self::Normal;
                 PlayerBehavior::Feedback(Message::warn(Phrase::new(
@@ -234,27 +199,114 @@ impl PlayerActionState {
                 *self = Self::Normal;
                 PlayerBehavior::Feedback(Message::info(Phrase::new("Finished waiting")))
             }
-            (_, QueuedInstruction::Interrupted) => {
+            (Self::Attacking, QueuedInstruction::Attack)
+            | (Self::Smashing, QueuedInstruction::Smash)
+            | (Self::Dragging { .. }, QueuedInstruction::Drag | QueuedInstruction::CancelAction)
+            | (Self::ExaminingPos(_), QueuedInstruction::ExaminePos)
+            | (Self::ExaminingZoneLevel(_), QueuedInstruction::ExamineZoneLevel) => {
+                *self = Self::Normal;
+                PlayerBehavior::NoEffect
+            }
+            (
+                Self::Dragging {
+                    active_from: Some(_),
+                },
+                QueuedInstruction::Finished,
+            ) => {
+                *self = Self::Dragging { active_from: None };
+                PlayerBehavior::NoEffect
+            }
+            (
+                Self::Dragging {
+                    active_from: Some(_),
+                },
+                _,
+            ) => {
+                PlayerBehavior::Feedback(Message::warn(Phrase::new("You are still dragging items")))
+            }
+            (_, instruction) => self.generic_plan(envir, player_pos, instruction),
+        }
+    }
+
+    /** For plans that not depend on self */
+    #[allow(clippy::needless_pass_by_value)]
+    fn generic_plan(
+        &mut self,
+        envir: &Envir,
+        player_pos: Pos,
+        instruction: QueuedInstruction,
+    ) -> PlayerBehavior {
+        //println!("processing generic instruction: {instruction:?}");
+        match instruction {
+            QueuedInstruction::CancelAction
+            | QueuedInstruction::Wait
+            | QueuedInstruction::Sleep => {
+                *self = Self::Normal;
+                PlayerBehavior::NoEffect
+            }
+            QueuedInstruction::Offset(direction) => {
+                self.handle_offset(envir, player_pos, direction.to_nbor())
+            }
+            QueuedInstruction::Wield(item) => {
+                PlayerBehavior::Perform(PlannedAction::Wield { item })
+            }
+            QueuedInstruction::Unwield(item) => {
+                PlayerBehavior::Perform(PlannedAction::Unwield { item })
+            }
+            QueuedInstruction::Pickup(item) => {
+                PlayerBehavior::Perform(PlannedAction::Pickup { item })
+            }
+            QueuedInstruction::Dump(item, direction) => {
+                PlayerBehavior::Perform(PlannedAction::MoveItem {
+                    item,
+                    to: Nbor::Horizontal(direction),
+                })
+            }
+            QueuedInstruction::Attack => self.handle_attack(envir, player_pos),
+            QueuedInstruction::Smash => self.handle_smash(envir, player_pos),
+            QueuedInstruction::Close => self.handle_close(envir, player_pos),
+            QueuedInstruction::Drag => {
+                *self = Self::Dragging { active_from: None }; // 'active_from' will temporary be set after moving
+                PlayerBehavior::NoEffect
+            }
+            QueuedInstruction::ExamineItem(item) => {
+                PlayerBehavior::Perform(PlannedAction::ExamineItem { item })
+            }
+            QueuedInstruction::ExaminePos => {
+                let target = Pos::from(&Focus::new(self, player_pos));
+                *self = Self::ExaminingPos(target);
+                PlayerBehavior::NoEffect
+            }
+            QueuedInstruction::ExamineZoneLevel => {
+                let target = ZoneLevel::from(&Focus::new(self, player_pos));
+                *self = Self::ExaminingZoneLevel(target);
+                PlayerBehavior::NoEffect
+            }
+            QueuedInstruction::ChangePace => PlayerBehavior::Perform(PlannedAction::ChangePace),
+            QueuedInstruction::Interrupted => {
                 *self = Self::Normal;
                 PlayerBehavior::Feedback(Message::error(Phrase::new(
                     "Iterrupted while not waiting",
                 )))
             }
-            (_, QueuedInstruction::Finished) => {
+            QueuedInstruction::Finished => {
                 *self = Self::Normal;
                 PlayerBehavior::Feedback(Message::error(Phrase::new("Finished while not waiting")))
             }
         }
     }
 
-    fn handle_offset(&mut self, target: Result<Pos, Message>, nbor: Nbor) -> PlayerBehavior {
-        match (&self, target) {
-            (Self::Sleeping { .. }, target) => {
-                panic!("{:?} {:?}", &self, target);
+    fn handle_offset(&mut self, envir: &Envir, player_pos: Pos, raw_nbor: Nbor) -> PlayerBehavior {
+        if let Err(message) = envir.get_nbor(player_pos, raw_nbor) {
+            return PlayerBehavior::Feedback(message);
+        }
+
+        match &self {
+            Self::Sleeping { .. } => {
+                panic!("{self:?} {player_pos:?} {raw_nbor:?}");
             }
-            (Self::ExaminingZoneLevel(current), _) => {
-                let target = current.nbor(nbor);
-                if let Some(target) = target {
+            Self::ExaminingZoneLevel(current) => {
+                if let Some(target) = current.nbor(raw_nbor) {
                     *self = Self::ExaminingZoneLevel(target);
                     PlayerBehavior::NoEffect
                 } else {
@@ -263,8 +315,8 @@ impl PlayerActionState {
                     )))
                 }
             }
-            (Self::ExaminingPos(current), target) => {
-                if let Some(target) = target.ok().or_else(|| current.raw_nbor(nbor)) {
+            Self::ExaminingPos(current) => {
+                if let Some(target) = current.raw_nbor(raw_nbor) {
                     *self = Self::ExaminingPos(target);
                     PlayerBehavior::NoEffect
                 } else {
@@ -273,31 +325,41 @@ impl PlayerActionState {
                     )))
                 }
             }
-            (Self::Normal, Ok(to)) => PlayerBehavior::Perform(PlannedAction::Step { to }),
-            (Self::Attacking, Ok(target)) => {
+            Self::Normal => PlayerBehavior::Perform(PlannedAction::Step { to: raw_nbor }),
+            Self::Attacking => {
                 *self = Self::Normal;
-                PlayerBehavior::Perform(PlannedAction::Attack { target })
+                PlayerBehavior::Perform(PlannedAction::Attack { target: raw_nbor })
             }
-            (Self::Smashing, Ok(target)) => {
+            Self::Smashing => {
                 *self = Self::Normal;
-                PlayerBehavior::Perform(PlannedAction::Smash { target })
+                PlayerBehavior::Perform(PlannedAction::Smash { target: raw_nbor })
             }
-            (Self::Closing, Ok(target)) => {
+            Self::Closing => {
                 *self = Self::Normal;
-                PlayerBehavior::Perform(PlannedAction::Close { target })
+                PlayerBehavior::Perform(PlannedAction::Close { target: raw_nbor })
             }
-            (Self::Waiting { .. }, _) => {
+            Self::Dragging { active_from: None } => {
+                *self = Self::Dragging {
+                    active_from: Some(player_pos),
+                };
+                PlayerBehavior::Perform(PlannedAction::Step { to: raw_nbor })
+            }
+            Self::Dragging {
+                active_from: Some(active_from),
+            } => {
+                panic!("{self:?} {player_pos:?} {raw_nbor:?} {active_from:?}");
+            }
+            Self::Waiting { .. } => {
                 *self = Self::Normal;
                 PlayerBehavior::NoEffect
             }
-            (_, Err(message)) => PlayerBehavior::Feedback(message),
         }
     }
 
     fn handle_attack(&mut self, envir: &Envir, pos: Pos) -> PlayerBehavior {
         let attackable_nbors = envir
             .nbors_for_exploring(pos, QueuedInstruction::Attack)
-            .collect::<Vec<Pos>>();
+            .collect::<Vec<Nbor>>();
         match attackable_nbors.len() {
             0 => PlayerBehavior::Feedback(Message::warn(Phrase::new("no targets nearby"))),
             1 => PlayerBehavior::Perform(PlannedAction::Attack {
@@ -313,7 +375,7 @@ impl PlayerActionState {
     fn handle_smash(&mut self, envir: &Envir, pos: Pos) -> PlayerBehavior {
         let smashable_nbors = envir
             .nbors_for_exploring(pos, QueuedInstruction::Smash)
-            .collect::<Vec<Pos>>();
+            .collect::<Vec<Nbor>>();
         match smashable_nbors.len() {
             0 => PlayerBehavior::Feedback(Message::warn(Phrase::new("no targets nearby"))),
             1 => PlayerBehavior::Perform(PlannedAction::Smash {
@@ -329,7 +391,7 @@ impl PlayerActionState {
     fn handle_close(&mut self, envir: &Envir, pos: Pos) -> PlayerBehavior {
         let closable_nbors = envir
             .nbors_for_exploring(pos, QueuedInstruction::Close)
-            .collect::<Vec<Pos>>();
+            .collect::<Vec<Nbor>>();
         match closable_nbors.len() {
             0 => PlayerBehavior::Feedback(Message::warn(Phrase::new("nothing to close nearby"))),
             1 => PlayerBehavior::Perform(PlannedAction::Close {
@@ -347,9 +409,11 @@ impl PlayerActionState {
             Self::Normal | Self::Closing | Self::ExaminingPos(_) | Self::ExaminingZoneLevel(_) => {
                 DEFAULT_TEXT_COLOR
             }
-            Self::Waiting { .. } | Self::Sleeping { .. } | Self::Smashing | Self::Attacking => {
-                WARN_TEXT_COLOR
-            }
+            Self::Waiting { .. }
+            | Self::Sleeping { .. }
+            | Self::Smashing
+            | Self::Attacking
+            | Self::Dragging { .. } => WARN_TEXT_COLOR,
         }
     }
 }
@@ -361,6 +425,7 @@ impl fmt::Display for PlayerActionState {
             Self::Attacking => "Attacking",
             Self::Smashing => "Smashing",
             Self::Closing => "Closing",
+            Self::Dragging { .. } => "Dragging",
             Self::Waiting { .. } => "Waiting",
             Self::Sleeping { .. } => "Sleeping",
             Self::ExaminingPos(_) => "Examining",

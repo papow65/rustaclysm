@@ -48,7 +48,7 @@ pub(crate) fn create_independent_resources(mut commands: Commands) {
     commands.insert_resource(Events::<ActorEvent<Wield>>::default());
     commands.insert_resource(Events::<ActorEvent<Unwield>>::default());
     commands.insert_resource(Events::<ActorEvent<Pickup>>::default());
-    commands.insert_resource(Events::<ActorEvent<Dump>>::default());
+    commands.insert_resource(Events::<ActorEvent<MoveItem>>::default());
     commands.insert_resource(Events::<ActorEvent<ExamineItem>>::default());
     commands.insert_resource(Events::<ActorEvent<ChangePace>>::default());
     commands.insert_resource(Events::<ActorEvent<StaminaImpact>>::default());
