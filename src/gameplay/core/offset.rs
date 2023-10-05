@@ -1,4 +1,4 @@
-#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd)]
 pub(crate) struct LevelOffset {
     pub(crate) h: i8,
 }
@@ -17,6 +17,12 @@ pub(crate) struct PosOffset {
 }
 
 impl PosOffset {
+    pub(crate) const HERE: Self = Self {
+        x: 0,
+        level: LevelOffset::ZERO,
+        z: 0,
+    };
+
     pub(crate) fn player_hint(&self) -> &str {
         if self.x == 0 && self.z == 0 {
             match self.level {
@@ -51,6 +57,15 @@ impl PosOffset {
                 assert!(self.z < 0, "Unexpected offset: {self:?}");
                 "NW"
             }
+        }
+    }
+
+    pub(crate) const fn down(&self) -> Self {
+        Self {
+            level: LevelOffset {
+                h: self.level.h - 1,
+            },
+            ..*self
         }
     }
 }

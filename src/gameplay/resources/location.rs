@@ -1,7 +1,7 @@
 use crate::prelude::{Pos, StairsDown, StairsUp};
 use bevy::{
     ecs::query::{ROQueryItem, ReadOnlyWorldQuery},
-    prelude::{Entity, Query, Resource},
+    prelude::{Entity, Query, Resource, With},
     utils::HashMap,
 };
 
@@ -69,7 +69,7 @@ impl Location {
     pub(crate) fn has_stairs_up<'s>(
         &self,
         from: Pos,
-        stairs_up: &'s Query<'_, 's, &'static StairsUp>,
+        stairs_up: &'s Query<'_, 's, &Pos, With<StairsUp>>,
     ) -> bool {
         from.level.up().is_some() && self.any(from, stairs_up)
     }
@@ -77,7 +77,7 @@ impl Location {
     pub(crate) fn has_stairs_down<'s>(
         &self,
         from: Pos,
-        stairs_down: &'s Query<'_, 's, &'static StairsDown>,
+        stairs_down: &'s Query<'_, 's, &Pos, With<StairsDown>>,
     ) -> bool {
         from.level.down().is_some() && self.any(from, stairs_down)
     }

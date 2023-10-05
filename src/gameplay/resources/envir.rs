@@ -19,8 +19,8 @@ pub(crate) struct Envir<'w, 's> {
     hurdles: Query<'w, 's, &'static Hurdle>,
     openables: Query<'w, 's, (Entity, &'static ObjectName), With<Openable>>,
     closeables: Query<'w, 's, (Entity, &'static ObjectName), With<Closeable>>,
-    stairs_up: Query<'w, 's, &'static StairsUp>,
-    stairs_down: Query<'w, 's, &'static StairsDown>,
+    stairs_up: Query<'w, 's, &'static Pos, With<StairsUp>>,
+    stairs_down: Query<'w, 's, &'static Pos, With<StairsDown>>,
     terrain: Query<'w, 's, &'static ObjectName, (Without<Health>, Without<Amount>)>,
     obstacles: Query<'w, 's, &'static ObjectName, With<Obstacle>>,
     opaques: Query<'w, 's, &'static ObjectName, With<Opaque>>,
@@ -44,15 +44,15 @@ impl<'w, 's> Envir<'w, 's> {
             == Some(true)
     }
 
-    pub(crate) fn stairs_up_to(&self, pos: Pos) -> Option<Pos> {
-        if self.location.has_stairs_up(pos, &self.stairs_up) {
-            let zone_level_up = ZoneLevel::from(pos).offset(LevelOffset::UP).unwrap();
+    pub(crate) fn stairs_up_to(&self, from: Pos) -> Option<Pos> {
+        if self.location.has_stairs_up(from, &self.stairs_up) {
+            let zone_level_up = ZoneLevel::from(from).offset(LevelOffset::UP).unwrap();
 
             for distance in 0..24i32 {
                 for dx in -distance..=distance {
                     for dz in -distance..=distance {
                         if dx.abs().max(dz.abs()) == distance {
-                            let test_up = pos
+                            let test_up = from
                                 .offset(PosOffset {
                                     x: dx,
                                     level: LevelOffset::UP,
@@ -70,7 +70,7 @@ impl<'w, 's> Envir<'w, 's> {
             }
 
             eprintln!("No matching stairs up found");
-            pos.offset(PosOffset {
+            from.offset(PosOffset {
                 x: 0,
                 level: LevelOffset::UP,
                 z: 0,
@@ -80,16 +80,16 @@ impl<'w, 's> Envir<'w, 's> {
         }
     }
 
-    pub(crate) fn stairs_down_to(&self, pos: Pos) -> Option<Pos> {
-        if self.location.has_stairs_down(pos, &self.stairs_down) {
-            let zone_level_down = ZoneLevel::from(pos).offset(LevelOffset::DOWN).unwrap();
+    pub(crate) fn stairs_down_to(&self, from: Pos) -> Option<Pos> {
+        if self.location.has_stairs_down(from, &self.stairs_down) {
+            let zone_level_down = ZoneLevel::from(from).offset(LevelOffset::DOWN).unwrap();
 
             // fast approach in most cases, otherwise fast enough
             for distance in 0..Zone::SIZE {
                 for dx in -distance..=distance {
                     for dz in -distance..=distance {
                         if dx.abs().max(dz.abs()) == distance {
-                            let test_down = pos
+                            let test_down = from
                                 .offset(PosOffset {
                                     x: dx,
                                     level: LevelOffset::DOWN,
@@ -107,7 +107,7 @@ impl<'w, 's> Envir<'w, 's> {
             }
 
             eprintln!("No matching stairs down found");
-            pos.offset(PosOffset {
+            from.offset(PosOffset {
                 x: 0,
                 level: LevelOffset::DOWN,
                 z: 0,
@@ -155,6 +155,20 @@ impl<'w, 's> Envir<'w, 's> {
 
     // helper methods
 
+    /** In case of vertical nbors: Follow stairs, even when they do not go staight up or down. Without stairs, see the raw position below/above, unless that contains a stair to somewhere else. */
+    pub(crate) fn get_looking_nbor(&self, from: Pos, nbor: Nbor) -> Option<Pos> {
+        match nbor {
+            Nbor::Up => self.stairs_up_to(from).or_else(|| from.raw_nbor(Nbor::Up)),
+            Nbor::Down => self
+                .stairs_down_to(from)
+                .or_else(|| from.raw_nbor(Nbor::Down)),
+            _ => {
+                // No stairs
+                Some(from.raw_nbor(nbor).unwrap())
+            }
+        }
+    }
+
     /** Follow stairs, even when they do not go staight up or down. */
     pub(crate) fn get_nbor(&self, from: Pos, nbor: Nbor) -> Result<Pos, Message> {
         match nbor {
@@ -180,7 +194,7 @@ impl<'w, 's> Envir<'w, 's> {
                 .ok()
                 .map(Nbor::Horizontal),
             LevelOffset::DOWN if self.get_nbor(from, Nbor::Down) == Ok(to) => Some(Nbor::Down),
-            _ => None, // multiple floors
+            _ => None,
         }
     }
 
@@ -439,6 +453,11 @@ pub(crate) struct CurrentlyVisible<'a> {
     opaque_cache: RefCell<HashMap<PosOffset, bool>>, // is opaque
     down_cache: RefCell<HashMap<PosOffset, bool>>,   // can see down
     visible_cache: RefCell<HashMap<PosOffset, Visible>>,
+
+    /// The stairs up that do not have stairs down directly above them
+    magic_stairs_up: Vec<PosOffset>,
+    /// The stairs down that do not have stairs up directly below them
+    magic_stairs_down: Vec<PosOffset>,
 }
 
 impl<'a> CurrentlyVisible<'a> {
@@ -462,6 +481,38 @@ impl<'a> CurrentlyVisible<'a> {
             .get(viewing_distance)
             .unwrap_or_else(|| panic!("{viewing_distance}"));
 
+        let magic_stairs_up = envir
+            .stairs_up
+            .iter()
+            .filter(|pos| {
+                pos.raw_nbor(Nbor::Up)
+                    .is_some_and(|down| !envir.location.has_stairs_down(down, &envir.stairs_down))
+            })
+            .map(|pos| *pos - from)
+            .collect::<Vec<_>>();
+        let magic_stairs_down = envir
+            .stairs_down
+            .iter()
+            .filter(|pos| {
+                pos.raw_nbor(Nbor::Down)
+                    .is_some_and(|down| !envir.location.has_stairs_up(down, &envir.stairs_up))
+            })
+            .map(|pos| *pos - from)
+            .collect::<Vec<_>>();
+
+        let visible_cache = RefCell::<HashMap<PosOffset, Visible>>::default();
+        if magic_stairs_up.contains(&PosOffset::HERE) {
+            if let Some(up) = envir.stairs_up_to(from) {
+                visible_cache.borrow_mut().insert(up - from, Visible::Seen);
+            }
+        } else if magic_stairs_down.contains(&PosOffset::HERE) {
+            if let Some(down) = envir.stairs_down_to(from) {
+                visible_cache
+                    .borrow_mut()
+                    .insert(down - from, Visible::Seen);
+            }
+        }
+
         Self {
             envir,
             segments,
@@ -469,18 +520,20 @@ impl<'a> CurrentlyVisible<'a> {
             from,
             opaque_cache: RefCell::default(),
             down_cache: RefCell::default(),
-            visible_cache: RefCell::default(),
+            visible_cache,
+            magic_stairs_up,
+            magic_stairs_down,
         }
     }
 
     pub(crate) fn can_see(&self, to: Pos, accessible: Option<&Accessible>) -> Visible {
         let to = if accessible.is_some() && self.from.level < to.level {
             // seen from below?
-            Pos {
-                x: to.x,
-                level: Level { h: to.level.h - 1 },
-                z: to.z,
-            }
+            let Some(below) = self.envir.get_looking_nbor(to, Nbor::Down) else {
+                eprintln!("No looking down nbor for {to:?}");
+                return Visible::Unseen;
+            };
+            below
         } else {
             // seen from above?
             to
@@ -525,7 +578,7 @@ impl<'a> CurrentlyVisible<'a> {
             .down_pairs
             .iter()
             .all(|(offset_a, offset_b)| {
-                self.can_look_down(*offset_a) || self.can_look_down(*offset_b)
+                self.can_look_vertical(*offset_a) || self.can_look_vertical(*offset_b)
             }) {
             Visible::Seen
         } else {
@@ -546,15 +599,25 @@ impl<'a> CurrentlyVisible<'a> {
             })
     }
 
-    fn can_look_down(&self, offset: PosOffset) -> bool {
+    fn can_look_vertical(&self, above: PosOffset) -> bool {
         *self
             .down_cache
             .borrow_mut()
-            .entry(offset)
+            .entry(above)
             .or_insert_with(|| {
-                let to = self.from.offset(offset).unwrap();
-                !self.envir.has_opaque_floor(to)
-                    && (Level::ZERO <= to.level || self.envir.is_accessible(to))
+                if LevelOffset::ZERO < above.level {
+                    // looking up
+                    let below = above.down();
+                    if self.magic_stairs_up.contains(&below) {
+                        return false;
+                    }
+                } else if self.magic_stairs_down.contains(&above) {
+                    return false;
+                }
+
+                let above = self.from.offset(above).unwrap();
+                !self.envir.has_opaque_floor(above)
+                    && (Level::ZERO <= above.level || self.envir.is_accessible(above))
             })
     }
 
