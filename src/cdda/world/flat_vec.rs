@@ -36,7 +36,7 @@ where
     {
         let mut result: Vec<T> = Vec::new();
         while let Some(element) = seq.next_element::<serde_json::Value>()? {
-            let mut fields = [(); N].map(|_| serde_json::Value::default());
+            let mut fields = [(); N].map(|()| serde_json::Value::default());
             fields[0] = element;
             for field in fields.iter_mut().take(N).skip(1) {
                 *field = seq.next_element::<serde_json::Value>()?.ok_or_else(|| {

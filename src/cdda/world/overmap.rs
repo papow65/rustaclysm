@@ -180,7 +180,7 @@ impl AssetLoader for OvermapLoader {
         EXTENSIONS.get_or_init(|| {
             let strings = STRINGS.get_or_init(|| {
                 let mut i = -(Self::EXTENSION_MAX as isize);
-                [(); Self::EXTENSION_COUNT].map(|_| {
+                [(); Self::EXTENSION_COUNT].map(|()| {
                     let string = i.to_string();
                     i += 1;
                     string
@@ -188,7 +188,7 @@ impl AssetLoader for OvermapLoader {
             });
 
             let mut j = 0;
-            [(); Self::EXTENSION_COUNT].map(|_| {
+            [(); Self::EXTENSION_COUNT].map(|()| {
                 let extension = strings[j].as_str();
                 j += 1;
                 extension
