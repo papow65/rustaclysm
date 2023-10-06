@@ -297,8 +297,13 @@ impl PlayerActionState {
     }
 
     fn handle_offset(&mut self, envir: &Envir, player_pos: Pos, raw_nbor: Nbor) -> PlayerBehavior {
-        if let Err(message) = envir.get_nbor(player_pos, raw_nbor) {
-            return PlayerBehavior::Feedback(message);
+        if !matches!(
+            *self,
+            Self::Sleeping { .. } | Self::ExaminingZoneLevel(_) | Self::ExaminingPos(_)
+        ) {
+            if let Err(message) = envir.get_nbor(player_pos, raw_nbor) {
+                return PlayerBehavior::Feedback(message);
+            }
         }
 
         match &self {
