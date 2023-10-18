@@ -4,7 +4,7 @@ use std::fmt;
 
 // Stats for characters
 
-#[derive(Component, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Component)]
 pub(crate) struct BaseSpeed(MillimeterPerSecond);
 
 impl BaseSpeed {
@@ -132,5 +132,5 @@ impl Health {
 }
 
 /** For some animals */
-#[derive(Component)]
+#[derive(Debug, Component)]
 pub(crate) struct Aquatic;

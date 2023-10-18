@@ -44,6 +44,7 @@ impl Impact {
 }
 
 #[derive(WorldQuery)]
+#[world_query(derive(Debug))]
 pub(crate) struct Actor {
     pub(crate) entity: Entity,
     pub(crate) name: &'static ObjectName,
@@ -58,6 +59,7 @@ pub(crate) struct Actor {
     pub(crate) stamina: &'static Stamina,
     pub(crate) walking_mode: &'static WalkingMode,
     pub(crate) life: &'static Life,
+    pub(crate) player: Option<&'static Player>,
 }
 
 impl ActorItem<'_> {

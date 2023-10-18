@@ -87,7 +87,7 @@ impl Container {
     }
 }
 
-#[derive(Component)]
+#[derive(Debug, Component)]
 pub(crate) struct BodyContainers {
     pub(crate) hands: Entity,
     pub(crate) clothing: Entity,

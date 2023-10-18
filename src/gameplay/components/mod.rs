@@ -99,7 +99,7 @@ impl Integrity {
     // TODO raising (not with Healing)
 }
 
-#[derive(Component)]
+#[derive(Debug, Component)]
 pub(crate) struct Life;
 
 #[derive(Component)]
@@ -111,7 +111,7 @@ pub(crate) struct CameraBase;
 #[derive(Component)]
 pub(crate) struct ExamineCursor;
 
-#[derive(Component)]
+#[derive(Debug, Component)]
 pub(crate) struct Melee {
     pub(crate) dices: u16,
     pub(crate) sides: u16,
