@@ -484,8 +484,11 @@ pub(crate) fn update_damaged_characters(
         let evolution = health.lower(&damage.change);
         if health.0.is_zero() {
             message_writer.send(Message::warn(
-                Phrase::from_fragment(damage.change.attacker.clone())
-                    .add("kills")
+                damage
+                    .change
+                    .attacker
+                    .clone()
+                    .verb("kill", "s")
                     .push(name.single()),
             ));
             transform.rotation = Quat::from_rotation_y(std::f32::consts::FRAC_PI_2)
@@ -502,8 +505,11 @@ pub(crate) fn update_damaged_characters(
             }
         } else {
             message_writer.send({
-                let begin = Phrase::from_fragment(damage.change.attacker.clone())
-                    .add("hits")
+                let begin = damage
+                    .change
+                    .attacker
+                    .clone()
+                    .verb("hit", "s")
                     .push(name.single());
 
                 Message::warn(if evolution.changed() {
@@ -527,24 +533,28 @@ pub(crate) fn update_damaged_characters(
 pub(crate) fn update_healed_characters(
     mut message_writer: EventWriter<Message>,
     mut healing_reader: EventReader<ActorEvent<Healing>>,
-    mut characters: Query<(&ObjectName, &mut Health), (With<Faction>, With<Life>)>,
+    mut actors: ParamSet<(
+        Query<&mut Health, (With<Faction>, With<Life>)>,
+        Query<Actor, (With<Faction>, With<Life>)>,
+    )>,
 ) {
     let start = Instant::now();
 
     for healing in &mut healing_reader {
-        let (name, mut health) = characters
-            .get_mut(healing.actor_entity)
-            .expect("Actor found");
+        let mut healths = actors.p0();
+        let mut health = healths.get_mut(healing.actor_entity).expect("Actor found");
         let evolution = health.raise(&healing.change);
         if evolution.changed() {
+            let actors = actors.p1();
+            let actor = actors.get(healing.actor_entity).expect("Actor found");
             message_writer.send({
-                let begin = Phrase::from_name(name);
+                let begin = actor.subject().verb("heal", "s");
 
                 Message::info(if evolution.change_abs() == 1 {
-                    begin.add("heals a bit")
+                    begin.add("a bit")
                 } else {
                     begin.add(format!(
-                        "heals for {} ({} -> {})",
+                        "for {} ({} -> {})",
                         evolution.change_abs(),
                         evolution.before,
                         evolution.after
@@ -584,8 +594,11 @@ pub(crate) fn update_damaged_items(
         let evolution = integrity.lower(&damage.change);
         if integrity.0.is_zero() {
             message_writer.send(Message::warn(
-                Phrase::from_fragment(damage.change.attacker.clone())
-                    .add("breaks")
+                damage
+                    .change
+                    .attacker
+                    .clone()
+                    .verb("break", "s")
                     .extend(name.as_item(amount, filthy)),
             ));
             commands.entity(item).despawn_recursive();
@@ -593,8 +606,11 @@ pub(crate) fn update_damaged_items(
             *visualization_update = VisualizationUpdate::Forced;
         } else {
             message_writer.send({
-                let begin = Phrase::from_fragment(damage.change.attacker.clone())
-                    .add("hits")
+                let begin = damage
+                    .change
+                    .attacker
+                    .clone()
+                    .verb("hit", "s")
                     .extend(name.as_item(amount, filthy));
 
                 Message::warn(if evolution.changed() {

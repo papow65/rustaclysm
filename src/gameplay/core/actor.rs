@@ -43,6 +43,33 @@ impl Impact {
     }
 }
 
+#[derive(Clone, Debug)]
+pub(crate) enum Subject {
+    You,
+    Other(Phrase),
+}
+
+impl Subject {
+    fn phrase(self, second_person: &str, third_person: String) -> Phrase {
+        match self {
+            Self::You => Phrase::from_fragment(Fragment {
+                text: String::from("You"),
+                color: Some(GOOD_TEXT_COLOR),
+            })
+            .add(second_person),
+            Self::Other(phrase) => phrase.add(third_person),
+        }
+    }
+
+    pub(crate) fn verb(self, root: &str, suffix: &str) -> Phrase {
+        self.phrase(root, String::from(root) + suffix)
+    }
+
+    pub(crate) fn is(self) -> Phrase {
+        self.phrase("is", String::from("are"))
+    }
+}
+
 #[derive(WorldQuery)]
 #[world_query(derive(Debug))]
 pub(crate) struct Actor {
@@ -63,6 +90,14 @@ pub(crate) struct Actor {
 }
 
 impl ActorItem<'_> {
+    pub(crate) fn subject(&self) -> Subject {
+        if self.player.is_some() {
+            Subject::You
+        } else {
+            Subject::Other(Phrase::from_name(self.name))
+        }
+    }
+
     pub(crate) fn speed(&self) -> MillimeterPerSecond {
         self.base_speed
             .speed(self.walking_mode, self.stamina.breath())
@@ -122,15 +157,16 @@ impl ActorItem<'_> {
             }*/
             Collision::Blocked(obstacle) => {
                 message_writer.send(Message::warn(
-                    Phrase::from_name(self.name)
-                        .add("crashes into")
+                    self.subject()
+                        .verb("crash", "es")
+                        .add("into")
                         .push(obstacle.single()),
                 ));
                 None
             }
             Collision::Ledged => {
                 message_writer.send(Message::warn(
-                    Phrase::from_name(self.name).add("halts at the ledge"),
+                    self.subject().verb("halt", "s").add("at the ledge"),
                 ));
                 None
             }
@@ -169,7 +205,7 @@ impl ActorItem<'_> {
         }
 
         let damage = Damage {
-            attacker: self.name.single(),
+            attacker: self.subject(),
             amount: self.melee.damage(melee_weapon),
         };
         match damage_writer {
@@ -209,7 +245,7 @@ impl ActorItem<'_> {
     ) -> Option<Impact> {
         let Some(high_speed) = self.high_speed() else {
             message_writer.send(Message::warn(
-                Phrase::from_name(self.name).add("is too exhausted to attack"),
+                self.subject().is().add("too exhausted to attack"),
             ));
             return None;
         };
@@ -228,7 +264,7 @@ impl ActorItem<'_> {
             ))
         } else {
             message_writer.send(Message::warn(
-                Phrase::from_name(self.name).add("attacks nothing"),
+                self.subject().verb("attack", "s").add("nothing"),
             ));
             None
         }
@@ -245,7 +281,7 @@ impl ActorItem<'_> {
     ) -> Option<Impact> {
         let Some(high_speed) = self.high_speed() else {
             message_writer.send(Message::warn(
-                Phrase::from_name(self.name).add("is too exhausted to smash"),
+                self.subject().is().add("too exhausted to smash"),
             ));
             return None;
         };
@@ -255,14 +291,14 @@ impl ActorItem<'_> {
         let stair_pos = Pos::new(target.x, self.pos.level, target.z);
         if self.pos.level.up() == Some(target.level) && envir.stairs_up_to(stair_pos).is_none() {
             message_writer.send(Message::warn(
-                Phrase::from_name(self.name).add("smashes the ceiling"),
+                self.subject().verb("smash", "es").add("the ceiling"),
             ));
             None
         } else if self.pos.level.down() == Some(target.level)
             && envir.stairs_down_to(stair_pos).is_none()
         {
             message_writer.send(Message::warn(
-                Phrase::from_name(self.name).add("smashes the floor"),
+                self.subject().verb("smash", "es").add("the floor"),
             ));
             None
         } else if let Some((smashable, _)) = envir.find_smashable(target) {
@@ -277,7 +313,7 @@ impl ActorItem<'_> {
             ))
         } else {
             message_writer.send(Message::warn(
-                Phrase::from_name(self.name).add("smashes nothing"),
+                self.subject().verb("smash", "es").add("nothing"),
             ));
             None
         }
@@ -295,8 +331,9 @@ impl ActorItem<'_> {
         if let Some((closeable, closeable_name)) = envir.find_closeable(target) {
             if let Some((_, character)) = envir.find_character(target) {
                 message_writer.send(Message::warn(
-                    Phrase::from_name(self.name)
-                        .add("can't close")
+                    self.subject()
+                        .verb("can't", "")
+                        .add("close")
                         .push(closeable_name.single())
                         .add("on")
                         .push(character.single()),
@@ -508,8 +545,9 @@ impl ActorItem<'_> {
     ) {
         let taken_name = object_name.as_item(Some(&allowed_amount), filthy);
         message_writer.send(Message::info(
-            Phrase::from_name(self.name)
-                .add("picks up")
+            self.subject()
+                .verb("pick", "s")
+                .add("up")
                 .extend(taken_name),
         ));
 
@@ -554,8 +592,9 @@ impl ActorItem<'_> {
         taken_name: Vec<Fragment>,
     ) {
         message_writer.send(Message::info(
-            Phrase::from_name(self.name)
-                .add("picks up")
+            self.subject()
+                .verb("pick", "s")
+                .add("up")
                 .extend(taken_name),
         ));
         commands
@@ -593,8 +632,8 @@ impl ActorItem<'_> {
         let to = self.pos.raw_nbor(move_item.to).unwrap();
 
         message_writer.send(Message::info(
-            Phrase::from_name(self.name)
-                .add(if dump { "drops" } else { "moves" })
+            self.subject()
+                .verb(if dump { "drop" } else { "move" }, "s")
                 .extend(moved_name.as_item(moved_amount, moved_filthy)),
         ));
         if dump {

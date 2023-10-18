@@ -1,10 +1,10 @@
-use crate::prelude::{ActorChange, Fragment, ItemChange};
+use crate::prelude::{ActorChange, ItemChange, Subject};
 use bevy::prelude::Event;
 
 #[derive(Clone, Debug, Event)]
 pub(crate) struct Damage {
     // TODO damage types
-    pub(crate) attacker: Fragment, // for logging
+    pub(crate) attacker: Subject, // for logging
     pub(crate) amount: u16,
 }
 
