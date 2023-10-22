@@ -465,20 +465,14 @@ pub(crate) fn update_damaged_characters(
     mut damage_reader: EventReader<ActorEvent<Damage>>,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
     mut characters: Query<
-        (
-            Entity,
-            &ObjectName,
-            &mut Health,
-            &mut Transform,
-            Option<&Player>,
-        ),
+        (&ObjectName, &mut Health, &mut Transform, Option<&Player>),
         (With<Faction>, With<Life>),
     >,
 ) {
     let start = Instant::now();
 
     for damage in &mut damage_reader {
-        let (character, name, mut health, mut transform, player) = characters
+        let (name, mut health, mut transform, player) = characters
             .get_mut(damage.actor_entity)
             .expect("Actor found");
         let evolution = health.lower(&damage.change);
@@ -494,7 +488,7 @@ pub(crate) fn update_damaged_characters(
             transform.rotation = Quat::from_rotation_y(std::f32::consts::FRAC_PI_2)
                 * Quat::from_rotation_x(-std::f32::consts::FRAC_PI_2);
             commands
-                .entity(character)
+                .entity(damage.actor_entity)
                 .insert(Corpse)
                 .insert(ObjectName::corpse())
                 .remove::<Life>()
