@@ -98,6 +98,17 @@ impl ActorItem<'_> {
         }
     }
 
+    pub(crate) fn fragment(&self) -> Fragment {
+        if self.player.is_some() {
+            Fragment {
+                text: String::from("you"),
+                color: Some(GOOD_TEXT_COLOR),
+            }
+        } else {
+            self.name.single()
+        }
+    }
+
     pub(crate) fn speed(&self) -> MillimeterPerSecond {
         self.base_speed
             .speed(self.walking_mode, self.stamina.breath())
@@ -521,7 +532,7 @@ impl ActorItem<'_> {
             }
         } else {
             message_writer.send(Message::warn(
-                Phrase::new("Nothing to pick up for").push(self.name.single()),
+                Phrase::new("Nothing to pick up for").push(self.fragment()),
             ));
             None
         }
