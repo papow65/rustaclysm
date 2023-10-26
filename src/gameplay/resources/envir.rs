@@ -156,6 +156,7 @@ impl<'w, 's> Envir<'w, 's> {
     // helper methods
 
     /** In case of vertical nbors: Follow stairs, even when they do not go staight up or down. Without stairs, see the raw position below/above, unless that contains a stair to somewhere else. */
+    #[allow(dead_code)]
     pub(crate) fn get_looking_nbor(&self, from: Pos, nbor: Nbor) -> Option<Pos> {
         match nbor {
             Nbor::Up => self.stairs_up_to(from).or_else(|| from.raw_nbor(Nbor::Up)),
@@ -527,17 +528,7 @@ impl<'a> CurrentlyVisible<'a> {
     }
 
     pub(crate) fn can_see(&self, to: Pos, accessible: Option<&Accessible>) -> Visible {
-        let to = if accessible.is_some() && self.from.level < to.level {
-            // seen from below?
-            let Some(below) = self.envir.get_looking_nbor(to, Nbor::Down) else {
-                eprintln!("No looking down nbor for {to:?}");
-                return Visible::Unseen;
-            };
-            below
-        } else {
-            // seen from above?
-            to
-        };
+        // We ignore floors seen from below. Those are not particulary interesting and require complex logic to do properly.
 
         if self.viewing_distance < self.from.x.abs_diff(to.x) as usize
             || self.viewing_distance < self.from.z.abs_diff(to.z) as usize
