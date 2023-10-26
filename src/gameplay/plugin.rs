@@ -21,23 +21,21 @@ impl Plugin for GameplayPlugin {
             brightness: 0.2,
             ..AmbientLight::default()
         })
-        .insert_resource(ElevationVisibility::default());
+        .insert_resource(ElevationVisibility::default())
+        // Loading is slow, so we start loading RelativeSegments immediately.
+        .insert_resource(RelativeSegmentsGenerator::new());
 
         create_schedules(app);
-
-        // Loading is slow, so we start loading it immediately.
-        // Loading is slow, so we load it in the background as an asset.
-        app.add_asset::<RelativeSegments>();
-        app.init_asset_loader::<RelativeSegmentsLoader>();
 
         add_systems(app);
     }
 }
 
 fn add_systems(app: &mut App) {
+    // Loading is slow, so we load RelativeSegments in the background
     app.add_systems(
         Update,
-        create_relative_segments.run_if(not(resource_exists::<RelativeSegments>())),
+        load_relative_segments.run_if(not(resource_exists::<RelativeSegments>())),
     );
 
     app.add_systems(

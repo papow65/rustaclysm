@@ -1,9 +1,8 @@
 use crate::prelude::*;
 use bevy::{
-    asset::{AssetLoader, LoadContext, LoadedAsset},
     prelude::*,
-    reflect::{TypePath, TypeUuid},
-    utils::{BoxedFuture, HashMap},
+    tasks::{AsyncComputeTaskPool, Task},
+    utils::HashMap,
 };
 use std::{array, iter::once, time::Instant};
 
@@ -77,9 +76,7 @@ pub(crate) struct RelativeSegment {
     pub(crate) down_pairs: Vec<(PosOffset, PosOffset)>,
 }
 
-#[derive(Debug, Resource, TypePath, TypeUuid)]
-#[type_path = "cdda::world::Map"]
-#[uuid = "b6afaa00-31ce-4553-99ab-4df240a292a3"]
+#[derive(Debug, Resource)]
 pub(crate) struct RelativeSegments {
     pub(crate) segments: [HashMap<PosOffset, RelativeSegment>; Self::SIZE],
 }
@@ -87,6 +84,7 @@ pub(crate) struct RelativeSegments {
 impl RelativeSegments {
     const SIZE: usize = MAX_VISIBLE_DISTANCE as usize + 1;
 
+    /** This might take a couple of seconds */
     fn new() -> Self {
         let start = Instant::now();
 
@@ -174,22 +172,15 @@ impl RelativeSegments {
     }
 }
 
-#[derive(Default)]
-pub(crate) struct RelativeSegmentsLoader;
+#[derive(Debug, Resource)]
+pub(crate) struct RelativeSegmentsGenerator {
+    pub(crate) task: Task<RelativeSegments>,
+}
 
-impl AssetLoader for RelativeSegmentsLoader {
-    fn load<'a>(
-        &'a self,
-        _bytes: &'a [u8],
-        load_context: &'a mut LoadContext,
-    ) -> BoxedFuture<'a, Result<(), bevy::asset::Error>> {
-        Box::pin(async move {
-            load_context.set_default_asset(LoadedAsset::new(RelativeSegments::new()));
-            Ok(())
-        })
-    }
-
-    fn extensions(&self) -> &[&str] {
-        &["relsegs"]
+impl RelativeSegmentsGenerator {
+    pub(crate) fn new() -> Self {
+        let thread_pool = AsyncComputeTaskPool::get();
+        let task = thread_pool.spawn(async move { RelativeSegments::new() });
+        Self { task }
     }
 }
