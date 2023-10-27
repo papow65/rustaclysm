@@ -62,20 +62,20 @@ pub(crate) fn start_gameplay(
 pub(crate) fn finish_loading(
     mut next_progress_state: ResMut<NextState<ProgressScreenState>>,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
-    overmap_buffer_manager: Res<OvermapBufferManager>,
-    overmap_manager: Res<OvermapManager>,
-    map_manager: Res<MapManager>,
+    overmap_buffer_assets: Res<Assets<OvermapBuffer>>,
+    overmap_assets: Res<Assets<Overmap>>,
+    map_assets: Res<Assets<Map>>,
     explored: Res<Explored>,
     subzone_level_entities: Res<SubzoneLevelEntities>,
     mut counter: Local<u8>,
 ) {
     if 3 < *counter {
         println!(
-            "Loading status {}: {:?}, {:?}, {:?}, {:?}, and {:?}",
+            "Loading status {}: {}, {}, {}, {:?}, and {:?}",
             *counter,
-            overmap_buffer_manager.loaded(),
-            overmap_manager.loaded(),
-            map_manager.loaded(),
+            overmap_buffer_assets.len(),
+            overmap_assets.len(),
+            map_assets.len(),
             explored.loaded(),
             subzone_level_entities.loaded(),
         );
@@ -84,9 +84,9 @@ pub(crate) fn finish_loading(
         let subzones_loaded = subzone_level_entities.loaded() || *counter == u8::MAX;
 
         if subzones_loaded
-            && overmap_buffer_manager.loaded()
-            && overmap_manager.loaded()
-            && map_manager.loaded()
+            && 0 < overmap_buffer_assets.len()
+            && 0 < overmap_assets.len()
+            && 0 < map_assets.len()
             && explored.loaded()
         {
             eprintln!("Loading complete");

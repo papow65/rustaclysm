@@ -451,7 +451,6 @@ pub(crate) fn handle_map_events(
                     zone_spawner.spawn_subzone(submap, subzone_level);
                 }
             }
-            zone_spawner.map_manager.mark_loaded(handle);
         }
     }
 }
@@ -467,7 +466,7 @@ pub(crate) fn handle_overmap_buffer_events(
 
     for overmap_buffer_asset_event in &mut overmap_buffer_asset_events {
         if let AssetEvent::Created { handle } = overmap_buffer_asset_event {
-            let overzone = overmap_buffer_manager.mark_loaded(handle);
+            let overzone = overmap_buffer_manager.overzone(handle);
             let overmap_buffer = overmap_buffer_assets
                 .get(handle)
                 .expect("Overmap buffer loaded");
@@ -489,7 +488,7 @@ pub(crate) fn handle_overmap_events(
 
     for overmap_asset_event in &mut overmap_asset_events {
         if let AssetEvent::Created { handle } = overmap_asset_event {
-            let overzone = overmap_manager.mark_loaded(handle);
+            let overzone = overmap_manager.overzone(handle);
             let overmap = overmap_assets.get(handle).expect("Overmap loaded");
             zone_level_ids.load(overzone, overmap);
         }

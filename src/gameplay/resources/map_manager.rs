@@ -1,18 +1,14 @@
 use crate::prelude::{AssetState, Map, MapPath, Submap, SubzoneLevel, WorldPath, ZoneLevel};
-use bevy::prelude::{AssetServer, Assets, Handle, Resource};
+use bevy::prelude::{AssetServer, Assets, Resource};
 
 #[derive(Resource)]
 pub(crate) struct MapManager {
     world_path: WorldPath,
-    loading: Vec<Handle<Map>>,
 }
 
 impl MapManager {
-    pub(crate) fn new(world_path: WorldPath) -> Self {
-        Self {
-            world_path,
-            loading: Vec::new(),
-        }
+    pub(crate) const fn new(world_path: WorldPath) -> Self {
+        Self { world_path }
     }
 
     pub(crate) fn get_zone_level<'a>(
@@ -25,10 +21,8 @@ impl MapManager {
         if map_path.0.exists() {
             let map_handle = asset_server.load(map_path.0);
             if let Some(map) = map_assets.get(&map_handle) {
-                self.mark_loaded(&map_handle);
                 AssetState::Available { asset: map }
             } else {
-                self.loading.push(map_handle);
                 AssetState::Loading
             }
         } else {
@@ -50,13 +44,5 @@ impl MapManager {
             AssetState::Loading => AssetState::Loading,
             AssetState::Nonexistent => AssetState::Nonexistent,
         }
-    }
-
-    pub(crate) fn mark_loaded(&mut self, handle: &Handle<Map>) {
-        self.loading.retain(|h| h != handle);
-    }
-
-    pub(crate) fn loaded(&self) -> bool {
-        self.loading.is_empty()
     }
 }

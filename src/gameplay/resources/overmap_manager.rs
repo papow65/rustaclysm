@@ -8,7 +8,6 @@ use bevy::{
 pub(crate) struct OvermapManager {
     world_path: WorldPath,
     all: HashMap<Handle<Overmap>, Overzone>,
-    loading: Vec<Handle<Overmap>>,
 }
 
 impl OvermapManager {
@@ -16,7 +15,6 @@ impl OvermapManager {
         Self {
             world_path,
             all: HashMap::new(),
-            loading: Vec::new(),
         }
     }
 
@@ -31,10 +29,8 @@ impl OvermapManager {
             let overmap_handle = asset_server.load(map_path.0);
             self.all.insert(overmap_handle.clone(), overzone);
             if let Some(overmap) = overmap_assets.get(&overmap_handle) {
-                self.mark_loaded(&overmap_handle);
                 AssetState::Available { asset: overmap }
             } else {
-                self.loading.push(overmap_handle);
                 AssetState::Loading
             }
         } else {
@@ -42,12 +38,7 @@ impl OvermapManager {
         }
     }
 
-    pub(crate) fn mark_loaded(&mut self, handle: &Handle<Overmap>) -> Overzone {
-        self.loading.retain(|h| h != handle);
+    pub(crate) fn overzone(&mut self, handle: &Handle<Overmap>) -> Overzone {
         self.all.get(handle).copied().expect("Known overmap")
-    }
-
-    pub(crate) fn loaded(&self) -> bool {
-        self.loading.is_empty()
     }
 }

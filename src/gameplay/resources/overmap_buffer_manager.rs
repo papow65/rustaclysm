@@ -6,7 +6,6 @@ use bevy::utils::HashMap;
 pub(crate) struct OvermapBufferManager {
     sav_path: SavPath,
     all: HashMap<Handle<OvermapBuffer>, Overzone>,
-    loading: Vec<Handle<OvermapBuffer>>,
 }
 
 impl OvermapBufferManager {
@@ -14,7 +13,6 @@ impl OvermapBufferManager {
         Self {
             sav_path,
             all: HashMap::new(),
-            loading: Vec::new(),
         }
     }
 
@@ -29,10 +27,8 @@ impl OvermapBufferManager {
             let handle = asset_server.load(path.0);
             self.all.insert(handle.clone(), overzone);
             if let Some(asset) = overmap_buffer_assets.get(&handle) {
-                self.mark_loaded(&handle);
                 AssetState::Available { asset }
             } else {
-                self.loading.push(handle);
                 AssetState::Loading
             }
         } else {
@@ -40,12 +36,7 @@ impl OvermapBufferManager {
         }
     }
 
-    pub(crate) fn mark_loaded(&mut self, handle: &Handle<OvermapBuffer>) -> Overzone {
-        self.loading.retain(|h| h != handle);
+    pub(crate) fn overzone(&mut self, handle: &Handle<OvermapBuffer>) -> Overzone {
         self.all.get(handle).copied().expect("Known overmap buffer")
-    }
-
-    pub(crate) fn loaded(&self) -> bool {
-        self.loading.is_empty()
     }
 }
