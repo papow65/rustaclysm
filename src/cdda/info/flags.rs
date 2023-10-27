@@ -13,11 +13,11 @@ impl Flags {
     }
 
     pub(crate) fn goes_up(&self) -> bool {
-        self.contains("GOES_UP") || self.contains("RAMP_UP") || self.contains("CLIMBABLE")
+        self.contains("GOES_UP") || self.contains("RAMP_UP")
     }
 
     pub(crate) fn goes_down(&self) -> bool {
-        self.contains("GOES_DOWN") || self.contains("RAMP_DOWN") || self.contains("CLIMBABLE")
+        self.contains("GOES_DOWN") || self.contains("RAMP_DOWN")
     }
 
     pub(crate) fn transparent(&self) -> bool {
