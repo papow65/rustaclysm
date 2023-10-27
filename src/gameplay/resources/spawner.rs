@@ -622,6 +622,11 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
         map_assets: &Assets<Map>,
         subzone_level: SubzoneLevel,
     ) {
+        if self.subzone_level_entities.get(subzone_level).is_some() {
+            eprintln!("{subzone_level:?} already exists");
+            return;
+        }
+
         match self
             .map_manager
             .get_subzone_level(&self.asset_server, map_assets, subzone_level)
