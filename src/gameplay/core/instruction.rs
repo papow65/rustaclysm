@@ -125,6 +125,7 @@ pub(crate) enum Instruction {
     ToggleElevation,
     ToggleHelp,
     Zoom(ZoomDirection),
+    ResetCameraAngle,
 }
 
 impl TryFrom<(&KeyCombo, CancelContext)> for Instruction {
@@ -141,6 +142,7 @@ impl TryFrom<(&KeyCombo, CancelContext)> for Instruction {
             (KeyCombo::Character('Z'), _) => Ok(Self::Zoom(ZoomDirection::Out)),
             (KeyCombo::Character('z'), _) => Ok(Self::Zoom(ZoomDirection::In)),
             (KeyCombo::Character('h'), _) => Ok(Self::ToggleElevation),
+            (KeyCombo::Character('0'), _) => Ok(Self::ResetCameraAngle),
             _ => QueuedInstruction::try_from(combo).map(Self::Queued),
         }
     }

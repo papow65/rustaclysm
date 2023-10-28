@@ -109,6 +109,8 @@ fn spawn_manual_display(
                             + "sleep         $\n"
                             + "zoom          z/Z\n"
                             + "zoom          scroll wheel\n"
+                            + "camera angle  hold middle\n"
+                            + "reset angle   0\n"
                             + "show elevated h\n"
                             + "toggle this   f1\n"
                             + "examine       x\n"

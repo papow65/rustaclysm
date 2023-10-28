@@ -1,6 +1,9 @@
 use crate::prelude::*;
 use bevy::{
-    input::{mouse::MouseWheel, ButtonState},
+    input::{
+        mouse::{MouseMotion, MouseWheel},
+        ButtonState,
+    },
     prelude::*,
 };
 use std::time::Instant;
@@ -23,6 +26,10 @@ fn open_inventory(next_gameplay_state: &mut NextState<GameplayScreenState>) {
 
 fn zoom(camera_offset: &mut CameraOffset, direction: ZoomDirection) {
     camera_offset.zoom(direction);
+}
+
+fn reset_camera_angle(camera_offset: &mut CameraOffset) {
+    camera_offset.reset_angle();
 }
 
 fn toggle_elevation(
@@ -49,6 +56,8 @@ fn toggle_help(help: &mut Query<&mut Visibility, With<ManualDisplay>>) {
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn manage_mouse_input(
     mut mouse_wheel_events: EventReader<MouseWheel>,
+    mut mouse_motion_events: EventReader<MouseMotion>,
+    mouse_buttons: Res<Input<MouseButton>>,
     mut camera_offset: ResMut<CameraOffset>,
 ) {
     let start = Instant::now();
@@ -61,6 +70,14 @@ pub(crate) fn manage_mouse_input(
                 ZoomDirection::Out
             },
         );
+    }
+
+    if mouse_buttons.pressed(MouseButton::Middle) {
+        let delta_sum = mouse_motion_events
+            .iter()
+            .map(|motion_event| motion_event.delta)
+            .sum();
+        camera_offset.adjust_angle(delta_sum);
     }
 
     log_if_slow("manage_mouse_input", start);
@@ -98,6 +115,7 @@ pub(crate) fn manage_keyboard_input(
                     Instruction::CancelState => open_menu(&mut next_gameplay_state),
                     Instruction::Inventory => open_inventory(&mut next_gameplay_state),
                     Instruction::Zoom(direction) => zoom(&mut camera_offset, direction),
+                    Instruction::ResetCameraAngle => reset_camera_angle(&mut camera_offset),
                     Instruction::ToggleElevation => {
                         toggle_elevation(&mut elevation_visibility, &mut visualization_update);
                     }
