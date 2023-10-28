@@ -22,6 +22,52 @@ pub(crate) struct Spawner<'w, 's> {
 }
 
 impl<'w, 's> Spawner<'w, 's> {
+    fn spawn_tile<'a>(
+        &mut self,
+        infos: &Infos,
+        subzone_level_entity: Entity,
+        pos: Pos,
+        terrain_id: &ObjectId,
+        furniture_ids: impl Iterator<Item = &'a ObjectId>,
+        item_repetitions: impl Iterator<Item = &'a Vec<Repetition<CddaItem>>>,
+        spawns: impl Iterator<Item = &'a Spawn>,
+        fields: impl Iterator<Item = &'a FlatVec<Field, 3>>,
+    ) {
+        self.spawn_terrain(infos, subzone_level_entity, pos, terrain_id);
+
+        for id in furniture_ids {
+            self.spawn_furniture(infos, subzone_level_entity, pos, id);
+        }
+
+        for repetitions in item_repetitions {
+            for repetition in repetitions {
+                let CddaAmount { obj: item, amount } = repetition.as_amount();
+                //dbg!(&item.typeid);
+                if let Err(load_error) = self.spawn_existing_item(
+                    infos,
+                    subzone_level_entity,
+                    pos,
+                    item,
+                    Amount(item.charges.unwrap_or(1) * amount),
+                ) {
+                    eprintln!("{load_error}");
+                }
+            }
+        }
+
+        for spawn in spawns {
+            //dbg!(&spawn.id);
+            self.spawn_character(infos, subzone_level_entity, pos, &spawn.id, None);
+        }
+
+        for fields in fields {
+            //dbg!(&fields);
+            for field in &fields.0 {
+                self.spawn_field(infos, subzone_level_entity, pos, &field.id);
+            }
+        }
+    }
+
     fn spawn_character(
         &mut self,
         infos: &Infos,
@@ -45,8 +91,7 @@ impl<'w, 's> Spawner<'w, 's> {
             category: ObjectCategory::Character,
             id: id.clone(),
         };
-        let entity = self.spawn_tile(parent, pos, definition, object_name);
-
+        let entity = self.spawn_object(parent, pos, definition, object_name);
         let mut entity = self.commands.entity(entity);
         entity
             .insert(Life)
@@ -109,7 +154,7 @@ impl<'w, 's> Spawner<'w, 's> {
             category: ObjectCategory::Field,
             id: id.clone(),
         };
-        self.spawn_tile(parent, pos, definition, object_name);
+        self.spawn_object(parent, pos, definition, object_name);
     }
 
     fn spawn_existing_item(
@@ -134,8 +179,8 @@ impl<'w, 's> Spawner<'w, 's> {
         };
         //println!("{:?} @ {pos:?}", &definition);
         let object_name = ObjectName::new(item_info.name.clone(), item_info.text_color());
-        let entity = self.spawn_tile(parent, pos, definition, object_name);
-        let mut entity = self.commands.entity(entity);
+        let object_entity = self.spawn_object(parent, pos, definition, object_name);
+        let mut entity = self.commands.entity(object_entity);
         entity.insert(amount);
 
         let (volume, mass) = match &item.corpse {
@@ -256,26 +301,26 @@ impl<'w, 's> Spawner<'w, 's> {
             id: id.clone(),
         };
         let object_name = ObjectName::new(furniture_info.name.clone(), DEFAULT_TEXT_COLOR);
-        let tile = self.spawn_tile(parent, pos, definition, object_name);
+        let object_entity = self.spawn_object(parent, pos, definition, object_name);
 
         if !furniture_info.flags.transparent() {
-            self.commands.entity(tile).insert(Opaque);
+            self.commands.entity(object_entity).insert(Opaque);
         }
 
         if furniture_info.bash.is_some() {
             // TODO
             self.commands
-                .entity(tile)
+                .entity(object_entity)
                 .insert(Integrity(Limited::full(10)));
         }
 
         match furniture_info.move_cost_mod {
             None => {}
             Some(MoveCostMod::Impossible(_)) => {
-                self.commands.entity(tile).insert(Obstacle);
+                self.commands.entity(object_entity).insert(Obstacle);
             }
             Some(MoveCostMod::Slower(increase)) => {
-                self.commands.entity(tile).insert(Hurdle(increase));
+                self.commands.entity(object_entity).insert(Hurdle(increase));
             }
         }
     }
@@ -286,39 +331,44 @@ impl<'w, 's> Spawner<'w, 's> {
             return;
         };
 
+        if id == &ObjectId::new("t_open_air") || id == &ObjectId::new("t_open_air_rooved") {
+            // Don't spawn air terrain to keep the entity count low
+            return;
+        }
+
         let definition = &ObjectDefinition {
             category: ObjectCategory::Terrain,
             id: id.clone(),
         };
         let object_name = ObjectName::new(terrain_info.name.clone(), DEFAULT_TEXT_COLOR);
-        let tile = self.spawn_tile(parent, pos, definition, object_name);
+        let object_entity = self.spawn_object(parent, pos, definition, object_name);
 
         if 0 < terrain_info.move_cost.0 {
             if terrain_info.close.is_some() {
-                self.commands.entity(tile).insert(Closeable);
+                self.commands.entity(object_entity).insert(Closeable);
             }
-            self.commands.entity(tile).insert(Accessible {
+            self.commands.entity(object_entity).insert(Accessible {
                 water: terrain_info.flags.water(),
                 move_cost: terrain_info.move_cost,
             });
         } else if terrain_info.open.is_some() {
-            self.commands.entity(tile).insert(Openable);
+            self.commands.entity(object_entity).insert(Openable);
         } else {
-            self.commands.entity(tile).insert(Obstacle);
+            self.commands.entity(object_entity).insert(Obstacle);
         }
 
         if !terrain_info.flags.transparent() {
-            self.commands.entity(tile).insert(Opaque);
+            self.commands.entity(object_entity).insert(Opaque);
         }
 
         if terrain_info.flags.goes_up() {
-            self.commands.entity(tile).insert(StairsUp);
+            self.commands.entity(object_entity).insert(StairsUp);
         }
 
         if terrain_info.flags.goes_down() {
-            self.commands.entity(tile).insert(StairsDown);
+            self.commands.entity(object_entity).insert(StairsDown);
         } else {
-            self.commands.entity(tile).insert(OpaqueFloor);
+            self.commands.entity(object_entity).insert(OpaqueFloor);
         }
 
         if let Some(bash) = &terrain_info.bash {
@@ -326,14 +376,14 @@ impl<'w, 's> Spawner<'w, 's> {
                 if ter_set != &ObjectId::new("t_null") {
                     // TODO
                     self.commands
-                        .entity(tile)
+                        .entity(object_entity)
                         .insert(Integrity(Limited::full(10)));
                 }
             }
         }
     }
 
-    fn spawn_tile(
+    fn spawn_object(
         &mut self,
         parent: Entity,
         pos: Pos,
@@ -667,85 +717,59 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
 
             for x in 0..12 {
                 for z in 0..12 {
-                    let pos = base_pos
-                        .offset(PosOffset {
-                            x,
-                            level: LevelOffset::ZERO,
-                            z,
-                        })
-                        .unwrap();
+                    let pos_offset = PosOffset {
+                        x,
+                        level: LevelOffset::ZERO,
+                        z,
+                    };
+                    let pos = base_pos.offset(pos_offset).expect("pos on same level");
                     //dbg!("{pos:?}");
-                    let id = *terrain.get(&pos).unwrap();
-                    if id != &ObjectId::new("t_open_air")
-                        && id != &ObjectId::new("t_open_air_rooved")
-                    {
-                        self.spawner
-                            .spawn_terrain(&self.infos, subzone_level_entity, pos, id);
-                    }
-
-                    for id in submap
-                        .furniture
-                        .iter()
-                        .filter_map(|at| at.get(Pos::new(x, Level::ZERO, z)))
-                    {
-                        self.spawner
-                            .spawn_furniture(&self.infos, subzone_level_entity, pos, id);
-                    }
-
-                    for repetitions in submap
-                        .items
-                        .0
-                        .iter()
-                        .filter_map(|at| at.get(Pos::new(x, Level::ZERO, z)))
-                    {
-                        for repetition in repetitions {
-                            let CddaAmount { obj: item, amount } = repetition.as_amount();
-                            //dbg!(&item.typeid);
-                            if let Err(load_error) = self.spawner.spawn_existing_item(
-                                &self.infos,
-                                subzone_level_entity,
-                                pos,
-                                item,
-                                Amount(item.charges.unwrap_or(1) * amount),
-                            ) {
-                                eprintln!("{load_error}");
-                            }
-                        }
-                    }
-
-                    for spawn in submap
+                    let terrain_id = *terrain.get(&pos).unwrap();
+                    let furniture_ids = submap.furniture.iter().filter_map(|at| at.get(pos_offset));
+                    let item_repetitions =
+                        submap.items.0.iter().filter_map(|at| at.get(pos_offset));
+                    let spawns = submap
                         .spawns
                         .iter()
-                        .filter(|spawn| spawn.x == x && spawn.z == z)
-                    {
-                        //dbg!(&spawn.id);
-                        self.spawner.spawn_character(
-                            &self.infos,
-                            subzone_level_entity,
-                            pos,
-                            &spawn.id,
-                            None,
-                        );
-                    }
-
-                    for fields in submap
-                        .fields
-                        .0
-                        .iter()
-                        .filter_map(|at| at.get(Pos::new(x, Level::ZERO, z)))
-                    {
-                        //dbg!(&fields);
-                        for field in &fields.0 {
-                            self.spawner.spawn_field(
-                                &self.infos,
-                                subzone_level_entity,
-                                pos,
-                                &field.id,
-                            );
-                        }
-                    }
+                        .filter(|spawn| spawn.x == pos_offset.x && spawn.z == pos_offset.z);
+                    let fields = submap.fields.0.iter().filter_map(|at| at.get(pos_offset));
+                    self.spawner.spawn_tile(
+                        &self.infos,
+                        subzone_level_entity,
+                        pos,
+                        terrain_id,
+                        furniture_ids,
+                        item_repetitions,
+                        spawns,
+                        fields,
+                    );
                 }
             }
+
+            if let AssetState::Available { asset: overmap } = self.overmap_manager.get_overmap(
+                &self.asset_server,
+                &self.overmap_assets,
+                Overzone::from(ZoneLevel::from(subzone_level).zone),
+            ) {
+                let spawned_offset = SubzoneOffset::from(subzone_level);
+                for monster in overmap
+                    .monster_map
+                    .0
+                    .iter()
+                    .filter(|(at, _)| at == &spawned_offset)
+                    .map(|(_, monster)| monster)
+                {
+                    eprintln!("TODO spanw {monster:?} at {spawned_offset:?}");
+                    self.spawner.spawn_character(
+                        &self.infos,
+                        subzone_level_entity,
+                        base_pos,
+                        &monster.typeid,
+                        None,
+                    );
+                }
+            }
+
             //println!("{:?} done", subzone_level);
         }
 

@@ -31,46 +31,45 @@ pub(crate) struct Overmap {
     region_id: serde_json::Value,
 
     #[allow(unused)] // TODO
-    monster_groups: serde_json::Value,
+    pub(crate) monster_groups: serde_json::Value,
 
     #[allow(unused)] // TODO
-    cities: serde_json::Value,
+    pub(crate) cities: serde_json::Value,
 
     #[allow(unused)] // TODO
-    connections_out: serde_json::Value,
+    pub(crate) connections_out: serde_json::Value,
 
     #[allow(unused)] // TODO
-    radios: serde_json::Value,
+    pub(crate) radios: serde_json::Value,
+
+    pub(crate) monster_map: FlatVec<(SubzoneOffset, Monster), 2>,
 
     #[allow(unused)] // TODO
-    monster_map: FlatVec<(SubzoneOffset, Monster), 2>,
+    pub(crate) tracked_vehicles: serde_json::Value,
 
     #[allow(unused)] // TODO
-    tracked_vehicles: serde_json::Value,
+    pub(crate) scent_traces: serde_json::Value,
 
     #[allow(unused)] // TODO
-    scent_traces: serde_json::Value,
+    pub(crate) npcs: serde_json::Value,
 
     #[allow(unused)] // TODO
-    npcs: serde_json::Value,
+    pub(crate) camps: serde_json::Value,
 
     #[allow(unused)] // TODO
-    camps: serde_json::Value,
+    pub(crate) overmap_special_placements: serde_json::Value,
 
     #[allow(unused)] // TODO
-    overmap_special_placements: serde_json::Value,
+    pub(crate) mapgen_arg_storage: Option<serde_json::Value>,
 
     #[allow(unused)] // TODO
-    mapgen_arg_storage: Option<serde_json::Value>,
+    pub(crate) mapgen_arg_index: Option<serde_json::Value>,
 
     #[allow(unused)] // TODO
-    mapgen_arg_index: Option<serde_json::Value>,
+    pub(crate) joins_used: Option<serde_json::Value>,
 
     #[allow(unused)] // TODO
-    joins_used: Option<serde_json::Value>,
-
-    #[allow(unused)] // TODO
-    predecessors: Option<serde_json::Value>,
+    pub(crate) predecessors: Option<serde_json::Value>,
 }
 
 impl Overmap {
@@ -237,9 +236,19 @@ impl OvermapLevel {
 }
 
 /** Offset of the subzone from the overmap */
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields)]
-pub(crate) struct SubzoneOffset(u16, u16, i8);
+pub(crate) struct SubzoneOffset(pub(crate) u16, pub(crate) u16, pub(crate) i8);
+
+impl From<SubzoneLevel> for SubzoneOffset {
+    fn from(subzone_level: SubzoneLevel) -> Self {
+        Self(
+            subzone_level.x.div_euclid(180) as u16,
+            subzone_level.z.div_euclid(180) as u16,
+            subzone_level.level.h,
+        )
+    }
+}
 
 #[allow(unused)]
 #[allow(clippy::struct_excessive_bools)]
@@ -273,7 +282,7 @@ pub(crate) struct Monster {
     archery_aim_counter: u8,
     last_updated: u32,
     body: HashMap<String, serde_json::Value>,
-    typeid: String,
+    pub(crate) typeid: ObjectId,
     unique_name: String,
     nickname: String,
     goal: Option<serde_json::Value>,

@@ -1,4 +1,4 @@
-use crate::prelude::{FlatVec, Pos};
+use crate::prelude::{FlatVec, PosOffset};
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
@@ -9,8 +9,8 @@ pub(crate) struct At<T> {
 }
 
 impl<T> At<T> {
-    pub(crate) const fn get(&self, relative_pos: Pos) -> Option<&T> {
-        if relative_pos.x as u8 == self.x && relative_pos.z as u8 == self.y {
+    pub(crate) const fn get(&self, offset: PosOffset) -> Option<&T> {
+        if offset.x as u8 == self.x && offset.z as u8 == self.y {
             Some(&self.obj)
         } else {
             None
