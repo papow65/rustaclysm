@@ -12,7 +12,7 @@ pub(crate) struct HudDefaults {
 }
 
 impl HudDefaults {
-    pub(crate) fn new(font: Handle<Font>) -> Self {
+    pub(crate) const fn new(font: Handle<Font>) -> Self {
         Self {
             text_style: TextStyle {
                 font,
@@ -182,7 +182,7 @@ pub(crate) fn update_log(
 ) {
     let start = Instant::now();
 
-    for message in &mut new_messages {
+    for message in new_messages.read() {
         if message.phrase.to_string().trim() != "" {
             if message.severity == Severity::Error {
                 eprintln!("{}", &message.phrase);
@@ -467,8 +467,7 @@ pub(crate) fn update_status_detais(
     player_action_state: Res<PlayerActionState>,
     envir: Envir,
     asset_server: Res<AssetServer>,
-    overmap_buffer_assets: Res<Assets<OvermapBuffer>>,
-    overmap_assets: Res<Assets<Overmap>>,
+    overmap_assets: Res<Assets<OvermapAsset>>,
     hud_defaults: Res<HudDefaults>,
     mut overmap_buffer_manager: ResMut<OvermapBufferManager>,
     mut overmap_manager: ResMut<OvermapManager>,
@@ -522,7 +521,7 @@ pub(crate) fn update_status_detais(
             vec![Fragment::new(
                 match explored.has_zone_level_been_seen(
                     &asset_server,
-                    &overmap_buffer_assets,
+                    &overmap_assets,
                     &mut overmap_buffer_manager,
                     zone_level,
                 ) {

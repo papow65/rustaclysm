@@ -61,7 +61,7 @@ pub(crate) fn manage_mouse_input(
     mut camera_offset: ResMut<CameraOffset>,
 ) {
     let start = Instant::now();
-    for scroll_event in &mut mouse_wheel_events {
+    for scroll_event in &mut mouse_wheel_events.read() {
         zoom(
             &mut camera_offset,
             if 0.0 < scroll_event.y {
@@ -74,7 +74,7 @@ pub(crate) fn manage_mouse_input(
 
     if mouse_buttons.pressed(MouseButton::Middle) {
         let delta_sum = mouse_motion_events
-            .iter()
+            .read()
             .map(|motion_event| motion_event.delta)
             .sum();
         camera_offset.adjust_angle(delta_sum);

@@ -3,10 +3,12 @@ use crate::prelude::{
     SubzoneLevel, WorldPath, ZoneLevel,
 };
 use bevy::{
-    asset::{AssetLoader, BoxedFuture, LoadContext, LoadedAsset},
+    asset::{io::Reader, Asset, AssetLoader, BoxedFuture, LoadContext},
     reflect::{TypePath, TypeUuid},
     utils::HashMap,
 };
+use either::Either;
+use futures_lite::AsyncReadExt;
 use serde::Deserialize;
 
 pub(crate) type MapPath = PathFor<Map>;
@@ -34,7 +36,7 @@ impl MapPath {
 // Reference: https://github.com/CleverRaven/Cataclysm-DDA/blob/master/src/savegame_json.cpp
 
 /** Corresponds to a 'map' in CDDA. It defines the layout of a `ZoneLevel`. */
-#[derive(Debug, Deserialize, TypePath, TypeUuid)]
+#[derive(Debug, Deserialize, Asset, TypePath, TypeUuid)]
 #[serde(deny_unknown_fields)]
 #[type_path = "cdda::world::Map"]
 #[uuid = "0ba81e33-a7c0-4366-a061-c37b2b0af4fa"]
@@ -44,22 +46,38 @@ pub(crate) struct Map(pub(crate) [Submap; 4]);
 pub(crate) struct MapLoader;
 
 impl AssetLoader for MapLoader {
+    type Asset = Map;
+    type Settings = ();
+    type Error = Either<std::io::Error, serde_json::Error>;
+
     fn load<'a>(
         &'a self,
-        bytes: &'a [u8],
+        reader: &'a mut Reader,
+        _settings: &'a Self::Settings,
         load_context: &'a mut LoadContext,
-    ) -> BoxedFuture<'a, Result<(), bevy::asset::Error>> {
+    ) -> BoxedFuture<'a, Result<Self::Asset, Self::Error>> {
         Box::pin(async move {
-            let map = serde_json::from_slice::<Map>(bytes).map_err(|e| {
-                eprintln!(
-                    "Map loading error: {:?} {:?} {e:?}",
-                    load_context.path(),
-                    std::str::from_utf8(&bytes[0..40])
-                );
-                e
-            })?;
-            load_context.set_default_asset(LoadedAsset::new(map));
-            Ok(())
+            let mut bytes = Vec::new();
+            reader
+                .read_to_end(&mut bytes)
+                .await
+                .map_err(|e| {
+                    eprintln!("Map file loading error: {:?} {e:?}", load_context.path(),);
+                    e
+                })
+                .map_err(Either::Left)?;
+
+            let map = serde_json::from_slice::<Map>(&bytes)
+                .map_err(|e| {
+                    eprintln!(
+                        "Map json loading error: {:?} {:?} {e:?}",
+                        load_context.path(),
+                        std::str::from_utf8(&bytes[0..40])
+                    );
+                    e
+                })
+                .map_err(Either::Right)?;
+            Ok(map)
         })
     }
 

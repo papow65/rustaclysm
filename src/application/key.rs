@@ -22,7 +22,7 @@ impl<'w, 's> Keys<'w, 's> {
         // Escape, F-keys, and numpad, with support for modifier keys
         let mut combos = self
             .key_events
-            .iter()
+            .read()
             .filter_map(|key_event| {
                 KeyCombo::try_from((ctrl, key_event))
                     .ok()
@@ -31,7 +31,7 @@ impl<'w, 's> Keys<'w, 's> {
             .collect::<Vec<_>>();
 
         // Character keys, with support for special characters
-        for combo in self.character_events.iter().map(KeyCombo::from) {
+        for combo in self.character_events.read().map(KeyCombo::from) {
             combos.push((ButtonState::Pressed, combo.clone()));
             combos.push((ButtonState::Released, combo));
         }

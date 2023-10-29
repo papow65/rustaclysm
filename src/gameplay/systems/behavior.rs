@@ -149,18 +149,18 @@ pub(crate) fn check_action_plan_amount(
     mut change_pace_reader: EventReader<ActorEvent<ChangePace>>,
 ) {
     let all = stay_reader
-        .iter()
+        .read()
         .map(|a| format!("{a:?}"))
-        .chain(step_reader.iter().map(|a| format!("{a:?}")))
-        .chain(attack_reader.iter().map(|a| format!("{a:?}")))
-        .chain(smash_reader.iter().map(|a| format!("{a:?}")))
-        .chain(close_reader.iter().map(|a| format!("{a:?}")))
-        .chain(wield_reader.iter().map(|a| format!("{a:?}")))
-        .chain(unwield_reader.iter().map(|a| format!("{a:?}")))
-        .chain(pickup_reader.iter().map(|a| format!("{a:?}")))
-        .chain(move_item_reader.iter().map(|a| format!("{a:?}")))
-        .chain(examine_item_reader.iter().map(|a| format!("{a:?}")))
-        .chain(change_pace_reader.iter().map(|a| format!("{a:?}")))
+        .chain(step_reader.read().map(|a| format!("{a:?}")))
+        .chain(attack_reader.read().map(|a| format!("{a:?}")))
+        .chain(smash_reader.read().map(|a| format!("{a:?}")))
+        .chain(close_reader.read().map(|a| format!("{a:?}")))
+        .chain(wield_reader.read().map(|a| format!("{a:?}")))
+        .chain(unwield_reader.read().map(|a| format!("{a:?}")))
+        .chain(pickup_reader.read().map(|a| format!("{a:?}")))
+        .chain(move_item_reader.read().map(|a| format!("{a:?}")))
+        .chain(examine_item_reader.read().map(|a| format!("{a:?}")))
+        .chain(change_pace_reader.read().map(|a| format!("{a:?}")))
         .collect::<Vec<_>>();
 
     assert!(all.len() <= 1, "Multiple actions: {all:?}");
@@ -170,7 +170,7 @@ pub(crate) fn check_action_plan_amount(
 pub(crate) fn single_action<T: ActorChange>(
     mut action_reader: EventReader<ActorEvent<T>>,
 ) -> ActorEvent<T> {
-    action_reader.iter().next().cloned().expect("Single event")
+    action_reader.read().next().cloned().expect("Single event")
 }
 
 #[allow(clippy::needless_pass_by_value)]
@@ -388,7 +388,7 @@ pub(crate) fn update_timeout(
             }
         }
         1 => {
-            for timeout_event in &mut timeout_events {
+            for timeout_event in timeout_events.read() {
                 assert!(0 < timeout_event.change.delay.0, "{timeout_event:?}");
                 timeouts.add(timeout_event.actor_entity, timeout_event.change.delay);
             }
@@ -412,17 +412,17 @@ pub(crate) fn update_stamina(
     assert!(
         stamina_impact_events.len() <= 1,
         "Multiple stamina impact events: {:?}",
-        stamina_impact_events.iter().collect::<Vec<_>>()
+        stamina_impact_events.read().collect::<Vec<_>>()
     );
 
     assert!(
         stamina_impact_events.len() <= timeout_events.len(),
         "More stamina impact events than timeout events: {:?} {:?}",
-        timeout_events.iter().collect::<Vec<_>>(),
-        stamina_impact_events.iter().collect::<Vec<_>>()
+        timeout_events.read().collect::<Vec<_>>(),
+        stamina_impact_events.read().collect::<Vec<_>>()
     );
 
-    for stamina_impact_event in &mut stamina_impact_events {
+    for stamina_impact_event in stamina_impact_events.read() {
         if let Ok(mut stamina) = staminas.get_mut(stamina_impact_event.actor_entity) {
             stamina.apply(stamina_impact_event.change);
         }
@@ -442,7 +442,7 @@ pub(crate) fn toggle_doors(
 ) {
     let start = Instant::now();
 
-    for toggle in &mut toggle_reader {
+    for toggle in toggle_reader.read() {
         let (entity, definition, &pos, parent) = terrain.get(toggle.terrain_entity).expect("Found");
 
         commands.entity(entity).despawn_recursive();
@@ -471,7 +471,7 @@ pub(crate) fn update_damaged_characters(
 ) {
     let start = Instant::now();
 
-    for damage in &mut damage_reader {
+    for damage in damage_reader.read() {
         let (name, mut health, mut transform, player) = characters
             .get_mut(damage.actor_entity)
             .expect("Actor found");
@@ -534,7 +534,7 @@ pub(crate) fn update_healed_characters(
 ) {
     let start = Instant::now();
 
-    for healing in &mut healing_reader {
+    for healing in healing_reader.read() {
         let mut healths = actors.p0();
         let mut health = healths.get_mut(healing.actor_entity).expect("Actor found");
         let evolution = health.raise(&healing.change);
@@ -582,7 +582,7 @@ pub(crate) fn update_damaged_items(
 ) {
     let start = Instant::now();
 
-    for damage in &mut damage_reader {
+    for damage in damage_reader.read() {
         let (item, &pos, name, amount, filthy, mut integrity, definition, parent) =
             items.get_mut(damage.item_entity).expect("Item found");
         let evolution = integrity.lower(&damage.change);

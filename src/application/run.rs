@@ -3,6 +3,7 @@ use bevy::{
     prelude::*,
     window::{PresentMode, WindowResolution},
 };
+use std::time::Duration;
 
 pub(crate) fn run_application() {
     let mut app = App::new();
@@ -12,7 +13,7 @@ pub(crate) fn run_application() {
     app.add_plugins(
         DefaultPlugins
             .set(AssetPlugin {
-                asset_folder: String::from('.'), // We add 'assets/' ourselves.
+                file_path: String::from('.'), // We add 'assets/' ourselves.
                 ..AssetPlugin::default()
             })
             .set(ImagePlugin::default_nearest())
@@ -31,7 +32,7 @@ pub(crate) fn run_application() {
     app.add_state::<ApplicationState>()
         .add_state::<ProgressScreenState>();
 
-    app.insert_resource(FixedTime::new_from_secs(0.25));
+    app.insert_resource(Time::<Fixed>::from_duration(Duration::from_millis(250)));
 
     app.add_plugins((
         MainMenuPlugin,

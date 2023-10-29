@@ -21,7 +21,7 @@ pub(crate) fn update_hidden_item_visibility(
     let start = Instant::now();
 
     // TODO use update_visualization
-    for entity in &mut removed_positions {
+    for entity in removed_positions.read() {
         if let Ok(mut visibility) = hidden_items.get_mut(entity) {
             *visibility = Visibility::Hidden;
         }

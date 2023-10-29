@@ -654,8 +654,7 @@ impl<'w, 's> Spawner<'w, 's> {
 #[derive(SystemParam)]
 pub(crate) struct ZoneSpawner<'w, 's> {
     pub(crate) asset_server: Res<'w, AssetServer>,
-    pub(crate) overmap_buffer_assets: Res<'w, Assets<OvermapBuffer>>,
-    pub(crate) overmap_assets: Res<'w, Assets<Overmap>>,
+    pub(crate) overmap_assets: Res<'w, Assets<OvermapAsset>>,
     infos: Res<'w, Infos>,
     pub(crate) overmap_buffer_manager: ResMut<'w, OvermapBufferManager>,
     pub(crate) overmap_manager: ResMut<'w, OvermapManager>,
@@ -793,7 +792,7 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
 
         let Some(seen_from) = self.spawner.explored.has_zone_level_been_seen(
             &self.asset_server,
-            &self.overmap_buffer_assets,
+            &self.overmap_assets,
             &mut self.overmap_buffer_manager,
             zone_level,
         ) else {

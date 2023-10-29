@@ -14,7 +14,7 @@ impl ZoneLevelIds {
     pub(crate) fn get(
         &mut self,
         asset_server: &AssetServer,
-        overmap_assets: &Assets<Overmap>,
+        overmap_assets: &Assets<OvermapAsset>,
         overmap_manager: &mut OvermapManager,
         zone_level: ZoneLevel,
     ) -> Option<&ObjectId> {

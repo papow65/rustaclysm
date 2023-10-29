@@ -1,5 +1,4 @@
 use crate::prelude::*;
-use bevy::reflect::{TypePath, TypeUuid};
 use serde::Deserialize;
 
 pub(crate) type OvermapBufferPath = PathFor<OvermapBuffer>;
@@ -13,10 +12,8 @@ impl OvermapBufferPath {
 }
 
 /** Corresponds to an 'overmapbuffer' in CDDA. It defines the save-specific information of a `Zone`. */
-#[derive(Debug, Deserialize, TypePath, TypeUuid)]
+#[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
-#[type_path = "cdda::world::OvermapBuffer"]
-#[uuid = "e1ddd167-19aa-4abd-bdb6-bddcb65bc3ca"]
 pub(crate) struct OvermapBuffer {
     /// Visible on the overmap
     pub(crate) visible: [RepetitionBlock<bool>; Level::AMOUNT],

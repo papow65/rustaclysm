@@ -34,6 +34,7 @@ pub(crate) fn spawn_main_menu(
             style: Style {
                 flex_direction: FlexDirection::Column,
                 width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
                 align_items: AlignItems::Center,
                 justify_content: JustifyContent::Center,
                 ..default()

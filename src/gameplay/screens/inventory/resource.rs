@@ -6,7 +6,7 @@ use bevy::{
 
 #[derive(Resource)]
 pub(crate) struct InventoryScreen {
-    pub(super) root: Entity,
+    pub(super) panel: Entity,
     pub(super) selected_item: Option<Entity>,
     pub(super) previous_items: HashMap<Entity, Entity>,
     pub(super) next_items: HashMap<Entity, Entity>,

@@ -6,25 +6,37 @@ const FONT_SIZE: f32 = 16.0;
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn spawn_inventory(mut commands: Commands, fonts: Res<Fonts>) {
-    let root = commands
+    let panel = commands
         .spawn(NodeBundle {
             style: Style {
                 width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
                 flex_direction: FlexDirection::Column,
                 align_items: AlignItems::Start,
                 justify_content: JustifyContent::Start,
                 margin: UiRect::horizontal(Val::Px(360.0)),
                 padding: UiRect::all(Val::Px(SPACING)),
+
                 ..default()
             },
             background_color: PANEL_COLOR.into(),
             ..default()
         })
-        .insert(StateBound::<GameplayScreenState>::default())
         .id();
+    commands
+        .spawn(NodeBundle {
+            style: Style {
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                ..default()
+            },
+            ..default()
+        })
+        .insert(StateBound::<GameplayScreenState>::default())
+        .add_child(panel);
 
     commands.insert_resource(InventoryScreen {
-        root,
+        panel,
         selected_item: None,
         previous_items: HashMap::default(),
         next_items: HashMap::default(),
@@ -65,7 +77,7 @@ pub(crate) fn clear_inventory(
     }
     inventory.last_time = clock.time();
 
-    if let Ok(children) = children.get(inventory.root) {
+    if let Ok(children) = children.get(inventory.panel) {
         for &child in children {
             if let Ok(mut style) = styles.get_mut(child) {
                 style.display = Display::None;
@@ -115,7 +127,7 @@ pub(crate) fn update_inventory(
             .any(|(e, _, _)| Some(*e) == inventory.selected_item)
     });
 
-    commands.entity(inventory.root).with_children(|parent| {
+    commands.entity(inventory.panel).with_children(|parent| {
         let mut first_item = None;
         let mut previous_item = None;
 

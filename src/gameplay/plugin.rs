@@ -24,6 +24,29 @@ impl Plugin for GameplayPlugin {
         .insert_resource(ElevationVisibility::default())
         // Loading is slow, so we start loading RelativeSegments immediately.
         .insert_resource(RelativeSegmentsGenerator::new());
+        app.insert_resource(Events::<Message>::default());
+        app.insert_resource(Events::<SpawnSubzoneLevel>::default());
+        app.insert_resource(Events::<CollapseZoneLevel>::default());
+        app.insert_resource(Events::<SpawnZoneLevel>::default());
+        app.insert_resource(Events::<UpdateZoneLevelVisibility>::default());
+        app.insert_resource(Events::<DespawnZoneLevel>::default());
+        app.insert_resource(Events::<ActorEvent<Stay>>::default());
+        app.insert_resource(Events::<ActorEvent<Step>>::default());
+        app.insert_resource(Events::<ActorEvent<Attack>>::default());
+        app.insert_resource(Events::<ActorEvent<Smash>>::default());
+        app.insert_resource(Events::<ActorEvent<Close>>::default());
+        app.insert_resource(Events::<ActorEvent<Wield>>::default());
+        app.insert_resource(Events::<ActorEvent<Unwield>>::default());
+        app.insert_resource(Events::<ActorEvent<Pickup>>::default());
+        app.insert_resource(Events::<ActorEvent<MoveItem>>::default());
+        app.insert_resource(Events::<ActorEvent<ExamineItem>>::default());
+        app.insert_resource(Events::<ActorEvent<ChangePace>>::default());
+        app.insert_resource(Events::<ActorEvent<StaminaImpact>>::default());
+        app.insert_resource(Events::<ActorEvent<Timeout>>::default());
+        app.insert_resource(Events::<ActorEvent<Damage>>::default());
+        app.insert_resource(Events::<ActorEvent<Healing>>::default());
+        app.insert_resource(Events::<ItemEvent<Damage>>::default());
+        app.insert_resource(Events::<TerrainEvent<Toggle>>::default());
 
         create_schedules(app);
 
@@ -57,13 +80,11 @@ fn add_systems(app: &mut App) {
         (
             (
                 (
-                    handle_overmap_buffer_events.run_if(on_event::<AssetEvent<OvermapBuffer>>()),
-                    handle_overmap_events.run_if(on_event::<AssetEvent<Overmap>>()),
+                    handle_overmap_buffer_events.run_if(on_event::<AssetEvent<OvermapAsset>>()),
+                    handle_overmap_events.run_if(on_event::<AssetEvent<OvermapAsset>>()),
                 ),
-                update_zone_levels_with_missing_assets.run_if(
-                    on_event::<AssetEvent<OvermapBuffer>>()
-                        .or_else(on_event::<AssetEvent<Overmap>>()),
-                ),
+                update_zone_levels_with_missing_assets
+                    .run_if(on_event::<AssetEvent<OvermapAsset>>()),
             )
                 .chain(),
             handle_map_events.run_if(on_event::<AssetEvent<Map>>()),
