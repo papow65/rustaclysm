@@ -378,8 +378,13 @@ impl<'w, 's> Envir<'w, 's> {
         }
     }
 
-    pub(crate) fn currently_visible(&'s self, clock: &'s Clock, from: Pos) -> CurrentlyVisible {
-        CurrentlyVisible::new(self, clock, from)
+    pub(crate) fn currently_visible(
+        &'s self,
+        clock: &'s Clock,
+        player_action_state: &PlayerActionState,
+        from: Pos,
+    ) -> CurrentlyVisible {
+        CurrentlyVisible::new(self, clock, player_action_state, from)
     }
 }
 
@@ -448,8 +453,8 @@ pub(crate) struct CurrentlyVisible<'a> {
     envir: &'a Envir<'a, 'a>,
     segments: &'a HashMap<PosOffset, RelativeSegment>,
 
-    /** Rounded up in calculations */
-    viewing_distance: usize,
+    /** Rounded up in calculations - None when not even 'from' is visible */
+    viewing_distance: Option<usize>,
     from: Pos,
     opaque_cache: RefCell<HashMap<PosOffset, bool>>, // is opaque
     down_cache: RefCell<HashMap<PosOffset, bool>>,   // can see down
@@ -464,23 +469,39 @@ pub(crate) struct CurrentlyVisible<'a> {
 impl<'a> CurrentlyVisible<'a> {
     const MIN_DISTANCE: f32 = 3.0;
 
-    pub(crate) fn viewing_distance(level: Level, sunlight_percentage: f32) -> usize {
-        let light = if level < Level::ZERO {
-            0.0
+    pub(crate) fn viewing_distance(
+        clock: &Clock,
+        player_action_state: &PlayerActionState,
+        level: Level,
+    ) -> Option<usize> {
+        if let PlayerActionState::Sleeping { .. } = player_action_state {
+            None
         } else {
-            sunlight_percentage
-        };
-        (light * MAX_VISIBLE_DISTANCE as f32 + (1.0 - light) * Self::MIN_DISTANCE) as usize
+            let light = if level < Level::ZERO {
+                0.0
+            } else {
+                clock.sunlight_percentage()
+            };
+            Some(
+                (light * MAX_VISIBLE_DISTANCE as f32 + (1.0 - light) * Self::MIN_DISTANCE) as usize,
+            )
+        }
     }
 
-    fn new(envir: &'a Envir<'a, 'a>, clock: &Clock, from: Pos) -> Self {
-        let sunlight_percentage = clock.sunlight_percentage();
-        let viewing_distance = Self::viewing_distance(from.level, sunlight_percentage);
+    fn new(
+        envir: &'a Envir<'a, 'a>,
+        clock: &Clock,
+        player_action_state: &PlayerActionState,
+        from: Pos,
+    ) -> Self {
+        let viewing_distance = Self::viewing_distance(clock, player_action_state, from.level);
+
+        // segments are not used when viewing_distance is None, so then we pick any.
         let segments = envir
             .relative_segments
             .segments
-            .get(viewing_distance)
-            .unwrap_or_else(|| panic!("{viewing_distance}"));
+            .get(viewing_distance.unwrap_or(0))
+            .unwrap_or_else(|| panic!("{viewing_distance:?}"));
 
         let magic_stairs_up = envir
             .stairs_up
@@ -530,8 +551,12 @@ impl<'a> CurrentlyVisible<'a> {
     pub(crate) fn can_see(&self, to: Pos, accessible: Option<&Accessible>) -> Visible {
         // We ignore floors seen from below. Those are not particulary interesting and require complex logic to do properly.
 
-        if self.viewing_distance < self.from.x.abs_diff(to.x) as usize
-            || self.viewing_distance < self.from.z.abs_diff(to.z) as usize
+        let Some(viewing_distance) = self.viewing_distance else {
+            return Visible::Unseen;
+        };
+
+        if viewing_distance < self.from.x.abs_diff(to.x) as usize
+            || viewing_distance < self.from.z.abs_diff(to.z) as usize
             || (accessible.is_some() && self.envir.is_opaque(to))
         {
             Visible::Unseen

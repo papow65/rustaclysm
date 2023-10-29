@@ -79,6 +79,7 @@ fn update_visualization(
     currently_visible: &CurrentlyVisible,
     elevation_visibility: ElevationVisibility,
     focus: &Focus,
+    player: Option<&Player>,
     pos: Pos,
     visibility: &mut Visibility,
     last_seen: &mut LastSeen,
@@ -103,19 +104,21 @@ fn update_visualization(
             update_material(commands, children, child_items, last_seen);
         }
 
-        *visibility = calculate_visibility(focus, pos, elevation_visibility, last_seen, speed);
+        *visibility =
+            calculate_visibility(focus, player, pos, elevation_visibility, last_seen, speed);
     }
 }
 
 fn calculate_visibility(
     focus: &Focus,
+    player: Option<&Player>,
     pos: Pos,
     elevation_visibility: ElevationVisibility,
     last_seen: &LastSeen,
     speed: Option<&BaseSpeed>,
 ) -> Visibility {
     // The player character can see things not shown to the player, like the top of a tower when walking next to it.
-    if focus.is_pos_shown(pos, elevation_visibility) && last_seen.shown(speed.is_some()) {
+    if focus.is_pos_shown(pos, elevation_visibility) && last_seen.shown(player, speed) {
         Visibility::Inherited
     } else {
         Visibility::Hidden
@@ -149,7 +152,7 @@ pub(crate) fn update_visualization_on_item_move(
     if moved_items.iter().peekable().peek().is_some() {
         let &player_pos = players.single();
         let focus = Focus::new(&player_action_state, player_pos);
-        let currently_visible = envir.currently_visible(&clock, player_pos); // does not depend on focus
+        let currently_visible = envir.currently_visible(&clock, &player_action_state, player_pos);
 
         for (&pos, mut visibility, mut last_seen, accessible, speed, children) in &mut moved_items {
             update_visualization(
@@ -158,6 +161,7 @@ pub(crate) fn update_visualization_on_item_move(
                 &currently_visible,
                 *elevation_visibility,
                 &focus,
+                None,
                 pos,
                 &mut visibility,
                 &mut last_seen,
@@ -185,6 +189,7 @@ pub(crate) fn update_visualization_on_focus_move(
     mut previous_camera_global_transform: Local<GlobalTransform>,
     mut last_elevation_visibility: Local<ElevationVisibility>,
     mut items: Query<(
+        Option<&Player>,
         &Pos,
         &mut Visibility,
         &mut LastSeen,
@@ -211,25 +216,35 @@ pub(crate) fn update_visualization_on_focus_move(
             VisualizationUpdate::Smart,
         ) = (&*player_action_state, *visualization_update)
         {
-            for (&pos, mut visibility, last_seen, _, speed, _) in &mut items {
+            for (player, &pos, mut visibility, last_seen, _, speed, _) in &mut items {
                 if *last_seen != LastSeen::Never {
-                    *visibility =
-                        calculate_visibility(&focus, pos, *elevation_visibility, &last_seen, speed);
+                    *visibility = calculate_visibility(
+                        &focus,
+                        player,
+                        pos,
+                        *elevation_visibility,
+                        &last_seen,
+                        speed,
+                    );
                 }
             }
 
             println!("{}x visibility updated", items.iter().len());
         } else {
-            let currently_visible = envir.currently_visible(&clock, player_pos); // does not depend on focus
+            let currently_visible =
+                envir.currently_visible(&clock, &player_action_state, player_pos);
 
             // Using parallel iteration was worse for performance using bevy 0.11
-            for (&pos, mut visibility, mut last_seen, accessible, speed, children) in &mut items {
+            for (player, &pos, mut visibility, mut last_seen, accessible, speed, children) in
+                &mut items
+            {
                 update_visualization(
                     &mut commands,
                     &mut explored,
                     &currently_visible,
                     *elevation_visibility,
                     &focus,
+                    player,
                     pos,
                     &mut visibility,
                     &mut last_seen,
@@ -255,15 +270,16 @@ pub(crate) fn update_visualization_on_focus_move(
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_visualization_on_weather_change(
     clock: Clock,
+    player_action_state: Res<PlayerActionState>,
     mut visualization_update: ResMut<VisualizationUpdate>,
-    mut last_viewing_disttance: Local<usize>,
+    mut last_viewing_disttance: Local<Option<usize>>,
     players: Query<&Pos, With<Player>>,
 ) {
     let start = Instant::now();
 
     let player_pos = players.single();
     let viewing_distance =
-        CurrentlyVisible::viewing_distance(player_pos.level, clock.sunlight_percentage());
+        CurrentlyVisible::viewing_distance(&clock, &player_action_state, player_pos.level);
     if *last_viewing_disttance != viewing_distance {
         *last_viewing_disttance = viewing_distance;
 

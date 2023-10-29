@@ -283,7 +283,8 @@ impl Faction {
         factions: &[(Pos, &Self)],
         actor: &ActorItem,
     ) -> Vec<Pos> {
-        let currently_visible = envir.currently_visible(clock, *actor.pos);
+        let not_asleep = PlayerActionState::Normal; // For now NPCs don't sleep
+        let currently_visible = envir.currently_visible(clock, &not_asleep, *actor.pos);
 
         factions
             .iter()

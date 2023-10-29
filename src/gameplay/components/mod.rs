@@ -143,9 +143,11 @@ impl LastSeen {
         }
     }
 
-    pub(crate) fn shown(&self, can_move: bool) -> bool {
+    pub(crate) fn shown(&self, player: Option<&Player>, speed: Option<&BaseSpeed>) -> bool {
         // Things that can move, like NPCs, are hidden when out of sight.
-        self == &Self::Currently || (self == &Self::Previously && !can_move)
+        self == &Self::Currently
+            || (self == &Self::Previously && speed.is_none())
+            || player.is_some()
     }
 }
 
