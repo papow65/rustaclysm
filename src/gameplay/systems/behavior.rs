@@ -705,12 +705,12 @@ pub(crate) fn combine_items(
             if 1 < merges.len() {
                 let keep = *merges.iter().max().unwrap();
 
-                println!(
+                /*println!(
                     "Combined {} with {} others to {}",
                     Phrase::from_fragments(moved_name.as_item(moved_amount, moved_filthy)),
                     merges.len() - 1,
                     Phrase::from_fragments(moved_name.as_item(Some(&total_amount), moved_filthy)),
-                );
+                );*/
 
                 commands.entity(keep).insert(total_amount);
 
