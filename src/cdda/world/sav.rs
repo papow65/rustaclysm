@@ -63,7 +63,6 @@ pub(crate) struct Sav {
     #[allow(unused)]
     pub(crate) mostseen: serde_json::Value,
 
-    #[allow(unused)]
     pub(crate) player: CddaPlayer,
 
     #[allow(unused)]
