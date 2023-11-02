@@ -19,18 +19,24 @@ impl Container {
     where
         I: Iterator<Item = &'a Containable>,
     {
-        let mut messages = Vec::new();
-
         let (current_volume, current_mass, curent_amount) = current_items
             .fold((Volume::ZERO, Mass::ZERO, 0), |acc, item| {
                 (acc.0 + item.volume, acc.1 + item.mass, acc.2 + 1)
             });
 
         let free_volume = self.max_volume - current_volume;
-        let max_amount_by_volume = free_volume / added.volume;
+        let max_amount_by_volume = if Volume::ZERO < added.volume {
+            free_volume / added.volume
+        } else {
+            added_amount.0
+        };
 
         let free_mass = self.max_mass - current_mass;
-        let max_amount_by_mass = free_mass / added.mass;
+        let max_amount_by_mass = if Mass::ZERO < added.mass {
+            free_mass / added.mass
+        } else {
+            added_amount.0
+        };
 
         let max_amount_by_amount = if let Some(max_amount) = self.max_amount {
             max_amount - curent_amount
@@ -45,6 +51,8 @@ impl Container {
         if 0 < allowed_amount {
             Ok(Amount(allowed_amount))
         } else {
+            let mut messages = Vec::new();
+
             if max_amount_by_volume == 0 {
                 let added_volume = added.volume;
                 if free_volume == Volume::ZERO {
