@@ -4,7 +4,7 @@ use bevy::prelude::States;
 #[derive(Clone, Copy, Default, Debug, PartialEq, Eq, Hash, States)]
 pub(crate) enum GameplayScreenState {
     Base,
-    Character,
+    //Character, // TODO
     Inventory,
     //Crafting, // TODO
     /** Different from the main menu */
