@@ -71,6 +71,38 @@ pub(crate) struct Hierarchy<'w, 's> {
             Option<&'static Parent>,
         ),
     >,
-    pub(crate) containers: Query<'w, 's, (&'static Container, Option<&'static Children>)>,
-    pub(crate) parents: Query<'w, 's, (Option<&'static Container>, &'static Children)>,
+    containers: Query<'w, 's, &'static Container>,
+    container_contents: Query<'w, 's, &'static Children, With<Container>>,
+    pub(crate) children: Query<'w, 's, &'static Children>,
+}
+
+impl<'w, 's> Hierarchy<'w, 's> {
+    pub(crate) fn items_in(&self, container: Entity) -> impl Iterator<Item = Entity> + '_ {
+        self.container_contents
+            .get(container)
+            .ok()
+            .iter()
+            .flat_map(|children| children.iter())
+            .copied()
+            .collect::<Vec<_>>()
+            .into_iter()
+    }
+
+    pub(crate) fn get_container(&self, container_entity: Entity) -> &Container {
+        self.containers
+            .get(container_entity)
+            .expect("The hand container")
+    }
+
+    pub(crate) fn get_contents(
+        &self,
+        container_entity: Entity,
+    ) -> impl Iterator<Item = &Containable> + '_ {
+        self.items
+            .iter()
+            .filter(|(.., parent)| parent.map(Parent::get) == Some(container_entity))
+            .map(|(.., containable, _)| containable)
+            .collect::<Vec<_>>()
+            .into_iter()
+    }
 }

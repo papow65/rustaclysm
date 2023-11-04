@@ -206,12 +206,10 @@ impl ActorItem<'_> {
     ) -> Impact {
         let mut melee_weapon = None;
         if let Some(body_containers) = self.body_containers {
-            let (_, hands_children) = hierarchy.containers.get(body_containers.hands).unwrap();
-            if let Some(hands_children) = hands_children {
-                if let Some(&weapon) = hands_children.iter().next() {
-                    let (_, definition, ..) = hierarchy.items.get(weapon).unwrap();
-                    melee_weapon = infos.item(&definition.id);
-                }
+            let mut hands_children = hierarchy.items_in(body_containers.hands);
+            if let Some(weapon) = hands_children.next() {
+                let (_, definition, ..) = hierarchy.items.get(weapon).unwrap();
+                melee_weapon = infos.item(&definition.id);
             }
         }
 
@@ -480,13 +478,8 @@ impl ActorItem<'_> {
                 );
             }
 
-            let current_items = hierarchy
-                .items
-                .iter()
-                .filter(|(.., parent)| parent.map(Parent::get) == Some(container_entity))
-                .map(|(.., containable, _)| containable);
-
-            let (container, _) = hierarchy.containers.get(container_entity).unwrap();
+            let current_items = hierarchy.get_contents(container_entity);
+            let container = hierarchy.get_container(container_entity);
             match container.check_add(
                 self.name.single(),
                 current_items,

@@ -660,8 +660,8 @@ pub(crate) fn combine_items(
     {
         if moved_definition.category == ObjectCategory::Item && !all_merged.contains(&moved_entity)
         {
-            let (_, siblings) = hierarchy
-                .parents
+            let siblings = hierarchy
+                .children
                 .get(moved_parent.get())
                 .unwrap_or_else(|_| {
                     //TODO fix this panic after moving items around
