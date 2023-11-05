@@ -72,37 +72,33 @@ pub(crate) struct Hierarchy<'w, 's> {
         ),
     >,
     containers: Query<'w, 's, &'static Container>,
-    container_contents: Query<'w, 's, &'static Children, With<Container>>,
-    pub(crate) children: Query<'w, 's, &'static Children>,
+    children: Query<'w, 's, &'static Children>,
 }
 
 impl<'w, 's> Hierarchy<'w, 's> {
-    pub(crate) fn items_in(&self, container: Entity) -> impl Iterator<Item = Entity> + '_ {
-        self.container_contents
-            .get(container)
-            .ok()
-            .iter()
-            .flat_map(|children| children.iter())
-            .copied()
-            .collect::<Vec<_>>()
-            .into_iter()
+    pub(crate) fn items_in(
+        &self,
+        container: Entity,
+    ) -> impl Iterator<
+        Item = (
+            Entity,
+            &ObjectDefinition,
+            &ObjectName,
+            Option<&Pos>,
+            Option<&Amount>,
+            Option<&Filthy>,
+            &Containable,
+            Option<&Parent>,
+        ),
+    > + '_ {
+        self.children
+            .iter_descendants(container)
+            .flat_map(|item| self.items.get(item))
     }
 
     pub(crate) fn get_container(&self, container_entity: Entity) -> &Container {
         self.containers
             .get(container_entity)
             .expect("The hand container")
-    }
-
-    pub(crate) fn get_contents(
-        &self,
-        container_entity: Entity,
-    ) -> impl Iterator<Item = &Containable> + '_ {
-        self.items
-            .iter()
-            .filter(|(.., parent)| parent.map(Parent::get) == Some(container_entity))
-            .map(|(.., containable, _)| containable)
-            .collect::<Vec<_>>()
-            .into_iter()
     }
 }

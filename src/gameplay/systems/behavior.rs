@@ -648,34 +648,15 @@ pub(crate) fn combine_items(
 
     let mut all_merged = Vec::new();
 
-    for (
-        moved_entity,
-        moved_definition,
-        moved_name,
-        moved_pos,
-        moved_amount,
-        moved_filthy,
-        moved_parent,
-    ) in moved_items.iter()
+    for (moved_entity, moved_definition, _, moved_pos, moved_amount, moved_filthy, moved_parent) in
+        moved_items.iter()
     {
         if moved_definition.category == ObjectCategory::Item && !all_merged.contains(&moved_entity)
         {
-            let siblings = hierarchy
-                .children
-                .get(moved_parent.get())
-                .unwrap_or_else(|_| {
-                    //TODO fix this panic after moving items around
-
-                    panic!(
-                        "Parent of {} could not be found",
-                        Phrase::from_fragments(moved_name.as_item(moved_amount, moved_filthy))
-                    )
-                });
-
             let mut merges = vec![moved_entity];
             let mut total_amount = &Amount(0) + moved_amount.unwrap_or(&Amount(1));
 
-            for sibling in siblings {
+            for sibling in hierarchy.items_in(moved_parent.get()) {
                 // Note that sibling may be any kind of entity
                 if let Ok((
                     some_entity,
@@ -684,9 +665,8 @@ pub(crate) fn combine_items(
                     some_pos,
                     some_amount,
                     some_filthy,
-                    _,
-                    _,
-                )) = hierarchy.items.get(*sibling)
+                    ..,
+                )) = hierarchy.items.get(sibling.0)
                 {
                     // Note that the positions may differ when the parents are the same.
                     if some_entity != moved_entity
