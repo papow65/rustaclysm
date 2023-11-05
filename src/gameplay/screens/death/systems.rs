@@ -12,6 +12,7 @@ pub(crate) fn spawn_death_screen(mut commands: Commands, fonts: Res<Fonts>) {
         .spawn(NodeBundle {
             style: Style {
                 width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
                 flex_direction: FlexDirection::Column,
                 align_items: AlignItems::Center,
                 justify_content: JustifyContent::Center,
