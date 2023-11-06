@@ -5,6 +5,7 @@ mod damage;
 mod focus;
 mod fragment;
 mod instruction;
+mod item;
 mod limited;
 mod mesh;
 mod model;
@@ -19,7 +20,7 @@ mod type_id;
 mod unit;
 
 pub(crate) use self::{
-    action::*, actor::*, asset_state::*, damage::*, focus::*, fragment::*, instruction::*,
+    action::*, actor::*, asset_state::*, damage::*, focus::*, fragment::*, instruction::*, item::*,
     limited::*, mesh::*, model::*, nbor::*, object_definition::*, object_id::*, offset::*,
     region::*, stamina_impact::*, toggle::*, type_id::*, unit::*,
 };

@@ -14,7 +14,7 @@ use std::ops::{Add, Sub};
 
 pub(crate) use {container::*, faction::*, object_name::*, player::*, pos::*, stats::*};
 
-#[derive(PartialEq, Component)]
+#[derive(PartialEq, Debug, Component)]
 pub(crate) struct Filthy;
 
 #[derive(Component)]
@@ -50,7 +50,7 @@ pub(crate) struct Opaque;
 #[derive(Component)]
 pub(crate) struct OpaqueFloor;
 
-#[derive(Clone, Component)]
+#[derive(Clone, Debug, Component)]
 pub(crate) struct Containable {
     pub(crate) volume: Volume,
     pub(crate) mass: Mass,
@@ -58,6 +58,10 @@ pub(crate) struct Containable {
 
 #[derive(Component, Debug, PartialEq, PartialOrd)]
 pub(crate) struct Amount(pub(crate) u32);
+
+impl Amount {
+    pub(crate) const SINGLE: Self = Self(1);
+}
 
 impl Add<Self> for &Amount {
     type Output = Amount;

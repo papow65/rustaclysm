@@ -208,8 +208,7 @@ impl ActorItem<'_> {
         if let Some(body_containers) = self.body_containers {
             let mut hands_children = hierarchy.items_in(body_containers.hands);
             if let Some(weapon) = hands_children.next() {
-                let (_, definition, ..) = hierarchy.items.get(weapon.0).unwrap();
-                melee_weapon = infos.item(&definition.id);
+                melee_weapon = infos.item(&weapon.definition.id);
             }
         }
 
@@ -442,94 +441,70 @@ impl ActorItem<'_> {
         container_entity: Entity,
         taken: Entity,
     ) -> Option<Impact> {
-        if let Ok((
-            taken_entity,
-            taken_definition,
-            taken_object_name,
-            taken_pos,
-            taken_amount,
-            taken_filthy,
-            taken_containable,
-            taken_parent,
-        )) = hierarchy.items.get(taken)
-        {
-            let taken_amount = taken_amount.unwrap_or(&Amount(1));
-            let taken_parent = taken_parent.expect("Parent entity required");
+        let taken = hierarchy.get_item(taken);
 
-            if let Some(taken_pos) = taken_pos {
-                let offset = *taken_pos - *self.pos;
-                assert!(
-                    offset.x.abs() <= 1,
-                    "Taking is not possible from more than one tile away"
-                );
-                assert!(
-                    offset.level == LevelOffset::ZERO,
-                    "Taking is only possible on the same level"
-                );
-                assert!(
-                    offset.z.abs() <= 1,
-                    "Taking is not possible from more than one tile away"
-                );
-            } else {
-                assert!(
-                    taken_parent.get() == self.body_containers.unwrap().hands
-                        || taken_parent.get() == self.body_containers.unwrap().clothing,
-                    "Item parents should be part of the body"
-                );
-            }
+        let taken_parent = taken.parent.expect("Parent entity required");
 
-            let current_items = hierarchy
-                .items_in(container_entity)
-                .map(|(.., containable, _)| containable);
-            let container = hierarchy.get_container(container_entity);
-            match container.check_add(
-                self.name.single(),
-                current_items,
-                taken_containable,
-                taken_amount,
-            ) {
-                Ok(allowed_amount) => {
-                    if &allowed_amount < taken_amount {
-                        self.take_some(
-                            commands,
-                            message_writer,
-                            location,
-                            container_entity,
-                            allowed_amount,
-                            taken_entity,
-                            taken_definition.clone(),
-                            taken_object_name.clone(),
-                            taken_pos,
-                            taken_amount,
-                            taken_filthy,
-                            taken_containable.clone(),
-                            taken_parent,
-                        );
-                    } else {
-                        let taken_name =
-                            taken_object_name.as_item(Some(taken_amount), taken_filthy);
-                        self.take_all(
-                            commands,
-                            message_writer,
-                            location,
-                            container_entity,
-                            taken_entity,
-                            taken_name,
-                        );
-                    }
-                    Some(self.activate())
-                }
-                Err(messages) => {
-                    assert!(!messages.is_empty(), "Empty messages are not allowed");
-                    message_writer.send_batch(messages);
-                    None
-                }
-            }
+        if let Some(taken_pos) = taken.pos {
+            let offset = *taken_pos - *self.pos;
+            assert!(
+                offset.x.abs() <= 1,
+                "Taking is not possible from more than one tile away"
+            );
+            assert!(
+                offset.level == LevelOffset::ZERO,
+                "Taking is only possible on the same level"
+            );
+            assert!(
+                offset.z.abs() <= 1,
+                "Taking is not possible from more than one tile away"
+            );
         } else {
-            message_writer.send(Message::warn(
-                Phrase::new("Nothing to pick up for").push(self.fragment()),
-            ));
-            None
+            assert!(
+                taken_parent.get() == self.body_containers.unwrap().hands
+                    || taken_parent.get() == self.body_containers.unwrap().clothing,
+                "Item parents should be part of the body"
+            );
+        }
+
+        let current_items = hierarchy
+            .items_in(container_entity)
+            .map(|item| item.containable);
+        let container = hierarchy.get_container(container_entity);
+        match container.check_add(
+            self.name.single(),
+            current_items,
+            taken.containable,
+            taken.amount,
+        ) {
+            Ok(allowed_amount) => {
+                if &allowed_amount < taken.amount {
+                    self.take_some(
+                        commands,
+                        message_writer,
+                        location,
+                        container_entity,
+                        allowed_amount,
+                        &taken,
+                        taken_parent,
+                    );
+                } else {
+                    self.take_all(
+                        commands,
+                        message_writer,
+                        location,
+                        container_entity,
+                        taken.entity,
+                        taken.fragments(),
+                    );
+                }
+                Some(self.activate())
+            }
+            Err(messages) => {
+                assert!(!messages.is_empty(), "Empty messages are not allowed");
+                message_writer.send_batch(messages);
+                None
+            }
         }
     }
 
@@ -540,52 +515,45 @@ impl ActorItem<'_> {
         location: &mut Location,
         container_entity: Entity,
         allowed_amount: Amount,
-        taken_entity: Entity,
-        definition: ObjectDefinition,
-        object_name: ObjectName,
-        taken_pos: Option<&Pos>,
-        split_amount: &Amount,
-        filthy: Option<&Filthy>,
-        containable: Containable,
+        taken: &ItemItem,
         taken_parent: &Parent,
     ) {
-        let taken_name = object_name.as_item(Some(&allowed_amount), filthy);
         message_writer.send(Message::info(
             self.subject()
                 .verb("pick", "s")
                 .add("up")
-                .extend(taken_name),
+                .extend(taken.fragments()),
         ));
 
-        let left_over_amount = split_amount - &allowed_amount;
+        let left_over_amount = taken.amount - &allowed_amount;
         //dbg!(&split_amount);
         //dbg!(&allowed_amount);
         //dbg!(&left_over_amount);
         let left_over_entity = commands
             .spawn((
-                definition,
-                object_name,
+                taken.definition.clone(),
+                taken.name.clone(),
                 left_over_amount,
-                containable,
+                taken.containable.clone(),
                 LastSeen::Currently,
                 SpatialBundle::default(),
             ))
             .set_parent(taken_parent.get())
             .id();
-        if filthy.is_some() {
+        if taken.filthy.is_some() {
             commands.entity(left_over_entity).insert(Filthy);
         }
-        if let Some(&taken_pos) = taken_pos {
+        if let Some(&taken_pos) = taken.pos {
             commands.entity(left_over_entity).insert(taken_pos);
         }
-        location.update(left_over_entity, taken_pos.copied());
+        location.update(left_over_entity, taken.pos.copied());
 
         commands
-            .entity(taken_entity)
+            .entity(taken.entity)
             .insert(allowed_amount)
             .remove::<Pos>()
             .set_parent(container_entity);
-        location.update(taken_entity, None);
+        location.update(taken.entity, None);
     }
 
     fn take_all(
@@ -618,10 +586,9 @@ impl ActorItem<'_> {
         hierarchy: &Hierarchy,
         move_item: &MoveItem,
     ) -> Option<Impact> {
-        let (_, _, moved_name, from, moved_amount, moved_filthy, _, moved_parent) =
-            hierarchy.items.get(move_item.item).unwrap();
+        let moved = hierarchy.get_item(move_item.item);
 
-        if let Some(from) = from {
+        if let Some(from) = moved.pos {
             let offset = *from - *self.pos;
             let potentially_valid = HorizontalDirection::try_from(offset).is_ok()
                 || matches!(offset.level, LevelOffset { h: -1 | 1 });
@@ -630,7 +597,7 @@ impl ActorItem<'_> {
                 return None;
             }
         }
-        let moved_parent = moved_parent.map(Parent::get);
+        let moved_parent = moved.parent.map(Parent::get);
         let dump = moved_parent == Some(self.body_containers.unwrap().hands)
             || moved_parent == Some(self.body_containers.unwrap().clothing);
 
@@ -640,7 +607,7 @@ impl ActorItem<'_> {
         message_writer.send(Message::info(
             self.subject()
                 .verb(if dump { "drop" } else { "move" }, "s")
-                .extend(moved_name.as_item(moved_amount, moved_filthy)),
+                .extend(moved.fragments()),
         ));
         if dump {
             commands

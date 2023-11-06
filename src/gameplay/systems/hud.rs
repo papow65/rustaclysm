@@ -397,13 +397,13 @@ pub(crate) fn update_status_player_wielded(
     fonts: Res<Fonts>,
     mut text_sections: ResMut<StatusTextSections>,
     mut status_displays: Query<&mut Text, With<StatusDisplay>>,
-    player_weapon: Query<(&ObjectName, Option<&Amount>, Option<&Filthy>), With<PlayerWielded>>,
+    player_weapon: Query<Item, With<PlayerWielded>>,
 ) {
     let start = Instant::now();
 
     let begin = Phrase::new("Weapon:");
-    let phrase = if let Ok((name, amount, filthy)) = player_weapon.get_single() {
-        begin.extend(name.as_item(amount, filthy))
+    let phrase = if let Ok(weapon) = player_weapon.get_single() {
+        begin.extend(weapon.fragments())
     } else {
         begin.add("(none)")
     }
@@ -666,7 +666,23 @@ fn entity_info(
     }
 
     let fallbak_name = ObjectName::missing();
-    let mut output = Phrase::from_fragments(name.unwrap_or(&fallbak_name).as_item(amount, filthy));
+    let item = ItemItem {
+        entity: Entity::PLACEHOLDER,
+        definition: &ObjectDefinition {
+            category: ObjectCategory::Meta,
+            id: ObjectId::new(""),
+        },
+        name: name.unwrap_or(&fallbak_name),
+        pos: None,
+        amount: amount.unwrap_or(&Amount::SINGLE),
+        filthy,
+        containable: &Containable {
+            volume: Volume::default(),
+            mass: Mass::ZERO,
+        },
+        parent: None,
+    };
+    let mut output = Phrase::from_fragments(item.fragments());
     for flag in &flags {
         output = output.add(format!("\n- {flag}"));
     }

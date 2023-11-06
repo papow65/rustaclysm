@@ -100,7 +100,7 @@ pub(crate) fn create_schedules(app: &mut App) {
                     .chain(),
                 (
                     // terrain events
-                    update_damaged_items.run_if(on_event::<TerrainEvent<Damage>>()),
+                    update_damaged_terrain.run_if(on_event::<TerrainEvent<Damage>>()),
                     apply_deferred, // Make sure destoyed items are handled early
                     toggle_doors.run_if(on_event::<TerrainEvent<Toggle>>()),
                 ),

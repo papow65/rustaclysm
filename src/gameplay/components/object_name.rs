@@ -14,31 +14,8 @@ impl ObjectName {
     }
 
     #[must_use]
-    pub(crate) fn as_item(
-        &self,
-        amount: Option<&Amount>,
-        filthy: Option<&Filthy>,
-    ) -> Vec<Fragment> {
-        let amount = match amount {
-            Some(Amount(n)) => *n,
-            _ => 1,
-        };
-        let mut result = Vec::new();
-        if 1 < amount {
-            result.push(Fragment::new(format!("{amount}")));
-        }
-        if filthy.is_some() {
-            result.push(Fragment::colorized("filthy", FILTHY_COLOR));
-        }
-        result.push(Fragment::colorized(
-            if amount == 1 {
-                self.name.single.clone()
-            } else {
-                self.name.plural.clone()
-            },
-            self.color,
-        ));
-        result
+    pub(crate) fn plural(&self) -> Fragment {
+        Fragment::colorized(self.name.plural.clone(), self.color)
     }
 
     #[must_use]

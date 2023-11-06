@@ -561,20 +561,19 @@ pub(crate) fn update_healed_characters(
     log_if_slow("update_healed_characters", start);
 }
 
+/** For terrain and furniture */
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn update_damaged_items(
+pub(crate) fn update_damaged_terrain(
     mut commands: Commands,
     mut message_writer: EventWriter<Message>,
     mut damage_reader: EventReader<TerrainEvent<Damage>>,
     mut spawner: Spawner,
     mut visualization_update: ResMut<VisualizationUpdate>,
     infos: Res<Infos>,
-    mut items: Query<(
+    mut terrain: Query<(
         Entity,
         &Pos,
         &ObjectName,
-        Option<&Amount>,
-        Option<&Filthy>,
         &mut Integrity,
         &ObjectDefinition,
         &Parent,
@@ -583,8 +582,9 @@ pub(crate) fn update_damaged_items(
     let start = Instant::now();
 
     for damage in damage_reader.read() {
-        let (item, &pos, name, amount, filthy, mut integrity, definition, parent) =
-            items.get_mut(damage.terrain_entity).expect("Object found");
+        let (terrain, &pos, name, mut integrity, definition, parent) = terrain
+            .get_mut(damage.terrain_entity)
+            .expect("Terrain or furniture found");
         let evolution = integrity.lower(&damage.change);
         if integrity.0.is_zero() {
             message_writer.send(Message::warn(
@@ -593,9 +593,9 @@ pub(crate) fn update_damaged_items(
                     .attacker
                     .clone()
                     .verb("break", "s")
-                    .extend(name.as_item(amount, filthy)),
+                    .push(name.single()),
             ));
-            commands.entity(item).despawn_recursive();
+            commands.entity(terrain).despawn_recursive();
             spawner.spawn_smashed(&infos, parent.get(), pos, definition);
             *visualization_update = VisualizationUpdate::Forced;
         } else {
@@ -605,7 +605,7 @@ pub(crate) fn update_damaged_items(
                     .attacker
                     .clone()
                     .verb("hit", "s")
-                    .extend(name.as_item(amount, filthy));
+                    .push(name.single());
 
                 Message::warn(if evolution.changed() {
                     begin.add(format!(
@@ -629,15 +629,7 @@ pub(crate) fn combine_items(
     mut commands: Commands,
     hierarchy: Hierarchy,
     moved_items: Query<
-        (
-            Entity,
-            &ObjectDefinition,
-            &ObjectName,
-            Option<&Pos>,
-            Option<&Amount>,
-            Option<&Filthy>,
-            &Parent,
-        ),
+        Item,
         (
             Changed<Parent>,
             Without<Container>, /*, With<Container>*/
@@ -648,36 +640,24 @@ pub(crate) fn combine_items(
 
     let mut all_merged = Vec::new();
 
-    for (moved_entity, moved_definition, _, moved_pos, moved_amount, moved_filthy, moved_parent) in
-        moved_items.iter()
-    {
-        if moved_definition.category == ObjectCategory::Item && !all_merged.contains(&moved_entity)
+    for moved in &moved_items {
+        if moved.definition.category == ObjectCategory::Item && !all_merged.contains(&moved.entity)
         {
-            let mut merges = vec![moved_entity];
-            let mut total_amount = &Amount(0) + moved_amount.unwrap_or(&Amount(1));
+            let mut merges = vec![moved.entity];
+            let mut total_amount = &Amount(0) + moved.amount;
 
-            for sibling in hierarchy.items_in(moved_parent.get()) {
-                // Note that sibling may be any kind of entity
-                if let Ok((
-                    some_entity,
-                    some_definition,
-                    _,
-                    some_pos,
-                    some_amount,
-                    some_filthy,
-                    ..,
-                )) = hierarchy.items.get(sibling.0)
-                {
+            if let Some(moved_parent) = moved.parent {
+                for sibling in hierarchy.items_in(moved_parent.get()) {
                     // Note that the positions may differ when the parents are the same.
-                    if some_entity != moved_entity
-                        && moved_definition == some_definition
-                        && moved_pos == some_pos
-                        && moved_filthy == some_filthy
-                        && !all_merged.contains(&some_entity)
+                    if sibling.entity != moved.entity
+                        && sibling.definition == moved.definition
+                        && sibling.pos == moved.pos
+                        && sibling.filthy == moved.filthy
+                        && !all_merged.contains(&sibling.entity)
                     {
-                        merges.push(some_entity);
-                        total_amount = &total_amount + some_amount.unwrap_or(&Amount(1));
-                        all_merged.push(some_entity);
+                        merges.push(sibling.entity);
+                        total_amount = &total_amount + sibling.amount;
+                        all_merged.push(sibling.entity);
                     }
                 }
             }

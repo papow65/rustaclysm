@@ -96,18 +96,7 @@ pub(crate) fn update_inventory(
     infos: Res<Infos>,
     mut inventory: ResMut<InventoryScreen>,
     players: Query<(&Pos, &BodyContainers), With<Player>>,
-    items: Query<(
-        Entity,
-        Option<&Parent>,
-        Option<&Pos>,
-        &ObjectDefinition,
-        &ObjectName,
-        &Amount,
-        Option<&Filthy>,
-        Option<&Corpse>,
-        Option<&Integrity>,
-        &LastSeen,
-    )>,
+    items: Query<(Item, Option<&Corpse>, Option<&Integrity>, &LastSeen)>,
 ) {
     if !run.0 {
         return;
@@ -206,18 +195,7 @@ pub(crate) fn update_inventory(
 
 fn items_by_section<'a>(
     envir: &'a Envir,
-    items: &'a Query<(
-        Entity,
-        Option<&Parent>,
-        Option<&Pos>,
-        &ObjectDefinition,
-        &ObjectName,
-        &Amount,
-        Option<&Filthy>,
-        Option<&Corpse>,
-        Option<&Integrity>,
-        &LastSeen,
-    )>,
+    items: &'a Query<(Item, Option<&Corpse>, Option<&Integrity>, &LastSeen)>,
     player_pos: Pos,
     body_containers: &'a BodyContainers,
 ) -> HashMap<InventorySection, Vec<(Entity, &'a ObjectId, Phrase)>> {
@@ -227,8 +205,8 @@ fn items_by_section<'a>(
             InventorySection::Nbor(nbor.horizontal_projection()),
             items
                 .iter()
-                .filter(|(_, _, pos, .., last_seen)| {
-                    *last_seen == &LastSeen::Currently && &Some(&nbor_pos) == pos
+                .filter(|(item, .., last_seen)| {
+                    *last_seen == &LastSeen::Currently && Some(&nbor_pos) == item.pos
                 })
                 .collect::<Vec<_>>(),
         );
@@ -237,14 +215,20 @@ fn items_by_section<'a>(
         InventorySection::Hands,
         items
             .iter()
-            .filter(|(_, parent, ..)| parent.map_or(false, |p| p.get() == body_containers.hands))
+            .filter(|(item, ..)| {
+                item.parent
+                    .map_or(false, |p| p.get() == body_containers.hands)
+            })
             .collect::<Vec<_>>(),
     );
     fields_by_section.insert(
         InventorySection::Clothing,
         items
             .iter()
-            .filter(|(_, parent, ..)| parent.map_or(false, |p| p.get() == body_containers.clothing))
+            .filter(|(item, ..)| {
+                item.parent
+                    .map_or(false, |p| p.get() == body_containers.clothing)
+            })
             .collect::<Vec<_>>(),
     );
 
@@ -252,15 +236,13 @@ fn items_by_section<'a>(
     for (section, fields_iter) in fields_by_section {
         let mut items = fields_iter
             .into_iter()
-            .map(
-                |(entity, _parent, _pos, definition, name, amount, filthy, ..)| {
-                    (
-                        entity,
-                        &definition.id,
-                        Phrase::from_fragments(name.as_item(Some(amount), filthy)),
-                    )
-                },
-            )
+            .map(|(item, ..)| {
+                (
+                    item.entity,
+                    &item.definition.id,
+                    Phrase::from_fragments(item.fragments()),
+                )
+            })
             .collect::<Vec<_>>();
         items.sort_by_key(|(.., phrase)| format!("{phrase}"));
         items_by_section.insert(section, items);
