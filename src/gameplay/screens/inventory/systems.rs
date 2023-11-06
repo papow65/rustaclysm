@@ -215,20 +215,14 @@ fn items_by_section<'a>(
         InventorySection::Hands,
         items
             .iter()
-            .filter(|(item, ..)| {
-                item.parent
-                    .map_or(false, |p| p.get() == body_containers.hands)
-            })
+            .filter(|(item, ..)| item.parent.get() == body_containers.hands)
             .collect::<Vec<_>>(),
     );
     fields_by_section.insert(
         InventorySection::Clothing,
         items
             .iter()
-            .filter(|(item, ..)| {
-                item.parent
-                    .map_or(false, |p| p.get() == body_containers.clothing)
-            })
+            .filter(|(item, ..)| item.parent.get() == body_containers.clothing)
             .collect::<Vec<_>>(),
     );
 

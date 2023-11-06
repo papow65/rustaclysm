@@ -11,7 +11,7 @@ pub(crate) struct Item {
     pub(crate) amount: &'static Amount,
     pub(crate) filthy: Option<&'static Filthy>,
     pub(crate) containable: &'static Containable,
-    pub(crate) parent: Option<&'static Parent>,
+    pub(crate) parent: &'static Parent,
 }
 
 impl ItemItem<'_> {

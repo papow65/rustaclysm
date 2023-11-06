@@ -443,8 +443,6 @@ impl ActorItem<'_> {
     ) -> Option<Impact> {
         let taken = hierarchy.get_item(taken);
 
-        let taken_parent = taken.parent.expect("Parent entity required");
-
         if let Some(taken_pos) = taken.pos {
             let offset = *taken_pos - *self.pos;
             assert!(
@@ -461,8 +459,8 @@ impl ActorItem<'_> {
             );
         } else {
             assert!(
-                taken_parent.get() == self.body_containers.unwrap().hands
-                    || taken_parent.get() == self.body_containers.unwrap().clothing,
+                taken.parent.get() == self.body_containers.unwrap().hands
+                    || taken.parent.get() == self.body_containers.unwrap().clothing,
                 "Item parents should be part of the body"
             );
         }
@@ -486,7 +484,7 @@ impl ActorItem<'_> {
                         container_entity,
                         allowed_amount,
                         &taken,
-                        taken_parent,
+                        taken.parent,
                     );
                 } else {
                     self.take_all(
@@ -598,9 +596,8 @@ impl ActorItem<'_> {
                 return None;
             }
         }
-        let moved_parent = moved.parent.map(Parent::get);
-        let dump = moved_parent == Some(self.body_containers.unwrap().hands)
-            || moved_parent == Some(self.body_containers.unwrap().clothing);
+        let dump = moved.parent.get() == self.body_containers.unwrap().hands
+            || moved.parent.get() == self.body_containers.unwrap().clothing;
 
         // TODO Check for obstacles
         let to = self.pos.raw_nbor(move_item.to).unwrap();

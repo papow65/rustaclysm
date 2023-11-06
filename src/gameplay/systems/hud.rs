@@ -680,7 +680,7 @@ fn entity_info(
             volume: Volume::default(),
             mass: Mass::ZERO,
         },
-        parent: None,
+        parent: &Parent::from_world(&mut World::default()),
     };
     let mut output = Phrase::from_fragments(item.fragments());
     for flag in &flags {

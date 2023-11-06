@@ -648,19 +648,17 @@ pub(crate) fn combine_items(
             let mut merges = vec![moved.entity];
             let mut total_amount = &Amount(0) + moved.amount;
 
-            if let Some(moved_parent) = moved.parent {
-                for sibling in hierarchy.items_in(moved_parent.get()) {
-                    // Note that the positions may differ when the parents are the same.
-                    if sibling.entity != moved.entity
-                        && sibling.definition == moved.definition
-                        && sibling.pos == moved.pos
-                        && sibling.filthy == moved.filthy
-                        && !all_merged.contains(&sibling.entity)
-                    {
-                        merges.push(sibling.entity);
-                        total_amount = &total_amount + sibling.amount;
-                        all_merged.push(sibling.entity);
-                    }
+            for sibling in hierarchy.items_in(moved.parent.get()) {
+                // Note that the positions may differ when the parents are the same.
+                if sibling.entity != moved.entity
+                    && sibling.definition == moved.definition
+                    && sibling.pos == moved.pos
+                    && sibling.filthy == moved.filthy
+                    && !all_merged.contains(&sibling.entity)
+                {
+                    merges.push(sibling.entity);
+                    total_amount = &total_amount + sibling.amount;
+                    all_merged.push(sibling.entity);
                 }
             }
 
