@@ -312,6 +312,7 @@ pub(crate) fn perform_move_item(
     In(move_item): In<ActorEvent<MoveItem>>,
     mut commands: Commands,
     mut message_writer: EventWriter<Message>,
+    subzone_level_entities: Res<SubzoneLevelEntities>,
     mut location: ResMut<Location>,
     hierarchy: Hierarchy,
     actors: Query<Actor>,
@@ -319,6 +320,7 @@ pub(crate) fn perform_move_item(
     move_item.actor(&actors).move_item(
         &mut commands,
         &mut message_writer,
+        &subzone_level_entities,
         &mut location,
         &hierarchy,
         &move_item.change,

@@ -326,3 +326,13 @@ pub(crate) fn update_camera_offset(
 
     log_if_slow("update_camera", start);
 }
+
+#[allow(clippy::needless_pass_by_value)]
+pub(crate) fn check_items(
+    item_parents: Query<Option<&Parent>, Or<(With<Amount>, With<Containable>)>>,
+) {
+    assert!(
+        item_parents.iter().filter(|o| o.is_none()).next().is_none(),
+        "All items should have a parent"
+    );
+}

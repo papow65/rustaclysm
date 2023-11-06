@@ -582,6 +582,7 @@ impl ActorItem<'_> {
         &self,
         commands: &mut Commands,
         message_writer: &mut EventWriter<Message>,
+        subzone_level_entities: &SubzoneLevelEntities,
         location: &mut Location,
         hierarchy: &Hierarchy,
         move_item: &MoveItem,
@@ -609,15 +610,16 @@ impl ActorItem<'_> {
                 .verb(if dump { "drop" } else { "move" }, "s")
                 .extend(moved.fragments()),
         ));
-        if dump {
-            commands
-                .entity(moved_parent.unwrap())
-                .remove_children(&[move_item.item]);
-        }
+
+        let Some(new_parent) = subzone_level_entities.get(SubzoneLevel::from(to)) else {
+            eprintln!("Subzone for moving not found");
+            return None;
+        };
         commands
             .entity(move_item.item)
             .insert(VisibilityBundle::default())
-            .insert(to);
+            .insert(to)
+            .set_parent(new_parent);
         location.update(move_item.item, Some(*self.pos));
         Some(self.activate())
     }

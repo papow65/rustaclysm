@@ -106,6 +106,7 @@ pub(crate) fn create_schedules(app: &mut App) {
                 ),
             ),
             apply_deferred,
+            check_items,
         )
             .chain(),
     );
