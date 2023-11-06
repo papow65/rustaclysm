@@ -606,9 +606,12 @@ fn entity_info(
 ) -> Vec<Fragment> {
     let mut flags = Vec::new();
     let id_str;
+    let category_str;
     if let Some(definition) = definition {
         id_str = format!("{:?}", definition.id);
         flags.push(id_str.as_str());
+        category_str = format!("{:?}", definition.category);
+        flags.push(category_str.as_str());
     }
     if corpse.is_some() {
         flags.push("corpse");
