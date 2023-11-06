@@ -332,7 +332,7 @@ pub(crate) fn check_items(
     item_parents: Query<Option<&Parent>, Or<(With<Amount>, With<Containable>)>>,
 ) {
     assert!(
-        item_parents.iter().filter(|o| o.is_none()).next().is_none(),
+        item_parents.iter().all(|o| o.is_some()),
         "All items should have a parent"
     );
 }

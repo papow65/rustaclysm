@@ -29,6 +29,10 @@ struct BehaviorSchedule;
 struct DisplayBehaviorSchedule;
 
 pub(crate) fn create_schedules(app: &mut App) {
+    create_behavior_schedule(app);
+    create_display_behavior_schedule(app);
+}
+pub(crate) fn create_behavior_schedule(app: &mut App) {
     app.init_schedule(BehaviorSchedule);
 
     app.add_systems(
@@ -110,7 +114,9 @@ pub(crate) fn create_schedules(app: &mut App) {
         )
             .chain(),
     );
+}
 
+pub(crate) fn create_display_behavior_schedule(app: &mut App) {
     app.init_schedule(DisplayBehaviorSchedule);
 
     app.add_systems(

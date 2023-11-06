@@ -98,6 +98,7 @@ impl ActorItem<'_> {
         }
     }
 
+    #[allow(unused)]
     pub(crate) fn fragment(&self) -> Fragment {
         if self.player.is_some() {
             Fragment {
