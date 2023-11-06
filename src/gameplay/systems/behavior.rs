@@ -221,7 +221,7 @@ pub(crate) fn perform_attack(
 pub(crate) fn perform_smash(
     In(smash): In<ActorEvent<Smash>>,
     mut message_writer: EventWriter<Message>,
-    mut damage_writer: EventWriter<ItemEvent<Damage>>,
+    mut damage_writer: EventWriter<TerrainEvent<Damage>>,
     envir: Envir,
     infos: Res<Infos>,
     hierarchy: Hierarchy,
@@ -565,7 +565,7 @@ pub(crate) fn update_healed_characters(
 pub(crate) fn update_damaged_items(
     mut commands: Commands,
     mut message_writer: EventWriter<Message>,
-    mut damage_reader: EventReader<ItemEvent<Damage>>,
+    mut damage_reader: EventReader<TerrainEvent<Damage>>,
     mut spawner: Spawner,
     mut visualization_update: ResMut<VisualizationUpdate>,
     infos: Res<Infos>,
@@ -584,7 +584,7 @@ pub(crate) fn update_damaged_items(
 
     for damage in damage_reader.read() {
         let (item, &pos, name, amount, filthy, mut integrity, definition, parent) =
-            items.get_mut(damage.item_entity).expect("Item found");
+            items.get_mut(damage.terrain_entity).expect("Object found");
         let evolution = integrity.lower(&damage.change);
         if integrity.0.is_zero() {
             message_writer.send(Message::warn(

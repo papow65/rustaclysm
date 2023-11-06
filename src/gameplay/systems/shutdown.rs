@@ -43,7 +43,7 @@ pub(crate) fn remove_gameplay_resources(mut commands: Commands) {
     commands.remove_resource::<Events<ActorEvent<Timeout>>>();
     commands.remove_resource::<Events<ActorEvent<Damage>>>();
     commands.remove_resource::<Events<ActorEvent<Healing>>>();
-    commands.remove_resource::<Events<ItemEvent<Damage>>>();
+    commands.remove_resource::<Events<TerrainEvent<Damage>>>();
     commands.remove_resource::<Events<TerrainEvent<Toggle>>>();
 }
 

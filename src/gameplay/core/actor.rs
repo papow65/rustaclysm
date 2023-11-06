@@ -195,7 +195,7 @@ impl ActorItem<'_> {
         &self,
         damage_writer: Either<
             &mut EventWriter<ActorEvent<Damage>>,
-            &mut EventWriter<ItemEvent<Damage>>,
+            &mut EventWriter<TerrainEvent<Damage>>,
         >,
         envir: &Envir,
         infos: &Infos,
@@ -219,8 +219,8 @@ impl ActorItem<'_> {
         };
         match damage_writer {
             Either::Left(damage_writer) => damage_writer.send(ActorEvent::new(damaged, damage)),
-            Either::Right(damage_writer) => damage_writer.send(ItemEvent {
-                item_entity: damaged,
+            Either::Right(damage_writer) => damage_writer.send(TerrainEvent {
+                terrain_entity: damaged,
                 change: damage,
             }),
         }
@@ -282,7 +282,7 @@ impl ActorItem<'_> {
     pub(crate) fn smash(
         &self,
         message_writer: &mut EventWriter<Message>,
-        damage_writer: &mut EventWriter<ItemEvent<Damage>>,
+        damage_writer: &mut EventWriter<TerrainEvent<Damage>>,
         envir: &Envir,
         infos: &Infos,
         hierarchy: &Hierarchy,

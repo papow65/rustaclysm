@@ -45,7 +45,7 @@ impl Plugin for GameplayPlugin {
         app.insert_resource(Events::<ActorEvent<Timeout>>::default());
         app.insert_resource(Events::<ActorEvent<Damage>>::default());
         app.insert_resource(Events::<ActorEvent<Healing>>::default());
-        app.insert_resource(Events::<ItemEvent<Damage>>::default());
+        app.insert_resource(Events::<TerrainEvent<Damage>>::default());
         app.insert_resource(Events::<TerrainEvent<Toggle>>::default());
 
         create_schedules(app);
