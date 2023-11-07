@@ -16,44 +16,63 @@ impl Plugin for GameplayPlugin {
             FrameTimeDiagnosticsPlugin,
         ));
 
-        // These resources may persist between gameplays.
+        // These resources persist between gameplays.
         app.insert_resource(AmbientLight {
             brightness: 0.2,
             ..AmbientLight::default()
         })
         .insert_resource(ElevationVisibility::default())
         // Loading is slow, so we start loading RelativeSegments immediately.
-        .insert_resource(RelativeSegmentsGenerator::new());
+        .insert_resource(RelativeSegmentsGenerator::new())
+        .insert_resource(GameplayCounter::default())
+        .insert_resource(Events::<Message>::default())
+        .insert_resource(Events::<SpawnSubzoneLevel>::default())
+        .insert_resource(Events::<CollapseZoneLevel>::default())
+        .insert_resource(Events::<SpawnZoneLevel>::default())
+        .insert_resource(Events::<UpdateZoneLevelVisibility>::default())
+        .insert_resource(Events::<DespawnZoneLevel>::default())
+        .insert_resource(Events::<ActorEvent<Stay>>::default())
+        .insert_resource(Events::<ActorEvent<Step>>::default())
+        .insert_resource(Events::<ActorEvent<Attack>>::default())
+        .insert_resource(Events::<ActorEvent<Smash>>::default())
+        .insert_resource(Events::<ActorEvent<Close>>::default())
+        .insert_resource(Events::<ActorEvent<Wield>>::default())
+        .insert_resource(Events::<ActorEvent<Unwield>>::default())
+        .insert_resource(Events::<ActorEvent<Pickup>>::default())
+        .insert_resource(Events::<ActorEvent<MoveItem>>::default())
+        .insert_resource(Events::<ActorEvent<ExamineItem>>::default())
+        .insert_resource(Events::<ActorEvent<ChangePace>>::default())
+        .insert_resource(Events::<ActorEvent<StaminaImpact>>::default())
+        .insert_resource(Events::<ActorEvent<Timeout>>::default())
+        .insert_resource(Events::<ActorEvent<Damage>>::default())
+        .insert_resource(Events::<ActorEvent<Healing>>::default())
+        .insert_resource(Events::<TerrainEvent<Damage>>::default())
+        .insert_resource(Events::<TerrainEvent<Toggle>>::default());
 
         create_schedules(app);
 
-        add_systems(app);
+        app.add_systems(OnEnter(ApplicationState::Gameplay), startup_systems());
+        app.add_systems(Update, update_systems());
+        app.add_systems(FixedUpdate, fixed_update_systems());
+        app.add_systems(OnExit(ApplicationState::Gameplay), shutdown_systems());
     }
 }
 
-fn add_systems(app: &mut App) {
-    // Loading is slow, so we load RelativeSegments in the background
-    app.add_systems(
-        Update,
-        load_relative_segments.run_if(not(resource_exists::<RelativeSegments>())),
-    );
+fn startup_systems() -> impl IntoSystemConfigs<()> {
+    (
+        create_independent_resources,
+        apply_deferred,
+        create_dependent_resources,
+        apply_deferred,
+        spawn_initial_entities,
+        spawn_hud,
+        apply_deferred,
+    )
+        .chain()
+}
 
-    app.add_systems(
-        OnEnter(ApplicationState::Gameplay),
-        (
-            create_independent_resources,
-            apply_deferred,
-            create_dependent_resources,
-            apply_deferred,
-            spawn_initial_entities,
-            spawn_hud,
-            apply_deferred,
-        )
-            .chain(),
-    );
-
-    app.add_systems(
-        Update,
+fn update_systems() -> (impl IntoSystemConfigs<()>, impl IntoSystemConfigs<()>) {
+    (
         (
             (
                 (
@@ -106,24 +125,53 @@ fn add_systems(app: &mut App) {
             update_camera_offset.run_if(resource_exists_and_changed::<CameraOffset>()),
         )
             .run_if(in_state(ApplicationState::Gameplay)),
-    );
+        // Loading is slow, so we load RelativeSegments in the background, independent of the current ApplicationState
+        load_relative_segments.run_if(not(resource_exists::<RelativeSegments>())),
+    )
+}
 
-    // executed at fixed interval
-    app.add_systems(
-        FixedUpdate,
-        update_status_fps.run_if(
-            in_state(ApplicationState::Gameplay).and_then(resource_exists::<StatusTextSections>()),
-        ),
-    );
+fn fixed_update_systems() -> impl IntoSystemConfigs<()> {
+    update_status_fps.run_if(
+        in_state(ApplicationState::Gameplay).and_then(resource_exists::<StatusTextSections>()),
+    )
+}
 
-    app.add_systems(
-        OnExit(ApplicationState::Gameplay),
+fn shutdown_systems() -> impl IntoSystemConfigs<()> {
+    (
+        disable_screen_state,
+        apply_deferred,
+        despawn::<ApplicationState>,
+        remove_gameplay_resources,
         (
-            disable_screen_state,
-            apply_deferred,
-            despawn::<ApplicationState>,
-            remove_gameplay_resources,
-        )
-            .chain(),
-    );
+            clear_gameplay_events::<Message>,
+            clear_gameplay_events::<SpawnSubzoneLevel>,
+            clear_gameplay_events::<CollapseZoneLevel>,
+            clear_gameplay_events::<SpawnZoneLevel>,
+            clear_gameplay_events::<UpdateZoneLevelVisibility>,
+            clear_gameplay_events::<DespawnZoneLevel>,
+        ),
+        (
+            clear_gameplay_events::<ActorEvent<Stay>>,
+            clear_gameplay_events::<ActorEvent<Step>>,
+            clear_gameplay_events::<ActorEvent<Attack>>,
+            clear_gameplay_events::<ActorEvent<Smash>>,
+            clear_gameplay_events::<ActorEvent<Close>>,
+            clear_gameplay_events::<ActorEvent<Wield>>,
+            clear_gameplay_events::<ActorEvent<Unwield>>,
+            clear_gameplay_events::<ActorEvent<Pickup>>,
+            clear_gameplay_events::<ActorEvent<MoveItem>>,
+            clear_gameplay_events::<ActorEvent<ExamineItem>>,
+            clear_gameplay_events::<ActorEvent<ChangePace>>,
+            clear_gameplay_events::<ActorEvent<StaminaImpact>>,
+            clear_gameplay_events::<ActorEvent<Timeout>>,
+            clear_gameplay_events::<ActorEvent<Damage>>,
+            clear_gameplay_events::<ActorEvent<Healing>>,
+        ),
+        (
+            clear_gameplay_events::<TerrainEvent<Damage>>,
+            clear_gameplay_events::<TerrainEvent<Toggle>>,
+        ),
+        increase_counter,
+    )
+        .chain()
 }

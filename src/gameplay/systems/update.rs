@@ -185,6 +185,7 @@ pub(crate) fn update_visualization_on_focus_move(
     mut explored: ResMut<Explored>,
     elevation_visibility: Res<ElevationVisibility>,
     mut visualization_update: ResMut<VisualizationUpdate>,
+    mut session: GameplaySession,
     mut last_focus: Local<Focus>,
     mut previous_camera_global_transform: Local<GlobalTransform>,
     mut last_elevation_visibility: Local<ElevationVisibility>,
@@ -202,6 +203,12 @@ pub(crate) fn update_visualization_on_focus_move(
     cameras: Query<&GlobalTransform, With<Camera>>,
 ) {
     let start = Instant::now();
+
+    if session.is_changed() {
+        *last_focus = Focus::default();
+        *previous_camera_global_transform = GlobalTransform::default();
+        *last_elevation_visibility = ElevationVisibility::default();
+    }
 
     let &player_pos = players.single();
     let focus = Focus::new(&player_action_state, player_pos);
@@ -272,10 +279,15 @@ pub(crate) fn update_visualization_on_weather_change(
     clock: Clock,
     player_action_state: Res<PlayerActionState>,
     mut visualization_update: ResMut<VisualizationUpdate>,
+    mut session: GameplaySession,
     mut last_viewing_disttance: Local<Option<usize>>,
     players: Query<&Pos, With<Player>>,
 ) {
     let start = Instant::now();
+
+    if session.is_changed() {
+        *last_viewing_disttance = None;
+    }
 
     let player_pos = players.single();
     let viewing_distance =

@@ -25,6 +25,7 @@ pub(crate) use self::{
 
 use crate::prelude::*;
 use bevy::{ecs::system::SystemParam, prelude::*};
+use std::num::Wrapping;
 
 //** Visibility of tiles above the player character */
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Resource)]
@@ -77,5 +78,22 @@ impl<'w, 's> Hierarchy<'w, 's> {
         self.containers
             .get(container_entity)
             .expect("The hand container")
+    }
+}
+
+#[derive(Debug, Default, Resource)]
+pub(crate) struct GameplayCounter(pub(crate) Wrapping<usize>);
+
+#[derive(SystemParam)]
+pub(crate) struct GameplaySession<'w, 's> {
+    current: Res<'w, GameplayCounter>,
+    last: Local<'s, Wrapping<usize>>,
+}
+
+impl<'w, 's> GameplaySession<'w, 's> {
+    pub(crate) fn is_changed(&mut self) -> bool {
+        let reset = self.current.0 != *self.last;
+        *self.last = self.current.0;
+        reset
     }
 }

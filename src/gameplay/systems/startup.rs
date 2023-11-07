@@ -31,29 +31,6 @@ pub(crate) fn create_independent_resources(mut commands: Commands) {
     commands.insert_resource(PlayerActionState::default());
     commands.insert_resource(StatusTextSections::default());
     commands.insert_resource(VisualizationUpdate::Smart);
-    commands.insert_resource(Events::<Message>::default());
-    commands.insert_resource(Events::<SpawnSubzoneLevel>::default());
-    commands.insert_resource(Events::<CollapseZoneLevel>::default());
-    commands.insert_resource(Events::<SpawnZoneLevel>::default());
-    commands.insert_resource(Events::<UpdateZoneLevelVisibility>::default());
-    commands.insert_resource(Events::<DespawnZoneLevel>::default());
-    commands.insert_resource(Events::<ActorEvent<Stay>>::default());
-    commands.insert_resource(Events::<ActorEvent<Step>>::default());
-    commands.insert_resource(Events::<ActorEvent<Attack>>::default());
-    commands.insert_resource(Events::<ActorEvent<Smash>>::default());
-    commands.insert_resource(Events::<ActorEvent<Close>>::default());
-    commands.insert_resource(Events::<ActorEvent<Wield>>::default());
-    commands.insert_resource(Events::<ActorEvent<Unwield>>::default());
-    commands.insert_resource(Events::<ActorEvent<Pickup>>::default());
-    commands.insert_resource(Events::<ActorEvent<MoveItem>>::default());
-    commands.insert_resource(Events::<ActorEvent<ExamineItem>>::default());
-    commands.insert_resource(Events::<ActorEvent<ChangePace>>::default());
-    commands.insert_resource(Events::<ActorEvent<StaminaImpact>>::default());
-    commands.insert_resource(Events::<ActorEvent<Timeout>>::default());
-    commands.insert_resource(Events::<ActorEvent<Damage>>::default());
-    commands.insert_resource(Events::<ActorEvent<Healing>>::default());
-    commands.insert_resource(Events::<TerrainEvent<Damage>>::default());
-    commands.insert_resource(Events::<TerrainEvent<Toggle>>::default());
 }
 
 /// Create resources that need other resources

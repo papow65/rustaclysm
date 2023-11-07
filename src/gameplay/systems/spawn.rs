@@ -10,6 +10,7 @@ pub(crate) fn spawn_subzones_for_camera(
     mut collaspe_zone_level_writer: EventWriter<CollapseZoneLevel>,
     player_action_state: Res<PlayerActionState>,
     subzone_level_entities: Res<SubzoneLevelEntities>,
+    mut session: GameplaySession,
     mut previous_camera_global_transform: Local<GlobalTransform>,
     mut previous_expanded_region: Local<Region>,
     players: Query<&Pos, With<Player>>,
@@ -17,6 +18,11 @@ pub(crate) fn spawn_subzones_for_camera(
     subzone_levels: Query<&SubzoneLevel>,
 ) {
     let start = Instant::now();
+
+    if session.is_changed() {
+        *previous_camera_global_transform = GlobalTransform::default();
+        *previous_expanded_region = Region::default();
+    }
 
     // TODO fix respawning expanded subzones after loading a save game twice, because the Local resources might not change
 
@@ -237,6 +243,7 @@ pub(crate) fn update_collapsed_zone_levels(
     mut despawn_zone_level_writer: EventWriter<DespawnZoneLevel>,
     player_action_state: Res<PlayerActionState>,
     zone_level_entities: Res<ZoneLevelEntities>,
+    mut session: GameplaySession,
     mut previous_camera_global_transform: Local<GlobalTransform>,
     mut previous_visible_region: Local<Region>,
     players: Query<&Pos, With<Player>>,
@@ -251,6 +258,11 @@ pub(crate) fn update_collapsed_zone_levels(
     // Collapsed zone level child visibility: not expanded, even when zoomed out
 
     let start = Instant::now();
+
+    if session.is_changed() {
+        *previous_camera_global_transform = GlobalTransform::default();
+        *previous_visible_region = Region::default();
+    }
 
     /*println!(
         "update_collapsed_zone_levels {:?} {:?}",

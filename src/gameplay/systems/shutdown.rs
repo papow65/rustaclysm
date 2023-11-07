@@ -15,37 +15,28 @@ pub(crate) fn remove_gameplay_resources(mut commands: Commands) {
     commands.remove_resource::<Explored>();
     commands.remove_resource::<Sav>();
     commands.remove_resource::<Timeouts>();
+    commands.remove_resource::<OvermapBufferManager>();
+    commands.remove_resource::<OvermapManager>();
+    commands.remove_resource::<MapManager>();
     commands.remove_resource::<ZoneLevelIds>();
     commands.remove_resource::<CameraOffset>();
     commands.remove_resource::<InstructionQueue>();
     commands.remove_resource::<PlayerActionState>();
     commands.remove_resource::<StatusTextSections>();
-    commands.remove_resource::<Events<Message>>();
-    commands.remove_resource::<Events<SpawnSubzoneLevel>>();
-    commands.remove_resource::<Events<CollapseZoneLevel>>();
-    commands.remove_resource::<Events<SpawnZoneLevel>>();
-    commands.remove_resource::<Events<UpdateZoneLevelVisibility>>();
-    commands.remove_resource::<Events<DespawnZoneLevel>>();
-    commands.remove_resource::<Events<ActorEvent<Stay>>>();
-    commands.remove_resource::<Events<ActorEvent<Step>>>();
-    commands.remove_resource::<Events<ActorEvent<Attack>>>();
-    commands.remove_resource::<Events<ActorEvent<Smash>>>();
-    commands.remove_resource::<Events<ActorEvent<Close>>>();
-    commands.remove_resource::<Events<ActorEvent<Wield>>>();
-    commands.remove_resource::<Events<ActorEvent<Unwield>>>();
-    commands.remove_resource::<Events<ActorEvent<Pickup>>>();
-    commands.remove_resource::<Events<ActorEvent<MoveItem>>>();
-    commands.remove_resource::<Events<ActorEvent<ExamineItem>>>();
-    commands.remove_resource::<Events<ActorEvent<ChangePace>>>();
-    commands.remove_resource::<Events<ActorEvent<StaminaImpact>>>();
-    commands.remove_resource::<Events<ActorEvent<Timeout>>>();
-    commands.remove_resource::<Events<ActorEvent<Damage>>>();
-    commands.remove_resource::<Events<ActorEvent<Healing>>>();
-    commands.remove_resource::<Events<TerrainEvent<Damage>>>();
-    commands.remove_resource::<Events<TerrainEvent<Toggle>>>();
+    // We don't remove the event resources, because that breaks the event readers.
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub(crate) fn clear_gameplay_events<T: Event>(mut events: ResMut<Events<T>>) {
+    events.clear();
 }
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn disable_screen_state(mut next_state: ResMut<NextState<GameplayScreenState>>) {
     next_state.set(GameplayScreenState::Inapplicable);
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub(crate) fn increase_counter(mut counter: ResMut<GameplayCounter>) {
+    counter.0 += 1;
 }

@@ -177,10 +177,15 @@ pub(crate) fn spawn_hud(
 pub(crate) fn update_log(
     mut new_messages: EventReader<Message>,
     hud_defaults: Res<HudDefaults>,
+    mut session: GameplaySession,
     mut message_log: Local<Vec<Message>>,
     mut logs: Query<&mut Text, With<LogDisplay>>,
 ) {
     let start = Instant::now();
+
+    if session.is_changed() {
+        *message_log = Vec::new();
+    }
 
     for message in new_messages.read() {
         if message.phrase.to_string().trim() != "" {
