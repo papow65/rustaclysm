@@ -53,7 +53,8 @@ pub(crate) fn create_independent_resources(mut commands: Commands) {
     commands.insert_resource(Events::<ActorEvent<Damage>>::default());
     commands.insert_resource(Events::<ActorEvent<Healing>>::default());
     commands.insert_resource(Events::<TerrainEvent<Damage>>::default());
-    commands.insert_resource(Events::<TerrainEvent<Toggle>>::default());}
+    commands.insert_resource(Events::<TerrainEvent<Toggle>>::default());
+}
 
 /// Create resources that need other resources
 #[allow(clippy::needless_pass_by_value)]
