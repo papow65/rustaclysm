@@ -243,20 +243,20 @@ impl TileLoader {
             println!("{tile_name:?} {foreground:?} {background:?}");
         }*/
 
-        let foreground_model = self
-            .to_model(foreground, definition, SpriteLayer::Front)
-            .unwrap_or_else(|| panic!("Foreground present for {foreground:?} with {definition:?}"));
+        let foreground_model = self.to_model(foreground, definition, SpriteLayer::Front);
         let background_model = self.to_model(background, definition, SpriteLayer::Back);
 
-        if let Some(background_model) = background_model {
-            Layers {
+        match (foreground_model, background_model) {
+            (foreground_model, Some(background_model)) => Layers {
                 base: background_model,
-                overlay: Some(foreground_model),
-            }
-        } else {
-            Layers {
+                overlay: foreground_model,
+            },
+            (Some(foreground_model), None) => Layers {
                 base: foreground_model,
                 overlay: None,
+            },
+            (None, None) => {
+                panic!("No foreground or background for {definition:?} and {variants:?}");
             }
         }
     }
