@@ -45,7 +45,7 @@ impl OvermapManager {
     }
 
     pub(crate) fn overzone(&mut self, handle: &AssetId<OvermapAsset>) -> Option<Overzone> {
-        println!("Looking for {handle:?} in {:?}", self.overzones);
+        //println!("Looking for {handle:?} in {:?}", self.overzones);
         self.overzones.get(handle).copied()
     }
 }
