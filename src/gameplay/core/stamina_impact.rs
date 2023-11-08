@@ -1,4 +1,4 @@
-use crate::prelude::ActorChange;
+use crate::prelude::Action;
 
 #[derive(Copy, Clone, Debug)]
 pub(crate) enum StaminaImpact {
@@ -21,4 +21,4 @@ impl StaminaImpact {
     }
 }
 
-impl ActorChange for StaminaImpact {}
+impl Action for StaminaImpact {}

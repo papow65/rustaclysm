@@ -58,26 +58,22 @@ pub(crate) struct StatusTextSections {
 // pickup
 #[derive(SystemParam)]
 pub(crate) struct Hierarchy<'w, 's> {
-    items: Query<'w, 's, Item>,
     containers: Query<'w, 's, &'static Container>,
     children: Query<'w, 's, &'static Children>,
+    items: Query<'w, 's, Item>,
 }
 
 impl<'w, 's> Hierarchy<'w, 's> {
-    pub(crate) fn get_item(&self, item_entity: Entity) -> ItemItem {
-        self.items.get(item_entity).expect("An existing item")
-    }
-
     pub(crate) fn items_in(&self, container: Entity) -> impl Iterator<Item = ItemItem> + '_ {
         self.children
             .iter_descendants(container)
             .flat_map(|item| self.items.get(item))
     }
 
-    pub(crate) fn get_container(&self, container_entity: Entity) -> &Container {
+    pub(crate) fn container(&self, container_entity: Entity) -> &Container {
         self.containers
             .get(container_entity)
-            .expect("The hand container")
+            .expect("An existing container")
     }
 }
 

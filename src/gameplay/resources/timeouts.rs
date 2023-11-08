@@ -1,4 +1,4 @@
-use crate::prelude::{ActorChange, Milliseconds, Timestamp};
+use crate::prelude::{Action, Milliseconds, Timestamp};
 use bevy::{
     ecs::system::SystemParam,
     prelude::{Entity, Res, Resource},
@@ -10,7 +10,7 @@ pub(crate) struct Timeout {
     pub(crate) delay: Milliseconds,
 }
 
-impl ActorChange for Timeout {}
+impl Action for Timeout {}
 
 #[derive(Resource)]
 pub(crate) struct Timeouts {

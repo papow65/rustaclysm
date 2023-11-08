@@ -195,7 +195,7 @@ impl ActorItem<'_> {
     fn damage(
         &self,
         damage_writer: Either<
-            &mut EventWriter<ActorEvent<Damage>>,
+            &mut EventWriter<ActionEvent<Damage>>,
             &mut EventWriter<TerrainEvent<Damage>>,
         >,
         envir: &Envir,
@@ -218,7 +218,7 @@ impl ActorItem<'_> {
             amount: self.melee.damage(melee_weapon),
         };
         match damage_writer {
-            Either::Left(damage_writer) => damage_writer.send(ActorEvent::new(damaged, damage)),
+            Either::Left(damage_writer) => damage_writer.send(ActionEvent::new(damaged, damage)),
             Either::Right(damage_writer) => damage_writer.send(TerrainEvent {
                 terrain_entity: damaged,
                 change: damage,
@@ -246,7 +246,7 @@ impl ActorItem<'_> {
     pub(crate) fn attack(
         &self,
         message_writer: &mut EventWriter<Message>,
-        damage_writer: &mut EventWriter<ActorEvent<Damage>>,
+        damage_writer: &mut EventWriter<ActionEvent<Damage>>,
         envir: &Envir,
         infos: &Infos,
         hierarchy: &Hierarchy,
@@ -377,7 +377,7 @@ impl ActorItem<'_> {
         message_writer: &mut EventWriter<Message>,
         location: &mut Location,
         hierarchy: &Hierarchy,
-        wield: &Wield,
+        item: &ItemItem,
     ) -> Option<Impact> {
         let impact = self.take(
             commands,
@@ -385,10 +385,10 @@ impl ActorItem<'_> {
             location,
             hierarchy,
             self.body_containers.unwrap().hands,
-            wield.item,
+            item,
         );
         if impact.is_some() {
-            commands.entity(wield.item).insert(PlayerWielded);
+            commands.entity(item.entity).insert(PlayerWielded);
         }
         impact
     }
@@ -399,7 +399,7 @@ impl ActorItem<'_> {
         message_writer: &mut EventWriter<Message>,
         location: &mut Location,
         hierarchy: &Hierarchy,
-        unwield: &Unwield,
+        item: &ItemItem,
     ) -> Option<Impact> {
         let impact = self.take(
             commands,
@@ -407,10 +407,10 @@ impl ActorItem<'_> {
             location,
             hierarchy,
             self.body_containers.unwrap().clothing,
-            unwield.item,
+            item,
         );
         if impact.is_some() {
-            commands.entity(unwield.item).remove::<PlayerWielded>();
+            commands.entity(item.entity).remove::<PlayerWielded>();
         }
         impact
     }
@@ -421,7 +421,7 @@ impl ActorItem<'_> {
         message_writer: &mut EventWriter<Message>,
         location: &mut Location,
         hierarchy: &Hierarchy,
-        pickup: &Pickup,
+        item: &ItemItem,
     ) -> Option<Impact> {
         self.take(
             commands,
@@ -429,7 +429,7 @@ impl ActorItem<'_> {
             location,
             hierarchy,
             self.body_containers.unwrap().clothing,
-            pickup.item,
+            item,
         )
     }
 
@@ -440,10 +440,8 @@ impl ActorItem<'_> {
         location: &mut Location,
         hierarchy: &Hierarchy,
         container_entity: Entity,
-        taken: Entity,
+        taken: &ItemItem,
     ) -> Option<Impact> {
-        let taken = hierarchy.get_item(taken);
-
         if let Some(taken_pos) = taken.pos {
             let offset = *taken_pos - *self.pos;
             assert!(
@@ -469,7 +467,7 @@ impl ActorItem<'_> {
         let current_items = hierarchy
             .items_in(container_entity)
             .map(|item| item.containable);
-        let container = hierarchy.get_container(container_entity);
+        let container = hierarchy.container(container_entity);
         match container.check_add(
             self.name.single(),
             current_items,
@@ -484,8 +482,7 @@ impl ActorItem<'_> {
                         location,
                         container_entity,
                         allowed_amount,
-                        &taken,
-                        taken.parent,
+                        taken,
                     );
                 } else {
                     self.take_all(
@@ -515,7 +512,6 @@ impl ActorItem<'_> {
         container_entity: Entity,
         allowed_amount: Amount,
         taken: &ItemItem,
-        taken_parent: &Parent,
     ) {
         message_writer.send(Message::info(
             self.subject()
@@ -537,7 +533,7 @@ impl ActorItem<'_> {
                 LastSeen::Currently,
                 SpatialBundle::default(),
             ))
-            .set_parent(taken_parent.get())
+            .set_parent(taken.parent.get())
             .id();
         if taken.filthy.is_some() {
             commands.entity(left_over_entity).insert(Filthy);
@@ -583,11 +579,9 @@ impl ActorItem<'_> {
         message_writer: &mut EventWriter<Message>,
         subzone_level_entities: &SubzoneLevelEntities,
         location: &mut Location,
-        hierarchy: &Hierarchy,
-        move_item: &MoveItem,
+        moved: &ItemItem,
+        to: Nbor,
     ) -> Option<Impact> {
-        let moved = hierarchy.get_item(move_item.item);
-
         if let Some(from) = moved.pos {
             let offset = *from - *self.pos;
             let potentially_valid = HorizontalDirection::try_from(offset).is_ok()
@@ -601,7 +595,7 @@ impl ActorItem<'_> {
             || moved.parent.get() == self.body_containers.unwrap().clothing;
 
         // TODO Check for obstacles
-        let to = self.pos.raw_nbor(move_item.to).unwrap();
+        let to = self.pos.raw_nbor(to).unwrap();
 
         message_writer.send(Message::info(
             self.subject()
@@ -614,38 +608,33 @@ impl ActorItem<'_> {
             return None;
         };
         commands
-            .entity(move_item.item)
+            .entity(moved.entity)
             .insert(VisibilityBundle::default())
             .insert(to)
             .set_parent(new_parent);
-        location.update(move_item.item, Some(*self.pos));
+        location.update(moved.entity, Some(*self.pos));
         Some(self.activate())
     }
 
     pub(crate) fn examine_item(
         message_writer: &mut EventWriter<Message>,
         infos: &Infos,
-        definitions: &Query<&ObjectDefinition>,
-        examine_item: &ExamineItem,
+        item: &ItemItem,
     ) {
-        if let Ok(definition) = definitions.get(examine_item.item) {
-            if let Some(item_info) = infos.item(&definition.id) {
-                if let Some(description) = &item_info.description {
-                    message_writer.send(Message::info(Phrase::new(
-                        match description {
-                            Description::Simple(simple) => simple,
-                            Description::Complex(complex) => complex.get("str").unwrap(),
-                        }
-                        .as_str(),
-                    )));
-                } else {
-                    eprintln!("No description");
-                }
+        if let Some(item_info) = infos.item(&item.definition.id) {
+            if let Some(description) = &item_info.description {
+                message_writer.send(Message::info(Phrase::new(
+                    match description {
+                        Description::Simple(simple) => simple,
+                        Description::Complex(complex) => complex.get("str").unwrap(),
+                    }
+                    .as_str(),
+                )));
             } else {
-                eprintln!("No info");
+                eprintln!("No description");
             }
         } else {
-            eprintln!("No definition");
+            eprintln!("No info");
         }
     }
 

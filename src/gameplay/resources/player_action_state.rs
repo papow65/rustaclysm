@@ -59,7 +59,7 @@ impl PlayerActionState {
     pub(crate) fn plan_action(
         &mut self,
         message_writer: &mut EventWriter<Message>,
-        healing_writer: &mut EventWriter<ActorEvent<Healing>>,
+        healing_writer: &mut EventWriter<ActionEvent<Healing>>,
         envir: &mut Envir,
         instruction_queue: &mut InstructionQueue,
         actor: Entity,
@@ -123,7 +123,7 @@ impl PlayerActionState {
                 let sleeping_duration = now - *healing_from;
 
                 let healing_amount = sleeping_duration.0 / 1_000_000;
-                healing_writer.send(ActorEvent::new(
+                healing_writer.send(ActionEvent::new(
                     actor,
                     Healing {
                         amount: healing_amount as u16,
