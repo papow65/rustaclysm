@@ -124,13 +124,13 @@ impl<'w, 's> Spawner<'w, 's> {
         if faction == Faction::Human {
             let hands = self
                 .commands
-                .spawn(BodyContainers::default_hands_container())
+                .spawn(BodyContainers::default_hands_container_limits())
                 .insert(SpatialBundle::HIDDEN_IDENTITY)
                 .set_parent(entity)
                 .id();
             let clothing = self
                 .commands
-                .spawn(BodyContainers::default_clothing_container())
+                .spawn(BodyContainers::default_clothing_container_limits())
                 .insert(SpatialBundle::HIDDEN_IDENTITY)
                 .set_parent(entity)
                 .id();

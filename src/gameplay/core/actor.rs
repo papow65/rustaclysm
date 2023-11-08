@@ -130,6 +130,14 @@ impl ActorItem<'_> {
         }
     }
 
+    fn hands<'a>(&self, hierarchy: &'a Hierarchy) -> Container<'a> {
+        Container::new(self.body_containers.unwrap().hands, hierarchy)
+    }
+
+    fn clothing<'a>(&self, hierarchy: &'a Hierarchy) -> Container<'a> {
+        Container::new(self.body_containers.unwrap().clothing, hierarchy)
+    }
+
     pub(crate) fn stay(&self, stay: &Stay) -> Impact {
         match stay.duration {
             StayDuration::Short => Impact::rest(
@@ -383,8 +391,7 @@ impl ActorItem<'_> {
             commands,
             message_writer,
             location,
-            hierarchy,
-            self.body_containers.unwrap().hands,
+            &self.hands(hierarchy),
             item,
         );
         if impact.is_some() {
@@ -405,8 +412,7 @@ impl ActorItem<'_> {
             commands,
             message_writer,
             location,
-            hierarchy,
-            self.body_containers.unwrap().clothing,
+            &self.clothing(hierarchy),
             item,
         );
         if impact.is_some() {
@@ -427,8 +433,7 @@ impl ActorItem<'_> {
             commands,
             message_writer,
             location,
-            hierarchy,
-            self.body_containers.unwrap().clothing,
+            &self.clothing(hierarchy),
             item,
         )
     }
@@ -438,8 +443,7 @@ impl ActorItem<'_> {
         commands: &mut Commands,
         message_writer: &mut EventWriter<Message>,
         location: &mut Location,
-        hierarchy: &Hierarchy,
-        container_entity: Entity,
+        target: &Container,
         taken: &ItemItem,
     ) -> Option<Impact> {
         if let Some(taken_pos) = taken.pos {
@@ -464,23 +468,14 @@ impl ActorItem<'_> {
             );
         }
 
-        let current_items = hierarchy
-            .items_in(container_entity)
-            .map(|item| item.containable);
-        let container = hierarchy.container(container_entity);
-        match container.check_add(
-            self.name.single(),
-            current_items,
-            taken.containable,
-            taken.amount,
-        ) {
+        match target.check_add(self.name.single(), taken.containable, taken.amount) {
             Ok(allowed_amount) => {
                 if &allowed_amount < taken.amount {
                     self.take_some(
                         commands,
                         message_writer,
                         location,
-                        container_entity,
+                        target.entity,
                         allowed_amount,
                         taken,
                     );
@@ -489,7 +484,7 @@ impl ActorItem<'_> {
                         commands,
                         message_writer,
                         location,
-                        container_entity,
+                        target.entity,
                         taken.entity,
                         taken.fragments(),
                     );

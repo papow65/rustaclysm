@@ -647,13 +647,7 @@ pub(crate) fn update_damaged_terrain(
 pub(crate) fn combine_items(
     mut commands: Commands,
     hierarchy: Hierarchy,
-    moved_items: Query<
-        Item,
-        (
-            Changed<Parent>,
-            Without<Container>, /*, With<Container>*/
-        ), //TODO this takes very long for initial entities
-    >,
+    moved_items: Query<Item, (Changed<Parent>, Without<ContainerLimits>)>,
 ) {
     let start = Instant::now();
 

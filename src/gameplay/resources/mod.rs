@@ -58,7 +58,7 @@ pub(crate) struct StatusTextSections {
 // pickup
 #[derive(SystemParam)]
 pub(crate) struct Hierarchy<'w, 's> {
-    containers: Query<'w, 's, &'static Container>,
+    limits: Query<'w, 's, &'static ContainerLimits>,
     children: Query<'w, 's, &'static Children>,
     items: Query<'w, 's, Item>,
 }
@@ -70,8 +70,8 @@ impl<'w, 's> Hierarchy<'w, 's> {
             .flat_map(|item| self.items.get(item))
     }
 
-    pub(crate) fn container(&self, container_entity: Entity) -> &Container {
-        self.containers
+    pub(crate) fn container(&self, container_entity: Entity) -> &ContainerLimits {
+        self.limits
             .get(container_entity)
             .expect("An existing container")
     }

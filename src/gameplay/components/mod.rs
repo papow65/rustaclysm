@@ -1,4 +1,4 @@
-mod container;
+mod container_limits;
 mod faction;
 mod object_name;
 mod player;
@@ -12,7 +12,7 @@ use bevy::{
 };
 use std::ops::{Add, Sub};
 
-pub(crate) use {container::*, faction::*, object_name::*, player::*, pos::*, stats::*};
+pub(crate) use {container_limits::*, faction::*, object_name::*, player::*, pos::*, stats::*};
 
 #[derive(PartialEq, Debug, Component)]
 pub(crate) struct Filthy;
@@ -56,10 +56,11 @@ pub(crate) struct Containable {
     pub(crate) mass: Mass,
 }
 
-#[derive(Component, Debug, PartialEq, PartialOrd)]
+#[derive(Component, Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) struct Amount(pub(crate) u32);
 
 impl Amount {
+    pub(crate) const ZERO: Self = Self(0);
     pub(crate) const SINGLE: Self = Self(1);
 }
 
