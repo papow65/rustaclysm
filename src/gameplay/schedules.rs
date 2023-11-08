@@ -91,7 +91,6 @@ pub(crate) fn create_behavior_schedule(app: &mut App) {
                     update_damaged_characters.run_if(on_event::<ActionEvent<Damage>>()),
                     apply_deferred, // Make sure killed actors are handled early
                     (
-                        update_timeout.run_if(on_event::<ActionEvent<Timeout>>()),
                         update_stamina.run_if(on_event::<ActionEvent<StaminaImpact>>()),
                         update_healed_characters.run_if(on_event::<ActionEvent<Healing>>()),
                     ),

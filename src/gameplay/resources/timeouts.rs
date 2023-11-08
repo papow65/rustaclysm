@@ -1,16 +1,9 @@
-use crate::prelude::{Action, Milliseconds, Timestamp};
+use crate::prelude::{Milliseconds, Timestamp};
 use bevy::{
     ecs::system::SystemParam,
     prelude::{Entity, Res, Resource},
     utils::HashMap,
 };
-
-#[derive(Clone, Debug)]
-pub(crate) struct Timeout {
-    pub(crate) delay: Milliseconds,
-}
-
-impl Action for Timeout {}
 
 #[derive(Resource)]
 pub(crate) struct Timeouts {

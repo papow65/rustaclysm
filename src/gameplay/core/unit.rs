@@ -58,6 +58,7 @@ impl fmt::Display for MillimeterPerSecond {
 pub(crate) struct Milliseconds(pub(crate) u64);
 
 impl Milliseconds {
+    pub(crate) const ZERO: Self = Self(0);
     pub(crate) const MINUTE: Self = Self(60 * 1000);
     pub(crate) const EIGHT_HOURS: Self = Self(8 * 60 * 60 * 1000);
 }
@@ -92,10 +93,11 @@ impl Sub for Milliseconds {
 
 impl Zero for Milliseconds {
     fn zero() -> Self {
-        Self(0)
+        Self::ZERO
     }
+
     fn is_zero(&self) -> bool {
-        self.0 == 0
+        self == &Self::ZERO
     }
 }
 

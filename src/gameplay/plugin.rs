@@ -43,7 +43,6 @@ impl Plugin for GameplayPlugin {
         .insert_resource(Events::<ActionEvent<ItemAction<ExamineItem>>>::default())
         .insert_resource(Events::<ActionEvent<ChangePace>>::default())
         .insert_resource(Events::<ActionEvent<StaminaImpact>>::default())
-        .insert_resource(Events::<ActionEvent<Timeout>>::default())
         .insert_resource(Events::<ActionEvent<Damage>>::default())
         .insert_resource(Events::<ActionEvent<Healing>>::default())
         .insert_resource(Events::<TerrainEvent<Damage>>::default())
@@ -163,7 +162,6 @@ fn shutdown_systems() -> impl IntoSystemConfigs<()> {
             clear_gameplay_events::<ActionEvent<ItemAction<ExamineItem>>>,
             clear_gameplay_events::<ActionEvent<ChangePace>>,
             clear_gameplay_events::<ActionEvent<StaminaImpact>>,
-            clear_gameplay_events::<ActionEvent<Timeout>>,
             clear_gameplay_events::<ActionEvent<Damage>>,
             clear_gameplay_events::<ActionEvent<Healing>>,
         ),

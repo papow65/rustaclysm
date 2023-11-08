@@ -187,11 +187,8 @@ pub(crate) fn single_action<A: Action>(
 
 #[allow(clippy::needless_pass_by_value)]
 #[allow(clippy::unnecessary_wraps)]
-pub(crate) fn perform_stay(
-    In(stay): In<ActionEvent<Stay>>,
-    actors: Query<Actor>,
-) -> Option<Impact> {
-    Some(stay.actor(&actors).stay(&stay.action))
+pub(crate) fn perform_stay(In(stay): In<ActionEvent<Stay>>, actors: Query<Actor>) -> Impact {
+    stay.actor(&actors).stay(&stay.action)
 }
 
 #[allow(clippy::needless_pass_by_value)]
@@ -202,7 +199,7 @@ pub(crate) fn perform_step(
     mut toggle_writer: EventWriter<TerrainEvent<Toggle>>,
     mut envir: Envir,
     actors: Query<Actor>,
-) -> Option<Impact> {
+) -> Impact {
     step.actor(&actors).step(
         &mut commands,
         &mut message_writer,
@@ -221,7 +218,7 @@ pub(crate) fn perform_attack(
     infos: Res<Infos>,
     hierarchy: Hierarchy,
     actors: Query<Actor>,
-) -> Option<Impact> {
+) -> Impact {
     attack.actor(&actors).attack(
         &mut message_writer,
         &mut damage_writer,
@@ -241,7 +238,7 @@ pub(crate) fn perform_smash(
     infos: Res<Infos>,
     hierarchy: Hierarchy,
     actors: Query<Actor>,
-) -> Option<Impact> {
+) -> Impact {
     smash.actor(&actors).smash(
         &mut message_writer,
         &mut damage_writer,
@@ -259,7 +256,7 @@ pub(crate) fn perform_close(
     mut toggle_writer: EventWriter<TerrainEvent<Toggle>>,
     envir: Envir,
     actors: Query<Actor>,
-) -> Option<Impact> {
+) -> Impact {
     close.actor(&actors).close(
         &mut message_writer,
         &mut toggle_writer,
@@ -277,7 +274,7 @@ pub(crate) fn perform_wield(
     hierarchy: Hierarchy,
     actors: Query<Actor>,
     items: Query<Item>,
-) -> Option<Impact> {
+) -> Impact {
     wield.actor(&actors).wield(
         &mut commands,
         &mut message_writer,
@@ -296,7 +293,7 @@ pub(crate) fn perform_unwield(
     hierarchy: Hierarchy,
     actors: Query<Actor>,
     items: Query<Item>,
-) -> Option<Impact> {
+) -> Impact {
     unwield.actor(&actors).unwield(
         &mut commands,
         &mut message_writer,
@@ -315,7 +312,7 @@ pub(crate) fn perform_pickup(
     hierarchy: Hierarchy,
     actors: Query<Actor>,
     items: Query<Item>,
-) -> Option<Impact> {
+) -> Impact {
     pickup.actor(&actors).pickup(
         &mut commands,
         &mut message_writer,
@@ -334,7 +331,7 @@ pub(crate) fn perform_move_item(
     mut location: ResMut<Location>,
     actors: Query<Actor>,
     items: Query<Item>,
-) -> Option<Impact> {
+) -> Impact {
     move_item.actor(&actors).move_item(
         &mut commands,
         &mut message_writer,
@@ -368,61 +365,36 @@ pub(crate) fn perform_change_pace(
     change_pace.actor(&actors).change_pace(&mut commands);
 }
 
-pub(crate) fn proces_impact(
-    In(impact): In<Option<Impact>>,
-    mut stamina_impact_events: EventWriter<ActionEvent<StaminaImpact>>,
-    mut timeout_events: EventWriter<ActionEvent<Timeout>>,
-) {
-    let Some(impact) = impact else {
-        return;
-    };
-
-    stamina_impact_events.send(ActionEvent::new(impact.actor_entity, impact.stamina_impact));
-    timeout_events.send(ActionEvent::new(
-        impact.actor_entity,
-        Timeout {
-            delay: impact.timeout,
-        },
-    ));
-}
-
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn update_timeout(
-    mut timeout_events: EventReader<ActionEvent<Timeout>>,
+pub(crate) fn proces_impact(
+    In(impact): In<Impact>,
     mut message_writer: EventWriter<Message>,
+    mut stamina_impact_events: EventWriter<ActionEvent<StaminaImpact>>,
     mut timeouts: ResMut<Timeouts>,
     players: Query<Entity, With<Player>>,
 ) {
     let start = Instant::now();
 
-    match timeout_events.len() {
-        0 => {
-            // None when waiting for player input
+    impact.check_validity();
+    let Some(stamina_impact) = impact.stamina_impact else {
+        if players.get(impact.actor_entity).is_err() {
+            message_writer.send(Message::error(Phrase::new("NPC action failed")));
+            // To prevent the application hanging on failed NPC actions, we add a small timeout
+            timeouts.add(impact.actor_entity, Milliseconds(1000));
+        }
 
-            if let Some(actor_entity) = timeouts.next(&players.iter().collect::<Vec<_>>()) {
-                if players.get(actor_entity).is_err() {
-                    message_writer.send(Message::error(Phrase::new("NPC action failed")));
-                    timeouts.add(actor_entity, Milliseconds(1000));
-                }
-            }
-        }
-        1 => {
-            for timeout_event in timeout_events.read() {
-                assert!(0 < timeout_event.action.delay.0, "{timeout_event:?}");
-                timeouts.add(timeout_event.actor_entity, timeout_event.action.delay);
-            }
-        }
-        _ => {
-            panic!("Multiple timeout events: {timeout_events:?}");
-        }
-    }
+        return;
+    };
 
-    log_if_slow("update_timeout", start);
+    timeouts.add(impact.actor_entity, impact.timeout);
+
+    stamina_impact_events.send(ActionEvent::new(impact.actor_entity, stamina_impact));
+
+    log_if_slow("proces_impact", start);
 }
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_stamina(
-    mut timeout_events: EventReader<ActionEvent<Timeout>>,
     mut stamina_impact_events: EventReader<ActionEvent<StaminaImpact>>,
     mut staminas: Query<&mut Stamina>,
 ) {
@@ -431,13 +403,6 @@ pub(crate) fn update_stamina(
     assert!(
         stamina_impact_events.len() <= 1,
         "Multiple stamina impact events: {:?}",
-        stamina_impact_events.read().collect::<Vec<_>>()
-    );
-
-    assert!(
-        stamina_impact_events.len() <= timeout_events.len(),
-        "More stamina impact events than timeout events: {:?} {:?}",
-        timeout_events.read().collect::<Vec<_>>(),
         stamina_impact_events.read().collect::<Vec<_>>()
     );
 
