@@ -93,11 +93,13 @@ pub(crate) fn create_behavior_schedule(app: &mut App) {
                     (
                         update_stamina.run_if(on_event::<ActionEvent<StaminaImpact>>()),
                         update_healed_characters.run_if(on_event::<ActionEvent<Healing>>()),
+                        update_corpses,
                     ),
                 )
                     .chain(),
                 (
                     // item events
+                    update_damaged_corpses.run_if(on_event::<CorpseEvent<Damage>>()),
                     combine_items,
                 )
                     .chain(),
@@ -106,7 +108,8 @@ pub(crate) fn create_behavior_schedule(app: &mut App) {
                     update_damaged_terrain.run_if(on_event::<TerrainEvent<Damage>>()),
                     apply_deferred, // Make sure destoyed items are handled early
                     toggle_doors.run_if(on_event::<TerrainEvent<Toggle>>()),
-                ),
+                )
+                    .chain(),
             ),
             apply_deferred,
             check_items,

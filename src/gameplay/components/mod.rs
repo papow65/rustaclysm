@@ -111,6 +111,11 @@ pub(crate) struct Life;
 pub(crate) struct Corpse;
 
 #[derive(Component)]
+pub(crate) struct CorpseRaise {
+    pub(crate) at: Timestamp,
+}
+
+#[derive(Component)]
 pub(crate) struct CameraBase;
 
 #[derive(Component)]

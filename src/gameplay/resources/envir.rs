@@ -26,7 +26,8 @@ pub(crate) struct Envir<'w, 's> {
     opaques: Query<'w, 's, &'static ObjectName, With<Opaque>>,
     opaque_floors: Query<'w, 's, &'static OpaqueFloor>,
     characters: Query<'w, 's, (Entity, &'static ObjectName), With<Life>>,
-    smashables: Query<'w, 's, (Entity, &'static ObjectName), With<Integrity>>,
+    smashables:
+        Query<'w, 's, (Entity, &'static ObjectName, Option<&'static CorpseRaise>), With<Integrity>>,
     items: Query<'w, 's, Entity, With<Containable>>,
 }
 
@@ -145,7 +146,10 @@ impl<'w, 's> Envir<'w, 's> {
         self.location.get_first(pos, &self.characters)
     }
 
-    pub(crate) fn find_smashable(&self, pos: Pos) -> Option<(Entity, &ObjectName)> {
+    pub(crate) fn find_smashable(
+        &self,
+        pos: Pos,
+    ) -> Option<(Entity, &ObjectName, Option<&CorpseRaise>)> {
         self.location.get_first(pos, &self.smashables)
     }
 

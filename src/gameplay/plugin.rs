@@ -45,6 +45,7 @@ impl Plugin for GameplayPlugin {
         .insert_resource(Events::<ActionEvent<StaminaImpact>>::default())
         .insert_resource(Events::<ActionEvent<Damage>>::default())
         .insert_resource(Events::<ActionEvent<Healing>>::default())
+        .insert_resource(Events::<CorpseEvent<Damage>>::default())
         .insert_resource(Events::<TerrainEvent<Damage>>::default())
         .insert_resource(Events::<TerrainEvent<Toggle>>::default());
 
@@ -166,6 +167,7 @@ fn shutdown_systems() -> impl IntoSystemConfigs<()> {
             clear_gameplay_events::<ActionEvent<Healing>>,
         ),
         (
+            clear_gameplay_events::<CorpseEvent<Damage>>,
             clear_gameplay_events::<TerrainEvent<Damage>>,
             clear_gameplay_events::<TerrainEvent<Toggle>>,
         ),

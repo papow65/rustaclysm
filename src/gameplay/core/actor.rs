@@ -1,6 +1,5 @@
 use crate::prelude::*;
 use bevy::{ecs::query::WorldQuery, prelude::*};
-use either::Either;
 
 /** Derived from stamina */
 #[derive(Copy, Clone, Debug)]
@@ -216,19 +215,20 @@ impl ActorItem<'_> {
         }
     }
 
-    fn damage(
+    fn damage<E: Event, N>(
         &self,
-        damage_writer: Either<
-            &mut EventWriter<ActionEvent<Damage>>,
-            &mut EventWriter<TerrainEvent<Damage>>,
-        >,
+        damage_writer: &mut EventWriter<E>,
         envir: &Envir,
         infos: &Infos,
         hierarchy: &Hierarchy,
         damaged: Entity,
         damaged_pos: Pos,
         speed: MillimeterPerSecond,
-    ) -> Impact {
+        new: N,
+    ) -> Impact
+    where
+        N: Fn(Entity, Damage) -> E,
+    {
         let mut melee_weapon = None;
         if let Some(body_containers) = self.body_containers {
             let mut hands_children = hierarchy.items_in(body_containers.hands);
@@ -241,13 +241,7 @@ impl ActorItem<'_> {
             attacker: self.subject(),
             amount: self.melee.damage(melee_weapon),
         };
-        match damage_writer {
-            Either::Left(damage_writer) => damage_writer.send(ActionEvent::new(damaged, damage)),
-            Either::Right(damage_writer) => damage_writer.send(TerrainEvent {
-                terrain_entity: damaged,
-                change: damage,
-            }),
-        }
+        damage_writer.send(new(damaged, damage));
 
         // Needed when a character smashes something at it's own position
         let cost_pos = if *self.pos == damaged_pos {
@@ -287,13 +281,14 @@ impl ActorItem<'_> {
 
         if let Some((defender, _)) = envir.find_character(target) {
             self.damage(
-                Either::Left(damage_writer),
+                damage_writer,
                 envir,
                 infos,
                 hierarchy,
                 defender,
                 target,
                 high_speed,
+                ActionEvent::new,
             )
         } else {
             message_writer.send(Message::warn(
@@ -306,7 +301,8 @@ impl ActorItem<'_> {
     pub(crate) fn smash(
         &self,
         message_writer: &mut EventWriter<Message>,
-        damage_writer: &mut EventWriter<TerrainEvent<Damage>>,
+        corpse_damage_writer: &mut EventWriter<CorpseEvent<Damage>>,
+        terrain_damage_writer: &mut EventWriter<TerrainEvent<Damage>>,
         envir: &Envir,
         infos: &Infos,
         hierarchy: &Hierarchy,
@@ -334,16 +330,30 @@ impl ActorItem<'_> {
                 self.subject().verb("smash", "es").add("the floor"),
             ));
             self.no_impact()
-        } else if let Some((smashable, _)) = envir.find_smashable(target) {
-            self.damage(
-                Either::Right(damage_writer),
-                envir,
-                infos,
-                hierarchy,
-                smashable,
-                target,
-                high_speed,
-            )
+        } else if let Some((smashable, _, corpse)) = envir.find_smashable(target) {
+            if corpse.is_some() {
+                self.damage(
+                    corpse_damage_writer,
+                    envir,
+                    infos,
+                    hierarchy,
+                    smashable,
+                    target,
+                    high_speed,
+                    CorpseEvent::new,
+                )
+            } else {
+                self.damage(
+                    terrain_damage_writer,
+                    envir,
+                    infos,
+                    hierarchy,
+                    smashable,
+                    target,
+                    high_speed,
+                    TerrainEvent::new,
+                )
+            }
         } else {
             message_writer.send(Message::warn(
                 self.subject().verb("smash", "es").add("nothing"),

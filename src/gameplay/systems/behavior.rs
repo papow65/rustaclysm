@@ -233,7 +233,8 @@ pub(crate) fn perform_attack(
 pub(crate) fn perform_smash(
     In(smash): In<ActionEvent<Smash>>,
     mut message_writer: EventWriter<Message>,
-    mut damage_writer: EventWriter<TerrainEvent<Damage>>,
+    mut corpse_damage_writer: EventWriter<CorpseEvent<Damage>>,
+    mut terrain_damage_writer: EventWriter<TerrainEvent<Damage>>,
     envir: Envir,
     infos: Res<Infos>,
     hierarchy: Hierarchy,
@@ -241,7 +242,8 @@ pub(crate) fn perform_smash(
 ) -> Impact {
     smash.actor(&actors).smash(
         &mut message_writer,
-        &mut damage_writer,
+        &mut corpse_damage_writer,
+        &mut terrain_damage_writer,
         &envir,
         &infos,
         &hierarchy,
@@ -447,6 +449,7 @@ pub(crate) fn update_damaged_characters(
     mut commands: Commands,
     mut message_writer: EventWriter<Message>,
     mut damage_reader: EventReader<ActionEvent<Damage>>,
+    clock: Clock,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
     mut characters: Query<
         (&ObjectName, &mut Health, &mut Transform, Option<&Player>),
@@ -474,7 +477,11 @@ pub(crate) fn update_damaged_characters(
             commands
                 .entity(damage.actor_entity)
                 .insert(Corpse)
+                .insert(CorpseRaise {
+                    at: clock.time() + Milliseconds::EIGHT_HOURS,
+                })
                 .insert(ObjectName::corpse())
+                .insert(Integrity(Limited::full(20)))
                 .remove::<Life>()
                 .remove::<Obstacle>();
 
@@ -543,6 +550,79 @@ pub(crate) fn update_healed_characters(
     }
 
     log_if_slow("update_healed_characters", start);
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub(crate) fn update_damaged_corpses(
+    mut commands: Commands,
+    mut message_writer: EventWriter<Message>,
+    mut damage_reader: EventReader<CorpseEvent<Damage>>,
+    mut corpses: Query<(&ObjectName, &mut Integrity), With<Corpse>>,
+) {
+    let start = Instant::now();
+
+    for damage in damage_reader.read() {
+        let (name, mut integrity) = corpses.get_mut(damage.corpse_entity).expect("Coprse found");
+        integrity.lower(&damage.change);
+
+        if integrity.0.is_zero() {
+            message_writer.send(Message::warn(
+                damage
+                    .change
+                    .attacker
+                    .clone()
+                    .verb("smash", "es")
+                    .push(name.single()),
+            ));
+
+            commands
+                .entity(damage.corpse_entity)
+                .remove::<Integrity>()
+                .remove::<CorpseRaise>();
+        }
+    }
+
+    log_if_slow("update_damaged_corpses", start);
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub(crate) fn update_corpses(
+    mut commands: Commands,
+    clock: Clock,
+    infos: Res<Infos>,
+    mut corpse_raises: Query<(Entity, &CorpseRaise, &mut Transform)>,
+) {
+    let start = Instant::now();
+
+    for (corpse, raise, mut transform) in &mut corpse_raises {
+        if raise.at <= clock.time() {
+            transform.rotation = Quat::IDENTITY;
+
+            let definition = ObjectDefinition {
+                category: ObjectCategory::Character,
+                id: ObjectId::new("mon_zombie"),
+            };
+            let character_info = infos.character(&definition.id).expect("Info available");
+            let object_name = ObjectName::new(character_info.name.clone(), Faction::Zombie.color());
+            let health = Health(Limited::full(character_info.hp.unwrap_or(60) as u16));
+
+            commands
+                .entity(corpse)
+                .insert(definition)
+                .insert(object_name)
+                .insert(Faction::Zombie)
+                .insert(Life)
+                .insert(health)
+                .insert(Stamina::Unlimited)
+                .insert(WalkingMode::Running)
+                .insert(Obstacle)
+                .remove::<Corpse>()
+                .remove::<CorpseRaise>()
+                .remove::<Integrity>();
+        }
+    }
+
+    log_if_slow("update_corpses", start);
 }
 
 /** For terrain and furniture */

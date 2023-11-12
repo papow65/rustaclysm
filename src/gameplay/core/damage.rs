@@ -1,4 +1,4 @@
-use crate::prelude::{Action, Subject, TerrainChange};
+use crate::prelude::{Action, CorpseChange, Subject, TerrainChange};
 use bevy::prelude::Event;
 
 #[derive(Clone, Debug, Event)]
@@ -9,6 +9,7 @@ pub(crate) struct Damage {
 }
 
 impl Action for Damage {}
+impl CorpseChange for Damage {}
 impl TerrainChange for Damage {}
 
 #[derive(Clone, Debug, Event)]
