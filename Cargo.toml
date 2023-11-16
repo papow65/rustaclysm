@@ -24,6 +24,9 @@ serde = { version = "1", features = ["derive", "rc" ] }
 serde_json = "1"
 time = "0.3"
 
+[features]
+log_archetypes = [] # print archetypes in use
+
 [profile.dev]
 opt-level = 3 # inspired by https://bevy-cheatbook.github.io/pitfalls/performance.html
 

@@ -2,6 +2,9 @@ use crate::prelude::*;
 use bevy::prelude::*;
 use std::time::Instant;
 
+#[cfg(feature = "log_archetypes")]
+use bevy::utils::HashMap;
+
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_transforms(mut obstacles: Query<(&Pos, &mut Transform), Changed<Pos>>) {
     let start = Instant::now();
@@ -339,6 +342,7 @@ pub(crate) fn update_camera_offset(
     log_if_slow("update_camera", start);
 }
 
+#[cfg(debug_assertions)]
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn check_items(
     item_parents: Query<Option<&Parent>, Or<(With<Amount>, With<Containable>)>>,
@@ -347,4 +351,39 @@ pub(crate) fn check_items(
         item_parents.iter().all(|o| o.is_some()),
         "All items should have a parent"
     );
+}
+
+#[cfg(feature = "log_archetypes")]
+#[allow(clippy::needless_pass_by_value)]
+pub(crate) fn log_archetypes(world: &mut World) {
+    let component_names = world
+        .components()
+        .iter()
+        .map(|component| {
+            (component.id(), {
+                let name = component.name();
+                let (base, brackets) = name.split_once('<').unwrap_or((name, ""));
+                let short_base = base.rsplit_once(':').unwrap_or(("", base)).1;
+                String::from(short_base) + (if brackets.is_empty() { "" } else { "<" }) + brackets
+            })
+        })
+        .collect::<HashMap<_, _>>();
+
+    for archetype in world.archetypes().iter() {
+        if !archetype.is_empty() {
+            println!(
+                "{:?} {:?} {:?}",
+                archetype.id(),
+                archetype.len(),
+                archetype
+                    .components()
+                    .map(|component| component_names
+                        .get(&component)
+                        .cloned()
+                        .unwrap_or(String::from("[???]")))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            );
+        }
+    }
 }
