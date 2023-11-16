@@ -58,7 +58,7 @@ where
                 Err(amount_error) => {
                     eprintln!("{single_error:?}");
                     eprintln!("{amount_error:?}");
-                    Err(amount_error).map_err(D::Error::custom)
+                    Err(D::Error::custom(amount_error))
                 }
             },
         }

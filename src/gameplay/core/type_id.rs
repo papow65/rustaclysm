@@ -4,9 +4,9 @@ use serde::Deserialize;
 pub(crate) struct TypeId(&'static str);
 
 impl TypeId {
-    pub(crate) const CHARACTER: &[Self] = &[Self("MONSTER")];
+    pub(crate) const CHARACTER: &'static [Self] = &[Self("MONSTER")];
 
-    pub(crate) const ITEM: &[Self] = &[
+    pub(crate) const ITEM: &'static [Self] = &[
         Self("AMMO"),
         Self("ARMOR"),
         Self("BATTERY"),
@@ -26,11 +26,11 @@ impl TypeId {
         Self("WHEEL"),
     ];
 
-    pub(crate) const FIELD: &[Self] = &[Self("field_type")];
-    pub(crate) const FURNITURE: &[Self] = &[Self("furniture")];
-    pub(crate) const ITEM_GROUP: &[Self] = &[Self("item_group")];
+    pub(crate) const FIELD: &'static [Self] = &[Self("field_type")];
+    pub(crate) const FURNITURE: &'static [Self] = &[Self("furniture")];
+    pub(crate) const ITEM_GROUP: &'static [Self] = &[Self("item_group")];
 
-    pub(crate) const OVERMAP: &[Self] = &[
+    pub(crate) const OVERMAP: &'static [Self] = &[
         Self("city_building"),
         Self("map_extra"),
         Self("overmap_connection"),
@@ -40,16 +40,16 @@ impl TypeId {
         Self("overmap_special_migration"),
     ];
 
-    pub(crate) const TERRAIN: &[Self] = &[Self("terrain")];
-    pub(crate) const VEHICLE_PART: &[Self] = &[Self("vehicle_part")];
+    pub(crate) const TERRAIN: &'static [Self] = &[Self("terrain")];
+    pub(crate) const VEHICLE_PART: &'static [Self] = &[Self("vehicle_part")];
 
-    pub(crate) const MIGRATION: &[Self] = &[
+    pub(crate) const MIGRATION: &'static [Self] = &[
         Self("MIGRATION"),
         Self("overmap_terrain"),
         Self("vehicle_part_migration"),
     ];
 
-    pub(crate) const UNUSED: &[Self] = &[
+    pub(crate) const UNUSED: &'static [Self] = &[
         Self("ammunition_type"),
         Self("behavior"),
         Self("enchantment"),
