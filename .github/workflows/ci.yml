@@ -15,15 +15,13 @@ jobs:
       - name: 'Install required libraries'
         run: sudo apt install -y libwayland-dev libxkbcommon-dev
       - name: 'git checkout'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: 'Check'
-        uses: actions-rs/cargo@v1
-        with:
-          command: check
+        uses: dtolnay/rust-toolchain@stable
+        run: cargo check
       - name: 'Test'
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
+        uses: dtolnay/rust-toolchain@stable
+        run: cargo test
   build:
     strategy:
       matrix:
@@ -42,14 +40,13 @@ jobs:
         if: runner.os == 'Linux'
         run: sudo apt install -y libwayland-dev libxkbcommon-dev
       - name: 'git checkout'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: 'Print rustc verion'
-        run: 'rustc --version --verbose'
+        uses: dtolnay/rust-toolchain@stable
+        run: rustc --version --verbose
       - name: 'Build'
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --release
+        uses: dtolnay/rust-toolchain@stable
+        run: cargo build --release
       - name: 'List built files'
         run: 'ls -l target/release'
       - name: 'Rename'
