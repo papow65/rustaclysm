@@ -35,6 +35,7 @@ impl Plugin for GameplayPlugin {
         .insert_resource(Events::<ActionEvent<Step>>::default())
         .insert_resource(Events::<ActionEvent<Attack>>::default())
         .insert_resource(Events::<ActionEvent<Smash>>::default())
+        .insert_resource(Events::<ActionEvent<Pulp>>::default())
         .insert_resource(Events::<ActionEvent<Close>>::default())
         .insert_resource(Events::<ActionEvent<ItemAction<Wield>>>::default())
         .insert_resource(Events::<ActionEvent<ItemAction<Unwield>>>::default())
@@ -155,6 +156,7 @@ fn shutdown_systems() -> impl IntoSystemConfigs<()> {
             clear_gameplay_events::<ActionEvent<Step>>,
             clear_gameplay_events::<ActionEvent<Attack>>,
             clear_gameplay_events::<ActionEvent<Smash>>,
+            clear_gameplay_events::<ActionEvent<Pulp>>,
             clear_gameplay_events::<ActionEvent<Close>>,
             clear_gameplay_events::<ActionEvent<ItemAction<Wield>>>,
             clear_gameplay_events::<ActionEvent<ItemAction<Unwield>>>,

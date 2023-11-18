@@ -1,4 +1,7 @@
-use crate::prelude::{Actor, ActorItem, Item, ItemItem, Nbor, StayDuration};
+use crate::{
+    gameplay::HorizontalDirection,
+    prelude::{Actor, ActorItem, Item, ItemItem, Nbor, StayDuration},
+};
 use bevy::prelude::{Entity, Event, Query};
 
 /** An action that an actor can perform */
@@ -53,8 +56,15 @@ pub(crate) struct Smash {
 impl Action for Smash {}
 
 #[derive(Clone, Debug)]
+pub(crate) struct Pulp {
+    pub(crate) target: HorizontalDirection,
+}
+
+impl Action for Pulp {}
+
+#[derive(Clone, Debug)]
 pub(crate) struct Close {
-    pub(crate) target: Nbor,
+    pub(crate) target: HorizontalDirection,
 }
 
 impl Action for Close {}

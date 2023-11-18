@@ -47,8 +47,7 @@ pub(crate) fn plan_action(
             &mut healing_writer,
             &mut envir,
             &mut instruction_queue,
-            actor.entity,
-            *actor.pos,
+            &actor,
             clock.time(),
             &enemies,
         )?
@@ -80,6 +79,7 @@ pub(crate) fn send_action_event(
     mut step_writer: EventWriter<ActionEvent<Step>>,
     mut attack_writer: EventWriter<ActionEvent<Attack>>,
     mut smash_writer: EventWriter<ActionEvent<Smash>>,
+    mut pulp_writer: EventWriter<ActionEvent<Pulp>>,
     mut close_writer: EventWriter<ActionEvent<Close>>,
     mut wield_writer: EventWriter<ActionEvent<ItemAction<Wield>>>,
     mut unwield_writer: EventWriter<ActionEvent<ItemAction<Unwield>>>,
@@ -107,6 +107,10 @@ pub(crate) fn send_action_event(
         }
         PlannedAction::Smash { target } => {
             smash_writer.send(ActionEvent::new(actor_entity, Smash { target }));
+        }
+        PlannedAction::Pulp { target } => {
+            eprintln!("Pulp action!");
+            pulp_writer.send(ActionEvent::new(actor_entity, Pulp { target }));
         }
         PlannedAction::Close { target } => {
             close_writer.send(ActionEvent::new(actor_entity, Close { target }));
@@ -152,6 +156,7 @@ pub(crate) fn check_action_plan_amount(
     mut step_reader: EventReader<ActionEvent<Step>>,
     mut attack_reader: EventReader<ActionEvent<Attack>>,
     mut smash_reader: EventReader<ActionEvent<Smash>>,
+    mut pulp_reader: EventReader<ActionEvent<Pulp>>,
     mut close_reader: EventReader<ActionEvent<Close>>,
     mut wield_reader: EventReader<ActionEvent<ItemAction<Wield>>>,
     mut unwield_reader: EventReader<ActionEvent<ItemAction<Unwield>>>,
@@ -166,6 +171,7 @@ pub(crate) fn check_action_plan_amount(
         .chain(step_reader.read().map(|a| format!("{a:?}")))
         .chain(attack_reader.read().map(|a| format!("{a:?}")))
         .chain(smash_reader.read().map(|a| format!("{a:?}")))
+        .chain(pulp_reader.read().map(|a| format!("{a:?}")))
         .chain(close_reader.read().map(|a| format!("{a:?}")))
         .chain(wield_reader.read().map(|a| format!("{a:?}")))
         .chain(unwield_reader.read().map(|a| format!("{a:?}")))
@@ -233,8 +239,7 @@ pub(crate) fn perform_attack(
 pub(crate) fn perform_smash(
     In(smash): In<ActionEvent<Smash>>,
     mut message_writer: EventWriter<Message>,
-    mut corpse_damage_writer: EventWriter<CorpseEvent<Damage>>,
-    mut terrain_damage_writer: EventWriter<TerrainEvent<Damage>>,
+    mut damage_writer: EventWriter<TerrainEvent<Damage>>,
     envir: Envir,
     infos: Res<Infos>,
     hierarchy: Hierarchy,
@@ -242,12 +247,31 @@ pub(crate) fn perform_smash(
 ) -> Impact {
     smash.actor(&actors).smash(
         &mut message_writer,
-        &mut corpse_damage_writer,
-        &mut terrain_damage_writer,
+        &mut damage_writer,
         &envir,
         &infos,
         &hierarchy,
         &smash.action,
+    )
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub(crate) fn perform_pulp(
+    In(pulp): In<ActionEvent<Pulp>>,
+    mut message_writer: EventWriter<Message>,
+    mut corpse_damage_writer: EventWriter<CorpseEvent<Damage>>,
+    envir: Envir,
+    infos: Res<Infos>,
+    hierarchy: Hierarchy,
+    actors: Query<Actor>,
+) -> Impact {
+    pulp.actor(&actors).pulp(
+        &mut message_writer,
+        &mut corpse_damage_writer,
+        &envir,
+        &infos,
+        &hierarchy,
+        &pulp.action,
     )
 }
 
@@ -481,7 +505,7 @@ pub(crate) fn update_damaged_characters(
                     at: clock.time() + Milliseconds::EIGHT_HOURS,
                 })
                 .insert(ObjectName::corpse())
-                .insert(Integrity(Limited::full(20)))
+                .insert(Integrity(Limited::full(400)))
                 .remove::<Life>()
                 .remove::<Obstacle>();
 
@@ -561,8 +585,10 @@ pub(crate) fn update_damaged_corpses(
 ) {
     let start = Instant::now();
 
+    eprintln!("{} corpses found", corpses.iter().len());
+
     for damage in damage_reader.read() {
-        let (name, mut integrity) = corpses.get_mut(damage.corpse_entity).expect("Coprse found");
+        let (name, mut integrity) = corpses.get_mut(damage.corpse_entity).expect("Corpse found");
         integrity.lower(&damage.change);
 
         if integrity.0.is_zero() {
@@ -571,7 +597,7 @@ pub(crate) fn update_damaged_corpses(
                     .change
                     .attacker
                     .clone()
-                    .verb("smash", "es")
+                    .verb("pulp", "s")
                     .push(name.single()),
             ));
 

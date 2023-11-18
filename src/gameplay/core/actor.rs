@@ -2,7 +2,7 @@ use crate::prelude::*;
 use bevy::{ecs::query::WorldQuery, prelude::*};
 
 /** Derived from stamina */
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub(crate) enum Breath {
     Normal,
     Winded,
@@ -301,8 +301,7 @@ impl ActorItem<'_> {
     pub(crate) fn smash(
         &self,
         message_writer: &mut EventWriter<Message>,
-        corpse_damage_writer: &mut EventWriter<CorpseEvent<Damage>>,
-        terrain_damage_writer: &mut EventWriter<TerrainEvent<Damage>>,
+        damage_writer: &mut EventWriter<TerrainEvent<Damage>>,
         envir: &Envir,
         infos: &Infos,
         hierarchy: &Hierarchy,
@@ -330,33 +329,57 @@ impl ActorItem<'_> {
                 self.subject().verb("smash", "es").add("the floor"),
             ));
             self.no_impact()
-        } else if let Some((smashable, _, corpse)) = envir.find_smashable(target) {
-            if corpse.is_some() {
-                self.damage(
-                    corpse_damage_writer,
-                    envir,
-                    infos,
-                    hierarchy,
-                    smashable,
-                    target,
-                    high_speed,
-                    CorpseEvent::new,
-                )
-            } else {
-                self.damage(
-                    terrain_damage_writer,
-                    envir,
-                    infos,
-                    hierarchy,
-                    smashable,
-                    target,
-                    high_speed,
-                    TerrainEvent::new,
-                )
-            }
+        } else if let Some(smashable) = envir.find_smashable(target) {
+            self.damage(
+                damage_writer,
+                envir,
+                infos,
+                hierarchy,
+                smashable,
+                target,
+                high_speed,
+                TerrainEvent::new,
+            )
         } else {
             message_writer.send(Message::warn(
                 self.subject().verb("smash", "es").add("nothing"),
+            ));
+            self.no_impact()
+        }
+    }
+
+    pub(crate) fn pulp(
+        &self,
+        message_writer: &mut EventWriter<Message>,
+        corpse_damage_writer: &mut EventWriter<CorpseEvent<Damage>>,
+        envir: &Envir,
+        infos: &Infos,
+        hierarchy: &Hierarchy,
+        pulp: &Pulp,
+    ) -> Impact {
+        let Some(high_speed) = self.high_speed() else {
+            message_writer.send(Message::warn(
+                self.subject().is().add("too exhausted to pulp"),
+            ));
+            return self.no_impact();
+        };
+
+        let target = self.pos.horizontal_nbor(pulp.target);
+
+        if let Some(pulpable_entity) = envir.find_pulpable(target) {
+            self.damage(
+                corpse_damage_writer,
+                envir,
+                infos,
+                hierarchy,
+                pulpable_entity,
+                target,
+                high_speed,
+                CorpseEvent::new,
+            )
+        } else {
+            message_writer.send(Message::warn(
+                self.subject().verb("pulp", "s").add("nothing"),
             ));
             self.no_impact()
         }
@@ -369,7 +392,7 @@ impl ActorItem<'_> {
         envir: &Envir,
         close: &Close,
     ) -> Impact {
-        let target = envir.get_nbor(*self.pos, close.target).expect("Valid pos");
+        let target = self.pos.horizontal_nbor(close.target);
 
         if let Some((closeable, closeable_name)) = envir.find_closeable(target) {
             if let Some((_, character)) = envir.find_character(target) {

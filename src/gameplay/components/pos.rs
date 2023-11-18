@@ -1,4 +1,7 @@
-use crate::prelude::{LevelOffset, Millimeter, Nbor, PosOffset};
+use crate::{
+    gameplay::HorizontalDirection,
+    prelude::{LevelOffset, Millimeter, Nbor, PosOffset},
+};
 use bevy::prelude::{Component, Vec3};
 use std::{cmp::Ordering, fmt, iter::once, ops::Sub};
 
@@ -152,6 +155,15 @@ impl Pos {
             .map(|level| Self::new(self.x + offset.x, level, self.z + offset.z))
     }
 
+    pub(crate) const fn horizontal_nbor(self, direction: HorizontalDirection) -> Self {
+        let (x, z) = direction.offset();
+        Self {
+            x: self.x + x,
+            level: self.level,
+            z: self.z + z,
+        }
+    }
+
     /// Get nbor while ignoring stairs - meant for meta operations like examining
     pub(crate) fn raw_nbor(self, nbor: Nbor) -> Option<Self> {
         match nbor {
@@ -165,14 +177,7 @@ impl Pos {
                 level,
                 z: self.z,
             }),
-            horizontal => {
-                let (x, z) = horizontal.horizontal_projection().offset();
-                Some(Self {
-                    x: self.x + x,
-                    level: self.level,
-                    z: self.z + z,
-                })
-            }
+            horizontal => Some(self.horizontal_nbor(horizontal.horizontal_projection())),
         }
     }
 

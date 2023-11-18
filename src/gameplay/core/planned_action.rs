@@ -1,6 +1,8 @@
 use crate::prelude::Nbor;
 use bevy::prelude::Entity;
 
+use super::HorizontalDirection;
+
 #[derive(Copy, Clone, Debug)]
 pub(crate) enum StayDuration {
     Short,
@@ -21,8 +23,11 @@ pub(crate) enum PlannedAction {
     Smash {
         target: Nbor,
     },
+    Pulp {
+        target: HorizontalDirection,
+    },
     Close {
-        target: Nbor,
+        target: HorizontalDirection,
     },
     Wield {
         item: Entity,

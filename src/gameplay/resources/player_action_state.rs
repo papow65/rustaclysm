@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use bevy::prelude::{Color, Entity, EventWriter, Resource};
+use bevy::prelude::{Color, EventWriter, Resource};
 use std::fmt;
 
 #[derive(Debug)]
@@ -18,6 +18,11 @@ pub(crate) enum PlayerActionState {
     Normal,
     Attacking,
     Smashing,
+    Pulping {
+        /// None: intent to pulp on next move
+        /// Some: corpse pulping in progress
+        active_target: Option<HorizontalDirection>,
+    },
     Closing,
     Dragging {
         /// None: intent to drag on next move
@@ -62,13 +67,12 @@ impl PlayerActionState {
         healing_writer: &mut EventWriter<ActionEvent<Healing>>,
         envir: &mut Envir,
         instruction_queue: &mut InstructionQueue,
-        actor: Entity,
-        player_pos: Pos,
+        player: &ActorItem,
         now: Timestamp,
         enemies: &[Pos],
     ) -> Option<PlannedAction> {
         while let Some(instruction) = instruction_queue.pop() {
-            match self.plan(envir, player_pos, instruction, now) {
+            match self.plan(envir, *player.pos, instruction, now) {
                 PlayerBehavior::Perform(action) => {
                     return Some(action);
                 }
@@ -85,6 +89,29 @@ impl PlayerActionState {
         }
 
         match self {
+            Self::Pulping {
+                active_target: Some(target),
+            } => {
+                eprintln!("Post instruction pulp handling...");
+                if envir
+                    .find_pulpable(player.pos.horizontal_nbor(*target))
+                    .is_some()
+                {
+                    if player.stamina.breath() == Breath::Normal {
+                        eprintln!("Keep pulping");
+                        Some(PlannedAction::Pulp { target: *target })
+                    } else {
+                        eprintln!("Keep pulping after catching breath");
+                        Some(PlannedAction::Stay {
+                            duration: StayDuration::Short,
+                        })
+                    }
+                } else {
+                    eprintln!("Stop pulping");
+                    instruction_queue.add(QueuedInstruction::Finished);
+                    None // process the cancellation next turn
+                }
+            }
             Self::Dragging {
                 active_from: Some(from),
             } => {
@@ -124,7 +151,7 @@ impl PlayerActionState {
 
                 let healing_amount = sleeping_duration.0 / 1_000_000;
                 healing_writer.send(ActionEvent::new(
-                    actor,
+                    player.entity,
                     Healing {
                         amount: healing_amount as u16,
                     },
@@ -199,6 +226,16 @@ impl PlayerActionState {
                 *self = Self::Normal;
                 PlayerBehavior::Feedback(Message::info(Phrase::new("Finished waiting")))
             }
+            (Self::Pulping { .. }, QueuedInstruction::Interrupted) => {
+                *self = Self::Normal;
+                PlayerBehavior::Feedback(Message::warn(Phrase::new(
+                    "You spot an enemy and stop pulping",
+                )))
+            }
+            (Self::Pulping { .. }, QueuedInstruction::Finished) => {
+                *self = Self::Normal;
+                PlayerBehavior::Feedback(Message::info(Phrase::new("Finished pulping")))
+            }
             (Self::Attacking, QueuedInstruction::Attack)
             | (Self::Smashing, QueuedInstruction::Smash)
             | (Self::Dragging { .. }, QueuedInstruction::Drag | QueuedInstruction::CancelAction)
@@ -264,6 +301,7 @@ impl PlayerActionState {
             }
             QueuedInstruction::Attack => self.handle_attack(envir, player_pos),
             QueuedInstruction::Smash => self.handle_smash(envir, player_pos),
+            QueuedInstruction::Pulp => self.handle_pulp(envir, player_pos),
             QueuedInstruction::Close => self.handle_close(envir, player_pos),
             QueuedInstruction::Drag => {
                 *self = Self::Dragging { active_from: None }; // 'active_from' will temporary be set after moving
@@ -339,9 +377,33 @@ impl PlayerActionState {
                 *self = Self::Normal;
                 PlayerBehavior::Perform(PlannedAction::Smash { target: raw_nbor })
             }
+            Self::Pulping {
+                active_target: None,
+            } => {
+                eprintln!("Inactive pulping");
+                if let Nbor::Horizontal(target) = raw_nbor {
+                    eprintln!("Activating pulping");
+                    PlayerBehavior::Perform(PlannedAction::Pulp { target })
+                } else {
+                    PlayerBehavior::Feedback(Message::warn(Phrase::new(
+                        "You can't pulp vertically",
+                    )))
+                }
+            }
+            Self::Pulping {
+                active_target: Some(target),
+            } => {
+                panic!("{self:?} {player_pos:?} {raw_nbor:?} {target:?}");
+            }
             Self::Closing => {
                 *self = Self::Normal;
-                PlayerBehavior::Perform(PlannedAction::Close { target: raw_nbor })
+                if let Nbor::Horizontal(target) = raw_nbor {
+                    PlayerBehavior::Perform(PlannedAction::Close { target })
+                } else {
+                    PlayerBehavior::Feedback(Message::warn(Phrase::new(
+                        "You can't close vertically",
+                    )))
+                }
             }
             Self::Dragging { active_from: None } => {
                 *self = Self::Dragging {
@@ -364,7 +426,7 @@ impl PlayerActionState {
     fn handle_attack(&mut self, envir: &Envir, pos: Pos) -> PlayerBehavior {
         let attackable_nbors = envir
             .nbors_for_exploring(pos, QueuedInstruction::Attack)
-            .collect::<Vec<Nbor>>();
+            .collect::<Vec<_>>();
         match attackable_nbors.len() {
             0 => PlayerBehavior::Feedback(Message::warn(Phrase::new("no targets nearby"))),
             1 => PlayerBehavior::Perform(PlannedAction::Attack {
@@ -380,7 +442,7 @@ impl PlayerActionState {
     fn handle_smash(&mut self, envir: &Envir, pos: Pos) -> PlayerBehavior {
         let smashable_nbors = envir
             .nbors_for_exploring(pos, QueuedInstruction::Smash)
-            .collect::<Vec<Nbor>>();
+            .collect::<Vec<_>>();
         match smashable_nbors.len() {
             0 => PlayerBehavior::Feedback(Message::warn(Phrase::new("no targets nearby"))),
             1 => PlayerBehavior::Perform(PlannedAction::Smash {
@@ -393,10 +455,50 @@ impl PlayerActionState {
         }
     }
 
+    fn handle_pulp(&mut self, envir: &Envir, pos: Pos) -> PlayerBehavior {
+        let pulpable_nbors = envir
+            .nbors_for_exploring(pos, QueuedInstruction::Pulp)
+            .filter_map(|nbor| {
+                if let Nbor::Horizontal(horizontal) = nbor {
+                    Some(horizontal)
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<_>>();
+        eprintln!("Pulping {} targets", pulpable_nbors.len());
+        match pulpable_nbors.len() {
+            0 => PlayerBehavior::Feedback(Message::warn(Phrase::new("no targets nearby"))),
+            1 => {
+                eprintln!("Pulping target found -> active");
+                *self = Self::Pulping {
+                    active_target: Some(pulpable_nbors[0]),
+                };
+                PlayerBehavior::Perform(PlannedAction::Pulp {
+                    target: pulpable_nbors[0],
+                })
+            }
+            _ => {
+                eprintln!("Pulping choice -> inactive");
+                *self = Self::Pulping {
+                    active_target: None,
+                };
+                PlayerBehavior::NoEffect
+            }
+        }
+    }
+
     fn handle_close(&mut self, envir: &Envir, pos: Pos) -> PlayerBehavior {
         let closable_nbors = envir
             .nbors_for_exploring(pos, QueuedInstruction::Close)
-            .collect::<Vec<Nbor>>();
+            .filter_map(|nbor| {
+                if let Nbor::Horizontal(horizontal) = nbor {
+                    Some(horizontal)
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<_>>();
         match closable_nbors.len() {
             0 => PlayerBehavior::Feedback(Message::warn(Phrase::new("nothing to close nearby"))),
             1 => PlayerBehavior::Perform(PlannedAction::Close {
@@ -416,8 +518,9 @@ impl PlayerActionState {
             }
             Self::Waiting { .. }
             | Self::Sleeping { .. }
-            | Self::Smashing
             | Self::Attacking
+            | Self::Smashing
+            | Self::Pulping { .. }
             | Self::Dragging { .. } => WARN_TEXT_COLOR,
         }
     }
@@ -429,6 +532,7 @@ impl fmt::Display for PlayerActionState {
             Self::Normal => "",
             Self::Attacking => "Attacking",
             Self::Smashing => "Smashing",
+            Self::Pulping { .. } => "Pulping",
             Self::Closing => "Closing",
             Self::Dragging { .. } => "Dragging",
             Self::Waiting { .. } => "Waiting",

@@ -58,6 +58,10 @@ pub(crate) fn create_behavior_schedule(app: &mut App) {
                     .pipe(proces_impact)
                     .run_if(on_event::<ActionEvent<Smash>>()),
                 single_action
+                    .pipe(perform_pulp)
+                    .pipe(proces_impact)
+                    .run_if(on_event::<ActionEvent<Pulp>>()),
+                single_action
                     .pipe(perform_close)
                     .pipe(proces_impact)
                     .run_if(on_event::<ActionEvent<Close>>()),

@@ -26,8 +26,8 @@ pub(crate) struct Envir<'w, 's> {
     opaques: Query<'w, 's, &'static ObjectName, With<Opaque>>,
     opaque_floors: Query<'w, 's, &'static OpaqueFloor>,
     characters: Query<'w, 's, (Entity, &'static ObjectName), With<Life>>,
-    smashables:
-        Query<'w, 's, (Entity, &'static ObjectName, Option<&'static CorpseRaise>), With<Integrity>>,
+    smashables: Query<'w, 's, Entity, (With<Integrity>, Without<Corpse>)>,
+    pulpables: Query<'w, 's, Entity, (With<Integrity>, With<Corpse>)>,
     items: Query<'w, 's, Entity, With<Containable>>,
 }
 
@@ -146,11 +146,12 @@ impl<'w, 's> Envir<'w, 's> {
         self.location.get_first(pos, &self.characters)
     }
 
-    pub(crate) fn find_smashable(
-        &self,
-        pos: Pos,
-    ) -> Option<(Entity, &ObjectName, Option<&CorpseRaise>)> {
+    pub(crate) fn find_smashable(&self, pos: Pos) -> Option<Entity> {
         self.location.get_first(pos, &self.smashables)
+    }
+
+    pub(crate) fn find_pulpable(&self, pos: Pos) -> Option<Entity> {
+        self.location.get_first(pos, &self.pulpables)
     }
 
     pub(crate) fn find_item(&self, pos: Pos) -> Option<Entity> {
@@ -276,6 +277,7 @@ impl<'w, 's> Envir<'w, 's> {
         self.nbors_if(pos, move |nbor| match instruction {
             QueuedInstruction::Attack => nbor != pos && self.find_character(nbor).is_some(),
             QueuedInstruction::Smash => self.find_smashable(nbor).is_some(),
+            QueuedInstruction::Pulp => self.find_pulpable(nbor).is_some(),
             QueuedInstruction::Close => self.find_closeable(nbor).is_some(),
             _ => panic!("unexpected instruction {instruction:?}"),
         })
