@@ -16,11 +16,11 @@ jobs:
         run: sudo apt install -y libwayland-dev libxkbcommon-dev
       - name: 'git checkout'
         uses: actions/checkout@v4
-      - name: 'Check'
+      - name: 'Install cargo'
         uses: dtolnay/rust-toolchain@stable
+      - name: 'Check'
         run: cargo check
       - name: 'Test'
-        uses: dtolnay/rust-toolchain@stable
         run: cargo test
   build:
     strategy:
@@ -41,11 +41,11 @@ jobs:
         run: sudo apt install -y libwayland-dev libxkbcommon-dev
       - name: 'git checkout'
         uses: actions/checkout@v4
-      - name: 'Print rustc verion'
+      - name: 'Install cargo'
         uses: dtolnay/rust-toolchain@stable
+      - name: 'Print rustc verion'
         run: rustc --version --verbose
       - name: 'Build'
-        uses: dtolnay/rust-toolchain@stable
         run: cargo build --release
       - name: 'List built files'
         run: 'ls -l target/release'
