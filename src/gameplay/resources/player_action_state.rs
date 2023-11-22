@@ -93,19 +93,17 @@ impl PlayerActionState {
                 active_target: Some(target),
             } => {
                 eprintln!("Post instruction pulp handling...");
-                if envir
+                if player.stamina.breath() == Breath::Winded {
+                    eprintln!("Keep pulping after catching breath");
+                    Some(PlannedAction::Stay {
+                        duration: StayDuration::Short,
+                    })
+                } else if envir
                     .find_pulpable(player.pos.horizontal_nbor(*target))
                     .is_some()
                 {
-                    if player.stamina.breath() == Breath::Normal {
-                        eprintln!("Keep pulping");
-                        Some(PlannedAction::Pulp { target: *target })
-                    } else {
-                        eprintln!("Keep pulping after catching breath");
-                        Some(PlannedAction::Stay {
-                            duration: StayDuration::Short,
-                        })
-                    }
+                    eprintln!("Keep pulping");
+                    Some(PlannedAction::Pulp { target: *target })
                 } else {
                     eprintln!("Stop pulping");
                     instruction_queue.add(QueuedInstruction::Finished);
