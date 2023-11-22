@@ -233,13 +233,10 @@ impl PlayerActionState {
                     "You spot an enemy and stop pulping",
                 )))
             }
-            (Self::Pulping { .. }, QueuedInstruction::Finished) => {
-                *self = Self::Normal;
-                PlayerBehavior::NoEffect
-            }
             (Self::Attacking, QueuedInstruction::Attack)
             | (Self::Smashing, QueuedInstruction::Smash)
             | (Self::Dragging { .. }, QueuedInstruction::Drag | QueuedInstruction::CancelAction)
+            | (Self::Pulping { .. }, QueuedInstruction::Finished)
             | (Self::ExaminingPos(_), QueuedInstruction::ExaminePos)
             | (Self::ExaminingZoneLevel(_), QueuedInstruction::ExamineZoneLevel) => {
                 *self = Self::Normal;
