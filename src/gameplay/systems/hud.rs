@@ -480,7 +480,7 @@ pub(crate) fn update_status_detais(
     mut zone_level_ids: ResMut<ZoneLevelIds>,
     mut text_sections: ResMut<StatusTextSections>,
     mut status_displays: Query<&mut Text, With<StatusDisplay>>,
-    characters: Query<(&ObjectDefinition, &ObjectName, &Health)>,
+    characters: Query<(&ObjectDefinition, &ObjectName, &Health, Option<&Integrity>)>,
     entities: Query<
         (
             Option<&ObjectDefinition>,
@@ -554,22 +554,39 @@ pub(crate) fn update_status_detais(
 
 fn characters_info(
     all_here: &[Entity],
-    characters: &Query<(&ObjectDefinition, &ObjectName, &Health)>,
+    characters: &Query<(&ObjectDefinition, &ObjectName, &Health, Option<&Integrity>)>,
 ) -> Vec<Fragment> {
     all_here
         .iter()
         .flat_map(|&i| characters.get(i))
-        .flat_map(|(definition, name, health)| {
-            Phrase::from_name(name)
-                .add("(")
-                .push(Fragment::colorized(
-                    format!("{}", health.0.current()),
-                    health.0.color(),
-                ))
-                .add("health)\n- ")
-                .add(definition.id.fallback_name())
-                .add("\n")
-                .fragments
+        .flat_map(|(definition, name, health, integrity)| {
+            let start = Phrase::from_name(name).add("(");
+
+            if health.0.is_nonzero() {
+                start
+                    .push(Fragment::colorized(
+                        format!("{}", health.0.current()),
+                        health.0.color(),
+                    ))
+                    .push(Fragment::colorized("health", health.0.color()))
+            } else {
+                match integrity {
+                    Some(integrity) if integrity.0.is_max() => {
+                        start.push(Fragment::colorized("fresh", FILTHY_COLOR))
+                    }
+                    Some(integrity) => start
+                        .push(Fragment::colorized(
+                            format!("{:.0}", 100.0 - 100.0 * integrity.0.percent()),
+                            integrity.0.color(),
+                        ))
+                        .push(Fragment::colorized("% pulped", WARN_TEXT_COLOR)),
+                    None => start.push(Fragment::colorized("thoroughly pulped", GOOD_TEXT_COLOR)),
+                }
+            }
+            .add(")\n- ")
+            .add(definition.id.fallback_name())
+            .add("\n")
+            .fragments
         })
         .collect()
 }

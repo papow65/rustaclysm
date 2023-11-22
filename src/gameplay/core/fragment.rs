@@ -86,7 +86,7 @@ impl Phrase {
     #[must_use]
     pub(crate) fn as_text_sections(&self, text_style: &TextStyle) -> Vec<TextSection> {
         let no_space_after = Regex::new(r"[(\[{ \n]$").expect("Valid regex after");
-        let no_space_before = Regex::new(r"^[)\]},;\. \n]").expect("Valid regex before");
+        let no_space_before = Regex::new(r"^[)\]},;%\. \n]").expect("Valid regex before");
 
         self.fragments.iter().filter(|f| !f.text.is_empty()).fold(
             Vec::new(),
@@ -182,7 +182,9 @@ mod container_tests {
             .add("2")
             .add(",")
             .push(Fragment::new("three"))
-            .extend(vec![Fragment::new("(four)"), Fragment::new("five")]);
-        assert_eq!(&phrase.as_string(), "one 2, three (four) five");
+            .extend(vec![Fragment::new("(four)"), Fragment::new("five")])
+            .add("6")
+            .add("%");
+        assert_eq!(&phrase.as_string(), "one 2, three (four) five 6%");
     }
 }
