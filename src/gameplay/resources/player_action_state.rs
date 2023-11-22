@@ -93,7 +93,10 @@ impl PlayerActionState {
                 active_target: Some(target),
             } => {
                 //eprintln!("Post instruction pulp handling...");
-                if player.stamina.breath() == Breath::Winded {
+                if !enemies.is_empty() {
+                    instruction_queue.add(QueuedInstruction::Interrupted);
+                    None // process the cancellation next turn
+                } else if player.stamina.breath() == Breath::Winded {
                     //eprintln!("Keep pulping after catching breath");
                     Some(PlannedAction::Stay {
                         duration: StayDuration::Short,
