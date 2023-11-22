@@ -92,9 +92,9 @@ impl PlayerActionState {
             Self::Pulping {
                 active_target: Some(target),
             } => {
-                eprintln!("Post instruction pulp handling...");
+                //eprintln!("Post instruction pulp handling...");
                 if player.stamina.breath() == Breath::Winded {
-                    eprintln!("Keep pulping after catching breath");
+                    //eprintln!("Keep pulping after catching breath");
                     Some(PlannedAction::Stay {
                         duration: StayDuration::Short,
                     })
@@ -102,10 +102,10 @@ impl PlayerActionState {
                     .find_pulpable(player.pos.horizontal_nbor(*target))
                     .is_some()
                 {
-                    eprintln!("Keep pulping");
+                    //eprintln!("Keep pulping");
                     Some(PlannedAction::Pulp { target: *target })
                 } else {
-                    eprintln!("Stop pulping");
+                    //eprintln!("Stop pulping");
                     instruction_queue.add(QueuedInstruction::Finished);
                     None // process the cancellation next turn
                 }
@@ -232,7 +232,7 @@ impl PlayerActionState {
             }
             (Self::Pulping { .. }, QueuedInstruction::Finished) => {
                 *self = Self::Normal;
-                PlayerBehavior::Feedback(Message::info(Phrase::new("Finished pulping")))
+                PlayerBehavior::NoEffect
             }
             (Self::Attacking, QueuedInstruction::Attack)
             | (Self::Smashing, QueuedInstruction::Smash)
@@ -378,9 +378,9 @@ impl PlayerActionState {
             Self::Pulping {
                 active_target: None,
             } => {
-                eprintln!("Inactive pulping");
+                //eprintln!("Inactive pulping");
                 if let Nbor::Horizontal(target) = raw_nbor {
-                    eprintln!("Activating pulping");
+                    //eprintln!("Activating pulping");
                     PlayerBehavior::Perform(PlannedAction::Pulp { target })
                 } else {
                     PlayerBehavior::Feedback(Message::warn(Phrase::new(
@@ -464,11 +464,11 @@ impl PlayerActionState {
                 }
             })
             .collect::<Vec<_>>();
-        eprintln!("Pulping {} targets", pulpable_nbors.len());
+        //eprintln!("Pulping {} targets", pulpable_nbors.len());
         match pulpable_nbors.len() {
             0 => PlayerBehavior::Feedback(Message::warn(Phrase::new("no targets nearby"))),
             1 => {
-                eprintln!("Pulping target found -> active");
+                //eprintln!("Pulping target found -> active");
                 *self = Self::Pulping {
                     active_target: Some(pulpable_nbors[0]),
                 };
@@ -477,7 +477,7 @@ impl PlayerActionState {
                 })
             }
             _ => {
-                eprintln!("Pulping choice -> inactive");
+                //eprintln!("Pulping choice -> inactive");
                 *self = Self::Pulping {
                     active_target: None,
                 };

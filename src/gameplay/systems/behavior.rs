@@ -109,7 +109,7 @@ pub(crate) fn send_action_event(
             smash_writer.send(ActionEvent::new(actor_entity, Smash { target }));
         }
         PlannedAction::Pulp { target } => {
-            eprintln!("Pulp action!");
+            //eprintln!("Pulp action!");
             pulp_writer.send(ActionEvent::new(actor_entity, Pulp { target }));
         }
         PlannedAction::Close { target } => {
@@ -585,20 +585,24 @@ pub(crate) fn update_damaged_corpses(
 ) {
     let start = Instant::now();
 
-    eprintln!("{} corpses found", corpses.iter().len());
+    //eprintln!("{} corpses found", corpses.iter().len());
 
     for damage in damage_reader.read() {
         let (name, mut integrity) = corpses.get_mut(damage.corpse_entity).expect("Corpse found");
         integrity.lower(&damage.change);
 
+        message_writer.send(Message::info(
+            damage
+                .change
+                .attacker
+                .clone()
+                .verb("pulp", "s")
+                .push(name.single()),
+        ));
+
         if integrity.0.is_zero() {
-            message_writer.send(Message::warn(
-                damage
-                    .change
-                    .attacker
-                    .clone()
-                    .verb("pulp", "s")
-                    .push(name.single()),
+            message_writer.send(Message::info(
+                Phrase::from_name(name).add("is thoroughly pulped"),
             ));
 
             commands
