@@ -19,31 +19,30 @@ pub(crate) fn spawn_menu(mut commands: Commands, fonts: Res<Fonts>) {
     let font = fonts.default();
 
     commands
-        .spawn(NodeBundle {
-            style: Style {
-                width: Val::Percent(100.0),
-                height: Val::Percent(100.0),
-                flex_direction: FlexDirection::Column,
-                align_items: AlignItems::Center,
-                justify_content: JustifyContent::Center,
-                row_gap: Val::Px(SPACING),
-                ..Style::default()
+        .spawn((
+            NodeBundle {
+                style: Style {
+                    width: Val::Percent(100.0),
+                    height: Val::Percent(100.0),
+                    flex_direction: FlexDirection::Column,
+                    align_items: AlignItems::Center,
+                    justify_content: JustifyContent::Center,
+                    row_gap: Val::Px(SPACING),
+                    ..Style::default()
+                },
+                ..default()
             },
-            ..default()
-        })
-        .insert(StateBound::<GameplayScreenState>::default())
+            StateBound::<GameplayScreenState>::default(),
+        ))
         .with_children(|parent| {
             parent
-                .spawn(button.clone())
-                .insert(ReturnButton)
+                .spawn((button.clone(), ReturnButton))
                 .with_children(|parent| add_text(parent, &font, "Return", GOOD_TEXT_COLOR));
             parent
-                .spawn(button.clone())
-                .insert(MainMenuButton)
+                .spawn((button.clone(), MainMenuButton))
                 .with_children(|parent| add_text(parent, &font, "Main Menu", DEFAULT_TEXT_COLOR));
             parent
-                .spawn(button)
-                .insert(QuitButton)
+                .spawn((button, QuitButton))
                 .with_children(|parent| add_text(parent, &font, "Quit", BAD_TEXT_COLOR));
         });
 }

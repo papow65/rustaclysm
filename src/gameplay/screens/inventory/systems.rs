@@ -24,15 +24,17 @@ pub(crate) fn spawn_inventory(mut commands: Commands, fonts: Res<Fonts>) {
         })
         .id();
     commands
-        .spawn(NodeBundle {
-            style: Style {
-                width: Val::Percent(100.0),
-                height: Val::Percent(100.0),
+        .spawn((
+            NodeBundle {
+                style: Style {
+                    width: Val::Percent(100.0),
+                    height: Val::Percent(100.0),
+                    ..default()
+                },
                 ..default()
             },
-            ..default()
-        })
-        .insert(StateBound::<GameplayScreenState>::default())
+            StateBound::<GameplayScreenState>::default(),
+        ))
         .add_child(panel);
 
     commands.insert_resource(InventoryScreen {

@@ -6,18 +6,20 @@ const FONT_SIZE: f32 = 40.0;
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn spawn_loading(mut commands: Commands, fonts: Res<Fonts>) {
     commands
-        .spawn(NodeBundle {
-            style: Style {
-                position_type: PositionType::Absolute,
-                width: Val::Percent(100.0),
-                height: Val::Percent(100.0),
-                align_items: AlignItems::Center,
-                justify_content: JustifyContent::Center,
+        .spawn((
+            NodeBundle {
+                style: Style {
+                    position_type: PositionType::Absolute,
+                    width: Val::Percent(100.0),
+                    height: Val::Percent(100.0),
+                    align_items: AlignItems::Center,
+                    justify_content: JustifyContent::Center,
+                    ..default()
+                },
                 ..default()
             },
-            ..default()
-        })
-        .insert(StateBound::<ProgressScreenState>::default())
+            StateBound::<ProgressScreenState>::default(),
+        ))
         .with_children(|parent| {
             parent
                 .spawn(NodeBundle {

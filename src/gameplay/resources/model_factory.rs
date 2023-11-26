@@ -56,7 +56,7 @@ impl<'w> ModelFactory<'w> {
             .clone()
     }
 
-    fn get_pbr_bundle(&mut self, model: &Model, shaded: bool) -> PbrBundle {
+    fn get_pbr_bundle(&mut self, model: &Model, visibility: Visibility, shaded: bool) -> PbrBundle {
         PbrBundle {
             mesh: self.get_mesh(model),
             material: if shaded {
@@ -65,30 +65,23 @@ impl<'w> ModelFactory<'w> {
                 self.get_appearance(model).material(&LastSeen::Currently)
             },
             transform: model.to_transform(),
-            visibility: if shaded {
-                Visibility::Inherited
-            } else {
-                Visibility::Hidden
-            },
+            visibility,
             ..PbrBundle::default()
         }
     }
 
-    pub(crate) fn get_single_pbr_bundle(
-        &mut self,
-        definition: &ObjectDefinition,
-        shading: bool,
-    ) -> PbrBundle {
+    pub(crate) fn get_single_pbr_bundle(&mut self, definition: &ObjectDefinition) -> PbrBundle {
         let models = self
             .loader
             .get_models(definition, &self.infos.variants(definition));
         assert!(models.overlay.is_none(), "{models:?}");
-        self.get_pbr_bundle(&models.base, shading)
+        self.get_pbr_bundle(&models.base, Visibility::Hidden, false)
     }
 
     pub(crate) fn get_layers(
         &mut self,
         definition: &ObjectDefinition,
+        visibility: Visibility,
         shading: bool,
     ) -> Layers<(PbrBundle, Appearance)> {
         let models = self
@@ -96,7 +89,7 @@ impl<'w> ModelFactory<'w> {
             .get_models(definition, &self.infos.variants(definition));
         models.map_mut(|model| {
             (
-                self.get_pbr_bundle(&model, shading),
+                self.get_pbr_bundle(&model, visibility, shading),
                 self.get_appearance(&model),
             )
         })

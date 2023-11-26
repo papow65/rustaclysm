@@ -93,19 +93,18 @@ impl<'w, 's> Spawner<'w, 's> {
         };
         let entity = self.spawn_object(parent, pos, definition, object_name);
         let mut entity = self.commands.entity(entity);
-        entity
-            .insert(Life)
-            .insert(Obstacle)
-            .insert(Health(
-                Limited::full(character_info.hp.unwrap_or(60) as u16),
-            ))
-            .insert(Stamina::Unlimited)
-            .insert(WalkingMode::Running)
-            .insert(faction.clone())
-            .insert(Melee {
+        entity.insert((
+            Life,
+            Obstacle,
+            Health(Limited::full(character_info.hp.unwrap_or(60) as u16)),
+            Stamina::Unlimited,
+            WalkingMode::Running,
+            faction.clone(),
+            Melee {
                 dices: character_info.melee_dice,
                 sides: character_info.melee_dice_sides,
-            });
+            },
+        ));
 
         if let Some(name) = name {
             entity.insert(name);
@@ -124,14 +123,18 @@ impl<'w, 's> Spawner<'w, 's> {
         if faction == Faction::Human {
             let hands = self
                 .commands
-                .spawn(BodyContainers::default_hands_container_limits())
-                .insert(SpatialBundle::HIDDEN_IDENTITY)
+                .spawn((
+                    BodyContainers::default_hands_container_limits(),
+                    SpatialBundle::HIDDEN_IDENTITY,
+                ))
                 .set_parent(entity)
                 .id();
             let clothing = self
                 .commands
-                .spawn(BodyContainers::default_clothing_container_limits())
-                .insert(SpatialBundle::HIDDEN_IDENTITY)
+                .spawn((
+                    BodyContainers::default_clothing_container_limits(),
+                    SpatialBundle::HIDDEN_IDENTITY,
+                ))
                 .set_parent(entity)
                 .id();
             self.commands
@@ -180,8 +183,6 @@ impl<'w, 's> Spawner<'w, 's> {
         //println!("{:?} @ {pos:?}", &definition);
         let object_name = ObjectName::new(item_info.name.clone(), item_info.text_color());
         let object_entity = self.spawn_object(parent, pos, definition, object_name);
-        let mut entity = self.commands.entity(object_entity);
-        entity.insert(amount);
 
         let (volume, mass) = match &item.corpse {
             Some(corpse_id) if corpse_id != &ObjectId::new("mon_null") => {
@@ -193,11 +194,16 @@ impl<'w, 's> Spawner<'w, 's> {
             }
             _ => (item_info.volume, item_info.mass),
         };
-        entity.insert(Containable {
-            // Based on cataclysm-ddasrc/mtype.cpp lines 47-48
-            volume: volume.unwrap_or_else(|| Volume::from(String::from("62499 ml"))),
-            mass: mass.unwrap_or_else(|| Mass::from(String::from("81499 g"))),
-        });
+
+        let mut entity = self.commands.entity(object_entity);
+        entity.insert((
+            amount,
+            Containable {
+                // Based on cataclysm-ddasrc/mtype.cpp lines 47-48
+                volume: volume.unwrap_or_else(|| Volume::from(String::from("62499 ml"))),
+                mass: mass.unwrap_or_else(|| Mass::from(String::from("81499 g"))),
+            },
+        ));
 
         if let Some(item_tags) = &item.item_tags {
             if item_tags.contains(&String::from("FILTHY")) {
@@ -405,40 +411,43 @@ impl<'w, 's> Spawner<'w, 's> {
         };
         //dbg!(&last_seen);
 
-        let layers =
-            self.model_factory
-                .get_layers(definition, true)
-                .map(|(pbr_bundle, apprearance)| {
-                    (
-                        pbr_bundle,
-                        apprearance.clone(),
-                        if last_seen == LastSeen::Never {
-                            Some(apprearance.material(&LastSeen::Currently))
-                            //None // TODO
-                        } else {
-                            Some(apprearance.material(&last_seen))
-                        },
-                    )
-                });
+        let layers = self
+            .model_factory
+            .get_layers(definition, Visibility::Inherited, true)
+            .map(|(pbr_bundle, apprearance)| {
+                (
+                    pbr_bundle,
+                    apprearance.clone(),
+                    if last_seen == LastSeen::Never {
+                        Some(apprearance.material(&LastSeen::Currently))
+                        //None // TODO
+                    } else {
+                        Some(apprearance.material(&last_seen))
+                    },
+                )
+            });
 
         let tile = self
             .commands
-            .spawn(SpatialBundle::default())
-            .insert(Visibility::Hidden)
-            .insert(definition.clone())
-            .insert(pos)
-            .insert(Transform::from_translation(pos.vec3()))
-            .insert(object_name)
+            .spawn((
+                SpatialBundle {
+                    transform: Transform::from_translation(pos.vec3()),
+                    ..SpatialBundle::HIDDEN_IDENTITY
+                },
+                definition.clone(),
+                pos,
+                object_name,
+            ))
             .with_children(|child_builder| {
                 {
                     let (pbr_bundle, appearance, material) = layers.base;
-                    let child = child_builder.spawn(pbr_bundle).insert(appearance).id();
+                    let child = child_builder.spawn((pbr_bundle, appearance)).id();
                     if let Some(material) = material {
                         insert(child_builder, child, material);
                     }
                 }
                 if let Some((pbr_bundle, appearance, material)) = layers.overlay {
-                    let child = child_builder.spawn(pbr_bundle).insert(appearance).id();
+                    let child = child_builder.spawn((pbr_bundle, appearance)).id();
                     if let Some(material) = material {
                         insert(child_builder, child, material);
                     }
@@ -463,9 +472,7 @@ impl<'w, 's> Spawner<'w, 's> {
             category: ObjectCategory::Meta,
             id: ObjectId::new("cursor"),
         };
-        let mut cursor_bundle = self
-            .model_factory
-            .get_single_pbr_bundle(&cursor_definition, false);
+        let mut cursor_bundle = self.model_factory.get_single_pbr_bundle(&cursor_definition);
         cursor_bundle.transform.translation.y = 0.1;
         cursor_bundle.transform.scale = Vec3::new(1.1, 1.0, 1.1);
 
@@ -476,7 +483,7 @@ impl<'w, 's> Spawner<'w, 's> {
                     .spawn(SpatialBundle::default())
                     .insert(CameraBase)
                     .with_children(|child_builder| {
-                        child_builder.spawn(cursor_bundle).insert(ExamineCursor);
+                        child_builder.spawn((cursor_bundle, ExamineCursor));
 
                         let camera_direction = Transform::IDENTITY
                             .looking_at(Vec3::new(0.1, 0.0, -1.0), Vec3::Y)
@@ -508,8 +515,8 @@ impl<'w, 's> Spawner<'w, 's> {
             -std::f32::consts::FRAC_PI_4,
         ));
         //dbg!(&light_transform);
-        self.commands
-            .spawn(DirectionalLightBundle {
+        self.commands.spawn((
+            DirectionalLightBundle {
                 directional_light: DirectionalLight {
                     illuminance: 50_000.0,
                     shadows_enabled: false, // TODO shadow direction does not match buildin shadows
@@ -517,8 +524,9 @@ impl<'w, 's> Spawner<'w, 's> {
                 },
                 transform: light_transform,
                 ..DirectionalLightBundle::default()
-            })
-            .insert(StateBound::<ApplicationState>::default());
+            },
+            StateBound::<ApplicationState>::default(),
+        ));
     }
 
     pub(crate) fn spawn_characters(&mut self, infos: &Infos, offset: PosOffset) {
@@ -705,9 +713,11 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
         let subzone_level_entity = self
             .spawner
             .commands
-            .spawn(SpatialBundle::default())
-            .insert(subzone_level)
-            .insert(StateBound::<ApplicationState>::default())
+            .spawn((
+                SpatialBundle::default(),
+                subzone_level,
+                StateBound::<ApplicationState>::default(),
+            ))
             .id();
 
         if submap.terrain.is_significant() {
@@ -845,35 +855,39 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
             DEFAULT_TEXT_COLOR,
         );
 
-        let mut entity = self.spawner.commands.entity(entity);
-        entity.insert(Collapsed).insert(name);
+        let (seen_from, visibility) = match seen_from {
+            SeenFrom::CloseBy | SeenFrom::FarAway => (LastSeen::Previously, Visibility::Inherited),
+            SeenFrom::Never => (LastSeen::Never, Visibility::Hidden),
+        };
 
         let pbr_bundles = self
             .spawner
             .model_factory
-            .get_layers(definition, false)
+            .get_layers(definition, *child_visibiltiy, false)
             .map(|(pbr, _)| pbr);
 
-        entity
-            .insert(SpatialBundle::default())
-            .insert(Transform {
-                translation: zone_level.base_pos().vec3() + Vec3::new(11.5, 0.0, 11.5),
-                scale: Vec3::splat(24.0),
-                ..Transform::default()
-            })
-            .insert(match seen_from {
-                SeenFrom::CloseBy | SeenFrom::FarAway => {
-                    (LastSeen::Previously, Visibility::Inherited)
-                }
-                SeenFrom::Never => (LastSeen::Never, Visibility::Hidden),
-            })
-            .insert(StateBound::<ApplicationState>::default())
+        self.spawner
+            .commands
+            .entity(entity)
+            .insert((
+                SpatialBundle {
+                    transform: Transform {
+                        translation: zone_level.base_pos().vec3() + Vec3::new(11.5, 0.0, 11.5),
+                        scale: Vec3::splat(24.0),
+                        ..Transform::default()
+                    },
+                    visibility,
+                    ..SpatialBundle::default()
+                },
+                Collapsed,
+                name,
+                seen_from,
+                StateBound::<ApplicationState>::default(),
+            ))
             .with_children(|child_builder| {
-                child_builder
-                    .spawn(pbr_bundles.base)
-                    .insert(*child_visibiltiy);
-                if let Some(pbr_bundle) = pbr_bundles.overlay {
-                    child_builder.spawn(pbr_bundle).insert(*child_visibiltiy);
+                child_builder.spawn(pbr_bundles.base);
+                if let Some(overlay_pbr_bundle) = pbr_bundles.overlay {
+                    child_builder.spawn(overlay_pbr_bundle);
                 }
             });
     }

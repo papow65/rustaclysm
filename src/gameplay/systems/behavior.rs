@@ -500,14 +500,15 @@ pub(crate) fn update_damaged_characters(
                 * Quat::from_rotation_x(-std::f32::consts::FRAC_PI_2);
             commands
                 .entity(damage.actor_entity)
-                .insert(Corpse)
-                .insert(CorpseRaise {
-                    at: clock.time() + Milliseconds::EIGHT_HOURS,
-                })
-                .insert(ObjectName::corpse())
-                .insert(Integrity(Limited::full(400)))
-                .remove::<Life>()
-                .remove::<Obstacle>();
+                .insert((
+                    Corpse,
+                    CorpseRaise {
+                        at: clock.time() + Milliseconds::EIGHT_HOURS,
+                    },
+                    ObjectName::corpse(),
+                    Integrity(Limited::full(400)),
+                ))
+                .remove::<(Life, Obstacle)>();
 
             if player.is_some() {
                 next_gameplay_state.set(GameplayScreenState::Death);
@@ -607,8 +608,7 @@ pub(crate) fn update_damaged_corpses(
 
             commands
                 .entity(damage.corpse_entity)
-                .remove::<Integrity>()
-                .remove::<CorpseRaise>();
+                .remove::<(CorpseRaise, Integrity)>();
         }
     }
 
@@ -638,17 +638,17 @@ pub(crate) fn update_corpses(
 
             commands
                 .entity(corpse)
-                .insert(definition)
-                .insert(object_name)
-                .insert(Faction::Zombie)
-                .insert(Life)
-                .insert(health)
-                .insert(Stamina::Unlimited)
-                .insert(WalkingMode::Running)
-                .insert(Obstacle)
-                .remove::<Corpse>()
-                .remove::<CorpseRaise>()
-                .remove::<Integrity>();
+                .insert((
+                    definition,
+                    object_name,
+                    Faction::Zombie,
+                    Life,
+                    health,
+                    Stamina::Unlimited,
+                    WalkingMode::Running,
+                    Obstacle,
+                ))
+                .remove::<(Corpse, CorpseRaise, Integrity)>();
         }
     }
 

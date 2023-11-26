@@ -44,8 +44,8 @@ fn spawn_log_display(parent: &mut EntityCommands) {
                 ..default()
             })
             .with_children(|child_builder| {
-                child_builder
-                    .spawn(TextBundle {
+                child_builder.spawn((
+                    TextBundle {
                         text: Text {
                             sections: vec![],
                             ..Text::default()
@@ -56,8 +56,9 @@ fn spawn_log_display(parent: &mut EntityCommands) {
                             ..Style::default()
                         },
                         ..TextBundle::default()
-                    })
-                    .insert(LogDisplay);
+                    },
+                    LogDisplay,
+                ));
             });
     });
 }
@@ -65,8 +66,8 @@ fn spawn_log_display(parent: &mut EntityCommands) {
 fn spawn_status_display(parent: &mut EntityCommands) {
     // TODO properly use flex layout
     parent.with_children(|child_builder| {
-        child_builder
-            .spawn(TextBundle {
+        child_builder.spawn((
+            TextBundle {
                 text: Text::default(),
                 style: Style {
                     position_type: PositionType::Absolute,
@@ -78,8 +79,9 @@ fn spawn_status_display(parent: &mut EntityCommands) {
                     ..Style::default()
                 },
                 ..TextBundle::default()
-            })
-            .insert(StatusDisplay);
+            },
+            StatusDisplay,
+        ));
     });
 }
 
@@ -92,9 +94,11 @@ fn spawn_manual_display(
     background.style.left = Val::Px(0.0);
 
     commands
-        .spawn(background)
-        .insert(ManualDisplay)
-        .insert(StateBound::<ApplicationState>::default())
+        .spawn((
+            background,
+            ManualDisplay,
+            StateBound::<ApplicationState>::default(),
+        ))
         .with_children(|parent| {
             parent.spawn(TextBundle {
                 text: Text {
@@ -165,8 +169,7 @@ pub(crate) fn spawn_hud(
     background.style.right = Val::Px(0.0);
     background.style.width = Val::Px(TEXT_WIDTH + 10.0); // 5px margin on both sides
     background.style.height = Val::Percent(100.0);
-    let mut parent = commands.spawn(background);
-    parent.insert(StateBound::<ApplicationState>::default());
+    let mut parent = commands.spawn((background, StateBound::<ApplicationState>::default()));
     spawn_status_display(&mut parent);
     spawn_log_display(&mut parent);
 

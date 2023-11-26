@@ -16,32 +16,36 @@ pub(crate) fn spawn_main_menu(
     asset_server: Res<AssetServer>,
     fonts: Res<Fonts>,
 ) {
-    commands
-        .spawn(Camera2dBundle::default())
-        .insert(StateBound::<ApplicationState>::default());
+    commands.spawn((
+        Camera2dBundle::default(),
+        StateBound::<ApplicationState>::default(),
+    ));
 
     let background_image = asset_server.load(Paths::backgrounds_path().join(BACKGROUND_NAME));
-    commands
-        .spawn(SpriteBundle {
+    commands.spawn((
+        SpriteBundle {
             texture: background_image,
             ..Default::default()
-        })
-        .insert(Background)
-        .insert(StateBound::<ApplicationState>::default());
+        },
+        Background,
+        StateBound::<ApplicationState>::default(),
+    ));
 
     commands
-        .spawn(NodeBundle {
-            style: Style {
-                flex_direction: FlexDirection::Column,
-                width: Val::Percent(100.0),
-                height: Val::Percent(100.0),
-                align_items: AlignItems::Center,
-                justify_content: JustifyContent::Center,
+        .spawn((
+            NodeBundle {
+                style: Style {
+                    flex_direction: FlexDirection::Column,
+                    width: Val::Percent(100.0),
+                    height: Val::Percent(100.0),
+                    align_items: AlignItems::Center,
+                    justify_content: JustifyContent::Center,
+                    ..default()
+                },
                 ..default()
             },
-            ..default()
-        })
-        .insert(StateBound::<ApplicationState>::default())
+            StateBound::<ApplicationState>::default(),
+        ))
         .with_children(|parent| {
             add_title(parent, fonts.default());
             add_tagline(parent, fonts.default());
@@ -83,8 +87,8 @@ fn add_tagline(parent: &mut ChildBuilder, font: Handle<Font>) {
 }
 
 fn add_load_button_area(parent: &mut ChildBuilder) {
-    parent
-        .spawn(NodeBundle {
+    parent.spawn((
+        NodeBundle {
             style: Style {
                 flex_direction: FlexDirection::Column,
                 width: Val::Percent(100.0),
@@ -96,33 +100,36 @@ fn add_load_button_area(parent: &mut ChildBuilder) {
                 ..default()
             },
             ..default()
-        })
-        .insert(LoadButtonArea);
+        },
+        LoadButtonArea,
+    ));
 }
 
 fn add_notification_area(parent: &mut ChildBuilder, font: Handle<Font>) {
     parent
-        .spawn(NodeBundle {
-            style: Style {
-                width: Val::Px(FULL_WIDTH),
-                height: Val::Px(10.0 * SPACING),
-                align_items: AlignItems::FlexStart,
-                justify_content: JustifyContent::FlexStart,
-                flex_direction: FlexDirection::Column,
-                padding: UiRect::all(Val::Px(SPACING)),
-                margin: UiRect {
-                    bottom: Val::Px(SPACING),
-                    ..UiRect::default()
+        .spawn((
+            NodeBundle {
+                style: Style {
+                    width: Val::Px(FULL_WIDTH),
+                    height: Val::Px(10.0 * SPACING),
+                    align_items: AlignItems::FlexStart,
+                    justify_content: JustifyContent::FlexStart,
+                    flex_direction: FlexDirection::Column,
+                    padding: UiRect::all(Val::Px(SPACING)),
+                    margin: UiRect {
+                        bottom: Val::Px(SPACING),
+                        ..UiRect::default()
+                    },
+                    ..default()
                 },
+                background_color: PANEL_COLOR.into(),
                 ..default()
             },
-            background_color: PANEL_COLOR.into(),
-            ..default()
-        })
-        .insert(MessageWrapper)
+            MessageWrapper,
+        ))
         .with_children(|parent| {
-            parent
-                .spawn(TextBundle {
+            parent.spawn((
+                TextBundle {
                     text: Text::from_section(
                         "",
                         TextStyle {
@@ -137,24 +144,27 @@ fn add_notification_area(parent: &mut ChildBuilder, font: Handle<Font>) {
                         ..Style::default()
                     },
                     ..TextBundle::default()
-                })
-                .insert(MessageField);
+                },
+                MessageField,
+            ));
         });
 }
 
 fn add_quit_button(parent: &mut ChildBuilder, font: Handle<Font>) {
     parent
-        .spawn(ButtonBundle {
-            style: Style {
-                width: Val::Px(200.0),
-                height: Val::Px(70.0),
-                justify_content: JustifyContent::Center,
-                align_items: AlignItems::Center,
+        .spawn((
+            ButtonBundle {
+                style: Style {
+                    width: Val::Px(200.0),
+                    height: Val::Px(70.0),
+                    justify_content: JustifyContent::Center,
+                    align_items: AlignItems::Center,
+                    ..default()
+                },
                 ..default()
             },
-            ..default()
-        })
-        .insert(QuitButton)
+            QuitButton,
+        ))
         .with_children(|parent| {
             parent.spawn(TextBundle::from_section(
                 "Quit",
@@ -196,26 +206,28 @@ pub(crate) fn update_sav_files(
                             commands.entity(load_button_area).with_children(|parent| {
                                 // Load button
                                 parent
-                                    .spawn(ButtonBundle {
-                                        style: Style {
-                                            width: Val::Px(400.0),
-                                            align_items: AlignItems::Center,
-                                            justify_content: JustifyContent::Center,
-                                            margin: UiRect {
-                                                bottom: Val::Px(SPACING),
-                                                ..UiRect::default()
-                                            },
-                                            padding: UiRect {
-                                                left: Val::Px(2.0 * SPACING),
-                                                right: Val::Px(2.0 * SPACING),
-                                                top: Val::Px(SPACING),
-                                                bottom: Val::Px(SPACING),
+                                    .spawn((
+                                        ButtonBundle {
+                                            style: Style {
+                                                width: Val::Px(400.0),
+                                                align_items: AlignItems::Center,
+                                                justify_content: JustifyContent::Center,
+                                                margin: UiRect {
+                                                    bottom: Val::Px(SPACING),
+                                                    ..UiRect::default()
+                                                },
+                                                padding: UiRect {
+                                                    left: Val::Px(2.0 * SPACING),
+                                                    right: Val::Px(2.0 * SPACING),
+                                                    top: Val::Px(SPACING),
+                                                    bottom: Val::Px(SPACING),
+                                                },
+                                                ..default()
                                             },
                                             ..default()
                                         },
-                                        ..default()
-                                    })
-                                    .insert(LoadButton { path: path.clone() })
+                                        LoadButton { path: path.clone() },
+                                    ))
                                     .with_children(|parent| {
                                         let world = path.parent().expect("World required");
                                         let encoded_character = path
