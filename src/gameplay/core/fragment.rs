@@ -1,7 +1,7 @@
 use crate::prelude::ObjectName;
 use bevy::prelude::{Color, TextSection, TextStyle};
 use regex::Regex;
-use std::{cmp::Eq, fmt};
+use std::{cmp::Eq, fmt, sync::OnceLock};
 
 #[derive(Clone, Debug, Default, PartialEq)]
 pub(crate) struct Fragment {
@@ -85,9 +85,6 @@ impl Phrase {
 
     #[must_use]
     pub(crate) fn as_text_sections(&self, text_style: &TextStyle) -> Vec<TextSection> {
-        let no_space_after = Regex::new(r"[(\[{ \n]$").expect("Valid regex after");
-        let no_space_before = Regex::new(r"^[)\]},;%\. \n]").expect("Valid regex before");
-
         self.fragments.iter().filter(|f| !f.text.is_empty()).fold(
             Vec::new(),
             |mut text_sections, f| {
@@ -96,12 +93,11 @@ impl Phrase {
                 text_sections.push(TextSection {
                     value: if text_sections
                         .last()
-                        .map_or(true, |l| no_space_after.is_match(&l.value))
-                        || no_space_before.is_match(&f.text)
+                        .map_or(false, |l| Self::space_between(&l.value, &f.text))
                     {
-                        f.text.clone()
-                    } else {
                         format!(" {}", f.text)
+                    } else {
+                        f.text.clone()
                     },
                     style: TextStyle {
                         font: text_style.font,
@@ -120,6 +116,18 @@ impl Phrase {
             .into_iter()
             .map(|text_section| text_section.value)
             .collect::<String>()
+    }
+
+    fn space_between(previous: &str, next: &str) -> bool {
+        static SPACE_AFTER: OnceLock<Regex> = OnceLock::new();
+        static SPACE_BEFORE: OnceLock<Regex> = OnceLock::new();
+
+        SPACE_AFTER
+            .get_or_init(|| Regex::new(r"[^(\[{ \n]$").expect("Valid regex after"))
+            .is_match(previous)
+            && SPACE_BEFORE
+                .get_or_init(|| Regex::new(r"^[^)\]},;%\. \n]").expect("Valid regex before"))
+                .is_match(next)
     }
 }
 
@@ -174,6 +182,20 @@ mod container_tests {
                 Fragment::new("(g)"),
             ]);
         assert_eq!(&phrase.as_string(), "(a) (b) [c] [d] {e} {f} (g)");
+    }
+
+    #[test]
+    fn empty() {
+        let phrase = Phrase::new("one")
+            .add("")
+            .add("{")
+            .add("")
+            .add("two")
+            .add("")
+            .add("}")
+            .add("")
+            .add("three");
+        assert_eq!(&phrase.as_string(), "one {two} three");
     }
 
     #[test]
