@@ -8,7 +8,7 @@ repository = "https://github.com/papow65/rustaclysm"
 authors = [ "papow65 <papow65@protonmail.com>" ]
 exclude = [ "/screenshots/" ]
 edition = "2021"
-rust-version = "1.74" # should be latest stable
+rust-version = "1.75" # should be latest stable
 
 [dependencies]
 base64 = "0.21"
@@ -116,6 +116,7 @@ match_wildcard_for_single_variants = { level = "allow", priority = 1 }
 module_name_repetitions = { level = "allow", priority = 1 }
 redundant_else = { level = "allow", priority = 1 }
 similar_names = { level = "allow", priority = 1 }
+struct_field_names = { level = "allow", priority = 1 } # doens't work well with CDDA data
 too_many_arguments = { level = "allow", priority = 1 } # doesn't work well with bevy
 trivially_copy_pass_by_ref = { level = "allow", priority = 1 }
 type_complexity = { level = "allow", priority = 1 } # doesn't work well with bevy

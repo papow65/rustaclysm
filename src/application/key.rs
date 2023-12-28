@@ -12,12 +12,12 @@ use std::fmt;
 pub(crate) struct Keys<'w, 's> {
     key_events: EventReader<'w, 's, KeyboardInput>,
     character_events: EventReader<'w, 's, ReceivedCharacter>,
-    keys: Res<'w, Input<KeyCode>>,
+    key_codes: Res<'w, Input<KeyCode>>,
 }
 
 impl<'w, 's> Keys<'w, 's> {
     pub(crate) fn combos(&mut self) -> Vec<(ButtonState, KeyCombo)> {
-        let ctrl = Ctrl::from(&*self.keys);
+        let ctrl = Ctrl::from(&*self.key_codes);
 
         // Escape, F-keys, and numpad, with support for modifier keys
         let mut combos = self
