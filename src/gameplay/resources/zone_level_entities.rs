@@ -32,7 +32,10 @@ impl ZoneLevelEntities {
     }
 
     pub(crate) fn remove(&mut self, entity: Entity) {
-        let zone_level = self.reverse.remove(&entity).unwrap();
+        let zone_level = self
+            .reverse
+            .remove(&entity)
+            .expect("zone level should be known");
         let removed = self.zone_levels.remove(&zone_level);
         assert!(
             removed.is_some(),

@@ -179,18 +179,13 @@ pub(crate) fn update_inventory(
             ));
         }
 
-        assert_eq!(
-            first_item.is_some(),
-            previous_item.is_some(),
-            "If there is a first item, there also should be a last item."
-        );
         if let Some(previous_item) = previous_item {
-            inventory
-                .previous_items
-                .insert(first_item.unwrap(), previous_item);
-            inventory
-                .next_items
-                .insert(previous_item, first_item.unwrap());
+            let Some(first_item) = first_item else {
+                panic!("If there is a previous item, there also should be a first item.")
+            };
+
+            inventory.previous_items.insert(first_item, previous_item);
+            inventory.next_items.insert(previous_item, first_item);
         }
     });
 }

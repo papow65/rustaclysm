@@ -34,7 +34,11 @@ impl ZoneLevelIds {
             };
             self.load(overzone, overmap);
         }
-        Some(self.names.get(&zone_level).unwrap())
+        Some(
+            self.names
+                .get(&zone_level)
+                .expect("zone level should be known"),
+        )
     }
 
     pub(crate) fn load(&mut self, overzone: Overzone, overmap: &Overmap) {

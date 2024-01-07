@@ -12,7 +12,9 @@ struct TileInfo {
 
 impl TileInfo {
     fn new(tile: &serde_json::Value) -> Self {
-        let tile = tile.as_object().unwrap();
+        let tile = tile
+            .as_object()
+            .expect("JSON value should be an object (map)");
         Self {
             names: {
                 let mut tile_names = Vec::new();
@@ -22,7 +24,9 @@ impl TileInfo {
                     }
                     serde_json::Value::Array(list) => {
                         for item in list {
-                            tile_names.push(ObjectId::new(item.as_str().unwrap()));
+                            tile_names.push(ObjectId::new(
+                                item.as_str().expect("JSON value should be a string"),
+                            ));
                         }
                     }
                     other => panic!("{other:?}"),
@@ -57,11 +61,15 @@ pub(crate) struct SpriteNumber(usize);
 
 impl SpriteNumber {
     fn from_json(value: &serde_json::Value) -> Self {
-        Self(value.as_u64().unwrap() as usize)
+        Self(
+            value
+                .as_u64()
+                .expect("JSON value should be an integer (>= 0)") as usize,
+        )
     }
 
     fn from_number(n: &serde_json::Number) -> Self {
-        Self(n.as_u64().unwrap() as usize)
+        Self(n.as_u64().expect("JSON value should be an integer (>= 0)") as usize)
     }
 
     pub(crate) const fn to_usize(self) -> usize {
@@ -85,8 +93,12 @@ struct Atlas {
 
 impl Atlas {
     fn new(json: &serde_json::Value, tiles: &mut HashMap<ObjectId, TileInfo>) -> Option<Self> {
-        let atlas = json.as_object().unwrap();
-        let filename = atlas["file"].as_str().unwrap();
+        let atlas = json
+            .as_object()
+            .expect("JSON value should be an object (map)");
+        let filename = atlas["file"]
+            .as_str()
+            .expect("'file' key should be present");
         if filename == "fallback.png" {
             return None;
         }
@@ -95,7 +107,7 @@ impl Atlas {
         let from_to = if let Some(comment) = atlas.get("//") {
             comment
                 .as_str()
-                .unwrap()
+                .expect("Comment should be a string")
                 .split(' ')
                 .flat_map(str::parse)
                 .map(SpriteNumber)
@@ -124,7 +136,10 @@ impl Atlas {
             .map_or(0.0, |y| y as f32 / 32.0)
             + (0.5 * height - 0.5));
 
-        for tile in atlas["tiles"].as_array().unwrap() {
+        for tile in atlas["tiles"]
+            .as_array()
+            .expect("'tiles' key should be present")
+        {
             let tile_info = TileInfo::new(tile);
             for name in &tile_info.names {
                 tiles.insert(name.clone(), tile_info.clone());
@@ -178,9 +193,14 @@ impl TileLoader {
         let filepath = Paths::gfx_path()
             .join("UltimateCataclysm")
             .join("tile_config.json");
-        let file_contents = read_to_string(filepath).unwrap();
-        let json: serde_json::Value = serde_json::from_str(&file_contents).unwrap();
-        let json_atlases = json.as_object().unwrap()["tiles-new"].as_array().unwrap();
+        let file_contents = read_to_string(filepath).expect("File should be readable");
+        let json: serde_json::Value =
+            serde_json::from_str(&file_contents).expect("File should be valid JSON");
+        let json_atlases = json
+            .as_object()
+            .expect("JSON value should be an object (map)")["tiles-new"]
+            .as_array()
+            .expect("JSON value should be an array (list)");
 
         let mut atlases = Vec::new();
         let mut tiles = HashMap::default();
@@ -236,7 +256,9 @@ impl TileLoader {
             .find_map(|variant| self.tiles.get(variant))
             .unwrap_or_else(|| {
                 //println!("No variant found from {variants:?}. Falling back to default sprite"); // TODO
-                self.tiles.get(&ObjectId::new("unknown")).unwrap()
+                self.tiles
+                    .get(&ObjectId::new("unknown"))
+                    .expect("Tile should be found")
             })
             .sprite_numbers();
         /*if tile_name.0.as_str() != "t_dirt" && !tile_name.0.starts_with("t_grass") {
@@ -288,7 +310,9 @@ fn load_xground(xg: Option<&serde_json::Value>) -> Vec<SpriteNumber> {
                     match item {
                         serde_json::Value::Number(n) => ids.push(SpriteNumber::from_number(n)),
                         serde_json::Value::Object(obj) => {
-                            ids.push(SpriteNumber::from_json(obj.get("sprite").unwrap()));
+                            ids.push(SpriteNumber::from_json(
+                                obj.get("sprite").expect("'sprite' key should be present"),
+                            ));
                         }
                         other => panic!("{other:?}"),
                     }

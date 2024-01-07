@@ -73,7 +73,7 @@ impl Paths {
         WorldPath::init(
             self.sav_path
                 .parent()
-                .expect("Parent directory expected")
+                .expect("Path should have a parent directory")
                 .to_path_buf(),
         )
     }
@@ -82,12 +82,14 @@ impl Paths {
         Self::check_dirs()?;
 
         let worlds_pattern = Self::save_path().join("*");
-        let pattern = worlds_pattern.to_str().unwrap();
+        let pattern = worlds_pattern
+            .to_str()
+            .expect("Path pattern should be valid UTF-8");
         let worlds = glob(pattern)
-            .expect("Failed to read glob pattern")
+            .expect("Paths shuld be readable")
             .map(|world| {
                 world
-                    .expect("problem with path")
+                    .expect("Path should be valid")
                     .components()
                     .skip(2)
                     .collect::<PathBuf>()
@@ -103,11 +105,13 @@ impl Paths {
             ))
         } else {
             let savs_pattern = worlds_pattern.join("#*.sav");
-            let pattern = savs_pattern.to_str().unwrap();
+            let pattern = savs_pattern
+                .to_str()
+                .expect("Path pattern should be valid UTF-8");
             let savs = glob(pattern)
-                .expect("Failed to read glob pattern")
+                .expect("Paths shuld be readable")
                 .map(|sav| {
-                    sav.expect("problem with path")
+                    sav.expect("Path should be valid")
                         .components()
                         .skip(2)
                         .collect::<PathBuf>()
@@ -137,7 +141,7 @@ impl Paths {
         for asset_subdir in [Self::data_path(), Self::gfx_path(), Self::save_path()] {
             if !asset_subdir.is_dir() {
                 return Err(LoadError::new(
-                    format!("Directory '{}/' not found.\nPlease make sure the '{}/' directory contains a copy of (or a symlink to) Cataclysm-DDA's '{}/' directory.", asset_subdir.display(), Self::asset_path().display(), asset_subdir.file_name().unwrap().to_str().unwrap())
+                    format!("Directory '{}/' not found.\nPlease make sure the '{}/' directory contains a copy of (or a symlink to) Cataclysm-DDA's '{}/' directory.", asset_subdir.display(), Self::asset_path().display(), asset_subdir.file_name().expect("Named directory").to_str().expect("Valid path"))
                 ));
             }
         }

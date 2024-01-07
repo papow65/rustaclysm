@@ -20,7 +20,7 @@ impl Timeouts {
     }
 
     pub(crate) fn add(&mut self, entity: Entity, timeout: Milliseconds) {
-        *self.m.get_mut(&entity).unwrap() += timeout;
+        *self.m.get_mut(&entity).expect("entity should be known") += timeout;
     }
 
     /// Does not 'pop' the entity

@@ -226,7 +226,11 @@ pub(crate) fn update_log(
         shown_reverse.push(message_and_count);
     }
 
-    let sections = &mut logs.iter_mut().next().unwrap().sections;
+    let sections = &mut logs
+        .iter_mut()
+        .next()
+        .expect("Exactly one log text")
+        .sections;
     sections.clear();
     for (message, count) in shown_reverse.into_iter().rev() {
         let mut style = hud_defaults.text_style.clone();
@@ -449,7 +453,12 @@ pub(crate) fn update_status_enemies(
             begin.extend(
                 enemies
                     .iter()
-                    .map(|&pos| (pos, envir.find_character(pos).unwrap()))
+                    .map(|&pos| {
+                        (
+                            pos,
+                            envir.find_character(pos).expect("Enemy should be present"),
+                        )
+                    })
                     .map(|(pos, (_, name))| {
                         Phrase::from_name(name)
                             .add((pos - *player_actor.pos).player_hint())

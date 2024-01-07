@@ -15,7 +15,10 @@ pub(crate) struct FieldInfo {
 
 impl FieldInfo {
     pub(crate) fn name(&self) -> &ItemName {
-        self.intensity_levels[0].name.as_ref().unwrap()
+        self.intensity_levels[0]
+            .name
+            .as_ref()
+            .expect("Named first level")
     }
 }
 

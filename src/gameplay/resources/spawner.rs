@@ -529,7 +529,7 @@ impl<'w, 's> Spawner<'w, 's> {
         ));
     }
 
-    pub(crate) fn spawn_characters(&mut self, infos: &Infos, offset: PosOffset) {
+    pub(crate) fn spawn_characters(&mut self, infos: &Infos, spawn_pos: Pos) {
         let root = self
             .commands
             .spawn(SpatialBundle::default())
@@ -540,22 +540,14 @@ impl<'w, 's> Spawner<'w, 's> {
             .spawn_character(
                 infos,
                 root,
-                Pos::new(45, Level::ZERO, 56)
-                    .offset(offset)
-                    .unwrap()
-                    .offset(PosOffset {
-                        x: -9,
-                        level: LevelOffset::ZERO,
-                        z: 0,
-                    })
-                    .unwrap(),
+                spawn_pos.horizontal_offset(36, 56),
                 &ObjectId::new("human"),
                 Some(ObjectName::from_str(
                     self.sav.player.name.as_str(),
                     GOOD_TEXT_COLOR,
                 )),
             )
-            .unwrap();
+            .expect("Player character should be spawned");
         self.commands
             .entity(player)
             .insert(Player)
@@ -566,7 +558,7 @@ impl<'w, 's> Spawner<'w, 's> {
         self.spawn_character(
             infos,
             root,
-            Pos::new(10, Level::ZERO, 10).offset(offset).unwrap(),
+            spawn_pos.horizontal_offset(10, 10),
             &ObjectId::new("human"),
             Some(ObjectName::from_str("Survivor", DEFAULT_TEXT_COLOR)),
         );
@@ -574,35 +566,35 @@ impl<'w, 's> Spawner<'w, 's> {
         self.spawn_character(
             infos,
             root,
-            Pos::new(12, Level::ZERO, 16).offset(offset).unwrap(),
+            spawn_pos.horizontal_offset(12, 16),
             &ObjectId::new("mon_zombie"),
             None,
         );
         self.spawn_character(
             infos,
             root,
-            Pos::new(40, Level::ZERO, 40).offset(offset).unwrap(),
+            spawn_pos.horizontal_offset(40, 40),
             &ObjectId::new("mon_zombie"),
             None,
         );
         self.spawn_character(
             infos,
             root,
-            Pos::new(38, Level::ZERO, 39).offset(offset).unwrap(),
+            spawn_pos.horizontal_offset(38, 39),
             &ObjectId::new("mon_zombie"),
             None,
         );
         self.spawn_character(
             infos,
             root,
-            Pos::new(37, Level::ZERO, 37).offset(offset).unwrap(),
+            spawn_pos.horizontal_offset(37, 37),
             &ObjectId::new("mon_zombie"),
             None,
         );
         self.spawn_character(
             infos,
             root,
-            Pos::new(34, Level::ZERO, 34).offset(offset).unwrap(),
+            spawn_pos.horizontal_offset(34, 34),
             &ObjectId::new("mon_zombie"),
             None,
         );
@@ -733,7 +725,7 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
                     };
                     let pos = base_pos.offset(pos_offset).expect("pos on same level");
                     //dbg!("{pos:?}");
-                    let terrain_id = *terrain.get(&pos).unwrap();
+                    let terrain_id = *terrain.get(&pos).expect("Terrain id should be found");
                     let furniture_ids = submap.furniture.iter().filter_map(|at| at.get(pos_offset));
                     let item_repetitions =
                         submap.items.0.iter().filter_map(|at| at.get(pos_offset));

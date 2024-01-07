@@ -51,24 +51,15 @@ pub(crate) fn create_dependent_resources(mut commands: Commands, paths: Res<Path
 pub(crate) fn spawn_initial_entities(infos: Res<Infos>, sav: Res<Sav>, mut spawner: Spawner) {
     spawner.spawn_light();
 
-    let offset = Zone {
+    let spawn_pos = Zone {
         x: i32::from(sav.om_x) * 180 + i32::from(sav.levx) / 2,
         z: i32::from(sav.om_y) * 180 + i32::from(sav.levy) / 2,
     }
     .zone_level(Level::new(sav.levz))
     .base_pos()
-    .offset(PosOffset {
-        x: 12 * i32::from(sav.levx % 2),
-        level: LevelOffset::ZERO,
-        z: 12 * i32::from(sav.levy % 2),
-    })
-    .unwrap()
-    .offset(PosOffset {
-        x: 24,
-        level: LevelOffset::ZERO,
-        z: 24,
-    })
-    .unwrap()
-        - Pos::ORIGIN;
-    spawner.spawn_characters(&infos, offset);
+    .horizontal_offset(
+        12 * i32::from(sav.levx % 2) + 24,
+        12 * i32::from(sav.levy % 2) + 24,
+    );
+    spawner.spawn_characters(&infos, spawn_pos);
 }

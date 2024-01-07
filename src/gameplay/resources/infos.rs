@@ -18,14 +18,7 @@ pub(crate) struct Infos {
 }
 
 impl Infos {
-    fn literals() -> HashMap<TypeId, HashMap<String, serde_json::Map<String, serde_json::Value>>> {
-        let mut literals = HashMap::default();
-        for type_ids in TypeId::all() {
-            for type_id in *type_ids {
-                literals.insert(type_id.clone(), HashMap::default());
-            }
-        }
-
+    fn literals_paths() -> Vec<PathBuf> {
         let json_path = Paths::data_path().join("json");
         let patterns = [
             json_path.join("field_type.json"),
@@ -37,17 +30,33 @@ impl Infos {
             json_path.join("monsters").join("**").join("*.json"),
             json_path.join("vehicleparts").join("**").join("*.json"),
         ];
-        let json_paths = patterns
+        patterns
             .iter()
-            .map(|pattern| pattern.as_path().to_str().expect("ASCII path"))
+            .map(|pattern| {
+                pattern
+                    .as_path()
+                    .to_str()
+                    .expect("Path pattern should be valid UTF-8")
+            })
             .flat_map(|pattern| {
                 println!("Searching {pattern} for info files");
-                glob(pattern).expect("Failed to read glob pattern")
-            });
+                glob(pattern).expect("Glob pattern should match some readable paths")
+            })
+            .map(|json_path_result| json_path_result.expect("JSON path should be valid"))
+            .collect::<Vec<_>>()
+    }
+
+    fn literals() -> HashMap<TypeId, HashMap<String, serde_json::Map<String, serde_json::Value>>> {
+        let mut literals = HashMap::default();
+        for type_ids in TypeId::all() {
+            for type_id in *type_ids {
+                literals.insert(type_id.clone(), HashMap::default());
+            }
+        }
+
         let mut file_count = 0;
         let mut info_count = 0;
-        for json_path in json_paths {
-            let json_path = json_path.expect("problem with json path for infos");
+        for json_path in Self::literals_paths() {
             if json_path.ends_with("default_blacklist.json")
                 || json_path.ends_with("dreams.json")
                 || json_path.ends_with("effect_on_condition.json")
@@ -59,12 +68,13 @@ impl Infos {
             let contents = serde_json::from_str::<Vec<serde_json::Map<String, serde_json::Value>>>(
                 file_contents.as_str(),
             );
-            let contents = contents.expect("Failed loading infos");
+            let contents =
+                contents.expect("The file should be valid JSON, containing a list of objects");
             file_count += 1;
 
             for content in contents {
-                let type_ = content.get("type").expect("type present");
-                let type_ = TypeId::get(type_.as_str().expect("string value for type"));
+                let type_ = content.get("type").expect("'type' key should be present");
+                let type_ = TypeId::get(type_.as_str().expect("'type' should have string value"));
                 if type_ == TypeId::get("mapgen") || content.get("from_variant").is_some() {
                     continue; // TODO
                 }
@@ -76,7 +86,9 @@ impl Infos {
                     }
                     serde_json::Value::Array(a) => {
                         for id in a {
-                            ids.push(String::from(id.as_str().unwrap()));
+                            ids.push(String::from(
+                                id.as_str().expect("Id should have a string value"),
+                            ));
                         }
                     }
                     _ => {
@@ -84,7 +96,9 @@ impl Infos {
                     }
                 }
                 //println!("Info abount {:?} > {:?}", &type_, &ids);
-                let by_type = literals.get_mut(&type_.clone()).unwrap();
+                let by_type = literals
+                    .get_mut(&type_.clone())
+                    .expect("All types should be present");
                 for id in ids {
                     assert!(by_type.get(&id).is_none(), "double entry for {:?}", &id);
                     by_type.insert(id.clone(), content.clone());
@@ -99,7 +113,7 @@ impl Infos {
                         }
                         serde_json::Value::Array(a) => {
                             for id in a {
-                                aliases.push(String::from(id.as_str().unwrap()));
+                                aliases.push(String::from(id.as_str().expect("")));
                             }
                         }
                         _ => {
@@ -136,7 +150,9 @@ impl Infos {
                 let mut ancestors = vec![object_id.clone()];
                 while let Some(copy_from) = enriched.remove("copy-from") {
                     //println!("Copy from {:?}", &copy_from);
-                    let copy_from = copy_from.as_str().expect("string value for copy-from");
+                    let copy_from = copy_from
+                        .as_str()
+                        .expect("'copy-from' should have a string value");
                     ancestors.push(String::from(copy_from));
                     assert!(ancestors.len() < 10, "{ancestors:?}");
                     let literals = &literals;

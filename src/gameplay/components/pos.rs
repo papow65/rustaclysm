@@ -149,6 +149,10 @@ impl Pos {
         Self { x, level, z }
     }
 
+    pub(crate) const fn horizontal_offset(self, x_offset: i32, z_offset: i32) -> Self {
+        Self::new(self.x + x_offset, self.level, self.z + z_offset)
+    }
+
     pub(crate) fn offset(self, offset: PosOffset) -> Option<Self> {
         self.level
             .offset(offset.level)

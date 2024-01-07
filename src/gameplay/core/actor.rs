@@ -134,11 +134,19 @@ impl ActorItem<'_> {
     }
 
     fn hands<'a>(&self, hierarchy: &'a Hierarchy) -> Container<'a> {
-        Container::new(self.body_containers.unwrap().hands, hierarchy)
+        Container::new(
+            self.body_containers.expect("Body containers present").hands,
+            hierarchy,
+        )
     }
 
     fn clothing<'a>(&self, hierarchy: &'a Hierarchy) -> Container<'a> {
-        Container::new(self.body_containers.unwrap().clothing, hierarchy)
+        Container::new(
+            self.body_containers
+                .expect("Body containers present")
+                .clothing,
+            hierarchy,
+        )
     }
 
     const fn no_impact(&self) -> Impact {
@@ -245,13 +253,7 @@ impl ActorItem<'_> {
 
         // Needed when a character smashes something at it's own position
         let cost_pos = if *self.pos == damaged_pos {
-            self.pos
-                .offset(PosOffset {
-                    x: 1,
-                    level: LevelOffset::ZERO,
-                    z: 0,
-                })
-                .unwrap()
+            self.pos.horizontal_offset(1, 0)
         } else {
             damaged_pos
         };
@@ -507,8 +509,12 @@ impl ActorItem<'_> {
             );
         } else {
             assert!(
-                taken.parent.get() == self.body_containers.unwrap().hands
-                    || taken.parent.get() == self.body_containers.unwrap().clothing,
+                taken.parent.get() == self.body_containers.expect("Body containers present").hands
+                    || taken.parent.get()
+                        == self
+                            .body_containers
+                            .expect("Body containers present")
+                            .clothing,
                 "Item parents should be part of the body"
             );
         }
@@ -631,11 +637,16 @@ impl ActorItem<'_> {
                 return self.no_impact();
             }
         }
-        let dump = moved.parent.get() == self.body_containers.unwrap().hands
-            || moved.parent.get() == self.body_containers.unwrap().clothing;
+        let dump = moved.parent.get()
+            == self.body_containers.expect("Body containers present").hands
+            || moved.parent.get()
+                == self
+                    .body_containers
+                    .expect("Body containers present")
+                    .clothing;
 
         // TODO Check for obstacles
-        let to = self.pos.raw_nbor(to).unwrap();
+        let to = self.pos.raw_nbor(to).expect("Valid position");
 
         message_writer.send(Message::info(
             self.subject()
@@ -665,7 +676,7 @@ impl ActorItem<'_> {
                 message_writer.send(Message::info(Phrase::new(
                     match description {
                         Description::Simple(simple) => simple,
-                        Description::Complex(complex) => complex.get("str").unwrap(),
+                        Description::Complex(complex) => complex.get("str").expect("'str' key"),
                     }
                     .as_str(),
                 )));

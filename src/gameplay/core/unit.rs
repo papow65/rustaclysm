@@ -305,7 +305,7 @@ impl From<String> for Volume {
         let unit: String = value.matches(char::is_alphabetic).collect();
         //println!("{value} {} {}", &quantity, &unit);
 
-        let quantity = quantity.parse::<f32>().unwrap();
+        let quantity = quantity.parse::<f32>().expect("Valid number");
 
         Self {
             milliliter: match unit.to_lowercase().as_str() {
@@ -399,7 +399,7 @@ impl From<String> for Mass {
         let unit: String = value.matches(char::is_alphabetic).collect();
         //println!("{value} {} {}", &quantity, &unit);
 
-        let quantity = quantity.parse::<f32>().unwrap();
+        let quantity = quantity.parse::<f32>().expect("Valid number");
 
         Self {
             milligram: match unit.to_lowercase().as_str() {

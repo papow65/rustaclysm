@@ -105,7 +105,7 @@ impl TryFrom<&SavPath> for Sav {
                 println!("Loading {}...", sav_path.0.display());
                 s
             })
-            .map(|s| String::from(s.split_at(s.find('\n').unwrap()).1))
+            .map(|s| String::from(s.split_at(s.find('\n').expect("Non-JSON first line")).1))
             .map(|s| serde_json::from_str::<Self>(s.as_str()))
             .expect(".sav file could not be read")
     }

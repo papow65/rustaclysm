@@ -47,7 +47,9 @@ impl<'w, 's> Envir<'w, 's> {
 
     pub(crate) fn stairs_up_to(&self, from: Pos) -> Option<Pos> {
         if self.location.has_stairs_up(from, &self.stairs_up) {
-            let zone_level_up = ZoneLevel::from(from).offset(LevelOffset::UP).unwrap();
+            let Some(zone_level_up) = ZoneLevel::from(from).offset(LevelOffset::UP) else {
+                return None;
+            };
 
             for distance in 0..24i32 {
                 for dx in -distance..=distance {
@@ -59,7 +61,7 @@ impl<'w, 's> Envir<'w, 's> {
                                     level: LevelOffset::UP,
                                     z: dz,
                                 })
-                                .unwrap();
+                                .expect("Valid position above");
                             if ZoneLevel::from(test_up) == zone_level_up
                                 && self.location.has_stairs_down(test_up, &self.stairs_down)
                             {
@@ -83,7 +85,9 @@ impl<'w, 's> Envir<'w, 's> {
 
     pub(crate) fn stairs_down_to(&self, from: Pos) -> Option<Pos> {
         if self.location.has_stairs_down(from, &self.stairs_down) {
-            let zone_level_down = ZoneLevel::from(from).offset(LevelOffset::DOWN).unwrap();
+            let Some(zone_level_down) = ZoneLevel::from(from).offset(LevelOffset::DOWN) else {
+                return None;
+            };
 
             // fast approach in most cases, otherwise fast enough
             for distance in 0..Zone::SIZE {
@@ -96,7 +100,7 @@ impl<'w, 's> Envir<'w, 's> {
                                     level: LevelOffset::DOWN,
                                     z: dz,
                                 })
-                                .unwrap();
+                                .expect("Valid position below");
                             if ZoneLevel::from(test_down) == zone_level_down
                                 && self.location.has_stairs_up(test_down, &self.stairs_up)
                             {
@@ -168,9 +172,9 @@ impl<'w, 's> Envir<'w, 's> {
             Nbor::Down => self
                 .stairs_down_to(from)
                 .or_else(|| from.raw_nbor(Nbor::Down)),
-            _ => {
+            Nbor::Horizontal(horizontal_direction) => {
                 // No stairs
-                Some(from.raw_nbor(nbor).unwrap())
+                Some(from.horizontal_nbor(horizontal_direction))
             }
         }
     }
@@ -184,9 +188,9 @@ impl<'w, 's> Envir<'w, 's> {
             Nbor::Down => self
                 .stairs_down_to(from)
                 .ok_or_else(|| Message::warn(Phrase::new("No stairs down"))),
-            _ => {
+            Nbor::Horizontal(horizontal_direction) => {
                 // No stairs
-                Ok(from.raw_nbor(nbor).unwrap())
+                Ok(from.horizontal_nbor(horizontal_direction))
             }
         }
     }
@@ -426,7 +430,9 @@ impl MovementPath {
                 "The first step should match the starting point"
             );
             Some(Self {
-                first: *steps.first().unwrap(),
+                first: *steps
+                    .first()
+                    .expect("The last step should always be present"),
                 duration,
                 destination,
             })
@@ -615,7 +621,7 @@ impl<'a> CurrentlyVisible<'a> {
             .borrow_mut()
             .entry(offset)
             .or_insert_with(|| {
-                let to = self.from.offset(offset).unwrap();
+                let to = self.from.offset(offset).expect("Valid offset");
                 self.envir.is_opaque(to)
                     || (to.level < Level::ZERO && self.envir.find_terrain(to).is_none())
             })
@@ -637,7 +643,7 @@ impl<'a> CurrentlyVisible<'a> {
                     return false;
                 }
 
-                let above = self.from.offset(above).unwrap();
+                let above = self.from.offset(above).expect("Valid offset");
                 !self.envir.has_opaque_floor(above)
                     && (Level::ZERO <= above.level || self.envir.is_accessible(above))
             })

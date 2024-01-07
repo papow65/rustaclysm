@@ -15,7 +15,9 @@ impl RelativeRay {
     fn to_segment(&self, others: &HashMap<Pos, Self>) -> RelativeSegment {
         let mut preceding = None;
         for potential_preceding in self.path.iter().rev().skip(1) {
-            let potential_sub_path = others.get(potential_preceding).unwrap();
+            let potential_sub_path = others
+                .get(potential_preceding)
+                .expect("Shorter paths should already have been processed");
             if self.path.starts_with(&potential_sub_path.path) {
                 preceding = Some(*potential_preceding - Pos::ORIGIN);
                 break; // stop at the first (longest) match
@@ -24,8 +26,8 @@ impl RelativeRay {
 
         let skipped = if let Some(preceding) = preceding {
             others
-                .get(&Pos::ORIGIN.offset(preceding).unwrap())
-                .unwrap()
+                .get(&Pos::ORIGIN.offset(preceding).expect("Valid offset"))
+                .expect("Shorter paths should already have been processed")
                 .path
                 .len()
                 - 1
@@ -97,7 +99,7 @@ impl RelativeSegments {
             for index in distance..=(MAX_VISIBLE_DISTANCE as usize) {
                 segments
                     .get_mut(index)
-                    .unwrap()
+                    .expect("'index' should be a valid index")
                     .insert(*pos - Pos::ORIGIN, segment.clone());
             }
         }
@@ -164,7 +166,9 @@ impl RelativeSegments {
         );
 
         for nbor in Nbor::ALL {
-            let nbor = Pos::ORIGIN.raw_nbor(nbor).unwrap();
+            let nbor = Pos::ORIGIN
+                .raw_nbor(nbor)
+                .expect("All nbors from te origin should be valid");
             assert!(rays.contains_key(&nbor), "{MAX_VISIBLE_DISTANCE} {nbor:?}");
         }
 

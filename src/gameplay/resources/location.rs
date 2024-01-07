@@ -16,8 +16,14 @@ pub(crate) struct Location {
 impl Location {
     pub(crate) fn update(&mut self, entity: Entity, pos: Option<Pos>) {
         if let Some(&prev_pos) = self.positions.get(&entity) {
-            let old_pos_vec = self.objects.get_mut(&prev_pos).unwrap();
-            let index = old_pos_vec.iter().position(|&x| x == entity).unwrap();
+            let old_pos_vec = self
+                .objects
+                .get_mut(&prev_pos)
+                .expect("A vec value should be present at its previous position");
+            let index = old_pos_vec
+                .iter()
+                .position(|&x| x == entity)
+                .expect("The entity should be present at its previous position");
             old_pos_vec.swap_remove(index);
         }
 

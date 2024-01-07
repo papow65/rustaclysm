@@ -106,6 +106,7 @@ modulo_arithmetic = "deny"
 str_to_string = "deny"
 missing_assert_message = "deny"
 missing_const_for_fn = "deny"
+unwrap_used = "deny"
 use_self = "deny"
 # Exceptions for allowed lints from denied categories
 cast_possible_truncation = { level = "allow", priority = 1 }

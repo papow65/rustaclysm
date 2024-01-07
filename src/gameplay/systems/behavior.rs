@@ -39,7 +39,9 @@ pub(crate) fn plan_action(
     };
 
     let factions = &factions.iter().map(|(p, f)| (*p, f)).collect::<Vec<_>>();
-    let actor = actors.get(active_actor).unwrap();
+    let actor = actors
+        .get(active_actor)
+        .expect("'entity' should be a known actor");
     let enemies = actor.faction.enemies(&envir, &clock, factions, &actor);
     let action = if players.get_mut(active_actor).is_ok() {
         player_action_state.plan_action(
@@ -749,7 +751,7 @@ pub(crate) fn combine_items(
             }
 
             if 1 < merges.len() {
-                let keep = *merges.iter().max().unwrap();
+                let keep = *merges.iter().max().expect("'merges' should not be empty");
 
                 /*println!(
                     "Combined {} with {} others to {}",

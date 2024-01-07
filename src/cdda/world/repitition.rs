@@ -1,6 +1,4 @@
-use crate::prelude::{
-    Level, LevelOffset, ObjectId, Overzone, Pos, PosOffset, SubzoneLevel, ZoneLevel,
-};
+use crate::prelude::{Level, ObjectId, Overzone, Pos, SubzoneLevel, ZoneLevel};
 use bevy::utils::HashMap;
 use serde::de::{Deserializer, Error};
 use serde::Deserialize;
@@ -74,36 +72,13 @@ impl<T> RepetitionBlock<T> {
     }
 
     pub(crate) fn load_as_subzone(&self, subzone_level: SubzoneLevel) -> HashMap<Pos, &T> {
-        self.load(
-            |x, z| {
-                subzone_level
-                    .base_pos()
-                    .offset(PosOffset {
-                        x,
-                        level: LevelOffset::ZERO,
-                        z,
-                    })
-                    .unwrap()
-            },
-            12,
-        )
+        self.load(|x, z| subzone_level.base_pos().horizontal_offset(x, z), 12)
     }
 
     #[allow(unused)]
     pub(crate) fn load_as_zone_level(&self, zone_level: ZoneLevel) -> HashMap<Pos, &T> {
         let base_pos = zone_level.base_pos();
-        self.load(
-            |x, z| {
-                base_pos
-                    .offset(PosOffset {
-                        x,
-                        level: LevelOffset::ZERO,
-                        z,
-                    })
-                    .unwrap()
-            },
-            24,
-        )
+        self.load(|x, z| base_pos.horizontal_offset(x, z), 24)
     }
 
     pub(crate) fn load_as_overzone(
@@ -153,6 +128,6 @@ impl RepetitionBlock<ObjectId> {
                 ObjectId::new("t_soil"),
                 ObjectId::new("t_rock"),
             ]
-            .contains(&self.0.first().unwrap().as_amount().obj)
+            .contains(&self.0.first().expect("Non-empty list").as_amount().obj)
     }
 }
