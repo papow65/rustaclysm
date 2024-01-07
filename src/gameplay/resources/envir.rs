@@ -51,7 +51,7 @@ impl<'w, 's> Envir<'w, 's> {
                 return None;
             };
 
-            for distance in 0..24i32 {
+            for distance in 0..24_i32 {
                 for dx in -distance..=distance {
                     for dz in -distance..=distance {
                         if dx.abs().max(dz.abs()) == distance {

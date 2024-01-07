@@ -204,7 +204,7 @@ impl Appearance {
             color.r() * 0.6,
             color.g() * 0.6,
             color.b(),
-            0.5f32.mul_add(color.a(), 0.5),
+            0.5_f32.mul_add(color.a(), 0.5),
         )
     }
 }

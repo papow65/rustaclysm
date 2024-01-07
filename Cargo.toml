@@ -102,12 +102,18 @@ perf = "deny"
 style = "deny"
 suspicious = "deny"
 # Denied lints from allowed categories
+assertions_on_result_states = "deny"
+disallowed_script_idents = "deny"
 modulo_arithmetic = "deny"
 str_to_string = "deny"
 missing_assert_message = "deny"
 missing_const_for_fn = "deny"
+mixed_read_write_in_expression = "deny"
 unwrap_used = "deny"
 use_self = "deny"
+unneeded_field_pattern = "deny"
+unseparated_literal_suffix = "deny"
+verbose_file_reads = "deny"
 # Exceptions for allowed lints from denied categories
 cast_possible_truncation = { level = "allow", priority = 1 }
 cast_precision_loss = { level = "allow", priority = 1 }
