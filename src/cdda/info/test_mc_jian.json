@@ -1,0 +1,23 @@
+{
+    "id": "mc_jian",
+    "type": "TOOL",
+    "category": "weapons",
+    "looks_like": "jian",
+    "name": { "str_sp": "medium steel jian" },
+    "description": "An ancient Chinese doubled-edged straight sword, with an ornate guard and a tassel attached to the pommel.  One of the four major weapons in folklore, alongside the dao sabre, qiang spear, and gun staff.\n\nMade with medium steel and with a grip made of leather wrapped in steel wire, apon is comfortable in your hand, though the balance isn't perfect and the edge could be sharper.",
+    "weight": "890 g",
+    "volume": "2 L",
+    "longest_side": "90 cm",
+    "symbol": "/",
+    "color": "light_gray",
+    "price": 100000,
+    "price_postapoc": 4000,
+    "material": [ { "type": "leather", "portion": 1.1 }, { "type": "mc_steel", "portion": 96 } ],
+    "repairs_with": [ "mc_steel" ],
+    "flags": [ "SHEATH_SWORD", "CONDUCTIVE", "DURABLE_MELEE" ],
+    "techniques": [ "WBLOCK_2" ],
+    "to_hit": { "grip": "weapon", "length": "long", "surface": "line", "balance": "good" },
+    "qualities": [ [ "CUT", 1 ], [ "BUTCHER", 8 ] ],
+    "weapon_category": [ "MEDIUM_SWORDS", "FENCING_WEAPONRY" ],
+    "melee_damage": { "bash": 5, "cut": 29 }
+}

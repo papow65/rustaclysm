@@ -30,3 +30,14 @@ pub(crate) struct CharacterInfo {
     #[serde(flatten)]
     pub(crate) extra: HashMap<String, serde_json::Value>,
 }
+
+#[cfg(test)]
+mod character_tests {
+    use super::*;
+    #[test]
+    fn it_works() {
+        let json = include_str!("test_mon_bee.json");
+        let result = serde_json::from_str::<CharacterInfo>(json);
+        assert!(result.is_ok(), "{result:?}");
+    }
+}

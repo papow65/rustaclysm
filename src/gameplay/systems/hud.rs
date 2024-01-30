@@ -654,7 +654,8 @@ fn entity_info(
     if let Some(accessible) = accessible {
         flags.push("accessible");
         if MoveCost::default() < accessible.move_cost {
-            let factor = f32::from(accessible.move_cost.0) / f32::from(MoveCost::default().0);
+            let factor =
+                f32::from(accessible.move_cost.value()) / f32::from(MoveCost::default().value());
             accessible_str = format!("hurlde (x{factor:.1})");
             flags.push(accessible_str.as_str());
         }

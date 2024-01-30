@@ -34,7 +34,7 @@ pub(crate) struct ItemInfo {
     pub(crate) count: Option<u32>,
 
     #[allow(dead_code)] // TODO
-    pub(crate) projectile_count: Option<u8>,
+    pub(crate) projectile_count: Option<u32>,
 
     #[allow(dead_code)] // TODO
     pub(crate) stack_size: Option<u8>,
@@ -195,7 +195,7 @@ pub(crate) struct ItemInfo {
     pub(crate) explosion: Option<serde_json::Value>,
 
     #[allow(dead_code)] // TODO
-    pub(crate) flags: Option<Vec<String>>,
+    pub(crate) flags: Flags,
 
     #[allow(dead_code)] // TODO
     pub(crate) faults: Option<serde_json::Value>,
@@ -372,8 +372,9 @@ pub(crate) enum Material {
         type_: String,
 
         /// assume 1 when missing
+        // TODO What does a fractional value mean?
         #[allow(unused)]
-        portion: Option<u16>,
+        portion: Option<f32>,
     },
 }
 
@@ -399,4 +400,21 @@ pub(crate) enum ToHit {
 pub(crate) enum Description {
     Simple(String),
     Complex(HashMap<String, String>),
+}
+
+#[cfg(test)]
+mod item_tests {
+    use super::*;
+    #[test]
+    fn ghee_works() {
+        let json = include_str!("test_ghee.json");
+        let result = serde_json::from_str::<ItemInfo>(json);
+        assert!(result.is_ok(), "{result:?}");
+    }
+    #[test]
+    fn mc_jian_works() {
+        let json = include_str!("test_mc_jian.json");
+        let result = serde_json::from_str::<ItemInfo>(json);
+        assert!(result.is_ok(), "{result:?}");
+    }
 }

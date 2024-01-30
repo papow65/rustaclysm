@@ -224,7 +224,7 @@ impl WalkingCost {
                 NborDistance::Zero => Millimeter::ZERO,
             },
         };
-        new.equivalent_distance.0 *= u64::from(move_cost.0);
+        new.equivalent_distance.0 *= u64::from(move_cost.value());
         if nbor_distance != NborDistance::Up {
             // 2 is both the penalty for muving up and default move cost.
             new.equivalent_distance.0 /= 2;

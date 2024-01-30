@@ -91,7 +91,7 @@ mod container_tests {
     use super::*;
     #[test]
     fn it_works() {
-        let json = include_str!("bash.json");
+        let json = include_str!("test_bash.json");
         let result = serde_json::from_str::<Bash>(json);
         assert!(result.is_ok(), "{result:?}");
     }

@@ -54,10 +54,16 @@ impl TypeId {
         Self("behavior"),
         Self("enchantment"),
         Self("effect_on_condition"),
+        Self("effect_type"),
         Self("fault"),
         Self("json_flag"),
         Self("mapgen"),
+        Self("monster_flag"),
+        Self("monstergroup"),
+        Self("recipe"),
+        Self("ter_furn_transform"),
         Self("TRAIT_MIGRATION"),
+        Self("trap"),
         Self("vehicle_part_category"),
     ];
 

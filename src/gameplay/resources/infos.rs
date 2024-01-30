@@ -75,7 +75,11 @@ impl Infos {
             for content in contents {
                 let type_ = content.get("type").expect("'type' key should be present");
                 let type_ = TypeId::get(type_.as_str().expect("'type' should have string value"));
-                if type_ == TypeId::get("mapgen") || content.get("from_variant").is_some() {
+                if type_ == TypeId::get("mapgen")
+                    || type_ == TypeId::get("monstergroup")
+                    || type_ == TypeId::get("recipe")
+                    || content.get("from_variant").is_some()
+                {
                     continue; // TODO
                 }
 
@@ -144,7 +148,7 @@ impl Infos {
             let enriched_of_type = enricheds
                 .entry(type_id.clone())
                 .or_insert_with(HashMap::default);
-            for (object_id, literal) in literal_entry {
+            'enricheds: for (object_id, literal) in literal_entry {
                 //println!("{:?}", &object_id);
                 let mut enriched = literal.clone();
                 let mut ancestors = vec![object_id.clone()];
@@ -156,24 +160,28 @@ impl Infos {
                     ancestors.push(String::from(copy_from));
                     assert!(ancestors.len() < 10, "{ancestors:?}");
                     let literals = &literals;
-                    let copy_from = literal_entry.get(copy_from).unwrap_or_else(|| {
+                    let copy_from = if let Some(found) = literal_entry.get(copy_from) {
+                        found
+                    } else {
                         let mut other_types = literals
                             .into_iter()
                             .filter_map(|(_, literal_entry)| literal_entry.get(copy_from));
-                        let single = other_types.next().unwrap_or_else(|| {
-                            panic!(
+                        let Some(single) = other_types.next() else {
+                            eprintln!(
                                 "copy-from {copy_from:?} not found for ({:?}) {:?}",
                                 &type_id, &copy_from
-                            )
-                        });
-                        assert!(
-                            other_types.next().is_none(),
-                            "Multiple copy-from {copy_from:?} found for {:?} {:?}",
-                            &type_id,
-                            &object_id
-                        );
+                            );
+                            continue 'enricheds;
+                        };
+                        if other_types.next().is_some() {
+                            eprintln!(
+                                "Multiple copy-from {copy_from:?} found for {:?} {:?}",
+                                &type_id, &object_id
+                            );
+                            continue 'enricheds;
+                        }
                         single
-                    });
+                    };
                     for (key, value) in copy_from {
                         enriched.entry(key.clone()).or_insert(value.clone());
                     }

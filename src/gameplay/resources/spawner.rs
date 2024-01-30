@@ -349,7 +349,7 @@ impl<'w, 's> Spawner<'w, 's> {
         let object_name = ObjectName::new(terrain_info.name.clone(), DEFAULT_TEXT_COLOR);
         let object_entity = self.spawn_object(parent, pos, definition, object_name);
 
-        if 0 < terrain_info.move_cost.0 {
+        if terrain_info.move_cost.accessible() {
             if terrain_info.close.is_some() {
                 self.commands.entity(object_entity).insert(Closeable);
             }

@@ -1,6 +1,8 @@
+use crate::prelude::MaybeFlat;
 use serde::Deserialize;
 
 #[derive(Debug, Default, Deserialize)]
+#[serde(from = "Option<MaybeFlat<String>>")]
 pub(crate) struct Flags(Vec<String>);
 
 impl Flags {
@@ -26,5 +28,15 @@ impl Flags {
 
     pub(crate) fn water(&self) -> bool {
         self.contains("SHALLOW_WATER") || self.contains("DEEP_WATER")
+    }
+}
+
+impl From<Option<MaybeFlat<String>>> for Flags {
+    fn from(cdda_flags: Option<MaybeFlat<String>>) -> Self {
+        Self(match cdda_flags {
+            Some(MaybeFlat::Single(flag)) => vec![flag],
+            Some(MaybeFlat::Multi(flags)) => flags,
+            None => Vec::new(),
+        })
     }
 }

@@ -17,13 +17,23 @@ pub(crate) struct TerrainInfo {
     extra: HashMap<String, serde_json::Value>,
 }
 
+// TODO What does a negative value mean?
+/// 0 -> inaccessible
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, PartialOrd)]
-pub(crate) struct MoveCost(pub(crate) u8);
+pub(crate) struct MoveCost(i8);
 
 impl MoveCost {
+    pub(crate) const fn accessible(&self) -> bool {
+        0 < self.0
+    }
+
+    pub(crate) fn value(&self) -> u8 {
+        self.0.max(0) as u8
+    }
+
     pub(crate) fn adjust(&self, cost_mod: Option<MoveCostIncrease>) -> Self {
         let extra = cost_mod.map_or(0, |c| c.0);
-        Self(self.0 + extra)
+        Self(self.0 + extra as i8)
     }
 }
 
