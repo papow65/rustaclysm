@@ -29,8 +29,8 @@ pub(crate) fn run_application() {
             }),
     );
 
-    app.add_state::<ApplicationState>()
-        .add_state::<ProgressScreenState>();
+    app.insert_state(ApplicationState::MainMenu)
+        .insert_state(ProgressScreenState::Complete);
 
     app.insert_resource(Time::<Fixed>::from_duration(Duration::from_millis(250)));
 

@@ -281,7 +281,7 @@ pub(crate) fn update_status_fps(
     let start = Instant::now();
 
     if diagnostics.is_changed() {
-        if let Some(fps) = diagnostics.get(FrameTimeDiagnosticsPlugin::FPS) {
+        if let Some(fps) = diagnostics.get(&FrameTimeDiagnosticsPlugin::FPS) {
             if let Some(average) = fps.average() {
                 // Precision of 0.1s
                 // Padding to 6 characters, aligned right

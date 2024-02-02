@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use bevy::{ecs::query::WorldQuery, prelude::*};
+use bevy::{ecs::query::QueryData, prelude::*};
 
 /** Derived from stamina */
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -81,8 +81,8 @@ impl Subject {
     }
 }
 
-#[derive(WorldQuery)]
-#[world_query(derive(Debug))]
+#[derive(QueryData)]
+#[query_data(derive(Debug))]
 pub(crate) struct Actor {
     pub(crate) entity: Entity,
     pub(crate) name: &'static ObjectName,

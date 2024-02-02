@@ -57,7 +57,7 @@ fn toggle_help(help: &mut Query<&mut Visibility, With<ManualDisplay>>) {
 pub(crate) fn manage_mouse_input(
     mut mouse_wheel_events: EventReader<MouseWheel>,
     mut mouse_motion_events: EventReader<MouseMotion>,
-    mouse_buttons: Res<Input<MouseButton>>,
+    mouse_buttons: Res<ButtonInput<MouseButton>>,
     mut camera_offset: ResMut<CameraOffset>,
 ) {
     let start = Instant::now();

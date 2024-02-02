@@ -382,19 +382,19 @@ pub(crate) fn manage_inventory_keyboard_input(
             ) => {
                 drop_at(&mut inventory, &combo);
             }
-            KeyCombo::KeyCode(Ctrl::Without, KeyCode::Up) => {
+            KeyCombo::KeyCode(Ctrl::Without, KeyCode::ArrowUp) => {
                 select_up(&mut inventory);
             }
-            KeyCombo::KeyCode(Ctrl::Without, KeyCode::Down) => {
+            KeyCombo::KeyCode(Ctrl::Without, KeyCode::ArrowDown) => {
                 select_down(&mut inventory);
             }
             KeyCombo::KeyCode(
                 Ctrl::Without,
-                key_code @ (KeyCode::D | KeyCode::T | KeyCode::U | KeyCode::W),
+                key_code @ (KeyCode::KeyD | KeyCode::KeyT | KeyCode::KeyU | KeyCode::KeyW),
             ) => {
                 handle_selected_item(&mut inventory, &mut instruction_queue, key_code);
             }
-            KeyCombo::KeyCode(Ctrl::Without, KeyCode::E) => {
+            KeyCombo::KeyCode(Ctrl::Without, KeyCode::KeyE) => {
                 // Special case, because we don't want to select another item after the action.
                 examine_selected_item(&inventory, &mut instruction_queue);
             }
@@ -438,10 +438,10 @@ fn handle_selected_item(
     if let Some(selected_item) = inventory.selected_item {
         let next_item = inventory.next_items.get(&selected_item).copied();
         instruction_queue.add(match key_code {
-            KeyCode::D => QueuedInstruction::Dump(selected_item, inventory.drop_direction),
-            KeyCode::T => QueuedInstruction::Pickup(selected_item),
-            KeyCode::U => QueuedInstruction::Unwield(selected_item),
-            KeyCode::W => QueuedInstruction::Wield(selected_item),
+            KeyCode::KeyD => QueuedInstruction::Dump(selected_item, inventory.drop_direction),
+            KeyCode::KeyT => QueuedInstruction::Pickup(selected_item),
+            KeyCode::KeyU => QueuedInstruction::Unwield(selected_item),
+            KeyCode::KeyW => QueuedInstruction::Wield(selected_item),
             _ => panic!("Unexpected key {key_code:?}"),
         });
         inventory.selected_item = next_item;

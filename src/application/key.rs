@@ -4,7 +4,7 @@ use bevy::{
         keyboard::{KeyCode, KeyboardInput},
         ButtonState,
     },
-    prelude::{EventReader, Input, ReceivedCharacter, Res},
+    prelude::{ButtonInput, EventReader, ReceivedCharacter, Res},
 };
 use std::fmt;
 
@@ -12,7 +12,7 @@ use std::fmt;
 pub(crate) struct Keys<'w, 's> {
     key_events: EventReader<'w, 's, KeyboardInput>,
     character_events: EventReader<'w, 's, ReceivedCharacter>,
-    key_codes: Res<'w, Input<KeyCode>>,
+    key_codes: Res<'w, ButtonInput<KeyCode>>,
 }
 
 impl<'w, 's> Keys<'w, 's> {
@@ -23,11 +23,7 @@ impl<'w, 's> Keys<'w, 's> {
         let mut combos = self
             .key_events
             .read()
-            .filter_map(|key_event| {
-                KeyCombo::try_from((ctrl, key_event))
-                    .ok()
-                    .map(|combo| (key_event.state, combo))
-            })
+            .map(|key_event| (key_event.state, KeyCombo::from((ctrl, key_event))))
             .collect::<Vec<_>>();
 
         // Character keys, with support for special characters
@@ -46,8 +42,8 @@ pub(crate) enum Ctrl {
     Without,
 }
 
-impl From<&Input<KeyCode>> for Ctrl {
-    fn from(keys: &Input<KeyCode>) -> Self {
+impl From<&ButtonInput<KeyCode>> for Ctrl {
+    fn from(keys: &ButtonInput<KeyCode>) -> Self {
         if keys.pressed(KeyCode::ControlLeft) || keys.pressed(KeyCode::ControlRight) {
             Self::With
         } else {
@@ -64,20 +60,26 @@ pub(crate) enum KeyCombo {
     Character(char),
 }
 
-impl TryFrom<(Ctrl, &KeyboardInput)> for KeyCombo {
-    type Error = ();
-
-    fn try_from((ctrl, input): (Ctrl, &KeyboardInput)) -> Result<Self, Self::Error> {
-        input
-            .key_code
-            .map(|key_code| Self::KeyCode(ctrl, key_code))
-            .ok_or(())
+impl From<(Ctrl, &KeyboardInput)> for KeyCombo {
+    fn from((ctrl, input): (Ctrl, &KeyboardInput)) -> Self {
+        eprintln!(
+            "{:?} {:?} {:?}",
+            input.key_code, input.logical_key, input.state
+        );
+        Self::KeyCode(ctrl, input.key_code)
     }
 }
 
 impl From<&ReceivedCharacter> for KeyCombo {
     fn from(received_character: &ReceivedCharacter) -> Self {
-        Self::Character(received_character.char)
+        // TODO Is this duplicate from logical_key?
+        Self::Character(
+            received_character
+                .char
+                .chars()
+                .next()
+                .expect("Key character should not be on-empty"),
+        )
     }
 }
 

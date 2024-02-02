@@ -12,7 +12,7 @@ impl Plugin for LoadingIndicatorPlugin {
             (
                 start_gameplay,
                 finish_loading.run_if(
-                    resource_exists::<Explored>().and_then(resource_exists::<RelativeSegments>()),
+                    resource_exists::<Explored>.and_then(resource_exists::<RelativeSegments>),
                 ),
             )
                 .run_if(in_state(ProgressScreenState::Loading)),

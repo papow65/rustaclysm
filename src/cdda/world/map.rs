@@ -4,7 +4,7 @@ use crate::prelude::{
 };
 use bevy::{
     asset::{io::Reader, Asset, AssetLoader, BoxedFuture, LoadContext},
-    reflect::{TypePath, TypeUuid},
+    reflect::TypePath,
     utils::HashMap,
 };
 use either::Either;
@@ -36,10 +36,9 @@ impl MapPath {
 // Reference: https://github.com/CleverRaven/Cataclysm-DDA/blob/master/src/savegame_json.cpp
 
 /** Corresponds to a 'map' in CDDA. It defines the layout of a `ZoneLevel`. */
-#[derive(Debug, Deserialize, Asset, TypePath, TypeUuid)]
+#[derive(Debug, Deserialize, Asset, TypePath)]
 #[serde(deny_unknown_fields)]
 #[type_path = "cdda::world::Map"]
-#[uuid = "0ba81e33-a7c0-4366-a061-c37b2b0af4fa"]
 pub(crate) struct Map(pub(crate) [Submap; 4]);
 
 #[derive(Default)]

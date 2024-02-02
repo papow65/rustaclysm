@@ -1,6 +1,6 @@
 use crate::prelude::{Pos, StairsDown, StairsUp};
 use bevy::{
-    ecs::query::{ROQueryItem, ReadOnlyWorldQuery},
+    ecs::query::{QueryData, QueryFilter, ROQueryItem},
     prelude::{Entity, Query, Resource, With},
     utils::HashMap,
 };
@@ -50,8 +50,8 @@ impl Location {
 
     pub(crate) fn any<'w, 's, Q, F>(&self, pos: Pos, items: &'s Query<'w, 's, Q, F>) -> bool
     where
-        F: 'w + 's + ReadOnlyWorldQuery,
-        Q: 'w + 's + ReadOnlyWorldQuery,
+        F: 'w + 's + QueryFilter,
+        Q: 'w + 's + QueryData,
     {
         self.entities(pos).any(|&x| items.get(x).is_ok())
     }
@@ -62,8 +62,8 @@ impl Location {
         items: &'s Query<'w, 's, Q, F>,
     ) -> Option<ROQueryItem<'s, Q>>
     where
-        F: 'w + 's + ReadOnlyWorldQuery,
-        Q: 'w + 's + ReadOnlyWorldQuery,
+        F: 'w + 's + QueryFilter,
+        Q: 'w + 's + QueryData,
     {
         self.entities(pos).find_map(|&x| items.get(x).ok())
     }

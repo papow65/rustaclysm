@@ -1,5 +1,8 @@
 use crate::prelude::SpriteOrientation;
-use bevy::render::mesh::{Indices, Mesh, PrimitiveTopology};
+use bevy::render::{
+    mesh::{Indices, Mesh, PrimitiveTopology},
+    render_asset::RenderAssetUsages,
+};
 
 #[derive(PartialEq, Debug, Clone, Copy)]
 pub(crate) struct MeshInfo {
@@ -62,7 +65,8 @@ impl MeshInfo {
         }
         let normals = vec![[0.0, 1.0, 0.0]; 4];
 
-        let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
+        // TODO Is 'all()' needed?
+        let mut mesh = Mesh::new(PrimitiveTopology::TriangleList, RenderAssetUsages::all());
         mesh.set_indices(Some(indices));
         mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, positions);
         mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
@@ -114,7 +118,8 @@ impl MeshInfo {
             12, 13, 14, 14, 15, 12, // top
         ]);
 
-        let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
+        // TODO Is 'all()' needed?
+        let mut mesh = Mesh::new(PrimitiveTopology::TriangleList, RenderAssetUsages::all());
         mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, positions);
         mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
         mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);

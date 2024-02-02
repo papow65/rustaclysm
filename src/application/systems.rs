@@ -43,7 +43,7 @@ pub(crate) fn manage_global_keyboard_input(
             continue;
         }
 
-        if let KeyCombo::KeyCode(Ctrl::With, KeyCode::C | KeyCode::Q) = combo {
+        if let KeyCombo::KeyCode(Ctrl::With, KeyCode::KeyC | KeyCode::KeyQ) = combo {
             app_exit_events.send(AppExit);
         }
     }

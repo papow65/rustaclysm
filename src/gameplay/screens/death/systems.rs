@@ -97,7 +97,7 @@ pub(crate) fn manage_death_keyboard_input(
             continue;
         }
 
-        if let KeyCombo::KeyCode(Ctrl::Without, KeyCode::Escape | KeyCode::Return | KeyCode::F12) =
+        if let KeyCombo::KeyCode(Ctrl::Without, KeyCode::Escape | KeyCode::Enter | KeyCode::F12) =
             combo
         {
             next_application_state.set(ApplicationState::MainMenu);

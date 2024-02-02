@@ -1,16 +1,9 @@
 use crate::prelude::*;
 use bevy::{
-    ecs::system::{Insert, SystemParam},
+    ecs::system::SystemParam,
     prelude::*,
     render::camera::{PerspectiveProjection, Projection::Perspective},
 };
-
-fn insert<T>(child_builder: &mut ChildBuilder, entity: Entity, bundle: T)
-where
-    T: Bundle + 'static,
-{
-    child_builder.add_command(Insert { entity, bundle });
-}
 
 #[derive(SystemParam)]
 pub(crate) struct Spawner<'w, 's> {
@@ -441,15 +434,15 @@ impl<'w, 's> Spawner<'w, 's> {
             .with_children(|child_builder| {
                 {
                     let (pbr_bundle, appearance, material) = layers.base;
-                    let child = child_builder.spawn((pbr_bundle, appearance)).id();
+                    let mut child = child_builder.spawn((pbr_bundle, appearance));
                     if let Some(material) = material {
-                        insert(child_builder, child, material);
+                        child.insert(material);
                     }
                 }
                 if let Some((pbr_bundle, appearance, material)) = layers.overlay {
-                    let child = child_builder.spawn((pbr_bundle, appearance)).id();
+                    let mut child = child_builder.spawn((pbr_bundle, appearance));
                     if let Some(material) = material {
-                        insert(child_builder, child, material);
+                        child.insert(material);
                     }
                 }
             })
@@ -518,7 +511,7 @@ impl<'w, 's> Spawner<'w, 's> {
         self.commands.spawn((
             DirectionalLightBundle {
                 directional_light: DirectionalLight {
-                    illuminance: 50_000.0,
+                    illuminance: 2_000.0,
                     shadows_enabled: false, // TODO shadow direction does not match buildin shadows
                     ..DirectionalLight::default()
                 },

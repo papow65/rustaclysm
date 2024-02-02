@@ -132,20 +132,19 @@ pub(crate) fn create_display_behavior_schedule(app: &mut App) {
             update_cursor_visibility_on_player_change,
             update_visualization_on_item_move,
             update_visualization_on_focus_move,
-            update_visualization_on_weather_change
-                .run_if(resource_exists_and_changed::<Timeouts>()),
-            update_camera_base.run_if(resource_exists_and_changed::<PlayerActionState>()),
+            update_visualization_on_weather_change.run_if(resource_exists_and_changed::<Timeouts>),
+            update_camera_base.run_if(resource_exists_and_changed::<PlayerActionState>),
             // sidebar components, in order:
             // (fps is handled elsewhere)
-            update_status_time.run_if(resource_exists_and_changed::<Timeouts>()),
+            update_status_time.run_if(resource_exists_and_changed::<Timeouts>),
             update_status_health,
             update_status_stamina,
             update_status_speed,
             update_status_player_action_state
-                .run_if(resource_exists_and_changed::<PlayerActionState>()),
-            update_status_player_wielded.run_if(resource_exists_and_changed::<Timeouts>()),
-            update_status_enemies.run_if(resource_exists_and_changed::<Timeouts>()),
-            update_status_detais.run_if(resource_exists_and_changed::<PlayerActionState>()),
+                .run_if(resource_exists_and_changed::<PlayerActionState>),
+            update_status_player_wielded.run_if(resource_exists_and_changed::<Timeouts>),
+            update_status_enemies.run_if(resource_exists_and_changed::<Timeouts>),
+            update_status_detais.run_if(resource_exists_and_changed::<PlayerActionState>),
             update_log.run_if(on_event::<Message>()),
             #[cfg(debug_assertions)]
             check_items,

@@ -87,7 +87,9 @@ pub(crate) fn manage_menu_button_input(
                     next_gameplay_state.set(GameplayScreenState::Inapplicable);
                     next_application_state.set(ApplicationState::MainMenu);
                 }
-                (false, false, true) => app_exit_events.send(AppExit),
+                (false, false, true) => {
+                    app_exit_events.send(AppExit);
+                }
                 (return_button, main_menu_button, quit_button) => {
                     panic!("{return_button:?} {main_menu_button:?} {quit_button:?}");
                 }

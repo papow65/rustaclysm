@@ -5,7 +5,7 @@ pub(crate) struct GameplayPlugin;
 
 impl Plugin for GameplayPlugin {
     fn build(&self, app: &mut App) {
-        app.add_state::<GameplayScreenState>();
+        app.insert_state(GameplayScreenState::Inapplicable);
 
         app.add_plugins((
             BaseScreenPlugin,
@@ -17,38 +17,34 @@ impl Plugin for GameplayPlugin {
         ));
 
         // These resources persist between gameplays.
-        app.insert_resource(AmbientLight {
-            brightness: 0.2,
-            ..AmbientLight::default()
-        })
-        .insert_resource(ElevationVisibility::default())
-        // Loading is slow, so we start loading RelativeSegments immediately.
-        .insert_resource(RelativeSegmentsGenerator::new())
-        .insert_resource(GameplayCounter::default())
-        .insert_resource(Events::<Message>::default())
-        .insert_resource(Events::<SpawnSubzoneLevel>::default())
-        .insert_resource(Events::<CollapseZoneLevel>::default())
-        .insert_resource(Events::<SpawnZoneLevel>::default())
-        .insert_resource(Events::<UpdateZoneLevelVisibility>::default())
-        .insert_resource(Events::<DespawnZoneLevel>::default())
-        .insert_resource(Events::<ActionEvent<Stay>>::default())
-        .insert_resource(Events::<ActionEvent<Step>>::default())
-        .insert_resource(Events::<ActionEvent<Attack>>::default())
-        .insert_resource(Events::<ActionEvent<Smash>>::default())
-        .insert_resource(Events::<ActionEvent<Pulp>>::default())
-        .insert_resource(Events::<ActionEvent<Close>>::default())
-        .insert_resource(Events::<ActionEvent<ItemAction<Wield>>>::default())
-        .insert_resource(Events::<ActionEvent<ItemAction<Unwield>>>::default())
-        .insert_resource(Events::<ActionEvent<ItemAction<Pickup>>>::default())
-        .insert_resource(Events::<ActionEvent<ItemAction<MoveItem>>>::default())
-        .insert_resource(Events::<ActionEvent<ItemAction<ExamineItem>>>::default())
-        .insert_resource(Events::<ActionEvent<ChangePace>>::default())
-        .insert_resource(Events::<ActionEvent<StaminaImpact>>::default())
-        .insert_resource(Events::<ActionEvent<Damage>>::default())
-        .insert_resource(Events::<ActionEvent<Healing>>::default())
-        .insert_resource(Events::<CorpseEvent<Damage>>::default())
-        .insert_resource(Events::<TerrainEvent<Damage>>::default())
-        .insert_resource(Events::<TerrainEvent<Toggle>>::default());
+        app.insert_resource(ElevationVisibility::default())
+            // Loading is slow, so we start loading RelativeSegments immediately.
+            .insert_resource(RelativeSegmentsGenerator::new())
+            .insert_resource(GameplayCounter::default())
+            .insert_resource(Events::<Message>::default())
+            .insert_resource(Events::<SpawnSubzoneLevel>::default())
+            .insert_resource(Events::<CollapseZoneLevel>::default())
+            .insert_resource(Events::<SpawnZoneLevel>::default())
+            .insert_resource(Events::<UpdateZoneLevelVisibility>::default())
+            .insert_resource(Events::<DespawnZoneLevel>::default())
+            .insert_resource(Events::<ActionEvent<Stay>>::default())
+            .insert_resource(Events::<ActionEvent<Step>>::default())
+            .insert_resource(Events::<ActionEvent<Attack>>::default())
+            .insert_resource(Events::<ActionEvent<Smash>>::default())
+            .insert_resource(Events::<ActionEvent<Pulp>>::default())
+            .insert_resource(Events::<ActionEvent<Close>>::default())
+            .insert_resource(Events::<ActionEvent<ItemAction<Wield>>>::default())
+            .insert_resource(Events::<ActionEvent<ItemAction<Unwield>>>::default())
+            .insert_resource(Events::<ActionEvent<ItemAction<Pickup>>>::default())
+            .insert_resource(Events::<ActionEvent<ItemAction<MoveItem>>>::default())
+            .insert_resource(Events::<ActionEvent<ItemAction<ExamineItem>>>::default())
+            .insert_resource(Events::<ActionEvent<ChangePace>>::default())
+            .insert_resource(Events::<ActionEvent<StaminaImpact>>::default())
+            .insert_resource(Events::<ActionEvent<Damage>>::default())
+            .insert_resource(Events::<ActionEvent<Healing>>::default())
+            .insert_resource(Events::<CorpseEvent<Damage>>::default())
+            .insert_resource(Events::<TerrainEvent<Damage>>::default())
+            .insert_resource(Events::<TerrainEvent<Toggle>>::default());
 
         create_schedules(app);
 
@@ -89,51 +85,51 @@ fn update_systems() -> (impl IntoSystemConfigs<()>, impl IntoSystemConfigs<()>) 
                 spawn_subzones_for_camera,
                 (
                     spawn_subzone_levels.run_if(
-                        resource_exists::<Events<SpawnSubzoneLevel>>()
+                        resource_exists::<Events<SpawnSubzoneLevel>>
                             .and_then(on_event::<SpawnSubzoneLevel>()),
                     ),
                     collapse_zone_levels.run_if(
-                        resource_exists::<Events<CollapseZoneLevel>>()
+                        resource_exists::<Events<CollapseZoneLevel>>
                             .and_then(on_event::<CollapseZoneLevel>()),
                     ),
                 ),
             )
                 .chain(),
             update_visualization_on_focus_move
-                .run_if(resource_exists_and_changed::<ElevationVisibility>()),
+                .run_if(resource_exists_and_changed::<ElevationVisibility>),
             (
                 update_collapsed_zone_levels,
                 (
                     spawn_zone_levels.run_if(
-                        resource_exists::<Events<SpawnZoneLevel>>()
+                        resource_exists::<Events<SpawnZoneLevel>>
                             .and_then(on_event::<SpawnZoneLevel>()),
                     ),
                     update_zone_level_visibility.run_if(
-                        resource_exists::<Events<UpdateZoneLevelVisibility>>()
+                        resource_exists::<Events<UpdateZoneLevelVisibility>>
                             .and_then(on_event::<UpdateZoneLevelVisibility>()),
                     ),
                     despawn_zone_level.run_if(
-                        resource_exists::<Events<DespawnZoneLevel>>()
+                        resource_exists::<Events<DespawnZoneLevel>>
                             .and_then(on_event::<DespawnZoneLevel>()),
                     ),
                     count_entities.run_if(
-                        resource_exists::<Events<DespawnZoneLevel>>()
+                        resource_exists::<Events<DespawnZoneLevel>>
                             .and_then(on_event::<DespawnZoneLevel>()),
                     ),
                 ),
             )
                 .chain(),
-            update_camera_offset.run_if(resource_exists_and_changed::<CameraOffset>()),
+            update_camera_offset.run_if(resource_exists_and_changed::<CameraOffset>),
         )
             .run_if(in_state(ApplicationState::Gameplay)),
         // Loading is slow, so we load RelativeSegments in the background, independent of the current ApplicationState
-        load_relative_segments.run_if(not(resource_exists::<RelativeSegments>())),
+        load_relative_segments.run_if(not(resource_exists::<RelativeSegments>)),
     )
 }
 
 fn fixed_update_systems() -> impl IntoSystemConfigs<()> {
     update_status_fps.run_if(
-        in_state(ApplicationState::Gameplay).and_then(resource_exists::<StatusTextSections>()),
+        in_state(ApplicationState::Gameplay).and_then(resource_exists::<StatusTextSections>),
     )
 }
 
