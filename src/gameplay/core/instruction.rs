@@ -1,5 +1,5 @@
-use crate::prelude::{Ctrl, KeyCombo, Nbor};
-use bevy::prelude::{Entity, KeyCode};
+use crate::prelude::{InputChange, Key, KeyCombo, Nbor};
+use bevy::{input::keyboard::KeyCode, prelude::Entity};
 
 use super::HorizontalDirection;
 
@@ -42,22 +42,22 @@ impl PlayerDirection {
     }
 }
 
-impl TryFrom<&KeyCombo> for PlayerDirection {
+impl TryFrom<Key> for PlayerDirection {
     type Error = ();
 
-    fn try_from(combo: &KeyCombo) -> Result<Self, ()> {
-        Ok(match combo {
-            KeyCombo::KeyCode(Ctrl::Without, KeyCode::Numpad1) => Self::CloserLeft,
-            KeyCombo::KeyCode(Ctrl::Without, KeyCode::Numpad2) => Self::Closer,
-            KeyCombo::KeyCode(Ctrl::Without, KeyCode::Numpad3) => Self::CloserRight,
-            KeyCombo::KeyCode(Ctrl::Without, KeyCode::Numpad4) => Self::Left,
-            KeyCombo::KeyCode(Ctrl::Without, KeyCode::Numpad5) => Self::Here,
-            KeyCombo::KeyCode(Ctrl::Without, KeyCode::Numpad6) => Self::Right,
-            KeyCombo::KeyCode(Ctrl::Without, KeyCode::Numpad7) => Self::AwayLeft,
-            KeyCombo::KeyCode(Ctrl::Without, KeyCode::Numpad8) => Self::Away,
-            KeyCombo::KeyCode(Ctrl::Without, KeyCode::Numpad9) => Self::AwayRight,
-            KeyCombo::Character('<') => Self::Above,
-            KeyCombo::Character('>') => Self::Below,
+    fn try_from(key: Key) -> Result<Self, ()> {
+        Ok(match key {
+            Key::Code(KeyCode::Numpad1) => Self::CloserLeft,
+            Key::Code(KeyCode::Numpad2) => Self::Closer,
+            Key::Code(KeyCode::Numpad3) => Self::CloserRight,
+            Key::Code(KeyCode::Numpad4) => Self::Left,
+            Key::Code(KeyCode::Numpad5) => Self::Here,
+            Key::Code(KeyCode::Numpad6) => Self::Right,
+            Key::Code(KeyCode::Numpad7) => Self::AwayLeft,
+            Key::Code(KeyCode::Numpad8) => Self::Away,
+            Key::Code(KeyCode::Numpad9) => Self::AwayRight,
+            Key::Character('<') => Self::Above,
+            Key::Character('>') => Self::Below,
             _ => {
                 return Err(());
             }
@@ -91,23 +91,23 @@ pub(crate) enum QueuedInstruction {
     Finished,
 }
 
-impl TryFrom<&KeyCombo> for QueuedInstruction {
+impl TryFrom<Key> for QueuedInstruction {
     type Error = ();
 
-    fn try_from(combo: &KeyCombo) -> Result<Self, ()> {
-        match combo {
-            KeyCombo::KeyCode(Ctrl::Without, KeyCode::Escape) => Ok(Self::CancelAction),
-            KeyCombo::Character('|') => Ok(Self::Wait),
-            KeyCombo::Character('$') => Ok(Self::Sleep),
-            KeyCombo::Character('a') => Ok(Self::Attack),
-            KeyCombo::Character('s') => Ok(Self::Smash),
-            KeyCombo::Character('p') => Ok(Self::Pulp),
-            KeyCombo::Character('c') => Ok(Self::Close),
-            KeyCombo::Character('\\') => Ok(Self::Drag),
-            KeyCombo::Character('x') => Ok(Self::ExaminePos),
-            KeyCombo::Character('X') => Ok(Self::ExamineZoneLevel),
-            KeyCombo::Character('+') => Ok(Self::ChangePace),
-            _ => PlayerDirection::try_from(combo).map(Self::Offset),
+    fn try_from(key: Key) -> Result<Self, ()> {
+        match key {
+            Key::Code(KeyCode::Escape) => Ok(Self::CancelAction),
+            Key::Character('|') => Ok(Self::Wait),
+            Key::Character('$') => Ok(Self::Sleep),
+            Key::Character('a') => Ok(Self::Attack),
+            Key::Character('s') => Ok(Self::Smash),
+            Key::Character('p') => Ok(Self::Pulp),
+            Key::Character('c') => Ok(Self::Close),
+            Key::Character('\\') => Ok(Self::Drag),
+            Key::Character('x') => Ok(Self::ExaminePos),
+            Key::Character('X') => Ok(Self::ExamineZoneLevel),
+            Key::Character('+') => Ok(Self::ChangePace),
+            _ => PlayerDirection::try_from(key).map(Self::Offset),
         }
     }
 }
@@ -121,8 +121,8 @@ pub(crate) enum ZoomDirection {
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) enum Instruction {
     Queued(QueuedInstruction),
-    MainMenu,
-    CancelState,
+    ShowMainMenu,
+    ShowGameplayMenu,
     Inventory,
     ToggleElevation,
     ToggleHelp,
@@ -134,18 +134,21 @@ impl TryFrom<(&KeyCombo, CancelContext)> for Instruction {
     type Error = ();
 
     fn try_from((combo, context): (&KeyCombo, CancelContext)) -> Result<Self, ()> {
-        match (combo, context) {
-            (KeyCombo::KeyCode(Ctrl::Without, KeyCode::Escape), CancelContext::State) => {
-                Ok(Self::CancelState)
+        match (combo.key, combo.change, context) {
+            (Key::Code(KeyCode::Escape), InputChange::Held, _) => Err(()),
+            (Key::Code(KeyCode::Escape), InputChange::JustPressed, CancelContext::State) => {
+                Ok(Self::ShowGameplayMenu)
             }
-            (KeyCombo::KeyCode(Ctrl::Without, KeyCode::F1), _) => Ok(Self::ToggleHelp),
-            (KeyCombo::KeyCode(Ctrl::Without, KeyCode::F12), _) => Ok(Self::MainMenu),
-            (KeyCombo::Character('i'), _) => Ok(Self::Inventory),
-            (KeyCombo::Character('Z'), _) => Ok(Self::Zoom(ZoomDirection::Out)),
-            (KeyCombo::Character('z'), _) => Ok(Self::Zoom(ZoomDirection::In)),
-            (KeyCombo::Character('h'), _) => Ok(Self::ToggleElevation),
-            (KeyCombo::Character('0'), _) => Ok(Self::ResetCameraAngle),
-            _ => QueuedInstruction::try_from(combo).map(Self::Queued),
+            (Key::Code(KeyCode::F1), InputChange::JustPressed, _) => Ok(Self::ToggleHelp),
+            (Key::Code(KeyCode::F12), InputChange::JustPressed, _) => Ok(Self::ShowMainMenu),
+            (Key::Character('i'), InputChange::JustPressed, _) => Ok(Self::Inventory),
+            (Key::Character('Z'), InputChange::JustPressed, _) => {
+                Ok(Self::Zoom(ZoomDirection::Out))
+            }
+            (Key::Character('z'), InputChange::JustPressed, _) => Ok(Self::Zoom(ZoomDirection::In)),
+            (Key::Character('h'), InputChange::JustPressed, _) => Ok(Self::ToggleElevation),
+            (Key::Character('0'), InputChange::JustPressed, _) => Ok(Self::ResetCameraAngle),
+            _ => QueuedInstruction::try_from(combo.key).map(Self::Queued),
         }
     }
 }

@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use bevy::{app::AppExit, input::ButtonState, prelude::*};
+use bevy::{app::AppExit, prelude::*};
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn maximize_window(mut windows: Query<&mut Window>) {
@@ -38,14 +38,11 @@ pub(crate) fn manage_global_keyboard_input(
     mut keys: Keys,
     mut app_exit_events: ResMut<Events<AppExit>>,
 ) {
-    for (state, combo) in keys.combos() {
-        if state != ButtonState::Pressed {
-            continue;
-        }
-
-        if let KeyCombo::KeyCode(Ctrl::With, KeyCode::KeyC | KeyCode::KeyQ) = combo {
-            app_exit_events.send(AppExit);
-        }
+    for _ in keys
+        .combos(Ctrl::With)
+        .filter(|combo| matches!(combo.key, Key::Character('c' | 'q')))
+    {
+        app_exit_events.send(AppExit);
     }
 }
 

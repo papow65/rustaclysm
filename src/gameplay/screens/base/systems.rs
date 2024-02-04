@@ -1,9 +1,6 @@
 use crate::prelude::*;
 use bevy::{
-    input::{
-        mouse::{MouseMotion, MouseWheel},
-        ButtonState,
-    },
+    input::mouse::{MouseMotion, MouseWheel},
     prelude::*,
 };
 use std::time::Instant;
@@ -97,37 +94,27 @@ pub(crate) fn manage_keyboard_input(
 ) {
     let start = Instant::now();
 
-    for (button_state, combo) in keys.combos() {
+    for combo in keys.combos(Ctrl::Without) {
         let Ok(instruction) = Instruction::try_from((&combo, player_action_state.cancel_context()))
         else {
-            if button_state == ButtonState::Pressed {
-                println!("{:?} not recognized", &combo);
-            }
+            println!("{combo:?} not recognized");
             continue;
         };
-        match button_state {
-            ButtonState::Pressed => {
-                println!("{:?} -> {:?}", &combo, &instruction);
-                match instruction {
-                    Instruction::MainMenu => {
-                        open_main_menu(&mut next_application_state, &mut next_gameplay_state);
-                    }
-                    Instruction::CancelState => open_menu(&mut next_gameplay_state),
-                    Instruction::Inventory => open_inventory(&mut next_gameplay_state),
-                    Instruction::Zoom(direction) => zoom(&mut camera_offset, direction),
-                    Instruction::ResetCameraAngle => reset_camera_angle(&mut camera_offset),
-                    Instruction::ToggleElevation => {
-                        toggle_elevation(&mut elevation_visibility, &mut visualization_update);
-                    }
-                    Instruction::ToggleHelp => toggle_help(&mut help),
-                    Instruction::Queued(instruction) => instruction_queue.add(instruction),
-                }
+
+        println!("{:?} -> {:?}", &combo, &instruction);
+        match instruction {
+            Instruction::ShowMainMenu => {
+                open_main_menu(&mut next_application_state, &mut next_gameplay_state);
             }
-            ButtonState::Released => {
-                if let Instruction::Queued(queued) = instruction {
-                    instruction_queue.interrupt(&queued);
-                }
+            Instruction::ShowGameplayMenu => open_menu(&mut next_gameplay_state),
+            Instruction::Inventory => open_inventory(&mut next_gameplay_state),
+            Instruction::Zoom(direction) => zoom(&mut camera_offset, direction),
+            Instruction::ResetCameraAngle => reset_camera_angle(&mut camera_offset),
+            Instruction::ToggleElevation => {
+                toggle_elevation(&mut elevation_visibility, &mut visualization_update);
             }
+            Instruction::ToggleHelp => toggle_help(&mut help),
+            Instruction::Queued(instruction) => instruction_queue.add(instruction, combo.change),
         }
     }
 

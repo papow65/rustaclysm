@@ -1,26 +1,28 @@
-use crate::prelude::QueuedInstruction;
+use crate::prelude::{InputChange, QueuedInstruction};
 use bevy::prelude::Resource;
 
 #[derive(Debug, Default, Resource)]
 pub(crate) struct InstructionQueue {
     queue: Vec<QueuedInstruction>,
-    continuous: Vec<QueuedInstruction>,
     waiting_for_user: bool,
 }
 
 impl InstructionQueue {
-    pub(crate) fn add(&mut self, instruction: QueuedInstruction) {
+    pub(crate) fn add(&mut self, instruction: QueuedInstruction, change: InputChange) {
         // Wait for an instruction to be processed until adding a duplicate when holding a key down.
-        if !self.continuous.contains(&instruction) || !self.queue.contains(&instruction) {
-            self.queue.insert(0, instruction.clone());
-            self.continuous.push(instruction);
+        if change == InputChange::JustPressed || !self.queue.contains(&instruction) {
+            self.queue.insert(0, instruction);
         }
 
         self.waiting_for_user = false;
     }
 
-    pub(crate) fn interrupt(&mut self, instruction: &QueuedInstruction) {
-        self.continuous.retain(|k| k != instruction);
+    pub(crate) fn add_interruption(&mut self) {
+        self.add(QueuedInstruction::Interrupted, InputChange::JustPressed);
+    }
+
+    pub(crate) fn add_finish(&mut self) {
+        self.add(QueuedInstruction::Finished, InputChange::JustPressed);
     }
 
     pub(crate) fn pop(&mut self) -> Option<QueuedInstruction> {

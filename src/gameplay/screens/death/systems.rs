@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use bevy::{input::ButtonState, prelude::*};
+use bevy::prelude::*;
 
 const SPACING: f32 = 5.0;
 const FONT_SIZE: f32 = 16.0;
@@ -92,17 +92,14 @@ pub(crate) fn manage_death_keyboard_input(
     mut next_application_state: ResMut<NextState<ApplicationState>>,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
 ) {
-    for (state, combo) in keys.combos() {
-        if state != ButtonState::Pressed {
-            continue;
-        }
-
-        if let KeyCombo::KeyCode(Ctrl::Without, KeyCode::Escape | KeyCode::Enter | KeyCode::F12) =
-            combo
-        {
-            next_application_state.set(ApplicationState::MainMenu);
-            next_gameplay_state.set(GameplayScreenState::Inapplicable);
-        }
+    for _ in keys.combos(Ctrl::Without).filter(|combo| {
+        matches!(
+            combo.key,
+            Key::Code(KeyCode::Escape | KeyCode::Enter | KeyCode::F12 | KeyCode::Space)
+        ) && combo.change == InputChange::JustPressed
+    }) {
+        next_application_state.set(ApplicationState::MainMenu);
+        next_gameplay_state.set(GameplayScreenState::Inapplicable);
     }
 }
 

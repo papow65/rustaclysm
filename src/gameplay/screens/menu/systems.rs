@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use bevy::{app::AppExit, input::ButtonState, prelude::*};
+use bevy::{app::AppExit, prelude::*};
 
 const SPACING: f32 = 20.0;
 const FONT_SIZE: f32 = 40.0;
@@ -104,16 +104,15 @@ pub(crate) fn manage_menu_keyboard_input(
     mut next_application_state: ResMut<NextState<ApplicationState>>,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
 ) {
-    for (state, combo) in keys.combos() {
-        if state != ButtonState::Pressed {
-            continue;
-        }
-
-        match combo {
-            KeyCombo::KeyCode(Ctrl::Without, KeyCode::Escape) => {
+    for combo in keys
+        .combos(Ctrl::Without)
+        .filter(|combo| combo.change == InputChange::JustPressed)
+    {
+        match combo.key {
+            Key::Code(KeyCode::Escape) => {
                 next_gameplay_state.set(GameplayScreenState::Base);
             }
-            KeyCombo::Character('m') => {
+            Key::Character('m') => {
                 next_gameplay_state.set(GameplayScreenState::Inapplicable);
                 next_application_state.set(ApplicationState::MainMenu);
             }

@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use bevy::{input::ButtonState, prelude::*, utils::HashMap};
+use bevy::{prelude::*, utils::HashMap};
 
 const SPACING: f32 = 5.0;
 const FONT_SIZE: f32 = 16.0;
@@ -359,17 +359,14 @@ pub(crate) fn manage_inventory_keyboard_input(
     mut instruction_queue: ResMut<InstructionQueue>,
     mut inventory: ResMut<InventoryScreen>,
 ) {
-    for (state, combo) in keys.combos() {
-        if state != ButtonState::Pressed {
-            continue;
-        }
-
-        match combo {
-            KeyCombo::KeyCode(Ctrl::Without, KeyCode::Escape) | KeyCombo::Character('i') => {
+    for combo in keys.combos(Ctrl::Without) {
+        match combo.key {
+            Key::Code(KeyCode::Escape) | Key::Character('i')
+                if combo.change == InputChange::JustPressed =>
+            {
                 next_gameplay_state.set(GameplayScreenState::Base);
             }
-            KeyCombo::KeyCode(
-                Ctrl::Without,
+            Key::Code(
                 KeyCode::Numpad1
                 | KeyCode::Numpad2
                 | KeyCode::Numpad3
@@ -380,21 +377,18 @@ pub(crate) fn manage_inventory_keyboard_input(
                 | KeyCode::Numpad8
                 | KeyCode::Numpad9,
             ) => {
-                drop_at(&mut inventory, &combo);
+                drop_at(&mut inventory, &combo.key);
             }
-            KeyCombo::KeyCode(Ctrl::Without, KeyCode::ArrowUp) => {
+            Key::Code(KeyCode::ArrowUp) => {
                 select_up(&mut inventory);
             }
-            KeyCombo::KeyCode(Ctrl::Without, KeyCode::ArrowDown) => {
+            Key::Code(KeyCode::ArrowDown) => {
                 select_down(&mut inventory);
             }
-            KeyCombo::KeyCode(
-                Ctrl::Without,
-                key_code @ (KeyCode::KeyD | KeyCode::KeyT | KeyCode::KeyU | KeyCode::KeyW),
-            ) => {
-                handle_selected_item(&mut inventory, &mut instruction_queue, key_code);
+            Key::Character(char @ ('d' | 't' | 'u' | 'w')) => {
+                handle_selected_item(&mut inventory, &mut instruction_queue, char);
             }
-            KeyCombo::KeyCode(Ctrl::Without, KeyCode::KeyE) => {
+            Key::Code(KeyCode::KeyE) => {
                 // Special case, because we don't want to select another item after the action.
                 examine_selected_item(&inventory, &mut instruction_queue);
             }
@@ -403,9 +397,9 @@ pub(crate) fn manage_inventory_keyboard_input(
     }
 }
 
-fn drop_at(inventory: &mut InventoryScreen, combo: &KeyCombo) {
-    let nbor = PlayerDirection::try_from(combo)
-        .expect("The direction should be valid ({combo:?})")
+fn drop_at(inventory: &mut InventoryScreen, key: &Key) {
+    let nbor = PlayerDirection::try_from(*key)
+        .expect("The direction should be valid ({key:?})")
         .to_nbor();
     match nbor {
         Nbor::Horizontal(horizontal_direction) => {
@@ -433,17 +427,20 @@ fn select_down(inventory: &mut InventoryScreen) {
 fn handle_selected_item(
     inventory: &mut ResMut<InventoryScreen>,
     instruction_queue: &mut ResMut<InstructionQueue>,
-    key_code: KeyCode,
+    char: char,
 ) {
     if let Some(selected_item) = inventory.selected_item {
         let next_item = inventory.next_items.get(&selected_item).copied();
-        instruction_queue.add(match key_code {
-            KeyCode::KeyD => QueuedInstruction::Dump(selected_item, inventory.drop_direction),
-            KeyCode::KeyT => QueuedInstruction::Pickup(selected_item),
-            KeyCode::KeyU => QueuedInstruction::Unwield(selected_item),
-            KeyCode::KeyW => QueuedInstruction::Wield(selected_item),
-            _ => panic!("Unexpected key {key_code:?}"),
-        });
+        instruction_queue.add(
+            match char {
+                'd' => QueuedInstruction::Dump(selected_item, inventory.drop_direction),
+                't' => QueuedInstruction::Pickup(selected_item),
+                'u' => QueuedInstruction::Unwield(selected_item),
+                'w' => QueuedInstruction::Wield(selected_item),
+                _ => panic!("Unexpected key {char:?}"),
+            },
+            InputChange::Held,
+        );
         inventory.selected_item = next_item;
     }
 }
@@ -453,7 +450,10 @@ fn examine_selected_item(
     instruction_queue: &mut ResMut<InstructionQueue>,
 ) {
     if let Some(selected_item) = inventory.selected_item {
-        instruction_queue.add(QueuedInstruction::ExamineItem(selected_item));
+        instruction_queue.add(
+            QueuedInstruction::ExamineItem(selected_item),
+            InputChange::Held,
+        );
     }
 }
 
@@ -473,7 +473,7 @@ pub(crate) fn manage_inventory_button_input(
                 InventoryAction::Wield => QueuedInstruction::Wield(entity),
                 InventoryAction::Unwield => QueuedInstruction::Unwield(entity),
             };
-            instruction_queue.add(instruction);
+            instruction_queue.add(instruction, InputChange::Held);
         }
     }
 }

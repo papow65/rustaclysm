@@ -94,7 +94,7 @@ impl PlayerActionState {
             } => {
                 //eprintln!("Post instruction pulp handling...");
                 if !enemies.is_empty() {
-                    instruction_queue.add(QueuedInstruction::Interrupted);
+                    instruction_queue.add_interruption();
                     None // process the cancellation next turn
                 } else if player.stamina.breath() == Breath::Winded {
                     //eprintln!("Keep pulping after catching breath");
@@ -109,7 +109,7 @@ impl PlayerActionState {
                     Some(PlannedAction::Pulp { target: *target })
                 } else {
                     //eprintln!("Stop pulping");
-                    instruction_queue.add(QueuedInstruction::Finished);
+                    instruction_queue.add_finish();
                     None // process the cancellation next turn
                 }
             }
@@ -122,16 +122,16 @@ impl PlayerActionState {
                         to: Nbor::HERE,
                     })
                 } else {
-                    instruction_queue.add(QueuedInstruction::Finished);
+                    instruction_queue.add_finish();
                     None // process the cancellation next turn
                 }
             }
             Self::Waiting { until } => {
                 if !enemies.is_empty() {
-                    instruction_queue.add(QueuedInstruction::Interrupted);
+                    instruction_queue.add_interruption();
                     None // process the cancellation next turn
                 } else if *until <= now {
-                    instruction_queue.add(QueuedInstruction::Finished);
+                    instruction_queue.add_finish();
                     None // process the cancellation next turn
                 } else {
                     Some(PlannedAction::Stay {
@@ -159,7 +159,7 @@ impl PlayerActionState {
                 ));
 
                 if *until <= now {
-                    instruction_queue.add(QueuedInstruction::Finished);
+                    instruction_queue.add_finish();
                     None // process the cancellation next turn
                 } else {
                     let healing_duration = Milliseconds(healing_amount * 1_000_000);
