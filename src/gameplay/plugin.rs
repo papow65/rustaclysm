@@ -58,12 +58,9 @@ impl Plugin for GameplayPlugin {
 fn startup_systems() -> impl IntoSystemConfigs<()> {
     (
         create_independent_resources,
-        apply_deferred,
         create_dependent_resources,
-        apply_deferred,
         spawn_initial_entities,
         spawn_hud,
-        apply_deferred,
     )
         .chain()
 }
@@ -136,7 +133,6 @@ fn fixed_update_systems() -> impl IntoSystemConfigs<()> {
 fn shutdown_systems() -> impl IntoSystemConfigs<()> {
     (
         disable_screen_state,
-        apply_deferred,
         despawn::<ApplicationState>,
         remove_gameplay_resources,
         (

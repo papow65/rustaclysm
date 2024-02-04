@@ -7,13 +7,7 @@ impl Plugin for MainMenuPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             OnEnter(ApplicationState::MainMenu),
-            (
-                spawn_main_menu,
-                apply_deferred,
-                resize_background,
-                update_sav_files,
-            )
-                .chain(),
+            (spawn_main_menu, resize_background, update_sav_files).chain(),
         );
 
         app.add_systems(

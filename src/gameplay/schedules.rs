@@ -88,12 +88,11 @@ pub(crate) fn create_behavior_schedule(app: &mut App) {
                     .pipe(perform_change_pace)
                     .run_if(on_event::<ActionEvent<ChangePace>>()),
             ),
-            apply_deferred,
             (
                 (
                     // actor events
+                    // Make sure killed actors are handled early
                     update_damaged_characters.run_if(on_event::<ActionEvent<Damage>>()),
-                    apply_deferred, // Make sure killed actors are handled early
                     (
                         update_stamina.run_if(on_event::<ActionEvent<StaminaImpact>>()),
                         update_healed_characters.run_if(on_event::<ActionEvent<Healing>>()),
@@ -109,13 +108,12 @@ pub(crate) fn create_behavior_schedule(app: &mut App) {
                     .chain(),
                 (
                     // terrain events
+                    // Make sure destoyed items are handled early
                     update_damaged_terrain.run_if(on_event::<TerrainEvent<Damage>>()),
-                    apply_deferred, // Make sure destoyed items are handled early
                     toggle_doors.run_if(on_event::<TerrainEvent<Toggle>>()),
                 )
                     .chain(),
             ),
-            apply_deferred,
         )
             .chain(),
     );
