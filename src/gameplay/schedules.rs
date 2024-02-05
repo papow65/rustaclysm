@@ -155,10 +155,27 @@ pub(crate) fn create_display_behavior_schedule(app: &mut App) {
 pub(crate) fn run_behavior_schedule(world: &mut World) -> DisplayHandling {
     let start = Instant::now();
 
+    let max_time =
+        if let Some(PlayerActionState::Waiting { .. } | PlayerActionState::Sleeping { .. }) =
+            world.get_resource::<PlayerActionState>()
+        {
+            // Allows 10 fps
+            Duration::from_secs_f32(0.09)
+        } else {
+            // Allows 120 fps
+            Duration::from_secs_f32(0.005)
+        };
+
     let mut count = 0;
-    while !waiting_for_user_input(world) && !over_time(&start, count) {
+    let mut over_time = false;
+    while !waiting_for_user_input(world) && !over_time {
         world.run_schedule(BehaviorSchedule);
         count += 1;
+        over_time = max_time < start.elapsed();
+    }
+
+    if over_time {
+        println!("run_behavior_schedule could ony handle {count} iterations before the timeout");
     }
 
     log_if_slow("run_behavior_schedule", start);
@@ -184,12 +201,4 @@ fn waiting_for_user_input(world: &mut World) -> bool {
     let mut system_state = SystemState::<(Res<InstructionQueue>,)>::new(world);
     let (instruction_queue,) = system_state.get(world);
     instruction_queue.is_waiting()
-}
-
-fn over_time(start: &Instant, count: usize) -> bool {
-    let over_time = Duration::from_secs_f32(0.0008) < start.elapsed();
-    if over_time {
-        eprintln!("run_behavior_schedule could ony handle {count} iterations before the timeout");
-    }
-    over_time
 }
