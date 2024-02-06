@@ -12,7 +12,7 @@ impl OvermapBufferPath {
     }
 }
 
-/** Corresponds to an 'overmapbuffer' in CDDA. It defines the save-specific information of a `Zone`. */
+/** Corresponds to an 'overmapbuffer' in CDDA. It defines the save-specific information of an `OverZone`. */
 #[derive(Debug, Deserialize, Asset, TypePath)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct OvermapBuffer {
