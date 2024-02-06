@@ -14,15 +14,14 @@ impl ZoneLevelIds {
     pub(crate) fn get(
         &mut self,
         asset_server: &AssetServer,
-        overmap_assets: &Assets<OvermapAsset>,
+        overmaps: &Assets<Overmap>,
         overmap_manager: &mut OvermapManager,
         zone_level: ZoneLevel,
     ) -> Option<&ObjectId> {
         if !self.names.contains_key(&zone_level) {
             let overzone = Overzone::from(zone_level.zone);
             let fallback;
-            let overmap = match overmap_manager.get_overmap(asset_server, overmap_assets, overzone)
-            {
+            let overmap = match overmap_manager.get_overmap(asset_server, overmaps, overzone) {
                 AssetState::Available { asset: overmap } => overmap,
                 AssetState::Loading => {
                     return None;

@@ -70,11 +70,13 @@ fn update_systems() -> (impl IntoSystemConfigs<()>, impl IntoSystemConfigs<()>) 
         (
             (
                 (
-                    handle_overmap_buffer_events.run_if(on_event::<AssetEvent<OvermapAsset>>()),
-                    handle_overmap_events.run_if(on_event::<AssetEvent<OvermapAsset>>()),
+                    handle_overmap_buffer_events.run_if(on_event::<AssetEvent<OvermapBuffer>>()),
+                    handle_overmap_events.run_if(on_event::<AssetEvent<Overmap>>()),
                 ),
-                update_zone_levels_with_missing_assets
-                    .run_if(on_event::<AssetEvent<OvermapAsset>>()),
+                update_zone_levels_with_missing_assets.run_if(
+                    on_event::<AssetEvent<Overmap>>()
+                        .or_else(on_event::<AssetEvent<OvermapBuffer>>()),
+                ),
             )
                 .chain(),
             handle_map_events.run_if(on_event::<AssetEvent<Map>>()),

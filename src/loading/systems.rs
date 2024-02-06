@@ -64,7 +64,8 @@ pub(crate) fn start_gameplay(
 pub(crate) fn finish_loading(
     mut next_progress_state: ResMut<NextState<ProgressScreenState>>,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
-    overmap_assets: Res<Assets<OvermapAsset>>,
+    overmap_assets: Res<Assets<Overmap>>,
+    overmap_buffer_assets: Res<Assets<OvermapBuffer>>,
     map_assets: Res<Assets<Map>>,
     explored: Res<Explored>,
     subzone_level_entities: Res<SubzoneLevelEntities>,
@@ -72,9 +73,10 @@ pub(crate) fn finish_loading(
 ) {
     if 3 < *counter {
         println!(
-            "Loading status {}: {}, {}, {:?}, and {:?}",
+            "Loading status {}: {}, {}, {}, {:?}, and {:?}",
             *counter,
             overmap_assets.len(),
+            overmap_buffer_assets.len(),
             map_assets.len(),
             explored.loaded(),
             subzone_level_entities.loaded(),
@@ -83,7 +85,11 @@ pub(crate) fn finish_loading(
         // subzone_level_entities sometimes fails to load for unknown reason. In that case, we give control back to the user after a delay.
         let subzones_loaded = subzone_level_entities.loaded() || *counter == u8::MAX;
 
-        if subzones_loaded && 1 < overmap_assets.len() && 0 < map_assets.len() && explored.loaded()
+        if subzones_loaded
+            && 0 < overmap_assets.len()
+            && 0 < overmap_buffer_assets.len()
+            && 0 < map_assets.len()
+            && explored.loaded()
         {
             eprintln!("Loading complete");
             next_progress_state.set(ProgressScreenState::Complete);

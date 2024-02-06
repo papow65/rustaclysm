@@ -199,7 +199,7 @@ pub(crate) fn collapse_zone_levels(
 
         match zone_spawner.spawner.explored.has_zone_level_been_seen(
             &zone_spawner.asset_server,
-            &zone_spawner.overmap_assets,
+            &zone_spawner.overmap_buffer_assets,
             &mut zone_spawner.overmap_buffer_manager,
             collapse_event.zone_level,
         ) {
@@ -408,7 +408,7 @@ fn collapsed_visibility(
                 && !sight_region.contains_zone_level(ZoneLevel::from(*subzone_level))
                 && zone_spawner.spawner.explored.has_zone_level_been_seen(
                     &zone_spawner.asset_server,
-                    &zone_spawner.overmap_assets,
+                    &zone_spawner.overmap_buffer_assets,
                     &mut zone_spawner.overmap_buffer_manager,
                     zone_level,
                 ) == Some(SeenFrom::FarAway)
@@ -454,20 +454,19 @@ pub(crate) fn handle_map_events(
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn handle_overmap_buffer_events(
-    mut overmap_asset_events: EventReader<AssetEvent<OvermapAsset>>,
-    overmap_buffer_assets: Res<Assets<OvermapAsset>>,
+    mut overmap_buffer_events: EventReader<AssetEvent<OvermapBuffer>>,
+    overmap_buffer_assets: Res<Assets<OvermapBuffer>>,
     mut overmap_buffer_manager: ResMut<OvermapBufferManager>,
     mut explored: ResMut<Explored>,
 ) {
     let start = Instant::now();
 
-    for overmap_asset_event in overmap_asset_events.read() {
+    for overmap_asset_event in overmap_buffer_events.read() {
         if let AssetEvent::LoadedWithDependencies { id } = overmap_asset_event {
             if let Some(overzone) = overmap_buffer_manager.overzone(id) {
                 let overmap_buffer = overmap_buffer_assets
                     .get(*id)
-                    .expect("Overmap buffer loaded")
-                    .buffer(id);
+                    .expect("Overmap buffer loaded");
                 explored.load(overzone, overmap_buffer);
             }
         }
@@ -478,17 +477,17 @@ pub(crate) fn handle_overmap_buffer_events(
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn handle_overmap_events(
-    mut overmap_asset_events: EventReader<AssetEvent<OvermapAsset>>,
-    overmap_assets: Res<Assets<OvermapAsset>>,
+    mut overmap_events: EventReader<AssetEvent<Overmap>>,
+    overmap_assets: Res<Assets<Overmap>>,
     mut overmap_manager: ResMut<OvermapManager>,
     mut zone_level_ids: ResMut<ZoneLevelIds>,
 ) {
     let start = Instant::now();
 
-    for overmap_asset_event in overmap_asset_events.read() {
+    for overmap_asset_event in overmap_events.read() {
         if let AssetEvent::LoadedWithDependencies { id } = overmap_asset_event {
             if let Some(overzone) = overmap_manager.overzone(id) {
-                let overmap = overmap_assets.get(*id).expect("Overmap loaded").overmap(id);
+                let overmap = overmap_assets.get(*id).expect("Overmap loaded");
                 zone_level_ids.load(overzone, overmap);
             }
         }
@@ -520,7 +519,7 @@ pub(crate) fn update_zone_levels_with_missing_assets(
     for (entity, &zone_level) in &zone_levels {
         let Some(seen_from) = zone_spawner.spawner.explored.has_zone_level_been_seen(
             &zone_spawner.asset_server,
-            &zone_spawner.overmap_assets,
+            &zone_spawner.overmap_buffer_assets,
             &mut zone_spawner.overmap_buffer_manager,
             zone_level,
         ) else {

@@ -36,7 +36,7 @@ impl Explored {
     pub(crate) fn has_zone_level_been_seen(
         &mut self,
         asset_server: &AssetServer,
-        overmap_assets: &Assets<OvermapAsset>,
+        overmap_buffers: &Assets<OvermapBuffer>,
         overmap_buffer_manager: &mut OvermapBufferManager,
         zone_level: ZoneLevel,
     ) -> Option<SeenFrom> {
@@ -44,7 +44,7 @@ impl Explored {
             let overzone = Overzone::from(zone_level.zone);
             if let AssetState::Available {
                 asset: overmap_buffer,
-            } = overmap_buffer_manager.get(asset_server, overmap_assets, overzone)
+            } = overmap_buffer_manager.get(asset_server, overmap_buffers, overzone)
             {
                 self.load(overzone, overmap_buffer);
                 self.zone_level.get(&zone_level).copied()

@@ -1,4 +1,4 @@
-use crate::prelude::{AssetState, Overmap, OvermapAsset, OvermapPath, Overzone, WorldPath};
+use crate::prelude::{AssetState, Overmap, OvermapPath, Overzone, WorldPath};
 use bevy::{
     prelude::{AssetId, AssetServer, Assets, Handle, Resource},
     utils::HashMap,
@@ -7,8 +7,8 @@ use bevy::{
 #[derive(Resource)]
 pub(crate) struct OvermapManager {
     world_path: WorldPath,
-    live_handles: Vec<Handle<OvermapAsset>>,
-    overzones: HashMap<AssetId<OvermapAsset>, Overzone>,
+    live_handles: Vec<Handle<Overmap>>,
+    overzones: HashMap<AssetId<Overmap>, Overzone>,
 }
 
 impl OvermapManager {
@@ -23,19 +23,17 @@ impl OvermapManager {
     pub(crate) fn get_overmap<'a>(
         &mut self,
         asset_server: &AssetServer,
-        overmap_assets: &'a Assets<OvermapAsset>,
+        overmap_assets: &'a Assets<Overmap>,
         overzone: Overzone,
     ) -> AssetState<'a, Overmap> {
         let overmap_path = OvermapPath::new(&self.world_path, overzone);
         if overmap_path.0.exists() {
-            let overmap_handle = asset_server.load(overmap_path.0.clone());
+            let overmap_handle = asset_server.load::<Overmap>(overmap_path.0.clone());
             let id = overmap_handle.id();
             self.live_handles.push(overmap_handle);
             self.overzones.insert(id, overzone);
             if let Some(asset) = overmap_assets.get(id) {
-                AssetState::Available {
-                    asset: asset.overmap(&overmap_path),
-                }
+                AssetState::Available { asset }
             } else {
                 AssetState::Loading
             }
@@ -44,7 +42,7 @@ impl OvermapManager {
         }
     }
 
-    pub(crate) fn overzone(&mut self, handle: &AssetId<OvermapAsset>) -> Option<Overzone> {
+    pub(crate) fn overzone(&mut self, handle: &AssetId<Overmap>) -> Option<Overzone> {
         //println!("Looking for {handle:?} in {:?}", self.overzones);
         self.overzones.get(handle).copied()
     }

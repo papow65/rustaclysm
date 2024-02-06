@@ -484,7 +484,8 @@ pub(crate) fn update_status_detais(
     player_action_state: Res<PlayerActionState>,
     envir: Envir,
     asset_server: Res<AssetServer>,
-    overmap_assets: Res<Assets<OvermapAsset>>,
+    overmaps: Res<Assets<Overmap>>,
+    overmap_buffers: Res<Assets<OvermapBuffer>>,
     hud_defaults: Res<HudDefaults>,
     mut overmap_buffer_manager: ResMut<OvermapBufferManager>,
     mut overmap_manager: ResMut<OvermapManager>,
@@ -538,7 +539,7 @@ pub(crate) fn update_status_detais(
             vec![Fragment::new(
                 match explored.has_zone_level_been_seen(
                     &asset_server,
-                    &overmap_assets,
+                    &overmap_buffers,
                     &mut overmap_buffer_manager,
                     zone_level,
                 ) {
@@ -546,7 +547,7 @@ pub(crate) fn update_status_detais(
                         "\n{zone_level:?}\n{:?}\n{seen_from:?}",
                         zone_level_ids.get(
                             &asset_server,
-                            &overmap_assets,
+                            &overmaps,
                             &mut overmap_manager,
                             zone_level
                         )

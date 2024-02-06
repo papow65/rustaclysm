@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use bevy::utils::HashMap;
+use bevy::{asset::Asset, reflect::TypePath, utils::HashMap};
 use serde::Deserialize;
 
 pub(crate) type OvermapPath = PathFor<Overmap>;
@@ -15,7 +15,7 @@ impl OvermapPath {
 }
 
 /** Corresponds to an 'overmap' in CDDA. It defines the layout of 180x180 `Zone`s. */
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Asset, TypePath)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct Overmap {
     pub(crate) layers: [OvermapLevel; Level::AMOUNT],
