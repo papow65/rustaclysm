@@ -28,9 +28,8 @@ where
             reader
                 .read_to_end(&mut bytes)
                 .await
-                .map_err(|e| {
+                .inspect_err(|e| {
                     eprintln!("Map file loading error: {:?} {e:?}", load_context.path(),);
-                    e
                 })
                 .map_err(Either::Left)?;
 
@@ -48,12 +47,11 @@ where
                 .expect("Unicode filename");
 
             serde_json::from_slice::<T>(after_first_line)
-                .map_err(|e| {
+                .inspect_err(|e| {
                     eprintln!(
                         "Overmap (buffer?) loading error: {file_name:?} {:?} {e:?}",
                         from_utf8(&bytes[0..40])
                     );
-                    e
                 })
                 .map_err(Either::Right)
         })

@@ -60,9 +60,8 @@ impl AssetLoader for MapLoader {
             reader
                 .read_to_end(&mut bytes)
                 .await
-                .map_err(|e| {
+                .inspect_err(|e| {
                     eprintln!("Map file loading error: {:?} {e:?}", load_context.path(),);
-                    e
                 })
                 .map_err(Either::Left)?;
 

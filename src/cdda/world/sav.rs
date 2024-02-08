@@ -101,9 +101,8 @@ impl TryFrom<&SavPath> for Sav {
     fn try_from(sav_path: &SavPath) -> Result<Self, Self::Error> {
         read_to_string(&sav_path.0)
             .ok()
-            .map(|s| {
+            .inspect(|_| {
                 println!("Loading {}...", sav_path.0.display());
-                s
             })
             .map(|s| String::from(s.split_at(s.find('\n').expect("Non-JSON first line")).1))
             .map(|s| serde_json::from_str::<Self>(s.as_str()))

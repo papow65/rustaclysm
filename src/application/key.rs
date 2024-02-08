@@ -47,9 +47,8 @@ impl<'w, 's> Keys<'w, 's> {
             })
             .map(move |(key, key_code)| (ctrl, key, key_code))
             .map(|(ctrl, key, key_code)| KeyCombo{ctrl, key, change: InputChange::from((&*self.key_states, *key_code))})
-            .map(|combo| {
+            .inspect(|combo| {
                 println!("{combo:?}");
-                combo
             })
     }
 }
