@@ -1,3 +1,5 @@
+//! See <https://github.com/papow65/rustaclysm/blob/main/readme.md>
+
 mod application;
 mod cdda;
 mod gameplay;
