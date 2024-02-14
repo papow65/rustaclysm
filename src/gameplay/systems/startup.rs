@@ -17,6 +17,9 @@ pub(crate) fn load_relative_segments(
 pub(crate) fn create_independent_resources(mut commands: Commands) {
     // Not persisted between gameplays
     commands.insert_resource(Infos::new());
+    commands.insert_resource(AssetStorage::<Overmap, Overzone>::default());
+    commands.insert_resource(AssetStorage::<OvermapBuffer, Overzone>::default());
+    commands.insert_resource(AssetStorage::<Map, ZoneLevel>::default());
     commands.insert_resource(Location::default());
     commands.insert_resource(SubzoneLevelEntities::default());
     commands.insert_resource(ZoneLevelEntities::default());
@@ -41,9 +44,6 @@ pub(crate) fn create_dependent_resources(mut commands: Commands, paths: Res<Path
     let timestamp = Timestamp::new(sav.turn, season_length);
 
     commands.insert_resource(sav);
-    commands.insert_resource(OvermapBufferManager::new(paths.sav_path()));
-    commands.insert_resource(OvermapManager::new(paths.world_path()));
-    commands.insert_resource(MapManager::new(paths.world_path()));
     commands.insert_resource(Timeouts::new(timestamp));
 }
 

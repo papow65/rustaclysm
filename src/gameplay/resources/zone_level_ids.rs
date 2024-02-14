@@ -1,8 +1,5 @@
 use crate::prelude::*;
-use bevy::{
-    prelude::{AssetServer, Assets, Resource},
-    utils::HashMap,
-};
+use bevy::{prelude::Resource, utils::HashMap};
 
 #[derive(Default, Resource)]
 pub(crate) struct ZoneLevelIds {
@@ -13,15 +10,13 @@ pub(crate) struct ZoneLevelIds {
 impl ZoneLevelIds {
     pub(crate) fn get(
         &mut self,
-        asset_server: &AssetServer,
-        overmaps: &Assets<Overmap>,
         overmap_manager: &mut OvermapManager,
         zone_level: ZoneLevel,
     ) -> Option<&ObjectId> {
         if !self.names.contains_key(&zone_level) {
             let overzone = Overzone::from(zone_level.zone);
             let fallback;
-            let overmap = match overmap_manager.get_overmap(asset_server, overmaps, overzone) {
+            let overmap = match overmap_manager.get(overzone) {
                 AssetState::Available { asset: overmap } => overmap,
                 AssetState::Loading => {
                     return None;

@@ -1,49 +1,34 @@
-use crate::prelude::{AssetState, Map, MapPath, Submap, SubzoneLevel, WorldPath, ZoneLevel};
-use bevy::prelude::{AssetServer, Assets, Handle, Resource};
+use crate::prelude::{
+    AssetState, AssetStorage, Map, MapPath, PathFor, Paths, Submap, SubzoneLevel, ZoneLevel,
+};
+use bevy::{
+    ecs::system::SystemParam,
+    prelude::{AssetServer, Assets, Res, ResMut},
+};
 
-#[derive(Resource)]
-pub(crate) struct MapManager {
-    world_path: WorldPath,
-    live_handles: Vec<Handle<Map>>,
+#[derive(SystemParam)]
+pub(crate) struct MapManager<'w> {
+    paths: Res<'w, Paths>,
+    storage: ResMut<'w, AssetStorage<Map, ZoneLevel>>,
+    asset_server: Res<'w, AssetServer>,
+    assets: Res<'w, Assets<Map>>,
 }
 
-impl MapManager {
-    pub(crate) const fn new(world_path: WorldPath) -> Self {
-        Self {
-            world_path,
-            live_handles: Vec::new(),
-        }
+impl<'w> MapManager<'w> {
+    fn path(&self, zone_level: ZoneLevel) -> PathFor<Map> {
+        let world_map = self.paths.world_path();
+        MapPath::new(&world_map, zone_level)
     }
 
-    pub(crate) fn get_zone_level<'a>(
-        &mut self,
-        asset_server: &AssetServer,
-        map_assets: &'a Assets<Map>,
-        zone_level: ZoneLevel,
-    ) -> AssetState<'a, Map> {
-        let map_path = MapPath::new(&self.world_path, zone_level);
-        if map_path.0.exists() {
-            let map_handle = asset_server.load(map_path.0);
-            let id = map_handle.id();
-            self.live_handles.push(map_handle);
-            if let Some(map) = map_assets.get(id) {
-                AssetState::Available { asset: map }
-            } else {
-                AssetState::Loading
-            }
-        } else {
-            AssetState::Nonexistent
-        }
+    pub(crate) fn map(&mut self, zone_level: ZoneLevel) -> AssetState<Map> {
+        let path = self.path(zone_level);
+        self.storage
+            .handle(&self.asset_server, &self.assets, zone_level, path)
     }
 
-    pub(crate) fn get_subzone_level<'a>(
-        &mut self,
-        asset_server: &AssetServer,
-        map_assets: &'a Assets<Map>,
-        subzone_level: SubzoneLevel,
-    ) -> AssetState<'a, Submap> {
+    pub(crate) fn submap(&mut self, subzone_level: SubzoneLevel) -> AssetState<Submap> {
         let zone_level = ZoneLevel::from(subzone_level);
-        match self.get_zone_level(asset_server, map_assets, zone_level) {
+        match self.map(zone_level) {
             AssetState::Available { asset: map } => AssetState::Available {
                 asset: &map.0[subzone_level.index()],
             },

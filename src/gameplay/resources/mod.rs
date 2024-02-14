@@ -1,3 +1,4 @@
+mod asset_storage;
 mod camera_offset;
 mod envir;
 mod explored;
@@ -17,8 +18,8 @@ mod zone_level_entities;
 mod zone_level_ids;
 
 pub(crate) use self::{
-    camera_offset::*, envir::*, explored::*, infos::*, instruction_queue::*, location::*,
-    map_manager::*, model_factory::*, overmap_buffer_manager::*, overmap_manager::*,
+    asset_storage::*, camera_offset::*, envir::*, explored::*, infos::*, instruction_queue::*,
+    location::*, map_manager::*, model_factory::*, overmap_buffer_manager::*, overmap_manager::*,
     player_action_state::*, relative_segments::*, spawner::*, subzone_level_entities::*,
     timeouts::*, zone_level_entities::*, zone_level_ids::*,
 };

@@ -1,49 +1,25 @@
-use crate::prelude::{AssetState, Overmap, OvermapPath, Overzone, WorldPath};
+use crate::prelude::{AssetState, AssetStorage, Overmap, OvermapPath, Overzone, Paths};
 use bevy::{
-    prelude::{AssetId, AssetServer, Assets, Handle, Resource},
-    utils::HashMap,
+    ecs::system::SystemParam,
+    prelude::{AssetId, AssetServer, Assets, Res, ResMut},
 };
 
-#[derive(Resource)]
-pub(crate) struct OvermapManager {
-    world_path: WorldPath,
-    live_handles: Vec<Handle<Overmap>>,
-    overzones: HashMap<AssetId<Overmap>, Overzone>,
+#[derive(SystemParam)]
+pub(crate) struct OvermapManager<'w> {
+    paths: Res<'w, Paths>,
+    storage: ResMut<'w, AssetStorage<Overmap, Overzone>>,
+    asset_server: Res<'w, AssetServer>,
+    assets: Res<'w, Assets<Overmap>>,
 }
 
-impl OvermapManager {
-    pub(crate) fn new(world_path: WorldPath) -> Self {
-        Self {
-            world_path,
-            live_handles: Vec::new(),
-            overzones: HashMap::new(),
-        }
-    }
-
-    pub(crate) fn get_overmap<'a>(
-        &mut self,
-        asset_server: &AssetServer,
-        overmap_assets: &'a Assets<Overmap>,
-        overzone: Overzone,
-    ) -> AssetState<'a, Overmap> {
-        let overmap_path = OvermapPath::new(&self.world_path, overzone);
-        if overmap_path.0.exists() {
-            let overmap_handle = asset_server.load::<Overmap>(overmap_path.0.clone());
-            let id = overmap_handle.id();
-            self.live_handles.push(overmap_handle);
-            self.overzones.insert(id, overzone);
-            if let Some(asset) = overmap_assets.get(id) {
-                AssetState::Available { asset }
-            } else {
-                AssetState::Loading
-            }
-        } else {
-            AssetState::Nonexistent
-        }
+impl<'w> OvermapManager<'w> {
+    pub(crate) fn get(&mut self, overzone: Overzone) -> AssetState<Overmap> {
+        let path = OvermapPath::new(&self.paths.world_path(), overzone);
+        self.storage
+            .handle(&self.asset_server, &self.assets, overzone, path)
     }
 
     pub(crate) fn overzone(&mut self, handle: &AssetId<Overmap>) -> Option<Overzone> {
-        //println!("Looking for {handle:?} in {:?}", self.overzones);
-        self.overzones.get(handle).copied()
+        self.storage.region(handle)
     }
 }

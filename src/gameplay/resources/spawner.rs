@@ -646,23 +646,19 @@ impl<'w, 's> Spawner<'w, 's> {
 
 #[derive(SystemParam)]
 pub(crate) struct ZoneSpawner<'w, 's> {
-    pub(crate) asset_server: Res<'w, AssetServer>,
-    pub(crate) overmap_assets: Res<'w, Assets<Overmap>>,
-    pub(crate) overmap_buffer_assets: Res<'w, Assets<OvermapBuffer>>,
     infos: Res<'w, Infos>,
-    pub(crate) overmap_buffer_manager: ResMut<'w, OvermapBufferManager>,
-    pub(crate) overmap_manager: ResMut<'w, OvermapManager>,
-    pub(crate) map_manager: ResMut<'w, MapManager>,
     pub(crate) zone_level_ids: ResMut<'w, ZoneLevelIds>,
     pub(crate) zone_level_entities: ResMut<'w, ZoneLevelEntities>,
     pub(crate) subzone_level_entities: ResMut<'w, SubzoneLevelEntities>,
+    pub(crate) overmap_manager: OvermapManager<'w>,
+    pub(crate) overmap_buffer_manager: OvermapBufferManager<'w>,
     pub(crate) spawner: Spawner<'w, 's>,
 }
 
 impl<'w, 's> ZoneSpawner<'w, 's> {
     pub(crate) fn spawn_expanded_subzone_level(
         &mut self,
-        map_assets: &Assets<Map>,
+        map_manager: &mut MapManager,
         subzone_level: SubzoneLevel,
     ) {
         if self.subzone_level_entities.get(subzone_level).is_some() {
@@ -670,10 +666,7 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
             return;
         }
 
-        match self
-            .map_manager
-            .get_subzone_level(&self.asset_server, map_assets, subzone_level)
-        {
+        match map_manager.submap(subzone_level) {
             AssetState::Available { asset: submap } => {
                 self.spawn_subzone(submap, subzone_level);
             }
@@ -681,12 +674,10 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
                 // It will be spawned when it's fully loaded.
             }
             AssetState::Nonexistent => {
-                if let Some(object_id) = self.zone_level_ids.get(
-                    &self.asset_server,
-                    &self.overmap_assets,
-                    &mut self.overmap_manager,
-                    ZoneLevel::from(subzone_level),
-                ) {
+                if let Some(object_id) = self
+                    .zone_level_ids
+                    .get(&mut self.overmap_manager, ZoneLevel::from(subzone_level))
+                {
                     let fallback = Submap::fallback(subzone_level, object_id);
                     self.spawn_subzone(&fallback, subzone_level);
                 }
@@ -741,11 +732,10 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
                 }
             }
 
-            if let AssetState::Available { asset: overmap } = self.overmap_manager.get_overmap(
-                &self.asset_server,
-                &self.overmap_assets,
-                Overzone::from(ZoneLevel::from(subzone_level).zone),
-            ) {
+            if let AssetState::Available { asset: overmap } = self
+                .overmap_manager
+                .get(Overzone::from(ZoneLevel::from(subzone_level).zone))
+            {
                 let spawned_offset = SubzoneOffset::from(subzone_level);
                 for monster in overmap
                     .monster_map
@@ -786,24 +776,18 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
         let mut entity = self.spawner.commands.spawn(zone_level);
         self.zone_level_entities.add(zone_level, entity.id());
 
-        let Some(seen_from) = self.spawner.explored.has_zone_level_been_seen(
-            &self.asset_server,
-            &self.overmap_buffer_assets,
-            &mut self.overmap_buffer_manager,
-            zone_level,
-        ) else {
+        let Some(seen_from) = self
+            .spawner
+            .explored
+            .has_zone_level_been_seen(&mut self.overmap_buffer_manager, zone_level)
+        else {
             entity.insert(MissingAsset);
             return;
         };
 
         let Some(definition) = self
             .zone_level_ids
-            .get(
-                &self.asset_server,
-                &self.overmap_assets,
-                &mut self.overmap_manager,
-                zone_level,
-            )
+            .get(&mut self.overmap_manager, zone_level)
             .map(|object_id| ObjectDefinition {
                 category: ObjectCategory::ZoneLevel,
                 id: object_id.clone(),

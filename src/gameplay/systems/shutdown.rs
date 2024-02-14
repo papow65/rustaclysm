@@ -10,14 +10,13 @@ pub(crate) fn remove_gameplay_resources(mut commands: Commands) {
     commands.remove_resource::<InstructionQueue>();
     commands.remove_resource::<AppearanceCache>();
     commands.remove_resource::<MeshCaches>();
-    commands.remove_resource::<MapManager>();
     commands.remove_resource::<VisualizationUpdate>();
     commands.remove_resource::<Explored>();
     commands.remove_resource::<Sav>();
     commands.remove_resource::<Timeouts>();
-    commands.remove_resource::<OvermapBufferManager>();
-    commands.remove_resource::<OvermapManager>();
-    commands.remove_resource::<MapManager>();
+    commands.remove_resource::<AssetStorage<Overmap, Overzone>>();
+    commands.remove_resource::<AssetStorage<OvermapBuffer, Overzone>>();
+    commands.remove_resource::<AssetStorage<Map, ZoneLevel>>();
     commands.remove_resource::<ZoneLevelIds>();
     commands.remove_resource::<CameraOffset>();
     commands.remove_resource::<InstructionQueue>();

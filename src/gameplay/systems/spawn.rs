@@ -159,8 +159,8 @@ fn despawn_expanded_subzone_levels(
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn spawn_subzone_levels(
     mut spawn_subzone_level_reader: EventReader<SpawnSubzoneLevel>,
-    map_assets: Res<Assets<Map>>,
     mut zone_spawner: ZoneSpawner,
+    mut map_manager: MapManager,
 ) {
     let start = Instant::now();
 
@@ -170,7 +170,7 @@ pub(crate) fn spawn_subzone_levels(
     );
 
     for spawn_event in spawn_subzone_level_reader.read() {
-        zone_spawner.spawn_expanded_subzone_level(&map_assets, spawn_event.subzone_level);
+        zone_spawner.spawn_expanded_subzone_level(&mut map_manager, spawn_event.subzone_level);
     }
 
     log_if_slow("spawn_subzone_levels", start);
@@ -198,8 +198,6 @@ pub(crate) fn collapse_zone_levels(
         }
 
         match zone_spawner.spawner.explored.has_zone_level_been_seen(
-            &zone_spawner.asset_server,
-            &zone_spawner.overmap_buffer_assets,
             &mut zone_spawner.overmap_buffer_manager,
             collapse_event.zone_level,
         ) {
@@ -406,12 +404,11 @@ fn collapsed_visibility(
         && zone_level.subzone_levels().iter().all(|subzone_level| {
             visible_region.contains_zone_level(ZoneLevel::from(*subzone_level))
                 && !sight_region.contains_zone_level(ZoneLevel::from(*subzone_level))
-                && zone_spawner.spawner.explored.has_zone_level_been_seen(
-                    &zone_spawner.asset_server,
-                    &zone_spawner.overmap_buffer_assets,
-                    &mut zone_spawner.overmap_buffer_manager,
-                    zone_level,
-                ) == Some(SeenFrom::FarAway)
+                && zone_spawner
+                    .spawner
+                    .explored
+                    .has_zone_level_been_seen(&mut zone_spawner.overmap_buffer_manager, zone_level)
+                    == Some(SeenFrom::FarAway)
         })
     {
         Visibility::Inherited
@@ -456,8 +453,8 @@ pub(crate) fn handle_map_events(
 pub(crate) fn handle_overmap_buffer_events(
     mut overmap_buffer_events: EventReader<AssetEvent<OvermapBuffer>>,
     overmap_buffer_assets: Res<Assets<OvermapBuffer>>,
-    mut overmap_buffer_manager: ResMut<OvermapBufferManager>,
     mut explored: ResMut<Explored>,
+    mut overmap_buffer_manager: OvermapBufferManager,
 ) {
     let start = Instant::now();
 
@@ -479,8 +476,8 @@ pub(crate) fn handle_overmap_buffer_events(
 pub(crate) fn handle_overmap_events(
     mut overmap_events: EventReader<AssetEvent<Overmap>>,
     overmap_assets: Res<Assets<Overmap>>,
-    mut overmap_manager: ResMut<OvermapManager>,
     mut zone_level_ids: ResMut<ZoneLevelIds>,
+    mut overmap_manager: OvermapManager,
 ) {
     let start = Instant::now();
 
@@ -517,23 +514,17 @@ pub(crate) fn update_zone_levels_with_missing_assets(
     let sight_region = zones_in_sight_distance(Pos::from(&focus));
 
     for (entity, &zone_level) in &zone_levels {
-        let Some(seen_from) = zone_spawner.spawner.explored.has_zone_level_been_seen(
-            &zone_spawner.asset_server,
-            &zone_spawner.overmap_buffer_assets,
-            &mut zone_spawner.overmap_buffer_manager,
-            zone_level,
-        ) else {
+        let Some(seen_from) = zone_spawner
+            .spawner
+            .explored
+            .has_zone_level_been_seen(&mut zone_spawner.overmap_buffer_manager, zone_level)
+        else {
             continue;
         };
 
         let Some(definition) = zone_spawner
             .zone_level_ids
-            .get(
-                &zone_spawner.asset_server,
-                &zone_spawner.overmap_assets,
-                &mut zone_spawner.overmap_manager,
-                zone_level,
-            )
+            .get(&mut zone_spawner.overmap_manager, zone_level)
             .map(|object_id| ObjectDefinition {
                 category: ObjectCategory::ZoneLevel,
                 id: object_id.clone(),

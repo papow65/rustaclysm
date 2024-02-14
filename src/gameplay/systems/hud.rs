@@ -482,16 +482,13 @@ pub(crate) fn update_status_enemies(
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_status_detais(
     player_action_state: Res<PlayerActionState>,
-    envir: Envir,
-    asset_server: Res<AssetServer>,
-    overmaps: Res<Assets<Overmap>>,
-    overmap_buffers: Res<Assets<OvermapBuffer>>,
     hud_defaults: Res<HudDefaults>,
-    mut overmap_buffer_manager: ResMut<OvermapBufferManager>,
-    mut overmap_manager: ResMut<OvermapManager>,
     mut explored: ResMut<Explored>,
     mut zone_level_ids: ResMut<ZoneLevelIds>,
     mut text_sections: ResMut<StatusTextSections>,
+    mut overmap_buffer_manager: OvermapBufferManager,
+    envir: Envir,
+    mut overmap_manager: OvermapManager,
     mut status_displays: Query<&mut Text, With<StatusDisplay>>,
     characters: Query<(&ObjectDefinition, &ObjectName, &Health, Option<&Integrity>)>,
     entities: Query<
@@ -537,20 +534,10 @@ pub(crate) fn update_status_detais(
         }
         PlayerActionState::ExaminingZoneLevel(zone_level) => {
             vec![Fragment::new(
-                match explored.has_zone_level_been_seen(
-                    &asset_server,
-                    &overmap_buffers,
-                    &mut overmap_buffer_manager,
-                    zone_level,
-                ) {
+                match explored.has_zone_level_been_seen(&mut overmap_buffer_manager, zone_level) {
                     seen_from @ Some(SeenFrom::CloseBy | SeenFrom::FarAway) => format!(
                         "\n{zone_level:?}\n{:?}\n{seen_from:?}",
-                        zone_level_ids.get(
-                            &asset_server,
-                            &overmaps,
-                            &mut overmap_manager,
-                            zone_level
-                        )
+                        zone_level_ids.get(&mut overmap_manager, zone_level)
                     ),
                     None | Some(SeenFrom::Never) => format!("\n{zone_level:?}\nUnseen"),
                 },
