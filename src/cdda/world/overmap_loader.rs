@@ -2,7 +2,7 @@ use bevy::asset::{io::Reader, Asset, AssetLoader, BoxedFuture, LoadContext};
 use either::Either;
 use futures_lite::AsyncReadExt;
 use serde::Deserialize;
-use std::{marker::PhantomData, str::from_utf8, sync::OnceLock};
+use std::{marker::PhantomData, str::from_utf8};
 
 //#[derive(Default)]
 pub(crate) struct OvermapLoader<T>(PhantomData<T>)
@@ -58,7 +58,7 @@ where
     }
 
     fn extensions(&self) -> &[&str] {
-        extensions()
+        &[]
     }
 }
 
@@ -69,51 +69,5 @@ where
 {
     fn default() -> Self {
         Self(PhantomData)
-    }
-}
-
-const EXTENSION_MAX: usize = 1000;
-const EXTENSION_COUNT: usize = 2 * EXTENSION_MAX + 1;
-
-fn extensions() -> &'static [&'static str] {
-    static STRINGS: OnceLock<[String; EXTENSION_COUNT]> = OnceLock::new();
-    static EXTENSIONS: OnceLock<[&str; EXTENSION_COUNT]> = OnceLock::new();
-
-    EXTENSIONS.get_or_init(|| {
-        let strings = STRINGS.get_or_init(|| {
-            let mut i = -(EXTENSION_MAX as isize);
-            [(); EXTENSION_COUNT].map(|()| {
-                let string = i.to_string();
-                i += 1;
-                string
-            })
-        });
-
-        let mut j = 0;
-        [(); EXTENSION_COUNT].map(|()| {
-            let extension = strings[j].as_str();
-            j += 1;
-            extension
-        })
-    })
-}
-
-#[cfg(test)]
-mod overmap_buffer_tests {
-    use super::*;
-    #[test]
-    fn check_extensions() {
-        let extensions = extensions();
-        assert_eq!(extensions.len(), EXTENSION_COUNT, "{extensions:?}");
-        assert_eq!(
-            extensions[0],
-            (-(EXTENSION_MAX as isize)).to_string().as_str(),
-            "{extensions:?}"
-        );
-        assert_eq!(
-            extensions.last().expect("many items"),
-            &EXTENSION_MAX.to_string().as_str(),
-            "{extensions:?}"
-        );
     }
 }
