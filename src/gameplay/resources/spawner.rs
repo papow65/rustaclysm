@@ -511,7 +511,7 @@ impl<'w, 's> Spawner<'w, 's> {
         self.commands.spawn((
             DirectionalLightBundle {
                 directional_light: DirectionalLight {
-                    illuminance: 2_000.0,
+                    illuminance: 10_000.0,
                     shadows_enabled: false, // TODO shadow direction does not match buildin shadows
                     ..DirectionalLight::default()
                 },
