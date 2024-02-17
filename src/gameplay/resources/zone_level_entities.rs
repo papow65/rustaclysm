@@ -1,13 +1,14 @@
 use crate::prelude::ZoneLevel;
 use bevy::{
+    ecs::entity::EntityHashMap,
     prelude::{Entity, Resource},
-    utils::{Entry, HashMap},
+    utils::{hashbrown::hash_map::Entry, HashMap},
 };
 
 #[derive(Default, Resource)]
 pub(crate) struct ZoneLevelEntities {
     zone_levels: HashMap<ZoneLevel, Entity>,
-    reverse: HashMap<Entity, ZoneLevel>,
+    reverse: EntityHashMap<ZoneLevel>,
 }
 
 impl ZoneLevelEntities {

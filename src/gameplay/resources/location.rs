@@ -1,6 +1,9 @@
 use crate::prelude::{Pos, StairsDown, StairsUp};
 use bevy::{
-    ecs::query::{QueryData, QueryFilter, ROQueryItem},
+    ecs::{
+        entity::EntityHashMap,
+        query::{QueryData, QueryFilter, ROQueryItem},
+    },
     prelude::{Entity, Query, Resource, With},
     utils::HashMap,
 };
@@ -10,7 +13,7 @@ const NOT_FOUND: &Vec<Entity> = &Vec::new();
 #[derive(Default, Resource)]
 pub(crate) struct Location {
     objects: HashMap<Pos, Vec<Entity>>,
-    positions: HashMap<Entity, Pos>,
+    positions: EntityHashMap<Pos>,
 }
 
 impl Location {

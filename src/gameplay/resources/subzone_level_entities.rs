@@ -1,13 +1,14 @@
 use crate::prelude::SubzoneLevel;
 use bevy::{
+    ecs::entity::EntityHashMap,
     prelude::{Entity, Resource},
-    utils::{Entry, HashMap},
+    utils::{hashbrown::hash_map::Entry, HashMap},
 };
 
 #[derive(Default, Resource)]
 pub(crate) struct SubzoneLevelEntities {
     subzone_levels: HashMap<SubzoneLevel, Entity>,
-    reverse: HashMap<Entity, SubzoneLevel>,
+    reverse: EntityHashMap<SubzoneLevel>,
 }
 
 impl SubzoneLevelEntities {

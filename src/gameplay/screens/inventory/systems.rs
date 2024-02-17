@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use bevy::{prelude::*, utils::HashMap};
+use bevy::{ecs::entity::EntityHashMap, prelude::*, utils::HashMap};
 
 const SPACING: f32 = 5.0;
 const FONT_SIZE: f32 = 16.0;
@@ -16,7 +16,6 @@ pub(crate) fn spawn_inventory(mut commands: Commands, fonts: Res<Fonts>) {
                 justify_content: JustifyContent::Start,
                 margin: UiRect::horizontal(Val::Px(360.0)),
                 padding: UiRect::all(Val::Px(SPACING)),
-
                 ..default()
             },
             background_color: PANEL_COLOR.into(),
@@ -40,8 +39,8 @@ pub(crate) fn spawn_inventory(mut commands: Commands, fonts: Res<Fonts>) {
     commands.insert_resource(InventoryScreen {
         panel,
         selected_item: None,
-        previous_items: HashMap::default(),
-        next_items: HashMap::default(),
+        previous_items: EntityHashMap::default(),
+        next_items: EntityHashMap::default(),
         drop_direction: HorizontalDirection::Here,
         section_text_style: TextStyle {
             font: fonts.default(),

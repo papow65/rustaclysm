@@ -1,21 +1,20 @@
 use crate::prelude::{Milliseconds, Timestamp};
 use bevy::{
-    ecs::system::SystemParam,
+    ecs::{entity::EntityHashMap, system::SystemParam},
     prelude::{Entity, Res, Resource},
-    utils::HashMap,
 };
 
 #[derive(Resource)]
 pub(crate) struct Timeouts {
     start: Timestamp,
-    m: HashMap<Entity, Timestamp>,
+    m: EntityHashMap<Timestamp>,
 }
 
 impl Timeouts {
     pub(crate) fn new(timestamp: Timestamp) -> Self {
         Self {
             start: timestamp,
-            m: HashMap::default(),
+            m: EntityHashMap::default(),
         }
     }
 
