@@ -12,7 +12,7 @@ rust-version = "1.76" # should be latest stable
 
 [dependencies]
 base64 = "0.21"
-bevy = { git = "https://github.com/bevyengine/bevy.git", default-features = false, features = [ "bevy_asset", "bevy_core_pipeline", "bevy_pbr", "bevy_text", "bevy_ui", "ktx2", "multi-threaded", "png", "tonemapping_luts", "wayland", "x11" ] }
+bevy = { version = "0.13", default-features = false, features = [ "bevy_asset", "bevy_core_pipeline", "bevy_pbr", "bevy_text", "bevy_ui", "ktx2", "multi-threaded", "png", "tonemapping_luts", "wayland", "x11" ] }
 bresenham = "0.1"
 either = "1"
 float-ord = "0.3"
