@@ -161,11 +161,6 @@ impl LastSeen {
     }
 }
 
-/** Indication for a zone level that it only show its overmap tile
-A zone level without this indicates that it is expanded into tiles */
-#[derive(Component)]
-pub(crate) struct Collapsed;
-
 #[derive(Component, Clone)]
 pub(crate) struct Appearance {
     seen: Handle<StandardMaterial>,

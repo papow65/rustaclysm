@@ -23,7 +23,7 @@ impl Plugin for GameplayPlugin {
             .insert_resource(GameplayCounter::default())
             .insert_resource(Events::<Message>::default())
             .insert_resource(Events::<SpawnSubzoneLevel>::default())
-            .insert_resource(Events::<CollapseZoneLevel>::default())
+            .insert_resource(Events::<DespawnSubzoneLevel>::default())
             .insert_resource(Events::<SpawnZoneLevel>::default())
             .insert_resource(Events::<UpdateZoneLevelVisibility>::default())
             .insert_resource(Events::<DespawnZoneLevel>::default())
@@ -88,9 +88,9 @@ fn update_systems() -> (impl IntoSystemConfigs<()>, impl IntoSystemConfigs<()>) 
                         resource_exists::<Events<SpawnSubzoneLevel>>
                             .and_then(on_event::<SpawnSubzoneLevel>()),
                     ),
-                    collapse_zone_levels.run_if(
-                        resource_exists::<Events<CollapseZoneLevel>>
-                            .and_then(on_event::<CollapseZoneLevel>()),
+                    despawn_subzone_levels.run_if(
+                        resource_exists::<Events<DespawnSubzoneLevel>>
+                            .and_then(on_event::<DespawnSubzoneLevel>()),
                     ),
                 ),
             )
@@ -98,7 +98,7 @@ fn update_systems() -> (impl IntoSystemConfigs<()>, impl IntoSystemConfigs<()>) 
             update_visualization_on_focus_move
                 .run_if(resource_exists_and_changed::<ElevationVisibility>),
             (
-                update_collapsed_zone_levels,
+                update_zone_levels,
                 (
                     spawn_zone_levels.run_if(
                         resource_exists::<Events<SpawnZoneLevel>>
@@ -146,7 +146,7 @@ fn shutdown_systems() -> impl IntoSystemConfigs<()> {
         (
             clear_gameplay_events::<Message>,
             clear_gameplay_events::<SpawnSubzoneLevel>,
-            clear_gameplay_events::<CollapseZoneLevel>,
+            clear_gameplay_events::<DespawnSubzoneLevel>,
             clear_gameplay_events::<SpawnZoneLevel>,
             clear_gameplay_events::<UpdateZoneLevelVisibility>,
             clear_gameplay_events::<DespawnZoneLevel>,

@@ -643,18 +643,16 @@ impl<'w, 's> Spawner<'w, 's> {
 }
 
 #[derive(SystemParam)]
-pub(crate) struct ZoneSpawner<'w, 's> {
+pub(crate) struct SubzoneSpawner<'w, 's> {
     infos: Res<'w, Infos>,
-    pub(crate) zone_level_ids: ResMut<'w, ZoneLevelIds>,
-    pub(crate) zone_level_entities: ResMut<'w, ZoneLevelEntities>,
+    zone_level_ids: ResMut<'w, ZoneLevelIds>,
     pub(crate) subzone_level_entities: ResMut<'w, SubzoneLevelEntities>,
-    pub(crate) overmap_manager: OvermapManager<'w>,
-    pub(crate) overmap_buffer_manager: OvermapBufferManager<'w>,
-    pub(crate) spawner: Spawner<'w, 's>,
+    overmap_manager: OvermapManager<'w>,
+    spawner: Spawner<'w, 's>,
 }
 
-impl<'w, 's> ZoneSpawner<'w, 's> {
-    pub(crate) fn spawn_expanded_subzone_level(
+impl<'w, 's> SubzoneSpawner<'w, 's> {
+    pub(crate) fn spawn_subzone_level(
         &mut self,
         map_manager: &mut MapManager,
         map_memory_manager: &mut MapMemoryManager,
@@ -669,7 +667,7 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
             AssetState::Available { asset: submap } => {
                 match map_memory_manager.submap(subzone_level) {
                     AssetState::Available { .. } | AssetState::Nonexistent => {
-                        self.spawn_subzone(submap, subzone_level);
+                        self.spawn_submap(submap, subzone_level);
                     }
                     AssetState::Loading => {
                         // It will be spawned when it's fully loaded.
@@ -685,13 +683,13 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
                     .get(&mut self.overmap_manager, ZoneLevel::from(subzone_level))
                 {
                     let submap = Submap::fallback(subzone_level, object_id);
-                    self.spawn_subzone(&submap, subzone_level);
+                    self.spawn_submap(&submap, subzone_level);
                 }
             }
         }
     }
 
-    fn spawn_subzone(&mut self, submap: &Submap, subzone_level: SubzoneLevel) {
+    fn spawn_submap(&mut self, submap: &Submap, subzone_level: SubzoneLevel) {
         //println!("{:?} started...", subzone_level);
         let subzone_level_entity = self
             .spawner
@@ -767,8 +765,20 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
         self.subzone_level_entities
             .add(subzone_level, subzone_level_entity);
     }
+}
 
-    pub(crate) fn spawn_collapsed_zone_level(
+#[derive(SystemParam)]
+pub(crate) struct ZoneSpawner<'w, 's> {
+    infos: Res<'w, Infos>,
+    pub(crate) zone_level_ids: ResMut<'w, ZoneLevelIds>,
+    zone_level_entities: ResMut<'w, ZoneLevelEntities>,
+    pub(crate) overmap_manager: OvermapManager<'w>,
+    pub(crate) overmap_buffer_manager: OvermapBufferManager<'w>,
+    pub(crate) spawner: Spawner<'w, 's>,
+}
+
+impl<'w, 's> ZoneSpawner<'w, 's> {
+    pub(crate) fn spawn_zone_level(
         &mut self,
         zone_level: ZoneLevel,
         child_visibiltiy: &Visibility,
@@ -776,7 +786,7 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
         //println!("zone_level: {zone_level:?} {:?}", &definition);
         assert!(
             zone_level.level <= Level::ZERO,
-            "Collapsed zone levels above ground may not be spawned"
+            "Zone levels above ground may not be spawned"
         );
 
         let mut entity = self.spawner.commands.spawn(zone_level);
@@ -804,16 +814,10 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
         };
 
         let entity = entity.id();
-        self.complete_collapsed_zone_level(
-            entity,
-            zone_level,
-            seen_from,
-            &definition,
-            child_visibiltiy,
-        );
+        self.complete_zone_level(entity, zone_level, seen_from, &definition, child_visibiltiy);
     }
 
-    pub(crate) fn complete_collapsed_zone_level(
+    pub(crate) fn complete_zone_level(
         &mut self,
         entity: Entity,
         zone_level: ZoneLevel,
@@ -855,7 +859,6 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
                     visibility,
                     ..SpatialBundle::default()
                 },
-                Collapsed,
                 name,
                 seen_from,
                 StateBound::<ApplicationState>::default(),

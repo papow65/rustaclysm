@@ -7,8 +7,8 @@ pub(crate) struct SpawnSubzoneLevel {
 }
 
 #[derive(Debug, Event)]
-pub(crate) struct CollapseZoneLevel {
-    pub(crate) zone_level: ZoneLevel,
+pub(crate) struct DespawnSubzoneLevel {
+    pub(crate) subzone_level: SubzoneLevel,
 }
 
 #[derive(Debug, Event)]

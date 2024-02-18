@@ -7,7 +7,7 @@ const MAX_EXPAND_DISTANCE: i32 = 10;
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn spawn_subzones_for_camera(
     mut spawn_subzone_level_writer: EventWriter<SpawnSubzoneLevel>,
-    mut collaspe_zone_level_writer: EventWriter<CollapseZoneLevel>,
+    mut despawn_subzone_level_writer: EventWriter<DespawnSubzoneLevel>,
     player_action_state: Res<PlayerActionState>,
     subzone_level_entities: Res<SubzoneLevelEntities>,
     mut session: GameplaySession,
@@ -43,7 +43,7 @@ pub(crate) fn spawn_subzones_for_camera(
         &expanded.region,
     );
     despawn_expanded_subzone_levels(
-        &mut collaspe_zone_level_writer,
+        &mut despawn_subzone_level_writer,
         &subzone_levels,
         &expanded.region,
     );
@@ -78,7 +78,7 @@ fn expanded_region(focus: &Focus, camera: &Camera, global_transform: &GlobalTran
     visible_region(camera, global_transform).clamp(&minimal_expanded_zones, &maximal_expanded_zones)
 }
 
-/** Region visible on the camera, for both expanded subzones and collapsed zones */
+/** Region visible on the camera */
 fn visible_region(camera: &Camera, global_transform: &GlobalTransform) -> Region {
     let Some(Rect {
         min: corner_min,
@@ -135,29 +135,26 @@ fn spawn_expanded_subzone_levels(
 }
 
 fn despawn_expanded_subzone_levels(
-    collaspe_zone_level_writer: &mut EventWriter<CollapseZoneLevel>,
+    despawn_subzone_level_writer: &mut EventWriter<DespawnSubzoneLevel>,
     subzone_levels: &Query<&SubzoneLevel>,
     expanded_region: &Region,
 ) {
     // we use hashmap keys to get rid of duplicates
-    let zone_levels = subzone_levels
+    subzone_levels
         .iter()
-        .map(|subzone_level| (ZoneLevel::from(*subzone_level), ()))
-        .collect::<bevy::utils::HashMap<ZoneLevel, ()>>();
-
-    zone_levels
-        .keys()
+        .filter(|subzone_level| {
+            !expanded_region.contains_zone_level(ZoneLevel::from(**subzone_level))
+        })
         .copied()
-        .filter(|zone_level| !expanded_region.contains_zone_level(*zone_level))
-        .for_each(|zone_level| {
-            collaspe_zone_level_writer.send(CollapseZoneLevel { zone_level });
+        .for_each(|subzone_level| {
+            despawn_subzone_level_writer.send(DespawnSubzoneLevel { subzone_level });
         });
 }
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn spawn_subzone_levels(
     mut spawn_subzone_level_reader: EventReader<SpawnSubzoneLevel>,
-    mut zone_spawner: ZoneSpawner,
+    mut subzone_spawner: SubzoneSpawner,
     mut map_manager: MapManager,
     mut map_memory_manager: MapMemoryManager,
 ) {
@@ -169,7 +166,7 @@ pub(crate) fn spawn_subzone_levels(
     );
 
     for spawn_event in spawn_subzone_level_reader.read() {
-        zone_spawner.spawn_expanded_subzone_level(
+        subzone_spawner.spawn_subzone_level(
             &mut map_manager,
             &mut map_memory_manager,
             spawn_event.subzone_level,
@@ -180,50 +177,30 @@ pub(crate) fn spawn_subzone_levels(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn collapse_zone_levels(
+pub(crate) fn despawn_subzone_levels(
     mut commands: Commands,
-    mut collapse_zone_level_reader: EventReader<CollapseZoneLevel>,
-    mut zone_spawner: ZoneSpawner,
+    mut despawn_subzone_level_reader: EventReader<DespawnSubzoneLevel>,
+    mut subzone_level_entities: ResMut<SubzoneLevelEntities>,
 ) {
     let start = Instant::now();
 
     println!(
-        "Collapsing {} zone levels",
-        collapse_zone_level_reader.len()
+        "Despawning {} subzone levels",
+        despawn_subzone_level_reader.len()
     );
 
-    for collapse_event in collapse_zone_level_reader.read() {
-        for subzone_level in collapse_event.zone_level.subzone_levels() {
-            if let Some(entity) = zone_spawner.subzone_level_entities.get(subzone_level) {
-                commands.entity(entity).despawn_recursive();
-                zone_spawner.subzone_level_entities.remove(entity);
-            }
-        }
-
-        match zone_spawner.spawner.explored.has_zone_level_been_seen(
-            &mut zone_spawner.overmap_buffer_manager,
-            collapse_event.zone_level,
-        ) {
-            Some(SeenFrom::CloseBy | SeenFrom::FarAway) => {
-                let visible = Visibility::Inherited;
-                if let Some(zone_level_entity) = zone_spawner
-                    .zone_level_entities
-                    .get(collapse_event.zone_level)
-                {
-                    commands.entity(zone_level_entity).insert(visible);
-                } else if collapse_event.zone_level.level <= Level::ZERO {
-                    zone_spawner.spawn_collapsed_zone_level(collapse_event.zone_level, &visible);
-                }
-            }
-            None | Some(SeenFrom::Never) => {}
+    for despawn_event in despawn_subzone_level_reader.read() {
+        if let Some(entity) = subzone_level_entities.get(despawn_event.subzone_level) {
+            commands.entity(entity).despawn_recursive();
+            subzone_level_entities.remove(entity);
         }
     }
 
-    log_if_slow("collapse_zone_levels", start);
+    log_if_slow("despawn_subzone_levels", start);
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn update_collapsed_zone_levels(
+pub(crate) fn update_zone_levels(
     mut spawn_zone_level_writer: EventWriter<SpawnZoneLevel>,
     mut update_zone_level_visibility_writer: EventWriter<UpdateZoneLevelVisibility>,
     mut despawn_zone_level_writer: EventWriter<DespawnZoneLevel>,
@@ -234,14 +211,11 @@ pub(crate) fn update_collapsed_zone_levels(
     mut previous_visible_region: Local<Region>,
     players: Query<&Pos, With<Player>>,
     cameras: Query<(&Camera, &GlobalTransform)>,
-    collapsed_zone_levels: Query<
-        (Entity, &ZoneLevel, &Children),
-        (With<Collapsed>, With<Visibility>),
-    >,
+    zone_levels: Query<(Entity, &ZoneLevel, &Children), With<Visibility>>,
     new_subzone_levels: Query<(), Added<SubzoneLevel>>,
 ) {
-    // Collapsed zone level visibility: not SeenFrom::Never and not open sky, deep rock, etc.
-    // Collapsed zone level child visibility: not expanded, even when zoomed out
+    // Zone level visibility: not SeenFrom::Never and not open sky, deep rock, etc.
+    // Zone level child visibility: not expanded, even when zoomed out
 
     let start = Instant::now();
 
@@ -251,7 +225,7 @@ pub(crate) fn update_collapsed_zone_levels(
     }
 
     /*println!(
-        "update_collapsed_zone_levels {:?} {:?}",
+        "update_zone_levels {:?} {:?}",
         new_subzone_levels.iter().collect::<Vec<_>>().len(),
         new_subzone_levels.is_empty()
     );*/
@@ -261,13 +235,13 @@ pub(crate) fn update_collapsed_zone_levels(
         return;
     }
 
-    // Collapsed zones above zero add little value, so we always skip these.
+    // Zone levels above zero add little value, so we always skip these.
     let visible_region = visible_region(camera, &global_transform).ground_only();
     //println!("Visible region: {:?}", &visible_region);
     if visible_region == *previous_visible_region && new_subzone_levels.is_empty() {
         return;
     }
-    //println!("update_collapsed_zone_levels refresh");
+    //println!("update_zone_levels refresh");
     //dbg!(&visible_region);
 
     let &player_pos = players.single();
@@ -288,7 +262,7 @@ pub(crate) fn update_collapsed_zone_levels(
         }
     }
 
-    for (entity, &zone_level, children) in collapsed_zone_levels.iter() {
+    for (entity, &zone_level, children) in zone_levels.iter() {
         if visible_region.contains_zone_level(zone_level) {
             update_zone_level_visibility_writer.send(UpdateZoneLevelVisibility {
                 zone_level,
@@ -302,7 +276,7 @@ pub(crate) fn update_collapsed_zone_levels(
     *previous_camera_global_transform = global_transform;
     *previous_visible_region = visible_region;
 
-    log_if_slow("update_collapsed_zone_levels", start);
+    log_if_slow("update_zone_levels", start);
 }
 
 #[allow(clippy::needless_pass_by_value)]
@@ -323,13 +297,13 @@ pub(crate) fn spawn_zone_levels(
     let focus = Focus::new(&player_action_state, player_pos);
 
     for spawn_event in spawn_zone_level_reader.read() {
-        let visibility = collapsed_visibility(
+        let visibility = zone_level_visibility(
             &mut zone_spawner,
             spawn_event.zone_level,
             &visible_region,
             &focus,
         );
-        zone_spawner.spawn_collapsed_zone_level(spawn_event.zone_level, &visibility);
+        zone_spawner.spawn_zone_level(spawn_event.zone_level, &visibility);
     }
 
     log_if_slow("spawn_zone_levels", start);
@@ -357,13 +331,12 @@ pub(crate) fn update_zone_level_visibility(
     let focus = Focus::new(&player_action_state, player_pos);
 
     for update_zone_level_visibility_event in update_zone_level_visibility_reader.read() {
-        let visibility = collapsed_visibility(
+        let visibility = zone_level_visibility(
             &mut zone_spawner,
             update_zone_level_visibility_event.zone_level,
             &visible_region,
             &focus,
         );
-        //println!("{collapsed_zone_level:?} becomes {visibility:?}");
         for &entity in &update_zone_level_visibility_event.children {
             // Removing 'Visibility' and 'ComputedVisibility' is not more performant in Bevy 0.9
             commands.entity(entity).insert(visibility);
@@ -392,7 +365,7 @@ pub(crate) fn despawn_zone_level(
     log_if_slow("despawn_zone_level", start);
 }
 
-fn collapsed_visibility(
+fn zone_level_visibility(
     zone_spawner: &mut ZoneSpawner,
     zone_level: ZoneLevel,
     visible_region: &Region,
@@ -417,7 +390,7 @@ fn collapsed_visibility(
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn handle_map_events(
     mut map_asset_events: EventReader<AssetEvent<Map>>,
-    mut zone_spawner: ZoneSpawner,
+    mut subzone_spawner: SubzoneSpawner,
     mut map_manager: MapManager,
     mut map_memory_manager: MapMemoryManager,
 ) {
@@ -428,12 +401,12 @@ pub(crate) fn handle_map_events(
                 .unwrap_or_else(|| panic!("{id:?} shoould be a known map asset id"));
 
             for subzone_level in zone_level.subzone_levels() {
-                if zone_spawner
+                if subzone_spawner
                     .subzone_level_entities
                     .get(subzone_level)
                     .is_none()
                 {
-                    zone_spawner.spawn_expanded_subzone_level(
+                    subzone_spawner.spawn_subzone_level(
                         &mut map_manager,
                         &mut map_memory_manager,
                         subzone_level,
@@ -554,9 +527,9 @@ pub(crate) fn update_zone_levels_with_missing_assets(
         };
 
         let child_visibility =
-            collapsed_visibility(&mut zone_spawner, zone_level, &visible_region, &focus);
+            zone_level_visibility(&mut zone_spawner, zone_level, &visible_region, &focus);
 
-        zone_spawner.complete_collapsed_zone_level(
+        zone_spawner.complete_zone_level(
             entity,
             zone_level,
             seen_from,
