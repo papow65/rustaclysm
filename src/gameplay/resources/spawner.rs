@@ -714,7 +714,7 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
                         level: LevelOffset::ZERO,
                         z,
                     };
-                    let pos = base_pos.offset(pos_offset).expect("pos on same level");
+                    let pos = base_pos.horizontal_offset(x, z);
                     //dbg!("{pos:?}");
                     let terrain_id = *terrain.get(&pos).expect("Terrain id should be found");
                     let furniture_ids = submap.furniture.iter().filter_map(|at| at.get(pos_offset));
