@@ -90,6 +90,7 @@ pub(crate) struct Submap {
     #[allow(unused)]
     version: u64,
 
+    #[allow(unused)]
     pub(crate) coordinates: (i32, i32, i8),
 
     #[allow(unused)]

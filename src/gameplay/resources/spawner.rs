@@ -659,6 +659,7 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
     pub(crate) fn spawn_expanded_subzone_level(
         &mut self,
         map_manager: &mut MapManager,
+        map_memory_manager: &mut MapMemoryManager,
         subzone_level: SubzoneLevel,
     ) {
         if self.subzone_level_entities.get(subzone_level).is_some() {
@@ -668,7 +669,14 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
 
         match map_manager.submap(subzone_level) {
             AssetState::Available { asset: submap } => {
-                self.spawn_subzone(submap, subzone_level);
+                match map_memory_manager.submap(subzone_level) {
+                    AssetState::Available { .. } | AssetState::Nonexistent => {
+                        self.spawn_subzone(submap, subzone_level);
+                    }
+                    AssetState::Loading => {
+                        // It will be spawned when it's fully loaded.
+                    }
+                }
             }
             AssetState::Loading => {
                 // It will be spawned when it's fully loaded.
@@ -678,14 +686,14 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
                     .zone_level_ids
                     .get(&mut self.overmap_manager, ZoneLevel::from(subzone_level))
                 {
-                    let fallback = Submap::fallback(subzone_level, object_id);
-                    self.spawn_subzone(&fallback, subzone_level);
+                    let submap = Submap::fallback(subzone_level, object_id);
+                    self.spawn_subzone(&submap, subzone_level);
                 }
             }
         }
     }
 
-    pub(crate) fn spawn_subzone(&mut self, submap: &Submap, subzone_level: SubzoneLevel) {
+    fn spawn_subzone(&mut self, submap: &Submap, subzone_level: SubzoneLevel) {
         //println!("{:?} started...", subzone_level);
         let subzone_level_entity = self
             .spawner

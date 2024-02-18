@@ -3,7 +3,7 @@ use crate::prelude::{
 };
 use bevy::{
     ecs::system::SystemParam,
-    prelude::{AssetServer, Assets, Res, ResMut},
+    prelude::{AssetId, AssetServer, Assets, Res, ResMut},
 };
 
 #[derive(SystemParam)]
@@ -20,7 +20,7 @@ impl<'w> MapManager<'w> {
         MapPath::new(&world_map, zone_level)
     }
 
-    pub(crate) fn map(&mut self, zone_level: ZoneLevel) -> AssetState<Map> {
+    fn map(&mut self, zone_level: ZoneLevel) -> AssetState<Map> {
         let path = self.path(zone_level);
         self.storage
             .handle(&self.asset_server, &self.assets, zone_level, path)
@@ -35,5 +35,9 @@ impl<'w> MapManager<'w> {
             AssetState::Loading => AssetState::Loading,
             AssetState::Nonexistent => AssetState::Nonexistent,
         }
+    }
+
+    pub(crate) fn zone_level(&self, handle: &AssetId<Map>) -> Option<ZoneLevel> {
+        self.storage.region(handle)
     }
 }

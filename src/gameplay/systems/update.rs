@@ -344,6 +344,42 @@ pub(crate) fn update_camera_offset(
 
 #[cfg(debug_assertions)]
 #[allow(clippy::needless_pass_by_value)]
+pub(crate) fn count_assets(
+    map_assets: Option<Res<Assets<Map>>>,
+    map_memory_assets: Option<Res<Assets<MapMemory>>>,
+    overmap_assets: Option<Res<Assets<Overmap>>>,
+    overmap_buffer_assets: Option<Res<Assets<OvermapBuffer>>>,
+    materials: Option<Res<Assets<StandardMaterial>>>,
+    meshes: Option<Res<Assets<Mesh>>>,
+    mut last_counts: Local<Vec<usize>>,
+) {
+    let start = Instant::now();
+
+    let counts = vec![
+        map_assets.map_or(0, |a| a.len()),
+        map_memory_assets.map_or(0, |a| a.len()),
+        overmap_assets.map_or(0, |a| a.len()),
+        overmap_buffer_assets.map_or(0, |a| a.len()),
+        materials.map_or(0, |a| a.len()),
+        meshes.map_or(0, |a| a.len()),
+    ];
+
+    if *last_counts != counts && counts.iter().any(|c| 0 < *c) {
+        println!("{} map assets", counts[0]);
+        println!("{} map memory assets", counts[1]);
+        println!("{} overmap assets", counts[2]);
+        println!("{} overmap buffer assets", counts[3]);
+        println!("{} material assets", counts[4]);
+        println!("{} mesh assets", counts[5]);
+
+        *last_counts = counts;
+    }
+
+    log_if_slow("count_assets", start);
+}
+
+#[cfg(debug_assertions)]
+#[allow(clippy::needless_pass_by_value)]
 pub(crate) fn check_items(
     item_parents: Query<Option<&Parent>, Or<(With<Amount>, With<Containable>)>>,
 ) {

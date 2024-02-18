@@ -80,6 +80,7 @@ fn update_systems() -> (impl IntoSystemConfigs<()>, impl IntoSystemConfigs<()>) 
             )
                 .chain(),
             handle_map_events.run_if(on_event::<AssetEvent<Map>>()),
+            handle_map_memory_events.run_if(on_event::<AssetEvent<MapMemory>>()),
             (
                 spawn_subzones_for_camera,
                 (
@@ -127,9 +128,14 @@ fn update_systems() -> (impl IntoSystemConfigs<()>, impl IntoSystemConfigs<()>) 
 }
 
 fn fixed_update_systems() -> impl IntoSystemConfigs<()> {
-    update_status_fps.run_if(
-        in_state(ApplicationState::Gameplay).and_then(resource_exists::<StatusTextSections>),
+    (
+        update_status_fps.run_if(
+            in_state(ApplicationState::Gameplay).and_then(resource_exists::<StatusTextSections>),
+        ),
+        #[cfg(debug_assertions)]
+        count_assets,
     )
+        .chain()
 }
 
 fn shutdown_systems() -> impl IntoSystemConfigs<()> {

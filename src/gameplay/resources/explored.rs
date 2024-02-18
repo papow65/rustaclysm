@@ -41,7 +41,7 @@ impl Explored {
                 asset: overmap_buffer,
             } = overmap_buffer_manager.get(overzone)
             {
-                self.load(overzone, overmap_buffer);
+                self.load_buffer(overzone, overmap_buffer);
                 self.zone_level.get(&zone_level).copied()
             } else {
                 None
@@ -53,7 +53,7 @@ impl Explored {
         self.pos.get(&pos) == Some(&true)
     }
 
-    pub(crate) fn load(&mut self, overzone: Overzone, overmap_buffer: &OvermapBuffer) {
+    pub(crate) fn load_buffer(&mut self, overzone: Overzone, overmap_buffer: &OvermapBuffer) {
         if !self.loaded_overzones.contains(&overzone) {
             for level in Level::GROUNDS {
                 let overmap = overmap_buffer
@@ -70,6 +70,42 @@ impl Explored {
                 }
             }
             self.loaded_overzones.push(overzone);
+        }
+    }
+
+    pub(crate) fn load_memory(
+        &mut self,
+        map_memory_manager: &mut MapMemoryManager,
+        base_zone_level: ZoneLevel,
+    ) {
+        // TODO check if performant enough
+
+        let base_subzone_level = base_zone_level.subzone_levels()[0];
+        for z in 0..8 {
+            for x in 0..8 {
+                let subzone_level = SubzoneLevel {
+                    x: base_subzone_level.x + x,
+                    level: base_subzone_level.level,
+                    z: base_subzone_level.z + z,
+                };
+                let AssetState::Available {
+                    asset: submap_memory,
+                } = map_memory_manager.submap(subzone_level)
+                else {
+                    panic!("Map memory asset not available for {subzone_level:?}");
+                };
+                for zz in 0..12 {
+                    for xx in 0..12 {
+                        if submap_memory.seen(xx, zz) {
+                            self.mark_pos_seen(
+                                subzone_level
+                                    .base_pos()
+                                    .horizontal_offset(i32::from(xx), i32::from(zz)),
+                            );
+                        }
+                    }
+                }
+            }
         }
     }
 

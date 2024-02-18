@@ -12,7 +12,7 @@ pub(crate) fn spawn_subzones_for_camera(
     subzone_level_entities: Res<SubzoneLevelEntities>,
     mut session: GameplaySession,
     mut previous_camera_global_transform: Local<GlobalTransform>,
-    mut previous_expanded_region: Local<Region>,
+    mut expanded: ResMut<Expanded>,
     players: Query<&Pos, With<Player>>,
     cameras: Query<(&Camera, &GlobalTransform)>,
     subzone_levels: Query<&SubzoneLevel>,
@@ -21,7 +21,6 @@ pub(crate) fn spawn_subzones_for_camera(
 
     if session.is_changed() {
         *previous_camera_global_transform = GlobalTransform::default();
-        *previous_expanded_region = Region::default();
     }
 
     // TODO fix respawning expanded subzones after loading a save game twice, because the Local resources might not change
@@ -34,23 +33,22 @@ pub(crate) fn spawn_subzones_for_camera(
     let &player_pos = players.single();
     let focus = Focus::new(&player_action_state, player_pos);
     let expanded_region = expanded_region(&focus, camera, &global_transform);
-    if expanded_region == *previous_expanded_region {
+    if !expanded.update(expanded_region) {
         return;
     }
 
     spawn_expanded_subzone_levels(
         &mut spawn_subzone_level_writer,
         &subzone_level_entities,
-        &expanded_region,
+        &expanded.region,
     );
     despawn_expanded_subzone_levels(
         &mut collaspe_zone_level_writer,
         &subzone_levels,
-        &expanded_region,
+        &expanded.region,
     );
 
     *previous_camera_global_transform = global_transform;
-    *previous_expanded_region = expanded_region;
 
     log_if_slow("spawn_subzones_for_camera", start);
 }
@@ -161,6 +159,7 @@ pub(crate) fn spawn_subzone_levels(
     mut spawn_subzone_level_reader: EventReader<SpawnSubzoneLevel>,
     mut zone_spawner: ZoneSpawner,
     mut map_manager: MapManager,
+    mut map_memory_manager: MapMemoryManager,
 ) {
     let start = Instant::now();
 
@@ -170,7 +169,11 @@ pub(crate) fn spawn_subzone_levels(
     );
 
     for spawn_event in spawn_subzone_level_reader.read() {
-        zone_spawner.spawn_expanded_subzone_level(&mut map_manager, spawn_event.subzone_level);
+        zone_spawner.spawn_expanded_subzone_level(
+            &mut map_manager,
+            &mut map_memory_manager,
+            spawn_event.subzone_level,
+        );
     }
 
     log_if_slow("spawn_subzone_levels", start);
@@ -419,34 +422,58 @@ fn collapsed_visibility(
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn handle_map_events(
-    mut zone_spawner: ZoneSpawner,
     mut map_asset_events: EventReader<AssetEvent<Map>>,
-    map_assets: Res<Assets<Map>>,
+    mut zone_spawner: ZoneSpawner,
+    mut map_manager: MapManager,
+    mut map_memory_manager: MapMemoryManager,
 ) {
     for map_asset_event in map_asset_events.read() {
         if let AssetEvent::LoadedWithDependencies { id } = map_asset_event {
-            let map = map_assets.get(*id).expect("Map loaded");
-            for submap in &map.0 {
-                let subzone_level = SubzoneLevel {
-                    x: submap.coordinates.0,
-                    level: Level::new(submap.coordinates.2),
-                    z: submap.coordinates.1,
-                };
+            let zone_level = map_manager
+                .zone_level(id)
+                .unwrap_or_else(|| panic!("{id:?} shoould be a known map asset id"));
+
+            for subzone_level in zone_level.subzone_levels() {
                 if zone_spawner
                     .subzone_level_entities
                     .get(subzone_level)
                     .is_none()
                 {
-                    assert_eq!(
-                        submap.coordinates,
-                        subzone_level.coordinates(),
-                        "The stored coordinates and calculated coordinated should match"
+                    zone_spawner.spawn_expanded_subzone_level(
+                        &mut map_manager,
+                        &mut map_memory_manager,
+                        subzone_level,
                     );
-                    zone_spawner.spawn_subzone(submap, subzone_level);
                 }
             }
         }
     }
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub(crate) fn handle_map_memory_events(
+    mut map_memory_asset_events: EventReader<AssetEvent<MapMemory>>,
+    mut spawn_subzone_level_writer: EventWriter<SpawnSubzoneLevel>,
+    subzone_level_entities: Res<SubzoneLevelEntities>,
+    expanded: Res<Expanded>,
+    mut explored: ResMut<Explored>,
+    mut map_memory_manager: MapMemoryManager,
+) {
+    for map_asset_event in map_memory_asset_events.read() {
+        if let AssetEvent::LoadedWithDependencies { id } = map_asset_event {
+            let base_zone_level = map_memory_manager
+                .base_zone_level(id)
+                .expect("Map memory known");
+            //println!("Loading map memory for {base_zone_level:?}");
+            explored.load_memory(&mut map_memory_manager, base_zone_level);
+        }
+    }
+
+    spawn_expanded_subzone_levels(
+        &mut spawn_subzone_level_writer,
+        &subzone_level_entities,
+        &expanded.region,
+    );
 }
 
 #[allow(clippy::needless_pass_by_value)]
@@ -464,7 +491,7 @@ pub(crate) fn handle_overmap_buffer_events(
                 let overmap_buffer = overmap_buffer_assets
                     .get(*id)
                     .expect("Overmap buffer loaded");
-                explored.load(overzone, overmap_buffer);
+                explored.load_buffer(overzone, overmap_buffer);
             }
         }
     }

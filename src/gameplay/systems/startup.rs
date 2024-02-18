@@ -20,9 +20,11 @@ pub(crate) fn create_independent_resources(mut commands: Commands) {
     commands.insert_resource(AssetStorage::<Overmap, Overzone>::default());
     commands.insert_resource(AssetStorage::<OvermapBuffer, Overzone>::default());
     commands.insert_resource(AssetStorage::<Map, ZoneLevel>::default());
+    commands.insert_resource(AssetStorage::<MapMemory, ZoneLevel>::default());
     commands.insert_resource(Location::default());
     commands.insert_resource(SubzoneLevelEntities::default());
     commands.insert_resource(ZoneLevelEntities::default());
+    commands.insert_resource(Expanded::default());
     commands.insert_resource(Explored::default());
     commands.insert_resource(ZoneLevelIds::default());
     commands.insert_resource(TileLoader::new());
