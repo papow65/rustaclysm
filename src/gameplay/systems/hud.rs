@@ -119,6 +119,7 @@ fn spawn_manual_display(
                             + "toggle this   f1\n"
                             + "examine       x\n"
                             + "examine map   X\n"
+                            + "toggle map    m/M\n"
                             + "inventory     i\n"
                             + "menu          esc\n"
                             + "main menu     f12\n"

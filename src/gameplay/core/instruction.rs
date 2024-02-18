@@ -113,6 +113,12 @@ impl TryFrom<Key> for QueuedInstruction {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub(crate) enum ZoomDistance {
+    Close,
+    Far,
+}
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub(crate) enum ZoomDirection {
     In,
     Out,
@@ -124,6 +130,7 @@ pub(crate) enum Instruction {
     ShowMainMenu,
     ShowGameplayMenu,
     Inventory,
+    ToggleMap(ZoomDistance),
     ToggleElevation,
     ToggleHelp,
     Zoom(ZoomDirection),
@@ -141,6 +148,12 @@ impl TryFrom<(&KeyCombo, CancelContext)> for Instruction {
             }
             (Key::Code(KeyCode::F1), InputChange::JustPressed, _) => Ok(Self::ToggleHelp),
             (Key::Code(KeyCode::F12), InputChange::JustPressed, _) => Ok(Self::ShowMainMenu),
+            (Key::Character('m'), InputChange::JustPressed, _) => {
+                Ok(Self::ToggleMap(ZoomDistance::Close))
+            }
+            (Key::Character('M'), InputChange::JustPressed, _) => {
+                Ok(Self::ToggleMap(ZoomDistance::Far))
+            }
             (Key::Character('i'), InputChange::JustPressed, _) => Ok(Self::Inventory),
             (Key::Character('Z'), InputChange::JustPressed, _) => {
                 Ok(Self::Zoom(ZoomDirection::Out))

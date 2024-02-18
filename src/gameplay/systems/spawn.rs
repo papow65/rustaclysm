@@ -321,13 +321,11 @@ pub(crate) fn spawn_zone_levels(
     let visible_region = visible_region(camera, &global_transform).ground_only();
     let &player_pos = players.single();
     let focus = Focus::new(&player_action_state, player_pos);
-    let sight_region = zones_in_sight_distance(Pos::from(&focus));
 
     for spawn_event in spawn_zone_level_reader.read() {
         let visibility = collapsed_visibility(
             &mut zone_spawner,
             spawn_event.zone_level,
-            &sight_region,
             &visible_region,
             &focus,
         );
@@ -357,13 +355,11 @@ pub(crate) fn update_zone_level_visibility(
     let visible_region = visible_region(camera, &global_transform).ground_only();
     let &player_pos = players.single();
     let focus = Focus::new(&player_action_state, player_pos);
-    let sight_region = zones_in_sight_distance(Pos::from(&focus));
 
     for update_zone_level_visibility_event in update_zone_level_visibility_reader.read() {
         let visibility = collapsed_visibility(
             &mut zone_spawner,
             update_zone_level_visibility_event.zone_level,
-            &sight_region,
             &visible_region,
             &focus,
         );
@@ -399,19 +395,17 @@ pub(crate) fn despawn_zone_level(
 fn collapsed_visibility(
     zone_spawner: &mut ZoneSpawner,
     zone_level: ZoneLevel,
-    sight_region: &Region,
     visible_region: &Region,
     focus: &Focus,
 ) -> Visibility {
     if zone_level.level == Level::from(focus).min(Level::ZERO)
         && zone_level.subzone_levels().iter().all(|subzone_level| {
             visible_region.contains_zone_level(ZoneLevel::from(*subzone_level))
-                && !sight_region.contains_zone_level(ZoneLevel::from(*subzone_level))
                 && zone_spawner
                     .spawner
                     .explored
                     .has_zone_level_been_seen(&mut zone_spawner.overmap_buffer_manager, zone_level)
-                    == Some(SeenFrom::FarAway)
+                    .is_some_and(|seen_from| seen_from != SeenFrom::Never)
         })
     {
         Visibility::Inherited
@@ -538,7 +532,6 @@ pub(crate) fn update_zone_levels_with_missing_assets(
     let &player_pos = players.single();
     let visible_region = visible_region(camera, &global_transform).ground_only();
     let focus = Focus::new(&player_action_state, player_pos);
-    let sight_region = zones_in_sight_distance(Pos::from(&focus));
 
     for (entity, &zone_level) in &zone_levels {
         let Some(seen_from) = zone_spawner
@@ -560,13 +553,8 @@ pub(crate) fn update_zone_levels_with_missing_assets(
             continue;
         };
 
-        let child_visibility = collapsed_visibility(
-            &mut zone_spawner,
-            zone_level,
-            &sight_region,
-            &visible_region,
-            &focus,
-        );
+        let child_visibility =
+            collapsed_visibility(&mut zone_spawner, zone_level, &visible_region, &focus);
 
         zone_spawner.complete_collapsed_zone_level(
             entity,

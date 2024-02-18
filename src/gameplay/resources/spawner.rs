@@ -2,7 +2,10 @@ use crate::prelude::*;
 use bevy::{
     ecs::system::SystemParam,
     prelude::*,
-    render::camera::{PerspectiveProjection, Projection::Perspective},
+    render::{
+        camera::{PerspectiveProjection, Projection::Perspective},
+        view::RenderLayers,
+    },
 };
 
 #[derive(SystemParam)]
@@ -409,13 +412,11 @@ impl<'w, 's> Spawner<'w, 's> {
             .get_layers(definition, Visibility::Inherited, true)
             .map(|(pbr_bundle, apprearance)| {
                 (
-                    pbr_bundle,
-                    apprearance.clone(),
+                    (pbr_bundle, apprearance.clone(), RenderLayers::layer(1)),
                     if last_seen == LastSeen::Never {
-                        Some(apprearance.material(&LastSeen::Currently))
-                        //None // TODO
+                        apprearance.material(&LastSeen::Currently)
                     } else {
-                        Some(apprearance.material(&last_seen))
+                        apprearance.material(&last_seen)
                     },
                 )
             });
@@ -433,17 +434,11 @@ impl<'w, 's> Spawner<'w, 's> {
             ))
             .with_children(|child_builder| {
                 {
-                    let (pbr_bundle, appearance, material) = layers.base;
-                    let mut child = child_builder.spawn((pbr_bundle, appearance));
-                    if let Some(material) = material {
-                        child.insert(material);
-                    }
+                    let (bundle, material_override) = layers.base;
+                    child_builder.spawn(bundle).insert(material_override);
                 }
-                if let Some((pbr_bundle, appearance, material)) = layers.overlay {
-                    let mut child = child_builder.spawn((pbr_bundle, appearance));
-                    if let Some(material) = material {
-                        child.insert(material);
-                    }
+                if let Some((bundle, material_override)) = layers.overlay {
+                    child_builder.spawn(bundle).insert(material_override);
                 }
             })
             .id();
@@ -487,14 +482,17 @@ impl<'w, 's> Spawner<'w, 's> {
                                 ..PbrBundle::default()
                             })
                             .with_children(|child_builder| {
-                                child_builder.spawn(Camera3dBundle {
-                                    projection: Perspective(PerspectiveProjection {
-                                        // more overview, less personal than the default
-                                        fov: 0.3,
+                                child_builder.spawn((
+                                    Camera3dBundle {
+                                        projection: Perspective(PerspectiveProjection {
+                                            // more overview, less personal than the default
+                                            fov: 0.3,
+                                            ..default()
+                                        }),
                                         ..default()
-                                    }),
-                                    ..default()
-                                });
+                                    },
+                                    RenderLayers::all().without(2),
+                                ));
                             });
                     });
             });
@@ -842,7 +840,7 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
             .spawner
             .model_factory
             .get_layers(definition, *child_visibiltiy, false)
-            .map(|(pbr, _)| pbr);
+            .map(|(pbr, _)| (pbr, RenderLayers::layer(2)));
 
         self.spawner
             .commands

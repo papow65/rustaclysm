@@ -1,4 +1,4 @@
-use crate::prelude::ZoomDirection;
+use crate::prelude::{ZoomDirection, ZoomDistance};
 use bevy::prelude::{Resource, Vec2, Vec3};
 
 #[derive(Debug, Default, Resource)]
@@ -30,6 +30,31 @@ impl CameraOffset {
         } else {
             -1
         };
+        dbg!(self.zoom_in_level);
+    }
+
+    pub(crate) const fn zoom_map_only(&self) -> bool {
+        self.zoom_in_level < -10
+    }
+
+    pub(crate) fn zoom_to_map(&mut self, zoom_distance: ZoomDistance) {
+        self.zoom_in_level = if zoom_distance == ZoomDistance::Close {
+            -8
+        } else {
+            -12
+        };
+    }
+
+    pub(crate) fn zoom_to_tiles(&mut self, zoom_distance: ZoomDistance) {
+        self.zoom_in_level = if zoom_distance == ZoomDistance::Close {
+            0
+        } else {
+            -7
+        };
+    }
+
+    pub(crate) const fn zoom_tiles_only(&self) -> bool {
+        -4 < self.zoom_in_level
     }
 
     pub(crate) fn adjust_angle(&mut self, delta: Vec2) {
