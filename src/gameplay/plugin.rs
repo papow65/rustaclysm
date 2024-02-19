@@ -84,10 +84,16 @@ fn update_systems() -> (impl IntoSystemConfigs<()>, impl IntoSystemConfigs<()>) 
             (
                 spawn_subzones_for_camera,
                 (
-                    spawn_subzone_levels.run_if(
-                        resource_exists::<Events<SpawnSubzoneLevel>>
-                            .and_then(on_event::<SpawnSubzoneLevel>()),
-                    ),
+                    (
+                        spawn_subzone_levels,
+                        update_visualization_on_item_move
+                            .run_if(resource_exists::<RelativeSegments>),
+                    )
+                        .chain()
+                        .run_if(
+                            resource_exists::<Events<SpawnSubzoneLevel>>
+                                .and_then(on_event::<SpawnSubzoneLevel>()),
+                        ),
                     despawn_subzone_levels.run_if(
                         resource_exists::<Events<DespawnSubzoneLevel>>
                             .and_then(on_event::<DespawnSubzoneLevel>()),
