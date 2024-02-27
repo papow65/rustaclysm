@@ -1,6 +1,9 @@
 use crate::prelude::*;
 use bevy::prelude::*;
-use std::time::Instant;
+use std::{
+    sync::{Arc, Mutex},
+    time::Instant,
+};
 
 #[cfg(feature = "log_archetypes")]
 use bevy::utils::HashMap;
@@ -77,8 +80,8 @@ fn update_material(
 }
 
 fn update_visualization(
-    commands: &mut Commands,
-    explored: &mut Explored,
+    commands: &Arc<Mutex<Commands>>,
+    explored: &Arc<Mutex<&mut Explored>>,
     currently_visible: &CurrentlyVisible,
     elevation_visibility: ElevationVisibility,
     focus: &Focus,
@@ -100,11 +103,16 @@ fn update_visualization(
     if last_seen != &LastSeen::Never {
         if last_seen != &previously_seen {
             if previously_seen == LastSeen::Never {
-                explored.mark_pos_seen(pos);
+                explored.lock().expect("Unpoisoned").mark_pos_seen(pos);
             }
 
             // TODO select an appearance based on amount of perceived light
-            update_material(commands, children, child_items, last_seen);
+            update_material(
+                &mut commands.lock().expect("Unpoisoned"),
+                children,
+                child_items,
+                last_seen,
+            );
         }
 
         *visibility =
@@ -130,7 +138,7 @@ fn calculate_visibility(
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_visualization_on_item_move(
-    mut commands: Commands,
+    commands: Commands,
     player_action_state: Res<PlayerActionState>,
     envir: Envir,
     clock: Clock,
@@ -156,11 +164,13 @@ pub(crate) fn update_visualization_on_item_move(
         let &player_pos = players.single();
         let focus = Focus::new(&player_action_state, player_pos);
         let currently_visible = envir.currently_visible(&clock, &player_action_state, player_pos);
+        let commands = Arc::new(Mutex::new(commands));
+        let explored = Arc::new(Mutex::new(&mut *explored));
 
         for (&pos, mut visibility, mut last_seen, accessible, speed, children) in &mut moved_items {
             update_visualization(
-                &mut commands,
-                &mut explored,
+                &commands.clone(),
+                &explored.clone(),
                 &currently_visible,
                 *elevation_visibility,
                 &focus,
@@ -181,7 +191,7 @@ pub(crate) fn update_visualization_on_item_move(
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_visualization_on_focus_move(
-    mut commands: Commands,
+    commands: Commands,
     player_action_state: Res<PlayerActionState>,
     envir: Envir,
     clock: Clock,
@@ -241,29 +251,33 @@ pub(crate) fn update_visualization_on_focus_move(
 
             println!("{}x visibility updated", items.iter().len());
         } else {
-            let currently_visible =
-                envir.currently_visible(&clock, &player_action_state, player_pos);
+            let currently_visible = thread_local::ThreadLocal::new();
+            let commands = Arc::new(Mutex::new(commands));
+            let explored = Arc::new(Mutex::new(&mut *explored));
 
-            // Using parallel iteration was worse for performance using bevy 0.11
-            for (player, &pos, mut visibility, mut last_seen, accessible, speed, children) in
-                &mut items
-            {
-                update_visualization(
-                    &mut commands,
-                    &mut explored,
-                    &currently_visible,
-                    *elevation_visibility,
-                    &focus,
-                    player,
-                    pos,
-                    &mut visibility,
-                    &mut last_seen,
-                    accessible,
-                    speed,
-                    children,
-                    &child_items,
-                );
-            }
+            items.par_iter_mut().for_each(
+                |(player, &pos, mut visibility, mut last_seen, accessible, speed, children)| {
+                    let currently_visible = currently_visible.get_or(|| {
+                        envir.currently_visible(&clock, &player_action_state, player_pos)
+                    });
+
+                    update_visualization(
+                        &commands.clone(),
+                        &explored.clone(),
+                        currently_visible,
+                        *elevation_visibility,
+                        &focus,
+                        player,
+                        pos,
+                        &mut visibility,
+                        &mut last_seen,
+                        accessible,
+                        speed,
+                        children,
+                        &child_items,
+                    );
+                },
+            );
 
             println!("{}x visualization updated", items.iter().len());
         }
