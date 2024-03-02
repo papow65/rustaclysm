@@ -1,5 +1,10 @@
 use crate::prelude::*;
-use bevy::{ecs::entity::EntityHashMap, prelude::*, utils::HashMap};
+use bevy::{
+    ecs::entity::EntityHashMap,
+    input::mouse::{MouseScrollUnit, MouseWheel},
+    prelude::*,
+    utils::HashMap,
+};
 
 const SPACING: f32 = 5.0;
 const FONT_SIZE: f32 = 16.0;
@@ -7,20 +12,19 @@ const FONT_SIZE: f32 = 16.0;
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn spawn_inventory(mut commands: Commands, fonts: Res<Fonts>) {
     let panel = commands
-        .spawn(NodeBundle {
-            style: Style {
-                width: Val::Percent(100.0),
-                height: Val::Percent(100.0),
-                flex_direction: FlexDirection::Column,
-                align_items: AlignItems::Start,
-                justify_content: JustifyContent::Start,
-                margin: UiRect::horizontal(Val::Px(360.0)),
-                padding: UiRect::all(Val::Px(SPACING)),
+        .spawn((
+            NodeBundle {
+                style: Style {
+                    width: Val::Percent(100.0),
+                    flex_direction: FlexDirection::Column,
+                    align_items: AlignItems::Start,
+                    justify_content: JustifyContent::Start,
+                    ..default()
+                },
                 ..default()
             },
-            background_color: PANEL_COLOR.into(),
-            ..default()
-        })
+            ScrollingList::default(),
+        ))
         .id();
     commands
         .spawn((
@@ -34,7 +38,25 @@ pub(crate) fn spawn_inventory(mut commands: Commands, fonts: Res<Fonts>) {
             },
             StateBound::<GameplayScreenState>::default(),
         ))
-        .add_child(panel);
+        .with_children(|builder| {
+            builder
+                .spawn(NodeBundle {
+                    style: Style {
+                        width: Val::Percent(100.0),
+                        height: Val::Percent(100.0),
+                        flex_direction: FlexDirection::Column,
+                        align_items: AlignItems::Start,
+                        justify_content: JustifyContent::Start,
+                        margin: UiRect::horizontal(Val::Px(360.0)),
+                        padding: UiRect::all(Val::Px(SPACING)),
+                        overflow: Overflow::clip_y(),
+                        ..default()
+                    },
+                    background_color: PANEL_COLOR.into(),
+                    ..default()
+                })
+                .add_child(panel);
+        });
 
     commands.insert_resource(InventoryScreen {
         panel,
@@ -349,6 +371,35 @@ fn add_row(
                     .insert(ActionButton(entity, action));
             }
         });
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub(crate) fn manage_inventory_mouse_input(
+    mut mouse_wheel_events: EventReader<MouseWheel>,
+    mut query_list: Query<(&mut ScrollingList, &mut Style, &Parent, &Node)>,
+    query_node: Query<&Node>,
+) {
+    for mouse_wheel_event in mouse_wheel_events.read() {
+        for (mut scrolling_list, mut style, parent, list_node) in &mut query_list {
+            let items_height = list_node.size().y;
+            let container_height = query_node
+                .get(parent.get())
+                .expect("Parent node should be found")
+                .size()
+                .y;
+
+            let max_scroll = (items_height - container_height).max(0.);
+
+            let dy = match mouse_wheel_event.unit {
+                MouseScrollUnit::Line => mouse_wheel_event.y * 20.,
+                MouseScrollUnit::Pixel => mouse_wheel_event.y,
+            };
+
+            scrolling_list.position += dy;
+            scrolling_list.position = scrolling_list.position.clamp(-max_scroll, 0.);
+            style.top = Val::Px(scrolling_list.position);
+        }
+    }
 }
 
 #[allow(clippy::needless_pass_by_value)]

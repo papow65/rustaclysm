@@ -14,6 +14,7 @@ impl Plugin for InventoryScreenPlugin {
                 clear_inventory.pipe(update_inventory),
                 (
                     manage_inventory_button_input,
+                    manage_inventory_mouse_input,
                     run_behavior_schedule.pipe(run_behavior_display_schedule),
                 )
                     .chain(),
