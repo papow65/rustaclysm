@@ -394,6 +394,32 @@ pub(crate) fn count_assets(
 
 #[cfg(debug_assertions)]
 #[allow(clippy::needless_pass_by_value)]
+pub(crate) fn count_zones(
+    //zones: Query<&Zone>,
+    zone_levels: Query<&ZoneLevel>,
+    subzone_levels: Query<&SubzoneLevel>,
+    mut last_counts: Local<Vec<usize>>,
+) {
+    let start = Instant::now();
+
+    let counts = vec![
+        /*zones.len(),*/ zone_levels.iter().len(),
+        subzone_levels.iter().len(),
+    ];
+
+    if *last_counts != counts && counts.iter().any(|c| 0 < *c) {
+        //println!("{} zones", counts[0]);
+        println!("{} zone levels", counts[0]);
+        println!("{} subzone levels", counts[1]);
+
+        *last_counts = counts;
+    }
+
+    log_if_slow("count_assets", start);
+}
+
+#[cfg(debug_assertions)]
+#[allow(clippy::needless_pass_by_value)]
 pub(crate) fn check_items(
     item_parents: Query<Option<&Parent>, Or<(With<Amount>, With<Containable>)>>,
 ) {

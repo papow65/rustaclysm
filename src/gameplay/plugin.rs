@@ -139,7 +139,7 @@ fn fixed_update_systems() -> impl IntoSystemConfigs<()> {
             in_state(ApplicationState::Gameplay).and_then(resource_exists::<StatusTextSections>),
         ),
         #[cfg(debug_assertions)]
-        count_assets,
+        (count_assets, count_zones),
     )
         .chain()
 }
