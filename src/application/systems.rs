@@ -37,12 +37,21 @@ pub(crate) fn manage_button_hover(
 pub(crate) fn manage_global_keyboard_input(
     mut keys: Keys,
     mut app_exit_events: ResMut<Events<AppExit>>,
+    mut ui_scale: ResMut<UiScale>,
 ) {
-    for _ in keys
-        .combos(Ctrl::With)
-        .filter(|combo| matches!(combo.key, Key::Character('c' | 'q')))
-    {
-        app_exit_events.send(AppExit);
+    for combo in keys.combos(Ctrl::With) {
+        match combo.key {
+            Key::Character('c' | 'q') => {
+                app_exit_events.send(AppExit);
+            }
+            Key::Character(resize @ ('+' | '-')) => {
+                let px = if resize == '+' { 1 } else { -1 } + (16.0 * ui_scale.0) as i8;
+                let px = px.clamp(4, 64);
+                ui_scale.0 = f32::from(px) / 16.0;
+                println!("UI scale: {ui_scale:?}");
+            }
+            _ => {}
+        }
     }
 }
 

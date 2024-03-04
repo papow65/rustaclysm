@@ -111,19 +111,20 @@ fn spawn_manual_display(
                             + "toggle speed  +\n"
                             + "wait          |\n"
                             + "sleep         $\n"
-                            + "zoom          z/Z\n"
-                            + "zoom          scroll wheel\n"
-                            + "camera angle  hold middle\n"
-                            + "reset angle   0\n"
                             + "show elevated h\n"
-                            + "toggle this   f1\n"
+                            + "inventory     i\n"
                             + "examine       x\n"
                             + "examine map   X\n"
                             + "toggle map    m/M\n"
-                            + "inventory     i\n"
+                            + "camera angle  hold middle\n"
+                            + "reset angle   0\n"
+                            + "zoom          z/Z\n"
+                            + "zoom          scroll wheel\n"
+                            + "zoom ui       ctrl +/-\n"
+                            + "toggle this   f1\n"
                             + "menu          esc\n"
                             + "main menu     f12\n"
-                            + "quit          ctrl+c/q",
+                            + "quit          ctrl c/q",
                         style: hud_defaults.text_style.clone(),
                     }],
                     ..Text::default()
