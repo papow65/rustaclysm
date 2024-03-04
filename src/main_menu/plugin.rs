@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use bevy::prelude::*;
+use bevy::{prelude::*, window::WindowResized};
 
 pub(crate) struct MainMenuPlugin;
 
@@ -12,7 +12,11 @@ impl Plugin for MainMenuPlugin {
 
         app.add_systems(
             Update,
-            manage_main_menu_button_input.run_if(in_state(ApplicationState::MainMenu)),
+            (
+                manage_main_menu_button_input,
+                resize_background.run_if(on_event::<WindowResized>()),
+            )
+                .run_if(in_state(ApplicationState::MainMenu)),
         );
 
         app.add_systems(

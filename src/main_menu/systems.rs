@@ -6,7 +6,7 @@ use std::str::from_utf8;
 const FULL_WIDTH: f32 = 720.0;
 const SPACING: f32 = 20.0;
 
-const BACKGROUND_WIDTH: f32 = 1552.0;
+const BACKGROUND_WIDTH: f32 = 1522.0;
 const BACKGROUND_HEIGHT: f32 = 1009.0;
 const BACKGROUND_NAME: &str = "on_the_run.png";
 
