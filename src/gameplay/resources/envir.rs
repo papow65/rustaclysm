@@ -225,10 +225,11 @@ impl<'w, 's> Envir<'w, 's> {
         })
     }
 
-    pub(crate) fn are_nbors(&self, one: Pos, other: Pos) -> bool {
+    /** Nbor from the first pos */
+    pub(crate) fn nbor(&self, one: Pos, other: Pos) -> Option<Nbor> {
         self.nbors_if(one, move |npos| npos == other)
             .next()
-            .is_some()
+            .map(|(nbor, ..)| nbor)
     }
 
     fn nbors_if<F>(
@@ -350,7 +351,7 @@ impl<'w, 's> Envir<'w, 's> {
     pub(crate) fn collide(&self, from: Pos, to: Pos, controlled: bool) -> Collision {
         assert_ne!(from, to, "Collisions require movement");
         assert!(
-            self.are_nbors(from, to),
+            self.nbor(from, to).is_some(),
             "Collisions require neighbor positions"
         );
 

@@ -5,6 +5,7 @@ use bevy::{ecs::query::QueryData, prelude::*};
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub(crate) enum Breath {
     Normal,
+    AlmostWinded,
     Winded,
 }
 
@@ -128,7 +129,9 @@ impl ActorItem<'_> {
 
     fn high_speed(&self) -> Option<MillimeterPerSecond> {
         match self.stamina.breath() {
-            Breath::Normal => Some(self.base_speed.speed(&WalkingMode::Running, Breath::Normal)),
+            Breath::Normal | Breath::AlmostWinded => {
+                Some(self.base_speed.speed(&WalkingMode::Running, Breath::Normal))
+            }
             Breath::Winded => None,
         }
     }

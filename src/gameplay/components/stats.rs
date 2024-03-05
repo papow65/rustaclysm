@@ -39,7 +39,7 @@ impl WalkingMode {
     #[must_use]
     pub(crate) const fn speed_factor(&self, breath: Breath) -> f32 {
         match breath {
-            Breath::Normal => match self {
+            Breath::Normal | Breath::AlmostWinded => match self {
                 Self::Crouching => 0.25,
                 Self::Walking => 0.5,
                 Self::SpeedWalking => 0.65,
@@ -52,7 +52,7 @@ impl WalkingMode {
     #[must_use]
     pub(crate) const fn stamina_impact(&self, breath: Breath) -> StaminaImpact {
         match breath {
-            Breath::Normal => match self {
+            Breath::Normal | Breath::AlmostWinded => match self {
                 Self::Crouching | Self::Walking => StaminaImpact::Light,
                 Self::SpeedWalking => StaminaImpact::Neutral,
                 Self::Running => StaminaImpact::Heavy,
@@ -102,8 +102,10 @@ impl Stamina {
             Self::Unlimited => Breath::Normal,
             Self::Limited(limited) => {
                 let run_cost = -StaminaImpact::Heavy.as_i16() as u16;
-                if run_cost <= limited.current() {
+                if 2 * run_cost <= limited.current() {
                     Breath::Normal
+                } else if run_cost <= limited.current() {
+                    Breath::AlmostWinded
                 } else {
                     Breath::Winded
                 }

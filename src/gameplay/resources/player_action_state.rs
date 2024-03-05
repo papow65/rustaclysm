@@ -36,6 +36,7 @@ pub(crate) enum PlayerActionState {
         healing_from: Timestamp,
         until: Timestamp,
     },
+    AutoDefend,
     ExaminingPos(Pos),
     ExaminingZoneLevel(ZoneLevel),
 }
@@ -89,88 +90,25 @@ impl PlayerActionState {
         }
 
         match self {
-            Self::Pulping {
-                active_target: Some(target),
-            } => {
-                //eprintln!("Post instruction pulp handling...");
-                if !enemies.is_empty() {
-                    instruction_queue.add_interruption();
-                    None // process the cancellation next turn
-                } else if player.stamina.breath() == Breath::Winded {
-                    //eprintln!("Keep pulping after catching breath");
-                    Some(PlannedAction::Stay {
-                        duration: StayDuration::Short,
-                    })
-                } else if envir
-                    .find_pulpable(player.pos.horizontal_nbor(*target))
-                    .is_some()
-                {
-                    //eprintln!("Keep pulping");
-                    Some(PlannedAction::Pulp { target: *target })
-                } else {
-                    //eprintln!("Stop pulping");
-                    instruction_queue.add_finish();
-                    None // process the cancellation next turn
-                }
-            }
             Self::Dragging {
                 active_from: Some(from),
-            } => {
-                if let Some(item) = envir.find_item(*from) {
-                    Some(PlannedAction::MoveItem {
-                        item,
-                        to: Nbor::HERE,
-                    })
-                } else {
-                    instruction_queue.add_finish();
-                    None // process the cancellation next turn
-                }
-            }
-            Self::Waiting { until } => {
-                if !enemies.is_empty() {
-                    instruction_queue.add_interruption();
-                    None // process the cancellation next turn
-                } else if *until <= now {
-                    instruction_queue.add_finish();
-                    None // process the cancellation next turn
-                } else {
-                    Some(PlannedAction::Stay {
-                        duration: StayDuration::Short,
-                    })
-                }
-            }
+            } => auto_drag(envir, instruction_queue, from),
+            Self::AutoDefend => auto_defend(envir, instruction_queue, player, enemies),
+            Self::Pulping {
+                active_target: Some(target),
+            } => auto_pulp(envir, instruction_queue, player, target, enemies),
+            Self::Waiting { until } => auto_wait(instruction_queue, now, until, enemies),
             Self::Sleeping {
                 healing_from,
                 until,
-            } => {
-                // TODO interrupt on taking damage
-
-                assert!(healing_from < until, "{healing_from:?} < {until:?}");
-                assert!(*healing_from <= now, "{healing_from:?} <= {now:?}");
-                //eprintln!("{healing_from:?} <= {now:?}");
-                let sleeping_duration = now - *healing_from;
-
-                let healing_amount = sleeping_duration.0 / 1_000_000;
-                healing_writer.send(ActionEvent::new(
-                    player.entity,
-                    Healing {
-                        amount: healing_amount as u16,
-                    },
-                ));
-
-                if *until <= now {
-                    instruction_queue.add_finish();
-                    None // process the cancellation next turn
-                } else {
-                    let healing_duration = Milliseconds(healing_amount * 1_000_000);
-                    *healing_from += healing_duration;
-                    // dbg!(healing_from);
-
-                    Some(PlannedAction::Stay {
-                        duration: StayDuration::Long,
-                    })
-                }
-            }
+            } => auto_sleep(
+                healing_writer,
+                instruction_queue,
+                player,
+                healing_from,
+                now,
+                until,
+            ),
             _ => {
                 instruction_queue.start_waiting();
                 println!("Waiting for user action");
@@ -213,6 +151,10 @@ impl PlayerActionState {
             (Self::Normal, QueuedInstruction::Sleep) => {
                 *self = Self::start_sleeping(now);
                 PlayerBehavior::Feedback(Message::info(Phrase::new("You fall asleep... Zzz...")))
+            }
+            (Self::Normal, QueuedInstruction::ToggleAutoDefend) => {
+                *self = Self::AutoDefend;
+                PlayerBehavior::Feedback(Message::info(Phrase::new("You start defending...")))
             }
             (Self::Attacking, QueuedInstruction::Offset(PlayerDirection::Here)) => {
                 PlayerBehavior::Feedback(Message::warn(Phrase::new("You can't attack yourself")))
@@ -275,7 +217,8 @@ impl PlayerActionState {
         match instruction {
             QueuedInstruction::CancelAction
             | QueuedInstruction::Wait
-            | QueuedInstruction::Sleep => {
+            | QueuedInstruction::Sleep
+            | QueuedInstruction::ToggleAutoDefend => {
                 *self = Self::Normal;
                 PlayerBehavior::NoEffect
             }
@@ -414,7 +357,7 @@ impl PlayerActionState {
             } => {
                 panic!("{self:?} {player_pos:?} {raw_nbor:?} {active_from:?}");
             }
-            Self::Waiting { .. } => {
+            Self::Waiting { .. } | Self::AutoDefend => {
                 *self = Self::Normal;
                 PlayerBehavior::NoEffect
             }
@@ -520,6 +463,7 @@ impl PlayerActionState {
             | Self::Smashing
             | Self::Pulping { .. }
             | Self::Dragging { .. } => WARN_TEXT_COLOR,
+            Self::AutoDefend => BAD_TEXT_COLOR,
         }
     }
 }
@@ -535,8 +479,128 @@ impl fmt::Display for PlayerActionState {
             Self::Dragging { .. } => "Dragging",
             Self::Waiting { .. } => "Waiting",
             Self::Sleeping { .. } => "Sleeping",
+            Self::AutoDefend => "Defending",
             Self::ExaminingPos(_) => "Examining",
             Self::ExaminingZoneLevel(_) => "Examining map",
+        })
+    }
+}
+
+fn auto_drag(
+    envir: &mut Envir<'_, '_>,
+    instruction_queue: &mut InstructionQueue,
+    from: &mut Pos,
+) -> Option<PlannedAction> {
+    if let Some(item) = envir.find_item(*from) {
+        Some(PlannedAction::MoveItem {
+            item,
+            to: Nbor::HERE,
+        })
+    } else {
+        instruction_queue.add_finish();
+        None // process the cancellation next turn
+    }
+}
+
+fn auto_defend(
+    envir: &mut Envir<'_, '_>,
+    instruction_queue: &mut InstructionQueue,
+    player: &ActorItem<'_>,
+    enemies: &[Pos],
+) -> Option<PlannedAction> {
+    if enemies.is_empty() || player.stamina.breath() != Breath::Normal {
+        instruction_queue.add_interruption();
+        None // process the cancellation next turn
+    } else if let Some(target) = enemies.iter().find_map(|pos| envir.nbor(*player.pos, *pos)) {
+        Some(PlannedAction::Attack { target })
+    } else {
+        Some(PlannedAction::Stay {
+            duration: StayDuration::Short,
+        })
+    }
+}
+
+fn auto_pulp(
+    envir: &mut Envir<'_, '_>,
+    instruction_queue: &mut InstructionQueue,
+    player: &ActorItem<'_>,
+    target: &mut HorizontalDirection,
+    enemies: &[Pos],
+) -> Option<PlannedAction> {
+    //eprintln!("Post instruction pulp handling...");
+    if !enemies.is_empty() {
+        instruction_queue.add_interruption();
+        None // process the cancellation next turn
+    } else if player.stamina.breath() != Breath::Normal {
+        //eprintln!("Keep pulping after catching breath");
+        Some(PlannedAction::Stay {
+            duration: StayDuration::Short,
+        })
+    } else if envir
+        .find_pulpable(player.pos.horizontal_nbor(*target))
+        .is_some()
+    {
+        //eprintln!("Keep pulping");
+        Some(PlannedAction::Pulp { target: *target })
+    } else {
+        //eprintln!("Stop pulping");
+        instruction_queue.add_finish();
+        None // process the cancellation next turn
+    }
+}
+
+fn auto_wait(
+    instruction_queue: &mut InstructionQueue,
+    now: Timestamp,
+    until: &mut Timestamp,
+    enemies: &[Pos],
+) -> Option<PlannedAction> {
+    if !enemies.is_empty() {
+        instruction_queue.add_interruption();
+        None // process the cancellation next turn
+    } else if *until <= now {
+        instruction_queue.add_finish();
+        None // process the cancellation next turn
+    } else {
+        Some(PlannedAction::Stay {
+            duration: StayDuration::Short,
+        })
+    }
+}
+
+fn auto_sleep(
+    healing_writer: &mut EventWriter<'_, ActionEvent<Healing>>,
+    instruction_queue: &mut InstructionQueue,
+    player: &ActorItem<'_>,
+    healing_from: &mut Timestamp,
+    now: Timestamp,
+    until: &mut Timestamp,
+) -> Option<PlannedAction> {
+    // TODO interrupt on taking damage
+
+    assert!(healing_from < until, "{healing_from:?} < {until:?}");
+    assert!(*healing_from <= now, "{healing_from:?} <= {now:?}");
+    //eprintln!("{healing_from:?} <= {now:?}");
+    let sleeping_duration = now - *healing_from;
+
+    let healing_amount = sleeping_duration.0 / 1_000_000;
+    healing_writer.send(ActionEvent::new(
+        player.entity,
+        Healing {
+            amount: healing_amount as u16,
+        },
+    ));
+
+    if *until <= now {
+        instruction_queue.add_finish();
+        None // process the cancellation next turn
+    } else {
+        let healing_duration = Milliseconds(healing_amount * 1_000_000);
+        *healing_from += healing_duration;
+        // dbg!(healing_from);
+
+        Some(PlannedAction::Stay {
+            duration: StayDuration::Long,
         })
     }
 }

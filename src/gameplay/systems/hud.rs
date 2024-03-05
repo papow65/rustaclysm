@@ -108,7 +108,8 @@ fn spawn_manual_display(
                             + "up/down       </>\n"
                             + "attack        a\n"
                             + "smash         s\n"
-                            + "toggle speed  +\n"
+                            + "walking mode  +\n"
+                            + "auto defend   tab\n"
                             + "wait          |\n"
                             + "sleep         $\n"
                             + "show elevated h\n"
@@ -369,20 +370,20 @@ pub(crate) fn update_status_speed(
 
     if let Ok(player_actor) = player_actors.get_single() {
         let walking_mode = player_actor.walking_mode;
-        text_sections.speed[0].value = match player_actor.stamina.breath() {
-            Breath::Normal => String::new(),
-            Breath::Winded => String::from("Winded "),
+        (
+            text_sections.speed[0].value,
+            text_sections.speed[0].style.color,
+        ) = match player_actor.stamina.breath() {
+            Breath::Normal => (String::new(), DEFAULT_TEXT_COLOR),
+            Breath::AlmostWinded => (String::from("Almost winded "), WARN_TEXT_COLOR),
+            Breath::Winded => (String::from("Winded "), BAD_TEXT_COLOR),
         };
-        text_sections.speed[0].style.color = BAD_TEXT_COLOR;
 
         text_sections.speed[1].value = String::from(walking_mode.as_str());
         text_sections.speed[1].style.color = walking_mode.color();
 
         text_sections.speed[2].value = format!(" ({})\n", player_actor.speed());
-        text_sections.speed[2].style.color = match player_actor.stamina.breath() {
-            Breath::Normal => DEFAULT_TEXT_COLOR,
-            Breath::Winded => BAD_TEXT_COLOR,
-        };
+        text_sections.speed[2].style.color = text_sections.speed[0].style.color;
 
         update_status_display(&text_sections, &mut status_displays.single_mut());
     }
