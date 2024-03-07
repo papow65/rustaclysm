@@ -657,6 +657,46 @@ pub(crate) fn update_corpses(
     log_if_slow("update_corpses", start);
 }
 
+#[allow(clippy::needless_pass_by_value)]
+pub(crate) fn update_explored(
+    mut commands: Commands,
+    clock: Clock,
+    infos: Res<Infos>,
+    mut corpse_raises: Query<(Entity, &CorpseRaise, &mut Transform)>,
+) {
+    let start = Instant::now();
+
+    for (corpse, raise, mut transform) in &mut corpse_raises {
+        if raise.at <= clock.time() {
+            transform.rotation = Quat::IDENTITY;
+
+            let definition = ObjectDefinition {
+                category: ObjectCategory::Character,
+                id: ObjectId::new("mon_zombie"),
+            };
+            let character_info = infos.character(&definition.id).expect("Info available");
+            let object_name = ObjectName::new(character_info.name.clone(), Faction::Zombie.color());
+            let health = Health(Limited::full(character_info.hp.unwrap_or(60) as u16));
+
+            commands
+                .entity(corpse)
+                .insert((
+                    definition,
+                    object_name,
+                    Faction::Zombie,
+                    Life,
+                    health,
+                    Stamina::Unlimited,
+                    WalkingMode::Running,
+                    Obstacle,
+                ))
+                .remove::<(Corpse, CorpseRaise, Integrity)>();
+        }
+    }
+
+    log_if_slow("update_corpses", start);
+}
+
 /** For terrain and furniture */
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_damaged_terrain(

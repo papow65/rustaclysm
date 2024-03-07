@@ -250,7 +250,7 @@ impl<'w, 's> Envir<'w, 's> {
         destination: Option<Pos>,
         intelligence: Intelligence,
         speed: MillimeterPerSecond,
-    ) -> impl Iterator<Item = (Pos, Milliseconds)> + 's {
+    ) -> impl Iterator<Item = (Nbor, Pos, Milliseconds)> + 's {
         self.nbors_if(pos, move |nbor| {
             (pos.level == Level::ZERO || !self.location.all(pos).is_empty()) && {
                 let at_destination = Some(nbor) == destination;
@@ -263,7 +263,7 @@ impl<'w, 's> Envir<'w, 's> {
                 }
             }
         })
-        .map(move |(_nbor, npos, walking_cost)| (npos, walking_cost.duration(speed)))
+        .map(move |(nbor, npos, walking_cost)| (nbor, npos, walking_cost.duration(speed)))
     }
 
     pub(crate) fn nbors_for_item_handling(
@@ -336,7 +336,10 @@ impl<'w, 's> Envir<'w, 's> {
             return None;
         }
 
-        let nbors_fn = |pos: &Pos| self.nbors_for_moving(*pos, Some(to), intelligence, speed);
+        let nbors_fn = |pos: &Pos| {
+            self.nbors_for_moving(*pos, Some(to), intelligence, speed)
+                .map(|(_, pos, cost)| (pos, cost))
+        };
         let estimated_duration_fn = |&pos: &Pos| self.walking_cost(pos, to).duration(speed);
 
         //println!("dumb? {dumb:?} @{from:?}");

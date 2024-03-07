@@ -162,12 +162,15 @@ impl Faction {
         let graph = dijkstra_all(&(*actor.pos, Milliseconds(0)), |(pos, prev_total_ms)| {
             envir
                 .nbors_for_moving(*pos, None, self.intelligence(), actor.speed())
-                .filter_map(|(nbor, ms)| {
+                .filter_map(|(_, nbor_pos, ms)| {
                     let total_ms = *prev_total_ms + ms;
                     if max_time < total_ms {
                         None
                     } else {
-                        Some(((nbor, total_ms), Danger::new(envir, &ms, nbor, enemies)))
+                        Some((
+                            (nbor_pos, total_ms),
+                            Danger::new(envir, &ms, nbor_pos, enemies),
+                        ))
                     }
                 })
                 .collect::<Vec<((Pos, Milliseconds), Danger)>>()
@@ -202,8 +205,8 @@ impl Faction {
         if fastrand::u8(0..10) < 3 {
             let wander_options = envir
                 .nbors_for_moving(*actor.pos, None, self.intelligence(), actor.speed())
-                .filter(|(pos, _)| factions.iter().all(|(other_pos, _)| pos != other_pos))
-                .map(|(pos, _)| pos)
+                .filter(|(_, pos, _)| factions.iter().all(|(other_pos, _)| pos != other_pos))
+                .map(|(_, pos, _)| pos)
                 .collect::<Vec<Pos>>();
 
             fastrand::choice(wander_options).map(|pos| {

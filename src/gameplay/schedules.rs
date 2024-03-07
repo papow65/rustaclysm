@@ -97,6 +97,7 @@ pub(crate) fn create_behavior_schedule(app: &mut App) {
                         update_stamina.run_if(on_event::<ActionEvent<StaminaImpact>>()),
                         update_healed_characters.run_if(on_event::<ActionEvent<Healing>>()),
                         update_corpses,
+                        update_explored.run_if(on_event::<ActionEvent<Step>>()),
                     ),
                 )
                     .chain(),

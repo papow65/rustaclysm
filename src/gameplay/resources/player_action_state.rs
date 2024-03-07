@@ -36,6 +36,9 @@ pub(crate) enum PlayerActionState {
         healing_from: Timestamp,
         until: Timestamp,
     },
+    AutoTravel {
+        target: Pos,
+    },
     AutoDefend,
     ExaminingPos(Pos),
     ExaminingZoneLevel(ZoneLevel),
@@ -94,6 +97,9 @@ impl PlayerActionState {
                 active_from: Some(from),
             } => auto_drag(envir, instruction_queue, from),
             Self::AutoDefend => auto_defend(envir, instruction_queue, player, enemies),
+            Self::AutoTravel { target } => {
+                auto_travel(envir, instruction_queue, player, *target, enemies)
+            }
             Self::Pulping {
                 active_target: Some(target),
             } => auto_pulp(envir, instruction_queue, player, target, enemies),
@@ -156,6 +162,19 @@ impl PlayerActionState {
                 *self = Self::AutoDefend;
                 PlayerBehavior::Feedback(Message::info(Phrase::new("You start defending...")))
             }
+            (Self::ExaminingPos(pos), QueuedInstruction::ToggleAutoTravel) => {
+                *self = Self::AutoTravel { target: *pos };
+                PlayerBehavior::Feedback(Message::info(Phrase::new("You start traveling...")))
+            }
+            (Self::ExaminingZoneLevel(zone_level), QueuedInstruction::ToggleAutoTravel) => {
+                *self = Self::AutoTravel {
+                    target: zone_level.base_pos().horizontal_offset(11, 11),
+                };
+                PlayerBehavior::Feedback(Message::info(Phrase::new("You start traveling...")))
+            }
+            (_, QueuedInstruction::ToggleAutoTravel) => PlayerBehavior::Feedback(Message::error(
+                Phrase::new("First examine your destination"),
+            )),
             (Self::Attacking, QueuedInstruction::Offset(PlayerDirection::Here)) => {
                 PlayerBehavior::Feedback(Message::warn(Phrase::new("You can't attack yourself")))
             }
@@ -218,6 +237,7 @@ impl PlayerActionState {
             QueuedInstruction::CancelAction
             | QueuedInstruction::Wait
             | QueuedInstruction::Sleep
+            | QueuedInstruction::ToggleAutoTravel
             | QueuedInstruction::ToggleAutoDefend => {
                 *self = Self::Normal;
                 PlayerBehavior::NoEffect
@@ -357,7 +377,7 @@ impl PlayerActionState {
             } => {
                 panic!("{self:?} {player_pos:?} {raw_nbor:?} {active_from:?}");
             }
-            Self::Waiting { .. } | Self::AutoDefend => {
+            Self::Waiting { .. } | Self::AutoTravel { .. } | Self::AutoDefend => {
                 *self = Self::Normal;
                 PlayerBehavior::NoEffect
             }
@@ -462,7 +482,8 @@ impl PlayerActionState {
             | Self::Attacking
             | Self::Smashing
             | Self::Pulping { .. }
-            | Self::Dragging { .. } => WARN_TEXT_COLOR,
+            | Self::Dragging { .. }
+            | Self::AutoTravel { .. } => WARN_TEXT_COLOR,
             Self::AutoDefend => BAD_TEXT_COLOR,
         }
     }
@@ -479,6 +500,7 @@ impl fmt::Display for PlayerActionState {
             Self::Dragging { .. } => "Dragging",
             Self::Waiting { .. } => "Waiting",
             Self::Sleeping { .. } => "Sleeping",
+            Self::AutoTravel { .. } => "Traveling",
             Self::AutoDefend => "Defending",
             Self::ExaminingPos(_) => "Examining",
             Self::ExaminingZoneLevel(_) => "Examining map",
@@ -499,6 +521,37 @@ fn auto_drag(
     } else {
         instruction_queue.add_finish();
         None // process the cancellation next turn
+    }
+}
+
+fn auto_travel(
+    envir: &mut Envir<'_, '_>,
+    instruction_queue: &mut InstructionQueue,
+    player: &ActorItem<'_>,
+    target: Pos,
+    enemies: &[Pos],
+) -> Option<PlannedAction> {
+    if !enemies.is_empty() || *player.pos == target || player.stamina.breath() != Breath::Normal {
+        instruction_queue.add_interruption();
+        None // process the cancellation next turn
+    } else {
+        envir
+            .path(*player.pos, target, Intelligence::Smart, player.speed())
+            .map(|path| {
+                envir
+                    .nbor(*player.pos, path.first)
+                    .expect("The first step should be a nbor")
+            })
+            .or_else(|| {
+                // Full path not available
+                envir
+                    .nbors_for_moving(*player.pos, None, Intelligence::Smart, player.speed())
+                    .map(|(nbor, nbor_pos, _)| (nbor, nbor_pos.vision_distance(target)))
+                    .min_by_key(|(_, distance)| *distance)
+                    .filter(|(_, distance)| *distance < player.pos.vision_distance(target))
+                    .map(|(nbor, _)| nbor)
+            })
+            .map(|to| PlannedAction::Step { to })
     }
 }
 
