@@ -11,6 +11,7 @@
 /perf*
 /flamegraph*
 /*.dot*
+/*.png
 /heaptrack*
 *.kate-swp
 /todo*
