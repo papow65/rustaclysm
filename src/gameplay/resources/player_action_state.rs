@@ -1,7 +1,6 @@
 use crate::prelude::*;
 use bevy::prelude::{Color, EventWriter, Resource};
 use std::fmt;
-use std::time::Instant;
 
 #[derive(Debug)]
 enum PlayerBehavior {
@@ -538,30 +537,29 @@ fn auto_travel(
         instruction_queue.add_interruption();
         None // process the cancellation next turn
     } else {
-        let start = Instant::now();
-        let path = envir.path(
-            *player.pos,
-            target,
-            Intelligence::Smart,
-            |pos| explored.has_pos_been_seen(pos),
-            player.speed(),
-        );
-        eprintln!("PATH: {:?}", start.elapsed());
-        path.map(|path| {
-            envir
-                .nbor(*player.pos, path.first)
-                .expect("The first step should be a nbor")
-        })
-        .or_else(|| {
-            // Full path not available
-            envir
-                .nbors_for_moving(*player.pos, None, Intelligence::Smart, player.speed())
-                .map(|(nbor, nbor_pos, _)| (nbor, nbor_pos.vision_distance(target)))
-                .min_by_key(|(_, distance)| *distance)
-                .filter(|(_, distance)| *distance < player.pos.vision_distance(target))
-                .map(|(nbor, _)| nbor)
-        })
-        .map(|to| PlannedAction::Step { to })
+        envir
+            .path(
+                *player.pos,
+                target,
+                Intelligence::Smart,
+                |pos| explored.has_pos_been_seen(pos),
+                player.speed(),
+            )
+            .map(|path| {
+                envir
+                    .nbor(*player.pos, path.first)
+                    .expect("The first step should be a nbor")
+            })
+            .or_else(|| {
+                // Full path not available
+                envir
+                    .nbors_for_moving(*player.pos, None, Intelligence::Smart, player.speed())
+                    .map(|(nbor, nbor_pos, _)| (nbor, nbor_pos.vision_distance(target)))
+                    .min_by_key(|(_, distance)| *distance)
+                    .filter(|(_, distance)| *distance < player.pos.vision_distance(target))
+                    .map(|(nbor, _)| nbor)
+            })
+            .map(|to| PlannedAction::Step { to })
     }
 }
 
