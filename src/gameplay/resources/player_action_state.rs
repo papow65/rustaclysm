@@ -68,7 +68,7 @@ impl PlayerActionState {
     pub(crate) fn plan_action(
         &mut self,
         message_writer: &mut EventWriter<Message>,
-        healing_writer: &mut EventWriter<ActionEvent<Healing>>,
+        healing_writer: &mut EventWriter<ActorEvent<Healing>>,
         envir: &mut Envir,
         instruction_queue: &mut InstructionQueue,
         player: &ActorItem,
@@ -622,7 +622,7 @@ fn auto_wait(
 }
 
 fn auto_sleep(
-    healing_writer: &mut EventWriter<'_, ActionEvent<Healing>>,
+    healing_writer: &mut EventWriter<'_, ActorEvent<Healing>>,
     instruction_queue: &mut InstructionQueue,
     player: &ActorItem<'_>,
     healing_from: &mut Timestamp,
@@ -637,7 +637,7 @@ fn auto_sleep(
     let sleeping_duration = now - *healing_from;
 
     let healing_amount = sleeping_duration.0 / 1_000_000;
-    healing_writer.send(ActionEvent::new(
+    healing_writer.send(ActorEvent::new(
         player.entity,
         Healing {
             amount: healing_amount as u16,

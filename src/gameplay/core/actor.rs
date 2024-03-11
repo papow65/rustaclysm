@@ -269,7 +269,7 @@ impl ActorItem<'_> {
     pub(crate) fn attack(
         &self,
         message_writer: &mut EventWriter<Message>,
-        damage_writer: &mut EventWriter<ActionEvent<Damage>>,
+        damage_writer: &mut EventWriter<ActorEvent<Damage>>,
         envir: &Envir,
         infos: &Infos,
         hierarchy: &Hierarchy,
@@ -293,7 +293,7 @@ impl ActorItem<'_> {
                 defender,
                 target,
                 high_speed,
-                ActionEvent::new,
+                ActorEvent::new,
             )
         } else {
             message_writer.send(Message::warn(

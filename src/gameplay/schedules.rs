@@ -38,66 +38,20 @@ pub(crate) fn create_behavior_schedule(app: &mut App) {
     app.add_systems(
         BehaviorSchedule,
         (
-            egible_character.pipe(plan_action).pipe(send_action_event),
-            (
-                check_action_plan_amount,
-                single_action
-                    .pipe(perform_stay)
-                    .pipe(proces_impact)
-                    .run_if(on_event::<ActionEvent<Stay>>()),
-                single_action
-                    .pipe(perform_step)
-                    .pipe(proces_impact)
-                    .run_if(on_event::<ActionEvent<Step>>()),
-                single_action
-                    .pipe(perform_attack)
-                    .pipe(proces_impact)
-                    .run_if(on_event::<ActionEvent<Attack>>()),
-                single_action
-                    .pipe(perform_smash)
-                    .pipe(proces_impact)
-                    .run_if(on_event::<ActionEvent<Smash>>()),
-                single_action
-                    .pipe(perform_pulp)
-                    .pipe(proces_impact)
-                    .run_if(on_event::<ActionEvent<Pulp>>()),
-                single_action
-                    .pipe(perform_close)
-                    .pipe(proces_impact)
-                    .run_if(on_event::<ActionEvent<Close>>()),
-                single_action
-                    .pipe(perform_wield)
-                    .pipe(proces_impact)
-                    .run_if(on_event::<ActionEvent<ItemAction<Wield>>>()),
-                single_action
-                    .pipe(perform_unwield)
-                    .pipe(proces_impact)
-                    .run_if(on_event::<ActionEvent<ItemAction<Unwield>>>()),
-                single_action
-                    .pipe(perform_pickup)
-                    .pipe(proces_impact)
-                    .run_if(on_event::<ActionEvent<ItemAction<Pickup>>>()),
-                single_action
-                    .pipe(perform_move_item)
-                    .pipe(proces_impact)
-                    .run_if(on_event::<ActionEvent<ItemAction<MoveItem>>>()),
-                single_action
-                    .pipe(perform_examine_item)
-                    .run_if(on_event::<ActionEvent<ItemAction<ExamineItem>>>()),
-                single_action
-                    .pipe(perform_change_pace)
-                    .run_if(on_event::<ActionEvent<ChangePace>>()),
-            ),
+            egible_character
+                .pipe(plan_action)
+                .pipe(perform_action)
+                .pipe(proces_impact),
             (
                 (
                     // actor events
                     // Make sure killed actors are handled early
-                    update_damaged_characters.run_if(on_event::<ActionEvent<Damage>>()),
+                    update_damaged_characters.run_if(on_event::<ActorEvent<Damage>>()),
                     (
-                        update_stamina.run_if(on_event::<ActionEvent<StaminaImpact>>()),
-                        update_healed_characters.run_if(on_event::<ActionEvent<Healing>>()),
+                        update_stamina.run_if(on_event::<ActorEvent<StaminaImpact>>()),
+                        update_healed_characters.run_if(on_event::<ActorEvent<Healing>>()),
                         update_corpses,
-                        update_explored.run_if(on_event::<ActionEvent<Step>>()),
+                        update_explored,
                     ),
                 )
                     .chain(),

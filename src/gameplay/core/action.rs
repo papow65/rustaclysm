@@ -2,19 +2,19 @@ use crate::{
     gameplay::HorizontalDirection,
     prelude::{Actor, ActorItem, Item, ItemItem, Nbor, StayDuration},
 };
-use bevy::prelude::{Entity, Event, Query};
+use bevy::prelude::{Entity, Query};
 
 /** An action that an actor can perform */
 pub(crate) trait Action: Clone + Send + Sync + 'static {}
 
 #[must_use]
-#[derive(Clone, Debug, Event)]
-pub(crate) struct ActionEvent<A: Action> {
+#[derive(Clone, Debug)]
+pub(crate) struct ActionIn<A: Action> {
     pub(crate) actor_entity: Entity,
     pub(crate) action: A,
 }
 
-impl<A: Action> ActionEvent<A> {
+impl<A: Action> ActionIn<A> {
     pub(crate) const fn new(actor_entity: Entity, action: A) -> Self {
         Self {
             actor_entity,
@@ -72,7 +72,7 @@ impl Action for Close {}
 pub(crate) trait ItemChange: Clone + Send + Sync + 'static {}
 
 #[must_use]
-#[derive(Clone, Debug, Event)]
+#[derive(Clone, Debug)]
 pub(crate) struct ItemAction<C: ItemChange> {
     pub(crate) item_entity: Entity,
     pub(crate) change: C,

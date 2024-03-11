@@ -1,6 +1,6 @@
 use crate::prelude::*;
-use bevy::prelude::*;
-use std::time::Instant;
+use bevy::{ecs::system::SystemId, prelude::*};
+use std::{cell::OnceCell, time::Instant};
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn egible_character(
@@ -22,7 +22,7 @@ pub(crate) fn plan_action(
     In(active_actor): In<Option<Entity>>,
     mut commands: Commands,
     mut message_writer: EventWriter<Message>,
-    mut healing_writer: EventWriter<ActionEvent<Healing>>,
+    mut healing_writer: EventWriter<ActorEvent<Healing>>,
     mut player_action_state: ResMut<PlayerActionState>,
     mut envir: Envir,
     clock: Clock,
@@ -75,133 +75,127 @@ pub(crate) fn plan_action(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn send_action_event(
+pub(crate) fn perform_action(
     In(option): In<Option<(Entity, PlannedAction)>>,
-    mut stay_writer: EventWriter<ActionEvent<Stay>>,
-    mut step_writer: EventWriter<ActionEvent<Step>>,
-    mut attack_writer: EventWriter<ActionEvent<Attack>>,
-    mut smash_writer: EventWriter<ActionEvent<Smash>>,
-    mut pulp_writer: EventWriter<ActionEvent<Pulp>>,
-    mut close_writer: EventWriter<ActionEvent<Close>>,
-    mut wield_writer: EventWriter<ActionEvent<ItemAction<Wield>>>,
-    mut unwield_writer: EventWriter<ActionEvent<ItemAction<Unwield>>>,
-    mut pickup_writer: EventWriter<ActionEvent<ItemAction<Pickup>>>,
-    mut move_item_writer: EventWriter<ActionEvent<ItemAction<MoveItem>>>,
-    mut examine_item_writer: EventWriter<ActionEvent<ItemAction<ExamineItem>>>,
-    mut change_pace_writer: EventWriter<ActionEvent<ChangePace>>,
-) {
+    world: &mut World,
+    perform_stay_id: Local<OnceCell<SystemId<ActionIn<Stay>, Impact>>>,
+    perform_step_id: Local<OnceCell<SystemId<ActionIn<Step>, Impact>>>,
+    perform_attack_id: Local<OnceCell<SystemId<ActionIn<Attack>, Impact>>>,
+    perform_smash_id: Local<OnceCell<SystemId<ActionIn<Smash>, Impact>>>,
+    perform_pulp_id: Local<OnceCell<SystemId<ActionIn<Pulp>, Impact>>>,
+    perform_close_id: Local<OnceCell<SystemId<ActionIn<Close>, Impact>>>,
+    perform_wield_id: Local<OnceCell<SystemId<ActionIn<ItemAction<Wield>>, Impact>>>,
+    perform_unwield_id: Local<OnceCell<SystemId<ActionIn<ItemAction<Unwield>>, Impact>>>,
+    perform_pickup_id: Local<OnceCell<SystemId<ActionIn<ItemAction<Pickup>>, Impact>>>,
+    perform_move_item_id: Local<OnceCell<SystemId<ActionIn<ItemAction<MoveItem>>, Impact>>>,
+    perform_examine_item_id: Local<OnceCell<SystemId<ActionIn<ItemAction<ExamineItem>>, ()>>>,
+    perform_change_pace_id: Local<OnceCell<SystemId<ActionIn<ChangePace>, ()>>>,
+) -> Option<Impact> {
     let start = Instant::now();
 
-    let Some((actor_entity, action)) = option else {
+    let Some((actor_entity, planned_action)) = option else {
         // No egible characters
-        return;
+        return None;
     };
 
-    match action {
-        PlannedAction::Stay { duration } => {
-            stay_writer.send(ActionEvent::new(actor_entity, Stay { duration }));
-        }
-        PlannedAction::Step { to } => {
-            step_writer.send(ActionEvent::new(actor_entity, Step { to }));
-        }
-        PlannedAction::Attack { target } => {
-            attack_writer.send(ActionEvent::new(actor_entity, Attack { target }));
-        }
-        PlannedAction::Smash { target } => {
-            smash_writer.send(ActionEvent::new(actor_entity, Smash { target }));
-        }
-        PlannedAction::Pulp { target } => {
-            //eprintln!("Pulp action!");
-            pulp_writer.send(ActionEvent::new(actor_entity, Pulp { target }));
-        }
-        PlannedAction::Close { target } => {
-            close_writer.send(ActionEvent::new(actor_entity, Close { target }));
-        }
-        PlannedAction::Wield { item } => {
-            wield_writer.send(ActionEvent::new(actor_entity, ItemAction::new(item, Wield)));
-        }
-        PlannedAction::Unwield { item } => {
-            unwield_writer.send(ActionEvent::new(
-                actor_entity,
-                ItemAction::new(item, Unwield),
-            ));
-        }
-        PlannedAction::Pickup { item } => {
-            pickup_writer.send(ActionEvent::new(
-                actor_entity,
-                ItemAction::new(item, Pickup),
-            ));
-        }
-        PlannedAction::MoveItem { item, to } => {
-            move_item_writer.send(ActionEvent::new(
-                actor_entity,
-                ItemAction::new(item, MoveItem { to }),
-            ));
-        }
+    let impact = match planned_action {
+        PlannedAction::Stay { duration } => perform_action_inner(
+            *perform_stay_id.get_or_init(|| world.register_system(perform_stay)),
+            world,
+            ActionIn::new(actor_entity, Stay { duration }),
+        ),
+        PlannedAction::Step { to } => perform_action_inner(
+            *perform_step_id.get_or_init(|| world.register_system(perform_step)),
+            world,
+            ActionIn::new(actor_entity, Step { to }),
+        ),
+        PlannedAction::Attack { target } => perform_action_inner(
+            *perform_attack_id.get_or_init(|| world.register_system(perform_attack)),
+            world,
+            ActionIn::new(actor_entity, Attack { target }),
+        ),
+        PlannedAction::Smash { target } => perform_action_inner(
+            *perform_smash_id.get_or_init(|| world.register_system(perform_smash)),
+            world,
+            ActionIn::new(actor_entity, Smash { target }),
+        ),
+        PlannedAction::Pulp { target } => perform_action_inner(
+            *perform_pulp_id.get_or_init(|| world.register_system(perform_pulp)),
+            world,
+            ActionIn::new(actor_entity, Pulp { target }),
+        ),
+        PlannedAction::Close { target } => perform_action_inner(
+            *perform_close_id.get_or_init(|| world.register_system(perform_close)),
+            world,
+            ActionIn::new(actor_entity, Close { target }),
+        ),
+        PlannedAction::Wield { item } => perform_action_inner(
+            *perform_wield_id.get_or_init(|| world.register_system(perform_wield)),
+            world,
+            ActionIn::new(actor_entity, ItemAction::new(item, Wield)),
+        ),
+        PlannedAction::Unwield { item } => perform_action_inner(
+            *perform_unwield_id.get_or_init(|| world.register_system(perform_unwield)),
+            world,
+            ActionIn::new(actor_entity, ItemAction::new(item, Unwield)),
+        ),
+        PlannedAction::Pickup { item } => perform_action_inner(
+            *perform_pickup_id.get_or_init(|| world.register_system(perform_pickup)),
+            world,
+            ActionIn::new(actor_entity, ItemAction::new(item, Pickup)),
+        ),
+        PlannedAction::MoveItem { item, to } => perform_action_inner(
+            *perform_move_item_id.get_or_init(|| world.register_system(perform_move_item)),
+            world,
+            ActionIn::new(actor_entity, ItemAction::new(item, MoveItem { to })),
+        ),
         PlannedAction::ExamineItem { item } => {
-            examine_item_writer.send(ActionEvent::new(
-                actor_entity,
-                ItemAction::new(item, ExamineItem),
-            ));
+            perform_action_inner(
+                *perform_examine_item_id
+                    .get_or_init(|| world.register_system(perform_examine_item)),
+                world,
+                ActionIn::new(actor_entity, ItemAction::new(item, ExamineItem)),
+            );
+            return None;
         }
         PlannedAction::ChangePace => {
-            change_pace_writer.send(ActionEvent::new(actor_entity, ChangePace));
+            perform_action_inner(
+                *perform_change_pace_id.get_or_init(|| world.register_system(perform_change_pace)),
+                world,
+                ActionIn::new(actor_entity, ChangePace),
+            );
+            return None;
         }
     };
 
-    log_if_slow("send_action_event", start);
+    log_if_slow("perform_action", start);
+
+    Some(impact)
 }
 
-#[allow(clippy::needless_pass_by_value)]
-pub(crate) fn check_action_plan_amount(
-    mut stay_reader: EventReader<ActionEvent<Stay>>,
-    mut step_reader: EventReader<ActionEvent<Step>>,
-    mut attack_reader: EventReader<ActionEvent<Attack>>,
-    mut smash_reader: EventReader<ActionEvent<Smash>>,
-    mut pulp_reader: EventReader<ActionEvent<Pulp>>,
-    mut close_reader: EventReader<ActionEvent<Close>>,
-    mut wield_reader: EventReader<ActionEvent<ItemAction<Wield>>>,
-    mut unwield_reader: EventReader<ActionEvent<ItemAction<Unwield>>>,
-    mut pickup_reader: EventReader<ActionEvent<ItemAction<Pickup>>>,
-    mut move_item_reader: EventReader<ActionEvent<ItemAction<MoveItem>>>,
-    mut examine_item_reader: EventReader<ActionEvent<ItemAction<ExamineItem>>>,
-    mut change_pace_reader: EventReader<ActionEvent<ChangePace>>,
-) {
-    let all = stay_reader
-        .read()
-        .map(|a| format!("{a:?}"))
-        .chain(step_reader.read().map(|a| format!("{a:?}")))
-        .chain(attack_reader.read().map(|a| format!("{a:?}")))
-        .chain(smash_reader.read().map(|a| format!("{a:?}")))
-        .chain(pulp_reader.read().map(|a| format!("{a:?}")))
-        .chain(close_reader.read().map(|a| format!("{a:?}")))
-        .chain(wield_reader.read().map(|a| format!("{a:?}")))
-        .chain(unwield_reader.read().map(|a| format!("{a:?}")))
-        .chain(pickup_reader.read().map(|a| format!("{a:?}")))
-        .chain(move_item_reader.read().map(|a| format!("{a:?}")))
-        .chain(examine_item_reader.read().map(|a| format!("{a:?}")))
-        .chain(change_pace_reader.read().map(|a| format!("{a:?}")))
-        .collect::<Vec<_>>();
-
-    assert!(all.len() <= 1, "Multiple actions: {all:?}");
-}
-
-#[allow(clippy::needless_pass_by_value)]
-pub(crate) fn single_action<A: Action>(
-    mut action_reader: EventReader<ActionEvent<A>>,
-) -> ActionEvent<A> {
-    action_reader.read().next().cloned().expect("Single event")
+fn perform_action_inner<A, R>(
+    system_id: SystemId<ActionIn<A>, R>,
+    world: &mut World,
+    action_in: ActionIn<A>,
+) -> R
+where
+    A: Action,
+    R: 'static,
+{
+    world
+        .run_system_with_input(system_id, action_in)
+        .expect("Action should have succeeded")
 }
 
 #[allow(clippy::needless_pass_by_value)]
 #[allow(clippy::unnecessary_wraps)]
-pub(crate) fn perform_stay(In(stay): In<ActionEvent<Stay>>, actors: Query<Actor>) -> Impact {
+pub(crate) fn perform_stay(In(stay): In<ActionIn<Stay>>, actors: Query<Actor>) -> Impact {
     stay.actor(&actors).stay(&stay.action)
 }
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn perform_step(
-    In(step): In<ActionEvent<Step>>,
+    In(step): In<ActionIn<Step>>,
     mut commands: Commands,
     mut message_writer: EventWriter<Message>,
     mut toggle_writer: EventWriter<TerrainEvent<Toggle>>,
@@ -219,9 +213,9 @@ pub(crate) fn perform_step(
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn perform_attack(
-    In(attack): In<ActionEvent<Attack>>,
+    In(attack): In<ActionIn<Attack>>,
     mut message_writer: EventWriter<Message>,
-    mut damage_writer: EventWriter<ActionEvent<Damage>>,
+    mut damage_writer: EventWriter<ActorEvent<Damage>>,
     envir: Envir,
     infos: Res<Infos>,
     hierarchy: Hierarchy,
@@ -239,7 +233,7 @@ pub(crate) fn perform_attack(
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn perform_smash(
-    In(smash): In<ActionEvent<Smash>>,
+    In(smash): In<ActionIn<Smash>>,
     mut message_writer: EventWriter<Message>,
     mut damage_writer: EventWriter<TerrainEvent<Damage>>,
     envir: Envir,
@@ -259,7 +253,7 @@ pub(crate) fn perform_smash(
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn perform_pulp(
-    In(pulp): In<ActionEvent<Pulp>>,
+    In(pulp): In<ActionIn<Pulp>>,
     mut message_writer: EventWriter<Message>,
     mut corpse_damage_writer: EventWriter<CorpseEvent<Damage>>,
     envir: Envir,
@@ -279,7 +273,7 @@ pub(crate) fn perform_pulp(
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn perform_close(
-    In(close): In<ActionEvent<Close>>,
+    In(close): In<ActionIn<Close>>,
     mut message_writer: EventWriter<Message>,
     mut toggle_writer: EventWriter<TerrainEvent<Toggle>>,
     envir: Envir,
@@ -295,7 +289,7 @@ pub(crate) fn perform_close(
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn perform_wield(
-    In(wield): In<ActionEvent<ItemAction<Wield>>>,
+    In(wield): In<ActionIn<ItemAction<Wield>>>,
     mut commands: Commands,
     mut message_writer: EventWriter<Message>,
     mut location: ResMut<Location>,
@@ -314,7 +308,7 @@ pub(crate) fn perform_wield(
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn perform_unwield(
-    In(unwield): In<ActionEvent<ItemAction<Unwield>>>,
+    In(unwield): In<ActionIn<ItemAction<Unwield>>>,
     mut commands: Commands,
     mut message_writer: EventWriter<Message>,
     mut location: ResMut<Location>,
@@ -333,7 +327,7 @@ pub(crate) fn perform_unwield(
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn perform_pickup(
-    In(pickup): In<ActionEvent<ItemAction<Pickup>>>,
+    In(pickup): In<ActionIn<ItemAction<Pickup>>>,
     mut commands: Commands,
     mut message_writer: EventWriter<Message>,
     mut location: ResMut<Location>,
@@ -352,7 +346,7 @@ pub(crate) fn perform_pickup(
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn perform_move_item(
-    In(move_item): In<ActionEvent<ItemAction<MoveItem>>>,
+    In(move_item): In<ActionIn<ItemAction<MoveItem>>>,
     mut commands: Commands,
     mut message_writer: EventWriter<Message>,
     subzone_level_entities: Res<SubzoneLevelEntities>,
@@ -372,7 +366,7 @@ pub(crate) fn perform_move_item(
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn perform_examine_item(
-    In(examine_item): In<ActionEvent<ItemAction<ExamineItem>>>,
+    In(examine_item): In<ActionIn<ItemAction<ExamineItem>>>,
     mut message_writer: EventWriter<Message>,
     infos: Res<Infos>,
     items: Query<Item>,
@@ -386,7 +380,7 @@ pub(crate) fn perform_examine_item(
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn perform_change_pace(
-    In(change_pace): In<ActionEvent<ChangePace>>,
+    In(change_pace): In<ActionIn<ChangePace>>,
     mut commands: Commands,
     actors: Query<Actor>,
 ) {
@@ -395,13 +389,17 @@ pub(crate) fn perform_change_pace(
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn proces_impact(
-    In(impact): In<Impact>,
+    In(impact): In<Option<Impact>>,
     mut message_writer: EventWriter<Message>,
-    mut stamina_impact_events: EventWriter<ActionEvent<StaminaImpact>>,
+    mut stamina_impact_events: EventWriter<ActorEvent<StaminaImpact>>,
     mut timeouts: ResMut<Timeouts>,
     players: Query<Entity, With<Player>>,
 ) {
     let start = Instant::now();
+
+    let Some(impact) = impact else {
+        return;
+    };
 
     impact.check_validity();
     let Some(stamina_impact) = impact.stamina_impact else {
@@ -416,14 +414,14 @@ pub(crate) fn proces_impact(
 
     timeouts.add(impact.actor_entity, impact.timeout);
 
-    stamina_impact_events.send(ActionEvent::new(impact.actor_entity, stamina_impact));
+    stamina_impact_events.send(ActorEvent::new(impact.actor_entity, stamina_impact));
 
     log_if_slow("proces_impact", start);
 }
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_stamina(
-    mut stamina_impact_events: EventReader<ActionEvent<StaminaImpact>>,
+    mut stamina_impact_events: EventReader<ActorEvent<StaminaImpact>>,
     mut staminas: Query<&mut Stamina>,
 ) {
     let start = Instant::now();
@@ -474,7 +472,7 @@ pub(crate) fn toggle_doors(
 pub(crate) fn update_damaged_characters(
     mut commands: Commands,
     mut message_writer: EventWriter<Message>,
-    mut damage_reader: EventReader<ActionEvent<Damage>>,
+    mut damage_reader: EventReader<ActorEvent<Damage>>,
     clock: Clock,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
     mut characters: Query<
@@ -544,7 +542,7 @@ pub(crate) fn update_damaged_characters(
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_healed_characters(
     mut message_writer: EventWriter<Message>,
-    mut healing_reader: EventReader<ActionEvent<Healing>>,
+    mut healing_reader: EventReader<ActorEvent<Healing>>,
     mut actors: ParamSet<(
         Query<&mut Health, (With<Faction>, With<Life>)>,
         Query<Actor, (With<Faction>, With<Life>)>,
@@ -658,41 +656,14 @@ pub(crate) fn update_corpses(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn update_explored(
-    mut commands: Commands,
-    clock: Clock,
-    infos: Res<Infos>,
-    mut corpse_raises: Query<(Entity, &CorpseRaise, &mut Transform)>,
-) {
+pub(crate) fn update_explored(moved_players: Query<(), (With<Player>, Changed<Pos>)>) {
     let start = Instant::now();
 
-    for (corpse, raise, mut transform) in &mut corpse_raises {
-        if raise.at <= clock.time() {
-            transform.rotation = Quat::IDENTITY;
-
-            let definition = ObjectDefinition {
-                category: ObjectCategory::Character,
-                id: ObjectId::new("mon_zombie"),
-            };
-            let character_info = infos.character(&definition.id).expect("Info available");
-            let object_name = ObjectName::new(character_info.name.clone(), Faction::Zombie.color());
-            let health = Health(Limited::full(character_info.hp.unwrap_or(60) as u16));
-
-            commands
-                .entity(corpse)
-                .insert((
-                    definition,
-                    object_name,
-                    Faction::Zombie,
-                    Life,
-                    health,
-                    Stamina::Unlimited,
-                    WalkingMode::Running,
-                    Obstacle,
-                ))
-                .remove::<(Corpse, CorpseRaise, Integrity)>();
-        }
+    if moved_players.get_single().is_err() {
+        return;
     }
+
+    // TODO
 
     log_if_slow("update_corpses", start);
 }

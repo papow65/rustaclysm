@@ -27,21 +27,9 @@ impl Plugin for GameplayPlugin {
             .insert_resource(Events::<SpawnZoneLevel>::default())
             .insert_resource(Events::<UpdateZoneLevelVisibility>::default())
             .insert_resource(Events::<DespawnZoneLevel>::default())
-            .insert_resource(Events::<ActionEvent<Stay>>::default())
-            .insert_resource(Events::<ActionEvent<Step>>::default())
-            .insert_resource(Events::<ActionEvent<Attack>>::default())
-            .insert_resource(Events::<ActionEvent<Smash>>::default())
-            .insert_resource(Events::<ActionEvent<Pulp>>::default())
-            .insert_resource(Events::<ActionEvent<Close>>::default())
-            .insert_resource(Events::<ActionEvent<ItemAction<Wield>>>::default())
-            .insert_resource(Events::<ActionEvent<ItemAction<Unwield>>>::default())
-            .insert_resource(Events::<ActionEvent<ItemAction<Pickup>>>::default())
-            .insert_resource(Events::<ActionEvent<ItemAction<MoveItem>>>::default())
-            .insert_resource(Events::<ActionEvent<ItemAction<ExamineItem>>>::default())
-            .insert_resource(Events::<ActionEvent<ChangePace>>::default())
-            .insert_resource(Events::<ActionEvent<StaminaImpact>>::default())
-            .insert_resource(Events::<ActionEvent<Damage>>::default())
-            .insert_resource(Events::<ActionEvent<Healing>>::default())
+            .insert_resource(Events::<ActorEvent<StaminaImpact>>::default())
+            .insert_resource(Events::<ActorEvent<Damage>>::default())
+            .insert_resource(Events::<ActorEvent<Healing>>::default())
             .insert_resource(Events::<CorpseEvent<Damage>>::default())
             .insert_resource(Events::<TerrainEvent<Damage>>::default())
             .insert_resource(Events::<TerrainEvent<Toggle>>::default());
@@ -158,21 +146,9 @@ fn shutdown_systems() -> impl IntoSystemConfigs<()> {
             clear_gameplay_events::<DespawnZoneLevel>,
         ),
         (
-            clear_gameplay_events::<ActionEvent<Stay>>,
-            clear_gameplay_events::<ActionEvent<Step>>,
-            clear_gameplay_events::<ActionEvent<Attack>>,
-            clear_gameplay_events::<ActionEvent<Smash>>,
-            clear_gameplay_events::<ActionEvent<Pulp>>,
-            clear_gameplay_events::<ActionEvent<Close>>,
-            clear_gameplay_events::<ActionEvent<ItemAction<Wield>>>,
-            clear_gameplay_events::<ActionEvent<ItemAction<Unwield>>>,
-            clear_gameplay_events::<ActionEvent<ItemAction<Pickup>>>,
-            clear_gameplay_events::<ActionEvent<ItemAction<MoveItem>>>,
-            clear_gameplay_events::<ActionEvent<ItemAction<ExamineItem>>>,
-            clear_gameplay_events::<ActionEvent<ChangePace>>,
-            clear_gameplay_events::<ActionEvent<StaminaImpact>>,
-            clear_gameplay_events::<ActionEvent<Damage>>,
-            clear_gameplay_events::<ActionEvent<Healing>>,
+            clear_gameplay_events::<ActorEvent<StaminaImpact>>,
+            clear_gameplay_events::<ActorEvent<Damage>>,
+            clear_gameplay_events::<ActorEvent<Healing>>,
         ),
         (
             clear_gameplay_events::<CorpseEvent<Damage>>,
