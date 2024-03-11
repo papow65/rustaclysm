@@ -1,6 +1,7 @@
 use crate::prelude::*;
 use bevy::prelude::{Color, EventWriter, Resource};
 use std::fmt;
+use std::time::Instant;
 
 #[derive(Debug)]
 enum PlayerBehavior {
@@ -71,6 +72,7 @@ impl PlayerActionState {
         healing_writer: &mut EventWriter<ActorEvent<Healing>>,
         envir: &mut Envir,
         instruction_queue: &mut InstructionQueue,
+        explored: &Explored,
         player: &ActorItem,
         now: Timestamp,
         enemies: &[Pos],
@@ -98,7 +100,7 @@ impl PlayerActionState {
             } => auto_drag(envir, instruction_queue, from),
             Self::AutoDefend => auto_defend(envir, instruction_queue, player, enemies),
             Self::AutoTravel { target } => {
-                auto_travel(envir, instruction_queue, player, *target, enemies)
+                auto_travel(envir, instruction_queue, explored, player, *target, enemies)
             }
             Self::Pulping {
                 active_target: Some(target),
@@ -527,6 +529,7 @@ fn auto_drag(
 fn auto_travel(
     envir: &mut Envir<'_, '_>,
     instruction_queue: &mut InstructionQueue,
+    explored: &Explored,
     player: &ActorItem<'_>,
     target: Pos,
     enemies: &[Pos],
@@ -535,23 +538,30 @@ fn auto_travel(
         instruction_queue.add_interruption();
         None // process the cancellation next turn
     } else {
-        envir
-            .path(*player.pos, target, Intelligence::Smart, player.speed())
-            .map(|path| {
-                envir
-                    .nbor(*player.pos, path.first)
-                    .expect("The first step should be a nbor")
-            })
-            .or_else(|| {
-                // Full path not available
-                envir
-                    .nbors_for_moving(*player.pos, None, Intelligence::Smart, player.speed())
-                    .map(|(nbor, nbor_pos, _)| (nbor, nbor_pos.vision_distance(target)))
-                    .min_by_key(|(_, distance)| *distance)
-                    .filter(|(_, distance)| *distance < player.pos.vision_distance(target))
-                    .map(|(nbor, _)| nbor)
-            })
-            .map(|to| PlannedAction::Step { to })
+        let start = Instant::now();
+        let path = envir.path(
+            *player.pos,
+            target,
+            Intelligence::Smart,
+            |pos| explored.has_pos_been_seen(pos),
+            player.speed(),
+        );
+        eprintln!("PATH: {:?}", start.elapsed());
+        path.map(|path| {
+            envir
+                .nbor(*player.pos, path.first)
+                .expect("The first step should be a nbor")
+        })
+        .or_else(|| {
+            // Full path not available
+            envir
+                .nbors_for_moving(*player.pos, None, Intelligence::Smart, player.speed())
+                .map(|(nbor, nbor_pos, _)| (nbor, nbor_pos.vision_distance(target)))
+                .min_by_key(|(_, distance)| *distance)
+                .filter(|(_, distance)| *distance < player.pos.vision_distance(target))
+                .map(|(nbor, _)| nbor)
+        })
+        .map(|to| PlannedAction::Step { to })
     }
 }
 

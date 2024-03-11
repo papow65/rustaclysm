@@ -325,29 +325,33 @@ impl<'w, 's> Envir<'w, 's> {
             .unwrap_or_else(|| WalkingCost::new(NborDistance::Zero, move_cost))
     }
 
-    pub(crate) fn path(
+    pub(crate) fn path<F>(
         &self,
         from: Pos,
         to: Pos,
         intelligence: Intelligence,
+        seen: F,
         speed: MillimeterPerSecond,
-    ) -> Option<MovementPath> {
+    ) -> Option<MovementPath>
+    where
+        F: Fn(Pos) -> bool,
+    {
         if to == from {
             return None;
         }
 
         let nbors_fn = |pos: &Pos| {
             self.nbors_for_moving(*pos, Some(to), intelligence, speed)
+                .filter(|(_, pos, _)| seen(*pos))
                 .map(|(_, pos, cost)| (pos, cost))
         };
         let estimated_duration_fn = |&pos: &Pos| self.walking_cost(pos, to).duration(speed);
 
         //println!("dumb? {dumb:?} @{from:?}");
-        match intelligence {
-            Intelligence::Smart => MovementPath::plan(from, nbors_fn, estimated_duration_fn, to),
-            Intelligence::Dumb => {
-                MovementPath::improvize(nbors_fn(&from), estimated_duration_fn, from, to)
-            }
+        if intelligence == Intelligence::Smart && seen(to) {
+            MovementPath::plan(from, nbors_fn, estimated_duration_fn, to)
+        } else {
+            MovementPath::improvize(nbors_fn(&from), estimated_duration_fn, from, to)
         }
     }
 

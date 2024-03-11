@@ -107,7 +107,13 @@ impl Faction {
             )
             .filter_map(|(memory, enemy_pos)| {
                 envir
-                    .path(*actor.pos, enemy_pos, self.intelligence(), actor.speed())
+                    .path(
+                        *actor.pos,
+                        enemy_pos,
+                        self.intelligence(),
+                        |_| true,
+                        actor.speed(),
+                    )
                     .map(|path| (memory, path))
             })
             .min_by_key(|(memory, path)| (*memory, path.duration.0))
