@@ -76,22 +76,45 @@ pub(crate) fn plan_action(
     Some((actor.entity, action))
 }
 
+pub(crate) struct PerformSystems {
+    stay: SystemId<ActionIn<Stay>, Impact>,
+    step: SystemId<ActionIn<Step>, Impact>,
+    attack: SystemId<ActionIn<Attack>, Impact>,
+    smash: SystemId<ActionIn<Smash>, Impact>,
+    pulp: SystemId<ActionIn<Pulp>, Impact>,
+    close: SystemId<ActionIn<Close>, Impact>,
+    wield: SystemId<ActionIn<ItemAction<Wield>>, Impact>,
+    unwield: SystemId<ActionIn<ItemAction<Unwield>>, Impact>,
+    pickup: SystemId<ActionIn<ItemAction<Pickup>>, Impact>,
+    move_item: SystemId<ActionIn<ItemAction<MoveItem>>, Impact>,
+    examine_item: SystemId<ActionIn<ItemAction<ExamineItem>>, ()>,
+    change_pace: SystemId<ActionIn<ChangePace>, ()>,
+}
+
+impl PerformSystems {
+    fn new(world: &mut World) -> Self {
+        Self {
+            stay: world.register_system(perform_stay),
+            step: world.register_system(perform_step),
+            attack: world.register_system(perform_attack),
+            smash: world.register_system(perform_smash),
+            pulp: world.register_system(perform_pulp),
+            close: world.register_system(perform_close),
+            wield: world.register_system(perform_wield),
+            unwield: world.register_system(perform_unwield),
+            pickup: world.register_system(perform_pickup),
+            move_item: world.register_system(perform_move_item),
+            examine_item: world.register_system(perform_examine_item),
+            change_pace: world.register_system(perform_change_pace),
+        }
+    }
+}
+
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn perform_action(
     In(option): In<Option<(Entity, PlannedAction)>>,
     world: &mut World,
-    perform_stay_id: Local<OnceCell<SystemId<ActionIn<Stay>, Impact>>>,
-    perform_step_id: Local<OnceCell<SystemId<ActionIn<Step>, Impact>>>,
-    perform_attack_id: Local<OnceCell<SystemId<ActionIn<Attack>, Impact>>>,
-    perform_smash_id: Local<OnceCell<SystemId<ActionIn<Smash>, Impact>>>,
-    perform_pulp_id: Local<OnceCell<SystemId<ActionIn<Pulp>, Impact>>>,
-    perform_close_id: Local<OnceCell<SystemId<ActionIn<Close>, Impact>>>,
-    perform_wield_id: Local<OnceCell<SystemId<ActionIn<ItemAction<Wield>>, Impact>>>,
-    perform_unwield_id: Local<OnceCell<SystemId<ActionIn<ItemAction<Unwield>>, Impact>>>,
-    perform_pickup_id: Local<OnceCell<SystemId<ActionIn<ItemAction<Pickup>>, Impact>>>,
-    perform_move_item_id: Local<OnceCell<SystemId<ActionIn<ItemAction<MoveItem>>, Impact>>>,
-    perform_examine_item_id: Local<OnceCell<SystemId<ActionIn<ItemAction<ExamineItem>>, ()>>>,
-    perform_change_pace_id: Local<OnceCell<SystemId<ActionIn<ChangePace>, ()>>>,
+    perform_systems: Local<OnceCell<PerformSystems>>,
 ) -> Option<Impact> {
     let start = Instant::now();
 
@@ -100,61 +123,62 @@ pub(crate) fn perform_action(
         return None;
     };
 
+    let perform_systems = perform_systems.get_or_init(|| PerformSystems::new(world));
+
     let impact = match planned_action {
         PlannedAction::Stay { duration } => perform_action_inner(
-            *perform_stay_id.get_or_init(|| world.register_system(perform_stay)),
+            perform_systems.stay,
             world,
             ActionIn::new(actor_entity, Stay { duration }),
         ),
         PlannedAction::Step { to } => perform_action_inner(
-            *perform_step_id.get_or_init(|| world.register_system(perform_step)),
+            perform_systems.step,
             world,
             ActionIn::new(actor_entity, Step { to }),
         ),
         PlannedAction::Attack { target } => perform_action_inner(
-            *perform_attack_id.get_or_init(|| world.register_system(perform_attack)),
+            perform_systems.attack,
             world,
             ActionIn::new(actor_entity, Attack { target }),
         ),
         PlannedAction::Smash { target } => perform_action_inner(
-            *perform_smash_id.get_or_init(|| world.register_system(perform_smash)),
+            perform_systems.smash,
             world,
             ActionIn::new(actor_entity, Smash { target }),
         ),
         PlannedAction::Pulp { target } => perform_action_inner(
-            *perform_pulp_id.get_or_init(|| world.register_system(perform_pulp)),
+            perform_systems.pulp,
             world,
             ActionIn::new(actor_entity, Pulp { target }),
         ),
         PlannedAction::Close { target } => perform_action_inner(
-            *perform_close_id.get_or_init(|| world.register_system(perform_close)),
+            perform_systems.close,
             world,
             ActionIn::new(actor_entity, Close { target }),
         ),
         PlannedAction::Wield { item } => perform_action_inner(
-            *perform_wield_id.get_or_init(|| world.register_system(perform_wield)),
+            perform_systems.wield,
             world,
             ActionIn::new(actor_entity, ItemAction::new(item, Wield)),
         ),
         PlannedAction::Unwield { item } => perform_action_inner(
-            *perform_unwield_id.get_or_init(|| world.register_system(perform_unwield)),
+            perform_systems.unwield,
             world,
             ActionIn::new(actor_entity, ItemAction::new(item, Unwield)),
         ),
         PlannedAction::Pickup { item } => perform_action_inner(
-            *perform_pickup_id.get_or_init(|| world.register_system(perform_pickup)),
+            perform_systems.pickup,
             world,
             ActionIn::new(actor_entity, ItemAction::new(item, Pickup)),
         ),
         PlannedAction::MoveItem { item, to } => perform_action_inner(
-            *perform_move_item_id.get_or_init(|| world.register_system(perform_move_item)),
+            perform_systems.move_item,
             world,
             ActionIn::new(actor_entity, ItemAction::new(item, MoveItem { to })),
         ),
         PlannedAction::ExamineItem { item } => {
             perform_action_inner(
-                *perform_examine_item_id
-                    .get_or_init(|| world.register_system(perform_examine_item)),
+                perform_systems.examine_item,
                 world,
                 ActionIn::new(actor_entity, ItemAction::new(item, ExamineItem)),
             );
@@ -162,7 +186,7 @@ pub(crate) fn perform_action(
         }
         PlannedAction::ChangePace => {
             perform_action_inner(
-                *perform_change_pace_id.get_or_init(|| world.register_system(perform_change_pace)),
+                perform_systems.change_pace,
                 world,
                 ActionIn::new(actor_entity, ChangePace),
             );
