@@ -130,7 +130,7 @@ pub(crate) fn run_behavior_schedule(world: &mut World) -> DisplayHandling {
     }
 
     if over_time {
-        println!("run_behavior_schedule could ony handle {count} iterations before the timeout");
+        println!("run_behavior_schedule could only handle {count} iterations before the timeout");
     }
 
     log_if_slow("run_behavior_schedule", start);
