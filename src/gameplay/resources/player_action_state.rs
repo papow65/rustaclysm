@@ -96,7 +96,7 @@ impl PlayerActionState {
         match self {
             Self::Dragging {
                 active_from: Some(from),
-            } => auto_drag(envir, instruction_queue, from),
+            } => auto_drag(envir, instruction_queue, from, enemies),
             Self::AutoDefend => auto_defend(envir, instruction_queue, player, enemies),
             Self::AutoTravel { target } => {
                 auto_travel(envir, instruction_queue, explored, player, *target, enemies)
@@ -513,8 +513,12 @@ fn auto_drag(
     envir: &mut Envir<'_, '_>,
     instruction_queue: &mut InstructionQueue,
     from: &mut Pos,
+    enemies: &[Pos],
 ) -> Option<PlannedAction> {
-    if let Some(item) = envir.find_item(*from) {
+    if !enemies.is_empty() {
+        instruction_queue.add_interruption();
+        None // process the cancellation next turn
+    } else if let Some(item) = envir.find_item(*from) {
         Some(PlannedAction::MoveItem {
             item,
             to: Nbor::HERE,
