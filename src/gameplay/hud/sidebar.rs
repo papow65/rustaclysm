@@ -1,26 +1,60 @@
 use crate::prelude::*;
 use bevy::diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin};
-use bevy::ecs::system::{EntityCommands, Resource};
+use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 use std::time::Instant;
 
 const TEXT_WIDTH: f32 = 8.0 * 43.0; // 43 chars
 
-#[derive(Resource)]
-pub(crate) struct HudDefaults {
-    text_style: TextStyle,
+#[allow(clippy::needless_pass_by_value)]
+pub(crate) fn spawn_sidebar(
+    mut commands: Commands,
+    hud_defaults: Res<HudDefaults>,
+    mut text_sections: ResMut<StatusTextSections>,
+) {
+    text_sections.fps.style = hud_defaults.text_style.clone();
+    text_sections.time.style = hud_defaults.text_style.clone();
+    text_sections.player_action_state.style = hud_defaults.text_style.clone();
+    for section in &mut text_sections.health {
+        section.style = hud_defaults.text_style.clone();
+    }
+    for section in &mut text_sections.stamina {
+        section.style = hud_defaults.text_style.clone();
+    }
+    for section in &mut text_sections.speed {
+        section.style = hud_defaults.text_style.clone();
+    }
+
+    let mut background = hud_defaults.background.clone();
+    background.style.top = Val::Px(0.0);
+    background.style.right = Val::Px(0.0);
+    background.style.width = Val::Px(TEXT_WIDTH + 10.0); // 5px margin on both sides
+    background.style.height = Val::Percent(100.0);
+    let mut parent = commands.spawn((background, StateBound::<ApplicationState>::default()));
+    spawn_status_display(&mut parent);
+    spawn_log_display(&mut parent);
 }
 
-impl HudDefaults {
-    pub(crate) const fn new(font: Handle<Font>) -> Self {
-        Self {
-            text_style: TextStyle {
-                font,
-                font_size: 16.0,
-                color: SOFT_TEXT_COLOR,
+fn spawn_status_display(parent: &mut EntityCommands) {
+    // TODO properly use flex layout
+    parent.with_children(|child_builder| {
+        child_builder.spawn((
+            TextBundle {
+                text: Text::default(),
+                style: Style {
+                    position_type: PositionType::Absolute,
+                    top: Val::Px(0.0),
+                    left: Val::Px(0.0),
+                    width: Val::Px(TEXT_WIDTH),
+                    height: Val::Percent(100.0),
+                    margin: UiRect::all(Val::Px(5.0)),
+                    ..Style::default()
+                },
+                ..TextBundle::default()
             },
-        }
-    }
+            StatusDisplay,
+        ));
+    });
 }
 
 fn spawn_log_display(parent: &mut EntityCommands) {
@@ -61,122 +95,6 @@ fn spawn_log_display(parent: &mut EntityCommands) {
                 ));
             });
     });
-}
-
-fn spawn_status_display(parent: &mut EntityCommands) {
-    // TODO properly use flex layout
-    parent.with_children(|child_builder| {
-        child_builder.spawn((
-            TextBundle {
-                text: Text::default(),
-                style: Style {
-                    position_type: PositionType::Absolute,
-                    top: Val::Px(0.0),
-                    left: Val::Px(0.0),
-                    width: Val::Px(TEXT_WIDTH),
-                    height: Val::Percent(100.0),
-                    margin: UiRect::all(Val::Px(5.0)),
-                    ..Style::default()
-                },
-                ..TextBundle::default()
-            },
-            StatusDisplay,
-        ));
-    });
-}
-
-fn spawn_manual_display(
-    commands: &mut Commands,
-    hud_defaults: &HudDefaults,
-    mut background: NodeBundle,
-) {
-    background.style.bottom = Val::Px(0.0);
-    background.style.left = Val::Px(0.0);
-
-    commands
-        .spawn((
-            background,
-            ManualDisplay,
-            StateBound::<ApplicationState>::default(),
-        ))
-        .with_children(|parent| {
-            parent.spawn(TextBundle {
-                text: Text {
-                    sections: vec![TextSection {
-                        value: String::new()
-                            + "move          numpad\n"
-                            + "up/down       </>\n"
-                            + "attack        a\n"
-                            + "smash         s\n"
-                            + "walking mode  +\n"
-                            + "auto defend   tab\n"
-                            + "wait          |\n"
-                            + "sleep         $\n"
-                            + "show elevated h\n"
-                            + "inventory     i\n"
-                            + "examine       x\n"
-                            + "examine map   X\n"
-                            + "toggle map    m/M\n"
-                            + "camera angle  hold middle\n"
-                            + "reset angle   0\n"
-                            + "zoom          z/Z\n"
-                            + "zoom          scroll wheel\n"
-                            + "zoom ui       ctrl +/-\n"
-                            + "toggle this   f1\n"
-                            + "menu          esc\n"
-                            + "main menu     f12\n"
-                            + "quit          ctrl c/q",
-                        style: hud_defaults.text_style.clone(),
-                    }],
-                    ..Text::default()
-                },
-                ..default()
-            });
-        });
-}
-
-#[allow(clippy::needless_pass_by_value)]
-pub(crate) fn spawn_hud(
-    mut commands: Commands,
-    fonts: Res<Fonts>,
-    mut text_sections: ResMut<StatusTextSections>,
-) {
-    let hud_defaults = HudDefaults::new(fonts.default());
-
-    text_sections.fps.style = hud_defaults.text_style.clone();
-    text_sections.time.style = hud_defaults.text_style.clone();
-    text_sections.player_action_state.style = hud_defaults.text_style.clone();
-    for section in &mut text_sections.health {
-        section.style = hud_defaults.text_style.clone();
-    }
-    for section in &mut text_sections.stamina {
-        section.style = hud_defaults.text_style.clone();
-    }
-    for section in &mut text_sections.speed {
-        section.style = hud_defaults.text_style.clone();
-    }
-
-    let mut background = NodeBundle {
-        style: Style {
-            position_type: PositionType::Absolute,
-            padding: UiRect::all(Val::Px(5.0)),
-            ..default()
-        },
-        background_color: PANEL_COLOR.into(),
-        ..default()
-    };
-
-    spawn_manual_display(&mut commands, &hud_defaults, background.clone());
-
-    background.style.top = Val::Px(0.0);
-    background.style.right = Val::Px(0.0);
-    background.style.width = Val::Px(TEXT_WIDTH + 10.0); // 5px margin on both sides
-    background.style.height = Val::Percent(100.0);
-    let mut parent = commands.spawn((background, StateBound::<ApplicationState>::default()));
-    spawn_status_display(&mut parent);
-    spawn_log_display(&mut parent);
-
-    commands.insert_resource(hud_defaults);
 }
 
 #[allow(clippy::needless_pass_by_value)]

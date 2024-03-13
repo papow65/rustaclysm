@@ -8,6 +8,7 @@ impl Plugin for GameplayPlugin {
         app.insert_state(GameplayScreenState::Inapplicable);
 
         app.add_plugins((
+            HudPlugin,
             BaseScreenPlugin,
             CharacterScreenPlugin,
             DeathScreenPlugin,
@@ -48,7 +49,6 @@ fn startup_systems() -> impl IntoSystemConfigs<()> {
         create_independent_resources,
         create_dependent_resources,
         spawn_initial_entities,
-        spawn_hud,
     )
         .chain()
 }

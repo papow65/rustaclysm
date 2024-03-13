@@ -1,11 +1,10 @@
 mod behavior;
-mod hud;
 mod shutdown;
 mod spawn;
 mod startup;
 mod update;
 
-pub(crate) use self::{behavior::*, hud::*, shutdown::*, spawn::*, startup::*, update::*};
+pub(crate) use self::{behavior::*, shutdown::*, spawn::*, startup::*, update::*};
 
 use crate::prelude::*;
 use bevy::prelude::*;
