@@ -8,6 +8,7 @@ impl Plugin for GameplayPlugin {
         app.insert_state(GameplayScreenState::Inapplicable);
 
         app.add_plugins((
+            BehaviorPlugin,
             HudPlugin,
             BaseScreenPlugin,
             CharacterScreenPlugin,
@@ -35,8 +36,6 @@ impl Plugin for GameplayPlugin {
             .insert_resource(Events::<TerrainEvent<Damage>>::default())
             .insert_resource(Events::<TerrainEvent<Toggle>>::default())
             .insert_resource(Events::<RefreshAfterBehavior>::default());
-
-        create_behavior_schedule(app);
 
         app.add_systems(OnEnter(ApplicationState::Gameplay), startup_systems());
         app.add_systems(Update, update_systems());
@@ -123,10 +122,12 @@ fn update_systems() -> (impl IntoSystemConfigs<()>, impl IntoSystemConfigs<()>) 
 }
 
 fn fixed_update_systems() -> impl IntoSystemConfigs<()> {
-    (
+    ((
         #[cfg(debug_assertions)]
         (count_assets, count_zones),
-    )
+        #[cfg(feature = "log_archetypes")]
+        list_archetypes,
+    ),)
         .chain()
 }
 
