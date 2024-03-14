@@ -1,11 +1,15 @@
-use crate::prelude::*;
+use super::components::{MainMenuButton, ReturnButton};
+use crate::prelude::{
+    ApplicationState, Ctrl, Fonts, GameplayScreenState, InputChange, Key, Keys, QuitButton,
+    StateBound, BAD_TEXT_COLOR, DEFAULT_TEXT_COLOR, GOOD_TEXT_COLOR,
+};
 use bevy::{app::AppExit, prelude::*};
 
 const SPACING: f32 = 20.0;
 const FONT_SIZE: f32 = 40.0;
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn spawn_menu(mut commands: Commands, fonts: Res<Fonts>) {
+pub(super) fn spawn_menu(mut commands: Commands, fonts: Res<Fonts>) {
     let button = ButtonBundle {
         style: Style {
             width: Val::Px(250.0),
@@ -59,7 +63,7 @@ fn add_text(parent: &mut ChildBuilder, font: &Handle<Font>, text: &str, color: C
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn manage_menu_button_input(
+pub(super) fn manage_menu_button_input(
     mut next_application_state: ResMut<NextState<ApplicationState>>,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
     mut app_exit_events: ResMut<Events<AppExit>>,
@@ -99,7 +103,7 @@ pub(crate) fn manage_menu_button_input(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn manage_menu_keyboard_input(
+pub(super) fn manage_menu_keyboard_input(
     mut keys: Keys,
     mut next_application_state: ResMut<NextState<ApplicationState>>,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
