@@ -1,6 +1,6 @@
-use super::ManualDisplay;
-use crate::prelude::*;
-use bevy::prelude::*;
+use super::components::ManualDisplay;
+use crate::prelude::{log_if_slow, Ctrl, InputChange, Key, Keys};
+use bevy::prelude::{KeyCode, Query, Visibility, With};
 use std::time::Instant;
 
 #[allow(clippy::needless_pass_by_value)]

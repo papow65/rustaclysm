@@ -1,4 +1,4 @@
-use super::{HudDefaults, ManualDisplay};
+use super::{components::ManualDisplay, resources::HudDefaults};
 use crate::prelude::{ApplicationState, StateBound};
 use bevy::prelude::{default, BuildChildren, Commands, Res, Text, TextBundle, TextSection, Val};
 
