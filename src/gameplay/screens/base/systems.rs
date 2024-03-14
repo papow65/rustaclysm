@@ -74,7 +74,7 @@ fn toggle_elevation(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn manage_mouse_input(
+pub(super) fn manage_mouse_input(
     mut mouse_wheel_events: EventReader<MouseWheel>,
     mut mouse_motion_events: EventReader<MouseMotion>,
     mouse_buttons: Res<ButtonInput<MouseButton>>,
@@ -106,7 +106,7 @@ pub(crate) fn manage_mouse_input(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn manage_keyboard_input(
+pub(super) fn manage_keyboard_input(
     mut next_application_state: ResMut<NextState<ApplicationState>>,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
     mut keys: Keys,

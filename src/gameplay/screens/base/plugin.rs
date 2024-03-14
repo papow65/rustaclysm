@@ -1,5 +1,9 @@
-use crate::prelude::*;
-use bevy::prelude::*;
+use super::systems::{manage_keyboard_input, manage_mouse_input};
+use crate::prelude::{
+    run_behavior_display_schedule, run_behavior_schedule, update_camera_base, update_camera_offset,
+    GameplayScreenState,
+};
+use bevy::prelude::{in_state, App, IntoSystemConfigs, Plugin, Update};
 
 pub(crate) struct BaseScreenPlugin;
 
