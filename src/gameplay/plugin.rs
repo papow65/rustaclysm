@@ -36,7 +36,7 @@ impl Plugin for GameplayPlugin {
             .insert_resource(Events::<TerrainEvent<Toggle>>::default())
             .insert_resource(Events::<RefreshAfterBehavior>::default());
 
-        create_schedules(app);
+        create_behavior_schedule(app);
 
         app.add_systems(OnEnter(ApplicationState::Gameplay), startup_systems());
         app.add_systems(Update, update_systems());

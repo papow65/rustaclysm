@@ -9,14 +9,6 @@ use std::time::{Duration, Instant};
 #[derive(ScheduleLabel, Debug, Hash, PartialEq, Eq, Clone)]
 struct BehaviorSchedule;
 
-/** This is run after the behavior schedule, but no more than once per tick. */
-#[derive(ScheduleLabel, Debug, Hash, PartialEq, Eq, Clone)]
-struct DisplayBehaviorSchedule;
-
-pub(crate) fn create_schedules(app: &mut App) {
-    create_behavior_schedule(app);
-    create_display_behavior_schedule(app);
-}
 pub(crate) fn create_behavior_schedule(app: &mut App) {
     app.init_schedule(BehaviorSchedule);
 
@@ -59,11 +51,9 @@ pub(crate) fn create_behavior_schedule(app: &mut App) {
     );
 }
 
-pub(crate) fn create_display_behavior_schedule(app: &mut App) {
-    app.init_schedule(DisplayBehaviorSchedule);
-
-    app.add_systems(
-        DisplayBehaviorSchedule,
+pub(crate) fn behavior_systems() -> impl IntoSystemConfigs<()> {
+    (
+        run_behavior_schedule,
         (
             update_transforms,
             update_hidden_item_visibility,
@@ -76,11 +66,13 @@ pub(crate) fn create_display_behavior_schedule(app: &mut App) {
             check_items,
             #[cfg(feature = "log_archetypes")]
             list_archetypes,
-        ),
-    );
+        )
+            .run_if(on_event::<RefreshAfterBehavior>()),
+    )
+        .chain()
 }
 
-pub(crate) fn run_behavior_schedule(world: &mut World) {
+fn run_behavior_schedule(world: &mut World) {
     let start = Instant::now();
 
     let max_time =
@@ -111,14 +103,6 @@ pub(crate) fn run_behavior_schedule(world: &mut World) {
     if 0 < count {
         world.send_event(RefreshAfterBehavior);
     }
-}
-
-pub(crate) fn run_behavior_display_schedule(world: &mut World) {
-    let start = Instant::now();
-
-    world.run_schedule(DisplayBehaviorSchedule);
-
-    log_if_slow("run_behavior_display_schedule", start);
 }
 
 /** All NPC mave a timeout and the player has an empty instruction queue */
