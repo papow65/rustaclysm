@@ -3,6 +3,7 @@ mod components;
 mod core;
 mod events;
 mod hud;
+mod player;
 mod plugin;
 mod resources;
 mod screens;
@@ -10,6 +11,6 @@ mod states;
 mod systems;
 
 pub(crate) use self::{
-    behavior::*, components::*, core::*, events::*, hud::*, plugin::*, resources::*, screens::*,
-    states::*, systems::*,
+    behavior::*, components::*, core::*, events::*, hud::*, player::*, plugin::*, resources::*,
+    screens::*, states::*, systems::*,
 };

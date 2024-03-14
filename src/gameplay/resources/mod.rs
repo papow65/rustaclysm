@@ -11,7 +11,6 @@ mod map_memory_manager;
 mod model_factory;
 mod overmap_buffer_manager;
 mod overmap_manager;
-mod player_action_state;
 mod relative_segments;
 mod spawner;
 mod subzone_level_entities;
@@ -22,8 +21,8 @@ mod zone_level_ids;
 pub(crate) use self::{
     asset_storage::*, camera_offset::*, envir::*, expanded::*, explored::*, infos::*,
     instruction_queue::*, location::*, map_manager::*, map_memory_manager::*, model_factory::*,
-    overmap_buffer_manager::*, overmap_manager::*, player_action_state::*, relative_segments::*,
-    spawner::*, subzone_level_entities::*, timeouts::*, zone_level_entities::*, zone_level_ids::*,
+    overmap_buffer_manager::*, overmap_manager::*, relative_segments::*, spawner::*,
+    subzone_level_entities::*, timeouts::*, zone_level_entities::*, zone_level_ids::*,
 };
 
 use crate::prelude::*;
