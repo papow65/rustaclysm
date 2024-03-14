@@ -2,7 +2,7 @@ use bevy::prelude::{Component, Entity};
 use std::fmt;
 
 #[derive(Debug)]
-pub(crate) enum InventoryAction {
+pub(super) enum InventoryAction {
     Examine,
     Take,
     Drop,
@@ -23,9 +23,9 @@ impl fmt::Display for InventoryAction {
 }
 
 #[derive(Component, Debug)]
-pub(crate) struct ActionButton(pub(crate) Entity, pub(crate) InventoryAction);
+pub(super) struct ActionButton(pub(super) Entity, pub(super) InventoryAction);
 
 #[derive(Component, Default)]
-pub(crate) struct ScrollingList {
-    pub(crate) position: f32,
+pub(super) struct ScrollingList {
+    pub(super) position: f32,
 }

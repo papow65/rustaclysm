@@ -1,3 +1,8 @@
+use super::{
+    components::{ActionButton, InventoryAction, ScrollingList},
+    resource::InventoryScreen,
+    section::InventorySection,
+};
 use crate::prelude::*;
 use bevy::{
     ecs::entity::EntityHashMap,
@@ -10,7 +15,7 @@ const SPACING: f32 = 5.0;
 const FONT_SIZE: f32 = 16.0;
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn spawn_inventory(mut commands: Commands, fonts: Res<Fonts>) {
+pub(super) fn spawn_inventory(mut commands: Commands, fonts: Res<Fonts>) {
     let panel = commands
         .spawn((
             NodeBundle {
@@ -89,7 +94,7 @@ pub(crate) fn spawn_inventory(mut commands: Commands, fonts: Res<Fonts>) {
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn clear_inventory(
+pub(super) fn clear_inventory(
     clock: Clock,
     mut inventory: ResMut<InventoryScreen>,
     children: Query<&Children>,
@@ -112,7 +117,7 @@ pub(crate) fn clear_inventory(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn update_inventory(
+pub(super) fn update_inventory(
     run: In<bool>,
     mut commands: Commands,
     envir: Envir,
@@ -374,7 +379,7 @@ fn add_row(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn manage_inventory_mouse_input(
+pub(super) fn manage_inventory_mouse_input(
     mut mouse_wheel_events: EventReader<MouseWheel>,
     mut query_list: Query<(&mut ScrollingList, &mut Style, &Parent, &Node)>,
     query_node: Query<&Node>,
@@ -403,7 +408,7 @@ pub(crate) fn manage_inventory_mouse_input(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn manage_inventory_keyboard_input(
+pub(super) fn manage_inventory_keyboard_input(
     mut keys: Keys,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
     mut instruction_queue: ResMut<InstructionQueue>,
@@ -508,7 +513,7 @@ fn examine_selected_item(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn manage_inventory_button_input(
+pub(super) fn manage_inventory_button_input(
     mut instruction_queue: ResMut<InstructionQueue>,
     interactions: Query<(&Interaction, &ActionButton), (Changed<Interaction>, With<Button>)>,
     inventory: Res<InventoryScreen>,
@@ -529,6 +534,6 @@ pub(crate) fn manage_inventory_button_input(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn remove_inventory_resource(mut commands: Commands) {
+pub(super) fn remove_inventory_resource(mut commands: Commands) {
     commands.remove_resource::<InventoryScreen>();
 }

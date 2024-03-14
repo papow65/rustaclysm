@@ -2,7 +2,7 @@ use crate::prelude::HorizontalDirection;
 use std::{cmp::Ordering, fmt};
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub(crate) enum InventorySection {
+pub(super) enum InventorySection {
     Nbor(HorizontalDirection),
     Hands,
     Clothing,
