@@ -1,11 +1,14 @@
-use crate::prelude::*;
+use crate::prelude::{
+    ApplicationState, Ctrl, Fonts, GameplayScreenState, InputChange, Key, Keys, StateBound,
+    BAD_TEXT_COLOR, DEFAULT_TEXT_COLOR, PANEL_COLOR,
+};
 use bevy::prelude::*;
 
 const SPACING: f32 = 5.0;
 const FONT_SIZE: f32 = 16.0;
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn spawn_death_screen(mut commands: Commands, fonts: Res<Fonts>) {
+pub(super) fn spawn_death_screen(mut commands: Commands, fonts: Res<Fonts>) {
     let font = fonts.default();
 
     commands
@@ -87,7 +90,7 @@ pub(crate) fn spawn_death_screen(mut commands: Commands, fonts: Res<Fonts>) {
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn manage_death_keyboard_input(
+pub(super) fn manage_death_keyboard_input(
     mut keys: Keys,
     mut next_application_state: ResMut<NextState<ApplicationState>>,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
@@ -104,7 +107,7 @@ pub(crate) fn manage_death_keyboard_input(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn manage_death_button_input(
+pub(super) fn manage_death_button_input(
     mut next_application_state: ResMut<NextState<ApplicationState>>,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
     interactions: Query<&Interaction, (Changed<Interaction>, With<Button>)>,

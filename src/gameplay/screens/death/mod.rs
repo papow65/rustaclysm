@@ -1,4 +1,4 @@
 mod plugin;
 mod systems;
 
-pub(crate) use self::{plugin::*, systems::*};
+pub(crate) use self::plugin::DeathScreenPlugin;
