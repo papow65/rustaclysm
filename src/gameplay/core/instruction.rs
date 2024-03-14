@@ -136,7 +136,6 @@ pub(crate) enum Instruction {
     Inventory,
     ToggleMap(ZoomDistance),
     ToggleElevation,
-    ToggleHelp,
     Zoom(ZoomDirection),
     ResetCameraAngle,
 }
@@ -150,7 +149,6 @@ impl TryFrom<(&KeyCombo, CancelContext)> for Instruction {
             (Key::Code(KeyCode::Escape), InputChange::JustPressed, CancelContext::State) => {
                 Ok(Self::ShowGameplayMenu)
             }
-            (Key::Code(KeyCode::F1), InputChange::JustPressed, _) => Ok(Self::ToggleHelp),
             (Key::Code(KeyCode::F12), InputChange::JustPressed, _) => Ok(Self::ShowMainMenu),
             (Key::Character('m'), InputChange::JustPressed, _) => {
                 Ok(Self::ToggleMap(ZoomDistance::Close))

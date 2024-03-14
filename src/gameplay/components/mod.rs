@@ -205,13 +205,4 @@ impl Appearance {
 }
 
 #[derive(Component)]
-pub(crate) struct StatusDisplay;
-
-#[derive(Component)]
-pub(crate) struct LogDisplay;
-
-#[derive(Component)]
-pub(crate) struct ManualDisplay;
-
-#[derive(Component)]
 pub(crate) struct MissingAsset;

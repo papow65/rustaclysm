@@ -1,13 +1,16 @@
+use super::{HudDefaults, LogDisplay, StatusDisplay, StatusTextSections};
 use crate::prelude::*;
-use bevy::diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin};
-use bevy::ecs::system::EntityCommands;
-use bevy::prelude::*;
+use bevy::{
+    diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin},
+    ecs::system::EntityCommands,
+    prelude::*,
+};
 use std::time::Instant;
 
 const TEXT_WIDTH: f32 = 8.0 * 43.0; // 43 chars
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn spawn_sidebar(
+pub(super) fn spawn_sidebar(
     mut commands: Commands,
     hud_defaults: Res<HudDefaults>,
     mut text_sections: ResMut<StatusTextSections>,
@@ -98,7 +101,7 @@ fn spawn_log_display(parent: &mut EntityCommands) {
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn update_log(
+pub(super) fn update_log(
     mut new_messages: EventReader<Message>,
     hud_defaults: Res<HudDefaults>,
     mut session: GameplaySession,
@@ -194,7 +197,7 @@ fn update_status_display(text_sections: &StatusTextSections, status_display: &mu
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn update_status_fps(
+pub(super) fn update_status_fps(
     diagnostics: Res<DiagnosticsStore>,
     mut text_sections: ResMut<StatusTextSections>,
     mut status_displays: Query<&mut Text, With<StatusDisplay>>,
@@ -217,7 +220,7 @@ pub(crate) fn update_status_fps(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn update_status_time(
+pub(super) fn update_status_time(
     clock: Clock,
     mut text_sections: ResMut<StatusTextSections>,
     mut status_displays: Query<&mut Text, With<StatusDisplay>>,
@@ -233,7 +236,7 @@ pub(crate) fn update_status_time(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn update_status_health(
+pub(super) fn update_status_health(
     health: Query<&Health, (With<Player>, Changed<Health>)>,
     mut text_sections: ResMut<StatusTextSections>,
     mut status_displays: Query<&mut Text, With<StatusDisplay>>,
@@ -253,7 +256,7 @@ pub(crate) fn update_status_health(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn update_status_stamina(
+pub(super) fn update_status_stamina(
     player_staminas: Query<&Stamina, (With<Player>, Changed<Stamina>)>,
     mut text_sections: ResMut<StatusTextSections>,
     mut status_displays: Query<&mut Text, With<StatusDisplay>>,
@@ -273,7 +276,7 @@ pub(crate) fn update_status_stamina(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn update_status_speed(
+pub(super) fn update_status_speed(
     player_actors: Query<
         Actor,
         (
@@ -310,7 +313,7 @@ pub(crate) fn update_status_speed(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn update_status_player_action_state(
+pub(super) fn update_status_player_action_state(
     player_action_state: Res<PlayerActionState>,
     mut text_sections: ResMut<StatusTextSections>,
     mut status_displays: Query<&mut Text, With<StatusDisplay>>,
@@ -326,7 +329,7 @@ pub(crate) fn update_status_player_action_state(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn update_status_player_wielded(
+pub(super) fn update_status_player_wielded(
     fonts: Res<Fonts>,
     mut text_sections: ResMut<StatusTextSections>,
     mut status_displays: Query<&mut Text, With<StatusDisplay>>,
@@ -351,7 +354,7 @@ pub(crate) fn update_status_player_wielded(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn update_status_enemies(
+pub(super) fn update_status_enemies(
     envir: Envir,
     clock: Clock,
     player_actors: Query<Actor, With<Player>>,
@@ -401,7 +404,7 @@ pub(crate) fn update_status_enemies(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn update_status_detais(
+pub(super) fn update_status_detais(
     player_action_state: Res<PlayerActionState>,
     hud_defaults: Res<HudDefaults>,
     mut explored: ResMut<Explored>,

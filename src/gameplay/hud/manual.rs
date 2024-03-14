@@ -1,8 +1,9 @@
-use crate::prelude::*;
-use bevy::prelude::*;
+use super::{HudDefaults, ManualDisplay};
+use crate::prelude::{ApplicationState, StateBound};
+use bevy::prelude::{default, BuildChildren, Commands, Res, Text, TextBundle, TextSection, Val};
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn spawn_manual(mut commands: Commands, hud_defaults: Res<HudDefaults>) {
+pub(super) fn spawn_manual(mut commands: Commands, hud_defaults: Res<HudDefaults>) {
     let mut background = hud_defaults.background.clone();
     background.style.bottom = Val::Px(0.0);
     background.style.left = Val::Px(0.0);
@@ -42,7 +43,7 @@ pub(crate) fn spawn_manual(mut commands: Commands, hud_defaults: Res<HudDefaults
                             + "quit          ctrl c/q",
                         style: hud_defaults.text_style.clone(),
                     }],
-                    ..Text::default()
+                    ..default()
                 },
                 ..default()
             });

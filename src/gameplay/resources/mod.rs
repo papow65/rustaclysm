@@ -45,19 +45,6 @@ pub(crate) enum VisualizationUpdate {
     Forced,
 }
 
-#[derive(Debug, Default, Resource)]
-pub(crate) struct StatusTextSections {
-    pub(crate) fps: TextSection,
-    pub(crate) time: TextSection,
-    pub(crate) health: [TextSection; 2],
-    pub(crate) stamina: [TextSection; 2],
-    pub(crate) speed: [TextSection; 3],
-    pub(crate) player_action_state: TextSection,
-    pub(crate) wielded: Vec<TextSection>,
-    pub(crate) enemies: Vec<TextSection>,
-    pub(crate) details: Vec<TextSection>,
-}
-
 // pickup
 #[derive(SystemParam)]
 pub(crate) struct Hierarchy<'w, 's> {

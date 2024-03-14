@@ -5,21 +5,6 @@ use bevy::{
 };
 use std::time::{Duration, Instant};
 
-#[derive(Debug, PartialEq)]
-pub(crate) enum DisplayHandling {
-    Refresh,
-    Keep,
-}
-
-impl From<usize> for DisplayHandling {
-    fn from(value: usize) -> Self {
-        match value {
-            0 => Self::Keep,
-            _ => Self::Refresh,
-        }
-    }
-}
-
 /** This is only run when the game when any character acts, sometimes multiple times per tick. */
 #[derive(ScheduleLabel, Debug, Hash, PartialEq, Eq, Clone)]
 struct BehaviorSchedule;
@@ -87,18 +72,6 @@ pub(crate) fn create_display_behavior_schedule(app: &mut App) {
             update_visualization_on_focus_move,
             update_visualization_on_weather_change.run_if(resource_exists_and_changed::<Timeouts>),
             update_camera_base.run_if(resource_exists_and_changed::<PlayerActionState>),
-            // sidebar components, in order:
-            // (fps is handled elsewhere)
-            update_status_time.run_if(resource_exists_and_changed::<Timeouts>),
-            update_status_health,
-            update_status_stamina,
-            update_status_speed,
-            update_status_player_action_state
-                .run_if(resource_exists_and_changed::<PlayerActionState>),
-            update_status_player_wielded.run_if(resource_exists_and_changed::<Timeouts>),
-            update_status_enemies.run_if(resource_exists_and_changed::<Timeouts>),
-            update_status_detais.run_if(resource_exists_and_changed::<PlayerActionState>),
-            update_log.run_if(on_event::<Message>()),
             #[cfg(debug_assertions)]
             check_items,
             #[cfg(feature = "log_archetypes")]
@@ -107,7 +80,7 @@ pub(crate) fn create_display_behavior_schedule(app: &mut App) {
     );
 }
 
-pub(crate) fn run_behavior_schedule(world: &mut World) -> DisplayHandling {
+pub(crate) fn run_behavior_schedule(world: &mut World) {
     let start = Instant::now();
 
     let max_time =
@@ -135,18 +108,15 @@ pub(crate) fn run_behavior_schedule(world: &mut World) -> DisplayHandling {
 
     log_if_slow("run_behavior_schedule", start);
 
-    DisplayHandling::from(count)
+    if 0 < count {
+        world.send_event(RefreshAfterBehavior);
+    }
 }
 
-pub(crate) fn run_behavior_display_schedule(
-    In(display_handling): In<DisplayHandling>,
-    world: &mut World,
-) {
+pub(crate) fn run_behavior_display_schedule(world: &mut World) {
     let start = Instant::now();
 
-    if display_handling == DisplayHandling::Refresh {
-        world.run_schedule(DisplayBehaviorSchedule);
-    }
+    world.run_schedule(DisplayBehaviorSchedule);
 
     log_if_slow("run_behavior_display_schedule", start);
 }

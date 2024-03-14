@@ -33,7 +33,8 @@ impl Plugin for GameplayPlugin {
             .insert_resource(Events::<ActorEvent<Healing>>::default())
             .insert_resource(Events::<CorpseEvent<Damage>>::default())
             .insert_resource(Events::<TerrainEvent<Damage>>::default())
-            .insert_resource(Events::<TerrainEvent<Toggle>>::default());
+            .insert_resource(Events::<TerrainEvent<Toggle>>::default())
+            .insert_resource(Events::<RefreshAfterBehavior>::default());
 
         create_schedules(app);
 
@@ -123,9 +124,6 @@ fn update_systems() -> (impl IntoSystemConfigs<()>, impl IntoSystemConfigs<()>) 
 
 fn fixed_update_systems() -> impl IntoSystemConfigs<()> {
     (
-        update_status_fps.run_if(
-            in_state(ApplicationState::Gameplay).and_then(resource_exists::<StatusTextSections>),
-        ),
         #[cfg(debug_assertions)]
         (count_assets, count_zones),
     )

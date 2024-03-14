@@ -73,16 +73,6 @@ fn toggle_elevation(
     *visualization_update = VisualizationUpdate::Forced;
 }
 
-fn toggle_help(help: &mut Query<&mut Visibility, With<ManualDisplay>>) {
-    for mut visibility in &mut *help {
-        *visibility = if *visibility == Visibility::Hidden {
-            Visibility::Inherited
-        } else {
-            Visibility::Hidden
-        };
-    }
-}
-
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn manage_mouse_input(
     mut mouse_wheel_events: EventReader<MouseWheel>,
@@ -126,7 +116,6 @@ pub(crate) fn manage_keyboard_input(
     mut camera_offset: ResMut<CameraOffset>,
     player_action_state: Res<PlayerActionState>,
     mut camera_layers: Query<&mut RenderLayers, With<Camera3d>>,
-    mut help: Query<&mut Visibility, With<ManualDisplay>>,
 ) {
     let start = Instant::now();
 
@@ -152,7 +141,6 @@ pub(crate) fn manage_keyboard_input(
             Instruction::ToggleElevation => {
                 toggle_elevation(&mut elevation_visibility, &mut visualization_update);
             }
-            Instruction::ToggleHelp => toggle_help(&mut help),
             Instruction::Queued(instruction) => instruction_queue.add(instruction, combo.change),
         }
     }
