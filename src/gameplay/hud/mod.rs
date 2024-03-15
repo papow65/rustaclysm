@@ -1,4 +1,4 @@
-/*! This plugin defines the [`HudPlugin`] */
+/*! This module provides the [`HudPlugin`] */
 
 mod components;
 mod input;

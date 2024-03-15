@@ -9,7 +9,11 @@ enum PlayerBehavior {
     NoEffect,
 }
 
-/** Conceptually, this is a child state of `GameplayScreenState::Base`
+// TODO Convert ExaminingPos and ExaminingZoneLevel to screen states.
+
+/** Current action of the player character
+
+Conceptually, this is a child state of [`GameplayScreenState::Base`].
 
 Not a bevy state because that doesn't suport enum values with fields */
 #[derive(Debug, Default, PartialEq, Eq, Resource)]
