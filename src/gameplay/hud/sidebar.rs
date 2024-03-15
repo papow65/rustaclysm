@@ -108,16 +108,20 @@ pub(super) fn update_sidebar_systems() -> impl IntoSystemConfigs<()> {
         // sidebar components, in order:
         // (fps is handled elsewhere)
         update_status_time.run_if(resource_exists_and_changed::<Timeouts>),
-        update_status_health,
-        update_status_stamina,
-        update_status_speed,
+        update_status_health.run_if(resource_exists_and_changed::<Timeouts>),
+        update_status_stamina.run_if(resource_exists_and_changed::<Timeouts>),
+        update_status_speed.run_if(on_event::<RefreshAfterBehavior>()),
         update_status_player_action_state.run_if(resource_exists_and_changed::<PlayerActionState>),
         update_status_player_wielded.run_if(resource_exists_and_changed::<Timeouts>),
         update_status_enemies.run_if(resource_exists_and_changed::<Timeouts>),
-        update_status_detais.run_if(resource_exists_and_changed::<PlayerActionState>),
+        update_status_detais.run_if(
+            resource_exists_and_changed::<PlayerActionState>
+                .or_else(resource_exists_and_changed::<State<FocusState>>),
+        ),
         update_log.run_if(on_event::<Message>()),
     )
         .chain()
+        .run_if(resource_exists::<StatusTextSections>.and_then(resource_exists::<RelativeSegments>))
 }
 
 #[allow(clippy::needless_pass_by_value)]
@@ -425,7 +429,7 @@ fn update_status_enemies(
 
 #[allow(clippy::needless_pass_by_value)]
 fn update_status_detais(
-    player_action_state: Res<PlayerActionState>,
+    focus_state: Res<State<FocusState>>,
     hud_defaults: Res<HudDefaults>,
     mut explored: ResMut<Explored>,
     mut zone_level_ids: ResMut<ZoneLevelIds>,
@@ -458,8 +462,9 @@ fn update_status_detais(
 ) {
     let start = Instant::now();
 
-    text_sections.details = Phrase::from_fragments(match *player_action_state {
-        PlayerActionState::ExaminingPos(pos) => {
+    text_sections.details = Phrase::from_fragments(match **focus_state {
+        FocusState::Normal => Vec::new(),
+        FocusState::ExaminingPos(pos) => {
             let mut total = vec![Fragment::new(format!("\n{pos:?}\n"))];
             if explored.has_pos_been_seen(pos) {
                 let all_here = envir.location.all(pos);
@@ -476,7 +481,7 @@ fn update_status_detais(
             }
             total
         }
-        PlayerActionState::ExaminingZoneLevel(zone_level) => {
+        FocusState::ExaminingZoneLevel(zone_level) => {
             vec![Fragment::new(
                 match explored.has_zone_level_been_seen(&mut overmap_buffer_manager, zone_level) {
                     seen_from @ Some(SeenFrom::CloseBy | SeenFrom::FarAway) => format!(
@@ -487,7 +492,6 @@ fn update_status_detais(
                 },
             )]
         }
-        _ => Vec::new(),
     })
     .as_text_sections(&hud_defaults.text_style);
 

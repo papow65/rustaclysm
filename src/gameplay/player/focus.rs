@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use bevy::prelude::Vec3;
 use std::cmp::Ordering;
 
 #[derive(PartialEq)]
@@ -8,11 +9,11 @@ pub(crate) enum Focus {
 }
 
 impl Focus {
-    pub(crate) const fn new(player_action_state: &PlayerActionState, player_pos: Pos) -> Self {
-        match player_action_state {
-            PlayerActionState::ExaminingPos(target) => Self::Pos(*target),
-            PlayerActionState::ExaminingZoneLevel(zone_level) => Self::ZoneLevel(*zone_level),
-            _ => Self::Pos(player_pos),
+    pub(crate) const fn new(focus_state: &FocusState, player_pos: Pos) -> Self {
+        match focus_state {
+            FocusState::Normal => Self::Pos(player_pos),
+            FocusState::ExaminingPos(target) => Self::Pos(*target),
+            FocusState::ExaminingZoneLevel(zone_level) => Self::ZoneLevel(*zone_level),
         }
     }
 
@@ -44,6 +45,15 @@ impl Focus {
                         Level::ZERO <= shown_pos.level && shown_pos.level <= focus_level
                     }
                 }
+            }
+        }
+    }
+
+    pub(in crate::gameplay) fn offset(&self, player_pos: Pos) -> Vec3 {
+        match self {
+            Self::Pos(target) => (*target - player_pos).vec3(),
+            Self::ZoneLevel(target) => {
+                (target.base_pos() - player_pos).vec3() + Vec3::new(11.5, 0.0, 11.5)
             }
         }
     }

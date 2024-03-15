@@ -87,8 +87,7 @@ fn update_systems() -> (impl IntoSystemConfigs<()>, impl IntoSystemConfigs<()>) 
                 ),
             )
                 .chain(),
-            update_visualization_on_focus_move
-                .run_if(resource_exists_and_changed::<ElevationVisibility>),
+            update_visibility.run_if(resource_exists_and_changed::<ElevationVisibility>),
             (
                 update_zone_levels,
                 (

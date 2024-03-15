@@ -110,8 +110,9 @@ impl Level {
         }
     }
 
+    #[inline]
     pub(crate) fn f32(&self) -> f32 {
-        f32::from(self.h) * Millimeter::VERTICAL.f32()
+        (*self - Self::ZERO).f32()
     }
 }
 
@@ -185,12 +186,9 @@ impl Pos {
         }
     }
 
+    #[inline]
     pub(crate) fn vec3(self) -> Vec3 {
-        Vec3::new(
-            f64::from(self.x) as f32 * Millimeter::ADJACENT.f32(),
-            self.level.f32(),
-            f64::from(self.z) as f32 * Millimeter::ADJACENT.f32(),
-        )
+        (self - Self::ORIGIN).vec3()
     }
 
     /** Doe not include 'self', but includes 'to' */
@@ -363,6 +361,10 @@ impl ZoneLevel {
             self.level,
             Zone::SIZE * self.zone.z,
         )
+    }
+
+    pub(crate) const fn center_pos(&self) -> Pos {
+        self.base_pos().horizontal_offset(11, 11)
     }
 
     pub(crate) const fn subzone_levels(&self) -> [SubzoneLevel; 4] {

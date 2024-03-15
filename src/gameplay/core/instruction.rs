@@ -4,9 +4,9 @@ use bevy::{input::keyboard::KeyCode, prelude::Entity};
 use super::HorizontalDirection;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub(crate) enum CancelContext {
-    State,
-    Action,
+pub(crate) enum CancelHandling {
+    Queued,
+    Menu,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -65,7 +65,7 @@ impl TryFrom<Key> for PlayerDirection {
     }
 }
 
-/** All instructions where the order of execution matters */
+/** All instructions related to player character actions */
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) enum QueuedInstruction {
     Offset(PlayerDirection),
@@ -84,8 +84,6 @@ pub(crate) enum QueuedInstruction {
     ToggleAutoDefend,
     ChangePace,
     ExamineItem(Entity),
-    ExaminePos,
-    ExamineZoneLevel,
     CancelAction,
     /** Set automatically */
     Interrupted,
@@ -108,8 +106,6 @@ impl TryFrom<Key> for QueuedInstruction {
             Key::Character('\\') => Ok(Self::Drag),
             Key::Character('G') => Ok(Self::ToggleAutoTravel),
             Key::Code(KeyCode::Tab) => Ok(Self::ToggleAutoDefend),
-            Key::Character('x') => Ok(Self::ExaminePos),
-            Key::Character('X') => Ok(Self::ExamineZoneLevel),
             Key::Character('+') => Ok(Self::ChangePace),
             _ => PlayerDirection::try_from(key).map(Self::Offset),
         }
@@ -133,6 +129,8 @@ pub(crate) enum Instruction {
     Queued(QueuedInstruction),
     ShowMainMenu,
     ShowGameplayMenu,
+    ExaminePos,
+    ExamineZoneLevel,
     Inventory,
     ToggleMap(ZoomDistance),
     ToggleElevation,
@@ -140,13 +138,13 @@ pub(crate) enum Instruction {
     ResetCameraAngle,
 }
 
-impl TryFrom<(&KeyCombo, CancelContext)> for Instruction {
+impl TryFrom<(&KeyCombo, CancelHandling)> for Instruction {
     type Error = ();
 
-    fn try_from((combo, context): (&KeyCombo, CancelContext)) -> Result<Self, ()> {
+    fn try_from((combo, context): (&KeyCombo, CancelHandling)) -> Result<Self, ()> {
         match (combo.key, combo.change, context) {
             (Key::Code(KeyCode::Escape), InputChange::Held, _) => Err(()),
-            (Key::Code(KeyCode::Escape), InputChange::JustPressed, CancelContext::State) => {
+            (Key::Code(KeyCode::Escape), InputChange::JustPressed, CancelHandling::Menu) => {
                 Ok(Self::ShowGameplayMenu)
             }
             (Key::Code(KeyCode::F12), InputChange::JustPressed, _) => Ok(Self::ShowMainMenu),
@@ -156,6 +154,8 @@ impl TryFrom<(&KeyCombo, CancelContext)> for Instruction {
             (Key::Character('M'), InputChange::JustPressed, _) => {
                 Ok(Self::ToggleMap(ZoomDistance::Far))
             }
+            (Key::Character('x'), InputChange::JustPressed, _) => Ok(Self::ExaminePos),
+            (Key::Character('X'), InputChange::JustPressed, _) => Ok(Self::ExamineZoneLevel),
             (Key::Character('i'), InputChange::JustPressed, _) => Ok(Self::Inventory),
             (Key::Character('Z'), InputChange::JustPressed, _) => {
                 Ok(Self::Zoom(ZoomDirection::Out))

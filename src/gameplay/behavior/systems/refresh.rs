@@ -1,6 +1,9 @@
 use crate::prelude::*;
 use bevy::prelude::*;
-use std::time::Instant;
+use std::{
+    sync::{Arc, Mutex},
+    time::Instant,
+};
 
 #[allow(clippy::needless_pass_by_value)]
 pub(in super::super) fn update_transforms(
@@ -33,31 +36,103 @@ pub(in super::super) fn update_hidden_item_visibility(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(in super::super) fn update_cursor_visibility_on_player_change(
+pub(in super::super) fn update_visualization_on_player_move(
+    commands: Commands,
+    focus_state: Res<State<FocusState>>,
     player_action_state: Res<PlayerActionState>,
-    mut curors: Query<(&mut Visibility, &mut Transform), With<ExamineCursor>>,
+    envir: Envir,
+    clock: Clock,
+    mut explored: ResMut<Explored>,
+    elevation_visibility: Res<ElevationVisibility>,
+    mut visualization_update: ResMut<VisualizationUpdate>,
+    mut session: GameplaySession,
+    mut last_focus: Local<Focus>,
+    mut previous_camera_global_transform: Local<GlobalTransform>,
+    mut last_elevation_visibility: Local<ElevationVisibility>,
+    mut items: Query<(
+        Option<&Player>,
+        &Pos,
+        &mut Visibility,
+        &mut LastSeen,
+        Option<&Accessible>,
+        Option<&BaseSpeed>,
+        &Children,
+    )>,
+    child_items: Query<&Appearance, (With<Parent>, Without<Pos>)>,
+    players: Query<&Pos, With<Player>>,
+    cameras: Query<&GlobalTransform, With<Camera>>,
 ) {
     let start = Instant::now();
 
-    if let Ok((mut visibility, mut transform)) = curors.get_single_mut() {
-        let examine_pos = matches!(*player_action_state, PlayerActionState::ExaminingPos(_));
-        let examine_zone_level = matches!(
-            *player_action_state,
-            PlayerActionState::ExaminingZoneLevel(_)
+    if let (
+        &FocusState::ExaminingPos(_) | &FocusState::ExaminingZoneLevel(_),
+        VisualizationUpdate::Smart,
+    ) = (&**focus_state, *visualization_update)
+    {
+        update_visibility(
+            focus_state,
+            elevation_visibility,
+            session,
+            last_focus,
+            previous_camera_global_transform,
+            last_elevation_visibility,
+            items,
+            players,
+            cameras,
         );
-        *visibility = if examine_pos || examine_zone_level {
-            Visibility::Inherited
-        } else {
-            Visibility::Hidden
-        };
-        transform.scale = if examine_zone_level {
-            Vec3::splat(24.0)
-        } else {
-            Vec3::ONE
-        };
+    } else {
+        if session.is_changed() {
+            *last_focus = Focus::default();
+            *previous_camera_global_transform = GlobalTransform::default();
+            *last_elevation_visibility = ElevationVisibility::default();
+        }
+
+        let &player_pos = players.single();
+        let focus = Focus::new(&focus_state, player_pos);
+        let &camera_global_transform = cameras.single();
+        if focus != *last_focus
+            || camera_global_transform != *previous_camera_global_transform
+            || *elevation_visibility != *last_elevation_visibility
+            || *visualization_update == VisualizationUpdate::Forced
+        {
+            let currently_visible = thread_local::ThreadLocal::new();
+            let commands = Arc::new(Mutex::new(commands));
+            let explored = Arc::new(Mutex::new(&mut *explored));
+
+            items.par_iter_mut().for_each(
+                |(player, &pos, mut visibility, mut last_seen, accessible, speed, children)| {
+                    let currently_visible = currently_visible.get_or(|| {
+                        envir.currently_visible(&clock, &player_action_state, player_pos)
+                    });
+
+                    update_visualization(
+                        &commands.clone(),
+                        &explored.clone(),
+                        currently_visible,
+                        *elevation_visibility,
+                        &focus,
+                        player,
+                        pos,
+                        &mut visibility,
+                        &mut last_seen,
+                        accessible,
+                        speed,
+                        children,
+                        &child_items,
+                    );
+                },
+            );
+
+            println!("{}x visualization updated", items.iter().len());
+
+            *last_focus = focus;
+            *previous_camera_global_transform = camera_global_transform;
+            *last_elevation_visibility = *elevation_visibility;
+            *visualization_update = VisualizationUpdate::Smart;
+        }
     }
 
-    log_if_slow("update_cursor_visibility_on_player_change", start);
+    log_if_slow("update_visualization_on_focus_move", start);
 }
 
 #[allow(clippy::needless_pass_by_value)]
@@ -86,29 +161,6 @@ pub(in super::super) fn update_visualization_on_weather_change(
     }
 
     log_if_slow("update_visualization_on_weather_change", start);
-}
-
-#[allow(clippy::needless_pass_by_value)]
-pub(in super::super) fn update_camera_base(
-    player_state: Res<PlayerActionState>,
-    players: Query<&Pos, With<Player>>,
-    mut camera_bases: Query<&mut Transform, (With<CameraBase>, Without<Camera3d>)>,
-) {
-    let start = Instant::now();
-
-    let pos = players.single();
-
-    for mut transform in &mut camera_bases {
-        transform.translation = match *player_state {
-            PlayerActionState::ExaminingPos(target) => target.vec3() - pos.vec3(),
-            PlayerActionState::ExaminingZoneLevel(target) => {
-                target.base_pos().vec3() - pos.vec3() + Vec3::new(11.5, 0.0, 11.5)
-            }
-            _ => Vec3::ZERO,
-        };
-    }
-
-    log_if_slow("update_camera", start);
 }
 
 #[cfg(debug_assertions)]

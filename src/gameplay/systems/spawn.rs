@@ -8,7 +8,7 @@ const MAX_EXPAND_DISTANCE: i32 = 10;
 pub(crate) fn spawn_subzones_for_camera(
     mut spawn_subzone_level_writer: EventWriter<SpawnSubzoneLevel>,
     mut despawn_subzone_level_writer: EventWriter<DespawnSubzoneLevel>,
-    player_action_state: Res<PlayerActionState>,
+    focus_state: Res<State<FocusState>>,
     subzone_level_entities: Res<SubzoneLevelEntities>,
     mut session: GameplaySession,
     mut previous_camera_global_transform: Local<GlobalTransform>,
@@ -31,7 +31,7 @@ pub(crate) fn spawn_subzones_for_camera(
     }
 
     let &player_pos = players.single();
-    let focus = Focus::new(&player_action_state, player_pos);
+    let focus = Focus::new(&focus_state, player_pos);
     let expanded_region = expanded_region(&focus, camera, &global_transform);
     if !expanded.update(expanded_region) {
         return;
@@ -204,7 +204,7 @@ pub(crate) fn update_zone_levels(
     mut spawn_zone_level_writer: EventWriter<SpawnZoneLevel>,
     mut update_zone_level_visibility_writer: EventWriter<UpdateZoneLevelVisibility>,
     mut despawn_zone_level_writer: EventWriter<DespawnZoneLevel>,
-    player_action_state: Res<PlayerActionState>,
+    focus_state: Res<State<FocusState>>,
     zone_level_entities: Res<ZoneLevelEntities>,
     mut session: GameplaySession,
     mut previous_camera_global_transform: Local<GlobalTransform>,
@@ -245,7 +245,7 @@ pub(crate) fn update_zone_levels(
     //dbg!(&visible_region);
 
     let &player_pos = players.single();
-    let focus = Focus::new(&player_action_state, player_pos);
+    let focus = Focus::new(&focus_state, player_pos);
     let shown_level = if let Ordering::Less = Level::from(&focus).compare_to_ground() {
         Level::from(&focus)
     } else {
@@ -282,7 +282,7 @@ pub(crate) fn update_zone_levels(
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn spawn_zone_levels(
     mut spawn_zone_level_reader: EventReader<SpawnZoneLevel>,
-    player_action_state: Res<PlayerActionState>,
+    focus_state: Res<State<FocusState>>,
     mut zone_spawner: ZoneSpawner,
     players: Query<&Pos, With<Player>>,
     cameras: Query<(&Camera, &GlobalTransform)>,
@@ -294,7 +294,7 @@ pub(crate) fn spawn_zone_levels(
     let (camera, &global_transform) = cameras.single();
     let visible_region = visible_region(camera, &global_transform).ground_only();
     let &player_pos = players.single();
-    let focus = Focus::new(&player_action_state, player_pos);
+    let focus = Focus::new(&focus_state, player_pos);
 
     for spawn_event in spawn_zone_level_reader.read() {
         let visibility = zone_level_visibility(
@@ -313,7 +313,7 @@ pub(crate) fn spawn_zone_levels(
 pub(crate) fn update_zone_level_visibility(
     mut commands: Commands,
     mut update_zone_level_visibility_reader: EventReader<UpdateZoneLevelVisibility>,
-    player_action_state: Res<PlayerActionState>,
+    focus_state: Res<State<FocusState>>,
     mut zone_spawner: ZoneSpawner,
     players: Query<&Pos, With<Player>>,
     cameras: Query<(&Camera, &GlobalTransform)>,
@@ -328,7 +328,7 @@ pub(crate) fn update_zone_level_visibility(
     let (camera, &global_transform) = cameras.single();
     let visible_region = visible_region(camera, &global_transform).ground_only();
     let &player_pos = players.single();
-    let focus = Focus::new(&player_action_state, player_pos);
+    let focus = Focus::new(&focus_state, player_pos);
 
     for update_zone_level_visibility_event in update_zone_level_visibility_reader.read() {
         let visibility = zone_level_visibility(
@@ -489,7 +489,7 @@ pub(crate) fn handle_overmap_events(
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_zone_levels_with_missing_assets(
-    player_action_state: Res<PlayerActionState>,
+    focus_state: Res<State<FocusState>>,
     mut zone_spawner: ZoneSpawner,
     zone_levels: Query<(Entity, &ZoneLevel), With<MissingAsset>>,
     players: Query<&Pos, With<Player>>,
@@ -504,7 +504,7 @@ pub(crate) fn update_zone_levels_with_missing_assets(
     let (camera, &global_transform) = cameras.single();
     let &player_pos = players.single();
     let visible_region = visible_region(camera, &global_transform).ground_only();
-    let focus = Focus::new(&player_action_state, player_pos);
+    let focus = Focus::new(&focus_state, player_pos);
 
     for (entity, &zone_level) in &zone_levels {
         let Some(seen_from) = zone_spawner

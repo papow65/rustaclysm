@@ -1,13 +1,13 @@
 use super::systems::{
     core::run_behavior_schedule,
     refresh::{
-        check_items, update_camera_base, update_cursor_visibility_on_player_change,
-        update_hidden_item_visibility, update_transforms, update_visualization_on_weather_change,
+        check_items, update_hidden_item_visibility, update_transforms,
+        update_visualization_on_player_move, update_visualization_on_weather_change,
     },
 };
 use crate::prelude::{
-    update_visualization_on_focus_move, update_visualization_on_item_move, PlayerActionState,
-    RefreshAfterBehavior, Timeouts,
+    update_camera_base, update_visualization_on_item_move, PlayerActionState, RefreshAfterBehavior,
+    Timeouts,
 };
 use bevy::prelude::{on_event, resource_exists_and_changed, IntoSystemConfigs};
 
@@ -17,9 +17,8 @@ pub(crate) fn behavior_systems() -> impl IntoSystemConfigs<()> {
         (
             update_transforms,
             update_hidden_item_visibility,
-            update_cursor_visibility_on_player_change,
             update_visualization_on_item_move,
-            update_visualization_on_focus_move,
+            update_visualization_on_player_move,
             update_visualization_on_weather_change.run_if(resource_exists_and_changed::<Timeouts>),
             update_camera_base.run_if(resource_exists_and_changed::<PlayerActionState>),
             #[cfg(debug_assertions)]

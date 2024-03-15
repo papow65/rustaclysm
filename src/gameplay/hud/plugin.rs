@@ -4,10 +4,9 @@ use super::{
     resources::{despawn_hud_resources, spawn_hud_resources},
     sidebar::{spawn_sidebar, update_sidebar_systems, update_status_fps},
 };
-use crate::prelude::{ApplicationState, RefreshAfterBehavior};
+use crate::prelude::ApplicationState;
 use bevy::prelude::{
-    in_state, on_event, App, Condition, FixedUpdate, IntoSystemConfigs, OnEnter, OnExit, Plugin,
-    Update,
+    in_state, App, FixedUpdate, IntoSystemConfigs, OnEnter, OnExit, Plugin, Update,
 };
 
 /** Plugin for the screen-independent HUD: the manual and the sidebar */
@@ -24,10 +23,7 @@ impl Plugin for HudPlugin {
             Update,
             (
                 manage_hud_keyboard_input,
-                update_sidebar_systems().run_if(
-                    in_state(ApplicationState::Gameplay)
-                        .and_then(on_event::<RefreshAfterBehavior>()),
-                ),
+                update_sidebar_systems().run_if(in_state(ApplicationState::Gameplay)),
             ),
         );
 

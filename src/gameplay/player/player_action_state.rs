@@ -9,8 +9,6 @@ enum PlayerBehavior {
     NoEffect,
 }
 
-// TODO Convert ExaminingPos and ExaminingZoneLevel to screen states.
-
 /** Current action of the player character
 
 Conceptually, this is a child state of [`GameplayScreenState::Base`].
@@ -44,8 +42,6 @@ pub(crate) enum PlayerActionState {
         target: Pos,
     },
     AutoDefend,
-    ExaminingPos(Pos),
-    ExaminingZoneLevel(ZoneLevel),
 }
 
 impl PlayerActionState {
@@ -59,13 +55,6 @@ impl PlayerActionState {
         Self::Sleeping {
             healing_from: now,
             until: now + Milliseconds::EIGHT_HOURS,
-        }
-    }
-
-    pub(crate) const fn cancel_context(&self) -> CancelContext {
-        match self {
-            Self::Normal | Self::Sleeping { .. } => CancelContext::State,
-            _ => CancelContext::Action,
         }
     }
 
@@ -136,11 +125,6 @@ impl PlayerActionState {
         now: Timestamp,
     ) -> PlayerBehavior {
         //println!("processing instruction: {instruction:?}");
-        assert!(
-            instruction != QueuedInstruction::CancelAction
-                || self.cancel_context() == CancelContext::Action,
-            "{self:?} is not an action to cancel"
-        );
         match (&self, instruction) {
             (Self::Sleeping { .. }, QueuedInstruction::Finished) => {
                 *self = Self::Normal;
@@ -167,16 +151,6 @@ impl PlayerActionState {
                 *self = Self::AutoDefend;
                 PlayerBehavior::Feedback(Message::info(Phrase::new("You start defending...")))
             }
-            (Self::ExaminingPos(pos), QueuedInstruction::ToggleAutoTravel) => {
-                *self = Self::AutoTravel { target: *pos };
-                PlayerBehavior::Feedback(Message::info(Phrase::new("You start traveling...")))
-            }
-            (Self::ExaminingZoneLevel(zone_level), QueuedInstruction::ToggleAutoTravel) => {
-                *self = Self::AutoTravel {
-                    target: zone_level.base_pos().horizontal_offset(11, 11),
-                };
-                PlayerBehavior::Feedback(Message::info(Phrase::new("You start traveling...")))
-            }
             (_, QueuedInstruction::ToggleAutoTravel) => PlayerBehavior::Feedback(Message::error(
                 Phrase::new("First examine your destination"),
             )),
@@ -202,9 +176,7 @@ impl PlayerActionState {
             (Self::Attacking, QueuedInstruction::Attack)
             | (Self::Smashing, QueuedInstruction::Smash)
             | (Self::Dragging { .. }, QueuedInstruction::Drag | QueuedInstruction::CancelAction)
-            | (Self::Pulping { .. }, QueuedInstruction::Finished)
-            | (Self::ExaminingPos(_), QueuedInstruction::ExaminePos)
-            | (Self::ExaminingZoneLevel(_), QueuedInstruction::ExamineZoneLevel) => {
+            | (Self::Pulping { .. }, QueuedInstruction::Finished) => {
                 *self = Self::Normal;
                 PlayerBehavior::NoEffect
             }
@@ -276,16 +248,6 @@ impl PlayerActionState {
             QueuedInstruction::ExamineItem(item) => {
                 PlayerBehavior::Perform(PlannedAction::ExamineItem { item })
             }
-            QueuedInstruction::ExaminePos => {
-                let target = Pos::from(&Focus::new(self, player_pos));
-                *self = Self::ExaminingPos(target);
-                PlayerBehavior::NoEffect
-            }
-            QueuedInstruction::ExamineZoneLevel => {
-                let target = ZoneLevel::from(&Focus::new(self, player_pos));
-                *self = Self::ExaminingZoneLevel(target);
-                PlayerBehavior::NoEffect
-            }
             QueuedInstruction::ChangePace => PlayerBehavior::Perform(PlannedAction::ChangePace),
             QueuedInstruction::Interrupted => {
                 *self = Self::Normal;
@@ -301,10 +263,7 @@ impl PlayerActionState {
     }
 
     fn handle_offset(&mut self, envir: &Envir, player_pos: Pos, raw_nbor: Nbor) -> PlayerBehavior {
-        if !matches!(
-            *self,
-            Self::Sleeping { .. } | Self::ExaminingZoneLevel(_) | Self::ExaminingPos(_)
-        ) {
+        if !matches!(*self, Self::Sleeping { .. }) {
             if let Err(message) = envir.get_nbor(player_pos, raw_nbor) {
                 return PlayerBehavior::Feedback(message);
             }
@@ -313,26 +272,6 @@ impl PlayerActionState {
         match &self {
             Self::Sleeping { .. } => {
                 panic!("{self:?} {player_pos:?} {raw_nbor:?}");
-            }
-            Self::ExaminingZoneLevel(current) => {
-                if let Some(target) = current.nbor(raw_nbor) {
-                    *self = Self::ExaminingZoneLevel(target);
-                    PlayerBehavior::NoEffect
-                } else {
-                    PlayerBehavior::Feedback(Message::warn(Phrase::new(
-                        "invalid zone level to examine",
-                    )))
-                }
-            }
-            Self::ExaminingPos(current) => {
-                if let Some(target) = current.raw_nbor(raw_nbor) {
-                    *self = Self::ExaminingPos(target);
-                    PlayerBehavior::NoEffect
-                } else {
-                    PlayerBehavior::Feedback(Message::warn(Phrase::new(
-                        "invalid position to examine",
-                    )))
-                }
             }
             Self::Normal => PlayerBehavior::Perform(PlannedAction::Step { to: raw_nbor }),
             Self::Attacking => {
@@ -479,9 +418,7 @@ impl PlayerActionState {
 
     pub(crate) const fn color(&self) -> Color {
         match self {
-            Self::Normal | Self::Closing | Self::ExaminingPos(_) | Self::ExaminingZoneLevel(_) => {
-                DEFAULT_TEXT_COLOR
-            }
+            Self::Normal | Self::Closing => DEFAULT_TEXT_COLOR,
             Self::Waiting { .. }
             | Self::Sleeping { .. }
             | Self::Attacking
@@ -507,8 +444,6 @@ impl fmt::Display for PlayerActionState {
             Self::Sleeping { .. } => "Sleeping",
             Self::AutoTravel { .. } => "Traveling",
             Self::AutoDefend => "Defending",
-            Self::ExaminingPos(_) => "Examining",
-            Self::ExaminingZoneLevel(_) => "Examining map",
         })
     }
 }

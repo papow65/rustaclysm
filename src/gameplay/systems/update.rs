@@ -8,6 +8,31 @@ use std::{
 #[cfg(feature = "log_archetypes")]
 use bevy::utils::HashMap;
 
+#[allow(clippy::needless_pass_by_value)]
+pub(crate) fn update_focus_cursor_visibility(
+    focus_state: Res<State<FocusState>>,
+    mut curors: Query<(&mut Visibility, &mut Transform), With<ExamineCursor>>,
+) {
+    let start = Instant::now();
+
+    if let Ok((mut visibility, mut transform)) = curors.get_single_mut() {
+        let examine_pos = matches!(**focus_state, FocusState::ExaminingPos(_));
+        let examine_zone_level = matches!(**focus_state, FocusState::ExaminingZoneLevel(_));
+        *visibility = if examine_pos || examine_zone_level {
+            Visibility::Inherited
+        } else {
+            Visibility::Hidden
+        };
+        transform.scale = if examine_zone_level {
+            Vec3::splat(24.0)
+        } else {
+            Vec3::ONE
+        };
+    }
+
+    log_if_slow("update_cursor_visibility_on_player_change", start);
+}
+
 fn update_material(
     commands: &mut Commands,
     children: &Children,
@@ -23,7 +48,7 @@ fn update_material(
     }
 }
 
-fn update_visualization(
+pub(crate) fn update_visualization(
     commands: &Arc<Mutex<Commands>>,
     explored: &Arc<Mutex<&mut Explored>>,
     currently_visible: &CurrentlyVisible,
@@ -80,9 +105,70 @@ fn calculate_visibility(
     }
 }
 
+/** 'items' is more complex than needed by [`calculate_visibility`], because of compatibility with \
+ *[`update_visualization_on_focus_move()`]. */
+#[allow(clippy::needless_pass_by_value)]
+pub(crate) fn update_visibility(
+    focus_state: Res<State<FocusState>>,
+    elevation_visibility: Res<ElevationVisibility>,
+    mut session: GameplaySession,
+    mut last_focus: Local<Focus>,
+    mut previous_camera_global_transform: Local<GlobalTransform>,
+    mut last_elevation_visibility: Local<ElevationVisibility>,
+    mut items: Query<(
+        Option<&Player>,
+        &Pos,
+        &mut Visibility,
+        &mut LastSeen,
+        Option<&Accessible>,
+        Option<&BaseSpeed>,
+        &Children,
+    )>,
+    players: Query<&Pos, With<Player>>,
+    cameras: Query<&GlobalTransform, With<Camera>>,
+) {
+    let start = Instant::now();
+
+    if session.is_changed() {
+        *last_focus = Focus::default();
+        *previous_camera_global_transform = GlobalTransform::default();
+        *last_elevation_visibility = ElevationVisibility::default();
+    }
+
+    let &player_pos = players.single();
+    let focus = Focus::new(&focus_state, player_pos);
+    let &camera_global_transform = cameras.single();
+    if focus != *last_focus
+        || camera_global_transform != *previous_camera_global_transform
+        || *elevation_visibility != *last_elevation_visibility
+    {
+        for (player, &pos, mut visibility, last_seen, _, speed, _) in &mut items {
+            if *last_seen != LastSeen::Never {
+                *visibility = calculate_visibility(
+                    &focus,
+                    player,
+                    pos,
+                    *elevation_visibility,
+                    &last_seen,
+                    speed,
+                );
+            }
+        }
+
+        println!("{}x visibility updated", items.iter().len());
+
+        *last_focus = focus;
+        *previous_camera_global_transform = camera_global_transform;
+        *last_elevation_visibility = *elevation_visibility;
+    }
+
+    log_if_slow("update_visibility", start);
+}
+
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_visualization_on_item_move(
     commands: Commands,
+    focus_state: Res<State<FocusState>>,
     player_action_state: Res<PlayerActionState>,
     envir: Envir,
     clock: Clock,
@@ -106,7 +192,7 @@ pub(crate) fn update_visualization_on_item_move(
 
     if moved_items.iter().peekable().peek().is_some() {
         let &player_pos = players.single();
-        let focus = Focus::new(&player_action_state, player_pos);
+        let focus = Focus::new(&focus_state, player_pos);
         let currently_visible = envir.currently_visible(&clock, &player_action_state, player_pos);
         let commands = Arc::new(Mutex::new(commands));
         let explored = Arc::new(Mutex::new(&mut *explored));
@@ -134,105 +220,17 @@ pub(crate) fn update_visualization_on_item_move(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn update_visualization_on_focus_move(
-    commands: Commands,
-    player_action_state: Res<PlayerActionState>,
-    envir: Envir,
-    clock: Clock,
-    mut explored: ResMut<Explored>,
-    elevation_visibility: Res<ElevationVisibility>,
-    mut visualization_update: ResMut<VisualizationUpdate>,
-    mut session: GameplaySession,
-    mut last_focus: Local<Focus>,
-    mut previous_camera_global_transform: Local<GlobalTransform>,
-    mut last_elevation_visibility: Local<ElevationVisibility>,
-    mut items: Query<(
-        Option<&Player>,
-        &Pos,
-        &mut Visibility,
-        &mut LastSeen,
-        Option<&Accessible>,
-        Option<&BaseSpeed>,
-        &Children,
-    )>,
-    child_items: Query<&Appearance, (With<Parent>, Without<Pos>)>,
+pub(crate) fn update_camera_base(
+    focus_state: Res<State<FocusState>>,
     players: Query<&Pos, With<Player>>,
-    cameras: Query<&GlobalTransform, With<Camera>>,
+    mut camera_bases: Query<&mut Transform, (With<CameraBase>, Without<Camera3d>)>,
 ) {
     let start = Instant::now();
 
-    if session.is_changed() {
-        *last_focus = Focus::default();
-        *previous_camera_global_transform = GlobalTransform::default();
-        *last_elevation_visibility = ElevationVisibility::default();
-    }
+    let player_pos = *players.single();
+    camera_bases.single_mut().translation = Focus::new(&focus_state, player_pos).offset(player_pos);
 
-    let &player_pos = players.single();
-    let focus = Focus::new(&player_action_state, player_pos);
-    let &camera_global_transform = cameras.single();
-    if focus != *last_focus
-        || camera_global_transform != *previous_camera_global_transform
-        || *elevation_visibility != *last_elevation_visibility
-        || *visualization_update == VisualizationUpdate::Forced
-    {
-        if let (
-            &PlayerActionState::ExaminingPos(_) | &PlayerActionState::ExaminingZoneLevel(_),
-            VisualizationUpdate::Smart,
-        ) = (&*player_action_state, *visualization_update)
-        {
-            for (player, &pos, mut visibility, last_seen, _, speed, _) in &mut items {
-                if *last_seen != LastSeen::Never {
-                    *visibility = calculate_visibility(
-                        &focus,
-                        player,
-                        pos,
-                        *elevation_visibility,
-                        &last_seen,
-                        speed,
-                    );
-                }
-            }
-
-            println!("{}x visibility updated", items.iter().len());
-        } else {
-            let currently_visible = thread_local::ThreadLocal::new();
-            let commands = Arc::new(Mutex::new(commands));
-            let explored = Arc::new(Mutex::new(&mut *explored));
-
-            items.par_iter_mut().for_each(
-                |(player, &pos, mut visibility, mut last_seen, accessible, speed, children)| {
-                    let currently_visible = currently_visible.get_or(|| {
-                        envir.currently_visible(&clock, &player_action_state, player_pos)
-                    });
-
-                    update_visualization(
-                        &commands.clone(),
-                        &explored.clone(),
-                        currently_visible,
-                        *elevation_visibility,
-                        &focus,
-                        player,
-                        pos,
-                        &mut visibility,
-                        &mut last_seen,
-                        accessible,
-                        speed,
-                        children,
-                        &child_items,
-                    );
-                },
-            );
-
-            println!("{}x visualization updated", items.iter().len());
-        }
-
-        *last_focus = focus;
-        *previous_camera_global_transform = camera_global_transform;
-        *last_elevation_visibility = *elevation_visibility;
-        *visualization_update = VisualizationUpdate::Smart;
-    }
-
-    log_if_slow("update_visualization_on_focus_move", start);
+    log_if_slow("update_camera", start);
 }
 
 #[allow(clippy::needless_pass_by_value)]

@@ -18,6 +18,32 @@ fn open_menu(next_gameplay_state: &mut NextState<GameplayScreenState>) {
     next_gameplay_state.set(GameplayScreenState::Menu);
 }
 
+fn toggle_examine_pos(
+    focus_state: &FocusState,
+    next_focus_state: &mut NextState<FocusState>,
+    players: &Query<&Pos, With<Player>>,
+) {
+    next_focus_state.set(match focus_state {
+        FocusState::Normal => FocusState::ExaminingPos(*players.single()),
+        FocusState::ExaminingPos(_) => FocusState::Normal,
+        FocusState::ExaminingZoneLevel(zone_level) => {
+            FocusState::ExaminingPos(zone_level.center_pos())
+        }
+    });
+}
+
+fn toggle_examine_zone_level(
+    focus_state: &FocusState,
+    next_focus_state: &mut NextState<FocusState>,
+    players: &Query<&Pos, With<Player>>,
+) {
+    next_focus_state.set(match focus_state {
+        FocusState::Normal => FocusState::ExaminingZoneLevel(ZoneLevel::from(*players.single())),
+        FocusState::ExaminingPos(pos) => FocusState::ExaminingZoneLevel(ZoneLevel::from(*pos)),
+        FocusState::ExaminingZoneLevel(_) => FocusState::Normal,
+    });
+}
+
 fn open_inventory(next_gameplay_state: &mut NextState<GameplayScreenState>) {
     next_gameplay_state.set(GameplayScreenState::Inventory);
 }
@@ -105,22 +131,72 @@ pub(super) fn manage_mouse_input(
     log_if_slow("manage_mouse_input", start);
 }
 
+fn handle_queued_instruction(
+    message_writer: &mut EventWriter<Message>,
+    focus_state: &FocusState,
+    next_focus_state: &mut ResMut<NextState<FocusState>>,
+    player_action_state: &mut ResMut<PlayerActionState>,
+    instruction_queue: &mut ResMut<InstructionQueue>,
+    instruction: QueuedInstruction,
+    change: InputChange,
+) {
+    //println!("{focus_state:?} {instruction:?}");
+    match (*focus_state, &instruction) {
+        (FocusState::Normal, _) => instruction_queue.add(instruction, change),
+        (FocusState::ExaminingPos(target), QueuedInstruction::ToggleAutoTravel) => {
+            //println!("Autotravel pos");
+            next_focus_state.set(FocusState::Normal);
+            **player_action_state = PlayerActionState::AutoTravel { target };
+            instruction_queue.stop_waiting();
+            message_writer.send(Message::info(Phrase::new("You start traveling...")));
+        }
+        (FocusState::ExaminingZoneLevel(zone_level), QueuedInstruction::ToggleAutoTravel) => {
+            //println!("Autotravel zone level");
+            next_focus_state.set(FocusState::Normal);
+            **player_action_state = PlayerActionState::AutoTravel {
+                target: zone_level.center_pos(),
+            };
+            instruction_queue.stop_waiting();
+            message_writer.send(Message::info(Phrase::new("You start traveling...")));
+        }
+        (FocusState::ExaminingPos(target), QueuedInstruction::Offset(offset)) => {
+            if let Some(nbor_target) = target.raw_nbor(offset.to_nbor()) {
+                next_focus_state.set(FocusState::ExaminingPos(nbor_target));
+            }
+        }
+        (FocusState::ExaminingZoneLevel(target), QueuedInstruction::Offset(offset)) => {
+            if let Some(nbor_target) = target.nbor(offset.to_nbor()) {
+                next_focus_state.set(FocusState::ExaminingZoneLevel(nbor_target));
+            }
+        }
+        (_, QueuedInstruction::CancelAction) => next_focus_state.set(FocusState::Normal),
+        _ => {
+            println!("Ignoring {:?} in {:?}", &instruction, &focus_state);
+        }
+    }
+}
+
 #[allow(clippy::needless_pass_by_value)]
 pub(super) fn manage_keyboard_input(
+    mut message_writer: EventWriter<Message>,
     mut next_application_state: ResMut<NextState<ApplicationState>>,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
+    focus_state: Res<State<FocusState>>,
+    mut next_focus_state: ResMut<NextState<FocusState>>,
     mut keys: Keys,
     mut instruction_queue: ResMut<InstructionQueue>,
     mut elevation_visibility: ResMut<ElevationVisibility>,
     mut visualization_update: ResMut<VisualizationUpdate>,
     mut camera_offset: ResMut<CameraOffset>,
-    player_action_state: Res<PlayerActionState>,
+    mut player_action_state: ResMut<PlayerActionState>,
     mut camera_layers: Query<&mut RenderLayers, With<Camera3d>>,
+    players: Query<&Pos, With<Player>>,
 ) {
     let start = Instant::now();
 
     for combo in keys.combos(Ctrl::Without) {
-        let Ok(instruction) = Instruction::try_from((&combo, player_action_state.cancel_context()))
+        let Ok(instruction) =
+            Instruction::try_from((&combo, focus_state.cancel_handling(&player_action_state)))
         else {
             println!("{combo:?} not recognized");
             continue;
@@ -132,6 +208,12 @@ pub(super) fn manage_keyboard_input(
                 open_main_menu(&mut next_application_state, &mut next_gameplay_state);
             }
             Instruction::ShowGameplayMenu => open_menu(&mut next_gameplay_state),
+            Instruction::ExaminePos => {
+                toggle_examine_pos(&focus_state, &mut next_focus_state, &players);
+            }
+            Instruction::ExamineZoneLevel => {
+                toggle_examine_zone_level(&focus_state, &mut next_focus_state, &players);
+            }
             Instruction::Inventory => open_inventory(&mut next_gameplay_state),
             Instruction::ToggleMap(zoom_distance) => {
                 toggle_map(&mut camera_offset, &mut camera_layers, zoom_distance);
@@ -141,7 +223,15 @@ pub(super) fn manage_keyboard_input(
             Instruction::ToggleElevation => {
                 toggle_elevation(&mut elevation_visibility, &mut visualization_update);
             }
-            Instruction::Queued(instruction) => instruction_queue.add(instruction, combo.change),
+            Instruction::Queued(instruction) => handle_queued_instruction(
+                &mut message_writer,
+                &focus_state,
+                &mut next_focus_state,
+                &mut player_action_state,
+                &mut instruction_queue,
+                instruction,
+                combo.change,
+            ),
         }
     }
 
