@@ -1,7 +1,5 @@
-use crate::prelude::Nbor;
+use crate::prelude::{HorizontalDirection, Nbor};
 use bevy::prelude::Entity;
-
-use super::HorizontalDirection;
 
 #[derive(Copy, Clone, Debug)]
 pub(crate) enum StayDuration {

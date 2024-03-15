@@ -1,8 +1,6 @@
 mod container_limits;
-mod faction;
 mod object_name;
 mod pos;
-mod stats;
 
 use crate::prelude::*;
 use bevy::{
@@ -11,7 +9,7 @@ use bevy::{
 };
 use std::ops::{Add, Sub};
 
-pub(crate) use {container_limits::*, faction::*, object_name::*, pos::*, stats::*};
+pub(crate) use {container_limits::*, object_name::*, pos::*};
 
 #[derive(PartialEq, Debug, Component)]
 pub(crate) struct Filthy;

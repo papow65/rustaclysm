@@ -1,3 +1,4 @@
+mod actor;
 mod behavior;
 mod components;
 mod core;
@@ -11,6 +12,6 @@ mod states;
 mod systems;
 
 pub(crate) use self::{
-    behavior::*, components::*, core::*, events::*, hud::*, player::*, plugin::*, resources::*,
-    screens::*, states::*, systems::*,
+    actor::*, behavior::*, components::*, core::*, events::*, hud::*, player::*, plugin::*,
+    resources::*, screens::*, states::*, systems::*,
 };
