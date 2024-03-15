@@ -11,10 +11,3 @@ pub(crate) struct Damage {
 impl ActorChange for Damage {}
 impl CorpseChange for Damage {}
 impl TerrainChange for Damage {}
-
-#[derive(Clone, Debug, Event)]
-pub(crate) struct Healing {
-    pub(crate) amount: u16,
-}
-
-impl ActorChange for Healing {}

@@ -8,6 +8,7 @@ impl Plugin for GameplayPlugin {
         app.insert_state(GameplayScreenState::Inapplicable);
 
         app.add_plugins((
+            ActorPlugin,
             BehaviorPlugin,
             HudPlugin,
             BaseScreenPlugin,
@@ -29,9 +30,6 @@ impl Plugin for GameplayPlugin {
             .insert_resource(Events::<SpawnZoneLevel>::default())
             .insert_resource(Events::<UpdateZoneLevelVisibility>::default())
             .insert_resource(Events::<DespawnZoneLevel>::default())
-            .insert_resource(Events::<ActorEvent<StaminaImpact>>::default())
-            .insert_resource(Events::<ActorEvent<Damage>>::default())
-            .insert_resource(Events::<ActorEvent<Healing>>::default())
             .insert_resource(Events::<CorpseEvent<Damage>>::default())
             .insert_resource(Events::<TerrainEvent<Damage>>::default())
             .insert_resource(Events::<TerrainEvent<Toggle>>::default())
@@ -143,11 +141,6 @@ fn shutdown_systems() -> impl IntoSystemConfigs<()> {
             clear_gameplay_events::<SpawnZoneLevel>,
             clear_gameplay_events::<UpdateZoneLevelVisibility>,
             clear_gameplay_events::<DespawnZoneLevel>,
-        ),
-        (
-            clear_gameplay_events::<ActorEvent<StaminaImpact>>,
-            clear_gameplay_events::<ActorEvent<Damage>>,
-            clear_gameplay_events::<ActorEvent<Healing>>,
         ),
         (
             clear_gameplay_events::<CorpseEvent<Damage>>,
