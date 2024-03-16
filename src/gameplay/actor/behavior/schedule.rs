@@ -25,24 +25,22 @@ impl BehaviorSchedule {
             };
 
         let mut count = 0;
-        let mut over_time = false;
-        while !Self::waiting_for_user_input(world) && !over_time {
+        while !Self::waiting_for_user_input(world) {
             world.run_schedule(Self);
             count += 1;
-            over_time = max_time < start.elapsed();
+            if max_time < start.elapsed() {
+                println!(
+                    "run_behavior_schedule could only handle {count} iterations before the timeout"
+                );
+                break;
+            }
         }
-
-        if over_time {
-            println!(
-                "run_behavior_schedule could only handle {count} iterations before the timeout"
-            );
-        }
-
-        log_if_slow("run_behavior_schedule", start);
 
         if 0 < count {
             world.send_event(RefreshAfterBehavior);
         }
+
+        log_if_slow("run_behavior_schedule", start);
     }
 
     /** All NPC mave a timeout and the player has an empty instruction queue */
