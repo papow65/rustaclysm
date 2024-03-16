@@ -18,29 +18,17 @@ fn open_menu(next_gameplay_state: &mut NextState<GameplayScreenState>) {
     next_gameplay_state.set(GameplayScreenState::Menu);
 }
 
-fn toggle_examine_pos(
-    focus_state: &FocusState,
-    next_focus_state: &mut NextState<FocusState>,
-    players: &Query<&Pos, With<Player>>,
-) {
-    next_focus_state.set(match focus_state {
-        FocusState::Normal => FocusState::ExaminingPos(*players.single()),
+fn toggle_examine_pos(focus: &Focus, next_focus_state: &mut NextState<FocusState>) {
+    next_focus_state.set(match **focus.state {
         FocusState::ExaminingPos(_) => FocusState::Normal,
-        FocusState::ExaminingZoneLevel(zone_level) => {
-            FocusState::ExaminingPos(zone_level.center_pos())
-        }
+        _ => FocusState::ExaminingPos(Pos::from(focus)),
     });
 }
 
-fn toggle_examine_zone_level(
-    focus_state: &FocusState,
-    next_focus_state: &mut NextState<FocusState>,
-    players: &Query<&Pos, With<Player>>,
-) {
-    next_focus_state.set(match focus_state {
-        FocusState::Normal => FocusState::ExaminingZoneLevel(ZoneLevel::from(*players.single())),
-        FocusState::ExaminingPos(pos) => FocusState::ExaminingZoneLevel(ZoneLevel::from(*pos)),
+fn toggle_examine_zone_level(focus: &Focus, next_focus_state: &mut NextState<FocusState>) {
+    next_focus_state.set(match **focus.state {
         FocusState::ExaminingZoneLevel(_) => FocusState::Normal,
+        _ => FocusState::ExaminingZoneLevel(ZoneLevel::from(focus)),
     });
 }
 
@@ -181,7 +169,7 @@ pub(super) fn manage_keyboard_input(
     mut message_writer: EventWriter<Message>,
     mut next_application_state: ResMut<NextState<ApplicationState>>,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
-    focus_state: Res<State<FocusState>>,
+    focus: Focus,
     mut next_focus_state: ResMut<NextState<FocusState>>,
     mut keys: Keys,
     mut instruction_queue: ResMut<InstructionQueue>,
@@ -190,13 +178,12 @@ pub(super) fn manage_keyboard_input(
     mut camera_offset: ResMut<CameraOffset>,
     mut player_action_state: ResMut<PlayerActionState>,
     mut camera_layers: Query<&mut RenderLayers, With<Camera3d>>,
-    players: Query<&Pos, With<Player>>,
 ) {
     let start = Instant::now();
 
     for combo in keys.combos(Ctrl::Without) {
         let Ok(instruction) =
-            Instruction::try_from((&combo, focus_state.cancel_handling(&player_action_state)))
+            Instruction::try_from((&combo, focus.state.cancel_handling(&player_action_state)))
         else {
             println!("{combo:?} not recognized");
             continue;
@@ -209,10 +196,10 @@ pub(super) fn manage_keyboard_input(
             }
             Instruction::ShowGameplayMenu => open_menu(&mut next_gameplay_state),
             Instruction::ExaminePos => {
-                toggle_examine_pos(&focus_state, &mut next_focus_state, &players);
+                toggle_examine_pos(&focus, &mut next_focus_state);
             }
             Instruction::ExamineZoneLevel => {
-                toggle_examine_zone_level(&focus_state, &mut next_focus_state, &players);
+                toggle_examine_zone_level(&focus, &mut next_focus_state);
             }
             Instruction::Inventory => open_inventory(&mut next_gameplay_state),
             Instruction::ToggleMap(zoom_distance) => {
@@ -225,7 +212,7 @@ pub(super) fn manage_keyboard_input(
             }
             Instruction::Queued(instruction) => handle_queued_instruction(
                 &mut message_writer,
-                &focus_state,
+                &focus.state,
                 &mut next_focus_state,
                 &mut player_action_state,
                 &mut instruction_queue,

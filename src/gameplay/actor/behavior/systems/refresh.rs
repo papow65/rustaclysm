@@ -38,7 +38,7 @@ pub(in super::super) fn update_hidden_item_visibility(
 #[allow(clippy::needless_pass_by_value)]
 pub(in super::super) fn update_visualization_on_player_move(
     commands: Commands,
-    focus_state: Res<State<FocusState>>,
+    focus: Focus,
     player_action_state: Res<PlayerActionState>,
     envir: Envir,
     clock: Clock,
@@ -46,7 +46,6 @@ pub(in super::super) fn update_visualization_on_player_move(
     elevation_visibility: Res<ElevationVisibility>,
     mut visualization_update: ResMut<VisualizationUpdate>,
     mut session: GameplaySession,
-    mut last_focus: Local<Focus>,
     mut previous_camera_global_transform: Local<GlobalTransform>,
     mut last_elevation_visibility: Local<ElevationVisibility>,
     mut items: Query<(
@@ -59,7 +58,6 @@ pub(in super::super) fn update_visualization_on_player_move(
         &Children,
     )>,
     child_items: Query<&Appearance, (With<Parent>, Without<Pos>)>,
-    players: Query<&Pos, With<Player>>,
     cameras: Query<&GlobalTransform, With<Camera>>,
 ) {
     let start = Instant::now();
@@ -67,30 +65,25 @@ pub(in super::super) fn update_visualization_on_player_move(
     if let (
         &FocusState::ExaminingPos(_) | &FocusState::ExaminingZoneLevel(_),
         VisualizationUpdate::Smart,
-    ) = (&**focus_state, *visualization_update)
+    ) = (&**focus.state, *visualization_update)
     {
         update_visibility(
-            focus_state,
+            focus,
             elevation_visibility,
             session,
-            last_focus,
             previous_camera_global_transform,
             last_elevation_visibility,
             items,
-            players,
             cameras,
         );
     } else {
         if session.is_changed() {
-            *last_focus = Focus::default();
             *previous_camera_global_transform = GlobalTransform::default();
             *last_elevation_visibility = ElevationVisibility::default();
         }
 
-        let &player_pos = players.single();
-        let focus = Focus::new(&focus_state, player_pos);
         let &camera_global_transform = cameras.single();
-        if focus != *last_focus
+        if focus.is_changed()
             || camera_global_transform != *previous_camera_global_transform
             || *elevation_visibility != *last_elevation_visibility
             || *visualization_update == VisualizationUpdate::Forced
@@ -102,7 +95,7 @@ pub(in super::super) fn update_visualization_on_player_move(
             items.par_iter_mut().for_each(
                 |(player, &pos, mut visibility, mut last_seen, accessible, speed, children)| {
                     let currently_visible = currently_visible.get_or(|| {
-                        envir.currently_visible(&clock, &player_action_state, player_pos)
+                        envir.currently_visible(&clock, &player_action_state, focus.player_pos())
                     });
 
                     update_visualization(
@@ -125,7 +118,6 @@ pub(in super::super) fn update_visualization_on_player_move(
 
             println!("{}x visualization updated", items.iter().len());
 
-            *last_focus = focus;
             *previous_camera_global_transform = camera_global_transform;
             *last_elevation_visibility = *elevation_visibility;
             *visualization_update = VisualizationUpdate::Smart;
@@ -150,9 +142,8 @@ pub(in super::super) fn update_visualization_on_weather_change(
         *last_viewing_disttance = None;
     }
 
-    let player_pos = players.single();
     let viewing_distance =
-        CurrentlyVisible::viewing_distance(&clock, &player_action_state, player_pos.level);
+        CurrentlyVisible::viewing_distance(&clock, &player_action_state, players.single().level);
     if *last_viewing_disttance != viewing_distance {
         *last_viewing_disttance = viewing_distance;
 

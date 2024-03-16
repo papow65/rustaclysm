@@ -1,22 +1,25 @@
 use crate::prelude::{
-    CancelHandling, ElevationVisibility, Level, PlayerActionState, Pos, ZoneLevel,
+    CancelHandling, ElevationVisibility, Level, Player, PlayerActionState, Pos, ZoneLevel,
 };
-use bevy::prelude::{States, Vec3};
+use bevy::{
+    ecs::system::SystemParam,
+    prelude::{DetectChanges, Query, Ref, Res, State, States, Vec3, With},
+};
 use std::{cmp::Ordering, fmt};
 
-#[derive(PartialEq)]
-pub(crate) enum Focus {
-    Pos(Pos),
-    ZoneLevel(ZoneLevel),
+#[derive(SystemParam)]
+pub(crate) struct Focus<'w, 's> {
+    pub(crate) state: Res<'w, State<FocusState>>,
+    players: Query<'w, 's, Ref<'static, Pos>, With<Player>>,
 }
 
-impl Focus {
-    pub(crate) const fn new(focus_state: &FocusState, player_pos: Pos) -> Self {
-        match focus_state {
-            FocusState::Normal => Self::Pos(player_pos),
-            FocusState::ExaminingPos(target) => Self::Pos(*target),
-            FocusState::ExaminingZoneLevel(zone_level) => Self::ZoneLevel(*zone_level),
-        }
+impl<'w, 's> Focus<'w, 's> {
+    pub(crate) fn is_changed(&self) -> bool {
+        self.state.is_changed() || self.players.single().is_changed()
+    }
+
+    pub(crate) fn player_pos(&self) -> Pos {
+        *self.players.single().into_inner()
     }
 
     pub(crate) fn is_pos_shown(
@@ -24,15 +27,12 @@ impl Focus {
         shown_pos: Pos,
         elevation_visibility: ElevationVisibility,
     ) -> bool {
-        match self {
-            Self::Pos(focus_pos) => {
-                shown_pos.level <= focus_pos.level
-                    || (elevation_visibility == ElevationVisibility::Shown
-                        && shown_pos.z <= focus_pos.z)
-            }
-            Self::ZoneLevel(zone_level) => {
+        let focus_pos = match **self.state {
+            FocusState::Normal => *self.players.single().into_inner(),
+            FocusState::ExaminingPos(pos) => pos,
+            FocusState::ExaminingZoneLevel(zone_level) => {
                 let focus_level = zone_level.level;
-                match (focus_level.compare_to_ground(), elevation_visibility) {
+                return match (focus_level.compare_to_ground(), elevation_visibility) {
                     (Ordering::Less, _) | (Ordering::Equal, ElevationVisibility::Shown) => {
                         // Below ground elevation is ignored, so only the current level is shown.
                         // And on ground, with elevation hidden, show only the current level.
@@ -46,50 +46,52 @@ impl Focus {
                         // Above ground, with elevation hidden, show everything between ground and focus
                         Level::ZERO <= shown_pos.level && shown_pos.level <= focus_level
                     }
-                }
+                };
             }
-        }
+        };
+
+        shown_pos.level <= focus_pos.level
+            || (elevation_visibility == ElevationVisibility::Shown && shown_pos.z <= focus_pos.z)
     }
 
-    pub(in crate::gameplay) fn offset(&self, player_pos: Pos) -> Vec3 {
-        match self {
-            Self::Pos(target) => (*target - player_pos).vec3(),
-            Self::ZoneLevel(target) => {
-                (target.base_pos() - player_pos).vec3() + Vec3::new(11.5, 0.0, 11.5)
+    pub(in crate::gameplay) fn offset(&self) -> Vec3 {
+        let target_pos = match **self.state {
+            FocusState::Normal => {
+                return Vec3::ZERO;
             }
+            FocusState::ExaminingPos(pos) => pos,
+            FocusState::ExaminingZoneLevel(zone_level) => zone_level.center_pos(),
+        };
+        (target_pos - *self.players.single().into_inner()).vec3()
+    }
+}
+
+impl<'w, 's> From<&Focus<'w, 's>> for Level {
+    fn from(focus: &Focus) -> Self {
+        match **focus.state {
+            FocusState::Normal => focus.players.single().into_inner().level,
+            FocusState::ExaminingPos(pos) => pos.level,
+            FocusState::ExaminingZoneLevel(zone_level) => zone_level.level,
         }
     }
 }
 
-impl Default for Focus {
-    fn default() -> Self {
-        Self::Pos(Pos::ORIGIN)
-    }
-}
-
-impl From<&Focus> for Level {
+impl<'w, 's> From<&Focus<'w, 's>> for Pos {
     fn from(focus: &Focus) -> Self {
-        match focus {
-            Focus::Pos(pos) => pos.level,
-            Focus::ZoneLevel(zone_level) => zone_level.level,
+        match **focus.state {
+            FocusState::Normal => *focus.players.single().into_inner(),
+            FocusState::ExaminingPos(pos) => pos,
+            FocusState::ExaminingZoneLevel(zone_level) => zone_level.center_pos(),
         }
     }
 }
 
-impl From<&Focus> for Pos {
+impl<'w, 's> From<&Focus<'w, 's>> for ZoneLevel {
     fn from(focus: &Focus) -> Self {
-        match focus {
-            Focus::Pos(pos) => *pos,
-            Focus::ZoneLevel(zone_level) => zone_level.base_pos(),
-        }
-    }
-}
-
-impl From<&Focus> for ZoneLevel {
-    fn from(focus: &Focus) -> Self {
-        match focus {
-            Focus::Pos(pos) => Self::from(*pos),
-            Focus::ZoneLevel(zone_level) => *zone_level,
+        match **focus.state {
+            FocusState::Normal => Self::from(*focus.players.single().into_inner()),
+            FocusState::ExaminingPos(pos) => Self::from(pos),
+            FocusState::ExaminingZoneLevel(zone_level) => zone_level,
         }
     }
 }
