@@ -1,12 +1,15 @@
 use super::{
     schedule::BehaviorSchedule,
     systems::refresh::{
-        check_items, update_hidden_item_visibility, update_transforms,
-        update_visualization_on_player_move, update_visualization_on_weather_change,
+        update_hidden_item_visibility, update_transforms, update_visualization_on_player_move,
+        update_visualization_on_weather_change,
     },
 };
 use crate::prelude::{update_visualization_on_item_move, RefreshAfterBehavior, Timeouts};
 use bevy::prelude::{on_event, resource_exists_and_changed, IntoSystemConfigs};
+
+#[cfg(debug_assertions)]
+use super::systems::refresh::check_items;
 
 pub(crate) fn behavior_systems() -> impl IntoSystemConfigs<()> {
     (
