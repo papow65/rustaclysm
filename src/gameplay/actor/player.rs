@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use bevy::prelude::{Color, Component, EventWriter, Resource};
+use bevy::prelude::{Color, Component, EventWriter, NextState, ResMut, States};
 use std::fmt;
 
 #[derive(Debug, Component)]
@@ -14,10 +14,8 @@ enum PlayerBehavior {
 
 /** Current action of the player character
 
-Conceptually, this is a child state of [`GameplayScreenState::Base`].
-
-Not a bevy state because that doesn't suport enum values with fields */
-#[derive(Debug, Default, PartialEq, Eq, Resource)]
+Conceptually, this is a child state of [`GameplayScreenState::Base`]. */
+#[derive(Clone, Debug, Default, PartialEq, Eq, Hash, States)]
 pub(crate) enum PlayerActionState {
     #[default]
     Normal,
@@ -62,10 +60,11 @@ impl PlayerActionState {
     }
 
     pub(crate) fn plan_action(
-        &mut self,
+        &self,
+        next_state: &mut ResMut<NextState<Self>>,
         message_writer: &mut EventWriter<Message>,
         healing_writer: &mut EventWriter<ActorEvent<Healing>>,
-        envir: &mut Envir,
+        envir: &Envir,
         instruction_queue: &mut InstructionQueue,
         explored: &Explored,
         player: &ActorItem,
@@ -73,7 +72,7 @@ impl PlayerActionState {
         enemies: &[Pos],
     ) -> Option<PlannedAction> {
         while let Some(instruction) = instruction_queue.pop() {
-            match self.plan(envir, *player.pos, instruction, now) {
+            match self.plan(next_state, envir, *player.pos, instruction, now) {
                 PlayerBehavior::Perform(action) => {
                     return Some(action);
                 }
@@ -105,6 +104,7 @@ impl PlayerActionState {
                 healing_from,
                 until,
             } => auto_sleep(
+                next_state,
                 healing_writer,
                 instruction_queue,
                 player,
@@ -121,7 +121,8 @@ impl PlayerActionState {
     }
 
     fn plan(
-        &mut self,
+        &self,
+        next_state: &mut ResMut<NextState<Self>>,
         envir: &Envir,
         player_pos: Pos,
         instruction: QueuedInstruction,
@@ -130,7 +131,7 @@ impl PlayerActionState {
         //println!("processing instruction: {instruction:?}");
         match (&self, instruction) {
             (Self::Sleeping { .. }, QueuedInstruction::Finished) => {
-                *self = Self::Normal;
+                next_state.set(Self::Normal);
                 PlayerBehavior::Feedback(Message::info(Phrase::new("You wake up")))
             }
             (Self::Sleeping { .. }, _) => {
@@ -143,15 +144,15 @@ impl PlayerActionState {
                 })
             }
             (Self::Normal, QueuedInstruction::Wait) => {
-                *self = Self::start_waiting(now);
+                next_state.set(Self::start_waiting(now));
                 PlayerBehavior::Feedback(Message::info(Phrase::new("You wait...")))
             }
             (Self::Normal, QueuedInstruction::Sleep) => {
-                *self = Self::start_sleeping(now);
+                next_state.set(Self::start_sleeping(now));
                 PlayerBehavior::Feedback(Message::info(Phrase::new("You fall asleep... Zzz...")))
             }
             (Self::Normal, QueuedInstruction::ToggleAutoDefend) => {
-                *self = Self::AutoDefend;
+                next_state.set(Self::AutoDefend);
                 PlayerBehavior::Feedback(Message::info(Phrase::new("You start defending...")))
             }
             (_, QueuedInstruction::ToggleAutoTravel) => PlayerBehavior::Feedback(Message::error(
@@ -161,17 +162,17 @@ impl PlayerActionState {
                 PlayerBehavior::Feedback(Message::warn(Phrase::new("You can't attack yourself")))
             }
             (Self::Waiting { .. }, QueuedInstruction::Interrupted) => {
-                *self = Self::Normal;
+                next_state.set(Self::Normal);
                 PlayerBehavior::Feedback(Message::warn(Phrase::new(
                     "You spot an enemy and stop waiting",
                 )))
             }
             (Self::Waiting { .. }, QueuedInstruction::Finished) => {
-                *self = Self::Normal;
+                next_state.set(Self::Normal);
                 PlayerBehavior::Feedback(Message::info(Phrase::new("Finished waiting")))
             }
             (Self::Pulping { .. }, QueuedInstruction::Interrupted) => {
-                *self = Self::Normal;
+                next_state.set(Self::Normal);
                 PlayerBehavior::Feedback(Message::warn(Phrase::new(
                     "You spot an enemy and stop pulping",
                 )))
@@ -180,7 +181,7 @@ impl PlayerActionState {
             | (Self::Smashing, QueuedInstruction::Smash)
             | (Self::Dragging { .. }, QueuedInstruction::Drag | QueuedInstruction::CancelAction)
             | (Self::Pulping { .. }, QueuedInstruction::Finished) => {
-                *self = Self::Normal;
+                next_state.set(Self::Normal);
                 PlayerBehavior::NoEffect
             }
             (
@@ -189,7 +190,7 @@ impl PlayerActionState {
                 },
                 QueuedInstruction::Finished,
             ) => {
-                *self = Self::Dragging { active_from: None };
+                next_state.set(Self::Dragging { active_from: None });
                 PlayerBehavior::NoEffect
             }
             (
@@ -200,14 +201,15 @@ impl PlayerActionState {
             ) => {
                 PlayerBehavior::Feedback(Message::warn(Phrase::new("You are still dragging items")))
             }
-            (_, instruction) => self.generic_plan(envir, player_pos, instruction),
+            (_, instruction) => self.generic_plan(next_state, envir, player_pos, instruction),
         }
     }
 
     /** For plans that not depend on self */
     #[allow(clippy::needless_pass_by_value)]
     fn generic_plan(
-        &mut self,
+        &self,
+        next_state: &mut ResMut<NextState<Self>>,
         envir: &Envir,
         player_pos: Pos,
         instruction: QueuedInstruction,
@@ -219,11 +221,11 @@ impl PlayerActionState {
             | QueuedInstruction::Sleep
             | QueuedInstruction::ToggleAutoTravel
             | QueuedInstruction::ToggleAutoDefend => {
-                *self = Self::Normal;
+                next_state.set(Self::Normal);
                 PlayerBehavior::NoEffect
             }
             QueuedInstruction::Offset(direction) => {
-                self.handle_offset(envir, player_pos, direction.to_nbor())
+                self.handle_offset(next_state, envir, player_pos, direction.to_nbor())
             }
             QueuedInstruction::Wield(item) => {
                 PlayerBehavior::Perform(PlannedAction::Wield { item })
@@ -240,12 +242,12 @@ impl PlayerActionState {
                     to: Nbor::Horizontal(direction),
                 })
             }
-            QueuedInstruction::Attack => self.handle_attack(envir, player_pos),
-            QueuedInstruction::Smash => self.handle_smash(envir, player_pos),
-            QueuedInstruction::Pulp => self.handle_pulp(envir, player_pos),
-            QueuedInstruction::Close => self.handle_close(envir, player_pos),
+            QueuedInstruction::Attack => Self::handle_attack(next_state, envir, player_pos),
+            QueuedInstruction::Smash => Self::handle_smash(next_state, envir, player_pos),
+            QueuedInstruction::Pulp => Self::handle_pulp(next_state, envir, player_pos),
+            QueuedInstruction::Close => Self::handle_close(next_state, envir, player_pos),
             QueuedInstruction::Drag => {
-                *self = Self::Dragging { active_from: None }; // 'active_from' will temporary be set after moving
+                next_state.set(Self::Dragging { active_from: None }); // 'active_from' will temporary be set after moving
                 PlayerBehavior::NoEffect
             }
             QueuedInstruction::ExamineItem(item) => {
@@ -253,19 +255,25 @@ impl PlayerActionState {
             }
             QueuedInstruction::ChangePace => PlayerBehavior::Perform(PlannedAction::ChangePace),
             QueuedInstruction::Interrupted => {
-                *self = Self::Normal;
+                next_state.set(Self::Normal);
                 PlayerBehavior::Feedback(Message::error(Phrase::new(
                     "Iterrupted while not waiting",
                 )))
             }
             QueuedInstruction::Finished => {
-                *self = Self::Normal;
+                next_state.set(Self::Normal);
                 PlayerBehavior::Feedback(Message::error(Phrase::new("Finished while not waiting")))
             }
         }
     }
 
-    fn handle_offset(&mut self, envir: &Envir, player_pos: Pos, raw_nbor: Nbor) -> PlayerBehavior {
+    fn handle_offset(
+        &self,
+        next_state: &mut ResMut<NextState<Self>>,
+        envir: &Envir,
+        player_pos: Pos,
+        raw_nbor: Nbor,
+    ) -> PlayerBehavior {
         if !matches!(*self, Self::Sleeping { .. }) {
             if let Err(message) = envir.get_nbor(player_pos, raw_nbor) {
                 return PlayerBehavior::Feedback(message);
@@ -278,11 +286,11 @@ impl PlayerActionState {
             }
             Self::Normal => PlayerBehavior::Perform(PlannedAction::Step { to: raw_nbor }),
             Self::Attacking => {
-                *self = Self::Normal;
+                next_state.set(Self::Normal);
                 PlayerBehavior::Perform(PlannedAction::Attack { target: raw_nbor })
             }
             Self::Smashing => {
-                *self = Self::Normal;
+                next_state.set(Self::Normal);
                 PlayerBehavior::Perform(PlannedAction::Smash { target: raw_nbor })
             }
             Self::Pulping {
@@ -304,7 +312,7 @@ impl PlayerActionState {
                 panic!("{self:?} {player_pos:?} {raw_nbor:?} {target:?}");
             }
             Self::Closing => {
-                *self = Self::Normal;
+                next_state.set(Self::Normal);
                 if let Nbor::Horizontal(target) = raw_nbor {
                     PlayerBehavior::Perform(PlannedAction::Close { target })
                 } else {
@@ -314,9 +322,9 @@ impl PlayerActionState {
                 }
             }
             Self::Dragging { active_from: None } => {
-                *self = Self::Dragging {
+                next_state.set(Self::Dragging {
                     active_from: Some(player_pos),
-                };
+                });
                 PlayerBehavior::Perform(PlannedAction::Step { to: raw_nbor })
             }
             Self::Dragging {
@@ -325,13 +333,17 @@ impl PlayerActionState {
                 panic!("{self:?} {player_pos:?} {raw_nbor:?} {active_from:?}");
             }
             Self::Waiting { .. } | Self::AutoTravel { .. } | Self::AutoDefend => {
-                *self = Self::Normal;
+                next_state.set(Self::Normal);
                 PlayerBehavior::NoEffect
             }
         }
     }
 
-    fn handle_attack(&mut self, envir: &Envir, pos: Pos) -> PlayerBehavior {
+    fn handle_attack(
+        next_state: &mut ResMut<NextState<Self>>,
+        envir: &Envir,
+        pos: Pos,
+    ) -> PlayerBehavior {
         let attackable_nbors = envir
             .nbors_for_exploring(pos, QueuedInstruction::Attack)
             .collect::<Vec<_>>();
@@ -341,13 +353,17 @@ impl PlayerActionState {
                 target: attackable_nbors[0],
             }),
             _ => {
-                *self = Self::Attacking;
+                next_state.set(Self::Attacking);
                 PlayerBehavior::NoEffect
             }
         }
     }
 
-    fn handle_smash(&mut self, envir: &Envir, pos: Pos) -> PlayerBehavior {
+    fn handle_smash(
+        next_state: &mut ResMut<NextState<Self>>,
+        envir: &Envir,
+        pos: Pos,
+    ) -> PlayerBehavior {
         let smashable_nbors = envir
             .nbors_for_exploring(pos, QueuedInstruction::Smash)
             .collect::<Vec<_>>();
@@ -357,13 +373,17 @@ impl PlayerActionState {
                 target: smashable_nbors[0],
             }),
             _ => {
-                *self = Self::Smashing;
+                next_state.set(Self::Smashing);
                 PlayerBehavior::NoEffect
             }
         }
     }
 
-    fn handle_pulp(&mut self, envir: &Envir, pos: Pos) -> PlayerBehavior {
+    fn handle_pulp(
+        next_state: &mut ResMut<NextState<Self>>,
+        envir: &Envir,
+        pos: Pos,
+    ) -> PlayerBehavior {
         let pulpable_nbors = envir
             .nbors_for_exploring(pos, QueuedInstruction::Pulp)
             .filter_map(|nbor| {
@@ -379,24 +399,28 @@ impl PlayerActionState {
             0 => PlayerBehavior::Feedback(Message::warn(Phrase::new("no targets nearby"))),
             1 => {
                 //eprintln!("Pulping target found -> active");
-                *self = Self::Pulping {
+                next_state.set(Self::Pulping {
                     active_target: Some(pulpable_nbors[0]),
-                };
+                });
                 PlayerBehavior::Perform(PlannedAction::Pulp {
                     target: pulpable_nbors[0],
                 })
             }
             _ => {
                 //eprintln!("Pulping choice -> inactive");
-                *self = Self::Pulping {
+                next_state.set(Self::Pulping {
                     active_target: None,
-                };
+                });
                 PlayerBehavior::NoEffect
             }
         }
     }
 
-    fn handle_close(&mut self, envir: &Envir, pos: Pos) -> PlayerBehavior {
+    fn handle_close(
+        next_state: &mut ResMut<NextState<Self>>,
+        envir: &Envir,
+        pos: Pos,
+    ) -> PlayerBehavior {
         let closable_nbors = envir
             .nbors_for_exploring(pos, QueuedInstruction::Close)
             .filter_map(|nbor| {
@@ -413,7 +437,7 @@ impl PlayerActionState {
                 target: closable_nbors[0],
             }),
             _ => {
-                *self = Self::Closing;
+                next_state.set(Self::Closing);
                 PlayerBehavior::NoEffect
             }
         }
@@ -452,9 +476,9 @@ impl fmt::Display for PlayerActionState {
 }
 
 fn auto_drag(
-    envir: &mut Envir<'_, '_>,
+    envir: &Envir<'_, '_>,
     instruction_queue: &mut InstructionQueue,
-    from: &mut Pos,
+    from: &Pos,
     enemies: &[Pos],
 ) -> Option<PlannedAction> {
     if !enemies.is_empty() {
@@ -472,7 +496,7 @@ fn auto_drag(
 }
 
 fn auto_travel(
-    envir: &mut Envir<'_, '_>,
+    envir: &Envir<'_, '_>,
     instruction_queue: &mut InstructionQueue,
     explored: &Explored,
     player: &ActorItem<'_>,
@@ -510,7 +534,7 @@ fn auto_travel(
 }
 
 fn auto_defend(
-    envir: &mut Envir<'_, '_>,
+    envir: &Envir<'_, '_>,
     instruction_queue: &mut InstructionQueue,
     player: &ActorItem<'_>,
     enemies: &[Pos],
@@ -528,10 +552,10 @@ fn auto_defend(
 }
 
 fn auto_pulp(
-    envir: &mut Envir<'_, '_>,
+    envir: &Envir<'_, '_>,
     instruction_queue: &mut InstructionQueue,
     player: &ActorItem<'_>,
-    target: &mut HorizontalDirection,
+    target: &HorizontalDirection,
     enemies: &[Pos],
 ) -> Option<PlannedAction> {
     //eprintln!("Post instruction pulp handling...");
@@ -559,7 +583,7 @@ fn auto_pulp(
 fn auto_wait(
     instruction_queue: &mut InstructionQueue,
     now: Timestamp,
-    until: &mut Timestamp,
+    until: &Timestamp,
     enemies: &[Pos],
 ) -> Option<PlannedAction> {
     if !enemies.is_empty() {
@@ -576,12 +600,13 @@ fn auto_wait(
 }
 
 fn auto_sleep(
+    next_state: &mut ResMut<NextState<PlayerActionState>>,
     healing_writer: &mut EventWriter<'_, ActorEvent<Healing>>,
     instruction_queue: &mut InstructionQueue,
     player: &ActorItem<'_>,
-    healing_from: &mut Timestamp,
+    healing_from: &Timestamp,
     now: Timestamp,
-    until: &mut Timestamp,
+    until: &Timestamp,
 ) -> Option<PlannedAction> {
     // TODO interrupt on taking damage
 
@@ -603,9 +628,11 @@ fn auto_sleep(
         None // process the cancellation next turn
     } else {
         let healing_duration = Milliseconds(healing_amount * 1_000_000);
-        *healing_from += healing_duration;
         // dbg!(healing_from);
-
+        next_state.set(PlayerActionState::Sleeping {
+            healing_from: *healing_from + healing_duration,
+            until: *until,
+        });
         Some(PlannedAction::Stay {
             duration: StayDuration::Long,
         })

@@ -111,11 +111,12 @@ pub(super) fn update_sidebar_systems() -> impl IntoSystemConfigs<()> {
         update_status_health.run_if(resource_exists_and_changed::<Timeouts>),
         update_status_stamina.run_if(resource_exists_and_changed::<Timeouts>),
         update_status_speed.run_if(on_event::<RefreshAfterBehavior>()),
-        update_status_player_action_state.run_if(resource_exists_and_changed::<PlayerActionState>),
+        update_status_player_action_state
+            .run_if(resource_exists_and_changed::<State<PlayerActionState>>),
         update_status_player_wielded.run_if(resource_exists_and_changed::<Timeouts>),
         update_status_enemies.run_if(resource_exists_and_changed::<Timeouts>),
         update_status_detais.run_if(
-            resource_exists_and_changed::<PlayerActionState>
+            resource_exists_and_changed::<State<PlayerActionState>>
                 .or_else(resource_exists_and_changed::<State<FocusState>>),
         ),
         update_log.run_if(on_event::<Message>()),
@@ -338,13 +339,13 @@ fn update_status_speed(
 
 #[allow(clippy::needless_pass_by_value)]
 fn update_status_player_action_state(
-    player_action_state: Res<PlayerActionState>,
+    player_action_state: Res<State<PlayerActionState>>,
     mut text_sections: ResMut<StatusTextSections>,
     mut status_displays: Query<&mut Text, With<StatusDisplay>>,
 ) {
     let start = Instant::now();
 
-    text_sections.player_action_state.value = format!("{}\n", *player_action_state);
+    text_sections.player_action_state.value = format!("{}\n", **player_action_state);
     text_sections.player_action_state.style.color = player_action_state.color();
 
     update_status_display(&text_sections, &mut status_displays.single_mut());

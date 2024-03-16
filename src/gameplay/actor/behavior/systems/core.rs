@@ -23,8 +23,9 @@ pub(in super::super) fn plan_action(
     mut commands: Commands,
     mut message_writer: EventWriter<Message>,
     mut healing_writer: EventWriter<ActorEvent<Healing>>,
-    mut player_action_state: ResMut<PlayerActionState>,
-    mut envir: Envir,
+    player_action_state: Res<State<PlayerActionState>>,
+    mut next_player_action_state: ResMut<NextState<PlayerActionState>>,
+    envir: Envir,
     clock: Clock,
     mut instruction_queue: ResMut<InstructionQueue>,
     explored: Res<Explored>,
@@ -46,9 +47,10 @@ pub(in super::super) fn plan_action(
     let enemies = actor.faction.enemies(&envir, &clock, factions, &actor);
     let action = if players.get_mut(active_actor).is_ok() {
         player_action_state.plan_action(
+            &mut next_player_action_state,
             &mut message_writer,
             &mut healing_writer,
-            &mut envir,
+            &envir,
             &mut instruction_queue,
             &explored,
             &actor,

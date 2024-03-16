@@ -4,6 +4,7 @@ use serde::Deserialize;
 use std::{
     cmp::Ordering,
     fmt,
+    hash::{Hash, Hasher},
     iter::Sum,
     ops::{Add, AddAssign, Div, Sub},
 };
@@ -193,6 +194,12 @@ impl fmt::Display for Timestamp {
 impl PartialEq for Timestamp {
     fn eq(&self, other: &Self) -> bool {
         self.offset.eq(&other.offset)
+    }
+}
+
+impl Hash for Timestamp {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.offset.hash(state);
     }
 }
 

@@ -138,7 +138,7 @@ pub(crate) fn update_visibility(
 pub(crate) fn update_visualization_on_item_move(
     commands: Commands,
     focus: Focus,
-    player_action_state: Res<PlayerActionState>,
+    player_action_state: Res<State<PlayerActionState>>,
     envir: Envir,
     clock: Clock,
     mut explored: ResMut<Explored>,

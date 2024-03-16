@@ -123,7 +123,7 @@ fn handle_queued_instruction(
     message_writer: &mut EventWriter<Message>,
     focus_state: &FocusState,
     next_focus_state: &mut ResMut<NextState<FocusState>>,
-    player_action_state: &mut ResMut<PlayerActionState>,
+    next_player_action_state: &mut ResMut<NextState<PlayerActionState>>,
     instruction_queue: &mut ResMut<InstructionQueue>,
     instruction: QueuedInstruction,
     change: InputChange,
@@ -134,16 +134,16 @@ fn handle_queued_instruction(
         (FocusState::ExaminingPos(target), QueuedInstruction::ToggleAutoTravel) => {
             //println!("Autotravel pos");
             next_focus_state.set(FocusState::Normal);
-            **player_action_state = PlayerActionState::AutoTravel { target };
+            next_player_action_state.set(PlayerActionState::AutoTravel { target });
             instruction_queue.stop_waiting();
             message_writer.send(Message::info(Phrase::new("You start traveling...")));
         }
         (FocusState::ExaminingZoneLevel(zone_level), QueuedInstruction::ToggleAutoTravel) => {
             //println!("Autotravel zone level");
             next_focus_state.set(FocusState::Normal);
-            **player_action_state = PlayerActionState::AutoTravel {
+            next_player_action_state.set(PlayerActionState::AutoTravel {
                 target: zone_level.center_pos(),
-            };
+            });
             instruction_queue.stop_waiting();
             message_writer.send(Message::info(Phrase::new("You start traveling...")));
         }
@@ -176,7 +176,8 @@ pub(super) fn manage_keyboard_input(
     mut elevation_visibility: ResMut<ElevationVisibility>,
     mut visualization_update: ResMut<VisualizationUpdate>,
     mut camera_offset: ResMut<CameraOffset>,
-    mut player_action_state: ResMut<PlayerActionState>,
+    player_action_state: Res<State<PlayerActionState>>,
+    mut next_player_action_state: ResMut<NextState<PlayerActionState>>,
     mut camera_layers: Query<&mut RenderLayers, With<Camera3d>>,
 ) {
     let start = Instant::now();
@@ -214,7 +215,7 @@ pub(super) fn manage_keyboard_input(
                 &mut message_writer,
                 &focus.state,
                 &mut next_focus_state,
-                &mut player_action_state,
+                &mut next_player_action_state,
                 &mut instruction_queue,
                 instruction,
                 combo.change,

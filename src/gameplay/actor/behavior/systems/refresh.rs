@@ -39,7 +39,7 @@ pub(in super::super) fn update_hidden_item_visibility(
 pub(in super::super) fn update_visualization_on_player_move(
     commands: Commands,
     focus: Focus,
-    player_action_state: Res<PlayerActionState>,
+    player_action_state: Res<State<PlayerActionState>>,
     envir: Envir,
     clock: Clock,
     mut explored: ResMut<Explored>,
@@ -130,7 +130,7 @@ pub(in super::super) fn update_visualization_on_player_move(
 #[allow(clippy::needless_pass_by_value)]
 pub(in super::super) fn update_visualization_on_weather_change(
     clock: Clock,
-    player_action_state: Res<PlayerActionState>,
+    player_action_state: Res<State<PlayerActionState>>,
     mut visualization_update: ResMut<VisualizationUpdate>,
     mut session: GameplaySession,
     mut last_viewing_disttance: Local<Option<usize>>,

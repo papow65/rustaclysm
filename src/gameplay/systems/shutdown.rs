@@ -22,7 +22,6 @@ pub(crate) fn remove_gameplay_resources(mut commands: Commands) {
     commands.remove_resource::<ZoneLevelIds>();
     commands.remove_resource::<CameraOffset>();
     commands.remove_resource::<InstructionQueue>();
-    commands.remove_resource::<PlayerActionState>();
     // We don't remove the event resources, because that breaks the event readers.
 }
 
