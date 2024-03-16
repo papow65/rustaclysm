@@ -1,11 +1,11 @@
 use super::{
     focus::FocusState,
-    systems::{manage_keyboard_input, manage_mouse_input},
+    systems::{
+        manage_keyboard_input, manage_mouse_input, update_camera_base, update_camera_offset,
+        update_focus_cursor_visibility,
+    },
 };
-use crate::prelude::{
-    behavior_systems, update_camera_base, update_camera_offset, update_focus_cursor_visibility,
-    update_visibility, GameplayScreenState,
-};
+use crate::prelude::{behavior_systems, update_visibility, GameplayScreenState};
 use bevy::prelude::{
     in_state, not, resource_exists_and_changed, App, IntoSystemConfigs, Plugin, State, Update,
 };

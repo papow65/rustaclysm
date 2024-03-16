@@ -7,4 +7,5 @@ pub(crate) use self::{
     focus::{Focus, FocusState},
     instruction_queue::InstructionQueue,
     plugin::BaseScreenPlugin,
+    systems::update_camera_offset,
 };

@@ -5,10 +5,7 @@ use super::systems::{
         update_visualization_on_player_move, update_visualization_on_weather_change,
     },
 };
-use crate::prelude::{
-    update_camera_base, update_visualization_on_item_move, PlayerActionState, RefreshAfterBehavior,
-    Timeouts,
-};
+use crate::prelude::{update_visualization_on_item_move, RefreshAfterBehavior, Timeouts};
 use bevy::prelude::{on_event, resource_exists_and_changed, IntoSystemConfigs};
 
 pub(crate) fn behavior_systems() -> impl IntoSystemConfigs<()> {
@@ -20,7 +17,6 @@ pub(crate) fn behavior_systems() -> impl IntoSystemConfigs<()> {
             update_visualization_on_item_move,
             update_visualization_on_player_move,
             update_visualization_on_weather_change.run_if(resource_exists_and_changed::<Timeouts>),
-            update_camera_base.run_if(resource_exists_and_changed::<PlayerActionState>),
             #[cfg(debug_assertions)]
             check_items,
         )

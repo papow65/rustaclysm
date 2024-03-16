@@ -226,3 +226,54 @@ pub(super) fn manage_keyboard_input(
 
     log_if_slow("manage_keyboard_input", start);
 }
+
+#[allow(clippy::needless_pass_by_value)]
+pub(super) fn update_focus_cursor_visibility(
+    focus_state: Res<State<FocusState>>,
+    mut curors: Query<(&mut Visibility, &mut Transform), With<ExamineCursor>>,
+) {
+    let start = Instant::now();
+
+    if let Ok((mut visibility, mut transform)) = curors.get_single_mut() {
+        let examine_pos = matches!(**focus_state, FocusState::ExaminingPos(_));
+        let examine_zone_level = matches!(**focus_state, FocusState::ExaminingZoneLevel(_));
+        *visibility = if examine_pos || examine_zone_level {
+            Visibility::Inherited
+        } else {
+            Visibility::Hidden
+        };
+        transform.scale = if examine_zone_level {
+            Vec3::splat(24.0)
+        } else {
+            Vec3::ONE
+        };
+    }
+
+    log_if_slow("update_focus_cursor_visibility", start);
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub(super) fn update_camera_base(
+    focus: Focus,
+    mut camera_bases: Query<&mut Transform, (With<CameraBase>, Without<Camera3d>)>,
+) {
+    let start = Instant::now();
+
+    camera_bases.single_mut().translation = focus.offset();
+
+    log_if_slow("update_camera", start);
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub(crate) fn update_camera_offset(
+    camera_offset: Res<CameraOffset>,
+    mut cameras: Query<&mut Transform, With<Camera3d>>,
+) {
+    let start = Instant::now();
+
+    let mut transform = cameras.single_mut();
+    transform.translation = camera_offset.offset();
+    transform.look_at(Vec3::ZERO, Vec3::Y);
+
+    log_if_slow("update_camera", start);
+}
