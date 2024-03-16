@@ -1,6 +1,6 @@
-use super::systems::{
-    core::run_behavior_schedule,
-    refresh::{
+use super::{
+    schedule::BehaviorSchedule,
+    systems::refresh::{
         check_items, update_hidden_item_visibility, update_transforms,
         update_visualization_on_player_move, update_visualization_on_weather_change,
     },
@@ -10,7 +10,7 @@ use bevy::prelude::{on_event, resource_exists_and_changed, IntoSystemConfigs};
 
 pub(crate) fn behavior_systems() -> impl IntoSystemConfigs<()> {
     (
-        run_behavior_schedule,
+        BehaviorSchedule::run,
         (
             update_transforms,
             update_hidden_item_visibility,

@@ -1,53 +1,6 @@
-use super::super::schedule::BehaviorSchedule;
 use crate::prelude::*;
-use bevy::{
-    ecs::system::{SystemId, SystemState},
-    prelude::*,
-};
-use std::{
-    cell::OnceCell,
-    time::{Duration, Instant},
-};
-
-pub(in super::super) fn run_behavior_schedule(world: &mut World) {
-    let start = Instant::now();
-
-    let max_time =
-        if let Some(PlayerActionState::Waiting { .. } | PlayerActionState::Sleeping { .. }) =
-            world.get_resource::<PlayerActionState>()
-        {
-            // Allows 10 fps
-            Duration::from_secs_f32(0.09)
-        } else {
-            // Allows 120 fps
-            Duration::from_secs_f32(0.005)
-        };
-
-    let mut count = 0;
-    let mut over_time = false;
-    while !waiting_for_user_input(world) && !over_time {
-        world.run_schedule(BehaviorSchedule);
-        count += 1;
-        over_time = max_time < start.elapsed();
-    }
-
-    if over_time {
-        println!("run_behavior_schedule could only handle {count} iterations before the timeout");
-    }
-
-    log_if_slow("run_behavior_schedule", start);
-
-    if 0 < count {
-        world.send_event(RefreshAfterBehavior);
-    }
-}
-
-/** All NPC mave a timeout and the player has an empty instruction queue */
-fn waiting_for_user_input(world: &mut World) -> bool {
-    let mut system_state = SystemState::<(Res<InstructionQueue>,)>::new(world);
-    let (instruction_queue,) = system_state.get(world);
-    instruction_queue.is_waiting()
-}
+use bevy::{ecs::system::SystemId, prelude::*};
+use std::{cell::OnceCell, time::Instant};
 
 #[allow(clippy::needless_pass_by_value)]
 pub(in super::super) fn egible_character(
