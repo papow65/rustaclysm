@@ -18,10 +18,6 @@ impl<'w, 's> Focus<'w, 's> {
         self.state.is_changed() || self.players.single().is_changed()
     }
 
-    pub(crate) fn player_pos(&self) -> Pos {
-        *self.players.single().into_inner()
-    }
-
     pub(crate) fn is_pos_shown(
         &self,
         shown_pos: Pos,

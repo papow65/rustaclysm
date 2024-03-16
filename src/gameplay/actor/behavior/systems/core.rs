@@ -25,7 +25,7 @@ pub(in super::super) fn plan_action(
     mut healing_writer: EventWriter<ActorEvent<Healing>>,
     player_action_state: Res<State<PlayerActionState>>,
     mut next_player_action_state: ResMut<NextState<PlayerActionState>>,
-    envir: Envir,
+    currently_visible_builder: CurrentlyVisibleBuilder,
     clock: Clock,
     mut instruction_queue: ResMut<InstructionQueue>,
     explored: Res<Explored>,
@@ -44,13 +44,15 @@ pub(in super::super) fn plan_action(
     let actor = actors
         .get(active_actor)
         .expect("'entity' should be a known actor");
-    let enemies = actor.faction.enemies(&envir, &clock, factions, &actor);
+    let enemies = actor
+        .faction
+        .enemies(&currently_visible_builder, factions, &actor);
     let action = if players.get_mut(active_actor).is_ok() {
         player_action_state.plan_action(
             &mut next_player_action_state,
             &mut message_writer,
             &mut healing_writer,
-            &envir,
+            &currently_visible_builder.envir,
             &mut instruction_queue,
             &explored,
             &actor,
@@ -58,7 +60,10 @@ pub(in super::super) fn plan_action(
             &enemies,
         )?
     } else {
-        let strategy = actor.faction.strategize(&envir, factions, &enemies, &actor);
+        let strategy =
+            actor
+                .faction
+                .strategize(&currently_visible_builder.envir, factions, &enemies, &actor);
         if let Some(last_enemy) = strategy.last_enemy {
             commands.entity(actor.entity).insert(last_enemy);
         }

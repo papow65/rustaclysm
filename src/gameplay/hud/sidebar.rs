@@ -380,8 +380,7 @@ fn update_status_player_wielded(
 
 #[allow(clippy::needless_pass_by_value)]
 fn update_status_enemies(
-    envir: Envir,
-    clock: Clock,
+    currently_visible_builder: CurrentlyVisibleBuilder,
     player_actors: Query<Actor, With<Player>>,
     factions: Query<(&Pos, &Faction), With<Life>>,
     fonts: Res<Fonts>,
@@ -392,7 +391,8 @@ fn update_status_enemies(
 
     let factions = factions.iter().map(|(p, f)| (*p, f)).collect::<Vec<_>>();
     if let Ok(player_actor) = player_actors.get_single() {
-        let mut enemies = Faction::Human.enemies(&envir, &clock, &factions, &player_actor);
+        let mut enemies =
+            Faction::Human.enemies(&currently_visible_builder, &factions, &player_actor);
         enemies.sort_by_key(|&pos| pos.vision_distance(*player_actor.pos));
 
         let begin = Phrase::new("Enemies:");
@@ -405,7 +405,10 @@ fn update_status_enemies(
                     .map(|&pos| {
                         (
                             pos,
-                            envir.find_character(pos).expect("Enemy should be present"),
+                            currently_visible_builder
+                                .envir
+                                .find_character(pos)
+                                .expect("Enemy should be present"),
                         )
                     })
                     .map(|(pos, (_, name))| {

@@ -39,9 +39,7 @@ pub(in super::super) fn update_hidden_item_visibility(
 pub(in super::super) fn update_visualization_on_player_move(
     commands: Commands,
     focus: Focus,
-    player_action_state: Res<State<PlayerActionState>>,
-    envir: Envir,
-    clock: Clock,
+    currently_visible_builder: CurrentlyVisibleBuilder,
     mut explored: ResMut<Explored>,
     elevation_visibility: Res<ElevationVisibility>,
     mut visualization_update: ResMut<VisualizationUpdate>,
@@ -94,9 +92,8 @@ pub(in super::super) fn update_visualization_on_player_move(
 
             items.par_iter_mut().for_each(
                 |(player, &pos, mut visibility, mut last_seen, accessible, speed, children)| {
-                    let currently_visible = currently_visible.get_or(|| {
-                        envir.currently_visible(&clock, &player_action_state, focus.player_pos())
-                    });
+                    let currently_visible =
+                        currently_visible.get_or(|| currently_visible_builder.for_player());
 
                     update_visualization(
                         &commands.clone(),
@@ -142,8 +139,11 @@ pub(in super::super) fn update_visualization_on_weather_change(
         *last_viewing_disttance = None;
     }
 
-    let viewing_distance =
-        CurrentlyVisible::viewing_distance(&clock, &player_action_state, players.single().level);
+    let viewing_distance = CurrentlyVisible::viewing_distance(
+        &clock,
+        Some(&*player_action_state),
+        players.single().level,
+    );
     if *last_viewing_disttance != viewing_distance {
         *last_viewing_disttance = viewing_distance;
 

@@ -138,9 +138,7 @@ pub(crate) fn update_visibility(
 pub(crate) fn update_visualization_on_item_move(
     commands: Commands,
     focus: Focus,
-    player_action_state: Res<State<PlayerActionState>>,
-    envir: Envir,
-    clock: Clock,
+    currently_visible_builder: CurrentlyVisibleBuilder,
     mut explored: ResMut<Explored>,
     elevation_visibility: Res<ElevationVisibility>,
     mut moved_items: Query<
@@ -155,13 +153,11 @@ pub(crate) fn update_visualization_on_item_move(
         Changed<Pos>,
     >,
     child_items: Query<&Appearance, (With<Parent>, Without<Pos>)>,
-    players: Query<&Pos, With<Player>>,
 ) {
     let start = Instant::now();
 
     if moved_items.iter().peekable().peek().is_some() {
-        let &player_pos = players.single();
-        let currently_visible = envir.currently_visible(&clock, &player_action_state, player_pos);
+        let currently_visible = currently_visible_builder.for_player();
         let commands = Arc::new(Mutex::new(commands));
         let explored = Arc::new(Mutex::new(&mut *explored));
 

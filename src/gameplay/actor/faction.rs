@@ -287,20 +287,20 @@ impl Faction {
 
     pub(crate) fn enemies(
         &self,
-        envir: &Envir,
-        clock: &Clock,
+        currently_visible_builder: &CurrentlyVisibleBuilder,
         factions: &[(Pos, &Self)],
         actor: &ActorItem,
     ) -> Vec<Pos> {
-        let not_asleep = PlayerActionState::Normal; // For now NPCs don't sleep
-        let currently_visible = envir.currently_visible(clock, &not_asleep, *actor.pos);
+        let currently_visible = currently_visible_builder.for_npc(*actor.pos);
 
         factions
             .iter()
             .filter(|(_, other_faction)| self.dislikes(other_faction))
             .map(|(enemy_pos, _)| enemy_pos)
             .copied()
-            .filter(|enemy_pos| actor.aquatic.is_none() || envir.is_water(*enemy_pos))
+            .filter(|enemy_pos| {
+                actor.aquatic.is_none() || currently_visible_builder.envir.is_water(*enemy_pos)
+            })
             .filter(|enemy_pos| currently_visible.can_see(*enemy_pos, None) == Visible::Seen)
             .collect::<Vec<Pos>>()
     }

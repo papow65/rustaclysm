@@ -1,5 +1,6 @@
 mod asset_storage;
 mod camera_offset;
+mod currently_visible;
 mod envir;
 mod expanded;
 mod explored;
@@ -18,10 +19,10 @@ mod zone_level_entities;
 mod zone_level_ids;
 
 pub(crate) use self::{
-    asset_storage::*, camera_offset::*, envir::*, expanded::*, explored::*, infos::*, location::*,
-    map_manager::*, map_memory_manager::*, model_factory::*, overmap_buffer_manager::*,
-    overmap_manager::*, relative_segments::*, spawner::*, subzone_level_entities::*, timeouts::*,
-    zone_level_entities::*, zone_level_ids::*,
+    asset_storage::*, camera_offset::*, currently_visible::*, envir::*, expanded::*, explored::*,
+    infos::*, location::*, map_manager::*, map_memory_manager::*, model_factory::*,
+    overmap_buffer_manager::*, overmap_manager::*, relative_segments::*, spawner::*,
+    subzone_level_entities::*, timeouts::*, zone_level_entities::*, zone_level_ids::*,
 };
 
 use crate::prelude::*;
