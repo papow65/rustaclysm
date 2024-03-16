@@ -1,5 +1,5 @@
 use super::{
-    state::FocusState,
+    focus::FocusState,
     systems::{manage_keyboard_input, manage_mouse_input},
 };
 use crate::prelude::{

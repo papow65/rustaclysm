@@ -1,6 +1,9 @@
 use crate::prelude::*;
-use bevy::prelude::{Color, EventWriter, Resource};
+use bevy::prelude::{Color, Component, EventWriter, Resource};
 use std::fmt;
+
+#[derive(Debug, Component)]
+pub(crate) struct Player;
 
 #[derive(Debug)]
 enum PlayerBehavior {

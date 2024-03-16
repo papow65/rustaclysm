@@ -113,6 +113,9 @@ pub(crate) struct CorpseRaise {
 }
 
 #[derive(Component)]
+pub(crate) struct PlayerWielded;
+
+#[derive(Component)]
 pub(crate) struct CameraBase;
 
 #[derive(Component)]

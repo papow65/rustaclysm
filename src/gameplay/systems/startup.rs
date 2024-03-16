@@ -33,7 +33,6 @@ pub(crate) fn create_independent_resources(mut commands: Commands) {
     commands.insert_resource(MeshCaches::default());
     commands.insert_resource(CameraOffset::default());
     commands.insert_resource(InstructionQueue::default());
-    commands.insert_resource(PlayerActionState::default());
     commands.insert_resource(VisualizationUpdate::Smart);
 }
 

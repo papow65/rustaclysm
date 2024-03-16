@@ -9,7 +9,6 @@ impl Plugin for GameplayPlugin {
 
         app.add_plugins((
             ActorPlugin,
-            BehaviorPlugin,
             HudPlugin,
             BaseScreenPlugin,
             CharacterScreenPlugin,
