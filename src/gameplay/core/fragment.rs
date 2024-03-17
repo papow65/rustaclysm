@@ -1,12 +1,21 @@
-use crate::prelude::ObjectName;
+use crate::prelude::Pos;
 use bevy::prelude::{Color, TextSection, TextStyle};
 use regex::Regex;
 use std::{cmp::Eq, fmt, sync::OnceLock};
 
 #[derive(Clone, Debug, Default, PartialEq)]
+pub(crate) enum Positioning {
+    Pos(Pos),
+    Player,
+    #[default]
+    None,
+}
+
+#[derive(Clone, Debug, Default, PartialEq)]
 pub(crate) struct Fragment {
     pub(crate) text: String,
     pub(crate) color: Option<Color>,
+    pub(crate) positioning: Positioning,
 }
 
 impl Fragment {
@@ -17,6 +26,7 @@ impl Fragment {
         Self {
             text: text.into(),
             color: None,
+            positioning: Positioning::None,
         }
     }
 
@@ -27,6 +37,18 @@ impl Fragment {
         Self {
             text: text.into(),
             color: Some(color),
+            positioning: Positioning::None,
+        }
+    }
+
+    pub(crate) fn positioned<S>(text: S, color: Color, pos: Pos) -> Self
+    where
+        S: Into<String>,
+    {
+        Self {
+            text: text.into(),
+            color: Some(color),
+            positioning: Positioning::Pos(pos),
         }
     }
 }
@@ -44,13 +66,6 @@ impl Phrase {
     pub(crate) fn new(text: impl Into<String>) -> Self {
         Self {
             fragments: vec![Fragment::new(text.into())],
-        }
-    }
-
-    #[must_use]
-    pub(crate) fn from_name(name: &ObjectName) -> Self {
-        Self {
-            fragments: vec![name.single()],
         }
     }
 

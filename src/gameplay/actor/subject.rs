@@ -1,4 +1,7 @@
-use crate::prelude::{Fragment, Phrase, GOOD_TEXT_COLOR};
+use crate::{
+    gameplay::Positioning,
+    prelude::{Fragment, Phrase, GOOD_TEXT_COLOR},
+};
 
 #[derive(Clone, Debug)]
 pub(crate) enum Subject {
@@ -12,6 +15,7 @@ impl Subject {
             Self::You => Phrase::from_fragment(Fragment {
                 text: String::from("You"),
                 color: Some(GOOD_TEXT_COLOR),
+                positioning: Positioning::Player,
             })
             .add(second_person),
             Self::Other(phrase) => phrase.add(third_person),
@@ -23,6 +27,6 @@ impl Subject {
     }
 
     pub(crate) fn is(self) -> Phrase {
-        self.phrase("is", String::from("are"))
+        self.phrase("are", String::from("is"))
     }
 }

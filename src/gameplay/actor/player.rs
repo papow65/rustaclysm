@@ -5,13 +5,6 @@ use std::fmt;
 #[derive(Debug, Component)]
 pub(crate) struct Player;
 
-#[derive(Debug)]
-enum PlayerBehavior {
-    Perform(PlannedAction),
-    Feedback(Message),
-    NoEffect,
-}
-
 /** Current action of the player character
 
 Conceptually, this is a child state of [`GameplayScreenState::Base`]. */
@@ -62,7 +55,7 @@ impl PlayerActionState {
     pub(crate) fn plan_action(
         &self,
         next_state: &mut ResMut<NextState<Self>>,
-        message_writer: &mut EventWriter<Message>,
+        message_writer: &mut MessageWriter,
         healing_writer: &mut EventWriter<ActorEvent<Healing>>,
         envir: &Envir,
         instruction_queue: &mut InstructionQueue,
@@ -72,19 +65,18 @@ impl PlayerActionState {
         enemies: &[Pos],
     ) -> Option<PlannedAction> {
         while let Some(instruction) = instruction_queue.pop() {
-            match self.plan(next_state, envir, *player.pos, instruction, now) {
-                PlayerBehavior::Perform(action) => {
-                    return Some(action);
-                }
-                PlayerBehavior::Feedback(message) => {
-                    message_writer.send(message);
-                    // Invalid instruction
-                    // Continue with next instruction
-                }
-                PlayerBehavior::NoEffect => {
-                    // Valid instruction, but no action performed.
-                    // Continue with next instruction
-                }
+            if let Some(action) = self.plan(
+                next_state,
+                message_writer,
+                envir,
+                *player.pos,
+                instruction,
+                now,
+            ) {
+                return Some(action);
+            } else {
+                // The action was either an invalid or one that took no time (like [`PlannedAction::ExamineItem`].
+                // Continue with next instruction
             }
         }
 
@@ -123,66 +115,79 @@ impl PlayerActionState {
     fn plan(
         &self,
         next_state: &mut ResMut<NextState<Self>>,
+        message_writer: &mut MessageWriter,
         envir: &Envir,
         player_pos: Pos,
         instruction: QueuedInstruction,
         now: Timestamp,
-    ) -> PlayerBehavior {
+    ) -> Option<PlannedAction> {
         //println!("processing instruction: {instruction:?}");
         match (&self, instruction) {
             (Self::Sleeping { .. }, QueuedInstruction::Finished) => {
                 next_state.set(Self::Normal);
-                PlayerBehavior::Feedback(Message::info(Phrase::new("You wake up")))
+                message_writer.you("wake up").send_info();
+                None
             }
             (Self::Sleeping { .. }, _) => {
                 // Can not be interrupted
-                PlayerBehavior::Feedback(Message::warn(Phrase::new("You are still asleep. Zzz...")))
+                message_writer.you("are still asleep. Zzz...").send_error();
+                None
             }
             (Self::Normal, QueuedInstruction::Offset(PlayerDirection::Here)) => {
-                PlayerBehavior::Perform(PlannedAction::Stay {
+                Some(PlannedAction::Stay {
                     duration: StayDuration::Short,
                 })
             }
             (Self::Normal, QueuedInstruction::Wait) => {
                 next_state.set(Self::start_waiting(now));
-                PlayerBehavior::Feedback(Message::info(Phrase::new("You wait...")))
+                message_writer.you("wait...").send_info();
+                None
             }
             (Self::Normal, QueuedInstruction::Sleep) => {
                 next_state.set(Self::start_sleeping(now));
-                PlayerBehavior::Feedback(Message::info(Phrase::new("You fall asleep... Zzz...")))
+                message_writer.you("fall asleep... Zzz...").send_info();
+                None
             }
             (Self::Normal, QueuedInstruction::ToggleAutoDefend) => {
                 next_state.set(Self::AutoDefend);
-                PlayerBehavior::Feedback(Message::info(Phrase::new("You start defending...")))
+                message_writer.you("start defending...").send_warn();
+                None
             }
-            (_, QueuedInstruction::ToggleAutoTravel) => PlayerBehavior::Feedback(Message::error(
-                Phrase::new("First examine your destination"),
-            )),
+            (_, QueuedInstruction::ToggleAutoTravel) => {
+                message_writer
+                    .str("First examine your destination")
+                    .send_error();
+                None
+            }
             (Self::Attacking, QueuedInstruction::Offset(PlayerDirection::Here)) => {
-                PlayerBehavior::Feedback(Message::warn(Phrase::new("You can't attack yourself")))
+                message_writer.you("can't attack yourself").send_error();
+                None
             }
             (Self::Waiting { .. }, QueuedInstruction::Interrupted) => {
                 next_state.set(Self::Normal);
-                PlayerBehavior::Feedback(Message::warn(Phrase::new(
-                    "You spot an enemy and stop waiting",
-                )))
+                message_writer
+                    .you("spot an enemy and stop waiting")
+                    .send_warn();
+                None
             }
             (Self::Waiting { .. }, QueuedInstruction::Finished) => {
                 next_state.set(Self::Normal);
-                PlayerBehavior::Feedback(Message::info(Phrase::new("Finished waiting")))
+                message_writer.str("Finished waiting").send_info();
+                None
             }
             (Self::Pulping { .. }, QueuedInstruction::Interrupted) => {
                 next_state.set(Self::Normal);
-                PlayerBehavior::Feedback(Message::warn(Phrase::new(
-                    "You spot an enemy and stop pulping",
-                )))
+                message_writer
+                    .you("spot an enemy and stop pulping")
+                    .send_warn();
+                None
             }
             (Self::Attacking, QueuedInstruction::Attack)
             | (Self::Smashing, QueuedInstruction::Smash)
             | (Self::Dragging { .. }, QueuedInstruction::Drag | QueuedInstruction::CancelAction)
             | (Self::Pulping { .. }, QueuedInstruction::Finished) => {
                 next_state.set(Self::Normal);
-                PlayerBehavior::NoEffect
+                None
             }
             (
                 Self::Dragging {
@@ -191,7 +196,7 @@ impl PlayerActionState {
                 QueuedInstruction::Finished,
             ) => {
                 next_state.set(Self::Dragging { active_from: None });
-                PlayerBehavior::NoEffect
+                None
             }
             (
                 Self::Dragging {
@@ -199,9 +204,12 @@ impl PlayerActionState {
                 },
                 _,
             ) => {
-                PlayerBehavior::Feedback(Message::warn(Phrase::new("You are still dragging items")))
+                message_writer.you("are still dragging items").send_warn();
+                None
             }
-            (_, instruction) => self.generic_plan(next_state, envir, player_pos, instruction),
+            (_, instruction) => {
+                self.generic_plan(next_state, message_writer, envir, player_pos, instruction)
+            }
         }
     }
 
@@ -210,10 +218,11 @@ impl PlayerActionState {
     fn generic_plan(
         &self,
         next_state: &mut ResMut<NextState<Self>>,
+        message_writer: &mut MessageWriter,
         envir: &Envir,
         player_pos: Pos,
         instruction: QueuedInstruction,
-    ) -> PlayerBehavior {
+    ) -> Option<PlannedAction> {
         //println!("processing generic instruction: {instruction:?}");
         match instruction {
             QueuedInstruction::CancelAction
@@ -222,47 +231,53 @@ impl PlayerActionState {
             | QueuedInstruction::ToggleAutoTravel
             | QueuedInstruction::ToggleAutoDefend => {
                 next_state.set(Self::Normal);
-                PlayerBehavior::NoEffect
+                None
             }
-            QueuedInstruction::Offset(direction) => {
-                self.handle_offset(next_state, envir, player_pos, direction.to_nbor())
+            QueuedInstruction::Offset(direction) => self.handle_offset(
+                next_state,
+                message_writer,
+                envir,
+                player_pos,
+                direction.to_nbor(),
+            ),
+            QueuedInstruction::Wield(item) => Some(PlannedAction::Wield { item }),
+            QueuedInstruction::Unwield(item) => Some(PlannedAction::Unwield { item }),
+            QueuedInstruction::Pickup(item) => Some(PlannedAction::Pickup { item }),
+            QueuedInstruction::Dump(item, direction) => Some(PlannedAction::MoveItem {
+                item,
+                to: Nbor::Horizontal(direction),
+            }),
+            QueuedInstruction::Attack => {
+                Self::handle_attack(next_state, message_writer, envir, player_pos)
             }
-            QueuedInstruction::Wield(item) => {
-                PlayerBehavior::Perform(PlannedAction::Wield { item })
+            QueuedInstruction::Smash => {
+                Self::handle_smash(next_state, message_writer, envir, player_pos)
             }
-            QueuedInstruction::Unwield(item) => {
-                PlayerBehavior::Perform(PlannedAction::Unwield { item })
+            QueuedInstruction::Pulp => {
+                Self::handle_pulp(next_state, message_writer, envir, player_pos)
             }
-            QueuedInstruction::Pickup(item) => {
-                PlayerBehavior::Perform(PlannedAction::Pickup { item })
+            QueuedInstruction::Close => {
+                Self::handle_close(next_state, message_writer, envir, player_pos)
             }
-            QueuedInstruction::Dump(item, direction) => {
-                PlayerBehavior::Perform(PlannedAction::MoveItem {
-                    item,
-                    to: Nbor::Horizontal(direction),
-                })
-            }
-            QueuedInstruction::Attack => Self::handle_attack(next_state, envir, player_pos),
-            QueuedInstruction::Smash => Self::handle_smash(next_state, envir, player_pos),
-            QueuedInstruction::Pulp => Self::handle_pulp(next_state, envir, player_pos),
-            QueuedInstruction::Close => Self::handle_close(next_state, envir, player_pos),
             QueuedInstruction::Drag => {
                 next_state.set(Self::Dragging { active_from: None }); // 'active_from' will temporary be set after moving
-                PlayerBehavior::NoEffect
+                None
             }
-            QueuedInstruction::ExamineItem(item) => {
-                PlayerBehavior::Perform(PlannedAction::ExamineItem { item })
-            }
-            QueuedInstruction::ChangePace => PlayerBehavior::Perform(PlannedAction::ChangePace),
+            QueuedInstruction::ExamineItem(item) => Some(PlannedAction::ExamineItem { item }),
+            QueuedInstruction::ChangePace => Some(PlannedAction::ChangePace),
             QueuedInstruction::Interrupted => {
                 next_state.set(Self::Normal);
-                PlayerBehavior::Feedback(Message::error(Phrase::new(
-                    "Iterrupted while not waiting",
-                )))
+                message_writer
+                    .str("Iterrupted while not waiting")
+                    .send_error();
+                None
             }
             QueuedInstruction::Finished => {
                 next_state.set(Self::Normal);
-                PlayerBehavior::Feedback(Message::error(Phrase::new("Finished while not waiting")))
+                message_writer
+                    .str("Finished while not waiting")
+                    .send_error();
+                None
             }
         }
     }
@@ -270,13 +285,15 @@ impl PlayerActionState {
     fn handle_offset(
         &self,
         next_state: &mut ResMut<NextState<Self>>,
+        message_writer: &mut MessageWriter,
         envir: &Envir,
         player_pos: Pos,
         raw_nbor: Nbor,
-    ) -> PlayerBehavior {
+    ) -> Option<PlannedAction> {
         if !matches!(*self, Self::Sleeping { .. }) {
-            if let Err(message) = envir.get_nbor(player_pos, raw_nbor) {
-                return PlayerBehavior::Feedback(message);
+            if let Err(failure) = envir.get_nbor(player_pos, raw_nbor) {
+                message_writer.str(failure).send_error();
+                return None;
             }
         }
 
@@ -284,14 +301,14 @@ impl PlayerActionState {
             Self::Sleeping { .. } => {
                 panic!("{self:?} {player_pos:?} {raw_nbor:?}");
             }
-            Self::Normal => PlayerBehavior::Perform(PlannedAction::Step { to: raw_nbor }),
+            Self::Normal => Some(PlannedAction::Step { to: raw_nbor }),
             Self::Attacking => {
                 next_state.set(Self::Normal);
-                PlayerBehavior::Perform(PlannedAction::Attack { target: raw_nbor })
+                Some(PlannedAction::Attack { target: raw_nbor })
             }
             Self::Smashing => {
                 next_state.set(Self::Normal);
-                PlayerBehavior::Perform(PlannedAction::Smash { target: raw_nbor })
+                Some(PlannedAction::Smash { target: raw_nbor })
             }
             Self::Pulping {
                 active_target: None,
@@ -299,11 +316,10 @@ impl PlayerActionState {
                 //eprintln!("Inactive pulping");
                 if let Nbor::Horizontal(target) = raw_nbor {
                     //eprintln!("Activating pulping");
-                    PlayerBehavior::Perform(PlannedAction::Pulp { target })
+                    Some(PlannedAction::Pulp { target })
                 } else {
-                    PlayerBehavior::Feedback(Message::warn(Phrase::new(
-                        "You can't pulp vertically",
-                    )))
+                    message_writer.you("can't pulp vertically").send_error();
+                    None
                 }
             }
             Self::Pulping {
@@ -314,18 +330,17 @@ impl PlayerActionState {
             Self::Closing => {
                 next_state.set(Self::Normal);
                 if let Nbor::Horizontal(target) = raw_nbor {
-                    PlayerBehavior::Perform(PlannedAction::Close { target })
+                    Some(PlannedAction::Close { target })
                 } else {
-                    PlayerBehavior::Feedback(Message::warn(Phrase::new(
-                        "You can't close vertically",
-                    )))
+                    message_writer.you("can't close vertically").send_error();
+                    None
                 }
             }
             Self::Dragging { active_from: None } => {
                 next_state.set(Self::Dragging {
                     active_from: Some(player_pos),
                 });
-                PlayerBehavior::Perform(PlannedAction::Step { to: raw_nbor })
+                Some(PlannedAction::Step { to: raw_nbor })
             }
             Self::Dragging {
                 active_from: Some(active_from),
@@ -334,56 +349,65 @@ impl PlayerActionState {
             }
             Self::Waiting { .. } | Self::AutoTravel { .. } | Self::AutoDefend => {
                 next_state.set(Self::Normal);
-                PlayerBehavior::NoEffect
+                None
             }
         }
     }
 
     fn handle_attack(
         next_state: &mut ResMut<NextState<Self>>,
+        message_writer: &mut MessageWriter,
         envir: &Envir,
         pos: Pos,
-    ) -> PlayerBehavior {
+    ) -> Option<PlannedAction> {
         let attackable_nbors = envir
             .nbors_for_exploring(pos, QueuedInstruction::Attack)
             .collect::<Vec<_>>();
         match attackable_nbors.len() {
-            0 => PlayerBehavior::Feedback(Message::warn(Phrase::new("no targets nearby"))),
-            1 => PlayerBehavior::Perform(PlannedAction::Attack {
+            0 => {
+                message_writer.str("no targets nearby").send_error();
+                None
+            }
+            1 => Some(PlannedAction::Attack {
                 target: attackable_nbors[0],
             }),
             _ => {
                 next_state.set(Self::Attacking);
-                PlayerBehavior::NoEffect
+                None
             }
         }
     }
 
     fn handle_smash(
         next_state: &mut ResMut<NextState<Self>>,
+        message_writer: &mut MessageWriter,
         envir: &Envir,
         pos: Pos,
-    ) -> PlayerBehavior {
+    ) -> Option<PlannedAction> {
         let smashable_nbors = envir
             .nbors_for_exploring(pos, QueuedInstruction::Smash)
             .collect::<Vec<_>>();
         match smashable_nbors.len() {
-            0 => PlayerBehavior::Feedback(Message::warn(Phrase::new("no targets nearby"))),
-            1 => PlayerBehavior::Perform(PlannedAction::Smash {
+            0 => {
+                message_writer.str("no targets nearby").send_error();
+                None
+            }
+            1 => Some(PlannedAction::Smash {
                 target: smashable_nbors[0],
             }),
             _ => {
                 next_state.set(Self::Smashing);
-                PlayerBehavior::NoEffect
+                None
             }
         }
     }
 
     fn handle_pulp(
         next_state: &mut ResMut<NextState<Self>>,
+        message_writer: &mut MessageWriter,
         envir: &Envir,
         pos: Pos,
-    ) -> PlayerBehavior {
+    ) -> Option<PlannedAction> {
         let pulpable_nbors = envir
             .nbors_for_exploring(pos, QueuedInstruction::Pulp)
             .filter_map(|nbor| {
@@ -396,13 +420,16 @@ impl PlayerActionState {
             .collect::<Vec<_>>();
         //eprintln!("Pulping {} targets", pulpable_nbors.len());
         match pulpable_nbors.len() {
-            0 => PlayerBehavior::Feedback(Message::warn(Phrase::new("no targets nearby"))),
+            0 => {
+                message_writer.str("no targets nearby").send_error();
+                None
+            }
             1 => {
                 //eprintln!("Pulping target found -> active");
                 next_state.set(Self::Pulping {
                     active_target: Some(pulpable_nbors[0]),
                 });
-                PlayerBehavior::Perform(PlannedAction::Pulp {
+                Some(PlannedAction::Pulp {
                     target: pulpable_nbors[0],
                 })
             }
@@ -411,16 +438,17 @@ impl PlayerActionState {
                 next_state.set(Self::Pulping {
                     active_target: None,
                 });
-                PlayerBehavior::NoEffect
+                None
             }
         }
     }
 
     fn handle_close(
         next_state: &mut ResMut<NextState<Self>>,
+        message_writer: &mut MessageWriter,
         envir: &Envir,
         pos: Pos,
-    ) -> PlayerBehavior {
+    ) -> Option<PlannedAction> {
         let closable_nbors = envir
             .nbors_for_exploring(pos, QueuedInstruction::Close)
             .filter_map(|nbor| {
@@ -432,13 +460,16 @@ impl PlayerActionState {
             })
             .collect::<Vec<_>>();
         match closable_nbors.len() {
-            0 => PlayerBehavior::Feedback(Message::warn(Phrase::new("nothing to close nearby"))),
-            1 => PlayerBehavior::Perform(PlannedAction::Close {
+            0 => {
+                message_writer.str("nothing to close nearby").send_error();
+                None
+            }
+            1 => Some(PlannedAction::Close {
                 target: closable_nbors[0],
             }),
             _ => {
                 next_state.set(Self::Closing);
-                PlayerBehavior::NoEffect
+                None
             }
         }
     }

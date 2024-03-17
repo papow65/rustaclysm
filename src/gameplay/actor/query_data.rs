@@ -25,19 +25,7 @@ impl ActorItem<'_> {
         if self.player.is_some() {
             Subject::You
         } else {
-            Subject::Other(Phrase::from_name(self.name))
-        }
-    }
-
-    #[allow(unused)]
-    pub(crate) fn fragment(&self) -> Fragment {
-        if self.player.is_some() {
-            Fragment {
-                text: String::from("you"),
-                color: Some(GOOD_TEXT_COLOR),
-            }
-        } else {
-            self.name.single()
+            Subject::Other(Phrase::from_fragment(self.name.single(*self.pos)))
         }
     }
 
@@ -101,7 +89,7 @@ impl ActorItem<'_> {
     pub(crate) fn step(
         &self,
         commands: &mut Commands,
-        message_writer: &mut EventWriter<Message>,
+        message_writer: &mut MessageWriter,
         toggle_writer: &mut EventWriter<TerrainEvent<Toggle>>,
         envir: &mut Envir,
         step: &Step,
@@ -121,18 +109,20 @@ impl ActorItem<'_> {
                  *            VERTICAL
             }*/
             Collision::Blocked(obstacle) => {
-                message_writer.send(Message::warn(
-                    self.subject()
-                        .verb("crash", "es")
-                        .add("into")
-                        .push(obstacle.single()),
-                ));
+                message_writer
+                    .subject(self.subject())
+                    .verb("crash", "es")
+                    .add("into")
+                    .join(|p| p.push(obstacle.single(to)))
+                    .send_warn();
                 self.no_impact()
             }
             Collision::Ledged => {
-                message_writer.send(Message::warn(
-                    self.subject().verb("halt", "s").add("at the ledge"),
-                ));
+                message_writer
+                    .subject(self.subject())
+                    .verb("halt", "s")
+                    .add("at the ledge")
+                    .send_warn();
                 self.no_impact()
             }
             Collision::Opened(door) => {
@@ -187,7 +177,7 @@ impl ActorItem<'_> {
 
     pub(crate) fn attack(
         &self,
-        message_writer: &mut EventWriter<Message>,
+        message_writer: &mut MessageWriter,
         damage_writer: &mut EventWriter<ActorEvent<Damage>>,
         envir: &Envir,
         infos: &Infos,
@@ -195,9 +185,11 @@ impl ActorItem<'_> {
         attack: &Attack,
     ) -> Impact {
         let Some(high_speed) = self.high_speed() else {
-            message_writer.send(Message::warn(
-                self.subject().is().add("too exhausted to attack"),
-            ));
+            message_writer
+                .subject(self.subject())
+                .is()
+                .add("too exhausted to attack")
+                .send_error();
             return self.no_impact();
         };
 
@@ -215,16 +207,18 @@ impl ActorItem<'_> {
                 ActorEvent::new,
             )
         } else {
-            message_writer.send(Message::warn(
-                self.subject().verb("attack", "s").add("nothing"),
-            ));
+            message_writer
+                .subject(self.subject())
+                .verb("attack", "s")
+                .add("nothing")
+                .send_warn();
             self.no_impact()
         }
     }
 
     pub(crate) fn smash(
         &self,
-        message_writer: &mut EventWriter<Message>,
+        message_writer: &mut MessageWriter,
         damage_writer: &mut EventWriter<TerrainEvent<Damage>>,
         envir: &Envir,
         infos: &Infos,
@@ -232,9 +226,11 @@ impl ActorItem<'_> {
         smash: &Smash,
     ) -> Impact {
         let Some(high_speed) = self.high_speed() else {
-            message_writer.send(Message::warn(
-                self.subject().is().add("too exhausted to smash"),
-            ));
+            message_writer
+                .subject(self.subject())
+                .is()
+                .add("too exhausted to smash")
+                .send_error();
             return self.no_impact();
         };
 
@@ -242,16 +238,20 @@ impl ActorItem<'_> {
 
         let stair_pos = Pos::new(target.x, self.pos.level, target.z);
         if self.pos.level.up() == Some(target.level) && envir.stairs_up_to(stair_pos).is_none() {
-            message_writer.send(Message::warn(
-                self.subject().verb("smash", "es").add("the ceiling"),
-            ));
+            message_writer
+                .subject(self.subject())
+                .verb("smash", "es")
+                .add("the ceiling")
+                .send_warn();
             self.no_impact()
         } else if self.pos.level.down() == Some(target.level)
             && envir.stairs_down_to(stair_pos).is_none()
         {
-            message_writer.send(Message::warn(
-                self.subject().verb("smash", "es").add("the floor"),
-            ));
+            message_writer
+                .subject(self.subject())
+                .verb("smash", "es")
+                .add("the floor")
+                .send_warn();
             self.no_impact()
         } else if let Some(smashable) = envir.find_smashable(target) {
             self.damage(
@@ -265,16 +265,18 @@ impl ActorItem<'_> {
                 TerrainEvent::new,
             )
         } else {
-            message_writer.send(Message::warn(
-                self.subject().verb("smash", "es").add("nothing"),
-            ));
+            message_writer
+                .subject(self.subject())
+                .verb("smash", "es")
+                .add("nothing")
+                .send_warn();
             self.no_impact()
         }
     }
 
     pub(crate) fn pulp(
         &self,
-        message_writer: &mut EventWriter<Message>,
+        message_writer: &mut MessageWriter,
         corpse_damage_writer: &mut EventWriter<CorpseEvent<Damage>>,
         envir: &Envir,
         infos: &Infos,
@@ -282,9 +284,11 @@ impl ActorItem<'_> {
         pulp: &Pulp,
     ) -> Impact {
         let Some(high_speed) = self.high_speed() else {
-            message_writer.send(Message::warn(
-                self.subject().is().add("too exhausted to pulp"),
-            ));
+            message_writer
+                .subject(self.subject())
+                .is()
+                .add("too exhausted to pulp")
+                .send_warn();
             return self.no_impact();
         };
 
@@ -302,16 +306,18 @@ impl ActorItem<'_> {
                 CorpseEvent::new,
             )
         } else {
-            message_writer.send(Message::warn(
-                self.subject().verb("pulp", "s").add("nothing"),
-            ));
+            message_writer
+                .subject(self.subject())
+                .verb("pulp", "s")
+                .add("nothing")
+                .send_warn();
             self.no_impact()
         }
     }
 
     pub(crate) fn close(
         &self,
-        message_writer: &mut EventWriter<Message>,
+        message_writer: &mut MessageWriter,
         toggle_writer: &mut EventWriter<TerrainEvent<Toggle>>,
         envir: &Envir,
         close: &Close,
@@ -320,14 +326,13 @@ impl ActorItem<'_> {
 
         if let Some((closeable, closeable_name)) = envir.find_closeable(target) {
             if let Some((_, character)) = envir.find_character(target) {
-                message_writer.send(Message::warn(
-                    self.subject()
-                        .verb("can't", "")
-                        .add("close")
-                        .push(closeable_name.single())
-                        .add("on")
-                        .push(character.single()),
-                ));
+                message_writer
+                    .subject(self.subject())
+                    .simple("can't close")
+                    .join(|p| p.push(closeable_name.single(target)))
+                    .add("on")
+                    .join(|p| p.push(character.single(target)))
+                    .send_warn();
                 self.no_impact()
             } else {
                 toggle_writer.send(TerrainEvent {
@@ -339,11 +344,11 @@ impl ActorItem<'_> {
         } else {
             let missing = ObjectName::missing();
             let obstacle = envir.find_terrain(target).unwrap_or(&missing);
-            message_writer.send(Message::warn(
-                Phrase::from_name(self.name)
-                    .add("can't close")
-                    .push(obstacle.single()),
-            ));
+            message_writer
+                .subject(self.subject())
+                .simple("can't close")
+                .join(|p| p.push(obstacle.single(target)))
+                .send_warn();
             self.no_impact()
         }
     }
@@ -351,7 +356,7 @@ impl ActorItem<'_> {
     pub(crate) fn wield(
         &self,
         commands: &mut Commands,
-        message_writer: &mut EventWriter<Message>,
+        message_writer: &mut MessageWriter,
         location: &mut Location,
         hierarchy: &Hierarchy,
         item: &ItemItem,
@@ -372,7 +377,7 @@ impl ActorItem<'_> {
     pub(crate) fn unwield(
         &self,
         commands: &mut Commands,
-        message_writer: &mut EventWriter<Message>,
+        message_writer: &mut MessageWriter,
         location: &mut Location,
         hierarchy: &Hierarchy,
         item: &ItemItem,
@@ -393,7 +398,7 @@ impl ActorItem<'_> {
     pub(crate) fn pickup(
         &self,
         commands: &mut Commands,
-        message_writer: &mut EventWriter<Message>,
+        message_writer: &mut MessageWriter,
         location: &mut Location,
         hierarchy: &Hierarchy,
         item: &ItemItem,
@@ -410,7 +415,7 @@ impl ActorItem<'_> {
     fn take(
         &self,
         commands: &mut Commands,
-        message_writer: &mut EventWriter<Message>,
+        message_writer: &mut MessageWriter,
         location: &mut Location,
         target: &Container,
         taken: &ItemItem,
@@ -441,53 +446,37 @@ impl ActorItem<'_> {
             );
         }
 
-        match target.check_add(self.name.single(), taken.containable, taken.amount) {
-            Ok(allowed_amount) => {
-                if &allowed_amount < taken.amount {
-                    self.take_some(
-                        commands,
-                        message_writer,
-                        location,
-                        target.entity,
-                        allowed_amount,
-                        taken,
-                    );
-                } else {
-                    self.take_all(
-                        commands,
-                        message_writer,
-                        location,
-                        target.entity,
-                        taken.entity,
-                        taken.fragments(),
-                    );
-                }
-                self.activate()
+        if let Ok(allowed_amount) = target.check_add(
+            message_writer,
+            self.subject(),
+            taken.containable,
+            taken.amount,
+        ) {
+            message_writer
+                .subject(self.subject())
+                .verb("pick", "s")
+                .add("up")
+                .join(|p| p.extend(taken.fragments()))
+                .send_info();
+
+            if &allowed_amount < taken.amount {
+                Self::take_some(commands, location, target.entity, allowed_amount, taken);
+            } else {
+                Self::take_all(commands, location, target.entity, taken.entity);
             }
-            Err(messages) => {
-                assert!(!messages.is_empty(), "Empty messages are not allowed");
-                message_writer.send_batch(messages);
-                self.no_impact()
-            }
+            self.activate()
+        } else {
+            self.no_impact()
         }
     }
 
     fn take_some(
-        &self,
         commands: &mut Commands,
-        message_writer: &mut EventWriter<Message>,
         location: &mut Location,
         container_entity: Entity,
         allowed_amount: Amount,
         taken: &ItemItem,
     ) {
-        message_writer.send(Message::info(
-            self.subject()
-                .verb("pick", "s")
-                .add("up")
-                .extend(taken.fragments()),
-        ));
-
         let left_over_amount = taken.amount - &allowed_amount;
         //dbg!(&split_amount);
         //dbg!(&allowed_amount);
@@ -520,20 +509,11 @@ impl ActorItem<'_> {
     }
 
     fn take_all(
-        &self,
         commands: &mut Commands,
-        message_writer: &mut EventWriter<Message>,
         location: &mut Location,
         container_entity: Entity,
         taken_entity: Entity,
-        taken_name: Vec<Fragment>,
     ) {
-        message_writer.send(Message::info(
-            self.subject()
-                .verb("pick", "s")
-                .add("up")
-                .extend(taken_name),
-        ));
         commands
             .entity(container_entity)
             .push_children(&[taken_entity]);
@@ -544,7 +524,7 @@ impl ActorItem<'_> {
     pub(crate) fn move_item(
         &self,
         commands: &mut Commands,
-        message_writer: &mut EventWriter<Message>,
+        message_writer: &mut MessageWriter,
         subzone_level_entities: &SubzoneLevelEntities,
         location: &mut Location,
         moved: &ItemItem,
@@ -555,7 +535,7 @@ impl ActorItem<'_> {
             let potentially_valid = HorizontalDirection::try_from(offset).is_ok()
                 || matches!(offset.level, LevelOffset { h: -1 | 1 });
             if !potentially_valid {
-                message_writer.send(Message::error(Phrase::new("Too far to move")));
+                message_writer.str("Too far to move").send_error();
                 return self.no_impact();
             }
         }
@@ -570,11 +550,11 @@ impl ActorItem<'_> {
         // TODO Check for obstacles
         let to = self.pos.raw_nbor(to).expect("Valid position");
 
-        message_writer.send(Message::info(
-            self.subject()
-                .verb(if dump { "drop" } else { "move" }, "s")
-                .extend(moved.fragments()),
-        ));
+        message_writer
+            .subject(self.subject())
+            .verb(if dump { "drop" } else { "move" }, "s")
+            .join(|p| p.extend(moved.fragments()))
+            .send_info();
 
         let Some(new_parent) = subzone_level_entities.get(SubzoneLevel::from(to)) else {
             eprintln!("Subzone for moving not found");
@@ -588,20 +568,15 @@ impl ActorItem<'_> {
         self.activate()
     }
 
-    pub(crate) fn examine_item(
-        message_writer: &mut EventWriter<Message>,
-        infos: &Infos,
-        item: &ItemItem,
-    ) {
+    pub(crate) fn examine_item(message_writer: &mut MessageWriter, infos: &Infos, item: &ItemItem) {
         if let Some(item_info) = infos.item(&item.definition.id) {
             if let Some(description) = &item_info.description {
-                message_writer.send(Message::info(Phrase::new(
-                    match description {
+                message_writer
+                    .str(match description {
                         Description::Simple(simple) => simple,
                         Description::Complex(complex) => complex.get("str").expect("'str' key"),
-                    }
-                    .as_str(),
-                )));
+                    })
+                    .send_info();
             } else {
                 eprintln!("No description");
             }

@@ -1,4 +1,4 @@
-use crate::prelude::*;
+use crate::prelude::{CddaItemName, Fragment, ItemName, Pos, BAD_TEXT_COLOR};
 use bevy::prelude::{Color, Component};
 
 #[derive(Clone, Component, Debug)]
@@ -9,13 +9,13 @@ pub(crate) struct ObjectName {
 
 impl ObjectName {
     #[must_use]
-    pub(crate) fn single(&self) -> Fragment {
-        Fragment::colorized(self.name.single.clone(), self.color)
+    pub(crate) fn single(&self, pos: Pos) -> Fragment {
+        Fragment::positioned(self.name.single.clone(), self.color, pos)
     }
 
     #[must_use]
-    pub(crate) fn plural(&self) -> Fragment {
-        Fragment::colorized(self.name.plural.clone(), self.color)
+    pub(crate) fn plural(&self, pos: Pos) -> Fragment {
+        Fragment::positioned(self.name.plural.clone(), self.color, pos)
     }
 
     #[must_use]

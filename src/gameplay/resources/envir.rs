@@ -179,14 +179,10 @@ impl<'w, 's> Envir<'w, 's> {
     }
 
     /** Follow stairs, even when they do not go staight up or down. */
-    pub(crate) fn get_nbor(&self, from: Pos, nbor: Nbor) -> Result<Pos, Message> {
+    pub(crate) fn get_nbor(&self, from: Pos, nbor: Nbor) -> Result<Pos, &str> {
         match nbor {
-            Nbor::Up => self
-                .stairs_up_to(from)
-                .ok_or_else(|| Message::warn(Phrase::new("No stairs up"))),
-            Nbor::Down => self
-                .stairs_down_to(from)
-                .ok_or_else(|| Message::warn(Phrase::new("No stairs down"))),
+            Nbor::Up => self.stairs_up_to(from).ok_or("No stairs up"),
+            Nbor::Down => self.stairs_down_to(from).ok_or("No stairs down"),
             Nbor::Horizontal(horizontal_direction) => {
                 // No stairs
                 Ok(from.horizontal_nbor(horizontal_direction))

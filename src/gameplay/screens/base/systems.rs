@@ -120,7 +120,7 @@ pub(super) fn manage_mouse_input(
 }
 
 fn handle_queued_instruction(
-    message_writer: &mut EventWriter<Message>,
+    message_writer: &mut MessageWriter,
     focus_state: &FocusState,
     next_focus_state: &mut ResMut<NextState<FocusState>>,
     next_player_action_state: &mut ResMut<NextState<PlayerActionState>>,
@@ -136,7 +136,7 @@ fn handle_queued_instruction(
             next_focus_state.set(FocusState::Normal);
             next_player_action_state.set(PlayerActionState::AutoTravel { target });
             instruction_queue.stop_waiting();
-            message_writer.send(Message::info(Phrase::new("You start traveling...")));
+            message_writer.you("start traveling...").send_info();
         }
         (FocusState::ExaminingZoneLevel(zone_level), QueuedInstruction::ToggleAutoTravel) => {
             //println!("Autotravel zone level");
@@ -145,7 +145,7 @@ fn handle_queued_instruction(
                 target: zone_level.center_pos(),
             });
             instruction_queue.stop_waiting();
-            message_writer.send(Message::info(Phrase::new("You start traveling...")));
+            message_writer.you("start traveling...").send_info();
         }
         (FocusState::ExaminingPos(target), QueuedInstruction::Offset(offset)) => {
             if let Some(nbor_target) = target.raw_nbor(offset.to_nbor()) {
@@ -166,7 +166,7 @@ fn handle_queued_instruction(
 
 #[allow(clippy::needless_pass_by_value)]
 pub(super) fn manage_keyboard_input(
-    mut message_writer: EventWriter<Message>,
+    mut message_writer: MessageWriter,
     mut next_application_state: ResMut<NextState<ApplicationState>>,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
     focus: Focus,

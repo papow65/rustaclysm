@@ -3,9 +3,9 @@ use super::{
     systems::{
         core::{egible_character, perform_action, plan_action, proces_impact},
         handlers::{
-            combine_items, toggle_doors, update_corpses, update_damaged_characters,
-            update_damaged_corpses, update_damaged_terrain, update_explored,
-            update_healed_characters, update_stamina,
+            combine_items, spawn_broken_terrain, toggle_doors, update_corpses,
+            update_damaged_characters, update_damaged_corpses, update_damaged_terrain,
+            update_explored, update_healed_characters, update_stamina,
         },
     },
 };
@@ -49,7 +49,9 @@ impl Plugin for BehaviorPlugin {
                     (
                         // terrain events
                         // Make sure destoyed items are handled early
-                        update_damaged_terrain.run_if(on_event::<TerrainEvent<Damage>>()),
+                        update_damaged_terrain
+                            .pipe(spawn_broken_terrain)
+                            .run_if(on_event::<TerrainEvent<Damage>>()),
                         toggle_doors.run_if(on_event::<TerrainEvent<Toggle>>()),
                     )
                         .chain(),

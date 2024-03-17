@@ -54,31 +54,35 @@ pub(in super::super) fn toggle_doors(
 #[allow(clippy::needless_pass_by_value)]
 pub(in super::super) fn update_damaged_characters(
     mut commands: Commands,
-    mut message_writer: EventWriter<Message>,
+    mut message_writer: MessageWriter,
     mut damage_reader: EventReader<ActorEvent<Damage>>,
     clock: Clock,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
     mut characters: Query<
-        (&ObjectName, &mut Health, &mut Transform, Option<&Player>),
+        (
+            &ObjectName,
+            &Pos,
+            &mut Health,
+            &mut Transform,
+            Option<&Player>,
+        ),
         (With<Faction>, With<Life>),
     >,
 ) {
     let start = Instant::now();
 
     for damage in damage_reader.read() {
-        let (name, mut health, mut transform, player) = characters
+        let (name, pos, mut health, mut transform, player) = characters
             .get_mut(damage.actor_entity)
             .expect("Actor found");
         let evolution = health.lower(&damage.action);
         if health.0.is_zero() {
-            message_writer.send(Message::warn(
-                damage
-                    .action
-                    .attacker
-                    .clone()
-                    .verb("kill", "s")
-                    .push(name.single()),
-            ));
+            message_writer
+                .subject(damage.action.attacker.clone())
+                .verb("kill", "s")
+                .join(|p| p.push(name.single(*pos)))
+                .send_warn();
+
             transform.rotation = Quat::from_rotation_y(std::f32::consts::FRAC_PI_2)
                 * Quat::from_rotation_x(-std::f32::consts::FRAC_PI_2);
             commands
@@ -97,25 +101,23 @@ pub(in super::super) fn update_damaged_characters(
                 next_gameplay_state.set(GameplayScreenState::Death);
             }
         } else {
-            message_writer.send({
-                let begin = damage
-                    .action
-                    .attacker
-                    .clone()
-                    .verb("hit", "s")
-                    .push(name.single());
-
-                Message::warn(if evolution.changed() {
-                    begin.add(format!(
-                        "for {} ({} -> {})",
-                        evolution.change_abs(),
-                        evolution.before,
-                        evolution.after
-                    ))
-                } else {
-                    begin.add("but it has no effect")
+            message_writer
+                .subject(damage.action.attacker.clone())
+                .verb("hit", "s")
+                .join(|p| p.push(name.single(*pos)))
+                .join(|p| {
+                    if evolution.changed() {
+                        p.add(format!(
+                            "for {} ({} -> {})",
+                            evolution.change_abs(),
+                            evolution.before,
+                            evolution.after
+                        ))
+                    } else {
+                        p.add("but it has no effect")
+                    }
                 })
-            });
+                .send_warn();
         }
     }
 
@@ -124,7 +126,7 @@ pub(in super::super) fn update_damaged_characters(
 
 #[allow(clippy::needless_pass_by_value)]
 pub(in super::super) fn update_healed_characters(
-    mut message_writer: EventWriter<Message>,
+    mut message_writer: MessageWriter,
     mut healing_reader: EventReader<ActorEvent<Healing>>,
     mut actors: ParamSet<(
         Query<&mut Health, (With<Faction>, With<Life>)>,
@@ -140,20 +142,22 @@ pub(in super::super) fn update_healed_characters(
         if evolution.changed() {
             let actors = actors.p1();
             let actor = actors.get(healing.actor_entity).expect("Actor found");
-            message_writer.send({
-                let begin = actor.subject().verb("heal", "s");
-
-                Message::info(if evolution.change_abs() == 1 {
-                    begin.add("a bit")
-                } else {
-                    begin.add(format!(
-                        "for {} ({} -> {})",
-                        evolution.change_abs(),
-                        evolution.before,
-                        evolution.after
-                    ))
+            message_writer
+                .subject(actor.subject())
+                .verb("heal", "s")
+                .join(|p| {
+                    if evolution.change_abs() == 1 {
+                        p.add("a bit")
+                    } else {
+                        p.add(format!(
+                            "for {} ({} -> {})",
+                            evolution.change_abs(),
+                            evolution.before,
+                            evolution.after
+                        ))
+                    }
                 })
-            });
+                .send_info();
         }
     }
 
@@ -163,31 +167,31 @@ pub(in super::super) fn update_healed_characters(
 #[allow(clippy::needless_pass_by_value)]
 pub(in super::super) fn update_damaged_corpses(
     mut commands: Commands,
-    mut message_writer: EventWriter<Message>,
+    mut message_writer: MessageWriter,
     mut damage_reader: EventReader<CorpseEvent<Damage>>,
-    mut corpses: Query<(&ObjectName, &mut Integrity), With<Corpse>>,
+    mut corpses: Query<(&ObjectName, &Pos, &mut Integrity), With<Corpse>>,
 ) {
     let start = Instant::now();
 
     //eprintln!("{} corpses found", corpses.iter().len());
 
     for damage in damage_reader.read() {
-        let (name, mut integrity) = corpses.get_mut(damage.corpse_entity).expect("Corpse found");
+        let (name, pos, mut integrity) =
+            corpses.get_mut(damage.corpse_entity).expect("Corpse found");
         integrity.lower(&damage.change);
 
-        message_writer.send(Message::info(
-            damage
-                .change
-                .attacker
-                .clone()
-                .verb("pulp", "s")
-                .push(name.single()),
-        ));
+        message_writer
+            .subject(damage.change.attacker.clone())
+            .verb("pulp", "s")
+            .join(|p| p.push(name.single(*pos)))
+            .send_info();
 
         if integrity.0.is_zero() {
-            message_writer.send(Message::info(
-                Phrase::from_name(name).add("is thoroughly pulped"),
-            ));
+            message_writer
+                .subject(Subject::Other(Phrase::from_fragment(name.single(*pos))))
+                .is()
+                .add("thoroughly pulped")
+                .send_info();
 
             commands
                 .entity(damage.corpse_entity)
@@ -255,11 +259,9 @@ pub(in super::super) fn update_explored(moved_players: Query<(), (With<Player>, 
 #[allow(clippy::needless_pass_by_value)]
 pub(in super::super) fn update_damaged_terrain(
     mut commands: Commands,
-    mut message_writer: EventWriter<Message>,
+    mut message_writer: MessageWriter,
     mut damage_reader: EventReader<TerrainEvent<Damage>>,
-    mut spawner: Spawner,
     mut visualization_update: ResMut<VisualizationUpdate>,
-    infos: Res<Infos>,
     mut terrain: Query<(
         Entity,
         &Pos,
@@ -268,8 +270,10 @@ pub(in super::super) fn update_damaged_terrain(
         &ObjectDefinition,
         &Parent,
     )>,
-) {
+) -> Vec<(Entity, Pos, ObjectDefinition)> {
     let start = Instant::now();
+
+    let mut broken = Vec::new();
 
     for damage in damage_reader.read() {
         let (terrain, &pos, name, mut integrity, definition, parent) = terrain
@@ -277,41 +281,55 @@ pub(in super::super) fn update_damaged_terrain(
             .expect("Terrain or furniture found");
         let evolution = integrity.lower(&damage.change);
         if integrity.0.is_zero() {
-            message_writer.send(Message::warn(
-                damage
-                    .change
-                    .attacker
-                    .clone()
-                    .verb("break", "s")
-                    .push(name.single()),
-            ));
+            message_writer
+                .subject(damage.change.attacker.clone())
+                .verb("break", "s")
+                .join(|p| p.push(name.single(pos)))
+                .send_warn();
             commands.entity(terrain).despawn_recursive();
-            spawner.spawn_smashed(&infos, parent.get(), pos, definition);
+            broken.push((parent.get(), pos, definition.clone()));
             *visualization_update = VisualizationUpdate::Forced;
         } else {
-            message_writer.send({
-                let begin = damage
-                    .change
-                    .attacker
-                    .clone()
-                    .verb("hit", "s")
-                    .push(name.single());
-
-                Message::warn(if evolution.changed() {
-                    begin.add(format!(
-                        "for {} ({} -> {})",
-                        evolution.change_abs(),
-                        evolution.before,
-                        evolution.after
-                    ))
-                } else {
-                    begin.add("but it has no effect")
+            message_writer
+                .subject(damage.change.attacker.clone())
+                .verb("hit", "s")
+                .join(|p| p.push(name.single(pos)))
+                .join(|p| {
+                    if evolution.changed() {
+                        p.add(format!(
+                            "for {} ({} -> {})",
+                            evolution.change_abs(),
+                            evolution.before,
+                            evolution.after
+                        ))
+                    } else {
+                        p.add("but it has no effect")
+                    }
                 })
-            });
+                .send_warn();
         }
     }
 
     log_if_slow("update_damaged_items", start);
+
+    broken
+}
+
+// Separate from 'update_damaged_terrain' to prevent a conflict with 'Location'.
+/** For terrain and furniture */
+#[allow(clippy::needless_pass_by_value)]
+pub(in super::super) fn spawn_broken_terrain(
+    In(broken): In<Vec<(Entity, Pos, ObjectDefinition)>>,
+    mut spawner: Spawner,
+    infos: Res<Infos>,
+) {
+    let start = Instant::now();
+
+    for (parent_entity, pos, definition) in broken {
+        spawner.spawn_smashed(&infos, parent_entity, pos, &definition);
+    }
+
+    log_if_slow("spawn_broken_terrain", start);
 }
 
 #[allow(clippy::needless_pass_by_value)]

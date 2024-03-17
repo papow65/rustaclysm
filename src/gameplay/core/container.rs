@@ -13,10 +13,11 @@ impl<'a> Container<'a> {
 
     pub(crate) fn check_add(
         &self,
-        container_name: Fragment,
+        message_writer: &mut MessageWriter,
+        container_subject: Subject,
         added: &Containable,
         added_amount: &Amount,
-    ) -> Result<Amount, Vec<Message>> {
+    ) -> Result<Amount, ()> {
         // TODO check that the added item is not already part of the current contents or the full ancestry of the container
 
         let limits = self.hierarchy.container(self.entity);
@@ -59,8 +60,6 @@ impl<'a> Container<'a> {
         if Amount::ZERO < allowed_amount {
             Ok(allowed_amount)
         } else {
-            let mut messages = Vec::new();
-
             if max_amount_by_volume == Amount::ZERO {
                 let added_volume = added.volume;
                 if free_volume == Volume::ZERO {
@@ -68,10 +67,10 @@ impl<'a> Container<'a> {
                 } else {
                     format!("only {free_volume} available")
                 };
-                messages.push(Message::warn(
-                    Phrase::from_fragment(container_name.clone())
-                        .add(format!("has {free_volume}, but {added_volume} needed")),
-                ));
+                message_writer
+                    .subject(container_subject.clone())
+                    .simple(format!("has {free_volume}, but {added_volume} needed").as_str())
+                    .send_warn();
             }
 
             if max_amount_by_mass == Amount::ZERO {
@@ -81,10 +80,10 @@ impl<'a> Container<'a> {
                 } else {
                     format!("only {free_mass} more")
                 };
-                messages.push(Message::warn(
-                    Phrase::from_fragment(container_name.clone())
-                        .add(format!("can bear {free_mass}, but {added_mass} needed",)),
-                ));
+                message_writer
+                    .subject(container_subject.clone())
+                    .simple(format!("can bear {free_mass}, but {added_mass} needed",).as_str())
+                    .send_warn();
             }
 
             if max_amount_by_amount == Amount::ZERO {
@@ -93,12 +92,15 @@ impl<'a> Container<'a> {
                     1 => String::from("only one more item"),
                     _ => format!("only {} more items", max_amount_by_amount.0),
                 };
-                messages.push(Message::warn(Phrase::from_fragment(container_name).add(
-                    format!("can hold {free_amount}, but {} needed", added_amount.0),
-                )));
+                message_writer
+                    .subject(container_subject)
+                    .simple(
+                        format!("can hold {free_amount}, but {} needed", added_amount.0).as_str(),
+                    )
+                    .send_warn();
             }
 
-            Err(messages)
+            Err(())
         }
     }
 }

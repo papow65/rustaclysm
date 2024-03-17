@@ -128,6 +128,7 @@ pub(super) fn update_sidebar_systems() -> impl IntoSystemConfigs<()> {
 #[allow(clippy::needless_pass_by_value)]
 fn update_log(
     mut new_messages: EventReader<Message>,
+    currently_visible_builder: CurrentlyVisibleBuilder,
     hud_defaults: Res<HudDefaults>,
     mut session: GameplaySession,
     mut message_log: Local<Vec<Message>>,
@@ -140,14 +141,16 @@ fn update_log(
     }
 
     for message in new_messages.read() {
-        if message.phrase.to_string().trim() != "" {
-            if message.severity == Severity::Error {
-                eprintln!("{}", &message.phrase);
-            } else {
-                println!("{}", &message.phrase);
+        if let Some(message) = percieve(&currently_visible_builder, message.clone()) {
+            if message.phrase.to_string().trim() != "" {
+                if message.severity == Severity::Error {
+                    eprintln!("{}", &message.phrase);
+                } else {
+                    println!("{}", &message.phrase);
+                }
             }
+            message_log.push(message.clone());
         }
-        message_log.push(message.clone());
     }
 
     let mut last: Option<(&Message, usize)> = None;
@@ -198,6 +201,36 @@ fn update_log(
     }
 
     log_if_slow("update_log", start);
+}
+
+fn percieve(
+    currently_visible_builder: &CurrentlyVisibleBuilder,
+    mut message: Message,
+) -> Option<Message> {
+    let mut seen = false;
+    let mut global = true;
+
+    for fragment in &mut message.phrase.fragments {
+        match fragment.positioning {
+            Positioning::Pos(pos) => {
+                if currently_visible_builder.for_player().can_see(pos, None) == Visible::Seen {
+                    seen = true;
+                } else {
+                    fragment.text = String::from("(unseen)");
+                }
+                global = false;
+            }
+            Positioning::Player => {
+                seen = true;
+                global = false;
+            }
+            Positioning::None => {
+                // nothing to do
+            }
+        }
+    }
+
+    (seen || global).then_some(message)
 }
 
 fn update_status_display(text_sections: &StatusTextSections, status_display: &mut Text) {
@@ -412,7 +445,7 @@ fn update_status_enemies(
                         )
                     })
                     .map(|(pos, (_, name))| {
-                        Phrase::from_name(name)
+                        Phrase::from_fragment(name.single(pos))
                             .add((pos - *player_actor.pos).player_hint())
                             .fragments
                     })
@@ -472,7 +505,7 @@ fn update_status_detais(
             let mut total = vec![Fragment::new(format!("\n{pos:?}\n"))];
             if explored.has_pos_been_seen(pos) {
                 let all_here = envir.location.all(pos);
-                total.extend(characters_info(&all_here, &characters));
+                total.extend(characters_info(&all_here, &characters, pos));
                 total.extend(
                     all_here
                         .iter()
@@ -507,12 +540,13 @@ fn update_status_detais(
 fn characters_info(
     all_here: &[Entity],
     characters: &Query<(&ObjectDefinition, &ObjectName, &Health, Option<&Integrity>)>,
+    pos: Pos,
 ) -> Vec<Fragment> {
     all_here
         .iter()
         .flat_map(|&i| characters.get(i))
         .flat_map(|(definition, name, health, integrity)| {
-            let start = Phrase::from_name(name).add("(");
+            let start = Phrase::from_fragment(name.single(pos)).add("(");
 
             if health.0.is_nonzero() {
                 start

@@ -25,10 +25,19 @@ impl ItemItem<'_> {
             result.push(Fragment::colorized("filthy", FILTHY_COLOR));
         }
         result.push(if self.amount == &Amount::SINGLE {
-            self.name.single()
+            self.name.single(Pos::ORIGIN)
         } else {
-            self.name.plural()
+            self.name.plural(Pos::ORIGIN)
         });
+
+        for fragment in &mut result {
+            fragment.positioning = if let Some(&pos) = self.pos {
+                Positioning::Pos(pos)
+            } else {
+                Positioning::None
+            };
+        }
+
         result
     }
 }

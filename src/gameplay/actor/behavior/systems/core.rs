@@ -21,7 +21,7 @@ pub(in super::super) fn egible_character(
 pub(in super::super) fn plan_action(
     In(active_actor): In<Option<Entity>>,
     mut commands: Commands,
-    mut message_writer: EventWriter<Message>,
+    mut message_writer: MessageWriter,
     mut healing_writer: EventWriter<ActorEvent<Healing>>,
     player_action_state: Res<State<PlayerActionState>>,
     mut next_player_action_state: ResMut<NextState<PlayerActionState>>,
@@ -31,7 +31,7 @@ pub(in super::super) fn plan_action(
     explored: Res<Explored>,
     actors: Query<Actor>,
     factions: Query<(&Pos, &Faction), With<Life>>,
-    mut players: Query<(), With<Player>>,
+    players: Query<(), With<Player>>,
 ) -> Option<(Entity, PlannedAction)> {
     let start = Instant::now();
 
@@ -47,7 +47,7 @@ pub(in super::super) fn plan_action(
     let enemies = actor
         .faction
         .enemies(&currently_visible_builder, factions, &actor);
-    let action = if players.get_mut(active_actor).is_ok() {
+    let action = if players.get(active_actor).is_ok() {
         player_action_state.plan_action(
             &mut next_player_action_state,
             &mut message_writer,
@@ -69,7 +69,7 @@ pub(in super::super) fn plan_action(
         }
         println!(
             "{} at {:?} plans {:?} and does {:?}",
-            actor.name.single().text,
+            actor.name.single(*actor.pos).text,
             actor.pos,
             strategy.intent,
             strategy.action
@@ -230,7 +230,7 @@ pub(in super::super) fn perform_stay(In(stay): In<ActionIn<Stay>>, actors: Query
 pub(in super::super) fn perform_step(
     In(step): In<ActionIn<Step>>,
     mut commands: Commands,
-    mut message_writer: EventWriter<Message>,
+    mut message_writer: MessageWriter,
     mut toggle_writer: EventWriter<TerrainEvent<Toggle>>,
     mut envir: Envir,
     actors: Query<Actor>,
@@ -247,7 +247,7 @@ pub(in super::super) fn perform_step(
 #[allow(clippy::needless_pass_by_value)]
 pub(in super::super) fn perform_attack(
     In(attack): In<ActionIn<Attack>>,
-    mut message_writer: EventWriter<Message>,
+    mut message_writer: MessageWriter,
     mut damage_writer: EventWriter<ActorEvent<Damage>>,
     envir: Envir,
     infos: Res<Infos>,
@@ -267,7 +267,7 @@ pub(in super::super) fn perform_attack(
 #[allow(clippy::needless_pass_by_value)]
 pub(in super::super) fn perform_smash(
     In(smash): In<ActionIn<Smash>>,
-    mut message_writer: EventWriter<Message>,
+    mut message_writer: MessageWriter,
     mut damage_writer: EventWriter<TerrainEvent<Damage>>,
     envir: Envir,
     infos: Res<Infos>,
@@ -287,7 +287,7 @@ pub(in super::super) fn perform_smash(
 #[allow(clippy::needless_pass_by_value)]
 pub(in super::super) fn perform_pulp(
     In(pulp): In<ActionIn<Pulp>>,
-    mut message_writer: EventWriter<Message>,
+    mut message_writer: MessageWriter,
     mut corpse_damage_writer: EventWriter<CorpseEvent<Damage>>,
     envir: Envir,
     infos: Res<Infos>,
@@ -307,7 +307,7 @@ pub(in super::super) fn perform_pulp(
 #[allow(clippy::needless_pass_by_value)]
 pub(in super::super) fn perform_close(
     In(close): In<ActionIn<Close>>,
-    mut message_writer: EventWriter<Message>,
+    mut message_writer: MessageWriter,
     mut toggle_writer: EventWriter<TerrainEvent<Toggle>>,
     envir: Envir,
     actors: Query<Actor>,
@@ -324,7 +324,7 @@ pub(in super::super) fn perform_close(
 pub(in super::super) fn perform_wield(
     In(wield): In<ActionIn<ItemAction<Wield>>>,
     mut commands: Commands,
-    mut message_writer: EventWriter<Message>,
+    mut message_writer: MessageWriter,
     mut location: ResMut<Location>,
     hierarchy: Hierarchy,
     actors: Query<Actor>,
@@ -343,7 +343,7 @@ pub(in super::super) fn perform_wield(
 pub(in super::super) fn perform_unwield(
     In(unwield): In<ActionIn<ItemAction<Unwield>>>,
     mut commands: Commands,
-    mut message_writer: EventWriter<Message>,
+    mut message_writer: MessageWriter,
     mut location: ResMut<Location>,
     hierarchy: Hierarchy,
     actors: Query<Actor>,
@@ -362,7 +362,7 @@ pub(in super::super) fn perform_unwield(
 pub(in super::super) fn perform_pickup(
     In(pickup): In<ActionIn<ItemAction<Pickup>>>,
     mut commands: Commands,
-    mut message_writer: EventWriter<Message>,
+    mut message_writer: MessageWriter,
     mut location: ResMut<Location>,
     hierarchy: Hierarchy,
     actors: Query<Actor>,
@@ -381,7 +381,7 @@ pub(in super::super) fn perform_pickup(
 pub(in super::super) fn perform_move_item(
     In(move_item): In<ActionIn<ItemAction<MoveItem>>>,
     mut commands: Commands,
-    mut message_writer: EventWriter<Message>,
+    mut message_writer: MessageWriter,
     subzone_level_entities: Res<SubzoneLevelEntities>,
     mut location: ResMut<Location>,
     actors: Query<Actor>,
@@ -400,7 +400,7 @@ pub(in super::super) fn perform_move_item(
 #[allow(clippy::needless_pass_by_value)]
 pub(in super::super) fn perform_examine_item(
     In(examine_item): In<ActionIn<ItemAction<ExamineItem>>>,
-    mut message_writer: EventWriter<Message>,
+    mut message_writer: MessageWriter,
     infos: Res<Infos>,
     items: Query<Item>,
 ) {
@@ -423,7 +423,7 @@ pub(in super::super) fn perform_change_pace(
 #[allow(clippy::needless_pass_by_value)]
 pub(in super::super) fn proces_impact(
     In(impact): In<Option<Impact>>,
-    mut message_writer: EventWriter<Message>,
+    mut message_writer: MessageWriter,
     mut stamina_impact_events: EventWriter<ActorEvent<StaminaImpact>>,
     mut timeouts: ResMut<Timeouts>,
     players: Query<Entity, With<Player>>,
@@ -437,8 +437,8 @@ pub(in super::super) fn proces_impact(
     impact.check_validity();
     let Some(stamina_impact) = impact.stamina_impact else {
         if players.get(impact.actor_entity).is_err() {
-            message_writer.send(Message::error(Phrase::new("NPC action failed")));
-            // To prevent the application hanging on failed NPC actions, we add a small timeout
+            message_writer.str("NPC action failed").send_error();
+            // To prevent the application hanging on failing NPC actions, we add a small timeout
             timeouts.add(impact.actor_entity, Milliseconds(1000));
         }
 
