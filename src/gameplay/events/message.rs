@@ -108,17 +108,20 @@ impl<'r, 'w> MessageBuilder<'r, 'w, Subject> {
 
 impl<'r, 'w> MessageBuilder<'r, 'w, Phrase> {
     #[must_use]
-    pub(crate) fn join<F>(mut self, f: F) -> Self
-    where
-        F: Fn(Phrase) -> Phrase,
-    {
-        self.phrase = f(self.phrase);
+    pub(crate) fn add(mut self, added: impl Into<String>) -> Self {
+        self.phrase = self.phrase.add(added);
         self
     }
 
     #[must_use]
-    pub(crate) fn add(mut self, added: &str) -> Self {
-        self.phrase = self.phrase.add(added);
+    pub(crate) fn push(mut self, fragment: Fragment) -> Self {
+        self.phrase = self.phrase.push(fragment);
+        self
+    }
+
+    #[must_use]
+    pub(crate) fn extend(mut self, fragments: Vec<Fragment>) -> Self {
+        self.phrase = self.phrase.extend(fragments);
         self
     }
 

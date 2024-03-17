@@ -1,4 +1,4 @@
-use crate::prelude::Pos;
+use crate::prelude::{Pos, GOOD_TEXT_COLOR};
 use bevy::prelude::{Color, TextSection, TextStyle};
 use regex::Regex;
 use std::{cmp::Eq, fmt, sync::OnceLock};
@@ -19,6 +19,14 @@ pub(crate) struct Fragment {
 }
 
 impl Fragment {
+    pub(crate) fn you() -> Self {
+        Self {
+            text: String::from("You"),
+            color: Some(GOOD_TEXT_COLOR),
+            positioning: Positioning::Player,
+        }
+    }
+
     pub(crate) fn new<S>(text: S) -> Self
     where
         S: Into<String>,

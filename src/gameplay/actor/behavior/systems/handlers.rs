@@ -76,11 +76,16 @@ pub(in super::super) fn update_damaged_characters(
             .get_mut(damage.actor_entity)
             .expect("Actor found");
         let evolution = health.lower(&damage.action);
+        let victim = if player.is_some() {
+            Fragment::you()
+        } else {
+            name.single(*pos)
+        };
         if health.0.is_zero() {
             message_writer
                 .subject(damage.action.attacker.clone())
                 .verb("kill", "s")
-                .join(|p| p.push(name.single(*pos)))
+                .push(victim)
                 .send_warn();
 
             transform.rotation = Quat::from_rotation_y(std::f32::consts::FRAC_PI_2)
@@ -104,18 +109,16 @@ pub(in super::super) fn update_damaged_characters(
             message_writer
                 .subject(damage.action.attacker.clone())
                 .verb("hit", "s")
-                .join(|p| p.push(name.single(*pos)))
-                .join(|p| {
-                    if evolution.changed() {
-                        p.add(format!(
-                            "for {} ({} -> {})",
-                            evolution.change_abs(),
-                            evolution.before,
-                            evolution.after
-                        ))
-                    } else {
-                        p.add("but it has no effect")
-                    }
+                .push(victim)
+                .add(if evolution.changed() {
+                    format!(
+                        "for {} ({} -> {})",
+                        evolution.change_abs(),
+                        evolution.before,
+                        evolution.after
+                    )
+                } else {
+                    String::from("but it has no effect")
                 })
                 .send_warn();
         }
@@ -145,17 +148,15 @@ pub(in super::super) fn update_healed_characters(
             message_writer
                 .subject(actor.subject())
                 .verb("heal", "s")
-                .join(|p| {
-                    if evolution.change_abs() == 1 {
-                        p.add("a bit")
-                    } else {
-                        p.add(format!(
-                            "for {} ({} -> {})",
-                            evolution.change_abs(),
-                            evolution.before,
-                            evolution.after
-                        ))
-                    }
+                .add(if evolution.change_abs() == 1 {
+                    String::from("a bit")
+                } else {
+                    format!(
+                        "for {} ({} -> {})",
+                        evolution.change_abs(),
+                        evolution.before,
+                        evolution.after
+                    )
                 })
                 .send_info();
         }
@@ -183,7 +184,7 @@ pub(in super::super) fn update_damaged_corpses(
         message_writer
             .subject(damage.change.attacker.clone())
             .verb("pulp", "s")
-            .join(|p| p.push(name.single(*pos)))
+            .push(name.single(*pos))
             .send_info();
 
         if integrity.0.is_zero() {
@@ -284,7 +285,7 @@ pub(in super::super) fn update_damaged_terrain(
             message_writer
                 .subject(damage.change.attacker.clone())
                 .verb("break", "s")
-                .join(|p| p.push(name.single(pos)))
+                .push(name.single(pos))
                 .send_warn();
             commands.entity(terrain).despawn_recursive();
             broken.push((parent.get(), pos, definition.clone()));
@@ -293,18 +294,16 @@ pub(in super::super) fn update_damaged_terrain(
             message_writer
                 .subject(damage.change.attacker.clone())
                 .verb("hit", "s")
-                .join(|p| p.push(name.single(pos)))
-                .join(|p| {
-                    if evolution.changed() {
-                        p.add(format!(
-                            "for {} ({} -> {})",
-                            evolution.change_abs(),
-                            evolution.before,
-                            evolution.after
-                        ))
-                    } else {
-                        p.add("but it has no effect")
-                    }
+                .push(name.single(pos))
+                .add(if evolution.changed() {
+                    format!(
+                        "for {} ({} -> {})",
+                        evolution.change_abs(),
+                        evolution.before,
+                        evolution.after
+                    )
+                } else {
+                    String::from("but it has no effect")
                 })
                 .send_warn();
         }

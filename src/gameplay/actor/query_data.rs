@@ -113,7 +113,7 @@ impl ActorItem<'_> {
                     .subject(self.subject())
                     .verb("crash", "es")
                     .add("into")
-                    .join(|p| p.push(obstacle.single(to)))
+                    .push(obstacle.single(to))
                     .send_warn();
                 self.no_impact()
             }
@@ -329,9 +329,9 @@ impl ActorItem<'_> {
                 message_writer
                     .subject(self.subject())
                     .simple("can't close")
-                    .join(|p| p.push(closeable_name.single(target)))
+                    .push(closeable_name.single(target))
                     .add("on")
-                    .join(|p| p.push(character.single(target)))
+                    .push(character.single(target))
                     .send_warn();
                 self.no_impact()
             } else {
@@ -347,7 +347,7 @@ impl ActorItem<'_> {
             message_writer
                 .subject(self.subject())
                 .simple("can't close")
-                .join(|p| p.push(obstacle.single(target)))
+                .push(obstacle.single(target))
                 .send_warn();
             self.no_impact()
         }
@@ -456,7 +456,7 @@ impl ActorItem<'_> {
                 .subject(self.subject())
                 .verb("pick", "s")
                 .add("up")
-                .join(|p| p.extend(taken.fragments()))
+                .extend(taken.fragments())
                 .send_info();
 
             if &allowed_amount < taken.amount {
@@ -553,7 +553,7 @@ impl ActorItem<'_> {
         message_writer
             .subject(self.subject())
             .verb(if dump { "drop" } else { "move" }, "s")
-            .join(|p| p.extend(moved.fragments()))
+            .extend(moved.fragments())
             .send_info();
 
         let Some(new_parent) = subzone_level_entities.get(SubzoneLevel::from(to)) else {
