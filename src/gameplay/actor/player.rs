@@ -80,18 +80,19 @@ impl PlayerActionState {
             }
         }
 
-        match self {
+        let current = next_state.0.clone().unwrap_or(self.clone());
+        match current {
             Self::Dragging {
                 active_from: Some(from),
-            } => auto_drag(envir, instruction_queue, from, enemies),
+            } => auto_drag(envir, instruction_queue, &from, enemies),
             Self::AutoDefend => auto_defend(envir, instruction_queue, player, enemies),
             Self::AutoTravel { target } => {
-                auto_travel(envir, instruction_queue, explored, player, *target, enemies)
+                auto_travel(envir, instruction_queue, explored, player, target, enemies)
             }
             Self::Pulping {
                 active_target: Some(target),
-            } => auto_pulp(envir, instruction_queue, player, target, enemies),
-            Self::Waiting { until } => auto_wait(instruction_queue, now, until, enemies),
+            } => auto_pulp(envir, instruction_queue, player, &target, enemies),
+            Self::Waiting { until } => auto_wait(instruction_queue, now, &until, enemies),
             Self::Sleeping {
                 healing_from,
                 until,
@@ -100,9 +101,9 @@ impl PlayerActionState {
                 healing_writer,
                 instruction_queue,
                 player,
-                healing_from,
+                &healing_from,
                 now,
-                until,
+                &until,
             ),
             _ => {
                 instruction_queue.start_waiting();
