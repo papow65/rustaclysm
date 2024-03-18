@@ -1,3 +1,4 @@
+//! These systems run once after [`BehaviorSchedule::repeat`].
 use crate::prelude::*;
 use bevy::prelude::*;
 use std::{
@@ -35,6 +36,7 @@ pub(in super::super) fn update_hidden_item_visibility(
     log_if_slow("update_visibility_for_hidden_items", start);
 }
 
+/** This is a slow system. For performance, it is only ran once after [`BehaviorSchedule::run`[, instead of after every action  */
 #[allow(clippy::needless_pass_by_value)]
 pub(in super::super) fn update_visualization_on_player_move(
     commands: Commands,

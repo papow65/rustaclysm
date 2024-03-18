@@ -1,3 +1,4 @@
+//! These systems are part of [`BehaviorSchedule`].
 use crate::prelude::*;
 use bevy::prelude::*;
 use std::time::Instant;

@@ -13,8 +13,8 @@ mod subject;
 
 pub(crate) use self::{
     actions::{
-        Action, ActionIn, Attack, ChangePace, Close, ExamineItem, ItemAction, MoveItem, Pickup,
-        Pulp, Smash, Stay, Step, Unwield, Wield,
+        ActionIn, Attack, ChangePace, Close, ExamineItem, ItemAction, MoveItem, Pickup, Pulp,
+        Smash, Stay, Step, Unwield, Wield,
     },
     behavior::behavior_systems,
     breath::Breath,

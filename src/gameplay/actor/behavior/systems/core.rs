@@ -8,20 +8,89 @@ pub(in super::super) fn egible_character(
     mut timeouts: ResMut<Timeouts>,
     actors: Query<Actor>,
     players: Query<(), With<Player>>,
-) -> Option<Entity> {
+) -> Entity {
     let egible_entities = actors
         .iter()
         .filter(|a| envir.is_accessible(*a.pos) || players.get(a.entity).is_ok())
         .map(|a| a.entity)
         .collect::<Vec<Entity>>();
-    timeouts.next(&egible_entities)
+    timeouts
+        .next(&egible_entities)
+        .expect("There should be an egible character")
+}
+
+pub(in super::super) struct PlanSystems {
+    manual_player_action: SystemId<Entity, Option<PlannedAction>>,
+    automatic_player_action: SystemId<Entity, Option<PlannedAction>>,
+    npc_action: SystemId<Entity, PlannedAction>,
+}
+
+impl PlanSystems {
+    fn new(world: &mut World) -> Self {
+        Self {
+            manual_player_action: world.register_system(plan_manual_player_action),
+            automatic_player_action: world.register_system(plan_automatic_player_action),
+            npc_action: world.register_system(plan_npc_action),
+        }
+    }
+}
+#[allow(clippy::needless_pass_by_value)]
+pub(in super::super) fn plan_action(
+    In(active_actor): In<Entity>,
+    world: &mut World,
+    plan_systems: Local<OnceCell<PlanSystems>>,
+) -> Option<(Entity, PlannedAction)> {
+    let start = Instant::now();
+
+    let plan_systems = plan_systems.get_or_init(|| PlanSystems::new(world));
+
+    let player_active = world
+        .get_entity(active_actor)
+        .expect("The active actor should exist")
+        .contains::<Player>();
+
+    let action = if player_active {
+        let manual_action = run_system(plan_systems.manual_player_action, world, active_actor);
+        // The state could have transitioned with or without a 'manual_action'.
+        apply_state_transition::<PlayerActionState>(world);
+        manual_action
+            .or_else(|| run_system(plan_systems.automatic_player_action, world, active_actor))?
+    } else {
+        run_system(plan_systems.npc_action, world, active_actor)
+    };
+
+    log_if_slow("plan_action", start);
+
+    Some((active_actor, action))
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(in super::super) fn plan_action(
-    In(active_actor): In<Option<Entity>>,
-    mut commands: Commands,
+fn plan_manual_player_action(
+    In(active_actor): In<Entity>,
     mut message_writer: MessageWriter,
+    player_action_state: Res<State<PlayerActionState>>,
+    mut next_player_action_state: ResMut<NextState<PlayerActionState>>,
+    currently_visible_builder: CurrentlyVisibleBuilder,
+    clock: Clock,
+    mut instruction_queue: ResMut<InstructionQueue>,
+    actors: Query<Actor>,
+) -> Option<PlannedAction> {
+    let actor = actors
+        .get(active_actor)
+        .expect("'entity' should be a known actor");
+    player_action_state.plan_manual_action(
+        &mut next_player_action_state,
+        &mut message_writer,
+        &currently_visible_builder.envir,
+        &mut instruction_queue,
+        &actor,
+        clock.time(),
+    )
+}
+
+#[allow(clippy::needless_pass_by_value)]
+fn plan_automatic_player_action(
+    In(active_actor): In<Entity>,
     mut healing_writer: EventWriter<ActorEvent<Healing>>,
     player_action_state: Res<State<PlayerActionState>>,
     mut next_player_action_state: ResMut<NextState<PlayerActionState>>,
@@ -31,56 +100,59 @@ pub(in super::super) fn plan_action(
     explored: Res<Explored>,
     actors: Query<Actor>,
     factions: Query<(&Pos, &Faction), With<Life>>,
-    players: Query<(), With<Player>>,
-) -> Option<(Entity, PlannedAction)> {
-    let start = Instant::now();
-
-    let Some(active_actor) = active_actor else {
-        eprintln!("No egible characters!");
-        return None;
-    };
-
-    let factions = &factions.iter().map(|(p, f)| (*p, f)).collect::<Vec<_>>();
+) -> Option<PlannedAction> {
     let actor = actors
         .get(active_actor)
         .expect("'entity' should be a known actor");
+
+    let factions = &factions.iter().map(|(p, f)| (*p, f)).collect::<Vec<_>>();
     let enemies = actor
         .faction
         .enemies(&currently_visible_builder, factions, &actor);
-    let action = if players.get(active_actor).is_ok() {
-        player_action_state.plan_action(
-            &mut next_player_action_state,
-            &mut message_writer,
-            &mut healing_writer,
-            &currently_visible_builder.envir,
-            &mut instruction_queue,
-            &explored,
-            &actor,
-            clock.time(),
-            &enemies,
-        )?
-    } else {
-        let strategy =
-            actor
-                .faction
-                .strategize(&currently_visible_builder.envir, factions, &enemies, &actor);
-        if let Some(last_enemy) = strategy.last_enemy {
-            commands.entity(actor.entity).insert(last_enemy);
-        }
-        println!(
-            "{} at {:?} plans {:?} and does {:?}",
-            actor.name.single(*actor.pos).text,
-            actor.pos,
-            strategy.intent,
-            strategy.action
-        );
 
+    player_action_state.plan_automatic_action(
+        &mut next_player_action_state,
+        &mut healing_writer,
+        &currently_visible_builder.envir,
+        &mut instruction_queue,
+        &explored,
+        &actor,
+        clock.time(),
+        &enemies,
+    )
+}
+
+#[allow(clippy::needless_pass_by_value)]
+fn plan_npc_action(
+    In(active_actor): In<Entity>,
+    mut commands: Commands,
+    currently_visible_builder: CurrentlyVisibleBuilder,
+    actors: Query<Actor>,
+    factions: Query<(&Pos, &Faction), With<Life>>,
+) -> PlannedAction {
+    let actor = actors
+        .get(active_actor)
+        .expect("'entity' should be a known actor");
+    let factions = &factions.iter().map(|(p, f)| (*p, f)).collect::<Vec<_>>();
+    let enemies = actor
+        .faction
+        .enemies(&currently_visible_builder, factions, &actor);
+    let strategy =
+        actor
+            .faction
+            .strategize(&currently_visible_builder.envir, factions, &enemies, &actor);
+    if let Some(last_enemy) = strategy.last_enemy {
+        commands.entity(actor.entity).insert(last_enemy);
+    }
+    println!(
+        "{} at {:?} plans {:?} and does {:?}",
+        actor.name.single(*actor.pos).text,
+        actor.pos,
+        strategy.intent,
         strategy.action
-    };
+    );
 
-    log_if_slow("plan_action", start);
-
-    Some((actor.entity, action))
+    strategy.action
 }
 
 pub(in super::super) struct PerformSystems {
@@ -133,58 +205,58 @@ pub(in super::super) fn perform_action(
     let perform_systems = perform_systems.get_or_init(|| PerformSystems::new(world));
 
     let impact = match planned_action {
-        PlannedAction::Stay { duration } => perform_action_inner(
+        PlannedAction::Stay { duration } => run_system(
             perform_systems.stay,
             world,
             ActionIn::new(actor_entity, Stay { duration }),
         ),
-        PlannedAction::Step { to } => perform_action_inner(
+        PlannedAction::Step { to } => run_system(
             perform_systems.step,
             world,
             ActionIn::new(actor_entity, Step { to }),
         ),
-        PlannedAction::Attack { target } => perform_action_inner(
+        PlannedAction::Attack { target } => run_system(
             perform_systems.attack,
             world,
             ActionIn::new(actor_entity, Attack { target }),
         ),
-        PlannedAction::Smash { target } => perform_action_inner(
+        PlannedAction::Smash { target } => run_system(
             perform_systems.smash,
             world,
             ActionIn::new(actor_entity, Smash { target }),
         ),
-        PlannedAction::Pulp { target } => perform_action_inner(
+        PlannedAction::Pulp { target } => run_system(
             perform_systems.pulp,
             world,
             ActionIn::new(actor_entity, Pulp { target }),
         ),
-        PlannedAction::Close { target } => perform_action_inner(
+        PlannedAction::Close { target } => run_system(
             perform_systems.close,
             world,
             ActionIn::new(actor_entity, Close { target }),
         ),
-        PlannedAction::Wield { item } => perform_action_inner(
+        PlannedAction::Wield { item } => run_system(
             perform_systems.wield,
             world,
             ActionIn::new(actor_entity, ItemAction::new(item, Wield)),
         ),
-        PlannedAction::Unwield { item } => perform_action_inner(
+        PlannedAction::Unwield { item } => run_system(
             perform_systems.unwield,
             world,
             ActionIn::new(actor_entity, ItemAction::new(item, Unwield)),
         ),
-        PlannedAction::Pickup { item } => perform_action_inner(
+        PlannedAction::Pickup { item } => run_system(
             perform_systems.pickup,
             world,
             ActionIn::new(actor_entity, ItemAction::new(item, Pickup)),
         ),
-        PlannedAction::MoveItem { item, to } => perform_action_inner(
+        PlannedAction::MoveItem { item, to } => run_system(
             perform_systems.move_item,
             world,
             ActionIn::new(actor_entity, ItemAction::new(item, MoveItem { to })),
         ),
         PlannedAction::ExamineItem { item } => {
-            perform_action_inner(
+            run_system(
                 perform_systems.examine_item,
                 world,
                 ActionIn::new(actor_entity, ItemAction::new(item, ExamineItem)),
@@ -192,7 +264,7 @@ pub(in super::super) fn perform_action(
             return None;
         }
         PlannedAction::ChangePace => {
-            perform_action_inner(
+            run_system(
                 perform_systems.change_pace,
                 world,
                 ActionIn::new(actor_entity, ChangePace),
@@ -206,17 +278,13 @@ pub(in super::super) fn perform_action(
     Some(impact)
 }
 
-fn perform_action_inner<A, R>(
-    system_id: SystemId<ActionIn<A>, R>,
-    world: &mut World,
-    action_in: ActionIn<A>,
-) -> R
+fn run_system<I, R>(system_id: SystemId<I, R>, world: &mut World, in_: I) -> R
 where
-    A: Action,
+    I: 'static,
     R: 'static,
 {
     world
-        .run_system_with_input(system_id, action_in)
+        .run_system_with_input(system_id, in_)
         .expect("Action should have succeeded")
 }
 

@@ -5,12 +5,13 @@ use bevy::{
 };
 use std::time::{Duration, Instant};
 
-/** This is only run when the game when any character acts, sometimes multiple times per tick. */
+/** This schedule attempts to execute one character action. */
 #[derive(ScheduleLabel, Debug, Hash, PartialEq, Eq, Clone)]
 pub(super) struct BehaviorSchedule;
 
 impl BehaviorSchedule {
-    pub(super) fn run(world: &mut World) {
+    /** This repeatedly runs [`BehaviorSchedule`], until the time runs out or player input is required. */
+    pub(super) fn repeat(world: &mut World) {
         let start = Instant::now();
 
         let max_time = if world

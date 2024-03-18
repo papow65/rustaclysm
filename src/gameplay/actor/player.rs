@@ -52,17 +52,14 @@ impl PlayerActionState {
         }
     }
 
-    pub(crate) fn plan_action(
+    pub(crate) fn plan_manual_action(
         &self,
         next_state: &mut ResMut<NextState<Self>>,
         message_writer: &mut MessageWriter,
-        healing_writer: &mut EventWriter<ActorEvent<Healing>>,
         envir: &Envir,
         instruction_queue: &mut InstructionQueue,
-        explored: &Explored,
         player: &ActorItem,
         now: Timestamp,
-        enemies: &[Pos],
     ) -> Option<PlannedAction> {
         while let Some(instruction) = instruction_queue.pop() {
             if let Some(action) = self.plan(
@@ -80,19 +77,32 @@ impl PlayerActionState {
             }
         }
 
-        let current = next_state.0.clone().unwrap_or(self.clone());
-        match current {
+        None
+    }
+
+    pub(crate) fn plan_automatic_action(
+        &self,
+        next_state: &mut ResMut<NextState<Self>>,
+        healing_writer: &mut EventWriter<ActorEvent<Healing>>,
+        envir: &Envir,
+        instruction_queue: &mut InstructionQueue,
+        explored: &Explored,
+        player: &ActorItem,
+        now: Timestamp,
+        enemies: &[Pos],
+    ) -> Option<PlannedAction> {
+        match self {
             Self::Dragging {
                 active_from: Some(from),
-            } => auto_drag(envir, instruction_queue, &from, enemies),
+            } => auto_drag(envir, instruction_queue, from, enemies),
             Self::AutoDefend => auto_defend(envir, instruction_queue, player, enemies),
             Self::AutoTravel { target } => {
-                auto_travel(envir, instruction_queue, explored, player, target, enemies)
+                auto_travel(envir, instruction_queue, explored, player, *target, enemies)
             }
             Self::Pulping {
                 active_target: Some(target),
-            } => auto_pulp(envir, instruction_queue, player, &target, enemies),
-            Self::Waiting { until } => auto_wait(instruction_queue, now, &until, enemies),
+            } => auto_pulp(envir, instruction_queue, player, *target, enemies),
+            Self::Waiting { until } => auto_wait(instruction_queue, now, until, enemies),
             Self::Sleeping {
                 healing_from,
                 until,
@@ -101,9 +111,9 @@ impl PlayerActionState {
                 healing_writer,
                 instruction_queue,
                 player,
-                &healing_from,
+                healing_from,
                 now,
-                &until,
+                until,
             ),
             _ => {
                 instruction_queue.start_waiting();
@@ -587,7 +597,7 @@ fn auto_pulp(
     envir: &Envir<'_, '_>,
     instruction_queue: &mut InstructionQueue,
     player: &ActorItem<'_>,
-    target: &HorizontalDirection,
+    target: HorizontalDirection,
     enemies: &[Pos],
 ) -> Option<PlannedAction> {
     //eprintln!("Post instruction pulp handling...");
@@ -600,11 +610,11 @@ fn auto_pulp(
             duration: StayDuration::Short,
         })
     } else if envir
-        .find_pulpable(player.pos.horizontal_nbor(*target))
+        .find_pulpable(player.pos.horizontal_nbor(target))
         .is_some()
     {
         //eprintln!("Keep pulping");
-        Some(PlannedAction::Pulp { target: *target })
+        Some(PlannedAction::Pulp { target })
     } else {
         //eprintln!("Stop pulping");
         instruction_queue.add_finish();
