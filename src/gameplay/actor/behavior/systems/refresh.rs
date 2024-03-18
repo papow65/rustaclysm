@@ -1,4 +1,4 @@
-//! These systems run once after [`BehaviorSchedule::repeat`].
+//! These systems run once after [`loop_behavior`].
 use crate::prelude::*;
 use bevy::prelude::*;
 use std::{

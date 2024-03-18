@@ -16,7 +16,7 @@ pub(crate) use self::{
         ActionIn, Attack, ChangePace, Close, ExamineItem, ItemAction, MoveItem, Pickup, Pulp,
         Smash, Stay, Step, Unwield, Wield,
     },
-    behavior::behavior_systems,
+    behavior::loop_behavior_and_refresh,
     breath::Breath,
     events::{ActorChange, ActorEvent, Healing, StaminaImpact},
     faction::{Faction, Intelligence, LastEnemy},

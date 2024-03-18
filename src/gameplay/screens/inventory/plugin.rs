@@ -2,7 +2,7 @@ use super::systems::{
     clear_inventory, manage_inventory_button_input, manage_inventory_keyboard_input,
     manage_inventory_mouse_input, remove_inventory_resource, spawn_inventory, update_inventory,
 };
-use crate::prelude::{behavior_systems, despawn, GameplayScreenState};
+use crate::prelude::{despawn, loop_behavior_and_refresh, GameplayScreenState};
 use bevy::prelude::{
     in_state, App, IntoSystem, IntoSystemConfigs, OnEnter, OnExit, Plugin, Update,
 };
@@ -21,7 +21,7 @@ impl Plugin for InventoryScreenPlugin {
                 (
                     manage_inventory_button_input,
                     manage_inventory_mouse_input,
-                    behavior_systems(),
+                    loop_behavior_and_refresh(),
                 )
                     .chain(),
             )

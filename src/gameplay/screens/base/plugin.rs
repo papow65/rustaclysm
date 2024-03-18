@@ -5,7 +5,7 @@ use super::{
         update_focus_cursor_visibility,
     },
 };
-use crate::prelude::{behavior_systems, update_visibility, GameplayScreenState};
+use crate::prelude::{loop_behavior_and_refresh, update_visibility, GameplayScreenState};
 use bevy::prelude::{
     in_state, not, resource_exists_and_changed, App, IntoSystemConfigs, Plugin, State, Update,
 };
@@ -24,7 +24,7 @@ impl Plugin for BaseScreenPlugin {
                     manage_keyboard_input
                         .before(/* process zooming input */ update_camera_offset),
                     (
-                        behavior_systems().run_if(in_state(FocusState::Normal)),
+                        loop_behavior_and_refresh().run_if(in_state(FocusState::Normal)),
                         (
                             update_focus_cursor_visibility,
                             update_visibility.run_if(not(in_state(FocusState::Normal))),
