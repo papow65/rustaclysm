@@ -14,6 +14,7 @@ pub(crate) use {container_limits::*, object_name::*, pos::*};
 #[derive(PartialEq, Debug, Component)]
 pub(crate) struct Filthy;
 
+/** Terrain that can be accessed, like a floor */
 #[derive(Component)]
 pub(crate) struct Accessible {
     pub(crate) water: bool,

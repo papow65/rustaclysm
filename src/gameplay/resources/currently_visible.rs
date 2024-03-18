@@ -127,7 +127,8 @@ impl<'a> CurrentlyVisible<'a> {
 
         if viewing_distance < self.from.x.abs_diff(to.x) as usize
             || viewing_distance < self.from.z.abs_diff(to.z) as usize
-            || (accessible.is_some() && self.envir.is_opaque(to))
+            // Floors can't be seen from below
+            || self.from.level < to.level && accessible.is_some()
         {
             Visible::Unseen
         } else {
