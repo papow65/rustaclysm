@@ -1,4 +1,4 @@
-use crate::prelude::{InputChange, QueuedInstruction};
+use crate::prelude::{InputChange, Interruption, QueuedInstruction};
 use bevy::prelude::Resource;
 
 #[derive(Debug, Default, Resource)]
@@ -17,12 +17,11 @@ impl InstructionQueue {
         self.waiting_for_user = false;
     }
 
-    pub(crate) fn add_interruption(&mut self) {
-        self.add(QueuedInstruction::Interrupted, InputChange::JustPressed);
-    }
-
-    pub(crate) fn add_finish(&mut self) {
-        self.add(QueuedInstruction::Finished, InputChange::JustPressed);
+    pub(crate) fn interrupt(&mut self, interruption: Interruption) {
+        self.add(
+            QueuedInstruction::Interrupt(interruption),
+            InputChange::JustPressed,
+        );
     }
 
     pub(crate) fn pop(&mut self) -> Option<QueuedInstruction> {

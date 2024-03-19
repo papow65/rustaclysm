@@ -84,25 +84,39 @@ impl PlayerActionState {
         &self,
         next_state: &mut ResMut<NextState<Self>>,
         healing_writer: &mut EventWriter<ActorEvent<Healing>>,
-        envir: &Envir,
+        currently_visible_builder: &CurrentlyVisibleBuilder,
         instruction_queue: &mut InstructionQueue,
         explored: &Explored,
         player: &ActorItem,
         now: Timestamp,
-        enemies: &[Pos],
+        factions: &[(Pos, &Faction)],
     ) -> Option<PlannedAction> {
+        let envir = &currently_visible_builder.envir;
+        let enemy_name = player
+            .faction
+            .enemy_name(currently_visible_builder, factions, player);
         match self {
             Self::Dragging {
                 active_from: Some(from),
-            } => auto_drag(envir, instruction_queue, from, enemies),
-            Self::AutoDefend => auto_defend(envir, instruction_queue, player, enemies),
-            Self::AutoTravel { target } => {
-                auto_travel(envir, instruction_queue, explored, player, *target, enemies)
+            } => auto_drag(envir, instruction_queue, from, enemy_name),
+            Self::AutoDefend => {
+                let enemies = player
+                    .faction
+                    .enemies(currently_visible_builder, factions, player);
+                auto_defend(envir, instruction_queue, player, &enemies)
             }
+            Self::AutoTravel { target } => auto_travel(
+                envir,
+                instruction_queue,
+                explored,
+                player,
+                *target,
+                enemy_name,
+            ),
             Self::Pulping {
                 active_target: Some(target),
-            } => auto_pulp(envir, instruction_queue, player, *target, enemies),
-            Self::Waiting { until } => auto_wait(instruction_queue, now, until, enemies),
+            } => auto_pulp(envir, instruction_queue, player, *target, enemy_name),
+            Self::Waiting { until } => auto_wait(instruction_queue, now, until, enemy_name),
             Self::Sleeping {
                 healing_from,
                 until,
@@ -134,7 +148,7 @@ impl PlayerActionState {
     ) -> Option<PlannedAction> {
         //println!("processing instruction: {instruction:?}");
         match (&self, instruction) {
-            (Self::Sleeping { .. }, QueuedInstruction::Finished) => {
+            (Self::Sleeping { .. }, QueuedInstruction::Interrupt(Interruption::Finished)) => {
                 next_state.set(Self::Normal);
                 message_writer.you("wake up").send_info();
                 None
@@ -174,29 +188,10 @@ impl PlayerActionState {
                 message_writer.you("can't attack yourself").send_error();
                 None
             }
-            (Self::Waiting { .. }, QueuedInstruction::Interrupted) => {
-                next_state.set(Self::Normal);
-                message_writer
-                    .you("spot an enemy and stop waiting")
-                    .send_warn();
-                None
-            }
-            (Self::Waiting { .. }, QueuedInstruction::Finished) => {
-                next_state.set(Self::Normal);
-                message_writer.str("Finished waiting").send_info();
-                None
-            }
-            (Self::Pulping { .. }, QueuedInstruction::Interrupted) => {
-                next_state.set(Self::Normal);
-                message_writer
-                    .you("spot an enemy and stop pulping")
-                    .send_warn();
-                None
-            }
             (Self::Attacking, QueuedInstruction::Attack)
             | (Self::Smashing, QueuedInstruction::Smash)
             | (Self::Dragging { .. }, QueuedInstruction::Drag | QueuedInstruction::CancelAction)
-            | (Self::Pulping { .. }, QueuedInstruction::Finished) => {
+            | (Self::Pulping { .. }, QueuedInstruction::Interrupt(Interruption::Finished)) => {
                 next_state.set(Self::Normal);
                 None
             }
@@ -204,7 +199,7 @@ impl PlayerActionState {
                 Self::Dragging {
                     active_from: Some(_),
                 },
-                QueuedInstruction::Finished,
+                QueuedInstruction::Interrupt(Interruption::Finished),
             ) => {
                 next_state.set(Self::Dragging { active_from: None });
                 None
@@ -276,18 +271,30 @@ impl PlayerActionState {
             }
             QueuedInstruction::ExamineItem(item) => Some(PlannedAction::ExamineItem { item }),
             QueuedInstruction::ChangePace => Some(PlannedAction::ChangePace),
-            QueuedInstruction::Interrupted => {
+            QueuedInstruction::Interrupt(Interruption::Danger(fragments)) => {
                 next_state.set(Self::Normal);
                 message_writer
-                    .str("Iterrupted while not waiting")
-                    .send_error();
+                    .you("spot")
+                    .push(fragments)
+                    .add("and stop")
+                    .add(self.to_string().to_lowercase())
+                    .send_warn();
                 None
             }
-            QueuedInstruction::Finished => {
+            QueuedInstruction::Interrupt(Interruption::LowStamina) => {
                 next_state.set(Self::Normal);
                 message_writer
-                    .str("Finished while not waiting")
-                    .send_error();
+                    .you("are almost out of breath and stop")
+                    .add(self.to_string().to_lowercase())
+                    .send_warn();
+                None
+            }
+            QueuedInstruction::Interrupt(Interruption::Finished) => {
+                next_state.set(Self::Normal);
+                message_writer
+                    .you("finish")
+                    .add(self.to_string().to_lowercase())
+                    .send_info();
                 None
             }
         }
@@ -521,19 +528,21 @@ fn auto_drag(
     envir: &Envir<'_, '_>,
     instruction_queue: &mut InstructionQueue,
     from: &Pos,
-    enemies: &[Pos],
+    enemy_name: Option<Fragment>,
 ) -> Option<PlannedAction> {
-    if !enemies.is_empty() {
-        instruction_queue.add_interruption();
-        None // process the cancellation next turn
-    } else if let Some(item) = envir.find_item(*from) {
-        Some(PlannedAction::MoveItem {
-            item,
-            to: Nbor::HERE,
-        })
+    if let Some(item) = envir.find_item(*from) {
+        if let Some(enemy_name) = enemy_name {
+            instruction_queue.interrupt(Interruption::Danger(enemy_name));
+            None
+        } else {
+            Some(PlannedAction::MoveItem {
+                item,
+                to: Nbor::HERE,
+            })
+        }
     } else {
-        instruction_queue.add_finish();
-        None // process the cancellation next turn
+        instruction_queue.interrupt(Interruption::Finished);
+        None
     }
 }
 
@@ -543,11 +552,17 @@ fn auto_travel(
     explored: &Explored,
     player: &ActorItem<'_>,
     target: Pos,
-    enemies: &[Pos],
+    enemy_name: Option<Fragment>,
 ) -> Option<PlannedAction> {
-    if !enemies.is_empty() || *player.pos == target || player.stamina.breath() != Breath::Normal {
-        instruction_queue.add_interruption();
-        None // process the cancellation next turn
+    if *player.pos == target {
+        instruction_queue.interrupt(Interruption::Finished);
+        None
+    } else if let Some(enemy_name) = enemy_name {
+        instruction_queue.interrupt(Interruption::Danger(enemy_name));
+        None
+    } else if player.stamina.breath() != Breath::Normal {
+        instruction_queue.interrupt(Interruption::LowStamina);
+        None
     } else {
         envir
             .path(
@@ -581,9 +596,12 @@ fn auto_defend(
     player: &ActorItem<'_>,
     enemies: &[Pos],
 ) -> Option<PlannedAction> {
-    if enemies.is_empty() || player.stamina.breath() != Breath::Normal {
-        instruction_queue.add_interruption();
-        None // process the cancellation next turn
+    if enemies.is_empty() {
+        instruction_queue.interrupt(Interruption::Finished);
+        None
+    } else if player.stamina.breath() != Breath::Normal {
+        instruction_queue.interrupt(Interruption::LowStamina);
+        None
     } else if let Some(target) = enemies.iter().find_map(|pos| envir.nbor(*player.pos, *pos)) {
         Some(PlannedAction::Attack { target })
     } else {
@@ -598,27 +616,29 @@ fn auto_pulp(
     instruction_queue: &mut InstructionQueue,
     player: &ActorItem<'_>,
     target: HorizontalDirection,
-    enemies: &[Pos],
+    enemy_name: Option<Fragment>,
 ) -> Option<PlannedAction> {
     //eprintln!("Post instruction pulp handling...");
-    if !enemies.is_empty() {
-        instruction_queue.add_interruption();
-        None // process the cancellation next turn
-    } else if player.stamina.breath() != Breath::Normal {
-        //eprintln!("Keep pulping after catching breath");
-        Some(PlannedAction::Stay {
-            duration: StayDuration::Short,
-        })
-    } else if envir
+    if envir
         .find_pulpable(player.pos.horizontal_nbor(target))
         .is_some()
     {
-        //eprintln!("Keep pulping");
-        Some(PlannedAction::Pulp { target })
+        if let Some(enemy_name) = enemy_name {
+            instruction_queue.interrupt(Interruption::Danger(enemy_name));
+            None
+        } else if player.stamina.breath() != Breath::Normal {
+            //eprintln!("Keep pulping after catching breath");
+            Some(PlannedAction::Stay {
+                duration: StayDuration::Short,
+            })
+        } else {
+            //eprintln!("Keep pulping");
+            Some(PlannedAction::Pulp { target })
+        }
     } else {
         //eprintln!("Stop pulping");
-        instruction_queue.add_finish();
-        None // process the cancellation next turn
+        instruction_queue.interrupt(Interruption::Finished);
+        None
     }
 }
 
@@ -626,14 +646,14 @@ fn auto_wait(
     instruction_queue: &mut InstructionQueue,
     now: Timestamp,
     until: &Timestamp,
-    enemies: &[Pos],
+    enemy_name: Option<Fragment>,
 ) -> Option<PlannedAction> {
-    if !enemies.is_empty() {
-        instruction_queue.add_interruption();
-        None // process the cancellation next turn
-    } else if *until <= now {
-        instruction_queue.add_finish();
-        None // process the cancellation next turn
+    if *until <= now {
+        instruction_queue.interrupt(Interruption::Finished);
+        None
+    } else if let Some(enemy_name) = enemy_name {
+        instruction_queue.interrupt(Interruption::Danger(enemy_name));
+        None
     } else {
         Some(PlannedAction::Stay {
             duration: StayDuration::Short,
@@ -666,8 +686,8 @@ fn auto_sleep(
     ));
 
     if *until <= now {
-        instruction_queue.add_finish();
-        None // process the cancellation next turn
+        instruction_queue.interrupt(Interruption::Finished);
+        None
     } else {
         let healing_duration = Milliseconds(healing_amount * 1_000_000);
         // dbg!(healing_from);

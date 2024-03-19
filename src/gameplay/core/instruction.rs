@@ -1,4 +1,4 @@
-use crate::prelude::{InputChange, Key, KeyCombo, Nbor};
+use crate::prelude::{Fragment, InputChange, Key, KeyCombo, Nbor};
 use bevy::{input::keyboard::KeyCode, prelude::Entity};
 
 use super::HorizontalDirection;
@@ -65,6 +65,13 @@ impl TryFrom<Key> for PlayerDirection {
     }
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) enum Interruption {
+    Danger(Fragment),
+    LowStamina,
+    Finished,
+}
+
 /** All instructions related to player character actions */
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) enum QueuedInstruction {
@@ -86,9 +93,7 @@ pub(crate) enum QueuedInstruction {
     ExamineItem(Entity),
     CancelAction,
     /** Set automatically */
-    Interrupted,
-    /** Set automatically */
-    Finished,
+    Interrupt(Interruption),
 }
 
 impl TryFrom<Key> for QueuedInstruction {

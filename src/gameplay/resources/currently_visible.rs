@@ -24,7 +24,7 @@ impl<'w, 's> CurrentlyVisibleBuilder<'w, 's> {
     }
 
     pub(crate) fn for_player(&self) -> CurrentlyVisible {
-        self.build(Some(&*self.player_action_state), *self.players.single())
+        self.build(Some(&*self.player_action_state), self.player_pos())
     }
 
     fn build(&self, state: Option<&PlayerActionState>, from: Pos) -> CurrentlyVisible {
@@ -76,6 +76,10 @@ impl<'w, 's> CurrentlyVisibleBuilder<'w, 's> {
             magic_stairs_up,
             magic_stairs_down,
         }
+    }
+
+    pub(crate) fn player_pos(&self) -> Pos {
+        *self.players.single()
     }
 }
 

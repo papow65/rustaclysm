@@ -106,19 +106,15 @@ fn plan_automatic_player_action(
         .expect("'entity' should be a known actor");
 
     let factions = &factions.iter().map(|(p, f)| (*p, f)).collect::<Vec<_>>();
-    let enemies = actor
-        .faction
-        .enemies(&currently_visible_builder, factions, &actor);
-
     player_action_state.plan_automatic_action(
         &mut next_player_action_state,
         &mut healing_writer,
-        &currently_visible_builder.envir,
+        &currently_visible_builder,
         &mut instruction_queue,
         &explored,
         &actor,
         clock.time(),
-        &enemies,
+        factions,
     )
 }
 

@@ -285,6 +285,34 @@ impl Faction {
             .expect("Fallback intent")
     }
 
+    /// The name of the first enemy, if any
+    pub(crate) fn enemy_name(
+        &self,
+        currently_visible_builder: &CurrentlyVisibleBuilder,
+        factions: &[(Pos, &Self)],
+        actor: &ActorItem,
+    ) -> Option<Fragment> {
+        let currently_visible = currently_visible_builder.for_npc(*actor.pos);
+        let player_pos = currently_visible_builder.player_pos();
+
+        factions
+            .iter()
+            .filter(|(_, other_faction)| self.dislikes(other_faction))
+            .map(|(enemy_pos, _)| enemy_pos)
+            .copied()
+            .filter(|enemy_pos| {
+                actor.aquatic.is_none() || currently_visible_builder.envir.is_water(*enemy_pos)
+            })
+            .filter(|enemy_pos| currently_visible.can_see(*enemy_pos, None) == Visible::Seen)
+            .min_by_key(|enemy_pos| player_pos.vision_distance(*enemy_pos))
+            .and_then(|enemy_pos| {
+                currently_visible_builder
+                    .envir
+                    .find_character(enemy_pos)
+                    .map(|(_, name)| name.single(enemy_pos))
+            })
+    }
+
     pub(crate) fn enemies(
         &self,
         currently_visible_builder: &CurrentlyVisibleBuilder,
