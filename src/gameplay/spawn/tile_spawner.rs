@@ -648,11 +648,22 @@ impl<'w> TileSpawner<'w, '_> {
             .insert(Stamina::FULL)
             .insert(WalkingMode::Walking); // override
         self.configure_player(player);
+    }
+
+    pub(crate) fn spawn_zombies(&mut self, infos: &Infos, around_pos: Pos) {
+        let root = self
+            .commands
+            .spawn((
+                Transform::default(),
+                Visibility::default(),
+                StateScoped(ApplicationState::Gameplay),
+            ))
+            .id();
 
         self.spawn_character(
             infos,
             root,
-            spawn_pos.horizontal_offset(10, 10),
+            around_pos.horizontal_offset(-26, -36),
             &ObjectId::new("human"),
             Some(ObjectName::from_str("Survivor", HARD_TEXT_COLOR)),
         );
@@ -660,35 +671,35 @@ impl<'w> TileSpawner<'w, '_> {
         self.spawn_character(
             infos,
             root,
-            spawn_pos.horizontal_offset(12, 16),
+            around_pos.horizontal_offset(-24, -30),
             &ObjectId::new("mon_zombie"),
             None,
         );
         self.spawn_character(
             infos,
             root,
-            spawn_pos.horizontal_offset(40, 40),
+            around_pos.horizontal_offset(4, -26),
             &ObjectId::new("mon_zombie"),
             None,
         );
         self.spawn_character(
             infos,
             root,
-            spawn_pos.horizontal_offset(38, 39),
+            around_pos.horizontal_offset(2, -27),
             &ObjectId::new("mon_zombie"),
             None,
         );
         self.spawn_character(
             infos,
             root,
-            spawn_pos.horizontal_offset(37, 37),
+            around_pos.horizontal_offset(1, -29),
             &ObjectId::new("mon_zombie"),
             None,
         );
         self.spawn_character(
             infos,
             root,
-            spawn_pos.horizontal_offset(34, 34),
+            around_pos.horizontal_offset(-2, -42),
             &ObjectId::new("mon_zombie"),
             None,
         );
