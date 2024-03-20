@@ -1,8 +1,7 @@
 use super::components::{MainMenuButton, ReturnButton};
 use crate::prelude::{
     ApplicationState, Ctrl, Fonts, GameplayScreenState, InputChange, Key, Keys, QuitButton,
-    StateBound, BAD_TEXT_COLOR, DEFAULT_TEXT_COLOR, GOOD_TEXT_COLOR, LARGE_FONT_SIZE,
-    MEDIUM_SPACING,
+    StateBound, BAD_TEXT_COLOR, DEFAULT_TEXT_COLOR, GOOD_TEXT_COLOR, MEDIUM_SPACING,
 };
 use bevy::{app::AppExit, prelude::*};
 
@@ -18,7 +17,6 @@ pub(super) fn spawn_menu(mut commands: Commands, fonts: Res<Fonts>) {
         },
         ..default()
     };
-    let font = fonts.default();
 
     commands
         .spawn((
@@ -39,25 +37,18 @@ pub(super) fn spawn_menu(mut commands: Commands, fonts: Res<Fonts>) {
         .with_children(|parent| {
             parent
                 .spawn((button.clone(), ReturnButton))
-                .with_children(|parent| add_text(parent, &font, "Return", GOOD_TEXT_COLOR));
+                .with_children(|parent| add_text(parent, &fonts, "Return", GOOD_TEXT_COLOR));
             parent
                 .spawn((button.clone(), MainMenuButton))
-                .with_children(|parent| add_text(parent, &font, "Main Menu", DEFAULT_TEXT_COLOR));
+                .with_children(|parent| add_text(parent, &fonts, "Main Menu", DEFAULT_TEXT_COLOR));
             parent
                 .spawn((button, QuitButton))
-                .with_children(|parent| add_text(parent, &font, "Quit", BAD_TEXT_COLOR));
+                .with_children(|parent| add_text(parent, &fonts, "Quit", BAD_TEXT_COLOR));
         });
 }
 
-fn add_text(parent: &mut ChildBuilder, font: &Handle<Font>, text: &str, color: Color) {
-    parent.spawn(TextBundle::from_section(
-        text,
-        TextStyle {
-            font: font.clone(),
-            font_size: LARGE_FONT_SIZE,
-            color,
-        },
-    ));
+fn add_text(parent: &mut ChildBuilder, fonts: &Fonts, text: &str, color: Color) {
+    parent.spawn(TextBundle::from_section(text, fonts.large(color)));
 }
 
 #[allow(clippy::needless_pass_by_value)]

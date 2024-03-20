@@ -1,5 +1,7 @@
-use crate::prelude::Paths;
-use bevy::prelude::{AssetServer, Font, Handle, Resource};
+use crate::prelude::{
+    Paths, HUGE_FONT_SIZE, LARGE_FONT_SIZE, LARGISH_FONT_SIZE, REGULAR_FONT_SIZE,
+};
+use bevy::prelude::{AssetServer, Color, Font, Handle, Resource, TextStyle};
 
 #[derive(Default, Resource)]
 pub(crate) struct Fonts {
@@ -13,7 +15,35 @@ impl Fonts {
         }
     }
 
-    pub(crate) fn default(&self) -> Handle<Font> {
-        self.fira.clone()
+    pub(crate) fn regular(&self, color: Color) -> TextStyle {
+        TextStyle {
+            font: self.fira.clone(),
+            font_size: REGULAR_FONT_SIZE,
+            color,
+        }
+    }
+
+    pub(crate) fn largish(&self, color: Color) -> TextStyle {
+        TextStyle {
+            font: self.fira.clone(),
+            font_size: LARGISH_FONT_SIZE,
+            color,
+        }
+    }
+
+    pub(crate) fn large(&self, color: Color) -> TextStyle {
+        TextStyle {
+            font: self.fira.clone(),
+            font_size: LARGE_FONT_SIZE,
+            color,
+        }
+    }
+
+    pub(crate) fn huge(&self, color: Color) -> TextStyle {
+        TextStyle {
+            font: self.fira.clone(),
+            font_size: HUGE_FONT_SIZE,
+            color,
+        }
     }
 }

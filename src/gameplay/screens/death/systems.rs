@@ -1,14 +1,11 @@
 use crate::prelude::{
     ApplicationState, Ctrl, Fonts, GameplayScreenState, InputChange, Key, Keys, StateBound,
-    BAD_TEXT_COLOR, DEFAULT_TEXT_COLOR, LARGE_FONT_SIZE, LARGISH_FONT_SIZE, PANEL_COLOR,
-    SMALL_SPACING,
+    BAD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, WARN_TEXT_COLOR,
 };
 use bevy::prelude::*;
 
 #[allow(clippy::needless_pass_by_value)]
 pub(super) fn spawn_death_screen(mut commands: Commands, fonts: Res<Fonts>) {
-    let font = fonts.default();
-
     commands
         .spawn((
             NodeBundle {
@@ -54,11 +51,7 @@ pub(super) fn spawn_death_screen(mut commands: Commands, fonts: Res<Fonts>) {
                         .with_children(|parent| {
                             parent.spawn(TextBundle::from_section(
                                 "You died",
-                                TextStyle {
-                                    font: font.clone(),
-                                    font_size: LARGISH_FONT_SIZE,
-                                    color: DEFAULT_TEXT_COLOR,
-                                },
+                                fonts.largish(BAD_TEXT_COLOR),
                             ));
                         });
 
@@ -76,11 +69,7 @@ pub(super) fn spawn_death_screen(mut commands: Commands, fonts: Res<Fonts>) {
                         .with_children(|parent| {
                             parent.spawn(TextBundle::from_section(
                                 "Main menu",
-                                TextStyle {
-                                    font,
-                                    font_size: LARGE_FONT_SIZE,
-                                    color: BAD_TEXT_COLOR,
-                                },
+                                fonts.large(WARN_TEXT_COLOR),
                             ));
                         });
                 });

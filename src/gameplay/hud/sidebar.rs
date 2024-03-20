@@ -403,7 +403,7 @@ fn update_status_player_wielded(
     }
     .add("\n");
 
-    let text_style = HudDefaults::new(fonts.default()).text_style;
+    let text_style = HudDefaults::new(&fonts).text_style;
     text_sections.wielded = phrase.as_text_sections(&text_style);
 
     update_status_display(&text_sections, &mut status_displays.single_mut());
@@ -455,7 +455,7 @@ fn update_status_enemies(
         }
         .add("\n");
 
-        let text_style = HudDefaults::new(fonts.default()).text_style;
+        let text_style = HudDefaults::new(&fonts).text_style;
         text_sections.enemies = phrase.as_text_sections(&text_style);
 
         update_status_display(&text_sections, &mut status_displays.single_mut());

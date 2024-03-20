@@ -34,11 +34,7 @@ pub(crate) fn spawn_loading(mut commands: Commands, fonts: Res<Fonts>) {
                 .with_children(|parent| {
                     parent.spawn(TextBundle::from_section(
                         "Loading...",
-                        TextStyle {
-                            font: fonts.default(),
-                            font_size: LARGE_FONT_SIZE,
-                            color: DEFAULT_TEXT_COLOR,
-                        },
+                        fonts.large(DEFAULT_TEXT_COLOR),
                     ));
                 });
         });

@@ -61,26 +61,10 @@ pub(super) fn spawn_inventory(mut commands: Commands, fonts: Res<Fonts>) {
         previous_items: EntityHashMap::default(),
         next_items: EntityHashMap::default(),
         drop_direction: HorizontalDirection::Here,
-        section_text_style: TextStyle {
-            font: fonts.default(),
-            font_size: REGULAR_FONT_SIZE,
-            color: SOFT_TEXT_COLOR,
-        },
-        selected_section_text_style: TextStyle {
-            font: fonts.default(),
-            font_size: REGULAR_FONT_SIZE,
-            color: WARN_TEXT_COLOR,
-        },
-        item_text_style: TextStyle {
-            font: fonts.default(),
-            font_size: REGULAR_FONT_SIZE,
-            color: DEFAULT_TEXT_COLOR,
-        },
-        selected_item_text_style: TextStyle {
-            font: fonts.default(),
-            font_size: REGULAR_FONT_SIZE,
-            color: GOOD_TEXT_COLOR,
-        },
+        section_text_style: fonts.regular(SOFT_TEXT_COLOR),
+        selected_section_text_style: fonts.regular(WARN_TEXT_COLOR),
+        item_text_style: fonts.regular(DEFAULT_TEXT_COLOR),
+        selected_item_text_style: fonts.regular(GOOD_TEXT_COLOR),
         last_time: Timestamp::ZERO,
     });
 }

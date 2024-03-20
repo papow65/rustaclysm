@@ -50,34 +50,26 @@ pub(crate) fn spawn_main_menu(
             StateBound::<ApplicationState>::default(),
         ))
         .with_children(|parent| {
-            add_title(parent, fonts.default());
-            add_tagline(parent, fonts.default());
+            add_title(parent, &fonts);
+            add_tagline(parent, &fonts);
             add_load_button_area(parent);
-            add_notification_area(parent, fonts.default());
-            add_quit_button(parent, fonts.default());
+            add_notification_area(parent, &fonts);
+            add_quit_button(parent, &fonts);
         });
 }
 
-fn add_title(parent: &mut ChildBuilder, font: Handle<Font>) {
+fn add_title(parent: &mut ChildBuilder, fonts: &Fonts) {
     parent.spawn(TextBundle::from_section(
         "Rustaclysm",
-        TextStyle {
-            font,
-            font_size: HUGE_FONT_SIZE,
-            color: DEFAULT_TEXT_COLOR,
-        },
+        fonts.huge(DEFAULT_TEXT_COLOR),
     ));
 }
 
-fn add_tagline(parent: &mut ChildBuilder, font: Handle<Font>) {
+fn add_tagline(parent: &mut ChildBuilder, fonts: &Fonts) {
     parent.spawn(
         TextBundle::from_section(
             "A 3D reimplementation of Cataclysm: Dark Days Ahead",
-            TextStyle {
-                font,
-                font_size: LARGISH_FONT_SIZE,
-                color: DEFAULT_TEXT_COLOR,
-            },
+            fonts.largish(DEFAULT_TEXT_COLOR),
         )
         .with_style(Style {
             margin: UiRect {
@@ -108,7 +100,7 @@ fn add_load_button_area(parent: &mut ChildBuilder) {
     ));
 }
 
-fn add_notification_area(parent: &mut ChildBuilder, font: Handle<Font>) {
+fn add_notification_area(parent: &mut ChildBuilder, fonts: &Fonts) {
     parent
         .spawn((
             NodeBundle {
@@ -133,14 +125,7 @@ fn add_notification_area(parent: &mut ChildBuilder, font: Handle<Font>) {
         .with_children(|parent| {
             parent.spawn((
                 TextBundle {
-                    text: Text::from_section(
-                        "",
-                        TextStyle {
-                            font,
-                            font_size: LARGISH_FONT_SIZE,
-                            color: DEFAULT_TEXT_COLOR,
-                        },
-                    ),
+                    text: Text::from_section("", fonts.largish(DEFAULT_TEXT_COLOR)),
                     style: Style {
                         width: Val::Px(FULL_WIDTH),
                         padding: UiRect::horizontal(MEDIUM_SPACING),
@@ -154,7 +139,7 @@ fn add_notification_area(parent: &mut ChildBuilder, font: Handle<Font>) {
         });
 }
 
-fn add_quit_button(parent: &mut ChildBuilder, font: Handle<Font>) {
+fn add_quit_button(parent: &mut ChildBuilder, fonts: &Fonts) {
     parent
         .spawn((
             ButtonBundle {
@@ -172,11 +157,7 @@ fn add_quit_button(parent: &mut ChildBuilder, font: Handle<Font>) {
         .with_children(|parent| {
             parent.spawn(TextBundle::from_section(
                 "Quit",
-                TextStyle {
-                    font,
-                    font_size: LARGE_FONT_SIZE,
-                    color: BAD_TEXT_COLOR,
-                },
+                fonts.large(BAD_TEXT_COLOR),
             ));
         });
 }
@@ -344,11 +325,7 @@ fn add_load_button(fonts: &Fonts, parent: &mut ChildBuilder, path: &Path) {
 
             parent.spawn(TextBundle::from_section(
                 format!("Load {} in {}", character, world.display()),
-                TextStyle {
-                    font: fonts.default(),
-                    font_size: LARGISH_FONT_SIZE,
-                    color: GOOD_TEXT_COLOR,
-                },
+                fonts.largish(GOOD_TEXT_COLOR),
             ));
         });
 }
