@@ -2,7 +2,10 @@ use crate::prelude::*;
 use base64::{engine::general_purpose::STANDARD as base64, Engine};
 use bevy::{app::AppExit, prelude::*};
 use glob::glob;
-use std::{path::PathBuf, str::from_utf8};
+use std::{
+    path::{Path, PathBuf},
+    str::from_utf8,
+};
 
 const FULL_WIDTH: f32 = 720.0;
 
@@ -182,7 +185,8 @@ fn add_quit_button(parent: &mut ChildBuilder, font: Handle<Font>) {
 pub(crate) fn update_sav_files(
     mut commands: Commands,
     fonts: Res<Fonts>,
-    mut last_error: Local<Option<LoadError>>,
+    mut session: GameplaySession,
+    mut last_list_saves_result: Local<Option<Result<Vec<PathBuf>, LoadError>>>,
     mut load_button_areas: Query<
         (Entity, &mut Style),
         (With<LoadButtonArea>, Without<MessageWrapper>),
@@ -190,88 +194,37 @@ pub(crate) fn update_sav_files(
     mut message_wrappers: Query<&mut Style, (With<MessageWrapper>, Without<LoadButtonArea>)>,
     mut message_fields: Query<&mut Text, With<MessageField>>,
 ) {
-    if let Ok(mut message_wrapper_style) = message_wrappers.get_single_mut() {
-        if let Ok(mut message_text) = message_fields.get_single_mut() {
-            if let Ok((load_button_area, mut load_button_area_style)) =
-                load_button_areas.get_single_mut()
-            {
-                match list_saves() {
-                    Ok(list) => {
-                        *last_error = None;
-                        load_button_area_style.display = Display::Flex;
-                        message_wrapper_style.display = Display::None;
+    let mut message_wrapper_style = message_wrappers.single_mut();
+    let (load_button_area, mut load_button_area_style) = load_button_areas.single_mut();
 
-                        commands.entity(load_button_area).despawn_descendants();
+    let list_saves_result = list_saves();
 
-                        for path in list {
-                            commands.entity(load_button_area).with_children(|parent| {
-                                // Load button
-                                parent
-                                    .spawn((
-                                        ButtonBundle {
-                                            style: Style {
-                                                width: Val::Px(400.0),
-                                                align_items: AlignItems::Center,
-                                                justify_content: JustifyContent::Center,
-                                                margin: UiRect {
-                                                    bottom: MEDIUM_SPACING,
-                                                    ..UiRect::default()
-                                                },
-                                                padding: UiRect {
-                                                    left: LARGE_SPACING,
-                                                    right: LARGE_SPACING,
-                                                    top: MEDIUM_SPACING,
-                                                    bottom: MEDIUM_SPACING,
-                                                },
-                                                ..default()
-                                            },
-                                            ..default()
-                                        },
-                                        LoadButton { path: path.clone() },
-                                    ))
-                                    .with_children(|parent| {
-                                        let world = path.parent().expect("World required");
-                                        let encoded_character = path
-                                            .file_name()
-                                            .expect("Filename required")
-                                            .to_str()
-                                            .expect("Valid utf-8 filename required")
-                                            .strip_prefix('#')
-                                            .expect("Expected # prefix")
-                                            .strip_suffix(".sav")
-                                            .expect("Expected .sav suffix");
-                                        let decoded_character = base64
-                                            .decode(encoded_character)
-                                            .expect("Valid base64 required");
-                                        let character = from_utf8(&decoded_character)
-                                            .expect("Valid utf8 required");
+    if !session.is_changed() && Some(&list_saves_result) == last_list_saves_result.as_ref() {
+        return;
+    }
+    *last_list_saves_result = Some(list_saves_result.clone());
 
-                                        parent.spawn(TextBundle::from_section(
-                                            format!("Load {} in {}", character, world.display()),
-                                            TextStyle {
-                                                font: fonts.default(),
-                                                font_size: LARGISH_FONT_SIZE,
-                                                color: GOOD_TEXT_COLOR,
-                                            },
-                                        ));
-                                    });
-                            });
-                        }
-                    }
-                    Err(err) => {
-                        if Some(&err) != last_error.as_ref() {
-                            eprintln!("{}", &err);
-                            *last_error = Some(err.clone());
-                        }
+    commands.entity(load_button_area).despawn_descendants();
 
-                        commands.entity(load_button_area).despawn_descendants();
+    match list_saves_result {
+        Ok(list) => {
+            load_button_area_style.display = Display::Flex;
+            message_wrapper_style.display = Display::None;
 
-                        load_button_area_style.display = Display::None;
-                        message_wrapper_style.display = Display::Flex;
-                        message_text.sections[0].value = err.to_string();
-                    }
-                }
+            for path in list {
+                commands.entity(load_button_area).with_children(|parent| {
+                    add_load_button(&fonts, parent, &path);
+                });
             }
+        }
+        Err(err) => {
+            eprintln!("{}", &err);
+
+            load_button_area_style.display = Display::None;
+            message_wrapper_style.display = Display::Flex;
+
+            let mut message_text = message_fields.single_mut();
+            message_text.sections[0].value = err.to_string();
         }
     }
 }
@@ -345,6 +298,59 @@ fn check_directory_structure() -> Result<(), LoadError> {
     }
 
     Ok(())
+}
+
+fn add_load_button(fonts: &Fonts, parent: &mut ChildBuilder, path: &Path) {
+    parent
+        .spawn((
+            ButtonBundle {
+                style: Style {
+                    width: Val::Px(400.0),
+                    align_items: AlignItems::Center,
+                    justify_content: JustifyContent::Center,
+                    margin: UiRect {
+                        bottom: MEDIUM_SPACING,
+                        ..UiRect::default()
+                    },
+                    padding: UiRect {
+                        left: LARGE_SPACING,
+                        right: LARGE_SPACING,
+                        top: MEDIUM_SPACING,
+                        bottom: MEDIUM_SPACING,
+                    },
+                    ..default()
+                },
+                ..default()
+            },
+            LoadButton {
+                path: path.to_path_buf(),
+            },
+        ))
+        .with_children(|parent| {
+            let world = path.parent().expect("World required");
+            let encoded_character = path
+                .file_name()
+                .expect("Filename required")
+                .to_str()
+                .expect("Valid utf-8 filename required")
+                .strip_prefix('#')
+                .expect("Expected # prefix")
+                .strip_suffix(".sav")
+                .expect("Expected .sav suffix");
+            let decoded_character = base64
+                .decode(encoded_character)
+                .expect("Valid base64 required");
+            let character = from_utf8(&decoded_character).expect("Valid utf8 required");
+
+            parent.spawn(TextBundle::from_section(
+                format!("Load {} in {}", character, world.display()),
+                TextStyle {
+                    font: fonts.default(),
+                    font_size: LARGISH_FONT_SIZE,
+                    color: GOOD_TEXT_COLOR,
+                },
+            ));
+        });
 }
 
 #[allow(clippy::needless_pass_by_value)]
