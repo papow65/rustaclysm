@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use bevy::prelude::*;
+use bevy::{ecs::system::SystemState, prelude::*};
 use std::{cmp::Ordering, time::Instant};
 
 const MAX_EXPAND_DISTANCE: i32 = 10;
@@ -173,13 +173,21 @@ pub(crate) fn spawn_subzone_levels(
     log_if_slow("spawn_subzone_levels", start);
 }
 
+/** This is an intentionally exclusive system to prevent an occasional panic.
+See <https://bevyengine.org/learn/errors/b0003/> */
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn despawn_subzone_levels(
-    mut commands: Commands,
-    mut despawn_subzone_level_reader: EventReader<DespawnSubzoneLevel>,
-    mut subzone_level_entities: ResMut<SubzoneLevelEntities>,
+    world: &mut World,
+    sytem_state: &mut SystemState<(
+        Commands,
+        EventReader<DespawnSubzoneLevel>,
+        ResMut<SubzoneLevelEntities>,
+    )>,
 ) {
     let start = Instant::now();
+
+    let (mut commands, mut despawn_subzone_level_reader, mut subzone_level_entities) =
+        sytem_state.get_mut(world);
 
     println!(
         "Despawning {} subzone levels",
@@ -187,11 +195,12 @@ pub(crate) fn despawn_subzone_levels(
     );
 
     for despawn_event in despawn_subzone_level_reader.read() {
-        if let Some(entity) = subzone_level_entities.get(despawn_event.subzone_level) {
+        if let Some(entity) = subzone_level_entities.remove(despawn_event.subzone_level) {
             commands.entity(entity).despawn_recursive();
-            subzone_level_entities.remove(entity);
         }
     }
+
+    sytem_state.apply(world);
 
     log_if_slow("despawn_subzone_levels", start);
 }

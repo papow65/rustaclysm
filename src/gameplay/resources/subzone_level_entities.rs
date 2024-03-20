@@ -32,16 +32,12 @@ impl SubzoneLevelEntities {
         reverse_entry.insert(subzone_level);
     }
 
-    pub(crate) fn remove(&mut self, entity: Entity) {
-        let subzone_level = self
-            .reverse
-            .remove(&entity)
-            .expect("'entity' should be found");
-        let removed = self.subzone_levels.remove(&subzone_level);
-        assert!(
-            removed.is_some(),
-            "The removed subzone level entity should have been found"
-        );
+    pub(crate) fn remove(&mut self, subzone_level: SubzoneLevel) -> Option<Entity> {
+        self.subzone_levels
+            .remove(&subzone_level)
+            .inspect(|removed_entity| {
+                self.reverse.remove(removed_entity);
+            })
     }
 
     pub(crate) fn loaded(&self) -> bool {
