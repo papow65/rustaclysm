@@ -118,7 +118,7 @@ pub(super) fn clear_inventory(
 
 #[allow(clippy::needless_pass_by_value)]
 pub(super) fn update_inventory(
-    run: In<bool>,
+    In(run): In<bool>,
     mut commands: Commands,
     envir: Envir,
     infos: Res<Infos>,
@@ -126,7 +126,7 @@ pub(super) fn update_inventory(
     players: Query<(&Pos, &BodyContainers), With<Player>>,
     items: Query<(Item, Option<&Corpse>, Option<&Integrity>, &LastSeen)>,
 ) {
-    if !run.0 {
+    if !run {
         return;
     }
 
