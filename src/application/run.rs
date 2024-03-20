@@ -2,7 +2,7 @@ use super::{
     check::check_delay,
     systems::{
         load_fonts, manage_button_hover, manage_global_keyboard_input, manage_scrolling,
-        maximize_window,
+        maximize_window, resize_scrolling_lists,
     },
 };
 use crate::prelude::*;
@@ -56,8 +56,10 @@ pub(crate) fn run_application() {
             manage_button_hover,
             manage_scrolling.run_if(on_event::<MouseWheel>()),
             manage_global_keyboard_input.run_if(on_event::<KeyboardInput>()),
+            resize_scrolling_lists,
         ),
     );
+    app.add_systems(FixedUpdate, resize_scrolling_lists);
     app.add_systems(Last, check_delay);
 
     app.run();

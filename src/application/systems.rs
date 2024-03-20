@@ -34,22 +34,6 @@ pub(super) fn manage_button_hover(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(super) fn manage_scrolling(
-    mut mouse_wheel_events: EventReader<MouseWheel>,
-    mut scrolling_lists: Query<(&mut ScrollingList, &mut Style, &Parent, &Node)>,
-    nodes: Query<&Node>,
-) {
-    for mouse_wheel_event in mouse_wheel_events.read() {
-        for (mut scrolling_list, mut style, parent, list_node) in &mut scrolling_lists {
-            let parent_node = nodes
-                .get(parent.get())
-                .expect("Parent node should be found");
-            style.top = scrolling_list.scroll(list_node, parent_node, mouse_wheel_event);
-        }
-    }
-}
-
-#[allow(clippy::needless_pass_by_value)]
 pub(super) fn manage_global_keyboard_input(
     mut keys: Keys,
     mut app_exit_events: ResMut<Events<AppExit>>,
@@ -68,5 +52,34 @@ pub(super) fn manage_global_keyboard_input(
             }
             _ => {}
         }
+    }
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub(super) fn manage_scrolling(
+    mut mouse_wheel_events: EventReader<MouseWheel>,
+    mut scrolling_lists: Query<(&mut ScrollingList, &mut Style, &Parent, &Node)>,
+    nodes: Query<&Node>,
+) {
+    for mouse_wheel_event in mouse_wheel_events.read() {
+        for (mut scrolling_list, mut style, parent, list_node) in &mut scrolling_lists {
+            let parent_node = nodes
+                .get(parent.get())
+                .expect("Parent node should be found");
+            style.top = scrolling_list.scroll(list_node, parent_node, mouse_wheel_event);
+        }
+    }
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub(crate) fn resize_scrolling_lists(
+    mut scrolling_lists: Query<(&mut ScrollingList, &mut Style, &Parent, &Node)>,
+    nodes: Query<&Node>,
+) {
+    for (mut scrolling_list, mut style, parent, list_node) in &mut scrolling_lists {
+        let parent_node = nodes
+            .get(parent.get())
+            .expect("Parent node should be found");
+        style.top = scrolling_list.resize(list_node, parent_node);
     }
 }
