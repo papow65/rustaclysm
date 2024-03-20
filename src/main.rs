@@ -2,6 +2,7 @@
 
 mod application;
 mod cdda;
+mod common;
 mod gameplay;
 mod loading;
 mod main_menu;

@@ -2,7 +2,7 @@ use crate::prelude::*;
 use bevy::prelude::Local;
 use std::time::{Duration, Instant};
 
-pub(crate) struct StdInstant(Instant);
+pub(super) struct StdInstant(Instant);
 
 impl Default for StdInstant {
     fn default() -> Self {
@@ -19,7 +19,7 @@ impl StdInstant {
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn check_delay(mut last_time: Local<StdInstant>) {
+pub(super) fn check_delay(mut last_time: Local<StdInstant>) {
     let start = Instant::now();
 
     let delay = last_time.next();

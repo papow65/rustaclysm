@@ -1,7 +1,8 @@
 use crate::prelude::*;
 use base64::{engine::general_purpose::STANDARD as base64, Engine};
 use bevy::{app::AppExit, prelude::*};
-use std::str::from_utf8;
+use glob::glob;
+use std::{path::PathBuf, str::from_utf8};
 
 const FULL_WIDTH: f32 = 720.0;
 const SPACING: f32 = 20.0;
@@ -194,7 +195,7 @@ pub(crate) fn update_sav_files(
             if let Ok((load_button_area, mut load_button_area_style)) =
                 load_button_areas.get_single_mut()
             {
-                match Paths::list() {
+                match list_saves() {
                     Ok(list) => {
                         *last_error = None;
                         load_button_area_style.display = Display::Flex;
@@ -273,6 +274,77 @@ pub(crate) fn update_sav_files(
             }
         }
     }
+}
+
+fn list_saves() -> Result<Vec<PathBuf>, LoadError> {
+    check_directory_structure()?;
+
+    let worlds_pattern = Paths::save_path().join("*");
+    let pattern = worlds_pattern
+        .to_str()
+        .expect("Path pattern should be valid UTF-8");
+    let worlds = glob(pattern)
+        .expect("Paths shuld be readable")
+        .map(|world| {
+            world
+                .expect("Path should be valid")
+                .components()
+                .skip(2)
+                .collect::<PathBuf>()
+        })
+        .collect::<Vec<_>>();
+
+    if worlds.is_empty() {
+        Err(LoadError::new(
+            format!(
+                "No Cataclysm: DDA worlds found to load under {}\nCreate a new world using Cataclysm: DDA to continue.",
+                Paths::save_path().display()
+            )
+        ))
+    } else {
+        let savs_pattern = worlds_pattern.join("#*.sav");
+        let pattern = savs_pattern
+            .to_str()
+            .expect("Path pattern should be valid UTF-8");
+        let savs = glob(pattern)
+            .expect("Paths shuld be readable")
+            .map(|sav| {
+                sav.expect("Path should be valid")
+                    .components()
+                    .skip(2)
+                    .collect::<PathBuf>()
+            })
+            .collect::<Vec<_>>();
+
+        if savs.is_empty() {
+            Err(LoadError::new(
+                format!(
+                    "No Cataclysm: DDA saves found to load in any world directory under {}\nCreate a new save file using Cataclysm: DDA to continue.",
+                    Paths::save_path().display()
+                )
+            ))
+        } else {
+            Ok(savs)
+        }
+    }
+}
+
+fn check_directory_structure() -> Result<(), LoadError> {
+    if !Paths::asset_path().is_dir() {
+        return Err(LoadError::new(
+            format!("Directory '{}' not found.\nPlease run this in the directory containing the 'assets' directory.", Paths::asset_path().display())
+        ));
+    }
+
+    for asset_subdir in [Paths::data_path(), Paths::gfx_path(), Paths::save_path()] {
+        if !asset_subdir.is_dir() {
+            return Err(LoadError::new(
+                format!("Directory '{}/' not found.\nPlease make sure the '{}/' directory contains a copy of (or a symlink to) Cataclysm-DDA's '{}/' directory.", asset_subdir.display(), Paths::asset_path().display(), asset_subdir.file_name().expect("Named directory").to_str().expect("Valid path"))
+            ));
+        }
+    }
+
+    Ok(())
 }
 
 #[allow(clippy::needless_pass_by_value)]
