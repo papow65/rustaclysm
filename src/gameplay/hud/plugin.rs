@@ -21,10 +21,8 @@ impl Plugin for HudPlugin {
 
         app.add_systems(
             Update,
-            (
-                manage_hud_keyboard_input,
-                update_sidebar_systems().run_if(in_state(ApplicationState::Gameplay)),
-            ),
+            (manage_hud_keyboard_input, update_sidebar_systems())
+                .run_if(in_state(ApplicationState::Gameplay)),
         );
 
         app.add_systems(
