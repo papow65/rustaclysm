@@ -23,9 +23,4 @@ impl fmt::Display for InventoryAction {
 }
 
 #[derive(Component, Debug)]
-pub(super) struct ActionButton(pub(super) Entity, pub(super) InventoryAction);
-
-#[derive(Component, Default)]
-pub(super) struct ScrollingList {
-    pub(super) position: f32,
-}
+pub(super) struct InventoryButton(pub(super) Entity, pub(super) InventoryAction);

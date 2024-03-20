@@ -1,9 +1,13 @@
 use super::{
     check::check_delay,
-    systems::{load_fonts, manage_button_hover, manage_global_keyboard_input, maximize_window},
+    systems::{
+        load_fonts, manage_button_hover, manage_global_keyboard_input, manage_scrolling,
+        maximize_window,
+    },
 };
 use crate::prelude::*;
 use bevy::{
+    input::{keyboard::KeyboardInput, mouse::MouseWheel},
     prelude::*,
     window::{PresentMode, WindowResolution},
 };
@@ -46,7 +50,14 @@ pub(crate) fn run_application() {
     ));
 
     app.add_systems(Startup, (maximize_window, load_fonts));
-    app.add_systems(Update, (manage_button_hover, manage_global_keyboard_input));
+    app.add_systems(
+        Update,
+        (
+            manage_button_hover,
+            manage_scrolling.run_if(on_event::<MouseWheel>()),
+            manage_global_keyboard_input.run_if(on_event::<KeyboardInput>()),
+        ),
+    );
     app.add_systems(Last, check_delay);
 
     app.run();

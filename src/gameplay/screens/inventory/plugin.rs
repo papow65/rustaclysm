@@ -1,6 +1,6 @@
 use super::systems::{
     clear_inventory, manage_inventory_button_input, manage_inventory_keyboard_input,
-    manage_inventory_mouse_input, remove_inventory_resource, spawn_inventory, update_inventory,
+    remove_inventory_resource, spawn_inventory, update_inventory,
 };
 use crate::prelude::{despawn, loop_behavior_and_refresh, GameplayScreenState};
 use bevy::prelude::{
@@ -18,12 +18,7 @@ impl Plugin for InventoryScreenPlugin {
             (
                 manage_inventory_keyboard_input,
                 clear_inventory.pipe(update_inventory),
-                (
-                    manage_inventory_button_input,
-                    manage_inventory_mouse_input,
-                    loop_behavior_and_refresh(),
-                )
-                    .chain(),
+                (manage_inventory_button_input, loop_behavior_and_refresh()).chain(),
             )
                 .run_if(in_state(GameplayScreenState::Inventory)),
         );
