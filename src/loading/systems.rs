@@ -1,8 +1,6 @@
 use crate::prelude::*;
 use bevy::prelude::*;
 
-const FONT_SIZE: f32 = 40.0;
-
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn spawn_loading(mut commands: Commands, fonts: Res<Fonts>) {
     commands
@@ -38,7 +36,7 @@ pub(crate) fn spawn_loading(mut commands: Commands, fonts: Res<Fonts>) {
                         "Loading...",
                         TextStyle {
                             font: fonts.default(),
-                            font_size: FONT_SIZE,
+                            font_size: LARGE_FONT_SIZE,
                             color: DEFAULT_TEXT_COLOR,
                         },
                     ));

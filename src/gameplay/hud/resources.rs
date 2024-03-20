@@ -1,4 +1,7 @@
-use crate::prelude::{Fonts, PANEL_COLOR, SOFT_TEXT_COLOR};
+use crate::{
+    common::REGULAR_FONT_SIZE,
+    prelude::{Fonts, PANEL_COLOR, SOFT_TEXT_COLOR},
+};
 use bevy::{
     ecs::system::Resource,
     prelude::{
@@ -30,7 +33,7 @@ impl HudDefaults {
         Self {
             text_style: TextStyle {
                 font,
-                font_size: 16.0,
+                font_size: REGULAR_FONT_SIZE,
                 color: SOFT_TEXT_COLOR,
             },
             background: NodeBundle {

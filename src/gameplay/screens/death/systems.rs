@@ -1,11 +1,9 @@
 use crate::prelude::{
     ApplicationState, Ctrl, Fonts, GameplayScreenState, InputChange, Key, Keys, StateBound,
-    BAD_TEXT_COLOR, DEFAULT_TEXT_COLOR, PANEL_COLOR,
+    BAD_TEXT_COLOR, DEFAULT_TEXT_COLOR, LARGE_FONT_SIZE, LARGISH_FONT_SIZE, PANEL_COLOR,
+    SMALL_SPACING,
 };
 use bevy::prelude::*;
-
-const SPACING: f32 = 5.0;
-const FONT_SIZE: f32 = 16.0;
 
 #[allow(clippy::needless_pass_by_value)]
 pub(super) fn spawn_death_screen(mut commands: Commands, fonts: Res<Fonts>) {
@@ -35,7 +33,7 @@ pub(super) fn spawn_death_screen(mut commands: Commands, fonts: Res<Fonts>) {
                         flex_direction: FlexDirection::Column,
                         align_items: AlignItems::Center,
                         justify_content: JustifyContent::Center,
-                        padding: UiRect::all(Val::Px(SPACING)),
+                        padding: UiRect::all(SMALL_SPACING),
                         ..default()
                     },
                     background_color: PANEL_COLOR.into(),
@@ -58,7 +56,7 @@ pub(super) fn spawn_death_screen(mut commands: Commands, fonts: Res<Fonts>) {
                                 "You died",
                                 TextStyle {
                                     font: font.clone(),
-                                    font_size: FONT_SIZE,
+                                    font_size: LARGISH_FONT_SIZE,
                                     color: DEFAULT_TEXT_COLOR,
                                 },
                             ));
@@ -80,7 +78,7 @@ pub(super) fn spawn_death_screen(mut commands: Commands, fonts: Res<Fonts>) {
                                 "Main menu",
                                 TextStyle {
                                     font,
-                                    font_size: FONT_SIZE,
+                                    font_size: LARGE_FONT_SIZE,
                                     color: BAD_TEXT_COLOR,
                                 },
                             ));

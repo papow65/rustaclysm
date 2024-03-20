@@ -6,9 +6,6 @@ use super::{
 use crate::prelude::*;
 use bevy::{ecs::entity::EntityHashMap, prelude::*, utils::HashMap};
 
-const SPACING: f32 = 5.0;
-const FONT_SIZE: f32 = 16.0;
-
 #[allow(clippy::needless_pass_by_value)]
 pub(super) fn spawn_inventory(mut commands: Commands, fonts: Res<Fonts>) {
     let panel = commands
@@ -48,7 +45,7 @@ pub(super) fn spawn_inventory(mut commands: Commands, fonts: Res<Fonts>) {
                         align_items: AlignItems::Start,
                         justify_content: JustifyContent::Start,
                         margin: UiRect::horizontal(Val::Px(360.0)),
-                        padding: UiRect::all(Val::Px(SPACING)),
+                        padding: UiRect::all(SMALL_SPACING),
                         overflow: Overflow::clip_y(),
                         ..default()
                     },
@@ -66,22 +63,22 @@ pub(super) fn spawn_inventory(mut commands: Commands, fonts: Res<Fonts>) {
         drop_direction: HorizontalDirection::Here,
         section_text_style: TextStyle {
             font: fonts.default(),
-            font_size: FONT_SIZE,
+            font_size: REGULAR_FONT_SIZE,
             color: SOFT_TEXT_COLOR,
         },
         selected_section_text_style: TextStyle {
             font: fonts.default(),
-            font_size: FONT_SIZE,
+            font_size: REGULAR_FONT_SIZE,
             color: WARN_TEXT_COLOR,
         },
         item_text_style: TextStyle {
             font: fonts.default(),
-            font_size: FONT_SIZE,
+            font_size: REGULAR_FONT_SIZE,
             color: DEFAULT_TEXT_COLOR,
         },
         selected_item_text_style: TextStyle {
             font: fonts.default(),
-            font_size: FONT_SIZE,
+            font_size: REGULAR_FONT_SIZE,
             color: GOOD_TEXT_COLOR,
         },
         last_time: Timestamp::ZERO,
@@ -276,7 +273,7 @@ fn add_row(
                 width: Val::Percent(100.0),
                 align_items: AlignItems::Start,
                 justify_content: JustifyContent::Start,
-                column_gap: Val::Px(SPACING),
+                column_gap: SMALL_SPACING,
                 ..default()
             },
             ..default()

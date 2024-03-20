@@ -5,7 +5,6 @@ use glob::glob;
 use std::{path::PathBuf, str::from_utf8};
 
 const FULL_WIDTH: f32 = 720.0;
-const SPACING: f32 = 20.0;
 
 const BACKGROUND_WIDTH: f32 = 1522.0;
 const BACKGROUND_HEIGHT: f32 = 1009.0;
@@ -61,7 +60,7 @@ fn add_title(parent: &mut ChildBuilder, font: Handle<Font>) {
         "Rustaclysm",
         TextStyle {
             font,
-            font_size: 120.0,
+            font_size: HUGE_FONT_SIZE,
             color: DEFAULT_TEXT_COLOR,
         },
     ));
@@ -73,13 +72,13 @@ fn add_tagline(parent: &mut ChildBuilder, font: Handle<Font>) {
             "A 3D reimplementation of Cataclysm: Dark Days Ahead",
             TextStyle {
                 font,
-                font_size: 22.0,
+                font_size: LARGISH_FONT_SIZE,
                 color: DEFAULT_TEXT_COLOR,
             },
         )
         .with_style(Style {
             margin: UiRect {
-                bottom: Val::Px(2.0 * SPACING),
+                bottom: LARGE_SPACING,
                 ..UiRect::default()
             },
             ..default()
@@ -93,11 +92,11 @@ fn add_load_button_area(parent: &mut ChildBuilder) {
             style: Style {
                 flex_direction: FlexDirection::Column,
                 width: Val::Percent(100.0),
-                height: Val::Px(400.0),
+                height: Val::Px(440.0),
                 align_items: AlignItems::Center,
                 flex_wrap: FlexWrap::Wrap,
                 align_content: AlignContent::Center,
-                column_gap: Val::Px(SPACING),
+                column_gap: MEDIUM_SPACING,
                 ..default()
             },
             ..default()
@@ -112,13 +111,13 @@ fn add_notification_area(parent: &mut ChildBuilder, font: Handle<Font>) {
             NodeBundle {
                 style: Style {
                     width: Val::Px(FULL_WIDTH),
-                    height: Val::Px(10.0 * SPACING),
+                    height: MEDIUM_SPACING * 10.0,
                     align_items: AlignItems::FlexStart,
                     justify_content: JustifyContent::FlexStart,
                     flex_direction: FlexDirection::Column,
-                    padding: UiRect::all(Val::Px(SPACING)),
+                    padding: UiRect::all(MEDIUM_SPACING),
                     margin: UiRect {
-                        bottom: Val::Px(SPACING),
+                        bottom: MEDIUM_SPACING,
                         ..UiRect::default()
                     },
                     ..default()
@@ -135,12 +134,13 @@ fn add_notification_area(parent: &mut ChildBuilder, font: Handle<Font>) {
                         "",
                         TextStyle {
                             font,
-                            font_size: 20.0,
+                            font_size: LARGISH_FONT_SIZE,
                             color: DEFAULT_TEXT_COLOR,
                         },
                     ),
                     style: Style {
-                        width: Val::Px(FULL_WIDTH - 2.0 * SPACING),
+                        width: Val::Px(FULL_WIDTH),
+                        padding: UiRect::horizontal(MEDIUM_SPACING),
                         flex_wrap: FlexWrap::Wrap,
                         ..Style::default()
                     },
@@ -171,7 +171,7 @@ fn add_quit_button(parent: &mut ChildBuilder, font: Handle<Font>) {
                 "Quit",
                 TextStyle {
                     font,
-                    font_size: 40.0,
+                    font_size: LARGE_FONT_SIZE,
                     color: BAD_TEXT_COLOR,
                 },
             ));
@@ -214,14 +214,14 @@ pub(crate) fn update_sav_files(
                                                 align_items: AlignItems::Center,
                                                 justify_content: JustifyContent::Center,
                                                 margin: UiRect {
-                                                    bottom: Val::Px(SPACING),
+                                                    bottom: MEDIUM_SPACING,
                                                     ..UiRect::default()
                                                 },
                                                 padding: UiRect {
-                                                    left: Val::Px(2.0 * SPACING),
-                                                    right: Val::Px(2.0 * SPACING),
-                                                    top: Val::Px(SPACING),
-                                                    bottom: Val::Px(SPACING),
+                                                    left: LARGE_SPACING,
+                                                    right: LARGE_SPACING,
+                                                    top: MEDIUM_SPACING,
+                                                    bottom: MEDIUM_SPACING,
                                                 },
                                                 ..default()
                                             },
@@ -250,7 +250,7 @@ pub(crate) fn update_sav_files(
                                             format!("Load {} in {}", character, world.display()),
                                             TextStyle {
                                                 font: fonts.default(),
-                                                font_size: 20.0,
+                                                font_size: LARGISH_FONT_SIZE,
                                                 color: GOOD_TEXT_COLOR,
                                             },
                                         ));
@@ -332,7 +332,7 @@ fn list_saves() -> Result<Vec<PathBuf>, LoadError> {
 fn check_directory_structure() -> Result<(), LoadError> {
     if !Paths::asset_path().is_dir() {
         return Err(LoadError::new(
-            format!("Directory '{}' not found.\nPlease run this in the directory containing the 'assets' directory.", Paths::asset_path().display())
+            format!("Directory '{}' not found.\nPlease run this application in the directory containing the 'assets' directory.", Paths::asset_path().display())
         ));
     }
 

@@ -1,12 +1,10 @@
 use super::components::{MainMenuButton, ReturnButton};
 use crate::prelude::{
     ApplicationState, Ctrl, Fonts, GameplayScreenState, InputChange, Key, Keys, QuitButton,
-    StateBound, BAD_TEXT_COLOR, DEFAULT_TEXT_COLOR, GOOD_TEXT_COLOR,
+    StateBound, BAD_TEXT_COLOR, DEFAULT_TEXT_COLOR, GOOD_TEXT_COLOR, LARGE_FONT_SIZE,
+    MEDIUM_SPACING,
 };
 use bevy::{app::AppExit, prelude::*};
-
-const SPACING: f32 = 20.0;
-const FONT_SIZE: f32 = 40.0;
 
 #[allow(clippy::needless_pass_by_value)]
 pub(super) fn spawn_menu(mut commands: Commands, fonts: Res<Fonts>) {
@@ -31,7 +29,7 @@ pub(super) fn spawn_menu(mut commands: Commands, fonts: Res<Fonts>) {
                     flex_direction: FlexDirection::Column,
                     align_items: AlignItems::Center,
                     justify_content: JustifyContent::Center,
-                    row_gap: Val::Px(SPACING),
+                    row_gap: MEDIUM_SPACING,
                     ..Style::default()
                 },
                 ..default()
@@ -56,7 +54,7 @@ fn add_text(parent: &mut ChildBuilder, font: &Handle<Font>, text: &str, color: C
         text,
         TextStyle {
             font: font.clone(),
-            font_size: FONT_SIZE,
+            font_size: LARGE_FONT_SIZE,
             color,
         },
     ));
