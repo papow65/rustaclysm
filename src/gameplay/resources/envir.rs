@@ -46,9 +46,7 @@ impl<'w, 's> Envir<'w, 's> {
 
     pub(crate) fn stairs_up_to(&self, from: Pos) -> Option<Pos> {
         if self.location.has_stairs_up(from, &self.stairs_up) {
-            let Some(zone_level_up) = ZoneLevel::from(from).offset(LevelOffset::UP) else {
-                return None;
-            };
+            let zone_level_up = ZoneLevel::from(from).offset(LevelOffset::UP)?;
 
             for distance in 0..24_i32 {
                 for dx in -distance..=distance {
@@ -84,9 +82,7 @@ impl<'w, 's> Envir<'w, 's> {
 
     pub(crate) fn stairs_down_to(&self, from: Pos) -> Option<Pos> {
         if self.location.has_stairs_down(from, &self.stairs_down) {
-            let Some(zone_level_down) = ZoneLevel::from(from).offset(LevelOffset::DOWN) else {
-                return None;
-            };
+            let zone_level_down = ZoneLevel::from(from).offset(LevelOffset::DOWN)?;
 
             // fast approach in most cases, otherwise fast enough
             for distance in 0..Zone::SIZE {

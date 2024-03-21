@@ -17,7 +17,7 @@ pub(crate) enum MaybeFlat<T> {
 
 #[derive(Clone, Debug, Deserialize)]
 #[serde(from = "MaybeFlat<T>")]
-pub(crate) struct DeflatVec<T>(Vec<T>);
+pub(crate) struct DeflatVec<T>(#[allow(dead_code)] Vec<T>);
 
 impl<T> From<MaybeFlat<T>> for DeflatVec<T> {
     fn from(maybe_flat: MaybeFlat<T>) -> Self {

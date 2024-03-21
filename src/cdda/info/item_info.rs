@@ -365,7 +365,7 @@ impl From<CddaItemName> for ItemName {
 #[serde(deny_unknown_fields)]
 #[serde(untagged)]
 pub(crate) enum Material {
-    Simple(String),
+    Simple(#[allow(dead_code)] String),
     Complex {
         #[allow(unused)]
         #[serde(rename(deserialize = "type"))]
@@ -382,16 +382,16 @@ pub(crate) enum Material {
 #[serde(deny_unknown_fields)]
 #[serde(untagged)]
 pub(crate) enum Price {
-    Numeric(u64),
-    Text(String),
+    Numeric(#[allow(dead_code)] u64),
+    Text(#[allow(dead_code)] String),
 }
 
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 #[serde(untagged)]
 pub(crate) enum ToHit {
-    Simple(i16),
-    Complex(HashMap<String, String>),
+    Simple(#[allow(dead_code)] i16),
+    Complex(#[allow(dead_code)] HashMap<String, String>),
 }
 
 #[derive(Clone, Debug, Deserialize)]

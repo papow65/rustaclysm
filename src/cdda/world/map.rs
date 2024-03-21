@@ -308,8 +308,8 @@ pub(crate) struct Spawn {
 #[derive(Clone, Debug, Deserialize)]
 #[serde(untagged)]
 pub(crate) enum Number {
-    Int(i64),
-    Text(String),
+    Int(#[allow(dead_code)] i64),
+    Text(#[allow(dead_code)] String),
 }
 
 #[cfg(test)]
