@@ -123,7 +123,8 @@ pub(crate) struct Submap {
     partial_constructions: Vec<serde_json::Value>,
 
     #[allow(unused)]
-    computers: Option<Vec<serde_json::Value>>,
+    #[serde(default)]
+    computers: Vec<serde_json::Value>,
 }
 
 impl Submap {
@@ -164,7 +165,7 @@ impl Submap {
             spawns: Vec::new(),
             vehicles: Vec::new(),
             partial_constructions: Vec::new(),
-            computers: None,
+            computers: Vec::new(),
         }
     }
 }
@@ -205,11 +206,13 @@ pub(crate) struct CddaItem {
     #[allow(unused)]
     pub(crate) item_vars: Option<HashMap<String, String>>,
     #[allow(unused)]
-    pub(crate) item_tags: Option<Vec<String>>,
+    #[serde(default)]
+    pub(crate) item_tags: Vec<String>,
     #[allow(unused)]
     pub(crate) contents: Option<CddaContainer>,
     #[allow(unused)]
-    pub(crate) components: Option<Vec<CddaItem>>,
+    #[serde(default)]
+    pub(crate) components: Vec<CddaItem>,
     #[allow(unused)]
     pub(crate) is_favorite: Option<bool>,
     #[allow(unused)]
@@ -219,7 +222,8 @@ pub(crate) struct CddaItem {
     #[allow(unused)]
     pub(crate) current_phase: Option<u8>,
     #[allow(unused)]
-    pub(crate) faults: Option<Vec<String>>,
+    #[serde(default)]
+    pub(crate) faults: Vec<String>,
     #[allow(unused)]
     pub(crate) rot: Option<i64>,
     #[allow(unused)]

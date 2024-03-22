@@ -47,16 +47,12 @@ impl Location {
         }
     }
 
-    fn entities(&self, pos: Pos) -> impl ExactSizeIterator<Item = &Entity> {
-        self.objects.get(&pos).unwrap_or(NOT_FOUND).iter()
-    }
-
     pub(crate) fn any<'w, 's, Q, F>(&self, pos: Pos, items: &'s Query<'w, 's, Q, F>) -> bool
     where
         F: 'w + 's + QueryFilter,
         Q: 'w + 's + QueryData,
     {
-        self.entities(pos).any(|&x| items.get(x).is_ok())
+        self.all(pos).any(|&x| items.get(x).is_ok())
     }
 
     pub(crate) fn get_first<'w, 's: 'w, Q, F>(
@@ -68,11 +64,11 @@ impl Location {
         F: 'w + 's + QueryFilter,
         Q: 'w + 's + QueryData,
     {
-        self.entities(pos).find_map(|&x| items.get(x).ok())
+        self.all(pos).find_map(|&x| items.get(x).ok())
     }
 
-    pub(crate) fn all(&self, pos: Pos) -> Vec<Entity> {
-        self.entities(pos).copied().collect()
+    pub(crate) fn all(&self, pos: Pos) -> impl ExactSizeIterator<Item = &Entity> {
+        self.objects.get(&pos).unwrap_or(NOT_FOUND).iter()
     }
 
     pub(crate) fn has_stairs_up<'s>(

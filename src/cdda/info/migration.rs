@@ -5,7 +5,7 @@ use serde::Deserialize;
 pub(crate) struct Migration {
     #[serde(rename(deserialize = "type"))]
     #[allow(dead_code)]
-    pub(crate) type_: String,
+    type_: String,
 
     pub(crate) replace: ObjectId,
 }

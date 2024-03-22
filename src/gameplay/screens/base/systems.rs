@@ -32,6 +32,10 @@ fn toggle_examine_zone_level(focus: &Focus, next_focus_state: &mut NextState<Foc
     });
 }
 
+fn open_crafting_screen(next_gameplay_state: &mut NextState<GameplayScreenState>) {
+    next_gameplay_state.set(GameplayScreenState::Crafting);
+}
+
 fn open_inventory(next_gameplay_state: &mut NextState<GameplayScreenState>) {
     next_gameplay_state.set(GameplayScreenState::Inventory);
 }
@@ -202,6 +206,7 @@ pub(super) fn manage_keyboard_input(
             Instruction::ExamineZoneLevel => {
                 toggle_examine_zone_level(&focus, &mut next_focus_state);
             }
+            Instruction::CraftingScreen => open_crafting_screen(&mut next_gameplay_state),
             Instruction::Inventory => open_inventory(&mut next_gameplay_state),
             Instruction::ToggleMap(zoom_distance) => {
                 toggle_map(&mut camera_offset, &mut camera_layers, zoom_distance);

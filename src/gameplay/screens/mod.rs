@@ -1,10 +1,11 @@
 mod base;
 mod character;
+mod crafting;
 mod death;
 mod inventory;
 mod menu;
 mod state;
 
 pub(crate) use self::{
-    base::*, character::*, death::*, inventory::*, menu::*, state::GameplayScreenState,
+    base::*, character::*, crafting::*, death::*, inventory::*, menu::*, state::GameplayScreenState,
 };

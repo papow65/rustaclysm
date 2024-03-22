@@ -3,6 +3,7 @@ use serde::Deserialize;
 
 #[derive(Debug, Default, Deserialize)]
 #[serde(from = "Option<MaybeFlat<String>>")]
+#[serde(default)]
 pub(crate) struct Flags(Vec<String>);
 
 impl Flags {

@@ -12,6 +12,7 @@ impl Plugin for GameplayPlugin {
             HudPlugin,
             BaseScreenPlugin,
             CharacterScreenPlugin,
+            CraftingScreenPlugin,
             DeathScreenPlugin,
             InventoryScreenPlugin,
             MenuScreenPlugin,

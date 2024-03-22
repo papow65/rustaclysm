@@ -201,10 +201,8 @@ impl<'w, 's> Spawner<'w, 's> {
             },
         ));
 
-        if let Some(item_tags) = &item.item_tags {
-            if item_tags.contains(&String::from("FILTHY")) {
-                entity.insert(Filthy);
-            }
+        if item.item_tags.contains(&String::from("FILTHY")) {
+            entity.insert(Filthy);
         }
 
         Ok(())
@@ -245,14 +243,14 @@ impl<'w, 's> Spawner<'w, 's> {
                                 specific_energy: None,
                                 temperature: None,
                                 item_vars: None,
-                                item_tags: None,
+                                item_tags: Vec::new(),
                                 contents: None,
-                                components: None,
+                                components: Vec::new(),
                                 is_favorite: None,
                                 relic_data: None,
                                 damaged: None,
                                 current_phase: None,
-                                faults: None,
+                                faults: Vec::new(),
                                 rot: None,
                                 curammo: None,
                                 item_counter: None,

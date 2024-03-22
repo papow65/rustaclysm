@@ -504,12 +504,16 @@ fn update_status_detais(
         FocusState::ExaminingPos(pos) => {
             let mut total = vec![Fragment::new(format!("\n{pos:?}\n"))];
             if explored.has_pos_been_seen(pos) {
-                let all_here = envir.location.all(pos);
-                total.extend(characters_info(&all_here, &characters, pos));
+                total.extend(characters_info(
+                    envir.location.all(pos).copied(),
+                    &characters,
+                    pos,
+                ));
                 total.extend(
-                    all_here
-                        .iter()
-                        .flat_map(|&i| entities.get(i))
+                    envir
+                        .location
+                        .all(pos)
+                        .flat_map(|i| entities.get(*i))
                         .flat_map(entity_info)
                         .collect::<Vec<_>>(),
                 );
@@ -538,13 +542,12 @@ fn update_status_detais(
 }
 
 fn characters_info(
-    all_here: &[Entity],
+    all_here: impl Iterator<Item = Entity>,
     characters: &Query<(&ObjectDefinition, &ObjectName, &Health, Option<&Integrity>)>,
     pos: Pos,
 ) -> Vec<Fragment> {
     all_here
-        .iter()
-        .flat_map(|&i| characters.get(i))
+        .flat_map(|i| characters.get(i))
         .flat_map(|(definition, name, health, integrity)| {
             let start = Phrase::from_fragment(name.single(pos)).add("(");
 

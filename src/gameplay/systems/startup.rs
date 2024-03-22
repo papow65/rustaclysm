@@ -16,7 +16,7 @@ pub(crate) fn load_relative_segments(
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn create_independent_resources(mut commands: Commands) {
     // Not persisted between gameplays
-    commands.insert_resource(Infos::new());
+    commands.insert_resource(Infos::load());
     commands.insert_resource(AssetStorage::<Overmap, Overzone>::default());
     commands.insert_resource(AssetStorage::<OvermapBuffer, Overzone>::default());
     commands.insert_resource(AssetStorage::<Map, ZoneLevel>::default());

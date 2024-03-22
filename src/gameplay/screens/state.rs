@@ -6,7 +6,7 @@ pub(crate) enum GameplayScreenState {
     Base,
     //Character, // TODO
     Inventory,
-    //Crafting, // TODO
+    Crafting,
     /** Different from the main menu */
     Menu,
     //Saving, // TODO

@@ -7,11 +7,9 @@ pub(crate) struct FurnitureInfo {
     pub(crate) name: ItemName,
     pub(crate) move_cost_mod: Option<MoveCostMod>,
     pub(crate) looks_like: Option<ObjectId>,
-
-    #[serde(default)]
     pub(crate) flags: Flags,
-
     pub(crate) bash: Option<Bash>,
+    pub(crate) crafting_pseudo_item: Option<ObjectId>,
 
     #[allow(unused)]
     #[serde(flatten)]

@@ -41,6 +41,7 @@ impl TypeId {
     ];
 
     pub(crate) const TERRAIN: &'static [Self] = &[Self("terrain")];
+    pub(crate) const TOOL_QUALITY: &'static [Self] = &[Self("tool_quality")];
     pub(crate) const VEHICLE_PART: &'static [Self] = &[Self("vehicle_part")];
 
     pub(crate) const MIGRATION: &'static [Self] = &[
@@ -84,6 +85,7 @@ impl TypeId {
             Self::MIGRATION,
             Self::OVERMAP,
             Self::TERRAIN,
+            Self::TOOL_QUALITY,
             Self::VEHICLE_PART,
             Self::UNUSED,
         ]

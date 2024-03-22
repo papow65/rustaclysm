@@ -154,7 +154,7 @@ pub(crate) struct ItemInfo {
 
     #[serde(rename(deserialize = "type"))]
     #[allow(dead_code)] // TODO
-    pub(crate) type_: String,
+    type_: String,
 
     pub(crate) name: ItemName,
 
@@ -200,8 +200,8 @@ pub(crate) struct ItemInfo {
     #[allow(dead_code)] // TODO
     pub(crate) faults: Option<serde_json::Value>,
 
-    #[allow(dead_code)] // TODO
-    pub(crate) qualities: Option<Vec<(String, i8)>>,
+    #[serde(default)]
+    pub(crate) qualities: Vec<(ObjectId, i8)>,
 
     // example: { "effects": [ "RECYCLED" ] }
     #[allow(dead_code)] // TODO

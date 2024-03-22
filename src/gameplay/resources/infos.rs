@@ -11,10 +11,11 @@ pub(crate) struct Infos {
     fields: HashMap<ObjectId, FieldInfo>,
     furniture: HashMap<ObjectId, FurnitureInfo>,
     items: HashMap<ObjectId, ItemInfo>,
+    item_groups: HashMap<ObjectId, ItemGroup>,
+    migrations: HashMap<ObjectId, Migration>,
+    qualities: HashMap<ObjectId, Quality>,
     terrain: HashMap<ObjectId, TerrainInfo>,
     zone_levels: HashMap<ObjectId, OvermapInfo>,
-    migrations: HashMap<ObjectId, Migration>,
-    item_groups: HashMap<ObjectId, ItemGroup>,
 }
 
 impl Infos {
@@ -22,6 +23,7 @@ impl Infos {
         let json_path = Paths::data_path().join("json");
         let patterns = [
             json_path.join("field_type.json"),
+            json_path.join("tool_qualities.json"),
             json_path
                 .join("furniture_and_terrain")
                 .join("**")
@@ -221,7 +223,7 @@ impl Infos {
         enricheds
     }
 
-    pub(crate) fn new() -> Self {
+    pub(crate) fn load() -> Self {
         let start = Instant::now();
 
         let mut enricheds = Self::enricheds();
@@ -230,10 +232,11 @@ impl Infos {
             fields: Self::extract(&mut enricheds, TypeId::FIELD),
             furniture: Self::extract(&mut enricheds, TypeId::FURNITURE),
             items: Self::extract(&mut enricheds, TypeId::ITEM),
+            item_groups: Self::extract(&mut enricheds, TypeId::ITEM_GROUP),
+            migrations: Self::extract(&mut enricheds, TypeId::MIGRATION),
+            qualities: Self::extract(&mut enricheds, TypeId::TOOL_QUALITY),
             terrain: Self::extract(&mut enricheds, TypeId::TERRAIN),
             zone_levels: Self::extract(&mut enricheds, TypeId::OVERMAP),
-            migrations: Self::extract(&mut enricheds, TypeId::MIGRATION),
-            item_groups: Self::extract(&mut enricheds, TypeId::ITEM_GROUP),
         };
 
         this.characters.insert(
@@ -260,38 +263,39 @@ impl Infos {
     }
 
     pub(crate) fn character<'a>(&'a self, id: &'a ObjectId) -> Option<&'a CharacterInfo> {
-        let id = self.migrations.get(id).map_or(id, |m| &m.replace);
-        self.characters.get(id)
+        self.characters.get(self.maybe_migrated(id))
     }
 
     pub(crate) fn field<'a>(&'a self, id: &'a ObjectId) -> Option<&'a FieldInfo> {
-        let id = self.migrations.get(id).map_or(id, |m| &m.replace);
-        self.fields.get(id)
+        self.fields.get(self.maybe_migrated(id))
     }
 
     pub(crate) fn furniture<'a>(&'a self, id: &'a ObjectId) -> Option<&'a FurnitureInfo> {
-        let id = self.migrations.get(id).map_or(id, |m| &m.replace);
-        self.furniture.get(id)
+        self.furniture.get(self.maybe_migrated(id))
     }
 
     pub(crate) fn item<'a>(&'a self, id: &'a ObjectId) -> Option<&'a ItemInfo> {
-        let id = self.migrations.get(id).map_or(id, |m| &m.replace);
-        self.items.get(id)
+        self.items.get(self.maybe_migrated(id))
     }
 
     pub(crate) fn item_group<'a>(&'a self, id: &'a ObjectId) -> Option<&'a ItemGroup> {
-        let id = self.migrations.get(id).map_or(id, |m| &m.replace);
-        self.item_groups.get(id)
+        self.item_groups.get(self.maybe_migrated(id))
     }
 
     pub(crate) fn terrain<'a>(&'a self, id: &'a ObjectId) -> Option<&'a TerrainInfo> {
-        let id = self.migrations.get(id).map_or(id, |m| &m.replace);
-        self.terrain.get(id)
+        self.terrain.get(self.maybe_migrated(id))
+    }
+
+    pub(crate) fn quality<'a>(&'a self, id: &'a ObjectId) -> Option<&'a Quality> {
+        self.qualities.get(self.maybe_migrated(id))
     }
 
     pub(crate) fn zone_level<'a>(&'a self, id: &'a ObjectId) -> Option<&'a OvermapInfo> {
-        let id = self.migrations.get(id).map_or(id, |m| &m.replace);
-        self.zone_levels.get(id)
+        self.zone_levels.get(self.maybe_migrated(id))
+    }
+
+    fn maybe_migrated<'a>(&'a self, id: &'a ObjectId) -> &'a ObjectId {
+        self.migrations.get(id).map_or(id, |m| &m.replace)
     }
 
     fn looks_like(&self, definition: &ObjectDefinition) -> Option<&ObjectId> {
@@ -360,6 +364,10 @@ impl Infos {
             current_definition_ref = &current_definition;
         }
         variants
+    }
+
+    pub(crate) fn qualities(&self) -> impl Iterator<Item = &ObjectId> {
+        self.qualities.keys()
     }
 
     fn extract<T>(

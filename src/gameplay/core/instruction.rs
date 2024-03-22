@@ -136,6 +136,7 @@ pub(crate) enum Instruction {
     ShowGameplayMenu,
     ExaminePos,
     ExamineZoneLevel,
+    CraftingScreen,
     Inventory,
     ToggleMap(ZoomDistance),
     ToggleElevation,
@@ -161,6 +162,7 @@ impl TryFrom<(&KeyCombo, CancelHandling)> for Instruction {
             }
             (Key::Character('x'), InputChange::JustPressed, _) => Ok(Self::ExaminePos),
             (Key::Character('X'), InputChange::JustPressed, _) => Ok(Self::ExamineZoneLevel),
+            (Key::Character('&'), InputChange::JustPressed, _) => Ok(Self::CraftingScreen),
             (Key::Character('i'), InputChange::JustPressed, _) => Ok(Self::Inventory),
             (Key::Character('Z'), InputChange::JustPressed, _) => {
                 Ok(Self::Zoom(ZoomDirection::Out))

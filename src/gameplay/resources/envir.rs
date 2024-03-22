@@ -243,16 +243,17 @@ impl<'w, 's> Envir<'w, 's> {
         speed: MillimeterPerSecond,
     ) -> impl Iterator<Item = (Nbor, Pos, Milliseconds)> + 's {
         self.nbors_if(pos, move |nbor| {
-            (pos.level == Level::ZERO || !self.location.all(pos).is_empty()) && {
-                let at_destination = Some(nbor) == destination;
-                match intelligence {
-                    Intelligence::Smart => {
-                        self.is_accessible(nbor)
-                            && (at_destination || self.find_obstacle(nbor).is_none())
+            (pos.level == Level::ZERO || !self.location.all(pos).collect::<Vec<_>>().is_empty())
+                && {
+                    let at_destination = Some(nbor) == destination;
+                    match intelligence {
+                        Intelligence::Smart => {
+                            self.is_accessible(nbor)
+                                && (at_destination || self.find_obstacle(nbor).is_none())
+                        }
+                        Intelligence::Dumb => at_destination || !self.is_opaque(nbor),
                     }
-                    Intelligence::Dumb => at_destination || !self.is_opaque(nbor),
                 }
-            }
         })
         .map(move |(nbor, npos, walking_cost)| (nbor, npos, walking_cost.duration(speed)))
     }
