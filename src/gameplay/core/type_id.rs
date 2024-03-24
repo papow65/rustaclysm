@@ -49,6 +49,7 @@ impl TypeId {
         Self("vehicle_part_migration"),
     ];
 
+    // TODO use these types
     pub(crate) const UNUSED: &'static [Self] = &[
         Self("ammunition_type"),
         Self("behavior"),
@@ -60,10 +61,16 @@ impl TypeId {
         Self("mapgen"),
         Self("monster_flag"),
         Self("monstergroup"),
+        Self("nested_category"),
+        Self("practice"),
         Self("recipe"),
+        Self("recipe_category"),
+        Self("recipe_group"),
+        Self("requirement"),
         Self("ter_furn_transform"),
         Self("TRAIT_MIGRATION"),
         Self("trap"),
+        Self("uncraft"),
         Self("vehicle_part_category"),
     ];
 

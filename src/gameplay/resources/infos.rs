@@ -28,6 +28,7 @@ impl Infos {
                 .join("*.json"),
             json_path.join("items").join("**").join("*.json"),
             json_path.join("monsters").join("**").join("*.json"),
+            json_path.join("recipes").join("**").join("*.json"),
             json_path.join("vehicleparts").join("**").join("*.json"),
         ];
         patterns
@@ -75,11 +76,7 @@ impl Infos {
             for content in contents {
                 let type_ = content.get("type").expect("'type' key should be present");
                 let type_ = TypeId::get(type_.as_str().expect("'type' should have string value"));
-                if type_ == TypeId::get("mapgen")
-                    || type_ == TypeId::get("monstergroup")
-                    || type_ == TypeId::get("recipe")
-                    || content.get("from_variant").is_some()
-                {
+                if TypeId::UNUSED.contains(type_) || content.get("from_variant").is_some() {
                     continue; // TODO
                 }
 
@@ -403,7 +400,8 @@ fn id_value<'a>(
     if content.get("from").is_some() {
         count += 1;
     }
-    assert_eq!(count, 1, "{json_path:?}");
+    assert_eq!(count, 1, "Not one of id, abstract, or from for json with type {:?} and keys  ({:?}) from {json_path:?}",
+             content.get("type"), content.keys().collect::<Vec<_>>());
     content
         .get("id")
         .or_else(|| content.get("abstract"))
