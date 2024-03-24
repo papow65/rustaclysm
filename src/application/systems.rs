@@ -59,14 +59,15 @@ pub(super) fn manage_global_keyboard_input(
 pub(super) fn manage_scrolling(
     mut mouse_wheel_events: EventReader<MouseWheel>,
     mut scrolling_lists: Query<(&mut ScrollingList, &mut Style, &Parent, &Node)>,
-    nodes: Query<&Node>,
+    parent_nodes: Query<(&Node, &Style), Without<ScrollingList>>,
 ) {
     for mouse_wheel_event in mouse_wheel_events.read() {
         for (mut scrolling_list, mut style, parent, list_node) in &mut scrolling_lists {
-            let parent_node = nodes
+            let (parent_node, parent_style) = parent_nodes
                 .get(parent.get())
                 .expect("Parent node should be found");
-            style.top = scrolling_list.scroll(list_node, parent_node, mouse_wheel_event);
+            style.top =
+                scrolling_list.scroll(list_node, parent_node, parent_style, mouse_wheel_event);
         }
     }
 }
@@ -74,12 +75,12 @@ pub(super) fn manage_scrolling(
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn resize_scrolling_lists(
     mut scrolling_lists: Query<(&mut ScrollingList, &mut Style, &Parent, &Node)>,
-    nodes: Query<&Node>,
+    parent_nodes: Query<(&Node, &Style), Without<ScrollingList>>,
 ) {
     for (mut scrolling_list, mut style, parent, list_node) in &mut scrolling_lists {
-        let parent_node = nodes
+        let (parent_node, parent_style) = parent_nodes
             .get(parent.get())
             .expect("Parent node should be found");
-        style.top = scrolling_list.resize(list_node, parent_node);
+        style.top = scrolling_list.resize(list_node, parent_node, parent_style);
     }
 }
