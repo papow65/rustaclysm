@@ -5,7 +5,7 @@ use bevy::prelude::Color;
 pub(crate) const DEFAULT_TEXT_COLOR: Color = Color::rgb(0.85, 0.85, 0.85);
 
 /** For unimportant text */
-pub(crate) const SOFT_TEXT_COLOR: Color = Color::rgb(0.8, 0.8, 0.8);
+pub(crate) const SOFT_TEXT_COLOR: Color = Color::rgb(0.65, 0.65, 0.65);
 
 /** For playing the game */
 pub(crate) const GOOD_TEXT_COLOR: Color = Color::rgb(0.15, 0.8, 0.15);
