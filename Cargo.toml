@@ -33,7 +33,9 @@ log_archetypes = [] # print archetypes in use
 opt-level = 3 # inspired by https://bevy-cheatbook.github.io/pitfalls/performance.html
 
 [profile.release]
+debug = "line-tables-only" # For useful bug reports
 lto = "thin"
+panic = 'abort'
 
 [lints.rust]
 # Forbidden
