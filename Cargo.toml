@@ -11,7 +11,7 @@ edition = "2021"
 rust-version = "1.78" # should be latest stable
 
 [dependencies]
-base64 = "0.21"
+base64 = "0.22"
 bevy = { version = "0.13", default-features = false, features = [ "bevy_asset", "bevy_core_pipeline", "bevy_pbr", "bevy_text", "bevy_ui", "ktx2", "multi-threaded", "png", "tonemapping_luts", "wayland", "x11" ] }
 bresenham = "0.1"
 either = "1"
