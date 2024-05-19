@@ -8,7 +8,7 @@ repository = "https://github.com/papow65/rustaclysm"
 authors = [ "papow65 <papow65@protonmail.com>" ]
 exclude = [ "/screenshots/" ]
 edition = "2021"
-rust-version = "1.77" # should be latest stable
+rust-version = "1.78" # should be latest stable
 
 [dependencies]
 base64 = "0.21"
@@ -53,7 +53,6 @@ ellipsis_inclusive_range_patterns = "forbid"
 explicit_outlives_requirements = "forbid"
 forbidden_lint_groups = "forbid"
 ill_formed_attribute_input = "forbid"
-illegal_floating_point_literal_pattern = "forbid"
 indirect_structural_match = "forbid"
 invalid_doc_attributes = "forbid"
 invalid_type_param_default = "forbid"
@@ -64,7 +63,6 @@ macro_expanded_macro_exports_accessed_by_absolute_paths = "forbid"
 missing_fragment_specifier = "forbid"
 non_fmt_panics = "forbid"
 non_snake_case = "forbid"
-nontrivial_structural_match = "forbid"
 order_dependent_trait_objects = "forbid"
 patterns_in_fns_without_body = "forbid"
 pointer_structural_match = "forbid"
@@ -98,12 +96,12 @@ dead_code = "warn"
 
 [lints.clippy]
 # Denied categories
-complexity = "deny"
-correctness = "deny"
-pedantic = "deny"
-perf = "deny"
-style = "deny"
-suspicious = "deny"
+complexity = { level = "deny", priority = -1 }
+correctness = { level = "deny", priority = -1 }
+pedantic = { level = "deny", priority = -1 }
+perf = { level = "deny", priority = -1 }
+style = { level = "deny", priority = -1 }
+suspicious = { level = "deny", priority = -1 }
 # Denied lints from allowed categories
 assertions_on_result_states = "deny"
 disallowed_script_idents = "deny"
