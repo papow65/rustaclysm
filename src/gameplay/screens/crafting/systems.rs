@@ -232,19 +232,15 @@ fn known_recipe(
         match &recipe.autolearn {
             AutoLearn::Bool(autolearn) => {
                 *autolearn
-                    && recipe
-                        .skill_used
-                        .as_ref()
-                        .map(|skill_used| {
-                            recipe.difficulty
-                                <= skills
-                                    .get(skill_used)
-                                    .unwrap_or_else(|| {
-                                        panic!("Skill {:?} not found", recipe.skill_used)
-                                    })
-                                    .level
-                        })
-                        .unwrap_or(true)
+                    && recipe.skill_used.as_ref().map_or(true, |skill_used| {
+                        recipe.difficulty
+                            <= skills
+                                .get(skill_used)
+                                .unwrap_or_else(|| {
+                                    panic!("Skill {:?} not found", recipe.skill_used)
+                                })
+                                .level
+                    })
             }
             AutoLearn::Skills(autolearn_skills) => {
                 autolearn_skills.iter().all(|(skill_name, skill_level)| {

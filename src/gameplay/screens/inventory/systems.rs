@@ -4,7 +4,7 @@ use super::{
     section::InventorySection,
 };
 use crate::prelude::*;
-use bevy::{ecs::entity::EntityHashMap, prelude::*, utils::HashMap};
+use bevy::{prelude::*, utils::HashMap};
 
 #[allow(clippy::needless_pass_by_value)]
 pub(super) fn spawn_inventory(mut commands: Commands, fonts: Res<Fonts>) {
@@ -57,9 +57,7 @@ pub(super) fn spawn_inventory(mut commands: Commands, fonts: Res<Fonts>) {
 
     commands.insert_resource(InventoryScreen {
         panel,
-        selected_item: None,
-        previous_items: EntityHashMap::default(),
-        next_items: EntityHashMap::default(),
+        selection_list: SelectionList::default(),
         drop_direction: HorizontalDirection::Here,
         section_text_style: fonts.regular(SOFT_TEXT_COLOR),
         selected_section_text_style: fonts.regular(WARN_TEXT_COLOR),
@@ -106,8 +104,7 @@ pub(super) fn update_inventory(
         return;
     }
 
-    inventory.previous_items.clear();
-    inventory.next_items.clear();
+    inventory.selection_list.clear(false);
 
     let (&player_pos, body_containers) = players.single();
     let items_by_section = items_by_section(&envir, &items, player_pos, body_containers);
@@ -117,13 +114,10 @@ pub(super) fn update_inventory(
     let selected_item_present = items_by_section.iter().any(|(_, items)| {
         items
             .iter()
-            .any(|(e, _, _)| Some(*e) == inventory.selected_item)
+            .any(|(e, _, _)| Some(*e) == inventory.selection_list.selected)
     });
 
     commands.entity(inventory.panel).with_children(|parent| {
-        let mut first_item = None;
-        let mut previous_item = None;
-
         for (section, items) in items_by_section {
             let section_style = if section == InventorySection::Nbor(inventory.drop_direction) {
                 &inventory.selected_section_text_style
@@ -144,15 +138,10 @@ pub(super) fn update_inventory(
             parent.spawn(TextBundle::from_sections(text_sections));
 
             for (entity, id, item_phrase) in items {
-                if first_item.is_none() {
-                    first_item = Some(entity);
-                    if !selected_item_present {
-                        inventory.selected_item = Some(entity);
-                    }
-                }
+                inventory.selection_list.append(entity);
 
                 if let Some(item_info) = infos.item(id) {
-                    let item_style = if Some(entity) == inventory.selected_item {
+                    let item_style = if Some(entity) == inventory.selection_list.selected {
                         &inventory.selected_item_text_style
                     } else {
                         &inventory.item_text_style
@@ -167,11 +156,6 @@ pub(super) fn update_inventory(
                         item_style,
                     );
                 }
-                if let Some(previous_item) = previous_item {
-                    inventory.previous_items.insert(entity, previous_item);
-                    inventory.next_items.insert(previous_item, entity);
-                }
-                previous_item = Some(entity);
             }
 
             // empty line
@@ -179,15 +163,6 @@ pub(super) fn update_inventory(
                 String::from(" "),
                 inventory.section_text_style.clone(),
             ));
-        }
-
-        if let Some(previous_item) = previous_item {
-            let Some(first_item) = first_item else {
-                panic!("If there is a previous item, there also should be a first item.")
-            };
-
-            inventory.previous_items.insert(first_item, previous_item);
-            inventory.next_items.insert(previous_item, first_item);
         }
     });
 }
@@ -413,15 +388,13 @@ fn drop_at(inventory: &mut InventoryScreen, key: &Key) {
 }
 
 fn select_up(inventory: &mut InventoryScreen) {
-    if let Some(selected) = inventory.selected_item {
-        inventory.selected_item = inventory.previous_items.get(&selected).copied();
+    if inventory.selection_list.select_previous() {
         inventory.last_time = Timestamp::ZERO;
     }
 }
 
 fn select_down(inventory: &mut InventoryScreen) {
-    if let Some(selected) = inventory.selected_item {
-        inventory.selected_item = inventory.next_items.get(&selected).copied();
+    if inventory.selection_list.select_next() {
         inventory.last_time = Timestamp::ZERO;
     }
 }
@@ -431,8 +404,8 @@ fn handle_selected_item(
     instruction_queue: &mut ResMut<InstructionQueue>,
     char: char,
 ) {
-    if let Some(selected_item) = inventory.selected_item {
-        let next_item = inventory.next_items.get(&selected_item).copied();
+    if let Some(selected_item) = inventory.selection_list.selected {
+        inventory.selection_list.select_next();
         instruction_queue.add(
             match char {
                 'd' => QueuedInstruction::Dump(selected_item, inventory.drop_direction),
@@ -443,7 +416,6 @@ fn handle_selected_item(
             },
             InputChange::Held,
         );
-        inventory.selected_item = next_item;
     }
 }
 
@@ -451,7 +423,7 @@ fn examine_selected_item(
     inventory: &ResMut<InventoryScreen>,
     instruction_queue: &mut ResMut<InstructionQueue>,
 ) {
-    if let Some(selected_item) = inventory.selected_item {
+    if let Some(selected_item) = inventory.selection_list.selected {
         instruction_queue.add(
             QueuedInstruction::ExamineItem(selected_item),
             InputChange::Held,

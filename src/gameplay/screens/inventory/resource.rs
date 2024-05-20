@@ -1,15 +1,10 @@
-use crate::prelude::{HorizontalDirection, Timestamp};
-use bevy::{
-    ecs::entity::EntityHashMap,
-    prelude::{Entity, Resource, TextStyle},
-};
+use crate::prelude::{HorizontalDirection, SelectionList, Timestamp};
+use bevy::prelude::{Entity, Resource, TextStyle};
 
 #[derive(Resource)]
 pub(super) struct InventoryScreen {
     pub(super) panel: Entity,
-    pub(super) selected_item: Option<Entity>,
-    pub(super) previous_items: EntityHashMap<Entity>,
-    pub(super) next_items: EntityHashMap<Entity>,
+    pub(super) selection_list: SelectionList,
     pub(super) drop_direction: HorizontalDirection,
     pub(super) section_text_style: TextStyle,
     pub(super) selected_section_text_style: TextStyle,
