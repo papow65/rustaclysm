@@ -7,9 +7,10 @@ mod item_info;
 mod migration;
 mod overmap_info;
 mod quality;
+mod recipe;
 mod terrain_info;
 
 pub(crate) use self::{
     character_info::*, field_info::*, flags::*, furniture_info::*, item_group::*, item_info::*,
-    migration::*, overmap_info::*, quality::*, terrain_info::*,
+    migration::*, overmap_info::*, quality::*, recipe::*, terrain_info::*,
 };

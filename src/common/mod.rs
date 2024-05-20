@@ -7,6 +7,7 @@ mod scrolling_list;
 mod sizes;
 mod slow;
 mod state_bound;
+mod text;
 
 pub(crate) use self::{
     colors::*,
@@ -21,4 +22,5 @@ pub(crate) use self::{
     },
     slow::*,
     state_bound::{despawn, StateBound},
+    text::uppercase_first,
 };

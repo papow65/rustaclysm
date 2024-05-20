@@ -117,7 +117,7 @@ pub(crate) struct CddaPlayer {
     pub(crate) scenario: serde_json::Value,
     pub(crate) scent: serde_json::Value,
     pub(crate) show_map_memory: serde_json::Value,*/
-    pub(crate) skills: serde_json::Value,
+    pub(crate) skills: HashMap<String, Skill>,
     pub(crate) sleep_deprivation: serde_json::Value,
     /*pub(crate) slow_rad: serde_json::Value,
     pub(crate) snippets_read: serde_json::Value,*/
@@ -143,4 +143,13 @@ pub(crate) struct CddaPlayer {
     // To prevent a linking eror when there Too many fields to deserialize
     #[serde(flatten)]
     pub(crate) extra: HashMap<String, serde_json::Value>,
+}
+
+#[derive(Debug, Deserialize)]
+pub(crate) struct Skill {
+    pub(crate) level: u8,
+
+    #[allow(unused)]
+    #[serde(flatten)]
+    extra: HashMap<String, serde_json::Value>,
 }

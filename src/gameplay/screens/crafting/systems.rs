@@ -1,7 +1,10 @@
 use super::resource::CraftingScreen;
 use crate::prelude::*;
-use bevy::prelude::*;
+use bevy::{prelude::*, utils::HashMap};
 use std::ops::RangeInclusive;
+
+const MAX_FIND_DISTANCE: i32 = 7;
+const FIND_RANGE: RangeInclusive<i32> = (-MAX_FIND_DISTANCE)..=MAX_FIND_DISTANCE;
 
 #[allow(clippy::needless_pass_by_value)]
 pub(super) fn spawn_crafting_screen(mut commands: Commands) {
@@ -88,9 +91,10 @@ pub(super) fn update_crafting_screen(
     location: Res<Location>,
     fonts: Res<Fonts>,
     infos: Res<Infos>,
+    sav: Res<Sav>,
     crafting_screen: Res<CraftingScreen>,
     players: Query<(&Pos, &BodyContainers), With<Player>>,
-    items_and_furniture: Query<(&ObjectDefinition, &LastSeen, Option<&Parent>)>,
+    items_and_furniture: Query<(&ObjectDefinition, &Amount, &LastSeen, Option<&Parent>)>,
 ) {
     if !run {
         return;
@@ -98,77 +102,170 @@ pub(super) fn update_crafting_screen(
 
     let (&player_pos, body_containers) = players.single();
 
-    let nearby = find_nearby(
-        &location,
-        &infos,
-        &items_and_furniture,
-        body_containers,
-        player_pos,
-    );
+    let nearby_items = find_nearby(&location, &items_and_furniture, player_pos, body_containers);
+    let nearby_qualities = nearby_qualities(&infos, &nearby_items);
+    let nearby_manuals = nearby_manuals(&infos, &nearby_items);
+    //println!("{:?}", &nearby_manuals);
+
+    let mut shown_recipes = infos
+        .recipes()
+        .filter(|(_, recipe)| known_recipe(recipe, &nearby_manuals, &sav.player.skills))
+        .filter_map(|(recipe_id, recipe)| {
+            infos
+                .item(&recipe.result)
+                .ok_or(0)
+                .inspect_err(|_| {
+                    eprintln!("Recipe result {:?} should be a known item", recipe.result);
+                })
+                .ok()
+                .map(|item| {
+                    (
+                        recipe_id,
+                        recipe,
+                        uppercase_first(&item.name.single),
+                        if qualities_present(&recipe.qualities.0, &nearby_qualities) {
+                            DEFAULT_TEXT_COLOR
+                        } else {
+                            SOFT_TEXT_COLOR
+                        },
+                    )
+                })
+        })
+        .collect::<Vec<_>>();
+    shown_recipes.sort_by_key(|(.., name, _)| String::from(name));
+
+    let mut shown_qualities = nearby_qualities
+        .iter()
+        .map(|(quality_id, amount)| {
+            (
+                quality_id,
+                amount,
+                uppercase_first(
+                    &infos
+                        .quality(quality_id)
+                        .expect("Quality should be found")
+                        .name
+                        .single,
+                ),
+            )
+        })
+        .collect::<Vec<_>>();
+    shown_qualities.sort_by_key(|(.., name)| String::from(name));
 
     commands
         .entity(crafting_screen.panel)
         .with_children(|parent| {
             parent.spawn(TextBundle::from_section(
-                String::from("Nearby tools:"),
-                fonts.regular(SOFT_TEXT_COLOR),
+                String::from("Known recipies:"),
+                fonts.regular(WARN_TEXT_COLOR),
             ));
 
-            let mut qualities = infos
-                .qualities()
-                .filter_map(|quality_id| {
-                    find_quality(&nearby, quality_id).map(|amount| (quality_id, amount))
-                })
-                .map(|(quality_id, amount)| {
-                    (
-                        quality_id,
-                        amount,
-                        &infos
-                            .quality(quality_id)
-                            .expect("Quality should be found")
-                            .name
-                            .single,
-                    )
-                })
-                .collect::<Vec<_>>();
-            qualities.sort_by_key(|(.., quality)| *quality);
-            for (_, amount, name) in qualities {
+            for (.., name, color) in shown_recipes {
+                parent.spawn(TextBundle::from_section(name, fonts.regular(color)));
+            }
+
+            parent.spawn(TextBundle::from_section(
+                String::from("\nNearby tools:"),
+                fonts.regular(WARN_TEXT_COLOR),
+            ));
+
+            for (_, amount, name) in shown_qualities {
                 parent.spawn(TextBundle::from_section(
                     format!("{amount} {name}"),
-                    fonts.regular(DEFAULT_TEXT_COLOR),
+                    fonts.regular(GOOD_TEXT_COLOR),
                 ));
             }
         });
 }
 
-const MAX_FIND_DISTANCE: i32 = 7;
-const FIND_RANGE: RangeInclusive<i32> = (-MAX_FIND_DISTANCE)..=MAX_FIND_DISTANCE;
-
 fn find_nearby<'a>(
     location: &'a Location,
-    infos: &'a Infos,
-    items_and_furniture: &'a Query<(&ObjectDefinition, &LastSeen, Option<&Parent>)>,
-    body_containers: &'a BodyContainers,
+    items_and_furniture: &'a Query<(&ObjectDefinition, &Amount, &LastSeen, Option<&Parent>)>,
     player_pos: Pos,
-) -> Vec<&'a (ObjectId, i8)> {
+    body_containers: &'a BodyContainers,
+) -> Vec<(&'a ObjectDefinition, &'a Amount)> {
     FIND_RANGE
         .flat_map(move |dz| {
             FIND_RANGE.flat_map(move |dx| {
                 location
                     .all(player_pos.horizontal_offset(dx, dz))
                     .filter_map(|entity| items_and_furniture.get(*entity).ok())
-                    .filter(|(_, last_seen, _)| **last_seen != LastSeen::Never)
+                    .filter(|(.., last_seen, _)| **last_seen != LastSeen::Never)
             })
         })
-        .chain(
-            items_and_furniture
-                .iter()
-                .filter(|(.., parent)| parent.is_some_and(|p| p.get() == body_containers.hands))
-                .chain(items_and_furniture.iter().filter(|(.., parent)| {
-                    parent.is_some_and(|p| p.get() == body_containers.clothing)
-                })),
-        )
-        .filter_map(|(definition, ..)| match definition.category {
+        .chain(items_and_furniture.iter().filter(|(.., parent)| {
+            parent.is_some_and(|p| {
+                p.get() == body_containers.hands || p.get() == body_containers.clothing
+            })
+        }))
+        .map(|(definition, amount, ..)| (definition, amount))
+        .collect::<Vec<_>>()
+}
+
+fn nearby_manuals<'a>(
+    infos: &'a Infos,
+    nearby_items: &[(&'a ObjectDefinition, &'a Amount)],
+) -> Vec<&'a ObjectId> {
+    nearby_items
+        .iter()
+        .map(|(definition, _)| definition)
+        .filter(|definition| {
+            definition.category == ObjectCategory::Item
+                && infos
+                    .item(&definition.id)
+                    .filter(|item| item.category.as_ref().is_some_and(|s| s == "manuals"))
+                    .is_some()
+        })
+        .map(|definition| &definition.id)
+        .collect::<Vec<_>>()
+}
+
+fn known_recipe(
+    recipe: &Recipe,
+    nearby_manuals: &[&ObjectId],
+    skills: &HashMap<String, Skill>,
+) -> bool {
+    if let BookLearn::List(list) = &recipe.book_learn {
+        list.iter()
+            .any(|(from_book, _)| nearby_manuals.contains(&from_book))
+    } else {
+        match &recipe.autolearn {
+            AutoLearn::Bool(autolearn) => {
+                *autolearn
+                    && recipe
+                        .skill_used
+                        .as_ref()
+                        .map(|skill_used| {
+                            recipe.difficulty
+                                <= skills
+                                    .get(skill_used)
+                                    .unwrap_or_else(|| {
+                                        panic!("Skill {:?} not found", recipe.skill_used)
+                                    })
+                                    .level
+                        })
+                        .unwrap_or(true)
+            }
+            AutoLearn::Skills(autolearn_skills) => {
+                autolearn_skills.iter().all(|(skill_name, skill_level)| {
+                    *skill_level
+                        <= skills
+                            .get(skill_name)
+                            .unwrap_or_else(|| panic!("Skill {:?} not found", recipe.skill_used))
+                            .level
+                })
+            }
+        }
+    }
+}
+
+fn nearby_qualities<'a>(
+    infos: &'a Infos,
+    nearby_items: &[(&'a ObjectDefinition, &'a Amount)],
+) -> HashMap<&'a ObjectId, i8> {
+    let found = nearby_items
+        .iter()
+        .filter_map(|(definition, _)| match definition.category {
             ObjectCategory::Item => infos.item(&definition.id).map(|item| &item.qualities),
             ObjectCategory::Furniture => infos
                 .furniture(&definition.id)
@@ -177,15 +274,27 @@ fn find_nearby<'a>(
             _ => None,
         })
         .flatten()
-        .collect::<Vec<_>>()
+        .collect::<Vec<_>>();
+
+    infos
+        .qualities()
+        .filter_map(|quality_id| {
+            found
+                .iter()
+                .filter(|item_quality| &item_quality.0 == quality_id)
+                .map(|item_quality| item_quality.1)
+                .max()
+                .map(|max| (quality_id, max))
+        })
+        .collect::<HashMap<_, _>>()
 }
 
-fn find_quality(nearby: &[&(ObjectId, i8)], quality: &ObjectId) -> Option<i8> {
-    nearby
-        .iter()
-        .filter(|item_quality| &item_quality.0 == quality)
-        .map(|item_quality| item_quality.1)
-        .max()
+fn qualities_present(required: &[RequiredQuality], present: &HashMap<&ObjectId, i8>) -> bool {
+    required.iter().all(|required_quality| {
+        present
+            .get(&required_quality.id)
+            .is_some_and(|present_level| required_quality.level as i8 <= *present_level)
+    })
 }
 
 #[allow(clippy::needless_pass_by_value)]

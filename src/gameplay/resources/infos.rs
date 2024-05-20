@@ -14,6 +14,7 @@ pub(crate) struct Infos {
     item_groups: HashMap<ObjectId, ItemGroup>,
     migrations: HashMap<ObjectId, Migration>,
     qualities: HashMap<ObjectId, Quality>,
+    recipes: HashMap<ObjectId, Recipe>,
     terrain: HashMap<ObjectId, TerrainInfo>,
     zone_levels: HashMap<ObjectId, OvermapInfo>,
 }
@@ -66,6 +67,7 @@ impl Infos {
             {
                 continue;
             }
+            println!("Parsing {json_path:?}...");
             let file_contents = read_to_string(&json_path)
                 .unwrap_or_else(|_| panic!("Could not read {}", json_path.display()));
             let contents = serde_json::from_str::<Vec<serde_json::Map<String, serde_json::Value>>>(
@@ -103,7 +105,12 @@ impl Infos {
                     .get_mut(&type_.clone())
                     .expect("All types should be present");
                 for id in ids {
-                    assert!(by_type.get(&id).is_none(), "double entry for {:?}", &id);
+                    if by_type.get(&id).is_some() {
+                        eprintln!(
+                            "Duplicate usade of id {:?} in {:?} detected. One will be ignored.",
+                            &id, &type_
+                        );
+                    }
                     by_type.insert(id.clone(), content.clone());
                     info_count += 1;
                 }
@@ -148,6 +155,9 @@ impl Infos {
                 .entry(type_id.clone())
                 .or_insert_with(HashMap::default);
             'enricheds: for (object_id, literal) in literal_entry {
+                if literal.contains_key("abstract") {
+                    continue;
+                }
                 //println!("{:?}", &object_id);
                 let mut enriched = literal.clone();
                 let mut ancestors = vec![object_id.clone()];
@@ -185,9 +195,9 @@ impl Infos {
                         enriched.entry(key.clone()).or_insert(value.clone());
                     }
                 }
+
                 enriched.remove("id");
                 enriched.remove("from");
-                enriched.remove("abstract");
                 enriched.remove("copy-from");
 
                 if TypeId::MIGRATION.contains(type_id) {
@@ -235,6 +245,7 @@ impl Infos {
             item_groups: Self::extract(&mut enricheds, TypeId::ITEM_GROUP),
             migrations: Self::extract(&mut enricheds, TypeId::MIGRATION),
             qualities: Self::extract(&mut enricheds, TypeId::TOOL_QUALITY),
+            recipes: Self::extract(&mut enricheds, TypeId::RECIPE),
             terrain: Self::extract(&mut enricheds, TypeId::TERRAIN),
             zone_levels: Self::extract(&mut enricheds, TypeId::OVERMAP),
         };
@@ -280,6 +291,10 @@ impl Infos {
 
     pub(crate) fn item_group<'a>(&'a self, id: &'a ObjectId) -> Option<&'a ItemGroup> {
         self.item_groups.get(self.maybe_migrated(id))
+    }
+
+    pub(crate) fn recipe<'a>(&'a self, id: &'a ObjectId) -> Option<&'a Recipe> {
+        self.recipes.get(self.maybe_migrated(id))
     }
 
     pub(crate) fn terrain<'a>(&'a self, id: &'a ObjectId) -> Option<&'a TerrainInfo> {
@@ -370,6 +385,10 @@ impl Infos {
         self.qualities.keys()
     }
 
+    pub(crate) fn recipes(&self) -> impl Iterator<Item = (&ObjectId, &Recipe)> {
+        self.recipes.iter()
+    }
+
     fn extract<T>(
         all: &mut HashMap<TypeId, HashMap<ObjectId, serde_json::Map<String, serde_json::Value>>>,
         type_ids: &[TypeId],
@@ -398,6 +417,41 @@ fn id_value<'a>(
     content: &'a serde_json::Map<String, serde_json::Value>,
     json_path: &'a PathBuf,
 ) -> &'a serde_json::Value {
+    if content
+        .get("type")
+        .is_some_and(|v| v.as_str() == Some("recipe"))
+    {
+        assert_eq!(content.get("id"), None, "No 'id' field allowed");
+        assert_eq!(content.get("from"), None, "No 'from' field allowed");
+
+        if let Some(suffix) = content.get("id_suffix") {
+            let composite = serde_json::Value::String(
+                content
+                    .get("result")
+                    .or_else(|| content.get("copy-from"))
+                    .unwrap_or_else(|| {
+                        panic!(
+                            "A recipe with an id suffix should have a 'result', or a 'copy-from' field: {content:?}"
+                        )
+                    })
+                    .as_str()
+                    .expect("'result' should be a string field")
+                    .to_owned()
+                    + " " + suffix
+                        .as_str()
+                        .expect("'id_suffix' should be a string field"),
+            );
+            return Box::leak(Box::new(composite));
+        }
+
+        return content
+            .get("abstract")
+            .or_else(|| content.get("result"))
+            .unwrap_or_else(|| {
+                panic!("A recipe should have an 'abstract' field, or a 'result' field: {content:?}")
+            });
+    }
+
     let mut count = 0;
     if content.get("id").is_some() {
         count += 1;

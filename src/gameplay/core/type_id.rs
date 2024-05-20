@@ -40,6 +40,7 @@ impl TypeId {
         Self("overmap_special_migration"),
     ];
 
+    pub(crate) const RECIPE: &'static [Self] = &[Self("recipe")];
     pub(crate) const TERRAIN: &'static [Self] = &[Self("terrain")];
     pub(crate) const TOOL_QUALITY: &'static [Self] = &[Self("tool_quality")];
     pub(crate) const VEHICLE_PART: &'static [Self] = &[Self("vehicle_part")];
@@ -64,7 +65,6 @@ impl TypeId {
         Self("monstergroup"),
         Self("nested_category"),
         Self("practice"),
-        Self("recipe"),
         Self("recipe_category"),
         Self("recipe_group"),
         Self("requirement"),
@@ -84,6 +84,7 @@ impl TypeId {
             Self::ITEM_GROUP,
             Self::MIGRATION,
             Self::OVERMAP,
+            Self::RECIPE,
             Self::TERRAIN,
             Self::TOOL_QUALITY,
             Self::VEHICLE_PART,

@@ -131,7 +131,6 @@ pub(crate) struct ItemInfo {
     pub(crate) insulation: Option<serde_json::Value>,
 
     #[allow(dead_code)] // TODO
-    #[allow(dead_code)] // TODO
     pub(crate) solar_efficiency: Option<serde_json::Value>,
 
     #[allow(dead_code)] // TODO
