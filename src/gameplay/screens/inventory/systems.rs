@@ -359,7 +359,7 @@ pub(super) fn manage_inventory_keyboard_input(
             Key::Character(char @ ('d' | 't' | 'u' | 'w')) => {
                 handle_selected_item(&mut inventory, &mut instruction_queue, char);
             }
-            Key::Code(KeyCode::KeyE) => {
+            Key::Character('e') => {
                 // Special case, because we don't want to select another item after the action.
                 examine_selected_item(&inventory, &mut instruction_queue);
             }
