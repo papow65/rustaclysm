@@ -1,12 +1,13 @@
 use super::{
     input::manage_hud_keyboard_input,
-    manual::spawn_manual,
+    manual::{spawn_manual, update_manual},
     resources::{despawn_hud_resources, spawn_hud_resources},
     sidebar::{spawn_sidebar, update_sidebar_systems, update_status_fps},
 };
-use crate::prelude::ApplicationState;
+use crate::prelude::{ApplicationState, GameplayScreenState};
 use bevy::prelude::{
-    in_state, App, FixedUpdate, IntoSystemConfigs, OnEnter, OnExit, Plugin, Update,
+    in_state, on_event, App, FixedUpdate, IntoSystemConfigs, OnEnter, OnExit, Plugin,
+    StateTransitionEvent, Update,
 };
 
 /** Plugin for the screen-independent HUD: the manual and the sidebar */
@@ -21,7 +22,11 @@ impl Plugin for HudPlugin {
 
         app.add_systems(
             Update,
-            (manage_hud_keyboard_input, update_sidebar_systems())
+            (
+                manage_hud_keyboard_input,
+                update_sidebar_systems(),
+                update_manual.run_if(on_event::<StateTransitionEvent<GameplayScreenState>>()),
+            )
                 .run_if(in_state(ApplicationState::Gameplay)),
         );
 

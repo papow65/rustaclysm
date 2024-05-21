@@ -15,3 +15,9 @@ pub(crate) enum GameplayScreenState {
     #[default]
     Inapplicable,
 }
+
+impl GameplayScreenState {
+    pub(crate) const fn large_node_bundle(&self) -> bool {
+        matches!(self, Self::Inventory | Self::Crafting)
+    }
+}
