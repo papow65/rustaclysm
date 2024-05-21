@@ -111,12 +111,6 @@ pub(super) fn update_inventory(
     let mut items_by_section = items_by_section.into_iter().collect::<Vec<_>>();
     items_by_section.sort_by_key(|(section, _)| (*section).clone());
 
-    let selected_item_present = items_by_section.iter().any(|(_, items)| {
-        items
-            .iter()
-            .any(|(e, _, _)| Some(*e) == inventory.selection_list.selected)
-    });
-
     commands.entity(inventory.panel).with_children(|parent| {
         for (section, items) in items_by_section {
             let section_style = if section == InventorySection::Nbor(inventory.drop_direction) {
