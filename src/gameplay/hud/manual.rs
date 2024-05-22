@@ -1,8 +1,8 @@
 use super::{components::ManualDisplay, resources::HudDefaults};
 use crate::prelude::{ApplicationState, GameplayScreenState, StateBound};
 use bevy::prelude::{
-    default, BackgroundColor, BuildChildren, Children, Commands, Query, Res, State, Text,
-    TextBundle, TextSection, Val, With,
+    default, BackgroundColor, BuildChildren, Children, Commands, NodeBundle, Query, Res, State,
+    Text, TextBundle, TextSection, Val, With, ZIndex,
 };
 
 static BASE_MANUAL_CONTENTS: &str = "\
@@ -39,20 +39,24 @@ static INVENTORY_MANUAL_CONTENTS: &str = "\
     take item       t\n\
     wield item      w\n\
     unwield item    u\n\
+    toggle this     F1\n\
     close inventory &/esc\n\
     quit            ctrl c/q";
 
 static CRAFTING_MANUAL_CONTENTS: &str = "\
     select craft    arrow up/down\n\
+    toggle this     F1\n\
     close crafting  &/esc\n\
     quit            ctrl c/q";
 
 static MENU_MANUAL_CONTENTS: &str = "\
+    toggle this     F1\n\
     to main menu    m\n\
     close menu      esc\n\
     quit            ctrl c/q";
 
 static DEATH_MANUAL_CONTENTS: &str = "\
+    toggle this     F1\n\
     to main menu    m/enter/space/esc\n\
     quit            ctrl c/q";
 
@@ -64,7 +68,10 @@ pub(super) fn spawn_manual(mut commands: Commands, hud_defaults: Res<HudDefaults
 
     commands
         .spawn((
-            background,
+            NodeBundle {
+                z_index: ZIndex::Global(1),
+                ..background
+            },
             ManualDisplay,
             StateBound::<ApplicationState>::default(),
         ))
