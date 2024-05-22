@@ -40,11 +40,11 @@ pub(super) fn spawn_inventory(mut commands: Commands, fonts: Res<Fonts>) {
                 .spawn(NodeBundle {
                     style: Style {
                         width: Val::Percent(100.0),
-                        height: Val::Percent(100.0),
+                        height: Val::Auto,
                         flex_direction: FlexDirection::Column,
                         align_items: AlignItems::Start,
                         justify_content: JustifyContent::Start,
-                        margin: UiRect::horizontal(Val::Px(360.0)),
+                        margin: UiRect::px(10.0, 365.0, 10.0, 10.0),
                         padding: UiRect::all(SMALL_SPACING),
                         overflow: Overflow::clip_y(),
                         ..default()
