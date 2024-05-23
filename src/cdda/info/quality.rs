@@ -6,6 +6,7 @@ use serde::Deserialize;
 pub(crate) struct Quality {
     pub(crate) name: ItemName,
 
+    #[allow(unused)]
     #[serde(default)]
     pub(crate) usages: Vec<(u8, Vec<String>)>,
 

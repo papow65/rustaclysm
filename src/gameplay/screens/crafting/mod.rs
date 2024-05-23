@@ -1,3 +1,4 @@
+mod components;
 mod plugin;
 mod resource;
 mod systems;

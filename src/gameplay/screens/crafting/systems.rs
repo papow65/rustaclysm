@@ -1,4 +1,4 @@
-use super::resource::CraftingScreen;
+use super::{components::RecipeSituation, resource::CraftingScreen};
 use crate::prelude::*;
 use bevy::{prelude::*, utils::HashMap};
 use std::ops::RangeInclusive;
@@ -8,7 +8,7 @@ const FIND_RANGE: RangeInclusive<i32> = (-MAX_FIND_DISTANCE)..=MAX_FIND_DISTANCE
 
 #[allow(clippy::needless_pass_by_value)]
 pub(super) fn spawn_crafting_screen(mut commands: Commands) {
-    let panel = commands
+    let recipe_list = commands
         .spawn((
             NodeBundle {
                 style: Style {
@@ -22,6 +22,18 @@ pub(super) fn spawn_crafting_screen(mut commands: Commands) {
             },
             ScrollingList::default(),
         ))
+        .id();
+    let recipe_details = commands
+        .spawn((NodeBundle {
+            style: Style {
+                width: Val::Percent(100.0),
+                flex_direction: FlexDirection::Column,
+                align_items: AlignItems::Start,
+                justify_content: JustifyContent::Start,
+                ..default()
+            },
+            ..default()
+        },))
         .id();
     commands
         .spawn((
@@ -52,11 +64,29 @@ pub(super) fn spawn_crafting_screen(mut commands: Commands) {
                     background_color: PANEL_COLOR.into(),
                     ..default()
                 })
-                .add_child(panel);
+                .with_children(|builder| {
+                    builder
+                        .spawn(NodeBundle {
+                            style: Style {
+                                width: Val::Percent(100.0),
+                                height: Val::Auto,
+                                flex_direction: FlexDirection::Row,
+                                align_items: AlignItems::Start,
+                                justify_content: JustifyContent::Start,
+                                overflow: Overflow::clip_y(),
+                                ..default()
+                            },
+                            ..default()
+                        })
+                        .add_child(recipe_list)
+                        .add_child(recipe_details);
+                });
         });
 
     commands.insert_resource(CraftingScreen {
-        panel,
+        recipe_list,
+        selection_list: SelectionList::default(),
+        recipe_details,
         last_time: Timestamp::ZERO,
     });
 }
@@ -72,8 +102,10 @@ pub(super) fn clear_crafting_screen(
         return false;
     }
     crafting_screen.last_time = clock.time();
+    crafting_screen.selection_list.clear(true);
 
-    if let Ok(children) = children.get(crafting_screen.panel) {
+    // TODO
+    if let Ok(children) = children.get(crafting_screen.recipe_list) {
         for &child in children {
             if let Ok(mut style) = styles.get_mut(child) {
                 style.display = Display::None;
@@ -92,7 +124,7 @@ pub(super) fn update_crafting_screen(
     fonts: Res<Fonts>,
     infos: Res<Infos>,
     sav: Res<Sav>,
-    crafting_screen: Res<CraftingScreen>,
+    mut crafting_screen: ResMut<CraftingScreen>,
     players: Query<(&Pos, &BodyContainers), With<Player>>,
     items_and_furniture: Query<(&ObjectDefinition, &Amount, &LastSeen, Option<&Parent>)>,
 ) {
@@ -118,21 +150,14 @@ pub(super) fn update_crafting_screen(
                     eprintln!("Recipe result {:?} should be a known item", recipe.result);
                 })
                 .ok()
-                .map(|item| {
-                    (
-                        recipe_id,
-                        recipe,
-                        uppercase_first(&item.name.single),
-                        if qualities_present(&recipe.qualities.0, &nearby_qualities) {
-                            DEFAULT_TEXT_COLOR
-                        } else {
-                            SOFT_TEXT_COLOR
-                        },
-                    )
+                .map(|item| RecipeSituation {
+                    recipe_id: recipe_id.clone(),
+                    name: uppercase_first(&item.name.single),
+                    qualities_present: qualities_present(&recipe.qualities.0, &nearby_qualities),
                 })
         })
         .collect::<Vec<_>>();
-    shown_recipes.sort_by_key(|(.., name, _)| String::from(name));
+    shown_recipes.sort_by_key(|recipe| recipe.name.clone());
 
     let mut shown_qualities = nearby_qualities
         .iter()
@@ -153,15 +178,25 @@ pub(super) fn update_crafting_screen(
     shown_qualities.sort_by_key(|(.., name)| String::from(name));
 
     commands
-        .entity(crafting_screen.panel)
+        .entity(crafting_screen.recipe_list)
         .with_children(|parent| {
             parent.spawn(TextBundle::from_section(
                 String::from("Known recipies:"),
                 fonts.regular(WARN_TEXT_COLOR),
             ));
 
-            for (.., name, color) in shown_recipes {
-                parent.spawn(TextBundle::from_section(name, fonts.regular(color)));
+            for recipe in shown_recipes {
+                let first = crafting_screen.selection_list.selected.is_none();
+                let entity = parent
+                    .spawn((
+                        TextBundle::from_section(
+                            recipe.name.clone(),
+                            fonts.regular(recipe.color(first)),
+                        ),
+                        recipe,
+                    ))
+                    .id();
+                crafting_screen.selection_list.append(entity);
             }
 
             parent.spawn(TextBundle::from_section(
@@ -175,6 +210,15 @@ pub(super) fn update_crafting_screen(
                     fonts.regular(GOOD_TEXT_COLOR),
                 ));
             }
+        });
+
+    commands
+        .entity(crafting_screen.recipe_details)
+        .with_children(|parent| {
+            parent.spawn(TextBundle::from_section(
+                String::from("Recipe details\nTODO"),
+                fonts.regular(WARN_TEXT_COLOR),
+            ));
         });
 }
 
@@ -295,10 +339,13 @@ fn qualities_present(required: &[RequiredQuality], present: &HashMap<&ObjectId, 
 
 #[allow(clippy::needless_pass_by_value)]
 pub(super) fn manage_crafting_keyboard_input(
+    mut commands: Commands,
     mut keys: Keys,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
     mut instruction_queue: ResMut<InstructionQueue>,
     mut crafting_screen: ResMut<CraftingScreen>,
+    fonts: Res<Fonts>,
+    mut recipes: Query<(&mut Text, &RecipeSituation)>,
 ) {
     for combo in keys.combos(Ctrl::Without) {
         match combo.key {
@@ -306,6 +353,29 @@ pub(super) fn manage_crafting_keyboard_input(
                 if combo.change == InputChange::JustPressed =>
             {
                 next_gameplay_state.set(GameplayScreenState::Base);
+            }
+            Key::Code(direction @ (KeyCode::ArrowUp | KeyCode::ArrowDown)) => {
+                if direction == KeyCode::ArrowUp {
+                    crafting_screen.select_up(&mut recipes);
+                } else {
+                    crafting_screen.select_down(&mut recipes);
+                }
+                if let Some(selected) = crafting_screen.selection_list.selected {
+                    let recipe = recipes
+                        .get(selected)
+                        .expect("Selected recipe should be found")
+                        .1;
+
+                    commands
+                        .entity(crafting_screen.recipe_details)
+                        .despawn_descendants()
+                        .with_children(|builder| {
+                            builder.spawn(TextBundle::from_section(
+                                recipe.name.clone(),
+                                fonts.regular(recipe.color(true)),
+                            ));
+                        });
+                }
             }
             _ => {}
         }

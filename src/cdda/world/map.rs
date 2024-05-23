@@ -170,12 +170,6 @@ impl Submap {
     }
 }
 
-#[derive(Debug)]
-pub(crate) struct Furniture {
-    #[allow(unused)]
-    id: ObjectId,
-}
-
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct CddaItem {

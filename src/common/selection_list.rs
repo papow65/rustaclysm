@@ -39,6 +39,8 @@ impl SelectionList {
     pub(crate) fn clear(&mut self, clear_selected: bool) {
         self.previous_items.clear();
         self.next_items.clear();
+        self.first = None;
+        self.last = None;
         if clear_selected {
             self.selected = None;
         }
