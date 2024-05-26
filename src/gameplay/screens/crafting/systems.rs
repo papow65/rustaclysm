@@ -1,4 +1,7 @@
-use super::{components::RecipeSituation, resource::CraftingScreen};
+use super::{
+    components::{QualitySituation, RecipeSituation},
+    resource::CraftingScreen,
+};
 use crate::prelude::*;
 use bevy::{prelude::*, utils::HashMap};
 use std::ops::RangeInclusive;
@@ -287,7 +290,7 @@ fn shown_recipes(
                     name: uppercase_first(&item.name.single),
                     autolearn,
                     manuals: recipe_manuals,
-                    qualities_present: qualities_present(&recipe.qualities.0, nearby_qualities),
+                    qualities: recipe_qualities(infos, &recipe.qualities.0, nearby_qualities),
                 })
         })
         .collect::<Vec<_>>();
@@ -370,12 +373,29 @@ fn nearby_qualities<'a>(
         .collect::<HashMap<_, _>>()
 }
 
-fn qualities_present(required: &[RequiredQuality], present: &HashMap<&ObjectId, i8>) -> bool {
-    required.iter().all(|required_quality| {
-        present
-            .get(&required_quality.id)
-            .is_some_and(|present_level| required_quality.level as i8 <= *present_level)
-    })
+fn recipe_qualities(
+    infos: &Infos,
+    required: &[RequiredQuality],
+    present: &HashMap<&ObjectId, i8>,
+) -> Vec<QualitySituation> {
+    let mut qualities = required
+        .iter()
+        .map(|required_quality| QualitySituation {
+            name: uppercase_first(
+                infos
+                    .quality(&required_quality.id)
+                    .expect("Quality should be known")
+                    .name
+                    .single
+                    .as_str(),
+            ),
+            present: present.get(&required_quality.id).copied(),
+            required: required_quality.level,
+        })
+        .collect::<Vec<_>>();
+
+    qualities.sort_by_key(|quality| quality.name.clone());
+    qualities
 }
 
 #[allow(clippy::needless_pass_by_value)]
@@ -411,31 +431,7 @@ pub(super) fn manage_crafting_keyboard_input(
                         .entity(crafting_screen.recipe_details)
                         .despawn_descendants()
                         .with_children(|builder| {
-                            builder.spawn(TextBundle::from_sections(vec![
-                                TextSection::new(&recipe.name, fonts.regular(recipe.color(true))),
-                                TextSection::new(
-                                    format!("\n({})\n\n", recipe.recipe_id.fallback_name()),
-                                    fonts.regular(SOFT_TEXT_COLOR),
-                                ),
-                                TextSection::new(
-                                    String::from(if recipe.autolearn { "Self-taught" } else { "" }),
-                                    fonts.regular(GOOD_TEXT_COLOR),
-                                ),
-                                TextSection::new(
-                                    String::from(
-                                        if recipe.autolearn && !recipe.manuals.is_empty() {
-                                            ", "
-                                        } else {
-                                            ""
-                                        },
-                                    ),
-                                    fonts.regular(GOOD_TEXT_COLOR),
-                                ),
-                                TextSection::new(
-                                    recipe.manuals.join(", "),
-                                    fonts.regular(WARN_TEXT_COLOR),
-                                ),
-                            ]));
+                            builder.spawn(TextBundle::from_sections(recipe.text_sections(&fonts)));
                         });
                 }
             }
