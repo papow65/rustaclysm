@@ -7,6 +7,8 @@ use bevy::prelude::{Color, Component};
 pub(super) struct RecipeSituation {
     pub(super) recipe_id: ObjectId,
     pub(super) name: String,
+    pub(super) autolearn: bool,
+    pub(super) manuals: Vec<String>,
     pub(super) qualities_present: bool,
 }
 

@@ -28,13 +28,30 @@ pub(crate) struct Recipe {
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
 pub(crate) enum BookLearn {
-    List(Vec<(ObjectId, u8)>),
+    List(Vec<BookLearnItem>),
+    Map(HashMap<ObjectId, serde_json::Value>),
     Other(#[allow(unused)] serde_json::Value),
 }
 
 impl Default for BookLearn {
     fn default() -> Self {
         Self::List(Vec::new())
+    }
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(untagged)]
+pub(crate) enum BookLearnItem {
+    Simple(ObjectId),
+    Wrapped((ObjectId,)),
+    WithSkill(ObjectId, #[allow(unused)] u8),
+}
+
+impl BookLearnItem {
+    pub(crate) const fn id(&self) -> &ObjectId {
+        match self {
+            Self::Simple(id) | Self::Wrapped((id,)) | Self::WithSkill(id, _) => id,
+        }
     }
 }
 
@@ -52,16 +69,16 @@ impl Default for AutoLearn {
 }
 
 #[derive(Default, Debug, Deserialize)]
-#[serde(from = "Vec<RequiredQualityWrap>")]
+#[serde(from = "Vec<Wrap<RequiredQuality>>")]
 pub(crate) struct RequiredQualities(pub(crate) Vec<RequiredQuality>);
 
-impl From<Vec<RequiredQualityWrap>> for RequiredQualities {
-    fn from(ws: Vec<RequiredQualityWrap>) -> Self {
+impl From<Vec<Wrap<RequiredQuality>>> for RequiredQualities {
+    fn from(ws: Vec<Wrap<RequiredQuality>>) -> Self {
         Self(
             ws.into_iter()
                 .flat_map(|w| match w {
-                    RequiredQualityWrap::Single(r) => vec![r],
-                    RequiredQualityWrap::List(l) => l,
+                    Wrap::Single(r) => vec![r],
+                    Wrap::List(l) => l,
                 })
                 .collect(),
         )
@@ -70,9 +87,9 @@ impl From<Vec<RequiredQualityWrap>> for RequiredQualities {
 
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
-pub(crate) enum RequiredQualityWrap {
-    Single(RequiredQuality),
-    List(Vec<RequiredQuality>),
+pub(crate) enum Wrap<T> {
+    Single(T),
+    List(Vec<T>),
 }
 
 #[derive(Debug, Deserialize)]

@@ -135,29 +135,11 @@ pub(super) fn update_crafting_screen(
     let (&player_pos, body_containers) = players.single();
 
     let nearby_items = find_nearby(&location, &items_and_furniture, player_pos, body_containers);
-    let nearby_qualities = nearby_qualities(&infos, &nearby_items);
     let nearby_manuals = nearby_manuals(&infos, &nearby_items);
+    let nearby_qualities = nearby_qualities(&infos, &nearby_items);
     //println!("{:?}", &nearby_manuals);
 
-    let mut shown_recipes = infos
-        .recipes()
-        .filter(|(_, recipe)| known_recipe(recipe, &nearby_manuals, &sav.player.skills))
-        .filter_map(|(recipe_id, recipe)| {
-            infos
-                .item(&recipe.result)
-                .ok_or(0)
-                .inspect_err(|_| {
-                    eprintln!("Recipe result {:?} should be a known item", recipe.result);
-                })
-                .ok()
-                .map(|item| RecipeSituation {
-                    recipe_id: recipe_id.clone(),
-                    name: uppercase_first(&item.name.single),
-                    qualities_present: qualities_present(&recipe.qualities.0, &nearby_qualities),
-                })
-        })
-        .collect::<Vec<_>>();
-    shown_recipes.sort_by_key(|recipe| recipe.name.clone());
+    let shown_recipes = shown_recipes(&infos, &sav, &nearby_manuals, &nearby_qualities);
 
     let mut shown_qualities = nearby_qualities
         .iter()
@@ -249,10 +231,10 @@ fn find_nearby<'a>(
 fn nearby_manuals<'a>(
     infos: &'a Infos,
     nearby_items: &[(&'a ObjectDefinition, &'a Amount)],
-) -> Vec<&'a ObjectId> {
+) -> HashMap<&'a ObjectId, &'a str> {
     nearby_items
         .iter()
-        .map(|(definition, _)| definition)
+        .map(|(definition, _)| *definition)
         .filter(|definition| {
             definition.category == ObjectCategory::Item
                 && infos
@@ -261,42 +243,101 @@ fn nearby_manuals<'a>(
                     .is_some()
         })
         .map(|definition| &definition.id)
-        .collect::<Vec<_>>()
+        .map(|manual_id| {
+            (
+                manual_id,
+                infos
+                    .item(manual_id)
+                    .expect("Manual should be known")
+                    .name
+                    .single
+                    .as_str(),
+            )
+        })
+        .collect::<HashMap<_, _>>()
 }
 
-fn known_recipe(
-    recipe: &Recipe,
-    nearby_manuals: &[&ObjectId],
-    skills: &HashMap<String, Skill>,
-) -> bool {
-    if let BookLearn::List(list) = &recipe.book_learn {
-        list.iter()
-            .any(|(from_book, _)| nearby_manuals.contains(&from_book))
-    } else {
-        match &recipe.autolearn {
-            AutoLearn::Bool(autolearn) => {
-                *autolearn
-                    && recipe.skill_used.as_ref().map_or(true, |skill_used| {
-                        recipe.difficulty
-                            <= skills
-                                .get(skill_used)
-                                .unwrap_or_else(|| {
-                                    panic!("Skill {:?} not found", recipe.skill_used)
-                                })
-                                .level
-                    })
-            }
-            AutoLearn::Skills(autolearn_skills) => {
-                autolearn_skills.iter().all(|(skill_name, skill_level)| {
-                    *skill_level
+fn shown_recipes(
+    infos: &Infos,
+    sav: &Sav,
+    nearby_manuals: &HashMap<&ObjectId, &str>,
+    nearby_qualities: &HashMap<&ObjectId, i8>,
+) -> Vec<RecipeSituation> {
+    let mut shown_recipes = infos
+        .recipes()
+        .map(|(recipe_id, recipe)| {
+            (
+                recipe_id,
+                recipe,
+                autolearn_recipe(recipe, &sav.player.skills),
+                recipe_manuals(recipe, nearby_manuals),
+            )
+        })
+        .filter(|(.., autolearn, recipe_manuals)| *autolearn || !recipe_manuals.is_empty())
+        .filter_map(|(recipe_id, recipe, autolearn, recipe_manuals)| {
+            infos
+                .item(&recipe.result)
+                .ok_or(0)
+                .inspect_err(|_| {
+                    eprintln!("Recipe result {:?} should be a known item", recipe.result);
+                })
+                .ok()
+                .map(|item| RecipeSituation {
+                    recipe_id: recipe_id.clone(),
+                    name: uppercase_first(&item.name.single),
+                    autolearn,
+                    manuals: recipe_manuals,
+                    qualities_present: qualities_present(&recipe.qualities.0, nearby_qualities),
+                })
+        })
+        .collect::<Vec<_>>();
+
+    shown_recipes.sort_by_key(|recipe| (recipe.name.clone(), recipe.recipe_id.fallback_name()));
+    shown_recipes
+}
+
+fn autolearn_recipe(recipe: &Recipe, skills: &HashMap<String, Skill>) -> bool {
+    match &recipe.autolearn {
+        AutoLearn::Bool(autolearn) => {
+            *autolearn
+                && recipe.skill_used.as_ref().map_or(true, |skill_used| {
+                    recipe.difficulty
                         <= skills
-                            .get(skill_name)
+                            .get(skill_used)
                             .unwrap_or_else(|| panic!("Skill {:?} not found", recipe.skill_used))
                             .level
                 })
-            }
+        }
+        AutoLearn::Skills(autolearn_skills) => {
+            autolearn_skills.iter().all(|(skill_name, skill_level)| {
+                *skill_level
+                    <= skills
+                        .get(skill_name)
+                        .unwrap_or_else(|| panic!("Skill {:?} not found", recipe.skill_used))
+                        .level
+            })
         }
     }
+}
+
+fn recipe_manuals<'a>(
+    recipe: &'a Recipe,
+    nearby_manuals: &HashMap<&'a ObjectId, &'a str>,
+) -> Vec<String> {
+    // TODO check skill level
+
+    let mut manuals = match &recipe.book_learn {
+        BookLearn::List(list) => list.iter().map(BookLearnItem::id).collect::<Vec<_>>(),
+        BookLearn::Map(map) => map.keys().collect::<Vec<_>>(),
+        BookLearn::Other(other) => todo!("{other:?}"),
+    }
+    .iter()
+    .filter_map(|from_book| nearby_manuals.get(from_book))
+    .map(|name| String::from(*name))
+    .collect::<Vec<_>>();
+
+    manuals.sort();
+    manuals
 }
 
 fn nearby_qualities<'a>(
@@ -370,10 +411,31 @@ pub(super) fn manage_crafting_keyboard_input(
                         .entity(crafting_screen.recipe_details)
                         .despawn_descendants()
                         .with_children(|builder| {
-                            builder.spawn(TextBundle::from_section(
-                                recipe.name.clone(),
-                                fonts.regular(recipe.color(true)),
-                            ));
+                            builder.spawn(TextBundle::from_sections(vec![
+                                TextSection::new(&recipe.name, fonts.regular(recipe.color(true))),
+                                TextSection::new(
+                                    format!("\n({})\n\n", recipe.recipe_id.fallback_name()),
+                                    fonts.regular(SOFT_TEXT_COLOR),
+                                ),
+                                TextSection::new(
+                                    String::from(if recipe.autolearn { "Self-taught" } else { "" }),
+                                    fonts.regular(GOOD_TEXT_COLOR),
+                                ),
+                                TextSection::new(
+                                    String::from(
+                                        if recipe.autolearn && !recipe.manuals.is_empty() {
+                                            ", "
+                                        } else {
+                                            ""
+                                        },
+                                    ),
+                                    fonts.regular(GOOD_TEXT_COLOR),
+                                ),
+                                TextSection::new(
+                                    recipe.manuals.join(", "),
+                                    fonts.regular(WARN_TEXT_COLOR),
+                                ),
+                            ]));
                         });
                 }
             }
