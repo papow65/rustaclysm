@@ -3,7 +3,7 @@ use bevy::{
     prelude::{Component, Node, Style, Val},
 };
 
-#[derive(Component, Default)]
+#[derive(Debug, Default, Component)]
 pub(crate) struct ScrollingList {
     position: f32,
 }
