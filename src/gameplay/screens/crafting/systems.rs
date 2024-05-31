@@ -406,7 +406,9 @@ pub(super) fn manage_crafting_keyboard_input(
     mut instruction_queue: ResMut<InstructionQueue>,
     mut crafting_screen: ResMut<CraftingScreen>,
     fonts: Res<Fonts>,
-    mut recipes: Query<(&mut Text, &RecipeSituation)>,
+    mut recipes: Query<(&mut Text, &Transform, &Node, &RecipeSituation)>,
+    mut scrolling_lists: Query<(&mut ScrollingList, &mut Style, &Parent, &Node)>,
+    scrolling_parents: Query<(&Node, &Style), Without<ScrollingList>>,
 ) {
     for combo in keys.combos(Ctrl::Without) {
         match combo.key {
@@ -422,16 +424,32 @@ pub(super) fn manage_crafting_keyboard_input(
                     crafting_screen.select_down(&mut recipes);
                 }
                 if let Some(selected) = crafting_screen.selection_list.selected {
-                    let recipe = recipes
+                    let (_, recipe_transform, recipe_node, recipe_sitation) = recipes
                         .get(selected)
-                        .expect("Selected recipe should be found")
-                        .1;
+                        .expect("Selected recipe should be found");
+
+                    {
+                        let (mut scrolling_list, mut style, parent, list_node) =
+                            scrolling_lists.single_mut();
+                        let (parent_node, parent_style) = scrolling_parents
+                            .get(parent.get())
+                            .expect("Parent node should be found");
+                        style.top = scrolling_list.follow(
+                            recipe_transform,
+                            recipe_node,
+                            list_node,
+                            parent_node,
+                            parent_style,
+                        );
+                    }
 
                     commands
                         .entity(crafting_screen.recipe_details)
                         .despawn_descendants()
                         .with_children(|builder| {
-                            builder.spawn(TextBundle::from_sections(recipe.text_sections(&fonts)));
+                            builder.spawn(TextBundle::from_sections(
+                                recipe_sitation.text_sections(&fonts),
+                            ));
                         });
                 }
             }

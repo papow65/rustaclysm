@@ -1,10 +1,11 @@
 use bevy::{
     input::mouse::{MouseScrollUnit, MouseWheel},
-    prelude::{Component, Node, Style, Val},
+    prelude::{Component, Node, Style, Transform, Val},
 };
 
 #[derive(Debug, Default, Component)]
 pub(crate) struct ScrollingList {
+    /// Smaller than or equal to 0.0, this matches with `Style.top`.
     position: f32,
 }
 
@@ -18,13 +19,43 @@ impl ScrollingList {
         parent_style: &Style,
         mouse_wheel_event: &MouseWheel,
     ) -> Val {
-        let dy = match mouse_wheel_event.unit {
+        self.position += match mouse_wheel_event.unit {
             MouseScrollUnit::Line => mouse_wheel_event.y * 20.,
             MouseScrollUnit::Pixel => mouse_wheel_event.y,
         };
-        self.adjust(my_node, parent_node, parent_style, dy)
+        self.adjust(my_node, parent_node, parent_style)
     }
 
+    /** Returns the new distance from the top */
+    #[must_use]
+    pub(crate) fn follow(
+        &mut self,
+        child_transform: &Transform,
+        child_node: &Node,
+        my_node: &Node,
+        parent_node: &Node,
+        parent_style: &Style,
+    ) -> Val {
+        let child_top =
+            my_node.size().y / 2.0 + child_transform.translation.y - child_node.size().y / 2.0;
+
+        //let first_viewed_top = self.position;
+        //let last_viewed_top = self.position + parent_node.size().y - child_node.size().y;
+        //println!("{first_viewed_top:?} <= {child_top:?} <= {last_viewed_top:?}");
+
+        self.position = self.position.clamp(
+            -child_top,
+            (parent_node.size().y - child_node.size().y) - child_top,
+        );
+
+        //let first_viewed_top = self.position;
+        //let last_viewed_top = self.position + parent_node.size().y - child_node.size().y;
+        //println!("-> {first_viewed_top:?} <= {child_top:?} <= {last_viewed_top:?}");
+
+        self.adjust(my_node, parent_node, parent_style)
+    }
+
+    /** Returns the new distance from the top */
     #[must_use]
     pub(crate) fn resize(
         &mut self,
@@ -32,25 +63,19 @@ impl ScrollingList {
         parent_node: &Node,
         parent_style: &Style,
     ) -> Val {
-        self.adjust(my_node, parent_node, parent_style, 0.0)
+        self.adjust(my_node, parent_node, parent_style)
     }
 
     #[must_use]
-    pub(crate) fn adjust(
-        &mut self,
-        my_node: &Node,
-        parent_node: &Node,
-        parent_style: &Style,
-        dy: f32,
-    ) -> Val {
+    fn adjust(&mut self, my_node: &Node, parent_node: &Node, parent_style: &Style) -> Val {
         let padding_top = Self::to_px(parent_style.padding.top);
         let padding_bottom = Self::to_px(parent_style.padding.bottom);
 
         let items_height = my_node.size().y + padding_top + padding_bottom;
         let parent_height = parent_node.size().y;
         let max_scroll = (items_height - parent_height).max(0.);
-        self.position += dy;
         self.position = self.position.clamp(-max_scroll, 0.);
+        //println!("=> {:?}", self.position);
         Val::Px(self.position)
     }
 
