@@ -5,6 +5,7 @@ use bevy::prelude::{Entity, Resource, TextStyle};
 pub(super) struct InventoryScreen {
     pub(super) panel: Entity,
     pub(super) selection_list: SelectionList,
+    pub(super) selected_row: Option<Entity>,
     pub(super) drop_direction: HorizontalDirection,
     pub(super) section_text_style: TextStyle,
     pub(super) selected_section_text_style: TextStyle,

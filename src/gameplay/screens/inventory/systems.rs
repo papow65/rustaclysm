@@ -58,6 +58,7 @@ pub(super) fn spawn_inventory(mut commands: Commands, fonts: Res<Fonts>) {
     commands.insert_resource(InventoryScreen {
         panel,
         selection_list: SelectionList::default(),
+        selected_row: None,
         drop_direction: HorizontalDirection::Here,
         section_text_style: fonts.regular(SOFT_TEXT_COLOR),
         selected_section_text_style: fonts.regular(WARN_TEXT_COLOR),
@@ -141,7 +142,7 @@ pub(super) fn update_inventory(
                         &inventory.item_text_style
                     };
 
-                    add_row(
+                    let row_entity = add_row(
                         &section,
                         parent,
                         entity,
@@ -149,6 +150,10 @@ pub(super) fn update_inventory(
                         item_info,
                         item_style,
                     );
+
+                    if Some(entity) == inventory.selection_list.selected {
+                        inventory.selected_row = Some(row_entity);
+                    }
                 }
             }
 
@@ -219,7 +224,7 @@ fn add_row(
     item_phrase: &Phrase,
     item_info: &ItemInfo,
     item_syle: &TextStyle,
-) {
+) -> Entity {
     parent
         .spawn(NodeBundle {
             style: Style {
@@ -320,7 +325,8 @@ fn add_row(
                     })
                     .insert(InventoryButton(entity, action));
             }
-        });
+        })
+        .id()
 }
 
 #[allow(clippy::needless_pass_by_value)]
@@ -329,6 +335,9 @@ pub(super) fn manage_inventory_keyboard_input(
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
     mut instruction_queue: ResMut<InstructionQueue>,
     mut inventory: ResMut<InventoryScreen>,
+    items: Query<(&Transform, &Node)>,
+    mut scrolling_lists: Query<(&mut ScrollingList, &mut Style, &Parent, &Node)>,
+    scrolling_parents: Query<(&Node, &Style), Without<ScrollingList>>,
 ) {
     for combo in keys.combos(Ctrl::Without) {
         match combo.key {
@@ -352,9 +361,11 @@ pub(super) fn manage_inventory_keyboard_input(
             }
             Key::Code(KeyCode::ArrowUp) => {
                 select_up(&mut inventory);
+                follow_selected(&inventory, &items, &mut scrolling_lists, &scrolling_parents);
             }
             Key::Code(KeyCode::ArrowDown) => {
                 select_down(&mut inventory);
+                follow_selected(&inventory, &items, &mut scrolling_lists, &scrolling_parents);
             }
             Key::Character(char @ ('d' | 't' | 'u' | 'w')) => {
                 handle_selected_item(&mut inventory, &mut instruction_queue, char);
@@ -393,6 +404,34 @@ fn select_down(inventory: &mut InventoryScreen) {
     }
 }
 
+fn follow_selected(
+    inventory: &InventoryScreen,
+    items: &Query<(&Transform, &Node)>,
+    scrolling_lists: &mut Query<(&mut ScrollingList, &mut Style, &Parent, &Node)>,
+    scrolling_parents: &Query<(&Node, &Style), Without<ScrollingList>>,
+) {
+    // inventory.selection_list.selected refers to the selected item entity
+    let Some(selected_row) = inventory.selected_row else {
+        return;
+    };
+
+    let (item_transform, item_node) = items
+        .get(selected_row)
+        .expect("Selected item should be found");
+
+    let (mut scrolling_list, mut style, parent, list_node) = scrolling_lists.single_mut();
+    let (parent_node, parent_style) = scrolling_parents
+        .get(parent.get())
+        .expect("Parent node should be found");
+    style.top = scrolling_list.follow(
+        item_transform,
+        item_node,
+        list_node,
+        parent_node,
+        parent_style,
+    );
+}
+
 fn handle_selected_item(
     inventory: &mut ResMut<InventoryScreen>,
     instruction_queue: &mut ResMut<InstructionQueue>,
@@ -414,7 +453,7 @@ fn handle_selected_item(
 }
 
 fn examine_selected_item(
-    inventory: &ResMut<InventoryScreen>,
+    inventory: &InventoryScreen,
     instruction_queue: &mut ResMut<InstructionQueue>,
 ) {
     if let Some(selected_item) = inventory.selection_list.selected {
