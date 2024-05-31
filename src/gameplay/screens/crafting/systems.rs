@@ -72,7 +72,7 @@ pub(super) fn spawn_crafting_screen(mut commands: Commands) {
                         .spawn(NodeBundle {
                             style: Style {
                                 width: Val::Percent(100.0),
-                                height: Val::Auto,
+                                height: Val::Percent(100.0),
                                 flex_direction: FlexDirection::Row,
                                 align_items: AlignItems::Start,
                                 justify_content: JustifyContent::Start,
