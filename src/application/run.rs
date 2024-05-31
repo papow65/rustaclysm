@@ -9,7 +9,7 @@ use crate::prelude::*;
 use bevy::{
     input::{keyboard::KeyboardInput, mouse::MouseWheel},
     prelude::*,
-    window::{PresentMode, WindowResolution},
+    window::{PresentMode, WindowResized, WindowResolution},
 };
 use std::time::Duration;
 
@@ -56,10 +56,11 @@ pub(crate) fn run_application() {
             manage_button_hover,
             manage_scrolling.run_if(on_event::<MouseWheel>()),
             manage_global_keyboard_input.run_if(on_event::<KeyboardInput>()),
-            resize_scrolling_lists,
+            resize_scrolling_lists.run_if(
+                on_event::<WindowResized>().or_else(resource_exists_and_changed::<UiScale>),
+            ),
         ),
     );
-    app.add_systems(FixedUpdate, resize_scrolling_lists);
     app.add_systems(Last, check_delay);
 
     app.run();
