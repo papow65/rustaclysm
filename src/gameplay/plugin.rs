@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use bevy::{diagnostic::FrameTimeDiagnosticsPlugin, prelude::*};
+use bevy::{diagnostic::FrameTimeDiagnosticsPlugin, input::keyboard::KeyboardInput, prelude::*};
 
 pub(crate) struct GameplayPlugin;
 
@@ -110,6 +110,7 @@ fn update_systems() -> (impl IntoSystemConfigs<()>, impl IntoSystemConfigs<()>) 
                 ),
             )
                 .chain(),
+            manage_gameplay_keyboard_input.run_if(on_event::<KeyboardInput>()),
             update_camera_offset.run_if(resource_exists_and_changed::<CameraOffset>),
         )
             .run_if(in_state(ApplicationState::Gameplay)),

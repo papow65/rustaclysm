@@ -6,14 +6,6 @@ use bevy::{
 };
 use std::time::Instant;
 
-fn open_main_menu(
-    next_application_state: &mut NextState<ApplicationState>,
-    next_gameplay_state: &mut NextState<GameplayScreenState>,
-) {
-    next_gameplay_state.set(GameplayScreenState::Inapplicable);
-    next_application_state.set(ApplicationState::MainMenu);
-}
-
 fn open_menu(next_gameplay_state: &mut NextState<GameplayScreenState>) {
     next_gameplay_state.set(GameplayScreenState::Menu);
 }
@@ -171,7 +163,6 @@ fn handle_queued_instruction(
 #[allow(clippy::needless_pass_by_value)]
 pub(super) fn manage_keyboard_input(
     mut message_writer: MessageWriter,
-    mut next_application_state: ResMut<NextState<ApplicationState>>,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
     focus: Focus,
     mut next_focus_state: ResMut<NextState<FocusState>>,
@@ -196,9 +187,6 @@ pub(super) fn manage_keyboard_input(
 
         println!("{:?} -> {:?}", &combo, &instruction);
         match instruction {
-            Instruction::ShowMainMenu => {
-                open_main_menu(&mut next_application_state, &mut next_gameplay_state);
-            }
             Instruction::ShowGameplayMenu => open_menu(&mut next_gameplay_state),
             Instruction::ExaminePos => {
                 toggle_examine_pos(&focus, &mut next_focus_state);

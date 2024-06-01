@@ -132,7 +132,6 @@ pub(crate) enum ZoomDirection {
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) enum Instruction {
     Queued(QueuedInstruction),
-    ShowMainMenu,
     ShowGameplayMenu,
     ExaminePos,
     ExamineZoneLevel,
@@ -153,7 +152,6 @@ impl TryFrom<(&KeyCombo, CancelHandling)> for Instruction {
             (Key::Code(KeyCode::Escape), InputChange::JustPressed, CancelHandling::Menu) => {
                 Ok(Self::ShowGameplayMenu)
             }
-            (Key::Code(KeyCode::F12), InputChange::JustPressed, _) => Ok(Self::ShowMainMenu),
             (Key::Character('m'), InputChange::JustPressed, _) => {
                 Ok(Self::ToggleMap(ZoomDistance::Close))
             }

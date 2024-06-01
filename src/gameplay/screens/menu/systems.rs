@@ -94,22 +94,14 @@ pub(super) fn manage_menu_button_input(
 #[allow(clippy::needless_pass_by_value)]
 pub(super) fn manage_menu_keyboard_input(
     mut keys: Keys,
-    mut next_application_state: ResMut<NextState<ApplicationState>>,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
 ) {
     for combo in keys
         .combos(Ctrl::Without)
         .filter(|combo| combo.change == InputChange::JustPressed)
     {
-        match combo.key {
-            Key::Code(KeyCode::Escape) => {
-                next_gameplay_state.set(GameplayScreenState::Base);
-            }
-            Key::Character('m') => {
-                next_gameplay_state.set(GameplayScreenState::Inapplicable);
-                next_application_state.set(ApplicationState::MainMenu);
-            }
-            _ => {}
+        if let Key::Code(KeyCode::Escape) = combo.key {
+            next_gameplay_state.set(GameplayScreenState::Base);
         }
     }
 }

@@ -27,8 +27,8 @@ static BASE_MANUAL_CONTENTS: &str = "\
     zoom            scroll wheel\n\
     zoom ui         ctrl +/-\n\
     toggle this     F1\n\
-    menu            esc\n\
-    main menu       F12\n\
+    open menu       esc\n\
+    to main menu    F12\n\
     quit            ctrl c/q";
 
 static INVENTORY_MANUAL_CONTENTS: &str = "\
@@ -39,25 +39,31 @@ static INVENTORY_MANUAL_CONTENTS: &str = "\
     take item       t\n\
     wield item      w\n\
     unwield item    u\n\
+    zoom ui         ctrl +/-\n\
     toggle this     F1\n\
     close inventory &/esc\n\
+    to main menu    F12\n\
     quit            ctrl c/q";
 
 static CRAFTING_MANUAL_CONTENTS: &str = "\
     select craft    arrow up/down\n\
+    zoom ui         ctrl +/-\n\
     toggle this     F1\n\
     close crafting  &/esc\n\
+    to main menu    F12\n\
     quit            ctrl c/q";
 
 static MENU_MANUAL_CONTENTS: &str = "\
+    zoom ui         ctrl +/-\n\
     toggle this     F1\n\
-    to main menu    m\n\
-    close menu      esc\n\
+    close this menu esc\n\
+    to main menu    F12\n\
     quit            ctrl c/q";
 
 static DEATH_MANUAL_CONTENTS: &str = "\
+    zoom ui         ctrl +/-\n\
     toggle this     F1\n\
-    to main menu    m/enter/space/esc\n\
+    to main menu    F12/enter/space/esc\n\
     quit            ctrl c/q";
 
 #[allow(clippy::needless_pass_by_value)]
