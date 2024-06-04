@@ -6,7 +6,7 @@ use crate::prelude::{
 };
 use bevy::prelude::{Color, Component, TextSection};
 
-#[derive(Component, Debug)]
+#[derive(Clone, Debug, Component)]
 pub(super) struct RecipeSituation {
     pub(super) recipe_id: ObjectId,
     pub(super) name: String,
@@ -73,7 +73,7 @@ impl RecipeSituation {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub(super) struct QualitySituation {
     pub(super) name: String,
     pub(super) present: Option<i8>,

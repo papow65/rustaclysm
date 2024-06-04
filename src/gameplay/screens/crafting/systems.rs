@@ -4,7 +4,7 @@ use super::{
 };
 use crate::prelude::*;
 use bevy::{prelude::*, utils::HashMap};
-use std::ops::RangeInclusive;
+use std::{ops::RangeInclusive, time::Instant};
 
 const MAX_FIND_DISTANCE: i32 = 7;
 const FIND_RANGE: RangeInclusive<i32> = (-MAX_FIND_DISTANCE)..=MAX_FIND_DISTANCE;
@@ -162,6 +162,7 @@ pub(super) fn update_crafting_screen(
         .collect::<Vec<_>>();
     shown_qualities.sort_by_key(|(.., name)| String::from(name));
 
+    let mut first_recipe = None;
     commands
         .entity(crafting_screen.recipe_list)
         .with_children(|parent| {
@@ -172,6 +173,10 @@ pub(super) fn update_crafting_screen(
 
             for recipe in shown_recipes {
                 let first = crafting_screen.selection_list.selected.is_none();
+                if first {
+                    first_recipe = Some(recipe.clone());
+                }
+
                 let entity = parent
                     .spawn((
                         TextBundle::from_section(
@@ -197,14 +202,18 @@ pub(super) fn update_crafting_screen(
             }
         });
 
-    commands
-        .entity(crafting_screen.recipe_details)
-        .with_children(|parent| {
-            parent.spawn(TextBundle::from_section(
-                String::from("Recipe details\nTODO"),
-                fonts.regular(WARN_TEXT_COLOR),
-            ));
-        });
+    if let Some(first_recipe) = first_recipe {
+        show_recipe(&mut commands, &fonts, &crafting_screen, &first_recipe);
+    } else {
+        commands
+            .entity(crafting_screen.recipe_details)
+            .with_children(|parent| {
+                parent.spawn(TextBundle::from_section(
+                    String::from("No recipes known"),
+                    fonts.regular(BAD_TEXT_COLOR),
+                ));
+            });
+    }
 }
 
 fn find_nearby<'a>(
@@ -410,6 +419,8 @@ pub(super) fn manage_crafting_keyboard_input(
     mut scrolling_lists: Query<(&mut ScrollingList, &mut Style, &Parent, &Node)>,
     scrolling_parents: Query<(&Node, &Style), Without<ScrollingList>>,
 ) {
+    let start = Instant::now();
+
     for combo in keys.combos(Ctrl::Without) {
         match combo.key {
             Key::Code(KeyCode::Escape) | Key::Character('&')
@@ -443,19 +454,30 @@ pub(super) fn manage_crafting_keyboard_input(
                         );
                     }
 
-                    commands
-                        .entity(crafting_screen.recipe_details)
-                        .despawn_descendants()
-                        .with_children(|builder| {
-                            builder.spawn(TextBundle::from_sections(
-                                recipe_sitation.text_sections(&fonts),
-                            ));
-                        });
+                    show_recipe(&mut commands, &fonts, &crafting_screen, recipe_sitation);
                 }
             }
             _ => {}
         }
     }
+
+    log_if_slow("manage_crafting_keyboard_input", start);
+}
+
+fn show_recipe(
+    commands: &mut Commands,
+    fonts: &Fonts,
+    crafting_screen: &CraftingScreen,
+    recipe_sitation: &RecipeSituation,
+) {
+    commands
+        .entity(crafting_screen.recipe_details)
+        .despawn_descendants()
+        .with_children(|builder| {
+            builder.spawn(TextBundle::from_sections(
+                recipe_sitation.text_sections(fonts),
+            ));
+        });
 }
 
 /*#[allow(clippy::needless_pass_by_value)]
