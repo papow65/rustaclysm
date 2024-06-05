@@ -11,6 +11,8 @@ pub(crate) struct Recipe {
     #[serde(default)]
     pub(crate) difficulty: u8,
 
+    pub(crate) time: Option<String>,
+
     #[serde(default)]
     pub(crate) book_learn: BookLearn,
 

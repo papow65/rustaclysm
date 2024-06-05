@@ -1,7 +1,7 @@
 use std::cmp::Ordering;
 
 use crate::prelude::{
-    Fonts, ObjectId, BAD_TEXT_COLOR, DEFAULT_TEXT_COLOR, GOOD_TEXT_COLOR, SOFT_TEXT_COLOR,
+    Fonts, ObjectId, Recipe, BAD_TEXT_COLOR, DEFAULT_TEXT_COLOR, GOOD_TEXT_COLOR, SOFT_TEXT_COLOR,
     WARN_TEXT_COLOR,
 };
 use bevy::prelude::{Color, Component, TextSection};
@@ -30,7 +30,7 @@ impl RecipeSituation {
         }
     }
 
-    pub(super) fn text_sections(&self, fonts: &Fonts) -> Vec<TextSection> {
+    pub(super) fn text_sections(&self, fonts: &Fonts, recipe: &Recipe) -> Vec<TextSection> {
         let mut text_sections = vec![
             TextSection::new("Result: ", fonts.regular(SOFT_TEXT_COLOR)),
             TextSection::new(&self.name, fonts.regular(self.color(true))),
@@ -39,6 +39,31 @@ impl RecipeSituation {
                 fonts.regular(SOFT_TEXT_COLOR),
             ),
         ];
+        if let Some(skill_used) = &recipe.skill_used {
+            text_sections.push(TextSection::new(
+                "\n\nSkill: ",
+                fonts.regular(SOFT_TEXT_COLOR),
+            ));
+            text_sections.push(TextSection::new(skill_used, fonts.regular(WARN_TEXT_COLOR)));
+            text_sections.push(TextSection::new(
+                "\nDifficulty: ",
+                fonts.regular(SOFT_TEXT_COLOR),
+            ));
+            text_sections.push(TextSection::new(
+                format!("{}", recipe.difficulty),
+                fonts.regular(WARN_TEXT_COLOR),
+            ));
+        }
+        if let Some(time) = &recipe.time {
+            text_sections.push(TextSection::new(
+                "\n\nDuration: ",
+                fonts.regular(SOFT_TEXT_COLOR),
+            ));
+            text_sections.push(TextSection::new(
+                time.clone(),
+                fonts.regular(WARN_TEXT_COLOR),
+            ));
+        }
         if !self.qualities.is_empty() {
             text_sections.push(TextSection::new(
                 "\n\nTools",
@@ -49,7 +74,7 @@ impl RecipeSituation {
             text_sections.extend_from_slice(&quality.text_sections(fonts));
         }
         text_sections.push(TextSection::new(
-            String::from("\n\nSource:\n"),
+            String::from("\n\nSource: "),
             fonts.regular(SOFT_TEXT_COLOR),
         ));
         text_sections.push(TextSection::new(

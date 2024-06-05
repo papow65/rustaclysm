@@ -203,7 +203,13 @@ pub(super) fn update_crafting_screen(
         });
 
     if let Some(first_recipe) = first_recipe {
-        show_recipe(&mut commands, &fonts, &crafting_screen, &first_recipe);
+        show_recipe(
+            &mut commands,
+            &infos,
+            &fonts,
+            &crafting_screen,
+            &first_recipe,
+        );
     } else {
         commands
             .entity(crafting_screen.recipe_details)
@@ -412,9 +418,10 @@ pub(super) fn manage_crafting_keyboard_input(
     mut commands: Commands,
     mut keys: Keys,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
+    infos: Res<Infos>,
+    fonts: Res<Fonts>,
     mut instruction_queue: ResMut<InstructionQueue>,
     mut crafting_screen: ResMut<CraftingScreen>,
-    fonts: Res<Fonts>,
     mut recipes: Query<(&mut Text, &Transform, &Node, &RecipeSituation)>,
     mut scrolling_lists: Query<(&mut ScrollingList, &mut Style, &Parent, &Node)>,
     scrolling_parents: Query<(&Node, &Style), Without<ScrollingList>>,
@@ -454,7 +461,13 @@ pub(super) fn manage_crafting_keyboard_input(
                         );
                     }
 
-                    show_recipe(&mut commands, &fonts, &crafting_screen, recipe_sitation);
+                    show_recipe(
+                        &mut commands,
+                        &infos,
+                        &fonts,
+                        &crafting_screen,
+                        recipe_sitation,
+                    );
                 }
             }
             _ => {}
@@ -466,16 +479,21 @@ pub(super) fn manage_crafting_keyboard_input(
 
 fn show_recipe(
     commands: &mut Commands,
+    infos: &Infos,
     fonts: &Fonts,
     crafting_screen: &CraftingScreen,
     recipe_sitation: &RecipeSituation,
 ) {
+    let recipe = infos
+        .recipe(&recipe_sitation.recipe_id)
+        .expect("Recipe id should esist");
+
     commands
         .entity(crafting_screen.recipe_details)
         .despawn_descendants()
         .with_children(|builder| {
             builder.spawn(TextBundle::from_sections(
-                recipe_sitation.text_sections(fonts),
+                recipe_sitation.text_sections(fonts, recipe),
             ));
         });
 }
