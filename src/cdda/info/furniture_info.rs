@@ -85,7 +85,7 @@ impl Probability {
 }
 
 #[cfg(test)]
-mod container_tests {
+mod furniture_tests {
     use super::*;
     #[test]
     fn it_works() {

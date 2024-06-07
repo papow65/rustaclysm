@@ -135,7 +135,7 @@ pub(super) fn update_inventory(
             for (entity, id, item_phrase) in items {
                 inventory.selection_list.append(entity);
 
-                if let Some(item_info) = infos.item(id) {
+                if let Some(item_info) = infos.try_item(id) {
                     let item_style = if Some(entity) == inventory.selection_list.selected {
                         &inventory.selected_item_text_style
                     } else {
@@ -154,6 +154,8 @@ pub(super) fn update_inventory(
                     if Some(entity) == inventory.selection_list.selected {
                         inventory.selected_row = Some(row_entity);
                     }
+                } else {
+                    eprintln!("Unknown item: {id:?}");
                 }
             }
 

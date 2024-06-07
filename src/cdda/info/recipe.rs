@@ -22,6 +22,9 @@ pub(crate) struct Recipe {
     #[serde(default)]
     pub(crate) qualities: RequiredQualities,
 
+    #[serde(default)]
+    pub(crate) components: Vec<Vec<Alternative>>,
+
     #[allow(unused)]
     #[serde(flatten)]
     extra: HashMap<String, serde_json::Value>,
@@ -100,8 +103,34 @@ pub(crate) struct RequiredQuality {
     pub(crate) level: u8,
 }
 
+#[derive(Debug, Deserialize)]
+#[serde(from = "CddaAlternative")]
+pub(crate) enum Alternative {
+    Item { item: ObjectId, required: u32 },
+    Requirement { requirement: ObjectId, factor: u32 },
+}
+
+impl From<CddaAlternative> for Alternative {
+    fn from(source: CddaAlternative) -> Self {
+        match source {
+            CddaAlternative::Item(item, required) => Self::Item { item, required },
+            CddaAlternative::List(requirement, factor, _) => Self::Requirement {
+                requirement,
+                factor,
+            },
+        }
+    }
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(untagged)]
+pub(crate) enum CddaAlternative {
+    Item(ObjectId, u32),
+    List(ObjectId, u32, #[allow(unused)] String),
+}
+
 #[cfg(test)]
-mod character_tests {
+mod recipe_tests {
     use super::*;
     #[test]
     fn it_works() {

@@ -14,8 +14,8 @@ impl ObjectName {
     }
 
     #[must_use]
-    pub(crate) fn plural(&self, pos: Pos) -> Fragment {
-        Fragment::positioned(self.name.plural.clone(), self.color, pos)
+    pub(crate) fn amount(&self, amount: u32, pos: Pos) -> Fragment {
+        Fragment::positioned(self.name.amount(amount).clone(), self.color, pos)
     }
 
     #[must_use]

@@ -72,7 +72,7 @@ impl<'w, 's> Spawner<'w, 's> {
         id: &ObjectId,
         name: Option<ObjectName>,
     ) -> Option<Entity> {
-        let Some(character_info) = infos.character(id) else {
+        let Some(character_info) = infos.try_character(id) else {
             println!("No info found for {id:?}. Spawning skipped");
             return None;
         };
@@ -143,7 +143,7 @@ impl<'w, 's> Spawner<'w, 's> {
     }
 
     fn spawn_field(&mut self, infos: &Infos, parent: Entity, pos: Pos, id: &ObjectId) {
-        let Some(field_info) = infos.field(id) else {
+        let Some(field_info) = infos.try_field(id) else {
             println!("No info found for field {id:?}");
             return;
         };
@@ -164,7 +164,7 @@ impl<'w, 's> Spawner<'w, 's> {
         item: &CddaItem,
         amount: Amount,
     ) -> Result<(), LoadError> {
-        let Some(item_info) = infos.item(&item.typeid) else {
+        let Some(item_info) = infos.try_item(&item.typeid) else {
             return Err(LoadError::new(format!(
                 "No info found for {:?}. Spawning skipped",
                 &item.typeid
@@ -183,7 +183,7 @@ impl<'w, 's> Spawner<'w, 's> {
         let (volume, mass) = match &item.corpse {
             Some(corpse_id) if corpse_id != &ObjectId::new("mon_null") => {
                 println!("{:?}", &corpse_id);
-                match infos.character(corpse_id) {
+                match infos.try_character(corpse_id) {
                     Some(monster_info) => (monster_info.volume, monster_info.mass),
                     None => (item_info.volume, item_info.mass),
                 }
@@ -281,7 +281,7 @@ impl<'w, 's> Spawner<'w, 's> {
         pos: Pos,
         id: &ObjectId,
     ) {
-        let item_group = &infos.item_group(id).expect("Existing item group");
+        let item_group = &infos.item_group(id);
         let items = item_group
             .items
             .as_ref()
@@ -291,7 +291,7 @@ impl<'w, 's> Spawner<'w, 's> {
     }
 
     fn spawn_furniture(&mut self, infos: &Infos, parent: Entity, pos: Pos, id: &ObjectId) {
-        let Some(furniture_info) = infos.furniture(id) else {
+        let Some(furniture_info) = infos.try_furniture(id) else {
             println!("No info found for {id:?}. Spawning skipped");
             return;
         };
@@ -326,7 +326,7 @@ impl<'w, 's> Spawner<'w, 's> {
     }
 
     pub(crate) fn spawn_terrain(&mut self, infos: &Infos, parent: Entity, pos: Pos, id: &ObjectId) {
-        let Some(terrain_info) = infos.terrain(id) else {
+        let Some(terrain_info) = infos.try_terrain(id) else {
             println!("No info found for terrain {:?}", &id);
             return;
         };
@@ -605,9 +605,9 @@ impl<'w, 's> Spawner<'w, 's> {
         );
 
         let bash = infos
-            .furniture(&definition.id)
+            .try_furniture(&definition.id)
             .map(|f| f.bash.as_ref())
-            .or_else(|| infos.terrain(&definition.id).map(|f| f.bash.as_ref()))
+            .or_else(|| infos.try_terrain(&definition.id).map(|f| f.bash.as_ref()))
             .expect("Furniture, or terrain")
             .expect("Smashable");
 
@@ -823,7 +823,7 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
         definition: &ObjectDefinition,
         child_visibiltiy: &Visibility,
     ) {
-        let zone_level_info = self.infos.zone_level(&definition.id);
+        let zone_level_info = self.infos.try_zone_level(&definition.id);
 
         let name = ObjectName::new(
             zone_level_info.map_or_else(

@@ -3,7 +3,7 @@ use bevy::{ecs::system::Resource, utils::HashMap};
 use glob::glob;
 use serde::de::DeserializeOwned;
 use serde_json::map::Entry;
-use std::{fs::read_to_string, path::PathBuf, time::Instant};
+use std::{any::type_name, fs::read_to_string, path::PathBuf, time::Instant};
 
 #[derive(Resource)]
 pub(crate) struct Infos {
@@ -15,6 +15,7 @@ pub(crate) struct Infos {
     migrations: HashMap<ObjectId, Migration>,
     qualities: HashMap<ObjectId, Quality>,
     recipes: HashMap<ObjectId, Recipe>,
+    requirements: HashMap<ObjectId, Requirement>,
     terrain: HashMap<ObjectId, TerrainInfo>,
     zone_levels: HashMap<ObjectId, OvermapInfo>,
 }
@@ -31,7 +32,9 @@ impl Infos {
                 .join("*.json"),
             json_path.join("items").join("**").join("*.json"),
             json_path.join("monsters").join("**").join("*.json"),
+            json_path.join("obsoletion").join("migration_items.json"),
             json_path.join("recipes").join("**").join("*.json"),
+            json_path.join("requirements").join("**").join("*.json"),
             json_path.join("vehicleparts").join("**").join("*.json"),
         ];
         patterns
@@ -246,6 +249,7 @@ impl Infos {
             migrations: Self::extract(&mut enricheds, TypeId::MIGRATION),
             qualities: Self::extract(&mut enricheds, TypeId::TOOL_QUALITY),
             recipes: Self::extract(&mut enricheds, TypeId::RECIPE),
+            requirements: Self::extract(&mut enricheds, TypeId::REQUIREMENT),
             terrain: Self::extract(&mut enricheds, TypeId::TERRAIN),
             zone_levels: Self::extract(&mut enricheds, TypeId::OVERMAP),
         };
@@ -273,40 +277,113 @@ impl Infos {
         this
     }
 
-    pub(crate) fn character<'a>(&'a self, id: &'a ObjectId) -> Option<&'a CharacterInfo> {
-        self.characters.get(self.maybe_migrated(id))
+    #[allow(unused)]
+    pub(crate) fn try_character<'a>(&'a self, id: &'a ObjectId) -> Option<&'a CharacterInfo> {
+        self.try_get(&self.characters, id)
     }
 
-    pub(crate) fn field<'a>(&'a self, id: &'a ObjectId) -> Option<&'a FieldInfo> {
-        self.fields.get(self.maybe_migrated(id))
+    #[allow(unused)]
+    pub(crate) fn character<'a>(&'a self, id: &'a ObjectId) -> &'a CharacterInfo {
+        self.get(&self.characters, id)
     }
 
-    pub(crate) fn furniture<'a>(&'a self, id: &'a ObjectId) -> Option<&'a FurnitureInfo> {
-        self.furniture.get(self.maybe_migrated(id))
+    #[allow(unused)]
+    pub(crate) fn try_field<'a>(&'a self, id: &'a ObjectId) -> Option<&'a FieldInfo> {
+        self.try_get(&self.fields, id)
     }
 
-    pub(crate) fn item<'a>(&'a self, id: &'a ObjectId) -> Option<&'a ItemInfo> {
-        self.items.get(self.maybe_migrated(id))
+    #[allow(unused)]
+    pub(crate) fn field<'a>(&'a self, id: &'a ObjectId) -> &'a FieldInfo {
+        self.get(&self.fields, id)
     }
 
-    pub(crate) fn item_group<'a>(&'a self, id: &'a ObjectId) -> Option<&'a ItemGroup> {
-        self.item_groups.get(self.maybe_migrated(id))
+    #[allow(unused)]
+    pub(crate) fn try_furniture<'a>(&'a self, id: &'a ObjectId) -> Option<&'a FurnitureInfo> {
+        self.try_get(&self.furniture, id)
     }
 
-    pub(crate) fn recipe<'a>(&'a self, id: &'a ObjectId) -> Option<&'a Recipe> {
-        self.recipes.get(self.maybe_migrated(id))
+    #[allow(unused)]
+    pub(crate) fn furniture<'a>(&'a self, id: &'a ObjectId) -> &'a FurnitureInfo {
+        self.get(&self.furniture, id)
     }
 
-    pub(crate) fn terrain<'a>(&'a self, id: &'a ObjectId) -> Option<&'a TerrainInfo> {
-        self.terrain.get(self.maybe_migrated(id))
+    #[allow(unused)]
+    pub(crate) fn try_item<'a>(&'a self, id: &'a ObjectId) -> Option<&'a ItemInfo> {
+        self.try_get(&self.items, id)
     }
 
-    pub(crate) fn quality<'a>(&'a self, id: &'a ObjectId) -> Option<&'a Quality> {
-        self.qualities.get(self.maybe_migrated(id))
+    #[allow(unused)]
+    pub(crate) fn item<'a>(&'a self, id: &'a ObjectId) -> &'a ItemInfo {
+        self.get(&self.items, id)
     }
 
-    pub(crate) fn zone_level<'a>(&'a self, id: &'a ObjectId) -> Option<&'a OvermapInfo> {
-        self.zone_levels.get(self.maybe_migrated(id))
+    #[allow(unused)]
+    pub(crate) fn try_item_group<'a>(&'a self, id: &'a ObjectId) -> Option<&'a ItemGroup> {
+        self.try_get(&self.item_groups, id)
+    }
+
+    #[allow(unused)]
+    pub(crate) fn item_group<'a>(&'a self, id: &'a ObjectId) -> &'a ItemGroup {
+        self.get(&self.item_groups, id)
+    }
+
+    #[allow(unused)]
+    pub(crate) fn try_quality<'a>(&'a self, id: &'a ObjectId) -> Option<&'a Quality> {
+        self.try_get(&self.qualities, id)
+    }
+
+    #[allow(unused)]
+    pub(crate) fn quality<'a>(&'a self, id: &'a ObjectId) -> &'a Quality {
+        self.get(&self.qualities, id)
+    }
+
+    #[allow(unused)]
+    pub(crate) fn try_recipe<'a>(&'a self, id: &'a ObjectId) -> Option<&'a Recipe> {
+        self.try_get(&self.recipes, id)
+    }
+
+    #[allow(unused)]
+    pub(crate) fn recipe<'a>(&'a self, id: &'a ObjectId) -> &'a Recipe {
+        self.get(&self.recipes, id)
+    }
+
+    #[allow(unused)]
+    pub(crate) fn try_requirement<'a>(&'a self, id: &'a ObjectId) -> Option<&'a Requirement> {
+        self.try_get(&self.requirements, id)
+    }
+
+    #[allow(unused)]
+    pub(crate) fn requirement<'a>(&'a self, id: &'a ObjectId) -> &'a Requirement {
+        self.get(&self.requirements, id)
+    }
+
+    #[allow(unused)]
+    pub(crate) fn try_terrain<'a>(&'a self, id: &'a ObjectId) -> Option<&'a TerrainInfo> {
+        self.try_get(&self.terrain, id)
+    }
+
+    #[allow(unused)]
+    pub(crate) fn terrain<'a>(&'a self, id: &'a ObjectId) -> &'a TerrainInfo {
+        self.get(&self.terrain, id)
+    }
+
+    #[allow(unused)]
+    pub(crate) fn try_zone_level<'a>(&'a self, id: &'a ObjectId) -> Option<&'a OvermapInfo> {
+        self.try_get(&self.zone_levels, id)
+    }
+
+    #[allow(unused)]
+    pub(crate) fn zone_level<'a>(&'a self, id: &'a ObjectId) -> &'a OvermapInfo {
+        self.get(&self.zone_levels, id)
+    }
+
+    fn get<'a, T>(&'a self, map: &'a HashMap<ObjectId, T>, id: &'a ObjectId) -> &'a T {
+        self.try_get(map, id)
+            .unwrap_or_else(|| panic!("{id:?} ({}) should be known", type_name::<T>()))
+    }
+
+    fn try_get<'a, T>(&'a self, map: &'a HashMap<ObjectId, T>, id: &'a ObjectId) -> Option<&'a T> {
+        map.get(self.maybe_migrated(id))
     }
 
     fn maybe_migrated<'a>(&'a self, id: &'a ObjectId) -> &'a ObjectId {

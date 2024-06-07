@@ -338,7 +338,17 @@ pub(crate) enum CddaItemName {
 #[serde(from = "CddaItemName")]
 pub(crate) struct ItemName {
     pub(crate) single: String,
-    pub(crate) plural: String,
+    plural: String,
+}
+
+impl ItemName {
+    pub(crate) const fn amount(&self, amount: u32) -> &String {
+        if amount == 1 {
+            &self.single
+        } else {
+            &self.plural
+        }
+    }
 }
 
 impl From<CddaItemName> for ItemName {

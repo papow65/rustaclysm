@@ -16,7 +16,7 @@ pub(crate) struct Quality {
 }
 
 #[cfg(test)]
-mod character_tests {
+mod quality_tests {
     use super::*;
     #[test]
     fn it_works() {

@@ -153,7 +153,7 @@ impl ActorItem<'_> {
         if let Some(body_containers) = self.body_containers {
             let mut hands_children = hierarchy.items_in(body_containers.hands);
             if let Some(weapon) = hands_children.next() {
-                melee_weapon = infos.item(&weapon.definition.id);
+                melee_weapon = infos.try_item(&weapon.definition.id);
             }
         }
 
@@ -569,7 +569,7 @@ impl ActorItem<'_> {
     }
 
     pub(crate) fn examine_item(message_writer: &mut MessageWriter, infos: &Infos, item: &ItemItem) {
-        if let Some(item_info) = infos.item(&item.definition.id) {
+        if let Some(item_info) = infos.try_item(&item.definition.id) {
             if let Some(description) = &item_info.description {
                 message_writer
                     .str(match description {

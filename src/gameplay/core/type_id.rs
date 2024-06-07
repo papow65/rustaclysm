@@ -41,6 +41,7 @@ impl TypeId {
     ];
 
     pub(crate) const RECIPE: &'static [Self] = &[Self("recipe")];
+    pub(crate) const REQUIREMENT: &'static [Self] = &[Self("requirement")];
     pub(crate) const TERRAIN: &'static [Self] = &[Self("terrain")];
     pub(crate) const TOOL_QUALITY: &'static [Self] = &[Self("tool_quality")];
     pub(crate) const VEHICLE_PART: &'static [Self] = &[Self("vehicle_part")];
@@ -67,7 +68,6 @@ impl TypeId {
         Self("practice"),
         Self("recipe_category"),
         Self("recipe_group"),
-        Self("requirement"),
         Self("ter_furn_transform"),
         Self("TRAIT_MIGRATION"),
         Self("trap"),
@@ -85,6 +85,7 @@ impl TypeId {
             Self::MIGRATION,
             Self::OVERMAP,
             Self::RECIPE,
+            Self::REQUIREMENT,
             Self::TERRAIN,
             Self::TOOL_QUALITY,
             Self::VEHICLE_PART,

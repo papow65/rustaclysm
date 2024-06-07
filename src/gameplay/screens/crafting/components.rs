@@ -13,11 +13,14 @@ pub(super) struct RecipeSituation {
     pub(super) autolearn: bool,
     pub(super) manuals: Vec<String>,
     pub(super) qualities: Vec<QualitySituation>,
+    pub(super) components: Vec<ComponentSituation>,
 }
 
 impl RecipeSituation {
     pub(super) fn color(&self, selected: bool) -> Color {
-        if self.qualities.iter().all(QualitySituation::is_present) {
+        if self.qualities.iter().all(QualitySituation::is_present)
+            && self.components.iter().all(ComponentSituation::is_present)
+        {
             if selected {
                 GOOD_TEXT_COLOR
             } else {
@@ -72,6 +75,15 @@ impl RecipeSituation {
         }
         for quality in &self.qualities {
             text_sections.extend_from_slice(&quality.text_sections(fonts));
+        }
+        if !self.components.is_empty() {
+            text_sections.push(TextSection::new(
+                "\n\nComponents",
+                fonts.regular(SOFT_TEXT_COLOR),
+            ));
+        }
+        for component in &self.components {
+            text_sections.extend_from_slice(&component.text_sections(fonts));
         }
         text_sections.push(TextSection::new(
             String::from("\n\nSource: "),
@@ -152,6 +164,81 @@ impl QualitySituation {
             text_sections.push(TextSection::new(
                 format!("{} required", self.required),
                 checked_style,
+            ));
+        }
+
+        text_sections
+    }
+}
+
+#[derive(Clone, Debug)]
+pub(super) struct ComponentSituation {
+    pub(super) alternatives: Vec<AlternativeSituation>,
+}
+
+impl ComponentSituation {
+    pub(super) fn is_present(&self) -> bool {
+        self.alternatives
+            .iter()
+            .any(AlternativeSituation::is_present)
+    }
+
+    fn text_sections(&self, fonts: &Fonts) -> Vec<TextSection> {
+        let soft_style = fonts.regular(SOFT_TEXT_COLOR);
+
+        let mut text_sections = Vec::new();
+
+        for (index, alternative) in self.alternatives.iter().enumerate() {
+            let divider = if index == 0 {
+                "\n- "
+            } else if index < self.alternatives.len() - 1 {
+                ", "
+            } else {
+                ", or "
+            };
+            text_sections.push(TextSection::new(divider, soft_style.clone()));
+            text_sections.extend_from_slice(&alternative.text_sections(fonts));
+        }
+
+        text_sections
+    }
+}
+
+#[derive(Clone, Debug)]
+pub(super) struct AlternativeSituation {
+    pub(super) id: ObjectId,
+    pub(super) name: String,
+    pub(super) required: u32,
+    pub(super) present: u32,
+}
+
+impl AlternativeSituation {
+    pub(super) const fn is_present(&self) -> bool {
+        self.required <= self.present
+    }
+
+    fn text_sections(&self, fonts: &Fonts) -> Vec<TextSection> {
+        let checked_style = fonts.regular(if self.is_present() {
+            GOOD_TEXT_COLOR
+        } else {
+            BAD_TEXT_COLOR
+        });
+
+        let mut text_sections = vec![TextSection::new(
+            format!("{} {}", self.required, &self.name),
+            checked_style.clone(),
+        )];
+
+        if 0 < self.present {
+            let only = if self.present < self.required {
+                "only "
+            } else {
+                ""
+            };
+
+            text_sections.push(TextSection::new(
+                format!(" ({only}{} present)", self.present),
+                fonts.regular(SOFT_TEXT_COLOR),
             ));
         }
 

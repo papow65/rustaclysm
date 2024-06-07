@@ -1,5 +1,5 @@
 use super::{
-    components::{QualitySituation, RecipeSituation},
+    components::{AlternativeSituation, ComponentSituation, QualitySituation, RecipeSituation},
     resource::CraftingScreen,
 };
 use crate::prelude::*;
@@ -142,7 +142,13 @@ pub(super) fn update_crafting_screen(
     let nearby_qualities = nearby_qualities(&infos, &nearby_items);
     //println!("{:?}", &nearby_manuals);
 
-    let shown_recipes = shown_recipes(&infos, &sav, &nearby_manuals, &nearby_qualities);
+    let shown_recipes = shown_recipes(
+        &infos,
+        &sav,
+        &nearby_manuals,
+        &nearby_qualities,
+        &nearby_items,
+    );
 
     let mut shown_qualities = nearby_qualities
         .iter()
@@ -150,13 +156,7 @@ pub(super) fn update_crafting_screen(
             (
                 quality_id,
                 amount,
-                uppercase_first(
-                    &infos
-                        .quality(quality_id)
-                        .expect("Quality should be found")
-                        .name
-                        .single,
-                ),
+                uppercase_first(&infos.quality(quality_id).name.single),
             )
         })
         .collect::<Vec<_>>();
@@ -256,22 +256,12 @@ fn nearby_manuals<'a>(
         .filter(|definition| {
             definition.category == ObjectCategory::Item
                 && infos
-                    .item(&definition.id)
+                    .try_item(&definition.id)
                     .filter(|item| item.category.as_ref().is_some_and(|s| s == "manuals"))
                     .is_some()
         })
         .map(|definition| &definition.id)
-        .map(|manual_id| {
-            (
-                manual_id,
-                infos
-                    .item(manual_id)
-                    .expect("Manual should be known")
-                    .name
-                    .single
-                    .as_str(),
-            )
-        })
+        .map(|manual_id| (manual_id, infos.item(manual_id).name.single.as_str()))
         .collect::<HashMap<_, _>>()
 }
 
@@ -280,6 +270,7 @@ fn shown_recipes(
     sav: &Sav,
     nearby_manuals: &HashMap<&ObjectId, &str>,
     nearby_qualities: &HashMap<&ObjectId, i8>,
+    nearby_items: &[(&ObjectDefinition, &Amount)],
 ) -> Vec<RecipeSituation> {
     let mut shown_recipes = infos
         .recipes()
@@ -294,7 +285,7 @@ fn shown_recipes(
         .filter(|(.., autolearn, recipe_manuals)| *autolearn || !recipe_manuals.is_empty())
         .filter_map(|(recipe_id, recipe, autolearn, recipe_manuals)| {
             infos
-                .item(&recipe.result)
+                .try_item(&recipe.result)
                 .ok_or(0)
                 .inspect_err(|_| {
                     eprintln!("Recipe result {:?} should be a known item", recipe.result);
@@ -306,6 +297,7 @@ fn shown_recipes(
                     autolearn,
                     manuals: recipe_manuals,
                     qualities: recipe_qualities(infos, &recipe.qualities.0, nearby_qualities),
+                    components: recipe_components(infos, &recipe.components, nearby_items),
                 })
         })
         .collect::<Vec<_>>();
@@ -365,11 +357,11 @@ fn nearby_qualities<'a>(
     let found = nearby_items
         .iter()
         .filter_map(|(definition, _)| match definition.category {
-            ObjectCategory::Item => infos.item(&definition.id).map(|item| &item.qualities),
+            ObjectCategory::Item => infos.try_item(&definition.id).map(|item| &item.qualities),
             ObjectCategory::Furniture => infos
-                .furniture(&definition.id)
+                .try_furniture(&definition.id)
                 .and_then(|furniture| furniture.crafting_pseudo_item.as_ref())
-                .and_then(|pseude_item| infos.item(pseude_item).map(|item| &item.qualities)),
+                .and_then(|pseude_item| infos.try_item(pseude_item).map(|item| &item.qualities)),
             _ => None,
         })
         .flatten()
@@ -396,14 +388,7 @@ fn recipe_qualities(
     let mut qualities = required
         .iter()
         .map(|required_quality| QualitySituation {
-            name: uppercase_first(
-                infos
-                    .quality(&required_quality.id)
-                    .expect("Quality should be known")
-                    .name
-                    .single
-                    .as_str(),
-            ),
+            name: uppercase_first(infos.quality(&required_quality.id).name.single.as_str()),
             present: present.get(&required_quality.id).copied(),
             required: required_quality.level,
         })
@@ -411,6 +396,71 @@ fn recipe_qualities(
 
     qualities.sort_by_key(|quality| quality.name.clone());
     qualities
+}
+
+fn recipe_components(
+    infos: &Infos,
+    required: &[Vec<Alternative>],
+    present: &[(&ObjectDefinition, &Amount)],
+) -> Vec<ComponentSituation> {
+    required
+        .iter()
+        .map(|component| ComponentSituation {
+            alternatives: component
+                .iter()
+                .flat_map(|alternative| expand_items(infos, alternative))
+                .filter_map(|(item_id, required)| {
+                    infos
+                        .try_item(item_id)
+                        .ok_or(())
+                        .inspect_err(|()| {
+                            eprintln!("Item {item_id:?} not found (maybe comestible?)");
+                        })
+                        .ok()
+                        .map(|item| (item_id, item, required))
+                })
+                .map(|(item_id, item, required)| AlternativeSituation {
+                    id: item_id.clone(),
+                    name: item.name.amount(required).clone(),
+                    required,
+                    present: present
+                        .iter()
+                        .filter(|(definition, _)| definition.id == *item_id)
+                        .map(|(_, amount)| amount.0)
+                        .sum(),
+                })
+                .collect::<Vec<_>>(),
+        })
+        .collect::<Vec<_>>()
+}
+
+fn expand_items<'a>(infos: &'a Infos, alternative: &'a Alternative) -> Vec<(&'a ObjectId, u32)> {
+    match alternative {
+        Alternative::Item { item, required } => vec![(item, *required)],
+        Alternative::Requirement {
+            requirement,
+            factor,
+        } => {
+            let requirement = infos.requirement(requirement);
+            if requirement.components.len() != 1 {
+                eprintln!(
+                    "Unexpected structure for {requirement:?}: {:?}",
+                    &requirement.components
+                );
+            }
+
+            requirement
+                .components
+                .iter()
+                .flatten()
+                .flat_map(|alternative| {
+                    expand_items(infos, alternative)
+                        .into_iter()
+                        .map(|(item_id, amount)| (item_id, factor * amount))
+                })
+                .collect()
+        }
+    }
 }
 
 #[allow(clippy::needless_pass_by_value)]
@@ -484,9 +534,7 @@ fn show_recipe(
     crafting_screen: &CraftingScreen,
     recipe_sitation: &RecipeSituation,
 ) {
-    let recipe = infos
-        .recipe(&recipe_sitation.recipe_id)
-        .expect("Recipe id should esist");
+    let recipe = infos.recipe(&recipe_sitation.recipe_id);
 
     commands
         .entity(crafting_screen.recipe_details)
