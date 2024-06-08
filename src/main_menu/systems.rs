@@ -348,7 +348,7 @@ pub(crate) fn manage_main_menu_button_input(
                     next_progress_state.set(ProgressScreenState::Loading);
                 }
                 (None, true) => {
-                    app_exit_events.send(AppExit);
+                    app_exit_events.send(AppExit::Success);
                 }
                 _ => {
                     // This may happen when a button click causes a return to the main menu

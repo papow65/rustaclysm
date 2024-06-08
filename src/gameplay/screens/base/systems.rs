@@ -40,10 +40,10 @@ fn toggle_map(
     let mut camera_layers = camera_layers.single_mut();
     *camera_layers = if showing_map(&camera_layers) {
         camera_offset.zoom_to_tiles(zoom_distance);
-        camera_layers.with(1).without(2)
+        camera_layers.clone().with(1).without(2)
     } else {
         camera_offset.zoom_to_map(zoom_distance);
-        camera_layers.without(1).with(2)
+        camera_layers.clone().without(1).with(2)
     };
 }
 
@@ -57,10 +57,10 @@ fn zoom(
     let mut camera_layers = camera_layers.single_mut();
     if showing_map(&camera_layers) {
         if camera_offset.zoom_tiles_only() {
-            *camera_layers = camera_layers.with(1).without(2);
+            *camera_layers = camera_layers.clone().with(1).without(2);
         }
     } else if camera_offset.zoom_map_only() {
-        *camera_layers = camera_layers.without(1).with(2);
+        *camera_layers = camera_layers.clone().without(1).with(2);
     }
 }
 

@@ -1,6 +1,6 @@
 use crate::prelude::*;
 use bevy::{
-    asset::{io::Reader, Asset, AssetLoader, BoxedFuture, LoadContext},
+    asset::{io::Reader, Asset, AssetLoader, LoadContext},
     reflect::TypePath,
 };
 use either::Either;
@@ -138,34 +138,32 @@ impl AssetLoader for MapMemoryLoader {
     type Settings = ();
     type Error = Either<std::io::Error, serde_json::Error>;
 
-    fn load<'a>(
+    async fn load<'a>(
         &'a self,
-        reader: &'a mut Reader,
+        reader: &'a mut Reader<'_>,
         _settings: &'a Self::Settings,
-        load_context: &'a mut LoadContext,
-    ) -> BoxedFuture<'a, Result<Self::Asset, Self::Error>> {
-        Box::pin(async move {
-            let mut bytes = Vec::new();
-            reader
-                .read_to_end(&mut bytes)
-                .await
-                .inspect_err(|e| {
-                    eprintln!("Map file loading error: {:?} {e:?}", load_context.path(),);
-                })
-                .map_err(Either::Left)?;
+        load_context: &'a mut LoadContext<'_>,
+    ) -> Result<Self::Asset, Self::Error> {
+        let mut bytes = Vec::new();
+        reader
+            .read_to_end(&mut bytes)
+            .await
+            .inspect_err(|e| {
+                eprintln!("Map file loading error: {:?} {e:?}", load_context.path(),);
+            })
+            .map_err(Either::Left)?;
 
-            let map_memory = serde_json::from_slice::<MapMemory>(&bytes)
-                .map_err(|e| {
-                    eprintln!(
-                        "Map json loading error: {:?} {:?} {e:?}",
-                        load_context.path(),
-                        std::str::from_utf8(&bytes[0..40])
-                    );
-                    e
-                })
-                .map_err(Either::Right)?;
-            Ok(map_memory)
-        })
+        let map_memory = serde_json::from_slice::<MapMemory>(&bytes)
+            .map_err(|e| {
+                eprintln!(
+                    "Map json loading error: {:?} {:?} {e:?}",
+                    load_context.path(),
+                    std::str::from_utf8(&bytes[0..40])
+                );
+                e
+            })
+            .map_err(Either::Right)?;
+        Ok(map_memory)
     }
 
     fn extensions(&self) -> &[&str] {

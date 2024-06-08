@@ -1,8 +1,8 @@
 use super::{components::ManualDisplay, resources::HudDefaults};
 use crate::prelude::{ApplicationState, GameplayScreenState, StateBound};
 use bevy::prelude::{
-    default, BackgroundColor, BuildChildren, Children, Commands, NodeBundle, Query, Res, State,
-    Text, TextBundle, TextSection, Val, With, ZIndex,
+    default, Alpha, BackgroundColor, BuildChildren, Children, Commands, NodeBundle, Query, Res,
+    State, Text, TextBundle, TextSection, Val, With, ZIndex,
 };
 
 static BASE_MANUAL_CONTENTS: &str = "\
@@ -105,10 +105,10 @@ pub(super) fn update_manual(
     let mut manual = manual.single_mut();
 
     let background_color = &mut manual.0 .0;
-    background_color.set_a(if gameplay_screen_state.get().large_node_bundle() {
+    background_color.set_alpha(if gameplay_screen_state.get().large_node_bundle() {
         1.0
     } else {
-        hud_defaults.background.background_color.0.a()
+        hud_defaults.background.background_color.0.alpha()
     });
 
     let manual_text_entity = manual

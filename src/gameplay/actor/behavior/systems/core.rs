@@ -52,7 +52,7 @@ pub(in super::super) fn plan_action(
     let action = if player_active {
         let manual_action = run_system(plan_systems.manual_player_action, world, active_actor);
         // The state could have transitioned with or without a 'manual_action'.
-        apply_state_transition::<PlayerActionState>(world);
+        world.run_schedule(StateTransition);
         manual_action
             .or_else(|| run_system(plan_systems.automatic_player_action, world, active_actor))?
     } else {

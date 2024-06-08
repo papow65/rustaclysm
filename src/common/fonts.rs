@@ -3,7 +3,7 @@ use crate::prelude::{
 };
 use bevy::prelude::{AssetServer, Color, Font, Handle, Resource, TextStyle};
 
-#[derive(Default, Resource)]
+#[derive(Resource)]
 pub(crate) struct Fonts {
     fira: Handle<Font>,
 }

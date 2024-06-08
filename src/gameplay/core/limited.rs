@@ -1,5 +1,5 @@
 use crate::prelude::{BAD_TEXT_COLOR, GOOD_TEXT_COLOR, WARN_TEXT_COLOR};
-use bevy::prelude::Color;
+use bevy::prelude::{Color, Mix};
 
 #[derive(Clone, Debug)]
 pub(crate) struct Evolution {
@@ -117,11 +117,6 @@ impl Limited {
         } else {
             (2.0 * percent, BAD_TEXT_COLOR, WARN_TEXT_COLOR)
         };
-
-        Color::rgb(
-            min_color.r() + part * (max_color.r() - min_color.r()),
-            min_color.g() + part * (max_color.g() - min_color.g()),
-            min_color.b() + part * (max_color.b() - min_color.b()),
-        )
+        min_color.mix(&max_color, part)
     }
 }

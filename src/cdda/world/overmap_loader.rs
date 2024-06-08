@@ -1,4 +1,4 @@
-use bevy::asset::{io::Reader, Asset, AssetLoader, BoxedFuture, LoadContext};
+use bevy::asset::{io::Reader, Asset, AssetLoader, LoadContext};
 use either::Either;
 use futures_lite::AsyncReadExt;
 use serde::Deserialize;
@@ -17,44 +17,42 @@ where
     type Settings = ();
     type Error = Either<std::io::Error, serde_json::Error>;
 
-    fn load<'a>(
+    async fn load<'a>(
         &'a self,
-        reader: &'a mut Reader,
+        reader: &'a mut Reader<'_>,
         _settings: &'a Self::Settings,
-        load_context: &'a mut LoadContext,
-    ) -> BoxedFuture<'a, Result<Self::Asset, Self::Error>> {
-        Box::pin(async move {
-            let mut bytes = Vec::new();
-            reader
-                .read_to_end(&mut bytes)
-                .await
-                .inspect_err(|e| {
-                    eprintln!("Map file loading error: {:?} {e:?}", load_context.path(),);
-                })
-                .map_err(Either::Left)?;
+        load_context: &'a mut LoadContext<'_>,
+    ) -> Result<Self::Asset, Self::Error> {
+        let mut bytes = Vec::new();
+        reader
+            .read_to_end(&mut bytes)
+            .await
+            .inspect_err(|e| {
+                eprintln!("Map file loading error: {:?} {e:?}", load_context.path(),);
+            })
+            .map_err(Either::Left)?;
 
-            let newline_pos = bytes
-                .windows(1)
-                .position(|window| window == b"\n")
-                .expect("Version line");
-            let after_first_line = bytes.split_at(newline_pos).1;
+        let newline_pos = bytes
+            .windows(1)
+            .position(|window| window == b"\n")
+            .expect("Version line");
+        let after_first_line = bytes.split_at(newline_pos).1;
 
-            let file_name = load_context
-                .path()
-                .file_name()
-                .expect("File name present")
-                .to_str()
-                .expect("Unicode filename");
+        let file_name = load_context
+            .path()
+            .file_name()
+            .expect("File name present")
+            .to_str()
+            .expect("Unicode filename");
 
-            serde_json::from_slice::<T>(after_first_line)
-                .inspect_err(|e| {
-                    eprintln!(
-                        "Overmap (buffer?) loading error: {file_name:?} {:?} {e:?}",
-                        from_utf8(&bytes[0..40])
-                    );
-                })
-                .map_err(Either::Right)
-        })
+        serde_json::from_slice::<T>(after_first_line)
+            .inspect_err(|e| {
+                eprintln!(
+                    "Overmap (buffer?) loading error: {file_name:?} {:?} {e:?}",
+                    from_utf8(&bytes[0..40])
+                );
+            })
+            .map_err(Either::Right)
     }
 
     fn extensions(&self) -> &[&str] {

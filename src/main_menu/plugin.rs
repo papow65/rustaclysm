@@ -5,6 +5,8 @@ pub(crate) struct MainMenuPlugin;
 
 impl Plugin for MainMenuPlugin {
     fn build(&self, app: &mut App) {
+        app.insert_state(ApplicationState::MainMenu);
+
         app.add_systems(
             OnEnter(ApplicationState::MainMenu),
             (spawn_main_menu, resize_background, update_sav_files).chain(),

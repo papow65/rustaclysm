@@ -13,8 +13,11 @@ pub(super) fn maximize_window(mut windows: Query<&mut Window>) {
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(super) fn load_fonts(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.insert_resource(Fonts::new(&asset_server));
+pub(super) fn load_fonts(world: &mut World) {
+    let asset_server = world.get_resource().expect("AssetServer should exist");
+    let fonts = Fonts::new(asset_server);
+    // Using 'commands.insert_resource' in bevy 0.14-rc2 doesn't work properly.
+    world.insert_resource(fonts);
 }
 
 #[allow(clippy::needless_pass_by_value)]
@@ -27,22 +30,14 @@ pub(super) fn preprocess_keyboard_input(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(super) fn manage_button_hover(
-    mut interactions: Query<
-        (&Interaction, &mut BackgroundColor),
-        (Changed<Interaction>, With<Button>),
-    >,
+pub(super) fn manage_button_color(
+    mut interactions: Query<(&Interaction, &mut UiImage), (Changed<Interaction>, With<Button>)>,
 ) {
-    for (interaction, mut color) in &mut interactions {
-        match *interaction {
-            Interaction::Hovered => {
-                *color = HOVERED_BUTTON_COLOR.into();
-            }
-            Interaction::None => {
-                *color = DEFAULT_BUTTON_COLOR.into();
-            }
-            Interaction::Pressed => {}
-        }
+    for (interaction, mut image) in &mut interactions {
+        image.color = match *interaction {
+            Interaction::Hovered | Interaction::Pressed => HOVERED_BUTTON_COLOR,
+            Interaction::None => DEFAULT_BUTTON_COLOR,
+        };
     }
 }
 
@@ -55,7 +50,7 @@ pub(super) fn manage_global_keyboard_input(
     for key_change in keys.with_ctrl() {
         match key_change.key {
             Key::Character('c' | 'q') => {
-                app_exit_events.send(AppExit);
+                app_exit_events.send(AppExit::Success);
             }
             Key::Character(resize @ ('+' | '-')) => {
                 let px = if resize == '+' { 1 } else { -1 } + (16.0 * ui_scale.0) as i8;

@@ -24,7 +24,7 @@ fn update_material(
 }
 
 pub(crate) fn update_visualization(
-    commands: &Arc<Mutex<Commands>>,
+    commands: &mut Commands,
     explored: &Arc<Mutex<&mut Explored>>,
     currently_visible: &CurrentlyVisible,
     elevation_visibility: ElevationVisibility,
@@ -51,12 +51,7 @@ pub(crate) fn update_visualization(
             }
 
             // TODO select an appearance based on amount of perceived light
-            update_material(
-                &mut commands.lock().expect("Unpoisoned"),
-                children,
-                child_items,
-                last_seen,
-            );
+            update_material(commands, children, child_items, last_seen);
         }
 
         *visibility =
@@ -136,7 +131,7 @@ pub(crate) fn update_visibility(
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_visualization_on_item_move(
-    commands: Commands,
+    par_commands: ParallelCommands,
     focus: Focus,
     currently_visible_builder: CurrentlyVisibleBuilder,
     mut explored: ResMut<Explored>,
@@ -158,25 +153,26 @@ pub(crate) fn update_visualization_on_item_move(
 
     if moved_items.iter().peekable().peek().is_some() {
         let currently_visible = currently_visible_builder.for_player();
-        let commands = Arc::new(Mutex::new(commands));
         let explored = Arc::new(Mutex::new(&mut *explored));
 
         for (&pos, mut visibility, mut last_seen, accessible, speed, children) in &mut moved_items {
-            update_visualization(
-                &commands.clone(),
-                &explored.clone(),
-                &currently_visible,
-                *elevation_visibility,
-                &focus,
-                None,
-                pos,
-                &mut visibility,
-                &mut last_seen,
-                accessible,
-                speed,
-                children,
-                &child_items,
-            );
+            par_commands.command_scope(|mut commands| {
+                update_visualization(
+                    &mut commands,
+                    &explored.clone(),
+                    &currently_visible,
+                    *elevation_visibility,
+                    &focus,
+                    None,
+                    pos,
+                    &mut visibility,
+                    &mut last_seen,
+                    accessible,
+                    speed,
+                    children,
+                    &child_items,
+                );
+            });
         }
     }
 
@@ -186,6 +182,7 @@ pub(crate) fn update_visualization_on_item_move(
 #[cfg(debug_assertions)]
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn count_assets(
+    font_assets: Option<Res<Assets<Font>>>,
     map_assets: Option<Res<Assets<Map>>>,
     map_memory_assets: Option<Res<Assets<MapMemory>>>,
     overmap_assets: Option<Res<Assets<Overmap>>>,
@@ -197,6 +194,7 @@ pub(crate) fn count_assets(
     let start = Instant::now();
 
     let counts = vec![
+        font_assets.map_or(0, |a| a.len()),
         map_assets.map_or(0, |a| a.len()),
         map_memory_assets.map_or(0, |a| a.len()),
         overmap_assets.map_or(0, |a| a.len()),
@@ -206,12 +204,13 @@ pub(crate) fn count_assets(
     ];
 
     if *last_counts != counts && counts.iter().any(|c| 0 < *c) {
-        println!("{} map assets", counts[0]);
-        println!("{} map memory assets", counts[1]);
-        println!("{} overmap assets", counts[2]);
-        println!("{} overmap buffer assets", counts[3]);
-        println!("{} material assets", counts[4]);
-        println!("{} mesh assets", counts[5]);
+        println!("{} font assets", counts[0]);
+        println!("{} map assets", counts[1]);
+        println!("{} map memory assets", counts[2]);
+        println!("{} overmap assets", counts[3]);
+        println!("{} overmap buffer assets", counts[4]);
+        println!("{} material assets", counts[5]);
+        println!("{} mesh assets", counts[6]);
 
         *last_counts = counts;
     }

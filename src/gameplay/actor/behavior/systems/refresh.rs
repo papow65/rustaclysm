@@ -39,7 +39,7 @@ pub(in super::super) fn update_hidden_item_visibility(
 /// This is a slow system. For performance, it is only ran once after [`BehaviorSchedule::run`[, instead of after every action
 #[allow(clippy::needless_pass_by_value)]
 pub(in super::super) fn update_visualization_on_player_move(
-    commands: Commands,
+    par_commands: ParallelCommands,
     focus: Focus,
     currently_visible_builder: CurrentlyVisibleBuilder,
     mut explored: ResMut<Explored>,
@@ -89,7 +89,6 @@ pub(in super::super) fn update_visualization_on_player_move(
             || *visualization_update == VisualizationUpdate::Forced
         {
             let currently_visible = thread_local::ThreadLocal::new();
-            let commands = Arc::new(Mutex::new(commands));
             let explored = Arc::new(Mutex::new(&mut *explored));
 
             items.par_iter_mut().for_each(
@@ -97,21 +96,23 @@ pub(in super::super) fn update_visualization_on_player_move(
                     let currently_visible =
                         currently_visible.get_or(|| currently_visible_builder.for_player());
 
-                    update_visualization(
-                        &commands.clone(),
-                        &explored.clone(),
-                        currently_visible,
-                        *elevation_visibility,
-                        &focus,
-                        player,
-                        pos,
-                        &mut visibility,
-                        &mut last_seen,
-                        accessible,
-                        speed,
-                        children,
-                        &child_items,
-                    );
+                    par_commands.command_scope(|mut commands| {
+                        update_visualization(
+                            &mut commands,
+                            &explored.clone(),
+                            currently_visible,
+                            *elevation_visibility,
+                            &focus,
+                            player,
+                            pos,
+                            &mut visibility,
+                            &mut last_seen,
+                            accessible,
+                            speed,
+                            children,
+                            &child_items,
+                        );
+                    });
                 },
             );
 

@@ -3,10 +3,7 @@ mod object_name;
 mod pos;
 
 use crate::prelude::*;
-use bevy::{
-    pbr::StandardMaterial,
-    prelude::{AlphaMode, Assets, Color, Component, Handle},
-};
+use bevy::prelude::{AlphaMode, Assets, Color, Component, Handle, Srgba, StandardMaterial};
 use std::ops::{Add, Sub};
 
 pub(crate) use {container_limits::*, object_name::*, pos::*};
@@ -196,11 +193,12 @@ impl Appearance {
     }
 
     fn remembered(color: Color) -> Color {
-        Color::rgba(
-            color.r() * 0.6,
-            color.g() * 0.6,
-            color.b(),
-            0.5_f32.mul_add(color.a(), 0.5),
+        let srgba = Srgba::from(color);
+        Color::srgba(
+            srgba.red * 0.6,
+            srgba.green * 0.6,
+            srgba.blue,
+            0.5_f32.mul_add(srgba.alpha, 0.5),
         )
     }
 }

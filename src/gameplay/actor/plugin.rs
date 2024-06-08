@@ -3,7 +3,7 @@ use crate::prelude::{
     clear_gameplay_events, ActorEvent, ApplicationState, Damage, Healing, PlayerActionState,
     StaminaImpact,
 };
-use bevy::prelude::{App, Events, OnExit, Plugin};
+use bevy::prelude::{App, AppExtStates, Events, OnExit, Plugin};
 
 pub(crate) struct ActorPlugin;
 

@@ -310,15 +310,15 @@ fn add_row(
 
             for action in actions {
                 parent
-                    .spawn(ButtonBundle {
+                    .spawn((ButtonBundle {
                         style: Style {
                             width: Val::Px(70.0),
                             justify_content: JustifyContent::Center,
                             ..default()
                         },
-                        background_color: DEFAULT_BUTTON_COLOR.into(),
+                        image: UiImage::default().with_color(DEFAULT_BUTTON_COLOR),
                         ..default()
-                    })
+                    },))
                     .with_children(|parent| {
                         parent.spawn(TextBundle::from_section(
                             format!("{}", &action),

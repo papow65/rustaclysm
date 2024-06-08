@@ -5,6 +5,8 @@ pub(crate) struct LoadingIndicatorPlugin;
 
 impl Plugin for LoadingIndicatorPlugin {
     fn build(&self, app: &mut App) {
+        app.insert_state(ProgressScreenState::Complete);
+
         app.add_systems(OnEnter(ProgressScreenState::Loading), spawn_loading);
 
         app.add_systems(

@@ -480,6 +480,7 @@ impl<'w, 's> Spawner<'w, 's> {
                                 ..PbrBundle::default()
                             })
                             .with_children(|child_builder| {
+                                println!("Camera");
                                 child_builder.spawn((
                                     Camera3dBundle {
                                         projection: Perspective(PerspectiveProjection {
@@ -489,7 +490,7 @@ impl<'w, 's> Spawner<'w, 's> {
                                         }),
                                         ..default()
                                     },
-                                    RenderLayers::all().without(2),
+                                    RenderLayers::default().with(1).without(2),
                                 ));
                             });
                     });

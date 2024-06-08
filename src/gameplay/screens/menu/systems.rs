@@ -81,7 +81,7 @@ pub(super) fn manage_menu_button_input(
                     next_application_state.set(ApplicationState::MainMenu);
                 }
                 (false, false, true) => {
-                    app_exit_events.send(AppExit);
+                    app_exit_events.send(AppExit::Success);
                 }
                 (return_button, main_menu_button, quit_button) => {
                     panic!("{return_button:?} {main_menu_button:?} {quit_button:?}");

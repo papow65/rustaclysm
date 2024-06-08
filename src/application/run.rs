@@ -1,7 +1,7 @@
 use super::{
     check::check_delay,
     systems::{
-        load_fonts, manage_button_hover, manage_global_keyboard_input, manage_scrolling,
+        load_fonts, manage_button_color, manage_global_keyboard_input, manage_scrolling,
         maximize_window, preprocess_keyboard_input, resize_scrolling_lists,
     },
 };
@@ -38,9 +38,6 @@ pub(crate) fn run_application() {
             }),
     );
 
-    app.insert_state(ApplicationState::MainMenu)
-        .insert_state(ProgressScreenState::Complete);
-
     app.insert_resource(Time::<Fixed>::from_duration(Duration::from_millis(250)));
 
     app.add_plugins((
@@ -55,7 +52,7 @@ pub(crate) fn run_application() {
     app.add_systems(
         Update,
         (
-            manage_button_hover,
+            manage_button_color,
             manage_scrolling.run_if(on_event::<MouseWheel>()),
             manage_global_keyboard_input.run_if(on_event::<KeyboardInput>()),
             resize_scrolling_lists.run_if(
