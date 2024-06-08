@@ -1,5 +1,9 @@
 use crate::prelude::*;
-use bevy::{app::AppExit, input::mouse::MouseWheel, prelude::*};
+use bevy::{
+    app::AppExit,
+    input::{keyboard::KeyboardInput, mouse::MouseWheel},
+    prelude::*,
+};
 
 #[allow(clippy::needless_pass_by_value)]
 pub(super) fn maximize_window(mut windows: Query<&mut Window>) {
@@ -11,6 +15,15 @@ pub(super) fn maximize_window(mut windows: Query<&mut Window>) {
 #[allow(clippy::needless_pass_by_value)]
 pub(super) fn load_fonts(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.insert_resource(Fonts::new(&asset_server));
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub(super) fn preprocess_keyboard_input(
+    mut keyboard_inputs: EventReader<KeyboardInput>,
+    key_states: Res<ButtonInput<KeyCode>>,
+    mut keys: ResMut<Keys>,
+) {
+    keys.update(&mut keyboard_inputs, &key_states);
 }
 
 #[allow(clippy::needless_pass_by_value)]
@@ -35,12 +48,12 @@ pub(super) fn manage_button_hover(
 
 #[allow(clippy::needless_pass_by_value)]
 pub(super) fn manage_global_keyboard_input(
-    mut keys: Keys,
+    keys: Res<Keys>,
     mut app_exit_events: ResMut<Events<AppExit>>,
     mut ui_scale: ResMut<UiScale>,
 ) {
-    for combo in keys.combos(Ctrl::With) {
-        match combo.key {
+    for key_change in keys.with_ctrl() {
+        match key_change.key {
             Key::Character('c' | 'q') => {
                 app_exit_events.send(AppExit);
             }

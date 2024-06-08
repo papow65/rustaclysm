@@ -466,7 +466,7 @@ fn expand_items<'a>(infos: &'a Infos, alternative: &'a Alternative) -> Vec<(&'a 
 #[allow(clippy::needless_pass_by_value)]
 pub(super) fn manage_crafting_keyboard_input(
     mut commands: Commands,
-    mut keys: Keys,
+    keys: Res<Keys>,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
     infos: Res<Infos>,
     fonts: Res<Fonts>,
@@ -478,17 +478,20 @@ pub(super) fn manage_crafting_keyboard_input(
 ) {
     let start = Instant::now();
 
-    for combo in keys.combos(Ctrl::Without) {
-        match combo.key {
+    for key_change in keys.without_ctrl() {
+        match key_change.key {
             Key::Code(KeyCode::Escape) | Key::Character('&')
-                if combo.change == InputChange::JustPressed =>
+                if key_change.change == InputChange::JustPressed =>
             {
+                println!("<- {key_change:?}");
                 next_gameplay_state.set(GameplayScreenState::Base);
             }
             Key::Code(direction @ (KeyCode::ArrowUp | KeyCode::ArrowDown)) => {
                 if direction == KeyCode::ArrowUp {
+                    //println!("Up!");
                     crafting_screen.select_up(&mut recipes);
                 } else {
+                    //println!("Down!");
                     crafting_screen.select_down(&mut recipes);
                 }
                 if let Some(selected) = crafting_screen.selection_list.selected {

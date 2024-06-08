@@ -1,6 +1,9 @@
 use super::systems::{manage_menu_button_input, manage_menu_keyboard_input, spawn_menu};
 use crate::prelude::{despawn, GameplayScreenState};
-use bevy::prelude::{in_state, App, IntoSystemConfigs, OnEnter, OnExit, Plugin, Update};
+use bevy::{
+    input::keyboard::KeyboardInput,
+    prelude::{in_state, on_event, App, IntoSystemConfigs, OnEnter, OnExit, Plugin, Update},
+};
 
 pub(crate) struct MenuScreenPlugin;
 
@@ -10,7 +13,10 @@ impl Plugin for MenuScreenPlugin {
 
         app.add_systems(
             Update,
-            (manage_menu_button_input, manage_menu_keyboard_input)
+            (
+                manage_menu_button_input,
+                manage_menu_keyboard_input.run_if(on_event::<KeyboardInput>()),
+            )
                 .run_if(in_state(GameplayScreenState::Menu)),
         );
 

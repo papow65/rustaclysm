@@ -1,8 +1,12 @@
 use crate::prelude::{
-    ApplicationState, Ctrl, Fonts, GameplayScreenState, InputChange, Key, Keys, StateBound,
-    BAD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, WARN_TEXT_COLOR,
+    ApplicationState, Fonts, GameplayScreenState, Key, Keys, StateBound, BAD_TEXT_COLOR,
+    PANEL_COLOR, SMALL_SPACING, WARN_TEXT_COLOR,
 };
-use bevy::prelude::*;
+use bevy::prelude::{
+    AlignItems, BuildChildren, Button, ButtonBundle, Changed, Commands, FlexDirection, Interaction,
+    JustifyContent, KeyCode, NextState, NodeBundle, Query, Res, ResMut, Style, TextBundle, UiRect,
+    Val, With,
+};
 
 #[allow(clippy::needless_pass_by_value)]
 pub(super) fn spawn_death_screen(mut commands: Commands, fonts: Res<Fonts>) {
@@ -15,9 +19,9 @@ pub(super) fn spawn_death_screen(mut commands: Commands, fonts: Res<Fonts>) {
                     flex_direction: FlexDirection::Column,
                     align_items: AlignItems::Center,
                     justify_content: JustifyContent::Center,
-                    ..default()
+                    ..Style::default()
                 },
-                ..default()
+                ..NodeBundle::default()
             },
             StateBound::<GameplayScreenState>::default(),
         ))
@@ -31,10 +35,10 @@ pub(super) fn spawn_death_screen(mut commands: Commands, fonts: Res<Fonts>) {
                         align_items: AlignItems::Center,
                         justify_content: JustifyContent::Center,
                         padding: UiRect::all(SMALL_SPACING),
-                        ..default()
+                        ..Style::default()
                     },
                     background_color: PANEL_COLOR.into(),
-                    ..default()
+                    ..NodeBundle::default()
                 })
                 .with_children(|parent| {
                     parent
@@ -44,9 +48,9 @@ pub(super) fn spawn_death_screen(mut commands: Commands, fonts: Res<Fonts>) {
                                 height: Val::Px(70.0),
                                 justify_content: JustifyContent::Center,
                                 align_items: AlignItems::Center,
-                                ..default()
+                                ..Style::default()
                             },
-                            ..default()
+                            ..NodeBundle::default()
                         })
                         .with_children(|parent| {
                             parent.spawn(TextBundle::from_section(
@@ -62,9 +66,9 @@ pub(super) fn spawn_death_screen(mut commands: Commands, fonts: Res<Fonts>) {
                                 height: Val::Px(70.0),
                                 justify_content: JustifyContent::Center,
                                 align_items: AlignItems::Center,
-                                ..default()
+                                ..Style::default()
                             },
-                            ..default()
+                            ..ButtonBundle::default()
                         })
                         .with_children(|parent| {
                             parent.spawn(TextBundle::from_section(
@@ -78,15 +82,15 @@ pub(super) fn spawn_death_screen(mut commands: Commands, fonts: Res<Fonts>) {
 
 #[allow(clippy::needless_pass_by_value)]
 pub(super) fn manage_death_keyboard_input(
-    mut keys: Keys,
+    keys: Res<Keys>,
     mut next_application_state: ResMut<NextState<ApplicationState>>,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
 ) {
-    for _ in keys.combos(Ctrl::Without).filter(|combo| {
+    for _ in keys.just_pressed_without_ctrl().filter(|key| {
         matches!(
-            combo.key,
+            **key,
             Key::Code(KeyCode::Escape | KeyCode::Enter | KeyCode::F12 | KeyCode::Space)
-        ) && combo.change == InputChange::JustPressed
+        )
     }) {
         next_application_state.set(ApplicationState::MainMenu);
         next_gameplay_state.set(GameplayScreenState::Inapplicable);

@@ -3,8 +3,11 @@ use super::systems::{
     remove_inventory_resource, spawn_inventory, update_inventory,
 };
 use crate::prelude::{despawn, loop_behavior_and_refresh, GameplayScreenState};
-use bevy::prelude::{
-    in_state, App, IntoSystem, IntoSystemConfigs, OnEnter, OnExit, Plugin, Update,
+use bevy::{
+    input::keyboard::KeyboardInput,
+    prelude::{
+        in_state, on_event, App, IntoSystem, IntoSystemConfigs, OnEnter, OnExit, Plugin, Update,
+    },
 };
 
 pub(crate) struct InventoryScreenPlugin;
@@ -16,7 +19,7 @@ impl Plugin for InventoryScreenPlugin {
         app.add_systems(
             Update,
             (
-                manage_inventory_keyboard_input,
+                manage_inventory_keyboard_input.run_if(on_event::<KeyboardInput>()),
                 clear_inventory.pipe(update_inventory),
                 (manage_inventory_button_input, loop_behavior_and_refresh()).chain(),
             )

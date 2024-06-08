@@ -1,7 +1,7 @@
 use super::components::{MainMenuButton, ReturnButton};
 use crate::prelude::{
-    ApplicationState, Ctrl, Fonts, GameplayScreenState, InputChange, Key, Keys, QuitButton,
-    StateBound, BAD_TEXT_COLOR, DEFAULT_TEXT_COLOR, GOOD_TEXT_COLOR, MEDIUM_SPACING,
+    ApplicationState, Fonts, GameplayScreenState, Key, Keys, QuitButton, StateBound,
+    BAD_TEXT_COLOR, DEFAULT_TEXT_COLOR, GOOD_TEXT_COLOR, MEDIUM_SPACING,
 };
 use bevy::{app::AppExit, prelude::*};
 
@@ -93,15 +93,13 @@ pub(super) fn manage_menu_button_input(
 
 #[allow(clippy::needless_pass_by_value)]
 pub(super) fn manage_menu_keyboard_input(
-    mut keys: Keys,
+    keys: Res<Keys>,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
 ) {
-    for combo in keys
-        .combos(Ctrl::Without)
-        .filter(|combo| combo.change == InputChange::JustPressed)
+    for _ in keys
+        .just_pressed_without_ctrl()
+        .filter(|key| **key == Key::Code(KeyCode::Escape))
     {
-        if let Key::Code(KeyCode::Escape) = combo.key {
-            next_gameplay_state.set(GameplayScreenState::Base);
-        }
+        next_gameplay_state.set(GameplayScreenState::Base);
     }
 }

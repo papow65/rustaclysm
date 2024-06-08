@@ -166,7 +166,7 @@ pub(super) fn manage_keyboard_input(
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
     focus: Focus,
     mut next_focus_state: ResMut<NextState<FocusState>>,
-    mut keys: Keys,
+    keys: Res<Keys>,
     mut instruction_queue: ResMut<InstructionQueue>,
     mut elevation_visibility: ResMut<ElevationVisibility>,
     mut visualization_update: ResMut<VisualizationUpdate>,
@@ -177,15 +177,16 @@ pub(super) fn manage_keyboard_input(
 ) {
     let start = Instant::now();
 
-    for combo in keys.combos(Ctrl::Without) {
-        let Ok(instruction) =
-            Instruction::try_from((&combo, focus.state.cancel_handling(&player_action_state)))
-        else {
-            println!("{combo:?} not recognized");
+    for key_change in keys.without_ctrl() {
+        let Ok(instruction) = Instruction::try_from((
+            key_change,
+            focus.state.cancel_handling(&player_action_state),
+        )) else {
+            println!("{key_change:?} not recognized");
             continue;
         };
 
-        println!("{:?} -> {:?}", &combo, &instruction);
+        println!("{key_change:?} -> {:?}", &instruction);
         match instruction {
             Instruction::ShowGameplayMenu => open_menu(&mut next_gameplay_state),
             Instruction::ExaminePos => {
@@ -211,7 +212,7 @@ pub(super) fn manage_keyboard_input(
                 &mut next_player_action_state,
                 &mut instruction_queue,
                 instruction,
-                combo.change,
+                key_change.change,
             ),
         }
     }

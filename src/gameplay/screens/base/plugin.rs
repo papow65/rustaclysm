@@ -6,8 +6,12 @@ use super::{
     },
 };
 use crate::prelude::{loop_behavior_and_refresh, update_visibility, GameplayScreenState};
-use bevy::prelude::{
-    in_state, not, resource_exists_and_changed, App, IntoSystemConfigs, Plugin, State, Update,
+use bevy::{
+    input::keyboard::KeyboardInput,
+    prelude::{
+        in_state, not, on_event, resource_exists_and_changed, App, IntoSystemConfigs, Plugin,
+        State, Update,
+    },
 };
 
 pub(crate) struct BaseScreenPlugin;
@@ -22,6 +26,7 @@ impl Plugin for BaseScreenPlugin {
                 manage_mouse_input.before(/* process zooming input */ update_camera_offset),
                 (
                     manage_keyboard_input
+                        .run_if(on_event::<KeyboardInput>())
                         .before(/* process zooming input */ update_camera_offset),
                     (
                         loop_behavior_and_refresh().run_if(in_state(FocusState::Normal)),

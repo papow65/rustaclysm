@@ -333,7 +333,7 @@ fn add_row(
 
 #[allow(clippy::needless_pass_by_value)]
 pub(super) fn manage_inventory_keyboard_input(
-    mut keys: Keys,
+    keys: Res<Keys>,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
     mut instruction_queue: ResMut<InstructionQueue>,
     mut inventory: ResMut<InventoryScreen>,
@@ -341,10 +341,10 @@ pub(super) fn manage_inventory_keyboard_input(
     mut scrolling_lists: Query<(&mut ScrollingList, &mut Style, &Parent, &Node)>,
     scrolling_parents: Query<(&Node, &Style), Without<ScrollingList>>,
 ) {
-    for combo in keys.combos(Ctrl::Without) {
-        match combo.key {
+    for key_change in keys.without_ctrl() {
+        match key_change.key {
             Key::Code(KeyCode::Escape) | Key::Character('i')
-                if combo.change == InputChange::JustPressed =>
+                if key_change.change == InputChange::JustPressed =>
             {
                 next_gameplay_state.set(GameplayScreenState::Base);
             }
@@ -359,7 +359,7 @@ pub(super) fn manage_inventory_keyboard_input(
                 | KeyCode::Numpad8
                 | KeyCode::Numpad9,
             ) => {
-                drop_at(&mut inventory, &combo.key);
+                drop_at(&mut inventory, &key_change.key);
             }
             Key::Code(KeyCode::ArrowUp) => {
                 select_up(&mut inventory);
@@ -382,7 +382,7 @@ pub(super) fn manage_inventory_keyboard_input(
 }
 
 fn drop_at(inventory: &mut InventoryScreen, key: &Key) {
-    let nbor = PlayerDirection::try_from(*key)
+    let nbor = PlayerDirection::try_from(key)
         .expect("The direction should be valid ({key:?})")
         .to_nbor();
     match nbor {
@@ -435,8 +435,8 @@ fn follow_selected(
 }
 
 fn handle_selected_item(
-    inventory: &mut ResMut<InventoryScreen>,
-    instruction_queue: &mut ResMut<InstructionQueue>,
+    inventory: &mut InventoryScreen,
+    instruction_queue: &mut InstructionQueue,
     char: char,
 ) {
     if let Some(selected_item) = inventory.selection_list.selected {
@@ -454,10 +454,7 @@ fn handle_selected_item(
     }
 }
 
-fn examine_selected_item(
-    inventory: &InventoryScreen,
-    instruction_queue: &mut ResMut<InstructionQueue>,
-) {
+fn examine_selected_item(inventory: &InventoryScreen, instruction_queue: &mut InstructionQueue) {
     if let Some(selected_item) = inventory.selection_list.selected {
         instruction_queue.add(
             QueuedInstruction::ExamineItem(selected_item),
