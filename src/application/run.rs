@@ -1,6 +1,5 @@
 use super::{
     check::check_delay,
-    schedule::KeyComboSchedule,
     systems::{
         load_fonts, manage_button_hover, manage_global_keyboard_input, manage_scrolling,
         maximize_window, preprocess_keyboard_input, resize_scrolling_lists,
@@ -8,8 +7,7 @@ use super::{
 };
 use crate::prelude::*;
 use bevy::{
-    app::MainScheduleOrder,
-    input::{keyboard::KeyboardInput, mouse::MouseWheel},
+    input::{keyboard::KeyboardInput, mouse::MouseWheel, InputSystem},
     prelude::*,
     window::{PresentMode, WindowResized, WindowResolution},
 };
@@ -52,19 +50,8 @@ pub(crate) fn run_application() {
         LoadingIndicatorPlugin,
     ));
 
-    // 'preprocess_keyboard_input' should run after 'PreUpdate' (to use the keyboard input),
-    // after 'StateTransition' to prevent duplicate input, but before 'Update',
-    // so we insert a schedule in between.
-    app.init_schedule(KeyComboSchedule);
-    app.world
-        .resource_mut::<MainScheduleOrder>()
-        .insert_after(StateTransition, KeyComboSchedule); // Before 'Update'
-
     app.add_systems(Startup, (maximize_window, load_fonts));
-    app.add_systems(
-        KeyComboSchedule,
-        preprocess_keyboard_input, /*.run_if(on_event::<KeyboardInput>())*/
-    );
+    app.add_systems(PreUpdate, preprocess_keyboard_input.after(InputSystem));
     app.add_systems(
         Update,
         (
