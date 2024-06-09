@@ -13,7 +13,7 @@ use bevy::{
     },
 };
 
-/** Plugin for the screen-independent HUD: the manual and the sidebar */
+/// Plugin for the screen-independent HUD: the manual and the sidebar
 pub(crate) struct HudPlugin;
 
 impl Plugin for HudPlugin {

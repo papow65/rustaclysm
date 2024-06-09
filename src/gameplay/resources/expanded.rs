@@ -1,7 +1,7 @@
 use crate::prelude::Region;
 use bevy::prelude::Resource;
 
-/** The area that should be expanded into tiles */
+/// The area that should be expanded into tiles
 #[derive(Default, Resource)]
 pub(crate) struct Expanded {
     pub(crate) region: Region,

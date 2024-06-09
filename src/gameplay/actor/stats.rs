@@ -133,6 +133,6 @@ impl Health {
     }
 }
 
-/** For some animals */
+/// For some animals
 #[derive(Debug, Component)]
 pub(crate) struct Aquatic;

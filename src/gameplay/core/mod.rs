@@ -27,7 +27,7 @@ pub(crate) enum SpriteLayer {
     Back,
 }
 
-/** Visible to the player character */
+/// Visible to the player character
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) enum Visible {
     Seen,

@@ -35,7 +35,7 @@ impl MapPath {
 
 // Reference: https://github.com/CleverRaven/Cataclysm-DDA/blob/master/src/savegame_json.cpp
 
-/** Corresponds to a 'map' in CDDA. It defines the layout of a `ZoneLevel`. */
+/// Corresponds to a 'map' in CDDA. It defines the layout of a `ZoneLevel`.
 #[derive(Debug, Deserialize, Asset, TypePath)]
 #[serde(deny_unknown_fields)]
 #[type_path = "cdda::world::Map"]

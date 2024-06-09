@@ -112,7 +112,7 @@ impl Div<MillimeterPerSecond> for Millimeter {
 
 #[derive(Clone, Copy, Debug, Default, Eq)]
 pub(crate) struct Timestamp {
-    /** Since start of the first year of the cataclysm */
+    /// Since start of the first year of the cataclysm
     offset: Milliseconds,
     season_length: u64,
 }
@@ -217,7 +217,7 @@ impl Ord for Timestamp {
 
 #[derive(Clone, Copy, Debug)]
 pub(crate) struct WalkingCost {
-    /** Contains the move cost of every step and double cost for going up */
+    /// Contains the move cost of every step and double cost for going up
     equivalent_distance: Millimeter,
 }
 

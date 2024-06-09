@@ -4,9 +4,9 @@ use bevy::prelude::{Resource, Vec2, Vec3};
 #[derive(Debug, Default, Resource)]
 pub(crate) struct CameraOffset {
     zoom_in_level: i32,
-    /** left/right angle */
+    /// left/right angle
     yaw_offset: f32,
-    /** up/down angle */
+    /// up/down angle
     pitch_offset: f32,
 }
 

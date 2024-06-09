@@ -159,7 +159,7 @@ impl<'w, 's> Envir<'w, 's> {
 
     // helper methods
 
-    /** In case of vertical nbors: Follow stairs, even when they do not go staight up or down. Without stairs, see the raw position below/above, unless that contains a stair to somewhere else. */
+    /// In case of vertical nbors: Follow stairs, even when they do not go staight up or down. Without stairs, see the raw position below/above, unless that contains a stair to somewhere else.
     #[allow(dead_code)]
     pub(crate) fn get_looking_nbor(&self, from: Pos, nbor: Nbor) -> Option<Pos> {
         match nbor {
@@ -174,7 +174,7 @@ impl<'w, 's> Envir<'w, 's> {
         }
     }
 
-    /** Follow stairs, even when they do not go staight up or down. */
+    /// Follow stairs, even when they do not go staight up or down.
     pub(crate) fn get_nbor(&self, from: Pos, nbor: Nbor) -> Result<Pos, &str> {
         match nbor {
             Nbor::Up => self.stairs_up_to(from).ok_or("No stairs up"),
@@ -186,7 +186,7 @@ impl<'w, 's> Envir<'w, 's> {
         }
     }
 
-    /** Follow stairs, even when they do not go staight up or down. */
+    /// Follow stairs, even when they do not go staight up or down.
     pub(crate) fn to_nbor(&self, from: Pos, to: Pos) -> Option<Nbor> {
         let offset = to - from;
         match offset.level {
@@ -216,7 +216,7 @@ impl<'w, 's> Envir<'w, 's> {
         })
     }
 
-    /** Nbor from the first pos */
+    /// Nbor from the first pos
     pub(crate) fn nbor(&self, one: Pos, other: Pos) -> Option<Nbor> {
         self.nbors_if(one, move |npos| npos == other)
             .next()
@@ -281,7 +281,7 @@ impl<'w, 's> Envir<'w, 's> {
         .map(move |(nbor, _npos, _distance)| nbor)
     }
 
-    /** `WalkingCost` without regard for obstacles or stairs, unless they are nbors */
+    /// `WalkingCost` without regard for obstacles or stairs, unless they are nbors
     pub(crate) fn walking_cost(&self, from: Pos, to: Pos) -> WalkingCost {
         let dx = from.x.abs_diff(to.x) as usize;
         let dz = from.z.abs_diff(to.z) as usize;

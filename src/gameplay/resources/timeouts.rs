@@ -33,7 +33,7 @@ impl Timeouts {
             .copied()
     }
 
-    /** Private, use Clock.time */
+    /// Private, use Clock.time
     fn time(&self) -> Timestamp {
         self.m.values().min().copied().unwrap_or(self.start)
     }
@@ -49,9 +49,9 @@ impl<'w> Clock<'w> {
         self.timeouts.time()
     }
 
-    /** Roughly matches New England, centered around 1 PM, ignoring seasons
-
-    Source: <https://www.suncalc.org> */
+    /// Roughly matches New England, centered around 1 PM, ignoring seasons
+    ///
+    /// Source: <https://www.suncalc.org>
     pub(crate) fn sunlight_percentage(&self) -> f32 {
         // Calculation in minutes
 

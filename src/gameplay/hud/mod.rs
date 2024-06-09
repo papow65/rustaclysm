@@ -1,4 +1,4 @@
-/*! This module provides the [`HudPlugin`] */
+//! This module provides the [`HudPlugin`]
 
 mod components;
 mod input;

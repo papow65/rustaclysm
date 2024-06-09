@@ -103,11 +103,11 @@ impl ActorItem<'_> {
                 envir.location.update(self.entity, Some(to));
                 self.standard_impact(envir.walking_cost(from, to).duration(self.speed()))
             }
-            /*Collision::Fall(fall_pos) => {
-                 * pos = fall_pos;
-                 *            location.add(mover, *pos);
-                 *            VERTICAL
-            }*/
+            //Collision::Fall(fall_pos) => {
+            //    pos = fall_pos;
+            //    location.add(mover, *pos);
+            //    VERTICAL
+            //}
             Collision::Blocked(obstacle) => {
                 message_writer
                     .subject(self.subject())

@@ -29,7 +29,7 @@ use crate::prelude::*;
 use bevy::{ecs::system::SystemParam, prelude::*};
 use std::num::Wrapping;
 
-//** Visibility of tiles above the player character */
+/// Visibility of tiles above the player character
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Resource)]
 pub(crate) enum ElevationVisibility {
     #[default]
@@ -37,7 +37,7 @@ pub(crate) enum ElevationVisibility {
     Hidden,
 }
 
-//** Strategy to use when updating visualizations */
+/// Strategy to use when updating visualizations
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Resource)]
 pub(crate) enum VisualizationUpdate {
     Smart,

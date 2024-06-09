@@ -4,7 +4,7 @@ use crate::{
 };
 use bevy::prelude::{Entity, Query};
 
-/** An action that an actor can perform */
+/// An action that an actor can perform
 pub(crate) trait Action: Clone + Send + Sync + 'static {}
 
 #[must_use]
@@ -108,7 +108,7 @@ pub(crate) struct Pickup;
 
 impl ItemChange for Pickup {}
 
-/** Redundantly named to avoid confusion */
+/// Redundantly named to avoid confusion
 #[derive(Clone, Debug)]
 pub(crate) struct MoveItem {
     pub(crate) to: Nbor,
@@ -116,7 +116,7 @@ pub(crate) struct MoveItem {
 
 impl ItemChange for MoveItem {}
 
-/** Redundantly named to avoid confusion */
+/// Redundantly named to avoid confusion
 #[derive(Clone, Debug)]
 pub(crate) struct ExamineItem;
 

@@ -10,7 +10,7 @@ pub(crate) struct ScrollingList {
 }
 
 impl ScrollingList {
-    /** Returns the new distance from the top */
+    /// Returns the new distance from the top
     #[must_use]
     pub(crate) fn scroll(
         &mut self,
@@ -26,7 +26,7 @@ impl ScrollingList {
         self.adjust(my_node, parent_node, parent_style)
     }
 
-    /** Returns the new distance from the top */
+    /// Returns the new distance from the top
     #[must_use]
     pub(crate) fn follow(
         &mut self,
@@ -55,7 +55,7 @@ impl ScrollingList {
         self.adjust(my_node, parent_node, parent_style)
     }
 
-    /** Returns the new distance from the top */
+    /// Returns the new distance from the top
     #[must_use]
     pub(crate) fn resize(
         &mut self,

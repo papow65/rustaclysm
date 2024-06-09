@@ -23,11 +23,11 @@ impl Plugin for BaseScreenPlugin {
         app.add_systems(
             Update,
             (
-                manage_mouse_input.before(/* process zooming input */ update_camera_offset),
+                manage_mouse_input.before(update_camera_offset),
                 (
                     manage_keyboard_input
                         .run_if(on_event::<KeyboardInput>())
-                        .before(/* process zooming input */ update_camera_offset),
+                        .before(update_camera_offset),
                     (
                         loop_behavior_and_refresh().run_if(in_state(FocusState::Normal)),
                         (

@@ -559,14 +559,14 @@ fn show_recipe(
         });
 }
 
-/*#[allow(clippy::needless_pass_by_value)]
-pub(super) fn manage_crafting_button_input(
-    mut instruction_queue: ResMut<InstructionQueue>,
-    interactions: Query<(&Interaction, &CraftingButton), (Changed<Interaction>, With<Button>)>,
-    crafting_screen: Res<CraftingScreen>,
-) {
-    // TODO
-}*/
+//#[allow(clippy::needless_pass_by_value)]
+//pub(super) fn manage_crafting_button_input(
+//    mut instruction_queue: ResMut<InstructionQueue>,
+//    interactions: Query<(&Interaction, &CraftingButton), (Changed<Interaction>, With<Button>)>,
+//    crafting_screen: Res<CraftingScreen>,
+//) {
+//    // TODO
+//}
 
 #[allow(clippy::needless_pass_by_value)]
 pub(super) fn remove_crafting_resource(mut commands: Commands) {

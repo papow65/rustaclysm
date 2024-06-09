@@ -4,19 +4,19 @@ use bevy::prelude::Color;
 
 pub(crate) const DEFAULT_TEXT_COLOR: Color = Color::rgb(0.85, 0.85, 0.85);
 
-/** For unimportant text */
+/// For unimportant text
 pub(crate) const SOFT_TEXT_COLOR: Color = Color::rgb(0.65, 0.65, 0.65);
 
-/** For playing the game */
+/// For playing the game
 pub(crate) const GOOD_TEXT_COLOR: Color = Color::rgb(0.15, 0.8, 0.15);
 
-/** For aggression and failed user actions */
+/// For aggression and failed user actions
 pub(crate) const WARN_TEXT_COLOR: Color = Color::rgb(0.8, 0.8, 0.15);
 
-/** For erros and for quitting */
+/// For erros and for quitting
 pub(crate) const BAD_TEXT_COLOR: Color = Color::rgb(1.0, 0.31, 0.31);
 
-/** For zombies and stuff they touched */
+/// For zombies and stuff they touched
 pub(crate) const FILTHY_COLOR: Color = Color::rgb(0.73, 0.4, 1.0);
 
 // Button colors

@@ -3,7 +3,7 @@ use bevy::{prelude::Resource, utils::HashMap};
 
 use super::overmap_buffer_manager::OvermapBufferManager;
 
-/** Ever seen by the player character */
+/// Ever seen by the player character
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub(crate) enum SeenFrom {
     FarAway,

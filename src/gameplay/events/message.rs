@@ -25,7 +25,7 @@ impl Severity {
     }
 }
 
-/** Message shown to the player */
+/// Message shown to the player
 #[derive(Clone, Debug, PartialEq, Eq, Event)]
 pub(crate) struct Message {
     pub(crate) phrase: Phrase,

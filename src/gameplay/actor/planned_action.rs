@@ -36,12 +36,12 @@ pub(crate) enum PlannedAction {
     Pickup {
         item: Entity,
     },
-    /** Redundantly named to avoid confusion */
+    /// Redundantly named to avoid confusion
     MoveItem {
         item: Entity,
         to: Nbor,
     },
-    /** Redundantly named to avoid confusion */
+    /// Redundantly named to avoid confusion
     ExamineItem {
         item: Entity,
     },

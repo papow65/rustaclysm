@@ -5,9 +5,8 @@ use std::fmt;
 #[derive(Debug, Component)]
 pub(crate) struct Player;
 
-/** Current action of the player character
-
-Conceptually, this is a child state of [`GameplayScreenState::Base`]. */
+/// Current action of the player character
+/// Conceptually, this is a child state of [`GameplayScreenState::Base`].
 #[derive(Clone, Debug, Default, PartialEq, Eq, Hash, States)]
 pub(crate) enum PlayerActionState {
     #[default]
@@ -219,7 +218,7 @@ impl PlayerActionState {
         }
     }
 
-    /** For plans that not depend on self */
+    /// For plans that not depend on self
     #[allow(clippy::needless_pass_by_value)]
     fn generic_plan(
         &self,

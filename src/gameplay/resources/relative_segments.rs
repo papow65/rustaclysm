@@ -86,7 +86,7 @@ pub(crate) struct RelativeSegments {
 impl RelativeSegments {
     const SIZE: usize = MAX_VISIBLE_DISTANCE as usize + 1;
 
-    /** This might take a couple of seconds */
+    /// This might take a couple of seconds
     fn new() -> Self {
         let start = Instant::now();
 

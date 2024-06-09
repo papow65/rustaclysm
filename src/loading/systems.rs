@@ -40,7 +40,7 @@ pub(crate) fn spawn_loading(mut commands: Commands, fonts: Res<Fonts>) {
         });
 }
 
-/** We start loading after the frame that spawns the loading indicator, to ensure the loading indicator is visible to the user. */
+/// We start loading after the frame that spawns the loading indicator, to ensure the loading indicator is visible to the user.
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn start_gameplay(
     application_state: Res<State<ApplicationState>>,

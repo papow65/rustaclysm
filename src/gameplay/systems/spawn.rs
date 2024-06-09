@@ -57,7 +57,7 @@ fn zones_in_sight_distance(focus_pos: Pos) -> Region {
     Region::from(&ZoneRegion::new(from.x..=to.x, from.z..=to.z))
 }
 
-/** Upper limit for expanding subzones */
+/// Upper limit for expanding subzones
 fn maximal_expanded_zones(player_zone: Zone) -> Region {
     let x_from = player_zone.x - MAX_EXPAND_DISTANCE;
     let x_to = player_zone.x + MAX_EXPAND_DISTANCE;
@@ -67,7 +67,7 @@ fn maximal_expanded_zones(player_zone: Zone) -> Region {
     Region::from(&ZoneRegion::new(x_from..=x_to, z_from..=z_to))
 }
 
-/** Region of expanded zones */
+/// Region of expanded zones
 fn expanded_region(focus: &Focus, camera: &Camera, global_transform: &GlobalTransform) -> Region {
     let minimal_expanded_zones = zones_in_sight_distance(Pos::from(focus));
     let maximal_expanded_zones = maximal_expanded_zones(Zone::from(Pos::from(focus)));
@@ -75,7 +75,7 @@ fn expanded_region(focus: &Focus, camera: &Camera, global_transform: &GlobalTran
     visible_region(camera, global_transform).clamp(&minimal_expanded_zones, &maximal_expanded_zones)
 }
 
-/** Region visible on the camera */
+/// Region visible on the camera
 fn visible_region(camera: &Camera, global_transform: &GlobalTransform) -> Region {
     let Some(Rect {
         min: corner_min,
@@ -173,8 +173,8 @@ pub(crate) fn spawn_subzone_levels(
     log_if_slow("spawn_subzone_levels", start);
 }
 
-/** This is an intentionally exclusive system to prevent an occasional panic.
-See <https://bevyengine.org/learn/errors/b0003/> */
+/// This is an intentionally exclusive system to prevent an occasional panic.
+/// See <https://bevyengine.org/learn/errors/b0003/>
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn despawn_subzone_levels(
     world: &mut World,
@@ -229,11 +229,11 @@ pub(crate) fn update_zone_levels(
         *previous_visible_region = Region::default();
     }
 
-    /*println!(
-        "update_zone_levels {:?} {:?}",
-        new_subzone_levels.iter().collect::<Vec<_>>().len(),
-        new_subzone_levels.is_empty()
-    );*/
+    //println!(
+    //    "update_zone_levels {:?} {:?}",
+    //    new_subzone_levels.iter().collect::<Vec<_>>().len(),
+    //    new_subzone_levels.is_empty()
+    //);
 
     let (camera, &global_transform) = cameras.single();
     if global_transform == *previous_camera_global_transform && new_subzone_levels.is_empty() {

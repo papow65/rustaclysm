@@ -14,7 +14,7 @@ pub(crate) use {container_limits::*, object_name::*, pos::*};
 #[derive(PartialEq, Debug, Component)]
 pub(crate) struct Filthy;
 
-/** Terrain that can be accessed, like a floor */
+/// Terrain that can be accessed, like a floor
 #[derive(Component)]
 pub(crate) struct Accessible {
     pub(crate) water: bool,
@@ -27,7 +27,7 @@ pub(crate) struct StairsUp;
 #[derive(Component)]
 pub(crate) struct StairsDown;
 
-/** Not accessible for any movement */
+/// Not accessible for any movement
 #[derive(Component)]
 pub(crate) struct Obstacle;
 
@@ -40,11 +40,11 @@ pub(crate) struct Closeable;
 #[derive(Component)]
 pub(crate) struct Hurdle(pub(crate) MoveCostIncrease);
 
-/** Blocks vision (horizontally) */
+/// Blocks vision (horizontally)
 #[derive(Component)]
 pub(crate) struct Opaque;
 
-/** Blocks vision to and from the level below */
+/// Blocks vision to and from the level below
 #[derive(Component)]
 pub(crate) struct OpaqueFloor;
 

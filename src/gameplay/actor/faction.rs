@@ -28,7 +28,7 @@ pub(crate) enum Intent {
 }
 
 impl Intent {
-    /** in order of consideration */
+    /// in order of consideration
     const ALL: [Self; 4] = [Self::Attack, Self::Flee, Self::Wander, Self::Wait];
 }
 

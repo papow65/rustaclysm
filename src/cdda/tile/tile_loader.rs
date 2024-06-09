@@ -261,9 +261,9 @@ impl TileLoader {
                     .expect("Tile should be found")
             })
             .sprite_numbers();
-        /*if tile_name.0.as_str() != "t_dirt" && !tile_name.0.starts_with("t_grass") {
-            println!("{tile_name:?} {foreground:?} {background:?}");
-        }*/
+        //if tile_name.0.as_str() != "t_dirt" && !tile_name.0.starts_with("t_grass") {
+        //    println!("{tile_name:?} {foreground:?} {background:?}");
+        //}
 
         let foreground_model = self.to_model(foreground, definition, SpriteLayer::Front);
         let background_model = self.to_model(background, definition, SpriteLayer::Back);

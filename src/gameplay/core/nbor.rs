@@ -14,7 +14,7 @@ pub(crate) enum HorizontalDirection {
 }
 
 impl HorizontalDirection {
-    /** (x: \[-1, 0, or 1\], z: \[-1, 0, or 1\]) */
+    /// (x: \[-1, 0, or 1\], z: \[-1, 0, or 1\])
     pub(crate) const fn offset(&self) -> (i32, i32) {
         (
             match self {

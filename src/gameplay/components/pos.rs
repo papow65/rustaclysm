@@ -5,7 +5,7 @@ use crate::{
 use bevy::prelude::{Component, Vec3};
 use std::{cmp::Ordering, fmt, iter::once, ops::Sub};
 
-/** Does not include 'from', but does include 'to' */
+/// Does not include 'from', but does include 'to'
 fn straight_2d(from: (i32, i32), to: (i32, i32)) -> impl Iterator<Item = (i32, i32)> {
     bresenham::Bresenham::new(
         (from.0 as isize, from.1 as isize),
@@ -191,7 +191,7 @@ impl Pos {
         (self - Self::ORIGIN).vec3()
     }
 
-    /** Doe not include 'self', but includes 'to' */
+    /// Doe not include 'self', but includes 'to'
     pub(crate) fn straight(self, to: Self) -> impl Iterator<Item = Self> {
         assert_ne!(self, to, "The begin and end should be different positions");
 
@@ -209,7 +209,7 @@ impl Pos {
             .map(|(((x, _), (y, _)), (z, _))| Self::new(x, Level::new(y as i8), z))
     }
 
-    /** Without regard of obstacles */
+    /// Without regard of obstacles
     pub(crate) fn vision_distance(self, other: Self) -> usize {
         ((Millimeter::ADJACENT.0.pow(2) * u64::from(self.x.abs_diff(other.x)).pow(2)
             + Millimeter::VERTICAL.0.pow(2)
@@ -250,12 +250,12 @@ pub(crate) struct SubzoneLevel {
 impl SubzoneLevel {
     pub(crate) const SIZE: i32 = 12;
 
-    /** CDDA index in map */
+    /// CDDA index in map
     pub(crate) const fn index(&self) -> usize {
         2 * (self.x as usize % 2) + (self.z as usize % 2)
     }
 
-    /** CDDA coordinates */
+    /// CDDA coordinates
     pub(crate) const fn coordinates(&self) -> (i32, i32, i8) {
         (self.x, self.z, self.level.h)
     }

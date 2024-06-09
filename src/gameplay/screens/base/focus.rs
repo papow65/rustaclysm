@@ -92,7 +92,7 @@ impl<'w, 's> From<&Focus<'w, 's>> for ZoneLevel {
     }
 }
 
-/** Conceptually, this is a child state of `GameplayScreenState::Base` */
+/// Conceptually, this is a child state of `GameplayScreenState::Base`
 #[derive(Clone, Copy, Default, Debug, PartialEq, Eq, Hash, States)]
 pub(crate) enum FocusState {
     #[default]

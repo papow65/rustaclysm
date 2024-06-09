@@ -14,7 +14,7 @@ impl OvermapPath {
     }
 }
 
-/** Corresponds to an 'overmap' in CDDA. It defines the layout of 180x180 `Zone`s. */
+/// Corresponds to an 'overmap' in CDDA. It defines the layout of 180x180 `Zone`s.
 #[derive(Debug, Deserialize, Asset, TypePath)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct Overmap {
@@ -123,7 +123,7 @@ impl OvermapLevel {
     }
 }
 
-/** Offset of the subzone from the overmap */
+/// Offset of the subzone from the overmap
 #[derive(Debug, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct SubzoneOffset(pub(crate) u16, pub(crate) u16, pub(crate) i8);

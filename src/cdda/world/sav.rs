@@ -48,16 +48,16 @@ pub(crate) struct Sav {
     #[allow(unused)]
     pub(crate) kill_tracker: serde_json::Value,
 
-    /** Overmap x */
+    /// Overmap x
     pub(crate) om_x: i16,
-    /** Overmap y -> z */
+    /// Overmap y -> z
     pub(crate) om_y: i16,
 
-    /** Subzone coordinate x, 0 <= levx < 360 */
+    /// Subzone coordinate x, 0 <= levx < 360
     pub(crate) levx: u16,
-    /** Subzone coordinate y -> z, 0 <= levy < 360 */
+    /// Subzone coordinate y -> z, 0 <= levy < 360
     pub(crate) levy: u16,
-    /** Level */
+    /// Level
     pub(crate) levz: i8,
 
     #[allow(unused)]

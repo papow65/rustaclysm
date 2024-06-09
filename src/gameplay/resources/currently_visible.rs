@@ -30,7 +30,7 @@ impl<'w, 's> CurrentlyVisibleBuilder<'w, 's> {
     fn build(&self, state: Option<&PlayerActionState>, from: Pos) -> CurrentlyVisible {
         let viewing_distance = CurrentlyVisible::viewing_distance(
             &self.clock,
-            state, /* not self...*/
+            state, // not self...
             from.level,
         );
 
@@ -87,7 +87,7 @@ pub(crate) struct CurrentlyVisible<'a> {
     envir: &'a Envir<'a, 'a>,
     segments: &'a HashMap<PosOffset, RelativeSegment>,
 
-    /** Rounded up in calculations - None when not even 'from' is visible */
+    /// Rounded up in calculations - None when not even 'from' is visible
     viewing_distance: Option<usize>,
     from: Pos,
     opaque_cache: RefCell<HashMap<PosOffset, bool>>, // is opaque

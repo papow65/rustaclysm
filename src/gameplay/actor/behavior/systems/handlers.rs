@@ -257,7 +257,7 @@ pub(in super::super) fn update_explored(moved_players: Query<(), (With<Player>, 
     log_if_slow("update_corpses", start);
 }
 
-/** For terrain and furniture */
+/// For terrain and furniture
 #[allow(clippy::needless_pass_by_value)]
 pub(in super::super) fn update_damaged_terrain(
     mut commands: Commands,
@@ -316,7 +316,7 @@ pub(in super::super) fn update_damaged_terrain(
 }
 
 // Separate from 'update_damaged_terrain' to prevent a conflict with 'Location'.
-/** For terrain and furniture */
+/// For terrain and furniture
 #[allow(clippy::needless_pass_by_value)]
 pub(in super::super) fn spawn_broken_terrain(
     In(broken): In<Vec<(Entity, Pos, ObjectDefinition)>>,
@@ -365,12 +365,12 @@ pub(in super::super) fn combine_items(
             if 1 < merges.len() {
                 let keep = *merges.iter().max().expect("'merges' should not be empty");
 
-                /*println!(
-                 *                    "Combined {} with {} others to {}",
-                 *                    Phrase::from_fragments(moved_name.as_item(moved_amount, moved_filthy)),
-                 *                    merges.len() - 1,
-                 *                    Phrase::from_fragments(moved_name.as_item(Some(&total_amount), moved_filthy)),
-                 *                );*/
+                //println!(
+                //    "Combined {} with {} others to {}",
+                //    Phrase::from_fragments(moved_name.as_item(moved_amount, moved_filthy)),
+                //    merges.len() - 1,
+                //    Phrase::from_fragments(moved_name.as_item(Some(&total_amount), moved_filthy)),
+                //);
 
                 commands.entity(keep).insert(total_amount);
 

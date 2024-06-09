@@ -54,19 +54,17 @@ impl Transform2d {
     ) -> Vec3 {
         match orientation {
             SpriteOrientation::Horizontal => Vec3::new(
-                /*right*/ self.offset.x,
-                /*up*/
-                vertical_offset,
-                /*front*/ -self.offset.y,
+                self.offset.x,   // right
+                vertical_offset, // up
+                -self.offset.y,
             ),
             SpriteOrientation::Vertical => Vec3::new(
-                /*right*/ self.offset.x,
-                /*up*/ vertical_offset,
-                /*front*/
+                self.offset.x,   // right
+                vertical_offset, // up
                 match layer {
                     SpriteLayer::Front => 0.41,
                     SpriteLayer::Back => 0.4,
-                },
+                }, // front
             ),
         }
     }
@@ -74,10 +72,18 @@ impl Transform2d {
     const fn to_scale(&self, orientation: SpriteOrientation) -> Vec3 {
         match orientation {
             SpriteOrientation::Horizontal => {
-                Vec3::new(self.scale.x, /*thickness*/ 1.0, self.scale.y)
+                Vec3::new(
+                    self.scale.x,
+                    1.0, // thickness
+                    self.scale.y,
+                )
             }
             SpriteOrientation::Vertical => {
-                Vec3::new(self.scale.x, self.scale.y, /*thickness*/ 1.0)
+                Vec3::new(
+                    self.scale.x,
+                    self.scale.y,
+                    1.0, // thickness
+                )
             }
         }
     }
@@ -135,7 +141,7 @@ impl ModelShape {
     }
 }
 
-/** Everything to make a `PbrBundle` */
+/// Everything to make a `PbrBundle`
 #[derive(Debug)]
 pub(crate) struct Model {
     pub(crate) shape: ModelShape,

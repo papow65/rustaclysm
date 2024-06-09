@@ -43,7 +43,7 @@ pub(crate) fn loop_behavior_and_refresh() -> impl IntoSystemConfigs<()> {
         .chain()
 }
 
-/** This repeatedly runs [`BehaviorSchedule`], until the time runs out or player input is required. */
+/// This repeatedly runs [`BehaviorSchedule`], until the time runs out or player input is required.
 fn loop_behavior(world: &mut World) {
     let start = Instant::now();
 
@@ -81,7 +81,7 @@ fn loop_behavior(world: &mut World) {
     log_if_slow("run_behavior_schedule", start);
 }
 
-/** All NPC mave a timeout and the player has an empty instruction queue */
+/// All NPC mave a timeout and the player has an empty instruction queue
 fn waiting_for_user_input(world: &mut World) -> bool {
     let mut system_state = SystemState::<(Res<InstructionQueue>,)>::new(world);
     let (instruction_queue,) = system_state.get(world);

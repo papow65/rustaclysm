@@ -72,7 +72,7 @@ pub(crate) enum Interruption {
     Finished,
 }
 
-/** All instructions related to player character actions */
+/// All instructions related to player character actions
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) enum QueuedInstruction {
     Offset(PlayerDirection),
@@ -92,7 +92,7 @@ pub(crate) enum QueuedInstruction {
     ChangePace,
     ExamineItem(Entity),
     CancelAction,
-    /** Set automatically */
+    /// Set automatically
     Interrupt(Interruption),
 }
 

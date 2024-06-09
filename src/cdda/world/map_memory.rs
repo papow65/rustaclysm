@@ -24,7 +24,7 @@ impl MapMemoryPath {
     }
 }
 
-/** A player's memory of terrain on 8x8 suzones or 4x4 zones. Corresponds to a map memory ('.mmr') file in CDDA. */
+/// A player's memory of terrain on 8x8 suzones or 4x4 zones. Corresponds to a map memory ('.mmr') file in CDDA.
 #[derive(Debug, serde::Deserialize, Asset, TypePath)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct MapMemory(pub(crate) Vec<SubmapMemory>);
