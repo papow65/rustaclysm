@@ -18,9 +18,7 @@ pub(super) struct RecipeSituation {
 
 impl RecipeSituation {
     pub(super) fn color(&self, selected: bool) -> Color {
-        if self.qualities.iter().all(QualitySituation::is_present)
-            && self.components.iter().all(ComponentSituation::is_present)
-        {
+        if self.craftable() {
             if selected {
                 GOOD_TEXT_COLOR
             } else {
@@ -31,6 +29,11 @@ impl RecipeSituation {
         } else {
             SOFT_TEXT_COLOR
         }
+    }
+
+    pub(super) fn craftable(&self) -> bool {
+        self.qualities.iter().all(QualitySituation::is_present)
+            && self.components.iter().all(ComponentSituation::is_present)
     }
 
     pub(super) fn text_sections(&self, fonts: &Fonts, recipe: &Recipe) -> Vec<TextSection> {

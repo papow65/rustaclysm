@@ -302,7 +302,13 @@ fn shown_recipes(
         })
         .collect::<Vec<_>>();
 
-    shown_recipes.sort_by_key(|recipe| (recipe.name.clone(), recipe.recipe_id.fallback_name()));
+    shown_recipes.sort_by_key(|recipe| {
+        (
+            !recipe.craftable(),
+            recipe.name.clone(),
+            recipe.recipe_id.fallback_name(),
+        )
+    });
     shown_recipes
 }
 
@@ -406,30 +412,34 @@ fn recipe_components(
     required
         .iter()
         .map(|component| ComponentSituation {
-            alternatives: component
-                .iter()
-                .flat_map(|alternative| expand_items(infos, alternative))
-                .filter_map(|(item_id, required)| {
-                    infos
-                        .try_item(item_id)
-                        .ok_or(())
-                        .inspect_err(|()| {
-                            eprintln!("Item {item_id:?} not found (maybe comestible?)");
-                        })
-                        .ok()
-                        .map(|item| (item_id, item, required))
-                })
-                .map(|(item_id, item, required)| AlternativeSituation {
-                    id: item_id.clone(),
-                    name: item.name.amount(required).clone(),
-                    required,
-                    present: present
-                        .iter()
-                        .filter(|(definition, _)| definition.id == *item_id)
-                        .map(|(_, amount)| amount.0)
-                        .sum(),
-                })
-                .collect::<Vec<_>>(),
+            alternatives: {
+                let mut alternatives = component
+                    .iter()
+                    .flat_map(|alternative| expand_items(infos, alternative))
+                    .filter_map(|(item_id, required)| {
+                        infos
+                            .try_item(item_id)
+                            .ok_or(())
+                            .inspect_err(|()| {
+                                eprintln!("Item {item_id:?} not found (maybe comestible?)");
+                            })
+                            .ok()
+                            .map(|item| (item_id, item, required))
+                    })
+                    .map(|(item_id, item, required)| AlternativeSituation {
+                        id: item_id.clone(),
+                        name: item.name.amount(required).clone(),
+                        required,
+                        present: present
+                            .iter()
+                            .filter(|(definition, _)| definition.id == *item_id)
+                            .map(|(_, amount)| amount.0)
+                            .sum(),
+                    })
+                    .collect::<Vec<_>>();
+                alternatives.sort_by_key(|alternative| !alternative.is_present());
+                alternatives
+            },
         })
         .collect::<Vec<_>>()
 }
