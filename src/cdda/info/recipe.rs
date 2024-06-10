@@ -1,4 +1,4 @@
-use crate::prelude::ObjectId;
+use crate::prelude::{Infos, ObjectId};
 use bevy::utils::HashMap;
 use serde::Deserialize;
 
@@ -24,6 +24,9 @@ pub(crate) struct Recipe {
 
     #[serde(default)]
     pub(crate) components: Vec<Vec<Alternative>>,
+
+    #[serde(default)]
+    pub(crate) using: Vec<Using>,
 
     #[allow(unused)]
     #[serde(flatten)]
@@ -103,7 +106,7 @@ pub(crate) struct RequiredQuality {
     pub(crate) level: u8,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 #[serde(from = "CddaAlternative")]
 pub(crate) enum Alternative {
     Item { item: ObjectId, required: u32 },
@@ -126,6 +129,76 @@ impl From<CddaAlternative> for Alternative {
 #[serde(untagged)]
 pub(crate) enum CddaAlternative {
     Item(ObjectId, u32),
+    List(ObjectId, u32, #[allow(unused)] String),
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(from = "CddaUsing")]
+pub(crate) struct Using {
+    pub(crate) requirement: ObjectId,
+    pub(crate) factor: u32,
+    pub(crate) kind: UsingKind,
+}
+
+impl Using {
+    pub(crate) fn to_components(&self, infos: &Infos) -> Vec<Vec<Alternative>> {
+        if self.kind == UsingKind::Components {
+            infos
+                .requirement(&self.requirement)
+                .components
+                .clone()
+                .into_iter()
+                .map(|component| {
+                    component
+                        .into_iter()
+                        .map(|mut alternative| {
+                            *match alternative {
+                                Alternative::Item {
+                                    ref mut required, ..
+                                } => required,
+                                Alternative::Requirement { ref mut factor, .. } => factor,
+                            } *= self.factor;
+                            alternative
+                        })
+                        .collect()
+                })
+                .collect()
+        } else {
+            vec![vec![Alternative::Requirement {
+                requirement: self.requirement.clone(),
+                factor: self.factor,
+            }]]
+        }
+    }
+}
+
+impl From<CddaUsing> for Using {
+    fn from(source: CddaUsing) -> Self {
+        match source {
+            CddaUsing::NonList(requirement, factor) => Self {
+                requirement,
+                factor,
+                kind: UsingKind::Components,
+            },
+            CddaUsing::List(requirement, factor, _) => Self {
+                requirement,
+                factor,
+                kind: UsingKind::Alternatives,
+            },
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Deserialize)]
+pub(crate) enum UsingKind {
+    Components,
+    Alternatives,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(untagged)]
+pub(crate) enum CddaUsing {
+    NonList(ObjectId, u32),
     List(ObjectId, u32, #[allow(unused)] String),
 }
 

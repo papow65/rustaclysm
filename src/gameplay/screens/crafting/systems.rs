@@ -296,8 +296,18 @@ fn shown_recipes(
                     name: uppercase_first(&item.name.single),
                     autolearn,
                     manuals: recipe_manuals,
-                    qualities: recipe_qualities(infos, &recipe.qualities.0, nearby_qualities),
-                    components: recipe_components(infos, &recipe.components, nearby_items),
+                    qualities: recipe_qualities(
+                        infos,
+                        &recipe.qualities.0,
+                        &recipe.using,
+                        nearby_qualities,
+                    ),
+                    components: recipe_components(
+                        infos,
+                        &recipe.components,
+                        &recipe.using,
+                        nearby_items,
+                    ),
                 })
         })
         .collect::<Vec<_>>();
@@ -389,10 +399,17 @@ fn nearby_qualities<'a>(
 fn recipe_qualities(
     infos: &Infos,
     required: &[RequiredQuality],
+    using: &[Using],
     present: &HashMap<&ObjectId, i8>,
 ) -> Vec<QualitySituation> {
     let mut qualities = required
         .iter()
+        .chain(
+            using
+                .iter()
+                .inspect(|using| println!("Using qualities from {using:?}"))
+                .flat_map(|using| &infos.requirement(&using.requirement).qualities.0),
+        )
         .map(|required_quality| QualitySituation {
             name: uppercase_first(infos.quality(&required_quality.id).name.single.as_str()),
             present: present.get(&required_quality.id).copied(),
@@ -407,10 +424,17 @@ fn recipe_qualities(
 fn recipe_components(
     infos: &Infos,
     required: &[Vec<Alternative>],
+    using: &[Using],
     present: &[(&ObjectDefinition, &Amount)],
 ) -> Vec<ComponentSituation> {
+    let using = using
+        .iter()
+        .flat_map(|using| using.to_components(infos))
+        .collect::<Vec<_>>();
+
     required
         .iter()
+        .chain(using.iter())
         .map(|component| ComponentSituation {
             alternatives: {
                 let mut alternatives = component
@@ -451,7 +475,14 @@ fn expand_items<'a>(infos: &'a Infos, alternative: &'a Alternative) -> Vec<(&'a 
             requirement,
             factor,
         } => {
-            let requirement = infos.requirement(requirement);
+            let Some(requirement) = infos.try_requirement(requirement) else {
+                assert!(
+                    infos.try_item(requirement).is_some(),
+                    "Unkonwn requirement {:?} should be an items",
+                    &requirement
+                );
+                return vec![(requirement, *factor)];
+            };
             if requirement.components.len() != 1 {
                 eprintln!(
                     "Unexpected structure for {requirement:?}: {:?}",
