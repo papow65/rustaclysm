@@ -1,11 +1,11 @@
 use crate::prelude::{
-    ApplicationState, Fonts, GameplayScreenState, Key, Keys, StateBound, BAD_TEXT_COLOR,
-    PANEL_COLOR, SMALL_SPACING, WARN_TEXT_COLOR,
+    ApplicationState, Fonts, GameplayScreenState, Key, Keys, BAD_TEXT_COLOR, PANEL_COLOR,
+    SMALL_SPACING, WARN_TEXT_COLOR,
 };
 use bevy::prelude::{
     AlignItems, BuildChildren, Button, ButtonBundle, Changed, Commands, FlexDirection, Interaction,
-    JustifyContent, KeyCode, NextState, NodeBundle, Query, Res, ResMut, Style, TextBundle, UiRect,
-    Val, With,
+    JustifyContent, KeyCode, NextState, NodeBundle, Query, Res, ResMut, StateScoped, Style,
+    TextBundle, UiRect, Val, With,
 };
 
 #[allow(clippy::needless_pass_by_value)]
@@ -23,7 +23,7 @@ pub(super) fn spawn_death_screen(mut commands: Commands, fonts: Res<Fonts>) {
                 },
                 ..NodeBundle::default()
             },
-            StateBound::<GameplayScreenState>::default(),
+            StateScoped(GameplayScreenState::Death),
         ))
         .with_children(|parent| {
             parent

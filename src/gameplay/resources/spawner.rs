@@ -515,7 +515,7 @@ impl<'w, 's> Spawner<'w, 's> {
                 transform: light_transform,
                 ..DirectionalLightBundle::default()
             },
-            StateBound::<ApplicationState>::default(),
+            StateScoped(ApplicationState::Gameplay),
         ));
     }
 
@@ -523,7 +523,7 @@ impl<'w, 's> Spawner<'w, 's> {
         let root = self
             .commands
             .spawn(SpatialBundle::default())
-            .insert(StateBound::<ApplicationState>::default())
+            .insert(StateScoped(ApplicationState::Gameplay))
             .id();
 
         let player = self
@@ -696,7 +696,7 @@ impl<'w, 's> SubzoneSpawner<'w, 's> {
             .spawn((
                 SpatialBundle::default(),
                 subzone_level,
-                StateBound::<ApplicationState>::default(),
+                StateScoped(ApplicationState::Gameplay),
             ))
             .id();
 
@@ -860,7 +860,7 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
                 },
                 name,
                 seen_from,
-                StateBound::<ApplicationState>::default(),
+                StateScoped(ApplicationState::Gameplay),
             ))
             .with_children(|child_builder| {
                 child_builder.spawn(pbr_bundles.base);

@@ -33,7 +33,7 @@ pub(super) fn spawn_inventory(mut commands: Commands, fonts: Res<Fonts>) {
                 },
                 ..default()
             },
-            StateBound::<GameplayScreenState>::default(),
+            StateScoped(GameplayScreenState::Inventory),
         ))
         .with_children(|builder| {
             builder

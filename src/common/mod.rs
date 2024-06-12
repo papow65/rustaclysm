@@ -7,7 +7,6 @@ mod scrolling_list;
 mod selection_list;
 mod sizes;
 mod slow;
-mod state_bound;
 mod text;
 
 pub(crate) use self::{
@@ -23,6 +22,5 @@ pub(crate) use self::{
         REGULAR_FONT_SIZE, SMALL_SPACING,
     },
     slow::*,
-    state_bound::{despawn, StateBound},
     text::uppercase_first,
 };

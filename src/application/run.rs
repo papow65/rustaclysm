@@ -47,6 +47,8 @@ pub(crate) fn run_application() {
         LoadingIndicatorPlugin,
     ));
 
+    app.enable_state_scoped_entities::<ApplicationState>();
+
     app.add_systems(Startup, (maximize_window, load_fonts));
     app.add_systems(PreUpdate, preprocess_keyboard_input.after(InputSystem));
     app.add_systems(

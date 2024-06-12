@@ -48,7 +48,7 @@ pub(super) fn spawn_crafting_screen(mut commands: Commands) {
                 },
                 ..default()
             },
-            StateBound::<GameplayScreenState>::default(),
+            StateScoped(GameplayScreenState::Crafting),
         ))
         .with_children(|builder| {
             builder

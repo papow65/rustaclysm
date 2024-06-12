@@ -1,5 +1,14 @@
-use crate::prelude::*;
-use bevy::{prelude::*, window::WindowResized};
+use crate::prelude::{
+    manage_main_menu_button_input, resize_background, spawn_main_menu, update_sav_files,
+    ApplicationState,
+};
+use bevy::{
+    prelude::{
+        in_state, on_event, App, AppExtStates, FixedUpdate, IntoSystemConfigs, OnEnter, Plugin,
+        Update,
+    },
+    window::WindowResized,
+};
 
 pub(crate) struct MainMenuPlugin;
 
@@ -24,11 +33,6 @@ impl Plugin for MainMenuPlugin {
         app.add_systems(
             FixedUpdate,
             (update_sav_files, resize_background).run_if(in_state(ApplicationState::MainMenu)),
-        );
-
-        app.add_systems(
-            OnExit(ApplicationState::MainMenu),
-            despawn::<ApplicationState>,
         );
     }
 }

@@ -36,7 +36,7 @@ pub(super) fn spawn_sidebar(
     background.style.right = Val::Px(0.0);
     background.style.width = Val::Px(TEXT_WIDTH + 10.0); // 5px margin on both sides
     background.style.height = Val::Percent(100.0);
-    let mut parent = commands.spawn((background, StateBound::<ApplicationState>::default()));
+    let mut parent = commands.spawn((background, StateScoped(ApplicationState::Gameplay)));
     spawn_status_display(&mut parent);
     spawn_log_display(&mut parent);
 }

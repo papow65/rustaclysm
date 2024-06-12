@@ -1,8 +1,8 @@
 use super::{components::ManualDisplay, resources::HudDefaults};
-use crate::prelude::{ApplicationState, GameplayScreenState, StateBound};
+use crate::prelude::{ApplicationState, GameplayScreenState};
 use bevy::prelude::{
     default, Alpha, BackgroundColor, BuildChildren, Children, Commands, NodeBundle, Query, Res,
-    State, Text, TextBundle, TextSection, Val, With, ZIndex,
+    State, StateScoped, Text, TextBundle, TextSection, Val, With, ZIndex,
 };
 
 static BASE_MANUAL_CONTENTS: &str = "\
@@ -79,7 +79,7 @@ pub(super) fn spawn_manual(mut commands: Commands, hud_defaults: Res<HudDefaults
                 ..background
             },
             ManualDisplay,
-            StateBound::<ApplicationState>::default(),
+            StateScoped(ApplicationState::Gameplay),
         ))
         .with_children(|parent| {
             parent.spawn(TextBundle {

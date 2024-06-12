@@ -16,7 +16,7 @@ pub(crate) fn spawn_loading(mut commands: Commands, fonts: Res<Fonts>) {
                 },
                 ..default()
             },
-            StateBound::<ProgressScreenState>::default(),
+            StateScoped(ProgressScreenState::Loading),
         ))
         .with_children(|parent| {
             parent

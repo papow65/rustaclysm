@@ -2,7 +2,7 @@ use super::systems::{
     clear_crafting_screen, manage_crafting_keyboard_input, remove_crafting_resource,
     spawn_crafting_screen, update_crafting_screen,
 };
-use crate::prelude::{despawn, loop_behavior_and_refresh, GameplayScreenState};
+use crate::prelude::{loop_behavior_and_refresh, GameplayScreenState};
 use bevy::{
     input::keyboard::KeyboardInput,
     prelude::{
@@ -31,7 +31,7 @@ impl Plugin for CraftingScreenPlugin {
 
         app.add_systems(
             OnExit(GameplayScreenState::Crafting),
-            (despawn::<GameplayScreenState>, remove_crafting_resource),
+            remove_crafting_resource,
         );
     }
 }

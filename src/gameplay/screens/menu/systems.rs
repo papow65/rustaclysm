@@ -1,7 +1,7 @@
 use super::components::{MainMenuButton, ReturnButton};
 use crate::prelude::{
-    ApplicationState, Fonts, GameplayScreenState, Key, Keys, QuitButton, StateBound,
-    BAD_TEXT_COLOR, DEFAULT_TEXT_COLOR, GOOD_TEXT_COLOR, MEDIUM_SPACING,
+    ApplicationState, Fonts, GameplayScreenState, Key, Keys, QuitButton, BAD_TEXT_COLOR,
+    DEFAULT_TEXT_COLOR, GOOD_TEXT_COLOR, MEDIUM_SPACING,
 };
 use bevy::{app::AppExit, prelude::*};
 
@@ -32,7 +32,7 @@ pub(super) fn spawn_menu(mut commands: Commands, fonts: Res<Fonts>) {
                 },
                 ..default()
             },
-            StateBound::<GameplayScreenState>::default(),
+            StateScoped(GameplayScreenState::Menu),
         ))
         .with_children(|parent| {
             parent

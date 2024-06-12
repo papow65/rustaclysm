@@ -21,7 +21,7 @@ pub(crate) fn spawn_main_menu(
 ) {
     commands.spawn((
         Camera2dBundle::default(),
-        StateBound::<ApplicationState>::default(),
+        StateScoped(ApplicationState::MainMenu),
     ));
 
     let background_image = asset_server.load(Paths::backgrounds_path().join(BACKGROUND_NAME));
@@ -31,7 +31,7 @@ pub(crate) fn spawn_main_menu(
             ..Default::default()
         },
         Background,
-        StateBound::<ApplicationState>::default(),
+        StateScoped(ApplicationState::MainMenu),
     ));
 
     commands
@@ -47,7 +47,7 @@ pub(crate) fn spawn_main_menu(
                 },
                 ..default()
             },
-            StateBound::<ApplicationState>::default(),
+            StateScoped(ApplicationState::MainMenu),
         ))
         .with_children(|parent| {
             add_title(parent, &fonts);
