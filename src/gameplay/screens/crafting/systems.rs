@@ -527,48 +527,60 @@ pub(super) fn manage_crafting_keyboard_input(
                 println!("<- {key_change:?}");
                 next_gameplay_state.set(GameplayScreenState::Base);
             }
-            Key::Code(direction @ (KeyCode::ArrowUp | KeyCode::ArrowDown)) => {
-                if direction == KeyCode::ArrowUp {
-                    //println!("Up!");
-                    crafting_screen.select_up(&mut recipes);
-                } else {
-                    //println!("Down!");
-                    crafting_screen.select_down(&mut recipes);
-                }
-                if let Some(selected) = crafting_screen.selection_list.selected {
-                    let (_, recipe_transform, recipe_node, recipe_sitation) = recipes
-                        .get(selected)
-                        .expect("Selected recipe should be found");
-
-                    {
-                        let (mut scrolling_list, mut style, parent, list_node) =
-                            scrolling_lists.single_mut();
-                        let (parent_node, parent_style) = scrolling_parents
-                            .get(parent.get())
-                            .expect("Parent node should be found");
-                        style.top = scrolling_list.follow(
-                            recipe_transform,
-                            recipe_node,
-                            list_node,
-                            parent_node,
-                            parent_style,
-                        );
-                    }
-
-                    show_recipe(
-                        &mut commands,
-                        &infos,
-                        &fonts,
-                        &crafting_screen,
-                        recipe_sitation,
-                    );
-                }
+            Key::Code(
+                key_code @ (KeyCode::ArrowUp
+                | KeyCode::ArrowDown
+                | KeyCode::PageUp
+                | KeyCode::PageDown),
+            ) => {
+                crafting_screen.adjust_selection(&mut recipes, &key_code);
+                adapt_to_selected(
+                    &mut commands,
+                    &infos,
+                    &fonts,
+                    &crafting_screen,
+                    &recipes,
+                    &mut scrolling_lists,
+                    &scrolling_parents,
+                );
             }
             _ => {}
         }
     }
 
     log_if_slow("manage_crafting_keyboard_input", start);
+}
+
+fn adapt_to_selected(
+    commands: &mut Commands,
+    infos: &Res<Infos>,
+    fonts: &Res<Fonts>,
+    crafting_screen: &ResMut<CraftingScreen>,
+    recipes: &Query<(&mut Text, &Transform, &Node, &RecipeSituation), ()>,
+    scrolling_lists: &mut Query<(&mut ScrollingList, &mut Style, &Parent, &Node), ()>,
+    scrolling_parents: &Query<(&Node, &Style), Without<ScrollingList>>,
+) {
+    if let Some(selected) = crafting_screen.selection_list.selected {
+        let (_, recipe_transform, recipe_node, recipe_sitation) = recipes
+            .get(selected)
+            .expect("Selected recipe should be found");
+
+        {
+            let (mut scrolling_list, mut style, parent, list_node) = scrolling_lists.single_mut();
+            let (parent_node, parent_style) = scrolling_parents
+                .get(parent.get())
+                .expect("Parent node should be found");
+            style.top = scrolling_list.follow(
+                recipe_transform,
+                recipe_node,
+                list_node,
+                parent_node,
+                parent_style,
+            );
+        }
+
+        show_recipe(commands, infos, fonts, crafting_screen, recipe_sitation);
+    }
 }
 
 fn show_recipe(

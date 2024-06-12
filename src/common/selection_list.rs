@@ -1,9 +1,51 @@
 use bevy::{
     ecs::entity::EntityHashMap,
-    prelude::{Component, Entity},
+    prelude::{Component, Entity, KeyCode},
 };
 
-#[derive(Component, Default)]
+#[derive(Clone, Copy)]
+pub(crate) enum StepSize {
+    Single,
+    Many,
+}
+
+impl StepSize {
+    const fn amount(&self) -> usize {
+        if matches!(self, Self::Many) {
+            10
+        } else {
+            1
+        }
+    }
+}
+
+impl From<&KeyCode> for StepSize {
+    fn from(key: &KeyCode) -> Self {
+        match key {
+            KeyCode::ArrowUp | KeyCode::ArrowDown => Self::Single,
+            KeyCode::PageUp | KeyCode::PageDown => Self::Many,
+            _ => panic!("Unsupported conversion to StepSize for {key:?}"),
+        }
+    }
+}
+
+#[derive(Clone, Copy, PartialEq)]
+pub(crate) enum StepDirection {
+    Up,
+    Down,
+}
+
+impl From<&KeyCode> for StepDirection {
+    fn from(key: &KeyCode) -> Self {
+        match key {
+            KeyCode::ArrowUp | KeyCode::PageUp => Self::Up,
+            KeyCode::ArrowDown | KeyCode::PageDown => Self::Down,
+            _ => panic!("Unsupported conversion to StepDirection for {key:?}"),
+        }
+    }
+}
+
+#[derive(Default, Component)]
 pub(crate) struct SelectionList {
     pub(crate) selected: Option<Entity>,
     first: Option<Entity>,
@@ -46,16 +88,19 @@ impl SelectionList {
         }
     }
 
-    pub(crate) fn select_previous(&mut self) -> bool {
-        if let Some(selected) = self.selected {
-            self.selected = self.previous_items.get(&selected).copied();
-        }
-        self.selected.is_some()
-    }
-
-    pub(crate) fn select_next(&mut self) -> bool {
-        if let Some(selected) = self.selected {
-            self.selected = self.next_items.get(&selected).copied();
+    pub(crate) fn adjust(&mut self, size: StepSize, direction: StepDirection) -> bool {
+        for _ in 0..size.amount() {
+            if let Some(selected) = self.selected {
+                let sequence = if direction == StepDirection::Up {
+                    &self.previous_items
+                } else {
+                    &self.next_items
+                };
+                self.selected = sequence.get(&selected).copied();
+            }
+            if self.selected == self.first || self.selected == self.last {
+                break;
+            }
         }
         self.selected.is_some()
     }

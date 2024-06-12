@@ -1,5 +1,5 @@
 use crate::prelude::{HorizontalDirection, SelectionList, Timestamp};
-use bevy::prelude::{Entity, Resource, TextStyle};
+use bevy::prelude::{Entity, KeyCode, Resource, TextStyle};
 
 #[derive(Resource)]
 pub(super) struct InventoryScreen {
@@ -12,4 +12,12 @@ pub(super) struct InventoryScreen {
     pub(super) item_text_style: TextStyle,
     pub(super) selected_item_text_style: TextStyle,
     pub(super) last_time: Timestamp,
+}
+
+impl InventoryScreen {
+    pub(super) fn adjust_selection(&mut self, key_code: &KeyCode) {
+        if self.selection_list.adjust(key_code.into(), key_code.into()) {
+            self.last_time = Timestamp::ZERO;
+        }
+    }
 }

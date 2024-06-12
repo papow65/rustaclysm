@@ -1,6 +1,6 @@
 use super::components::RecipeSituation;
 use crate::prelude::{SelectionList, Timestamp};
-use bevy::prelude::{Entity, Node, Query, Resource, Text, Transform};
+use bevy::prelude::{Entity, KeyCode, Node, Query, Resource, Text, Transform};
 
 #[derive(Resource)]
 pub(super) struct CraftingScreen {
@@ -11,21 +11,13 @@ pub(super) struct CraftingScreen {
 }
 
 impl CraftingScreen {
-    pub(super) fn select_up(
+    pub(super) fn adjust_selection(
         &mut self,
         recipes: &mut Query<(&mut Text, &Transform, &Node, &RecipeSituation)>,
+        key_code: &KeyCode,
     ) {
         self.highlight_selected(recipes, false);
-        self.selection_list.select_previous();
-        self.highlight_selected(recipes, true);
-    }
-
-    pub(super) fn select_down(
-        &mut self,
-        recipes: &mut Query<(&mut Text, &Transform, &Node, &RecipeSituation)>,
-    ) {
-        self.highlight_selected(recipes, false);
-        self.selection_list.select_next();
+        self.selection_list.adjust(key_code.into(), key_code.into());
         self.highlight_selected(recipes, true);
     }
 

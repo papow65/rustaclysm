@@ -361,12 +361,13 @@ pub(super) fn manage_inventory_keyboard_input(
             ) => {
                 drop_at(&mut inventory, &key_change.key);
             }
-            Key::Code(KeyCode::ArrowUp) => {
-                select_up(&mut inventory);
-                follow_selected(&inventory, &items, &mut scrolling_lists, &scrolling_parents);
-            }
-            Key::Code(KeyCode::ArrowDown) => {
-                select_down(&mut inventory);
+            Key::Code(
+                key_code @ (KeyCode::ArrowUp
+                | KeyCode::ArrowDown
+                | KeyCode::PageUp
+                | KeyCode::PageDown),
+            ) => {
+                inventory.adjust_selection(&key_code);
                 follow_selected(&inventory, &items, &mut scrolling_lists, &scrolling_parents);
             }
             Key::Character(char @ ('d' | 't' | 'u' | 'w')) => {
@@ -391,18 +392,6 @@ fn drop_at(inventory: &mut InventoryScreen, key: &Key) {
             inventory.last_time = Timestamp::ZERO;
         }
         _ => panic!("Only horizontal dropping allowed"),
-    }
-}
-
-fn select_up(inventory: &mut InventoryScreen) {
-    if inventory.selection_list.select_previous() {
-        inventory.last_time = Timestamp::ZERO;
-    }
-}
-
-fn select_down(inventory: &mut InventoryScreen) {
-    if inventory.selection_list.select_next() {
-        inventory.last_time = Timestamp::ZERO;
     }
 }
 
@@ -440,7 +429,9 @@ fn handle_selected_item(
     char: char,
 ) {
     if let Some(selected_item) = inventory.selection_list.selected {
-        inventory.selection_list.select_next();
+        inventory
+            .selection_list
+            .adjust(StepSize::Single, StepDirection::Down);
         instruction_queue.add(
             match char {
                 'd' => QueuedInstruction::Dump(selected_item, inventory.drop_direction),
