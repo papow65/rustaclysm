@@ -8,7 +8,7 @@ repository = "https://github.com/papow65/rustaclysm"
 authors = [ "papow65 <papow65@protonmail.com>" ]
 exclude = [ "/screenshots/" ]
 edition = "2021"
-rust-version = "1.78" # should be latest stable
+rust-version = "1.79" # should be latest stable
 
 [dependencies]
 base64 = "0.22"
@@ -38,7 +38,9 @@ lto = "thin"
 panic = 'abort'
 
 [lints.rust]
-# Forbidden
+# Forbidden groups
+keyword_idents = { level = "forbid", priority = -1 }
+# Forbidden linsts
 absolute_paths_not_starting_with_crate = "forbid"
 ambiguous_associated_items = "forbid"
 anonymous_parameters = "forbid"
@@ -56,7 +58,6 @@ ill_formed_attribute_input = "forbid"
 indirect_structural_match = "forbid"
 invalid_doc_attributes = "forbid"
 invalid_type_param_default = "forbid"
-keyword_idents = "forbid"
 late_bound_lifetime_arguments = "forbid"
 legacy_derive_helpers = "forbid"
 macro_expanded_macro_exports_accessed_by_absolute_paths = "forbid"
