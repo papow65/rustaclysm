@@ -59,10 +59,6 @@ impl ActorItem<'_> {
         )
     }
 
-    const fn no_impact(&self) -> Impact {
-        Impact::none(self.entity)
-    }
-
     const fn standard_impact(&self, timeout: Milliseconds) -> Impact {
         Impact::new(
             self.entity,
@@ -93,7 +89,7 @@ impl ActorItem<'_> {
         toggle_writer: &mut EventWriter<TerrainEvent<Toggle>>,
         envir: &mut Envir,
         step: &Step,
-    ) -> Impact {
+    ) -> Option<Impact> {
         let from = *self.pos;
         let to = envir.get_nbor(from, step.to).expect("Valid pos");
 
@@ -101,7 +97,7 @@ impl ActorItem<'_> {
             Collision::Pass => {
                 commands.entity(self.entity).insert(to);
                 envir.location.update(self.entity, Some(to));
-                self.standard_impact(envir.walking_cost(from, to).duration(self.speed()))
+                Some(self.standard_impact(envir.walking_cost(from, to).duration(self.speed())))
             }
             //Collision::Fall(fall_pos) => {
             //    pos = fall_pos;
@@ -115,7 +111,7 @@ impl ActorItem<'_> {
                     .add("into")
                     .push(obstacle.single(to))
                     .send_warn();
-                self.no_impact()
+                None
             }
             Collision::Ledged => {
                 message_writer
@@ -123,14 +119,14 @@ impl ActorItem<'_> {
                     .verb("halt", "s")
                     .add("at the ledge")
                     .send_warn();
-                self.no_impact()
+                None
             }
             Collision::Opened(door) => {
                 toggle_writer.send(TerrainEvent {
                     terrain_entity: door,
                     change: Toggle::Open,
                 });
-                self.standard_impact(envir.walking_cost(from, to).duration(self.speed()))
+                Some(self.standard_impact(envir.walking_cost(from, to).duration(self.speed())))
             }
         }
     }
@@ -183,20 +179,20 @@ impl ActorItem<'_> {
         infos: &Infos,
         hierarchy: &Hierarchy,
         attack: &Attack,
-    ) -> Impact {
+    ) -> Option<Impact> {
         let Some(high_speed) = self.high_speed() else {
             message_writer
                 .subject(self.subject())
                 .is()
                 .add("too exhausted to attack")
                 .send_error();
-            return self.no_impact();
+            return None;
         };
 
         let target = envir.get_nbor(*self.pos, attack.target).expect("Valid pos");
 
         if let Some((defender, _)) = envir.find_character(target) {
-            self.damage(
+            Some(self.damage(
                 damage_writer,
                 envir,
                 infos,
@@ -205,14 +201,14 @@ impl ActorItem<'_> {
                 target,
                 high_speed,
                 ActorEvent::new,
-            )
+            ))
         } else {
             message_writer
                 .subject(self.subject())
                 .verb("attack", "s")
                 .add("nothing")
                 .send_warn();
-            self.no_impact()
+            None
         }
     }
 
@@ -224,14 +220,14 @@ impl ActorItem<'_> {
         infos: &Infos,
         hierarchy: &Hierarchy,
         smash: &Smash,
-    ) -> Impact {
+    ) -> Option<Impact> {
         let Some(high_speed) = self.high_speed() else {
             message_writer
                 .subject(self.subject())
                 .is()
                 .add("too exhausted to smash")
                 .send_error();
-            return self.no_impact();
+            return None;
         };
 
         let target = envir.get_nbor(*self.pos, smash.target).expect("Valid pos");
@@ -243,7 +239,7 @@ impl ActorItem<'_> {
                 .verb("smash", "es")
                 .add("the ceiling")
                 .send_warn();
-            self.no_impact()
+            None
         } else if self.pos.level.down() == Some(target.level)
             && envir.stairs_down_to(stair_pos).is_none()
         {
@@ -252,9 +248,9 @@ impl ActorItem<'_> {
                 .verb("smash", "es")
                 .add("the floor")
                 .send_warn();
-            self.no_impact()
+            None
         } else if let Some(smashable) = envir.find_smashable(target) {
-            self.damage(
+            Some(self.damage(
                 damage_writer,
                 envir,
                 infos,
@@ -263,14 +259,14 @@ impl ActorItem<'_> {
                 target,
                 high_speed,
                 TerrainEvent::new,
-            )
+            ))
         } else {
             message_writer
                 .subject(self.subject())
                 .verb("smash", "es")
                 .add("nothing")
                 .send_warn();
-            self.no_impact()
+            None
         }
     }
 
@@ -282,20 +278,20 @@ impl ActorItem<'_> {
         infos: &Infos,
         hierarchy: &Hierarchy,
         pulp: &Pulp,
-    ) -> Impact {
+    ) -> Option<Impact> {
         let Some(high_speed) = self.high_speed() else {
             message_writer
                 .subject(self.subject())
                 .is()
                 .add("too exhausted to pulp")
                 .send_warn();
-            return self.no_impact();
+            return None;
         };
 
         let target = self.pos.horizontal_nbor(pulp.target);
 
         if let Some(pulpable_entity) = envir.find_pulpable(target) {
-            self.damage(
+            Some(self.damage(
                 corpse_damage_writer,
                 envir,
                 infos,
@@ -304,14 +300,14 @@ impl ActorItem<'_> {
                 target,
                 high_speed,
                 CorpseEvent::new,
-            )
+            ))
         } else {
             message_writer
                 .subject(self.subject())
                 .verb("pulp", "s")
                 .add("nothing")
                 .send_warn();
-            self.no_impact()
+            None
         }
     }
 
@@ -321,7 +317,7 @@ impl ActorItem<'_> {
         toggle_writer: &mut EventWriter<TerrainEvent<Toggle>>,
         envir: &Envir,
         close: &Close,
-    ) -> Impact {
+    ) -> Option<Impact> {
         let target = self.pos.horizontal_nbor(close.target);
 
         if let Some((closeable, closeable_name)) = envir.find_closeable(target) {
@@ -333,13 +329,17 @@ impl ActorItem<'_> {
                     .add("on")
                     .push(character.single(target))
                     .send_warn();
-                self.no_impact()
+                None
             } else {
                 toggle_writer.send(TerrainEvent {
                     terrain_entity: closeable,
                     change: Toggle::Close,
                 });
-                self.standard_impact(envir.walking_cost(*self.pos, target).duration(self.speed()))
+                Some(
+                    self.standard_impact(
+                        envir.walking_cost(*self.pos, target).duration(self.speed()),
+                    ),
+                )
             }
         } else {
             let missing = ObjectName::missing();
@@ -349,7 +349,7 @@ impl ActorItem<'_> {
                 .simple("can't close")
                 .push(obstacle.single(target))
                 .send_warn();
-            self.no_impact()
+            None
         }
     }
 
@@ -360,7 +360,7 @@ impl ActorItem<'_> {
         location: &mut Location,
         hierarchy: &Hierarchy,
         item: &ItemItem,
-    ) -> Impact {
+    ) -> Option<Impact> {
         let impact = self.take(
             commands,
             message_writer,
@@ -368,7 +368,7 @@ impl ActorItem<'_> {
             &self.hands(hierarchy),
             item,
         );
-        if impact.stamina_impact.is_some() && self.player.is_some() {
+        if impact.is_some() && self.player.is_some() {
             commands.entity(item.entity).insert(PlayerWielded);
         }
         impact
@@ -381,7 +381,7 @@ impl ActorItem<'_> {
         location: &mut Location,
         hierarchy: &Hierarchy,
         item: &ItemItem,
-    ) -> Impact {
+    ) -> Option<Impact> {
         let impact = self.take(
             commands,
             message_writer,
@@ -389,7 +389,7 @@ impl ActorItem<'_> {
             &self.clothing(hierarchy),
             item,
         );
-        if impact.stamina_impact.is_some() {
+        if impact.is_some() {
             commands.entity(item.entity).remove::<PlayerWielded>();
         }
         impact
@@ -402,7 +402,7 @@ impl ActorItem<'_> {
         location: &mut Location,
         hierarchy: &Hierarchy,
         item: &ItemItem,
-    ) -> Impact {
+    ) -> Option<Impact> {
         self.take(
             commands,
             message_writer,
@@ -419,7 +419,7 @@ impl ActorItem<'_> {
         location: &mut Location,
         target: &Container,
         taken: &ItemItem,
-    ) -> Impact {
+    ) -> Option<Impact> {
         if let Some(taken_pos) = taken.pos {
             let offset = *taken_pos - *self.pos;
             assert!(
@@ -464,9 +464,9 @@ impl ActorItem<'_> {
             } else {
                 Self::take_all(commands, location, target.entity, taken.entity);
             }
-            self.activate()
+            Some(self.activate())
         } else {
-            self.no_impact()
+            None
         }
     }
 
@@ -529,14 +529,14 @@ impl ActorItem<'_> {
         location: &mut Location,
         moved: &ItemItem,
         to: Nbor,
-    ) -> Impact {
+    ) -> Option<Impact> {
         if let Some(from) = moved.pos {
             let offset = *from - *self.pos;
             let potentially_valid = HorizontalDirection::try_from(offset).is_ok()
                 || matches!(offset.level, LevelOffset { h: -1 | 1 });
             if !potentially_valid {
                 message_writer.str("Too far to move").send_error();
-                return self.no_impact();
+                return None;
             }
         }
         let dump = moved.parent.get()
@@ -558,14 +558,14 @@ impl ActorItem<'_> {
 
         let Some(new_parent) = subzone_level_entities.get(SubzoneLevel::from(to)) else {
             eprintln!("Subzone for moving not found");
-            return self.no_impact();
+            return None;
         };
         commands
             .entity(moved.entity)
             .insert((VisibilityBundle::default(), to))
             .set_parent(new_parent);
         location.update(moved.entity, Some(*self.pos));
-        self.activate()
+        Some(self.activate())
     }
 
     pub(crate) fn examine_item(message_writer: &mut MessageWriter, infos: &Infos, item: &ItemItem) {

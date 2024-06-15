@@ -22,10 +22,6 @@ impl Impact {
         }
     }
 
-    pub(crate) const fn none(actor_entity: Entity) -> Self {
-        Self::new(actor_entity, Milliseconds::ZERO, None)
-    }
-
     pub(crate) const fn rest(actor_entity: Entity, timeout: Milliseconds) -> Self {
         Self::new(actor_entity, timeout, Some(StaminaImpact::Rest))
     }

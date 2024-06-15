@@ -50,13 +50,13 @@ pub(in super::super) fn plan_action(
         .contains::<Player>();
 
     let action = if player_active {
-        let manual_action = run_system(plan_systems.manual_player_action, world, active_actor);
+        let manual_action = run_system(world, plan_systems.manual_player_action, active_actor);
         // The state could have transitioned with or without a 'manual_action'.
         world.run_schedule(StateTransition);
         manual_action
-            .or_else(|| run_system(plan_systems.automatic_player_action, world, active_actor))?
+            .or_else(|| run_system(world, plan_systems.automatic_player_action, active_actor))?
     } else {
-        run_system(plan_systems.npc_action, world, active_actor)
+        run_system(world, plan_systems.npc_action, active_actor)
     };
 
     log_if_slow("plan_action", start);
@@ -152,18 +152,18 @@ fn plan_npc_action(
 }
 
 pub(in super::super) struct PerformSystems {
-    stay: SystemId<ActionIn<Stay>, Impact>,
-    step: SystemId<ActionIn<Step>, Impact>,
-    attack: SystemId<ActionIn<Attack>, Impact>,
-    smash: SystemId<ActionIn<Smash>, Impact>,
-    pulp: SystemId<ActionIn<Pulp>, Impact>,
-    close: SystemId<ActionIn<Close>, Impact>,
-    wield: SystemId<ActionIn<ItemAction<Wield>>, Impact>,
-    unwield: SystemId<ActionIn<ItemAction<Unwield>>, Impact>,
-    pickup: SystemId<ActionIn<ItemAction<Pickup>>, Impact>,
-    move_item: SystemId<ActionIn<ItemAction<MoveItem>>, Impact>,
-    examine_item: SystemId<ActionIn<ItemAction<ExamineItem>>, ()>,
-    change_pace: SystemId<ActionIn<ChangePace>, ()>,
+    stay: SystemId<ActionIn<Stay>, Option<Impact>>,
+    step: SystemId<ActionIn<Step>, Option<Impact>>,
+    attack: SystemId<ActionIn<Attack>, Option<Impact>>,
+    smash: SystemId<ActionIn<Smash>, Option<Impact>>,
+    pulp: SystemId<ActionIn<Pulp>, Option<Impact>>,
+    close: SystemId<ActionIn<Close>, Option<Impact>>,
+    wield: SystemId<ActionIn<ItemAction<Wield>>, Option<Impact>>,
+    unwield: SystemId<ActionIn<ItemAction<Unwield>>, Option<Impact>>,
+    pickup: SystemId<ActionIn<ItemAction<Pickup>>, Option<Impact>>,
+    move_item: SystemId<ActionIn<ItemAction<MoveItem>>, Option<Impact>>,
+    examine_item: SystemId<ActionIn<ItemAction<ExamineItem>>, Option<Impact>>,
+    change_pace: SystemId<ActionIn<ChangePace>, Option<Impact>>,
 }
 
 impl PerformSystems {
@@ -200,85 +200,50 @@ pub(in super::super) fn perform_action(
 
     let perform_systems = perform_systems.get_or_init(|| PerformSystems::new(world));
 
-    let impact = match planned_action {
-        PlannedAction::Stay { duration } => run_system(
-            perform_systems.stay,
-            world,
-            ActionIn::new(actor_entity, Stay { duration }),
-        ),
-        PlannedAction::Step { to } => run_system(
-            perform_systems.step,
-            world,
-            ActionIn::new(actor_entity, Step { to }),
-        ),
-        PlannedAction::Attack { target } => run_system(
-            perform_systems.attack,
-            world,
-            ActionIn::new(actor_entity, Attack { target }),
-        ),
-        PlannedAction::Smash { target } => run_system(
-            perform_systems.smash,
-            world,
-            ActionIn::new(actor_entity, Smash { target }),
-        ),
-        PlannedAction::Pulp { target } => run_system(
-            perform_systems.pulp,
-            world,
-            ActionIn::new(actor_entity, Pulp { target }),
-        ),
-        PlannedAction::Close { target } => run_system(
-            perform_systems.close,
-            world,
-            ActionIn::new(actor_entity, Close { target }),
-        ),
-        PlannedAction::Wield { item } => run_system(
-            perform_systems.wield,
-            world,
-            ActionIn::new(actor_entity, ItemAction::new(item, Wield)),
-        ),
-        PlannedAction::Unwield { item } => run_system(
-            perform_systems.unwield,
-            world,
-            ActionIn::new(actor_entity, ItemAction::new(item, Unwield)),
-        ),
-        PlannedAction::Pickup { item } => run_system(
-            perform_systems.pickup,
-            world,
-            ActionIn::new(actor_entity, ItemAction::new(item, Pickup)),
-        ),
-        PlannedAction::MoveItem { item, to } => run_system(
+    let perform_fn = match planned_action {
+        PlannedAction::Stay { duration } => act_fn(perform_systems.stay, Stay { duration }),
+        PlannedAction::Step { to } => act_fn(perform_systems.step, Step { to }),
+        PlannedAction::Attack { target } => act_fn(perform_systems.attack, Attack { target }),
+        PlannedAction::Smash { target } => act_fn(perform_systems.smash, Smash { target }),
+        PlannedAction::Pulp { target } => act_fn(perform_systems.pulp, Pulp { target }),
+        PlannedAction::Close { target } => act_fn(perform_systems.close, Close { target }),
+        PlannedAction::Wield { item } => {
+            act_fn(perform_systems.wield, ItemAction::new(item, Wield))
+        }
+        PlannedAction::Unwield { item } => {
+            act_fn(perform_systems.unwield, ItemAction::new(item, Unwield))
+        }
+        PlannedAction::Pickup { item } => {
+            act_fn(perform_systems.pickup, ItemAction::new(item, Pickup))
+        }
+        PlannedAction::MoveItem { item, to } => act_fn(
             perform_systems.move_item,
-            world,
-            ActionIn::new(actor_entity, ItemAction::new(item, MoveItem { to })),
+            ItemAction::new(item, MoveItem { to }),
         ),
-        PlannedAction::ExamineItem { item } => {
-            run_system(
-                perform_systems.examine_item,
-                world,
-                ActionIn::new(actor_entity, ItemAction::new(item, ExamineItem)),
-            );
-            return None;
-        }
-        PlannedAction::ChangePace => {
-            run_system(
-                perform_systems.change_pace,
-                world,
-                ActionIn::new(actor_entity, ChangePace),
-            );
-            return None;
-        }
+        PlannedAction::ExamineItem { item } => act_fn(
+            perform_systems.examine_item,
+            ItemAction::new(item, ExamineItem),
+        ),
+        PlannedAction::ChangePace => act_fn(perform_systems.change_pace, ChangePace),
     };
+
+    let impact = perform_fn(world, actor_entity);
 
     log_if_slow("perform_action", start);
 
-    Some(impact)
+    impact
 }
 
-fn run_system<I, R>(system_id: SystemId<I, R>, world: &mut World, in_: I) -> R
-where
-    I: 'static,
-    R: 'static,
-{
+fn act_fn<A: Action>(
+    system: SystemId<ActionIn<A>, Option<Impact>>,
+    action: A,
+) -> Box<dyn FnOnce(&mut World, Entity) -> Option<Impact>> {
+    Box::new(move |world, actor_entity| {
+        run_system(world, system, ActionIn::new(actor_entity, action))
+    })
+}
+
+fn run_system<I: 'static, R: 'static>(world: &mut World, system_id: SystemId<I, R>, in_: I) -> R {
     world
         .run_system_with_input(system_id, in_)
         .expect("Action should have succeeded")
@@ -286,8 +251,11 @@ where
 
 #[allow(clippy::needless_pass_by_value)]
 #[allow(clippy::unnecessary_wraps)]
-pub(in super::super) fn perform_stay(In(stay): In<ActionIn<Stay>>, actors: Query<Actor>) -> Impact {
-    stay.actor(&actors).stay(&stay.action)
+pub(in super::super) fn perform_stay(
+    In(stay): In<ActionIn<Stay>>,
+    actors: Query<Actor>,
+) -> Option<Impact> {
+    Some(stay.actor(&actors).stay(&stay.action))
 }
 
 #[allow(clippy::needless_pass_by_value)]
@@ -298,7 +266,7 @@ pub(in super::super) fn perform_step(
     mut toggle_writer: EventWriter<TerrainEvent<Toggle>>,
     mut envir: Envir,
     actors: Query<Actor>,
-) -> Impact {
+) -> Option<Impact> {
     step.actor(&actors).step(
         &mut commands,
         &mut message_writer,
@@ -317,7 +285,7 @@ pub(in super::super) fn perform_attack(
     infos: Res<Infos>,
     hierarchy: Hierarchy,
     actors: Query<Actor>,
-) -> Impact {
+) -> Option<Impact> {
     attack.actor(&actors).attack(
         &mut message_writer,
         &mut damage_writer,
@@ -337,7 +305,7 @@ pub(in super::super) fn perform_smash(
     infos: Res<Infos>,
     hierarchy: Hierarchy,
     actors: Query<Actor>,
-) -> Impact {
+) -> Option<Impact> {
     smash.actor(&actors).smash(
         &mut message_writer,
         &mut damage_writer,
@@ -357,7 +325,7 @@ pub(in super::super) fn perform_pulp(
     infos: Res<Infos>,
     hierarchy: Hierarchy,
     actors: Query<Actor>,
-) -> Impact {
+) -> Option<Impact> {
     pulp.actor(&actors).pulp(
         &mut message_writer,
         &mut corpse_damage_writer,
@@ -375,7 +343,7 @@ pub(in super::super) fn perform_close(
     mut toggle_writer: EventWriter<TerrainEvent<Toggle>>,
     envir: Envir,
     actors: Query<Actor>,
-) -> Impact {
+) -> Option<Impact> {
     close.actor(&actors).close(
         &mut message_writer,
         &mut toggle_writer,
@@ -393,7 +361,7 @@ pub(in super::super) fn perform_wield(
     hierarchy: Hierarchy,
     actors: Query<Actor>,
     items: Query<Item>,
-) -> Impact {
+) -> Option<Impact> {
     wield.actor(&actors).wield(
         &mut commands,
         &mut message_writer,
@@ -412,7 +380,7 @@ pub(in super::super) fn perform_unwield(
     hierarchy: Hierarchy,
     actors: Query<Actor>,
     items: Query<Item>,
-) -> Impact {
+) -> Option<Impact> {
     unwield.actor(&actors).unwield(
         &mut commands,
         &mut message_writer,
@@ -431,7 +399,7 @@ pub(in super::super) fn perform_pickup(
     hierarchy: Hierarchy,
     actors: Query<Actor>,
     items: Query<Item>,
-) -> Impact {
+) -> Option<Impact> {
     pickup.actor(&actors).pickup(
         &mut commands,
         &mut message_writer,
@@ -450,7 +418,7 @@ pub(in super::super) fn perform_move_item(
     mut location: ResMut<Location>,
     actors: Query<Actor>,
     items: Query<Item>,
-) -> Impact {
+) -> Option<Impact> {
     move_item.actor(&actors).move_item(
         &mut commands,
         &mut message_writer,
@@ -467,12 +435,13 @@ pub(in super::super) fn perform_examine_item(
     mut message_writer: MessageWriter,
     infos: Res<Infos>,
     items: Query<Item>,
-) {
+) -> Option<Impact> {
     ActorItem::examine_item(
         &mut message_writer,
         &infos,
         &examine_item.action.item(&items),
     );
+    None
 }
 
 #[allow(clippy::needless_pass_by_value)]
@@ -480,8 +449,9 @@ pub(in super::super) fn perform_change_pace(
     In(change_pace): In<ActionIn<ChangePace>>,
     mut commands: Commands,
     actors: Query<Actor>,
-) {
+) -> Option<Impact> {
     change_pace.actor(&actors).change_pace(&mut commands);
+    None
 }
 
 #[allow(clippy::needless_pass_by_value)]
