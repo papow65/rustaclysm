@@ -43,6 +43,15 @@ impl ActorItem<'_> {
         }
     }
 
+    fn low_speed(&self) -> Option<MillimeterPerSecond> {
+        match self.stamina.breath() {
+            Breath::Normal | Breath::AlmostWinded => {
+                Some(self.base_speed.speed(&WalkingMode::Walking, Breath::Normal))
+            }
+            Breath::Winded => None,
+        }
+    }
+
     fn hands<'a>(&self, hierarchy: &'a Hierarchy) -> Container<'a> {
         Container::new(
             self.body_containers.expect("Body containers present").hands,
@@ -308,6 +317,42 @@ impl ActorItem<'_> {
                 .add("nothing")
                 .send_warn();
             None
+        }
+    }
+
+    pub(crate) fn peek(
+        &self,
+        message_writer: &mut MessageWriter,
+        player_action_state: &mut NextState<PlayerActionState>,
+        envir: &Envir,
+        peek: &Peek,
+    ) -> Option<Impact> {
+        let from = *self.pos;
+
+        let to = envir
+            .get_nbor(from, Nbor::Horizontal(peek.target.into()))
+            .expect("Valid pos");
+
+        match envir.collide(from, to, true) {
+            Collision::Pass | Collision::Ledged => {
+                if let Some(low_speed) = self.low_speed() {
+                    player_action_state.set(PlayerActionState::Peeking {
+                        active_target: Some(peek.target),
+                    });
+                    Some(self.standard_impact(envir.walking_cost(from, to).duration(low_speed)))
+                } else {
+                    message_writer
+                        .subject(self.subject())
+                        .is()
+                        .add("too exhausted to peek")
+                        .send_warn();
+                    None
+                }
+            }
+            _ => {
+                message_writer.you("can't peek there").send_warn();
+                None
+            }
         }
     }
 

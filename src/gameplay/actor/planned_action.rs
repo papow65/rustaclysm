@@ -1,4 +1,4 @@
-use crate::prelude::{HorizontalDirection, Nbor};
+use crate::prelude::{CardinalDirection, HorizontalDirection, Nbor};
 use bevy::prelude::Entity;
 
 #[derive(Copy, Clone, Debug)]
@@ -23,6 +23,9 @@ pub(crate) enum PlannedAction {
     },
     Pulp {
         target: HorizontalDirection,
+    },
+    Peek {
+        target: CardinalDirection,
     },
     Close {
         target: HorizontalDirection,

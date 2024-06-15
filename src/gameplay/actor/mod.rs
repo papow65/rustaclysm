@@ -13,8 +13,8 @@ mod subject;
 
 pub(crate) use self::{
     actions::{
-        Action, ActionIn, Attack, ChangePace, Close, ExamineItem, ItemAction, MoveItem, Pickup,
-        Pulp, Smash, Stay, Step, Unwield, Wield,
+        Action, ActionIn, Attack, ChangePace, Close, ExamineItem, ItemAction, MoveItem, Peek,
+        Pickup, Pulp, Smash, Stay, Step, Unwield, Wield,
     },
     behavior::loop_behavior_and_refresh,
     breath::Breath,

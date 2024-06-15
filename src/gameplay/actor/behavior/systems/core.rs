@@ -157,6 +157,7 @@ pub(in super::super) struct PerformSystems {
     attack: SystemId<ActionIn<Attack>, Option<Impact>>,
     smash: SystemId<ActionIn<Smash>, Option<Impact>>,
     pulp: SystemId<ActionIn<Pulp>, Option<Impact>>,
+    peek: SystemId<ActionIn<Peek>, Option<Impact>>,
     close: SystemId<ActionIn<Close>, Option<Impact>>,
     wield: SystemId<ActionIn<ItemAction<Wield>>, Option<Impact>>,
     unwield: SystemId<ActionIn<ItemAction<Unwield>>, Option<Impact>>,
@@ -174,6 +175,7 @@ impl PerformSystems {
             attack: world.register_system(perform_attack),
             smash: world.register_system(perform_smash),
             pulp: world.register_system(perform_pulp),
+            peek: world.register_system(perform_peek),
             close: world.register_system(perform_close),
             wield: world.register_system(perform_wield),
             unwield: world.register_system(perform_unwield),
@@ -206,6 +208,7 @@ pub(in super::super) fn perform_action(
         PlannedAction::Attack { target } => act_fn(perform_systems.attack, Attack { target }),
         PlannedAction::Smash { target } => act_fn(perform_systems.smash, Smash { target }),
         PlannedAction::Pulp { target } => act_fn(perform_systems.pulp, Pulp { target }),
+        PlannedAction::Peek { target } => act_fn(perform_systems.peek, Peek { target }),
         PlannedAction::Close { target } => act_fn(perform_systems.close, Close { target }),
         PlannedAction::Wield { item } => {
             act_fn(perform_systems.wield, ItemAction::new(item, Wield))
@@ -333,6 +336,22 @@ pub(in super::super) fn perform_pulp(
         &infos,
         &hierarchy,
         &pulp.action,
+    )
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub(in super::super) fn perform_peek(
+    In(peek): In<ActionIn<Peek>>,
+    mut message_writer: MessageWriter,
+    mut player_action_state: ResMut<NextState<PlayerActionState>>,
+    envir: Envir,
+    actors: Query<Actor>,
+) -> Option<Impact> {
+    peek.actor(&actors).peek(
+        &mut message_writer,
+        &mut player_action_state,
+        &envir,
+        &peek.action,
     )
 }
 

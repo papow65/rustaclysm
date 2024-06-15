@@ -8,8 +8,8 @@ use super::{
             update_explored, update_healed_characters, update_stamina,
         },
         refresh::{
-            update_hidden_item_visibility, update_transforms, update_visualization_on_player_move,
-            update_visualization_on_weather_change,
+            update_hidden_item_visibility, update_peeking_transforms, update_transforms,
+            update_visualization_on_player_move, update_visualization_on_weather_change,
         },
     },
 };
@@ -19,7 +19,10 @@ use crate::prelude::{
 };
 use bevy::{
     ecs::system::SystemState,
-    prelude::{on_event, IntoSystem, IntoSystemConfigs, Res, State, World},
+    prelude::{
+        on_event, resource_exists_and_changed, IntoSystem, IntoSystemConfigs, Res, State,
+        StateTransition, World,
+    },
 };
 use std::time::{Duration, Instant};
 
@@ -31,6 +34,8 @@ pub(crate) fn loop_behavior_and_refresh() -> impl IntoSystemConfigs<()> {
         loop_behavior,
         (
             update_transforms,
+            update_peeking_transforms
+                .run_if(resource_exists_and_changed::<State<PlayerActionState>>),
             update_hidden_item_visibility,
             update_visualization_on_item_move,
             update_visualization_on_player_move,
@@ -94,6 +99,7 @@ pub(super) fn behavior_systems() -> impl IntoSystemConfigs<()> {
             .pipe(plan_action)
             .pipe(perform_action)
             .pipe(proces_impact),
+        run_state_transitions, // only intended for PlayerActionState
         (
             (
                 // actor events
@@ -125,4 +131,8 @@ pub(super) fn behavior_systems() -> impl IntoSystemConfigs<()> {
         ),
     )
         .chain()
+}
+
+fn run_state_transitions(world: &mut World) {
+    world.run_schedule(StateTransition);
 }

@@ -19,6 +19,37 @@ pub(in super::super) fn update_transforms(
     log_if_slow("update_transforms", start);
 }
 
+/// Independent of `update_transforms`, because the systems affect different entities.
+#[allow(clippy::needless_pass_by_value)]
+pub(in super::super) fn update_peeking_transforms(
+    player_action_state: Res<State<PlayerActionState>>,
+    players: Query<&Children, With<Player>>,
+    mut mesh_transforms: Query<&mut Transform, With<Handle<Mesh>>>,
+) {
+    let start = Instant::now();
+
+    // y will be ignored
+    let offset = if let PlayerActionState::Peeking {
+        active_target: Some(target),
+    } = **player_action_state
+    {
+        Pos::ORIGIN.horizontal_nbor(target.into()).vec3() * 0.45
+    } else {
+        Vec3::ZERO
+    };
+
+    let children = players.single();
+    for child in children {
+        if let Ok(mut transform) = mesh_transforms.get_mut(*child) {
+            transform.translation.x = offset.x;
+            // The heigt (y) is not affected by peeking and already set
+            transform.translation.z = offset.z;
+        }
+    }
+
+    log_if_slow("update_peeking_transforms", start);
+}
+
 #[allow(clippy::needless_pass_by_value)]
 pub(in super::super) fn update_hidden_item_visibility(
     mut hidden_items: Query<&mut Visibility, Without<Pos>>,
@@ -155,6 +186,11 @@ pub(in super::super) fn update_visualization_on_weather_change(
     }
 
     log_if_slow("update_visualization_on_weather_change", start);
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub(in super::super) fn trigger_refresh(mut visualization_update: ResMut<VisualizationUpdate>) {
+    *visualization_update = VisualizationUpdate::Forced;
 }
 
 #[cfg(debug_assertions)]

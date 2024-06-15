@@ -1,6 +1,34 @@
 use crate::prelude::PosOffset;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub(crate) enum CardinalDirection {
+    North,
+    West,
+    East,
+    South,
+}
+
+impl CardinalDirection {
+    pub(crate) const ALL: [Self; 4] = [Self::North, Self::East, Self::West, Self::South];
+}
+
+impl TryFrom<HorizontalDirection> for CardinalDirection {
+    type Error = ();
+
+    fn try_from(value: HorizontalDirection) -> Result<Self, Self::Error> {
+        Ok(match value {
+            HorizontalDirection::North => Self::North,
+            HorizontalDirection::West => Self::West,
+            HorizontalDirection::South => Self::South,
+            HorizontalDirection::East => Self::East,
+            _ => {
+                return Err(());
+            }
+        })
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub(crate) enum HorizontalDirection {
     NorthWest,
     North,
@@ -28,6 +56,17 @@ impl HorizontalDirection {
                 Self::SouthWest | Self::South | Self::SouthEast => 1,
             },
         )
+    }
+}
+
+impl From<CardinalDirection> for HorizontalDirection {
+    fn from(value: CardinalDirection) -> Self {
+        match value {
+            CardinalDirection::North => Self::North,
+            CardinalDirection::West => Self::West,
+            CardinalDirection::South => Self::South,
+            CardinalDirection::East => Self::East,
+        }
     }
 }
 

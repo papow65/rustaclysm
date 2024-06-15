@@ -1,5 +1,5 @@
 use crate::{
-    gameplay::HorizontalDirection,
+    gameplay::{CardinalDirection, HorizontalDirection},
     prelude::{Actor, ActorItem, Item, ItemItem, Nbor, StayDuration},
 };
 use bevy::prelude::{Entity, Query};
@@ -61,6 +61,13 @@ pub(crate) struct Pulp {
 }
 
 impl Action for Pulp {}
+
+#[derive(Clone, Debug)]
+pub(crate) struct Peek {
+    pub(crate) target: CardinalDirection,
+}
+
+impl Action for Peek {}
 
 #[derive(Clone, Debug)]
 pub(crate) struct Close {

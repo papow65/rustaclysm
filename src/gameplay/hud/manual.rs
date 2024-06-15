@@ -12,7 +12,8 @@ static BASE_MANUAL_CONTENTS: &str = "\
     smash furniture s\n\
     pulp corpse     p\n\
     walking mode    +\n\
-    auto defend     tab\n\
+    auto defend     A\n\
+    peek            tab\n\
     wait            |\n\
     sleep           $\n\
     show elevated   h\n\

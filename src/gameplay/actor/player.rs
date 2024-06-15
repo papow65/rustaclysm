@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use bevy::prelude::{Color, Component, EventWriter, NextState, ResMut, States};
+use bevy::prelude::{Color, Component, DetectChanges, EventWriter, NextState, ResMut, States};
 use std::fmt;
 
 #[derive(Debug, Component)]
@@ -17,6 +17,11 @@ pub(crate) enum PlayerActionState {
         /// None: intent to pulp on next move
         /// Some: corpse pulping in progress
         active_target: Option<HorizontalDirection>,
+    },
+    Peeking {
+        /// None: intent to peek on next move
+        /// Some: validated peeking in progress
+        active_target: Option<CardinalDirection>,
     },
     Closing,
     Dragging {
@@ -157,6 +162,19 @@ impl PlayerActionState {
                 message_writer.you("are still asleep. Zzz...").send_error();
                 None
             }
+            (
+                Self::Peeking {
+                    active_target: Some(_),
+                },
+                instruction,
+            ) => Self::stop_peeking(
+                next_state,
+                message_writer,
+                envir,
+                player_pos,
+                instruction,
+                now,
+            ),
             (Self::Normal, QueuedInstruction::Offset(PlayerDirection::Here)) => {
                 Some(PlannedAction::Stay {
                     duration: StayDuration::Short,
@@ -189,6 +207,7 @@ impl PlayerActionState {
             }
             (Self::Attacking, QueuedInstruction::Attack)
             | (Self::Smashing, QueuedInstruction::Smash)
+            | (Self::Peeking { .. }, QueuedInstruction::Peek)
             | (Self::Dragging { .. }, QueuedInstruction::Drag | QueuedInstruction::CancelAction)
             | (Self::Pulping { .. }, QueuedInstruction::Interrupt(Interruption::Finished)) => {
                 next_state.set(Self::Normal);
@@ -261,6 +280,12 @@ impl PlayerActionState {
             QueuedInstruction::Pulp => {
                 Self::handle_pulp(next_state, message_writer, envir, player_pos)
             }
+            QueuedInstruction::Peek => {
+                next_state.set(Self::Peeking {
+                    active_target: None,
+                });
+                None
+            }
             QueuedInstruction::Close => {
                 Self::handle_close(next_state, message_writer, envir, player_pos)
             }
@@ -315,7 +340,13 @@ impl PlayerActionState {
         }
 
         match &self {
-            Self::Sleeping { .. } => {
+            Self::Sleeping { .. }
+            | Self::Peeking {
+                active_target: Some(_),
+            }
+            | Self::Dragging {
+                active_from: Some(_),
+            } => {
                 panic!("{self:?} {player_pos:?} {raw_nbor:?}");
             }
             Self::Normal => Some(PlannedAction::Step { to: raw_nbor }),
@@ -344,6 +375,46 @@ impl PlayerActionState {
             } => {
                 panic!("{self:?} {player_pos:?} {raw_nbor:?} {target:?}");
             }
+            Self::Peeking {
+                active_target: None,
+            } => {
+                match raw_nbor {
+                    Nbor::Up | Nbor::Down => {
+                        message_writer.you("can't peek vertically").send_error();
+                        None
+                    }
+                    Nbor::HERE => {
+                        message_writer.you("can't peek here").send_error();
+                        None
+                    }
+                    Nbor::Horizontal(
+                        HorizontalDirection::NorthWest
+                        | HorizontalDirection::SouthWest
+                        | HorizontalDirection::NorthEast
+                        | HorizontalDirection::SouthEast,
+                    ) => {
+                        message_writer.you("can't peek diagonally").send_error();
+                        None
+                    }
+                    Nbor::Horizontal(
+                        horizontal_direction @ (HorizontalDirection::North
+                        | HorizontalDirection::South
+                        | HorizontalDirection::East
+                        | HorizontalDirection::West),
+                    ) => {
+                        let target = CardinalDirection::try_from(horizontal_direction)
+                            .unwrap_or_else(|()| {
+                                panic!(
+                                    "{horizontal_direction:?} should match a cardinal direction"
+                                );
+                            });
+                        //eprintln!("Activating peeking");
+                        // Not Self::Peeking, because that is not validated yet.
+                        next_state.set(Self::Normal);
+                        Some(PlannedAction::Peek { target })
+                    }
+                }
+            }
             Self::Closing => {
                 next_state.set(Self::Normal);
                 if let Nbor::Horizontal(target) = raw_nbor {
@@ -358,11 +429,6 @@ impl PlayerActionState {
                     active_from: Some(player_pos),
                 });
                 Some(PlannedAction::Step { to: raw_nbor })
-            }
-            Self::Dragging {
-                active_from: Some(active_from),
-            } => {
-                panic!("{self:?} {player_pos:?} {raw_nbor:?} {active_from:?}");
             }
             Self::Waiting { .. } | Self::AutoTravel { .. } | Self::AutoDefend => {
                 next_state.set(Self::Normal);
@@ -499,10 +565,39 @@ impl PlayerActionState {
             | Self::Attacking
             | Self::Smashing
             | Self::Pulping { .. }
+            | Self::Peeking { .. }
             | Self::Dragging { .. }
             | Self::AutoTravel { .. } => WARN_TEXT_COLOR,
             Self::AutoDefend => BAD_TEXT_COLOR,
         }
+    }
+
+    fn stop_peeking(
+        next_state: &mut ResMut<NextState<Self>>,
+        message_writer: &mut MessageWriter,
+        envir: &Envir,
+        player_pos: Pos,
+        instruction: QueuedInstruction,
+        now: Timestamp,
+    ) -> Option<PlannedAction> {
+        // Pretend to be Self::Normal
+        Self::Normal
+            .plan(
+                next_state,
+                message_writer,
+                envir,
+                player_pos,
+                instruction,
+                now,
+            )
+            .inspect(
+                // Only called for Some(planned_action)
+                |_| {
+                    if !next_state.is_changed() {
+                        next_state.set(Self::Normal);
+                    }
+                },
+            )
     }
 }
 
@@ -513,6 +608,7 @@ impl fmt::Display for PlayerActionState {
             Self::Attacking => "Attacking",
             Self::Smashing => "Smashing",
             Self::Pulping { .. } => "Pulping",
+            Self::Peeking { .. } => "Peeking",
             Self::Closing => "Closing",
             Self::Dragging { .. } => "Dragging",
             Self::Waiting { .. } => "Waiting",

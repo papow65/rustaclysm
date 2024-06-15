@@ -20,20 +20,28 @@ pub(crate) struct CurrentlyVisibleBuilder<'w, 's> {
 
 impl<'w, 's> CurrentlyVisibleBuilder<'w, 's> {
     pub(crate) fn for_npc(&self, pos: Pos) -> CurrentlyVisible {
-        self.build(None, pos)
+        let viewing_distance = CurrentlyVisible::viewing_distance(&self.clock, None, pos.level);
+        self.build(viewing_distance, pos)
     }
 
     pub(crate) fn for_player(&self) -> CurrentlyVisible {
-        self.build(Some(&*self.player_action_state), self.player_pos())
-    }
-
-    fn build(&self, state: Option<&PlayerActionState>, from: Pos) -> CurrentlyVisible {
+        let from_pos = if let PlayerActionState::Peeking {
+            active_target: Some(target),
+        } = **self.player_action_state
+        {
+            self.player_pos().horizontal_nbor(target.into())
+        } else {
+            self.player_pos()
+        };
         let viewing_distance = CurrentlyVisible::viewing_distance(
             &self.clock,
-            state, // not self...
-            from.level,
+            Some(&*self.player_action_state),
+            from_pos.level,
         );
+        self.build(viewing_distance, from_pos)
+    }
 
+    fn build(&self, viewing_distance: Option<usize>, from: Pos) -> CurrentlyVisible {
         // segments are not used when viewing_distance is None, so then we pick any.
         let segments = self
             .relative_segments
