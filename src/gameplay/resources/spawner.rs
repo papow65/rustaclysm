@@ -408,15 +408,13 @@ impl<'w, 's> Spawner<'w, 's> {
         let layers = self
             .model_factory
             .get_layers(definition, Visibility::Inherited, true)
-            .map(|(pbr_bundle, apprearance)| {
-                (
-                    (pbr_bundle, apprearance.clone(), RenderLayers::layer(1)),
-                    if last_seen == LastSeen::Never {
-                        apprearance.material(&LastSeen::Currently)
-                    } else {
-                        apprearance.material(&last_seen)
-                    },
-                )
+            .map(|(mut pbr_bundle, apprearance)| {
+                pbr_bundle.material = if last_seen == LastSeen::Never {
+                    apprearance.material(&LastSeen::Currently)
+                } else {
+                    apprearance.material(&last_seen)
+                };
+                (pbr_bundle, apprearance.clone(), RenderLayers::layer(1))
             });
 
         let tile = self
@@ -431,12 +429,9 @@ impl<'w, 's> Spawner<'w, 's> {
                 object_name,
             ))
             .with_children(|child_builder| {
-                {
-                    let (bundle, material_override) = layers.base;
-                    child_builder.spawn(bundle).insert(material_override);
-                }
-                if let Some((bundle, material_override)) = layers.overlay {
-                    child_builder.spawn(bundle).insert(material_override);
+                child_builder.spawn(layers.base);
+                if let Some(overlay) = layers.overlay {
+                    child_builder.spawn(overlay);
                 }
             })
             .id();
