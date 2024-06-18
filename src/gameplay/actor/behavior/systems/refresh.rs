@@ -2,6 +2,7 @@
 use crate::prelude::*;
 use bevy::prelude::*;
 use std::{
+    cell::OnceCell,
     sync::{Arc, Mutex},
     time::Instant,
 };
@@ -25,11 +26,11 @@ pub(in super::super) fn update_peeking_transforms(
     player_action_state: Res<State<PlayerActionState>>,
     players: Query<&Children, With<Player>>,
     mut mesh_transforms: Query<&mut Transform, With<Handle<Mesh>>>,
+    initial_offset: Local<OnceCell<Vec3>>,
 ) {
     let start = Instant::now();
 
-    // y will be ignored
-    let offset = if let PlayerActionState::Peeking {
+    let state_offset = if let PlayerActionState::Peeking {
         active_target: Some(target),
     } = **player_action_state
     {
@@ -41,9 +42,8 @@ pub(in super::super) fn update_peeking_transforms(
     let children = players.single();
     for child in children {
         if let Ok(mut transform) = mesh_transforms.get_mut(*child) {
-            transform.translation.x = offset.x;
-            // The heigt (y) is not affected by peeking and already set
-            transform.translation.z = offset.z;
+            transform.translation =
+                state_offset + *initial_offset.get_or_init(|| transform.translation);
         }
     }
 
