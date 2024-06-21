@@ -155,7 +155,7 @@ pub(in super::super) fn update_visualization_on_player_move(
         }
     }
 
-    log_if_slow("update_visualization_on_focus_move", start);
+    log_if_slow("update_visualization_on_player_move", start);
 }
 
 #[allow(clippy::needless_pass_by_value)]
@@ -181,7 +181,7 @@ pub(in super::super) fn update_visualization_on_weather_change(
     if *last_viewing_disttance != viewing_distance {
         *last_viewing_disttance = viewing_distance;
 
-        // Handled by update_visualization_on_focus_move next frame
+        // Handled by update_visualization_on_player_move next frame
         *visualization_update = VisualizationUpdate::Forced;
     }
 

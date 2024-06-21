@@ -76,7 +76,7 @@ fn calculate_visibility(
 }
 
 /// 'items' is more complex than needed by [`calculate_visibility`], because of compatibility with \
-/// [`update_visualization_on_focus_move()`].
+/// [`update_visualization_on_player_move()`].
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_visibility(
     focus: Focus,
