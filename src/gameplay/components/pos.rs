@@ -1,6 +1,6 @@
 use crate::{
     gameplay::HorizontalDirection,
-    prelude::{LevelOffset, Millimeter, Nbor, PosOffset},
+    prelude::{LevelOffset, Nbor, PosOffset, VisionDistance},
 };
 use bevy::prelude::{Component, Vec3};
 use std::{cmp::Ordering, fmt, iter::once, ops::Sub};
@@ -209,16 +209,9 @@ impl Pos {
             .map(|(((x, _), (y, _)), (z, _))| Self::new(x, Level::new(y as i8), z))
     }
 
-    /// Without regard of obstacles
-    pub(crate) fn vision_distance(self, other: Self) -> usize {
-        ((Millimeter::ADJACENT.0.pow(2) * u64::from(self.x.abs_diff(other.x)).pow(2)
-            + Millimeter::VERTICAL.0.pow(2)
-                * u64::from(self.level.h.abs_diff(other.level.h)).pow(2)
-            + Millimeter::ADJACENT.0.pow(2) * u64::from(self.z.abs_diff(other.z)).pow(2))
-            as f32
-            / Millimeter::ADJACENT.0.pow(2) as f32)
-            .sqrt()
-            .floor() as usize
+    /// Without regard for obstacles
+    pub(crate) fn vision_distance(self, other: Self) -> VisionDistance {
+        VisionDistance::from(self - other)
     }
 }
 
@@ -260,7 +253,7 @@ impl SubzoneLevel {
         (self.x, self.z, self.level.h)
     }
 
-    pub(crate) const fn base_pos(&self) -> Pos {
+    pub(crate) const fn base_corner(&self) -> Pos {
         Pos::new(Self::SIZE * self.x, self.level, Self::SIZE * self.z)
     }
 }
@@ -355,7 +348,7 @@ impl ZoneLevel {
         }
     }
 
-    pub(crate) const fn base_pos(&self) -> Pos {
+    pub(crate) const fn base_corner(&self) -> Pos {
         Pos::new(
             Zone::SIZE * self.zone.x,
             self.level,
@@ -364,7 +357,7 @@ impl ZoneLevel {
     }
 
     pub(crate) const fn center_pos(&self) -> Pos {
-        self.base_pos().horizontal_offset(11, 11)
+        self.base_corner().horizontal_offset(11, 11)
     }
 
     pub(crate) const fn subzone_levels(&self) -> [SubzoneLevel; 4] {

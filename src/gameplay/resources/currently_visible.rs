@@ -1,6 +1,6 @@
 use crate::prelude::{
     Accessible, Clock, Envir, Level, LevelOffset, Player, PlayerActionState, Pos, PosOffset,
-    RelativeSegment, RelativeSegments, Visible, MAX_VISIBLE_DISTANCE,
+    RelativeSegment, RelativeSegments, Visible, VisionDistance,
 };
 use bevy::{
     ecs::system::SystemParam,
@@ -125,7 +125,8 @@ impl<'a> CurrentlyVisible<'a> {
                 clock.sunlight_percentage()
             };
             Some(
-                (light * MAX_VISIBLE_DISTANCE as f32 + (1.0 - light) * Self::MIN_DISTANCE) as usize,
+                (light * VisionDistance::MAX_VISION_TILES as f32
+                    + (1.0 - light) * Self::MIN_DISTANCE) as usize,
             )
         }
     }

@@ -99,7 +99,7 @@ impl Explored {
                         if submap_memory.seen(xx, zz) {
                             self.mark_pos_seen(
                                 subzone_level
-                                    .base_pos()
+                                    .base_corner()
                                     .horizontal_offset(i32::from(xx), i32::from(zz)),
                             );
                         }

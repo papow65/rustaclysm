@@ -304,7 +304,7 @@ impl Faction {
                 actor.aquatic.is_none() || currently_visible_builder.envir.is_water(*enemy_pos)
             })
             .filter(|enemy_pos| currently_visible.can_see(*enemy_pos, None) == Visible::Seen)
-            .min_by_key(|enemy_pos| player_pos.vision_distance(*enemy_pos))
+            .min_by_key(|enemy_pos| player_pos.vision_distance(*enemy_pos).as_tiles())
             .and_then(|enemy_pos| {
                 currently_visible_builder
                     .envir

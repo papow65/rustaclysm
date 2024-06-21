@@ -51,9 +51,14 @@ pub(crate) fn spawn_subzones_for_camera(
 }
 
 fn zones_in_sight_distance(focus_pos: Pos) -> Region {
-    let from =
-        Zone::from(focus_pos.horizontal_offset(-MAX_VISIBLE_DISTANCE, -MAX_VISIBLE_DISTANCE));
-    let to = Zone::from(focus_pos.horizontal_offset(MAX_VISIBLE_DISTANCE, MAX_VISIBLE_DISTANCE));
+    let from = Zone::from(focus_pos.horizontal_offset(
+        -VisionDistance::MAX_VISION_TILES,
+        -VisionDistance::MAX_VISION_TILES,
+    ));
+    let to = Zone::from(focus_pos.horizontal_offset(
+        VisionDistance::MAX_VISION_TILES,
+        VisionDistance::MAX_VISION_TILES,
+    ));
     Region::from(&ZoneRegion::new(from.x..=to.x, from.z..=to.z))
 }
 

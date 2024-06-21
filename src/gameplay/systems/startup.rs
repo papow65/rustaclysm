@@ -56,7 +56,7 @@ pub(crate) fn spawn_initial_entities(infos: Res<Infos>, sav: Res<Sav>, mut spawn
         z: i32::from(sav.om_y) * 180 + i32::from(sav.levy) / 2,
     }
     .zone_level(Level::new(sav.levz))
-    .base_pos()
+    .base_corner()
     .horizontal_offset(
         12 * i32::from(sav.levx % 2) + 24,
         12 * i32::from(sav.levy % 2) + 24,

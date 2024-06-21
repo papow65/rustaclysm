@@ -1,7 +1,7 @@
 use crate::prelude::Millimeter;
 use bevy::prelude::Vec3;
 
-#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) struct LevelOffset {
     pub(crate) h: i8,
 }

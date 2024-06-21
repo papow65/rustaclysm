@@ -10,8 +10,6 @@ use std::{
 };
 use time::OffsetDateTime;
 
-pub(crate) const MAX_VISIBLE_DISTANCE: i32 = 60;
-
 #[derive(Clone, Copy, Debug)]
 pub(crate) struct Millimeter(pub(crate) u64);
 

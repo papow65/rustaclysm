@@ -14,11 +14,12 @@ mod region;
 mod toggle;
 mod type_id;
 mod unit;
+mod vision_distance;
 
 pub(crate) use self::{
     asset_state::*, container::*, fragment::*, instruction::*, item::*, limited::*, mesh::*,
     model::*, nbor::*, object_definition::*, object_id::*, offset::*, region::*, toggle::*,
-    type_id::*, unit::*,
+    type_id::*, unit::*, vision_distance::*,
 };
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]

@@ -72,12 +72,15 @@ impl<T> RepetitionBlock<T> {
     }
 
     pub(crate) fn load_as_subzone(&self, subzone_level: SubzoneLevel) -> HashMap<Pos, &T> {
-        self.load(|x, z| subzone_level.base_pos().horizontal_offset(x, z), 12)
+        self.load(
+            |x, z| subzone_level.base_corner().horizontal_offset(x, z),
+            12,
+        )
     }
 
     #[allow(unused)]
     pub(crate) fn load_as_zone_level(&self, zone_level: ZoneLevel) -> HashMap<Pos, &T> {
-        let base_pos = zone_level.base_pos();
+        let base_pos = zone_level.base_corner();
         self.load(|x, z| base_pos.horizontal_offset(x, z), 24)
     }
 

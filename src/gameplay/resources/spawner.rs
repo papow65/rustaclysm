@@ -697,7 +697,7 @@ impl<'w, 's> SubzoneSpawner<'w, 's> {
 
         if submap.terrain.is_significant() {
             let terrain = submap.terrain.load_as_subzone(subzone_level);
-            let base_pos = subzone_level.base_pos();
+            let base_pos = subzone_level.base_corner();
 
             for x in 0..12 {
                 for z in 0..12 {
@@ -846,7 +846,7 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
             .insert((
                 SpatialBundle {
                     transform: Transform {
-                        translation: zone_level.base_pos().vec3() + Vec3::new(11.5, 0.0, 11.5),
+                        translation: zone_level.base_corner().vec3() + Vec3::new(11.5, 0.0, 11.5),
                         scale: Vec3::splat(24.0),
                         ..Transform::default()
                     },

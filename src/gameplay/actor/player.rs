@@ -677,8 +677,10 @@ fn auto_travel(
                 envir
                     .nbors_for_moving(*player.pos, None, Intelligence::Smart, player.speed())
                     .map(|(nbor, nbor_pos, _)| (nbor, nbor_pos.vision_distance(target)))
-                    .min_by_key(|(_, distance)| *distance)
-                    .filter(|(_, distance)| *distance < player.pos.vision_distance(target))
+                    .min_by_key(|(_, distance)| distance.as_tiles())
+                    .filter(|(_, distance)| {
+                        distance.in_range(VisionDistance::MAX_VISION_TILES as usize)
+                    })
                     .map(|(nbor, _)| nbor)
             })
             .map(|to| PlannedAction::Step { to })

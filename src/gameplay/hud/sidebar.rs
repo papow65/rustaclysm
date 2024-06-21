@@ -426,7 +426,7 @@ fn update_status_enemies(
     if let Ok(player_actor) = player_actors.get_single() {
         let mut enemies =
             Faction::Human.enemies(&currently_visible_builder, &factions, &player_actor);
-        enemies.sort_by_key(|&pos| pos.vision_distance(*player_actor.pos));
+        enemies.sort_by_key(|&pos| pos.vision_distance(*player_actor.pos).as_tiles());
 
         let begin = Phrase::new("Enemies:");
         let phrase = if enemies.is_empty() {
