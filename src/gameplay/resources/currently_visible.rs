@@ -1,6 +1,6 @@
 use crate::prelude::{
     Accessible, Clock, Envir, Level, LevelOffset, Player, PlayerActionState, Pos, PosOffset,
-    RelativeSegment, RelativeSegments, Visible, VisionDistance,
+    RelativeSegment, RelativeSegments, SubzoneLevel, Visible, VisionDistance,
 };
 use bevy::{
     ecs::system::SystemParam,
@@ -21,10 +21,10 @@ pub(crate) struct CurrentlyVisibleBuilder<'w, 's> {
 impl<'w, 's> CurrentlyVisibleBuilder<'w, 's> {
     pub(crate) fn for_npc(&self, pos: Pos) -> CurrentlyVisible {
         let viewing_distance = CurrentlyVisible::viewing_distance(&self.clock, None, pos.level);
-        self.build(viewing_distance, pos)
+        self.build(viewing_distance, pos, true)
     }
 
-    pub(crate) fn for_player(&self) -> CurrentlyVisible {
+    pub(crate) fn for_player(&self, only_nearby: bool) -> CurrentlyVisible {
         let from_pos = if let PlayerActionState::Peeking {
             active_target: Some(target),
         } = **self.player_action_state
@@ -38,10 +38,15 @@ impl<'w, 's> CurrentlyVisibleBuilder<'w, 's> {
             Some(&*self.player_action_state),
             from_pos.level,
         );
-        self.build(viewing_distance, from_pos)
+        self.build(viewing_distance, from_pos, only_nearby)
     }
 
-    fn build(&self, viewing_distance: Option<usize>, from: Pos) -> CurrentlyVisible {
+    fn build(
+        &self,
+        viewing_distance: Option<usize>,
+        from: Pos,
+        only_nearby: bool,
+    ) -> CurrentlyVisible {
         // segments are not used when viewing_distance is None, so then we pick any.
         let segments = self
             .relative_segments
@@ -73,6 +78,8 @@ impl<'w, 's> CurrentlyVisibleBuilder<'w, 's> {
             }
         }
 
+        let nearby_subzone_level_cache = only_nearby.then(RefCell::default);
+
         CurrentlyVisible {
             envir: &self.envir,
             segments,
@@ -81,6 +88,7 @@ impl<'w, 's> CurrentlyVisibleBuilder<'w, 's> {
             opaque_cache: RefCell::default(),
             down_cache: RefCell::default(),
             visible_cache,
+            nearby_subzone_level_cache,
             magic_stairs_up,
             magic_stairs_down,
         }
@@ -101,6 +109,9 @@ pub(crate) struct CurrentlyVisible<'a> {
     opaque_cache: RefCell<HashMap<PosOffset, bool>>, // is opaque
     down_cache: RefCell<HashMap<PosOffset, bool>>,   // can see down
     visible_cache: RefCell<HashMap<PosOffset, Visible>>,
+
+    /// None is used when everything should be updated
+    nearby_subzone_level_cache: Option<RefCell<HashMap<SubzoneLevel, bool>>>,
 
     /// The stairs up that do not have stairs down directly above them
     magic_stairs_up: Vec<PosOffset>,
@@ -134,19 +145,20 @@ impl<'a> CurrentlyVisible<'a> {
     pub(crate) fn can_see(&self, to: Pos, accessible: Option<&Accessible>) -> Visible {
         // We ignore floors seen from below. Those are not particulary interesting and require complex logic to do properly.
 
+        if self.nearby_pos(to, 0) && (to.level <= self.from.level || accessible.is_none()) {
+            self.can_see_relative(to - self.from)
+        } else {
+            Visible::Unseen
+        }
+    }
+
+    const fn nearby_pos(&self, pos: Pos, extra: usize) -> bool {
         let Some(viewing_distance) = self.viewing_distance else {
-            return Visible::Unseen;
+            return false;
         };
 
-        if viewing_distance < self.from.x.abs_diff(to.x) as usize
-            || viewing_distance < self.from.z.abs_diff(to.z) as usize
-            // Floors can't be seen from below
-            || self.from.level < to.level && accessible.is_some()
-        {
-            Visible::Unseen
-        } else {
-            self.can_see_relative(to - self.from)
-        }
+        self.from.x.abs_diff(pos.x) as usize <= viewing_distance + extra
+            && self.from.z.abs_diff(pos.z) as usize <= viewing_distance + extra
     }
 
     pub(crate) fn can_see_relative(&self, relative_to: PosOffset) -> Visible {
@@ -226,5 +238,22 @@ impl<'a> CurrentlyVisible<'a> {
             .borrow_mut()
             .insert(relative_to, visible.clone());
         visible
+    }
+
+    pub(crate) fn nearby(&self, subzone_level: SubzoneLevel) -> bool {
+        let Some(nearby_subzone_level_cache) = &self.nearby_subzone_level_cache else {
+            // When updating all positions
+            return true;
+        };
+
+        *nearby_subzone_level_cache
+            .borrow_mut()
+            .entry(subzone_level)
+            .or_insert_with(|| {
+                subzone_level
+                    .corners()
+                    .iter()
+                    .any(|corner| self.nearby_pos(*corner, 1))
+            })
     }
 }

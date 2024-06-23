@@ -38,27 +38,30 @@ pub(crate) fn update_visualization(
     children: &Children,
     child_items: &Query<&Appearance, (With<Parent>, Without<Pos>)>,
 ) {
-    let previously_seen = last_seen.clone();
+    if currently_visible.nearby(SubzoneLevel::from(pos)) {
+        let previously_seen = last_seen.clone();
 
-    let visible = currently_visible.can_see(pos, accessible);
-    // TODO check if there is enough light
-    last_seen.update(&visible);
+        let visible = currently_visible.can_see(pos, accessible);
+        // TODO check if there is enough light
+        last_seen.update(&visible);
 
-    if last_seen != &LastSeen::Never {
-        if last_seen != &previously_seen {
-            if previously_seen == LastSeen::Never {
-                explored.lock().expect("Unpoisoned").mark_pos_seen(pos);
+        if last_seen != &LastSeen::Never {
+            if last_seen != &previously_seen {
+                if previously_seen == LastSeen::Never {
+                    explored.lock().expect("Unpoisoned").mark_pos_seen(pos);
+                }
+
+                // TODO select an appearance based on amount of perceived light
+                update_material(commands, children, child_items, last_seen);
             }
 
-            // TODO select an appearance based on amount of perceived light
-            update_material(commands, children, child_items, last_seen);
+            *visibility =
+                calculate_visibility(focus, player, pos, elevation_visibility, last_seen, speed);
         }
-
-        *visibility =
-            calculate_visibility(focus, player, pos, elevation_visibility, last_seen, speed);
     }
 }
 
+/// Visible to the camera
 fn calculate_visibility(
     focus: &Focus,
     player: Option<&Player>,
@@ -152,7 +155,7 @@ pub(crate) fn update_visualization_on_item_move(
     let start = Instant::now();
 
     if moved_items.iter().peekable().peek().is_some() {
-        let currently_visible = currently_visible_builder.for_player();
+        let currently_visible = currently_visible_builder.for_player(true);
         let explored = Arc::new(Mutex::new(&mut *explored));
 
         for (&pos, mut visibility, mut last_seen, accessible, speed, children) in &mut moved_items {

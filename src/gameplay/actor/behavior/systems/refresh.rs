@@ -122,10 +122,12 @@ pub(in super::super) fn update_visualization_on_player_move(
             let currently_visible = thread_local::ThreadLocal::new();
             let explored = Arc::new(Mutex::new(&mut *explored));
 
+            let only_nearby = *visualization_update != VisualizationUpdate::Forced;
+
             items.par_iter_mut().for_each(
                 |(player, &pos, mut visibility, mut last_seen, accessible, speed, children)| {
-                    let currently_visible =
-                        currently_visible.get_or(|| currently_visible_builder.for_player());
+                    let currently_visible = currently_visible
+                        .get_or(|| currently_visible_builder.for_player(only_nearby));
 
                     par_commands.command_scope(|mut commands| {
                         update_visualization(

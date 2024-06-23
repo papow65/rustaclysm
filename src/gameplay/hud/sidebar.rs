@@ -213,7 +213,11 @@ fn percieve(
     for fragment in &mut message.phrase.fragments {
         match fragment.positioning {
             Positioning::Pos(pos) => {
-                if currently_visible_builder.for_player().can_see(pos, None) == Visible::Seen {
+                if currently_visible_builder
+                    .for_player(true)
+                    .can_see(pos, None)
+                    == Visible::Seen
+                {
                     seen = true;
                 } else {
                     fragment.text = String::from("(unseen)");
