@@ -78,7 +78,6 @@ pub(in super::super) fn update_visualization_on_player_move(
     mut visualization_update: ResMut<VisualizationUpdate>,
     mut session: GameplaySession,
     mut previous_camera_global_transform: Local<GlobalTransform>,
-    mut last_elevation_visibility: Local<ElevationVisibility>,
     mut items: Query<(
         Option<&Player>,
         &Pos,
@@ -93,68 +92,48 @@ pub(in super::super) fn update_visualization_on_player_move(
 ) {
     let start = Instant::now();
 
-    if let (
-        &FocusState::ExaminingPos(_) | &FocusState::ExaminingZoneLevel(_),
-        VisualizationUpdate::Smart,
-    ) = (&**focus.state, *visualization_update)
+    if session.is_changed() {
+        *previous_camera_global_transform = GlobalTransform::default();
+    }
+
+    let &camera_global_transform = cameras.single();
+    if focus.is_changed()
+        || camera_global_transform != *previous_camera_global_transform
+        || *visualization_update == VisualizationUpdate::Forced
     {
-        update_visibility(
-            focus,
-            elevation_visibility,
-            session,
-            previous_camera_global_transform,
-            last_elevation_visibility,
-            items,
-            cameras,
+        let currently_visible = thread_local::ThreadLocal::new();
+        let explored = Arc::new(Mutex::new(&mut *explored));
+        let only_nearby = *visualization_update != VisualizationUpdate::Forced;
+
+        items.par_iter_mut().for_each(
+            |(player, &pos, mut visibility, mut last_seen, accessible, speed, children)| {
+                let currently_visible =
+                    currently_visible.get_or(|| currently_visible_builder.for_player(only_nearby));
+
+                par_commands.command_scope(|mut commands| {
+                    update_visualization(
+                        &mut commands,
+                        &explored.clone(),
+                        currently_visible,
+                        *elevation_visibility,
+                        &focus,
+                        player,
+                        pos,
+                        &mut visibility,
+                        &mut last_seen,
+                        accessible,
+                        speed,
+                        children,
+                        &child_items,
+                    );
+                });
+            },
         );
-    } else {
-        if session.is_changed() {
-            *previous_camera_global_transform = GlobalTransform::default();
-            *last_elevation_visibility = ElevationVisibility::default();
-        }
 
-        let &camera_global_transform = cameras.single();
-        if focus.is_changed()
-            || camera_global_transform != *previous_camera_global_transform
-            || *elevation_visibility != *last_elevation_visibility
-            || *visualization_update == VisualizationUpdate::Forced
-        {
-            let currently_visible = thread_local::ThreadLocal::new();
-            let explored = Arc::new(Mutex::new(&mut *explored));
+        println!("{}x visualization updated", items.iter().len());
 
-            let only_nearby = *visualization_update != VisualizationUpdate::Forced;
-
-            items.par_iter_mut().for_each(
-                |(player, &pos, mut visibility, mut last_seen, accessible, speed, children)| {
-                    let currently_visible = currently_visible
-                        .get_or(|| currently_visible_builder.for_player(only_nearby));
-
-                    par_commands.command_scope(|mut commands| {
-                        update_visualization(
-                            &mut commands,
-                            &explored.clone(),
-                            currently_visible,
-                            *elevation_visibility,
-                            &focus,
-                            player,
-                            pos,
-                            &mut visibility,
-                            &mut last_seen,
-                            accessible,
-                            speed,
-                            children,
-                            &child_items,
-                        );
-                    });
-                },
-            );
-
-            println!("{}x visualization updated", items.iter().len());
-
-            *previous_camera_global_transform = camera_global_transform;
-            *last_elevation_visibility = *elevation_visibility;
-            *visualization_update = VisualizationUpdate::Smart;
-        }
+        *previous_camera_global_transform = camera_global_transform;
+        *visualization_update = VisualizationUpdate::Smart;
     }
 
     log_if_slow("update_visualization_on_player_move", start);
