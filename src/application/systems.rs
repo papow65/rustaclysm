@@ -31,10 +31,13 @@ pub(super) fn preprocess_keyboard_input(
 
 #[allow(clippy::needless_pass_by_value)]
 pub(super) fn manage_button_color(
-    mut interactions: Query<(&Interaction, &mut UiImage), (Changed<Interaction>, With<Button>)>,
+    mut interactions: Query<
+        (&Interaction, &mut BackgroundColor),
+        (Changed<Interaction>, With<Button>),
+    >,
 ) {
-    for (interaction, mut image) in &mut interactions {
-        image.color = match *interaction {
+    for (interaction, mut color) in &mut interactions {
+        color.0 = match *interaction {
             Interaction::Hovered | Interaction::Pressed => HOVERED_BUTTON_COLOR,
             Interaction::None => DEFAULT_BUTTON_COLOR,
         };
