@@ -97,18 +97,17 @@ pub(in super::super) fn update_visualization_on_player_move(
     }
 
     let &camera_global_transform = cameras.single();
-    if focus.is_changed()
-        || camera_global_transform != *previous_camera_global_transform
-        || *visualization_update == VisualizationUpdate::Forced
-    {
+    let camera_moved = camera_global_transform != *previous_camera_global_transform;
+
+    if focus.is_changed() || camera_moved || visualization_update.forced() {
         let currently_visible = thread_local::ThreadLocal::new();
         let explored = Arc::new(Mutex::new(&mut *explored));
-        let only_nearby = *visualization_update != VisualizationUpdate::Forced;
 
         items.par_iter_mut().for_each(
             |(player, &pos, mut visibility, mut last_seen, accessible, speed, children)| {
-                let currently_visible =
-                    currently_visible.get_or(|| currently_visible_builder.for_player(only_nearby));
+                let currently_visible = currently_visible.get_or(|| {
+                    currently_visible_builder.for_player(!visualization_update.forced())
+                });
 
                 par_commands.command_scope(|mut commands| {
                     update_visualization(
@@ -133,7 +132,7 @@ pub(in super::super) fn update_visualization_on_player_move(
         println!("{}x visualization updated", items.iter().len());
 
         *previous_camera_global_transform = camera_global_transform;
-        *visualization_update = VisualizationUpdate::Smart;
+        (*visualization_update).reset();
     }
 
     log_if_slow("update_visualization_on_player_move", start);

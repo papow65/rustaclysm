@@ -44,6 +44,16 @@ pub(crate) enum VisualizationUpdate {
     Forced,
 }
 
+impl VisualizationUpdate {
+    pub(crate) fn forced(&self) -> bool {
+        *self == Self::Forced
+    }
+
+    pub(crate) fn reset(&mut self) {
+        *self = Self::Smart;
+    }
+}
+
 // pickup
 #[derive(SystemParam)]
 pub(crate) struct Hierarchy<'w, 's> {
