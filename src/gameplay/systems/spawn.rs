@@ -352,7 +352,6 @@ pub(crate) fn update_zone_level_visibility(
 pub(crate) fn despawn_zone_level(
     mut commands: Commands,
     mut despawn_zone_level_reader: EventReader<DespawnZoneLevel>,
-    mut zone_level_entities: ResMut<ZoneLevelEntities>,
 ) {
     let start = Instant::now();
 
@@ -361,7 +360,6 @@ pub(crate) fn despawn_zone_level(
     for despawn_zone_level_event in despawn_zone_level_reader.read() {
         let entity = despawn_zone_level_event.entity;
         commands.entity(entity).despawn_recursive();
-        zone_level_entities.remove(entity);
     }
 
     log_if_slow("despawn_zone_level", start);

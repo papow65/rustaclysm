@@ -1,8 +1,12 @@
+use super::ZoneLevelEntities;
 use crate::{
     gameplay::HorizontalDirection,
     prelude::{LevelOffset, Nbor, PosOffset, VisionDistance},
 };
-use bevy::prelude::{Component, Vec3};
+use bevy::{
+    ecs::component::{ComponentHooks, StorageType},
+    prelude::{Component, Vec3},
+};
 use std::{cmp::Ordering, fmt, iter::once, ops::Sub};
 
 /// Does not include 'from', but does include 'to'
@@ -324,7 +328,8 @@ impl From<Pos> for Zone {
     }
 }
 
-#[derive(Component, Copy, Clone, PartialEq, Eq, Hash)]
+// Manually deriving `Component`
+#[derive(Copy, Clone, PartialEq, Eq, Hash)]
 pub(crate) struct ZoneLevel {
     pub(crate) zone: Zone,
     pub(crate) level: Level,
@@ -424,6 +429,14 @@ impl From<SubzoneLevel> for ZoneLevel {
             },
             level: subzone_level.level,
         }
+    }
+}
+
+impl Component for ZoneLevel {
+    const STORAGE_TYPE: StorageType = StorageType::Table;
+
+    fn register_component_hooks(hooks: &mut ComponentHooks) {
+        ZoneLevelEntities::register_hooks(hooks);
     }
 }
 

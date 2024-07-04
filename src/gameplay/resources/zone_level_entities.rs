@@ -1,6 +1,6 @@
 use crate::prelude::ZoneLevel;
 use bevy::{
-    ecs::entity::EntityHashMap,
+    ecs::component::ComponentHooks,
     prelude::{Entity, Resource},
     utils::{hashbrown::hash_map::Entry, HashMap},
 };
@@ -8,39 +8,44 @@ use bevy::{
 #[derive(Default, Resource)]
 pub(crate) struct ZoneLevelEntities {
     zone_levels: HashMap<ZoneLevel, Entity>,
-    reverse: EntityHashMap<ZoneLevel>,
 }
 
 impl ZoneLevelEntities {
+    pub(crate) fn register_hooks(hooks: &mut ComponentHooks) {
+        hooks.on_add(|mut world, entity, _component_id| {
+            let zone_level = *world
+                .entity(entity)
+                .get::<ZoneLevel>()
+                .expect("ZoneLevel should be present because it was just added");
+            if let Some(mut this) = world.get_resource_mut::<Self>() {
+                let entry = this.zone_levels.entry(zone_level);
+                assert!(
+                    matches!(entry, Entry::Vacant(..)),
+                    "Duplicate for {entry:?} - new: {entity:?}"
+                );
+                entry.insert(entity);
+            }
+        });
+        hooks.on_remove(|mut world, entity, _component_id| {
+            let removed_zone_level = *world
+                .entity(entity)
+                .get::<ZoneLevel>()
+                .expect("ZoneLevel should be present because it is being removed");
+            if let Some(mut this) = world.get_resource_mut::<Self>() {
+                let entry = this.zone_levels.entry(removed_zone_level);
+                match entry {
+                    Entry::Occupied(occupied) => {
+                        occupied.remove();
+                    }
+                    Entry::Vacant(..) => {
+                        panic!("The removed zone level entity should have been found");
+                    }
+                }
+            }
+        });
+    }
+
     pub(crate) fn get(&self, zone_level: ZoneLevel) -> Option<Entity> {
         self.zone_levels.get(&zone_level).copied()
-    }
-
-    pub(crate) fn add(&mut self, zone_level: ZoneLevel, entity: Entity) {
-        let entry = self.zone_levels.entry(zone_level);
-        assert!(
-            matches!(entry, Entry::Vacant(..)),
-            "Duplicate for {entry:?} - new: {entity:?}"
-        );
-        entry.insert(entity);
-
-        let reverse_entry = self.reverse.entry(entity);
-        assert!(
-            matches!(reverse_entry, Entry::Vacant(..)),
-            "There shouldn't be a reverse entry"
-        );
-        reverse_entry.insert(zone_level);
-    }
-
-    pub(crate) fn remove(&mut self, entity: Entity) {
-        let zone_level = self
-            .reverse
-            .remove(&entity)
-            .expect("zone level should be known");
-        let removed = self.zone_levels.remove(&zone_level);
-        assert!(
-            removed.is_some(),
-            "The removed zone level entity should have been found"
-        );
     }
 }

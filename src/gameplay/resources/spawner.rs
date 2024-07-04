@@ -765,7 +765,6 @@ impl<'w, 's> SubzoneSpawner<'w, 's> {
 pub(crate) struct ZoneSpawner<'w, 's> {
     infos: Res<'w, Infos>,
     pub(crate) zone_level_ids: ResMut<'w, ZoneLevelIds>,
-    zone_level_entities: ResMut<'w, ZoneLevelEntities>,
     pub(crate) overmap_manager: OvermapManager<'w>,
     pub(crate) overmap_buffer_manager: OvermapBufferManager<'w>,
     pub(crate) spawner: Spawner<'w, 's>,
@@ -784,7 +783,6 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
         );
 
         let mut entity = self.spawner.commands.spawn(zone_level);
-        self.zone_level_entities.add(zone_level, entity.id());
 
         let Some(seen_from) = self
             .spawner
