@@ -45,8 +45,10 @@ pub(crate) fn run_application() {
         CddaPlugin,
         GameplayPlugin,
         LoadingIndicatorPlugin,
+        log_transition_plugin::<ApplicationState>,
     ));
 
+    app.insert_state(ApplicationState::MainMenu);
     app.enable_state_scoped_entities::<ApplicationState>();
 
     app.add_systems(Startup, (maximize_window, load_fonts));

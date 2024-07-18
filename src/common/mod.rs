@@ -2,6 +2,7 @@ mod colors;
 mod error;
 mod fonts;
 mod key;
+mod log_transition;
 mod paths;
 mod scrolling_list;
 mod selection_list;
@@ -14,6 +15,7 @@ pub(crate) use self::{
     error::LoadError,
     fonts::Fonts,
     key::*,
+    log_transition::log_transition_plugin,
     paths::*,
     scrolling_list::ScrollingList,
     selection_list::{SelectionList, StepDirection, StepSize},

@@ -12,7 +12,7 @@ rust-version = "1.80" # should be latest stable
 
 [dependencies]
 base64 = "0.22"
-bevy = { version = "0.14", default-features = false, features = [ "bevy_asset", "bevy_core_pipeline", "bevy_pbr", "bevy_state", "bevy_text", "bevy_ui", "ktx2", "multi_threaded", "png", "tonemapping_luts", "wayland", "x11" ] }
+bevy = { version = "0.14", default-features = false, features = [ "bevy_asset", "bevy_core_pipeline", "bevy_pbr", "bevy_state", "bevy_text", "bevy_ui", "bevy_dev_tools", "ktx2", "multi_threaded", "png", "tonemapping_luts", "wayland", "x11" ] }
 #bevy_dylib = "0.14" # Uncomment this line (once) when `cargo run --features bevy/dynamic_linking` does not look for the right version
 bresenham = "0.1"
 either = "1"

@@ -18,6 +18,7 @@ impl Plugin for GameplayPlugin {
             InventoryScreenPlugin,
             MenuScreenPlugin,
             FrameTimeDiagnosticsPlugin,
+            log_transition_plugin::<GameplayScreenState>,
         ));
 
         // These resources persist between gameplays.
