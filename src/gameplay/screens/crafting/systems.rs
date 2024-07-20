@@ -407,7 +407,7 @@ fn recipe_qualities(
         .chain(
             using
                 .iter()
-                .inspect(|using| println!("Using qualities from {using:?}"))
+                //.inspect(|using| println!("Using qualities from {using:?}"))
                 .flat_map(|using| &infos.requirement(&using.requirement).qualities.0),
         )
         .map(|required_quality| QualitySituation {
@@ -507,8 +507,8 @@ fn expand_items<'a>(infos: &'a Infos, alternative: &'a Alternative) -> Vec<(&'a 
 #[allow(clippy::needless_pass_by_value)]
 pub(super) fn manage_crafting_keyboard_input(
     mut commands: Commands,
-    keys: Res<Keys>,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
+    keys: Res<Keys>,
     infos: Res<Infos>,
     fonts: Res<Fonts>,
     mut instruction_queue: ResMut<InstructionQueue>,
@@ -544,6 +544,14 @@ pub(super) fn manage_crafting_keyboard_input(
                     &scrolling_parents,
                 );
             }
+            Key::Character('c') => {
+                start_craft(
+                    &mut next_gameplay_state,
+                    &mut instruction_queue,
+                    &crafting_screen,
+                    &recipes.transmute_lens().query(),
+                );
+            }
             _ => {}
         }
     }
@@ -555,9 +563,9 @@ fn adapt_to_selected(
     commands: &mut Commands,
     infos: &Res<Infos>,
     fonts: &Res<Fonts>,
-    crafting_screen: &ResMut<CraftingScreen>,
-    recipes: &Query<(&mut Text, &Transform, &Node, &RecipeSituation), ()>,
-    scrolling_lists: &mut Query<(&mut ScrollingList, &mut Style, &Parent, &Node), ()>,
+    crafting_screen: &CraftingScreen,
+    recipes: &Query<(&mut Text, &Transform, &Node, &RecipeSituation)>,
+    scrolling_lists: &mut Query<(&mut ScrollingList, &mut Style, &Parent, &Node)>,
     scrolling_parents: &Query<(&Node, &Style), Without<ScrollingList>>,
 ) {
     if let Some(selected) = crafting_screen.selection_list.selected {
@@ -596,20 +604,70 @@ fn show_recipe(
         .entity(crafting_screen.recipe_details)
         .despawn_descendants()
         .with_children(|builder| {
+            builder
+                .spawn(ButtonBundle {
+                    style: Style {
+                        width: Val::Px(70.0),
+                        justify_content: JustifyContent::Center,
+                        ..Style::default()
+                    },
+                    ..ButtonBundle::default()
+                })
+                .with_children(|parent| {
+                    parent.spawn(TextBundle::from_section(
+                        "Craft",
+                        fonts.regular(recipe_sitation.color(true)),
+                    ));
+                });
             builder.spawn(TextBundle::from_sections(
                 recipe_sitation.text_sections(fonts, recipe),
             ));
         });
 }
 
-//#[allow(clippy::needless_pass_by_value)]
-//pub(super) fn manage_crafting_button_input(
-//    mut instruction_queue: ResMut<InstructionQueue>,
-//    interactions: Query<(&Interaction, &CraftingButton), (Changed<Interaction>, With<Button>)>,
-//    crafting_screen: Res<CraftingScreen>,
-//) {
-//    // TODO
-//}
+#[allow(clippy::needless_pass_by_value)]
+pub(super) fn manage_crafting_button_input(
+    mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
+    mut instruction_queue: ResMut<InstructionQueue>,
+    interactions: Query<&Interaction, (Changed<Interaction>, With<Button>)>,
+    crafting_screen: Res<CraftingScreen>,
+    recipes: Query<&RecipeSituation>,
+) {
+    for &interaction in interactions.iter() {
+        if interaction == Interaction::Pressed {
+            start_craft(
+                &mut next_gameplay_state,
+                &mut instruction_queue,
+                &crafting_screen,
+                &recipes,
+            );
+        }
+    }
+}
+
+fn start_craft(
+    next_gameplay_state: &mut NextState<GameplayScreenState>,
+    instruction_queue: &mut InstructionQueue,
+    crafting_screen: &CraftingScreen,
+    recipes: &Query<&RecipeSituation>,
+) {
+    let selected_craft = crafting_screen
+        .selection_list
+        .selected
+        .expect("There should be a selected craft");
+    let recipe = recipes
+        .get(selected_craft)
+        .expect("The selected craft should be found");
+    println!("Craft {recipe:?}");
+    instruction_queue.add(
+        QueuedInstruction::StartCraft {
+            recipe_id: recipe.recipe_id.clone(),
+        },
+        InputChange::JustPressed,
+    );
+    // Close the crafting screen
+    next_gameplay_state.set(GameplayScreenState::Base);
+}
 
 #[allow(clippy::needless_pass_by_value)]
 pub(super) fn remove_crafting_resource(mut commands: Commands) {

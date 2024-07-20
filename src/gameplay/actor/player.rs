@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use bevy::prelude::{Color, Component, DetectChanges, NextState, ResMut, States};
+use bevy::prelude::{Color, Component, DetectChanges, Entity, NextState, ResMut, States};
 use std::fmt;
 
 #[derive(Debug, Component)]
@@ -28,6 +28,13 @@ pub(crate) enum PlayerActionState {
         /// None: intent to drag on next move
         /// Some: moving items from previous to current position
         active_from: Option<Pos>,
+    },
+    PickingNborForCrafting {
+        recipe_id: ObjectId,
+    },
+    Crafting {
+        /// The craft item, not the resulting item
+        item: Entity,
     },
     Waiting {
         until: Timestamp,
@@ -99,6 +106,9 @@ impl PlayerActionState {
             Self::Dragging {
                 active_from: Some(from),
             } => plan_auto_drag(envir, instruction_queue, from, enemy_name),
+            Self::Crafting { item } => {
+                plan_auto_continue_craft(instruction_queue, *item, enemy_name)
+            }
             Self::AutoDefend => {
                 let enemies = player
                     .faction
@@ -250,6 +260,10 @@ impl PlayerActionState {
                 item,
                 to: Nbor::Horizontal(direction),
             }),
+            QueuedInstruction::StartCraft { recipe_id } => {
+                Self::handle_start_craft(next_state, message_writer, envir, player_pos, recipe_id)
+            }
+            // TODO instruction to continue crafting
             QueuedInstruction::Attack => {
                 Self::handle_attack(next_state, message_writer, envir, player_pos)
             }
@@ -356,44 +370,7 @@ impl PlayerActionState {
             }
             Self::Peeking {
                 active_target: None,
-            } => {
-                match raw_nbor {
-                    Nbor::Up | Nbor::Down => {
-                        message_writer.you("can't peek vertically").send_error();
-                        None
-                    }
-                    Nbor::HERE => {
-                        message_writer.you("can't peek here").send_error();
-                        None
-                    }
-                    Nbor::Horizontal(
-                        HorizontalDirection::NorthWest
-                        | HorizontalDirection::SouthWest
-                        | HorizontalDirection::NorthEast
-                        | HorizontalDirection::SouthEast,
-                    ) => {
-                        message_writer.you("can't peek diagonally").send_error();
-                        None
-                    }
-                    Nbor::Horizontal(
-                        horizontal_direction @ (HorizontalDirection::North
-                        | HorizontalDirection::South
-                        | HorizontalDirection::East
-                        | HorizontalDirection::West),
-                    ) => {
-                        let target = CardinalDirection::try_from(horizontal_direction)
-                            .unwrap_or_else(|()| {
-                                panic!(
-                                    "{horizontal_direction:?} should match a cardinal direction"
-                                );
-                            });
-                        //eprintln!("Activating peeking");
-                        // Not Self::Peeking, because that is not validated yet.
-                        next_state.set(Self::Normal);
-                        Some(PlannedAction::Peek { target })
-                    }
-                }
-            }
+            } => Self::handle_peeking_offset(next_state, message_writer, raw_nbor),
             Self::Closing => {
                 next_state.set(Self::Normal);
                 if let Nbor::Horizontal(target) = raw_nbor {
@@ -409,8 +386,106 @@ impl PlayerActionState {
                 });
                 Some(PlannedAction::Step { to: raw_nbor })
             }
-            Self::Waiting { .. } | Self::AutoTravel { .. } | Self::AutoDefend => {
+            Self::PickingNborForCrafting { recipe_id } => {
+                if let Nbor::Horizontal(target) = raw_nbor {
+                    // next_state is set when performing the action
+                    Some(PlannedAction::StartCraft(StartCraft {
+                        recipe_id: recipe_id.clone(),
+                        target,
+                    }))
+                } else {
+                    message_writer.you("can't craft vertically").send_error();
+                    None
+                }
+            }
+            Self::Crafting { .. }
+            | Self::Waiting { .. }
+            | Self::AutoTravel { .. }
+            | Self::AutoDefend => {
                 next_state.set(Self::Normal);
+                None
+            }
+        }
+    }
+
+    fn handle_peeking_offset(
+        next_state: &mut NextState<Self>,
+        message_writer: &mut MessageWriter,
+        raw_nbor: Nbor,
+    ) -> Option<PlannedAction> {
+        match raw_nbor {
+            Nbor::Up | Nbor::Down => {
+                message_writer.you("can't peek vertically").send_error();
+                None
+            }
+            Nbor::HERE => {
+                message_writer.you("can't peek here").send_error();
+                None
+            }
+            Nbor::Horizontal(
+                HorizontalDirection::NorthWest
+                | HorizontalDirection::SouthWest
+                | HorizontalDirection::NorthEast
+                | HorizontalDirection::SouthEast,
+            ) => {
+                message_writer.you("can't peek diagonally").send_error();
+                None
+            }
+            Nbor::Horizontal(
+                horizontal_direction @ (HorizontalDirection::North
+                | HorizontalDirection::South
+                | HorizontalDirection::East
+                | HorizontalDirection::West),
+            ) => {
+                let target =
+                    CardinalDirection::try_from(horizontal_direction).unwrap_or_else(|()| {
+                        panic!("{horizontal_direction:?} should match a cardinal direction");
+                    });
+                //eprintln!("Activating peeking");
+                // Not Self::Peeking, because that is not validated yet.
+                next_state.set(Self::Normal);
+                Some(PlannedAction::Peek { target })
+            }
+        }
+    }
+
+    fn handle_start_craft(
+        next_state: &mut ResMut<NextState<Self>>,
+        message_writer: &mut MessageWriter,
+        envir: &Envir,
+        pos: Pos,
+        recipe_id: ObjectId,
+    ) -> Option<PlannedAction> {
+        let craftable_nbors = envir
+            .nbors_for_exploring(
+                pos,
+                QueuedInstruction::StartCraft {
+                    recipe_id: recipe_id.clone(),
+                },
+            )
+            .collect::<Vec<_>>();
+
+        match craftable_nbors.len() {
+            0 => {
+                message_writer.str("no place to craft nearby").send_error();
+                None
+            }
+            1 => {
+                if let Nbor::Horizontal(horizontal_direction) =
+                    craftable_nbors.first().expect("Single valid pos")
+                {
+                    // Craftig state is set when performing the action
+                    Some(PlannedAction::StartCraft(StartCraft {
+                        recipe_id,
+                        target: *horizontal_direction,
+                    }))
+                } else {
+                    message_writer.str("no place to craft nearby").send_error();
+                    None
+                }
+            }
+            _ => {
+                next_state.set(Self::PickingNborForCrafting { recipe_id });
                 None
             }
         }
@@ -546,6 +621,8 @@ impl PlayerActionState {
             | Self::Pulping { .. }
             | Self::Peeking { .. }
             | Self::Dragging { .. }
+            | Self::PickingNborForCrafting { .. }
+            | Self::Crafting { .. }
             | Self::AutoTravel { .. } => WARN_TEXT_COLOR,
             Self::AutoDefend => BAD_TEXT_COLOR,
         }
@@ -590,6 +667,8 @@ impl fmt::Display for PlayerActionState {
             Self::Peeking { .. } => "Peeking",
             Self::Closing => "Closing",
             Self::Dragging { .. } => "Dragging",
+            Self::PickingNborForCrafting { .. } => "Crafting: pick a direction",
+            Self::Crafting { .. } => "Crafting",
             Self::Waiting { .. } => "Waiting",
             Self::Sleeping { .. } => "Sleeping",
             Self::AutoTravel { .. } => "Traveling",
@@ -605,19 +684,31 @@ fn plan_auto_drag(
     enemy_name: Option<Fragment>,
 ) -> Option<PlannedAction> {
     if let Some(item) = envir.find_item(*from) {
-        if let Some(enemy_name) = enemy_name {
-            instruction_queue.interrupt(Interruption::Danger(enemy_name));
-            None
-        } else {
-            Some(PlannedAction::MoveItem {
+        interrupt_on_danger(
+            instruction_queue,
+            enemy_name,
+            PlannedAction::MoveItem {
                 item,
                 to: Nbor::HERE,
-            })
-        }
+            },
+        )
     } else {
         instruction_queue.interrupt(Interruption::Finished);
         None
     }
+}
+
+fn plan_auto_continue_craft(
+    instruction_queue: &mut InstructionQueue,
+    item: Entity,
+    enemy_name: Option<Fragment>,
+) -> Option<PlannedAction> {
+    // Finishing a craft is checked when performing the action
+    interrupt_on_danger(
+        instruction_queue,
+        enemy_name,
+        PlannedAction::ContinueCraft { item },
+    )
 }
 
 fn plan_auto_travel(
@@ -697,16 +788,17 @@ fn plan_auto_pulp(
         .find_pulpable(player.pos.horizontal_nbor(target))
         .is_some()
     {
-        if let Some(enemy_name) = enemy_name {
-            instruction_queue.interrupt(Interruption::Danger(enemy_name));
-            None
-        } else if player.stamina.breath() != Breath::Normal {
-            //eprintln!("Keep pulping after catching breath");
-            Some(PlannedAction::Stay)
-        } else {
-            //eprintln!("Keep pulping");
-            Some(PlannedAction::Pulp { target })
-        }
+        interrupt_on_danger(
+            instruction_queue,
+            enemy_name,
+            if player.stamina.breath() == Breath::Normal {
+                //eprintln!("Keep pulping");
+                PlannedAction::Pulp { target }
+            } else {
+                //eprintln!("Keep pulping after catching breath");
+                PlannedAction::Stay
+            },
+        )
     } else {
         //eprintln!("Stop pulping");
         instruction_queue.interrupt(Interruption::Finished);
@@ -723,11 +815,21 @@ fn plan_auto_wait(
     if *until <= now {
         instruction_queue.interrupt(Interruption::Finished);
         None
-    } else if let Some(enemy_name) = enemy_name {
+    } else {
+        interrupt_on_danger(instruction_queue, enemy_name, PlannedAction::Stay)
+    }
+}
+
+fn interrupt_on_danger(
+    instruction_queue: &mut InstructionQueue,
+    enemy_name: Option<Fragment>,
+    planned_action: PlannedAction,
+) -> Option<PlannedAction> {
+    if let Some(enemy_name) = enemy_name {
         instruction_queue.interrupt(Interruption::Danger(enemy_name));
         None
     } else {
-        Some(PlannedAction::Stay)
+        Some(planned_action)
     }
 }
 

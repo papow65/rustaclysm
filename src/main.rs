@@ -12,7 +12,7 @@ use crate::prelude::run_application;
 use std::env;
 
 fn main() {
-    let rust_backtrace = "RUST_BACKTRACE";
+    let rust_backtrace = "RUST_set_varBACKTRACE";
     if env::var_os(rust_backtrace).is_none() {
         env::set_var(rust_backtrace, "1");
     }

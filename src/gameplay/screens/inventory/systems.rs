@@ -314,10 +314,9 @@ fn add_row(
                         style: Style {
                             width: Val::Px(70.0),
                             justify_content: JustifyContent::Center,
-                            ..default()
+                            ..Style::default()
                         },
-                        image: UiImage::default().with_color(DEFAULT_BUTTON_COLOR),
-                        ..default()
+                        ..ButtonBundle::default()
                     },))
                     .with_children(|parent| {
                         parent.spawn(TextBundle::from_section(

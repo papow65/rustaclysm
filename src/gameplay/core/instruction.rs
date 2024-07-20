@@ -1,4 +1,4 @@
-use crate::prelude::{Fragment, InputChange, Key, KeyChange, Nbor};
+use crate::prelude::{Fragment, InputChange, Key, KeyChange, Nbor, ObjectId};
 use bevy::{input::keyboard::KeyCode, prelude::Entity};
 
 use super::HorizontalDirection;
@@ -80,6 +80,9 @@ pub(crate) enum QueuedInstruction {
     Unwield(Entity),
     Pickup(Entity),
     Dump(Entity, HorizontalDirection),
+    StartCraft {
+        recipe_id: ObjectId,
+    },
     Attack,
     Smash,
     Pulp,

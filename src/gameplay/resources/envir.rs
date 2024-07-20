@@ -276,6 +276,9 @@ impl<'w, 's> Envir<'w, 's> {
             QueuedInstruction::Smash => self.find_smashable(nbor).is_some(),
             QueuedInstruction::Pulp => self.find_pulpable(nbor).is_some(),
             QueuedInstruction::Close => self.find_closeable(nbor).is_some(),
+            QueuedInstruction::StartCraft { .. } => {
+                self.is_accessible(nbor) && !self.is_water(nbor)
+            }
             _ => panic!("unexpected instruction {instruction:?}"),
         })
         .map(move |(nbor, _npos, _distance)| nbor)

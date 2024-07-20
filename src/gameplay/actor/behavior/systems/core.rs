@@ -36,6 +36,7 @@ impl PlanSystems {
         }
     }
 }
+
 #[allow(clippy::needless_pass_by_value)]
 pub(in super::super) fn plan_action(
     In(active_actor): In<Entity>,
@@ -172,6 +173,8 @@ pub(in super::super) struct PerformSystems {
     unwield: SystemId<ActionIn<ItemAction<Unwield>>, Option<Impact>>,
     pickup: SystemId<ActionIn<ItemAction<Pickup>>, Option<Impact>>,
     move_item: SystemId<ActionIn<ItemAction<MoveItem>>, Option<Impact>>,
+    start_craft: SystemId<ActionIn<StartCraft>, Option<Impact>>,
+    continue_craft: SystemId<ActionIn<ItemAction<ContinueCraft>>, Option<Impact>>,
     examine_item: SystemId<ActionIn<ItemAction<ExamineItem>>, Option<Impact>>,
     change_pace: SystemId<ActionIn<ChangePace>, Option<Impact>>,
 }
@@ -191,6 +194,8 @@ impl PerformSystems {
             unwield: world.register_system(perform_unwield),
             pickup: world.register_system(perform_pickup),
             move_item: world.register_system(perform_move_item),
+            start_craft: world.register_system(perform_start_craft),
+            continue_craft: world.register_system(perform_continue_craft),
             examine_item: world.register_system(perform_examine_item),
             change_pace: world.register_system(perform_change_pace),
         }
@@ -233,6 +238,11 @@ pub(in super::super) fn perform_action(
         PlannedAction::MoveItem { item, to } => act_fn(
             perform_systems.move_item,
             ItemAction::new(item, MoveItem { to }),
+        ),
+        PlannedAction::StartCraft(start_craft) => act_fn(perform_systems.start_craft, start_craft),
+        PlannedAction::ContinueCraft { item } => act_fn(
+            perform_systems.continue_craft,
+            ItemAction::new(item, ContinueCraft),
         ),
         PlannedAction::ExamineItem { item } => act_fn(
             perform_systems.examine_item,
@@ -471,6 +481,48 @@ pub(in super::super) fn perform_move_item(
         &mut location,
         &move_item.action.item(&items),
         move_item.action.change.to,
+    )
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub(in super::super) fn perform_start_craft(
+    In(start_craft): In<ActionIn<StartCraft>>,
+    mut message_writer: MessageWriter,
+    mut next_player_action_state: ResMut<NextState<PlayerActionState>>,
+    mut spawner: Spawner,
+    infos: Res<Infos>,
+    subzone_level_entities: Res<SubzoneLevelEntities>,
+    actors: Query<Actor>,
+) -> Option<Impact> {
+    start_craft.actor(&actors).start_craft(
+        &mut message_writer,
+        &mut next_player_action_state,
+        &mut spawner,
+        &infos,
+        &subzone_level_entities,
+        start_craft.action,
+    )
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub(in super::super) fn perform_continue_craft(
+    In(continue_craft): In<ActionIn<ItemAction<ContinueCraft>>>,
+    mut commands: Commands,
+    mut message_writer: MessageWriter,
+    mut next_player_action_state: ResMut<NextState<PlayerActionState>>,
+    mut spawner: Spawner,
+    infos: Res<Infos>,
+    actors: Query<Actor>,
+    mut items: Query<(Item, &mut Craft)>,
+) -> Option<Impact> {
+    continue_craft.actor(&actors).continue_craft(
+        &mut commands,
+        &mut message_writer,
+        &mut next_player_action_state,
+        &mut spawner,
+        &infos,
+        &mut items,
+        continue_craft.action.item_entity,
     )
 }
 

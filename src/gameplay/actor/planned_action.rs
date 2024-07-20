@@ -1,4 +1,4 @@
-use crate::prelude::{CardinalDirection, HorizontalDirection, Nbor};
+use crate::prelude::{CardinalDirection, HorizontalDirection, Nbor, StartCraft};
 use bevy::prelude::Entity;
 
 #[derive(Debug)]
@@ -36,6 +36,10 @@ pub(crate) enum PlannedAction {
     MoveItem {
         item: Entity,
         to: Nbor,
+    },
+    StartCraft(StartCraft),
+    ContinueCraft {
+        item: Entity,
     },
     /// Redundantly named to avoid confusion
     ExamineItem {

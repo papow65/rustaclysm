@@ -238,6 +238,43 @@ pub(crate) struct CddaItem {
     pub(crate) degradation: Option<u32>,
 }
 
+impl From<ObjectId> for CddaItem {
+    fn from(typeid: ObjectId) -> Self {
+        Self {
+            typeid,
+            snip_id: None,
+            charges: None,
+            active: None,
+            corpse: None,
+            name: None,
+            owner: None,
+            bday: None,
+            last_temp_check: None,
+            specific_energy: None,
+            temperature: None,
+            item_vars: None,
+            item_tags: Vec::new(),
+            contents: None,
+            components: Vec::new(),
+            is_favorite: None,
+            relic_data: None,
+            damaged: None,
+            current_phase: None,
+            faults: Vec::new(),
+            rot: None,
+            curammo: None,
+            item_counter: None,
+            variant: None,
+            recipe_charges: None,
+            poison: None,
+            burnt: None,
+            craft_data: None,
+            dropped_from: None,
+            degradation: None,
+        }
+    }
+}
+
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct CddaContainer {

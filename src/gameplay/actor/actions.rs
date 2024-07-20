@@ -1,6 +1,6 @@
 use crate::{
     gameplay::{CardinalDirection, HorizontalDirection},
-    prelude::{Actor, ActorItem, Item, ItemItem, Nbor},
+    prelude::{Actor, ActorItem, Item, ItemItem, Nbor, ObjectId},
 };
 use bevy::prelude::{Entity, Query};
 
@@ -125,6 +125,19 @@ pub(crate) struct MoveItem {
 }
 
 impl ItemChange for MoveItem {}
+
+#[derive(Clone, Debug)]
+pub(crate) struct StartCraft {
+    pub(crate) recipe_id: ObjectId,
+    pub(crate) target: HorizontalDirection,
+}
+
+impl Action for StartCraft {}
+
+#[derive(Clone, Debug)]
+pub(crate) struct ContinueCraft;
+
+impl ItemChange for ContinueCraft {}
 
 /// Redundantly named to avoid confusion
 #[derive(Clone, Debug)]

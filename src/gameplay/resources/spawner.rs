@@ -39,7 +39,7 @@ impl<'w, 's> Spawner<'w, 's> {
             for repetition in repetitions {
                 let CddaAmount { obj: item, amount } = repetition.as_amount();
                 //dbg!(&item.typeid);
-                self.spawn_existing_item(
+                _ = self.spawn_item(
                     infos,
                     subzone_level_entity,
                     pos,
@@ -155,17 +155,17 @@ impl<'w, 's> Spawner<'w, 's> {
         self.spawn_object(parent, pos, definition, object_name);
     }
 
-    fn spawn_existing_item(
+    pub(crate) fn spawn_item(
         &mut self,
         infos: &Infos,
         parent: Entity,
         pos: Pos,
         item: &CddaItem,
         amount: Amount,
-    ) {
+    ) -> Result<Entity, ()> {
         let Some(item_info) = infos.try_item(&item.typeid) else {
             eprintln!("No info found for {:?}. Spawning skipped", &item.typeid);
-            return;
+            return Err(());
         };
 
         //println!("{:?} {:?} {:?} {:?}", &parent, pos, &id, &amount);
@@ -201,9 +201,11 @@ impl<'w, 's> Spawner<'w, 's> {
         if item.item_tags.contains(&String::from("FILTHY")) {
             entity.insert(Filthy);
         }
+
+        Ok(entity.id())
     }
 
-    fn spawn_new_items(
+    fn spawn_bashing_items(
         &mut self,
         infos: &Infos,
         parent_entity: Entity,
@@ -221,44 +223,9 @@ impl<'w, 's> Spawner<'w, 's> {
                             Some(count) => count.random(),
                             None => 1,
                         });
-                        self.spawn_existing_item(
-                            infos,
-                            parent_entity,
-                            pos,
-                            &CddaItem {
-                                typeid: item.item.clone(),
-                                snip_id: None,
-                                charges: item.charges.as_ref().map(CountRange::random),
-                                active: None,
-                                corpse: None,
-                                name: None,
-                                owner: None,
-                                bday: None,
-                                last_temp_check: None,
-                                specific_energy: None,
-                                temperature: None,
-                                item_vars: None,
-                                item_tags: Vec::new(),
-                                contents: None,
-                                components: Vec::new(),
-                                is_favorite: None,
-                                relic_data: None,
-                                damaged: None,
-                                current_phase: None,
-                                faults: Vec::new(),
-                                rot: None,
-                                curammo: None,
-                                item_counter: None,
-                                variant: None,
-                                recipe_charges: None,
-                                poison: None,
-                                burnt: None,
-                                craft_data: None,
-                                dropped_from: None,
-                                degradation: None,
-                            },
-                            amount,
-                        );
+                        let mut cdda_item = CddaItem::from(item.item.clone());
+                        cdda_item.charges = item.charges.as_ref().map(CountRange::random);
+                        _ = self.spawn_item(infos, parent_entity, pos, &cdda_item, amount);
                     }
                 }
                 BashItem::Group { ref group } => {
@@ -281,7 +248,7 @@ impl<'w, 's> Spawner<'w, 's> {
             .as_ref()
             .or(item_group.entries.as_ref())
             .expect("items or entries");
-        self.spawn_new_items(infos, parent_entity, pos, items);
+        self.spawn_bashing_items(infos, parent_entity, pos, items);
     }
 
     fn spawn_furniture(&mut self, infos: &Infos, parent: Entity, pos: Pos, id: &ObjectId) {
@@ -411,35 +378,30 @@ impl<'w, 's> Spawner<'w, 's> {
                 (pbr_bundle, apprearance.clone(), RenderLayers::layer(1))
             });
 
-        let tile = self
-            .commands
-            .spawn((
-                SpatialBundle {
-                    transform: Transform::from_translation(pos.vec3()),
-                    ..SpatialBundle::HIDDEN_IDENTITY
-                },
-                definition.clone(),
-                pos,
-                object_name,
-            ))
-            .with_children(|child_builder| {
-                child_builder.spawn(layers.base);
-                if let Some(overlay) = layers.overlay {
-                    child_builder.spawn(overlay);
-                }
-            })
-            .id();
-        //dbg!(tile);
-
-        self.commands.entity(parent).add_child(tile);
-
+        let mut entity_commands = self.commands.spawn((
+            SpatialBundle {
+                transform: Transform::from_translation(pos.vec3()),
+                ..SpatialBundle::HIDDEN_IDENTITY
+            },
+            definition.clone(),
+            pos,
+            object_name,
+        ));
+        entity_commands.with_children(|child_builder| {
+            child_builder.spawn(layers.base);
+            if let Some(overlay) = layers.overlay {
+                child_builder.spawn(overlay);
+            }
+        });
         if definition.category.shading_applied() {
-            self.commands.entity(tile).insert(last_seen);
+            entity_commands.insert(last_seen);
         }
 
-        self.location.update(tile, Some(pos));
+        let entity = entity_commands.id();
+        self.commands.entity(parent).add_child(entity);
+        self.location.update(entity, Some(pos));
 
-        tile
+        entity
     }
 
     fn configure_player(&mut self, player_entity: Entity) {
@@ -620,13 +582,33 @@ impl<'w, 's> Spawner<'w, 's> {
         if let Some(items) = &bash.items {
             match items {
                 BashItems::Explicit(item_vec) => {
-                    self.spawn_new_items(infos, parent_entity, pos, item_vec);
+                    self.spawn_bashing_items(infos, parent_entity, pos, item_vec);
                 }
                 BashItems::Collection(id) => {
                     self.spawn_item_collection(infos, parent_entity, pos, id);
                 }
             }
         }
+    }
+
+    pub(crate) fn spawn_craft(
+        &mut self,
+        infos: &Infos,
+        parent_entity: Entity,
+        pos: Pos,
+        object_id: ObjectId,
+    ) -> Entity {
+        let craft = CddaItem::from(ObjectId::new("craft"));
+        let entity = self
+            .spawn_item(infos, parent_entity, pos, &craft, Amount::SINGLE)
+            .expect("Spawning craft item should have succeeded");
+        self.commands.entity(entity).insert(Craft {
+            work_needed: 100,
+            work_done: 0,
+            object_id,
+        });
+
+        entity
     }
 }
 

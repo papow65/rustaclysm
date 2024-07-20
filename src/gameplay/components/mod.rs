@@ -141,6 +141,23 @@ impl HealingDuration {
 }
 
 #[derive(Debug, Component)]
+pub(crate) struct Craft {
+    pub(crate) object_id: ObjectId,
+    pub(crate) work_needed: u32,
+    pub(crate) work_done: u32,
+}
+
+impl Craft {
+    pub(crate) fn work(&mut self) {
+        self.work_done += 1;
+    }
+
+    pub(crate) const fn finished(&self) -> bool {
+        self.work_done <= self.work_needed
+    }
+}
+
+#[derive(Debug, Component)]
 pub(crate) struct Melee {
     pub(crate) dices: u16,
     pub(crate) sides: u16,

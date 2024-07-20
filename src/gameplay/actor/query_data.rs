@@ -621,7 +621,9 @@ impl ActorItem<'_> {
             .send_info();
 
         let Some(new_parent) = subzone_level_entities.get(SubzoneLevel::from(to)) else {
-            eprintln!("Subzone for moving not found");
+            message_writer
+                .str("Subzone not found when moving an item")
+                .send_error();
             return None;
         };
         commands
@@ -630,6 +632,64 @@ impl ActorItem<'_> {
             .set_parent(new_parent);
         location.update(moved.entity, Some(*self.pos));
         Some(self.activate())
+    }
+
+    pub(crate) fn start_craft(
+        &self,
+        message_writer: &mut MessageWriter,
+        next_player_action_state: &mut NextState<PlayerActionState>,
+        spawner: &mut Spawner,
+        infos: &Infos,
+        subzone_level_entities: &SubzoneLevelEntities,
+        start_craft: StartCraft,
+    ) -> Option<Impact> {
+        let pos = self.pos.horizontal_nbor(start_craft.target);
+        let Some(parent_entity) = subzone_level_entities.get(SubzoneLevel::from(pos)) else {
+            message_writer
+                .str("Subzone not found when starting to craft")
+                .send_error();
+            return None;
+        };
+
+        // TODO consume components
+
+        let item = spawner.spawn_craft(infos, parent_entity, pos, start_craft.recipe_id);
+
+        next_player_action_state.set(PlayerActionState::Crafting { item });
+
+        None
+    }
+
+    #[allow(clippy::unnecessary_wraps)]
+    pub(crate) fn continue_craft(
+        &self,
+        commands: &mut Commands,
+        message_writer: &mut MessageWriter,
+        next_player_action_state: &mut NextState<PlayerActionState>,
+        spawner: &mut Spawner,
+        infos: &Infos,
+        crafts: &mut Query<(Item, &mut Craft)>,
+        craft: Entity,
+    ) -> Option<Impact> {
+        let (item, mut craft) = crafts.get_mut(craft).expect("Craft should be found");
+
+        craft.work();
+        if craft.finished() {
+            message_writer.you("finish").add("crafting").send_info();
+            let parent = item.parent.get();
+            let pos = *item.pos.unwrap_or(self.pos);
+            let amount = *item.amount;
+            let cdda_item = CddaItem::from(craft.object_id.clone());
+            commands.entity(item.entity).despawn_recursive();
+            _ = spawner.spawn_item(infos, parent, pos, &cdda_item, amount);
+            next_player_action_state.set(PlayerActionState::Normal);
+        }
+
+        Some(Impact {
+            actor_entity: self.entity,
+            timeout: Milliseconds::MINUTE,
+            stamina_impact: Some(StaminaImpact::Neutral),
+        })
     }
 
     pub(crate) fn examine_item(message_writer: &mut MessageWriter, infos: &Infos, item: &ItemItem) {

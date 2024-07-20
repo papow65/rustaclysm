@@ -1,10 +1,9 @@
-use std::cmp::Ordering;
-
 use crate::prelude::{
     Fonts, ObjectId, Recipe, BAD_TEXT_COLOR, DEFAULT_TEXT_COLOR, GOOD_TEXT_COLOR, SOFT_TEXT_COLOR,
     WARN_TEXT_COLOR,
 };
 use bevy::prelude::{Color, Component, TextSection};
+use std::cmp::Ordering;
 
 #[derive(Clone, Debug, Component)]
 pub(super) struct RecipeSituation {
