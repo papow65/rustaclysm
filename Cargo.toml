@@ -8,7 +8,7 @@ repository = "https://github.com/papow65/rustaclysm"
 authors = [ "papow65 <papow65@protonmail.com>" ]
 exclude = [ "/screenshots/" ]
 edition = "2021"
-rust-version = "1.79" # should be latest stable
+rust-version = "1.80" # should be latest stable
 
 [dependencies]
 base64 = "0.22"
@@ -56,7 +56,6 @@ ellipsis_inclusive_range_patterns = "forbid"
 explicit_outlives_requirements = "forbid"
 forbidden_lint_groups = "forbid"
 ill_formed_attribute_input = "forbid"
-indirect_structural_match = "forbid"
 invalid_doc_attributes = "forbid"
 invalid_type_param_default = "forbid"
 late_bound_lifetime_arguments = "forbid"
@@ -67,10 +66,8 @@ non_fmt_panics = "forbid"
 non_snake_case = "forbid"
 order_dependent_trait_objects = "forbid"
 patterns_in_fns_without_body = "forbid"
-pointer_structural_match = "forbid"
 private_interfaces = "forbid"
 private_bounds = "forbid"
-proc_macro_back_compat = "forbid"
 proc_macro_derive_resolution_fallback = "forbid"
 pub_use_of_private_extern_crate = "forbid"
 rust_2021_incompatible_closure_captures = "forbid"
@@ -84,7 +81,6 @@ uninhabited_static = "forbid"
 unsafe_code = "forbid"
 unstable_name_collisions = "forbid"
 unsupported_calling_conventions = "forbid"
-where_clauses_object_safety = "forbid"
 # Denied
 non_camel_case_types = "deny"
 non_upper_case_globals = "deny"
