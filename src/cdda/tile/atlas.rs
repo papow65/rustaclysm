@@ -11,7 +11,7 @@ pub(super) struct Atlas {
 }
 
 impl Atlas {
-    pub(super) fn new(
+    pub(super) fn try_new(
         json: &serde_json::Value,
         tiles: &mut HashMap<ObjectId, TileInfo>,
     ) -> Result<Option<Self>, Error> {

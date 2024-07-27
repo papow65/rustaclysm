@@ -47,15 +47,13 @@ impl TileLoader {
             });
         };
 
-        let mut atlases = Vec::new();
         let mut tiles = HashMap::default();
 
-        for json_atlas in json_atlases {
-            if let Some(atlas) = Atlas::new(json_atlas, &mut tiles)? {
-                //dbg!(&atlas);
-                atlases.push(atlas);
-            }
-        }
+        let atlases = json_atlases
+            .iter()
+            .map(|json_atlas| Atlas::try_new(json_atlas, &mut tiles))
+            .filter_map(Result::transpose)
+            .collect::<Result<Vec<_>, _>>()?;
 
         let mut loader = Self {
             tiles,
