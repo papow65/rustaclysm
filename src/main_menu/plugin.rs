@@ -3,10 +3,7 @@ use crate::prelude::{
     ApplicationState,
 };
 use bevy::{
-    prelude::{
-        in_state, on_event, App, AppExtStates, FixedUpdate, IntoSystemConfigs, OnEnter, Plugin,
-        Update,
-    },
+    prelude::{in_state, on_event, App, FixedUpdate, IntoSystemConfigs, OnEnter, Plugin, Update},
     window::WindowResized,
 };
 

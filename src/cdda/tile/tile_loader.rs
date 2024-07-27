@@ -1,7 +1,9 @@
 use crate::prelude::*;
-use bevy::prelude::*;
-use bevy::utils::HashMap;
-use std::{fs::read_to_string, path::PathBuf};
+use bevy::{
+    prelude::*,
+    utils::{Entry, HashMap},
+};
+use std::{any::type_name, fs::read_to_string, path::PathBuf};
 
 #[derive(Debug)]
 struct TileInfo {
@@ -11,11 +13,39 @@ struct TileInfo {
 }
 
 impl TileInfo {
-    fn new(tile: &serde_json::Value) -> Self {
+    fn sprite_numbers(&self) -> (Option<SpriteNumber>, Option<SpriteNumber>) {
+        (
+            fastrand::choice(&self.foreground).copied(),
+            fastrand::choice(&self.background).copied(),
+        )
+    }
+
+    fn used_sprite_numbers(&self) -> impl Iterator<Item = SpriteNumber> + '_ {
+        self.foreground
+            .iter()
+            .copied()
+            .chain(self.background.iter().copied())
+    }
+}
+
+impl Clone for TileInfo {
+    fn clone(&self) -> Self {
+        Self {
+            names: self.names.clone(),
+            foreground: self.foreground.clone(),
+            background: self.background.clone(),
+        }
+    }
+}
+
+impl TryFrom<&serde_json::Value> for TileInfo {
+    type Error = Error;
+
+    fn try_from(tile: &serde_json::Value) -> Result<Self, Self::Error> {
         let tile = tile
             .as_object()
             .expect("JSON value should be an object (map)");
-        Self {
+        Ok(Self {
             names: {
                 let mut tile_names = Vec::new();
                 match &tile["id"] {
@@ -29,30 +59,20 @@ impl TileInfo {
                             ));
                         }
                     }
-                    other => panic!("{other:?}"),
+                    other => {
+                        return Err(Error::UnexpectedJsonVariant {
+                            _format: type_name::<Self>(),
+                            _part: Some("id"),
+                            _expected: "string or array",
+                            _json: other.clone(),
+                        });
+                    }
                 };
                 tile_names
             },
             foreground: load_xground(tile.get("fg")),
             background: load_xground(tile.get("bg")),
-        }
-    }
-
-    fn sprite_numbers(&self) -> (Option<SpriteNumber>, Option<SpriteNumber>) {
-        (
-            fastrand::choice(&self.foreground).copied(),
-            fastrand::choice(&self.background).copied(),
-        )
-    }
-}
-
-impl Clone for TileInfo {
-    fn clone(&self) -> Self {
-        Self {
-            names: self.names.clone(),
-            foreground: self.foreground.clone(),
-            background: self.background.clone(),
-        }
+        })
     }
 }
 
@@ -92,7 +112,10 @@ struct Atlas {
 }
 
 impl Atlas {
-    fn new(json: &serde_json::Value, tiles: &mut HashMap<ObjectId, TileInfo>) -> Option<Self> {
+    fn new(
+        json: &serde_json::Value,
+        tiles: &mut HashMap<ObjectId, TileInfo>,
+    ) -> Result<Option<Self>, Error> {
         let atlas = json
             .as_object()
             .expect("JSON value should be an object (map)");
@@ -100,7 +123,7 @@ impl Atlas {
             .as_str()
             .expect("'file' key should be present");
         if filename == "fallback.png" {
-            return None;
+            return Ok(None);
         }
         let image_path = Paths::gfx_path().join("UltimateCataclysm").join(filename);
 
@@ -140,30 +163,30 @@ impl Atlas {
             .as_array()
             .expect("'tiles' key should be present")
         {
-            let tile_info = TileInfo::new(tile);
+            let tile_info = TileInfo::try_from(tile)?;
             for name in &tile_info.names {
                 tiles.insert(name.clone(), tile_info.clone());
             }
         }
 
-        Some(Self {
+        Ok(Some(Self {
             range: (from_to[0], from_to[1]),
             image_path,
             transform2d: Transform2d {
                 scale: Vec2::new(width, height),
                 offset: Vec2::new(offset_x, offset_y),
             },
-        })
+        }))
     }
 
-    fn contains(&self, sprite_number: &SpriteNumber) -> bool {
-        (self.range.0..=self.range.1).contains(sprite_number)
+    fn contains(&self, sprite_number: SpriteNumber) -> bool {
+        (self.range.0..=self.range.1).contains(&sprite_number)
     }
 
-    fn texture_info(&self, sprite_number: &SpriteNumber) -> TextureInfo {
+    fn texture_info(&self, sprite_number: SpriteNumber) -> TextureInfo {
         TextureInfo {
             mesh_info: MeshInfo::new(
-                (*sprite_number).to_usize() - self.range.0.to_usize(),
+                sprite_number.to_usize() - self.range.0.to_usize(),
                 match self.image_path.display().to_string() {
                     p if p.ends_with("filler_tall.png") => 2,
                     p if p.ends_with("large_ridden.png") => 3,
@@ -189,24 +212,45 @@ pub(crate) struct TileLoader {
 }
 
 impl TileLoader {
-    pub(crate) fn new() -> Self {
-        let filepath = Paths::gfx_path()
-            .join("UltimateCataclysm")
-            .join("tile_config.json");
-        let file_contents = read_to_string(filepath).expect("File should be readable");
+    pub(crate) fn try_new() -> Result<Self, Error> {
+        let file_name = "tile_config.json";
+        let file_path = Paths::gfx_path().join("UltimateCataclysm").join(file_name);
+        let file_contents = read_to_string(&file_path)?;
         let json: serde_json::Value =
-            serde_json::from_str(&file_contents).expect("File should be valid JSON");
-        let json_atlases = json
-            .as_object()
-            .expect("JSON value should be an object (map)")["tiles-new"]
-            .as_array()
-            .expect("JSON value should be an array (list)");
+            serde_json::from_str(&file_contents).map_err(|serde_json_error| Error::Json {
+                _wrapped: serde_json_error,
+                _file_path: file_path,
+                _contents: file_contents,
+            })?;
+        let Some(json_object) = json.as_object() else {
+            return Err(Error::UnexpectedJsonVariant {
+                _format: file_name,
+                _part: None,
+                _expected: "object",
+                _json: json,
+            });
+        };
+        let Some(tiles) = json_object.get("tiles-new") else {
+            return Err(Error::MissingJsonKey {
+                _format: file_name,
+                _key: "tiles-new",
+                _json: json,
+            });
+        };
+        let Some(json_atlases) = tiles.as_array() else {
+            return Err(Error::UnexpectedJsonVariant {
+                _format: file_name,
+                _part: Some("tiles-new"),
+                _expected: "array",
+                _json: json,
+            });
+        };
 
         let mut atlases = Vec::new();
         let mut tiles = HashMap::default();
 
         for json_atlas in json_atlases {
-            if let Some(atlas) = Atlas::new(json_atlas, &mut tiles) {
+            if let Some(atlas) = Atlas::new(json_atlas, &mut tiles)? {
                 //dbg!(&atlas);
                 atlases.push(atlas);
             }
@@ -219,31 +263,24 @@ impl TileLoader {
 
         for tile_info in loader.tiles.values() {
             //dbg!(tile_info.names[0].0.as_str());
-            for fg in &tile_info.foreground {
-                loader
-                    .textures
-                    .entry(*fg)
-                    .or_insert_with(|| Self::texture_info(&atlases, fg));
-            }
-            for bg in &tile_info.background {
-                loader
-                    .textures
-                    .entry(*bg)
-                    .or_insert_with(|| Self::texture_info(&atlases, bg));
+            for sprite_number in tile_info.used_sprite_numbers() {
+                if let Entry::Vacant(vacant) = loader.textures.entry(sprite_number) {
+                    vacant.insert(Self::texture_info(&atlases, sprite_number)?);
+                }
             }
         }
 
-        loader
+        Ok(loader)
     }
 
-    fn texture_info(atlases: &[Atlas], sprite_number: &SpriteNumber) -> TextureInfo {
+    fn texture_info(atlases: &[Atlas], sprite_number: SpriteNumber) -> Result<TextureInfo, Error> {
         atlases
             .iter()
             .find(|atlas_wrapper| atlas_wrapper.contains(sprite_number))
-            .map_or_else(
-                || panic!("{sprite_number:?} not found"),
-                |atlas_wrapper| atlas_wrapper.texture_info(sprite_number),
-            )
+            .map(|atlas_wrapper| atlas_wrapper.texture_info(sprite_number))
+            .ok_or(Error::UnknownSpriteNumber {
+                _number: sprite_number,
+            })
     }
 
     pub(crate) fn get_models(

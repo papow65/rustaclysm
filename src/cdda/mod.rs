@@ -1,9 +1,10 @@
+mod error;
 mod info;
 mod plugin;
 mod tile;
 mod world;
 
-pub(crate) use self::{info::*, plugin::*, tile::*, world::*};
+pub(crate) use self::{error::Error, info::*, plugin::*, tile::*, world::*};
 
 use serde::Deserialize;
 
