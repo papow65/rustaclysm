@@ -14,16 +14,13 @@ impl Atlas {
     pub(super) fn try_new(
         json: &serde_json::Value,
         tiles: &mut HashMap<ObjectId, TileInfo>,
-    ) -> Result<Option<Self>, Error> {
+    ) -> Result<Self, Error> {
         let atlas = json
             .as_object()
             .expect("JSON value should be an object (map)");
         let filename = atlas["file"]
             .as_str()
             .expect("'file' key should be present");
-        if filename == "fallback.png" {
-            return Ok(None);
-        }
         let image_path = Paths::gfx_path().join("UltimateCataclysm").join(filename);
 
         let from_to = if let Some(comment) = atlas.get("//") {
@@ -68,14 +65,14 @@ impl Atlas {
             }
         }
 
-        Ok(Some(Self {
+        Ok(Self {
             range: (from_to[0], from_to[1]),
             image_path,
             transform2d: Transform2d {
                 scale: Vec2::new(width, height),
                 offset: Vec2::new(offset_x, offset_y),
             },
-        }))
+        })
     }
 
     pub(super) fn contains(&self, sprite_number: SpriteNumber) -> bool {

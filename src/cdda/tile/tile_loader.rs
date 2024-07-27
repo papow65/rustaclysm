@@ -52,7 +52,6 @@ impl TileLoader {
         let atlases = json_atlases
             .iter()
             .map(|json_atlas| Atlas::try_new(json_atlas, &mut tiles))
-            .filter_map(Result::transpose)
             .collect::<Result<Vec<_>, _>>()?;
 
         let mut loader = Self {
