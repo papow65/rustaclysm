@@ -54,21 +54,15 @@ impl TileLoader {
             .map(|json_atlas| Atlas::try_new(json_atlas, &mut tiles))
             .collect::<Result<Vec<_>, _>>()?;
 
-        let mut loader = Self {
-            tiles,
-            textures: HashMap::default(),
-        };
+        let mut textures = HashMap::default();
 
-        for tile_info in loader.tiles.values() {
-            //dbg!(tile_info.names[0].0.as_str());
-            for sprite_number in tile_info.used_sprite_numbers() {
-                if let Entry::Vacant(vacant) = loader.textures.entry(sprite_number) {
-                    vacant.insert(Self::texture_info(&atlases, sprite_number)?);
-                }
+        for sprite_number in tiles.values().flat_map(TileInfo::used_sprite_numbers) {
+            if let Entry::Vacant(vacant) = textures.entry(sprite_number) {
+                vacant.insert(Self::texture_info(&atlases, sprite_number)?);
             }
         }
 
-        Ok(loader)
+        Ok(Self { tiles, textures })
     }
 
     fn texture_info(atlases: &[Atlas], sprite_number: SpriteNumber) -> Result<TextureInfo, Error> {
