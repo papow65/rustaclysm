@@ -2,7 +2,7 @@ use super::SpriteNumber;
 use crate::prelude::{Error, ObjectId};
 use std::any::type_name;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub(super) struct TileInfo {
     pub(super) names: Vec<ObjectId>,
     foreground: Vec<SpriteNumber>,
@@ -22,16 +22,6 @@ impl TileInfo {
             .iter()
             .copied()
             .chain(self.background.iter().copied())
-    }
-}
-
-impl Clone for TileInfo {
-    fn clone(&self) -> Self {
-        Self {
-            names: self.names.clone(),
-            foreground: self.foreground.clone(),
-            background: self.background.clone(),
-        }
     }
 }
 
