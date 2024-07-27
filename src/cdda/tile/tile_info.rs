@@ -4,12 +4,16 @@ use std::any::type_name;
 
 #[derive(Clone, Debug)]
 pub(super) struct TileInfo {
-    pub(super) names: Vec<ObjectId>,
+    names: Vec<ObjectId>,
     foreground: Vec<SpriteNumber>,
     background: Vec<SpriteNumber>,
 }
 
 impl TileInfo {
+    pub(super) fn names(&self) -> impl Iterator<Item = &ObjectId> {
+        self.names.iter()
+    }
+
     pub(super) fn sprite_numbers(&self) -> (Option<SpriteNumber>, Option<SpriteNumber>) {
         (
             fastrand::choice(&self.foreground).copied(),

@@ -60,7 +60,7 @@ impl Atlas {
             .expect("'tiles' key should be present")
         {
             let tile_info = TileInfo::try_from(tile)?;
-            for name in &tile_info.names {
+            for name in tile_info.names() {
                 tiles.insert(name.clone(), tile_info.clone());
             }
         }
