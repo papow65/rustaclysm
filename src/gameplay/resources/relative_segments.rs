@@ -1,6 +1,6 @@
 use crate::prelude::*;
 use bevy::{prelude::*, utils::HashMap};
-use std::{array, iter::once, time::Instant};
+use std::{array, iter::once};
 
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct RelativeRay {
@@ -79,8 +79,6 @@ impl RelativeSegments {
 
     /// This might take a couple of seconds
     fn new() -> Self {
-        let start = Instant::now();
-
         let rays = Self::rays();
 
         let mut segments = array::from_fn(|_| HashMap::<PosOffset, RelativeSegment>::default());
@@ -94,9 +92,6 @@ impl RelativeSegments {
                     .insert(pos_offset, segment.clone());
             }
         }
-
-        let duration = start.elapsed();
-        println!("The creation of RelativeSegments took {duration:?}");
 
         Self { segments }
     }

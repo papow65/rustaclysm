@@ -1,5 +1,7 @@
 use super::{atlas::Atlas, tile_info::TileInfo, SpriteNumber, TextureInfo};
-use crate::prelude::{Error, Layers, Model, ObjectDefinition, ObjectId, Paths, SpriteLayer};
+use crate::prelude::{
+    AsyncNew, Error, Layers, Model, ObjectDefinition, ObjectId, Paths, SpriteLayer,
+};
 use bevy::{
     prelude::Resource,
     utils::{Entry, HashMap},
@@ -126,5 +128,11 @@ impl TileLoader {
                 &self.textures[&sprite_number],
             )
         })
+    }
+}
+
+impl AsyncNew<Self> for TileLoader {
+    async fn async_new() -> Self {
+        async move { Self::try_new().expect("Tiles should load") }.await
     }
 }

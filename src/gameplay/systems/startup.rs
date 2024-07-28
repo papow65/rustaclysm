@@ -16,7 +16,6 @@ pub(crate) fn create_independent_resources(mut commands: Commands) {
     commands.insert_resource(Expanded::default());
     commands.insert_resource(Explored::default());
     commands.insert_resource(ZoneLevelIds::default());
-    commands.insert_resource(TileLoader::try_new().expect("Tiles should load"));
     commands.insert_resource(InstructionQueue::default());
     commands.insert_resource(AppearanceCache::default());
     commands.insert_resource(MeshCaches::default());

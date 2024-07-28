@@ -1,5 +1,8 @@
 use crate::prelude::*;
-use bevy::{diagnostic::FrameTimeDiagnosticsPlugin, input::keyboard::KeyboardInput, prelude::*};
+use bevy::{
+    diagnostic::FrameTimeDiagnosticsPlugin, ecs::schedule::SystemConfigTupleMarker,
+    input::keyboard::KeyboardInput, prelude::*,
+};
 
 pub(crate) struct GameplayPlugin;
 
@@ -23,8 +26,8 @@ impl Plugin for GameplayPlugin {
 
         // These resources persist between gameplays.
         app.insert_resource(ElevationVisibility::default())
-            // Loading is slow, so we start loading RelativeSegments immediately.
             .insert_resource(AsyncResourceLoader::<RelativeSegments>::default())
+            .insert_resource(AsyncResourceLoader::<TileLoader>::default())
             .insert_resource(GameplayCounter::default())
             .insert_resource(Events::<Message>::default())
             .insert_resource(Events::<SpawnSubzoneLevel>::default())
@@ -53,7 +56,7 @@ fn startup_systems() -> impl IntoSystemConfigs<()> {
         .chain()
 }
 
-fn update_systems() -> (impl IntoSystemConfigs<()>, impl IntoSystemConfigs<()>) {
+fn update_systems() -> impl IntoSystemConfigs<(SystemConfigTupleMarker, (), (), ())> {
     (
         (
             (
@@ -116,8 +119,9 @@ fn update_systems() -> (impl IntoSystemConfigs<()>, impl IntoSystemConfigs<()>) 
             update_camera_offset.run_if(resource_exists_and_changed::<CameraOffset>),
         )
             .run_if(in_state(ApplicationState::Gameplay)),
-        // Loading is slow, so we load RelativeSegments in the background, independent of the current ApplicationState
+        // Resources that take a while to load, are loaded in the background, independent of the current ApplicationState
         load_async_resource::<RelativeSegments>(),
+        load_async_resource::<TileLoader>(),
     )
 }
 
