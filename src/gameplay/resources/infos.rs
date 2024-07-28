@@ -490,6 +490,12 @@ impl Infos {
     }
 }
 
+impl AsyncNew<Self> for Infos {
+    async fn async_new() -> Self {
+        Self::load()
+    }
+}
+
 fn id_value<'a>(
     content: &'a serde_json::Map<String, serde_json::Value>,
     json_path: &'a PathBuf,

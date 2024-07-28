@@ -3,7 +3,6 @@ use bevy::prelude::*;
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn remove_gameplay_resources(mut commands: Commands) {
-    commands.remove_resource::<Infos>();
     commands.remove_resource::<Location>();
     commands.remove_resource::<SubzoneLevelEntities>();
     commands.remove_resource::<ZoneLevelEntities>();

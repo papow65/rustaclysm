@@ -26,6 +26,7 @@ impl Plugin for GameplayPlugin {
 
         // These resources persist between gameplays.
         app.insert_resource(ElevationVisibility::default())
+            .insert_resource(AsyncResourceLoader::<Infos>::default())
             .insert_resource(AsyncResourceLoader::<RelativeSegments>::default())
             .insert_resource(AsyncResourceLoader::<TileLoader>::default())
             .insert_resource(GameplayCounter::default())
@@ -56,7 +57,7 @@ fn startup_systems() -> impl IntoSystemConfigs<()> {
         .chain()
 }
 
-fn update_systems() -> impl IntoSystemConfigs<(SystemConfigTupleMarker, (), (), ())> {
+fn update_systems() -> impl IntoSystemConfigs<(SystemConfigTupleMarker, (), (), (), ())> {
     (
         (
             (
@@ -122,6 +123,7 @@ fn update_systems() -> impl IntoSystemConfigs<(SystemConfigTupleMarker, (), (), 
         // Resources that take a while to load, are loaded in the background, independent of the current ApplicationState
         load_async_resource::<RelativeSegments>(),
         load_async_resource::<TileLoader>(),
+        load_async_resource::<Infos>(),
     )
 }
 
