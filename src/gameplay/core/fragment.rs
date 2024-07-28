@@ -1,7 +1,7 @@
 use crate::prelude::{Pos, GOOD_TEXT_COLOR};
 use bevy::prelude::{Color, TextSection, TextStyle};
 use regex::Regex;
-use std::{cmp::Eq, fmt, sync::OnceLock};
+use std::{cmp::Eq, fmt, sync::LazyLock};
 
 #[derive(Clone, Debug, Default, PartialEq)]
 pub(crate) enum Positioning {
@@ -142,15 +142,12 @@ impl Phrase {
     }
 
     fn space_between(previous: &str, next: &str) -> bool {
-        static SPACE_AFTER: OnceLock<Regex> = OnceLock::new();
-        static SPACE_BEFORE: OnceLock<Regex> = OnceLock::new();
+        static SPACE_AFTER: LazyLock<Regex> =
+            LazyLock::new(|| Regex::new(r"[^(\[{ \n]$").expect("Valid regex after"));
+        static SPACE_BEFORE: LazyLock<Regex> =
+            LazyLock::new(|| Regex::new(r"^[^)\]},;%\. \n]").expect("Valid regex before"));
 
-        SPACE_AFTER
-            .get_or_init(|| Regex::new(r"[^(\[{ \n]$").expect("Valid regex after"))
-            .is_match(previous)
-            && SPACE_BEFORE
-                .get_or_init(|| Regex::new(r"^[^)\]},;%\. \n]").expect("Valid regex before"))
-                .is_match(next)
+        SPACE_AFTER.is_match(previous) && SPACE_BEFORE.is_match(next)
     }
 }
 
