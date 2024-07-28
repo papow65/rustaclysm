@@ -22,6 +22,7 @@ pub(in super::super) fn egible_character(
 pub(in super::super) struct PlanSystems {
     manual_player_action: SystemId<Entity, Option<PlannedAction>>,
     automatic_player_action: SystemId<Entity, Option<PlannedAction>>,
+    wait_for_player_input: SystemId<(), ()>,
     npc_action: SystemId<Entity, PlannedAction>,
 }
 
@@ -30,6 +31,7 @@ impl PlanSystems {
         Self {
             manual_player_action: world.register_system(plan_manual_player_action),
             automatic_player_action: world.register_system(plan_automatic_player_action),
+            wait_for_player_input: world.register_system(wait_for_player_input),
             npc_action: world.register_system(plan_npc_action),
         }
     }
@@ -54,7 +56,11 @@ pub(in super::super) fn plan_action(
         // The `PlannedActionState` could have transitioned with or without a 'manual_action'.
         world.run_schedule(StateTransition);
         manual_action
-            .or_else(|| run_system(world, plan_systems.automatic_player_action, active_actor))?
+            .or_else(|| run_system(world, plan_systems.automatic_player_action, active_actor))
+            .or_else(|| {
+                run_system(world, plan_systems.wait_for_player_input, ());
+                None
+            })?
     } else {
         run_system(world, plan_systems.npc_action, active_actor)
     };
@@ -112,6 +118,12 @@ fn plan_automatic_player_action(
         clock.time(),
         factions,
     )
+}
+
+#[allow(clippy::needless_pass_by_value)]
+fn wait_for_player_input(mut instruction_queue: ResMut<InstructionQueue>) {
+    instruction_queue.start_waiting();
+    println!("Waiting for user action");
 }
 
 #[allow(clippy::needless_pass_by_value)]

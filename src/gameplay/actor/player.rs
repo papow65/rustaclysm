@@ -118,11 +118,7 @@ impl PlayerActionState {
             } => plan_auto_pulp(envir, instruction_queue, player, *target, enemy_name),
             Self::Waiting { until } => plan_auto_wait(instruction_queue, now, until, enemy_name),
             Self::Sleeping { until } => plan_auto_sleep(instruction_queue, now, until),
-            _ => {
-                instruction_queue.start_waiting();
-                println!("Waiting for user action");
-                None // no key pressed - wait for the user
-            }
+            _ => None,
         }
     }
 
