@@ -68,8 +68,8 @@ impl TileLoader {
     fn texture_info(atlases: &[Atlas], sprite_number: SpriteNumber) -> Result<TextureInfo, Error> {
         atlases
             .iter()
-            .find(|atlas_wrapper| atlas_wrapper.contains(sprite_number))
-            .map(|atlas_wrapper| atlas_wrapper.texture_info(sprite_number))
+            .find(|atlas| atlas.contains(sprite_number))
+            .map(|atlas| atlas.texture_info(sprite_number))
             .ok_or(Error::UnknownSpriteNumber {
                 _number: sprite_number,
             })
