@@ -1,3 +1,4 @@
+mod async_resource_loader;
 mod colors;
 mod error;
 mod fonts;
@@ -11,6 +12,7 @@ mod slow;
 mod text;
 
 pub(crate) use self::{
+    async_resource_loader::{load_async_resource, AsyncNew, AsyncResourceLoader},
     colors::*,
     error::LoadError,
     fonts::Fonts,

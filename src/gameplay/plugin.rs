@@ -24,7 +24,7 @@ impl Plugin for GameplayPlugin {
         // These resources persist between gameplays.
         app.insert_resource(ElevationVisibility::default())
             // Loading is slow, so we start loading RelativeSegments immediately.
-            .insert_resource(RelativeSegmentsGenerator::new())
+            .insert_resource(AsyncResourceLoader::<RelativeSegments>::default())
             .insert_resource(GameplayCounter::default())
             .insert_resource(Events::<Message>::default())
             .insert_resource(Events::<SpawnSubzoneLevel>::default())
@@ -117,7 +117,7 @@ fn update_systems() -> (impl IntoSystemConfigs<()>, impl IntoSystemConfigs<()>) 
         )
             .run_if(in_state(ApplicationState::Gameplay)),
         // Loading is slow, so we load RelativeSegments in the background, independent of the current ApplicationState
-        load_relative_segments.run_if(not(resource_exists::<RelativeSegments>)),
+        load_async_resource::<RelativeSegments>(),
     )
 }
 

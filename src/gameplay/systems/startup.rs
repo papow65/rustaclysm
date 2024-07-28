@@ -1,16 +1,5 @@
 use crate::prelude::*;
 use bevy::prelude::*;
-use futures_lite::future::{block_on, poll_once};
-
-#[allow(clippy::needless_pass_by_value)]
-pub(crate) fn load_relative_segments(
-    mut commands: Commands,
-    mut relative_segments_generator: ResMut<RelativeSegmentsGenerator>,
-) {
-    if let Some(relative_segments) = block_on(poll_once(&mut relative_segments_generator.task)) {
-        commands.insert_resource(relative_segments);
-    }
-}
 
 /// Create resources that do not need other resources
 #[allow(clippy::needless_pass_by_value)]

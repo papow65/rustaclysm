@@ -1,9 +1,5 @@
 use crate::prelude::*;
-use bevy::{
-    prelude::*,
-    tasks::{AsyncComputeTaskPool, Task},
-    utils::HashMap,
-};
+use bevy::{prelude::*, utils::HashMap};
 use std::{array, iter::once, time::Instant};
 
 #[derive(Clone, Debug, PartialEq)]
@@ -210,15 +206,8 @@ impl RelativeSegments {
     }
 }
 
-#[derive(Debug, Resource)]
-pub(crate) struct RelativeSegmentsGenerator {
-    pub(crate) task: Task<RelativeSegments>,
-}
-
-impl RelativeSegmentsGenerator {
-    pub(crate) fn new() -> Self {
-        let thread_pool = AsyncComputeTaskPool::get();
-        let task = thread_pool.spawn(async move { RelativeSegments::new() });
-        Self { task }
+impl AsyncNew<Self> for RelativeSegments {
+    async fn async_new() -> Self {
+        async move { Self::new() }.await
     }
 }
