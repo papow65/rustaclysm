@@ -1,17 +1,10 @@
 use crate::prelude::{CardinalDirection, HorizontalDirection, Nbor};
 use bevy::prelude::Entity;
 
-#[derive(Copy, Clone, Debug)]
-pub(crate) enum StayDuration {
-    Short,
-    Long,
-}
-
 #[derive(Debug)]
 pub(crate) enum PlannedAction {
-    Stay {
-        duration: StayDuration,
-    },
+    Stay,
+    Sleep,
     Step {
         to: Nbor,
     },

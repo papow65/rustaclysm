@@ -76,15 +76,34 @@ impl ActorItem<'_> {
         )
     }
 
-    pub(crate) fn stay(&self, stay: &Stay) -> Impact {
-        match stay.duration {
-            StayDuration::Short => Impact::rest(
-                self.entity,
-                Millimeter(Millimeter::ADJACENT.0 / 2)
-                    / self.high_speed().unwrap_or_else(|| self.speed()),
-            ),
-            StayDuration::Long => Impact::full_rest(self.entity, Milliseconds::MINUTE),
-        }
+    pub(crate) fn stay(&self) -> Impact {
+        Impact::standing_rest(
+            self.entity,
+            Millimeter(Millimeter::ADJACENT.0 / 2)
+                / self.high_speed().unwrap_or_else(|| self.speed()),
+        )
+    }
+
+    pub(crate) fn sleep(
+        &mut self,
+        healing_writer: &mut EventWriter<'_, ActorEvent<Healing>>,
+        healing_durations: &mut Query<&mut HealingDuration>,
+    ) -> Impact {
+        let sleep_duration = Milliseconds::MINUTE;
+
+        let mut healing_duration = healing_durations
+            .get_mut(self.entity)
+            .expect("Actor entity should be found");
+
+        let healing_amount = healing_duration.heal(sleep_duration);
+        healing_writer.send(ActorEvent::new(
+            self.entity,
+            Healing {
+                amount: healing_amount as u16,
+            },
+        ));
+
+        Impact::laying_rest(self.entity, sleep_duration)
     }
 
     fn activate(&self) -> Impact {

@@ -1,6 +1,6 @@
 use crate::{
     gameplay::{CardinalDirection, HorizontalDirection},
-    prelude::{Actor, ActorItem, Item, ItemItem, Nbor, StayDuration},
+    prelude::{Actor, ActorItem, Item, ItemItem, Nbor},
 };
 use bevy::prelude::{Entity, Query};
 
@@ -28,11 +28,14 @@ impl<A: Action> ActionIn<A> {
 }
 
 #[derive(Clone, Debug)]
-pub(crate) struct Stay {
-    pub(crate) duration: StayDuration,
-}
+pub(crate) struct Stay;
 
 impl Action for Stay {}
+
+#[derive(Clone, Debug)]
+pub(crate) struct Sleep;
+
+impl Action for Sleep {}
 
 #[derive(Clone, Debug)]
 pub(crate) struct Step {

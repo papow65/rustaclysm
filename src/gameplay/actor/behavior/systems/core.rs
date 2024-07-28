@@ -51,7 +51,7 @@ pub(in super::super) fn plan_action(
 
     let action = if player_active {
         let manual_action = run_system(world, plan_systems.manual_player_action, active_actor);
-        // The state could have transitioned with or without a 'manual_action'.
+        // The `PlannedActionState` could have transitioned with or without a 'manual_action'.
         world.run_schedule(StateTransition);
         manual_action
             .or_else(|| run_system(world, plan_systems.automatic_player_action, active_actor))?
@@ -91,9 +91,7 @@ fn plan_manual_player_action(
 #[allow(clippy::needless_pass_by_value)]
 fn plan_automatic_player_action(
     In(active_actor): In<Entity>,
-    mut healing_writer: EventWriter<ActorEvent<Healing>>,
     player_action_state: Res<State<PlayerActionState>>,
-    mut next_player_action_state: ResMut<NextState<PlayerActionState>>,
     currently_visible_builder: CurrentlyVisibleBuilder,
     clock: Clock,
     mut instruction_queue: ResMut<InstructionQueue>,
@@ -107,8 +105,6 @@ fn plan_automatic_player_action(
 
     let factions = &factions.iter().map(|(p, f)| (*p, f)).collect::<Vec<_>>();
     player_action_state.plan_automatic_action(
-        &mut next_player_action_state,
-        &mut healing_writer,
         &currently_visible_builder,
         &mut instruction_queue,
         &explored,
@@ -153,6 +149,7 @@ fn plan_npc_action(
 
 pub(in super::super) struct PerformSystems {
     stay: SystemId<ActionIn<Stay>, Option<Impact>>,
+    sleep: SystemId<ActionIn<Sleep>, Option<Impact>>,
     step: SystemId<ActionIn<Step>, Option<Impact>>,
     attack: SystemId<ActionIn<Attack>, Option<Impact>>,
     smash: SystemId<ActionIn<Smash>, Option<Impact>>,
@@ -171,6 +168,7 @@ impl PerformSystems {
     fn new(world: &mut World) -> Self {
         Self {
             stay: world.register_system(perform_stay),
+            sleep: world.register_system(perform_sleep),
             step: world.register_system(perform_step),
             attack: world.register_system(perform_attack),
             smash: world.register_system(perform_smash),
@@ -203,7 +201,8 @@ pub(in super::super) fn perform_action(
     let perform_systems = perform_systems.get_or_init(|| PerformSystems::new(world));
 
     let perform_fn = match planned_action {
-        PlannedAction::Stay { duration } => act_fn(perform_systems.stay, Stay { duration }),
+        PlannedAction::Stay => act_fn(perform_systems.stay, Stay),
+        PlannedAction::Sleep => act_fn(perform_systems.sleep, Sleep),
         PlannedAction::Step { to } => act_fn(perform_systems.step, Step { to }),
         PlannedAction::Attack { target } => act_fn(perform_systems.attack, Attack { target }),
         PlannedAction::Smash { target } => act_fn(perform_systems.smash, Smash { target }),
@@ -258,7 +257,22 @@ pub(in super::super) fn perform_stay(
     In(stay): In<ActionIn<Stay>>,
     actors: Query<Actor>,
 ) -> Option<Impact> {
-    Some(stay.actor(&actors).stay(&stay.action))
+    Some(stay.actor(&actors).stay())
+}
+
+#[allow(clippy::needless_pass_by_value)]
+#[allow(clippy::unnecessary_wraps)]
+pub(in super::super) fn perform_sleep(
+    In(sleep): In<ActionIn<Sleep>>,
+    mut healing_writer: EventWriter<ActorEvent<Healing>>,
+    mut healing_durations: Query<&mut HealingDuration>,
+    actors: Query<Actor>,
+) -> Option<Impact> {
+    Some(
+        sleep
+            .actor(&actors)
+            .sleep(&mut healing_writer, &mut healing_durations),
+    )
 }
 
 #[allow(clippy::needless_pass_by_value)]

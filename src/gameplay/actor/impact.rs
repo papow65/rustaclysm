@@ -22,12 +22,12 @@ impl Impact {
         }
     }
 
-    pub(crate) const fn rest(actor_entity: Entity, timeout: Milliseconds) -> Self {
-        Self::new(actor_entity, timeout, Some(StaminaImpact::Rest))
+    pub(crate) const fn standing_rest(actor_entity: Entity, timeout: Milliseconds) -> Self {
+        Self::new(actor_entity, timeout, Some(StaminaImpact::StandingRest))
     }
 
-    pub(crate) const fn full_rest(actor_entity: Entity, timeout: Milliseconds) -> Self {
-        Self::new(actor_entity, timeout, Some(StaminaImpact::FullRest))
+    pub(crate) const fn laying_rest(actor_entity: Entity, timeout: Milliseconds) -> Self {
+        Self::new(actor_entity, timeout, Some(StaminaImpact::LayingRest))
     }
 
     pub(crate) const fn heavy(actor_entity: Entity, timeout: Milliseconds) -> Self {

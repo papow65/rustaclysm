@@ -27,8 +27,8 @@ impl ActorChange for Healing {}
 
 #[derive(Copy, Clone, Debug)]
 pub(crate) enum StaminaImpact {
-    FullRest,
-    Rest,
+    LayingRest,
+    StandingRest,
     Light,
     Neutral,
     Heavy,
@@ -37,8 +37,8 @@ pub(crate) enum StaminaImpact {
 impl StaminaImpact {
     pub(crate) const fn as_i16(&self) -> i16 {
         match self {
-            Self::FullRest => 100,
-            Self::Rest => 2,
+            Self::LayingRest => 4,
+            Self::StandingRest => 2,
             Self::Light => 1,
             Self::Neutral => 0,
             Self::Heavy => -12,

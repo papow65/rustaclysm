@@ -100,6 +100,7 @@ impl<'w, 's> Spawner<'w, 's> {
                 dices: character_info.melee_dice,
                 sides: character_info.melee_dice_sides,
             },
+            HealingDuration::new(),
         ));
 
         if let Some(name) = name {

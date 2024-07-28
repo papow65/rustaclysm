@@ -120,6 +120,27 @@ pub(crate) struct CameraBase;
 pub(crate) struct ExamineCursor;
 
 #[derive(Debug, Component)]
+pub(crate) struct HealingDuration(Milliseconds);
+
+impl HealingDuration {
+    const HEALING_RATE: u64 = 1_000_000;
+
+    pub(crate) const fn new() -> Self {
+        Self(Milliseconds::ZERO)
+    }
+
+    #[must_use]
+    pub(crate) fn heal(&mut self, duration: Milliseconds) -> u64 {
+        self.0 += duration;
+
+        let healing = self.0 .0 / Self::HEALING_RATE;
+        self.0 .0 %= Self::HEALING_RATE;
+
+        healing
+    }
+}
+
+#[derive(Debug, Component)]
 pub(crate) struct Melee {
     pub(crate) dices: u16,
     pub(crate) sides: u16,

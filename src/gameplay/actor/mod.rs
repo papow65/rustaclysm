@@ -14,14 +14,14 @@ mod subject;
 pub(crate) use self::{
     actions::{
         Action, ActionIn, Attack, ChangePace, Close, ExamineItem, ItemAction, MoveItem, Peek,
-        Pickup, Pulp, Smash, Stay, Step, Unwield, Wield,
+        Pickup, Pulp, Sleep, Smash, Stay, Step, Unwield, Wield,
     },
     behavior::loop_behavior_and_refresh,
     breath::Breath,
     events::{ActorChange, ActorEvent, Healing, StaminaImpact},
     faction::{Faction, Intelligence, LastEnemy},
     impact::Impact,
-    planned_action::{PlannedAction, StayDuration},
+    planned_action::PlannedAction,
     player::{Player, PlayerActionState},
     plugin::ActorPlugin,
     query_data::{Actor, ActorItem},

@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use bevy::prelude::{Color, Component, DetectChanges, EventWriter, NextState, ResMut, States};
+use bevy::prelude::{Color, Component, DetectChanges, NextState, ResMut, States};
 use std::fmt;
 
 #[derive(Debug, Component)]
@@ -33,7 +33,6 @@ pub(crate) enum PlayerActionState {
         until: Timestamp,
     },
     Sleeping {
-        healing_from: Timestamp,
         until: Timestamp,
     },
     AutoTravel {
@@ -51,7 +50,6 @@ impl PlayerActionState {
 
     fn start_sleeping(now: Timestamp) -> Self {
         Self::Sleeping {
-            healing_from: now,
             until: now + Milliseconds::EIGHT_HOURS,
         }
     }
@@ -76,7 +74,7 @@ impl PlayerActionState {
             ) {
                 return Some(action);
             } else {
-                // The action was either an invalid or one that took no time (like [`PlannedAction::ExamineItem`].
+                // The action was either invalid or one that took no time (like [`PlannedAction::ExamineItem`].
                 // Continue with next instruction
             }
         }
@@ -86,8 +84,6 @@ impl PlayerActionState {
 
     pub(crate) fn plan_automatic_action(
         &self,
-        next_state: &mut ResMut<NextState<Self>>,
-        healing_writer: &mut EventWriter<ActorEvent<Healing>>,
         currently_visible_builder: &CurrentlyVisibleBuilder,
         instruction_queue: &mut InstructionQueue,
         explored: &Explored,
@@ -102,14 +98,14 @@ impl PlayerActionState {
         match self {
             Self::Dragging {
                 active_from: Some(from),
-            } => auto_drag(envir, instruction_queue, from, enemy_name),
+            } => plan_auto_drag(envir, instruction_queue, from, enemy_name),
             Self::AutoDefend => {
                 let enemies = player
                     .faction
                     .enemies(currently_visible_builder, factions, player);
-                auto_defend(envir, instruction_queue, player, &enemies)
+                plan_auto_defend(envir, instruction_queue, player, &enemies)
             }
-            Self::AutoTravel { target } => auto_travel(
+            Self::AutoTravel { target } => plan_auto_travel(
                 envir,
                 instruction_queue,
                 explored,
@@ -119,20 +115,9 @@ impl PlayerActionState {
             ),
             Self::Pulping {
                 active_target: Some(target),
-            } => auto_pulp(envir, instruction_queue, player, *target, enemy_name),
-            Self::Waiting { until } => auto_wait(instruction_queue, now, until, enemy_name),
-            Self::Sleeping {
-                healing_from,
-                until,
-            } => auto_sleep(
-                next_state,
-                healing_writer,
-                instruction_queue,
-                player,
-                healing_from,
-                now,
-                until,
-            ),
+            } => plan_auto_pulp(envir, instruction_queue, player, *target, enemy_name),
+            Self::Waiting { until } => plan_auto_wait(instruction_queue, now, until, enemy_name),
+            Self::Sleeping { until } => plan_auto_sleep(instruction_queue, now, until),
             _ => {
                 instruction_queue.start_waiting();
                 println!("Waiting for user action");
@@ -176,9 +161,7 @@ impl PlayerActionState {
                 now,
             ),
             (Self::Normal, QueuedInstruction::Offset(PlayerDirection::Here)) => {
-                Some(PlannedAction::Stay {
-                    duration: StayDuration::Short,
-                })
+                Some(PlannedAction::Stay)
             }
             (Self::Normal, QueuedInstruction::Wait) => {
                 next_state.set(Self::start_waiting(now));
@@ -619,7 +602,7 @@ impl fmt::Display for PlayerActionState {
     }
 }
 
-fn auto_drag(
+fn plan_auto_drag(
     envir: &Envir<'_, '_>,
     instruction_queue: &mut InstructionQueue,
     from: &Pos,
@@ -641,7 +624,7 @@ fn auto_drag(
     }
 }
 
-fn auto_travel(
+fn plan_auto_travel(
     envir: &Envir<'_, '_>,
     instruction_queue: &mut InstructionQueue,
     explored: &Explored,
@@ -687,7 +670,7 @@ fn auto_travel(
     }
 }
 
-fn auto_defend(
+fn plan_auto_defend(
     envir: &Envir<'_, '_>,
     instruction_queue: &mut InstructionQueue,
     player: &ActorItem<'_>,
@@ -702,13 +685,11 @@ fn auto_defend(
     } else if let Some(target) = enemies.iter().find_map(|pos| envir.nbor(*player.pos, *pos)) {
         Some(PlannedAction::Attack { target })
     } else {
-        Some(PlannedAction::Stay {
-            duration: StayDuration::Short,
-        })
+        Some(PlannedAction::Stay)
     }
 }
 
-fn auto_pulp(
+fn plan_auto_pulp(
     envir: &Envir<'_, '_>,
     instruction_queue: &mut InstructionQueue,
     player: &ActorItem<'_>,
@@ -725,9 +706,7 @@ fn auto_pulp(
             None
         } else if player.stamina.breath() != Breath::Normal {
             //eprintln!("Keep pulping after catching breath");
-            Some(PlannedAction::Stay {
-                duration: StayDuration::Short,
-            })
+            Some(PlannedAction::Stay)
         } else {
             //eprintln!("Keep pulping");
             Some(PlannedAction::Pulp { target })
@@ -739,7 +718,7 @@ fn auto_pulp(
     }
 }
 
-fn auto_wait(
+fn plan_auto_wait(
     instruction_queue: &mut InstructionQueue,
     now: Timestamp,
     until: &Timestamp,
@@ -752,48 +731,21 @@ fn auto_wait(
         instruction_queue.interrupt(Interruption::Danger(enemy_name));
         None
     } else {
-        Some(PlannedAction::Stay {
-            duration: StayDuration::Short,
-        })
+        Some(PlannedAction::Stay)
     }
 }
 
-fn auto_sleep(
-    next_state: &mut ResMut<NextState<PlayerActionState>>,
-    healing_writer: &mut EventWriter<'_, ActorEvent<Healing>>,
+fn plan_auto_sleep(
     instruction_queue: &mut InstructionQueue,
-    player: &ActorItem<'_>,
-    healing_from: &Timestamp,
     now: Timestamp,
     until: &Timestamp,
 ) -> Option<PlannedAction> {
     // TODO interrupt on taking damage
 
-    assert!(healing_from < until, "{healing_from:?} < {until:?}");
-    assert!(*healing_from <= now, "{healing_from:?} <= {now:?}");
-    //eprintln!("{healing_from:?} <= {now:?}");
-    let sleeping_duration = now - *healing_from;
-
-    let healing_amount = sleeping_duration.0 / 1_000_000;
-    healing_writer.send(ActorEvent::new(
-        player.entity,
-        Healing {
-            amount: healing_amount as u16,
-        },
-    ));
-
     if *until <= now {
         instruction_queue.interrupt(Interruption::Finished);
         None
     } else {
-        let healing_duration = Milliseconds(healing_amount * 1_000_000);
-        // dbg!(healing_from);
-        next_state.set(PlayerActionState::Sleeping {
-            healing_from: *healing_from + healing_duration,
-            until: *until,
-        });
-        Some(PlannedAction::Stay {
-            duration: StayDuration::Long,
-        })
+        Some(PlannedAction::Sleep)
     }
 }

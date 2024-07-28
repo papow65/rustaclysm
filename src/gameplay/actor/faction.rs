@@ -133,9 +133,7 @@ impl Faction {
                 } else if envir.find_obstacle(path.first).is_some() {
                     Some((
                         if factions.iter().any(|(pos, _)| *pos == path.first) {
-                            PlannedAction::Stay {
-                                duration: StayDuration::Short,
-                            }
+                            PlannedAction::Stay
                         } else {
                             PlannedAction::Smash { target: nbor }
                         },
@@ -194,9 +192,7 @@ impl Faction {
             .0;
         let nbor = envir.to_nbor(*actor.pos, to).expect("Nbors");
         Some(if nbor == Nbor::HERE {
-            PlannedAction::Stay {
-                duration: StayDuration::Short,
-            }
+            PlannedAction::Stay
         } else {
             PlannedAction::Step { to: nbor }
         })
@@ -248,10 +244,7 @@ impl Faction {
             Intent::Wander => self
                 .wander(envir, factions, actor)
                 .map(|action| (action, None)),
-            Intent::Wait => Some(PlannedAction::Stay {
-                duration: StayDuration::Short,
-            })
-            .map(|action| (action, None)),
+            Intent::Wait => Some(PlannedAction::Stay).map(|action| (action, None)),
         }
         .filter(|(action, _)| match action {
             // prevent fish from acting on land
