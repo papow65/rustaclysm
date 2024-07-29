@@ -39,15 +39,13 @@ impl<'w, 's> Spawner<'w, 's> {
             for repetition in repetitions {
                 let CddaAmount { obj: item, amount } = repetition.as_amount();
                 //dbg!(&item.typeid);
-                if let Err(load_error) = self.spawn_existing_item(
+                self.spawn_existing_item(
                     infos,
                     subzone_level_entity,
                     pos,
                     item,
                     Amount(item.charges.unwrap_or(1) * amount),
-                ) {
-                    eprintln!("{load_error}");
-                }
+                );
             }
         }
 
@@ -164,12 +162,10 @@ impl<'w, 's> Spawner<'w, 's> {
         pos: Pos,
         item: &CddaItem,
         amount: Amount,
-    ) -> Result<(), LoadError> {
+    ) {
         let Some(item_info) = infos.try_item(&item.typeid) else {
-            return Err(LoadError::new(format!(
-                "No info found for {:?}. Spawning skipped",
-                &item.typeid
-            )));
+            eprintln!("No info found for {:?}. Spawning skipped", &item.typeid);
+            return;
         };
 
         //println!("{:?} {:?} {:?} {:?}", &parent, pos, &id, &amount);
@@ -205,8 +201,6 @@ impl<'w, 's> Spawner<'w, 's> {
         if item.item_tags.contains(&String::from("FILTHY")) {
             entity.insert(Filthy);
         }
-
-        Ok(())
     }
 
     fn spawn_new_items(
@@ -264,8 +258,7 @@ impl<'w, 's> Spawner<'w, 's> {
                                 degradation: None,
                             },
                             amount,
-                        )
-                        .expect("Existing item id");
+                        );
                     }
                 }
                 BashItem::Group { ref group } => {

@@ -1,7 +1,7 @@
-use crate::prelude::{
+use super::systems::{
     manage_main_menu_button_input, resize_background, spawn_main_menu, update_sav_files,
-    ApplicationState,
 };
+use crate::prelude::ApplicationState;
 use bevy::{
     prelude::{in_state, on_event, App, FixedUpdate, IntoSystemConfigs, OnEnter, Plugin, Update},
     window::WindowResized,

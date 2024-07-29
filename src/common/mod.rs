@@ -1,6 +1,6 @@
 mod async_resource_loader;
 mod colors;
-mod error;
+mod components;
 mod fonts;
 mod key;
 mod log_transition;
@@ -14,7 +14,7 @@ mod text;
 pub(crate) use self::{
     async_resource_loader::{load_async_resource, AsyncNew, AsyncResourceLoader},
     colors::*,
-    error::LoadError,
+    components::QuitButton,
     fonts::Fonts,
     key::*,
     log_transition::log_transition_plugin,

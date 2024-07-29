@@ -1,3 +1,7 @@
+use super::{
+    components::{Background, LoadButton, LoadButtonArea, MessageField, MessageWrapper},
+    load_error::LoadError,
+};
 use crate::prelude::*;
 use base64::{engine::general_purpose::STANDARD as base64, Engine};
 use bevy::{app::AppExit, prelude::*};
@@ -14,7 +18,7 @@ const BACKGROUND_HEIGHT: f32 = 1009.0;
 const BACKGROUND_NAME: &str = "on_the_run.png";
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn spawn_main_menu(
+pub(super) fn spawn_main_menu(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     fonts: Res<Fonts>,
@@ -163,7 +167,7 @@ fn add_quit_button(parent: &mut ChildBuilder, fonts: &Fonts) {
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn update_sav_files(
+pub(super) fn update_sav_files(
     mut commands: Commands,
     fonts: Res<Fonts>,
     mut session: GameplaySession,
@@ -331,7 +335,7 @@ fn add_load_button(fonts: &Fonts, parent: &mut ChildBuilder, path: &Path) {
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn manage_main_menu_button_input(
+pub(super) fn manage_main_menu_button_input(
     mut commands: Commands,
     mut next_progress_state: ResMut<NextState<ProgressScreenState>>,
     mut app_exit_events: ResMut<Events<AppExit>>,
@@ -359,7 +363,7 @@ pub(crate) fn manage_main_menu_button_input(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn resize_background(
+pub(super) fn resize_background(
     cameras: Query<&Camera>,
     mut backgrounds: Query<&mut Transform, With<Background>>,
 ) {

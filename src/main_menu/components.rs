@@ -2,21 +2,18 @@ use bevy::prelude::Component;
 use std::path::PathBuf;
 
 #[derive(Component)]
-pub(crate) struct Background;
+pub(super) struct Background;
 
 #[derive(Component)]
-pub(crate) struct LoadButtonArea;
+pub(super) struct LoadButtonArea;
 
 #[derive(Component, Debug)]
-pub(crate) struct LoadButton {
-    pub(crate) path: PathBuf,
+pub(super) struct LoadButton {
+    pub(super) path: PathBuf,
 }
 
 #[derive(Component)]
-pub(crate) struct QuitButton;
+pub(super) struct MessageWrapper;
 
 #[derive(Component)]
-pub(crate) struct MessageWrapper;
-
-#[derive(Component)]
-pub(crate) struct MessageField;
+pub(super) struct MessageField;
