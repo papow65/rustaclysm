@@ -52,8 +52,9 @@ impl fmt::Display for Volume {
     }
 }
 
-impl From<String> for Volume {
-    fn from(value: String) -> Self {
+impl<S: AsRef<str>> From<S> for Volume {
+    fn from(value: S) -> Self {
+        let value = value.as_ref();
         let quantity = value.trim_matches(char::is_alphabetic).trim();
         let unit: String = value.matches(char::is_alphabetic).collect();
         //println!("{value} {} {}", &quantity, &unit);
@@ -86,13 +87,7 @@ mod volume_tests {
     use super::*;
     #[test]
     fn it_works() {
-        assert_eq!(
-            Volume::from(String::from("21 ml")),
-            Volume { milliliter: 21 }
-        );
-        assert_eq!(
-            Volume::from(String::from("35.6L")),
-            Volume { milliliter: 35_600 }
-        );
+        assert_eq!(Volume::from("21 ml"), Volume { milliliter: 21 });
+        assert_eq!(Volume::from("35.6L"), Volume { milliliter: 35_600 });
     }
 }

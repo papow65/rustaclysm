@@ -53,8 +53,9 @@ impl fmt::Display for Mass {
     }
 }
 
-impl From<String> for Mass {
-    fn from(value: String) -> Self {
+impl<S: AsRef<str>> From<S> for Mass {
+    fn from(value: S) -> Self {
+        let value = value.as_ref();
         let quantity = value.trim_matches(char::is_alphabetic).trim();
         let unit: String = value.matches(char::is_alphabetic).collect();
         //println!("{value} {} {}", &quantity, &unit);

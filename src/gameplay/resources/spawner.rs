@@ -193,8 +193,8 @@ impl<'w, 's> Spawner<'w, 's> {
             amount,
             Containable {
                 // Based on cataclysm-ddasrc/mtype.cpp lines 47-48
-                volume: volume.unwrap_or_else(|| Volume::from(String::from("62499 ml"))),
-                mass: mass.unwrap_or_else(|| Mass::from(String::from("81499 g"))),
+                volume: volume.unwrap_or_else(|| Volume::from("62499 ml")),
+                mass: mass.unwrap_or_else(|| Mass::from("81499 g")),
             },
         ));
 

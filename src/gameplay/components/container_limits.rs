@@ -17,16 +17,16 @@ pub(crate) struct BodyContainers {
 impl BodyContainers {
     pub(crate) fn default_hands_container_limits() -> ContainerLimits {
         ContainerLimits {
-            max_volume: Volume::from(String::from("100 L")),
-            max_mass: Mass::from(String::from("50 kg")),
+            max_volume: Volume::from("100 L"),
+            max_mass: Mass::from("50 kg"),
             max_amount: Some(Amount::SINGLE),
         }
     }
 
     pub(crate) fn default_clothing_container_limits() -> ContainerLimits {
         ContainerLimits {
-            max_volume: Volume::from(String::from("100 L")),
-            max_mass: Mass::from(String::from("50 kg")),
+            max_volume: Volume::from("100 L"),
+            max_mass: Mass::from("50 kg"),
             max_amount: None,
         }
     }
