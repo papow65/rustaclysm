@@ -18,9 +18,7 @@ impl Plugin for BehaviorPlugin {
 
 fn trigger_peeking_refresh(app: &mut App) {
     for direction in CardinalDirection::ALL {
-        let peeking = PlayerActionState::Peeking {
-            active_target: Some(direction),
-        };
+        let peeking = PlayerActionState::Peeking { direction };
         app.add_systems(OnEnter(peeking.clone()), trigger_refresh);
         app.add_systems(OnExit(peeking), trigger_refresh);
     }

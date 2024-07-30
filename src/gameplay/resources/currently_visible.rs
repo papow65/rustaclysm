@@ -25,11 +25,9 @@ impl<'w, 's> CurrentlyVisibleBuilder<'w, 's> {
     }
 
     pub(crate) fn for_player(&self, only_nearby: bool) -> CurrentlyVisible {
-        let from_pos = if let PlayerActionState::Peeking {
-            active_target: Some(target),
-        } = **self.player_action_state
+        let from_pos = if let PlayerActionState::Peeking { direction } = **self.player_action_state
         {
-            self.player_pos().horizontal_nbor(target.into())
+            self.player_pos().horizontal_nbor(direction.into())
         } else {
             self.player_pos()
         };

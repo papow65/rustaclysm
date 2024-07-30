@@ -30,11 +30,8 @@ pub(in super::super) fn update_peeking_transforms(
 ) {
     let start = Instant::now();
 
-    let state_offset = if let PlayerActionState::Peeking {
-        active_target: Some(target),
-    } = **player_action_state
-    {
-        Pos::ORIGIN.horizontal_nbor(target.into()).vec3() * 0.45
+    let state_offset = if let PlayerActionState::Peeking { direction } = **player_action_state {
+        Pos::ORIGIN.horizontal_nbor(direction.into()).vec3() * 0.45
     } else {
         Vec3::ZERO
     };

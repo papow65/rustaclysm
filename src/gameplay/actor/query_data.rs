@@ -356,7 +356,7 @@ impl ActorItem<'_> {
             Collision::Pass | Collision::Ledged => {
                 if let Some(low_speed) = self.low_speed() {
                     player_action_state.set(PlayerActionState::Peeking {
-                        active_target: Some(peek.target),
+                        direction: peek.target,
                     });
                     Some(self.standard_impact(envir.walking_cost(from, to).duration(low_speed)))
                 } else {

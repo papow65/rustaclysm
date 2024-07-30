@@ -5,32 +5,32 @@ use std::fmt;
 #[derive(Debug, Component)]
 pub(crate) struct Player;
 
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub(crate) enum PickingNbor {
+    Attacking,
+    Smashing,
+    Pulping,
+    Peeking,
+    Closing,
+    Dragging,
+    Crafting { recipe_id: ObjectId },
+}
+
 /// Current action of the player character
 /// Conceptually, this is a child state of [`GameplayScreenState::Base`].
 #[derive(Clone, Debug, Default, PartialEq, Eq, Hash, States)]
 pub(crate) enum PlayerActionState {
     #[default]
     Normal,
-    Attacking,
-    Smashing,
+    PickingNbor(PickingNbor),
     Pulping {
-        /// None: intent to pulp on next move
-        /// Some: corpse pulping in progress
-        active_target: Option<HorizontalDirection>,
+        direction: HorizontalDirection,
     },
     Peeking {
-        /// None: intent to peek on next move
-        /// Some: validated peeking in progress
-        active_target: Option<CardinalDirection>,
+        direction: CardinalDirection,
     },
-    Closing,
     Dragging {
-        /// None: intent to drag on next move
-        /// Some: moving items from previous to current position
-        active_from: Option<Pos>,
-    },
-    PickingNborForCrafting {
-        recipe_id: ObjectId,
+        from: Pos,
     },
     Crafting {
         /// The craft item, not the resulting item
@@ -103,9 +103,7 @@ impl PlayerActionState {
             .faction
             .enemy_name(currently_visible_builder, factions, player);
         match self {
-            Self::Dragging {
-                active_from: Some(from),
-            } => plan_auto_drag(envir, instruction_queue, from, enemy_name),
+            Self::Dragging { from } => plan_auto_drag(envir, instruction_queue, from, enemy_name),
             Self::Crafting { item } => {
                 plan_auto_continue_craft(instruction_queue, *item, enemy_name)
             }
@@ -123,9 +121,9 @@ impl PlayerActionState {
                 *target,
                 enemy_name,
             ),
-            Self::Pulping {
-                active_target: Some(target),
-            } => plan_auto_pulp(envir, instruction_queue, player, *target, enemy_name),
+            Self::Pulping { direction } => {
+                plan_auto_pulp(envir, instruction_queue, player, *direction, enemy_name)
+            }
             Self::Waiting { until } => plan_auto_wait(instruction_queue, now, until, enemy_name),
             Self::Sleeping { until } => plan_auto_sleep(instruction_queue, now, until),
             _ => None,
@@ -153,12 +151,7 @@ impl PlayerActionState {
                 message_writer.you("are still asleep. Zzz...").send_error();
                 None
             }
-            (
-                Self::Peeking {
-                    active_target: Some(_),
-                },
-                instruction,
-            ) => Self::stop_peeking(
+            (Self::Peeking { .. }, instruction) => Self::stop_peeking(
                 next_state,
                 message_writer,
                 envir,
@@ -190,33 +183,32 @@ impl PlayerActionState {
                     .send_error();
                 None
             }
-            (Self::Attacking, QueuedInstruction::Offset(PlayerDirection::Here)) => {
+            (
+                Self::PickingNbor(PickingNbor::Attacking),
+                QueuedInstruction::Offset(PlayerDirection::Here),
+            ) => {
                 message_writer.you("can't attack yourself").send_error();
                 None
             }
-            (Self::Attacking, QueuedInstruction::Attack)
-            | (Self::Smashing, QueuedInstruction::Smash)
-            | (Self::Peeking { .. }, QueuedInstruction::Peek)
-            | (Self::Dragging { .. }, QueuedInstruction::Drag | QueuedInstruction::CancelAction)
-            | (Self::Pulping { .. }, QueuedInstruction::Interrupt(Interruption::Finished)) => {
+            (Self::PickingNbor(PickingNbor::Attacking), QueuedInstruction::Attack)
+            | (Self::PickingNbor(PickingNbor::Smashing), QueuedInstruction::Smash)
+            | (Self::PickingNbor(PickingNbor::Peeking), QueuedInstruction::Peek)
+            | (
+                Self::PickingNbor(PickingNbor::Dragging) | Self::Dragging { .. },
+                QueuedInstruction::Drag | QueuedInstruction::CancelAction,
+            )
+            | (
+                Self::PickingNbor(PickingNbor::Pulping) | Self::Pulping { .. },
+                QueuedInstruction::Interrupt(Interruption::Finished),
+            ) => {
                 next_state.set(Self::Normal);
                 None
             }
-            (
-                Self::Dragging {
-                    active_from: Some(_),
-                },
-                QueuedInstruction::Interrupt(Interruption::Finished),
-            ) => {
-                next_state.set(Self::Dragging { active_from: None });
+            (Self::Dragging { .. }, QueuedInstruction::Interrupt(Interruption::Finished)) => {
+                next_state.set(Self::PickingNbor(PickingNbor::Dragging));
                 None
             }
-            (
-                Self::Dragging {
-                    active_from: Some(_),
-                },
-                _,
-            ) => {
+            (Self::Dragging { .. }, _) => {
                 message_writer.you("are still dragging items").send_warn();
                 None
             }
@@ -274,16 +266,14 @@ impl PlayerActionState {
                 Self::handle_pulp(next_state, message_writer, envir, player_pos)
             }
             QueuedInstruction::Peek => {
-                next_state.set(Self::Peeking {
-                    active_target: None,
-                });
+                next_state.set(Self::PickingNbor(PickingNbor::Peeking));
                 None
             }
             QueuedInstruction::Close => {
                 Self::handle_close(next_state, message_writer, envir, player_pos)
             }
             QueuedInstruction::Drag => {
-                next_state.set(Self::Dragging { active_from: None }); // 'active_from' will temporary be set after moving
+                next_state.set(Self::PickingNbor(PickingNbor::Dragging));
                 None
             }
             QueuedInstruction::ExamineItem(item) => Some(PlannedAction::ExamineItem { item }),
@@ -333,27 +323,19 @@ impl PlayerActionState {
         }
 
         match &self {
-            Self::Sleeping { .. }
-            | Self::Peeking {
-                active_target: Some(_),
-            }
-            | Self::Dragging {
-                active_from: Some(_),
-            } => {
+            Self::Sleeping { .. } | Self::Peeking { .. } | Self::Dragging { .. } => {
                 panic!("{self:?} {player_pos:?} {raw_nbor:?}");
             }
             Self::Normal => Some(PlannedAction::Step { to: raw_nbor }),
-            Self::Attacking => {
+            Self::PickingNbor(PickingNbor::Attacking) => {
                 next_state.set(Self::Normal);
                 Some(PlannedAction::Attack { target: raw_nbor })
             }
-            Self::Smashing => {
+            Self::PickingNbor(PickingNbor::Smashing) => {
                 next_state.set(Self::Normal);
                 Some(PlannedAction::Smash { target: raw_nbor })
             }
-            Self::Pulping {
-                active_target: None,
-            } => {
+            Self::PickingNbor(PickingNbor::Pulping) => {
                 //eprintln!("Inactive pulping");
                 if let Nbor::Horizontal(target) = raw_nbor {
                     //eprintln!("Activating pulping");
@@ -363,15 +345,13 @@ impl PlayerActionState {
                     None
                 }
             }
-            Self::Pulping {
-                active_target: Some(target),
-            } => {
-                panic!("{self:?} {player_pos:?} {raw_nbor:?} {target:?}");
+            Self::Pulping { direction } => {
+                panic!("{self:?} {player_pos:?} {raw_nbor:?} {direction:?}");
             }
-            Self::Peeking {
-                active_target: None,
-            } => Self::handle_peeking_offset(next_state, message_writer, raw_nbor),
-            Self::Closing => {
+            Self::PickingNbor(PickingNbor::Peeking) => {
+                Self::handle_peeking_offset(next_state, message_writer, raw_nbor)
+            }
+            Self::PickingNbor(PickingNbor::Closing) => {
                 next_state.set(Self::Normal);
                 if let Nbor::Horizontal(target) = raw_nbor {
                     Some(PlannedAction::Close { target })
@@ -380,13 +360,11 @@ impl PlayerActionState {
                     None
                 }
             }
-            Self::Dragging { active_from: None } => {
-                next_state.set(Self::Dragging {
-                    active_from: Some(player_pos),
-                });
+            Self::PickingNbor(PickingNbor::Dragging) => {
+                next_state.set(Self::Dragging { from: player_pos });
                 Some(PlannedAction::Step { to: raw_nbor })
             }
-            Self::PickingNborForCrafting { recipe_id } => {
+            Self::PickingNbor(PickingNbor::Crafting { recipe_id }) => {
                 if let Nbor::Horizontal(target) = raw_nbor {
                     // next_state is set when performing the action
                     Some(PlannedAction::StartCraft(StartCraft {
@@ -485,7 +463,7 @@ impl PlayerActionState {
                 }
             }
             _ => {
-                next_state.set(Self::PickingNborForCrafting { recipe_id });
+                next_state.set(Self::PickingNbor(PickingNbor::Crafting { recipe_id }));
                 None
             }
         }
@@ -509,7 +487,7 @@ impl PlayerActionState {
                 target: attackable_nbors[0],
             }),
             _ => {
-                next_state.set(Self::Attacking);
+                next_state.set(Self::PickingNbor(PickingNbor::Attacking));
                 None
             }
         }
@@ -533,7 +511,7 @@ impl PlayerActionState {
                 target: smashable_nbors[0],
             }),
             _ => {
-                next_state.set(Self::Smashing);
+                next_state.set(Self::PickingNbor(PickingNbor::Smashing));
                 None
             }
         }
@@ -564,7 +542,7 @@ impl PlayerActionState {
             1 => {
                 //eprintln!("Pulping target found -> active");
                 next_state.set(Self::Pulping {
-                    active_target: Some(pulpable_nbors[0]),
+                    direction: pulpable_nbors[0],
                 });
                 Some(PlannedAction::Pulp {
                     target: pulpable_nbors[0],
@@ -572,9 +550,7 @@ impl PlayerActionState {
             }
             _ => {
                 //eprintln!("Pulping choice -> inactive");
-                next_state.set(Self::Pulping {
-                    active_target: None,
-                });
+                next_state.set(Self::PickingNbor(PickingNbor::Pulping));
                 None
             }
         }
@@ -605,7 +581,7 @@ impl PlayerActionState {
                 target: closable_nbors[0],
             }),
             _ => {
-                next_state.set(Self::Closing);
+                next_state.set(Self::PickingNbor(PickingNbor::Closing));
                 None
             }
         }
@@ -613,15 +589,13 @@ impl PlayerActionState {
 
     pub(crate) const fn color(&self) -> Color {
         match self {
-            Self::Normal | Self::Closing => DEFAULT_TEXT_COLOR,
+            Self::Normal | Self::PickingNbor(PickingNbor::Closing) => DEFAULT_TEXT_COLOR,
             Self::Waiting { .. }
             | Self::Sleeping { .. }
-            | Self::Attacking
-            | Self::Smashing
+            | Self::PickingNbor { .. }
             | Self::Pulping { .. }
             | Self::Peeking { .. }
             | Self::Dragging { .. }
-            | Self::PickingNborForCrafting { .. }
             | Self::Crafting { .. }
             | Self::AutoTravel { .. } => WARN_TEXT_COLOR,
             Self::AutoDefend => BAD_TEXT_COLOR,
@@ -659,15 +633,24 @@ impl PlayerActionState {
 
 impl fmt::Display for PlayerActionState {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let picking_nbor_string;
         f.write_str(match self {
             Self::Normal => "",
-            Self::Attacking => "Attacking",
-            Self::Smashing => "Smashing",
+            Self::PickingNbor(picking_nbor) => {
+                picking_nbor_string = String::from(match picking_nbor {
+                    PickingNbor::Attacking => "Attacking",
+                    PickingNbor::Smashing => "Smashing",
+                    PickingNbor::Pulping => "Pulping",
+                    PickingNbor::Peeking => "Peeking",
+                    PickingNbor::Closing => "Closing",
+                    PickingNbor::Dragging => "Dragging",
+                    PickingNbor::Crafting { .. } => "Crafting",
+                }) + ": pick a direction";
+                picking_nbor_string.as_str()
+            }
             Self::Pulping { .. } => "Pulping",
             Self::Peeking { .. } => "Peeking",
-            Self::Closing => "Closing",
             Self::Dragging { .. } => "Dragging",
-            Self::PickingNborForCrafting { .. } => "Crafting: pick a direction",
             Self::Crafting { .. } => "Crafting",
             Self::Waiting { .. } => "Waiting",
             Self::Sleeping { .. } => "Sleeping",
