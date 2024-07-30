@@ -7,8 +7,9 @@ mod plugin;
 mod resources;
 mod screens;
 mod systems;
+mod units;
 
 pub(crate) use self::{
     actor::*, components::*, core::*, events::*, hud::*, plugin::*, resources::*, screens::*,
-    systems::*,
+    systems::*, units::*,
 };
