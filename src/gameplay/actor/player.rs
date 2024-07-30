@@ -323,58 +323,11 @@ impl PlayerActionState {
         }
 
         match &self {
-            Self::Sleeping { .. } | Self::Peeking { .. } | Self::Dragging { .. } => {
+            Self::Sleeping { .. }
+            | Self::Peeking { .. }
+            | Self::Dragging { .. }
+            | Self::Pulping { .. } => {
                 panic!("{self:?} {player_pos:?} {raw_nbor:?}");
-            }
-            Self::Normal => Some(PlannedAction::Step { to: raw_nbor }),
-            Self::PickingNbor(PickingNbor::Attacking) => {
-                next_state.set(Self::Normal);
-                Some(PlannedAction::Attack { target: raw_nbor })
-            }
-            Self::PickingNbor(PickingNbor::Smashing) => {
-                next_state.set(Self::Normal);
-                Some(PlannedAction::Smash { target: raw_nbor })
-            }
-            Self::PickingNbor(PickingNbor::Pulping) => {
-                //eprintln!("Inactive pulping");
-                if let Nbor::Horizontal(target) = raw_nbor {
-                    //eprintln!("Activating pulping");
-                    Some(PlannedAction::Pulp { target })
-                } else {
-                    message_writer.you("can't pulp vertically").send_error();
-                    None
-                }
-            }
-            Self::Pulping { direction } => {
-                panic!("{self:?} {player_pos:?} {raw_nbor:?} {direction:?}");
-            }
-            Self::PickingNbor(PickingNbor::Peeking) => {
-                Self::handle_peeking_offset(next_state, message_writer, raw_nbor)
-            }
-            Self::PickingNbor(PickingNbor::Closing) => {
-                next_state.set(Self::Normal);
-                if let Nbor::Horizontal(target) = raw_nbor {
-                    Some(PlannedAction::Close { target })
-                } else {
-                    message_writer.you("can't close vertically").send_error();
-                    None
-                }
-            }
-            Self::PickingNbor(PickingNbor::Dragging) => {
-                next_state.set(Self::Dragging { from: player_pos });
-                Some(PlannedAction::Step { to: raw_nbor })
-            }
-            Self::PickingNbor(PickingNbor::Crafting { recipe_id }) => {
-                if let Nbor::Horizontal(target) = raw_nbor {
-                    // next_state is set when performing the action
-                    Some(PlannedAction::StartCraft(StartCraft {
-                        recipe_id: recipe_id.clone(),
-                        target,
-                    }))
-                } else {
-                    message_writer.you("can't craft vertically").send_error();
-                    None
-                }
             }
             Self::Crafting { .. }
             | Self::Waiting { .. }
@@ -382,6 +335,57 @@ impl PlayerActionState {
             | Self::AutoDefend => {
                 next_state.set(Self::Normal);
                 None
+            }
+            Self::Normal => Some(PlannedAction::Step { to: raw_nbor }),
+            Self::PickingNbor(picking_nbor) => {
+                match picking_nbor {
+                    PickingNbor::Attacking => {
+                        next_state.set(Self::Normal);
+                        Some(PlannedAction::Attack { target: raw_nbor })
+                    }
+                    PickingNbor::Smashing => {
+                        next_state.set(Self::Normal);
+                        Some(PlannedAction::Smash { target: raw_nbor })
+                    }
+                    PickingNbor::Pulping => {
+                        //eprintln!("Inactive pulping");
+                        if let Nbor::Horizontal(target) = raw_nbor {
+                            //eprintln!("Activating pulping");
+                            Some(PlannedAction::Pulp { target })
+                        } else {
+                            message_writer.you("can't pulp vertically").send_error();
+                            None
+                        }
+                    }
+                    PickingNbor::Peeking => {
+                        Self::handle_peeking_offset(next_state, message_writer, raw_nbor)
+                    }
+                    PickingNbor::Closing => {
+                        next_state.set(Self::Normal);
+                        if let Nbor::Horizontal(target) = raw_nbor {
+                            Some(PlannedAction::Close { target })
+                        } else {
+                            message_writer.you("can't close vertically").send_error();
+                            None
+                        }
+                    }
+                    PickingNbor::Dragging => {
+                        next_state.set(Self::Dragging { from: player_pos });
+                        Some(PlannedAction::Step { to: raw_nbor })
+                    }
+                    PickingNbor::Crafting { recipe_id } => {
+                        if let Nbor::Horizontal(target) = raw_nbor {
+                            // next_state is set when performing the action
+                            Some(PlannedAction::StartCraft(StartCraft {
+                                recipe_id: recipe_id.clone(),
+                                target,
+                            }))
+                        } else {
+                            message_writer.you("can't craft vertically").send_error();
+                            None
+                        }
+                    }
+                }
             }
         }
     }
