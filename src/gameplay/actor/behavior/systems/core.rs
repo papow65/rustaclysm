@@ -124,7 +124,6 @@ fn plan_automatic_player_action(
 #[allow(clippy::needless_pass_by_value)]
 fn wait_for_player_input(mut instruction_queue: ResMut<InstructionQueue>) {
     instruction_queue.start_waiting();
-    println!("Waiting for user action");
 }
 
 #[allow(clippy::needless_pass_by_value)]
