@@ -123,20 +123,16 @@ pub(crate) struct ExamineCursor;
 pub(crate) struct HealingDuration(Duration);
 
 impl HealingDuration {
-    const HEALING_RATE: u64 = 1_000_000;
-
     pub(crate) const fn new() -> Self {
         Self(Duration::ZERO)
     }
 
     #[must_use]
     pub(crate) fn heal(&mut self, duration: Duration) -> u64 {
+        let healing_rate = Duration::SECOND * 1000;
+
         self.0 += duration;
-
-        let healing = self.0 .0 / Self::HEALING_RATE;
-        self.0 .0 %= Self::HEALING_RATE;
-
-        healing
+        self.0.extract_div(healing_rate)
     }
 }
 
@@ -161,7 +157,7 @@ impl Craft {
     }
 
     pub(crate) const fn finished(&self) -> bool {
-        self.work_needed.0 <= self.work_done.0
+        self.work_needed.milliseconds() <= self.work_done.milliseconds()
     }
 }
 

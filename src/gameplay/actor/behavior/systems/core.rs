@@ -569,7 +569,7 @@ pub(in super::super) fn proces_impact(
         if players.get(impact.actor_entity).is_err() {
             message_writer.str("NPC action failed").send_error();
             // To prevent the application hanging on failing NPC actions, we add a small timeout
-            timeouts.add(impact.actor_entity, Duration(1000));
+            timeouts.add(impact.actor_entity, Duration::SECOND);
         }
 
         return;

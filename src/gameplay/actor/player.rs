@@ -57,7 +57,7 @@ impl PlayerActionState {
 
     fn start_sleeping(now: Timestamp) -> Self {
         Self::Sleeping {
-            until: now + Duration::EIGHT_HOURS,
+            until: now + Duration::HOUR * 8,
         }
     }
 

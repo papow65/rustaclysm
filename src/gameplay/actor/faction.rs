@@ -116,7 +116,7 @@ impl Faction {
                     )
                     .map(|path| (memory, path))
             })
-            .min_by_key(|(memory, path)| (*memory, path.duration.0))
+            .min_by_key(|(memory, path)| (*memory, path.duration.milliseconds()))
             .and_then(|(_, path)| {
                 let last_enemy = LastEnemy(path.destination);
                 let nbor = envir.to_nbor(*actor.pos, path.first).expect("Nbors");
@@ -160,10 +160,10 @@ impl Faction {
 
         // Higher gives better results but is slower
         let planning_limit: u64 = 5;
-        let min_time = Duration((planning_limit - 1) * up_time.0); // included
-        let max_time = Duration(planning_limit * up_time.0); // not included
+        let min_time = up_time * (planning_limit - 1); // included
+        let max_time = up_time * planning_limit; // not included
 
-        let graph = dijkstra_all(&(*actor.pos, Duration(0)), |(pos, prev_total_ms)| {
+        let graph = dijkstra_all(&(*actor.pos, Duration::ZERO), |(pos, prev_total_ms)| {
             envir
                 .nbors_for_moving(*pos, None, self.intelligence(), actor.speed())
                 .filter_map(|(_, nbor_pos, ms)| {
@@ -331,9 +331,9 @@ impl Faction {
 pub(crate) struct Danger(FloatOrd<f32>);
 
 impl Danger {
-    pub(crate) fn new(envir: &Envir, time: &Duration, pos: Pos, froms: &[Pos]) -> Self {
+    pub(crate) fn new(envir: &Envir, duration: &Duration, pos: Pos, froms: &[Pos]) -> Self {
         Self(FloatOrd(
-            time.0 as f32
+            duration.milliseconds() as f32
                 * froms
                     .iter()
                     .map(|from| 1.0 / (envir.walking_cost(pos, *from).f32()))
@@ -341,8 +341,8 @@ impl Danger {
         ))
     }
 
-    pub(crate) fn average(&self, time: &Duration) -> Self {
-        Self(FloatOrd(self.0 .0 / (time.0 as f32)))
+    pub(crate) fn average(&self, duration: &Duration) -> Self {
+        Self(FloatOrd(self.0 .0 / (duration.milliseconds() as f32)))
     }
 }
 
