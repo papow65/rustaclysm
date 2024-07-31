@@ -59,7 +59,9 @@ impl<S: AsRef<str>> From<S> for Volume {
         let unit: String = value.matches(char::is_alphabetic).collect();
         //println!("{value} {} {}", &quantity, &unit);
 
-        let quantity = quantity.parse::<f32>().expect("Valid number");
+        let quantity = quantity
+            .parse::<f32>()
+            .unwrap_or_else(|err| panic!("{err:?} when parsing {quantity:?}"));
 
         Self {
             milliliter: match unit.to_lowercase().as_str() {
@@ -85,8 +87,9 @@ impl Sum for Volume {
 #[cfg(test)]
 mod volume_tests {
     use super::*;
+
     #[test]
-    fn it_works() {
+    fn parsing_works() {
         assert_eq!(Volume::from("21 ml"), Volume { milliliter: 21 });
         assert_eq!(Volume::from("35.6L"), Volume { milliliter: 35_600 });
     }

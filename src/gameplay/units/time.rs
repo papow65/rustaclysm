@@ -1,13 +1,17 @@
 use pathfinding::num_traits::Zero;
+use regex::Regex;
+use serde::Deserialize;
 use std::{
     cmp::Ordering,
     fmt,
     hash::{Hash, Hasher},
     ops::{Add, AddAssign, Sub},
+    sync::LazyLock,
 };
 use time::OffsetDateTime;
 
-#[derive(Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Deserialize)]
+#[serde(from = "String")]
 pub(crate) struct Milliseconds(pub(crate) u64);
 
 impl Milliseconds {
@@ -22,6 +26,59 @@ impl fmt::Debug for Milliseconds {
     }
 }
 
+impl fmt::Display for Milliseconds {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let milliseconds = self.0;
+        let seconds = milliseconds / 1000;
+        let minutes = seconds / 60;
+        let hours = minutes / 60;
+        let days = hours / 24;
+
+        let mut spacing = "";
+        if 0 < days {
+            write!(f, "{days} day{}", plural(days))?;
+            spacing = " ";
+        }
+
+        let hours = hours % 24;
+        if 0 < hours {
+            write!(f, "{spacing}{hours} hour{}", plural(hours))?;
+            spacing = " ";
+        }
+
+        let minutes = minutes % 60;
+        if 0 < minutes {
+            write!(f, "{spacing}{minutes} minute{}", plural(minutes))?;
+            spacing = " ";
+        }
+
+        let seconds = seconds % 60;
+        if 0 < seconds {
+            write!(f, "{spacing}{seconds} second{}", plural(seconds))?;
+            spacing = " ";
+        }
+
+        let milliseconds = milliseconds % 1000;
+        if 0 < milliseconds {
+            write!(
+                f,
+                "{spacing}{milliseconds} millisecond{}",
+                plural(milliseconds)
+            )?;
+        }
+
+        Ok(())
+    }
+}
+
+const fn plural(i: u64) -> &'static str {
+    if i == 1 {
+        ""
+    } else {
+        "s"
+    }
+}
+
 impl Add for Milliseconds {
     type Output = Self;
 
@@ -33,6 +90,38 @@ impl Add for Milliseconds {
 impl AddAssign for Milliseconds {
     fn add_assign(&mut self, other: Self) {
         self.0 += other.0;
+    }
+}
+
+impl<S: AsRef<str>> From<S> for Milliseconds {
+    fn from(value: S) -> Self {
+        static DURATION_PARSER: LazyLock<Regex> = LazyLock::new(|| {
+            Regex::new("(?:([0-9]+) *([a-zA-Z]+))+").expect("Valid regex for duration")
+        });
+
+        let value = value.as_ref();
+
+        let mut total = Self::ZERO;
+        for capture in DURATION_PARSER.captures_iter(value) {
+            let (_full, [quantity, unit]) = capture.extract();
+
+            let quantity = quantity
+                .parse::<u64>()
+                .unwrap_or_else(|err| panic!("{err:?} when parsing {quantity:?}"));
+            let unit = unit.to_lowercase();
+            //println!("{capture:?} {_full:?} {&quantity} {&unit}");
+
+            total += Self(match unit.as_str() {
+                "ms" | "millisecond" | "milliseconds" => quantity,
+                "s" | "second" | "seconds" => 1_000 * quantity,
+                "m" | "minute" | "minutes" => 60_000 * quantity,
+                "h" | "hour" | "hours" => 3_600_000 * quantity,
+                "d" | "day" | "days" => 24 * 3_600_000 * quantity,
+                _ => panic!("Could not parse {quantity} {unit} in {value}"),
+            } as u64);
+        }
+
+        total
     }
 }
 
@@ -156,5 +245,27 @@ impl PartialOrd for Timestamp {
 impl Ord for Timestamp {
     fn cmp(&self, other: &Self) -> Ordering {
         self.offset.cmp(&other.offset)
+    }
+}
+
+#[cfg(test)]
+mod time_tests {
+    use super::*;
+
+    #[test]
+    fn add_asign_works() {
+        let mut total = Milliseconds(2);
+        total += Milliseconds(3);
+        assert_eq!(total, Milliseconds(5));
+    }
+
+    #[test]
+    fn parsing_works() {
+        assert_eq!(Milliseconds::from("21 s"), Milliseconds(21 * 1000));
+        assert_eq!(Milliseconds::from("35m"), Milliseconds(35 * 60 * 1000));
+        assert_eq!(
+            Milliseconds::from("31 h 40 m"),
+            Milliseconds(31 * 60 * 60 * 1000 + 40 * 60 * 1000)
+        );
     }
 }

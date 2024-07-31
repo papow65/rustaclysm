@@ -60,7 +60,9 @@ impl<S: AsRef<str>> From<S> for Mass {
         let unit: String = value.matches(char::is_alphabetic).collect();
         //println!("{value} {} {}", &quantity, &unit);
 
-        let quantity = quantity.parse::<f32>().expect("Valid number");
+        let quantity = quantity
+            .parse::<f32>()
+            .unwrap_or_else(|err| panic!("{err:?} when parsing {quantity:?}"));
 
         Self {
             milligram: match unit.to_lowercase().as_str() {
@@ -76,8 +78,9 @@ impl<S: AsRef<str>> From<S> for Mass {
 #[cfg(test)]
 mod mass_tests {
     use super::*;
+
     #[test]
-    fn it_works() {
+    fn parsing_works() {
         assert_eq!(Mass::from(String::from("21mg")), Mass { milligram: 21 });
         assert_eq!(
             Mass::from(String::from("35.6 Kg")),

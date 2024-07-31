@@ -1,4 +1,4 @@
-use crate::prelude::{Infos, ObjectId};
+use crate::prelude::{Infos, Milliseconds, ObjectId};
 use bevy::utils::HashMap;
 use serde::Deserialize;
 
@@ -11,7 +11,7 @@ pub(crate) struct Recipe {
     #[serde(default)]
     pub(crate) difficulty: u8,
 
-    pub(crate) time: Option<String>,
+    pub(crate) time: Option<Milliseconds>,
 
     #[serde(default)]
     pub(crate) book_learn: BookLearn,

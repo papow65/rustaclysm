@@ -65,7 +65,7 @@ impl RecipeSituation {
                 fonts.regular(SOFT_TEXT_COLOR),
             ));
             text_sections.push(TextSection::new(
-                time.clone(),
+                time.to_string(),
                 fonts.regular(WARN_TEXT_COLOR),
             ));
         }
