@@ -143,17 +143,25 @@ impl HealingDuration {
 #[derive(Debug, Component)]
 pub(crate) struct Craft {
     pub(crate) object_id: ObjectId,
-    pub(crate) work_needed: u32,
-    pub(crate) work_done: u32,
+    pub(crate) work_needed: Milliseconds,
+    pub(crate) work_done: Milliseconds,
 }
 
 impl Craft {
-    pub(crate) fn work(&mut self) {
-        self.work_done += 1;
+    pub(crate) const fn new(object_id: ObjectId, work_needed: Milliseconds) -> Self {
+        Self {
+            object_id,
+            work_needed,
+            work_done: Milliseconds::ZERO,
+        }
+    }
+
+    pub(crate) fn work(&mut self, duration: Milliseconds) {
+        self.work_done += duration;
     }
 
     pub(crate) const fn finished(&self) -> bool {
-        self.work_done <= self.work_needed
+        self.work_needed.0 <= self.work_done.0
     }
 }
 

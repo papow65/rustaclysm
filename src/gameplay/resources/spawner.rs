@@ -602,11 +602,11 @@ impl<'w, 's> Spawner<'w, 's> {
         let entity = self
             .spawn_item(infos, parent_entity, pos, &craft, Amount::SINGLE)
             .expect("Spawning craft item should have succeeded");
-        self.commands.entity(entity).insert(Craft {
-            work_needed: 100,
-            work_done: 0,
-            object_id,
-        });
+
+        let recipe = infos.recipe(&object_id);
+        let crafting_time = recipe.time.expect("Craftable recipes should have a time");
+        let craft = Craft::new(object_id, crafting_time);
+        self.commands.entity(entity).insert(craft);
 
         entity
     }

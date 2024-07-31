@@ -673,7 +673,9 @@ impl ActorItem<'_> {
     ) -> Option<Impact> {
         let (item, mut craft) = crafts.get_mut(craft).expect("Craft should be found");
 
-        craft.work();
+        let crafting_time = Milliseconds(3_000);
+
+        craft.work(crafting_time);
         if craft.finished() {
             message_writer.you("finish").add("crafting").send_info();
             let parent = item.parent.get();
@@ -687,7 +689,7 @@ impl ActorItem<'_> {
 
         Some(Impact {
             actor_entity: self.entity,
-            timeout: Milliseconds::MINUTE,
+            timeout: crafting_time,
             stamina_impact: Some(StaminaImpact::Neutral),
         })
     }
