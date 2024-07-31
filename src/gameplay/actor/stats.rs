@@ -17,7 +17,7 @@ impl BaseSpeed {
     }
 
     pub(crate) fn speed(&self, walking_mode: &WalkingMode, breath: Breath) -> Speed {
-        Speed((self.0 .0 as f32 * walking_mode.speed_factor(breath)) as u64)
+        self.0 * walking_mode.speed_factor(breath)
     }
 }
 

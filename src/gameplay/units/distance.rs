@@ -45,7 +45,7 @@ impl Div<Speed> for Distance {
     type Output = Duration;
 
     fn div(self, speed: Speed) -> Duration {
-        Duration(self.millimeter * 1000 / speed.0)
+        Duration(self.millimeter * 1000 / speed.millimeter_per_second())
     }
 }
 
