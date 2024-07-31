@@ -14,7 +14,7 @@ impl VisionDistance {
 
     /// Often slower than `in_range`
     pub(crate) fn as_tiles(&self) -> usize {
-        (self.square_mm as f32 / Distance::ADJACENT.0.pow(2) as f32)
+        (self.square_mm as f32 / Distance::ADJACENT.millimeter().pow(2) as f32)
             .sqrt()
             .floor() as usize
     }
@@ -34,9 +34,11 @@ impl VisionDistance {
 
     pub(crate) const fn from(pos_offset: PosOffset) -> Self {
         Self {
-            square_mm: Distance::ADJACENT.0.pow(2) * (pos_offset.x.abs_diff(0) as u64).pow(2)
-                + Distance::VERTICAL.0.pow(2) * (pos_offset.level.h.abs_diff(0) as u64).pow(2)
-                + Distance::ADJACENT.0.pow(2) * (pos_offset.z.abs_diff(0) as u64).pow(2),
+            square_mm: Distance::ADJACENT.millimeter().pow(2)
+                * (pos_offset.x.abs_diff(0) as u64).pow(2)
+                + Distance::VERTICAL.millimeter().pow(2)
+                    * (pos_offset.level.h.abs_diff(0) as u64).pow(2)
+                + Distance::ADJACENT.millimeter().pow(2) * (pos_offset.z.abs_diff(0) as u64).pow(2),
         }
     }
 

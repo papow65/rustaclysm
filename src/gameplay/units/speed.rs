@@ -39,10 +39,10 @@ impl WalkingCost {
                 NborDistance::Zero => Distance::ZERO,
             },
         };
-        new.equivalent_distance.0 *= u64::from(move_cost.value());
+        new.equivalent_distance *= u64::from(move_cost.value());
         if nbor_distance != NborDistance::Up {
             // 2 is both the penalty for muving up and default move cost.
-            new.equivalent_distance.0 /= 2;
+            new.equivalent_distance /= 2;
         }
 
         new
@@ -53,7 +53,7 @@ impl WalkingCost {
     }
 
     pub(crate) fn f32(&self) -> f32 {
-        1.0 / (self.equivalent_distance.0 as f32)
+        0.001 / self.equivalent_distance.meter_f32()
     }
 }
 
@@ -64,5 +64,18 @@ impl Add<Self> for WalkingCost {
         Self {
             equivalent_distance: self.equivalent_distance + other.equivalent_distance,
         }
+    }
+}
+
+#[cfg(test)]
+mod volume_tests {
+    use super::*;
+
+    #[test]
+    fn parsing_works() {
+        assert_eq!(
+            WalkingCost::new(NborDistance::Adjacent, MoveCost::default()).f32(),
+            0.001
+        );
     }
 }

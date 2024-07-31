@@ -79,7 +79,7 @@ impl ActorItem<'_> {
     pub(crate) fn stay(&self) -> Impact {
         Impact::standing_rest(
             self.entity,
-            Distance(Distance::ADJACENT.0 / 2) / self.high_speed().unwrap_or_else(|| self.speed()),
+            Distance::ADJACENT / 2 / self.high_speed().unwrap_or_else(|| self.speed()),
         )
     }
 
@@ -106,7 +106,7 @@ impl ActorItem<'_> {
     }
 
     fn activate(&self) -> Impact {
-        self.standard_impact(Distance(3 * Distance::ADJACENT.0) / self.speed())
+        self.standard_impact(Distance::ADJACENT * 3 / self.speed())
     }
 
     pub(crate) fn step(

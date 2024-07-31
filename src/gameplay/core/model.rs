@@ -126,7 +126,11 @@ impl ModelShape {
                 scale: match *layer {
                     SpriteLayer::Front => 1.0,
                     SpriteLayer::Back => 0.98,
-                } * Vec3::new(Distance::ADJACENT.f32(), *height, Distance::ADJACENT.f32()),
+                } * Vec3::new(
+                    Distance::ADJACENT.meter_f32(),
+                    *height,
+                    Distance::ADJACENT.meter_f32(),
+                ),
                 translation: match *layer {
                     SpriteLayer::Front => Vec3::ZERO,
                     SpriteLayer::Back => Vec3::new(0.0, 0.0, -0.01),
