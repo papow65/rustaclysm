@@ -240,8 +240,8 @@ impl<'w, 's> Envir<'w, 's> {
         pos: Pos,
         destination: Option<Pos>,
         intelligence: Intelligence,
-        speed: MillimeterPerSecond,
-    ) -> impl Iterator<Item = (Nbor, Pos, Milliseconds)> + 's {
+        speed: Speed,
+    ) -> impl Iterator<Item = (Nbor, Pos, Duration)> + 's {
         self.nbors_if(pos, move |nbor| {
             (pos.level == Level::ZERO || !self.location.all(pos).collect::<Vec<_>>().is_empty())
                 && {
@@ -326,7 +326,7 @@ impl<'w, 's> Envir<'w, 's> {
         to: Pos,
         intelligence: Intelligence,
         seen: F,
-        speed: MillimeterPerSecond,
+        speed: Speed,
     ) -> Option<MovementPath>
     where
         F: Fn(Pos) -> bool,
@@ -415,7 +415,7 @@ impl<'w, 's> Envir<'w, 's> {
 #[derive(Debug)]
 pub(crate) struct MovementPath {
     pub(crate) first: Pos,
-    pub(crate) duration: Milliseconds,
+    pub(crate) duration: Duration,
     pub(crate) destination: Pos,
 }
 
@@ -428,8 +428,8 @@ impl MovementPath {
     ) -> Option<Self>
     where
         FN: FnMut(&Pos) -> IN,
-        IN: Iterator<Item = (Pos, Milliseconds)>,
-        FH: FnMut(&Pos) -> Milliseconds,
+        IN: Iterator<Item = (Pos, Duration)>,
+        FH: FnMut(&Pos) -> Duration,
     {
         if let Some((mut steps, duration)) =
             astar(&from, successors, heuristic, |&pos| pos == destination)
@@ -462,8 +462,8 @@ impl MovementPath {
         destination: Pos,
     ) -> Option<Self>
     where
-        I: Iterator<Item = (Pos, Milliseconds)>,
-        FH: FnMut(&Pos) -> Milliseconds,
+        I: Iterator<Item = (Pos, Duration)>,
+        FH: FnMut(&Pos) -> Duration,
     {
         nbors
             .map(|(first, _)| Self {

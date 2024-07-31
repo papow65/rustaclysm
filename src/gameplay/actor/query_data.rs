@@ -29,12 +29,12 @@ impl ActorItem<'_> {
         }
     }
 
-    pub(crate) fn speed(&self) -> MillimeterPerSecond {
+    pub(crate) fn speed(&self) -> Speed {
         self.base_speed
             .speed(self.walking_mode, self.stamina.breath())
     }
 
-    fn high_speed(&self) -> Option<MillimeterPerSecond> {
+    fn high_speed(&self) -> Option<Speed> {
         match self.stamina.breath() {
             Breath::Normal | Breath::AlmostWinded => {
                 Some(self.base_speed.speed(&WalkingMode::Running, Breath::Normal))
@@ -43,7 +43,7 @@ impl ActorItem<'_> {
         }
     }
 
-    fn low_speed(&self) -> Option<MillimeterPerSecond> {
+    fn low_speed(&self) -> Option<Speed> {
         match self.stamina.breath() {
             Breath::Normal | Breath::AlmostWinded => {
                 Some(self.base_speed.speed(&WalkingMode::Walking, Breath::Normal))
@@ -68,7 +68,7 @@ impl ActorItem<'_> {
         )
     }
 
-    const fn standard_impact(&self, timeout: Milliseconds) -> Impact {
+    const fn standard_impact(&self, timeout: Duration) -> Impact {
         Impact::new(
             self.entity,
             timeout,
@@ -79,8 +79,7 @@ impl ActorItem<'_> {
     pub(crate) fn stay(&self) -> Impact {
         Impact::standing_rest(
             self.entity,
-            Millimeter(Millimeter::ADJACENT.0 / 2)
-                / self.high_speed().unwrap_or_else(|| self.speed()),
+            Distance(Distance::ADJACENT.0 / 2) / self.high_speed().unwrap_or_else(|| self.speed()),
         )
     }
 
@@ -89,7 +88,7 @@ impl ActorItem<'_> {
         healing_writer: &mut EventWriter<'_, ActorEvent<Healing>>,
         healing_durations: &mut Query<&mut HealingDuration>,
     ) -> Impact {
-        let sleep_duration = Milliseconds::MINUTE;
+        let sleep_duration = Duration::MINUTE;
 
         let mut healing_duration = healing_durations
             .get_mut(self.entity)
@@ -107,7 +106,7 @@ impl ActorItem<'_> {
     }
 
     fn activate(&self) -> Impact {
-        self.standard_impact(Millimeter(3 * Millimeter::ADJACENT.0) / self.speed())
+        self.standard_impact(Distance(3 * Distance::ADJACENT.0) / self.speed())
     }
 
     pub(crate) fn step(
@@ -167,7 +166,7 @@ impl ActorItem<'_> {
         hierarchy: &Hierarchy,
         damaged: Entity,
         damaged_pos: Pos,
-        speed: MillimeterPerSecond,
+        speed: Speed,
         new: N,
     ) -> Impact
     where
@@ -673,7 +672,7 @@ impl ActorItem<'_> {
     ) -> Option<Impact> {
         let (item, mut craft) = crafts.get_mut(craft).expect("Craft should be found");
 
-        let crafting_time = Milliseconds(3_000);
+        let crafting_time = Duration(3_000);
 
         craft.work(crafting_time);
         if craft.finished() {

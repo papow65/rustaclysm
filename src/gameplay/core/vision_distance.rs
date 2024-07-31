@@ -1,4 +1,4 @@
-use crate::prelude::{LevelOffset, Millimeter, PosOffset};
+use crate::prelude::{Distance, LevelOffset, PosOffset};
 use std::ops::RangeInclusive;
 
 /// Not `Eq`, `PartialOrd`, and `Ord`, because there are multiple interpretations possible
@@ -14,7 +14,7 @@ impl VisionDistance {
 
     /// Often slower than `in_range`
     pub(crate) fn as_tiles(&self) -> usize {
-        (self.square_mm as f32 / Millimeter::ADJACENT.0.pow(2) as f32)
+        (self.square_mm as f32 / Distance::ADJACENT.0.pow(2) as f32)
             .sqrt()
             .floor() as usize
     }
@@ -34,9 +34,9 @@ impl VisionDistance {
 
     pub(crate) const fn from(pos_offset: PosOffset) -> Self {
         Self {
-            square_mm: Millimeter::ADJACENT.0.pow(2) * (pos_offset.x.abs_diff(0) as u64).pow(2)
-                + Millimeter::VERTICAL.0.pow(2) * (pos_offset.level.h.abs_diff(0) as u64).pow(2)
-                + Millimeter::ADJACENT.0.pow(2) * (pos_offset.z.abs_diff(0) as u64).pow(2),
+            square_mm: Distance::ADJACENT.0.pow(2) * (pos_offset.x.abs_diff(0) as u64).pow(2)
+                + Distance::VERTICAL.0.pow(2) * (pos_offset.level.h.abs_diff(0) as u64).pow(2)
+                + Distance::ADJACENT.0.pow(2) * (pos_offset.z.abs_diff(0) as u64).pow(2),
         }
     }
 

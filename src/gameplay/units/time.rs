@@ -12,21 +12,21 @@ use time::OffsetDateTime;
 
 #[derive(Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Deserialize)]
 #[serde(from = "String")]
-pub(crate) struct Milliseconds(pub(crate) u64);
+pub(crate) struct Duration(pub(crate) u64);
 
-impl Milliseconds {
+impl Duration {
     pub(crate) const ZERO: Self = Self(0);
     pub(crate) const MINUTE: Self = Self(60 * 1000);
     pub(crate) const EIGHT_HOURS: Self = Self(8 * 60 * 60 * 1000);
 }
 
-impl fmt::Debug for Milliseconds {
+impl fmt::Debug for Duration {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{:.03?} s", self.0 as f32 * 0.001)
     }
 }
 
-impl fmt::Display for Milliseconds {
+impl fmt::Display for Duration {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let milliseconds = self.0;
         let seconds = milliseconds / 1000;
@@ -79,7 +79,7 @@ const fn plural(i: u64) -> &'static str {
     }
 }
 
-impl Add for Milliseconds {
+impl Add for Duration {
     type Output = Self;
 
     fn add(self, other: Self) -> Self {
@@ -87,13 +87,13 @@ impl Add for Milliseconds {
     }
 }
 
-impl AddAssign for Milliseconds {
+impl AddAssign for Duration {
     fn add_assign(&mut self, other: Self) {
         self.0 += other.0;
     }
 }
 
-impl<S: AsRef<str>> From<S> for Milliseconds {
+impl<S: AsRef<str>> From<S> for Duration {
     fn from(value: S) -> Self {
         static DURATION_PARSER: LazyLock<Regex> = LazyLock::new(|| {
             Regex::new("(?:([0-9]+) *([a-zA-Z]+))+").expect("Valid regex for duration")
@@ -125,7 +125,7 @@ impl<S: AsRef<str>> From<S> for Milliseconds {
     }
 }
 
-impl Sub for Milliseconds {
+impl Sub for Duration {
     type Output = Self;
 
     fn sub(self, other: Self) -> Self {
@@ -133,7 +133,7 @@ impl Sub for Milliseconds {
     }
 }
 
-impl Zero for Milliseconds {
+impl Zero for Duration {
     fn zero() -> Self {
         Self::ZERO
     }
@@ -146,7 +146,7 @@ impl Zero for Milliseconds {
 #[derive(Clone, Copy, Debug, Default, Eq)]
 pub(crate) struct Timestamp {
     /// Since start of the first year of the cataclysm
-    offset: Milliseconds,
+    offset: Duration,
     season_length: u64,
 }
 
@@ -155,7 +155,7 @@ impl Timestamp {
 
     pub(crate) const fn new(turn: u64, season_length: u64) -> Self {
         Self {
-            offset: Milliseconds(1000 * turn),
+            offset: Duration(1000 * turn),
             season_length,
         }
     }
@@ -165,10 +165,10 @@ impl Timestamp {
     }
 }
 
-impl Add<Milliseconds> for Timestamp {
+impl Add<Duration> for Timestamp {
     type Output = Self;
 
-    fn add(self, other: Milliseconds) -> Self {
+    fn add(self, other: Duration) -> Self {
         Self {
             offset: self.offset + other,
             season_length: self.season_length,
@@ -176,16 +176,16 @@ impl Add<Milliseconds> for Timestamp {
     }
 }
 
-impl AddAssign<Milliseconds> for Timestamp {
-    fn add_assign(&mut self, other: Milliseconds) {
+impl AddAssign<Duration> for Timestamp {
+    fn add_assign(&mut self, other: Duration) {
         self.offset += other;
     }
 }
 
 impl Sub for Timestamp {
-    type Output = Milliseconds;
+    type Output = Duration;
 
-    fn sub(self, other: Self) -> Milliseconds {
+    fn sub(self, other: Self) -> Duration {
         self.offset - other.offset
     }
 }
@@ -254,18 +254,18 @@ mod time_tests {
 
     #[test]
     fn add_asign_works() {
-        let mut total = Milliseconds(2);
-        total += Milliseconds(3);
-        assert_eq!(total, Milliseconds(5));
+        let mut total = Duration(2);
+        total += Duration(3);
+        assert_eq!(total, Duration(5));
     }
 
     #[test]
     fn parsing_works() {
-        assert_eq!(Milliseconds::from("21 s"), Milliseconds(21 * 1000));
-        assert_eq!(Milliseconds::from("35m"), Milliseconds(35 * 60 * 1000));
+        assert_eq!(Duration::from("21 s"), Duration(21 * 1000));
+        assert_eq!(Duration::from("35m"), Duration(35 * 60 * 1000));
         assert_eq!(
-            Milliseconds::from("31 h 40 m"),
-            Milliseconds(31 * 60 * 60 * 1000 + 40 * 60 * 1000)
+            Duration::from("31 h 40 m"),
+            Duration(31 * 60 * 60 * 1000 + 40 * 60 * 1000)
         );
     }
 }

@@ -120,17 +120,17 @@ pub(crate) struct CameraBase;
 pub(crate) struct ExamineCursor;
 
 #[derive(Debug, Component)]
-pub(crate) struct HealingDuration(Milliseconds);
+pub(crate) struct HealingDuration(Duration);
 
 impl HealingDuration {
     const HEALING_RATE: u64 = 1_000_000;
 
     pub(crate) const fn new() -> Self {
-        Self(Milliseconds::ZERO)
+        Self(Duration::ZERO)
     }
 
     #[must_use]
-    pub(crate) fn heal(&mut self, duration: Milliseconds) -> u64 {
+    pub(crate) fn heal(&mut self, duration: Duration) -> u64 {
         self.0 += duration;
 
         let healing = self.0 .0 / Self::HEALING_RATE;
@@ -143,20 +143,20 @@ impl HealingDuration {
 #[derive(Debug, Component)]
 pub(crate) struct Craft {
     pub(crate) object_id: ObjectId,
-    pub(crate) work_needed: Milliseconds,
-    pub(crate) work_done: Milliseconds,
+    pub(crate) work_needed: Duration,
+    pub(crate) work_done: Duration,
 }
 
 impl Craft {
-    pub(crate) const fn new(object_id: ObjectId, work_needed: Milliseconds) -> Self {
+    pub(crate) const fn new(object_id: ObjectId, work_needed: Duration) -> Self {
         Self {
             object_id,
             work_needed,
-            work_done: Milliseconds::ZERO,
+            work_done: Duration::ZERO,
         }
     }
 
-    pub(crate) fn work(&mut self, duration: Milliseconds) {
+    pub(crate) fn work(&mut self, duration: Duration) {
         self.work_done += duration;
     }
 

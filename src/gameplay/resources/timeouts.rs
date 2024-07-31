@@ -1,4 +1,4 @@
-use crate::prelude::{Milliseconds, Timestamp};
+use crate::prelude::{Duration, Timestamp};
 use bevy::{
     ecs::{entity::EntityHashMap, system::SystemParam},
     prelude::{Entity, Res, Resource},
@@ -18,7 +18,7 @@ impl Timeouts {
         }
     }
 
-    pub(crate) fn add(&mut self, entity: Entity, timeout: Milliseconds) {
+    pub(crate) fn add(&mut self, entity: Entity, timeout: Duration) {
         *self.m.get_mut(&entity).expect("entity should be known") += timeout;
     }
 

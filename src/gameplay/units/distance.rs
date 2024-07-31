@@ -1,10 +1,10 @@
-use super::{MillimeterPerSecond, Milliseconds};
+use super::{Duration, Speed};
 use std::ops::{Add, Div};
 
 #[derive(Clone, Copy, Debug)]
-pub(crate) struct Millimeter(pub(crate) u64);
+pub(crate) struct Distance(pub(crate) u64);
 
-impl Millimeter {
+impl Distance {
     pub(crate) const ZERO: Self = Self(0);
     pub(crate) const ADJACENT: Self = Self(1000);
     pub(crate) const DIAGONAL: Self = Self(1414);
@@ -15,7 +15,7 @@ impl Millimeter {
     }
 }
 
-impl Add<Self> for Millimeter {
+impl Add<Self> for Distance {
     type Output = Self;
 
     fn add(self, other: Self) -> Self {
@@ -23,10 +23,10 @@ impl Add<Self> for Millimeter {
     }
 }
 
-impl Div<MillimeterPerSecond> for Millimeter {
-    type Output = Milliseconds;
+impl Div<Speed> for Distance {
+    type Output = Duration;
 
-    fn div(self, speed: MillimeterPerSecond) -> Milliseconds {
-        Milliseconds(self.0 * 1000 / speed.0)
+    fn div(self, speed: Speed) -> Duration {
+        Duration(self.0 * 1000 / speed.0)
     }
 }

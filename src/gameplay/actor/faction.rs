@@ -160,10 +160,10 @@ impl Faction {
 
         // Higher gives better results but is slower
         let planning_limit: u64 = 5;
-        let min_time = Milliseconds((planning_limit - 1) * up_time.0); // included
-        let max_time = Milliseconds(planning_limit * up_time.0); // not included
+        let min_time = Duration((planning_limit - 1) * up_time.0); // included
+        let max_time = Duration(planning_limit * up_time.0); // not included
 
-        let graph = dijkstra_all(&(*actor.pos, Milliseconds(0)), |(pos, prev_total_ms)| {
+        let graph = dijkstra_all(&(*actor.pos, Duration(0)), |(pos, prev_total_ms)| {
             envir
                 .nbors_for_moving(*pos, None, self.intelligence(), actor.speed())
                 .filter_map(|(_, nbor_pos, ms)| {
@@ -177,7 +177,7 @@ impl Faction {
                         ))
                     }
                 })
-                .collect::<Vec<((Pos, Milliseconds), Danger)>>()
+                .collect::<Vec<((Pos, Duration), Danger)>>()
                 .into_iter()
         });
         let safest_longtime_pos = graph
@@ -331,7 +331,7 @@ impl Faction {
 pub(crate) struct Danger(FloatOrd<f32>);
 
 impl Danger {
-    pub(crate) fn new(envir: &Envir, time: &Milliseconds, pos: Pos, froms: &[Pos]) -> Self {
+    pub(crate) fn new(envir: &Envir, time: &Duration, pos: Pos, froms: &[Pos]) -> Self {
         Self(FloatOrd(
             time.0 as f32
                 * froms
@@ -341,7 +341,7 @@ impl Danger {
         ))
     }
 
-    pub(crate) fn average(&self, time: &Milliseconds) -> Self {
+    pub(crate) fn average(&self, time: &Duration) -> Self {
         Self(FloatOrd(self.0 .0 / (time.0 as f32)))
     }
 }

@@ -5,7 +5,7 @@ use std::fmt;
 // Stats for characters
 
 #[derive(Debug, Clone, Copy, Component)]
-pub(crate) struct BaseSpeed(MillimeterPerSecond);
+pub(crate) struct BaseSpeed(Speed);
 
 impl BaseSpeed {
     pub(crate) const fn from_percent(percent: u64) -> Self {
@@ -13,11 +13,11 @@ impl BaseSpeed {
     }
 
     pub(crate) const fn from_kmph(s: u64) -> Self {
-        Self(MillimeterPerSecond::from_kmph(s))
+        Self(Speed::from_kmph(s))
     }
 
-    pub(crate) fn speed(&self, walking_mode: &WalkingMode, breath: Breath) -> MillimeterPerSecond {
-        MillimeterPerSecond((self.0 .0 as f32 * walking_mode.speed_factor(breath)) as u64)
+    pub(crate) fn speed(&self, walking_mode: &WalkingMode, breath: Breath) -> Speed {
+        Speed((self.0 .0 as f32 * walking_mode.speed_factor(breath)) as u64)
     }
 }
 

@@ -1,4 +1,4 @@
-use crate::prelude::Millimeter;
+use crate::prelude::Distance;
 use bevy::prelude::Vec3;
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
@@ -12,7 +12,7 @@ impl LevelOffset {
     pub(crate) const DOWN: Self = Self { h: -1 };
 
     pub(crate) fn f32(&self) -> f32 {
-        f32::from(self.h) * Millimeter::VERTICAL.f32()
+        f32::from(self.h) * Distance::VERTICAL.f32()
     }
 }
 
@@ -78,9 +78,9 @@ impl PosOffset {
 
     pub(crate) fn vec3(&self) -> Vec3 {
         Vec3::new(
-            f64::from(self.x) as f32 * Millimeter::ADJACENT.f32(),
+            f64::from(self.x) as f32 * Distance::ADJACENT.f32(),
             self.level.f32(),
-            f64::from(self.z) as f32 * Millimeter::ADJACENT.f32(),
+            f64::from(self.z) as f32 * Distance::ADJACENT.f32(),
         )
     }
 }

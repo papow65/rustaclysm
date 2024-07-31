@@ -51,13 +51,13 @@ pub(crate) enum PlayerActionState {
 impl PlayerActionState {
     fn start_waiting(now: Timestamp) -> Self {
         Self::Waiting {
-            until: now + Milliseconds::MINUTE,
+            until: now + Duration::MINUTE,
         }
     }
 
     fn start_sleeping(now: Timestamp) -> Self {
         Self::Sleeping {
-            until: now + Milliseconds::EIGHT_HOURS,
+            until: now + Duration::EIGHT_HOURS,
         }
     }
 

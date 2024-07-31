@@ -96,7 +96,7 @@ pub(in super::super) fn update_damaged_characters(
                 .insert((
                     Corpse,
                     CorpseRaise {
-                        at: clock.time() + Milliseconds::EIGHT_HOURS,
+                        at: clock.time() + Duration::EIGHT_HOURS,
                     },
                     ObjectName::corpse(),
                     Integrity(Limited::full(400)),

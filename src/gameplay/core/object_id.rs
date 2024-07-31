@@ -85,7 +85,7 @@ impl ObjectId {
             || self.0.starts_with("t_soil")
         {
             ModelShape::Cuboid {
-                height: Millimeter::VERTICAL.f32(),
+                height: Distance::VERTICAL.f32(),
             }
         } else if self.0.starts_with("t_window")
             || self.0.starts_with("t_door")
@@ -95,13 +95,13 @@ impl ObjectId {
             ModelShape::Plane {
                 orientation: SpriteOrientation::Vertical,
                 transform2d: Transform2d {
-                    scale: Vec2::new(Millimeter::ADJACENT.f32(), Millimeter::VERTICAL.f32()),
+                    scale: Vec2::new(Distance::ADJACENT.f32(), Distance::VERTICAL.f32()),
                     offset: Vec2::ZERO,
                 },
             }
         } else if self.0.starts_with("t_sewage_pipe") {
             ModelShape::Cuboid {
-                height: Millimeter::ADJACENT.f32(),
+                height: Distance::ADJACENT.f32(),
             }
         } else if self.0.starts_with("mon_") {
             ModelShape::Plane {

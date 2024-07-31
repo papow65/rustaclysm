@@ -5,9 +5,9 @@ mod time;
 mod volume;
 
 pub(crate) use self::{
-    distance::Millimeter,
+    distance::Distance,
     mass::Mass,
-    speed::{MillimeterPerSecond, WalkingCost},
-    time::{Milliseconds, Timestamp},
+    speed::{Speed, WalkingCost},
+    time::{Duration, Timestamp},
     volume::Volume,
 };
