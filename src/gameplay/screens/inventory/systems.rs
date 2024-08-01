@@ -4,7 +4,7 @@ use super::{
     section::InventorySection,
 };
 use crate::prelude::*;
-use bevy::{prelude::*, utils::HashMap};
+use bevy::{ecs::entity::EntityHashMap, prelude::*, utils::HashMap};
 
 #[allow(clippy::needless_pass_by_value)]
 pub(super) fn spawn_inventory(mut commands: Commands, fonts: Res<Fonts>) {
@@ -60,6 +60,7 @@ pub(super) fn spawn_inventory(mut commands: Commands, fonts: Res<Fonts>) {
         selection_list: SelectionList::default(),
         selected_row: None,
         drop_direction: HorizontalDirection::Here,
+        section_by_item: EntityHashMap::default(),
         section_text_style: fonts.regular(SOFT_TEXT_COLOR),
         drop_section_text_style: fonts.regular(WARN_TEXT_COLOR),
         item_text_style: fonts.regular(DEFAULT_TEXT_COLOR),
@@ -110,7 +111,7 @@ pub(super) fn update_inventory(
     let (&player_pos, body_containers) = players.single();
     let items_by_section = items_by_section(&envir, &items, player_pos, body_containers);
     let mut items_by_section = items_by_section.into_iter().collect::<Vec<_>>();
-    items_by_section.sort_by_key(|(section, _)| (*section).clone());
+    items_by_section.sort_by_key(|(section, _)| *section);
 
     commands.entity(inventory.panel).with_children(|parent| {
         for (section, items) in items_by_section {
@@ -156,6 +157,8 @@ pub(super) fn update_inventory(
                     if Some(entity) == inventory.selection_list.selected {
                         inventory.selected_row = Some(row_entity);
                     }
+
+                    inventory.section_by_item.insert(entity, section);
                 } else {
                     eprintln!("Unknown item: {id:?}");
                 }
@@ -434,12 +437,19 @@ fn handle_selected_item(
     char: char,
 ) {
     if let Some(selected_item) = inventory.selection_list.selected {
-        inventory
-            .selection_list
-            .adjust(StepSize::Single, StepDirection::Down);
         instruction_queue.add(
             match char {
-                'd' => QueuedInstruction::Dump(selected_item, inventory.drop_direction),
+                'd' => {
+                    let Some(item_section) = inventory.section_by_item.get(&selected_item) else {
+                        eprintln!("Section of item {selected_item:?} not found");
+                        return;
+                    };
+                    if &InventorySection::Nbor(inventory.drop_direction) == item_section {
+                        // Prevent moving an item to its current position.
+                        return;
+                    }
+                    QueuedInstruction::Dump(selected_item, inventory.drop_direction)
+                }
                 't' => QueuedInstruction::Pickup(selected_item),
                 'u' => QueuedInstruction::Unwield(selected_item),
                 'w' => QueuedInstruction::Wield(selected_item),
@@ -447,6 +457,9 @@ fn handle_selected_item(
             },
             InputChange::Held,
         );
+        inventory
+            .selection_list
+            .adjust(StepSize::Single, StepDirection::Down);
     }
 }
 
