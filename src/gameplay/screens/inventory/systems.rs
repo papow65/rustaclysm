@@ -61,7 +61,7 @@ pub(super) fn spawn_inventory(mut commands: Commands, fonts: Res<Fonts>) {
         selected_row: None,
         drop_direction: HorizontalDirection::Here,
         section_text_style: fonts.regular(SOFT_TEXT_COLOR),
-        selected_section_text_style: fonts.regular(WARN_TEXT_COLOR),
+        drop_section_text_style: fonts.regular(WARN_TEXT_COLOR),
         item_text_style: fonts.regular(DEFAULT_TEXT_COLOR),
         selected_item_text_style: fonts.regular(GOOD_TEXT_COLOR),
         last_time: Timestamp::ZERO,
@@ -114,8 +114,9 @@ pub(super) fn update_inventory(
 
     commands.entity(inventory.panel).with_children(|parent| {
         for (section, items) in items_by_section {
-            let section_style = if section == InventorySection::Nbor(inventory.drop_direction) {
-                &inventory.selected_section_text_style
+            let drop_section = section == InventorySection::Nbor(inventory.drop_direction);
+            let section_style = if drop_section {
+                &inventory.drop_section_text_style
             } else {
                 &inventory.section_text_style
             };
@@ -124,7 +125,7 @@ pub(super) fn update_inventory(
                 format!("[{section}]"),
                 section_style.clone(),
             )];
-            if section == InventorySection::Nbor(inventory.drop_direction) {
+            if drop_section {
                 text_sections.push(TextSection::new(
                     String::from("(dropping here)"),
                     section_style.clone(),
@@ -149,6 +150,7 @@ pub(super) fn update_inventory(
                         &item_phrase,
                         item_info,
                         item_style,
+                        drop_section,
                     );
 
                     if Some(entity) == inventory.selection_list.selected {
@@ -226,6 +228,7 @@ fn add_row(
     item_phrase: &Phrase,
     item_info: &ItemInfo,
     item_syle: &TextStyle,
+    drop_section: bool,
 ) -> Entity {
     parent
         .spawn(NodeBundle {
@@ -299,7 +302,9 @@ fn add_row(
             let mut actions = vec![InventoryAction::Examine];
             if matches!(section, InventorySection::Nbor(_)) {
                 actions.push(InventoryAction::Take);
-                actions.push(InventoryAction::Move);
+                if !drop_section {
+                    actions.push(InventoryAction::Move);
+                }
             } else {
                 actions.push(InventoryAction::Drop);
             }
