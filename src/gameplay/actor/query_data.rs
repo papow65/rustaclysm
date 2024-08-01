@@ -629,7 +629,7 @@ impl ActorItem<'_> {
             .entity(moved.entity)
             .insert((VisibilityBundle::default(), to))
             .set_parent(new_parent);
-        location.update(moved.entity, Some(*self.pos));
+        location.update(moved.entity, Some(to));
         Some(self.activate())
     }
 
