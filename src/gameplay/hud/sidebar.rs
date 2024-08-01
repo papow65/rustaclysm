@@ -131,51 +131,49 @@ fn update_log(
     currently_visible_builder: CurrentlyVisibleBuilder,
     hud_defaults: Res<HudDefaults>,
     mut session: GameplaySession,
-    mut message_log: Local<Vec<Message>>,
+    mut previous_sections: Local<Vec<TextSection>>,
+    mut last_message: Local<Option<(Message, usize)>>,
     mut logs: Query<&mut Text, With<LogDisplay>>,
 ) {
     let start = Instant::now();
 
     if session.is_changed() {
-        *message_log = Vec::new();
+        *previous_sections = Vec::new();
+        *last_message = Option::None;
     }
 
     for message in new_messages.read() {
-        if let Some(message) = percieve(&currently_visible_builder, message.clone()) {
-            if message.phrase.to_string().trim() != "" {
-                if message.severity == Severity::Error {
-                    eprintln!("{}", &message.phrase);
-                } else {
-                    println!("{}", &message.phrase);
-                }
-            }
-            message_log.push(message.clone());
-        }
-    }
-
-    let mut last: Option<(&Message, usize)> = None;
-    let mut shown_reverse = Vec::<(&Message, usize)>::new();
-    for message in message_log.iter().rev() {
-        match last {
-            Some((last_message, ref mut last_count)) if last_message == message => {
-                *last_count += 1;
-            }
-            Some(message_and_count) => {
-                shown_reverse.push(message_and_count);
-                if 20 <= shown_reverse.len() {
-                    last = None;
-                    break;
-                } else {
-                    last = Some((message, 1));
-                }
-            }
-            None => {
-                last = Some((message, 1));
+        let percieved_message = percieve(&currently_visible_builder, message.clone());
+        if message.phrase.to_string().trim() != "" {
+            let suffix = if percieved_message.is_some() {
+                ""
+            } else {
+                " (not perceived)"
+            };
+            if message.severity == Severity::Error {
+                eprintln!("{}{suffix}", &message.phrase);
+            } else {
+                println!("{}{suffix}", &message.phrase);
             }
         }
-    }
-    if let Some(message_and_count) = last {
-        shown_reverse.push(message_and_count);
+        if let Some(message) = percieved_message {
+            match &mut *last_message {
+                Some((last, ref mut count)) if *last == message => {
+                    *count += 1;
+                }
+                _ => {
+                    if let Some((previous_last, previous_count)) =
+                        last_message.replace((message, 1))
+                    {
+                        previous_sections.extend(to_text_sections(
+                            &hud_defaults.text_style,
+                            &previous_last,
+                            previous_count,
+                        ));
+                    }
+                }
+            }
+        }
     }
 
     let sections = &mut logs
@@ -184,23 +182,29 @@ fn update_log(
         .expect("Exactly one log text")
         .sections;
     sections.clear();
-    for (message, count) in shown_reverse.into_iter().rev() {
-        let mut style = hud_defaults.text_style.clone();
-        style.color = message.severity.color();
-        sections.extend(message.phrase.clone().as_text_sections(&style));
-        if 1 < count {
-            sections.push(TextSection {
-                value: format!(" ({count}x)"),
-                style: hud_defaults.text_style.clone(),
-            });
-        }
-        sections.push(TextSection {
-            value: String::from("\n"),
-            style: hud_defaults.text_style.clone(),
-        });
+    sections.extend(previous_sections.clone());
+    if let Some((message, count)) = &*last_message {
+        sections.extend(to_text_sections(&hud_defaults.text_style, message, *count));
     }
 
     log_if_slow("update_log", start);
+}
+
+fn to_text_sections(text_style: &TextStyle, message: &Message, count: usize) -> Vec<TextSection> {
+    let mut style = text_style.clone();
+    style.color = message.severity.color();
+    let mut sections = message.phrase.as_text_sections(&style);
+    if 1 < count {
+        sections.push(TextSection {
+            value: format!(" ({count}x)"),
+            style: text_style.clone(),
+        });
+    }
+    sections.push(TextSection {
+        value: String::from("\n"),
+        style: text_style.clone(),
+    });
+    sections
 }
 
 fn percieve(
