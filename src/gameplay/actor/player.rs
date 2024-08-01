@@ -210,7 +210,12 @@ impl PlayerActionState {
                     QueuedInstruction::Interrupt(Interruption::Finished) => {
                         next_state.set(Self::PickingNbor(PickingNbor::Dragging));
                     }
-                    QueuedInstruction::Interrupt(_) => next_state.set(Self::Normal),
+                    QueuedInstruction::Interrupt(_) => {
+                        message_writer
+                            .you("spot an enemy and stop dragging")
+                            .send_warn();
+                        next_state.set(Self::Normal);
+                    }
                     _ => message_writer.you("are still dragging items").send_warn(),
                 }
                 None
