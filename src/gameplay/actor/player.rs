@@ -139,7 +139,7 @@ impl PlayerActionState {
         instruction: QueuedInstruction,
         now: Timestamp,
     ) -> Option<PlannedAction> {
-        //println!("processing instruction: {instruction:?}");
+        println!("processing instruction: {instruction:?}");
         match (&self, instruction) {
             (Self::Sleeping { .. }, QueuedInstruction::Interrupt(Interruption::Finished)) => {
                 next_state.set(Self::Normal);
@@ -205,12 +205,14 @@ impl PlayerActionState {
                 next_state.set(Self::Normal);
                 None
             }
-            (Self::Dragging { .. }, QueuedInstruction::Interrupt(Interruption::Finished)) => {
-                next_state.set(Self::PickingNbor(PickingNbor::Dragging));
-                None
-            }
-            (Self::Dragging { .. }, _) => {
-                message_writer.you("are still dragging items").send_warn();
+            (Self::Dragging { .. }, instruction) => {
+                match instruction {
+                    QueuedInstruction::Interrupt(Interruption::Finished) => {
+                        next_state.set(Self::PickingNbor(PickingNbor::Dragging));
+                    }
+                    QueuedInstruction::Interrupt(_) => next_state.set(Self::Normal),
+                    _ => message_writer.you("are still dragging items").send_warn(),
+                }
                 None
             }
             (_, instruction) => {
