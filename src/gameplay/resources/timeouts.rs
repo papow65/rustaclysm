@@ -58,7 +58,7 @@ impl<'w> Clock<'w> {
         const SOLAR_NOON: u64 = 13 * 60;
         // We can ignore calculation errors related to solar midnight, because there is no sunlight around that time.
 
-        const FULL_SUN_DIFF: u64 = 3 * 60; // Full daylight up to than 3 hours away from solar noon
+        const FULL_SUN_DIFF: u64 = 3 * 60; // Full daylight up to 3 hours away from solar noon
         const SUNSET_DIFF: u64 = 7 * 60; // No daylight more than 7 hours away from solar noon
 
         let minutes_from_noon = SOLAR_NOON.abs_diff(self.time().minute_of_day());
