@@ -640,6 +640,7 @@ impl fmt::Display for PlayerActionState {
         let picking_nbor_string;
         f.write_str(match self {
             Self::Normal => "",
+            Self::PickingNbor(PickingNbor::Dragging { .. }) | Self::Dragging { .. } => "Dragging",
             Self::PickingNbor(picking_nbor) => {
                 picking_nbor_string = String::from(match picking_nbor {
                     PickingNbor::Attacking => "Attacking",
@@ -647,14 +648,13 @@ impl fmt::Display for PlayerActionState {
                     PickingNbor::Pulping => "Pulping",
                     PickingNbor::Peeking => "Peeking",
                     PickingNbor::Closing => "Closing",
-                    PickingNbor::Dragging => "Dragging",
+                    PickingNbor::Dragging => unreachable!(),
                     PickingNbor::Crafting { .. } => "Crafting",
                 }) + ": pick a direction";
                 picking_nbor_string.as_str()
             }
             Self::Pulping { .. } => "Pulping",
             Self::Peeking { .. } => "Peeking",
-            Self::Dragging { .. } => "Dragging",
             Self::Crafting { .. } => "Crafting",
             Self::Waiting { .. } => "Waiting",
             Self::Sleeping { .. } => "Sleeping",
