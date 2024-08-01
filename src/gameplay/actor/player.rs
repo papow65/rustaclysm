@@ -159,9 +159,10 @@ impl PlayerActionState {
                 instruction,
                 now,
             ),
-            (Self::Normal, QueuedInstruction::Offset(PlayerDirection::Here)) => {
-                Some(PlannedAction::Stay)
-            }
+            (
+                Self::Normal | Self::PickingNbor(PickingNbor::Dragging),
+                QueuedInstruction::Offset(PlayerDirection::Here),
+            ) => Some(PlannedAction::Stay),
             (Self::Normal, QueuedInstruction::Wait) => {
                 next_state.set(Self::start_waiting(now));
                 message_writer.you("wait...").send_info();
