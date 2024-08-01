@@ -574,7 +574,9 @@ fn adapt_to_selected(
             .expect("Selected recipe should be found");
 
         {
-            let (mut scrolling_list, mut style, parent, list_node) = scrolling_lists.single_mut();
+            let (mut scrolling_list, mut style, parent, list_node) = scrolling_lists
+                .get_mut(crafting_screen.recipe_list)
+                .expect("The recipe list should be a scrolling list");
             let (parent_node, parent_style) = scrolling_parents
                 .get(parent.get())
                 .expect("Parent node should be found");

@@ -308,8 +308,12 @@ impl PlayerActionState {
                 next_state.set(Self::Normal);
                 message_writer
                     .you("finish")
-                    .add(self.to_string().to_lowercase())
-                    .send_info();
+                    .add(if let Self::Crafting { .. } = self {
+                        String::from("your craft")
+                    } else {
+                        self.to_string().to_lowercase()
+                    })
+                    .send(self.severity_finishing());
                 None
             }
         }
@@ -599,7 +603,7 @@ impl PlayerActionState {
         }
     }
 
-    pub(crate) const fn color(&self) -> Color {
+    pub(crate) const fn color_in_progress(&self) -> Color {
         match self {
             Self::Normal | Self::PickingNbor(PickingNbor::Closing) => DEFAULT_TEXT_COLOR,
             Self::Waiting { .. }
@@ -611,6 +615,15 @@ impl PlayerActionState {
             | Self::Crafting { .. }
             | Self::AutoTravel { .. } => WARN_TEXT_COLOR,
             Self::AutoDefend => BAD_TEXT_COLOR,
+        }
+    }
+
+    pub(crate) const fn severity_finishing(&self) -> Severity {
+        match self {
+            Self::Pulping { .. }
+            | Self::Crafting { .. }
+            | Self::PickingNbor(PickingNbor::Crafting { .. }) => Severity::Success,
+            _ => Severity::Low,
         }
     }
 

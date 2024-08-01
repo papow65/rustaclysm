@@ -388,7 +388,7 @@ fn update_status_player_action_state(
     let start = Instant::now();
 
     text_sections.player_action_state.value = format!("{}\n", **player_action_state);
-    text_sections.player_action_state.style.color = player_action_state.color();
+    text_sections.player_action_state.style.color = player_action_state.color_in_progress();
 
     update_status_display(&text_sections, &mut status_displays.single_mut());
 

@@ -668,15 +668,18 @@ impl ActorItem<'_> {
         spawner: &mut Spawner,
         infos: &Infos,
         crafts: &mut Query<(Item, &mut Craft)>,
-        craft: Entity,
+        craft_entity: Entity,
     ) -> Option<Impact> {
-        let (item, mut craft) = crafts.get_mut(craft).expect("Craft should be found");
+        let (item, mut craft) = crafts.get_mut(craft_entity).expect("Craft should be found");
 
         let crafting_progress = Duration::SECOND * 3;
 
         craft.work(crafting_progress);
         if craft.finished() {
-            message_writer.you("finish").add("crafting").send_info();
+            message_writer
+                .you("finish")
+                .add("your craft")
+                .send(PlayerActionState::Crafting { item: craft_entity }.severity_finishing());
             let parent = item.parent.get();
             let pos = *item.pos.unwrap_or(self.pos);
             let amount = *item.amount;

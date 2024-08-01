@@ -6,11 +6,11 @@ use bevy::{
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) enum Severity {
-    #[allow(unused)]
     Low,
     Info,
     Warn,
     Error,
+    Success,
 }
 
 impl Severity {
@@ -21,6 +21,7 @@ impl Severity {
             Self::Info => DEFAULT_TEXT_COLOR,
             Self::Warn => WARN_TEXT_COLOR,
             Self::Error => BAD_TEXT_COLOR,
+            Self::Success => GOOD_TEXT_COLOR,
         }
     }
 }
@@ -137,7 +138,7 @@ impl<'r, 'w> MessageBuilder<'r, 'w, Phrase> {
         self.send(Severity::Error);
     }
 
-    fn send(self, severity: Severity) {
+    pub(crate) fn send(self, severity: Severity) {
         self.message_writer.event_writer.send(Message {
             phrase: self.phrase,
             severity,
