@@ -1,7 +1,7 @@
 use super::{
     check::check_delay,
     systems::{
-        load_fonts, manage_button_color, manage_global_keyboard_input, manage_scrolling,
+        load_fonts, manage_button_color, manage_global_keyboard_input, manage_scrolling_lists,
         maximize_window, preprocess_keyboard_input, resize_scrolling_lists,
     },
 };
@@ -57,7 +57,7 @@ pub(crate) fn run_application() {
         Update,
         (
             manage_button_color,
-            manage_scrolling.run_if(on_event::<MouseWheel>()),
+            manage_scrolling_lists.run_if(on_event::<MouseWheel>()),
             manage_global_keyboard_input.run_if(on_event::<KeyboardInput>()),
             resize_scrolling_lists.run_if(
                 on_event::<WindowResized>().or_else(resource_exists_and_changed::<UiScale>),

@@ -1,13 +1,16 @@
 use super::{
     focus::FocusState,
     systems::{
-        manage_keyboard_input, manage_mouse_input, update_camera_base, update_camera_offset,
-        update_focus_cursor_visibility,
+        manage_keyboard_input, manage_mouse_button_input, manage_mouse_scroll_input,
+        update_camera_base, update_camera_offset, update_focus_cursor_visibility,
     },
 };
 use crate::prelude::{loop_behavior_and_refresh, update_visibility, GameplayScreenState};
 use bevy::{
-    input::keyboard::KeyboardInput,
+    input::{
+        keyboard::KeyboardInput,
+        mouse::{MouseMotion, MouseWheel},
+    },
     prelude::{
         in_state, not, on_event, resource_exists_and_changed, App, AppExtStates, IntoSystemConfigs,
         Plugin, State, Update,
@@ -23,7 +26,10 @@ impl Plugin for BaseScreenPlugin {
         app.add_systems(
             Update,
             (
-                manage_mouse_input.before(update_camera_offset),
+                manage_mouse_scroll_input
+                    .run_if(on_event::<MouseWheel>())
+                    .before(update_camera_offset),
+                manage_mouse_button_input.run_if(on_event::<MouseMotion>()),
                 (
                     manage_keyboard_input
                         .run_if(on_event::<KeyboardInput>())

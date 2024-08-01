@@ -97,6 +97,7 @@ fn spawn_log_display(parent: &mut EntityCommands) {
                         },
                         ..TextBundle::default()
                     },
+                    ScrollingList::default(),
                     LogDisplay,
                 ));
             });

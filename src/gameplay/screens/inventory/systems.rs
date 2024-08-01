@@ -418,7 +418,9 @@ fn follow_selected(
         .get(selected_row)
         .expect("Selected item should be found");
 
-    let (mut scrolling_list, mut style, parent, list_node) = scrolling_lists.single_mut();
+    let (mut scrolling_list, mut style, parent, list_node) = scrolling_lists
+        .get_mut(inventory.panel)
+        .expect("The inventory panel should be a scrolling list");
     let (parent_node, parent_style) = scrolling_parents
         .get(parent.get())
         .expect("Parent node should be found");

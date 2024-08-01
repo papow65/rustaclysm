@@ -1,9 +1,11 @@
 use bevy::{
+    ecs::component::{ComponentHooks, StorageType},
     input::mouse::{MouseScrollUnit, MouseWheel},
-    prelude::{Component, Node, Style, Transform, Val},
+    prelude::{Component, Interaction, JustifyContent, Node, Style, Transform, Val},
 };
 
-#[derive(Debug, Default, Component)]
+// Manually deriving `Component`
+#[derive(Debug, Default)]
 pub(crate) struct ScrollingList {
     /// Smaller than or equal to 0.0, this matches with `Style.top`.
     position: f32,
@@ -20,7 +22,7 @@ impl ScrollingList {
         mouse_wheel_event: &MouseWheel,
     ) -> Val {
         self.position += match mouse_wheel_event.unit {
-            MouseScrollUnit::Line => mouse_wheel_event.y * 20.,
+            MouseScrollUnit::Line => mouse_wheel_event.y * 20.0,
             MouseScrollUnit::Pixel => mouse_wheel_event.y,
         };
         self.adjust(my_node, parent_node, parent_style)
@@ -73,8 +75,15 @@ impl ScrollingList {
 
         let items_height = my_node.size().y + padding_top + padding_bottom;
         let parent_height = parent_node.size().y;
-        let max_scroll = (items_height - parent_height).max(0.);
-        self.position = self.position.clamp(-max_scroll, 0.);
+        let max_scroll = (items_height - parent_height).max(0.0);
+
+        self.position = match parent_style.justify_content {
+            JustifyContent::Default | JustifyContent::Start => {
+                self.position.clamp(-max_scroll, 0.0)
+            }
+            JustifyContent::End => self.position.clamp(0.0, max_scroll),
+            missing => todo!("{missing:?}"),
+        };
         //println!("=> {:?}", self.position);
         Val::Px(self.position)
     }
@@ -86,5 +95,15 @@ impl ScrollingList {
             Val::Px(px) => px,
             other => unimplemented!("Conversion of {:?} to pixels", other),
         }
+    }
+}
+
+impl Component for ScrollingList {
+    const STORAGE_TYPE: StorageType = StorageType::Table;
+
+    fn register_component_hooks(hooks: &mut ComponentHooks) {
+        hooks.on_add(|mut world, entity, _component_id| {
+            world.commands().entity(entity).insert(Interaction::None);
+        });
     }
 }
