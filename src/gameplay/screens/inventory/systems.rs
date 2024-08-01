@@ -299,6 +299,7 @@ fn add_row(
             let mut actions = vec![InventoryAction::Examine];
             if matches!(section, InventorySection::Nbor(_)) {
                 actions.push(InventoryAction::Take);
+                actions.push(InventoryAction::Move);
             } else {
                 actions.push(InventoryAction::Drop);
             }
@@ -465,7 +466,9 @@ pub(super) fn manage_inventory_button_input(
             let instruction = match inventory_action {
                 InventoryAction::Examine => QueuedInstruction::ExamineItem(entity),
                 InventoryAction::Take => QueuedInstruction::Pickup(entity),
-                InventoryAction::Drop => QueuedInstruction::Dump(entity, inventory.drop_direction),
+                InventoryAction::Drop | InventoryAction::Move => {
+                    QueuedInstruction::Dump(entity, inventory.drop_direction)
+                }
                 InventoryAction::Wield => QueuedInstruction::Wield(entity),
                 InventoryAction::Unwield => QueuedInstruction::Unwield(entity),
             };

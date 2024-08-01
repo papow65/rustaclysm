@@ -6,6 +6,7 @@ pub(super) enum InventoryAction {
     Examine,
     Take,
     Drop,
+    Move,
     Wield,
     Unwield,
 }
@@ -16,6 +17,7 @@ impl fmt::Display for InventoryAction {
             Self::Examine => write!(f, "Examine"),
             Self::Take => write!(f, "Take"),
             Self::Drop => write!(f, "Drop"),
+            Self::Move => write!(f, "Move"),
             Self::Wield => write!(f, "Wield"),
             Self::Unwield => write!(f, "Unwield"),
         }
