@@ -676,10 +676,10 @@ impl ActorItem<'_> {
 
         craft.work(crafting_progress);
         if craft.finished() {
-            message_writer
-                .you("finish")
-                .add("your craft")
-                .send(PlayerActionState::Crafting { item: craft_entity }.severity_finishing());
+            message_writer.you("finish").add("your craft").send(
+                PlayerActionState::Crafting { item: craft_entity }.severity_finishing(),
+                false,
+            );
             let parent = item.parent.get();
             let pos = *item.pos.unwrap_or(self.pos);
             let amount = *item.amount;
@@ -687,6 +687,24 @@ impl ActorItem<'_> {
             commands.entity(item.entity).despawn_recursive();
             _ = spawner.spawn_item(infos, parent, pos, &cdda_item, amount);
             next_player_action_state.set(PlayerActionState::Normal);
+        } else {
+            let percent_progress = craft.percent_progress();
+            let color = text_color(percent_progress / 100.0);
+            let percent_progress = format!("{percent_progress:.1}");
+            let time_left = craft
+                .time_left()
+                .to_string()
+                .split(' ')
+                .take(2)
+                .collect::<Vec<_>>()
+                .join(" ");
+            message_writer
+                .str("Craft:")
+                .push(Fragment::colorized(percent_progress, color))
+                .add("% progress -")
+                .push(Fragment::colorized(time_left, color))
+                .add("left")
+                .send(Severity::Info, true);
         }
 
         Some(Impact {

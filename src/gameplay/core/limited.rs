@@ -1,5 +1,5 @@
-use crate::prelude::{BAD_TEXT_COLOR, GOOD_TEXT_COLOR, WARN_TEXT_COLOR};
-use bevy::prelude::{Color, Mix};
+use crate::prelude::text_color;
+use bevy::prelude::Color;
 
 #[derive(Clone, Debug)]
 pub(crate) struct Evolution {
@@ -33,7 +33,7 @@ impl Limited {
         Self { current: max, max }
     }
 
-    pub(crate) fn percent(&self) -> f32 {
+    pub(crate) fn relative(&self) -> f32 {
         f32::from(self.current) / f32::from(self.max)
     }
 
@@ -111,12 +111,6 @@ impl Limited {
     }
 
     pub(crate) fn color(&self) -> Color {
-        let percent = self.percent();
-        let (part, min_color, max_color) = if 0.5 <= percent {
-            (2.0 * percent - 1.0, WARN_TEXT_COLOR, GOOD_TEXT_COLOR)
-        } else {
-            (2.0 * percent, BAD_TEXT_COLOR, WARN_TEXT_COLOR)
-        };
-        min_color.mix(&max_color, part)
+        text_color(self.relative())
     }
 }

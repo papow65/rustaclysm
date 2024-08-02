@@ -172,7 +172,7 @@ impl Sub for Duration {
 
     fn sub(self, other: Self) -> Self {
         Self {
-            milliseconds: self.milliseconds - other.milliseconds,
+            milliseconds: self.milliseconds.saturating_sub(other.milliseconds),
         }
     }
 }

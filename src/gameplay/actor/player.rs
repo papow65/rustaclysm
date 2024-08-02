@@ -313,7 +313,7 @@ impl PlayerActionState {
                     } else {
                         self.to_string().to_lowercase()
                     })
-                    .send(self.severity_finishing());
+                    .send(self.severity_finishing(), false);
                 None
             }
         }

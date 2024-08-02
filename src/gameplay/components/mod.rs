@@ -159,6 +159,14 @@ impl Craft {
     pub(crate) const fn finished(&self) -> bool {
         self.work_needed.milliseconds() <= self.work_done.milliseconds()
     }
+
+    pub(crate) fn percent_progress(&self) -> f32 {
+        100.0 * self.work_done.milliseconds() as f32 / self.work_needed.milliseconds() as f32
+    }
+
+    pub(crate) fn time_left(&self) -> Duration {
+        self.work_needed - self.work_done
+    }
 }
 
 #[derive(Debug, Component)]

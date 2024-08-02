@@ -166,11 +166,13 @@ fn update_log(
                     if let Some((previous_last, previous_count)) =
                         last_message.replace((message, 1))
                     {
-                        previous_sections.extend(to_text_sections(
-                            &hud_defaults.text_style,
-                            &previous_last,
-                            previous_count,
-                        ));
+                        if !previous_last.transient {
+                            previous_sections.extend(to_text_sections(
+                                &hud_defaults.text_style,
+                                &previous_last,
+                                previous_count,
+                            ));
+                        }
                     }
                 }
             }
@@ -574,7 +576,7 @@ fn characters_info(
                     }
                     Some(integrity) => start
                         .push(Fragment::colorized(
-                            format!("{:.0}", 100.0 - 100.0 * integrity.0.percent()),
+                            format!("{:.0}", 100.0 - 100.0 * integrity.0.relative()),
                             integrity.0.color(),
                         ))
                         .push(Fragment::colorized("% pulped", WARN_TEXT_COLOR)),

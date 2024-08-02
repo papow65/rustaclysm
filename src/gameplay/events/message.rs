@@ -31,6 +31,7 @@ impl Severity {
 pub(crate) struct Message {
     pub(crate) phrase: Phrase,
     pub(crate) severity: Severity,
+    pub(crate) transient: bool,
 }
 
 #[derive(SystemParam)]
@@ -127,21 +128,22 @@ impl<'r, 'w> MessageBuilder<'r, 'w, Phrase> {
     }
 
     pub(crate) fn send_info(self) {
-        self.send(Severity::Info);
+        self.send(Severity::Info, false);
     }
 
     pub(crate) fn send_warn(self) {
-        self.send(Severity::Warn);
+        self.send(Severity::Warn, false);
     }
 
     pub(crate) fn send_error(self) {
-        self.send(Severity::Error);
+        self.send(Severity::Error, false);
     }
 
-    pub(crate) fn send(self, severity: Severity) {
+    pub(crate) fn send(self, severity: Severity, transient: bool) {
         self.message_writer.event_writer.send(Message {
             phrase: self.phrase,
             severity,
+            transient,
         });
     }
 }
