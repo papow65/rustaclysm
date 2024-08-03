@@ -141,7 +141,7 @@ pub(in super::super) fn update_visualization_on_weather_change(
     player_action_state: Res<State<PlayerActionState>>,
     mut visualization_update: ResMut<VisualizationUpdate>,
     mut session: GameplaySession,
-    mut last_viewing_disttance: Local<Option<usize>>,
+    mut last_viewing_disttance: Local<Option<u8>>,
     players: Query<&Pos, With<Player>>,
 ) {
     let start = Instant::now();

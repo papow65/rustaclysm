@@ -41,7 +41,7 @@ impl<'w, 's> CurrentlyVisibleBuilder<'w, 's> {
 
     fn build(
         &self,
-        viewing_distance: Option<usize>,
+        viewing_distance: Option<u8>,
         from: Pos,
         only_nearby: bool,
     ) -> CurrentlyVisible {
@@ -49,7 +49,7 @@ impl<'w, 's> CurrentlyVisibleBuilder<'w, 's> {
         let segments = self
             .relative_segments
             .segments
-            .get(viewing_distance.unwrap_or(0))
+            .get(viewing_distance.unwrap_or(0) as usize)
             .unwrap_or_else(|| panic!("{viewing_distance:?}"));
 
         let magic_stairs_up = self
@@ -102,7 +102,7 @@ pub(crate) struct CurrentlyVisible<'a> {
     segments: &'a HashMap<PosOffset, RelativeSegment>,
 
     /// Rounded up in calculations - None when not even 'from' is visible
-    viewing_distance: Option<usize>,
+    viewing_distance: Option<u8>,
     from: Pos,
     opaque_cache: RefCell<HashMap<PosOffset, bool>>, // is opaque
     down_cache: RefCell<HashMap<PosOffset, bool>>,   // can see down
@@ -124,7 +124,7 @@ impl<'a> CurrentlyVisible<'a> {
         clock: &Clock,
         player_action_state: Option<&PlayerActionState>,
         level: Level,
-    ) -> Option<usize> {
+    ) -> Option<u8> {
         if let Some(PlayerActionState::Sleeping { .. }) = player_action_state {
             None
         } else {
@@ -135,7 +135,7 @@ impl<'a> CurrentlyVisible<'a> {
             };
             Some(
                 (light * VisionDistance::MAX_VISION_TILES as f32
-                    + (1.0 - light) * Self::MIN_DISTANCE) as usize,
+                    + (1.0 - light) * Self::MIN_DISTANCE) as u8,
             )
         }
     }
@@ -150,13 +150,13 @@ impl<'a> CurrentlyVisible<'a> {
         }
     }
 
-    const fn nearby_pos(&self, pos: Pos, extra: usize) -> bool {
+    const fn nearby_pos(&self, pos: Pos, extra: u8) -> bool {
         let Some(viewing_distance) = self.viewing_distance else {
             return false;
         };
 
-        self.from.x.abs_diff(pos.x) as usize <= viewing_distance + extra
-            && self.from.z.abs_diff(pos.z) as usize <= viewing_distance + extra
+        self.from.x.abs_diff(pos.x) <= viewing_distance as u32 + extra as u32
+            && self.from.z.abs_diff(pos.z) <= viewing_distance as u32 + extra as u32
     }
 
     pub(crate) fn can_see_relative(&self, relative_to: PosOffset) -> Visible {
