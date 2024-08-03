@@ -159,7 +159,7 @@ impl Faction {
             WalkingCost::new(NborDistance::Up, MoveCost::default()).duration(actor.speed());
 
         // Higher gives better results but is slower
-        let planning_limit: u64 = 5;
+        let planning_limit: u64 = 4;
         let min_time = up_time * (planning_limit - 1); // included
         let max_time = up_time * planning_limit; // not included
 
@@ -247,11 +247,11 @@ impl Faction {
             Intent::Wait => Some(PlannedAction::Stay).map(|action| (action, None)),
         }
         .filter(|(action, _)| match action {
-            // prevent fish from acting on land
             PlannedAction::Step { to: nbor }
             | PlannedAction::Attack { target: nbor }
             | PlannedAction::Smash { target: nbor } => {
                 let pos = envir.get_nbor(*actor.pos, *nbor).expect("Valid pos");
+                // prevent fish from acting on land
                 actor.aquatic.is_none() || envir.is_water(pos)
             }
             _ => true,
