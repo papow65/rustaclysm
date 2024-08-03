@@ -26,6 +26,7 @@ impl ZoneLevelEntities {
                 entry.insert(entity);
             }
         });
+
         hooks.on_remove(|mut world, entity, _component_id| {
             let removed_zone_level = *world
                 .entity(entity)
@@ -38,7 +39,7 @@ impl ZoneLevelEntities {
                         occupied.remove();
                     }
                     Entry::Vacant(..) => {
-                        panic!("The removed zone level entity should have been found");
+                        eprintln!("The removed zone level entity should have been found");
                     }
                 }
             }

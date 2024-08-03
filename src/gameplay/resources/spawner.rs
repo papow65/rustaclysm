@@ -11,7 +11,6 @@ use bevy::{
 #[derive(SystemParam)]
 pub(crate) struct Spawner<'w, 's> {
     pub(crate) commands: Commands<'w, 's>,
-    location: ResMut<'w, Location>,
     pub(crate) explored: ResMut<'w, Explored>,
     sav: Res<'w, Sav>,
     model_factory: ModelFactory<'w>,
@@ -399,7 +398,6 @@ impl<'w, 's> Spawner<'w, 's> {
 
         let entity = entity_commands.id();
         self.commands.entity(parent).add_child(entity);
-        self.location.update(entity, Some(pos));
 
         entity
     }

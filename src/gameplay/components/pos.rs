@@ -1,7 +1,6 @@
-use super::ZoneLevelEntities;
 use crate::{
     gameplay::HorizontalDirection,
-    prelude::{LevelOffset, Nbor, PosOffset, VisionDistance},
+    prelude::{LevelOffset, Location, Nbor, PosOffset, VisionDistance, ZoneLevelEntities},
 };
 use bevy::{
     ecs::component::{ComponentHooks, StorageType},
@@ -136,7 +135,8 @@ impl Sub<Self> for Level {
     }
 }
 
-#[derive(Component, Copy, Clone, PartialEq, Eq, Hash)]
+// Manually deriving `Component`
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub(crate) struct Pos {
     pub(crate) x: i32,
     pub(crate) level: Level,
@@ -234,6 +234,14 @@ impl Sub<Self> for Pos {
             level: self.level - other.level,
             z: self.z - other.z,
         }
+    }
+}
+
+impl Component for Pos {
+    const STORAGE_TYPE: StorageType = StorageType::Table;
+
+    fn register_component_hooks(hooks: &mut ComponentHooks) {
+        Location::register_hooks(hooks);
     }
 }
 

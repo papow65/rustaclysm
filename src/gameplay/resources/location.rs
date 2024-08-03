@@ -1,6 +1,7 @@
-use crate::prelude::{Pos, StairsDown, StairsUp};
+use crate::prelude::{Faction, ObjectDefinition, Pos, StairsDown, StairsUp};
 use bevy::{
     ecs::{
+        component::ComponentHooks,
         entity::EntityHashMap,
         query::{QueryData, QueryFilter, ROQueryItem},
     },
@@ -13,11 +14,60 @@ const NOT_FOUND: &Vec<Entity> = &Vec::new();
 #[derive(Default, Resource)]
 pub(crate) struct Location {
     objects: HashMap<Pos, Vec<Entity>>,
-    positions: EntityHashMap<Pos>,
+    positions: EntityHashMap<Pos>, // TODO
 }
 
 impl Location {
-    pub(crate) fn update(&mut self, entity: Entity, pos: Option<Pos>) {
+    pub(crate) fn register_hooks(hooks: &mut ComponentHooks) {
+        hooks.on_add(|mut world, entity, _component_id| {
+            let pos = *world
+                .entity(entity)
+                .get::<Pos>()
+                .expect("Pos should be present because it was just added");
+            if let Some(faction) = world.entity(entity).get::<Faction>() {
+                println!(
+                    "Adding {pos:?} to {faction:?} {:?}",
+                    world.entity(entity).get::<ObjectDefinition>()
+                );
+            }
+            if let Some(mut this) = world.get_resource_mut::<Self>() {
+                this.add(pos, entity);
+                println!("Location: add {entity:?} @ {pos:?}");
+            } else {
+                println!("Location MISSING: add {entity:?} @ {pos:?}");
+            }
+        });
+
+        hooks.on_remove(|mut world, entity, _component_id| {
+            let removed_pos = *world
+                .entity(entity)
+                .get::<Pos>()
+                .expect("Pos should be present because it is being removed");
+            if let Some(faction) = world.entity(entity).get::<Faction>() {
+                println!(
+                    "Removing {removed_pos:?} from {faction:?} {:?}",
+                    world.entity(entity).get::<ObjectDefinition>()
+                );
+            }
+            if let Some(mut this) = world.get_resource_mut::<Self>() {
+                this.remove(entity);
+            } else {
+                println!("Location MISSING: removed {entity:?} @ {removed_pos:?}");
+            }
+        });
+    }
+
+    pub(crate) fn move_(&mut self, entity: Entity, to: Pos) {
+        self.remove(entity);
+        self.add(to, entity);
+    }
+
+    fn add(&mut self, pos: Pos, entity: Entity) {
+        self.objects.entry(pos).or_default().push(entity);
+        self.positions.insert(entity, pos);
+    }
+
+    fn remove(&mut self, entity: Entity) {
         if let Some(&prev_pos) = self.positions.get(&entity) {
             let old_pos_vec = self
                 .objects
@@ -29,22 +79,7 @@ impl Location {
                 .expect("The entity should be present at its previous position");
             old_pos_vec.swap_remove(index);
         }
-
-        if let Some(pos) = pos {
-            if let Some(vec) = self.objects.get_mut(&pos) {
-                assert!(
-                    !vec.contains(&entity),
-                    "The given entity shouldn't alrady be at this position"
-                );
-                vec.push(entity);
-                //println!("\n\rTogether {vec:?}");
-            } else {
-                self.objects.insert(pos, vec![entity]);
-            }
-            self.positions.insert(entity, pos);
-        } else {
-            self.positions.remove(&entity);
-        }
+        self.positions.remove(&entity);
     }
 
     pub(crate) fn any<'w, 's, Q, F>(&self, pos: Pos, items: &'s Query<'w, 's, Q, F>) -> bool

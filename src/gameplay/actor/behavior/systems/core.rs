@@ -411,7 +411,6 @@ pub(in super::super) fn perform_wield(
     In(wield): In<ActionIn<ItemAction<Wield>>>,
     mut commands: Commands,
     mut message_writer: MessageWriter,
-    mut location: ResMut<Location>,
     hierarchy: Hierarchy,
     actors: Query<Actor>,
     items: Query<Item>,
@@ -419,7 +418,6 @@ pub(in super::super) fn perform_wield(
     wield.actor(&actors).wield(
         &mut commands,
         &mut message_writer,
-        &mut location,
         &hierarchy,
         &wield.action.item(&items),
     )
@@ -430,7 +428,6 @@ pub(in super::super) fn perform_unwield(
     In(unwield): In<ActionIn<ItemAction<Unwield>>>,
     mut commands: Commands,
     mut message_writer: MessageWriter,
-    mut location: ResMut<Location>,
     hierarchy: Hierarchy,
     actors: Query<Actor>,
     items: Query<Item>,
@@ -438,7 +435,6 @@ pub(in super::super) fn perform_unwield(
     unwield.actor(&actors).unwield(
         &mut commands,
         &mut message_writer,
-        &mut location,
         &hierarchy,
         &unwield.action.item(&items),
     )
@@ -449,7 +445,6 @@ pub(in super::super) fn perform_pickup(
     In(pickup): In<ActionIn<ItemAction<Pickup>>>,
     mut commands: Commands,
     mut message_writer: MessageWriter,
-    mut location: ResMut<Location>,
     hierarchy: Hierarchy,
     actors: Query<Actor>,
     items: Query<Item>,
@@ -457,7 +452,6 @@ pub(in super::super) fn perform_pickup(
     pickup.actor(&actors).pickup(
         &mut commands,
         &mut message_writer,
-        &mut location,
         &hierarchy,
         &pickup.action.item(&items),
     )

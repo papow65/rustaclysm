@@ -123,7 +123,7 @@ impl ActorItem<'_> {
         match envir.collide(from, to, true) {
             Collision::Pass => {
                 commands.entity(self.entity).insert(to);
-                envir.location.update(self.entity, Some(to));
+                envir.location.move_(self.entity, to);
                 Some(self.standard_impact(envir.walking_cost(from, to).duration(self.speed())))
             }
             //Collision::Fall(fall_pos) => {
@@ -420,17 +420,10 @@ impl ActorItem<'_> {
         &self,
         commands: &mut Commands,
         message_writer: &mut MessageWriter,
-        location: &mut Location,
         hierarchy: &Hierarchy,
         item: &ItemItem,
     ) -> Option<Impact> {
-        let impact = self.take(
-            commands,
-            message_writer,
-            location,
-            &self.hands(hierarchy),
-            item,
-        );
+        let impact = self.take(commands, message_writer, &self.hands(hierarchy), item);
         if impact.is_some() && self.player.is_some() {
             commands.entity(item.entity).insert(PlayerWielded);
         }
@@ -441,17 +434,10 @@ impl ActorItem<'_> {
         &self,
         commands: &mut Commands,
         message_writer: &mut MessageWriter,
-        location: &mut Location,
         hierarchy: &Hierarchy,
         item: &ItemItem,
     ) -> Option<Impact> {
-        let impact = self.take(
-            commands,
-            message_writer,
-            location,
-            &self.clothing(hierarchy),
-            item,
-        );
+        let impact = self.take(commands, message_writer, &self.clothing(hierarchy), item);
         if impact.is_some() {
             commands.entity(item.entity).remove::<PlayerWielded>();
         }
@@ -462,24 +448,16 @@ impl ActorItem<'_> {
         &self,
         commands: &mut Commands,
         message_writer: &mut MessageWriter,
-        location: &mut Location,
         hierarchy: &Hierarchy,
         item: &ItemItem,
     ) -> Option<Impact> {
-        self.take(
-            commands,
-            message_writer,
-            location,
-            &self.clothing(hierarchy),
-            item,
-        )
+        self.take(commands, message_writer, &self.clothing(hierarchy), item)
     }
 
     fn take(
         &self,
         commands: &mut Commands,
         message_writer: &mut MessageWriter,
-        location: &mut Location,
         target: &Container,
         taken: &ItemItem,
     ) -> Option<Impact> {
@@ -523,9 +501,9 @@ impl ActorItem<'_> {
                 .send_info();
 
             if &allowed_amount < taken.amount {
-                Self::take_some(commands, location, target.entity, allowed_amount, taken);
+                Self::take_some(commands, target.entity, allowed_amount, taken);
             } else {
-                Self::take_all(commands, location, target.entity, taken.entity);
+                Self::take_all(commands, target.entity, taken.entity);
             }
             Some(self.activate())
         } else {
@@ -535,7 +513,6 @@ impl ActorItem<'_> {
 
     fn take_some(
         commands: &mut Commands,
-        location: &mut Location,
         container_entity: Entity,
         allowed_amount: Amount,
         taken: &ItemItem,
@@ -561,27 +538,19 @@ impl ActorItem<'_> {
         if let Some(&taken_pos) = taken.pos {
             commands.entity(left_over_entity).insert(taken_pos);
         }
-        location.update(left_over_entity, taken.pos.copied());
 
         commands
             .entity(taken.entity)
             .insert(allowed_amount)
             .remove::<Pos>()
             .set_parent(container_entity);
-        location.update(taken.entity, None);
     }
 
-    fn take_all(
-        commands: &mut Commands,
-        location: &mut Location,
-        container_entity: Entity,
-        taken_entity: Entity,
-    ) {
+    fn take_all(commands: &mut Commands, container_entity: Entity, taken_entity: Entity) {
         commands
             .entity(container_entity)
             .push_children(&[taken_entity]);
         commands.entity(taken_entity).remove::<Pos>();
-        location.update(taken_entity, None);
     }
 
     pub(crate) fn move_item(
@@ -629,7 +598,7 @@ impl ActorItem<'_> {
             .entity(moved.entity)
             .insert((VisibilityBundle::default(), to))
             .set_parent(new_parent);
-        location.update(moved.entity, Some(to));
+        location.move_(moved.entity, to);
         Some(self.activate())
     }
 
