@@ -26,7 +26,6 @@ use bevy::{
 };
 use std::time::{Duration, Instant};
 
-#[cfg(debug_assertions)]
 use super::systems::refresh::check_items;
 
 pub(crate) fn loop_behavior_and_refresh() -> impl IntoSystemConfigs<()> {
@@ -40,7 +39,6 @@ pub(crate) fn loop_behavior_and_refresh() -> impl IntoSystemConfigs<()> {
             update_visualization_on_item_move,
             update_visualization_on_player_move,
             update_visualization_on_weather_change,
-            #[cfg(debug_assertions)]
             check_items,
         )
             .run_if(on_event::<RefreshAfterBehavior>()),

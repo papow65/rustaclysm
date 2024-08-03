@@ -170,13 +170,14 @@ pub(in super::super) fn trigger_refresh(mut visualization_update: ResMut<Visuali
     *visualization_update = VisualizationUpdate::Forced;
 }
 
-#[cfg(debug_assertions)]
 #[allow(clippy::needless_pass_by_value)]
 pub(in super::super) fn check_items(
     item_parents: Query<Option<&Parent>, Or<(With<Amount>, With<Containable>)>>,
 ) {
-    assert!(
-        item_parents.iter().all(|o| o.is_some()),
-        "All items should have a parent"
-    );
+    if cfg!(debug_assertions) {
+        assert!(
+            item_parents.iter().all(|o| o.is_some()),
+            "All items should have a parent"
+        );
+    }
 }

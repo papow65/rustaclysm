@@ -182,7 +182,6 @@ pub(crate) fn update_visualization_on_item_move(
     log_if_slow("update_visualization_on_item_move", start);
 }
 
-#[cfg(debug_assertions)]
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn count_assets(
     font_assets: Option<Res<Assets<Font>>>,
@@ -194,6 +193,10 @@ pub(crate) fn count_assets(
     meshes: Option<Res<Assets<Mesh>>>,
     mut last_counts: Local<Vec<usize>>,
 ) {
+    if !cfg!(debug_assertions) {
+        return;
+    }
+
     let start = Instant::now();
 
     let counts = vec![
@@ -221,7 +224,6 @@ pub(crate) fn count_assets(
     log_if_slow("count_assets", start);
 }
 
-#[cfg(debug_assertions)]
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn count_zones(
     //zones: Query<&Zone>,
@@ -229,6 +231,10 @@ pub(crate) fn count_zones(
     subzone_levels: Query<&SubzoneLevel>,
     mut last_counts: Local<Vec<usize>>,
 ) {
+    if !cfg!(debug_assertions) {
+        return;
+    }
+
     let start = Instant::now();
 
     let counts = vec![

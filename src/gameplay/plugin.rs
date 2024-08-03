@@ -129,11 +129,9 @@ fn update_systems() -> impl IntoSystemConfigs<(SystemConfigTupleMarker, (), (), 
 
 fn fixed_update_systems() -> impl IntoSystemConfigs<()> {
     (
-        #[cfg(debug_assertions)]
         (count_assets, count_zones),
         #[cfg(feature = "log_archetypes")]
         list_archetypes,
-        || (), // dummy system to prevent an empty chain in release mode
     )
         .chain()
 }
