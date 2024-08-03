@@ -82,17 +82,23 @@ fn plan_manual_player_action(
     mut instruction_queue: ResMut<InstructionQueue>,
     actors: Query<Actor>,
 ) -> Option<PlannedAction> {
+    let start = Instant::now();
+
     let actor = actors
         .get(active_actor)
         .expect("'entity' should be a known actor");
-    player_action_state.plan_manual_action(
+    let impact = player_action_state.plan_manual_action(
         &mut next_player_action_state,
         &mut message_writer,
         &currently_visible_builder.envir,
         &mut instruction_queue,
         &actor,
         clock.time(),
-    )
+    );
+
+    log_if_slow("plan_manual_player_action", start);
+
+    impact
 }
 
 #[allow(clippy::needless_pass_by_value)]
@@ -106,24 +112,34 @@ fn plan_automatic_player_action(
     actors: Query<Actor>,
     factions: Query<(&Pos, &Faction), With<Life>>,
 ) -> Option<PlannedAction> {
+    let start = Instant::now();
+
     let actor = actors
         .get(active_actor)
         .expect("'entity' should be a known actor");
 
     let factions = &factions.iter().map(|(p, f)| (*p, f)).collect::<Vec<_>>();
-    player_action_state.plan_automatic_action(
+    let planned_action = player_action_state.plan_automatic_action(
         &currently_visible_builder,
         &mut instruction_queue,
         &explored,
         &actor,
         clock.time(),
         factions,
-    )
+    );
+
+    log_if_slow("plan_manual_player_action", start);
+
+    planned_action
 }
 
 #[allow(clippy::needless_pass_by_value)]
 fn wait_for_player_input(mut instruction_queue: ResMut<InstructionQueue>) {
+    let start = Instant::now();
+
     instruction_queue.start_waiting();
+
+    log_if_slow("wait_for_player_input", start);
 }
 
 #[allow(clippy::needless_pass_by_value)]
@@ -134,6 +150,8 @@ fn plan_npc_action(
     actors: Query<Actor>,
     factions: Query<(&Pos, &Faction), With<Life>>,
 ) -> PlannedAction {
+    let start = Instant::now();
+
     let actor = actors
         .get(active_actor)
         .expect("'entity' should be a known actor");
@@ -155,6 +173,8 @@ fn plan_npc_action(
         strategy.intent,
         strategy.action
     );
+
+    log_if_slow("wait_for_player_input", start);
 
     strategy.action
 }
