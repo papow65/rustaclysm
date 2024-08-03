@@ -76,7 +76,25 @@ impl<'w, 's> CurrentlyVisibleBuilder<'w, 's> {
             }
         }
 
-        let nearby_subzone_level_cache = only_nearby.then(RefCell::default);
+        let nearby_subzone_limits = only_nearby.then(|| {
+            // One extra tile to erase what just dissapeared from sight
+            let distance = i32::from(viewing_distance.unwrap_or(0)) + 1;
+
+            let min = SubzoneLevel::from(Pos {
+                x: from.x - distance,
+                level: from.level,
+                z: from.z - distance,
+            });
+            let max = SubzoneLevel::from(Pos {
+                x: from.x + distance,
+                level: from.level,
+                z: from.z + distance,
+            });
+            //println!("{from:?} {distance:?} -> ({min:?}, {max:?})");
+            assert!(min.x <= max.x, "Invalid range for x {min:?}-{max:?}");
+            assert!(min.z <= max.z, "Invalid range for z {min:?}-{max:?}");
+            (min, max)
+        });
 
         CurrentlyVisible {
             envir: &self.envir,
@@ -86,7 +104,7 @@ impl<'w, 's> CurrentlyVisibleBuilder<'w, 's> {
             opaque_cache: RefCell::default(),
             down_cache: RefCell::default(),
             visible_cache,
-            nearby_subzone_level_cache,
+            nearby_subzone_limits,
             magic_stairs_up,
             magic_stairs_down,
         }
@@ -109,7 +127,7 @@ pub(crate) struct CurrentlyVisible<'a> {
     visible_cache: RefCell<HashMap<PosOffset, Visible>>,
 
     /// None is used when everything should be updated
-    nearby_subzone_level_cache: Option<RefCell<HashMap<SubzoneLevel, bool>>>,
+    nearby_subzone_limits: Option<(SubzoneLevel, SubzoneLevel)>,
 
     /// The stairs up that do not have stairs down directly above them
     magic_stairs_up: Vec<PosOffset>,
@@ -238,20 +256,14 @@ impl<'a> CurrentlyVisible<'a> {
         visible
     }
 
-    pub(crate) fn nearby(&self, subzone_level: SubzoneLevel) -> bool {
-        let Some(nearby_subzone_level_cache) = &self.nearby_subzone_level_cache else {
-            // When updating all positions
+    pub(crate) const fn nearby(&self, subzone_level: SubzoneLevel) -> bool {
+        let Some((min, max)) = self.nearby_subzone_limits else {
             return true;
         };
 
-        *nearby_subzone_level_cache
-            .borrow_mut()
-            .entry(subzone_level)
-            .or_insert_with(|| {
-                subzone_level
-                    .corners()
-                    .iter()
-                    .any(|corner| self.nearby_pos(*corner, 1))
-            })
+        min.x <= subzone_level.x
+            && subzone_level.x <= max.x
+            && min.z <= subzone_level.z
+            && subzone_level.z <= max.z
     }
 }

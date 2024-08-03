@@ -268,16 +268,6 @@ impl SubzoneLevel {
     pub(crate) const fn base_corner(&self) -> Pos {
         Pos::new(Self::SIZE * self.x, self.level, Self::SIZE * self.z)
     }
-
-    pub(crate) const fn corners(&self) -> [Pos; 4] {
-        let base_corner = self.base_corner();
-        [
-            base_corner,
-            base_corner.horizontal_offset(0, 11),
-            base_corner.horizontal_offset(11, 0),
-            base_corner.horizontal_offset(11, 11),
-        ]
-    }
 }
 
 impl fmt::Debug for SubzoneLevel {
