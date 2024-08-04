@@ -1,9 +1,19 @@
 use super::components::{MainMenuButton, ReturnButton};
-use crate::prelude::{
-    ApplicationState, Fonts, GameplayScreenState, Key, Keys, QuitButton, BAD_TEXT_COLOR,
-    DEFAULT_TEXT_COLOR, GOOD_TEXT_COLOR, MEDIUM_SPACING,
+use crate::{
+    application::ApplicationState,
+    prelude::{
+        Fonts, GameplayScreenState, Key, Keys, QuitButton, BAD_TEXT_COLOR, DEFAULT_TEXT_COLOR,
+        GOOD_TEXT_COLOR, MEDIUM_SPACING,
+    },
 };
-use bevy::{app::AppExit, prelude::*};
+use bevy::{
+    app::AppExit,
+    prelude::{
+        default, AlignItems, BuildChildren, Button, ButtonBundle, Changed, ChildBuilder, Color,
+        Commands, Events, FlexDirection, Interaction, JustifyContent, KeyCode, NextState,
+        NodeBundle, Query, Res, ResMut, StateScoped, Style, TextBundle, Val, With,
+    },
+};
 
 #[allow(clippy::needless_pass_by_value)]
 pub(super) fn spawn_menu(mut commands: Commands, fonts: Res<Fonts>) {

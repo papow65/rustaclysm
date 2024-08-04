@@ -4,7 +4,7 @@ use super::{
     resources::{despawn_hud_resources, spawn_hud_resources},
     sidebar::{spawn_sidebar, update_sidebar_systems, update_status_fps},
 };
-use crate::prelude::{ApplicationState, GameplayScreenState};
+use crate::{application::ApplicationState, prelude::GameplayScreenState};
 use bevy::{
     input::keyboard::KeyboardInput,
     prelude::{

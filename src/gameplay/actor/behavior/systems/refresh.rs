@@ -1,6 +1,13 @@
 //! These systems run once after [`loop_behavior`].
-use crate::prelude::*;
-use bevy::prelude::*;
+use crate::prelude::{
+    log_if_slow, update_visualization, Accessible, Amount, Appearance, BaseSpeed, Clock,
+    Containable, CurrentlyVisible, CurrentlyVisibleBuilder, ElevationVisibility, Explored, Focus,
+    GameplaySession, LastSeen, Player, PlayerActionState, Pos, VisualizationUpdate,
+};
+use bevy::prelude::{
+    Camera, Changed, Children, GlobalTransform, Handle, Local, Mesh, Or, ParallelCommands, Parent,
+    Query, RemovedComponents, Res, ResMut, State, Transform, Vec3, Visibility, With, Without,
+};
 use std::{
     cell::OnceCell,
     sync::{Arc, Mutex},

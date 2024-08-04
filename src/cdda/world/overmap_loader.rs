@@ -4,7 +4,6 @@ use futures_lite::AsyncReadExt;
 use serde::Deserialize;
 use std::{marker::PhantomData, str::from_utf8};
 
-//#[derive(Default)]
 pub(crate) struct OvermapLoader<T>(PhantomData<T>)
 where
     T: Asset;

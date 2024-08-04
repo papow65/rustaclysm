@@ -1,6 +1,9 @@
-use crate::prelude::{
-    ApplicationState, Fonts, GameplayScreenState, Key, Keys, BAD_TEXT_COLOR, PANEL_COLOR,
-    SMALL_SPACING, WARN_TEXT_COLOR,
+use crate::{
+    application::ApplicationState,
+    prelude::{
+        Fonts, GameplayScreenState, Key, Keys, BAD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING,
+        WARN_TEXT_COLOR,
+    },
 };
 use bevy::prelude::{
     AlignItems, BuildChildren, Button, ButtonBundle, Changed, Commands, FlexDirection, Interaction,

@@ -1,5 +1,15 @@
-use crate::prelude::*;
-use bevy::prelude::*;
+use super::ProgressScreenState;
+use crate::{
+    application::ApplicationState,
+    prelude::{
+        Explored, Fonts, GameplayScreenState, Map, Overmap, OvermapBuffer, SubzoneLevelEntities,
+        DEFAULT_BUTTON_COLOR, DEFAULT_TEXT_COLOR,
+    },
+};
+use bevy::prelude::{
+    AlignItems, Assets, BuildChildren, Commands, JustifyContent, Local, NextState, NodeBundle,
+    PositionType, Res, ResMut, State, StateScoped, Style, TextBundle, Val,
+};
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn spawn_loading(mut commands: Commands, fonts: Res<Fonts>) {
@@ -12,9 +22,9 @@ pub(crate) fn spawn_loading(mut commands: Commands, fonts: Res<Fonts>) {
                     height: Val::Percent(100.0),
                     align_items: AlignItems::Center,
                     justify_content: JustifyContent::Center,
-                    ..default()
+                    ..Style::default()
                 },
-                ..default()
+                ..NodeBundle::default()
             },
             StateScoped(ProgressScreenState::Loading),
         ))
@@ -26,10 +36,10 @@ pub(crate) fn spawn_loading(mut commands: Commands, fonts: Res<Fonts>) {
                         height: Val::Px(70.0),
                         justify_content: JustifyContent::Center,
                         align_items: AlignItems::Center,
-                        ..default()
+                        ..Style::default()
                     },
                     background_color: DEFAULT_BUTTON_COLOR.into(),
-                    ..default()
+                    ..NodeBundle::default()
                 })
                 .with_children(|parent| {
                     parent.spawn(TextBundle::from_section(

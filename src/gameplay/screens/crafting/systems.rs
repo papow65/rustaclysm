@@ -3,7 +3,15 @@ use super::{
     resource::CraftingScreen,
 };
 use crate::prelude::*;
-use bevy::{prelude::*, utils::HashMap};
+use bevy::{
+    prelude::{
+        AlignItems, BuildChildren, Button, ButtonBundle, Changed, Children, Commands,
+        DespawnRecursiveExt, Display, FlexDirection, In, Interaction, JustifyContent, KeyCode,
+        NextState, Node, NodeBundle, Overflow, Parent, Query, Res, ResMut, StateScoped, Style,
+        Text, TextBundle, Transform, UiRect, Val, With, Without,
+    },
+    utils::HashMap,
+};
 use std::{ops::RangeInclusive, time::Instant};
 
 const MAX_FIND_DISTANCE: i32 = 7;
@@ -19,9 +27,9 @@ pub(super) fn spawn_crafting_screen(mut commands: Commands) {
                     flex_direction: FlexDirection::Column,
                     align_items: AlignItems::Start,
                     justify_content: JustifyContent::Start,
-                    ..default()
+                    ..Style::default()
                 },
-                ..default()
+                ..NodeBundle::default()
             },
             ScrollingList::default(),
         ))
@@ -33,9 +41,9 @@ pub(super) fn spawn_crafting_screen(mut commands: Commands) {
                 flex_direction: FlexDirection::Column,
                 align_items: AlignItems::Start,
                 justify_content: JustifyContent::Start,
-                ..default()
+                ..Style::default()
             },
-            ..default()
+            ..NodeBundle::default()
         },))
         .id();
     commands
@@ -44,9 +52,9 @@ pub(super) fn spawn_crafting_screen(mut commands: Commands) {
                 style: Style {
                     width: Val::Percent(100.0),
                     height: Val::Percent(100.0),
-                    ..default()
+                    ..Style::default()
                 },
-                ..default()
+                ..NodeBundle::default()
             },
             StateScoped(GameplayScreenState::Crafting),
         ))
@@ -62,10 +70,10 @@ pub(super) fn spawn_crafting_screen(mut commands: Commands) {
                         margin: UiRect::px(10.0, 365.0, 10.0, 10.0),
                         padding: UiRect::all(SMALL_SPACING),
                         overflow: Overflow::clip_y(),
-                        ..default()
+                        ..Style::default()
                     },
                     background_color: PANEL_COLOR.into(),
-                    ..default()
+                    ..NodeBundle::default()
                 })
                 .with_children(|builder| {
                     builder
@@ -77,9 +85,9 @@ pub(super) fn spawn_crafting_screen(mut commands: Commands) {
                                 align_items: AlignItems::Start,
                                 justify_content: JustifyContent::Start,
                                 overflow: Overflow::clip_y(),
-                                ..default()
+                                ..Style::default()
                             },
-                            ..default()
+                            ..NodeBundle::default()
                         })
                         .add_child(recipe_list)
                         .add_child(recipe_details);

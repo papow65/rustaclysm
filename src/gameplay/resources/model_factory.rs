@@ -1,5 +1,15 @@
-use crate::prelude::*;
-use bevy::{ecs::system::SystemParam, prelude::*, utils::HashMap};
+use crate::prelude::{
+    Appearance, Infos, LastSeen, Layers, Model, ModelShape, ObjectDefinition, SpriteNumber,
+    SpriteOrientation, TileLoader,
+};
+use bevy::{
+    ecs::system::SystemParam,
+    prelude::{
+        AssetServer, Assets, Handle, Mesh, PbrBundle, Res, ResMut, Resource, StandardMaterial,
+        Visibility,
+    },
+    utils::HashMap,
+};
 use std::path::PathBuf;
 
 #[derive(Default, Resource)]

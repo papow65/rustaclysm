@@ -1,4 +1,6 @@
-use crate::prelude::*;
+use crate::prelude::{
+    Distance, MeshInfo, ObjectDefinition, SpriteLayer, SpriteNumber, TextureInfo,
+};
 use bevy::prelude::{AlphaMode, Mesh, Transform, Vec2, Vec3};
 use std::path::PathBuf;
 

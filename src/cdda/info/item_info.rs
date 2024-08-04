@@ -1,4 +1,6 @@
-use crate::prelude::*;
+use crate::prelude::{
+    DeflatVec, Flags, Mass, ObjectId, Volume, DEFAULT_TEXT_COLOR, GOOD_TEXT_COLOR, WARN_TEXT_COLOR,
+};
 use bevy::{prelude::Color, utils::HashMap};
 use serde::Deserialize;
 

@@ -1,4 +1,7 @@
-use crate::prelude::*;
+use crate::prelude::{
+    Breath, Damage, Evolution, Healing, Limited, Speed, StaminaImpact, DEFAULT_TEXT_COLOR,
+    WARN_TEXT_COLOR,
+};
 use bevy::prelude::{Color, Component};
 use std::fmt;
 

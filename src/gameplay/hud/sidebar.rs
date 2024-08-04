@@ -2,7 +2,7 @@ use super::{
     components::{LogDisplay, StatusDisplay},
     resources::{HudDefaults, StatusTextSections},
 };
-use crate::prelude::*;
+use crate::{application::ApplicationState, prelude::*};
 use bevy::{
     diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin},
     ecs::system::EntityCommands,

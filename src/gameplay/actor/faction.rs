@@ -1,4 +1,8 @@
-use crate::prelude::*;
+use crate::prelude::{
+    ActorItem, CurrentlyVisibleBuilder, Duration, Envir, Fragment, Health, MoveCost, Nbor,
+    NborDistance, PlannedAction, Pos, Visible, WalkingCost, DEFAULT_TEXT_COLOR, FILTHY_COLOR,
+    WARN_TEXT_COLOR,
+};
 use bevy::prelude::{Color, Component};
 use float_ord::FloatOrd;
 use pathfinding::{

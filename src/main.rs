@@ -8,7 +8,7 @@ mod loading;
 mod main_menu;
 mod prelude;
 
-use crate::prelude::run_application;
+use crate::application::run_application;
 use std::env;
 
 fn main() {

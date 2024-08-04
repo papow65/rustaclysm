@@ -1,5 +1,10 @@
-use crate::prelude::*;
-use bevy::prelude::*;
+use crate::prelude::{
+    AppearanceCache, AssetStorage, CameraOffset, Expanded, Explored, GameplayCounter,
+    GameplayScreenState, InstructionQueue, Location, Map, MapMemory, MeshCaches, Overmap,
+    OvermapBuffer, Overzone, Sav, SubzoneLevelEntities, Timeouts, VisualizationUpdate, ZoneLevel,
+    ZoneLevelEntities, ZoneLevelIds,
+};
+use bevy::prelude::{Commands, Event, Events, NextState, ResMut};
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn remove_gameplay_resources(mut commands: Commands) {

@@ -1,7 +1,11 @@
-use crate::prelude::*;
+use crate::{application::ApplicationState, prelude::*};
 use bevy::{
     ecs::system::SystemParam,
-    prelude::*,
+    prelude::{
+        BuildChildren, Camera3dBundle, Commands, DirectionalLight, DirectionalLightBundle, Entity,
+        EulerRot, Mat4, PbrBundle, Res, ResMut, SpatialBundle, StateScoped, Transform, Vec3,
+        Visibility,
+    },
     render::{
         camera::{PerspectiveProjection, Projection::Perspective},
         view::RenderLayers,
@@ -435,9 +439,9 @@ impl<'w, 's> Spawner<'w, 's> {
                                         projection: Perspective(PerspectiveProjection {
                                             // more overview, less personal than the default
                                             fov: 0.3,
-                                            ..default()
+                                            ..PerspectiveProjection::default()
                                         }),
-                                        ..default()
+                                        ..Camera3dBundle::default()
                                     },
                                     RenderLayers::default().with(1).without(2),
                                 ));

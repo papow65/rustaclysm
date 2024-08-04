@@ -1,8 +1,11 @@
-use crate::prelude::*;
+use crate::prelude::{Fonts, Key, Keys, ScrollingList, DEFAULT_BUTTON_COLOR, HOVERED_BUTTON_COLOR};
 use bevy::{
     app::AppExit,
     input::{keyboard::KeyboardInput, mouse::MouseWheel},
-    prelude::*,
+    prelude::{
+        BackgroundColor, Button, ButtonInput, Changed, EventReader, Events, Interaction, KeyCode,
+        Node, Parent, Query, Res, ResMut, Style, UiScale, Window, With, Without, World,
+    },
 };
 
 #[allow(clippy::needless_pass_by_value)]

@@ -1,4 +1,7 @@
-use crate::prelude::{ApplicationState, GameplayScreenState, Key, Keys};
+use crate::{
+    application::ApplicationState,
+    prelude::{GameplayScreenState, Key, Keys},
+};
 use bevy::prelude::{KeyCode, NextState, Res, ResMut};
 
 #[allow(clippy::needless_pass_by_value)]

@@ -1,9 +1,11 @@
-use crate::prelude::*;
+use crate::prelude::{
+    Distance, ModelShape, ObjectCategory, SpriteLayer, SpriteOrientation, Transform2d,
+};
 use bevy::prelude::Vec2;
 use serde::Deserialize;
 use std::sync::Arc;
 
-#[derive(Clone, Deserialize, Debug, Hash, PartialEq, Eq)]
+#[derive(Clone, Debug, Hash, PartialEq, Eq, Deserialize)]
 pub(crate) struct ObjectId(Arc<str>);
 
 impl ObjectId {

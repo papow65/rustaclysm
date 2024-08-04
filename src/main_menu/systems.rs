@@ -2,9 +2,25 @@ use super::{
     components::{Background, LoadButton, LoadButtonArea, MessageField, MessageWrapper},
     load_error::LoadError,
 };
-use crate::prelude::*;
+use crate::{
+    application::ApplicationState,
+    loading::ProgressScreenState,
+    prelude::{
+        Fonts, GameplaySession, Paths, QuitButton, BAD_TEXT_COLOR, DEFAULT_TEXT_COLOR,
+        GOOD_TEXT_COLOR, LARGE_SPACING, MEDIUM_SPACING, PANEL_COLOR,
+    },
+};
 use base64::{engine::general_purpose::STANDARD as base64, Engine};
-use bevy::{app::AppExit, prelude::*};
+use bevy::{
+    app::AppExit,
+    prelude::{
+        AlignContent, AlignItems, AssetServer, BuildChildren, Button, ButtonBundle, Camera,
+        Camera2dBundle, Changed, ChildBuilder, Commands, DespawnRecursiveExt, Display, Entity,
+        Events, FlexDirection, FlexWrap, Interaction, JustifyContent, Local, NextState, NodeBundle,
+        Query, Res, ResMut, SpriteBundle, StateScoped, Style, Text, TextBundle, Transform, UiRect,
+        Val, Vec3, With, Without,
+    },
+};
 use glob::glob;
 use std::{
     path::{Path, PathBuf},
@@ -47,9 +63,9 @@ pub(super) fn spawn_main_menu(
                     height: Val::Percent(100.0),
                     align_items: AlignItems::Center,
                     justify_content: JustifyContent::Center,
-                    ..default()
+                    ..Style::default()
                 },
-                ..default()
+                ..NodeBundle::default()
             },
             StateScoped(ApplicationState::MainMenu),
         ))
@@ -80,7 +96,7 @@ fn add_tagline(parent: &mut ChildBuilder, fonts: &Fonts) {
                 bottom: LARGE_SPACING,
                 ..UiRect::default()
             },
-            ..default()
+            ..Style::default()
         }),
     );
 }
@@ -96,9 +112,9 @@ fn add_load_button_area(parent: &mut ChildBuilder) {
                 flex_wrap: FlexWrap::Wrap,
                 align_content: AlignContent::Center,
                 column_gap: MEDIUM_SPACING,
-                ..default()
+                ..Style::default()
             },
-            ..default()
+            ..NodeBundle::default()
         },
         LoadButtonArea,
     ));
@@ -119,10 +135,10 @@ fn add_notification_area(parent: &mut ChildBuilder, fonts: &Fonts) {
                         bottom: MEDIUM_SPACING,
                         ..UiRect::default()
                     },
-                    ..default()
+                    ..Style::default()
                 },
                 background_color: PANEL_COLOR.into(),
-                ..default()
+                ..NodeBundle::default()
             },
             MessageWrapper,
         ))
@@ -152,9 +168,9 @@ fn add_quit_button(parent: &mut ChildBuilder, fonts: &Fonts) {
                     height: Val::Px(70.0),
                     justify_content: JustifyContent::Center,
                     align_items: AlignItems::Center,
-                    ..default()
+                    ..Style::default()
                 },
-                ..default()
+                ..ButtonBundle::default()
             },
             QuitButton,
         ))
@@ -303,9 +319,9 @@ fn add_load_button(fonts: &Fonts, parent: &mut ChildBuilder, path: &Path) {
                         top: MEDIUM_SPACING,
                         bottom: MEDIUM_SPACING,
                     },
-                    ..default()
+                    ..Style::default()
                 },
-                ..default()
+                ..ButtonBundle::default()
             },
             LoadButton {
                 path: path.to_path_buf(),

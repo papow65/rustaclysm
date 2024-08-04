@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::prelude::{App, Plugin};
 
 pub(crate) struct CharacterScreenPlugin;
 

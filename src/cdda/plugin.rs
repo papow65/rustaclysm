@@ -1,7 +1,7 @@
 use crate::prelude::{
     Map, MapLoader, MapMemory, MapMemoryLoader, Overmap, OvermapBuffer, OvermapLoader,
 };
-use bevy::prelude::*;
+use bevy::prelude::{App, AssetApp, Plugin};
 
 pub(crate) struct CddaPlugin;
 

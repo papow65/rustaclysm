@@ -1,4 +1,4 @@
-use crate::prelude::*;
+use super::SpriteLayer;
 
 const SEPARATION_OFFSET: f32 = 0.005;
 
