@@ -74,7 +74,7 @@ impl Infos {
             {
                 continue;
             }
-            println!("Parsing {json_path:?}...");
+            //println!("Parsing {json_path:?}...");
             let file_contents = read_to_string(&json_path)
                 .unwrap_or_else(|_| panic!("Could not read {}", json_path.display()));
             let contents = serde_json::from_str::<Vec<serde_json::Map<String, serde_json::Value>>>(
