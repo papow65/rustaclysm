@@ -1,4 +1,4 @@
-use crate::prelude::{Fragment, InputChange, Key, KeyChange, Nbor, ObjectId};
+use crate::prelude::{Fragment, InputChange, Key, KeyChange, Nbor, RecipeSituation};
 use bevy::{input::keyboard::KeyCode, prelude::Entity};
 
 use super::HorizontalDirection;
@@ -73,16 +73,14 @@ pub(crate) enum Interruption {
 }
 
 /// All instructions related to player character actions
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq)]
 pub(crate) enum QueuedInstruction {
     Offset(PlayerDirection),
     Wield(Entity),
     Unwield(Entity),
     Pickup(Entity),
     Dump(Entity, HorizontalDirection),
-    StartCraft {
-        recipe_id: ObjectId,
-    },
+    StartCraft(RecipeSituation),
     Attack,
     Smash,
     Pulp,
@@ -134,7 +132,7 @@ pub(crate) enum ZoomDirection {
     Out,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug)]
 pub(crate) enum Instruction {
     Queued(QueuedInstruction),
     ShowGameplayMenu,

@@ -598,16 +598,16 @@ impl<'w, 's> Spawner<'w, 's> {
         infos: &Infos,
         parent_entity: Entity,
         pos: Pos,
-        object_id: ObjectId,
+        recipe_id: ObjectId,
     ) -> Entity {
         let craft = CddaItem::from(ObjectId::new("craft"));
         let entity = self
             .spawn_item(infos, parent_entity, pos, &craft, Amount::SINGLE)
             .expect("Spawning craft item should have succeeded");
 
-        let recipe = infos.recipe(&object_id);
+        let recipe = infos.recipe(&recipe_id);
         let crafting_time = recipe.time.expect("Craftable recipes should have a time");
-        let craft = Craft::new(object_id, crafting_time);
+        let craft = Craft::new(recipe_id, crafting_time);
         self.commands.entity(entity).insert(craft);
 
         entity

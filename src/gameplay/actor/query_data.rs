@@ -624,12 +624,14 @@ impl ActorItem<'_> {
 
     pub(crate) fn start_craft(
         &self,
+        commands: &mut Commands,
         message_writer: &mut MessageWriter,
         next_player_action_state: &mut NextState<PlayerActionState>,
         spawner: &mut Spawner,
         infos: &Infos,
         subzone_level_entities: &SubzoneLevelEntities,
-        start_craft: StartCraft,
+        item_amounts: &mut Query<&mut Amount>,
+        start_craft: &StartCraft,
     ) -> Option<Impact> {
         let pos = self.pos.horizontal_nbor(start_craft.target);
         let Some(parent_entity) = subzone_level_entities.get(SubzoneLevel::from(pos)) else {
@@ -639,9 +641,39 @@ impl ActorItem<'_> {
             return None;
         };
 
-        // TODO consume components
+        for AlternativeSituation {
+            item_entities,
+            required,
+            ..
+        } in start_craft.recipe_situation.consumed_components()
+        {
+            //println!("Consume {required} from {item_entities:?}:");
+            let mut missing = *required;
+            for &item_entity in item_entities {
+                let mut item_amount = item_amounts
+                    .get_mut(item_entity)
+                    .expect("Consumed component items should be found");
+                if item_amount.0 <= missing {
+                    //println!(" - Consume {item_entity} fully ({:?}x)", item_amount.0);
+                    commands.entity(item_entity).despawn_recursive();
+                    missing -= item_amount.0;
+                    if missing == 0 {
+                        break;
+                    }
+                } else {
+                    //println!(" - Consume {item_entity:?} partially ({}/{})",missing, item_amount.0);
+                    item_amount.0 -= missing;
+                    break;
+                }
+            }
+        }
 
-        let item = spawner.spawn_craft(infos, parent_entity, pos, start_craft.recipe_id);
+        let item = spawner.spawn_craft(
+            infos,
+            parent_entity,
+            pos,
+            start_craft.recipe_situation.recipe_id().clone(),
+        );
 
         next_player_action_state.set(PlayerActionState::Crafting { item });
 

@@ -2,11 +2,11 @@ use crate::prelude::{
     Fonts, ObjectId, Recipe, BAD_TEXT_COLOR, DEFAULT_TEXT_COLOR, GOOD_TEXT_COLOR, SOFT_TEXT_COLOR,
     WARN_TEXT_COLOR,
 };
-use bevy::prelude::{Color, Component, TextSection};
+use bevy::prelude::{Color, Component, Entity, TextSection};
 use std::cmp::Ordering;
 
-#[derive(Clone, Debug, Component)]
-pub(super) struct RecipeSituation {
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Component)]
+pub(crate) struct RecipeSituation {
     pub(super) recipe_id: ObjectId,
     pub(super) name: String,
     pub(super) autolearn: bool,
@@ -16,6 +16,20 @@ pub(super) struct RecipeSituation {
 }
 
 impl RecipeSituation {
+    pub(crate) const fn recipe_id(&self) -> &ObjectId {
+        &self.recipe_id
+    }
+
+    pub(crate) fn consumed_components(&self) -> impl Iterator<Item = &AlternativeSituation> {
+        self.components.iter().map(|component| {
+            component
+                .alternatives
+                .iter()
+                .find(|alternative| alternative.is_present())
+                .expect("Crafting components should be present")
+        })
+    }
+
     pub(super) fn color(&self, selected: bool) -> Color {
         if self.craftable() {
             if selected {
@@ -112,7 +126,7 @@ impl RecipeSituation {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub(super) struct QualitySituation {
     pub(super) name: String,
     pub(super) present: Option<i8>,
@@ -173,7 +187,7 @@ impl QualitySituation {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub(super) struct ComponentSituation {
     pub(super) alternatives: Vec<AlternativeSituation>,
 }
@@ -206,12 +220,13 @@ impl ComponentSituation {
     }
 }
 
-#[derive(Clone, Debug)]
-pub(super) struct AlternativeSituation {
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub(crate) struct AlternativeSituation {
     pub(super) id: ObjectId,
     pub(super) name: String,
-    pub(super) required: u32,
+    pub(crate) required: u32,
     pub(super) present: u32,
+    pub(crate) item_entities: Vec<Entity>,
 }
 
 impl AlternativeSituation {

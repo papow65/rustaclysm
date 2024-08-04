@@ -6,9 +6,9 @@ use crate::prelude::*;
 use bevy::{
     prelude::{
         AlignItems, BuildChildren, Button, ButtonBundle, Changed, Children, Commands,
-        DespawnRecursiveExt, Display, FlexDirection, In, Interaction, JustifyContent, KeyCode,
-        NextState, Node, NodeBundle, Overflow, Parent, Query, Res, ResMut, StateScoped, Style,
-        Text, TextBundle, Transform, UiRect, Val, With, Without,
+        DespawnRecursiveExt, Display, Entity, FlexDirection, In, Interaction, JustifyContent,
+        KeyCode, NextState, Node, NodeBundle, Overflow, Parent, Query, Res, ResMut, StateScoped,
+        Style, Text, TextBundle, Transform, UiRect, Val, With, Without,
     },
     utils::HashMap,
 };
@@ -137,7 +137,13 @@ pub(super) fn refresh_crafting_screen(
     sav: Res<Sav>,
     mut crafting_screen: ResMut<CraftingScreen>,
     players: Query<(&Pos, &BodyContainers), With<Player>>,
-    items_and_furniture: Query<(&ObjectDefinition, &Amount, &LastSeen, Option<&Parent>)>,
+    items_and_furniture: Query<(
+        Entity,
+        &ObjectDefinition,
+        &Amount,
+        &LastSeen,
+        Option<&Parent>,
+    )>,
 ) {
     if !run {
         return;
@@ -232,10 +238,16 @@ pub(super) fn refresh_crafting_screen(
 
 fn find_nearby<'a>(
     location: &'a Location,
-    items_and_furniture: &'a Query<(&ObjectDefinition, &Amount, &LastSeen, Option<&Parent>)>,
+    items_and_furniture: &'a Query<(
+        Entity,
+        &ObjectDefinition,
+        &Amount,
+        &LastSeen,
+        Option<&Parent>,
+    )>,
     player_pos: Pos,
     body_containers: &'a BodyContainers,
-) -> Vec<(&'a ObjectDefinition, &'a Amount)> {
+) -> Vec<(Entity, &'a ObjectDefinition, &'a Amount)> {
     FIND_RANGE
         .flat_map(move |dz| {
             FIND_RANGE.flat_map(move |dx| {
@@ -250,17 +262,17 @@ fn find_nearby<'a>(
                 p.get() == body_containers.hands || p.get() == body_containers.clothing
             })
         }))
-        .map(|(definition, amount, ..)| (definition, amount))
+        .map(|(entity, definition, amount, ..)| (entity, definition, amount))
         .collect::<Vec<_>>()
 }
 
 fn nearby_manuals<'a>(
     infos: &'a Infos,
-    nearby_items: &[(&'a ObjectDefinition, &'a Amount)],
+    nearby_items: &[(Entity, &'a ObjectDefinition, &'a Amount)],
 ) -> HashMap<&'a ObjectId, &'a str> {
     nearby_items
         .iter()
-        .map(|(definition, _)| *definition)
+        .map(|(_, definition, _)| *definition)
         .filter(|definition| {
             definition.category == ObjectCategory::Item
                 && infos
@@ -278,7 +290,7 @@ fn shown_recipes(
     sav: &Sav,
     nearby_manuals: &HashMap<&ObjectId, &str>,
     nearby_qualities: &HashMap<&ObjectId, i8>,
-    nearby_items: &[(&ObjectDefinition, &Amount)],
+    nearby_items: &[(Entity, &ObjectDefinition, &Amount)],
 ) -> Vec<RecipeSituation> {
     let mut shown_recipes = infos
         .recipes()
@@ -376,11 +388,11 @@ fn recipe_manuals<'a>(
 
 fn nearby_qualities<'a>(
     infos: &'a Infos,
-    nearby_items: &[(&'a ObjectDefinition, &'a Amount)],
+    nearby_items: &[(Entity, &'a ObjectDefinition, &'a Amount)],
 ) -> HashMap<&'a ObjectId, i8> {
     let found = nearby_items
         .iter()
-        .filter_map(|(definition, _)| match definition.category {
+        .filter_map(|(_, definition, _)| match definition.category {
             ObjectCategory::Item => infos.try_item(&definition.id).map(|item| &item.qualities),
             ObjectCategory::Furniture => infos
                 .try_furniture(&definition.id)
@@ -433,7 +445,7 @@ fn recipe_components(
     infos: &Infos,
     required: &[Vec<Alternative>],
     using: &[Using],
-    present: &[(&ObjectDefinition, &Amount)],
+    present: &[(Entity, &ObjectDefinition, &Amount)],
 ) -> Vec<ComponentSituation> {
     let using = using
         .iter()
@@ -458,15 +470,19 @@ fn recipe_components(
                             .ok()
                             .map(|item| (item_id, item, required))
                     })
-                    .map(|(item_id, item, required)| AlternativeSituation {
-                        id: item_id.clone(),
-                        name: item.name.amount(required).clone(),
-                        required,
-                        present: present
+                    .map(|(item_id, item, required)| {
+                        let (item_entities, amounts): (Vec<_>, Vec<&Amount>) = present
                             .iter()
-                            .filter(|(definition, _)| definition.id == *item_id)
-                            .map(|(_, amount)| amount.0)
-                            .sum(),
+                            .filter(|(_, definition, _)| definition.id == *item_id)
+                            .map(|(entity, _, amount)| (entity, amount))
+                            .unzip();
+                        AlternativeSituation {
+                            id: item_id.clone(),
+                            name: item.name.amount(required).clone(),
+                            required,
+                            present: amounts.iter().map(|amount| amount.0).sum(),
+                            item_entities,
+                        }
                     })
                     .collect::<Vec<_>>();
                 alternatives.sort_by_key(|alternative| !alternative.is_present());
@@ -670,9 +686,7 @@ fn start_craft(
         .expect("The selected craft should be found");
     println!("Craft {recipe:?}");
     instruction_queue.add(
-        QueuedInstruction::StartCraft {
-            recipe_id: recipe.recipe_id.clone(),
-        },
+        QueuedInstruction::StartCraft(recipe.clone()),
         InputChange::JustPressed,
     );
     // Close the crafting screen

@@ -277,7 +277,7 @@ impl<'w, 's> Envir<'w, 's> {
     pub(crate) fn nbors_for_exploring(
         &'s self,
         pos: Pos,
-        instruction: QueuedInstruction,
+        instruction: &'s QueuedInstruction,
     ) -> impl Iterator<Item = Nbor> + 's {
         self.nbors_if(pos, move |nbor| match instruction {
             QueuedInstruction::Attack => nbor != pos && self.find_character(nbor).is_some(),

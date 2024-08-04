@@ -13,7 +13,7 @@ pub(crate) enum PickingNbor {
     Peeking,
     Closing,
     Dragging,
-    Crafting { recipe_id: ObjectId },
+    Crafting(RecipeSituation),
 }
 
 /// Current action of the player character
@@ -263,9 +263,13 @@ impl PlayerActionState {
                 item,
                 to: Nbor::Horizontal(direction),
             }),
-            QueuedInstruction::StartCraft { recipe_id } => {
-                Self::handle_start_craft(next_state, message_writer, envir, player_pos, recipe_id)
-            }
+            QueuedInstruction::StartCraft(recipe_situation) => Self::handle_start_craft(
+                next_state,
+                message_writer,
+                envir,
+                player_pos,
+                recipe_situation,
+            ),
             // TODO instruction to continue crafting
             QueuedInstruction::Attack => {
                 Self::handle_attack(next_state, message_writer, envir, player_pos)
@@ -388,11 +392,11 @@ impl PlayerActionState {
                         next_state.set(Self::Dragging { from: player_pos });
                         Some(PlannedAction::Step { to: raw_nbor })
                     }
-                    PickingNbor::Crafting { recipe_id } => {
+                    PickingNbor::Crafting(recipe_situation) => {
                         if let Nbor::Horizontal(target) = raw_nbor {
                             // next_state is set when performing the action
                             Some(PlannedAction::StartCraft(StartCraft {
-                                recipe_id: recipe_id.clone(),
+                                recipe_situation: recipe_situation.clone(),
                                 target,
                             }))
                         } else {
@@ -451,16 +455,15 @@ impl PlayerActionState {
         message_writer: &mut MessageWriter,
         envir: &Envir,
         pos: Pos,
-        recipe_id: ObjectId,
+        recipe_situation: RecipeSituation,
     ) -> Option<PlannedAction> {
+        let start_craft = QueuedInstruction::StartCraft(recipe_situation);
         let craftable_nbors = envir
-            .nbors_for_exploring(
-                pos,
-                QueuedInstruction::StartCraft {
-                    recipe_id: recipe_id.clone(),
-                },
-            )
+            .nbors_for_exploring(pos, &start_craft)
             .collect::<Vec<_>>();
+        let QueuedInstruction::StartCraft(recipe_situation) = start_craft else {
+            panic!("The instruction {start_craft:?} should still match start craft");
+        };
 
         match craftable_nbors.len() {
             0 => {
@@ -473,7 +476,7 @@ impl PlayerActionState {
                 {
                     // Craftig state is set when performing the action
                     Some(PlannedAction::StartCraft(StartCraft {
-                        recipe_id,
+                        recipe_situation,
                         target: *horizontal_direction,
                     }))
                 } else {
@@ -482,7 +485,7 @@ impl PlayerActionState {
                 }
             }
             _ => {
-                next_state.set(Self::PickingNbor(PickingNbor::Crafting { recipe_id }));
+                next_state.set(Self::PickingNbor(PickingNbor::Crafting(recipe_situation)));
                 None
             }
         }
@@ -495,7 +498,7 @@ impl PlayerActionState {
         pos: Pos,
     ) -> Option<PlannedAction> {
         let attackable_nbors = envir
-            .nbors_for_exploring(pos, QueuedInstruction::Attack)
+            .nbors_for_exploring(pos, &QueuedInstruction::Attack)
             .collect::<Vec<_>>();
         match attackable_nbors.len() {
             0 => {
@@ -519,7 +522,7 @@ impl PlayerActionState {
         pos: Pos,
     ) -> Option<PlannedAction> {
         let smashable_nbors = envir
-            .nbors_for_exploring(pos, QueuedInstruction::Smash)
+            .nbors_for_exploring(pos, &QueuedInstruction::Smash)
             .collect::<Vec<_>>();
         match smashable_nbors.len() {
             0 => {
@@ -543,7 +546,7 @@ impl PlayerActionState {
         pos: Pos,
     ) -> Option<PlannedAction> {
         let pulpable_nbors = envir
-            .nbors_for_exploring(pos, QueuedInstruction::Pulp)
+            .nbors_for_exploring(pos, &QueuedInstruction::Pulp)
             .filter_map(|nbor| {
                 if let Nbor::Horizontal(horizontal) = nbor {
                     Some(horizontal)
@@ -582,7 +585,7 @@ impl PlayerActionState {
         pos: Pos,
     ) -> Option<PlannedAction> {
         let closable_nbors = envir
-            .nbors_for_exploring(pos, QueuedInstruction::Close)
+            .nbors_for_exploring(pos, &QueuedInstruction::Close)
             .filter_map(|nbor| {
                 if let Nbor::Horizontal(horizontal) = nbor {
                     Some(horizontal)

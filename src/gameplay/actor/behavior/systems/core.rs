@@ -511,20 +511,24 @@ pub(in super::super) fn perform_move_item(
 #[allow(clippy::needless_pass_by_value)]
 pub(in super::super) fn perform_start_craft(
     In(start_craft): In<ActionIn<StartCraft>>,
+    mut commands: Commands,
     mut message_writer: MessageWriter,
     mut next_player_action_state: ResMut<NextState<PlayerActionState>>,
     mut spawner: Spawner,
     infos: Res<Infos>,
     subzone_level_entities: Res<SubzoneLevelEntities>,
     actors: Query<Actor>,
+    mut amounts: Query<&mut Amount>,
 ) -> Option<Impact> {
     start_craft.actor(&actors).start_craft(
+        &mut commands,
         &mut message_writer,
         &mut next_player_action_state,
         &mut spawner,
         &infos,
         &subzone_level_entities,
-        start_craft.action,
+        &mut amounts,
+        &start_craft.action,
     )
 }
 
