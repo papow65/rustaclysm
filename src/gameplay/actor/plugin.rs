@@ -5,7 +5,7 @@ use crate::{
         clear_gameplay_events, ActorEvent, Damage, Healing, PlayerActionState, StaminaImpact,
     },
 };
-use bevy::prelude::{App, AppExtStates, Events, OnExit, Plugin};
+use bevy::prelude::{App, AppExtStates, Events, NextState, OnEnter, OnExit, Plugin, ResMut};
 
 pub(crate) struct ActorPlugin;
 
@@ -20,6 +20,13 @@ impl Plugin for ActorPlugin {
             .insert_resource(Events::<ActorEvent<Damage>>::default())
             .insert_resource(Events::<ActorEvent<Healing>>::default());
 
+        app.add_systems(
+            OnEnter(ApplicationState::Gameplay),
+            |mut next_state: ResMut<NextState<PlayerActionState>>| {
+                // TODO match the state from the save
+                next_state.set(PlayerActionState::Normal);
+            },
+        );
         app.add_systems(
             OnExit(ApplicationState::Gameplay),
             (
