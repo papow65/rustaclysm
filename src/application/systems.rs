@@ -4,9 +4,11 @@ use bevy::{
     input::{keyboard::KeyboardInput, mouse::MouseWheel},
     prelude::{
         BackgroundColor, Button, ButtonInput, Changed, EventReader, Events, Interaction, KeyCode,
-        Node, Parent, Query, Res, ResMut, Style, UiScale, Window, With, Without, World,
+        NextState, Node, Parent, Query, Res, ResMut, Style, UiScale, Window, With, Without, World,
     },
 };
+
+use super::ApplicationState;
 
 #[allow(clippy::needless_pass_by_value)]
 pub(super) fn maximize_window(mut windows: Query<&mut Window>) {
@@ -21,6 +23,12 @@ pub(super) fn load_fonts(world: &mut World) {
     let fonts = Fonts::new(asset_server);
     // Using 'commands.insert_resource' in bevy 0.14-rc2 doesn't work properly.
     world.insert_resource(fonts);
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub(super) fn enter_main_menu(mut next_application_state: ResMut<NextState<ApplicationState>>) {
+    println!("enter_main_menu");
+    next_application_state.set(ApplicationState::MainMenu);
 }
 
 #[allow(clippy::needless_pass_by_value)]

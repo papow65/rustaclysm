@@ -1,8 +1,8 @@
 use super::{
     check::check_delay,
     systems::{
-        load_fonts, manage_button_color, manage_global_keyboard_input, manage_scrolling_lists,
-        maximize_window, preprocess_keyboard_input, resize_scrolling_lists,
+        enter_main_menu, load_fonts, manage_button_color, manage_global_keyboard_input,
+        manage_scrolling_lists, maximize_window, preprocess_keyboard_input, resize_scrolling_lists,
     },
     ApplicationState,
 };
@@ -57,10 +57,13 @@ pub(crate) fn run_application() {
         log_transition_plugin::<ApplicationState>,
     ));
 
-    app.insert_state(ApplicationState::MainMenu);
+    app.insert_state(ApplicationState::Startup);
     app.enable_state_scoped_entities::<ApplicationState>();
 
-    app.add_systems(Startup, (maximize_window, load_fonts));
+    app.add_systems(
+        Startup,
+        (maximize_window, (load_fonts, enter_main_menu).chain()),
+    );
     app.add_systems(PreUpdate, preprocess_keyboard_input.after(InputSystem));
     app.add_systems(
         Update,
