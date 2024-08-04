@@ -311,15 +311,20 @@ pub(in super::super) fn perform_stay(
 #[allow(clippy::unnecessary_wraps)]
 pub(in super::super) fn perform_sleep(
     In(sleep): In<ActionIn<Sleep>>,
+    mut message_writer: MessageWriter,
     mut healing_writer: EventWriter<ActorEvent<Healing>>,
+    player_action_state: Res<State<PlayerActionState>>,
+    clock: Clock,
     mut healing_durations: Query<&mut HealingDuration>,
     actors: Query<Actor>,
 ) -> Option<Impact> {
-    Some(
-        sleep
-            .actor(&actors)
-            .sleep(&mut healing_writer, &mut healing_durations),
-    )
+    Some(sleep.actor(&actors).sleep(
+        &mut message_writer,
+        &mut healing_writer,
+        player_action_state.get(),
+        &clock,
+        &mut healing_durations,
+    ))
 }
 
 #[allow(clippy::needless_pass_by_value)]

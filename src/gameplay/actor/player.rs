@@ -40,7 +40,7 @@ pub(crate) enum PlayerActionState {
         until: Timestamp,
     },
     Sleeping {
-        until: Timestamp,
+        from: Timestamp,
     },
     AutoTravel {
         target: Pos,
@@ -55,10 +55,8 @@ impl PlayerActionState {
         }
     }
 
-    fn start_sleeping(now: Timestamp) -> Self {
-        Self::Sleeping {
-            until: now + Duration::HOUR * 8,
-        }
+    const fn start_sleeping(now: Timestamp) -> Self {
+        Self::Sleeping { from: now }
     }
 
     pub(crate) fn plan_manual_action(
@@ -125,7 +123,7 @@ impl PlayerActionState {
                 plan_auto_pulp(envir, instruction_queue, player, *direction, enemy_name)
             }
             Self::Waiting { until } => plan_auto_wait(instruction_queue, now, until, enemy_name),
-            Self::Sleeping { until } => plan_auto_sleep(instruction_queue, now, until),
+            Self::Sleeping { from } => plan_auto_sleep(instruction_queue, now, from),
             _ => None,
         }
     }
@@ -141,9 +139,14 @@ impl PlayerActionState {
     ) -> Option<PlannedAction> {
         println!("processing instruction: {instruction:?}");
         match (&self, instruction) {
-            (Self::Sleeping { .. }, QueuedInstruction::Interrupt(Interruption::Finished)) => {
+            (Self::Sleeping { from }, QueuedInstruction::Interrupt(Interruption::Finished)) => {
+                let total_duration = now - *from;
+                let color = text_color(total_duration / (Duration::HOUR * 8));
                 next_state.set(Self::Normal);
-                message_writer.you("wake up").send_info();
+                message_writer
+                    .you("wake up after sleeping")
+                    .push(Fragment::colorized(total_duration.short_format(), color))
+                    .send_info();
                 None
             }
             (Self::Sleeping { .. }, _) => {
@@ -844,11 +847,11 @@ fn interrupt_on_danger(
 fn plan_auto_sleep(
     instruction_queue: &mut InstructionQueue,
     now: Timestamp,
-    until: &Timestamp,
+    from: &Timestamp,
 ) -> Option<PlannedAction> {
     // TODO interrupt on taking damage
 
-    if *until <= now {
+    if *from + Duration::HOUR * 8 <= now {
         instruction_queue.interrupt(Interruption::Finished);
         None
     } else {

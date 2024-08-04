@@ -91,7 +91,10 @@ impl ActorItem<'_> {
 
     pub(crate) fn sleep(
         &mut self,
+        message_writer: &mut MessageWriter,
         healing_writer: &mut EventWriter<'_, ActorEvent<Healing>>,
+        player_action_state: &PlayerActionState,
+        clock: &Clock,
         healing_durations: &mut Query<&mut HealingDuration>,
     ) -> Impact {
         let sleep_duration = Duration::MINUTE;
@@ -107,6 +110,17 @@ impl ActorItem<'_> {
                 amount: healing_amount as u16,
             },
         ));
+
+        if let PlayerActionState::Sleeping { from } = player_action_state {
+            let total_duration = clock.time() - *from;
+            let color = text_color(total_duration / (Duration::HOUR * 8));
+            message_writer
+                .you("sleep for")
+                .push(Fragment::colorized(total_duration.short_format(), color))
+                .send(Severity::Info, true);
+        } else {
+            eprintln!("Unexpected {player_action_state:?} while sleeping");
+        }
 
         Impact::laying_rest(self.entity, sleep_duration)
     }
@@ -666,13 +680,7 @@ impl ActorItem<'_> {
             let percent_progress = craft.percent_progress();
             let color = text_color(percent_progress / 100.0);
             let percent_progress = format!("{percent_progress:.1}");
-            let time_left = craft
-                .time_left()
-                .to_string()
-                .split(' ')
-                .take(2)
-                .collect::<Vec<_>>()
-                .join(" ");
+            let time_left = craft.time_left().short_format();
             message_writer
                 .str("Craft:")
                 .push(Fragment::colorized(percent_progress, color))

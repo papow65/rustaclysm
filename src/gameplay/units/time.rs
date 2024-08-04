@@ -42,6 +42,10 @@ impl Duration {
         self.milliseconds %= modulo.milliseconds;
         extracted
     }
+
+    pub(crate) fn short_format(&self) -> String {
+        format!("{self:1}")
+    }
 }
 
 impl fmt::Debug for Duration {
@@ -57,24 +61,40 @@ impl fmt::Display for Duration {
         if 0 < days {
             write!(f, "{days} day{}", plural(days))?;
             spacing = " ";
+
+            if f.width() == Some(1) {
+                return Ok(());
+            }
         }
 
         let hours = (self.milliseconds % Self::DAY.milliseconds) / Self::HOUR.milliseconds;
         if 0 < hours {
             write!(f, "{spacing}{hours} hour{}", plural(hours))?;
             spacing = " ";
+
+            if f.width() == Some(1) {
+                return Ok(());
+            }
         }
 
         let minutes = (self.milliseconds % Self::HOUR.milliseconds) / Self::MINUTE.milliseconds;
         if 0 < minutes {
             write!(f, "{spacing}{minutes} minute{}", plural(minutes))?;
             spacing = " ";
+
+            if f.width() == Some(1) {
+                return Ok(());
+            }
         }
 
         let seconds = (self.milliseconds % Self::MINUTE.milliseconds) / Self::SECOND.milliseconds;
         if 0 < seconds {
             write!(f, "{spacing}{seconds} second{}", plural(seconds))?;
             spacing = " ";
+
+            if f.width() == Some(1) {
+                return Ok(());
+            }
         }
 
         let milliseconds = self.milliseconds % Self::SECOND.milliseconds;
@@ -84,6 +104,8 @@ impl fmt::Display for Duration {
                 "{spacing}{milliseconds} millisecond{}",
                 plural(milliseconds)
             )?;
+        } else if self.milliseconds == 0 {
+            write!(f, "no time",)?;
         }
 
         Ok(())
@@ -111,6 +133,14 @@ impl Add for Duration {
 impl AddAssign for Duration {
     fn add_assign(&mut self, other: Self) {
         self.milliseconds += other.milliseconds;
+    }
+}
+
+impl Div<Self> for Duration {
+    type Output = f32;
+
+    fn div(self, div: Self) -> f32 {
+        self.milliseconds as f32 / div.milliseconds as f32
     }
 }
 
@@ -325,6 +355,42 @@ mod time_tests {
             Duration {
                 milliseconds: 31 * 60 * 60 * 1000 + 40 * 60 * 1000
             }
+        );
+    }
+
+    #[test]
+    fn formatting_works() {
+        assert_eq!(
+            Duration { milliseconds: 0 }.to_string(),
+            String::from("no time")
+        );
+        assert_eq!(
+            Duration {
+                milliseconds: 21 * 1000
+            }
+            .to_string(),
+            String::from("21 seconds")
+        );
+        assert_eq!(
+            Duration {
+                milliseconds: 35 * 60 * 1000
+            }
+            .to_string(),
+            String::from("35 minutes")
+        );
+        assert_eq!(
+            Duration {
+                milliseconds: (((2 * 24 + 17) * 60) + 40) * 60 * 1000
+            }
+            .to_string(),
+            String::from("2 days 17 hours 40 minutes")
+        );
+        assert_eq!(
+            Duration {
+                milliseconds: (((2 * 24 + 17) * 60) + 40) * 60 * 1000
+            }
+            .short_format(),
+            String::from("2 days")
         );
     }
 }
