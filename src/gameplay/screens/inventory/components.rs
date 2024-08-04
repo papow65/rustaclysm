@@ -1,3 +1,4 @@
+use crate::prelude::Phrase;
 use bevy::prelude::{Component, Entity};
 use std::fmt;
 
@@ -24,5 +25,11 @@ impl fmt::Display for InventoryAction {
     }
 }
 
-#[derive(Component, Debug)]
+#[derive(Debug, Component)]
 pub(super) struct InventoryButton(pub(super) Entity, pub(super) InventoryAction);
+
+#[derive(Debug, Component)]
+pub(super) struct InventoryItemLine;
+
+#[derive(Debug, Component)]
+pub(super) struct InventoryItemDescription(pub(super) Phrase);

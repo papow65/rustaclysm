@@ -1,9 +1,15 @@
 use super::{
-    components::{InventoryAction, InventoryButton},
+    components::{InventoryAction, InventoryButton, InventoryItemDescription, InventoryItemLine},
     resource::InventoryScreen,
     section::InventorySection,
 };
-use crate::prelude::*;
+use crate::prelude::{
+    BodyContainers, Clock, Corpse, Envir, Fonts, GameplayScreenState, HorizontalDirection, Infos,
+    InputChange, InstructionQueue, Integrity, Item, ItemInfo, Key, Keys, LastSeen, Nbor, ObjectId,
+    Phrase, Player, PlayerDirection, Pos, QueuedInstruction, ScrollingList, SelectionList,
+    StepDirection, StepSize, Timestamp, DEFAULT_TEXT_COLOR, GOOD_TEXT_COLOR, PANEL_COLOR,
+    SMALL_SPACING, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
+};
 use bevy::{ecs::entity::EntityHashMap, prelude::*, utils::HashMap};
 
 #[allow(clippy::needless_pass_by_value)]
@@ -58,7 +64,6 @@ pub(super) fn spawn_inventory(mut commands: Commands, fonts: Res<Fonts>) {
     commands.insert_resource(InventoryScreen {
         panel,
         selection_list: SelectionList::default(),
-        selected_row: None,
         drop_direction: HorizontalDirection::Here,
         section_by_item: EntityHashMap::default(),
         section_text_style: fonts.regular(SOFT_TEXT_COLOR),
@@ -93,7 +98,7 @@ pub(super) fn clear_inventory(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(super) fn update_inventory(
+pub(super) fn refresh_inventory(
     In(run): In<bool>,
     mut commands: Commands,
     envir: Envir,
@@ -135,10 +140,8 @@ pub(super) fn update_inventory(
             parent.spawn(TextBundle::from_sections(text_sections));
 
             for (entity, id, item_phrase) in items {
-                inventory.selection_list.append(entity);
-
                 if let Some(item_info) = infos.try_item(id) {
-                    let item_style = if Some(entity) == inventory.selection_list.selected {
+                    let item_style = if inventory.selection_list.selected.is_none() {
                         &inventory.selected_item_text_style
                     } else {
                         &inventory.item_text_style
@@ -154,10 +157,7 @@ pub(super) fn update_inventory(
                         drop_section,
                     );
 
-                    if Some(entity) == inventory.selection_list.selected {
-                        inventory.selected_row = Some(row_entity);
-                    }
-
+                    inventory.selection_list.append(row_entity);
                     inventory.section_by_item.insert(entity, section);
                 } else {
                     eprintln!("Unknown item: {id:?}");
@@ -234,90 +234,66 @@ fn add_row(
     drop_section: bool,
 ) -> Entity {
     parent
-        .spawn(NodeBundle {
-            style: Style {
-                width: Val::Percent(100.0),
-                align_items: AlignItems::Start,
-                justify_content: JustifyContent::Start,
-                column_gap: SMALL_SPACING,
+        .spawn((
+            NodeBundle {
+                style: Style {
+                    width: Val::Percent(100.0),
+                    align_items: AlignItems::Start,
+                    justify_content: JustifyContent::Start,
+                    column_gap: SMALL_SPACING,
+                    ..default()
+                },
                 ..default()
             },
-            ..default()
-        })
+            InventoryItemLine,
+        ))
         .with_children(|parent| {
-            parent
-                .spawn(NodeBundle {
-                    style: Style {
+            parent.spawn((
+                TextBundle::from_sections(item_phrase.as_text_sections(item_syle)).with_style(
+                    Style {
                         width: Val::Px(200.0),
                         overflow: Overflow::clip(),
                         ..Style::default()
                     },
-                    ..default()
-                })
-                .with_children(|parent| {
-                    parent.spawn(TextBundle::from_sections(
-                        item_phrase.as_text_sections(item_syle),
-                    ));
-                });
+                ),
+                InventoryItemDescription(item_phrase.clone()),
+            ));
 
-            parent
-                .spawn(NodeBundle {
-                    style: Style {
-                        width: Val::Px(60.0),
-                        overflow: Overflow::clip(),
-                        justify_content: JustifyContent::End,
-                        ..Style::default()
+            parent.spawn(
+                TextBundle::from_section(
+                    if let Some(ref volume) = item_info.volume {
+                        format!("{volume}")
+                    } else {
+                        String::new()
                     },
-                    ..default()
-                })
-                .with_children(|parent| {
-                    parent.spawn(TextBundle::from_section(
-                        if let Some(ref volume) = item_info.volume {
-                            format!("{volume}")
-                        } else {
-                            String::new()
-                        },
-                        item_syle.clone(),
-                    ));
-                });
+                    item_syle.clone(),
+                )
+                .with_style(Style {
+                    width: Val::Px(60.0),
+                    overflow: Overflow::clip(),
+                    justify_content: JustifyContent::End,
+                    ..Style::default()
+                }),
+            );
 
-            parent
-                .spawn(NodeBundle {
-                    style: Style {
-                        width: Val::Px(60.0),
-                        overflow: Overflow::clip(),
-                        justify_content: JustifyContent::End,
-                        ..Style::default()
+            parent.spawn(
+                TextBundle::from_section(
+                    if let Some(ref mass) = item_info.mass {
+                        format!("{mass}")
+                    } else {
+                        String::new()
                     },
-                    ..default()
-                })
-                .with_children(|parent| {
-                    parent.spawn(TextBundle::from_section(
-                        if let Some(ref mass) = item_info.mass {
-                            format!("{mass}")
-                        } else {
-                            String::new()
-                        },
-                        item_syle.clone(),
-                    ));
-                });
+                    item_syle.clone(),
+                )
+                .with_style(Style {
+                    width: Val::Px(60.0),
+                    overflow: Overflow::clip(),
+                    justify_content: JustifyContent::End,
+                    ..Style::default()
+                }),
+            );
 
-            let mut actions = vec![InventoryAction::Examine];
-            if matches!(section, InventorySection::Nbor(_)) {
-                actions.push(InventoryAction::Take);
-                if !drop_section {
-                    actions.push(InventoryAction::Move);
-                }
-            } else {
-                actions.push(InventoryAction::Drop);
-            }
-            if matches!(section, InventorySection::Hands) {
-                actions.push(InventoryAction::Unwield);
-            } else {
-                actions.push(InventoryAction::Wield);
-            }
-
-            for action in actions {
+            for action in actions(section, drop_section) {
                 parent
                     .spawn((ButtonBundle {
                         style: Style {
@@ -339,13 +315,34 @@ fn add_row(
         .id()
 }
 
+fn actions(section: &InventorySection, drop_section: bool) -> Vec<InventoryAction> {
+    let mut actions = vec![InventoryAction::Examine];
+    if matches!(section, InventorySection::Nbor(_)) {
+        actions.push(InventoryAction::Take);
+        if !drop_section {
+            actions.push(InventoryAction::Move);
+        }
+    } else {
+        actions.push(InventoryAction::Drop);
+    }
+    if matches!(section, InventorySection::Hands) {
+        actions.push(InventoryAction::Unwield);
+    } else {
+        actions.push(InventoryAction::Wield);
+    }
+    actions
+}
+
 #[allow(clippy::needless_pass_by_value)]
 pub(super) fn manage_inventory_keyboard_input(
     keys: Res<Keys>,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
     mut instruction_queue: ResMut<InstructionQueue>,
     mut inventory: ResMut<InventoryScreen>,
-    items: Query<(&Transform, &Node)>,
+    item_lines: Query<(&InventoryItemLine, &Children)>,
+    mut item_texts: Query<(&mut Text, Option<&InventoryItemDescription>)>,
+    item_buttons: Query<&Children, With<Button>>,
+    item_layouts: Query<(&Transform, &Node)>,
     mut scrolling_lists: Query<(&mut ScrollingList, &mut Style, &Parent, &Node)>,
     scrolling_parents: Query<(&Node, &Style), Without<ScrollingList>>,
 ) {
@@ -375,8 +372,13 @@ pub(super) fn manage_inventory_keyboard_input(
                 | KeyCode::PageUp
                 | KeyCode::PageDown),
             ) => {
-                inventory.adjust_selection(&key_code);
-                follow_selected(&inventory, &items, &mut scrolling_lists, &scrolling_parents);
+                inventory.adjust_selection(&item_lines, &mut item_texts, &item_buttons, &key_code);
+                follow_selected(
+                    &inventory,
+                    &item_layouts,
+                    &mut scrolling_lists,
+                    &scrolling_parents,
+                );
             }
             Key::Character(char @ ('d' | 't' | 'u' | 'w')) => {
                 handle_selected_item(&mut inventory, &mut instruction_queue, char);
@@ -409,8 +411,7 @@ fn follow_selected(
     scrolling_lists: &mut Query<(&mut ScrollingList, &mut Style, &Parent, &Node)>,
     scrolling_parents: &Query<(&Node, &Style), Without<ScrollingList>>,
 ) {
-    // inventory.selection_list.selected refers to the selected item entity
-    let Some(selected_row) = inventory.selected_row else {
+    let Some(selected_row) = inventory.selection_list.selected else {
         return;
     };
 

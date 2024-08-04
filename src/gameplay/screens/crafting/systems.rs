@@ -128,7 +128,7 @@ pub(super) fn clear_crafting_screen(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(super) fn update_crafting_screen(
+pub(super) fn refresh_crafting_screen(
     In(run): In<bool>,
     mut commands: Commands,
     location: Res<Location>,
@@ -541,13 +541,13 @@ pub(super) fn manage_crafting_keyboard_input(
                 | KeyCode::PageUp
                 | KeyCode::PageDown),
             ) => {
-                crafting_screen.adjust_selection(&mut recipes, &key_code);
+                crafting_screen.adjust_selection(&mut recipes.transmute_lens().query(), &key_code);
                 adapt_to_selected(
                     &mut commands,
                     &infos,
                     &fonts,
                     &crafting_screen,
-                    &recipes,
+                    &recipes.transmute_lens().query(),
                     &mut scrolling_lists,
                     &scrolling_parents,
                 );
@@ -572,12 +572,12 @@ fn adapt_to_selected(
     infos: &Res<Infos>,
     fonts: &Res<Fonts>,
     crafting_screen: &CraftingScreen,
-    recipes: &Query<(&mut Text, &Transform, &Node, &RecipeSituation)>,
+    recipes: &Query<(&Transform, &Node, &RecipeSituation)>,
     scrolling_lists: &mut Query<(&mut ScrollingList, &mut Style, &Parent, &Node)>,
     scrolling_parents: &Query<(&Node, &Style), Without<ScrollingList>>,
 ) {
     if let Some(selected) = crafting_screen.selection_list.selected {
-        let (_, recipe_transform, recipe_node, recipe_sitation) = recipes
+        let (recipe_transform, recipe_node, recipe_sitation) = recipes
             .get(selected)
             .expect("Selected recipe should be found");
 

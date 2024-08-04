@@ -1,6 +1,6 @@
 use super::components::RecipeSituation;
 use crate::prelude::{SelectionList, Timestamp};
-use bevy::prelude::{Entity, KeyCode, Node, Query, Resource, Text, Transform};
+use bevy::prelude::{Entity, KeyCode, Query, Resource, Text};
 
 #[derive(Resource)]
 pub(super) struct CraftingScreen {
@@ -13,7 +13,7 @@ pub(super) struct CraftingScreen {
 impl CraftingScreen {
     pub(super) fn adjust_selection(
         &mut self,
-        recipes: &mut Query<(&mut Text, &Transform, &Node, &RecipeSituation)>,
+        recipes: &mut Query<(&mut Text, &RecipeSituation)>,
         key_code: &KeyCode,
     ) {
         self.highlight_selected(recipes, false);
@@ -23,19 +23,19 @@ impl CraftingScreen {
 
     pub(super) fn highlight_selected(
         &self,
-        recipes: &mut Query<(&mut Text, &Transform, &Node, &RecipeSituation)>,
-        state: bool,
+        recipes: &mut Query<(&mut Text, &RecipeSituation)>,
+        show_selected: bool,
     ) {
         let Some(selected) = self.selection_list.selected else {
             return;
         };
-        let (text, .., recipe) = &mut recipes
+        let (text, recipe) = &mut recipes
             .get_mut(selected)
             .expect("Highlighted recipe should ba found");
         text.sections
             .first_mut()
             .expect("Recipes should have a first text section")
             .style
-            .color = recipe.color(state);
+            .color = recipe.color(show_selected);
     }
 }
