@@ -363,7 +363,7 @@ pub(super) fn manage_inventory_keyboard_input(
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
     mut instruction_queue: ResMut<InstructionQueue>,
     mut inventory: ResMut<InventoryScreen>,
-    item_lines: Query<(&InventoryItemLine, &Children)>,
+    mut item_lines: Query<(&InventoryItemLine, &Children)>,
     mut item_texts: Query<(&mut Text, Option<&InventoryItemDescription>)>,
     item_buttons: Query<&Children, With<Button>>,
     item_layouts: Query<(&Transform, &Node)>,
@@ -405,7 +405,12 @@ pub(super) fn manage_inventory_keyboard_input(
                 );
             }
             Key::Character(char @ ('d' | 't' | 'u' | 'w')) => {
-                handle_selected_item(&mut inventory, &mut instruction_queue, char);
+                handle_selected_item(
+                    &mut inventory,
+                    &mut instruction_queue,
+                    &item_lines.transmute_lens().query(),
+                    char,
+                );
             }
             Key::Character('e') => {
                 // Special case, because we don't want to select another item after the action.
@@ -461,9 +466,14 @@ fn follow_selected(
 fn handle_selected_item(
     inventory: &mut InventoryScreen,
     instruction_queue: &mut InstructionQueue,
+    item_lines: &Query<&InventoryItemLine>,
     char: char,
 ) {
-    if let Some(selected_item) = inventory.selection_list.selected {
+    if let Some(selected_row) = inventory.selection_list.selected {
+        let selected_item = item_lines
+            .get(selected_row)
+            .expect("Selected row should be found")
+            .item;
         instruction_queue.add(
             match char {
                 'd' => {
