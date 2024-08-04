@@ -132,9 +132,10 @@ fn update_log(
     currently_visible_builder: CurrentlyVisibleBuilder,
     hud_defaults: Res<HudDefaults>,
     mut session: GameplaySession,
+    mut logs: Query<&mut Text, With<LogDisplay>>,
     mut previous_sections: Local<Vec<TextSection>>,
     mut last_message: Local<Option<(Message, usize)>>,
-    mut logs: Query<&mut Text, With<LogDisplay>>,
+    mut transient_message: Local<Vec<TextSection>>,
 ) {
     let start = Instant::now();
 
@@ -158,15 +159,18 @@ fn update_log(
             }
         }
         if let Some(message) = percieved_message {
-            match &mut *last_message {
-                Some((last, ref mut count)) if *last == message => {
-                    *count += 1;
-                }
-                _ => {
-                    if let Some((previous_last, previous_count)) =
-                        last_message.replace((message, 1))
-                    {
-                        if !previous_last.transient {
+            transient_message.clear();
+            if message.transient {
+                transient_message.extend(to_text_sections(&hud_defaults.text_style, &message, 1));
+            } else {
+                match &mut *last_message {
+                    Some((last, ref mut count)) if *last == message => {
+                        *count += 1;
+                    }
+                    _ => {
+                        if let Some((previous_last, previous_count)) =
+                            last_message.replace((message, 1))
+                        {
                             previous_sections.extend(to_text_sections(
                                 &hud_defaults.text_style,
                                 &previous_last,
@@ -189,6 +193,7 @@ fn update_log(
     if let Some((message, count)) = &*last_message {
         sections.extend(to_text_sections(&hud_defaults.text_style, message, *count));
     }
+    sections.extend(transient_message.clone());
 
     log_if_slow("update_log", start);
 }
