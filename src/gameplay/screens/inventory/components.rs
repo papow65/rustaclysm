@@ -26,10 +26,15 @@ impl fmt::Display for InventoryAction {
 }
 
 #[derive(Debug, Component)]
-pub(super) struct InventoryButton(pub(super) Entity, pub(super) InventoryAction);
+pub(super) struct InventoryButton {
+    pub(super) item: Entity,
+    pub(super) action: InventoryAction,
+}
 
 #[derive(Debug, Component)]
-pub(super) struct InventoryItemLine;
+pub(super) struct InventoryItemLine {
+    pub(super) item: Entity,
+}
 
 #[derive(Debug, Component)]
 pub(super) struct InventoryItemDescription(pub(super) Phrase);

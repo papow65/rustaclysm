@@ -106,12 +106,20 @@ pub(super) fn refresh_inventory(
     mut inventory: ResMut<InventoryScreen>,
     players: Query<(&Pos, &BodyContainers), With<Player>>,
     items: Query<(Item, Option<&Corpse>, Option<&Integrity>, &LastSeen)>,
+    previous_item_lines: Query<&InventoryItemLine>,
 ) {
     if !run {
         return;
     }
 
-    inventory.selection_list.clear(false);
+    let previous_selected_item = inventory
+        .selection_list
+        .selected
+        .and_then(|row| previous_item_lines.get(row).ok())
+        .map(|line| line.item)
+        .filter(|item| items.contains(*item));
+    println!("Refresh inventory, with previous selected {previous_selected_item:?}");
+    inventory.selection_list.clear();
 
     let (&player_pos, body_containers) = players.single();
     let items_by_section = items_by_section(&envir, &items, player_pos, body_containers);
@@ -139,9 +147,18 @@ pub(super) fn refresh_inventory(
             }
             parent.spawn(TextBundle::from_sections(text_sections));
 
-            for (entity, id, item_phrase) in items {
+            for (item_entity, id, item_phrase) in items {
                 if let Some(item_info) = infos.try_item(id) {
-                    let item_style = if inventory.selection_list.selected.is_none() {
+                    let is_selected;
+                    let is_selected_previous;
+                    if let Some(previous_selected_item) = previous_selected_item {
+                        is_selected = item_entity == previous_selected_item;
+                        is_selected_previous = is_selected;
+                    } else {
+                        is_selected = inventory.selection_list.selected.is_none();
+                        is_selected_previous = false;
+                    }
+                    let item_style = if is_selected {
                         &inventory.selected_item_text_style
                     } else {
                         &inventory.item_text_style
@@ -150,7 +167,7 @@ pub(super) fn refresh_inventory(
                     let row_entity = add_row(
                         &section,
                         parent,
-                        entity,
+                        item_entity,
                         &item_phrase,
                         item_info,
                         item_style,
@@ -158,7 +175,11 @@ pub(super) fn refresh_inventory(
                     );
 
                     inventory.selection_list.append(row_entity);
-                    inventory.section_by_item.insert(entity, section);
+                    if is_selected_previous {
+                        println!("Previous selected found");
+                        inventory.selection_list.selected = Some(row_entity);
+                    }
+                    inventory.section_by_item.insert(item_entity, section);
                 } else {
                     eprintln!("Unknown item: {id:?}");
                 }
@@ -227,7 +248,7 @@ fn items_by_section<'a>(
 fn add_row(
     section: &InventorySection,
     parent: &mut ChildBuilder,
-    entity: Entity,
+    item_entity: Entity,
     item_phrase: &Phrase,
     item_info: &ItemInfo,
     item_syle: &TextStyle,
@@ -245,7 +266,7 @@ fn add_row(
                 },
                 ..default()
             },
-            InventoryItemLine,
+            InventoryItemLine { item: item_entity },
         ))
         .with_children(|parent| {
             parent.spawn((
@@ -309,7 +330,10 @@ fn add_row(
                             item_syle.clone(),
                         ));
                     })
-                    .insert(InventoryButton(entity, action));
+                    .insert(InventoryButton {
+                        item: item_entity,
+                        action,
+                    });
             }
         })
         .id()
@@ -478,20 +502,23 @@ fn examine_selected_item(inventory: &InventoryScreen, instruction_queue: &mut In
 #[allow(clippy::needless_pass_by_value)]
 pub(super) fn manage_inventory_button_input(
     mut instruction_queue: ResMut<InstructionQueue>,
-    interactions: Query<(&Interaction, &InventoryButton), (Changed<Interaction>, With<Button>)>,
+    interactions: Query<
+        (&Interaction, &InventoryButton, &Parent),
+        (Changed<Interaction>, With<Button>),
+    >,
     inventory: Res<InventoryScreen>,
 ) {
-    for (&interaction, &InventoryButton(entity, ref inventory_action)) in interactions.iter() {
+    for (&interaction, &InventoryButton { item, ref action }, parent) in interactions.iter() {
         if interaction == Interaction::Pressed {
-            println!("{inventory_action} {entity:?}");
-            let instruction = match inventory_action {
-                InventoryAction::Examine => QueuedInstruction::ExamineItem(entity),
-                InventoryAction::Take => QueuedInstruction::Pickup(entity),
+            println!("{action} {item:?} {:?}", parent.get());
+            let instruction = match action {
+                InventoryAction::Examine => QueuedInstruction::ExamineItem(item),
+                InventoryAction::Take => QueuedInstruction::Pickup(item),
                 InventoryAction::Drop | InventoryAction::Move => {
-                    QueuedInstruction::Dump(entity, inventory.drop_direction)
+                    QueuedInstruction::Dump(item, inventory.drop_direction)
                 }
-                InventoryAction::Wield => QueuedInstruction::Wield(entity),
-                InventoryAction::Unwield => QueuedInstruction::Unwield(entity),
+                InventoryAction::Wield => QueuedInstruction::Wield(item),
+                InventoryAction::Unwield => QueuedInstruction::Unwield(item),
             };
             instruction_queue.add(instruction, InputChange::Held);
         }

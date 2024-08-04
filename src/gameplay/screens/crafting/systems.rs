@@ -113,7 +113,7 @@ pub(super) fn clear_crafting_screen(
         return false;
     }
     crafting_screen.last_time = clock.time();
-    crafting_screen.selection_list.clear(true);
+    crafting_screen.selection_list.clear();
 
     // TODO
     if let Ok(children) = children.get(crafting_screen.recipe_list) {

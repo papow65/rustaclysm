@@ -78,14 +78,12 @@ impl SelectionList {
         self.last = Some(added);
     }
 
-    pub(crate) fn clear(&mut self, clear_selected: bool) {
+    pub(crate) fn clear(&mut self) {
         self.previous_items.clear();
         self.next_items.clear();
         self.first = None;
         self.last = None;
-        if clear_selected {
-            self.selected = None;
-        }
+        self.selected = None;
     }
 
     pub(crate) fn adjust(&mut self, size: StepSize, direction: StepDirection) -> bool {
