@@ -239,9 +239,9 @@ fn list_saves() -> Result<Vec<PathBuf>, LoadError> {
                 .skip(2)
                 .collect::<PathBuf>()
         })
-        .collect::<Vec<_>>();
+        .next();
 
-    if worlds.is_empty() {
+    if worlds.is_none() {
         Err(LoadError::new(
             format!(
                 "No Cataclysm: DDA worlds found to load under {}\nCreate a new world using Cataclysm: DDA to continue.",

@@ -378,7 +378,7 @@ impl<'w, 's> Spawner<'w, 's> {
                 } else {
                     apprearance.material(&last_seen)
                 };
-                (pbr_bundle, apprearance.clone(), RenderLayers::layer(1))
+                (pbr_bundle, apprearance, RenderLayers::layer(1))
             });
 
         let mut entity_commands = self.commands.spawn((

@@ -19,7 +19,7 @@ impl<'w> OvermapBufferManager<'w> {
             .handle(&self.asset_server, &self.assets, overzone, path)
     }
 
-    pub(crate) fn overzone(&mut self, handle: &AssetId<OvermapBuffer>) -> Option<Overzone> {
+    pub(crate) fn overzone(&self, handle: &AssetId<OvermapBuffer>) -> Option<Overzone> {
         self.storage.region(handle)
     }
 }

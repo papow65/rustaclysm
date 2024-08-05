@@ -88,7 +88,7 @@ impl ActorItem<'_> {
     }
 
     pub(crate) fn sleep(
-        &mut self,
+        &self,
         message_writer: &mut MessageWriter,
         healing_writer: &mut EventWriter<'_, ActorEvent<Healing>>,
         player_action_state: &PlayerActionState,

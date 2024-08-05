@@ -244,7 +244,7 @@ impl AlternativeSituation {
 
         let mut text_sections = vec![TextSection::new(
             format!("{} {}", self.required, &self.name),
-            checked_style.clone(),
+            checked_style,
         )];
 
         if 0 < self.present {

@@ -254,7 +254,7 @@ pub(crate) fn update_zone_levels(
     //println!("update_zone_levels refresh");
     //dbg!(&visible_region);
 
-    let shown_level = if let Ordering::Less = Level::from(&focus).compare_to_ground() {
+    let shown_level = if Level::from(&focus).compare_to_ground() == Ordering::Less {
         Level::from(&focus)
     } else {
         Level::ZERO
@@ -448,7 +448,7 @@ pub(crate) fn handle_overmap_buffer_events(
     mut overmap_buffer_events: EventReader<AssetEvent<OvermapBuffer>>,
     overmap_buffer_assets: Res<Assets<OvermapBuffer>>,
     mut explored: ResMut<Explored>,
-    mut overmap_buffer_manager: OvermapBufferManager,
+    overmap_buffer_manager: OvermapBufferManager,
 ) {
     let start = Instant::now();
 
@@ -471,7 +471,7 @@ pub(crate) fn handle_overmap_events(
     mut overmap_events: EventReader<AssetEvent<Overmap>>,
     overmap_assets: Res<Assets<Overmap>>,
     mut zone_level_ids: ResMut<ZoneLevelIds>,
-    mut overmap_manager: OvermapManager,
+    overmap_manager: OvermapManager,
 ) {
     let start = Instant::now();
 

@@ -526,8 +526,7 @@ fn update_status_detais(
                         .location
                         .all(pos)
                         .flat_map(|i| entities.get(*i))
-                        .flat_map(entity_info)
-                        .collect::<Vec<_>>(),
+                        .flat_map(entity_info),
                 );
             } else {
                 total.push(Fragment::new(String::from("Unseen")));

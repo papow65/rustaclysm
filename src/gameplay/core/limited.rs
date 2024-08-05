@@ -57,12 +57,12 @@ impl Limited {
     }
 
     #[allow(unused)]
-    pub(crate) fn can_add(&mut self, amount: i16) -> bool {
+    pub(crate) fn can_add(&self, amount: i16) -> bool {
         matches!((self.current as i16).overflowing_add(amount), (sum, true) if (0_i16..=(self.max as i16)).contains(&sum))
     }
 
     #[allow(unused)]
-    pub(crate) fn can_subtract(&mut self, amount: i16) -> bool {
+    pub(crate) fn can_subtract(&self, amount: i16) -> bool {
         self.can_add(-amount)
     }
 

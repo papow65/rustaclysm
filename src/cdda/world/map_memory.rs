@@ -115,16 +115,16 @@ impl<'de> Visitor<'de> for TileMemoryVisitor {
             type_id: seq
                 .next_element()?
                 .map(|s: String| if s.is_empty() { None } else { Some(s) })
-                .ok_or(A::Error::custom(String::from("Missing type_id")))?,
+                .ok_or_else(|| A::Error::custom("Missing type_id"))?,
             subtile: seq
                 .next_element()?
-                .ok_or(A::Error::custom(String::from("Missing subtile")))?,
+                .ok_or_else(|| A::Error::custom("Missing subtile"))?,
             rotation: seq
                 .next_element()?
-                .ok_or(A::Error::custom(String::from("Missing rotation")))?,
+                .ok_or_else(|| A::Error::custom("Missing rotation"))?,
             symbol: seq
                 .next_element()?
-                .ok_or(A::Error::custom(String::from("Missing symbol")))?,
+                .ok_or_else(|| A::Error::custom("Missing symbol"))?,
             amount: seq.next_element()?.unwrap_or(1),
         })
     }
