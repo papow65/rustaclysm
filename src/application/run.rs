@@ -3,7 +3,8 @@ use crate::application::systems::{
     manage_scrolling_lists, maximize_window, preprocess_keyboard_input, resize_scrolling_lists,
 };
 use crate::application::{check::check_delay, ApplicationState};
-use crate::prelude::{log_transition_plugin, CddaPlugin, GameplayPlugin, Keys};
+use crate::common::{log_transition_plugin, Keys};
+use crate::{cdda::CddaPlugin, gameplay::GameplayPlugin};
 use crate::{loading::LoadingIndicatorPlugin, main_menu::MainMenuPlugin};
 use bevy::input::{keyboard::KeyboardInput, mouse::MouseWheel, InputSystem};
 use bevy::prelude::{

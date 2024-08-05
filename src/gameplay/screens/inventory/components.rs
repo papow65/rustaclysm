@@ -1,4 +1,4 @@
-use crate::prelude::Phrase;
+use crate::gameplay::Phrase;
 use bevy::prelude::{Component, Entity};
 use std::fmt;
 

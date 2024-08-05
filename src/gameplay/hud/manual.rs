@@ -1,5 +1,5 @@
 use crate::gameplay::hud::{components::ManualDisplay, resources::HudDefaults};
-use crate::{application::ApplicationState, prelude::GameplayScreenState};
+use crate::{application::ApplicationState, gameplay::GameplayScreenState};
 use bevy::prelude::{
     default, Alpha, BackgroundColor, BuildChildren, Children, Commands, NodeBundle, Query, Res,
     State, StateScoped, Text, TextBundle, TextSection, Val, With, ZIndex,

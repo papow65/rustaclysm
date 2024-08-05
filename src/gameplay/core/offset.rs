@@ -1,4 +1,4 @@
-use crate::prelude::Distance;
+use crate::gameplay::Distance;
 use bevy::prelude::Vec3;
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]

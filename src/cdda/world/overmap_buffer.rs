@@ -1,4 +1,6 @@
-use crate::prelude::{Level, Overzone, PathFor, RepetitionBlock, SavPath};
+use crate::cdda::{RepetitionBlock, SavPath};
+use crate::common::PathFor;
+use crate::gameplay::{Level, Overzone};
 use bevy::{asset::Asset, reflect::TypePath};
 use serde::Deserialize;
 

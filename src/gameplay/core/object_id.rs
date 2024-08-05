@@ -1,4 +1,4 @@
-use crate::prelude::{
+use crate::gameplay::{
     Distance, ModelShape, ObjectCategory, SpriteLayer, SpriteOrientation, Transform2d,
 };
 use bevy::prelude::Vec2;

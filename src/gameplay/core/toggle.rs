@@ -1,4 +1,4 @@
-use crate::prelude::TerrainChange;
+use crate::gameplay::TerrainChange;
 use bevy::prelude::Event;
 
 /// Open or close something, like a door

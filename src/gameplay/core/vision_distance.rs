@@ -1,4 +1,4 @@
-use crate::prelude::{Distance, LevelOffset, PosOffset};
+use crate::gameplay::{Distance, LevelOffset, PosOffset};
 use std::ops::RangeInclusive;
 
 /// Not `Eq`, `PartialOrd`, and `Ord`, because there are multiple interpretations possible

@@ -1,11 +1,8 @@
-use crate::{
-    gameplay::HorizontalDirection,
-    prelude::{LevelOffset, Location, Nbor, PosOffset, VisionDistance, ZoneLevelEntities},
+use crate::gameplay::{
+    HorizontalDirection, LevelOffset, Location, Nbor, PosOffset, VisionDistance, ZoneLevelEntities,
 };
-use bevy::{
-    ecs::component::{ComponentHooks, StorageType},
-    prelude::{Component, Vec3},
-};
+use bevy::ecs::component::{ComponentHooks, StorageType};
+use bevy::prelude::{Component, Vec3};
 use std::{cmp::Ordering, fmt, iter::once, ops::Sub};
 
 /// Does not include 'from', but does include 'to'

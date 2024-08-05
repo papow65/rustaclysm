@@ -1,6 +1,4 @@
-use crate::prelude::{
-    Paths, HUGE_FONT_SIZE, LARGE_FONT_SIZE, LARGISH_FONT_SIZE, REGULAR_FONT_SIZE,
-};
+use crate::common::{Paths, HUGE_FONT_SIZE, LARGE_FONT_SIZE, LARGISH_FONT_SIZE, REGULAR_FONT_SIZE};
 use bevy::prelude::{AssetServer, Color, Font, Handle, Resource, TextStyle};
 
 #[derive(Resource)]

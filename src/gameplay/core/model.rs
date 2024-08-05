@@ -1,6 +1,5 @@
-use crate::prelude::{
-    Distance, MeshInfo, ObjectDefinition, SpriteLayer, SpriteNumber, TextureInfo,
-};
+use crate::cdda::{SpriteNumber, TextureInfo};
+use crate::gameplay::{Distance, MeshInfo, ObjectDefinition, SpriteLayer};
 use bevy::prelude::{AlphaMode, Mesh, Transform, Vec2, Vec3};
 use std::path::PathBuf;
 

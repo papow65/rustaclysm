@@ -1,4 +1,4 @@
-use crate::prelude::{CardinalDirection, HorizontalDirection, Nbor, StartCraft};
+use crate::gameplay::{CardinalDirection, HorizontalDirection, Nbor, StartCraft};
 use bevy::prelude::Entity;
 
 #[derive(Debug)]

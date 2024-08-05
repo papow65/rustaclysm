@@ -1,4 +1,4 @@
-use crate::prelude::{SubzoneLevel, ZoneLevel};
+use crate::gameplay::{SubzoneLevel, ZoneLevel};
 use bevy::prelude::{Entity, Event};
 
 #[derive(Debug, Event)]

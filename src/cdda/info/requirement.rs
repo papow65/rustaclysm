@@ -1,4 +1,4 @@
-use crate::prelude::{Alternative, RequiredQualities};
+use crate::cdda::{Alternative, RequiredQualities};
 use bevy::utils::HashMap;
 use serde::Deserialize;
 

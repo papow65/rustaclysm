@@ -1,10 +1,6 @@
-use bevy::{
-    input::{
-        keyboard::{Key as LogicalKey, KeyboardInput},
-        ButtonState,
-    },
-    prelude::{ButtonInput, EventReader, KeyCode, Resource},
-};
+use bevy::input::keyboard::{Key as LogicalKey, KeyboardInput};
+use bevy::input::ButtonState;
+use bevy::prelude::{ButtonInput, EventReader, KeyCode, Resource};
 use either::Either;
 use std::iter::empty;
 

@@ -1,4 +1,4 @@
-use crate::prelude::SpriteOrientation;
+use crate::gameplay::SpriteOrientation;
 use bevy::render::{
     mesh::{Indices, Mesh, PrimitiveTopology},
     render_asset::RenderAssetUsages,

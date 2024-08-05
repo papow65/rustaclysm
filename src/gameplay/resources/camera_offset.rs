@@ -1,4 +1,4 @@
-use crate::prelude::{ZoomDirection, ZoomDistance};
+use crate::gameplay::{ZoomDirection, ZoomDistance};
 use bevy::prelude::{Resource, Vec2, Vec3};
 
 #[derive(Debug, Default, Resource)]

@@ -1,4 +1,4 @@
-use crate::prelude::{ItemName, ObjectId};
+use crate::{cdda::ItemName, gameplay::ObjectId};
 use bevy::utils::HashMap;
 use serde::Deserialize;
 

@@ -1,7 +1,9 @@
 //! These systems run once after [`loop_behavior`].
-use crate::prelude::{
-    log_if_slow, update_visualization, Accessible, Amount, Appearance, BaseSpeed, Clock,
-    Containable, CurrentlyVisible, CurrentlyVisibleBuilder, ElevationVisibility, Explored, Focus,
+
+use crate::common::log_if_slow;
+use crate::gameplay::{
+    update_visualization, Accessible, Amount, Appearance, BaseSpeed, Clock, Containable,
+    CurrentlyVisible, CurrentlyVisibleBuilder, ElevationVisibility, Explored, Focus,
     GameplaySession, LastSeen, Player, PlayerActionState, Pos, VisualizationUpdate,
 };
 use bevy::prelude::{

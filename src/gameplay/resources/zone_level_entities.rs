@@ -1,4 +1,4 @@
-use crate::prelude::ZoneLevel;
+use crate::gameplay::ZoneLevel;
 use bevy::{
     ecs::component::ComponentHooks,
     prelude::{Entity, Resource},

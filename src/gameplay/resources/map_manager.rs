@@ -1,10 +1,8 @@
-use crate::prelude::{
-    AssetState, AssetStorage, Map, MapPath, PathFor, Paths, Submap, SubzoneLevel, ZoneLevel,
-};
-use bevy::{
-    ecs::system::SystemParam,
-    prelude::{AssetId, AssetServer, Assets, Res, ResMut},
-};
+use crate::cdda::{Map, MapPath, Submap};
+use crate::common::{PathFor, Paths};
+use crate::gameplay::{AssetState, AssetStorage, SubzoneLevel, ZoneLevel};
+use bevy::ecs::system::SystemParam;
+use bevy::prelude::{AssetId, AssetServer, Assets, Res, ResMut};
 
 #[derive(SystemParam)]
 pub(crate) struct MapManager<'w> {

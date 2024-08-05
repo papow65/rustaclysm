@@ -1,4 +1,4 @@
-use crate::prelude::HorizontalDirection;
+use crate::gameplay::HorizontalDirection;
 use std::{cmp::Ordering, fmt};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]

@@ -1,4 +1,4 @@
-use crate::prelude::{CddaPlayer, PathFor};
+use crate::{cdda::CddaPlayer, common::PathFor};
 use bevy::ecs::system::Resource;
 use serde::Deserialize;
 use std::fs::read_to_string;

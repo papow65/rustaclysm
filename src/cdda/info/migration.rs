@@ -1,4 +1,4 @@
-use crate::prelude::ObjectId;
+use crate::gameplay::ObjectId;
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]

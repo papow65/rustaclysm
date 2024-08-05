@@ -1,7 +1,6 @@
-use crate::prelude::{
-    AssetState, AssetStorage, MapMemory, MapMemoryPath, Paths, SubmapMemory, SubzoneLevel, Zone,
-    ZoneLevel,
-};
+use crate::cdda::{MapMemory, MapMemoryPath, SubmapMemory};
+use crate::common::Paths;
+use crate::gameplay::{AssetState, AssetStorage, SubzoneLevel, Zone, ZoneLevel};
 use bevy::{
     ecs::system::SystemParam,
     prelude::{AssetId, AssetServer, Assets, Res, ResMut},

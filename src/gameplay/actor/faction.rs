@@ -1,14 +1,13 @@
-use crate::prelude::{
-    ActorItem, CurrentlyVisibleBuilder, Duration, Envir, Fragment, Health, MoveCost, Nbor,
-    NborDistance, PlannedAction, Pos, Visible, WalkingCost, DEFAULT_TEXT_COLOR, FILTHY_COLOR,
-    WARN_TEXT_COLOR,
+use crate::cdda::MoveCost;
+use crate::common::{DEFAULT_TEXT_COLOR, FILTHY_COLOR, WARN_TEXT_COLOR};
+use crate::gameplay::{
+    ActorItem, CurrentlyVisibleBuilder, Duration, Envir, Fragment, Health, Nbor, NborDistance,
+    PlannedAction, Pos, Visible, WalkingCost,
 };
 use bevy::prelude::{Color, Component};
 use float_ord::FloatOrd;
-use pathfinding::{
-    num_traits::Zero,
-    prelude::{build_path, dijkstra_all},
-};
+use pathfinding::num_traits::Zero;
+use pathfinding::prelude::{build_path, dijkstra_all};
 use std::{mem::discriminant, ops::Add};
 
 #[derive(Copy, Clone, PartialEq, Eq)]

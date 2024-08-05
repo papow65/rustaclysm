@@ -1,6 +1,7 @@
+use crate::common::log_transition_plugin;
+use crate::gameplay::{Explored, RelativeSegments};
 use crate::loading::systems::{finish_loading, spawn_loading, start_gameplay};
 use crate::loading::ProgressScreenState;
-use crate::prelude::{log_transition_plugin, Explored, RelativeSegments};
 use bevy::prelude::{
     in_state, resource_exists, App, AppExtStates, Condition, IntoSystemConfigs, OnEnter, Plugin,
     Update,

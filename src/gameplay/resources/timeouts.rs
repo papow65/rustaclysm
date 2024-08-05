@@ -1,4 +1,4 @@
-use crate::prelude::{Duration, Timestamp};
+use crate::gameplay::{Duration, Timestamp};
 use bevy::{
     ecs::{entity::EntityHashMap, system::SystemParam},
     prelude::{Entity, Res, Resource},

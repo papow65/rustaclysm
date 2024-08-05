@@ -1,7 +1,5 @@
-use bevy::{
-    dev_tools::states::log_transitions,
-    prelude::{App, States, Update},
-};
+use bevy::dev_tools::states::log_transitions;
+use bevy::prelude::{App, States, Update};
 
 pub(crate) fn log_transition_plugin<S: States>(app: &mut App) {
     if cfg!(debug_assertions) {

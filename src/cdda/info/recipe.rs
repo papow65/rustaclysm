@@ -1,4 +1,4 @@
-use crate::prelude::{Duration, Infos, ObjectId};
+use crate::gameplay::{Duration, Infos, ObjectId};
 use bevy::utils::HashMap;
 use serde::Deserialize;
 

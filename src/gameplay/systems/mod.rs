@@ -6,7 +6,7 @@ mod update;
 
 pub(crate) use self::{input::*, shutdown::*, spawn::*, startup::*, update::*};
 
-use crate::prelude::*;
+use crate::gameplay::*;
 use bevy::prelude::*;
 
 #[allow(clippy::needless_pass_by_value)]

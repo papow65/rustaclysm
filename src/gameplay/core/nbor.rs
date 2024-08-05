@@ -1,4 +1,4 @@
-use crate::prelude::PosOffset;
+use crate::gameplay::PosOffset;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub(crate) enum CardinalDirection {

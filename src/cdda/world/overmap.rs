@@ -1,7 +1,6 @@
-use crate::prelude::{
-    CddaAmount, FlatVec, Level, ObjectId, Overzone, PathFor, RepetitionBlock, SubzoneLevel,
-    WorldPath,
-};
+use crate::cdda::{CddaAmount, FlatVec, RepetitionBlock};
+use crate::common::{PathFor, WorldPath};
+use crate::gameplay::{Level, ObjectId, Overzone, SubzoneLevel};
 use bevy::{asset::Asset, reflect::TypePath, utils::HashMap};
 use serde::Deserialize;
 

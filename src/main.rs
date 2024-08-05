@@ -6,7 +6,6 @@ mod common;
 mod gameplay;
 mod loading;
 mod main_menu;
-mod prelude;
 
 use crate::application::run_application;
 use std::env;

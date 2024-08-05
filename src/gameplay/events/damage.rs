@@ -1,4 +1,4 @@
-use crate::prelude::{ActorChange, CorpseChange, Subject, TerrainChange};
+use crate::gameplay::{ActorChange, CorpseChange, Subject, TerrainChange};
 use bevy::prelude::Event;
 
 #[derive(Clone, Debug, Event)]

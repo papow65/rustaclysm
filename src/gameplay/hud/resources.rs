@@ -1,4 +1,4 @@
-use crate::prelude::{Fonts, PANEL_COLOR, SOFT_TEXT_COLOR};
+use crate::common::{Fonts, PANEL_COLOR, SOFT_TEXT_COLOR};
 use bevy::{
     ecs::system::Resource,
     prelude::{

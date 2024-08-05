@@ -1,8 +1,9 @@
-use crate::prelude::{
+use crate::cdda::{Map, MapMemory, Overmap, OvermapBuffer, Sav};
+use crate::common::Paths;
+use crate::gameplay::{
     AppearanceCache, AssetStorage, CameraOffset, Expanded, Explored, Infos, InstructionQueue,
-    Level, Location, Map, MapMemory, MeshCaches, Overmap, OvermapBuffer, Overzone, Paths, Sav,
-    Spawner, SubzoneLevelEntities, Timeouts, Timestamp, VisualizationUpdate, Zone, ZoneLevel,
-    ZoneLevelEntities, ZoneLevelIds,
+    Level, Location, MeshCaches, Overzone, Spawner, SubzoneLevelEntities, Timeouts, Timestamp,
+    VisualizationUpdate, Zone, ZoneLevel, ZoneLevelEntities, ZoneLevelIds,
 };
 use bevy::prelude::{Commands, Res};
 

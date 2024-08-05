@@ -1,16 +1,16 @@
-use crate::prelude::{
-    log_if_slow, Accessible, Appearance, BaseSpeed, CurrentlyVisible, CurrentlyVisibleBuilder,
-    ElevationVisibility, Explored, Focus, GameplaySession, LastSeen, Map, MapMemory, Overmap,
-    OvermapBuffer, Player, Pos, SubzoneLevel, ZoneLevel,
+use crate::cdda::{Map, MapMemory, Overmap, OvermapBuffer};
+use crate::common::log_if_slow;
+use crate::gameplay::{
+    Accessible, Appearance, BaseSpeed, CurrentlyVisible, CurrentlyVisibleBuilder,
+    ElevationVisibility, Explored, Focus, GameplaySession, LastSeen, Player, Pos, SubzoneLevel,
+    ZoneLevel,
 };
 use bevy::prelude::{
     Assets, Camera, Changed, Children, Commands, Font, GlobalTransform, Local, Mesh,
     ParallelCommands, Parent, Query, Res, ResMut, StandardMaterial, Visibility, With, Without,
 };
-use std::{
-    sync::{Arc, Mutex},
-    time::Instant,
-};
+use std::sync::{Arc, Mutex};
+use std::time::Instant;
 
 #[cfg(feature = "log_archetypes")]
 use bevy::utils::HashMap;

@@ -1,4 +1,4 @@
-use crate::prelude::{Faction, ObjectDefinition, Pos, StairsDown, StairsUp};
+use crate::gameplay::{Faction, ObjectDefinition, Pos, StairsDown, StairsUp};
 use bevy::{
     ecs::{
         component::ComponentHooks,

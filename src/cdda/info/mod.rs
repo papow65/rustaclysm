@@ -12,6 +12,7 @@ mod requirement;
 mod terrain_info;
 
 pub(crate) use self::{
-    character_info::*, field_info::*, flags::*, furniture_info::*, item_group::*, item_info::*,
-    migration::*, overmap_info::*, quality::*, recipe::*, requirement::*, terrain_info::*,
+    character_info::*, field_info::*, flags::Flags, furniture_info::*, item_group::ItemGroup,
+    item_info::*, migration::Migration, overmap_info::OvermapInfo, quality::Quality, recipe::*,
+    requirement::Requirement, terrain_info::*,
 };

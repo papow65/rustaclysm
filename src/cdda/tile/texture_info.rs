@@ -1,4 +1,4 @@
-use crate::prelude::{MeshInfo, Transform2d};
+use crate::gameplay::{MeshInfo, Transform2d};
 use std::path::PathBuf;
 
 #[derive(Debug, Clone)]

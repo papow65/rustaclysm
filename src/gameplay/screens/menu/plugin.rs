@@ -1,7 +1,7 @@
 use crate::gameplay::screens::menu::systems::{
     manage_menu_button_input, manage_menu_keyboard_input, spawn_menu,
 };
-use crate::prelude::GameplayScreenState;
+use crate::gameplay::GameplayScreenState;
 use bevy::input::keyboard::KeyboardInput;
 use bevy::prelude::{in_state, on_event, App, IntoSystemConfigs, OnEnter, Plugin, Update};
 

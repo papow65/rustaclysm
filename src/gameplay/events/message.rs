@@ -1,8 +1,9 @@
-use crate::prelude::*;
-use bevy::{
-    ecs::system::SystemParam,
-    prelude::{Color, Event, EventWriter},
+use crate::common::{
+    BAD_TEXT_COLOR, DEFAULT_TEXT_COLOR, GOOD_TEXT_COLOR, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
 };
+use crate::gameplay::*;
+use bevy::ecs::system::SystemParam;
+use bevy::prelude::{Color, Event, EventWriter};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) enum Severity {

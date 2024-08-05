@@ -1,11 +1,9 @@
-use crate::prelude::{
+use crate::common::FILTHY_COLOR;
+use crate::gameplay::{
     Amount, Containable, Filthy, Fragment, ObjectDefinition, ObjectName, Pos, Positioning,
-    FILTHY_COLOR,
 };
-use bevy::{
-    ecs::query::QueryData,
-    prelude::{Entity, Parent},
-};
+use bevy::ecs::query::QueryData;
+use bevy::prelude::{Entity, Parent};
 
 #[derive(QueryData)]
 #[query_data(derive(Debug))]

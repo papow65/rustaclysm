@@ -1,6 +1,6 @@
-use crate::prelude::{
-    DeflatVec, Flags, Mass, ObjectId, Volume, DEFAULT_TEXT_COLOR, GOOD_TEXT_COLOR, WARN_TEXT_COLOR,
-};
+use crate::cdda::{DeflatVec, Flags};
+use crate::common::{DEFAULT_TEXT_COLOR, GOOD_TEXT_COLOR, WARN_TEXT_COLOR};
+use crate::gameplay::{Mass, ObjectId, Volume};
 use bevy::{prelude::Color, utils::HashMap};
 use serde::Deserialize;
 

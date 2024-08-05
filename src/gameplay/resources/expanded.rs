@@ -1,4 +1,4 @@
-use crate::prelude::Region;
+use crate::gameplay::Region;
 use bevy::prelude::Resource;
 
 /// The area that should be expanded into tiles

@@ -1,4 +1,4 @@
-use crate::prelude::{
+use crate::cdda::{
     Map, MapLoader, MapMemory, MapMemoryLoader, Overmap, OvermapBuffer, OvermapLoader,
 };
 use bevy::prelude::{App, AssetApp, Plugin};

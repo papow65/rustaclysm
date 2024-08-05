@@ -1,8 +1,9 @@
-use crate::prelude::{
-    AsyncNew, CddaItemName, CharacterInfo, FieldInfo, Flags, FurnitureInfo, ItemGroup, ItemInfo,
-    ItemName, Mass, Migration, ObjectCategory, ObjectDefinition, ObjectId, OvermapInfo, Paths,
-    Quality, Recipe, Requirement, TerrainInfo, TypeId, Volume,
+use crate::cdda::{
+    CddaItemName, CharacterInfo, FieldInfo, Flags, FurnitureInfo, ItemGroup, ItemInfo, ItemName,
+    Migration, OvermapInfo, Quality, Recipe, Requirement, TerrainInfo,
 };
+use crate::common::{AsyncNew, Paths};
+use crate::gameplay::{Mass, ObjectCategory, ObjectDefinition, ObjectId, TypeId, Volume};
 use bevy::{ecs::system::Resource, utils::HashMap};
 use glob::glob;
 use serde::de::DeserializeOwned;

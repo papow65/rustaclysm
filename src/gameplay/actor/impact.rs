@@ -1,4 +1,4 @@
-use crate::prelude::{Duration, StaminaImpact};
+use crate::gameplay::{Duration, StaminaImpact};
 use bevy::prelude::Entity;
 
 #[must_use]

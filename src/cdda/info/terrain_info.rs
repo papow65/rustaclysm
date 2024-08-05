@@ -1,4 +1,5 @@
-use crate::prelude::{Bash, Flags, ItemName, MoveCostIncrease, ObjectId};
+use crate::cdda::{Bash, Flags, ItemName, MoveCostIncrease};
+use crate::gameplay::ObjectId;
 use bevy::utils::HashMap;
 use serde::Deserialize;
 

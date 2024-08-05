@@ -1,7 +1,6 @@
-use crate::prelude::{
-    At, AtVec, CddaAmount, FieldVec, FlatVec, ObjectId, PathFor, Repetition, RepetitionBlock,
-    SubzoneLevel, WorldPath, ZoneLevel,
-};
+use crate::cdda::{At, AtVec, CddaAmount, FieldVec, FlatVec, Repetition, RepetitionBlock};
+use crate::common::{PathFor, WorldPath};
+use crate::gameplay::{ObjectId, SubzoneLevel, ZoneLevel};
 use bevy::{
     asset::{io::Reader, Asset, AssetLoader, LoadContext},
     reflect::TypePath,

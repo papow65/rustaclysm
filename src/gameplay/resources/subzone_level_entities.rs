@@ -1,4 +1,4 @@
-use crate::prelude::SubzoneLevel;
+use crate::gameplay::SubzoneLevel;
 use bevy::{
     ecs::entity::EntityHashMap,
     prelude::{Entity, Resource},

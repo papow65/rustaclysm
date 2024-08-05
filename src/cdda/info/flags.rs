@@ -1,4 +1,4 @@
-use crate::prelude::MaybeFlat;
+use crate::cdda::MaybeFlat;
 use serde::Deserialize;
 
 #[derive(Debug, Default, Deserialize)]

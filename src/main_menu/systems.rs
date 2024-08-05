@@ -1,11 +1,12 @@
+use crate::common::{
+    Fonts, Paths, QuitButton, BAD_TEXT_COLOR, DEFAULT_TEXT_COLOR, GOOD_TEXT_COLOR, LARGE_SPACING,
+    MEDIUM_SPACING, PANEL_COLOR,
+};
+use crate::gameplay::GameplaySession;
 use crate::main_menu::components::{
     Background, LoadButton, LoadButtonArea, MessageField, MessageWrapper,
 };
 use crate::main_menu::load_error::LoadError;
-use crate::prelude::{
-    Fonts, GameplaySession, Paths, QuitButton, BAD_TEXT_COLOR, DEFAULT_TEXT_COLOR, GOOD_TEXT_COLOR,
-    LARGE_SPACING, MEDIUM_SPACING, PANEL_COLOR,
-};
 use crate::{application::ApplicationState, loading::ProgressScreenState};
 use base64::{engine::general_purpose::STANDARD as base64, Engine};
 use bevy::app::AppExit;

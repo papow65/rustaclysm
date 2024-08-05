@@ -1,4 +1,5 @@
-use crate::prelude::{InputChange, Interruption, QueuedInstruction};
+use crate::common::InputChange;
+use crate::gameplay::{Interruption, QueuedInstruction};
 use bevy::prelude::Resource;
 
 #[derive(Debug, Default, Resource)]

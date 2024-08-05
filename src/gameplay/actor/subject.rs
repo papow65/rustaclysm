@@ -1,4 +1,4 @@
-use crate::prelude::{Fragment, Phrase};
+use crate::gameplay::{Fragment, Phrase};
 
 #[derive(Clone, Debug)]
 pub(crate) enum Subject {

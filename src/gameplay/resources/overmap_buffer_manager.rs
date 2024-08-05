@@ -1,8 +1,8 @@
-use crate::prelude::{AssetState, AssetStorage, OvermapBuffer, OvermapBufferPath, Overzone, Paths};
-use bevy::{
-    ecs::system::SystemParam,
-    prelude::{AssetId, AssetServer, Assets, Res, ResMut},
-};
+use crate::cdda::{OvermapBuffer, OvermapBufferPath};
+use crate::common::Paths;
+use crate::gameplay::{AssetState, AssetStorage, Overzone};
+use bevy::ecs::system::SystemParam;
+use bevy::prelude::{AssetId, AssetServer, Assets, Res, ResMut};
 
 #[derive(SystemParam)]
 pub(crate) struct OvermapBufferManager<'w> {

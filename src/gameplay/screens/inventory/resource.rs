@@ -1,8 +1,9 @@
+use crate::common::SelectionList;
 use crate::gameplay::screens::inventory::components::{
     InventoryItemDescription, InventoryItemLine,
 };
 use crate::gameplay::screens::inventory::section::InventorySection;
-use crate::prelude::{HorizontalDirection, SelectionList, Timestamp};
+use crate::gameplay::{HorizontalDirection, Timestamp};
 use bevy::ecs::entity::EntityHashMap;
 use bevy::prelude::{Button, Children, Entity, KeyCode, Query, Resource, Text, TextStyle, With};
 

@@ -1,8 +1,6 @@
-use crate::prelude::{AssetState, PathFor};
-use bevy::{
-    prelude::{Asset, AssetId, AssetServer, Assets, Handle, Resource},
-    utils::HashMap,
-};
+use crate::{common::PathFor, gameplay::AssetState};
+use bevy::prelude::{Asset, AssetId, AssetServer, Assets, Handle, Resource};
+use bevy::utils::HashMap;
 
 #[derive(Resource)]
 pub(crate) struct AssetStorage<A: Asset, R: Clone + Copy> {

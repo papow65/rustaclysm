@@ -1,4 +1,4 @@
-use crate::prelude::SpriteNumber;
+use crate::cdda::SpriteNumber;
 use std::{io, path::PathBuf};
 
 #[derive(Debug)]

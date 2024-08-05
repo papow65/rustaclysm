@@ -1,4 +1,4 @@
-use crate::prelude::log_if_slow;
+use crate::common::log_if_slow;
 use bevy::prelude::Local;
 use std::time::{Duration, Instant};
 

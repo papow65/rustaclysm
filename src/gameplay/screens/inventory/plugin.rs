@@ -2,7 +2,7 @@ use crate::gameplay::screens::inventory::systems::{
     clear_inventory, manage_inventory_button_input, manage_inventory_keyboard_input,
     refresh_inventory, remove_inventory_resource, spawn_inventory,
 };
-use crate::prelude::{loop_behavior_and_refresh, GameplayScreenState};
+use crate::gameplay::{loop_behavior_and_refresh, GameplayScreenState};
 use bevy::input::keyboard::KeyboardInput;
 use bevy::prelude::{
     in_state, on_event, App, IntoSystem, IntoSystemConfigs, OnEnter, OnExit, Plugin, Update,

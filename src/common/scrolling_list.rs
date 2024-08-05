@@ -1,8 +1,6 @@
-use bevy::{
-    ecs::component::{ComponentHooks, StorageType},
-    input::mouse::{MouseScrollUnit, MouseWheel},
-    prelude::{Component, Interaction, JustifyContent, Node, Style, Transform, Val},
-};
+use bevy::ecs::component::{ComponentHooks, StorageType};
+use bevy::input::mouse::{MouseScrollUnit, MouseWheel};
+use bevy::prelude::{Component, Interaction, JustifyContent, Node, Style, Transform, Val};
 
 // Manually deriving `Component`
 #[derive(Debug, Default)]

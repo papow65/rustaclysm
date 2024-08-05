@@ -1,4 +1,4 @@
-use crate::prelude::{
+use crate::gameplay::{
     Accessible, Clock, Envir, Level, LevelOffset, Player, PlayerActionState, Pos, PosOffset,
     RelativeSegment, RelativeSegments, SubzoneLevel, Visible, VisionDistance,
 };

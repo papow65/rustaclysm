@@ -1,13 +1,12 @@
-use crate::prelude::{
+use crate::cdda::MoveCost;
+use crate::gameplay::{
     Accessible, Amount, Closeable, Containable, Corpse, Duration, Health, HorizontalDirection,
-    Hurdle, Integrity, Intelligence, Level, LevelOffset, Life, Location, MoveCost, Nbor,
-    NborDistance, ObjectName, Obstacle, Opaque, OpaqueFloor, Openable, Pos, PosOffset,
-    QueuedInstruction, Speed, StairsDown, StairsUp, WalkingCost, Zone, ZoneLevel,
+    Hurdle, Integrity, Intelligence, Level, LevelOffset, Life, Location, Nbor, NborDistance,
+    ObjectName, Obstacle, Opaque, OpaqueFloor, Openable, Pos, PosOffset, QueuedInstruction, Speed,
+    StairsDown, StairsUp, WalkingCost, Zone, ZoneLevel,
 };
-use bevy::{
-    ecs::system::SystemParam,
-    prelude::{Entity, Query, ResMut, With, Without},
-};
+use bevy::ecs::system::SystemParam;
+use bevy::prelude::{Entity, Query, ResMut, With, Without};
 use pathfinding::prelude::astar;
 use std::{cmp::Ordering, iter::repeat};
 

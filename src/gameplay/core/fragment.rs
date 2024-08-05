@@ -1,4 +1,4 @@
-use crate::prelude::{Pos, GOOD_TEXT_COLOR};
+use crate::{common::GOOD_TEXT_COLOR, gameplay::Pos};
 use bevy::prelude::{Color, TextSection, TextStyle};
 use regex::Regex;
 use std::{cmp::Eq, fmt, sync::LazyLock};

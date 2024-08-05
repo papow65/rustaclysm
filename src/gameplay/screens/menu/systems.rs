@@ -1,9 +1,10 @@
 use crate::application::ApplicationState;
-use crate::gameplay::screens::menu::components::{MainMenuButton, ReturnButton};
-use crate::prelude::{
-    Fonts, GameplayScreenState, Key, Keys, QuitButton, BAD_TEXT_COLOR, DEFAULT_TEXT_COLOR,
-    GOOD_TEXT_COLOR, MEDIUM_SPACING,
+use crate::common::{
+    Fonts, Key, Keys, QuitButton, BAD_TEXT_COLOR, DEFAULT_TEXT_COLOR, GOOD_TEXT_COLOR,
+    MEDIUM_SPACING,
 };
+use crate::gameplay::screens::menu::components::{MainMenuButton, ReturnButton};
+use crate::gameplay::GameplayScreenState;
 use bevy::app::AppExit;
 use bevy::prelude::{
     default, AlignItems, BuildChildren, Button, ButtonBundle, Changed, ChildBuilder, Color,

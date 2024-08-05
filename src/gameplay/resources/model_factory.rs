@@ -1,15 +1,12 @@
-use crate::prelude::{
-    Appearance, Infos, LastSeen, Layers, Model, ModelShape, ObjectDefinition, SpriteNumber,
-    SpriteOrientation, TileLoader,
+use crate::cdda::{SpriteNumber, TileLoader};
+use crate::gameplay::{
+    Appearance, Infos, LastSeen, Layers, Model, ModelShape, ObjectDefinition, SpriteOrientation,
 };
-use bevy::{
-    ecs::system::SystemParam,
-    prelude::{
-        AssetServer, Assets, Handle, Mesh, PbrBundle, Res, ResMut, Resource, StandardMaterial,
-        Visibility,
-    },
-    utils::HashMap,
+use bevy::prelude::{
+    AssetServer, Assets, Handle, Mesh, PbrBundle, Res, ResMut, Resource, StandardMaterial,
+    Visibility,
 };
+use bevy::{ecs::system::SystemParam, utils::HashMap};
 use std::path::PathBuf;
 
 #[derive(Default, Resource)]

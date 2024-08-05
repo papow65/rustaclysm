@@ -1,4 +1,5 @@
-use crate::prelude::{Flags, ItemName, Mass, ObjectId, Volume};
+use crate::cdda::{Flags, ItemName};
+use crate::gameplay::{Mass, ObjectId, Volume};
 use bevy::utils::HashMap;
 use serde::Deserialize;
 

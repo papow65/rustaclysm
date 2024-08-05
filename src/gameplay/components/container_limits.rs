@@ -1,4 +1,4 @@
-use crate::prelude::{Amount, Mass, Volume};
+use crate::gameplay::{Amount, Mass, Volume};
 use bevy::prelude::{Component, Entity};
 
 #[derive(Component)]

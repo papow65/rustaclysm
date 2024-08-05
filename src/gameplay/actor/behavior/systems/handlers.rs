@@ -1,10 +1,11 @@
 //! These systems are part of [`BehaviorSchedule`].
-use crate::prelude::{
-    log_if_slow, Actor, ActorEvent, Amount, Clock, ContainerLimits, Corpse, CorpseEvent,
-    CorpseRaise, Damage, Duration, Faction, Fragment, GameplayScreenState, Healing, Health,
-    Hierarchy, Infos, Integrity, Item, Life, Limited, MessageWriter, ObjectCategory,
-    ObjectDefinition, ObjectId, ObjectName, Obstacle, Phrase, Player, Pos, Spawner, Stamina,
-    StaminaImpact, Subject, TerrainEvent, Toggle, VisualizationUpdate, WalkingMode,
+use crate::common::log_if_slow;
+use crate::gameplay::{
+    Actor, ActorEvent, Amount, Clock, ContainerLimits, Corpse, CorpseEvent, CorpseRaise, Damage,
+    Duration, Faction, Fragment, GameplayScreenState, Healing, Health, Hierarchy, Infos, Integrity,
+    Item, Life, Limited, MessageWriter, ObjectCategory, ObjectDefinition, ObjectId, ObjectName,
+    Obstacle, Phrase, Player, Pos, Spawner, Stamina, StaminaImpact, Subject, TerrainEvent, Toggle,
+    VisualizationUpdate, WalkingMode,
 };
 use bevy::prelude::{
     Changed, Commands, DespawnRecursiveExt, Entity, EventReader, In, NextState, ParamSet, Parent,

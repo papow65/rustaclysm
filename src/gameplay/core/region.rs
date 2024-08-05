@@ -1,4 +1,4 @@
-use crate::prelude::{Level, Zone, ZoneLevel};
+use crate::gameplay::{Level, Zone, ZoneLevel};
 use std::{fmt, ops::RangeInclusive};
 
 #[derive(Clone, Debug, PartialEq)]

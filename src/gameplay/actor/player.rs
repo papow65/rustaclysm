@@ -1,4 +1,5 @@
-use crate::prelude::*;
+use crate::common::{text_color, BAD_TEXT_COLOR, DEFAULT_TEXT_COLOR, WARN_TEXT_COLOR};
+use crate::gameplay::*;
 use bevy::prelude::{Color, Component, DetectChanges, Entity, NextState, ResMut, States};
 use std::fmt;
 

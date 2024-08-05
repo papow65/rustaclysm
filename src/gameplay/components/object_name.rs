@@ -1,4 +1,6 @@
-use crate::prelude::{CddaItemName, Fragment, ItemName, Pos, BAD_TEXT_COLOR};
+use crate::cdda::{CddaItemName, ItemName};
+use crate::common::BAD_TEXT_COLOR;
+use crate::gameplay::{Fragment, Pos};
 use bevy::prelude::{Color, Component};
 
 #[derive(Clone, Component, Debug)]
