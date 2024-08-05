@@ -1,4 +1,4 @@
-use super::{components::ManualDisplay, resources::HudDefaults};
+use crate::gameplay::hud::{components::ManualDisplay, resources::HudDefaults};
 use crate::{application::ApplicationState, prelude::GameplayScreenState};
 use bevy::prelude::{
     default, Alpha, BackgroundColor, BuildChildren, Children, Commands, NodeBundle, Query, Res,

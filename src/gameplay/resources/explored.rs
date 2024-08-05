@@ -1,4 +1,5 @@
-use super::{map_memory_manager::MapMemoryManager, overmap_buffer_manager::OvermapBufferManager};
+use crate::gameplay::resources::map_memory_manager::MapMemoryManager;
+use crate::gameplay::resources::overmap_buffer_manager::OvermapBufferManager;
 use crate::prelude::{
     AssetState, Level, OvermapBuffer, Overzone, Pos, SubzoneLevel, Zone, ZoneLevel,
 };

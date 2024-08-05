@@ -1,17 +1,21 @@
-use super::{
-    components::{AlternativeSituation, ComponentSituation, QualitySituation, RecipeSituation},
-    resource::CraftingScreen,
+use crate::cdda::{
+    Alternative, AutoLearn, BookLearn, BookLearnItem, Recipe, RequiredQuality, Sav, Skill, Using,
 };
-use crate::prelude::*;
-use bevy::{
-    prelude::{
-        AlignItems, BuildChildren, Button, ButtonBundle, Changed, Children, Commands,
-        DespawnRecursiveExt, Display, Entity, FlexDirection, In, Interaction, JustifyContent,
-        KeyCode, NextState, Node, NodeBundle, Overflow, Parent, Query, Res, ResMut, StateScoped,
-        Style, Text, TextBundle, Transform, UiRect, Val, With, Without,
-    },
-    utils::HashMap,
+use crate::common::{
+    log_if_slow, uppercase_first, Fonts, InputChange, Key, Keys, ScrollingList, SelectionList,
+    BAD_TEXT_COLOR, GOOD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, WARN_TEXT_COLOR,
 };
+use crate::gameplay::screens::crafting::components::{
+    AlternativeSituation, ComponentSituation, QualitySituation, RecipeSituation,
+};
+use crate::gameplay::screens::crafting::resource::CraftingScreen;
+use crate::gameplay::{
+    Amount, BodyContainers, Clock, GameplayScreenState, Infos, InstructionQueue, LastSeen,
+    Location, ObjectCategory, ObjectDefinition, ObjectId, Player, Pos, QueuedInstruction,
+    Timestamp,
+};
+use bevy::prelude::*;
+use bevy::utils::HashMap;
 use std::{ops::RangeInclusive, time::Instant};
 
 const MAX_FIND_DISTANCE: i32 = 7;

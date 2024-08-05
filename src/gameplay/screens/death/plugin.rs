@@ -1,9 +1,9 @@
-use super::systems::{manage_death_button_input, manage_death_keyboard_input, spawn_death_screen};
-use crate::prelude::GameplayScreenState;
-use bevy::{
-    input::keyboard::KeyboardInput,
-    prelude::{in_state, on_event, App, IntoSystemConfigs, OnEnter, Plugin, Update},
+use crate::gameplay::screens::death::systems::{
+    manage_death_button_input, manage_death_keyboard_input, spawn_death_screen,
 };
+use crate::prelude::GameplayScreenState;
+use bevy::input::keyboard::KeyboardInput;
+use bevy::prelude::{in_state, on_event, App, IntoSystemConfigs, OnEnter, Plugin, Update};
 
 pub(crate) struct DeathScreenPlugin;
 

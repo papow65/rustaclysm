@@ -1,14 +1,17 @@
-use super::{
-    components::{InventoryAction, InventoryButton, InventoryItemDescription, InventoryItemLine},
-    resource::InventoryScreen,
-    section::InventorySection,
+use crate::cdda::ItemInfo;
+use crate::common::{
+    Fonts, InputChange, Key, Keys, ScrollingList, SelectionList, StepDirection, StepSize,
+    DEFAULT_TEXT_COLOR, GOOD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, SOFT_TEXT_COLOR,
+    WARN_TEXT_COLOR,
 };
-use crate::prelude::{
-    BodyContainers, Clock, Corpse, Envir, Fonts, GameplayScreenState, HorizontalDirection, Infos,
-    InputChange, InstructionQueue, Integrity, Item, ItemInfo, Key, Keys, LastSeen, Nbor, ObjectId,
-    Phrase, Player, PlayerDirection, Pos, QueuedInstruction, ScrollingList, SelectionList,
-    StepDirection, StepSize, Timestamp, DEFAULT_TEXT_COLOR, GOOD_TEXT_COLOR, PANEL_COLOR,
-    SMALL_SPACING, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
+use crate::gameplay::screens::inventory::components::{
+    InventoryAction, InventoryButton, InventoryItemDescription, InventoryItemLine,
+};
+use crate::gameplay::screens::inventory::{resource::InventoryScreen, section::InventorySection};
+use crate::gameplay::{
+    BodyContainers, Clock, Corpse, Envir, GameplayScreenState, HorizontalDirection, Infos,
+    InstructionQueue, Integrity, Item, LastSeen, Nbor, ObjectId, Phrase, Player, PlayerDirection,
+    Pos, QueuedInstruction, Timestamp,
 };
 use bevy::{ecs::entity::EntityHashMap, prelude::*, utils::HashMap};
 

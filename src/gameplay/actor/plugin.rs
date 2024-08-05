@@ -1,9 +1,7 @@
-use super::behavior::BehaviorPlugin;
-use crate::{
-    application::ApplicationState,
-    prelude::{
-        clear_gameplay_events, ActorEvent, Damage, Healing, PlayerActionState, StaminaImpact,
-    },
+use crate::application::ApplicationState;
+use crate::gameplay::actor::behavior::BehaviorPlugin;
+use crate::prelude::{
+    clear_gameplay_events, ActorEvent, Damage, Healing, PlayerActionState, StaminaImpact,
 };
 use bevy::prelude::{App, AppExtStates, Events, NextState, OnEnter, OnExit, Plugin, ResMut};
 

@@ -1,7 +1,7 @@
-use super::{
-    schedule::BehaviorSchedule, system_configs::behavior_systems, systems::refresh::trigger_refresh,
-};
-use crate::prelude::{CardinalDirection, PlayerActionState};
+use crate::gameplay::actor::behavior::schedule::BehaviorSchedule;
+use crate::gameplay::actor::behavior::system_configs::behavior_systems;
+use crate::gameplay::actor::behavior::systems::refresh::trigger_refresh;
+use crate::gameplay::{CardinalDirection, PlayerActionState};
 use bevy::prelude::{App, OnEnter, OnExit, Plugin};
 
 pub(in super::super) struct BehaviorPlugin;

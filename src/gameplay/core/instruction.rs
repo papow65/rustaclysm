@@ -1,7 +1,6 @@
-use crate::prelude::{Fragment, InputChange, Key, KeyChange, Nbor, RecipeSituation};
+use crate::common::{InputChange, Key, KeyChange};
+use crate::gameplay::{Fragment, HorizontalDirection, Nbor, RecipeSituation};
 use bevy::{input::keyboard::KeyCode, prelude::Entity};
-
-use super::HorizontalDirection;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub(crate) enum CancelHandling {

@@ -1,4 +1,4 @@
-use super::{Duration, Speed};
+use crate::gameplay::{Duration, Speed};
 use std::ops::{Add, Div, DivAssign, Mul, MulAssign};
 
 #[derive(Clone, Copy, Debug)]

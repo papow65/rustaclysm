@@ -1,10 +1,8 @@
 use crate::prelude::*;
-use bevy::{
-    ecs::query::QueryData,
-    prelude::{
-        BuildChildren, Commands, DespawnRecursiveExt, Entity, Event, EventWriter, NextState, Query,
-        SpatialBundle, VisibilityBundle,
-    },
+use bevy::ecs::query::QueryData;
+use bevy::prelude::{
+    BuildChildren, Commands, DespawnRecursiveExt, Entity, Event, EventWriter, NextState, Query,
+    SpatialBundle, VisibilityBundle,
 };
 
 #[derive(QueryData)]

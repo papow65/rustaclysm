@@ -1,4 +1,4 @@
-use super::{
+use crate::gameplay::hud::{
     input::manage_hud_keyboard_input,
     manual::{spawn_manual, update_manual},
     resources::{despawn_hud_resources, spawn_hud_resources},

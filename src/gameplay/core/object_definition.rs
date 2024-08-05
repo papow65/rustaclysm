@@ -1,4 +1,4 @@
-use super::SpriteLayer;
+use crate::gameplay::SpriteLayer;
 
 const SEPARATION_OFFSET: f32 = 0.005;
 

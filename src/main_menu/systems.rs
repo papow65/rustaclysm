@@ -1,31 +1,24 @@
-use super::{
-    components::{Background, LoadButton, LoadButtonArea, MessageField, MessageWrapper},
-    load_error::LoadError,
+use crate::main_menu::components::{
+    Background, LoadButton, LoadButtonArea, MessageField, MessageWrapper,
 };
-use crate::{
-    application::ApplicationState,
-    loading::ProgressScreenState,
-    prelude::{
-        Fonts, GameplaySession, Paths, QuitButton, BAD_TEXT_COLOR, DEFAULT_TEXT_COLOR,
-        GOOD_TEXT_COLOR, LARGE_SPACING, MEDIUM_SPACING, PANEL_COLOR,
-    },
+use crate::main_menu::load_error::LoadError;
+use crate::prelude::{
+    Fonts, GameplaySession, Paths, QuitButton, BAD_TEXT_COLOR, DEFAULT_TEXT_COLOR, GOOD_TEXT_COLOR,
+    LARGE_SPACING, MEDIUM_SPACING, PANEL_COLOR,
 };
+use crate::{application::ApplicationState, loading::ProgressScreenState};
 use base64::{engine::general_purpose::STANDARD as base64, Engine};
-use bevy::{
-    app::AppExit,
-    prelude::{
-        AlignContent, AlignItems, AssetServer, BuildChildren, Button, ButtonBundle, Camera,
-        Camera2dBundle, Changed, ChildBuilder, Commands, DespawnRecursiveExt, Display, Entity,
-        Events, FlexDirection, FlexWrap, Interaction, JustifyContent, Local, NextState, NodeBundle,
-        Query, Res, ResMut, SpriteBundle, StateScoped, Style, Text, TextBundle, Transform, UiRect,
-        Val, Vec3, With, Without,
-    },
+use bevy::app::AppExit;
+use bevy::prelude::{
+    AlignContent, AlignItems, AssetServer, BuildChildren, Button, ButtonBundle, Camera,
+    Camera2dBundle, Changed, ChildBuilder, Commands, DespawnRecursiveExt, Display, Entity, Events,
+    FlexDirection, FlexWrap, Interaction, JustifyContent, Local, NextState, NodeBundle, Query, Res,
+    ResMut, SpriteBundle, StateScoped, Style, Text, TextBundle, Transform, UiRect, Val, Vec3, With,
+    Without,
 };
 use glob::glob;
-use std::{
-    path::{Path, PathBuf},
-    str::from_utf8,
-};
+use std::path::{Path, PathBuf};
+use std::str::from_utf8;
 
 const FULL_WIDTH: f32 = 720.0;
 

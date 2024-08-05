@@ -1,13 +1,9 @@
-use super::{
-    components::{LogDisplay, StatusDisplay},
-    resources::{HudDefaults, StatusTextSections},
-};
+use crate::gameplay::hud::components::{LogDisplay, StatusDisplay};
+use crate::gameplay::hud::resources::{HudDefaults, StatusTextSections};
 use crate::{application::ApplicationState, prelude::*};
-use bevy::{
-    diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin},
-    ecs::system::EntityCommands,
-    prelude::*,
-};
+use bevy::diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin};
+use bevy::ecs::system::EntityCommands;
+use bevy::prelude::*;
 use std::time::Instant;
 
 const TEXT_WIDTH: f32 = 8.0 * 43.0; // 43 chars

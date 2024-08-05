@@ -1,11 +1,9 @@
-use super::{atlas::Atlas, tile_info::TileInfo, SpriteNumber, TextureInfo};
-use crate::prelude::{
-    AsyncNew, Error, Layers, Model, ObjectDefinition, ObjectId, Paths, SpriteLayer,
-};
-use bevy::{
-    prelude::Resource,
-    utils::{Entry, HashMap},
-};
+use crate::cdda::tile::{atlas::Atlas, tile_info::TileInfo};
+use crate::cdda::{Error, SpriteNumber, TextureInfo};
+use crate::common::{AsyncNew, Paths};
+use crate::gameplay::{Layers, Model, ObjectDefinition, ObjectId, SpriteLayer};
+use bevy::prelude::Resource;
+use bevy::utils::{Entry, HashMap};
 use std::fs::read_to_string;
 
 #[derive(Resource)]

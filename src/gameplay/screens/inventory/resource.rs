@@ -1,12 +1,10 @@
-use super::{
-    components::{InventoryItemDescription, InventoryItemLine},
-    section::InventorySection,
+use crate::gameplay::screens::inventory::components::{
+    InventoryItemDescription, InventoryItemLine,
 };
+use crate::gameplay::screens::inventory::section::InventorySection;
 use crate::prelude::{HorizontalDirection, SelectionList, Timestamp};
-use bevy::{
-    ecs::entity::EntityHashMap,
-    prelude::{Button, Children, Entity, KeyCode, Query, Resource, Text, TextStyle, With},
-};
+use bevy::ecs::entity::EntityHashMap;
+use bevy::prelude::{Button, Children, Entity, KeyCode, Query, Resource, Text, TextStyle, With};
 
 #[derive(Resource)]
 pub(super) struct InventoryScreen {

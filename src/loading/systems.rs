@@ -1,11 +1,8 @@
-use super::ProgressScreenState;
-use crate::{
-    application::ApplicationState,
-    prelude::{
-        Explored, Fonts, GameplayScreenState, Map, Overmap, OvermapBuffer, SubzoneLevelEntities,
-        DEFAULT_BUTTON_COLOR, DEFAULT_TEXT_COLOR,
-    },
-};
+use crate::application::ApplicationState;
+use crate::cdda::{Map, Overmap, OvermapBuffer};
+use crate::common::{Fonts, DEFAULT_BUTTON_COLOR, DEFAULT_TEXT_COLOR};
+use crate::gameplay::{Explored, GameplayScreenState, SubzoneLevelEntities};
+use crate::loading::ProgressScreenState;
 use bevy::prelude::{
     AlignItems, Assets, BuildChildren, Commands, JustifyContent, Local, NextState, NodeBundle,
     PositionType, Res, ResMut, State, StateScoped, Style, TextBundle, Val,

@@ -1,4 +1,4 @@
-use super::components::RecipeSituation;
+use crate::gameplay::screens::crafting::components::RecipeSituation;
 use crate::prelude::{SelectionList, Timestamp};
 use bevy::prelude::{Entity, KeyCode, Query, Resource, Text};
 

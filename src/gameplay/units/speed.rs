@@ -1,5 +1,5 @@
-use super::{Distance, Duration};
-use crate::prelude::{MoveCost, NborDistance};
+use crate::cdda::MoveCost;
+use crate::gameplay::{Distance, Duration, NborDistance};
 use std::{fmt, ops::Add, ops::Mul};
 
 #[derive(Clone, Copy)]

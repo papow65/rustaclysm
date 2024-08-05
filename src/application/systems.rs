@@ -1,14 +1,11 @@
-use crate::prelude::{Fonts, Key, Keys, ScrollingList, DEFAULT_BUTTON_COLOR, HOVERED_BUTTON_COLOR};
-use bevy::{
-    app::AppExit,
-    input::{keyboard::KeyboardInput, mouse::MouseWheel},
-    prelude::{
-        BackgroundColor, Button, ButtonInput, Changed, EventReader, Events, Interaction, KeyCode,
-        NextState, Node, Parent, Query, Res, ResMut, Style, UiScale, Window, With, Without, World,
-    },
+use crate::application::ApplicationState;
+use crate::common::{Fonts, Key, Keys, ScrollingList, DEFAULT_BUTTON_COLOR, HOVERED_BUTTON_COLOR};
+use bevy::app::AppExit;
+use bevy::input::{keyboard::KeyboardInput, mouse::MouseWheel};
+use bevy::prelude::{
+    BackgroundColor, Button, ButtonInput, Changed, EventReader, Events, Interaction, KeyCode,
+    NextState, Node, Parent, Query, Res, ResMut, Style, UiScale, Window, With, Without, World,
 };
-
-use super::ApplicationState;
 
 #[allow(clippy::needless_pass_by_value)]
 pub(super) fn maximize_window(mut windows: Query<&mut Window>) {

@@ -1,5 +1,6 @@
-use super::{tile_info::TileInfo, SpriteNumber, TextureInfo};
-use crate::prelude::{Error, MeshInfo, ObjectId, Paths, Transform2d};
+use crate::cdda::{tile::tile_info::TileInfo, tile::SpriteNumber, Error, TextureInfo};
+use crate::common::Paths;
+use crate::gameplay::{MeshInfo, ObjectId, Transform2d};
 use bevy::{prelude::Vec2, utils::HashMap};
 use std::path::PathBuf;
 

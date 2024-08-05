@@ -1,25 +1,17 @@
-use super::{
-    check::check_delay,
-    systems::{
-        enter_main_menu, load_fonts, manage_button_color, manage_global_keyboard_input,
-        manage_scrolling_lists, maximize_window, preprocess_keyboard_input, resize_scrolling_lists,
-    },
-    ApplicationState,
+use crate::application::systems::{
+    enter_main_menu, load_fonts, manage_button_color, manage_global_keyboard_input,
+    manage_scrolling_lists, maximize_window, preprocess_keyboard_input, resize_scrolling_lists,
 };
-use crate::{
-    loading::LoadingIndicatorPlugin,
-    main_menu::MainMenuPlugin,
-    prelude::{log_transition_plugin, CddaPlugin, GameplayPlugin, Keys},
+use crate::application::{check::check_delay, ApplicationState};
+use crate::prelude::{log_transition_plugin, CddaPlugin, GameplayPlugin, Keys};
+use crate::{loading::LoadingIndicatorPlugin, main_menu::MainMenuPlugin};
+use bevy::input::{keyboard::KeyboardInput, mouse::MouseWheel, InputSystem};
+use bevy::prelude::{
+    on_event, resource_exists_and_changed, App, AppExtStates, AssetPlugin, Condition,
+    DefaultPlugins, Fixed, IVec2, ImagePlugin, IntoSystemConfigs, Last, Msaa, PluginGroup,
+    PreUpdate, Startup, Time, UiScale, Update, Window, WindowPlugin, WindowPosition,
 };
-use bevy::{
-    input::{keyboard::KeyboardInput, mouse::MouseWheel, InputSystem},
-    prelude::{
-        on_event, resource_exists_and_changed, App, AppExtStates, AssetPlugin, Condition,
-        DefaultPlugins, Fixed, IVec2, ImagePlugin, IntoSystemConfigs, Last, Msaa, PluginGroup,
-        PreUpdate, Startup, Time, UiScale, Update, Window, WindowPlugin, WindowPosition,
-    },
-    window::{PresentMode, WindowResized, WindowResolution},
-};
+use bevy::window::{PresentMode, WindowResized, WindowResolution};
 use std::time::Duration;
 
 pub(crate) fn run_application() {

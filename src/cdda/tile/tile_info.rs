@@ -1,5 +1,5 @@
-use super::SpriteNumber;
-use crate::prelude::{Error, ObjectId};
+use crate::cdda::{Error, SpriteNumber};
+use crate::gameplay::ObjectId;
 use std::any::type_name;
 
 #[derive(Clone, Debug)]

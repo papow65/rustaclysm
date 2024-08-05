@@ -1,4 +1,4 @@
-use super::components::ManualDisplay;
+use crate::gameplay::hud::components::ManualDisplay;
 use crate::prelude::{log_if_slow, Key, Keys};
 use bevy::prelude::{KeyCode, Query, Res, Visibility, With};
 use std::time::Instant;
