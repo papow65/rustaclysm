@@ -31,14 +31,14 @@ impl TileLoader {
                 _json: json,
             });
         };
-        let Some(tiles) = json_object.get("tiles-new") else {
+        let Some(json_tiles) = json_object.get("tiles-new") else {
             return Err(Error::MissingJsonKey {
                 _format: file_name,
                 _key: "tiles-new",
                 _json: json,
             });
         };
-        let Some(json_atlases) = tiles.as_array() else {
+        let Some(json_atlases) = json_tiles.as_array() else {
             return Err(Error::UnexpectedJsonVariant {
                 _format: file_name,
                 _part: Some("tiles-new"),
