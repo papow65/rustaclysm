@@ -1,4 +1,4 @@
-use crate::gameplay::{Faction, ObjectDefinition, Pos, StairsDown, StairsUp};
+use crate::gameplay::{Pos, StairsDown, StairsUp};
 use bevy::{
     ecs::{
         component::ComponentHooks,
@@ -24,36 +24,33 @@ impl Location {
                 .entity(entity)
                 .get::<Pos>()
                 .expect("Pos should be present because it was just added");
-            if let Some(faction) = world.entity(entity).get::<Faction>() {
-                println!(
-                    "Adding {pos:?} to {faction:?} {:?}",
-                    world.entity(entity).get::<ObjectDefinition>()
-                );
-            }
-            if let Some(mut this) = world.get_resource_mut::<Self>() {
-                this.add(pos, entity);
-                println!("Location: add {entity:?} @ {pos:?}");
-            } else {
-                println!("Location MISSING: add {entity:?} @ {pos:?}");
-            }
+            //if let Some(faction) = world.entity(entity).get::<Faction>() {
+            //    println!("Adding {pos:?} to {faction:?} {:?}", world.entity(entity).get::<ObjectDefinition>());
+            //}
+
+            let Some(mut this) = world.get_resource_mut::<Self>() else {
+                eprintln!("Location missing duuring on_add hook for {entity:?} @ {pos:?}");
+                return;
+            };
+
+            this.add(pos, entity);
+            //println!("Location: {entity:?} @ {pos:?} added");
         });
 
         hooks.on_remove(|mut world, entity, _component_id| {
-            let removed_pos = *world
-                .entity(entity)
-                .get::<Pos>()
-                .expect("Pos should be present because it is being removed");
-            if let Some(faction) = world.entity(entity).get::<Faction>() {
-                println!(
-                    "Removing {removed_pos:?} from {faction:?} {:?}",
-                    world.entity(entity).get::<ObjectDefinition>()
-                );
-            }
-            if let Some(mut this) = world.get_resource_mut::<Self>() {
-                this.remove(entity);
-            } else {
-                println!("Location MISSING: removed {entity:?} @ {removed_pos:?}");
-            }
+            //let removed_pos = *world.entity(entity).get::<Pos>().expect("Pos should be present because it is being removed");
+            //if let Some(faction) = world.entity(entity).get::<Faction>() {
+            //    println!("Removing {removed_pos:?} from {faction:?} {:?}",world.entity(entity).get::<ObjectDefinition>());
+            //}
+
+            let Some(mut this) = world.get_resource_mut::<Self>() else {
+                // This happens when we return from gameplay to the main menu
+                //println!("Location missing duuring on_remove hook for {entity:?}");
+                return;
+            };
+
+            this.remove(entity);
+            //println!("Location: {entity:?} @ {pos:?} removed");
         });
     }
 
