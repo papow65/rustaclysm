@@ -24,7 +24,6 @@ pub(super) fn load_fonts(world: &mut World) {
 
 #[allow(clippy::needless_pass_by_value)]
 pub(super) fn enter_main_menu(mut next_application_state: ResMut<NextState<ApplicationState>>) {
-    println!("enter_main_menu");
     next_application_state.set(ApplicationState::MainMenu);
 }
 

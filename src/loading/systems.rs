@@ -5,7 +5,7 @@ use crate::gameplay::{Explored, GameplayScreenState, SubzoneLevelEntities};
 use crate::loading::ProgressScreenState;
 use bevy::prelude::{
     AlignItems, Assets, BuildChildren, Commands, JustifyContent, Local, NextState, NodeBundle,
-    PositionType, Res, ResMut, State, StateScoped, Style, TextBundle, Val,
+    PositionType, Res, ResMut, State, StateScoped, Style, TextBundle, Val, ZIndex,
 };
 
 #[allow(clippy::needless_pass_by_value)]
@@ -21,6 +21,7 @@ pub(crate) fn spawn_loading(mut commands: Commands, fonts: Res<Fonts>) {
                     justify_content: JustifyContent::Center,
                     ..Style::default()
                 },
+                z_index: ZIndex::Global(3),
                 ..NodeBundle::default()
             },
             StateScoped(ProgressScreenState::Loading),

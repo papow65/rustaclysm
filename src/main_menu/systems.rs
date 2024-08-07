@@ -3,19 +3,16 @@ use crate::common::{
     MEDIUM_SPACING, PANEL_COLOR,
 };
 use crate::gameplay::GameplaySession;
-use crate::main_menu::components::{
-    Background, LoadButton, LoadButtonArea, MessageField, MessageWrapper,
-};
+use crate::main_menu::components::{LoadButton, LoadButtonArea, MessageField, MessageWrapper};
 use crate::main_menu::load_error::LoadError;
 use crate::{application::ApplicationState, loading::ProgressScreenState};
 use base64::{engine::general_purpose::STANDARD as base64, Engine};
 use bevy::app::AppExit;
 use bevy::prelude::{
-    AlignContent, AlignItems, AssetServer, BuildChildren, Button, ButtonBundle, Camera,
-    Camera2dBundle, Changed, ChildBuilder, Commands, DespawnRecursiveExt, Display, Entity, Events,
-    FlexDirection, FlexWrap, Interaction, JustifyContent, Local, NextState, NodeBundle, Query, Res,
-    ResMut, SpriteBundle, StateScoped, Style, Text, TextBundle, Transform, UiRect, Val, Vec3, With,
-    Without,
+    AlignContent, AlignItems, BuildChildren, Button, ButtonBundle, Camera2dBundle, Changed,
+    ChildBuilder, Commands, DespawnRecursiveExt, Display, Entity, Events, FlexDirection, FlexWrap,
+    Interaction, JustifyContent, Local, NextState, NodeBundle, Query, Res, ResMut, StateScoped,
+    Style, Text, TextBundle, UiRect, Val, With, Without, ZIndex,
 };
 use glob::glob;
 use std::path::{Path, PathBuf};
@@ -23,28 +20,10 @@ use std::str::from_utf8;
 
 const FULL_WIDTH: f32 = 720.0;
 
-const BACKGROUND_WIDTH: f32 = 1522.0;
-const BACKGROUND_HEIGHT: f32 = 1009.0;
-const BACKGROUND_NAME: &str = "on_the_run.png";
-
 #[allow(clippy::needless_pass_by_value)]
-pub(super) fn spawn_main_menu(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    fonts: Res<Fonts>,
-) {
+pub(super) fn spawn_main_menu(mut commands: Commands, fonts: Res<Fonts>) {
     commands.spawn((
         Camera2dBundle::default(),
-        StateScoped(ApplicationState::MainMenu),
-    ));
-
-    let background_image = asset_server.load(Paths::backgrounds_path().join(BACKGROUND_NAME));
-    commands.spawn((
-        SpriteBundle {
-            texture: background_image,
-            ..Default::default()
-        },
-        Background,
         StateScoped(ApplicationState::MainMenu),
     ));
 
@@ -59,6 +38,7 @@ pub(super) fn spawn_main_menu(
                     justify_content: JustifyContent::Center,
                     ..Style::default()
                 },
+                z_index: ZIndex::Global(3),
                 ..NodeBundle::default()
             },
             StateScoped(ApplicationState::MainMenu),
@@ -368,23 +348,6 @@ pub(super) fn manage_main_menu_button_input(
                     // This may happen when a button click causes a return to the main menu
                 }
             }
-        }
-    }
-}
-
-#[allow(clippy::needless_pass_by_value)]
-pub(super) fn resize_background(
-    cameras: Query<&Camera>,
-    mut backgrounds: Query<&mut Transform, With<Background>>,
-) {
-    let camera = cameras.single();
-
-    if let Some(camera_size) = &camera.physical_target_size() {
-        let scale =
-            (camera_size.x as f32 / BACKGROUND_WIDTH).max(camera_size.y as f32 / BACKGROUND_HEIGHT);
-
-        for mut background in &mut backgrounds {
-            *background = Transform::from_scale(Vec3::new(scale, scale, 1.0));
         }
     }
 }
