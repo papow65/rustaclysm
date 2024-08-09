@@ -1,10 +1,9 @@
+use crate::application::ApplicationState;
 use crate::gameplay::{
     CancelHandling, ElevationVisibility, Level, Player, PlayerActionState, Pos, ZoneLevel,
 };
-use bevy::{
-    ecs::system::SystemParam,
-    prelude::{DetectChanges, Query, Ref, Res, State, States, Vec3, With},
-};
+use bevy::ecs::system::SystemParam;
+use bevy::prelude::{DetectChanges, Query, Ref, Res, State, StateSet, SubStates, Vec3, With};
 use std::{cmp::Ordering, fmt};
 
 #[derive(SystemParam)]
@@ -92,8 +91,8 @@ impl<'w, 's> From<&Focus<'w, 's>> for ZoneLevel {
     }
 }
 
-/// Conceptually, this is a child state of `GameplayScreenState::Base`
-#[derive(Clone, Copy, Default, Debug, PartialEq, Eq, Hash, States)]
+#[derive(Clone, Copy, Default, Debug, PartialEq, Eq, Hash, SubStates)]
+#[source(ApplicationState = ApplicationState::Gameplay)]
 pub(crate) enum FocusState {
     #[default]
     Normal,

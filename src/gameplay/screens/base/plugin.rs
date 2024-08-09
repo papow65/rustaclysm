@@ -8,16 +8,14 @@ use crate::gameplay::{
 use bevy::input::keyboard::KeyboardInput;
 use bevy::input::mouse::{MouseMotion, MouseWheel};
 use bevy::prelude::{
-    in_state, not, on_event, resource_exists_and_changed, App, AppExtStates, IntoSystemConfigs,
-    Plugin, State, Update,
+    in_state, not, on_event, resource_exists_and_changed, App, IntoSystemConfigs, Plugin, State,
+    Update,
 };
 
 pub(crate) struct BaseScreenPlugin;
 
 impl Plugin for BaseScreenPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_state(FocusState::Normal);
-
         app.add_systems(
             Update,
             (
