@@ -1,6 +1,9 @@
+use crate::application::ApplicationState;
 use crate::common::{text_color, BAD_TEXT_COLOR, DEFAULT_TEXT_COLOR, WARN_TEXT_COLOR};
 use crate::gameplay::*;
-use bevy::prelude::{Color, Component, DetectChanges, Entity, NextState, ResMut, States};
+use bevy::prelude::{
+    Color, Component, DetectChanges, Entity, NextState, ResMut, StateSet, SubStates,
+};
 use std::fmt;
 
 #[derive(Debug, Component)]
@@ -18,8 +21,8 @@ pub(crate) enum PickingNbor {
 }
 
 /// Current action of the player character
-/// Conceptually, this is a child state of [`GameplayScreenState::Base`].
-#[derive(Clone, Debug, Default, PartialEq, Eq, Hash, States)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Hash, SubStates)]
+#[source(ApplicationState = ApplicationState::Gameplay)]
 pub(crate) enum PlayerActionState {
     #[default]
     Normal,
