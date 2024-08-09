@@ -1,5 +1,5 @@
 use crate::common::log_transition_plugin;
-use crate::gameplay::{Explored, RelativeSegments};
+use crate::gameplay::{Explored, Infos, RelativeSegments};
 use crate::loading::systems::{finish_loading, spawn_loading, start_gameplay};
 use crate::loading::ProgressScreenState;
 use bevy::prelude::{
@@ -21,7 +21,7 @@ impl Plugin for LoadingIndicatorPlugin {
         app.add_systems(
             Update,
             (
-                start_gameplay,
+                start_gameplay.run_if(resource_exists::<Infos>),
                 finish_loading.run_if(
                     resource_exists::<Explored>.and_then(resource_exists::<RelativeSegments>),
                 ),
