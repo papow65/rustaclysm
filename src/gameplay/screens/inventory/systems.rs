@@ -417,7 +417,11 @@ pub(super) fn manage_inventory_keyboard_input(
             }
             Key::Character('e') => {
                 // Special case, because we don't want to select another item after the action.
-                examine_selected_item(&inventory, &mut instruction_queue);
+                examine_selected_item(
+                    &inventory,
+                    &mut instruction_queue,
+                    &item_lines.transmute_lens().query(),
+                );
             }
             _ => {}
         }
@@ -472,11 +476,7 @@ fn handle_selected_item(
     item_lines: &Query<&InventoryItemLine>,
     char: char,
 ) {
-    if let Some(selected_row) = inventory.selection_list.selected {
-        let selected_item = item_lines
-            .get(selected_row)
-            .expect("Selected row should be found")
-            .item;
+    if let Some(selected_item) = inventory.selected_item(item_lines) {
         instruction_queue.add(
             match char {
                 'd' => {
@@ -503,8 +503,12 @@ fn handle_selected_item(
     }
 }
 
-fn examine_selected_item(inventory: &InventoryScreen, instruction_queue: &mut InstructionQueue) {
-    if let Some(selected_item) = inventory.selection_list.selected {
+fn examine_selected_item(
+    inventory: &InventoryScreen,
+    instruction_queue: &mut InstructionQueue,
+    item_lines: &Query<&InventoryItemLine>,
+) {
+    if let Some(selected_item) = inventory.selected_item(item_lines) {
         instruction_queue.add(
             QueuedInstruction::ExamineItem(selected_item),
             InputChange::Held,

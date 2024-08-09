@@ -72,6 +72,15 @@ impl InventoryScreen {
             }
         }
     }
+
+    pub(super) fn selected_item(&self, item_lines: &Query<&InventoryItemLine>) -> Option<Entity> {
+        self.selection_list.selected.map(|selected_line| {
+            item_lines
+                .get(selected_line)
+                .expect("Selected row should be found")
+                .item
+        })
+    }
 }
 
 fn set_text_style(text: &mut Text, style: &TextStyle) {
