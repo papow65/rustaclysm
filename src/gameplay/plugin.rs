@@ -13,7 +13,7 @@ pub(crate) struct GameplayPlugin;
 
 impl Plugin for GameplayPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_state(GameplayScreenState::Inapplicable);
+        app.add_sub_state::<GameplayScreenState>();
         app.enable_state_scoped_entities::<GameplayScreenState>();
 
         app.add_plugins((
@@ -143,7 +143,6 @@ fn fixed_update_systems() -> impl IntoSystemConfigs<()> {
 
 fn shutdown_systems() -> impl IntoSystemConfigs<()> {
     (
-        disable_screen_state,
         remove_gameplay_resources,
         (
             clear_gameplay_events::<Message>,

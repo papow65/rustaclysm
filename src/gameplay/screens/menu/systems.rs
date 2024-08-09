@@ -84,7 +84,6 @@ pub(super) fn manage_menu_button_input(
                     next_gameplay_state.set(GameplayScreenState::Base);
                 }
                 (false, true, false) => {
-                    next_gameplay_state.set(GameplayScreenState::Inapplicable);
                     next_application_state.set(ApplicationState::MainMenu);
                 }
                 (false, false, true) => {

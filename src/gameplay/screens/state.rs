@@ -1,8 +1,10 @@
-use bevy::prelude::States;
+use crate::application::ApplicationState;
+use bevy::prelude::{StateSet, SubStates};
 
-/// Conceptually, this is a child state of `ApplicationState::Gameplay`
-#[derive(Clone, Copy, Default, Debug, PartialEq, Eq, Hash, States)]
+#[derive(Clone, Copy, Default, Debug, PartialEq, Eq, Hash, SubStates)]
+#[source(ApplicationState = ApplicationState::Gameplay)]
 pub(crate) enum GameplayScreenState {
+    #[default]
     Base,
     //Character, // TODO
     Inventory,
@@ -11,9 +13,6 @@ pub(crate) enum GameplayScreenState {
     Menu,
     //Saving, // TODO
     Death,
-    /// When not `ApplicationState::Gameplay`
-    #[default]
-    Inapplicable,
 }
 
 impl GameplayScreenState {

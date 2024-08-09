@@ -82,9 +82,8 @@ pub(super) fn spawn_death_screen(mut commands: Commands, fonts: Res<Fonts>) {
 
 #[allow(clippy::needless_pass_by_value)]
 pub(super) fn manage_death_keyboard_input(
-    keys: Res<Keys>,
     mut next_application_state: ResMut<NextState<ApplicationState>>,
-    mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
+    keys: Res<Keys>,
 ) {
     for _ in keys.just_pressed_without_ctrl().filter(|key| {
         matches!(
@@ -93,20 +92,17 @@ pub(super) fn manage_death_keyboard_input(
         )
     }) {
         next_application_state.set(ApplicationState::MainMenu);
-        next_gameplay_state.set(GameplayScreenState::Inapplicable);
     }
 }
 
 #[allow(clippy::needless_pass_by_value)]
 pub(super) fn manage_death_button_input(
     mut next_application_state: ResMut<NextState<ApplicationState>>,
-    mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
     interactions: Query<&Interaction, (Changed<Interaction>, With<Button>)>,
 ) {
     for &interaction in &interactions {
         if interaction == Interaction::Pressed {
             next_application_state.set(ApplicationState::MainMenu);
-            next_gameplay_state.set(GameplayScreenState::Inapplicable);
         }
     }
 }

@@ -1,10 +1,10 @@
 use crate::cdda::{Map, MapMemory, Overmap, OvermapBuffer, Sav};
 use crate::gameplay::{
     AppearanceCache, AssetStorage, CameraOffset, Expanded, Explored, GameplayCounter,
-    GameplayScreenState, InstructionQueue, Location, MeshCaches, Overzone, SubzoneLevelEntities,
-    Timeouts, VisualizationUpdate, ZoneLevel, ZoneLevelEntities, ZoneLevelIds,
+    InstructionQueue, Location, MeshCaches, Overzone, SubzoneLevelEntities, Timeouts,
+    VisualizationUpdate, ZoneLevel, ZoneLevelEntities, ZoneLevelIds,
 };
-use bevy::prelude::{Commands, Event, Events, NextState, ResMut};
+use bevy::prelude::{Commands, Event, Events, ResMut};
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn remove_gameplay_resources(mut commands: Commands) {
@@ -32,11 +32,6 @@ pub(crate) fn remove_gameplay_resources(mut commands: Commands) {
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn clear_gameplay_events<T: Event>(mut events: ResMut<Events<T>>) {
     events.clear();
-}
-
-#[allow(clippy::needless_pass_by_value)]
-pub(crate) fn disable_screen_state(mut next_state: ResMut<NextState<GameplayScreenState>>) {
-    next_state.set(GameplayScreenState::Inapplicable);
 }
 
 #[allow(clippy::needless_pass_by_value)]

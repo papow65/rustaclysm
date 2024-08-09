@@ -131,9 +131,6 @@ pub(super) fn update_manual(
                 GameplayScreenState::Crafting => CRAFTING_MANUAL_CONTENTS,
                 GameplayScreenState::Menu => MENU_MANUAL_CONTENTS,
                 GameplayScreenState::Death => DEATH_MANUAL_CONTENTS,
-                GameplayScreenState::Inapplicable => {
-                    panic!("Gameplay manual contents should not be updated outside of gameplay")
-                }
             },
         );
 }
