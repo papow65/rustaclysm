@@ -1,8 +1,8 @@
 use crate::background::{component::Background, state::BackgroundState};
 use crate::common::Paths;
 use bevy::prelude::{
-    AssetServer, Camera, Commands, ImageBundle, PositionType, Query, Res, StateScoped, Style,
-    UiImage, Val, With, ZIndex,
+    AssetServer, Commands, ImageBundle, PositionType, Query, Res, StateScoped, Style, UiImage, Val,
+    Window, With, ZIndex,
 };
 
 const BACKGROUND_WIDTH: f32 = 1522.0;
@@ -13,9 +13,9 @@ const BACKGROUND_NAME: &str = "on_the_run.png";
 pub(super) fn spawn_background(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    cameras: Query<&Camera>,
+    windows: Query<&Window>,
 ) {
-    let background_scale = background_scale(cameras.get_single().ok());
+    let background_scale = background_scale(windows.get_single().ok());
     let background_image = asset_server.load(Paths::backgrounds_path().join(BACKGROUND_NAME));
     commands.spawn((
         ImageBundle {
@@ -39,19 +39,20 @@ pub(super) fn spawn_background(
 
 #[allow(clippy::needless_pass_by_value)]
 pub(super) fn resize_background(
-    cameras: Query<&Camera>,
+    windows: Query<&Window>,
     mut backgrounds: Query<&mut Style, With<Background>>,
 ) {
     if let Ok(mut style) = backgrounds.get_single_mut() {
-        (style.width, style.height) = background_scale(cameras.get_single().ok());
+        (style.width, style.height) = background_scale(windows.get_single().ok());
     }
 }
 
-fn background_scale(camera: Option<&Camera>) -> (Val, Val) {
-    let ratio = if let Some(camera_size) = camera.and_then(Camera::physical_target_size) {
-        camera_size.y as f32 * BACKGROUND_WIDTH / (BACKGROUND_HEIGHT * camera_size.x as f32)
+fn background_scale(window: Option<&Window>) -> (Val, Val) {
+    let ratio = if let Some(window) = window {
+        window.resolution.height() * BACKGROUND_WIDTH
+            / (BACKGROUND_HEIGHT * window.resolution.width())
     } else {
-        eprintln!("No camera size available (yet?) to resize the background to");
+        eprintln!("No window size available (yet?) to resize the background to");
         1.0
     };
 
