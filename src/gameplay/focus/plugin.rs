@@ -1,3 +1,4 @@
+use crate::common::log_transition_plugin;
 use crate::gameplay::focus::systems::{update_camera_base, update_focus_cursor_visibility};
 use crate::gameplay::{loop_behavior_and_refresh, update_visibility, FocusState};
 use bevy::prelude::{
@@ -10,6 +11,7 @@ pub(crate) struct FocusPlugin;
 impl Plugin for FocusPlugin {
     fn build(&self, app: &mut App) {
         app.add_sub_state::<FocusState>();
+        app.add_plugins((log_transition_plugin::<FocusState>,));
 
         app.add_systems(
             Update,
