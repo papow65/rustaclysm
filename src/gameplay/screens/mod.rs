@@ -7,7 +7,7 @@ mod menu;
 mod state;
 
 pub(crate) use self::{
-    base::{update_camera_offset, BaseScreenPlugin, Focus, FocusState, InstructionQueue},
+    base::{update_camera_offset, BaseScreenPlugin, InstructionQueue},
     character::CharacterScreenPlugin,
     crafting::{AlternativeSituation, CraftingScreenPlugin, RecipeSituation},
     death::DeathScreenPlugin,

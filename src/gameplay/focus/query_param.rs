@@ -1,10 +1,7 @@
-use crate::application::ApplicationState;
-use crate::gameplay::{
-    CancelHandling, ElevationVisibility, Level, Player, PlayerActionState, Pos, ZoneLevel,
-};
+use crate::gameplay::{ElevationVisibility, FocusState, Level, Player, Pos, ZoneLevel};
 use bevy::ecs::system::SystemParam;
-use bevy::prelude::{DetectChanges, Query, Ref, Res, State, StateSet, SubStates, Vec3, With};
-use std::{cmp::Ordering, fmt};
+use bevy::prelude::{DetectChanges, NextState, Query, Ref, Res, State, Vec3, With};
+use std::cmp::Ordering;
 
 #[derive(SystemParam)]
 pub(crate) struct Focus<'w, 's> {
@@ -13,6 +10,20 @@ pub(crate) struct Focus<'w, 's> {
 }
 
 impl<'w, 's> Focus<'w, 's> {
+    pub(crate) fn toggle_examine_pos(&self, next_focus_state: &mut NextState<FocusState>) {
+        next_focus_state.set(match **self.state {
+            FocusState::ExaminingPos(_) => FocusState::Normal,
+            _ => FocusState::ExaminingPos(Pos::from(self)),
+        });
+    }
+
+    pub(crate) fn toggle_examine_zone_level(&self, next_focus_state: &mut NextState<FocusState>) {
+        next_focus_state.set(match **self.state {
+            FocusState::ExaminingZoneLevel(_) => FocusState::Normal,
+            _ => FocusState::ExaminingZoneLevel(ZoneLevel::from(self)),
+        });
+    }
+
     pub(crate) fn is_changed(&self) -> bool {
         self.state.is_changed() || self.players.single().is_changed()
     }
@@ -88,42 +99,5 @@ impl<'w, 's> From<&Focus<'w, 's>> for ZoneLevel {
             FocusState::ExaminingPos(pos) => Self::from(pos),
             FocusState::ExaminingZoneLevel(zone_level) => zone_level,
         }
-    }
-}
-
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, SubStates)]
-#[source(ApplicationState = ApplicationState::Gameplay)]
-pub(crate) enum FocusState {
-    #[default]
-    Normal,
-    ExaminingPos(Pos),
-    ExaminingZoneLevel(ZoneLevel),
-}
-
-impl FocusState {
-    pub(crate) const fn cancel_handling(
-        &self,
-        player_action_state: &PlayerActionState,
-    ) -> CancelHandling {
-        if !matches!(*self, Self::Normal) {
-            CancelHandling::Queued
-        } else if matches!(
-            player_action_state,
-            PlayerActionState::Normal | PlayerActionState::Sleeping { .. }
-        ) {
-            CancelHandling::Menu
-        } else {
-            CancelHandling::Queued
-        }
-    }
-}
-
-impl fmt::Display for FocusState {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.write_str(match self {
-            Self::Normal => "",
-            Self::ExaminingPos(_) => "Examining",
-            Self::ExaminingZoneLevel(_) => "Examining map",
-        })
     }
 }

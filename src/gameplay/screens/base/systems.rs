@@ -1,8 +1,8 @@
 use crate::common::{log_if_slow, InputChange, Keys, ScrollingList};
 use crate::gameplay::{
-    CameraBase, CameraOffset, ElevationVisibility, ExamineCursor, Focus, FocusState,
-    GameplayScreenState, Instruction, InstructionQueue, MessageWriter, PlayerActionState, Pos,
-    QueuedInstruction, VisualizationUpdate, ZoneLevel, ZoomDirection, ZoomDistance,
+    CameraOffset, ElevationVisibility, Focus, FocusState, GameplayScreenState, Instruction,
+    InstructionQueue, MessageWriter, PlayerActionState, QueuedInstruction, VisualizationUpdate,
+    ZoomDirection, ZoomDistance,
 };
 use bevy::input::mouse::{MouseMotion, MouseWheel};
 use bevy::{prelude::*, render::view::RenderLayers};
@@ -10,20 +10,6 @@ use std::time::Instant;
 
 fn open_menu(next_gameplay_state: &mut NextState<GameplayScreenState>) {
     next_gameplay_state.set(GameplayScreenState::Menu);
-}
-
-fn toggle_examine_pos(focus: &Focus, next_focus_state: &mut NextState<FocusState>) {
-    next_focus_state.set(match **focus.state {
-        FocusState::ExaminingPos(_) => FocusState::Normal,
-        _ => FocusState::ExaminingPos(Pos::from(focus)),
-    });
-}
-
-fn toggle_examine_zone_level(focus: &Focus, next_focus_state: &mut NextState<FocusState>) {
-    next_focus_state.set(match **focus.state {
-        FocusState::ExaminingZoneLevel(_) => FocusState::Normal,
-        _ => FocusState::ExaminingZoneLevel(ZoneLevel::from(focus)),
-    });
 }
 
 fn open_crafting_screen(next_gameplay_state: &mut NextState<GameplayScreenState>) {
@@ -205,10 +191,10 @@ pub(super) fn manage_keyboard_input(
         match instruction {
             Instruction::ShowGameplayMenu => open_menu(&mut next_gameplay_state),
             Instruction::ExaminePos => {
-                toggle_examine_pos(&focus, &mut next_focus_state);
+                focus.toggle_examine_pos(&mut next_focus_state);
             }
             Instruction::ExamineZoneLevel => {
-                toggle_examine_zone_level(&focus, &mut next_focus_state);
+                focus.toggle_examine_zone_level(&mut next_focus_state);
             }
             Instruction::CraftingScreen => open_crafting_screen(&mut next_gameplay_state),
             Instruction::Inventory => open_inventory(&mut next_gameplay_state),
@@ -235,43 +221,6 @@ pub(super) fn manage_keyboard_input(
     instruction_queue.log_if_long();
 
     log_if_slow("manage_keyboard_input", start);
-}
-
-#[allow(clippy::needless_pass_by_value)]
-pub(super) fn update_focus_cursor_visibility(
-    focus_state: Res<State<FocusState>>,
-    mut curors: Query<(&mut Visibility, &mut Transform), With<ExamineCursor>>,
-) {
-    let start = Instant::now();
-
-    if let Ok((mut visibility, mut transform)) = curors.get_single_mut() {
-        let examine_pos = matches!(**focus_state, FocusState::ExaminingPos(_));
-        let examine_zone_level = matches!(**focus_state, FocusState::ExaminingZoneLevel(_));
-        *visibility = if examine_pos || examine_zone_level {
-            Visibility::Inherited
-        } else {
-            Visibility::Hidden
-        };
-        transform.scale = if examine_zone_level {
-            Vec3::splat(24.0)
-        } else {
-            Vec3::ONE
-        };
-    }
-
-    log_if_slow("update_focus_cursor_visibility", start);
-}
-
-#[allow(clippy::needless_pass_by_value)]
-pub(super) fn update_camera_base(
-    focus: Focus,
-    mut camera_bases: Query<&mut Transform, (With<CameraBase>, Without<Camera3d>)>,
-) {
-    let start = Instant::now();
-
-    camera_bases.single_mut().translation = focus.offset();
-
-    log_if_slow("update_camera", start);
 }
 
 #[allow(clippy::needless_pass_by_value)]

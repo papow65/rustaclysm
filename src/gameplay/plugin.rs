@@ -14,11 +14,11 @@ pub(crate) struct GameplayPlugin;
 impl Plugin for GameplayPlugin {
     fn build(&self, app: &mut App) {
         app.add_sub_state::<GameplayScreenState>();
-        app.add_sub_state::<FocusState>();
         app.enable_state_scoped_entities::<GameplayScreenState>();
 
         app.add_plugins((
             ActorPlugin,
+            FocusPlugin,
             HudPlugin,
             BaseScreenPlugin,
             CharacterScreenPlugin,
