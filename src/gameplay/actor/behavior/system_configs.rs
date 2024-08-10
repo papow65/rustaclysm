@@ -14,12 +14,12 @@ use crate::gameplay::actor::behavior::systems::refresh::{
 };
 use crate::gameplay::{
     update_visualization_on_item_move, ActorEvent, CorpseEvent, Damage, Healing, InstructionQueue,
-    PlayerActionState, RefreshAfterBehavior, StaminaImpact, TerrainEvent, Toggle,
+    PlayerActionState, RefreshAfterBehavior, RelativeSegments, StaminaImpact, TerrainEvent, Toggle,
 };
 use bevy::ecs::system::SystemState;
 use bevy::prelude::{
-    on_event, resource_exists_and_changed, IntoSystem, IntoSystemConfigs, Res, State,
-    StateTransition, World,
+    on_event, resource_exists, resource_exists_and_changed, IntoSystem, IntoSystemConfigs, Res,
+    State, StateTransition, World,
 };
 use std::time::{Duration, Instant};
 
@@ -39,6 +39,7 @@ pub(crate) fn loop_behavior_and_refresh() -> impl IntoSystemConfigs<()> {
             .run_if(on_event::<RefreshAfterBehavior>()),
     )
         .chain()
+        .run_if(resource_exists::<RelativeSegments>)
 }
 
 /// This repeatedly runs [`BehaviorSchedule`], until the time runs out or player input is required.
