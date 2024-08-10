@@ -236,3 +236,8 @@ pub(crate) fn update_camera_offset(
 
     log_if_slow("update_camera", start);
 }
+
+#[allow(clippy::needless_pass_by_value)]
+pub(in super::super) fn trigger_refresh(mut visualization_update: ResMut<VisualizationUpdate>) {
+    *visualization_update = VisualizationUpdate::Forced;
+}

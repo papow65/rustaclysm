@@ -13,7 +13,7 @@ impl Plugin for BackgroundPlugin {
     fn build(&self, app: &mut App) {
         app.add_computed_state::<BackgroundState>();
         app.enable_state_scoped_entities::<BackgroundState>();
-        app.add_plugins((log_transition_plugin::<BackgroundState>,));
+        app.add_plugins(log_transition_plugin::<BackgroundState>);
 
         app.add_systems(OnEnter(BackgroundState), spawn_background);
 

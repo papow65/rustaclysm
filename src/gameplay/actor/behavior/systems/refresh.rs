@@ -175,11 +175,6 @@ pub(in super::super) fn update_visualization_on_weather_change(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(in super::super) fn trigger_refresh(mut visualization_update: ResMut<VisualizationUpdate>) {
-    *visualization_update = VisualizationUpdate::Forced;
-}
-
-#[allow(clippy::needless_pass_by_value)]
 pub(in super::super) fn check_items(
     item_parents: Query<Option<&Parent>, Or<(With<Amount>, With<Containable>)>>,
 ) {

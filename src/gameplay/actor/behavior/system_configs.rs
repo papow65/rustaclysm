@@ -23,7 +23,7 @@ use bevy::prelude::{
 };
 use std::time::{Duration, Instant};
 
-pub(crate) fn loop_behavior_and_refresh() -> impl IntoSystemConfigs<()> {
+pub(super) fn loop_behavior_and_refresh() -> impl IntoSystemConfigs<()> {
     (
         loop_behavior,
         (
