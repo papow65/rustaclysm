@@ -91,7 +91,7 @@ impl<'w, 's> From<&Focus<'w, 's>> for ZoneLevel {
     }
 }
 
-#[derive(Clone, Copy, Default, Debug, PartialEq, Eq, Hash, SubStates)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, SubStates)]
 #[source(ApplicationState = ApplicationState::Gameplay)]
 pub(crate) enum FocusState {
     #[default]

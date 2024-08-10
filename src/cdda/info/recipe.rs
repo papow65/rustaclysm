@@ -76,7 +76,7 @@ impl Default for AutoLearn {
     }
 }
 
-#[derive(Default, Debug, Deserialize)]
+#[derive(Debug, Default, Deserialize)]
 #[serde(from = "Vec<Wrap<RequiredQuality>>")]
 pub(crate) struct RequiredQualities(pub(crate) Vec<RequiredQuality>);
 
