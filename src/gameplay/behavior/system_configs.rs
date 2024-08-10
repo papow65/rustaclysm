@@ -1,14 +1,14 @@
 use crate::common::log_if_slow;
-use crate::gameplay::actor::behavior::schedule::BehaviorSchedule;
-use crate::gameplay::actor::behavior::systems::core::{
+use crate::gameplay::behavior::schedule::BehaviorSchedule;
+use crate::gameplay::behavior::systems::core::{
     egible_character, perform_action, plan_action, proces_impact,
 };
-use crate::gameplay::actor::behavior::systems::handlers::{
+use crate::gameplay::behavior::systems::handlers::{
     combine_items, spawn_broken_terrain, toggle_doors, update_corpses, update_damaged_characters,
     update_damaged_corpses, update_damaged_terrain, update_explored, update_healed_characters,
     update_stamina,
 };
-use crate::gameplay::actor::behavior::systems::refresh::{
+use crate::gameplay::behavior::systems::refresh::{
     check_items, update_hidden_item_visibility, update_peeking_transforms, update_transforms,
     update_visualization_on_player_move, update_visualization_on_weather_change,
 };

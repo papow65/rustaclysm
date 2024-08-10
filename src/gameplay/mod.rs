@@ -1,4 +1,5 @@
 mod actor;
+mod behavior;
 mod components;
 mod core;
 mod events;

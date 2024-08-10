@@ -1,5 +1,4 @@
 mod actions;
-mod behavior;
 mod breath;
 mod events;
 mod faction;

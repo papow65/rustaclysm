@@ -1,9 +1,6 @@
 use crate::common::log_transition_plugin;
-use crate::gameplay::actor::behavior::schedule::BehaviorSchedule;
-use crate::gameplay::actor::behavior::state::BehaviorState;
-use crate::gameplay::actor::behavior::system_configs::{
-    behavior_systems, loop_behavior_and_refresh,
-};
+use crate::gameplay::behavior::system_configs::{behavior_systems, loop_behavior_and_refresh};
+use crate::gameplay::behavior::{schedule::BehaviorSchedule, state::BehaviorState};
 use bevy::prelude::{in_state, App, AppExtStates, IntoSystemConfigs, Plugin, Update};
 
 pub(in super::super) struct BehaviorPlugin;

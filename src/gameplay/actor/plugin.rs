@@ -1,5 +1,5 @@
 use crate::application::ApplicationState;
-use crate::gameplay::actor::behavior::BehaviorPlugin;
+use crate::gameplay::behavior::BehaviorPlugin;
 use crate::gameplay::{
     clear_gameplay_events, ActorEvent, Damage, Healing, PlayerActionState, StaminaImpact,
 };
