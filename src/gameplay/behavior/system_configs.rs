@@ -12,9 +12,10 @@ use crate::gameplay::behavior::systems::refresh::{
     check_items, update_hidden_item_visibility, update_peeking_transforms, update_transforms,
     update_visualization_on_player_move, update_visualization_on_weather_change,
 };
+use crate::gameplay::systems::update_visualization_on_item_move;
 use crate::gameplay::{
-    update_visualization_on_item_move, ActorEvent, CorpseEvent, Damage, Healing, InstructionQueue,
-    PlayerActionState, RefreshAfterBehavior, RelativeSegments, StaminaImpact, TerrainEvent, Toggle,
+    ActorEvent, CorpseEvent, Damage, Healing, InstructionQueue, PlayerActionState,
+    RefreshAfterBehavior, RelativeSegments, StaminaImpact, TerrainEvent, Toggle,
 };
 use bevy::ecs::system::SystemState;
 use bevy::prelude::{

@@ -1,6 +1,6 @@
 use crate::common::log_transition_plugin;
 use crate::gameplay::focus::systems::{update_camera_base, update_focus_cursor_visibility};
-use crate::gameplay::{update_visibility, FocusState};
+use crate::gameplay::{systems::update_visibility, FocusState};
 use bevy::prelude::{
     in_state, not, resource_exists_and_changed, App, AppExtStates, IntoSystemConfigs, Plugin,
     State, Update,

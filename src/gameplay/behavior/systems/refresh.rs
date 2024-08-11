@@ -1,10 +1,11 @@
 //! These systems run once after [`loop_behavior`].
 
 use crate::common::log_if_slow;
+use crate::gameplay::systems::update_visualization;
 use crate::gameplay::{
-    update_visualization, Accessible, Amount, Appearance, BaseSpeed, Clock, Containable,
-    CurrentlyVisible, CurrentlyVisibleBuilder, ElevationVisibility, Explored, Focus,
-    GameplaySession, LastSeen, Player, PlayerActionState, Pos, VisualizationUpdate,
+    Accessible, Amount, Appearance, BaseSpeed, Clock, Containable, CurrentlyVisible,
+    CurrentlyVisibleBuilder, ElevationVisibility, Explored, Focus, GameplaySession, LastSeen,
+    Player, PlayerActionState, Pos, VisualizationUpdate,
 };
 use bevy::prelude::{
     Camera, Changed, Children, GlobalTransform, Handle, Local, Mesh, Or, ParallelCommands, Parent,
