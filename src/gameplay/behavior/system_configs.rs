@@ -52,7 +52,9 @@ fn loop_behavior(world: &mut World) {
         .is_some_and(|state| {
             matches!(
                 **state,
-                PlayerActionState::Waiting { .. } | PlayerActionState::Sleeping { .. }
+                PlayerActionState::Crafting { .. }
+                    | PlayerActionState::Waiting { .. }
+                    | PlayerActionState::Sleeping { .. }
             )
         }) {
         // Allows 10 fps
