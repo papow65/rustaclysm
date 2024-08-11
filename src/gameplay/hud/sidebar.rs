@@ -1,14 +1,20 @@
 use crate::cdda::MoveCost;
 use crate::common::{
-    log_if_slow, Fonts, ScrollingList, BAD_TEXT_COLOR, DEFAULT_TEXT_COLOR, FILTHY_COLOR,
-    GOOD_TEXT_COLOR, WARN_TEXT_COLOR,
+    log_if_slow, on_safe_event, Fonts, ScrollingList, BAD_TEXT_COLOR, DEFAULT_TEXT_COLOR,
+    FILTHY_COLOR, GOOD_TEXT_COLOR, WARN_TEXT_COLOR,
 };
 use crate::gameplay::hud::components::{LogDisplay, StatusDisplay};
 use crate::gameplay::hud::resources::{HudDefaults, StatusTextSections};
 use crate::{application::ApplicationState, gameplay::*};
 use bevy::diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin};
 use bevy::ecs::system::EntityCommands;
-use bevy::prelude::*;
+use bevy::prelude::{
+    resource_exists, resource_exists_and_changed, BuildChildren, Changed, Commands, Condition,
+    DetectChanges, Entity, EventReader, FlexDirection, FlexWrap, FromWorld, IntoSystemConfigs,
+    JustifyContent, Local, NodeBundle, Or, Overflow, Parent, PositionType, Query, Res, ResMut,
+    State, StateScoped, Style, Text, TextBundle, TextSection, TextStyle, UiRect, Val, Visibility,
+    With, Without, World,
+};
 use std::time::Instant;
 
 const TEXT_WIDTH: f32 = 8.0 * 43.0; // 43 chars
@@ -80,9 +86,9 @@ fn spawn_log_display(parent: &mut EntityCommands) {
                     flex_direction: FlexDirection::Column,
                     justify_content: JustifyContent::End,
                     overflow: Overflow::clip(),
-                    ..default()
+                    ..Style::default()
                 },
-                ..default()
+                ..NodeBundle::default()
             })
             .with_children(|child_builder| {
                 child_builder.spawn((
@@ -112,7 +118,7 @@ pub(super) fn update_sidebar_systems() -> impl IntoSystemConfigs<()> {
         update_status_time.run_if(resource_exists_and_changed::<Timeouts>),
         update_status_health.run_if(resource_exists_and_changed::<Timeouts>),
         update_status_stamina.run_if(resource_exists_and_changed::<Timeouts>),
-        update_status_speed.run_if(on_event::<RefreshAfterBehavior>()),
+        update_status_speed.run_if(on_safe_event::<RefreshAfterBehavior>()),
         update_status_player_action_state
             .run_if(resource_exists_and_changed::<State<PlayerActionState>>),
         update_status_player_wielded.run_if(resource_exists_and_changed::<Timeouts>),
@@ -121,7 +127,7 @@ pub(super) fn update_sidebar_systems() -> impl IntoSystemConfigs<()> {
             resource_exists_and_changed::<State<PlayerActionState>>
                 .or_else(resource_exists_and_changed::<State<FocusState>>),
         ),
-        update_log.run_if(on_event::<Message>()),
+        update_log.run_if(on_safe_event::<Message>()),
     )
         .chain()
         .run_if(resource_exists::<StatusTextSections>.and_then(resource_exists::<RelativeSegments>))

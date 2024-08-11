@@ -11,7 +11,6 @@ mod object_definition;
 mod object_id;
 mod offset;
 mod region;
-mod toggle;
 mod type_id;
 mod vision_distance;
 
@@ -29,7 +28,6 @@ pub(crate) use self::{
     object_id::ObjectId,
     offset::{LevelOffset, PosOffset},
     region::{Region, ZoneRegion},
-    toggle::Toggle,
     type_id::TypeId,
     vision_distance::VisionDistance,
 };

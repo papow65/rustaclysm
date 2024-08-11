@@ -4,6 +4,7 @@ mod components;
 mod fonts;
 mod key;
 mod log_transition;
+mod on_safe_event;
 mod paths;
 mod scrolling_list;
 mod selection_list;
@@ -21,6 +22,7 @@ pub(crate) use self::{
     fonts::Fonts,
     key::{InputChange, Key, KeyChange, Keys},
     log_transition::log_transition_plugin,
+    on_safe_event::on_safe_event,
     paths::{PathFor, Paths, WorldPath},
     scrolling_list::ScrollingList,
     selection_list::{SelectionList, StepDirection, StepSize},

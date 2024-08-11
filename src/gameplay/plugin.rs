@@ -1,19 +1,20 @@
 use crate::application::ApplicationState;
 use crate::cdda::{Map, MapMemory, Overmap, OvermapBuffer, TileLoader};
-use crate::common::{load_async_resource, log_transition_plugin, AsyncResourceLoader};
+use crate::common::{
+    load_async_resource, log_transition_plugin, on_safe_event, AsyncResourceLoader,
+};
 use crate::gameplay::systems::*;
 use crate::gameplay::{
-    hud::HudPlugin, update_camera_offset, ActorPlugin, BaseScreenPlugin, CameraOffset,
-    CharacterScreenPlugin, CorpseEvent, CraftingScreenPlugin, Damage, DeathScreenPlugin,
+    events::EventPlugin, hud::HudPlugin, update_camera_offset, ActorPlugin, BaseScreenPlugin,
+    CameraOffset, CharacterScreenPlugin, CraftingScreenPlugin, DeathScreenPlugin,
     DespawnSubzoneLevel, DespawnZoneLevel, ElevationVisibility, FocusPlugin, GameplayCounter,
-    GameplayScreenState, Infos, InventoryScreenPlugin, MenuScreenPlugin, Message,
-    RefreshAfterBehavior, RelativeSegments, SpawnSubzoneLevel, SpawnZoneLevel, TerrainEvent,
-    Toggle, UpdateZoneLevelVisibility,
+    GameplayScreenState, Infos, InventoryScreenPlugin, MenuScreenPlugin, RelativeSegments,
+    SpawnSubzoneLevel, SpawnZoneLevel, UpdateZoneLevelVisibility,
 };
 use bevy::input::keyboard::KeyboardInput;
 use bevy::prelude::{
     in_state, on_event, resource_exists, resource_exists_and_changed, App, AppExtStates,
-    AssetEvent, Condition, Events, FixedUpdate, IntoSystemConfigs, OnEnter, OnExit, Plugin, Update,
+    AssetEvent, FixedUpdate, IntoSystemConfigs, OnEnter, OnExit, Plugin, Update,
 };
 use bevy::{diagnostic::FrameTimeDiagnosticsPlugin, ecs::schedule::SystemConfigTupleMarker};
 
@@ -29,6 +30,7 @@ impl Plugin for GameplayPlugin {
             FocusPlugin,
             HudPlugin,
             BaseScreenPlugin,
+            EventPlugin,
             CharacterScreenPlugin,
             CraftingScreenPlugin,
             DeathScreenPlugin,
@@ -43,17 +45,7 @@ impl Plugin for GameplayPlugin {
             .insert_resource(AsyncResourceLoader::<Infos>::default())
             .insert_resource(AsyncResourceLoader::<RelativeSegments>::default())
             .insert_resource(AsyncResourceLoader::<TileLoader>::default())
-            .insert_resource(GameplayCounter::default())
-            .insert_resource(Events::<Message>::default())
-            .insert_resource(Events::<SpawnSubzoneLevel>::default())
-            .insert_resource(Events::<DespawnSubzoneLevel>::default())
-            .insert_resource(Events::<SpawnZoneLevel>::default())
-            .insert_resource(Events::<UpdateZoneLevelVisibility>::default())
-            .insert_resource(Events::<DespawnZoneLevel>::default())
-            .insert_resource(Events::<CorpseEvent<Damage>>::default())
-            .insert_resource(Events::<TerrainEvent<Damage>>::default())
-            .insert_resource(Events::<TerrainEvent<Toggle>>::default())
-            .insert_resource(Events::<RefreshAfterBehavior>::default());
+            .insert_resource(GameplayCounter::default());
 
         app.add_systems(OnEnter(ApplicationState::Gameplay), startup_systems());
         app.add_systems(Update, update_systems());
@@ -79,10 +71,8 @@ fn update_systems() -> impl IntoSystemConfigs<(SystemConfigTupleMarker, (), (), 
                     handle_overmap_buffer_events.run_if(on_event::<AssetEvent<OvermapBuffer>>()),
                     handle_overmap_events.run_if(on_event::<AssetEvent<Overmap>>()),
                 ),
-                update_zone_levels_with_missing_assets.run_if(
-                    on_event::<AssetEvent<Overmap>>()
-                        .or_else(on_event::<AssetEvent<OvermapBuffer>>()),
-                ),
+                update_zone_levels_with_missing_assets
+                    .run_if(on_safe_event::<AssetEvent<OvermapBuffer>>()),
             )
                 .chain(),
             handle_map_events.run_if(on_event::<AssetEvent<Map>>()),
@@ -96,14 +86,8 @@ fn update_systems() -> impl IntoSystemConfigs<(SystemConfigTupleMarker, (), (), 
                             .run_if(resource_exists::<RelativeSegments>),
                     )
                         .chain()
-                        .run_if(
-                            resource_exists::<Events<SpawnSubzoneLevel>>
-                                .and_then(on_event::<SpawnSubzoneLevel>()),
-                        ),
-                    despawn_subzone_levels.run_if(
-                        resource_exists::<Events<DespawnSubzoneLevel>>
-                            .and_then(on_event::<DespawnSubzoneLevel>()),
-                    ),
+                        .run_if(on_safe_event::<SpawnSubzoneLevel>()),
+                    despawn_subzone_levels.run_if(on_safe_event::<DespawnSubzoneLevel>()),
                 ),
             )
                 .chain(),
@@ -111,22 +95,11 @@ fn update_systems() -> impl IntoSystemConfigs<(SystemConfigTupleMarker, (), (), 
             (
                 update_zone_levels,
                 (
-                    spawn_zone_levels.run_if(
-                        resource_exists::<Events<SpawnZoneLevel>>
-                            .and_then(on_event::<SpawnZoneLevel>()),
-                    ),
-                    update_zone_level_visibility.run_if(
-                        resource_exists::<Events<UpdateZoneLevelVisibility>>
-                            .and_then(on_event::<UpdateZoneLevelVisibility>()),
-                    ),
-                    despawn_zone_level.run_if(
-                        resource_exists::<Events<DespawnZoneLevel>>
-                            .and_then(on_event::<DespawnZoneLevel>()),
-                    ),
-                    count_entities.run_if(
-                        resource_exists::<Events<DespawnZoneLevel>>
-                            .and_then(on_event::<DespawnZoneLevel>()),
-                    ),
+                    spawn_zone_levels.run_if(on_safe_event::<SpawnZoneLevel>()),
+                    update_zone_level_visibility
+                        .run_if(on_safe_event::<UpdateZoneLevelVisibility>()),
+                    despawn_zone_level.run_if(on_safe_event::<DespawnZoneLevel>()),
+                    count_entities.run_if(on_safe_event::<DespawnZoneLevel>()),
                 ),
             )
                 .chain(),
@@ -151,22 +124,5 @@ fn fixed_update_systems() -> impl IntoSystemConfigs<()> {
 }
 
 fn shutdown_systems() -> impl IntoSystemConfigs<()> {
-    (
-        remove_gameplay_resources,
-        (
-            clear_gameplay_events::<Message>,
-            clear_gameplay_events::<SpawnSubzoneLevel>,
-            clear_gameplay_events::<DespawnSubzoneLevel>,
-            clear_gameplay_events::<SpawnZoneLevel>,
-            clear_gameplay_events::<UpdateZoneLevelVisibility>,
-            clear_gameplay_events::<DespawnZoneLevel>,
-        ),
-        (
-            clear_gameplay_events::<CorpseEvent<Damage>>,
-            clear_gameplay_events::<TerrainEvent<Damage>>,
-            clear_gameplay_events::<TerrainEvent<Toggle>>,
-        ),
-        increase_counter,
-    )
-        .chain()
+    (remove_gameplay_resources, increase_counter).chain()
 }
