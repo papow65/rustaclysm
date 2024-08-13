@@ -11,22 +11,21 @@ use bevy::prelude::{Commands, Res};
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn create_independent_resources(mut commands: Commands) {
     // Not persisted between gameplays
-    commands.insert_resource(AssetStorage::<Overmap, Overzone>::default());
-    commands.insert_resource(AssetStorage::<OvermapBuffer, Overzone>::default());
+    commands.insert_resource(AppearanceCache::default());
     commands.insert_resource(AssetStorage::<Map, ZoneLevel>::default());
     commands.insert_resource(AssetStorage::<MapMemory, ZoneLevel>::default());
-    commands.insert_resource(Location::default());
-    commands.insert_resource(SubzoneLevelEntities::default());
-    commands.insert_resource(ZoneLevelEntities::default());
+    commands.insert_resource(AssetStorage::<Overmap, Overzone>::default());
+    commands.insert_resource(AssetStorage::<OvermapBuffer, Overzone>::default());
+    commands.insert_resource(CameraOffset::default());
     commands.insert_resource(Expanded::default());
     commands.insert_resource(Explored::default());
-    commands.insert_resource(ZoneLevelIds::default());
     commands.insert_resource(InstructionQueue::default());
-    commands.insert_resource(AppearanceCache::default());
+    commands.insert_resource(Location::default());
     commands.insert_resource(MeshCaches::default());
-    commands.insert_resource(CameraOffset::default());
-    commands.insert_resource(InstructionQueue::default());
+    commands.insert_resource(SubzoneLevelEntities::default());
     commands.insert_resource(VisualizationUpdate::Smart);
+    commands.insert_resource(ZoneLevelEntities::default());
+    commands.insert_resource(ZoneLevelIds::default());
 }
 
 /// Create resources that need other resources
