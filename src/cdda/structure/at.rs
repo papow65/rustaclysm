@@ -1,4 +1,4 @@
-use crate::{cdda::FlatVec, gameplay::PosOffset};
+use crate::{cdda::structure::FlatVec, gameplay::PosOffset};
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]

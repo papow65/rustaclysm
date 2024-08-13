@@ -1,4 +1,4 @@
-use crate::cdda::{DeflatVec, Flags};
+use crate::cdda::{structure::MaybeFlatVec, Flags};
 use crate::common::{DEFAULT_TEXT_COLOR, GOOD_TEXT_COLOR, WARN_TEXT_COLOR};
 use crate::gameplay::{Mass, ObjectId, Volume};
 use bevy::{prelude::Color, utils::HashMap};
@@ -42,7 +42,7 @@ pub(crate) struct ItemInfo {
     pub(crate) stack_size: Option<u8>,
 
     #[allow(dead_code)] // TODO
-    pub(crate) ammo_type: Option<DeflatVec<String>>,
+    pub(crate) ammo_type: Option<MaybeFlatVec<String>>,
 
     #[allow(dead_code)] // TODO
     pub(crate) casing: Option<String>,
@@ -169,7 +169,7 @@ pub(crate) struct ItemInfo {
     pub(crate) color: Option<String>,
 
     #[allow(dead_code)] // TODO
-    pub(crate) material: Option<DeflatVec<Material>>,
+    pub(crate) material: Option<MaybeFlatVec<Material>>,
 
     #[allow(dead_code)] // TODO
     pub(crate) material_thickness: Option<f32>,

@@ -1,8 +1,8 @@
-use crate::cdda::MaybeFlat;
+use crate::cdda::structure::MaybeFlatVec;
 use serde::Deserialize;
 
 #[derive(Debug, Default, Deserialize)]
-#[serde(from = "Option<MaybeFlat<String>>")]
+#[serde(from = "Option<MaybeFlatVec<String>>")]
 #[serde(default)]
 pub(crate) struct Flags(Vec<String>);
 
@@ -32,11 +32,10 @@ impl Flags {
     }
 }
 
-impl From<Option<MaybeFlat<String>>> for Flags {
-    fn from(cdda_flags: Option<MaybeFlat<String>>) -> Self {
+impl From<Option<MaybeFlatVec<String>>> for Flags {
+    fn from(cdda_flags: Option<MaybeFlatVec<String>>) -> Self {
         Self(match cdda_flags {
-            Some(MaybeFlat::Single(flag)) => vec![flag],
-            Some(MaybeFlat::Multi(flags)) => flags,
+            Some(MaybeFlatVec(flags)) => flags,
             None => Vec::new(),
         })
     }
