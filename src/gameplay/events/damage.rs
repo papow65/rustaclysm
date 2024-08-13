@@ -1,7 +1,6 @@
 use crate::gameplay::{ActorChange, CorpseChange, Subject, TerrainChange};
-use bevy::prelude::Event;
 
-#[derive(Clone, Debug, Event)]
+#[derive(Clone, Debug)]
 pub(crate) struct Damage {
     // TODO damage types
     pub(crate) attacker: Subject, // for logging

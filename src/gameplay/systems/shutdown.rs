@@ -4,7 +4,7 @@ use crate::gameplay::{
     InstructionQueue, Location, MeshCaches, Overzone, SubzoneLevelEntities, Timeouts,
     VisualizationUpdate, ZoneLevel, ZoneLevelEntities, ZoneLevelIds,
 };
-use bevy::prelude::{Commands, Event, Events, ResMut};
+use bevy::prelude::{Commands, ResMut};
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn remove_gameplay_resources(mut commands: Commands) {
@@ -26,11 +26,6 @@ pub(crate) fn remove_gameplay_resources(mut commands: Commands) {
     commands.remove_resource::<ZoneLevelEntities>();
     commands.remove_resource::<ZoneLevelIds>();
     // We don't remove the event resources, because that breaks the event readers.
-}
-
-#[allow(clippy::needless_pass_by_value)]
-pub(crate) fn clear_gameplay_events<T: Event>(mut events: ResMut<Events<T>>) {
-    events.clear();
 }
 
 #[allow(clippy::needless_pass_by_value)]

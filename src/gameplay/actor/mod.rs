@@ -1,6 +1,5 @@
 mod actions;
 mod breath;
-mod events;
 mod faction;
 mod impact;
 mod planned_action;
@@ -16,7 +15,6 @@ pub(crate) use self::{
         MoveItem, Peek, Pickup, Pulp, Sleep, Smash, StartCraft, Stay, Step, Unwield, Wield,
     },
     breath::Breath,
-    events::{ActorChange, ActorEvent, Healing, StaminaImpact},
     faction::{Faction, Intelligence, LastEnemy},
     impact::Impact,
     planned_action::PlannedAction,
