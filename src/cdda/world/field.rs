@@ -1,11 +1,13 @@
 use crate::{cdda::FlatVec, gameplay::ObjectId};
 use serde::Deserialize;
 
-#[allow(unused)]
 #[derive(Debug, Deserialize)]
 pub(crate) struct Field {
     pub(crate) id: ObjectId,
+
+    #[allow(unused)]
     intensity: i32,
+    #[allow(unused)]
     age: i64,
 }
 
