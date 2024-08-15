@@ -1,13 +1,14 @@
 use crate::cdda::{
-    At, AtVec, CddaAmount, CddaItem, FieldVec, FlatVec, Repetition, RepetitionBlock, Spawn,
+    At, AtVec, CddaAmount, CddaItem, CddaVehicle, Error, FieldVec, FlatVec, Repetition,
+    RepetitionBlock, Spawn,
 };
 use crate::common::{PathFor, WorldPath};
 use crate::gameplay::{ObjectId, SubzoneLevel, ZoneLevel};
 use bevy::asset::{io::Reader, Asset, AssetLoader, LoadContext};
 use bevy::reflect::TypePath;
-use either::Either;
 use futures_lite::AsyncReadExt;
 use serde::Deserialize;
+use std::str::from_utf8;
 
 pub(crate) type MapPath = PathFor<Map>;
 
@@ -45,7 +46,7 @@ pub(crate) struct MapLoader;
 impl AssetLoader for MapLoader {
     type Asset = Map;
     type Settings = ();
-    type Error = Either<std::io::Error, serde_json::Error>;
+    type Error = Error;
 
     async fn load<'a>(
         &'a self,
@@ -57,21 +58,13 @@ impl AssetLoader for MapLoader {
         reader
             .read_to_end(&mut bytes)
             .await
-            .inspect_err(|e| {
-                eprintln!("Map file loading error: {:?} {e:?}", load_context.path(),);
-            })
-            .map_err(Either::Left)?;
+            .map_err(|err| Error::Io { _wrapped: err })?;
 
-        let map = serde_json::from_slice::<Map>(&bytes)
-            .map_err(|e| {
-                eprintln!(
-                    "Map json loading error: {:?} {:?} {e:?}",
-                    load_context.path(),
-                    std::str::from_utf8(&bytes[0..40])
-                );
-                e
-            })
-            .map_err(Either::Right)?;
+        let map = serde_json::from_slice::<Map>(&bytes).map_err(|err| Error::Json {
+            _wrapped: err,
+            _file_path: load_context.path().to_path_buf(),
+            _contents: String::from(from_utf8(&bytes[0..1000]).unwrap_or("(invalid UTF8)")),
+        })?;
         Ok(map)
     }
 
@@ -111,9 +104,7 @@ pub(crate) struct Submap {
     cosmetics: Vec<(u8, u8, String, String)>,
 
     pub(crate) spawns: Vec<Spawn>,
-
-    #[allow(unused)]
-    vehicles: Vec<serde_json::Value>, // grep -orIE 'vehicles":\[[^]]+.{80}'  assets/save/maps/ | less
+    pub(crate) vehicles: Vec<CddaVehicle>,
 
     #[allow(unused)]
     partial_constructions: Vec<serde_json::Value>,

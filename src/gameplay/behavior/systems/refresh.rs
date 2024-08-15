@@ -5,21 +5,18 @@ use crate::gameplay::systems::update_visualization;
 use crate::gameplay::{
     Accessible, Amount, Appearance, BaseSpeed, Clock, Containable, CurrentlyVisible,
     CurrentlyVisibleBuilder, ElevationVisibility, Explored, Focus, GameplaySession, LastSeen,
-    Player, PlayerActionState, Pos, VisualizationUpdate,
+    Player, PlayerActionState, Pos, Vehicle, VisualizationUpdate,
 };
 use bevy::prelude::{
     Camera, Changed, Children, GlobalTransform, Handle, Local, Mesh, Or, ParallelCommands, Parent,
     Query, RemovedComponents, Res, ResMut, State, Transform, Vec3, Visibility, With, Without,
 };
-use std::{
-    cell::OnceCell,
-    sync::{Arc, Mutex},
-    time::Instant,
-};
+use std::sync::{Arc, Mutex};
+use std::{cell::OnceCell, time::Instant};
 
 #[allow(clippy::needless_pass_by_value)]
 pub(in super::super) fn update_transforms(
-    mut obstacles: Query<(&Pos, &mut Transform), Changed<Pos>>,
+    mut obstacles: Query<(&Pos, &mut Transform), (Changed<Pos>, Without<Vehicle>)>,
 ) {
     let start = Instant::now();
 

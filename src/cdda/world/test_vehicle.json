@@ -1,0 +1,2316 @@
+{
+  "type": "van_full-size",
+  "posx": 2,
+  "posy": 4,
+  "om_id": 0,
+  "faceDir": 90,
+  "moveDir": 90,
+  "turn_dir": 90,
+  "last_turn": 0,
+  "velocity": 0,
+  "avg_velocity": 0,
+  "falling": false,
+  "in_water": false,
+  "floating": false,
+  "flying": false,
+  "cruise_velocity": 0,
+  "vertical_velocity": 0,
+  "cruise_on": true,
+  "engine_on": false,
+  "tracking_on": false,
+  "skidding": false,
+  "of_turn_carry": 0.000000,
+  "name": "Full-size Van",
+  "owner": "NULL",
+  "old_owner": "NULL",
+  "theft_time": null,
+  "parts": [
+    {
+      "id": "frame",
+      "variant": "cross",
+      "base": {
+        "typeid": "frame",
+        "bday": 0,
+        "damaged": 1340,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": 0,
+      "mount_dy": 0,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "reclining_seat_windshield",
+      "base": {
+        "typeid": "seat",
+        "bday": 0,
+        "damaged": 2000,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": 0,
+      "mount_dy": 0,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "seatbelt",
+      "base": {
+        "typeid": "rope_6",
+        "bday": 0,
+        "damaged": 686,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": 0,
+      "mount_dy": 0,
+      "open": false,
+      "direction": 0,
+      "blood": 364,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "controls",
+      "base": {
+        "typeid": "vehicle_controls",
+        "bday": 0,
+        "damaged": 1680,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": 0,
+      "mount_dy": 0,
+      "open": false,
+      "direction": 0,
+      "blood": 300,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "stereo",
+      "base": {
+        "typeid": "stereo",
+        "bday": 0,
+        "damaged": 334,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": 0,
+      "mount_dy": 0,
+      "open": false,
+      "direction": 0,
+      "blood": 235,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "dashboard",
+      "base": {
+        "typeid": "vehicle_dashboard",
+        "bday": 0,
+        "damaged": 672,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": 0,
+      "mount_dy": 0,
+      "open": false,
+      "direction": 0,
+      "blood": 293,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "vehicle_clock",
+      "base": {
+        "typeid": "wristwatch",
+        "bday": 0,
+        "damaged": 4000,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": 0,
+      "mount_dy": 0,
+      "open": false,
+      "direction": 0,
+      "blood": 214,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "vehicle_alarm",
+      "base": {
+        "typeid": "processor",
+        "bday": 0,
+        "damaged": 686,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": 0,
+      "mount_dy": 0,
+      "open": false,
+      "direction": 0,
+      "blood": 358,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "horn_car",
+      "base": {
+        "typeid": "horn_car",
+        "bday": 0,
+        "item_vars": {
+          "magazine_converted": "1"
+        },
+        "damaged": 1000,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": 0,
+      "mount_dy": 0,
+      "open": false,
+      "direction": 0,
+      "blood": 293,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "roof",
+      "base": {
+        "typeid": "sheet_metal",
+        "bday": 0,
+        "damaged": 1000,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": 0,
+      "mount_dy": 0,
+      "open": false,
+      "direction": 0,
+      "blood": 218,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "frame",
+      "variant": "vertical_left",
+      "base": {
+        "typeid": "frame",
+        "bday": 0,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": 0,
+      "mount_dy": -1,
+      "open": false,
+      "direction": 0,
+      "blood": 100,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "door",
+      "variant": "nw",
+      "base": {
+        "typeid": "frame",
+        "bday": 0,
+        "damaged": 3005,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": 0,
+      "mount_dy": -1,
+      "open": false,
+      "direction": 0,
+      "blood": 271,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "frame",
+      "variant": "cross",
+      "base": {
+        "typeid": "frame",
+        "bday": 0,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": 0,
+      "mount_dy": 1,
+      "open": false,
+      "direction": 0,
+      "blood": 251,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "reclining_seat_windshield",
+      "base": {
+        "typeid": "seat",
+        "bday": 0,
+        "damaged": 1000,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": 0,
+      "mount_dy": 1,
+      "open": false,
+      "direction": 0,
+      "blood": 159,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "seatbelt",
+      "base": {
+        "typeid": "rope_6",
+        "bday": 0,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": 0,
+      "mount_dy": 1,
+      "open": false,
+      "direction": 0,
+      "blood": 244,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "roof",
+      "base": {
+        "typeid": "sheet_metal",
+        "bday": 0,
+        "damaged": 2667,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": 0,
+      "mount_dy": 1,
+      "open": false,
+      "direction": 0,
+      "blood": 300,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "frame",
+      "variant": "vertical_right",
+      "base": {
+        "typeid": "frame",
+        "bday": 0,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": 0,
+      "mount_dy": 2,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "door",
+      "variant": "ne",
+      "base": {
+        "typeid": "frame",
+        "bday": 0,
+        "damaged": 2667,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": 0,
+      "mount_dy": 2,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "frame",
+      "variant": "vertical_T_left",
+      "base": {
+        "typeid": "frame",
+        "bday": 0,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": 1,
+      "mount_dy": -1,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "windshield",
+      "variant": "wheel_left",
+      "base": {
+        "typeid": "glass_sheet",
+        "bday": 0,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": 1,
+      "mount_dy": -1,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "wheel_mount_medium_steerable",
+      "base": {
+        "typeid": "wheel_mount_medium",
+        "bday": 0,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": 1,
+      "mount_dy": -1,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "wheel_wide",
+      "base": {
+        "typeid": "wheel_wide",
+        "bday": 0,
+        "damaged": 4000,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": 1,
+      "mount_dy": -1,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "frame",
+      "variant": "horizontal_2",
+      "base": {
+        "typeid": "frame",
+        "bday": 0,
+        "damaged": 4000,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": 1,
+      "mount_dy": 0,
+      "open": false,
+      "direction": 0,
+      "blood": 259,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "windshield",
+      "variant": "cover_left",
+      "base": {
+        "typeid": "glass_sheet",
+        "bday": 0,
+        "damaged": 720,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": 1,
+      "mount_dy": 0,
+      "open": false,
+      "direction": 0,
+      "blood": 103,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "frame",
+      "variant": "horizontal_2",
+      "base": {
+        "typeid": "frame",
+        "bday": 0,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": 1,
+      "mount_dy": 1,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "windshield",
+      "variant": "cover_right",
+      "base": {
+        "typeid": "glass_sheet",
+        "bday": 0,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": 1,
+      "mount_dy": 1,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "frame",
+      "variant": "vertical_T_right",
+      "base": {
+        "typeid": "frame",
+        "bday": 0,
+        "damaged": 340,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": 1,
+      "mount_dy": 2,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "windshield",
+      "variant": "wheel_right",
+      "base": {
+        "typeid": "glass_sheet",
+        "bday": 0,
+        "damaged": 1040,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": 1,
+      "mount_dy": 2,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "wheel_mount_medium_steerable",
+      "base": {
+        "typeid": "wheel_mount_medium",
+        "bday": 0,
+        "damaged": 1000,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": 1,
+      "mount_dy": 2,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "wheel_wide",
+      "base": {
+        "typeid": "wheel_wide",
+        "bday": 0,
+        "damaged": 4000,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": 1,
+      "mount_dy": 2,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "frame",
+      "variant": "nw",
+      "base": {
+        "typeid": "frame",
+        "bday": 0,
+        "damaged": 2670,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": 2,
+      "mount_dy": -1,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "halfboard",
+      "variant": "nw",
+      "base": {
+        "typeid": "sheet_metal",
+        "bday": 0,
+        "damaged": 3000,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": 2,
+      "mount_dy": -1,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "headlight",
+      "base": {
+        "typeid": "car_headlight",
+        "bday": 0,
+        "damaged": 800,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": 2,
+      "mount_dy": -1,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "frame",
+      "variant": "horizontal_front",
+      "base": {
+        "typeid": "frame",
+        "bday": 0,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": 2,
+      "mount_dy": 0,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "halfboard",
+      "variant": "cover_left",
+      "base": {
+        "typeid": "sheet_metal",
+        "bday": 0,
+        "damaged": 4000,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": 2,
+      "mount_dy": 0,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "engine_v6",
+      "base": {
+        "typeid": "v6_combustion",
+        "bday": 0,
+        "damaged": 2000,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": 2,
+      "mount_dy": 0,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": true,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "alternator_car",
+      "base": {
+        "typeid": "alternator_car",
+        "bday": 0,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": 2,
+      "mount_dy": 0,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "frame",
+      "variant": "horizontal_front",
+      "base": {
+        "typeid": "frame",
+        "bday": 0,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": 2,
+      "mount_dy": 1,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "halfboard",
+      "variant": "cover_right",
+      "base": {
+        "typeid": "sheet_metal",
+        "bday": 0,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": 2,
+      "mount_dy": 1,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "battery_car",
+      "base": {
+        "typeid": "battery_car",
+        "bday": 0,
+        "damaged": 1334,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ],
+        "contents": {
+          "contents": [
+            {
+              "pocket_type": 1,
+              "contents": [
+                {
+                  "typeid": "battery",
+                  "charges": 675,
+                  "bday": 23271410,
+                  "last_temp_check": 0,
+                  "item_tags": [
+                    "IRREMOVABLE",
+                    "NO_DROP"
+                  ]
+                }
+              ],
+              "_sealed": false
+            },
+            {
+              "pocket_type": 4,
+              "contents": [],
+              "_sealed": false
+            },
+            {
+              "pocket_type": 3,
+              "contents": [],
+              "_sealed": false
+            },
+            {
+              "pocket_type": 7,
+              "contents": [],
+              "_sealed": false
+            }
+          ]
+        }
+      },
+      "mount_dx": 2,
+      "mount_dy": 1,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "frame",
+      "variant": "ne",
+      "base": {
+        "typeid": "frame",
+        "bday": 0,
+        "damaged": 3340,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": 2,
+      "mount_dy": 2,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "halfboard",
+      "variant": "ne",
+      "base": {
+        "typeid": "sheet_metal",
+        "bday": 0,
+        "damaged": 2667,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": 2,
+      "mount_dy": 2,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "headlight",
+      "base": {
+        "typeid": "car_headlight",
+        "bday": 0,
+        "damaged": 1000,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": 2,
+      "mount_dy": 2,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "frame",
+      "variant": "vertical_left",
+      "base": {
+        "typeid": "frame",
+        "bday": 0,
+        "damaged": 670,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": -1,
+      "mount_dy": -1,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "door",
+      "variant": "sw",
+      "base": {
+        "typeid": "frame",
+        "bday": 0,
+        "damaged": 676,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": -1,
+      "mount_dy": -1,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "door_motor",
+      "base": {
+        "typeid": "motor_tiny",
+        "bday": 0,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": -1,
+      "mount_dy": -1,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "frame",
+      "variant": "cross",
+      "base": {
+        "typeid": "frame",
+        "bday": 0,
+        "damaged": 2000,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": -1,
+      "mount_dy": 0,
+      "open": false,
+      "direction": 0,
+      "blood": 246,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "reclining_seat",
+      "base": {
+        "typeid": "seat",
+        "bday": 0,
+        "damaged": 2000,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": -1,
+      "mount_dy": 0,
+      "open": false,
+      "direction": 0,
+      "blood": 200,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "seatbelt",
+      "base": {
+        "typeid": "rope_6",
+        "bday": 0,
+        "damaged": 1715,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": -1,
+      "mount_dy": 0,
+      "open": false,
+      "direction": 0,
+      "blood": 150,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "roof",
+      "base": {
+        "typeid": "sheet_metal",
+        "bday": 0,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": -1,
+      "mount_dy": 0,
+      "open": false,
+      "direction": 0,
+      "blood": 271,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "frame",
+      "variant": "cross",
+      "base": {
+        "typeid": "frame",
+        "bday": 0,
+        "damaged": 3340,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": -1,
+      "mount_dy": 1,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "reclining_seat",
+      "base": {
+        "typeid": "seat",
+        "bday": 0,
+        "damaged": 680,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": -1,
+      "mount_dy": 1,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "seatbelt",
+      "base": {
+        "typeid": "rope_6",
+        "bday": 0,
+        "damaged": 343,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": -1,
+      "mount_dy": 1,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "roof",
+      "base": {
+        "typeid": "sheet_metal",
+        "bday": 0,
+        "damaged": 667,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": -1,
+      "mount_dy": 1,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "frame",
+      "variant": "vertical_right",
+      "base": {
+        "typeid": "frame",
+        "bday": 0,
+        "damaged": 670,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": -1,
+      "mount_dy": 2,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "door",
+      "variant": "se",
+      "base": {
+        "typeid": "frame",
+        "bday": 0,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": -1,
+      "mount_dy": 2,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "door_motor",
+      "base": {
+        "typeid": "motor_tiny",
+        "bday": 0,
+        "damaged": 1680,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": -1,
+      "mount_dy": 2,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "frame",
+      "variant": "vertical_left",
+      "base": {
+        "typeid": "frame",
+        "bday": 0,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": -2,
+      "mount_dy": -1,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "windshield",
+      "variant": "vertical_left",
+      "base": {
+        "typeid": "glass_sheet",
+        "bday": 0,
+        "damaged": 1680,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": -2,
+      "mount_dy": -1,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "tank",
+      "base": {
+        "typeid": "metal_tank",
+        "bday": 0,
+        "damaged": 667,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ],
+        "contents": {
+          "contents": [
+            {
+              "pocket_type": 0,
+              "contents": [
+                {
+                  "typeid": "gasoline",
+                  "charges": 10560,
+                  "bday": 23271410,
+                  "last_temp_check": 0
+                }
+              ],
+              "_sealed": false
+            },
+            {
+              "pocket_type": 4,
+              "contents": [],
+              "_sealed": false
+            },
+            {
+              "pocket_type": 3,
+              "contents": [],
+              "_sealed": false
+            },
+            {
+              "pocket_type": 7,
+              "contents": [],
+              "_sealed": false
+            }
+          ]
+        }
+      },
+      "mount_dx": -2,
+      "mount_dy": -1,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "frame",
+      "variant": "cross",
+      "base": {
+        "typeid": "frame",
+        "bday": 0,
+        "damaged": 1000,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": -2,
+      "mount_dy": 0,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "seat",
+      "base": {
+        "typeid": "seat",
+        "bday": 0,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": -2,
+      "mount_dy": 0,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "seatbelt",
+      "base": {
+        "typeid": "rope_6",
+        "bday": 0,
+        "damaged": 2400,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": -2,
+      "mount_dy": 0,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "roof",
+      "base": {
+        "typeid": "sheet_metal",
+        "bday": 0,
+        "damaged": 1667,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": -2,
+      "mount_dy": 0,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "frame",
+      "variant": "cross",
+      "base": {
+        "typeid": "frame",
+        "bday": 0,
+        "damaged": 670,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": -2,
+      "mount_dy": 1,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "seat",
+      "base": {
+        "typeid": "seat",
+        "bday": 0,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": -2,
+      "mount_dy": 1,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "seatbelt",
+      "base": {
+        "typeid": "rope_6",
+        "bday": 0,
+        "damaged": 2058,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": -2,
+      "mount_dy": 1,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "roof",
+      "base": {
+        "typeid": "sheet_metal",
+        "bday": 0,
+        "damaged": 667,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": -2,
+      "mount_dy": 1,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "frame",
+      "variant": "vertical_right",
+      "base": {
+        "typeid": "frame",
+        "bday": 0,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": -2,
+      "mount_dy": 2,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "windshield",
+      "variant": "vertical_right",
+      "base": {
+        "typeid": "glass_sheet",
+        "bday": 0,
+        "damaged": 3680,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": -2,
+      "mount_dy": 2,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "frame",
+      "variant": "vertical_left",
+      "base": {
+        "typeid": "frame",
+        "bday": 0,
+        "damaged": 1000,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": -3,
+      "mount_dy": -1,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "halfboard",
+      "variant": "wheel_left",
+      "base": {
+        "typeid": "sheet_metal",
+        "bday": 0,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": -3,
+      "mount_dy": -1,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "wheel_mount_medium",
+      "base": {
+        "typeid": "wheel_mount_medium",
+        "bday": 0,
+        "damaged": 1667,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": -3,
+      "mount_dy": -1,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "wheel_wide",
+      "base": {
+        "typeid": "wheel_wide",
+        "bday": 0,
+        "damaged": 4000,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": -3,
+      "mount_dy": -1,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "frame",
+      "variant": "cross",
+      "base": {
+        "typeid": "frame",
+        "bday": 0,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": -3,
+      "mount_dy": 0,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "cargo_space",
+      "base": {
+        "typeid": "cargo_rack",
+        "bday": 0,
+        "damaged": 1344,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": -3,
+      "mount_dy": 0,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "roof",
+      "base": {
+        "typeid": "sheet_metal",
+        "bday": 0,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": -3,
+      "mount_dy": 0,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "frame",
+      "variant": "cross",
+      "base": {
+        "typeid": "frame",
+        "bday": 0,
+        "damaged": 2000,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": -3,
+      "mount_dy": 1,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "cargo_space",
+      "base": {
+        "typeid": "cargo_rack",
+        "bday": 0,
+        "damaged": 3008,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": -3,
+      "mount_dy": 1,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "roof",
+      "base": {
+        "typeid": "sheet_metal",
+        "bday": 0,
+        "damaged": 334,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": -3,
+      "mount_dy": 1,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "frame",
+      "variant": "vertical_right",
+      "base": {
+        "typeid": "frame",
+        "bday": 0,
+        "damaged": 340,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": -3,
+      "mount_dy": 2,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "halfboard",
+      "variant": "wheel_right",
+      "base": {
+        "typeid": "sheet_metal",
+        "bday": 0,
+        "damaged": 3000,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": -3,
+      "mount_dy": 2,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "wheel_mount_medium",
+      "base": {
+        "typeid": "wheel_mount_medium",
+        "bday": 0,
+        "damaged": 3000,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": -3,
+      "mount_dy": 2,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "wheel_wide",
+      "base": {
+        "typeid": "wheel_wide",
+        "bday": 0,
+        "damaged": 4000,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": -3,
+      "mount_dy": 2,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "frame",
+      "variant": "sw",
+      "base": {
+        "typeid": "frame",
+        "bday": 0,
+        "damaged": 1000,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": -4,
+      "mount_dy": -1,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "halfboard",
+      "variant": "sw",
+      "base": {
+        "typeid": "sheet_metal",
+        "bday": 0,
+        "damaged": 1334,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": -4,
+      "mount_dy": -1,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "frame",
+      "variant": "horizontal_rear",
+      "base": {
+        "typeid": "frame",
+        "bday": 0,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": -4,
+      "mount_dy": 0,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "door_trunk",
+      "base": {
+        "typeid": "frame",
+        "bday": 0,
+        "damaged": 1334,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": -4,
+      "mount_dy": 0,
+      "open": true,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "muffler",
+      "base": {
+        "typeid": "muffler",
+        "bday": 0,
+        "damaged": 400,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": -4,
+      "mount_dy": 0,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "frame",
+      "variant": "horizontal_rear",
+      "base": {
+        "typeid": "frame",
+        "bday": 0,
+        "damaged": 2670,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": -4,
+      "mount_dy": 1,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "door_trunk",
+      "base": {
+        "typeid": "frame",
+        "bday": 0,
+        "damaged": 347,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": -4,
+      "mount_dy": 1,
+      "open": true,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "door_motor",
+      "base": {
+        "typeid": "motor_tiny",
+        "bday": 0,
+        "damaged": 1680,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": -4,
+      "mount_dy": 1,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "frame",
+      "variant": "se",
+      "base": {
+        "typeid": "frame",
+        "bday": 0,
+        "damaged": 1340,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": -4,
+      "mount_dy": 2,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    },
+    {
+      "id": "halfboard",
+      "variant": "se",
+      "base": {
+        "typeid": "sheet_metal",
+        "bday": 0,
+        "damaged": 3000,
+        "last_temp_check": 0,
+        "item_tags": [
+          "VEHICLE"
+        ]
+      },
+      "mount_dx": -4,
+      "mount_dy": 2,
+      "open": false,
+      "direction": 0,
+      "blood": 0,
+      "enabled": false,
+      "flags": 0,
+      "passenger_id": -1,
+      "crew_id": -1,
+      "items": [],
+      "ammo_pref": "null"
+    }
+  ],
+  "tags": [],
+  "fuel_remainder": {},
+  "fuel_used_last_turn": {},
+  "labels": [],
+  "zones": [],
+  "other_tow_point": [
+    0,
+    0,
+    0
+  ],
+  "is_locked": false,
+  "is_alarm_on": false,
+  "camera_on": false,
+  "autopilot_on": false,
+  "last_update_turn": 23271470,
+  "pivot": [
+    0,
+    0
+  ],
+  "is_on_ramp": false,
+  "is_autodriving": false,
+  "is_following": false,
+  "is_patrolling": false,
+  "autodrive_local_target": [
+    0,
+    0,
+    0
+  ],
+  "airworthy": true,
+  "requested_z_change": 0,
+  "summon_time_limit": null,
+  "magic": false,
+  "smart_controller": null,
+  "vehicle_noise": 0
+}

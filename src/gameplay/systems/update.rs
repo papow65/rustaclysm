@@ -5,8 +5,9 @@ use crate::gameplay::{
     ElevationVisibility, Explored, Focus, GameplaySession, LastSeen, Player, Pos, SubzoneLevel,
     ZoneLevel,
 };
+use bevy::asset::UntypedAssetLoadFailedEvent;
 use bevy::prelude::{
-    Assets, Camera, Changed, Children, Commands, Font, GlobalTransform, Local, Mesh,
+    Assets, Camera, Changed, Children, Commands, EventReader, Font, GlobalTransform, Local, Mesh,
     ParallelCommands, Parent, Query, Res, ResMut, StandardMaterial, Visibility, With, Without,
 };
 use std::sync::{Arc, Mutex};
@@ -259,6 +260,21 @@ pub(crate) fn count_zones(
     }
 
     log_if_slow("count_zones", start);
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub(crate) fn check_failed_asset_loading(mut fails: EventReader<UntypedAssetLoadFailedEvent>) {
+    let start = Instant::now();
+
+    for fail in fails.read() {
+        if cfg!(debug_assertions) {
+            panic!("Failed to load asset: {fail:#?}");
+        } else {
+            eprintln!("Failed to load asset: {fail:#?}");
+        }
+    }
+
+    log_if_slow("check_failed_asset_loading", start);
 }
 
 #[cfg(feature = "log_archetypes")]

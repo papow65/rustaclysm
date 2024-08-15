@@ -6,7 +6,7 @@ use bevy::{
 use either::Either;
 use futures_lite::AsyncReadExt;
 use serde::de::{Deserialize, Deserializer, Error, SeqAccess, Visitor};
-use std::fmt;
+use std::{fmt, str::from_utf8};
 
 pub(crate) type MapMemoryPath = PathFor<MapMemory>;
 
@@ -156,9 +156,9 @@ impl AssetLoader for MapMemoryLoader {
         let map_memory = serde_json::from_slice::<MapMemory>(&bytes)
             .map_err(|e| {
                 eprintln!(
-                    "Map json loading error: {:?} {:?} {e:?}",
+                    "Map memory json loading error: {:?} {:?} {e:?}",
                     load_context.path(),
-                    std::str::from_utf8(&bytes[0..40])
+                    from_utf8(&bytes[0..40])
                 );
                 e
             })

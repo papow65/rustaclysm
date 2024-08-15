@@ -116,7 +116,7 @@ fn update_systems() -> impl IntoSystemConfigs<(SystemConfigTupleMarker, (), (), 
 
 fn fixed_update_systems() -> impl IntoSystemConfigs<()> {
     (
-        (count_assets, count_zones),
+        (count_assets, count_zones, check_failed_asset_loading),
         #[cfg(feature = "log_archetypes")]
         list_archetypes,
     )

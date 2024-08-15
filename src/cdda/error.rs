@@ -1,5 +1,5 @@
 use crate::cdda::SpriteNumber;
-use std::{io, path::PathBuf};
+use std::{error::Error as StdError, fmt, fmt::Display, io, path::PathBuf};
 
 #[derive(Debug)]
 pub(crate) enum Error {
@@ -29,8 +29,16 @@ pub(crate) enum Error {
     },
 }
 
+impl Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{self:#?}")
+    }
+}
+
 impl From<io::Error> for Error {
     fn from(value: io::Error) -> Self {
         Self::Io { _wrapped: value }
     }
 }
+
+impl StdError for Error {}

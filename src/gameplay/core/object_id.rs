@@ -13,8 +13,12 @@ impl ObjectId {
         Self(value.into())
     }
 
-    pub(crate) fn suffix(&self, name: &str) -> Self {
-        Self((String::from(&*self.0) + name).into())
+    pub(crate) fn prefix(&self, part: impl Into<String>) -> Self {
+        Self((part.into() + &*self.0).into())
+    }
+
+    pub(crate) fn suffix(&self, part: &str) -> Self {
+        Self((String::from(&*self.0) + part).into())
     }
 
     pub(crate) fn truncate(&self) -> Self {
@@ -77,6 +81,15 @@ impl ObjectId {
             ModelShape::Plane {
                 orientation: SpriteOrientation::Horizontal,
                 transform2d: transform2d.clone(),
+            }
+        } else if self.0.contains("solar_panel") {
+            ModelShape::Plane {
+                orientation: SpriteOrientation::Horizontal,
+                transform2d: Transform2d {
+                    scale: transform2d.scale,
+                    offset: transform2d.offset
+                        + Vec2::new(0.0, -0.5 * Distance::ADJACENT.meter_f32()),
+                },
             }
         } else if self.0.starts_with("t_rock")
             || self.0.starts_with("t_wall")

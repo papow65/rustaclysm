@@ -8,6 +8,7 @@ mod overmap_loader;
 mod player;
 mod sav;
 mod spawn;
+mod vehicle;
 
 pub(crate) use self::{
     field::{Field, FieldVec},
@@ -20,4 +21,5 @@ pub(crate) use self::{
     player::{CddaPlayer, Skill},
     sav::{Sav, SavPath},
     spawn::Spawn,
+    vehicle::{CddaVehicle, CddaVehiclePart},
 };

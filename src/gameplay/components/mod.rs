@@ -1,13 +1,17 @@
 mod container_limits;
 mod object_name;
 mod pos;
+mod vehicle;
+
+pub(crate) use container_limits::{BodyContainers, ContainerLimits};
+pub(crate) use object_name::ObjectName;
+pub(crate) use pos::{Level, Overzone, Pos, SubzoneLevel, Zone, ZoneLevel};
+pub(crate) use vehicle::{Vehicle, VehiclePart};
 
 use crate::cdda::{ItemInfo, MoveCost, MoveCostIncrease};
 use crate::gameplay::*;
 use bevy::prelude::{AlphaMode, Assets, Color, Component, Handle, Srgba, StandardMaterial};
 use std::ops::{Add, Sub};
-
-pub(crate) use {container_limits::*, object_name::*, pos::*};
 
 #[derive(PartialEq, Debug, Component)]
 pub(crate) struct Filthy;

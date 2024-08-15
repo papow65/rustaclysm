@@ -1,6 +1,6 @@
 use crate::cdda::{
     CddaItemName, CharacterInfo, FieldInfo, Flags, FurnitureInfo, ItemGroup, ItemInfo, ItemName,
-    Migration, OvermapInfo, Quality, Recipe, Requirement, TerrainInfo,
+    Migration, OvermapInfo, Quality, Recipe, Requirement, TerrainInfo, VehiclePartInfo,
 };
 use crate::common::{AsyncNew, Paths};
 use crate::gameplay::{Mass, ObjectCategory, ObjectDefinition, ObjectId, TypeId, Volume};
@@ -22,6 +22,7 @@ pub(crate) struct Infos {
     recipes: HashMap<ObjectId, Recipe>,
     requirements: HashMap<ObjectId, Requirement>,
     terrain: HashMap<ObjectId, TerrainInfo>,
+    vehicle_parts: HashMap<ObjectId, VehiclePartInfo>,
     zone_levels: HashMap<ObjectId, OvermapInfo>,
 }
 
@@ -256,6 +257,7 @@ impl Infos {
             recipes: Self::extract(&mut enricheds, TypeId::RECIPE),
             requirements: Self::extract(&mut enricheds, TypeId::REQUIREMENT),
             terrain: Self::extract(&mut enricheds, TypeId::TERRAIN),
+            vehicle_parts: Self::extract(&mut enricheds, TypeId::VEHICLE_PART),
             zone_levels: Self::extract(&mut enricheds, TypeId::OVERMAP),
         };
 
@@ -373,6 +375,16 @@ impl Infos {
     }
 
     #[allow(unused)]
+    pub(crate) fn try_vehicle_part<'a>(&'a self, id: &'a ObjectId) -> Option<&'a VehiclePartInfo> {
+        self.try_get(&self.vehicle_parts, id)
+    }
+
+    #[allow(unused)]
+    pub(crate) fn vehicle_part<'a>(&'a self, id: &'a ObjectId) -> &'a VehiclePartInfo {
+        self.get(&self.vehicle_parts, id)
+    }
+
+    #[allow(unused)]
     pub(crate) fn try_zone_level<'a>(&'a self, id: &'a ObjectId) -> Option<&'a OvermapInfo> {
         self.try_get(&self.zone_levels, id)
     }
@@ -417,6 +429,10 @@ impl Infos {
                 .terrain
                 .get(&definition.id)
                 .and_then(|o| o.looks_like.as_ref()),
+            ObjectCategory::VehiclePart => self
+                .vehicle_parts
+                .get(&definition.id)
+                .and_then(|o| o.looks_like.as_ref()),
             ObjectCategory::ZoneLevel => self
                 .zone_levels
                 .get(&definition.id)
@@ -445,6 +461,8 @@ impl Infos {
         let mut variants = vec![
             current_definition_ref.id.suffix("_season_summer"),
             current_definition_ref.id.clone(),
+            current_definition_ref.id.prefix("vp_"),
+            current_definition_ref.id.prefix("vp_").suffix("_cover"),
         ];
 
         while let Some(other) = self.looks_like(current_definition_ref) {
@@ -454,6 +472,8 @@ impl Infos {
             }
             variants.push(other.suffix("_season_summer"));
             variants.push(other.clone());
+            variants.push(other.prefix("vp_"));
+            variants.push(other.prefix("vp_").suffix("_cover"));
             current_definition = ObjectDefinition {
                 category: definition.category.clone(),
                 id: other.clone(),

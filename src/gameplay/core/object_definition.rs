@@ -9,6 +9,8 @@ pub(crate) enum ObjectCategory {
     Furniture,
     Item,
     Character,
+    Vehicle,
+    VehiclePart,
     ZoneLevel,
     Meta,
 }
@@ -19,14 +21,16 @@ impl ObjectCategory {
     }
 
     pub(crate) fn vertical_offset(&self, layer: &SpriteLayer) -> f32 {
-        let level = match self {
+        let level = 2 * match self {
             Self::ZoneLevel => -1,
             Self::Terrain => 0,
             Self::Field => 1,
             Self::Furniture => 2,
-            Self::Item => 4,
-            Self::Character => 6,
-            Self::Meta => 8,
+            Self::Item => 3,
+            Self::Character => 5,
+            Self::Vehicle => unimplemented!(),
+            Self::VehiclePart => 4,
+            Self::Meta => 6,
         } + match &layer {
             SpriteLayer::Front => 1,
             SpriteLayer::Back => 0,

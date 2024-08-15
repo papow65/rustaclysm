@@ -1,7 +1,8 @@
 use crate::application::ApplicationState;
 use crate::cdda::{
-    BashItem, BashItems, CddaAmount, CddaItem, CddaItemName, CountRange, Field, FlatVec, ItemName,
-    MoveCostMod, Repetition, Sav, Spawn, Submap, SubzoneOffset,
+    BashItem, BashItems, CddaAmount, CddaItem, CddaItemName, CddaVehicle, CddaVehiclePart,
+    CountRange, Field, FlatVec, ItemName, MoveCostMod, Repetition, Sav, Spawn, Submap,
+    SubzoneOffset,
 };
 use crate::common::{BAD_TEXT_COLOR, DEFAULT_TEXT_COLOR, GOOD_TEXT_COLOR};
 use crate::gameplay::*;
@@ -258,7 +259,7 @@ impl<'w, 's> Spawner<'w, 's> {
 
     fn spawn_furniture(&mut self, infos: &Infos, parent: Entity, pos: Pos, id: &ObjectId) {
         let Some(furniture_info) = infos.try_furniture(id) else {
-            println!("No info found for {id:?}. Spawning skipped");
+            eprintln!("No info found for {id:?}. Spawning skipped");
             return;
         };
 
@@ -293,7 +294,7 @@ impl<'w, 's> Spawner<'w, 's> {
 
     pub(crate) fn spawn_terrain(&mut self, infos: &Infos, parent: Entity, pos: Pos, id: &ObjectId) {
         let Some(terrain_info) = infos.try_terrain(id) else {
-            println!("No info found for terrain {:?}", &id);
+            eprintln!("No info found for terrain {:?}", &id);
             return;
         };
 
@@ -349,6 +350,77 @@ impl<'w, 's> Spawner<'w, 's> {
         }
     }
 
+    pub(crate) fn spawn_vehicle(
+        &mut self,
+        parent: Entity,
+        pos: Pos,
+        vehicle: &CddaVehicle,
+    ) -> Entity {
+        let definition = &ObjectDefinition {
+            category: ObjectCategory::Vehicle,
+            id: vehicle.id.clone(),
+        };
+        let object_name = ObjectName::from_str(vehicle.name.as_str(), DEFAULT_TEXT_COLOR);
+
+        let entity = self.spawn_object(parent, pos, definition, object_name);
+        self.commands.entity(entity).insert((
+            Vehicle,
+            pos,
+            Transform::IDENTITY,
+            StateScoped(ApplicationState::Gameplay),
+        ));
+
+        entity
+    }
+
+    pub(crate) fn spawn_vehicle_part(
+        &mut self,
+        infos: &Infos,
+        parent: Entity,
+        parent_pos: Pos,
+        part: &CddaVehiclePart,
+    ) {
+        let Some(info) = infos.try_vehicle_part(&part.id) else {
+            eprintln!(
+                "No info found for vehicle part {:?}. Spawning skipped",
+                &part.id
+            );
+            return;
+        };
+
+        let Some(name) = info
+            .name
+            .as_ref()
+            .or_else(|| infos.try_item(&info.item).map(|item| &item.name))
+        else {
+            eprintln!(
+                "No info found for item {:?} from vehicle part {:?}. Spawning skipped",
+                &info.item, &part.id
+            );
+            return;
+        };
+
+        let pos = parent_pos.horizontal_offset(part.mount_dx, part.mount_dy);
+        let definition = &ObjectDefinition {
+            category: ObjectCategory::VehiclePart,
+            id: part.id.clone(),
+        };
+        let object_name = ObjectName::new(name.clone(), DEFAULT_TEXT_COLOR);
+        let entity = self.spawn_object(parent, pos, definition, object_name);
+        self.commands.entity(entity).insert(VehiclePart {
+            offset: PosOffset {
+                x: part.mount_dx,
+                level: LevelOffset::ZERO,
+                z: part.mount_dy,
+            },
+            item: part.base.clone(),
+        });
+
+        if info.flags.obstacle() {
+            self.commands.entity(entity).insert(Obstacle);
+        }
+    }
+
     fn spawn_object(
         &mut self,
         parent: Entity,
@@ -371,17 +443,22 @@ impl<'w, 's> Spawner<'w, 's> {
         };
         //dbg!(&last_seen);
 
-        let layers = self
-            .model_factory
-            .get_layers(definition, Visibility::Inherited, true)
-            .map(|(mut pbr_bundle, apprearance)| {
-                pbr_bundle.material = if last_seen == LastSeen::Never {
-                    apprearance.material(&LastSeen::Currently)
-                } else {
-                    apprearance.material(&last_seen)
-                };
-                (pbr_bundle, apprearance, RenderLayers::layer(1))
-            });
+        let layers = if definition.category == ObjectCategory::Vehicle {
+            None
+        } else {
+            Some(
+                self.model_factory
+                    .get_layers(definition, Visibility::Inherited, true)
+                    .map(|(mut pbr_bundle, apprearance)| {
+                        pbr_bundle.material = if last_seen == LastSeen::Never {
+                            apprearance.material(&LastSeen::Currently)
+                        } else {
+                            apprearance.material(&last_seen)
+                        };
+                        (pbr_bundle, apprearance, RenderLayers::layer(1))
+                    }),
+            )
+        };
 
         let mut entity_commands = self.commands.spawn((
             SpatialBundle {
@@ -392,20 +469,20 @@ impl<'w, 's> Spawner<'w, 's> {
             pos,
             object_name,
         ));
-        entity_commands.with_children(|child_builder| {
-            child_builder.spawn(layers.base);
-            if let Some(overlay) = layers.overlay {
-                child_builder.spawn(overlay);
-            }
-        });
+        entity_commands.set_parent(parent);
+        if let Some(layers) = layers {
+            entity_commands.with_children(|child_builder| {
+                child_builder.spawn(layers.base);
+                if let Some(overlay) = layers.overlay {
+                    child_builder.spawn(overlay);
+                }
+            });
+        }
         if definition.category.shading_applied() {
             entity_commands.insert(last_seen);
         }
 
-        let entity = entity_commands.id();
-        self.commands.entity(parent).add_child(entity);
-
-        entity
+        entity_commands.id()
     }
 
     fn configure_player(&mut self, player_entity: Entity) {
@@ -706,6 +783,22 @@ impl<'w, 's> SubzoneSpawner<'w, 's> {
                         item_repetitions,
                         spawns,
                         fields,
+                    );
+                }
+            }
+
+            for vehicle in &submap.vehicles {
+                let vehicle_pos = base_pos.horizontal_offset(vehicle.posx, vehicle.posy);
+                let vehicle_entity =
+                    self.spawner
+                        .spawn_vehicle(subzone_level_entity, vehicle_pos, vehicle);
+
+                for vehicle_part in &vehicle.parts {
+                    self.spawner.spawn_vehicle_part(
+                        &self.infos,
+                        vehicle_entity,
+                        vehicle_pos,
+                        vehicle_part,
                     );
                 }
             }
