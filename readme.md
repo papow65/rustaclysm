@@ -7,9 +7,20 @@ A 3D reimplementation of [Cataclysm: Dark Days Ahead](https://cataclysmdda.org/)
 1. Data-compatibility with Cataclysm: DDA
 2. User-friendly UI
 
-## Development stage
+## Supported features
 
-Unfinished pre-alpha - Currently you can walk around an existing save from Cataclysm: Dark Days Ahead. You can kill and be killed by zombies. You can open and close doors and pick up and drop items.
+Currently, these features are (partially) supported:
+
+- Loading existing saves from Cataclysm: Dark Days Ahead
+- Walking around
+- Inventory
+- Crafting
+- Health and stamina
+- Killing and being killed by zombies
+- Opening and closing doors and windows
+- Examining items and tiles
+- Sleeping
+- Day-night cycle
 
 ## Getting started
 
