@@ -722,7 +722,7 @@ impl<'w, 's> SubzoneSpawner<'w, 's> {
                     .filter(|(at, _)| at == &spawned_offset)
                     .map(|(_, monster)| monster)
                 {
-                    eprintln!("TODO spanw {monster:?} at {spawned_offset:?}");
+                    println!("Spawning {monster:?} at {spawned_offset:?}");
                     self.spawner.spawn_character(
                         &self.infos,
                         subzone_level_entity,
