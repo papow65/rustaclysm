@@ -9,7 +9,7 @@ const BACKGROUND_WIDTH: f32 = 1522.0;
 const BACKGROUND_HEIGHT: f32 = 1009.0;
 const BACKGROUND_NAME: &str = "on_the_run.png";
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(super) fn spawn_background(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
@@ -37,7 +37,7 @@ pub(super) fn spawn_background(
     ));
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(super) fn resize_background(
     windows: Query<&Window>,
     mut backgrounds: Query<&mut Style, With<Background>>,

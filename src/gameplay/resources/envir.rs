@@ -167,7 +167,7 @@ impl<'w, 's> Envir<'w, 's> {
     // helper methods
 
     /// In case of vertical nbors: Follow stairs, even when they do not go staight up or down. Without stairs, see the raw position below/above, unless that contains a stair to somewhere else.
-    #[allow(dead_code)]
+    #[expect(dead_code)]
     pub(crate) fn get_looking_nbor(&self, from: Pos, nbor: Nbor) -> Option<Pos> {
         match nbor {
             Nbor::Up => self.stairs_up_to(from).or_else(|| from.raw_nbor(Nbor::Up)),

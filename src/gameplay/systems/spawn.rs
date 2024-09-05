@@ -12,7 +12,7 @@ use std::{cmp::Ordering, time::Instant};
 
 const MAX_EXPAND_DISTANCE: i32 = 10;
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(crate) fn spawn_subzones_for_camera(
     mut spawn_subzone_level_writer: EventWriter<SpawnSubzoneLevel>,
     mut despawn_subzone_level_writer: EventWriter<DespawnSubzoneLevel>,
@@ -161,7 +161,6 @@ fn despawn_expanded_subzone_levels(
         });
 }
 
-#[allow(clippy::needless_pass_by_value)]
 pub(crate) fn spawn_subzone_levels(
     mut spawn_subzone_level_reader: EventReader<SpawnSubzoneLevel>,
     mut subzone_spawner: SubzoneSpawner,
@@ -188,7 +187,6 @@ pub(crate) fn spawn_subzone_levels(
 
 /// This is an intentionally exclusive system to prevent an occasional panic.
 /// See <https://bevyengine.org/learn/errors/b0003/>
-#[allow(clippy::needless_pass_by_value)]
 pub(crate) fn despawn_subzone_levels(
     world: &mut World,
     sytem_state: &mut SystemState<(
@@ -218,7 +216,7 @@ pub(crate) fn despawn_subzone_levels(
     log_if_slow("despawn_subzone_levels", start);
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(crate) fn update_zone_levels(
     mut spawn_zone_level_writer: EventWriter<SpawnZoneLevel>,
     mut update_zone_level_visibility_writer: EventWriter<UpdateZoneLevelVisibility>,
@@ -295,7 +293,7 @@ pub(crate) fn update_zone_levels(
     log_if_slow("update_zone_levels", start);
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(crate) fn spawn_zone_levels(
     mut spawn_zone_level_reader: EventReader<SpawnZoneLevel>,
     focus: Focus,
@@ -322,7 +320,7 @@ pub(crate) fn spawn_zone_levels(
     log_if_slow("spawn_zone_levels", start);
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(crate) fn update_zone_level_visibility(
     mut commands: Commands,
     mut update_zone_level_visibility_reader: EventReader<UpdateZoneLevelVisibility>,
@@ -356,7 +354,6 @@ pub(crate) fn update_zone_level_visibility(
     log_if_slow("update_zone_level_visibility", start);
 }
 
-#[allow(clippy::needless_pass_by_value)]
 pub(crate) fn despawn_zone_level(
     mut commands: Commands,
     mut despawn_zone_level_reader: EventReader<DespawnZoneLevel>,
@@ -395,7 +392,6 @@ fn zone_level_visibility(
     }
 }
 
-#[allow(clippy::needless_pass_by_value)]
 pub(crate) fn handle_map_events(
     mut map_asset_events: EventReader<AssetEvent<Map>>,
     mut subzone_spawner: SubzoneSpawner,
@@ -425,7 +421,7 @@ pub(crate) fn handle_map_events(
     }
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(crate) fn handle_map_memory_events(
     mut map_memory_asset_events: EventReader<AssetEvent<MapMemory>>,
     mut spawn_subzone_level_writer: EventWriter<SpawnSubzoneLevel>,
@@ -451,7 +447,7 @@ pub(crate) fn handle_map_memory_events(
     );
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(crate) fn handle_overmap_buffer_events(
     mut overmap_buffer_events: EventReader<AssetEvent<OvermapBuffer>>,
     overmap_buffer_assets: Res<Assets<OvermapBuffer>>,
@@ -474,7 +470,7 @@ pub(crate) fn handle_overmap_buffer_events(
     log_if_slow("update_zone_level_visibility", start);
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(crate) fn handle_overmap_events(
     mut overmap_events: EventReader<AssetEvent<Overmap>>,
     overmap_assets: Res<Assets<Overmap>>,
@@ -495,7 +491,7 @@ pub(crate) fn handle_overmap_events(
     log_if_slow("update_zone_level_visibility", start);
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(crate) fn update_zone_levels_with_missing_assets(
     focus: Focus,
     mut zone_spawner: ZoneSpawner,

@@ -6,9 +6,9 @@ pub(crate) struct Vehicle;
 
 #[derive(Component)]
 pub(crate) struct VehiclePart {
-    #[allow(unused)]
+    #[expect(unused)]
     pub(crate) offset: PosOffset,
 
-    #[allow(unused)]
+    #[expect(unused)]
     pub(crate) item: CddaItem,
 }

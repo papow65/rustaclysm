@@ -14,7 +14,6 @@ use bevy::prelude::{
 use std::sync::{Arc, Mutex};
 use std::{cell::OnceCell, time::Instant};
 
-#[allow(clippy::needless_pass_by_value)]
 pub(in super::super) fn update_transforms(
     mut obstacles: Query<(&Pos, &mut Transform), (Changed<Pos>, Without<Vehicle>)>,
 ) {
@@ -28,7 +27,7 @@ pub(in super::super) fn update_transforms(
 }
 
 /// Independent of `update_transforms`, because the systems affect different entities.
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(in super::super) fn update_peeking_transforms(
     player_action_state: Res<State<PlayerActionState>>,
     players: Query<&Children, With<Player>>,
@@ -54,7 +53,6 @@ pub(in super::super) fn update_peeking_transforms(
     log_if_slow("update_peeking_transforms", start);
 }
 
-#[allow(clippy::needless_pass_by_value)]
 pub(in super::super) fn update_hidden_item_visibility(
     mut hidden_items: Query<&mut Visibility, Without<Pos>>,
     mut removed_positions: RemovedComponents<Pos>,
@@ -72,7 +70,7 @@ pub(in super::super) fn update_hidden_item_visibility(
 }
 
 /// This is a slow system. For performance, it is only ran once after [`BehaviorSchedule::run`[, instead of after every action
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(in super::super) fn update_visualization_on_player_move(
     par_commands: ParallelCommands,
     focus: Focus,
@@ -142,7 +140,7 @@ pub(in super::super) fn update_visualization_on_player_move(
     log_if_slow("update_visualization_on_player_move", start);
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(in super::super) fn update_visualization_on_weather_change(
     clock: Clock,
     player_action_state: Res<State<PlayerActionState>>,
@@ -172,7 +170,7 @@ pub(in super::super) fn update_visualization_on_weather_change(
     log_if_slow("update_visualization_on_weather_change", start);
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(in super::super) fn check_items(
     item_parents: Query<Option<&Parent>, Or<(With<Amount>, With<Containable>)>>,
 ) {

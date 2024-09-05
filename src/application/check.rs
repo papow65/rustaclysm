@@ -18,7 +18,6 @@ impl StdInstant {
     }
 }
 
-#[allow(clippy::needless_pass_by_value)]
 pub(super) fn check_delay(mut last_time: Local<StdInstant>) {
     let start = Instant::now();
 

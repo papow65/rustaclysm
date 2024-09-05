@@ -2,7 +2,7 @@ use crate::application::ApplicationState;
 use crate::common::{Key, Keys};
 use bevy::prelude::{KeyCode, NextState, Res, ResMut};
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(crate) fn manage_gameplay_keyboard_input(
     keys: Res<Keys>,
     mut next_application_state: ResMut<NextState<ApplicationState>>,

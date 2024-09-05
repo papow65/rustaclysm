@@ -679,7 +679,7 @@ impl ActorItem<'_> {
         None
     }
 
-    #[allow(clippy::unnecessary_wraps)]
+    #[expect(clippy::unnecessary_wraps)]
     pub(crate) fn continue_craft(
         &self,
         commands: &mut Commands,

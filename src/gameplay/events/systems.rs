@@ -43,7 +43,6 @@ pub(super) fn clear_event_resources() -> impl IntoSystemConfigs<()> {
         .chain() // for a simple return type
 }
 
-#[allow(clippy::needless_pass_by_value)]
 fn clear_events<T: Event>(mut events: ResMut<Events<T>>) {
     events.clear();
 }

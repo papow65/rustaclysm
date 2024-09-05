@@ -71,7 +71,7 @@ fn toggle_elevation(
     *visualization_update = VisualizationUpdate::Forced;
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(super) fn manage_mouse_scroll_input(
     mut mouse_wheel_events: EventReader<MouseWheel>,
     mut camera_offset: ResMut<CameraOffset>,
@@ -97,7 +97,7 @@ pub(super) fn manage_mouse_scroll_input(
     log_if_slow("manage_mouse_scroll_input", start);
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(super) fn manage_mouse_button_input(
     mut mouse_motion_events: EventReader<MouseMotion>,
     mouse_buttons: Res<ButtonInput<MouseButton>>,
@@ -161,7 +161,7 @@ fn handle_queued_instruction(
     }
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(super) fn manage_keyboard_input(
     mut message_writer: MessageWriter,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
@@ -223,7 +223,7 @@ pub(super) fn manage_keyboard_input(
     log_if_slow("manage_keyboard_input", start);
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(crate) fn update_camera_offset(
     camera_offset: Res<CameraOffset>,
     mut cameras: Query<&mut Transform, With<Camera3d>>,
@@ -237,7 +237,6 @@ pub(crate) fn update_camera_offset(
     log_if_slow("update_camera", start);
 }
 
-#[allow(clippy::needless_pass_by_value)]
 pub(in super::super) fn trigger_refresh(mut visualization_update: ResMut<VisualizationUpdate>) {
     *visualization_update = VisualizationUpdate::Forced;
 }

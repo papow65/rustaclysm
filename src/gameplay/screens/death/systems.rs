@@ -8,7 +8,7 @@ use bevy::prelude::{
     TextBundle, UiRect, Val, With,
 };
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(super) fn spawn_death_screen(mut commands: Commands, fonts: Res<Fonts>) {
     commands
         .spawn((
@@ -80,7 +80,7 @@ pub(super) fn spawn_death_screen(mut commands: Commands, fonts: Res<Fonts>) {
         });
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(super) fn manage_death_keyboard_input(
     mut next_application_state: ResMut<NextState<ApplicationState>>,
     keys: Res<Keys>,
@@ -95,7 +95,7 @@ pub(super) fn manage_death_keyboard_input(
     }
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(super) fn manage_death_button_input(
     mut next_application_state: ResMut<NextState<ApplicationState>>,
     interactions: Query<&Interaction, (Changed<Interaction>, With<Button>)>,

@@ -22,48 +22,48 @@ impl OvermapPath {
 pub(crate) struct Overmap {
     pub(crate) layers: [OvermapLevel; Level::AMOUNT],
 
-    #[allow(unused)] // TODO
+    #[expect(unused)] // TODO
     region_id: serde_json::Value,
 
-    #[allow(unused)] // TODO
+    #[expect(unused)] // TODO
     pub(crate) monster_groups: serde_json::Value,
 
-    #[allow(unused)] // TODO
+    #[expect(unused)] // TODO
     pub(crate) cities: serde_json::Value,
 
-    #[allow(unused)] // TODO
+    #[expect(unused)] // TODO
     pub(crate) connections_out: serde_json::Value,
 
-    #[allow(unused)] // TODO
+    #[expect(unused)] // TODO
     pub(crate) radios: serde_json::Value,
 
     pub(crate) monster_map: FlatVec<(SubzoneOffset, Monster), 2>,
 
-    #[allow(unused)] // TODO
+    #[expect(unused)] // TODO
     pub(crate) tracked_vehicles: serde_json::Value,
 
-    #[allow(unused)] // TODO
+    #[expect(unused)] // TODO
     pub(crate) scent_traces: serde_json::Value,
 
-    #[allow(unused)] // TODO
+    #[expect(unused)] // TODO
     pub(crate) npcs: serde_json::Value,
 
-    #[allow(unused)] // TODO
+    #[expect(unused)] // TODO
     pub(crate) camps: serde_json::Value,
 
-    #[allow(unused)] // TODO
+    #[expect(unused)] // TODO
     pub(crate) overmap_special_placements: serde_json::Value,
 
-    #[allow(unused)] // TODO
+    #[expect(unused)] // TODO
     pub(crate) mapgen_arg_storage: Option<serde_json::Value>,
 
-    #[allow(unused)] // TODO
+    #[expect(unused)] // TODO
     pub(crate) mapgen_arg_index: Option<serde_json::Value>,
 
-    #[allow(unused)] // TODO
+    #[expect(unused)] // TODO
     pub(crate) joins_used: Option<serde_json::Value>,
 
-    #[allow(unused)] // TODO
+    #[expect(unused)] // TODO
     pub(crate) predecessors: Option<serde_json::Value>,
 }
 
@@ -140,8 +140,8 @@ impl From<SubzoneLevel> for SubzoneOffset {
     }
 }
 
-#[allow(unused)]
-#[allow(clippy::struct_excessive_bools)]
+#[expect(unused)]
+#[expect(clippy::struct_excessive_bools)]
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct Monster {

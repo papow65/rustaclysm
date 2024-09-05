@@ -86,7 +86,7 @@ fn calculate_visibility(
     }
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(crate) fn update_visibility(
     focus: Focus,
     elevation_visibility: Res<ElevationVisibility>,
@@ -136,7 +136,7 @@ pub(crate) fn update_visibility(
     log_if_slow("update_visibility", start);
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(crate) fn update_visualization_on_item_move(
     par_commands: ParallelCommands,
     focus: Focus,
@@ -186,7 +186,6 @@ pub(crate) fn update_visualization_on_item_move(
     log_if_slow("update_visualization_on_item_move", start);
 }
 
-#[allow(clippy::needless_pass_by_value)]
 pub(crate) fn count_assets(
     font_assets: Option<Res<Assets<Font>>>,
     map_assets: Option<Res<Assets<Map>>>,
@@ -228,7 +227,7 @@ pub(crate) fn count_assets(
     log_if_slow("count_assets", start);
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(crate) fn count_zones(
     //zones: Query<&Zone>,
     zone_levels: Query<&ZoneLevel>,
@@ -258,7 +257,6 @@ pub(crate) fn count_zones(
     log_if_slow("count_zones", start);
 }
 
-#[allow(clippy::needless_pass_by_value)]
 pub(crate) fn check_failed_asset_loading(mut fails: EventReader<UntypedAssetLoadFailedEvent>) {
     let start = Instant::now();
 
@@ -274,7 +272,7 @@ pub(crate) fn check_failed_asset_loading(mut fails: EventReader<UntypedAssetLoad
 }
 
 #[cfg(feature = "log_archetypes")]
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(crate) fn log_archetypes(world: &mut World) {
     let component_names = world
         .components()

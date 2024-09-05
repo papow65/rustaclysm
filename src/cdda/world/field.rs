@@ -5,9 +5,9 @@ use serde::Deserialize;
 pub(crate) struct Field {
     pub(crate) id: ObjectId,
 
-    #[allow(unused)]
+    #[expect(unused)]
     intensity: i32,
-    #[allow(unused)]
+    #[expect(unused)]
     age: i64,
 }
 

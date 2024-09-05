@@ -22,12 +22,12 @@ pub(crate) struct OvermapBuffer {
     pub(crate) visible: [RepetitionBlock<bool>; Level::AMOUNT],
 
     /// Marked as 'Exmplored' on the overmap
-    #[allow(unused)]
+    #[expect(unused)]
     pub(crate) explored: [RepetitionBlock<bool>; Level::AMOUNT],
 
-    #[allow(unused)]
+    #[expect(unused)]
     pub(crate) notes: Vec<serde_json::Value>,
 
-    #[allow(unused)]
+    #[expect(unused)]
     pub(crate) extras: Vec<serde_json::Value>,
 }

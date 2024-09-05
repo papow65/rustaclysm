@@ -14,7 +14,6 @@ use bevy::prelude::{
 };
 use std::time::Instant;
 
-#[allow(clippy::needless_pass_by_value)]
 pub(in super::super) fn update_stamina(
     mut stamina_impact_events: EventReader<ActorEvent<StaminaImpact>>,
     mut staminas: Query<&mut Stamina>,
@@ -36,7 +35,7 @@ pub(in super::super) fn update_stamina(
     log_if_slow("update_stamina", start);
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(in super::super) fn toggle_doors(
     mut commands: Commands,
     mut toggle_reader: EventReader<TerrainEvent<Toggle>>,
@@ -63,7 +62,7 @@ pub(in super::super) fn toggle_doors(
     log_if_slow("toggle_doors", start);
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(in super::super) fn update_damaged_characters(
     mut commands: Commands,
     mut message_writer: MessageWriter,
@@ -139,7 +138,6 @@ pub(in super::super) fn update_damaged_characters(
     log_if_slow("update_damaged_characters", start);
 }
 
-#[allow(clippy::needless_pass_by_value)]
 pub(in super::super) fn update_healed_characters(
     mut message_writer: MessageWriter,
     mut healing_reader: EventReader<ActorEvent<Healing>>,
@@ -177,7 +175,6 @@ pub(in super::super) fn update_healed_characters(
     log_if_slow("update_healed_characters", start);
 }
 
-#[allow(clippy::needless_pass_by_value)]
 pub(in super::super) fn update_damaged_corpses(
     mut commands: Commands,
     mut message_writer: MessageWriter,
@@ -215,7 +212,7 @@ pub(in super::super) fn update_damaged_corpses(
     log_if_slow("update_damaged_corpses", start);
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(in super::super) fn update_corpses(
     mut commands: Commands,
     clock: Clock,
@@ -255,7 +252,7 @@ pub(in super::super) fn update_corpses(
     log_if_slow("update_corpses", start);
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(in super::super) fn update_explored(moved_players: Query<(), (With<Player>, Changed<Pos>)>) {
     let start = Instant::now();
 
@@ -269,7 +266,6 @@ pub(in super::super) fn update_explored(moved_players: Query<(), (With<Player>, 
 }
 
 /// For terrain and furniture
-#[allow(clippy::needless_pass_by_value)]
 pub(in super::super) fn update_damaged_terrain(
     mut commands: Commands,
     mut message_writer: MessageWriter,
@@ -328,7 +324,7 @@ pub(in super::super) fn update_damaged_terrain(
 
 // Separate from 'update_damaged_terrain' to prevent a conflict with 'Location'.
 /// For terrain and furniture
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(in super::super) fn spawn_broken_terrain(
     In(broken): In<Vec<(Entity, Pos, ObjectDefinition)>>,
     mut spawner: Spawner,
@@ -343,7 +339,7 @@ pub(in super::super) fn spawn_broken_terrain(
     log_if_slow("spawn_broken_terrain", start);
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(in super::super) fn combine_items(
     mut commands: Commands,
     hierarchy: Hierarchy,

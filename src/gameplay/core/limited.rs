@@ -24,7 +24,7 @@ pub(crate) struct Limited {
 }
 
 impl Limited {
-    #[allow(unused)]
+    #[expect(unused)]
     pub(crate) const fn empty(max: u16) -> Self {
         Self { current: 0, max }
     }
@@ -56,17 +56,15 @@ impl Limited {
         self.adjust(-(amount as i16))
     }
 
-    #[allow(unused)]
     pub(crate) fn can_add(&self, amount: i16) -> bool {
         matches!((self.current as i16).overflowing_add(amount), (sum, true) if (0_i16..=(self.max as i16)).contains(&sum))
     }
 
-    #[allow(unused)]
+    #[expect(unused)]
     pub(crate) fn can_subtract(&self, amount: i16) -> bool {
         self.can_add(-amount)
     }
 
-    #[allow(unused)]
     pub(crate) fn try_add(&mut self, amount: i16) -> Result<(), ()> {
         match (self.current as i16).overflowing_add(amount) {
             (sum, true) if (0_i16..=(self.max as i16)).contains(&sum) => {
@@ -77,7 +75,7 @@ impl Limited {
         }
     }
 
-    #[allow(unused)]
+    #[expect(unused)]
     pub(crate) fn try_subtract(&mut self, amount: i16) -> Result<(), ()> {
         self.try_add(-amount)
     }
@@ -86,12 +84,12 @@ impl Limited {
         self.current
     }
 
-    #[allow(unused)]
+    #[expect(unused)]
     pub(crate) const fn max(&self) -> u16 {
         self.max
     }
 
-    #[allow(unused)]
+    #[expect(unused)]
     pub(crate) const fn left(&self) -> u16 {
         self.max - self.current
     }
@@ -100,12 +98,10 @@ impl Limited {
         self.current == 0
     }
 
-    #[allow(unused)]
     pub(crate) const fn is_nonzero(&self) -> bool {
         0 < self.current
     }
 
-    #[allow(unused)]
     pub(crate) const fn is_max(&self) -> bool {
         self.current == self.max
     }

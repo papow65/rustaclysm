@@ -37,7 +37,6 @@ impl<T: AsyncNew<T> + Send + 'static> Default for AsyncResourceLoader<T> {
     }
 }
 
-#[allow(clippy::needless_pass_by_value)]
 fn create_async_resource<T: AsyncNew<T> + Resource>(
     mut commands: Commands,
     mut async_resource_generator: ResMut<AsyncResourceLoader<T>>,

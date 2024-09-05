@@ -9,43 +9,43 @@ pub(crate) type SavPath = PathFor<Sav>;
 #[derive(Debug, Deserialize, Resource)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct Sav {
-    #[allow(unused)]
+    #[expect(unused)]
     pub(crate) achievements_tracker: serde_json::Value,
 
-    #[allow(unused)]
+    #[expect(unused)]
     pub(crate) active_monsters: serde_json::Value,
 
-    #[allow(unused)]
+    #[expect(unused)]
     pub(crate) auto_travel_mode: serde_json::Value,
 
-    #[allow(unused)]
+    #[expect(unused)]
     #[serde(rename(deserialize = "bVMonsterLookFire"))]
     pub(crate) b_v_monster_look_fire: serde_json::Value,
 
-    #[allow(unused)]
+    #[expect(unused)]
     pub(crate) calendar_start: u64,
 
-    #[allow(unused)]
+    #[expect(unused)]
     pub(crate) game_start: u64,
 
     pub(crate) turn: u64,
 
-    #[allow(unused)]
+    #[expect(unused)]
     pub(crate) driving_view_offset: serde_json::Value,
 
-    #[allow(unused)]
+    #[expect(unused)]
     pub(crate) global_vals: serde_json::Value,
 
-    #[allow(unused)]
+    #[expect(unused)]
     pub(crate) grscent: serde_json::Value,
 
-    #[allow(unused)]
+    #[expect(unused)]
     pub(crate) inactive_global_effect_on_condition_vector: serde_json::Value,
 
-    #[allow(unused)]
+    #[expect(unused)]
     pub(crate) initial_season: serde_json::Value,
 
-    #[allow(unused)]
+    #[expect(unused)]
     pub(crate) kill_tracker: serde_json::Value,
 
     /// Overmap x
@@ -60,39 +60,39 @@ pub(crate) struct Sav {
     /// Level
     pub(crate) levz: i8,
 
-    #[allow(unused)]
+    #[expect(unused)]
     pub(crate) mostseen: serde_json::Value,
 
     pub(crate) player: CddaPlayer,
 
-    #[allow(unused)]
+    #[expect(unused)]
     pub(crate) player_messages: serde_json::Value,
 
-    #[allow(unused)]
+    #[expect(unused)]
     pub(crate) queued_global_effect_on_conditions: serde_json::Value,
 
-    #[allow(unused)]
+    #[expect(unused)]
     pub(crate) run_mode: serde_json::Value,
 
-    #[allow(unused)]
+    #[expect(unused)]
     pub(crate) stats_tracker: serde_json::Value,
 
-    #[allow(unused)]
+    #[expect(unused)]
     pub(crate) turnssincelastmon: serde_json::Value,
 
-    #[allow(unused)]
+    #[expect(unused)]
     pub(crate) typescent: serde_json::Value,
 
-    #[allow(unused)]
+    #[expect(unused)]
     pub(crate) unique_npcs: Option<serde_json::Value>,
 
-    #[allow(unused)]
+    #[expect(unused)]
     pub(crate) view_offset_x: serde_json::Value,
 
-    #[allow(unused)]
+    #[expect(unused)]
     pub(crate) view_offset_y: serde_json::Value,
 
-    #[allow(unused)]
+    #[expect(unused)]
     pub(crate) view_offset_z: serde_json::Value,
 }
 

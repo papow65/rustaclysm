@@ -20,7 +20,7 @@ use std::str::from_utf8;
 
 const FULL_WIDTH: f32 = 720.0;
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(super) fn spawn_main_menu(mut commands: Commands, fonts: Res<Fonts>) {
     commands.spawn((
         Camera2dBundle::default(),
@@ -156,7 +156,7 @@ fn add_quit_button(parent: &mut ChildBuilder, fonts: &Fonts) {
         });
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(super) fn update_sav_files(
     mut commands: Commands,
     fonts: Res<Fonts>,
@@ -324,7 +324,6 @@ fn add_load_button(fonts: &Fonts, parent: &mut ChildBuilder, path: &Path) {
         });
 }
 
-#[allow(clippy::needless_pass_by_value)]
 pub(super) fn manage_main_menu_button_input(
     mut commands: Commands,
     mut next_progress_state: ResMut<NextState<ProgressScreenState>>,

@@ -83,7 +83,7 @@ impl Keys {
             Either::Right(empty())
         }
     }
-    #[allow(unused)]
+    #[expect(unused)]
     pub(crate) fn just_pressed_with_ctrl(&self) -> impl Iterator<Item = &Key> + '_ {
         self.just_pressed(self.ctrl == Ctrl::With)
     }

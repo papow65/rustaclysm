@@ -15,7 +15,7 @@ use crate::gameplay::{
 };
 use bevy::{ecs::entity::EntityHashMap, prelude::*, utils::HashMap};
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(super) fn spawn_inventory(mut commands: Commands, fonts: Res<Fonts>) {
     let panel = commands
         .spawn((
@@ -77,7 +77,7 @@ pub(super) fn spawn_inventory(mut commands: Commands, fonts: Res<Fonts>) {
     });
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(super) fn clear_inventory(
     clock: Clock,
     mut inventory: ResMut<InventoryScreen>,
@@ -100,7 +100,7 @@ pub(super) fn clear_inventory(
     true
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(super) fn refresh_inventory(
     In(run): In<bool>,
     mut commands: Commands,
@@ -360,7 +360,7 @@ fn actions(section: &InventorySection, drop_section: bool) -> Vec<InventoryActio
     actions
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(super) fn manage_inventory_keyboard_input(
     keys: Res<Keys>,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
@@ -516,7 +516,7 @@ fn examine_selected_item(
     }
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(super) fn manage_inventory_button_input(
     mut instruction_queue: ResMut<InstructionQueue>,
     interactions: Query<
@@ -542,7 +542,6 @@ pub(super) fn manage_inventory_button_input(
     }
 }
 
-#[allow(clippy::needless_pass_by_value)]
 pub(super) fn remove_inventory_resource(mut commands: Commands) {
     commands.remove_resource::<InventoryScreen>();
 }

@@ -1,7 +1,7 @@
 use crate::{cdda::CddaItem, gameplay::ObjectId};
 use serde::Deserialize;
 
-#[allow(unused, clippy::struct_excessive_bools)]
+#[expect(unused, clippy::struct_excessive_bools)]
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct CddaVehicle {
@@ -63,7 +63,7 @@ pub(crate) struct CddaVehicle {
     pub(crate) vehicle_noise: u8,
 }
 
-#[allow(unused)]
+#[expect(unused)]
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct CddaVehiclePart {

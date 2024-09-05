@@ -28,7 +28,7 @@ pub(crate) struct Recipe {
     #[serde(default)]
     pub(crate) using: Vec<Using>,
 
-    #[allow(unused)]
+    #[expect(unused)]
     #[serde(flatten)]
     extra: HashMap<String, serde_json::Value>,
 }
@@ -38,7 +38,7 @@ pub(crate) struct Recipe {
 pub(crate) enum BookLearn {
     List(Vec<BookLearnItem>),
     Map(HashMap<ObjectId, serde_json::Value>),
-    Other(#[allow(unused)] serde_json::Value),
+    Other(serde_json::Value),
 }
 
 impl Default for BookLearn {
@@ -52,7 +52,7 @@ impl Default for BookLearn {
 pub(crate) enum BookLearnItem {
     Simple(ObjectId),
     Wrapped((ObjectId,)),
-    WithSkill(ObjectId, #[allow(unused)] u8),
+    WithSkill(ObjectId, #[expect(unused)] u8),
 }
 
 impl BookLearnItem {
@@ -129,7 +129,7 @@ impl From<CddaAlternative> for Alternative {
 #[serde(untagged)]
 pub(crate) enum CddaAlternative {
     Item(ObjectId, u32),
-    List(ObjectId, u32, #[allow(unused)] String),
+    List(ObjectId, u32, #[expect(unused)] String),
 }
 
 #[derive(Debug, Deserialize)]
@@ -199,7 +199,7 @@ pub(crate) enum UsingKind {
 #[serde(untagged)]
 pub(crate) enum CddaUsing {
     NonList(ObjectId, u32),
-    List(ObjectId, u32, #[allow(unused)] String),
+    List(ObjectId, u32, #[expect(unused)] String),
 }
 
 #[cfg(test)]

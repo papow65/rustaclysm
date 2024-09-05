@@ -12,7 +12,7 @@ use bevy::prelude::{
     Query, Res, ResMut, StateScoped, Style, TextBundle, Val, With,
 };
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(super) fn spawn_menu(mut commands: Commands, fonts: Res<Fonts>) {
     let button = ButtonBundle {
         style: Style {
@@ -58,7 +58,7 @@ fn add_text(parent: &mut ChildBuilder, fonts: &Fonts, text: &str, color: Color) 
     parent.spawn(TextBundle::from_section(text, fonts.large(color)));
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(super) fn manage_menu_button_input(
     mut next_application_state: ResMut<NextState<ApplicationState>>,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
@@ -97,7 +97,7 @@ pub(super) fn manage_menu_button_input(
     }
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(super) fn manage_menu_keyboard_input(
     keys: Res<Keys>,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,

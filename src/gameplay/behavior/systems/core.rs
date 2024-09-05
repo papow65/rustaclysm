@@ -6,7 +6,7 @@ use bevy::prelude::{
 };
 use std::{cell::OnceCell, time::Instant};
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(in super::super) fn egible_character(
     envir: Envir,
     mut timeouts: ResMut<Timeouts>,
@@ -41,7 +41,7 @@ impl PlanSystems {
     }
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(in super::super) fn plan_action(
     In(active_actor): In<Entity>,
     world: &mut World,
@@ -75,7 +75,7 @@ pub(in super::super) fn plan_action(
     Some((active_actor, action))
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 fn plan_manual_player_action(
     In(active_actor): In<Entity>,
     mut message_writer: MessageWriter,
@@ -105,7 +105,7 @@ fn plan_manual_player_action(
     impact
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 fn plan_automatic_player_action(
     In(active_actor): In<Entity>,
     player_action_state: Res<State<PlayerActionState>>,
@@ -137,7 +137,6 @@ fn plan_automatic_player_action(
     planned_action
 }
 
-#[allow(clippy::needless_pass_by_value)]
 fn wait_for_player_input(mut instruction_queue: ResMut<InstructionQueue>) {
     let start = Instant::now();
 
@@ -146,7 +145,7 @@ fn wait_for_player_input(mut instruction_queue: ResMut<InstructionQueue>) {
     log_if_slow("wait_for_player_input", start);
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 fn plan_npc_action(
     In(active_actor): In<Entity>,
     mut commands: Commands,
@@ -225,7 +224,7 @@ impl PerformSystems {
     }
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(in super::super) fn perform_action(
     In(option): In<Option<(Entity, PlannedAction)>>,
     world: &mut World,
@@ -296,8 +295,8 @@ fn run_system<I: 'static, R: 'static>(world: &mut World, system_id: SystemId<I, 
         .expect("Action should have succeeded")
 }
 
-#[allow(clippy::needless_pass_by_value)]
-#[allow(clippy::unnecessary_wraps)]
+#[expect(clippy::needless_pass_by_value)]
+#[expect(clippy::unnecessary_wraps)]
 pub(in super::super) fn perform_stay(
     In(stay): In<ActionIn<Stay>>,
     actors: Query<Actor>,
@@ -305,8 +304,8 @@ pub(in super::super) fn perform_stay(
     Some(stay.actor(&actors).stay())
 }
 
-#[allow(clippy::needless_pass_by_value)]
-#[allow(clippy::unnecessary_wraps)]
+#[expect(clippy::needless_pass_by_value)]
+#[expect(clippy::unnecessary_wraps)]
 pub(in super::super) fn perform_sleep(
     In(sleep): In<ActionIn<Sleep>>,
     mut message_writer: MessageWriter,
@@ -325,7 +324,7 @@ pub(in super::super) fn perform_sleep(
     ))
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(in super::super) fn perform_step(
     In(step): In<ActionIn<Step>>,
     mut commands: Commands,
@@ -343,7 +342,7 @@ pub(in super::super) fn perform_step(
     )
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(in super::super) fn perform_attack(
     In(attack): In<ActionIn<Attack>>,
     mut message_writer: MessageWriter,
@@ -363,7 +362,7 @@ pub(in super::super) fn perform_attack(
     )
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(in super::super) fn perform_smash(
     In(smash): In<ActionIn<Smash>>,
     mut message_writer: MessageWriter,
@@ -383,7 +382,7 @@ pub(in super::super) fn perform_smash(
     )
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(in super::super) fn perform_pulp(
     In(pulp): In<ActionIn<Pulp>>,
     mut message_writer: MessageWriter,
@@ -403,7 +402,7 @@ pub(in super::super) fn perform_pulp(
     )
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(in super::super) fn perform_peek(
     In(peek): In<ActionIn<Peek>>,
     mut message_writer: MessageWriter,
@@ -419,7 +418,7 @@ pub(in super::super) fn perform_peek(
     )
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(in super::super) fn perform_close(
     In(close): In<ActionIn<Close>>,
     mut message_writer: MessageWriter,
@@ -435,7 +434,7 @@ pub(in super::super) fn perform_close(
     )
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(in super::super) fn perform_wield(
     In(wield): In<ActionIn<ItemAction<Wield>>>,
     mut commands: Commands,
@@ -452,7 +451,7 @@ pub(in super::super) fn perform_wield(
     )
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(in super::super) fn perform_unwield(
     In(unwield): In<ActionIn<ItemAction<Unwield>>>,
     mut commands: Commands,
@@ -469,7 +468,7 @@ pub(in super::super) fn perform_unwield(
     )
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(in super::super) fn perform_pickup(
     In(pickup): In<ActionIn<ItemAction<Pickup>>>,
     mut commands: Commands,
@@ -486,7 +485,7 @@ pub(in super::super) fn perform_pickup(
     )
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(in super::super) fn perform_move_item(
     In(move_item): In<ActionIn<ItemAction<MoveItem>>>,
     mut commands: Commands,
@@ -506,7 +505,7 @@ pub(in super::super) fn perform_move_item(
     )
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(in super::super) fn perform_start_craft(
     In(start_craft): In<ActionIn<StartCraft>>,
     mut commands: Commands,
@@ -530,7 +529,7 @@ pub(in super::super) fn perform_start_craft(
     )
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(in super::super) fn perform_continue_craft(
     In(continue_craft): In<ActionIn<ItemAction<ContinueCraft>>>,
     mut commands: Commands,
@@ -552,7 +551,7 @@ pub(in super::super) fn perform_continue_craft(
     )
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(in super::super) fn perform_examine_item(
     In(examine_item): In<ActionIn<ItemAction<ExamineItem>>>,
     mut message_writer: MessageWriter,
@@ -567,7 +566,7 @@ pub(in super::super) fn perform_examine_item(
     None
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(in super::super) fn perform_change_pace(
     In(change_pace): In<ActionIn<ChangePace>>,
     mut commands: Commands,
@@ -577,7 +576,7 @@ pub(in super::super) fn perform_change_pace(
     None
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(in super::super) fn proces_impact(
     In(impact): In<Option<Impact>>,
     mut message_writer: MessageWriter,

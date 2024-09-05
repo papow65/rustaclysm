@@ -1,7 +1,7 @@
 use bevy::utils::HashMap;
 use serde::Deserialize;
 
-#[allow(unused)]
+#[expect(unused)]
 #[derive(Debug, Deserialize)]
 //#[serde(deny_unknown_fields)] // can't be used with '#[serde(flatten)]' (at the bottom)
 pub(crate) struct CddaPlayer {
@@ -149,7 +149,7 @@ pub(crate) struct CddaPlayer {
 pub(crate) struct Skill {
     pub(crate) level: u8,
 
-    #[allow(unused)]
+    #[expect(unused)]
     #[serde(flatten)]
     extra: HashMap<String, serde_json::Value>,
 }

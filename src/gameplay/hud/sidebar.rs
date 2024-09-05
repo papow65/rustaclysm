@@ -19,7 +19,7 @@ use std::time::Instant;
 
 const TEXT_WIDTH: f32 = 8.0 * 43.0; // 43 chars
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(super) fn spawn_sidebar(
     mut commands: Commands,
     hud_defaults: Res<HudDefaults>,
@@ -133,7 +133,7 @@ pub(super) fn update_sidebar_systems() -> impl IntoSystemConfigs<()> {
         .run_if(resource_exists::<StatusTextSections>.and_then(resource_exists::<RelativeSegments>))
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 fn update_log(
     mut new_messages: EventReader<Message>,
     currently_visible_builder: CurrentlyVisibleBuilder,
@@ -277,7 +277,7 @@ fn update_status_display(text_sections: &StatusTextSections, status_display: &mu
         .extend(text_sections.details.clone());
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(super) fn update_status_fps(
     diagnostics: Res<DiagnosticsStore>,
     mut text_sections: ResMut<StatusTextSections>,
@@ -300,7 +300,7 @@ pub(super) fn update_status_fps(
     log_if_slow("update_status_fps", start);
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 fn update_status_time(
     clock: Clock,
     mut text_sections: ResMut<StatusTextSections>,
@@ -316,7 +316,7 @@ fn update_status_time(
     log_if_slow("update_status_time", start);
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 fn update_status_health(
     health: Query<&Health, (With<Player>, Changed<Health>)>,
     mut text_sections: ResMut<StatusTextSections>,
@@ -336,7 +336,7 @@ fn update_status_health(
     log_if_slow("update_status_health", start);
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 fn update_status_stamina(
     player_staminas: Query<&Stamina, (With<Player>, Changed<Stamina>)>,
     mut text_sections: ResMut<StatusTextSections>,
@@ -356,7 +356,7 @@ fn update_status_stamina(
     log_if_slow("update_status_stamina", start);
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 fn update_status_speed(
     player_actors: Query<
         Actor,
@@ -393,7 +393,7 @@ fn update_status_speed(
     log_if_slow("update_status_speed", start);
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 fn update_status_player_action_state(
     player_action_state: Res<State<PlayerActionState>>,
     mut text_sections: ResMut<StatusTextSections>,
@@ -409,7 +409,7 @@ fn update_status_player_action_state(
     log_if_slow("update_status_player_action_state", start);
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 fn update_status_player_wielded(
     fonts: Res<Fonts>,
     mut text_sections: ResMut<StatusTextSections>,
@@ -434,7 +434,7 @@ fn update_status_player_wielded(
     log_if_slow("update_status_wielded", start);
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 fn update_status_enemies(
     currently_visible_builder: CurrentlyVisibleBuilder,
     player_actors: Query<Actor, With<Player>>,
@@ -487,7 +487,7 @@ fn update_status_enemies(
     log_if_slow("update_status_enemies", start);
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 fn update_status_detais(
     focus_state: Res<State<FocusState>>,
     hud_defaults: Res<HudDefaults>,

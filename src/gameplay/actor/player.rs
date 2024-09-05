@@ -234,7 +234,6 @@ impl PlayerActionState {
     }
 
     /// For plans that not depend on self
-    #[allow(clippy::needless_pass_by_value)]
     fn generic_plan(
         &self,
         next_state: &mut ResMut<NextState<Self>>,

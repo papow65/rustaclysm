@@ -3,7 +3,7 @@ use crate::gameplay::hud::components::ManualDisplay;
 use bevy::prelude::{KeyCode, Query, Res, Visibility, With};
 use std::time::Instant;
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(super) fn manage_hud_keyboard_input(
     keys: Res<Keys>,
     mut manual: Query<&mut Visibility, With<ManualDisplay>>,

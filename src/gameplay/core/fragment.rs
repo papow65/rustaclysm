@@ -85,7 +85,7 @@ impl Phrase {
     }
 
     #[must_use]
-    pub(crate) fn from_fragments(fragments: Vec<Fragment>) -> Self {
+    pub(crate) const fn from_fragments(fragments: Vec<Fragment>) -> Self {
         Self { fragments }
     }
 

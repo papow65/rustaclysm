@@ -6,21 +6,21 @@ use serde::Deserialize;
 pub(crate) struct Spawn {
     pub(crate) id: ObjectId,
 
-    #[allow(unused)]
+    #[expect(unused)]
     count: i32,
 
     pub(crate) x: i32,
     pub(crate) z: i32,
 
-    #[allow(unused)]
+    #[expect(unused)]
     faction_id: i32,
 
-    #[allow(unused)]
+    #[expect(unused)]
     mission_id: i32,
 
-    #[allow(unused)]
+    #[expect(unused)]
     friendly: bool,
 
-    #[allow(unused)]
+    #[expect(unused)]
     name: Option<String>,
 }

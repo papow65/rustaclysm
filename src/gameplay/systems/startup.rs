@@ -8,7 +8,6 @@ use crate::gameplay::{
 use bevy::prelude::{Commands, Res};
 
 /// Create resources that do not need other resources
-#[allow(clippy::needless_pass_by_value)]
 pub(crate) fn create_independent_resources(mut commands: Commands) {
     // Not persisted between gameplays
     commands.insert_resource(AppearanceCache::default());
@@ -29,7 +28,7 @@ pub(crate) fn create_independent_resources(mut commands: Commands) {
 }
 
 /// Create resources that need other resources
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(crate) fn create_dependent_resources(mut commands: Commands, paths: Res<Paths>) {
     let sav = Sav::try_from(&paths.sav_path()).expect("Loading sav file failed");
     let season_length = 91; // TODO load from worldoptions.json
@@ -39,7 +38,7 @@ pub(crate) fn create_dependent_resources(mut commands: Commands, paths: Res<Path
     commands.insert_resource(Timeouts::new(timestamp));
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(crate) fn spawn_initial_entities(infos: Res<Infos>, sav: Res<Sav>, mut spawner: Spawner) {
     spawner.spawn_light();
 

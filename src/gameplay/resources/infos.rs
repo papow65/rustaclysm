@@ -284,112 +284,97 @@ impl Infos {
         this
     }
 
-    #[allow(unused)]
     pub(crate) fn try_character<'a>(&'a self, id: &'a ObjectId) -> Option<&'a CharacterInfo> {
         self.try_get(&self.characters, id)
     }
 
-    #[allow(unused)]
     pub(crate) fn character<'a>(&'a self, id: &'a ObjectId) -> &'a CharacterInfo {
         self.get(&self.characters, id)
     }
 
-    #[allow(unused)]
     pub(crate) fn try_field<'a>(&'a self, id: &'a ObjectId) -> Option<&'a FieldInfo> {
         self.try_get(&self.fields, id)
     }
 
-    #[allow(unused)]
+    #[expect(unused)]
     pub(crate) fn field<'a>(&'a self, id: &'a ObjectId) -> &'a FieldInfo {
         self.get(&self.fields, id)
     }
 
-    #[allow(unused)]
     pub(crate) fn try_furniture<'a>(&'a self, id: &'a ObjectId) -> Option<&'a FurnitureInfo> {
         self.try_get(&self.furniture, id)
     }
 
-    #[allow(unused)]
+    #[expect(unused)]
     pub(crate) fn furniture<'a>(&'a self, id: &'a ObjectId) -> &'a FurnitureInfo {
         self.get(&self.furniture, id)
     }
 
-    #[allow(unused)]
     pub(crate) fn try_item<'a>(&'a self, id: &'a ObjectId) -> Option<&'a ItemInfo> {
         self.try_get(&self.items, id)
     }
 
-    #[allow(unused)]
     pub(crate) fn item<'a>(&'a self, id: &'a ObjectId) -> &'a ItemInfo {
         self.get(&self.items, id)
     }
 
-    #[allow(unused)]
+    #[expect(unused)]
     pub(crate) fn try_item_group<'a>(&'a self, id: &'a ObjectId) -> Option<&'a ItemGroup> {
         self.try_get(&self.item_groups, id)
     }
 
-    #[allow(unused)]
     pub(crate) fn item_group<'a>(&'a self, id: &'a ObjectId) -> &'a ItemGroup {
         self.get(&self.item_groups, id)
     }
 
-    #[allow(unused)]
+    #[expect(unused)]
     pub(crate) fn try_quality<'a>(&'a self, id: &'a ObjectId) -> Option<&'a Quality> {
         self.try_get(&self.qualities, id)
     }
 
-    #[allow(unused)]
     pub(crate) fn quality<'a>(&'a self, id: &'a ObjectId) -> &'a Quality {
         self.get(&self.qualities, id)
     }
 
-    #[allow(unused)]
+    #[expect(unused)]
     pub(crate) fn try_recipe<'a>(&'a self, id: &'a ObjectId) -> Option<&'a Recipe> {
         self.try_get(&self.recipes, id)
     }
 
-    #[allow(unused)]
     pub(crate) fn recipe<'a>(&'a self, id: &'a ObjectId) -> &'a Recipe {
         self.get(&self.recipes, id)
     }
 
-    #[allow(unused)]
     pub(crate) fn try_requirement<'a>(&'a self, id: &'a ObjectId) -> Option<&'a Requirement> {
         self.try_get(&self.requirements, id)
     }
 
-    #[allow(unused)]
     pub(crate) fn requirement<'a>(&'a self, id: &'a ObjectId) -> &'a Requirement {
         self.get(&self.requirements, id)
     }
 
-    #[allow(unused)]
     pub(crate) fn try_terrain<'a>(&'a self, id: &'a ObjectId) -> Option<&'a TerrainInfo> {
         self.try_get(&self.terrain, id)
     }
 
-    #[allow(unused)]
     pub(crate) fn terrain<'a>(&'a self, id: &'a ObjectId) -> &'a TerrainInfo {
         self.get(&self.terrain, id)
     }
 
-    #[allow(unused)]
     pub(crate) fn try_vehicle_part<'a>(&'a self, id: &'a ObjectId) -> Option<&'a VehiclePartInfo> {
         self.try_get(&self.vehicle_parts, id)
     }
 
-    #[allow(unused)]
+    #[expect(unused)]
     pub(crate) fn vehicle_part<'a>(&'a self, id: &'a ObjectId) -> &'a VehiclePartInfo {
         self.get(&self.vehicle_parts, id)
     }
 
-    #[allow(unused)]
     pub(crate) fn try_zone_level<'a>(&'a self, id: &'a ObjectId) -> Option<&'a OvermapInfo> {
         self.try_get(&self.zone_levels, id)
     }
 
-    #[allow(unused)]
+    #[expect(unused)]
     pub(crate) fn zone_level<'a>(&'a self, id: &'a ObjectId) -> &'a OvermapInfo {
         self.get(&self.zone_levels, id)
     }

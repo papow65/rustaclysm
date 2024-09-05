@@ -6,11 +6,11 @@ use serde::Deserialize;
 pub(crate) struct Quality {
     pub(crate) name: ItemName,
 
-    #[allow(unused)]
+    #[expect(unused)]
     #[serde(default)]
     pub(crate) usages: Vec<(u8, Vec<String>)>,
 
-    #[allow(unused)]
+    #[expect(unused)]
     #[serde(flatten)]
     extra: HashMap<String, serde_json::Value>,
 }

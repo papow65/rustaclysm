@@ -67,7 +67,7 @@ static DEATH_MANUAL_CONTENTS: &str = "\
     to main menu    F12/enter/space/esc\n\
     quit            ctrl c/q";
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(super) fn spawn_manual(mut commands: Commands, hud_defaults: Res<HudDefaults>) {
     let mut background = hud_defaults.background.clone();
     background.style.bottom = Val::Px(0.0);
@@ -96,7 +96,7 @@ pub(super) fn spawn_manual(mut commands: Commands, hud_defaults: Res<HudDefaults
         });
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(super) fn update_manual(
     gameplay_screen_state: Res<State<GameplayScreenState>>,
     hud_defaults: Res<HudDefaults>,

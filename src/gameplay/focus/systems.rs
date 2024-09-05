@@ -3,7 +3,7 @@ use crate::gameplay::{CameraBase, ExamineCursor, Focus, FocusState};
 use bevy::prelude::{Camera3d, Query, Res, State, Transform, Vec3, Visibility, With, Without};
 use std::time::Instant;
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(super) fn update_focus_cursor_visibility(
     focus_state: Res<State<FocusState>>,
     mut curors: Query<(&mut Visibility, &mut Transform), With<ExamineCursor>>,
@@ -28,7 +28,7 @@ pub(super) fn update_focus_cursor_visibility(
     log_if_slow("update_focus_cursor_visibility", start);
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(super) fn update_camera_base(
     focus: Focus,
     mut camera_bases: Query<&mut Transform, (With<CameraBase>, Without<Camera3d>)>,

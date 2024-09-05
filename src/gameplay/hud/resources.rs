@@ -6,13 +6,12 @@ use bevy::{
     },
 };
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(super) fn spawn_hud_resources(mut commands: Commands, fonts: Res<Fonts>) {
     commands.insert_resource(HudDefaults::new(&fonts));
     commands.insert_resource(StatusTextSections::default());
 }
 
-#[allow(clippy::needless_pass_by_value)]
 pub(super) fn despawn_hud_resources(mut commands: Commands) {
     commands.remove_resource::<HudDefaults>();
     commands.remove_resource::<StatusTextSections>();

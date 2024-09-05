@@ -9,7 +9,7 @@ pub(crate) use self::{input::*, shutdown::*, spawn::*, startup::*, update::*};
 use crate::gameplay::*;
 use bevy::prelude::*;
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(crate) fn count_entities(
     all: Query<()>,
     zone_levels: Query<(), With<ZoneLevel>>,

@@ -8,7 +8,7 @@ use bevy::prelude::{
     PositionType, Res, ResMut, State, StateScoped, Style, TextBundle, Val, ZIndex,
 };
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(crate) fn spawn_loading(mut commands: Commands, fonts: Res<Fonts>) {
     commands
         .spawn((
@@ -49,7 +49,7 @@ pub(crate) fn spawn_loading(mut commands: Commands, fonts: Res<Fonts>) {
 }
 
 /// We start loading after the frame that spawns the loading indicator, to ensure the loading indicator is visible to the user.
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(crate) fn start_gameplay(
     application_state: Res<State<ApplicationState>>,
     mut next_application_state: ResMut<NextState<ApplicationState>>,
@@ -62,7 +62,7 @@ pub(crate) fn start_gameplay(
     }
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(crate) fn finish_loading(
     mut next_progress_state: ResMut<NextState<ProgressScreenState>>,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,

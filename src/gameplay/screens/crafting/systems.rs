@@ -21,7 +21,6 @@ use std::{ops::RangeInclusive, time::Instant};
 const MAX_FIND_DISTANCE: i32 = 7;
 const FIND_RANGE: RangeInclusive<i32> = (-MAX_FIND_DISTANCE)..=MAX_FIND_DISTANCE;
 
-#[allow(clippy::needless_pass_by_value)]
 pub(super) fn spawn_crafting_screen(mut commands: Commands) {
     let recipe_list = commands
         .spawn((
@@ -106,7 +105,7 @@ pub(super) fn spawn_crafting_screen(mut commands: Commands) {
     });
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(super) fn clear_crafting_screen(
     clock: Clock,
     mut crafting_screen: ResMut<CraftingScreen>,
@@ -131,7 +130,7 @@ pub(super) fn clear_crafting_screen(
     true
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(super) fn refresh_crafting_screen(
     In(run): In<bool>,
     mut commands: Commands,
@@ -532,7 +531,7 @@ fn expand_items<'a>(infos: &'a Infos, alternative: &'a Alternative) -> Vec<(&'a 
     }
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(super) fn manage_crafting_keyboard_input(
     mut commands: Commands,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
@@ -655,7 +654,7 @@ fn show_recipe(
         });
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(super) fn manage_crafting_button_input(
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
     mut instruction_queue: ResMut<InstructionQueue>,
@@ -697,7 +696,6 @@ fn start_craft(
     next_gameplay_state.set(GameplayScreenState::Base);
 }
 
-#[allow(clippy::needless_pass_by_value)]
 pub(super) fn remove_crafting_resource(mut commands: Commands) {
     commands.remove_resource::<CraftingScreen>();
 }

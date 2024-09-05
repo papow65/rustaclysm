@@ -13,7 +13,7 @@ pub(crate) struct TerrainInfo {
     pub(crate) flags: Flags,
     pub(crate) bash: Option<Bash>,
 
-    #[allow(unused)]
+    #[expect(unused)]
     #[serde(flatten)]
     extra: HashMap<String, serde_json::Value>,
 }

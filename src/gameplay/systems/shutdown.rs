@@ -6,7 +6,6 @@ use crate::gameplay::{
 };
 use bevy::prelude::{Commands, ResMut};
 
-#[allow(clippy::needless_pass_by_value)]
 pub(crate) fn remove_gameplay_resources(mut commands: Commands) {
     commands.remove_resource::<AppearanceCache>();
     commands.remove_resource::<AssetStorage<Map, ZoneLevel>>();
@@ -28,7 +27,6 @@ pub(crate) fn remove_gameplay_resources(mut commands: Commands) {
     // We don't remove the event resources, because that breaks the event readers.
 }
 
-#[allow(clippy::needless_pass_by_value)]
 pub(crate) fn increase_counter(mut counter: ResMut<GameplayCounter>) {
     counter.0 += 1;
 }

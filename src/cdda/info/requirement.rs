@@ -10,7 +10,7 @@ pub(crate) struct Requirement {
     #[serde(default)]
     pub(crate) components: Vec<Vec<Alternative>>,
 
-    #[allow(unused)]
+    #[expect(unused)]
     #[serde(flatten)]
     extra: HashMap<String, serde_json::Value>,
 }

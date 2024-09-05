@@ -76,40 +76,40 @@ impl AssetLoader for MapLoader {
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct Submap {
-    #[allow(unused)]
+    #[expect(unused)]
     version: u64,
 
-    #[allow(unused)]
+    #[expect(unused)]
     pub(crate) coordinates: (i32, i32, i8),
 
-    #[allow(unused)]
+    #[expect(unused)]
     turn_last_touched: u64,
 
-    #[allow(unused)]
+    #[expect(unused)]
     temperature: i64,
 
-    #[allow(unused)]
+    #[expect(unused)]
     radiation: Vec<i64>,
 
     pub(crate) terrain: RepetitionBlock<ObjectId>,
     pub(crate) furniture: Vec<At<ObjectId>>,
     pub(crate) items: AtVec<Vec<Repetition<CddaItem>>>,
 
-    #[allow(unused)]
+    #[expect(unused)]
     traps: Vec<At<ObjectId>>,
 
     pub(crate) fields: AtVec<FieldVec>,
 
-    #[allow(unused)]
+    #[expect(unused)]
     cosmetics: Vec<(u8, u8, String, String)>,
 
     pub(crate) spawns: Vec<Spawn>,
     pub(crate) vehicles: Vec<CddaVehicle>,
 
-    #[allow(unused)]
+    #[expect(unused)]
     partial_constructions: Vec<serde_json::Value>,
 
-    #[allow(unused)]
+    #[expect(unused)]
     #[serde(default)]
     computers: Vec<serde_json::Value>,
 }

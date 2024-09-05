@@ -27,7 +27,7 @@ pub(crate) struct CharacterInfo {
     #[serde(default)]
     pub(crate) flags: Flags,
 
-    #[allow(unused)]
+    #[expect(unused)]
     #[serde(flatten)]
     pub(crate) extra: HashMap<String, serde_json::Value>,
 }

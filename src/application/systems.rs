@@ -7,14 +7,12 @@ use bevy::prelude::{
     NextState, Node, Parent, Query, Res, ResMut, Style, UiScale, Window, With, Without, World,
 };
 
-#[allow(clippy::needless_pass_by_value)]
 pub(super) fn maximize_window(mut windows: Query<&mut Window>) {
     for mut window in &mut windows {
         window.set_maximized(true);
     }
 }
 
-#[allow(clippy::needless_pass_by_value)]
 pub(super) fn load_fonts(world: &mut World) {
     let asset_server = world.get_resource().expect("AssetServer should exist");
     let fonts = Fonts::new(asset_server);
@@ -22,12 +20,11 @@ pub(super) fn load_fonts(world: &mut World) {
     world.insert_resource(fonts);
 }
 
-#[allow(clippy::needless_pass_by_value)]
 pub(super) fn enter_main_menu(mut next_application_state: ResMut<NextState<ApplicationState>>) {
     next_application_state.set(ApplicationState::MainMenu);
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(super) fn preprocess_keyboard_input(
     mut keyboard_inputs: EventReader<KeyboardInput>,
     key_states: Res<ButtonInput<KeyCode>>,
@@ -36,7 +33,6 @@ pub(super) fn preprocess_keyboard_input(
     keys.update(&mut keyboard_inputs, &key_states);
 }
 
-#[allow(clippy::needless_pass_by_value)]
 pub(super) fn manage_button_color(
     mut interactions: Query<
         (&Interaction, &mut BackgroundColor),
@@ -51,7 +47,7 @@ pub(super) fn manage_button_color(
     }
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(super) fn manage_global_keyboard_input(
     keys: Res<Keys>,
     mut app_exit_events: ResMut<Events<AppExit>>,
@@ -73,7 +69,7 @@ pub(super) fn manage_global_keyboard_input(
     }
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(super) fn manage_scrolling_lists(
     mut mouse_wheel_events: EventReader<MouseWheel>,
     mut scrolling_lists: Query<(&mut ScrollingList, &mut Style, &Parent, &Node, &Interaction)>,
@@ -93,7 +89,7 @@ pub(super) fn manage_scrolling_lists(
     }
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(crate) fn resize_scrolling_lists(
     mut scrolling_lists: Query<(&mut ScrollingList, &mut Style, &Parent, &Node)>,
     parent_nodes: Query<(&Node, &Style), Without<ScrollingList>>,

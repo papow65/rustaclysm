@@ -12,7 +12,7 @@ pub(crate) struct FurnitureInfo {
     pub(crate) bash: Option<Bash>,
     pub(crate) crafting_pseudo_item: Option<ObjectId>,
 
-    #[allow(unused)]
+    #[expect(unused)]
     #[serde(flatten)]
     extra: HashMap<String, serde_json::Value>,
 }
@@ -33,7 +33,7 @@ pub(crate) struct Bash {
     pub(crate) furn_set: Option<ObjectId>,
     pub(crate) items: Option<BashItems>,
 
-    #[allow(unused)]
+    #[expect(unused)]
     #[serde(flatten)]
     extra: HashMap<String, serde_json::Value>,
 }
