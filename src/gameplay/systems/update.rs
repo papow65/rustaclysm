@@ -86,8 +86,6 @@ fn calculate_visibility(
     }
 }
 
-/// 'items' is more complex than needed by [`calculate_visibility`], because of compatibility with \
-/// [`update_visualization_on_player_move()`].
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn update_visibility(
     focus: Focus,
@@ -100,9 +98,7 @@ pub(crate) fn update_visibility(
         &Pos,
         &mut Visibility,
         &mut LastSeen,
-        Option<&Accessible>,
         Option<&BaseSpeed>,
-        &Children,
     )>,
     cameras: Query<&GlobalTransform, With<Camera>>,
 ) {
@@ -118,7 +114,7 @@ pub(crate) fn update_visibility(
         || camera_global_transform != *previous_camera_global_transform
         || *elevation_visibility != *last_elevation_visibility
     {
-        for (player, &pos, mut visibility, last_seen, _, speed, _) in &mut items {
+        for (player, &pos, mut visibility, last_seen, speed) in &mut items {
             if *last_seen != LastSeen::Never {
                 *visibility = calculate_visibility(
                     &focus,

@@ -1,4 +1,4 @@
-//! These systems run once after [`loop_behavior`].
+//! These systems run at most once at the end of [`loop_behavior_and_refresh`](`crate::gameplay::behavior::system_configs::loop_behavior_and_refresh`).
 
 use crate::common::log_if_slow;
 use crate::gameplay::systems::update_visualization;

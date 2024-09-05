@@ -1,4 +1,5 @@
-//! These systems are part of [`BehaviorSchedule`].
+//! These systems are part of [`BehaviorSchedule`](`crate::gameplay::behavior::schedule::BehaviorSchedule`).
+
 use crate::common::log_if_slow;
 use crate::gameplay::{
     Actor, ActorEvent, Amount, Clock, ContainerLimits, Corpse, CorpseEvent, CorpseRaise, Damage,
