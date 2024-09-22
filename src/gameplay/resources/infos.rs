@@ -116,7 +116,7 @@ impl Infos {
                 for id in ids {
                     if by_type.get(&id).is_some() {
                         eprintln!(
-                            "Duplicate usade of id {:?} in {:?} detected. One will be ignored.",
+                            "Duplicate usage of id {:?} in {:?} detected. One will be ignored.",
                             &id, &type_
                         );
                     }
