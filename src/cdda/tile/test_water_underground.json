@@ -1,0 +1,23 @@
+{
+    "id": [ "t_water_sh_underground", "t_swater_sh_underground", "t_water_sh_murky_underground" ],
+    "multitile": true,
+    "fg": 7435,
+    "bg": 6210,
+    "additional_tiles": [
+        {
+            "id": "center",
+            "bg": 6210,
+            "fg": [
+                { "weight": 1, "sprite": 7417 },
+                { "weight": 1, "sprite": 7418 },
+                { "weight": 1, "sprite": 7419 },
+                { "weight": 1, "sprite": 7420 }
+            ]
+        },
+        { "id": "corner", "bg": 6210, "fg": [ 7422, 7424, 7423, 7421 ] },
+        { "id": "t_connection", "bg": 6210, "fg": [ 7432, 7434, 7433, 7431 ] },
+        { "id": "edge", "bg": 6210, "fg": [ 7426, 7425 ] },
+        { "id": "end_piece", "bg": 6210, "fg": [ 7428, 7430, 7429, 7427 ] },
+        { "bg": 6210, "id": "unconnected", "fg": 7435 }
+    ]
+}

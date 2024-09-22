@@ -3,17 +3,6 @@ use std::{error::Error as StdError, fmt, fmt::Display, io, path::PathBuf};
 
 #[derive(Debug)]
 pub(crate) enum Error {
-    MissingJsonKey {
-        _format: &'static str,
-        _key: &'static str,
-        _json: serde_json::Value,
-    },
-    UnexpectedJsonVariant {
-        _format: &'static str,
-        _part: Option<&'static str>,
-        _expected: &'static str,
-        _json: serde_json::Value,
-    },
     UnknownSpriteNumber {
         _number: SpriteNumber,
     },

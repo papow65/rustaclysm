@@ -1,8 +1,26 @@
-use crate::cdda::{tile::tile_info::TileInfo, tile::SpriteNumber, Error, TextureInfo};
-use crate::common::Paths;
+use crate::cdda::tile::tile_info::{CddaTileInfo, TileInfo};
+use crate::cdda::{tile::SpriteNumber, TextureInfo};
 use crate::gameplay::{MeshInfo, ObjectId, Transform2d};
 use bevy::{prelude::Vec2, utils::HashMap};
-use std::path::PathBuf;
+use serde::Deserialize;
+use std::path::{Path, PathBuf};
+
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(super) struct CddaAtlas {
+    file: String,
+    sprite_width: Option<u8>,
+    sprite_height: Option<u8>,
+    sprite_offset_x: Option<i8>,
+    sprite_offset_y: Option<i8>,
+    tiles: Vec<CddaTileInfo>,
+
+    #[expect(unused)]
+    ascii: Option<serde_json::Value>,
+
+    #[serde(rename = "//")]
+    comment: Option<String>,
+}
 
 #[derive(Debug)]
 pub(super) struct Atlas {
@@ -12,22 +30,16 @@ pub(super) struct Atlas {
 }
 
 impl Atlas {
-    pub(super) fn try_new(
-        json: &serde_json::Value,
+    pub(super) fn new(
+        tileset_path: &Path,
+        cdda_atlas: CddaAtlas,
         tiles: &mut HashMap<ObjectId, TileInfo>,
-    ) -> Result<Self, Error> {
-        let atlas = json
-            .as_object()
-            .expect("JSON value should be an object (map)");
-        let filename = atlas["file"]
-            .as_str()
-            .expect("'file' key should be present");
-        let image_path = Paths::gfx_path().join("UltimateCataclysm").join(filename);
+    ) -> Self {
+        let filename = cdda_atlas.file.as_str();
+        let image_path = tileset_path.join(filename);
 
-        let from_to = if let Some(comment) = atlas.get("//") {
+        let from_to = if let Some(comment) = cdda_atlas.comment {
             comment
-                .as_str()
-                .expect("Comment should be a string")
                 .split(' ')
                 .flat_map(str::parse)
                 .map(SpriteNumber)
@@ -36,44 +48,37 @@ impl Atlas {
             vec![SpriteNumber(0), SpriteNumber(1024)]
         };
 
-        let width = atlas
-            .get("sprite_width")
-            .and_then(serde_json::Value::as_i64)
-            .map_or(1.0, |w| w as f32 / 32.0);
-        let height = atlas
-            .get("sprite_height")
-            .and_then(serde_json::Value::as_i64)
-            .map_or(1.0, |h| h as f32 / 32.0);
+        let width = cdda_atlas.sprite_width.map_or(1.0, |w| f32::from(w) / 32.0);
+        let height = cdda_atlas
+            .sprite_height
+            .map_or(1.0, |h| f32::from(h) / 32.0);
 
-        let offset_x = atlas
-            .get("sprite_offset_x")
-            .and_then(serde_json::Value::as_f64)
-            .map_or(0.0, |x| x as f32 / 32.0)
+        let offset_x = cdda_atlas
+            .sprite_offset_x
+            .map_or(0.0, |x| f32::from(x) / 32.0)
             + (0.5 * width - 0.5);
-        let offset_y = -(atlas // notice the minus sign
-            .get("sprite_offset_y")
-            .and_then(serde_json::Value::as_f64)
-            .map_or(0.0, |y| y as f32 / 32.0)
+
+        // notice the minus sign
+        let offset_y = -(cdda_atlas
+            .sprite_offset_y
+            .map_or(0.0, |y| f32::from(y) / 32.0)
             + (0.5 * height - 0.5));
 
-        for tile in atlas["tiles"]
-            .as_array()
-            .expect("'tiles' key should be present")
-        {
-            let tile_info = TileInfo::try_from(tile)?;
-            for name in tile_info.names() {
-                tiles.insert(name.clone(), tile_info.clone());
+        for tile in cdda_atlas.tiles {
+            let tile_info = TileInfo::from(tile);
+            for id in tile_info.ids() {
+                tiles.insert(id.clone(), tile_info.clone());
             }
         }
 
-        Ok(Self {
+        Self {
             range: (from_to[0], from_to[1]),
             image_path,
             transform2d: Transform2d {
                 scale: Vec2::new(width, height),
                 offset: Vec2::new(offset_x, offset_y),
             },
-        })
+        }
     }
 
     pub(super) fn contains(&self, sprite_number: SpriteNumber) -> bool {

@@ -1,10 +1,21 @@
-use crate::cdda::tile::{atlas::Atlas, tile_info::TileInfo};
+use crate::cdda::tile::{atlas::Atlas, atlas::CddaAtlas, tile_info::TileInfo};
 use crate::cdda::{Error, SpriteNumber, TextureInfo};
 use crate::common::{AsyncNew, Paths};
 use crate::gameplay::{Layers, Model, ObjectDefinition, ObjectId, SpriteLayer};
 use bevy::prelude::Resource;
 use bevy::utils::{Entry, HashMap};
+use serde::Deserialize;
 use std::fs::read_to_string;
+
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct CddaTileConfig {
+    #[expect(unused)]
+    tile_info: serde_json::Value,
+
+    #[serde(rename = "tiles-new")]
+    atlases: Vec<CddaAtlas>,
+}
 
 #[derive(Resource)]
 pub(crate) struct TileLoader {
@@ -14,51 +25,31 @@ pub(crate) struct TileLoader {
 
 impl TileLoader {
     pub(crate) fn try_new() -> Result<Self, Error> {
-        let file_name = "tile_config.json";
-        let file_path = Paths::gfx_path().join("UltimateCataclysm").join(file_name);
+        let tileset_path = Paths::gfx_path().join("UltimateCataclysm");
+        let file_path = tileset_path.join("tile_config.json");
         let file_contents = read_to_string(&file_path)?;
-        let json: serde_json::Value =
-            serde_json::from_str(&file_contents).map_err(|serde_json_error| Error::Json {
-                _wrapped: serde_json_error,
+        let cdda_tile_config = serde_json::from_str::<CddaTileConfig>(file_contents.as_str())
+            .map_err(|e| Error::Json {
+                _wrapped: e,
                 _file_path: file_path,
                 _contents: file_contents,
             })?;
-        let Some(json_object) = json.as_object() else {
-            return Err(Error::UnexpectedJsonVariant {
-                _format: file_name,
-                _part: None,
-                _expected: "object",
-                _json: json,
-            });
-        };
-        let Some(json_tiles) = json_object.get("tiles-new") else {
-            return Err(Error::MissingJsonKey {
-                _format: file_name,
-                _key: "tiles-new",
-                _json: json,
-            });
-        };
-        let Some(json_atlases) = json_tiles.as_array() else {
-            return Err(Error::UnexpectedJsonVariant {
-                _format: file_name,
-                _part: Some("tiles-new"),
-                _expected: "array",
-                _json: json,
-            });
-        };
 
         let mut tiles = HashMap::default();
 
-        let atlases = json_atlases
-            .iter()
-            .map(|json_atlas| Atlas::try_new(json_atlas, &mut tiles))
-            .collect::<Result<Vec<_>, _>>()?;
+        let atlases = cdda_tile_config
+            .atlases
+            .into_iter()
+            .map(|json_atlas| Atlas::new(&tileset_path, json_atlas, &mut tiles))
+            .collect::<Vec<_>>();
 
         let mut textures = HashMap::default();
 
         for sprite_number in tiles.values().flat_map(TileInfo::used_sprite_numbers) {
             if let Entry::Vacant(vacant) = textures.entry(sprite_number) {
                 vacant.insert(Self::texture_info(&atlases, sprite_number)?);
+            } else {
+                eprintln!("Sprite number already in use. Check for identical texture info.");
             }
         }
 
@@ -132,5 +123,20 @@ impl TileLoader {
 impl AsyncNew<Self> for TileLoader {
     async fn async_new() -> Self {
         async move { Self::try_new().expect("Tiles should load") }.await
+    }
+}
+
+#[cfg(test)]
+mod recipe_tests {
+    use super::*;
+    #[test]
+    #[ignore] // Not a proper unit test, because the config tile may not exist
+    fn it_works() {
+        let json = include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/assets/gfx/UltimateCataclysm/tile_config.json"
+        ));
+        let result = serde_json::from_str::<CddaTileConfig>(json);
+        assert!(result.is_ok(), "{result:?}");
     }
 }
