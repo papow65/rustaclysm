@@ -46,10 +46,20 @@ impl TileLoader {
         let mut textures = HashMap::default();
 
         for sprite_number in tiles.values().flat_map(TileInfo::used_sprite_numbers) {
-            if let Entry::Vacant(vacant) = textures.entry(sprite_number) {
-                vacant.insert(Self::texture_info(&atlases, sprite_number)?);
-            } else {
-                eprintln!("Sprite number already in use. Check for identical texture info.");
+            let texture_info = Self::texture_info(&atlases, sprite_number)?;
+            match textures.entry(sprite_number) {
+                Entry::Vacant(vacant) => {
+                    vacant.insert(texture_info);
+                }
+                Entry::Occupied(o) => {
+                    if cfg!(debug_assertions) && o.get() != &texture_info {
+                        eprintln!(
+                            "Multiple texture infos for {sprite_number:?}: {:?} {:?}",
+                            o.get(),
+                            &texture_info
+                        );
+                    }
+                }
             }
         }
 
