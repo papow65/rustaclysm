@@ -395,36 +395,36 @@ impl Infos {
         self.migrations.get(id).map_or(id, |m| &m.replace)
     }
 
-    fn looks_like(&self, definition: &ObjectDefinition) -> Option<&ObjectId> {
+    fn looks_like(&self, definition: &ObjectDefinition) -> Option<ObjectId> {
         match definition.category {
             ObjectCategory::Character => self
                 .characters
                 .get(&definition.id)
-                .and_then(|o| o.looks_like.as_ref()),
+                .and_then(|o| o.looks_like.clone()),
             ObjectCategory::Item => self
                 .items
                 .get(&definition.id)
-                .and_then(|o| o.looks_like.as_ref()),
+                .and_then(|o| o.looks_like.clone()),
             ObjectCategory::Field => self
                 .fields
                 .get(&definition.id)
-                .and_then(|o| o.looks_like.as_ref()),
+                .and_then(|o| o.looks_like.clone()),
             ObjectCategory::Furniture => self
                 .furniture
                 .get(&definition.id)
-                .and_then(|o| o.looks_like.as_ref()),
+                .and_then(|o| o.looks_like.clone()),
             ObjectCategory::Terrain => self
                 .terrain
                 .get(&definition.id)
-                .and_then(|o| o.looks_like.as_ref()),
+                .and_then(|o| o.looks_like.clone()),
             ObjectCategory::VehiclePart => self
                 .vehicle_parts
                 .get(&definition.id)
-                .and_then(|o| o.looks_like.as_ref()),
+                .and_then(|o| o.looks_like.clone()),
             ObjectCategory::ZoneLevel => self
                 .zone_levels
                 .get(&definition.id)
-                .and_then(|o| o.looks_like.as_ref()),
+                .and_then(|o| o.looks_like.clone()),
             _ => unimplemented!("{:?}", definition),
         }
     }
@@ -454,7 +454,7 @@ impl Infos {
         ];
 
         while let Some(other) = self.looks_like(current_definition_ref) {
-            if variants.contains(other) {
+            if variants.contains(&other) {
                 //eprintln!("Variants {:?} already contains {:?}", &variants, &other); // TODO
                 break;
             }
@@ -471,8 +471,8 @@ impl Infos {
         variants
     }
 
-    pub(crate) fn qualities(&self) -> impl Iterator<Item = &ObjectId> {
-        self.qualities.keys()
+    pub(crate) fn qualities(&self) -> impl Iterator<Item = ObjectId> + '_ {
+        self.qualities.keys().cloned()
     }
 
     pub(crate) fn recipes(&self) -> impl Iterator<Item = (&ObjectId, &Recipe)> {

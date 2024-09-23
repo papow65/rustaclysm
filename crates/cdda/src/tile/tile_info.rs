@@ -126,8 +126,8 @@ pub struct TileInfo {
 }
 
 impl TileInfo {
-    pub fn ids(&self) -> impl Iterator<Item = &ObjectId> {
-        self.ids.iter()
+    pub fn ids(&self) -> impl Iterator<Item = ObjectId> + '_ {
+        self.ids.iter().cloned()
     }
 
     pub fn sprite_numbers(&self) -> (Option<SpriteNumber>, Option<SpriteNumber>) {

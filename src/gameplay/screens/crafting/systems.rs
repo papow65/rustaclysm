@@ -273,7 +273,7 @@ fn find_nearby<'a>(
 fn nearby_manuals<'a>(
     infos: &'a Infos,
     nearby_items: &[(Entity, &'a ObjectDefinition, &'a Amount)],
-) -> HashMap<&'a ObjectId, Arc<str>> {
+) -> HashMap<ObjectId, Arc<str>> {
     nearby_items
         .iter()
         .map(|(_, definition, _)| *definition)
@@ -284,16 +284,20 @@ fn nearby_manuals<'a>(
                     .filter(|item| item.category.as_ref().is_some_and(|s| &**s == "manuals"))
                     .is_some()
         })
-        .map(|definition| &definition.id)
-        .map(|manual_id| (manual_id, infos.item(manual_id).name.single.clone()))
+        .map(|definition| {
+            (
+                definition.id.clone(),
+                infos.item(&definition.id).name.single.clone(),
+            )
+        })
         .collect::<HashMap<_, _>>()
 }
 
 fn shown_recipes(
     infos: &Infos,
     sav: &Sav,
-    nearby_manuals: &HashMap<&ObjectId, Arc<str>>,
-    nearby_qualities: &HashMap<&ObjectId, i8>,
+    nearby_manuals: &HashMap<ObjectId, Arc<str>>,
+    nearby_qualities: &HashMap<ObjectId, i8>,
     nearby_items: &[(Entity, &ObjectDefinition, &Amount)],
 ) -> Vec<RecipeSituation> {
     let mut shown_recipes = infos
@@ -370,15 +374,12 @@ fn autolearn_recipe(recipe: &Recipe, skills: &HashMap<Arc<str>, Skill>) -> bool 
     }
 }
 
-fn recipe_manuals<'a>(
-    recipe: &'a Recipe,
-    nearby_manuals: &HashMap<&'a ObjectId, Arc<str>>,
-) -> Vec<Arc<str>> {
+fn recipe_manuals(recipe: &Recipe, nearby_manuals: &HashMap<ObjectId, Arc<str>>) -> Vec<Arc<str>> {
     // TODO check skill level
 
     let mut manuals = match &recipe.book_learn {
         BookLearn::List(list) => list.iter().map(BookLearnItem::id).collect::<Vec<_>>(),
-        BookLearn::Map(map) => map.keys().collect::<Vec<_>>(),
+        BookLearn::Map(map) => map.keys().cloned().collect::<Vec<_>>(),
         BookLearn::Other(other) => todo!("{other:?}"),
     }
     .iter()
@@ -393,7 +394,7 @@ fn recipe_manuals<'a>(
 fn nearby_qualities<'a>(
     infos: &'a Infos,
     nearby_items: &[(Entity, &'a ObjectDefinition, &'a Amount)],
-) -> HashMap<&'a ObjectId, i8> {
+) -> HashMap<ObjectId, i8> {
     let found = nearby_items
         .iter()
         .filter_map(|(_, definition, _)| match definition.category {
@@ -412,7 +413,7 @@ fn nearby_qualities<'a>(
         .filter_map(|quality_id| {
             found
                 .iter()
-                .filter(|item_quality| &item_quality.0 == quality_id)
+                .filter(|item_quality| item_quality.0 == quality_id)
                 .map(|item_quality| item_quality.1)
                 .max()
                 .map(|max| (quality_id, max))
@@ -424,7 +425,7 @@ fn recipe_qualities(
     infos: &Infos,
     required: &[RequiredQuality],
     using: &[Using],
-    present: &HashMap<&ObjectId, i8>,
+    present: &HashMap<ObjectId, i8>,
 ) -> Vec<QualitySituation> {
     let mut qualities = required
         .iter()
