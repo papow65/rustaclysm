@@ -1,0 +1,18 @@
+use crate::tile::tile_info::CddaTileInfo;
+use serde::Deserialize;
+
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CddaAtlas {
+    pub file: String,
+    pub sprite_width: Option<u8>,
+    pub sprite_height: Option<u8>,
+    pub sprite_offset_x: Option<i8>,
+    pub sprite_offset_y: Option<i8>,
+    pub tiles: Vec<CddaTileInfo>,
+
+    pub ascii: Option<serde_json::Value>,
+
+    #[serde(rename = "//")]
+    pub comment: Option<String>,
+}

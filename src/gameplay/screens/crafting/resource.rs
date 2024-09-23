@@ -1,6 +1,7 @@
+use crate::common::SelectionList;
 use crate::gameplay::screens::crafting::components::RecipeSituation;
-use crate::{common::SelectionList, gameplay::Timestamp};
 use bevy::prelude::{Entity, KeyCode, Query, Resource, Text};
+use units::Timestamp;
 
 #[derive(Resource)]
 pub(super) struct CraftingScreen {

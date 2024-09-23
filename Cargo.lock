@@ -1185,6 +1185,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "cdda"
+version = "0.0.0"
+dependencies = [
+ "bevy",
+ "either",
+ "fastrand",
+ "serde",
+ "serde_json",
+ "units",
+]
+
+[[package]]
 name = "cesu8"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2799,6 +2811,7 @@ dependencies = [
  "base64 0.22.1",
  "bevy",
  "bresenham",
+ "cdda",
  "either",
  "fastrand",
  "float-ord",
@@ -2810,6 +2823,7 @@ dependencies = [
  "serde_json",
  "thread_local",
  "time",
+ "units",
 ]
 
 [[package]]
@@ -3289,6 +3303,16 @@ name = "unicode-xid"
 version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "229730647fbc343e3a80e463c1db7f78f3855d3f3739bee0dda773c9a037c90a"
+
+[[package]]
+name = "units"
+version = "0.0.0"
+dependencies = [
+ "pathfinding",
+ "regex",
+ "serde",
+ "time",
+]
 
 [[package]]
 name = "uuid"

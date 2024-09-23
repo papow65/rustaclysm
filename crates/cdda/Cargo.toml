@@ -1,0 +1,13 @@
+[package]
+name = "cdda"
+description = "A library for working with files from Cataclysm: Datk Days Ahead"
+license = "AGPL-3.0-or-later"
+edition = "2021"
+
+[dependencies]
+bevy = { version = "0.14", default-features = false, features = [ "bevy_asset" ] }
+either = "1"
+fastrand = "2"
+serde = { version = "1", features = ["derive", "rc" ] }
+serde_json = "1"
+units = { path = "../units" }

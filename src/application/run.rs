@@ -5,7 +5,7 @@ use crate::application::systems::{
 use crate::application::{check::check_delay, ApplicationState};
 use crate::background::BackgroundPlugin;
 use crate::common::{log_transition_plugin, Keys};
-use crate::{cdda::CddaPlugin, gameplay::GameplayPlugin};
+use crate::gameplay::GameplayPlugin;
 use crate::{loading::LoadingIndicatorPlugin, main_menu::MainMenuPlugin};
 use bevy::input::{keyboard::KeyboardInput, mouse::MouseWheel, InputSystem};
 use bevy::prelude::{
@@ -46,7 +46,6 @@ pub(crate) fn run_application() {
     app.add_plugins((
         MainMenuPlugin,
         BackgroundPlugin,
-        CddaPlugin,
         GameplayPlugin,
         LoadingIndicatorPlugin,
         log_transition_plugin::<ApplicationState>,

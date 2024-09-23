@@ -1,7 +1,8 @@
-use crate::cdda::{SpriteNumber, TextureInfo};
-use crate::gameplay::{Distance, MeshInfo, ObjectDefinition, SpriteLayer};
+use crate::gameplay::{MeshInfo, ObjectCategory, ObjectDefinition, SpriteLayer, TextureInfo};
 use bevy::prelude::{AlphaMode, Mesh, Transform, Vec2, Vec3};
+use cdda::SpriteNumber;
 use std::path::PathBuf;
+use units::Distance;
 
 #[derive(Debug)]
 pub(crate) struct Layers<T> {
@@ -117,6 +118,91 @@ pub(crate) enum ModelShape {
 }
 
 impl ModelShape {
+    fn derive(
+        definition: &ObjectDefinition,
+        layer: SpriteLayer,
+        transform2d: &Transform2d,
+    ) -> Self {
+        if definition.category == ObjectCategory::ZoneLevel
+            || definition.id.starts_with("t_rock_floor")
+            || definition.id.starts_with("t_rock_roof")
+        {
+            Self::Plane {
+                orientation: SpriteOrientation::Horizontal,
+                transform2d: transform2d.clone(),
+            }
+        } else if definition.id.contains("solar_panel") {
+            Self::Plane {
+                orientation: SpriteOrientation::Horizontal,
+                transform2d: Transform2d {
+                    scale: transform2d.scale,
+                    offset: transform2d.offset
+                        + Vec2::new(0.0, -0.5 * Distance::ADJACENT.meter_f32()),
+                },
+            }
+        } else if definition.id.starts_with("t_rock")
+            || definition.id.starts_with("t_wall")
+            || definition.id.starts_with("t_brick_wall")
+            || definition.id.starts_with("t_concrete_wall")
+            || definition.id.starts_with("t_reinforced_glass")
+            || definition.id.starts_with("t_paper")
+            || definition.id.starts_with("t_soil")
+        {
+            Self::Cuboid {
+                height: Distance::VERTICAL.meter_f32(),
+            }
+        } else if definition.id.starts_with("t_window")
+            || definition.id.starts_with("t_door")
+            || definition.id.starts_with("t_curtains")
+            || definition.id.starts_with("t_bars")
+        {
+            Self::Plane {
+                orientation: SpriteOrientation::Vertical,
+                transform2d: Transform2d {
+                    scale: Vec2::new(
+                        Distance::ADJACENT.meter_f32(),
+                        Distance::VERTICAL.meter_f32(),
+                    ),
+                    offset: Vec2::ZERO,
+                },
+            }
+        } else if definition.id.starts_with("t_sewage_pipe") {
+            Self::Cuboid {
+                height: Distance::ADJACENT.meter_f32(),
+            }
+        } else if definition.id.starts_with("mon_") {
+            Self::Plane {
+                orientation: SpriteOrientation::Vertical,
+                transform2d: transform2d.clone(),
+            }
+        } else if layer == SpriteLayer::Back {
+            Self::Plane {
+                orientation: SpriteOrientation::Horizontal,
+                transform2d: transform2d.clone(),
+            }
+        } else if 1.0 < transform2d.scale.x.max(transform2d.scale.y)
+            || definition.id.starts_with("t_fence")
+            || definition.id.starts_with("t_chainfence")
+            || definition.id.starts_with("t_chaingate")
+            || definition.id.starts_with("t_splitrail_fence")
+            || definition.id.starts_with("t_shrub")
+            || definition.id.starts_with("t_flower")
+            || definition.id.starts_with("f_plant")
+            || definition.id.starts_with("t_grass_long")
+            || definition.id.starts_with("t_grass_tall")
+        {
+            Self::Plane {
+                orientation: SpriteOrientation::Vertical,
+                transform2d: transform2d.clone(),
+            }
+        } else {
+            Self::Plane {
+                orientation: SpriteOrientation::Horizontal,
+                transform2d: transform2d.clone(),
+            }
+        }
+    }
+
     fn to_transform(&self, layer: &SpriteLayer, vertical_offset: f32) -> Transform {
         match self {
             Self::Plane {
@@ -162,9 +248,7 @@ impl Model {
         texture_info: &TextureInfo,
     ) -> Self {
         Self {
-            shape: definition
-                .id
-                .to_shape(layer, &texture_info.transform2d, &definition.category),
+            shape: ModelShape::derive(definition, layer, &texture_info.transform2d),
             layer,
             sprite_number,
             mesh_info: texture_info.mesh_info,

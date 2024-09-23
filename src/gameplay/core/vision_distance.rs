@@ -1,5 +1,6 @@
-use crate::gameplay::{Distance, LevelOffset, PosOffset};
+use crate::gameplay::{LevelOffset, PosOffset};
 use std::ops::RangeInclusive;
+use units::Distance;
 
 /// Not `Eq`, `PartialOrd`, and `Ord`, because there are multiple interpretations possible
 #[derive(Clone, PartialEq)]

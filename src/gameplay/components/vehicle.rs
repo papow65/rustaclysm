@@ -1,5 +1,6 @@
-use crate::{cdda::CddaItem, gameplay::PosOffset};
+use crate::gameplay::PosOffset;
 use bevy::prelude::Component;
+use cdda::CddaItem;
 
 #[derive(Component)]
 pub(crate) struct Vehicle;

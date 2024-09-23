@@ -1,19 +1,20 @@
 use crate::application::ApplicationState;
-use crate::cdda::{
-    BashItem, BashItems, CddaAmount, CddaItem, CddaItemName, CddaVehicle, CddaVehiclePart,
-    CountRange, Field, FlatVec, ItemName, MoveCostMod, Repetition, Sav, Spawn, Submap,
-    SubzoneOffset,
-};
-use crate::common::{BAD_TEXT_COLOR, DEFAULT_TEXT_COLOR, GOOD_TEXT_COLOR};
+use crate::common::{BAD_TEXT_COLOR, DEFAULT_TEXT_COLOR, GOOD_TEXT_COLOR, WARN_TEXT_COLOR};
 use crate::gameplay::*;
+use ::cdda::{
+    BashItem, BashItems, CddaAmount, CddaItem, CddaItemName, CddaVehicle, CddaVehiclePart,
+    CountRange, Field, FlatVec, ItemName, MoveCostMod, ObjectId, Repetition, RepetitionBlock, Sav,
+    Spawn, Submap, SubzoneOffset,
+};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{
-    BuildChildren, Camera3dBundle, Commands, DirectionalLight, DirectionalLightBundle, Entity,
-    EulerRot, Mat4, PbrBundle, Res, ResMut, SpatialBundle, StateScoped, Transform, Vec3,
+    BuildChildren, Camera3dBundle, Color, Commands, DirectionalLight, DirectionalLightBundle,
+    Entity, EulerRot, Mat4, PbrBundle, Res, ResMut, SpatialBundle, StateScoped, Transform, Vec3,
     Visibility,
 };
 use bevy::render::camera::{PerspectiveProjection, Projection::Perspective};
 use bevy::render::view::RenderLayers;
+use units::{Mass, Volume};
 
 #[derive(SystemParam)]
 pub(crate) struct Spawner<'w, 's> {
@@ -180,7 +181,10 @@ impl<'w, 's> Spawner<'w, 's> {
             id: item.typeid.clone(),
         };
         //println!("{:?} @ {pos:?}", &definition);
-        let object_name = ObjectName::new(item_info.name.clone(), item_info.text_color());
+        let object_name = ObjectName::new(
+            item_info.name.clone(),
+            item_category_text_color(&item_info.category),
+        );
         let object_entity = self.spawn_object(parent, pos, definition, object_name);
 
         let (volume, mass) = match &item.corpse {
@@ -693,6 +697,16 @@ impl<'w, 's> Spawner<'w, 's> {
     }
 }
 
+fn item_category_text_color(from: &Option<String>) -> Color {
+    if from == &Some(String::from("manuals")) {
+        GOOD_TEXT_COLOR
+    } else if from == &Some(String::from("bionics")) {
+        WARN_TEXT_COLOR
+    } else {
+        DEFAULT_TEXT_COLOR
+    }
+}
+
 #[derive(SystemParam)]
 pub(crate) struct SubzoneSpawner<'w, 's> {
     infos: Res<'w, Infos>,
@@ -733,7 +747,7 @@ impl<'w, 's> SubzoneSpawner<'w, 's> {
                     .zone_level_ids
                     .get(&mut self.overmap_manager, ZoneLevel::from(subzone_level))
                 {
-                    let submap = Submap::fallback(subzone_level, object_id);
+                    let submap = Self::fallback_submap(subzone_level, object_id);
                     self.spawn_submap(&submap, subzone_level);
                 }
             }
@@ -766,14 +780,14 @@ impl<'w, 's> SubzoneSpawner<'w, 's> {
                     let pos = base_pos.horizontal_offset(x, z);
                     //dbg!("{pos:?}");
                     let terrain_id = *terrain.get(&pos).expect("Terrain id should be found");
-                    let furniture_ids = submap.furniture.iter().filter_map(|at| at.get(pos_offset));
+                    let furniture_ids = submap.furniture.iter().filter_map(|at| pos_offset.get(at));
                     let item_repetitions =
-                        submap.items.0.iter().filter_map(|at| at.get(pos_offset));
+                        submap.items.0.iter().filter_map(|at| pos_offset.get(at));
                     let spawns = submap
                         .spawns
                         .iter()
                         .filter(|spawn| spawn.x == pos_offset.x && spawn.z == pos_offset.z);
-                    let fields = submap.fields.0.iter().filter_map(|at| at.get(pos_offset));
+                    let fields = submap.fields.0.iter().filter_map(|at| pos_offset.get(at));
                     self.spawner.spawn_tile(
                         &self.infos,
                         subzone_level_entity,
@@ -831,6 +845,47 @@ impl<'w, 's> SubzoneSpawner<'w, 's> {
 
         self.subzone_level_entities
             .add(subzone_level, subzone_level_entity);
+    }
+
+    fn fallback_submap(subzone_level: SubzoneLevel, zone_object_id: &ObjectId) -> Submap {
+        Submap {
+            version: 0,
+            turn_last_touched: 0,
+            coordinates: subzone_level.coordinates(),
+            temperature: 0,
+            radiation: Vec::new(),
+            terrain: RepetitionBlock::new(CddaAmount {
+                obj: ObjectId::new(if zone_object_id == &ObjectId::new("open_air") {
+                    "t_open_air"
+                } else if zone_object_id == &ObjectId::new("solid_earth") {
+                    "t_soil"
+                } else if [ObjectId::new("empty_rock"), ObjectId::new("deep_rock")]
+                    .contains(zone_object_id)
+                {
+                    "t_rock"
+                } else if zone_object_id.is_moving_deep_water_zone() {
+                    "t_water_moving_dp"
+                } else if zone_object_id.is_still_deep_water_zone() {
+                    "t_water_dp"
+                } else if zone_object_id.is_grassy_zone() {
+                    "t_grass"
+                } else if zone_object_id.is_road_zone() {
+                    "t_pavement"
+                } else {
+                    "t_dirt"
+                }),
+                amount: 144,
+            }),
+            furniture: Vec::new(),
+            items: FlatVec(Vec::new()),
+            traps: Vec::new(),
+            fields: FlatVec(Vec::new()),
+            cosmetics: Vec::new(),
+            spawns: Vec::new(),
+            vehicles: Vec::new(),
+            partial_constructions: Vec::new(),
+            computers: Vec::new(),
+        }
     }
 }
 

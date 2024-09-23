@@ -1,4 +1,3 @@
-use crate::cdda::MoveCost;
 use crate::common::{
     log_if_slow, on_safe_event, Fonts, ScrollingList, BAD_TEXT_COLOR, DEFAULT_TEXT_COLOR,
     FILTHY_COLOR, GOOD_TEXT_COLOR, WARN_TEXT_COLOR,
@@ -6,6 +5,7 @@ use crate::common::{
 use crate::gameplay::hud::components::{LogDisplay, StatusDisplay};
 use crate::gameplay::hud::resources::{HudDefaults, StatusTextSections};
 use crate::{application::ApplicationState, gameplay::*};
+use ::cdda::{MoveCost, ObjectId};
 use bevy::diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin};
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::{
@@ -16,6 +16,7 @@ use bevy::prelude::{
     With, Without, World,
 };
 use std::time::Instant;
+use units::{Mass, Volume};
 
 const TEXT_WIDTH: f32 = 8.0 * 43.0; // 43 chars
 

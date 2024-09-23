@@ -1,6 +1,3 @@
-use crate::cdda::{
-    Alternative, AutoLearn, BookLearn, BookLearnItem, Recipe, RequiredQuality, Sav, Skill, Using,
-};
 use crate::common::{
     log_if_slow, uppercase_first, Fonts, InputChange, Key, Keys, ScrollingList, SelectionList,
     BAD_TEXT_COLOR, GOOD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, WARN_TEXT_COLOR,
@@ -11,12 +8,16 @@ use crate::gameplay::screens::crafting::components::{
 use crate::gameplay::screens::crafting::resource::CraftingScreen;
 use crate::gameplay::{
     Amount, BodyContainers, Clock, GameplayScreenState, Infos, InstructionQueue, LastSeen,
-    Location, ObjectCategory, ObjectDefinition, ObjectId, Player, Pos, QueuedInstruction,
-    Timestamp,
+    Location, ObjectCategory, ObjectDefinition, Player, Pos, QueuedInstruction,
 };
 use bevy::prelude::*;
 use bevy::utils::HashMap;
+use cdda::{
+    Alternative, AutoLearn, BookLearn, BookLearnItem, ObjectId, Recipe, RequiredQuality, Sav,
+    Skill, Using,
+};
 use std::{ops::RangeInclusive, time::Instant};
+use units::Timestamp;
 
 const MAX_FIND_DISTANCE: i32 = 7;
 const FIND_RANGE: RangeInclusive<i32> = (-MAX_FIND_DISTANCE)..=MAX_FIND_DISTANCE;
@@ -452,7 +453,7 @@ fn recipe_components(
 ) -> Vec<ComponentSituation> {
     let using = using
         .iter()
-        .flat_map(|using| using.to_components(infos))
+        .flat_map(|using| infos.to_components(using))
         .collect::<Vec<_>>();
 
     required

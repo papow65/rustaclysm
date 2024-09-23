@@ -1,0 +1,11 @@
+[package]
+name = "units"
+description = "A library for expressing physical units relevant to this game"
+license = "AGPL-3.0-or-later"
+edition = "2021"
+
+[dependencies]
+pathfinding = "4"
+regex = "1"
+serde = { version = "1", features = ["derive"] }
+time = "0.3"

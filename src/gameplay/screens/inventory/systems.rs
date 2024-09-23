@@ -1,4 +1,3 @@
-use crate::cdda::ItemInfo;
 use crate::common::{
     Fonts, InputChange, Key, Keys, ScrollingList, SelectionList, StepDirection, StepSize,
     DEFAULT_TEXT_COLOR, GOOD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, SOFT_TEXT_COLOR,
@@ -10,10 +9,12 @@ use crate::gameplay::screens::inventory::components::{
 use crate::gameplay::screens::inventory::{resource::InventoryScreen, section::InventorySection};
 use crate::gameplay::{
     BodyContainers, Clock, Corpse, Envir, GameplayScreenState, HorizontalDirection, Infos,
-    InstructionQueue, Integrity, Item, LastSeen, Nbor, ObjectId, Phrase, Player, PlayerDirection,
-    Pos, QueuedInstruction, Timestamp,
+    InstructionQueue, Integrity, Item, LastSeen, Nbor, Phrase, Player, PlayerDirection, Pos,
+    QueuedInstruction,
 };
 use bevy::{ecs::entity::EntityHashMap, prelude::*, utils::HashMap};
+use cdda::{ItemInfo, ObjectId};
+use units::Timestamp;
 
 #[expect(clippy::needless_pass_by_value)]
 pub(super) fn spawn_inventory(mut commands: Commands, fonts: Res<Fonts>) {

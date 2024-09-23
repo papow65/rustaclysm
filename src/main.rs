@@ -2,7 +2,6 @@
 
 mod application;
 mod background;
-mod cdda;
 mod common;
 mod gameplay;
 mod loading;

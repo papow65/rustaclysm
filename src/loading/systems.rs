@@ -1,5 +1,4 @@
 use crate::application::ApplicationState;
-use crate::cdda::{Map, Overmap, OvermapBuffer};
 use crate::common::{Fonts, DEFAULT_BUTTON_COLOR, DEFAULT_TEXT_COLOR};
 use crate::gameplay::{Explored, GameplayScreenState, SubzoneLevelEntities};
 use crate::loading::ProgressScreenState;
@@ -7,6 +6,7 @@ use bevy::prelude::{
     AlignItems, Assets, BuildChildren, Commands, JustifyContent, Local, NextState, NodeBundle,
     PositionType, Res, ResMut, State, StateScoped, Style, TextBundle, Val, ZIndex,
 };
+use cdda::{Map, Overmap, OvermapBuffer};
 
 #[expect(clippy::needless_pass_by_value)]
 pub(crate) fn spawn_loading(mut commands: Commands, fonts: Res<Fonts>) {

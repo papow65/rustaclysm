@@ -1,15 +1,14 @@
 use crate::application::ApplicationState;
-use crate::cdda::{Map, MapMemory, Overmap, OvermapBuffer, TileLoader};
 use crate::common::{
     load_async_resource, log_transition_plugin, on_safe_event, AsyncResourceLoader,
 };
 use crate::gameplay::systems::*;
 use crate::gameplay::{
     events::EventPlugin, hud::HudPlugin, update_camera_offset, ActorPlugin, BaseScreenPlugin,
-    CameraOffset, CharacterScreenPlugin, CraftingScreenPlugin, DeathScreenPlugin,
+    CameraOffset, CddaPlugin, CharacterScreenPlugin, CraftingScreenPlugin, DeathScreenPlugin,
     DespawnSubzoneLevel, DespawnZoneLevel, ElevationVisibility, FocusPlugin, GameplayCounter,
     GameplayScreenState, Infos, InventoryScreenPlugin, MenuScreenPlugin, RelativeSegments,
-    SpawnSubzoneLevel, SpawnZoneLevel, UpdateZoneLevelVisibility,
+    SpawnSubzoneLevel, SpawnZoneLevel, TileLoader, UpdateZoneLevelVisibility,
 };
 use bevy::input::keyboard::KeyboardInput;
 use bevy::prelude::{
@@ -17,6 +16,7 @@ use bevy::prelude::{
     AssetEvent, FixedUpdate, IntoSystemConfigs, OnEnter, OnExit, Plugin, Update,
 };
 use bevy::{diagnostic::FrameTimeDiagnosticsPlugin, ecs::schedule::SystemConfigTupleMarker};
+use cdda::{Map, MapMemory, Overmap, OvermapBuffer};
 
 pub(crate) struct GameplayPlugin;
 
@@ -30,6 +30,7 @@ impl Plugin for GameplayPlugin {
             FocusPlugin,
             HudPlugin,
             BaseScreenPlugin,
+            CddaPlugin,
             EventPlugin,
             CharacterScreenPlugin,
             CraftingScreenPlugin,

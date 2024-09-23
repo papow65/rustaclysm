@@ -23,7 +23,7 @@ pub(crate) use self::{
     key::{InputChange, Key, KeyChange, Keys},
     log_transition::log_transition_plugin,
     on_safe_event::on_safe_event,
-    paths::{PathFor, Paths, WorldPath},
+    paths::{PathFor, Paths, SavPath, WorldPath},
     scrolling_list::ScrollingList,
     selection_list::{SelectionList, StepDirection, StepSize},
     sizes::{

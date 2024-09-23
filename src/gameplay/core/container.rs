@@ -1,5 +1,6 @@
-use crate::gameplay::{Amount, Containable, Hierarchy, Mass, MessageWriter, Subject, Volume};
+use crate::gameplay::{Amount, Containable, Hierarchy, MessageWriter, Subject};
 use bevy::prelude::Entity;
+use units::{Mass, Volume};
 
 pub(crate) struct Container<'a> {
     pub(crate) entity: Entity,

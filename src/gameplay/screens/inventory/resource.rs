@@ -3,9 +3,10 @@ use crate::gameplay::screens::inventory::components::{
     InventoryItemDescription, InventoryItemLine,
 };
 use crate::gameplay::screens::inventory::section::InventorySection;
-use crate::gameplay::{HorizontalDirection, Timestamp};
+use crate::gameplay::HorizontalDirection;
 use bevy::ecs::entity::EntityHashMap;
 use bevy::prelude::{Button, Children, Entity, KeyCode, Query, Resource, Text, TextStyle, With};
+use units::Timestamp;
 
 #[derive(Resource)]
 pub(super) struct InventoryScreen {

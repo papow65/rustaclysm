@@ -1,5 +1,6 @@
-use crate::cdda::SavPath;
 use bevy::ecs::system::Resource;
+use cdda::Sav;
+use std::fs::read_to_string;
 use std::path::{Path, PathBuf};
 use std::{any::type_name, fmt, marker::PhantomData};
 
@@ -22,6 +23,24 @@ impl<T> fmt::Debug for PathFor<T> {
 }
 
 pub(crate) type WorldPath = PathFor<()>;
+
+pub(crate) type SavPath = PathFor<Sav>;
+
+impl TryFrom<&SavPath> for Sav {
+    type Error = serde_json::Error;
+
+    fn try_from(sav_path: &SavPath) -> Result<Self, Self::Error> {
+        read_to_string(&sav_path.0)
+            .ok()
+            .inspect(|_| {
+                println!("Loading {}...", sav_path.0.display());
+            })
+            .map(|s| String::from(s.split_at(s.find('\n').expect("Non-JSON first line")).1))
+            .map(|s| serde_json::from_str::<Self>(s.as_str()))
+            .expect(".sav file could not be read")
+    }
+}
+//
 
 /// This represents a world and a save in that world
 #[derive(Clone, Resource)]

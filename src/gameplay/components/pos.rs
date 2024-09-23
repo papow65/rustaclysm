@@ -3,6 +3,7 @@ use crate::gameplay::{
 };
 use bevy::ecs::component::{ComponentHooks, StorageType};
 use bevy::prelude::{Component, Vec3};
+use cdda::{Overmap, SubzoneOffset};
 use std::{cmp::Ordering, fmt, iter::once, ops::Sub};
 
 /// Does not include 'from', but does include 'to'
@@ -23,7 +24,7 @@ pub(crate) struct Level {
 }
 
 impl Level {
-    pub(crate) const AMOUNT: usize = 21;
+    pub(crate) const AMOUNT: usize = Overmap::LEVEL_AMOUNT;
     pub(crate) const GROUND_AMOUNT: usize = (Self::AMOUNT - 1) / 2 + 1;
 
     pub(crate) const ZERO: Self = Self::new(0);
@@ -284,6 +285,16 @@ impl From<Pos> for SubzoneLevel {
             level: pos.level,
             z: pos.z.div_euclid(Self::SIZE),
         }
+    }
+}
+
+impl From<SubzoneLevel> for SubzoneOffset {
+    fn from(subzone_level: SubzoneLevel) -> Self {
+        Self(
+            subzone_level.x.div_euclid(180) as u16,
+            subzone_level.z.div_euclid(180) as u16,
+            subzone_level.level.h,
+        )
     }
 }
 

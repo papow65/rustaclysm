@@ -1,5 +1,6 @@
-use crate::gameplay::{Duration, StaminaImpact};
+use crate::gameplay::StaminaImpact;
 use bevy::prelude::Entity;
+use units::Duration;
 
 #[must_use]
 #[derive(Debug)]

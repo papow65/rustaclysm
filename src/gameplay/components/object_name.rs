@@ -1,7 +1,7 @@
-use crate::cdda::{CddaItemName, ItemName};
 use crate::common::BAD_TEXT_COLOR;
 use crate::gameplay::{Fragment, Pos};
 use bevy::prelude::{Color, Component};
+use cdda::{CddaItemName, ItemName};
 
 #[derive(Clone, Component, Debug)]
 pub(crate) struct ObjectName {

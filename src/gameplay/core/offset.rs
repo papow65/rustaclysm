@@ -1,5 +1,6 @@
-use crate::gameplay::Distance;
 use bevy::prelude::Vec3;
+use cdda::At;
+use units::Distance;
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) struct LevelOffset {
@@ -82,5 +83,13 @@ impl PosOffset {
             self.level.f32(),
             f64::from(self.z) as f32 * Distance::ADJACENT.meter_f32(),
         )
+    }
+
+    pub(crate) const fn get<'a, T>(&'a self, at: &'a At<T>) -> Option<&'a T> {
+        if self.x as u8 == at.x && self.z as u8 == at.y {
+            Some(&at.obj)
+        } else {
+            None
+        }
     }
 }

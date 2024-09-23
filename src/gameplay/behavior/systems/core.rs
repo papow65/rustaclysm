@@ -5,6 +5,7 @@ use bevy::prelude::{
     StateTransition, With, World,
 };
 use std::{cell::OnceCell, time::Instant};
+use units::Duration;
 
 #[expect(clippy::needless_pass_by_value)]
 pub(in super::super) fn egible_character(

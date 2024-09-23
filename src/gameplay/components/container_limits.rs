@@ -1,5 +1,6 @@
-use crate::gameplay::{Amount, Mass, Volume};
+use crate::gameplay::Amount;
 use bevy::prelude::{Component, Entity};
+use units::{Mass, Volume};
 
 #[derive(Component)]
 pub(crate) struct ContainerLimits {

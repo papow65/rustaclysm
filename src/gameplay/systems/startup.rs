@@ -1,20 +1,17 @@
-use crate::cdda::{Map, MapMemory, Overmap, OvermapBuffer, Sav};
 use crate::common::Paths;
 use crate::gameplay::{
-    AppearanceCache, AssetStorage, CameraOffset, Expanded, Explored, Infos, InstructionQueue,
-    Level, Location, MeshCaches, Overzone, Spawner, SubzoneLevelEntities, Timeouts, Timestamp,
-    VisualizationUpdate, Zone, ZoneLevel, ZoneLevelEntities, ZoneLevelIds,
+    AppearanceCache, CameraOffset, Expanded, Explored, Infos, InstructionQueue, Level, Location,
+    MeshCaches, Spawner, SubzoneLevelEntities, Timeouts, VisualizationUpdate, Zone,
+    ZoneLevelEntities, ZoneLevelIds,
 };
 use bevy::prelude::{Commands, Res};
+use cdda::Sav;
+use units::Timestamp;
 
 /// Create resources that do not need other resources
 pub(crate) fn create_independent_resources(mut commands: Commands) {
     // Not persisted between gameplays
     commands.insert_resource(AppearanceCache::default());
-    commands.insert_resource(AssetStorage::<Map, ZoneLevel>::default());
-    commands.insert_resource(AssetStorage::<MapMemory, ZoneLevel>::default());
-    commands.insert_resource(AssetStorage::<Overmap, Overzone>::default());
-    commands.insert_resource(AssetStorage::<OvermapBuffer, Overzone>::default());
     commands.insert_resource(CameraOffset::default());
     commands.insert_resource(Expanded::default());
     commands.insert_resource(Explored::default());

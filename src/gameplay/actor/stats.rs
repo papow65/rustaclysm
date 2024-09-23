@@ -1,7 +1,8 @@
 use crate::common::{DEFAULT_TEXT_COLOR, WARN_TEXT_COLOR};
-use crate::gameplay::{Breath, Damage, Evolution, Healing, Limited, Speed, StaminaImpact};
+use crate::gameplay::{Breath, Damage, Evolution, Healing, Limited, StaminaImpact};
 use bevy::prelude::{Color, Component};
 use std::fmt;
+use units::Speed;
 
 // Stats for characters
 

@@ -1,17 +1,13 @@
-use crate::cdda::{Map, MapMemory, Overmap, OvermapBuffer, Sav};
 use crate::gameplay::{
-    AppearanceCache, AssetStorage, CameraOffset, Expanded, Explored, GameplayCounter,
-    InstructionQueue, Location, MeshCaches, Overzone, SubzoneLevelEntities, Timeouts,
-    VisualizationUpdate, ZoneLevel, ZoneLevelEntities, ZoneLevelIds,
+    AppearanceCache, CameraOffset, Expanded, Explored, GameplayCounter, InstructionQueue, Location,
+    MeshCaches, SubzoneLevelEntities, Timeouts, VisualizationUpdate, ZoneLevelEntities,
+    ZoneLevelIds,
 };
 use bevy::prelude::{Commands, ResMut};
+use cdda::Sav;
 
 pub(crate) fn remove_gameplay_resources(mut commands: Commands) {
     commands.remove_resource::<AppearanceCache>();
-    commands.remove_resource::<AssetStorage<Map, ZoneLevel>>();
-    commands.remove_resource::<AssetStorage<MapMemory, ZoneLevel>>();
-    commands.remove_resource::<AssetStorage<Overmap, Overzone>>();
-    commands.remove_resource::<AssetStorage<OvermapBuffer, Overzone>>();
     commands.remove_resource::<CameraOffset>();
     commands.remove_resource::<Expanded>();
     commands.remove_resource::<Explored>();

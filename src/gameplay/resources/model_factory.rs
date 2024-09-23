@@ -1,12 +1,13 @@
-use crate::cdda::{SpriteNumber, TileLoader};
 use crate::gameplay::{
     Appearance, Infos, LastSeen, Layers, Model, ModelShape, ObjectDefinition, SpriteOrientation,
+    TileLoader,
 };
 use bevy::prelude::{
     AssetServer, Assets, Handle, Mesh, PbrBundle, Res, ResMut, Resource, StandardMaterial,
     Visibility,
 };
 use bevy::{ecs::system::SystemParam, utils::HashMap};
+use cdda::SpriteNumber;
 use std::path::PathBuf;
 
 #[derive(Default, Resource)]

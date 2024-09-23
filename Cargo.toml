@@ -10,11 +10,15 @@ exclude = [ "/screenshots/" ]
 edition = "2021"
 rust-version = "1.81" # should be latest stable
 
+[workspace]
+members = [ "crates/*" ]
+
 [dependencies]
 base64 = "0.22"
 bevy = { version = "0.14", default-features = false, features = [ "bevy_asset", "bevy_core_pipeline", "bevy_pbr", "bevy_state", "bevy_text", "bevy_ui", "bevy_dev_tools", "ktx2", "multi_threaded", "png", "tonemapping_luts", "wayland", "x11" ] }
 #bevy_dylib = "0.14.1" # Uncomment this line (once) when `cargo run --features bevy/dynamic_linking` does not look for the right version
 bresenham = "0.1"
+cdda = { path = "crates/cdda" }
 either = "1"
 float-ord = "0.3"
 futures-lite = "2"
@@ -26,6 +30,7 @@ serde = { version = "1", features = ["derive", "rc" ] }
 serde_json = "1"
 thread_local = "1"
 time = "0.3"
+units = { path = "crates/units" }
 
 [features]
 log_archetypes = [] # print archetypes in use
