@@ -69,13 +69,15 @@ impl<'w, 's> Hierarchy<'w, 's> {
     }
 }
 
+type GameplayCount = Wrapping<u32>;
+
 #[derive(Debug, Default, Resource)]
-pub(crate) struct GameplayCounter(pub(crate) Wrapping<usize>);
+pub(crate) struct GameplayCounter(pub(crate) GameplayCount);
 
 #[derive(SystemParam)]
 pub(crate) struct GameplaySession<'w, 's> {
     current: Res<'w, GameplayCounter>,
-    last: Local<'s, Wrapping<usize>>,
+    last: Local<'s, GameplayCount>,
 }
 
 impl<'w, 's> GameplaySession<'w, 's> {
