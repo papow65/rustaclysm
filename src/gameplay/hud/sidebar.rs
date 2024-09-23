@@ -15,8 +15,10 @@ use bevy::prelude::{
     State, StateScoped, Style, Text, TextBundle, TextSection, TextStyle, UiRect, Val, Visibility,
     With, Without, World,
 };
-use std::time::Instant;
+use std::{num::Saturating, time::Instant};
 use units::{Mass, Volume};
+
+type DuplicateMessageCount = Saturating<u16>;
 
 const TEXT_WIDTH: f32 = 8.0 * 43.0; // 43 chars
 
@@ -142,9 +144,11 @@ fn update_log(
     mut session: GameplaySession,
     mut logs: Query<&mut Text, With<LogDisplay>>,
     mut previous_sections: Local<Vec<TextSection>>,
-    mut last_message: Local<Option<(Message, usize)>>,
+    mut last_message: Local<Option<(Message, DuplicateMessageCount)>>,
     mut transient_message: Local<Vec<TextSection>>,
 ) {
+    const SINGLE: DuplicateMessageCount = Saturating(1);
+
     let start = Instant::now();
 
     if session.is_changed() {
@@ -169,7 +173,11 @@ fn update_log(
         if let Some(message) = percieved_message {
             transient_message.clear();
             if message.transient {
-                transient_message.extend(to_text_sections(&hud_defaults.text_style, &message, 1));
+                transient_message.extend(to_text_sections(
+                    &hud_defaults.text_style,
+                    &message,
+                    SINGLE,
+                ));
             } else {
                 match &mut *last_message {
                     Some((last, ref mut count)) if *last == message => {
@@ -177,7 +185,7 @@ fn update_log(
                     }
                     _ => {
                         if let Some((previous_last, previous_count)) =
-                            last_message.replace((message, 1))
+                            last_message.replace((message, SINGLE))
                         {
                             previous_sections.extend(to_text_sections(
                                 &hud_defaults.text_style,
@@ -206,11 +214,15 @@ fn update_log(
     log_if_slow("update_log", start);
 }
 
-fn to_text_sections(text_style: &TextStyle, message: &Message, count: usize) -> Vec<TextSection> {
+fn to_text_sections(
+    text_style: &TextStyle,
+    message: &Message,
+    count: DuplicateMessageCount,
+) -> Vec<TextSection> {
     let mut style = text_style.clone();
     style.color = message.severity.color();
     let mut sections = message.phrase.as_text_sections(&style);
-    if 1 < count {
+    if 1 < count.0 {
         sections.push(TextSection {
             value: format!(" ({count}x)"),
             style: text_style.clone(),
