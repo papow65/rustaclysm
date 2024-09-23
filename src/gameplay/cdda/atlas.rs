@@ -69,7 +69,7 @@ impl Atlas {
     pub(crate) fn texture_info(&self, sprite_number: SpriteNumber) -> TextureInfo {
         TextureInfo {
             mesh_info: MeshInfo::new(
-                sprite_number.to_usize() - self.range.0.to_usize(),
+                sprite_number.to_u16() - self.range.0.to_u16(),
                 match self.image_path.display().to_string() {
                     p if p.ends_with("filler_tall.png") => 2,
                     p if p.ends_with("large_ridden.png") => 3,
@@ -80,7 +80,7 @@ impl Atlas {
                     p if p.ends_with("small.png") => 12,
                     _ => 16,
                 },
-                1 + self.range.1.to_usize() - self.range.0.to_usize(),
+                1 + self.range.1.to_u16() - self.range.0.to_u16(),
             ),
             image_path: self.image_path.clone(),
             transform2d: self.transform2d.clone(),

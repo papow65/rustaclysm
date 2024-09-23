@@ -13,15 +13,18 @@ pub(crate) struct MeshInfo {
 }
 
 impl MeshInfo {
-    pub(crate) fn new(index: usize, tiles_per_row: usize, size: usize) -> Self {
+    pub(crate) fn new(index: u16, tiles_per_row: u16, size: u16) -> Self {
         // rounding up 'size / tiles_per_row'
         let tiles_per_column = (size + tiles_per_row - 1) / tiles_per_row;
 
-        let tile_width = 1.0 / tiles_per_row as f32;
-        let tile_height = 1.0 / tiles_per_column as f32;
+        assert!(0 < tiles_per_row, "At least one tile per row");
+        assert!(0 < tiles_per_column, "At least one tile per column");
 
-        let x_min = (index % tiles_per_row) as f32 * tile_width;
-        let y_min = (index / tiles_per_row) as f32 * tile_height;
+        let tile_width = 1.0 / f32::from(tiles_per_row);
+        let tile_height = 1.0 / f32::from(tiles_per_column);
+
+        let x_min = f32::from(index % tiles_per_row) * tile_width;
+        let y_min = f32::from(index / tiles_per_row) * tile_height;
 
         Self {
             x_min,
