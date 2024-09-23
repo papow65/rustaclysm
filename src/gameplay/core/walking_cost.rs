@@ -1,6 +1,7 @@
 use crate::gameplay::NborDistance;
 use cdda::MoveCost;
-use std::ops::Add;
+use std::iter::Sum;
+use std::ops::{Add, Mul};
 use units::{Distance, Duration, Speed};
 
 #[derive(Clone, Copy, Debug)]
@@ -44,6 +45,30 @@ impl Add<Self> for WalkingCost {
         Self {
             equivalent_distance: self.equivalent_distance + other.equivalent_distance,
         }
+    }
+}
+
+impl Mul<u64> for WalkingCost {
+    type Output = Self;
+
+    fn mul(self, other: u64) -> Self {
+        Self {
+            equivalent_distance: self.equivalent_distance * other,
+        }
+    }
+}
+
+impl Sum<Self> for WalkingCost {
+    fn sum<I>(iter: I) -> Self
+    where
+        I: Iterator<Item = Self>,
+    {
+        iter.fold(
+            Self {
+                equivalent_distance: Distance::ZERO,
+            },
+            |total, added| total + added,
+        )
     }
 }
 

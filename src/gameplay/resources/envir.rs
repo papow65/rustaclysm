@@ -8,7 +8,7 @@ use bevy::ecs::system::SystemParam;
 use bevy::prelude::{Entity, Query, ResMut, With, Without};
 use cdda::MoveCost;
 use pathfinding::prelude::astar;
-use std::{cmp::Ordering, iter::repeat};
+use std::cmp::Ordering;
 use units::{Duration, Speed};
 
 pub(crate) enum Collision<'a> {
@@ -293,14 +293,14 @@ impl<'w, 's> Envir<'w, 's> {
 
     /// `WalkingCost` without regard for obstacles or stairs, unless they are nbors
     pub(crate) fn walking_cost(&self, from: Pos, to: Pos) -> WalkingCost {
-        let dx = from.x.abs_diff(to.x) as usize;
-        let dz = from.z.abs_diff(to.z) as usize;
+        let dx = u64::from(from.x.abs_diff(to.x));
+        let dz = u64::from(from.z.abs_diff(to.z));
         let diagonal = dx.min(dz);
         let adjacent = dx.max(dz) - diagonal;
 
         let dy = (to.level - from.level).h;
-        let up = dy.max(0) as usize;
-        let down = (-dy).max(0) as usize;
+        let up = dy.max(0) as u64;
+        let down = (-dy).max(0) as u64;
 
         let move_cost = if diagonal + adjacent + up + down == 1 {
             // nbors, the precise value matters in some cases
@@ -317,14 +317,15 @@ impl<'w, 's> Envir<'w, 's> {
             MoveCost::default()
         };
 
-        repeat(NborDistance::Up)
-            .take(up)
-            .chain(repeat(NborDistance::Adjacent).take(adjacent))
-            .chain(repeat(NborDistance::Diagonal).take(diagonal))
-            .chain(repeat(NborDistance::Down).take(down))
-            .map(|nd| WalkingCost::new(nd, move_cost))
-            .reduce(|total, item| total + item)
-            .unwrap_or_else(|| WalkingCost::new(NborDistance::Zero, move_cost))
+        [
+            (NborDistance::Up, up),
+            (NborDistance::Adjacent, adjacent),
+            (NborDistance::Diagonal, diagonal),
+            (NborDistance::Down, down),
+        ]
+        .into_iter()
+        .map(|(nd, amount)| WalkingCost::new(nd, move_cost) * amount)
+        .sum()
     }
 
     pub(crate) fn path<F>(
