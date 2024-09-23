@@ -1,14 +1,15 @@
 use crate::structure::MaybeFlatVec;
 use serde::Deserialize;
+use std::sync::Arc;
 
 #[derive(Debug, Default, Deserialize)]
-#[serde(from = "Option<MaybeFlatVec<String>>")]
+#[serde(from = "Option<MaybeFlatVec<Arc<str>>>")]
 #[serde(default)]
-pub struct Flags(Vec<String>);
+pub struct Flags(Vec<Arc<str>>);
 
 impl Flags {
     fn contains(&self, value: &str) -> bool {
-        self.0.contains(&String::from(value))
+        self.0.contains(&Arc::from(value))
     }
 
     pub fn aquatic(&self) -> bool {
@@ -36,8 +37,8 @@ impl Flags {
     }
 }
 
-impl From<Option<MaybeFlatVec<String>>> for Flags {
-    fn from(cdda_flags: Option<MaybeFlatVec<String>>) -> Self {
+impl From<Option<MaybeFlatVec<Arc<str>>>> for Flags {
+    fn from(cdda_flags: Option<MaybeFlatVec<Arc<str>>>) -> Self {
         Self(match cdda_flags {
             Some(MaybeFlatVec(flags)) => flags,
             None => Vec::new(),

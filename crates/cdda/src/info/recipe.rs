@@ -1,13 +1,14 @@
 use crate::ObjectId;
 use bevy::utils::HashMap;
 use serde::Deserialize;
+use std::sync::Arc;
 use units::Duration;
 
 #[derive(Debug, Deserialize)]
 pub struct Recipe {
     pub result: ObjectId,
 
-    pub skill_used: Option<String>,
+    pub skill_used: Option<Arc<str>>,
 
     #[serde(default)]
     pub difficulty: u8,
@@ -31,7 +32,7 @@ pub struct Recipe {
 
     #[expect(unused)]
     #[serde(flatten)]
-    extra: HashMap<String, serde_json::Value>,
+    extra: HashMap<Arc<str>, serde_json::Value>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -68,7 +69,7 @@ impl BookLearnItem {
 #[serde(untagged)]
 pub enum AutoLearn {
     Bool(bool),
-    Skills(Vec<(String, u8)>),
+    Skills(Vec<(Arc<str>, u8)>),
 }
 
 impl Default for AutoLearn {
@@ -130,7 +131,7 @@ impl From<CddaAlternative> for Alternative {
 #[serde(untagged)]
 pub enum CddaAlternative {
     Item(ObjectId, u32),
-    List(ObjectId, u32, String),
+    List(ObjectId, u32, Arc<str>),
 }
 
 #[derive(Debug, Deserialize)]
@@ -168,7 +169,7 @@ pub enum UsingKind {
 #[serde(untagged)]
 pub enum CddaUsing {
     NonList(ObjectId, u32),
-    List(ObjectId, u32, String),
+    List(ObjectId, u32, Arc<str>),
 }
 
 #[cfg(test)]

@@ -16,7 +16,7 @@ impl Atlas {
         cdda_atlas: CddaAtlas,
         tiles: &mut HashMap<ObjectId, TileInfo>,
     ) -> Self {
-        let filename = cdda_atlas.file.as_str();
+        let filename = &*cdda_atlas.file;
         let image_path = tileset_path.join(filename);
 
         let from_to = if let Some(comment) = cdda_atlas.comment {

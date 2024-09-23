@@ -14,6 +14,7 @@ use bevy::prelude::{
 };
 use bevy::render::camera::{PerspectiveProjection, Projection::Perspective};
 use bevy::render::view::RenderLayers;
+use std::sync::Arc;
 use units::{Mass, Volume};
 
 #[derive(SystemParam)]
@@ -81,7 +82,7 @@ impl<'w, 's> Spawner<'w, 's> {
             println!("No info found for {id:?}. Spawning skipped");
             return None;
         };
-        let faction = match character_info.default_faction.as_str() {
+        let faction = match &*character_info.default_faction {
             "human" => Faction::Human,
             "zombie" => Faction::Zombie,
             _ => Faction::Animal,
@@ -208,7 +209,7 @@ impl<'w, 's> Spawner<'w, 's> {
             },
         ));
 
-        if item.item_tags.contains(&String::from("FILTHY")) {
+        if item.item_tags.contains(&Arc::from("FILTHY")) {
             entity.insert(Filthy);
         }
 
@@ -364,7 +365,7 @@ impl<'w, 's> Spawner<'w, 's> {
             category: ObjectCategory::Vehicle,
             id: vehicle.id.clone(),
         };
-        let object_name = ObjectName::from_str(vehicle.name.as_str(), DEFAULT_TEXT_COLOR);
+        let object_name = ObjectName::from_str(&vehicle.name, DEFAULT_TEXT_COLOR);
 
         let entity = self.spawn_object(parent, pos, definition, object_name);
         self.commands.entity(entity).insert((
@@ -568,10 +569,7 @@ impl<'w, 's> Spawner<'w, 's> {
                 root,
                 spawn_pos.horizontal_offset(36, 56),
                 &ObjectId::new("human"),
-                Some(ObjectName::from_str(
-                    self.sav.player.name.as_str(),
-                    GOOD_TEXT_COLOR,
-                )),
+                Some(ObjectName::from_str(&self.sav.player.name, GOOD_TEXT_COLOR)),
             )
             .expect("Player character should be spawned");
         self.commands
@@ -697,10 +695,10 @@ impl<'w, 's> Spawner<'w, 's> {
     }
 }
 
-fn item_category_text_color(from: &Option<String>) -> Color {
-    if from == &Some(String::from("manuals")) {
+fn item_category_text_color(from: &Option<Arc<str>>) -> Color {
+    if from == &Some(Arc::from("manuals")) {
         GOOD_TEXT_COLOR
-    } else if from == &Some(String::from("bionics")) {
+    } else if from == &Some(Arc::from("bionics")) {
         WARN_TEXT_COLOR
     } else {
         DEFAULT_TEXT_COLOR

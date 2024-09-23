@@ -2,6 +2,7 @@ use crate::ObjectId;
 use crate::{Flags, ItemName};
 use bevy::utils::HashMap;
 use serde::Deserialize;
+use std::sync::Arc;
 
 #[derive(Debug, Deserialize)]
 pub struct FurnitureInfo {
@@ -14,7 +15,7 @@ pub struct FurnitureInfo {
 
     #[expect(unused)]
     #[serde(flatten)]
-    extra: HashMap<String, serde_json::Value>,
+    extra: HashMap<Arc<str>, serde_json::Value>,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, PartialOrd)]
@@ -35,7 +36,7 @@ pub struct Bash {
 
     #[expect(unused)]
     #[serde(flatten)]
-    extra: HashMap<String, serde_json::Value>,
+    extra: HashMap<Arc<str>, serde_json::Value>,
 }
 
 #[derive(Debug, Deserialize)]

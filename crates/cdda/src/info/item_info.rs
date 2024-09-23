@@ -1,13 +1,14 @@
 use crate::{structure::MaybeFlatVec, Flags, ObjectId};
 use bevy::utils::HashMap;
 use serde::Deserialize;
+use std::sync::Arc;
 use units::{Mass, Volume};
 
 #[derive(Debug, Deserialize)]
 pub struct ItemInfo {
-    pub category: Option<String>,
+    pub category: Option<Arc<str>>,
 
-    pub effects: Option<Vec<String>>,
+    pub effects: Option<Vec<Arc<str>>>,
 
     // example: { "price": 0.7, "damage": { "damage_type": "bullet", "amount": 0.9 }, "dispersion": 1.1 }
     pub proportional: Option<serde_json::Value>,
@@ -27,13 +28,13 @@ pub struct ItemInfo {
     pub count: Option<u32>,
     pub projectile_count: Option<u32>,
     pub stack_size: Option<u8>,
-    pub ammo_type: Option<MaybeFlatVec<String>>,
-    pub casing: Option<String>,
+    pub ammo_type: Option<MaybeFlatVec<Arc<str>>>,
+    pub casing: Option<Arc<str>>,
     pub range: Option<i16>, // examples: -6, 140
     pub dispersion: Option<u16>,
     pub recoil: Option<u16>,
     pub loudness: Option<u16>,
-    pub drop: Option<String>,
+    pub drop: Option<Arc<str>>,
     pub show_stats: Option<bool>,
 
     // The fields below are listed in load_basic_info as item_factory.cpp:3932
@@ -44,7 +45,7 @@ pub struct ItemInfo {
     pub integral_mass: Option<serde_json::Value>,
 
     pub volume: Option<Volume>,
-    pub longest_side: Option<String>,
+    pub longest_side: Option<Arc<str>>,
     pub price: Option<Price>,
     pub price_postapoc: Option<Price>,
     pub stackable: Option<serde_json::Value>,
@@ -55,7 +56,7 @@ pub struct ItemInfo {
     pub to_hit: Option<ToHit>,
     pub variant_type: Option<serde_json::Value>,
     pub variants: Option<serde_json::Value>,
-    pub container: Option<String>,
+    pub container: Option<Arc<str>>,
     pub sealed: Option<bool>,
     pub min_strength: Option<serde_json::Value>,
     pub min_dexterity: Option<serde_json::Value>,
@@ -74,16 +75,16 @@ pub struct ItemInfo {
 
     #[serde(rename(deserialize = "type"))]
     #[expect(dead_code)] // TODO
-    type_: String,
+    type_: Arc<str>,
 
     pub name: ItemName,
     pub description: Option<Description>,
     pub symbol: Option<char>,
-    pub color: Option<String>,
+    pub color: Option<Arc<str>>,
     pub material: Option<MaybeFlatVec<Material>>,
     pub material_thickness: Option<f32>,
     pub chat_topics: Option<serde_json::Value>,
-    pub phase: Option<String>,
+    pub phase: Option<Arc<str>>,
     pub magazines: Option<serde_json::Value>,
     pub nanofab_template_group: Option<serde_json::Value>,
     pub template_requirements: Option<serde_json::Value>,
@@ -131,7 +132,7 @@ pub struct ItemInfo {
     // Plenty of fields already availalble
     #[expect(unused)]
     #[serde(flatten)]
-    extra: HashMap<String, serde_json::Value>,
+    extra: HashMap<Arc<str>, serde_json::Value>,
 }
 
 impl ItemInfo {
@@ -144,32 +145,32 @@ impl ItemInfo {
 #[serde(deny_unknown_fields)]
 #[serde(untagged)]
 pub enum CddaItemName {
-    Simple(String),
+    Simple(Arc<str>),
     Both {
-        str_sp: String,
+        str_sp: Arc<str>,
 
-        ctxt: Option<String>,
+        ctxt: Option<Arc<str>>,
     },
     Split {
-        str: String,
-        str_pl: Option<String>,
+        str: Arc<str>,
+        str_pl: Option<Arc<str>>,
 
-        ctxt: Option<String>,
+        ctxt: Option<Arc<str>>,
 
         #[serde(rename(deserialize = "//~"))]
-        comment: Option<String>,
+        comment: Option<Arc<str>>,
     },
 }
 
 #[derive(Clone, Debug, Deserialize)]
 #[serde(from = "CddaItemName")]
 pub struct ItemName {
-    pub single: String,
-    plural: String,
+    pub single: Arc<str>,
+    plural: Arc<str>,
 }
 
 impl ItemName {
-    pub const fn amount(&self, amount: u32) -> &String {
+    pub const fn amount(&self, amount: u32) -> &Arc<str> {
         if amount == 1 {
             &self.single
         } else {
@@ -183,7 +184,7 @@ impl From<CddaItemName> for ItemName {
         match origin {
             CddaItemName::Simple(string) => Self {
                 single: string.clone(),
-                plural: string + "s",
+                plural: (String::from(&*string) + "s").into(),
             },
             CddaItemName::Both { str_sp, .. } => Self {
                 single: str_sp.clone(),
@@ -191,7 +192,7 @@ impl From<CddaItemName> for ItemName {
             },
             CddaItemName::Split { str, str_pl, .. } => Self {
                 single: str.clone(),
-                plural: str_pl.unwrap_or_else(|| str.clone() + "s"),
+                plural: str_pl.unwrap_or_else(|| (String::from(&*str) + "s").into()),
             },
         }
     }
@@ -201,10 +202,10 @@ impl From<CddaItemName> for ItemName {
 #[serde(deny_unknown_fields)]
 #[serde(untagged)]
 pub enum Material {
-    Simple(String),
+    Simple(Arc<str>),
     Complex {
         #[serde(rename(deserialize = "type"))]
-        type_: String,
+        type_: Arc<str>,
 
         /// assume 1 when missing
         // TODO What does a fractional value mean?
@@ -217,7 +218,7 @@ pub enum Material {
 #[serde(untagged)]
 pub enum Price {
     Numeric(u64),
-    Text(String),
+    Text(Arc<str>),
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -225,15 +226,15 @@ pub enum Price {
 #[serde(untagged)]
 pub enum ToHit {
     Simple(i16),
-    Complex(HashMap<String, String>),
+    Complex(HashMap<Arc<str>, Arc<str>>),
 }
 
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 #[serde(untagged)]
 pub enum Description {
-    Simple(String),
-    Complex(HashMap<String, String>),
+    Simple(Arc<str>),
+    Complex(HashMap<Arc<str>, Arc<str>>),
 }
 
 #[cfg(test)]

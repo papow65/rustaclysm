@@ -1,5 +1,6 @@
 use bevy::utils::HashMap;
 use serde::Deserialize;
+use std::sync::Arc;
 
 #[derive(Debug, Deserialize)]
 //#[serde(deny_unknown_fields)] // can't be used with '#[serde(flatten)]' (at the bottom)
@@ -97,7 +98,7 @@ pub struct CddaPlayer {
     //pub moves: serde_json::Value,
     //pub mutations: serde_json::Value,
     //pub my_bionics: serde_json::Value,
-    pub name: String,
+    pub name: Arc<str>,
     //pub num_blocks_bonus: serde_json::Value,
     //pub num_dodges_bonus: serde_json::Value,
     pub omt_path: serde_json::Value,
@@ -116,7 +117,7 @@ pub struct CddaPlayer {
     //pub scenario: serde_json::Value,
     //pub scent: serde_json::Value,
     //pub show_map_memory: serde_json::Value,
-    pub skills: HashMap<String, Skill>,
+    pub skills: HashMap<Arc<str>, Skill>,
     pub sleep_deprivation: serde_json::Value,
     //pub slow_rad: serde_json::Value,
     //pub snippets_read: serde_json::Value,
@@ -141,7 +142,7 @@ pub struct CddaPlayer {
 
     // To prevent a linking eror when there Too many fields to deserialize
     #[serde(flatten)]
-    pub extra: HashMap<String, serde_json::Value>,
+    pub extra: HashMap<Arc<str>, serde_json::Value>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -150,5 +151,5 @@ pub struct Skill {
 
     #[expect(unused)]
     #[serde(flatten)]
-    extra: HashMap<String, serde_json::Value>,
+    extra: HashMap<Arc<str>, serde_json::Value>,
 }

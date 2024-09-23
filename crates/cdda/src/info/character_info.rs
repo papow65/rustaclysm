@@ -1,12 +1,13 @@
 use crate::{Flags, ItemName, ObjectId};
 use bevy::utils::HashMap;
 use serde::Deserialize;
+use std::sync::Arc;
 use units::{Mass, Volume};
 
 #[derive(Debug, Deserialize)]
 pub struct CharacterInfo {
     pub name: ItemName,
-    pub default_faction: String,
+    pub default_faction: Arc<str>,
     pub looks_like: Option<ObjectId>,
     pub volume: Option<Volume>,
 
@@ -28,7 +29,7 @@ pub struct CharacterInfo {
     pub flags: Flags,
 
     #[serde(flatten)]
-    pub extra: HashMap<String, serde_json::Value>,
+    pub extra: HashMap<Arc<str>, serde_json::Value>,
 }
 
 #[cfg(test)]

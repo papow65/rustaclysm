@@ -2,6 +2,7 @@ use crate::ObjectId;
 use crate::{CddaAmount, FlatVec, RepetitionBlock};
 use bevy::{asset::Asset, reflect::TypePath, utils::HashMap};
 use serde::Deserialize;
+use std::sync::Arc;
 
 /// Corresponds to an 'overmap' in CDDA. It defines the layout of 180x180 `Zone`s.
 #[derive(Debug, Deserialize, Asset, TypePath)]
@@ -55,9 +56,9 @@ pub struct Monster {
     location: (i32, i32, i8),
     moves: i16,
     pain: u32,
-    effects: HashMap<String, serde_json::Value>,
+    effects: HashMap<Arc<str>, serde_json::Value>,
     damage_over_time_map: Vec<serde_json::Value>,
-    values: HashMap<String, serde_json::Value>,
+    values: HashMap<Arc<str>, serde_json::Value>,
     blocks_left: u8,
     dodges_left: u8,
     num_blocks_bonus: u8,
@@ -78,19 +79,19 @@ pub struct Monster {
     throw_resist: u8,
     archery_aim_counter: u8,
     last_updated: u32,
-    body: HashMap<String, serde_json::Value>,
+    body: HashMap<Arc<str>, serde_json::Value>,
     pub typeid: ObjectId,
-    unique_name: String,
-    nickname: String,
+    unique_name: Arc<str>,
+    nickname: Arc<str>,
     goal: Option<serde_json::Value>,
     wander_pos: (i32, i32, i32),
     wandf: u32,
     provocative_sound: bool,
     hp: u16,
-    special_attacks: HashMap<String, serde_json::Value>,
+    special_attacks: HashMap<Arc<str>, serde_json::Value>,
     friendly: i8,
     fish_population: u8,
-    faction: String,
+    faction: Arc<str>,
     mission_ids: Vec<serde_json::Value>,
     mission_fused: Vec<serde_json::Value>,
     no_extra_death_drops: bool,
@@ -98,7 +99,7 @@ pub struct Monster {
     anger: i16,
     morale: i16,
     hallucination: bool,
-    ammo: HashMap<String, i16>,
+    ammo: HashMap<Arc<str>, i16>,
     underwater: bool,
     upgrades: bool,
     upgrade_time: i32,

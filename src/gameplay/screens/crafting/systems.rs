@@ -16,7 +16,7 @@ use cdda::{
     Alternative, AutoLearn, BookLearn, BookLearnItem, ObjectId, Recipe, RequiredQuality, Sav,
     Skill, Using,
 };
-use std::{ops::RangeInclusive, time::Instant};
+use std::{ops::RangeInclusive, sync::Arc, time::Instant};
 use units::Timestamp;
 
 const MAX_FIND_DISTANCE: i32 = 7;
@@ -174,11 +174,11 @@ pub(super) fn refresh_crafting_screen(
             (
                 quality_id,
                 amount,
-                uppercase_first(&infos.quality(quality_id).name.single),
+                uppercase_first(infos.quality(quality_id).name.single.clone()),
             )
         })
         .collect::<Vec<_>>();
-    shown_qualities.sort_by_key(|(.., name)| String::from(name));
+    shown_qualities.sort_by_key(|(.., name)| name.clone());
 
     let mut first_recipe = None;
     commands
@@ -198,7 +198,7 @@ pub(super) fn refresh_crafting_screen(
                 let entity = parent
                     .spawn((
                         TextBundle::from_section(
-                            recipe.name.clone(),
+                            String::from(&*recipe.name),
                             fonts.regular(recipe.color(first)),
                         ),
                         recipe,
@@ -273,7 +273,7 @@ fn find_nearby<'a>(
 fn nearby_manuals<'a>(
     infos: &'a Infos,
     nearby_items: &[(Entity, &'a ObjectDefinition, &'a Amount)],
-) -> HashMap<&'a ObjectId, &'a str> {
+) -> HashMap<&'a ObjectId, Arc<str>> {
     nearby_items
         .iter()
         .map(|(_, definition, _)| *definition)
@@ -281,18 +281,18 @@ fn nearby_manuals<'a>(
             definition.category == ObjectCategory::Item
                 && infos
                     .try_item(&definition.id)
-                    .filter(|item| item.category.as_ref().is_some_and(|s| s == "manuals"))
+                    .filter(|item| item.category.as_ref().is_some_and(|s| &**s == "manuals"))
                     .is_some()
         })
         .map(|definition| &definition.id)
-        .map(|manual_id| (manual_id, infos.item(manual_id).name.single.as_str()))
+        .map(|manual_id| (manual_id, infos.item(manual_id).name.single.clone()))
         .collect::<HashMap<_, _>>()
 }
 
 fn shown_recipes(
     infos: &Infos,
     sav: &Sav,
-    nearby_manuals: &HashMap<&ObjectId, &str>,
+    nearby_manuals: &HashMap<&ObjectId, Arc<str>>,
     nearby_qualities: &HashMap<&ObjectId, i8>,
     nearby_items: &[(Entity, &ObjectDefinition, &Amount)],
 ) -> Vec<RecipeSituation> {
@@ -317,7 +317,7 @@ fn shown_recipes(
                 .ok()
                 .map(|item| RecipeSituation {
                     recipe_id: recipe_id.clone(),
-                    name: uppercase_first(&item.name.single),
+                    name: uppercase_first(item.name.single.clone()),
                     autolearn,
                     manuals: recipe_manuals,
                     qualities: recipe_qualities(
@@ -346,7 +346,7 @@ fn shown_recipes(
     shown_recipes
 }
 
-fn autolearn_recipe(recipe: &Recipe, skills: &HashMap<String, Skill>) -> bool {
+fn autolearn_recipe(recipe: &Recipe, skills: &HashMap<Arc<str>, Skill>) -> bool {
     match &recipe.autolearn {
         AutoLearn::Bool(autolearn) => {
             *autolearn
@@ -372,8 +372,8 @@ fn autolearn_recipe(recipe: &Recipe, skills: &HashMap<String, Skill>) -> bool {
 
 fn recipe_manuals<'a>(
     recipe: &'a Recipe,
-    nearby_manuals: &HashMap<&'a ObjectId, &'a str>,
-) -> Vec<String> {
+    nearby_manuals: &HashMap<&'a ObjectId, Arc<str>>,
+) -> Vec<Arc<str>> {
     // TODO check skill level
 
     let mut manuals = match &recipe.book_learn {
@@ -383,7 +383,7 @@ fn recipe_manuals<'a>(
     }
     .iter()
     .filter_map(|from_book| nearby_manuals.get(from_book))
-    .map(|name| String::from(*name))
+    .cloned()
     .collect::<Vec<_>>();
 
     manuals.sort();
@@ -435,7 +435,7 @@ fn recipe_qualities(
                 .flat_map(|using| &infos.requirement(&using.requirement).qualities.0),
         )
         .map(|required_quality| QualitySituation {
-            name: uppercase_first(infos.quality(&required_quality.id).name.single.as_str()),
+            name: uppercase_first(infos.quality(&required_quality.id).name.single.clone()),
             present: present.get(&required_quality.id).copied(),
             required: required_quality.level,
         })

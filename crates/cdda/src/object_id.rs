@@ -48,8 +48,8 @@ impl ObjectId {
         )
     }
 
-    pub fn fallback_name(&self) -> String {
-        String::from(&*self.0)
+    pub fn fallback_name(&self) -> Arc<str> {
+        Arc::<str>::from(&*self.0)
     }
 
     pub fn is_moving_deep_water_zone(&self) -> bool {

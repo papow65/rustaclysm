@@ -1,6 +1,7 @@
 use bevy::{asset::Asset, reflect::TypePath};
 use serde::de::{Deserialize, Deserializer, Error, SeqAccess, Visitor};
 use std::fmt;
+use std::sync::Arc;
 
 /// A player's memory of terrain on 8x8 suzones or 4x4 zones. Corresponds to a map memory ('.mmr') file in CDDA.
 #[derive(Debug, serde::Deserialize, Asset, TypePath)]
@@ -53,7 +54,7 @@ impl From<Option<Vec<TileMemory>>> for SubmapMemory {
 #[derive(Debug)]
 pub struct TileMemory {
     // Empty strings are translated to `None`.
-    pub type_id: Option<String>,
+    pub type_id: Option<Arc<str>>,
 
     #[allow(unused)]
     pub subtile: u8,
@@ -92,7 +93,7 @@ impl<'de> Visitor<'de> for TileMemoryVisitor {
         Ok(TileMemory {
             type_id: seq
                 .next_element()?
-                .map(|s: String| if s.is_empty() { None } else { Some(s) })
+                .map(|s: Arc<str>| if s.is_empty() { None } else { Some(s) })
                 .ok_or_else(|| A::Error::custom("Missing type_id"))?,
             subtile: seq
                 .next_element()?
@@ -141,7 +142,7 @@ mod container_tests {
                         amount: 1
                     }
                 ])
-                if x == "t_grass" && y == "t_grass" && z == "f_black_eyed_susan"
+                if &**x == "t_grass" && &**y == "t_grass" && &**z == "f_black_eyed_susan"
             ),
             "{result:?}"
         );

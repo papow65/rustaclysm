@@ -2,6 +2,7 @@ use crate::ObjectId;
 use crate::{Bash, Flags, ItemName, MoveCostIncrease};
 use bevy::utils::HashMap;
 use serde::Deserialize;
+use std::sync::Arc;
 
 #[derive(Debug, Deserialize)]
 pub struct TerrainInfo {
@@ -15,7 +16,7 @@ pub struct TerrainInfo {
 
     #[expect(unused)]
     #[serde(flatten)]
-    extra: HashMap<String, serde_json::Value>,
+    extra: HashMap<Arc<str>, serde_json::Value>,
 }
 
 // TODO What does a negative value mean?

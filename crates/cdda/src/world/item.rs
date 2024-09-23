@@ -1,28 +1,29 @@
 use crate::ObjectId;
 use bevy::utils::HashMap;
 use serde::Deserialize;
+use std::sync::Arc;
 
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct CddaItem {
     pub typeid: ObjectId,
 
-    pub snip_id: Option<String>,
+    pub snip_id: Option<Arc<str>>,
     pub charges: Option<u32>,
     pub active: Option<bool>,
 
     pub corpse: Option<ObjectId>,
 
-    pub name: Option<String>,
-    pub owner: Option<String>,
+    pub name: Option<Arc<str>>,
+    pub owner: Option<Arc<str>>,
     pub bday: Option<i64>,
     pub last_temp_check: Option<u64>,
     pub specific_energy: Option<Number>,
     pub temperature: Option<Number>,
-    pub item_vars: Option<HashMap<String, String>>,
+    pub item_vars: Option<HashMap<Arc<str>, Arc<str>>>,
 
     #[serde(default)]
-    pub item_tags: Vec<String>,
+    pub item_tags: Vec<Arc<str>>,
 
     pub contents: Option<CddaContainer>,
 
@@ -35,17 +36,17 @@ pub struct CddaItem {
     pub current_phase: Option<u8>,
 
     #[serde(default)]
-    pub faults: Vec<String>,
+    pub faults: Vec<Arc<str>>,
 
     pub rot: Option<i64>,
-    pub curammo: Option<String>,
+    pub curammo: Option<Arc<str>>,
     pub item_counter: Option<u8>,
-    pub variant: Option<String>,
+    pub variant: Option<Arc<str>>,
     pub recipe_charges: Option<u8>,
     pub poison: Option<u8>,
     pub burnt: Option<serde_json::Value>,
     pub craft_data: Option<serde_json::Value>,
-    pub dropped_from: Option<String>,
+    pub dropped_from: Option<Arc<str>>,
     pub degradation: Option<u32>,
 }
 
@@ -128,7 +129,7 @@ pub struct AdditionalPocket {
 #[serde(untagged)]
 pub enum Number {
     Int(i64),
-    Text(String),
+    Text(Arc<str>),
 }
 
 #[cfg(test)]

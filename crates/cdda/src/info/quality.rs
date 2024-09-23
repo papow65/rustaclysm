@@ -1,16 +1,17 @@
 use crate::ItemName;
 use bevy::utils::HashMap;
 use serde::Deserialize;
+use std::sync::Arc;
 
 #[derive(Debug, Deserialize)]
 pub struct Quality {
     pub name: ItemName,
 
     #[serde(default)]
-    pub usages: Vec<(u8, Vec<String>)>,
+    pub usages: Vec<(u8, Vec<Arc<str>>)>,
 
     #[serde(flatten)]
-    pub extra: HashMap<String, serde_json::Value>,
+    pub extra: HashMap<Arc<str>, serde_json::Value>,
 }
 
 #[cfg(test)]

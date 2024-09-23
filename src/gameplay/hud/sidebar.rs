@@ -596,7 +596,7 @@ fn characters_info(
                 }
             }
             .add(")\n- ")
-            .add(definition.id.fallback_name())
+            .add(String::from(&*definition.id.fallback_name()))
             .add("\n")
             .fragments
         })

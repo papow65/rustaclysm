@@ -733,7 +733,7 @@ impl ActorItem<'_> {
         if let Some(item_info) = infos.try_item(&item.definition.id) {
             if let Some(description) = &item_info.description {
                 message_writer
-                    .str(match description {
+                    .str(&**match description {
                         Description::Simple(simple) => simple,
                         Description::Complex(complex) => complex.get("str").expect("'str' key"),
                     })

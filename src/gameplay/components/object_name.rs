@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crate::common::BAD_TEXT_COLOR;
 use crate::gameplay::{Fragment, Pos};
 use bevy::prelude::{Color, Component};
@@ -12,12 +14,12 @@ pub(crate) struct ObjectName {
 impl ObjectName {
     #[must_use]
     pub(crate) fn single(&self, pos: Pos) -> Fragment {
-        Fragment::positioned(self.name.single.clone(), self.color, pos)
+        Fragment::positioned(&*self.name.single, self.color, pos)
     }
 
     #[must_use]
     pub(crate) fn amount(&self, amount: u32, pos: Pos) -> Fragment {
-        Fragment::positioned(self.name.amount(amount).clone(), self.color, pos)
+        Fragment::positioned(&**self.name.amount(amount), self.color, pos)
     }
 
     #[must_use]
@@ -28,7 +30,7 @@ impl ObjectName {
     #[must_use]
     pub(crate) fn from_str(text: &str, color: Color) -> Self {
         Self {
-            name: ItemName::from(CddaItemName::Simple(String::from(text))),
+            name: ItemName::from(CddaItemName::Simple(Arc::from(text))),
             color,
         }
     }

@@ -1,5 +1,6 @@
 use crate::{CddaItem, ObjectId};
 use serde::Deserialize;
+use std::sync::Arc;
 
 #[expect(clippy::struct_excessive_bools)]
 #[derive(Debug, Deserialize)]
@@ -33,9 +34,9 @@ pub struct CddaVehicle {
     pub tracking_on: bool,
     pub skidding: bool,
     pub of_turn_carry: f32,
-    pub name: String,
-    pub owner: String,
-    pub old_owner: String,
+    pub name: Arc<str>,
+    pub owner: Arc<str>,
+    pub old_owner: Arc<str>,
     pub theft_time: Option<serde_json::Value>,
     pub parts: Vec<CddaVehiclePart>,
     pub tags: Vec<()>,
@@ -67,7 +68,7 @@ pub struct CddaVehicle {
 #[serde(deny_unknown_fields)]
 pub struct CddaVehiclePart {
     pub id: ObjectId,
-    pub variant: Option<String>,
+    pub variant: Option<Arc<str>>,
     pub base: CddaItem,
 
     /// i8 would suffice, but i32 requires less casting
@@ -83,7 +84,7 @@ pub struct CddaVehiclePart {
     pub passenger_id: i8,
     pub crew_id: i8,
     pub items: Vec<CddaItem>,
-    pub ammo_pref: String,
+    pub ammo_pref: Arc<str>,
 }
 
 #[cfg(test)]

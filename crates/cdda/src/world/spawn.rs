@@ -1,5 +1,6 @@
 use crate::ObjectId;
 use serde::Deserialize;
+use std::sync::Arc;
 
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -22,5 +23,5 @@ pub struct Spawn {
     friendly: bool,
 
     #[expect(unused)]
-    name: Option<String>,
+    name: Option<Arc<str>>,
 }

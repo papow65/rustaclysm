@@ -1,6 +1,7 @@
 use crate::{ItemName, ObjectId};
 use bevy::utils::HashMap;
 use serde::Deserialize;
+use std::sync::Arc;
 
 #[derive(Debug, Deserialize)]
 #[serde(tag = "type")]
@@ -10,7 +11,7 @@ pub struct FieldInfo {
 
     #[expect(unused)]
     #[serde(flatten)]
-    extra: HashMap<String, serde_json::Value>,
+    extra: HashMap<Arc<str>, serde_json::Value>,
 }
 
 impl FieldInfo {
@@ -28,5 +29,5 @@ pub struct IntensityLevel {
 
     #[expect(unused)]
     #[serde(flatten)]
-    extra: HashMap<String, serde_json::Value>,
+    extra: HashMap<Arc<str>, serde_json::Value>,
 }

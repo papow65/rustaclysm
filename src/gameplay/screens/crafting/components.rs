@@ -3,14 +3,14 @@ use crate::common::{
 };
 use bevy::prelude::{Color, Component, Entity, TextSection};
 use cdda::{ObjectId, Recipe};
-use std::cmp::Ordering;
+use std::{cmp::Ordering, sync::Arc};
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Component)]
 pub(crate) struct RecipeSituation {
     pub(super) recipe_id: ObjectId,
-    pub(super) name: String,
+    pub(super) name: Arc<str>,
     pub(super) autolearn: bool,
-    pub(super) manuals: Vec<String>,
+    pub(super) manuals: Vec<Arc<str>>,
     pub(super) qualities: Vec<QualitySituation>,
     pub(super) components: Vec<ComponentSituation>,
 }
@@ -52,7 +52,7 @@ impl RecipeSituation {
     pub(super) fn text_sections(&self, fonts: &Fonts, recipe: &Recipe) -> Vec<TextSection> {
         let mut text_sections = vec![
             TextSection::new("Result: ", fonts.regular(SOFT_TEXT_COLOR)),
-            TextSection::new(&self.name, fonts.regular(self.color(true))),
+            TextSection::new(String::from(&*self.name), fonts.regular(self.color(true))),
             TextSection::new(
                 format!("\n({})", self.recipe_id.fallback_name()),
                 fonts.regular(SOFT_TEXT_COLOR),
@@ -63,7 +63,10 @@ impl RecipeSituation {
                 "\n\nSkill: ",
                 fonts.regular(SOFT_TEXT_COLOR),
             ));
-            text_sections.push(TextSection::new(skill_used, fonts.regular(WARN_TEXT_COLOR)));
+            text_sections.push(TextSection::new(
+                &**skill_used,
+                fonts.regular(WARN_TEXT_COLOR),
+            ));
             text_sections.push(TextSection::new(
                 "\nDifficulty: ",
                 fonts.regular(SOFT_TEXT_COLOR),
@@ -128,7 +131,7 @@ impl RecipeSituation {
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub(super) struct QualitySituation {
-    pub(super) name: String,
+    pub(super) name: Arc<str>,
     pub(super) present: Option<i8>,
     pub(super) required: u8,
 }
@@ -149,7 +152,7 @@ impl QualitySituation {
 
         let mut text_sections = vec![
             TextSection::new("\n- ", soft_style.clone()),
-            TextSection::new(&self.name, checked_style.clone()),
+            TextSection::new(&*self.name, checked_style.clone()),
             TextSection::new(": a tool of ", soft_style.clone()),
         ];
 
@@ -223,7 +226,7 @@ impl ComponentSituation {
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub(crate) struct AlternativeSituation {
     pub(super) id: ObjectId,
-    pub(super) name: String,
+    pub(super) name: Arc<str>,
     pub(crate) required: u32,
     pub(super) present: u32,
     pub(crate) item_entities: Vec<Entity>,

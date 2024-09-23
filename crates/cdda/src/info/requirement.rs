@@ -1,6 +1,7 @@
 use crate::{Alternative, RequiredQualities};
 use bevy::utils::HashMap;
 use serde::Deserialize;
+use std::sync::Arc;
 
 #[derive(Debug, Deserialize)]
 pub struct Requirement {
@@ -12,5 +13,5 @@ pub struct Requirement {
 
     #[expect(unused)]
     #[serde(flatten)]
-    extra: HashMap<String, serde_json::Value>,
+    extra: HashMap<Arc<str>, serde_json::Value>,
 }

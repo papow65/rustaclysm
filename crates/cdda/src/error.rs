@@ -1,5 +1,6 @@
 use crate::SpriteNumber;
-use std::{error::Error as StdError, fmt, fmt::Display, io, path::PathBuf};
+use std::fmt::{self, Display};
+use std::{error::Error as StdError, io, path::PathBuf, sync::Arc};
 
 #[derive(Debug)]
 pub enum Error {
@@ -14,7 +15,7 @@ pub enum Error {
     Json {
         _wrapped: serde_json::Error,
         _file_path: PathBuf,
-        _contents: String,
+        _contents: Arc<str>,
     },
 }
 

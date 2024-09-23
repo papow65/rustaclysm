@@ -5,6 +5,7 @@ use bevy::prelude::Resource;
 use bevy::utils::{Entry, HashMap};
 use cdda::{CddaTileConfig, Error, ObjectId, SpriteNumber, TileInfo};
 use std::fs::read_to_string;
+use std::sync::Arc;
 
 #[derive(Resource)]
 pub(crate) struct TileLoader {
@@ -21,7 +22,7 @@ impl TileLoader {
             .map_err(|e| Error::Json {
                 _wrapped: e,
                 _file_path: file_path,
-                _contents: file_contents,
+                _contents: Arc::from(file_contents.as_str()),
             })?;
 
         let mut tiles = HashMap::default();

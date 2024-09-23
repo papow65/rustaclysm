@@ -2,6 +2,7 @@ use crate::ItemName;
 use crate::ObjectId;
 use bevy::utils::HashMap;
 use serde::Deserialize;
+use std::sync::Arc;
 
 #[derive(Debug, Deserialize)]
 pub struct OvermapInfo {
@@ -10,5 +11,5 @@ pub struct OvermapInfo {
 
     #[expect(unused)]
     #[serde(flatten)]
-    extra: HashMap<String, serde_json::Value>,
+    extra: HashMap<Arc<str>, serde_json::Value>,
 }

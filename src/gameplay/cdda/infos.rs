@@ -9,6 +9,7 @@ use cdda::{
 use glob::glob;
 use serde::de::DeserializeOwned;
 use serde_json::map::Entry;
+use std::sync::Arc;
 use std::{any::type_name, fs::read_to_string, path::PathBuf, time::Instant};
 use units::{Mass, Volume};
 
@@ -266,8 +267,8 @@ impl Infos {
         this.characters.insert(
             ObjectId::new("human"),
             CharacterInfo {
-                name: ItemName::from(CddaItemName::Simple(String::from("Human"))),
-                default_faction: String::from("human"),
+                name: ItemName::from(CddaItemName::Simple(Arc::from("Human"))),
+                default_faction: Arc::from("human"),
                 looks_like: Some(ObjectId::new("overlay_male_mutation_SKIN_TAN")),
                 volume: Some(Volume::from("80 l")),
                 mass: Some(Mass::from("80 kg")),

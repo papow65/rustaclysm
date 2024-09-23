@@ -2,6 +2,7 @@ use crate::ObjectId;
 use crate::{At, AtVec, CddaItem, CddaVehicle, FieldVec, Repetition, RepetitionBlock, Spawn};
 use bevy::{asset::Asset, reflect::TypePath};
 use serde::Deserialize;
+use std::sync::Arc;
 
 // Reference: https://github.com/CleverRaven/Cataclysm-DDA/blob/master/src/savegame_json.cpp
 
@@ -24,7 +25,7 @@ pub struct Submap {
     pub items: AtVec<Vec<Repetition<CddaItem>>>,
     pub traps: Vec<At<ObjectId>>,
     pub fields: AtVec<FieldVec>,
-    pub cosmetics: Vec<(u8, u8, String, String)>,
+    pub cosmetics: Vec<(u8, u8, Arc<str>, Arc<str>)>,
     pub spawns: Vec<Spawn>,
     pub vehicles: Vec<CddaVehicle>,
     pub partial_constructions: Vec<serde_json::Value>,
