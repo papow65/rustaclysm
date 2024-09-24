@@ -2,7 +2,7 @@ use crate::gameplay::cdda::{asset_storage::AssetStorage, paths::OvermapPath};
 use crate::gameplay::{ActiveSav, AssetState, Overzone};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{AssetId, AssetServer, Assets, Res, ResMut};
-use cdda::Overmap;
+use cdda_json_files::Overmap;
 
 #[derive(SystemParam)]
 pub(crate) struct OvermapManager<'w> {

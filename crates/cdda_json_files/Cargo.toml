@@ -1,5 +1,5 @@
 [package]
-name = "cdda"
+name = "cdda_json_files"
 description = "A library for working with files from Cataclysm: Datk Days Ahead"
 license = "AGPL-3.0-or-later"
 edition = "2021"

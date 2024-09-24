@@ -2,7 +2,7 @@ use crate::common::{
     Fonts, BAD_TEXT_COLOR, DEFAULT_TEXT_COLOR, GOOD_TEXT_COLOR, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
 };
 use bevy::prelude::{Color, Component, Entity, TextSection};
-use cdda::{ObjectId, Recipe};
+use cdda_json_files::{ObjectId, Recipe};
 use std::{cmp::Ordering, sync::Arc};
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Component)]

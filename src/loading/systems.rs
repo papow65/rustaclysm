@@ -6,7 +6,7 @@ use bevy::prelude::{
     AlignItems, Assets, BuildChildren, Commands, JustifyContent, Local, NextState, NodeBundle,
     PositionType, Res, ResMut, State, StateScoped, Style, TextBundle, Val, ZIndex,
 };
-use cdda::{Map, Overmap, OvermapBuffer};
+use cdda_json_files::{Map, Overmap, OvermapBuffer};
 
 #[expect(clippy::needless_pass_by_value)]
 pub(crate) fn spawn_loading(mut commands: Commands, fonts: Res<Fonts>) {

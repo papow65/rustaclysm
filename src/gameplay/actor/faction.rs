@@ -4,7 +4,7 @@ use crate::gameplay::{
     Pos, Visible, WalkingCost,
 };
 use bevy::prelude::{Color, Component};
-use cdda::MoveCost;
+use cdda_json_files::MoveCost;
 use float_ord::FloatOrd;
 use pathfinding::num_traits::Zero;
 use pathfinding::prelude::{build_path, dijkstra_all};

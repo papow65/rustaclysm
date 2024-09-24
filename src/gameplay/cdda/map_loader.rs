@@ -1,5 +1,5 @@
 use bevy::asset::{io::Reader, AssetLoader, LoadContext};
-use cdda::{Error, Map};
+use cdda_json_files::{Error, Map};
 use futures_lite::AsyncReadExt;
 use std::{str::from_utf8, sync::Arc};
 

@@ -3,7 +3,7 @@ use std::sync::Arc;
 use crate::common::BAD_TEXT_COLOR;
 use crate::gameplay::{Fragment, Pos};
 use bevy::prelude::{Color, Component};
-use cdda::{CddaItemName, ItemName};
+use cdda_json_files::{CddaItemName, ItemName};
 
 #[derive(Clone, Component, Debug)]
 pub(crate) struct ObjectName {

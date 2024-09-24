@@ -1,10 +1,10 @@
 use crate::{common::text_color, gameplay::*};
-use ::cdda::{CddaItem, Description};
 use bevy::ecs::query::QueryData;
 use bevy::prelude::{
     BuildChildren, Commands, DespawnRecursiveExt, Entity, Event, EventWriter, NextState, Query,
     SpatialBundle, VisibilityBundle,
 };
+use cdda_json_files::{CddaItem, Description};
 use units::{Distance, Duration, Speed};
 
 #[derive(QueryData)]

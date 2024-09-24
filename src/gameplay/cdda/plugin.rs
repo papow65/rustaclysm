@@ -2,7 +2,7 @@ use crate::application::ApplicationState;
 use crate::gameplay::cdda::systems::{create_cdda_resources, remove_cdda_resources};
 use crate::gameplay::cdda::{MapLoader, MapMemoryLoader, OvermapLoader};
 use bevy::prelude::{App, AssetApp, OnEnter, OnExit, Plugin};
-use cdda::{Map, MapMemory, Overmap, OvermapBuffer};
+use cdda_json_files::{Map, MapMemory, Overmap, OvermapBuffer};
 
 pub(crate) struct CddaPlugin;
 

@@ -1,6 +1,6 @@
 use crate::gameplay::{MeshInfo, ObjectCategory, ObjectDefinition, SpriteLayer, TextureInfo};
 use bevy::prelude::{AlphaMode, Mesh, Transform, Vec2, Vec3};
-use cdda::SpriteNumber;
+use cdda_json_files::SpriteNumber;
 use std::path::PathBuf;
 use units::Distance;
 

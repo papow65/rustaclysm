@@ -1,6 +1,6 @@
 use crate::gameplay::{Level, Overzone, Pos, SubzoneLevel, ZoneLevel};
 use bevy::utils::HashMap;
-use cdda::{CddaAmount, RepetitionBlock};
+use cdda_json_files::{CddaAmount, RepetitionBlock};
 use std::hash::Hash;
 
 pub(crate) trait RepetitionBlockExt<'a, T> {

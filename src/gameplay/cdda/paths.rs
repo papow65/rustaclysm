@@ -1,5 +1,5 @@
 use crate::gameplay::{Overzone, ZoneLevel};
-use cdda::{Map, MapMemory, Overmap, OvermapBuffer, Sav};
+use cdda_json_files::{Map, MapMemory, Overmap, OvermapBuffer, Sav};
 use std::{any::type_name, fmt, fs::read_to_string, marker::PhantomData, path::PathBuf};
 
 pub(crate) struct PathFor<T>(pub(crate) PathBuf, PhantomData<T>);

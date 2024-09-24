@@ -9,7 +9,7 @@ use bevy::prelude::{
     Assets, Camera, Changed, Children, Commands, EventReader, Font, GlobalTransform, Local, Mesh,
     ParallelCommands, Parent, Query, Res, ResMut, StandardMaterial, Visibility, With, Without,
 };
-use cdda::{Map, MapMemory, Overmap, OvermapBuffer};
+use cdda_json_files::{Map, MapMemory, Overmap, OvermapBuffer};
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
 

@@ -1,5 +1,5 @@
 use crate::gameplay::NborDistance;
-use cdda::MoveCost;
+use cdda_json_files::MoveCost;
 use std::iter::Sum;
 use std::ops::{Add, Mul};
 use units::{Distance, Duration, Speed};

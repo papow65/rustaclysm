@@ -1185,7 +1185,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "cdda"
+name = "cdda_json_files"
 version = "0.0.0"
 dependencies = [
  "bevy",
@@ -2811,7 +2811,7 @@ dependencies = [
  "base64 0.22.1",
  "bevy",
  "bresenham",
- "cdda",
+ "cdda_json_files",
  "either",
  "fastrand",
  "float-ord",

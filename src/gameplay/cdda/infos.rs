@@ -1,7 +1,7 @@
 use crate::common::{AssetPaths, AsyncNew};
 use crate::gameplay::{ObjectCategory, ObjectDefinition, TypeId};
 use bevy::{ecs::system::Resource, utils::HashMap};
-use cdda::{
+use cdda_json_files::{
     Alternative, CddaItemName, CharacterInfo, FieldInfo, Flags, FurnitureInfo, ItemGroup, ItemInfo,
     ItemName, Migration, ObjectId, OvermapInfo, Quality, Recipe, Requirement, TerrainInfo, Using,
     UsingKind, VehiclePartInfo,

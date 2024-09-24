@@ -12,7 +12,7 @@ use crate::gameplay::{
 };
 use bevy::prelude::*;
 use bevy::utils::HashMap;
-use cdda::{
+use cdda_json_files::{
     Alternative, AutoLearn, BookLearn, BookLearnItem, ObjectId, Recipe, RequiredQuality, Sav,
     Skill, Using,
 };

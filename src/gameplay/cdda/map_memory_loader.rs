@@ -1,5 +1,5 @@
-use ::cdda::MapMemory;
 use bevy::asset::{io::Reader, AssetLoader, LoadContext};
+use cdda_json_files::MapMemory;
 use either::Either;
 use futures_lite::AsyncReadExt;
 use std::str::from_utf8;

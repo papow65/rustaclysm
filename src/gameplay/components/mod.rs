@@ -9,8 +9,8 @@ pub(crate) use pos::{Level, Overzone, Pos, SubzoneLevel, Zone, ZoneLevel};
 pub(crate) use vehicle::{Vehicle, VehiclePart};
 
 use crate::gameplay::*;
-use ::cdda::{ItemInfo, MoveCost, MoveCostIncrease, ObjectId};
 use bevy::prelude::{AlphaMode, Assets, Color, Component, Handle, Srgba, StandardMaterial};
+use cdda_json_files::{ItemInfo, MoveCost, MoveCostIncrease, ObjectId};
 use std::ops::{Add, Sub};
 use units::{Duration, Mass, Timestamp, Volume};
 

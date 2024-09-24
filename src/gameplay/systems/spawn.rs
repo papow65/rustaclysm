@@ -7,7 +7,7 @@ use crate::gameplay::{
     Zone, ZoneLevel, ZoneLevelEntities, ZoneLevelIds, ZoneRegion, ZoneSpawner,
 };
 use bevy::{ecs::system::SystemState, prelude::*};
-use cdda::{Map, MapMemory, Overmap, OvermapBuffer};
+use cdda_json_files::{Map, MapMemory, Overmap, OvermapBuffer};
 use std::{cmp::Ordering, time::Instant};
 
 const MAX_EXPAND_DISTANCE: i32 = 10;

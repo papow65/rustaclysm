@@ -3,7 +3,7 @@ use crate::gameplay::{
 };
 use bevy::ecs::component::{ComponentHooks, StorageType};
 use bevy::prelude::{Component, Vec3};
-use cdda::{Overmap, SubzoneOffset};
+use cdda_json_files::{Overmap, SubzoneOffset};
 use std::{cmp::Ordering, fmt, iter::once, ops::Sub};
 
 /// Does not include 'from', but does include 'to'

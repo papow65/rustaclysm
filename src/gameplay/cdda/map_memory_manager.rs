@@ -2,7 +2,7 @@ use crate::gameplay::cdda::{asset_storage::AssetStorage, paths::MapMemoryPath};
 use crate::gameplay::{ActiveSav, AssetState, SubzoneLevel, Zone, ZoneLevel};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{AssetId, AssetServer, Assets, Res, ResMut};
-use cdda::{MapMemory, SubmapMemory};
+use cdda_json_files::{MapMemory, SubmapMemory};
 
 #[derive(SystemParam)]
 pub(crate) struct MapMemoryManager<'w> {

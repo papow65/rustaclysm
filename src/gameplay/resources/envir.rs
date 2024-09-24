@@ -6,7 +6,7 @@ use crate::gameplay::{
 };
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{Entity, Query, ResMut, With, Without};
-use cdda::MoveCost;
+use cdda_json_files::MoveCost;
 use pathfinding::prelude::astar;
 use std::cmp::Ordering;
 use units::{Duration, Speed};

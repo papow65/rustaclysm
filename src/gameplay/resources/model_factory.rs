@@ -7,7 +7,7 @@ use bevy::prelude::{
     Visibility,
 };
 use bevy::{ecs::system::SystemParam, utils::HashMap};
-use cdda::SpriteNumber;
+use cdda_json_files::SpriteNumber;
 use std::path::PathBuf;
 
 #[derive(Default, Resource)]

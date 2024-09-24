@@ -1,6 +1,6 @@
 use crate::gameplay::{AssetState, Level, OvermapManager, Overzone, RepetitionBlockExt, ZoneLevel};
 use bevy::{prelude::Resource, utils::HashMap};
-use cdda::{FlatVec, ObjectId, Overmap, OvermapLevel};
+use cdda_json_files::{FlatVec, ObjectId, Overmap, OvermapLevel};
 
 #[derive(Default, Resource)]
 pub(crate) struct ZoneLevelIds {

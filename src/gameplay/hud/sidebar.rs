@@ -5,7 +5,6 @@ use crate::common::{
 use crate::gameplay::hud::components::{LogDisplay, StatusDisplay};
 use crate::gameplay::hud::resources::{HudDefaults, StatusTextSections};
 use crate::{application::ApplicationState, gameplay::*};
-use ::cdda::{MoveCost, ObjectId};
 use bevy::diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin};
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::{
@@ -15,6 +14,7 @@ use bevy::prelude::{
     State, StateScoped, Style, Text, TextBundle, TextSection, TextStyle, UiRect, Val, Visibility,
     With, Without, World,
 };
+use cdda_json_files::{MoveCost, ObjectId};
 use std::{num::Saturating, time::Instant};
 use units::{Mass, Volume};
 

@@ -12,7 +12,7 @@ use bevy::prelude::{
     Changed, Commands, DespawnRecursiveExt, Entity, EventReader, In, NextState, ParamSet, Parent,
     Quat, Query, Res, ResMut, Transform, With, Without,
 };
-use cdda::ObjectId;
+use cdda_json_files::ObjectId;
 use std::time::Instant;
 use units::Duration;
 

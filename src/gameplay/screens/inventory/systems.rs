@@ -13,7 +13,7 @@ use crate::gameplay::{
     QueuedInstruction,
 };
 use bevy::{ecs::entity::EntityHashMap, prelude::*, utils::HashMap};
-use cdda::{ItemInfo, ObjectId};
+use cdda_json_files::{ItemInfo, ObjectId};
 use units::Timestamp;
 
 #[expect(clippy::needless_pass_by_value)]

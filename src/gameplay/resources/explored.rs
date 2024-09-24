@@ -1,7 +1,7 @@
 use crate::gameplay::cdda::{MapMemoryManager, OvermapBufferManager, RepetitionBlockExt};
 use crate::gameplay::{AssetState, Level, Overzone, Pos, SubzoneLevel, Zone, ZoneLevel};
 use bevy::{prelude::Resource, utils::HashMap};
-use cdda::OvermapBuffer;
+use cdda_json_files::OvermapBuffer;
 
 /// Ever seen by the player character
 #[derive(Copy, Clone, Debug, PartialEq)]

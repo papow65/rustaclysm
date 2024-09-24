@@ -1,6 +1,6 @@
 use crate::gameplay::{MeshInfo, TextureInfo, Transform2d};
 use bevy::{prelude::Vec2, utils::HashMap};
-use cdda::{CddaAtlas, ObjectId, SpriteNumber, TileInfo};
+use cdda_json_files::{CddaAtlas, ObjectId, SpriteNumber, TileInfo};
 use std::path::{Path, PathBuf};
 
 #[derive(Debug)]

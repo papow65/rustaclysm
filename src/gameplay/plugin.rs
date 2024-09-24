@@ -16,7 +16,7 @@ use bevy::prelude::{
     AssetEvent, FixedUpdate, IntoSystemConfigs, OnEnter, OnExit, Plugin, Update,
 };
 use bevy::{diagnostic::FrameTimeDiagnosticsPlugin, ecs::schedule::SystemConfigTupleMarker};
-use cdda::{Map, MapMemory, Overmap, OvermapBuffer};
+use cdda_json_files::{Map, MapMemory, Overmap, OvermapBuffer};
 
 pub(crate) struct GameplayPlugin;
 

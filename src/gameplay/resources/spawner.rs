@@ -1,11 +1,6 @@
 use crate::application::ApplicationState;
 use crate::common::{BAD_TEXT_COLOR, DEFAULT_TEXT_COLOR, GOOD_TEXT_COLOR, WARN_TEXT_COLOR};
 use crate::gameplay::*;
-use ::cdda::{
-    BashItem, BashItems, CddaAmount, CddaItem, CddaItemName, CddaVehicle, CddaVehiclePart,
-    CountRange, Field, FlatVec, ItemName, MoveCostMod, ObjectId, Repetition, RepetitionBlock, Sav,
-    Spawn, Submap, SubzoneOffset,
-};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{
     BuildChildren, Camera3dBundle, Color, Commands, DirectionalLight, DirectionalLightBundle,
@@ -14,6 +9,11 @@ use bevy::prelude::{
 };
 use bevy::render::camera::{PerspectiveProjection, Projection::Perspective};
 use bevy::render::view::RenderLayers;
+use cdda_json_files::{
+    BashItem, BashItems, CddaAmount, CddaItem, CddaItemName, CddaVehicle, CddaVehiclePart,
+    CountRange, Field, FlatVec, ItemName, MoveCostMod, ObjectId, Repetition, RepetitionBlock, Sav,
+    Spawn, Submap, SubzoneOffset,
+};
 use std::sync::Arc;
 use units::{Mass, Volume};
 

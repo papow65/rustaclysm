@@ -1,6 +1,6 @@
 use crate::gameplay::{cdda::asset_storage::AssetStorage, Overzone, ZoneLevel};
 use bevy::prelude::Commands;
-use cdda::{Map, MapMemory, Overmap, OvermapBuffer};
+use cdda_json_files::{Map, MapMemory, Overmap, OvermapBuffer};
 
 pub(super) fn create_cdda_resources(mut commands: Commands) {
     commands.insert_resource(AssetStorage::<Map, ZoneLevel>::default());

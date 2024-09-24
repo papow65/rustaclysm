@@ -4,7 +4,7 @@ use crate::gameplay::{
     ZoneLevelIds,
 };
 use bevy::prelude::{Commands, ResMut};
-use cdda::Sav;
+use cdda_json_files::Sav;
 
 pub(crate) fn remove_gameplay_resources(mut commands: Commands) {
     commands.remove_resource::<AppearanceCache>();
