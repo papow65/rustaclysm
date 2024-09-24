@@ -1,4 +1,4 @@
-use crate::common::{AsyncNew, Paths};
+use crate::common::{AssetPaths, AsyncNew};
 use crate::gameplay::{ObjectCategory, ObjectDefinition, TypeId};
 use bevy::{ecs::system::Resource, utils::HashMap};
 use cdda::{
@@ -31,7 +31,7 @@ pub(crate) struct Infos {
 
 impl Infos {
     fn literals_paths() -> Vec<PathBuf> {
-        let json_path = Paths::data_path().join("json");
+        let json_path = AssetPaths::data().join("json");
         let patterns = [
             json_path.join("field_type.json"),
             json_path.join("tool_qualities.json"),

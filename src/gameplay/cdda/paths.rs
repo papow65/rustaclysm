@@ -1,6 +1,43 @@
-use crate::common::{PathFor, SavPath, WorldPath};
 use crate::gameplay::{Overzone, ZoneLevel};
-use cdda::{Map, MapMemory, Overmap, OvermapBuffer};
+use cdda::{Map, MapMemory, Overmap, OvermapBuffer, Sav};
+use std::{any::type_name, fmt, fs::read_to_string, marker::PhantomData, path::PathBuf};
+
+pub(crate) struct PathFor<T>(pub(crate) PathBuf, PhantomData<T>);
+
+impl<T> PathFor<T> {
+    pub(crate) const fn init(path: PathBuf) -> Self {
+        Self(path, PhantomData)
+    }
+}
+
+impl<T> fmt::Debug for PathFor<T> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        "PathFor<".fmt(formatter)?;
+        type_name::<T>().fmt(formatter)?;
+        ">{".fmt(formatter)?;
+        self.0.fmt(formatter)?;
+        "}".fmt(formatter)
+    }
+}
+
+pub(crate) type WorldPath = PathFor<()>;
+
+pub(crate) type SavPath = PathFor<Sav>;
+
+impl TryFrom<&SavPath> for Sav {
+    type Error = serde_json::Error;
+
+    fn try_from(sav_path: &SavPath) -> Result<Self, Self::Error> {
+        read_to_string(&sav_path.0)
+            .ok()
+            .inspect(|_| {
+                println!("Loading {}...", sav_path.0.display());
+            })
+            .map(|s| String::from(s.split_at(s.find('\n').expect("Non-JSON first line")).1))
+            .map(|s| serde_json::from_str::<Self>(s.as_str()))
+            .expect(".sav file could not be read")
+    }
+}
 
 pub(super) type MapPath = PathFor<Map>;
 

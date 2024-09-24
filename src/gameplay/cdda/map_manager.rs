@@ -1,13 +1,12 @@
-use crate::common::{PathFor, Paths};
 use crate::gameplay::cdda::{asset_storage::AssetStorage, paths::MapPath};
-use crate::gameplay::{AssetState, SubzoneLevel, ZoneLevel};
+use crate::gameplay::{ActiveSav, AssetState, PathFor, SubzoneLevel, ZoneLevel};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{AssetId, AssetServer, Assets, Res, ResMut};
 use cdda::{Map, Submap};
 
 #[derive(SystemParam)]
 pub(crate) struct MapManager<'w> {
-    paths: Res<'w, Paths>,
+    active_sav: Res<'w, ActiveSav>,
     storage: ResMut<'w, AssetStorage<Map, ZoneLevel>>,
     asset_server: Res<'w, AssetServer>,
     assets: Res<'w, Assets<Map>>,
@@ -15,7 +14,7 @@ pub(crate) struct MapManager<'w> {
 
 impl<'w> MapManager<'w> {
     fn path(&self, zone_level: ZoneLevel) -> PathFor<Map> {
-        let world_map = self.paths.world_path();
+        let world_map = self.active_sav.world_path();
         MapPath::new(&world_map, zone_level)
     }
 

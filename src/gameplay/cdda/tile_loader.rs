@@ -1,4 +1,4 @@
-use crate::common::{AsyncNew, Paths};
+use crate::common::{AssetPaths, AsyncNew};
 use crate::gameplay::cdda::{Atlas, TextureInfo};
 use crate::gameplay::{Layers, Model, ObjectDefinition, SpriteLayer};
 use bevy::prelude::Resource;
@@ -15,7 +15,7 @@ pub(crate) struct TileLoader {
 
 impl TileLoader {
     pub(crate) fn try_new() -> Result<Self, Error> {
-        let tileset_path = Paths::gfx_path().join("UltimateCataclysm");
+        let tileset_path = AssetPaths::gfx().join("UltimateCataclysm");
         let file_path = tileset_path.join("tile_config.json");
         let file_contents = read_to_string(&file_path)?;
         let cdda_tile_config = serde_json::from_str::<CddaTileConfig>(file_contents.as_str())

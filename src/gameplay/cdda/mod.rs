@@ -1,3 +1,4 @@
+mod active_sav;
 mod asset_storage;
 mod atlas;
 mod infos;
@@ -15,6 +16,7 @@ mod systems;
 mod texture_info;
 mod tile_loader;
 
+pub(crate) use self::active_sav::ActiveSav;
 pub(crate) use self::atlas::Atlas;
 pub(crate) use self::infos::Infos;
 pub(crate) use self::map_loader::MapLoader;
@@ -24,6 +26,7 @@ pub(crate) use self::map_memory_manager::MapMemoryManager;
 pub(crate) use self::overmap_buffer_manager::OvermapBufferManager;
 pub(crate) use self::overmap_loader::OvermapLoader;
 pub(crate) use self::overmap_manager::OvermapManager;
+pub(crate) use self::paths::{PathFor, SavPath, WorldPath};
 pub(crate) use self::plugin::CddaPlugin;
 pub(crate) use self::repetition_block_ext::RepetitionBlockExt;
 pub(crate) use self::texture_info::TextureInfo;

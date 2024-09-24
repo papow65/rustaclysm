@@ -1,4 +1,4 @@
-use crate::{common::PathFor, gameplay::AssetState};
+use crate::gameplay::{AssetState, PathFor};
 use bevy::prelude::{Asset, AssetId, AssetServer, Assets, Handle, Resource};
 use bevy::utils::HashMap;
 

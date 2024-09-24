@@ -1,8 +1,8 @@
 use crate::common::{
-    Fonts, Paths, QuitButton, BAD_TEXT_COLOR, DEFAULT_TEXT_COLOR, GOOD_TEXT_COLOR, LARGE_SPACING,
-    MEDIUM_SPACING, PANEL_COLOR,
+    AssetPaths, Fonts, QuitButton, BAD_TEXT_COLOR, DEFAULT_TEXT_COLOR, GOOD_TEXT_COLOR,
+    LARGE_SPACING, MEDIUM_SPACING, PANEL_COLOR,
 };
-use crate::gameplay::GameplaySession;
+use crate::gameplay::{ActiveSav, GameplaySession};
 use crate::main_menu::components::{LoadButton, LoadButtonArea, MessageField, MessageWrapper};
 use crate::main_menu::load_error::LoadError;
 use crate::{application::ApplicationState, loading::ProgressScreenState};
@@ -207,7 +207,7 @@ pub(super) fn update_sav_files(
 fn list_saves() -> Result<Vec<PathBuf>, LoadError> {
     check_directory_structure()?;
 
-    let worlds_pattern = Paths::save_path().join("*");
+    let worlds_pattern = AssetPaths::save().join("*");
     let pattern = worlds_pattern
         .to_str()
         .expect("Path pattern should be valid UTF-8");
@@ -226,7 +226,7 @@ fn list_saves() -> Result<Vec<PathBuf>, LoadError> {
         Err(LoadError::new(
             format!(
                 "No Cataclysm: DDA worlds found to load under {}\nCreate a new world using Cataclysm: DDA to continue.",
-                Paths::save_path().display()
+                AssetPaths::save().display()
             )
         ))
     } else {
@@ -248,7 +248,7 @@ fn list_saves() -> Result<Vec<PathBuf>, LoadError> {
             Err(LoadError::new(
                 format!(
                     "No Cataclysm: DDA saves found to load in any world directory under {}\nCreate a new save file using Cataclysm: DDA to continue.",
-                    Paths::save_path().display()
+                    AssetPaths::save().display()
                 )
             ))
         } else {
@@ -258,16 +258,16 @@ fn list_saves() -> Result<Vec<PathBuf>, LoadError> {
 }
 
 fn check_directory_structure() -> Result<(), LoadError> {
-    if !Paths::asset_path().is_dir() {
+    if !AssetPaths::assets().is_dir() {
         return Err(LoadError::new(
-            format!("Directory '{}' not found.\nPlease run this application in the directory containing the 'assets' directory.", Paths::asset_path().display())
+            format!("Directory '{}' not found.\nPlease run this application in the directory containing the 'assets' directory.", AssetPaths::assets().display())
         ));
     }
 
-    for asset_subdir in [Paths::data_path(), Paths::gfx_path(), Paths::save_path()] {
+    for asset_subdir in [AssetPaths::data(), AssetPaths::gfx(), AssetPaths::save()] {
         if !asset_subdir.is_dir() {
             return Err(LoadError::new(
-                format!("Directory '{}/' not found.\nPlease make sure the '{}/' directory contains a copy of (or a symlink to) Cataclysm-DDA's '{}/' directory.", asset_subdir.display(), Paths::asset_path().display(), asset_subdir.file_name().expect("Named directory").to_str().expect("Valid path"))
+                format!("Directory '{}/' not found.\nPlease make sure the '{}/' directory contains a copy of (or a symlink to) Cataclysm-DDA's '{}/' directory.", asset_subdir.display(), AssetPaths::assets().display(), asset_subdir.file_name().expect("Named directory").to_str().expect("Valid path"))
             ));
         }
     }
@@ -337,7 +337,7 @@ pub(super) fn manage_main_menu_button_input(
         if *interaction == Interaction::Pressed {
             match (load_button, quit_button.is_some()) {
                 (Some(load_button), false) => {
-                    commands.insert_resource(Paths::new(&load_button.path));
+                    commands.insert_resource(ActiveSav::new(&load_button.path));
                     next_progress_state.set(ProgressScreenState::Loading);
                 }
                 (None, true) => {

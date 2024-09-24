@@ -1,7 +1,6 @@
-use crate::common::Paths;
 use crate::gameplay::{
-    AppearanceCache, CameraOffset, Expanded, Explored, Infos, InstructionQueue, Level, Location,
-    MeshCaches, Spawner, SubzoneLevelEntities, Timeouts, VisualizationUpdate, Zone,
+    ActiveSav, AppearanceCache, CameraOffset, Expanded, Explored, Infos, InstructionQueue, Level,
+    Location, MeshCaches, Spawner, SubzoneLevelEntities, Timeouts, VisualizationUpdate, Zone,
     ZoneLevelEntities, ZoneLevelIds,
 };
 use bevy::prelude::{Commands, Res};
@@ -26,7 +25,7 @@ pub(crate) fn create_independent_resources(mut commands: Commands) {
 
 /// Create resources that need other resources
 #[expect(clippy::needless_pass_by_value)]
-pub(crate) fn create_dependent_resources(mut commands: Commands, paths: Res<Paths>) {
+pub(crate) fn create_dependent_resources(mut commands: Commands, paths: Res<ActiveSav>) {
     let sav = Sav::try_from(&paths.sav_path()).expect("Loading sav file failed");
     let season_length = 91; // TODO load from worldoptions.json
     let timestamp = Timestamp::new(sav.turn, season_length);

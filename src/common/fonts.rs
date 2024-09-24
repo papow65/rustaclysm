@@ -1,4 +1,6 @@
-use crate::common::{Paths, HUGE_FONT_SIZE, LARGE_FONT_SIZE, LARGISH_FONT_SIZE, REGULAR_FONT_SIZE};
+use crate::common::{
+    AssetPaths, HUGE_FONT_SIZE, LARGE_FONT_SIZE, LARGISH_FONT_SIZE, REGULAR_FONT_SIZE,
+};
 use bevy::prelude::{AssetServer, Color, Font, Handle, Resource, TextStyle};
 
 #[derive(Resource)]
@@ -9,7 +11,7 @@ pub(crate) struct Fonts {
 impl Fonts {
     pub(crate) fn new(asset_server: &AssetServer) -> Self {
         Self {
-            fira: asset_server.load(Paths::fonts_path().join("FiraMono-Medium.otf")),
+            fira: asset_server.load(AssetPaths::fonts().join("FiraMono-Medium.otf")),
         }
     }
 

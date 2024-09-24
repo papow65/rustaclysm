@@ -1,5 +1,5 @@
 use crate::background::{component::Background, state::BackgroundState};
-use crate::common::Paths;
+use crate::common::AssetPaths;
 use bevy::prelude::{
     AssetServer, Commands, ImageBundle, PositionType, Query, Res, StateScoped, Style, UiImage, Val,
     Window, With, ZIndex,
@@ -16,7 +16,7 @@ pub(super) fn spawn_background(
     windows: Query<&Window>,
 ) {
     let background_scale = background_scale(windows.get_single().ok());
-    let background_image = asset_server.load(Paths::backgrounds_path().join(BACKGROUND_NAME));
+    let background_image = asset_server.load(AssetPaths::backgrounds().join(BACKGROUND_NAME));
     commands.spawn((
         ImageBundle {
             style: Style {

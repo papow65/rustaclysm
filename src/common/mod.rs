@@ -1,3 +1,4 @@
+mod asset_paths;
 mod async_resource_loader;
 mod colors;
 mod components;
@@ -5,7 +6,6 @@ mod fonts;
 mod key;
 mod log_transition;
 mod on_safe_event;
-mod paths;
 mod scrolling_list;
 mod selection_list;
 mod sizes;
@@ -13,6 +13,7 @@ mod slow;
 mod text;
 
 pub(crate) use self::{
+    asset_paths::AssetPaths,
     async_resource_loader::{load_async_resource, AsyncNew, AsyncResourceLoader},
     colors::{
         text_color, BAD_TEXT_COLOR, DEFAULT_BUTTON_COLOR, DEFAULT_TEXT_COLOR, FILTHY_COLOR,
@@ -23,7 +24,6 @@ pub(crate) use self::{
     key::{InputChange, Key, KeyChange, Keys},
     log_transition::log_transition_plugin,
     on_safe_event::on_safe_event,
-    paths::{PathFor, Paths, SavPath, WorldPath},
     scrolling_list::ScrollingList,
     selection_list::{SelectionList, StepDirection, StepSize},
     sizes::{
