@@ -1,5 +1,4 @@
-use crate::{Flags, ItemName, ObjectId};
-use bevy::utils::HashMap;
+use crate::{Flags, HashMap, ItemName, ObjectId};
 use serde::Deserialize;
 use std::sync::Arc;
 use units::{Mass, Volume};

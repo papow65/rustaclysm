@@ -1,15 +1,14 @@
-use crate::ObjectId;
-use crate::{At, AtVec, CddaItem, CddaVehicle, FieldVec, Repetition, RepetitionBlock, Spawn};
-use bevy::{asset::Asset, reflect::TypePath};
+use crate::{
+    At, AtVec, CddaItem, CddaVehicle, FieldVec, ObjectId, Repetition, RepetitionBlock, Spawn,
+};
 use serde::Deserialize;
 use std::sync::Arc;
 
 // Reference: https://github.com/CleverRaven/Cataclysm-DDA/blob/master/src/savegame_json.cpp
 
 /// Corresponds to a 'map' in CDDA. It defines the layout of a `ZoneLevel`.
-#[derive(Debug, Deserialize, Asset, TypePath)]
+#[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
-#[type_path = "cdda::world::Map"]
 pub struct Map(pub [Submap; 4]);
 
 #[derive(Debug, Deserialize)]

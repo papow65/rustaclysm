@@ -1,5 +1,6 @@
 mod active_sav;
 mod asset_storage;
+mod assets;
 mod atlas;
 mod infos;
 mod map_loader;
@@ -17,6 +18,7 @@ mod texture_info;
 mod tile_loader;
 
 pub(crate) use self::active_sav::ActiveSav;
+pub(crate) use self::assets::{MapAsset, MapMemoryAsset, OvermapAsset, OvermapBufferAsset};
 pub(crate) use self::atlas::Atlas;
 pub(crate) use self::infos::Infos;
 pub(crate) use self::map_loader::MapLoader;

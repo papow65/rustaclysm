@@ -1,13 +1,13 @@
 use crate::common::log_if_slow;
 use crate::gameplay::{
     DespawnSubzoneLevel, DespawnZoneLevel, Expanded, Explored, Focus, GameplaySession, Level,
-    MapManager, MapMemoryManager, MissingAsset, ObjectCategory, ObjectDefinition,
-    OvermapBufferManager, OvermapManager, Pos, Region, SeenFrom, SpawnSubzoneLevel, SpawnZoneLevel,
-    SubzoneLevel, SubzoneLevelEntities, SubzoneSpawner, UpdateZoneLevelVisibility, VisionDistance,
-    Zone, ZoneLevel, ZoneLevelEntities, ZoneLevelIds, ZoneRegion, ZoneSpawner,
+    MapAsset, MapManager, MapMemoryAsset, MapMemoryManager, MissingAsset, ObjectCategory,
+    ObjectDefinition, OvermapAsset, OvermapBufferAsset, OvermapBufferManager, OvermapManager, Pos,
+    Region, SeenFrom, SpawnSubzoneLevel, SpawnZoneLevel, SubzoneLevel, SubzoneLevelEntities,
+    SubzoneSpawner, UpdateZoneLevelVisibility, VisionDistance, Zone, ZoneLevel, ZoneLevelEntities,
+    ZoneLevelIds, ZoneRegion, ZoneSpawner,
 };
 use bevy::{ecs::system::SystemState, prelude::*};
-use cdda_json_files::{Map, MapMemory, Overmap, OvermapBuffer};
 use std::{cmp::Ordering, time::Instant};
 
 const MAX_EXPAND_DISTANCE: i32 = 10;
@@ -393,7 +393,7 @@ fn zone_level_visibility(
 }
 
 pub(crate) fn handle_map_events(
-    mut map_asset_events: EventReader<AssetEvent<Map>>,
+    mut map_asset_events: EventReader<AssetEvent<MapAsset>>,
     mut subzone_spawner: SubzoneSpawner,
     mut map_manager: MapManager,
     mut map_memory_manager: MapMemoryManager,
@@ -423,7 +423,7 @@ pub(crate) fn handle_map_events(
 
 #[expect(clippy::needless_pass_by_value)]
 pub(crate) fn handle_map_memory_events(
-    mut map_memory_asset_events: EventReader<AssetEvent<MapMemory>>,
+    mut map_memory_asset_events: EventReader<AssetEvent<MapMemoryAsset>>,
     mut spawn_subzone_level_writer: EventWriter<SpawnSubzoneLevel>,
     subzone_level_entities: Res<SubzoneLevelEntities>,
     expanded: Res<Expanded>,
@@ -449,8 +449,8 @@ pub(crate) fn handle_map_memory_events(
 
 #[expect(clippy::needless_pass_by_value)]
 pub(crate) fn handle_overmap_buffer_events(
-    mut overmap_buffer_events: EventReader<AssetEvent<OvermapBuffer>>,
-    overmap_buffer_assets: Res<Assets<OvermapBuffer>>,
+    mut overmap_buffer_events: EventReader<AssetEvent<OvermapBufferAsset>>,
+    overmap_buffer_assets: Res<Assets<OvermapBufferAsset>>,
     mut explored: ResMut<Explored>,
     overmap_buffer_manager: OvermapBufferManager,
 ) {
@@ -472,8 +472,8 @@ pub(crate) fn handle_overmap_buffer_events(
 
 #[expect(clippy::needless_pass_by_value)]
 pub(crate) fn handle_overmap_events(
-    mut overmap_events: EventReader<AssetEvent<Overmap>>,
-    overmap_assets: Res<Assets<Overmap>>,
+    mut overmap_events: EventReader<AssetEvent<OvermapAsset>>,
+    overmap_assets: Res<Assets<OvermapAsset>>,
     mut zone_level_ids: ResMut<ZoneLevelIds>,
     overmap_manager: OvermapManager,
 ) {

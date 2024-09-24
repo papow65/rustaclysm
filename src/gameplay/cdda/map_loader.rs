@@ -1,5 +1,6 @@
+use crate::gameplay::MapAsset;
 use bevy::asset::{io::Reader, AssetLoader, LoadContext};
-use cdda_json_files::{Error, Map};
+use cdda_json_files::Error;
 use futures_lite::AsyncReadExt;
 use std::{str::from_utf8, sync::Arc};
 
@@ -7,7 +8,7 @@ use std::{str::from_utf8, sync::Arc};
 pub(crate) struct MapLoader;
 
 impl AssetLoader for MapLoader {
-    type Asset = Map;
+    type Asset = MapAsset;
     type Settings = ();
     type Error = Error;
 
@@ -23,7 +24,7 @@ impl AssetLoader for MapLoader {
             .await
             .map_err(|err| Error::Io { _wrapped: err })?;
 
-        let map = serde_json::from_slice::<Map>(&bytes).map_err(|err| Error::Json {
+        let map = serde_json::from_slice::<MapAsset>(&bytes).map_err(|err| Error::Json {
             _wrapped: err,
             _file_path: load_context.path().to_path_buf(),
             _contents: Arc::from(from_utf8(&bytes[0..1000]).unwrap_or("(invalid UTF8)")),

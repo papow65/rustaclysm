@@ -1,4 +1,6 @@
-use crate::gameplay::{AssetState, Level, OvermapManager, Overzone, RepetitionBlockExt, ZoneLevel};
+use crate::gameplay::{
+    AssetState, Level, OvermapAsset, OvermapManager, Overzone, RepetitionBlockExt, ZoneLevel,
+};
 use bevy::{prelude::Resource, utils::HashMap};
 use cdda_json_files::{FlatVec, ObjectId, Overmap, OvermapLevel};
 
@@ -36,11 +38,11 @@ impl ZoneLevelIds {
         )
     }
 
-    pub(crate) fn load(&mut self, overzone: Overzone, overmap: &Overmap) {
+    pub(crate) fn load(&mut self, overzone: Overzone, overmap: &OvermapAsset) {
         if !self.loaded_overzones.contains(&overzone) {
             for level in Level::ALL {
                 self.names.extend(
-                    overmap.layers[level.index()]
+                    overmap.0.layers[level.index()]
                         .0
                         .load_as_overzone(overzone, level)
                         .into_iter()
@@ -51,8 +53,8 @@ impl ZoneLevelIds {
         }
     }
 
-    pub(crate) fn fallback_overmap() -> Overmap {
-        Overmap {
+    pub(crate) fn fallback_overmap() -> OvermapAsset {
+        OvermapAsset(Overmap {
             layers: [
                 OvermapLevel::all(ObjectId::new("deep_rock")),
                 OvermapLevel::all(ObjectId::new("deep_rock")),
@@ -91,6 +93,6 @@ impl ZoneLevelIds {
             mapgen_arg_index: None,
             joins_used: None,
             predecessors: None,
-        }
+        })
     }
 }

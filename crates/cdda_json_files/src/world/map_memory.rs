@@ -1,10 +1,9 @@
-use bevy::{asset::Asset, reflect::TypePath};
 use serde::de::{Deserialize, Deserializer, Error, SeqAccess, Visitor};
 use std::fmt;
 use std::sync::Arc;
 
 /// A player's memory of terrain on 8x8 suzones or 4x4 zones. Corresponds to a map memory ('.mmr') file in CDDA.
-#[derive(Debug, serde::Deserialize, Asset, TypePath)]
+#[derive(Debug, serde::Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct MapMemory(pub Vec<SubmapMemory>);
 

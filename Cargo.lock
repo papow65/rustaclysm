@@ -1188,9 +1188,10 @@ dependencies = [
 name = "cdda_json_files"
 version = "0.0.0"
 dependencies = [
- "bevy",
+ "ahash",
  "either",
  "fastrand",
+ "hashbrown",
  "serde",
  "serde_json",
  "units",

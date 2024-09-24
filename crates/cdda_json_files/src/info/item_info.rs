@@ -1,5 +1,4 @@
-use crate::{structure::MaybeFlatVec, Flags, ObjectId};
-use bevy::utils::HashMap;
+use crate::{structure::MaybeFlatVec, Flags, HashMap, ObjectId};
 use serde::Deserialize;
 use std::sync::Arc;
 use units::{Mass, Volume};

@@ -1,5 +1,4 @@
-use crate::ObjectId;
-use bevy::utils::HashMap;
+use crate::{HashMap, ObjectId};
 use serde::Deserialize;
 use std::sync::Arc;
 

@@ -11,7 +11,7 @@ use bevy::render::camera::{PerspectiveProjection, Projection::Perspective};
 use bevy::render::view::RenderLayers;
 use cdda_json_files::{
     BashItem, BashItems, CddaAmount, CddaItem, CddaItemName, CddaVehicle, CddaVehiclePart,
-    CountRange, Field, FlatVec, ItemName, MoveCostMod, ObjectId, Repetition, RepetitionBlock, Sav,
+    CountRange, Field, FlatVec, ItemName, MoveCostMod, ObjectId, Repetition, RepetitionBlock,
     Spawn, Submap, SubzoneOffset,
 };
 use std::sync::Arc;
@@ -21,7 +21,7 @@ use units::{Mass, Volume};
 pub(crate) struct Spawner<'w, 's> {
     pub(crate) commands: Commands<'w, 's>,
     pub(crate) explored: ResMut<'w, Explored>,
-    sav: Res<'w, Sav>,
+    active_sav: Res<'w, ActiveSav>,
     model_factory: ModelFactory<'w>,
 }
 
@@ -563,13 +563,14 @@ impl<'w, 's> Spawner<'w, 's> {
             .insert(StateScoped(ApplicationState::Gameplay))
             .id();
 
+        let sav = self.active_sav.sav();
         let player = self
             .spawn_character(
                 infos,
                 root,
                 spawn_pos.horizontal_offset(36, 56),
                 &ObjectId::new("human"),
-                Some(ObjectName::from_str(&self.sav.player.name, GOOD_TEXT_COLOR)),
+                Some(ObjectName::from_str(&sav.player.name, GOOD_TEXT_COLOR)),
             )
             .expect("Player character should be spawned");
         self.commands
@@ -821,6 +822,7 @@ impl<'w, 's> SubzoneSpawner<'w, 's> {
             {
                 let spawned_offset = SubzoneOffset::from(subzone_level);
                 for monster in overmap
+                    .0
                     .monster_map
                     .0
                     .iter()

@@ -1,12 +1,14 @@
 use crate::application::ApplicationState;
 use crate::common::{Fonts, DEFAULT_BUTTON_COLOR, DEFAULT_TEXT_COLOR};
-use crate::gameplay::{Explored, GameplayScreenState, SubzoneLevelEntities};
+use crate::gameplay::{
+    Explored, GameplayScreenState, MapAsset, MapMemoryAsset, OvermapAsset, OvermapBufferAsset,
+    SubzoneLevelEntities,
+};
 use crate::loading::ProgressScreenState;
 use bevy::prelude::{
     AlignItems, Assets, BuildChildren, Commands, JustifyContent, Local, NextState, NodeBundle,
     PositionType, Res, ResMut, State, StateScoped, Style, TextBundle, Val, ZIndex,
 };
-use cdda_json_files::{Map, Overmap, OvermapBuffer};
 
 #[expect(clippy::needless_pass_by_value)]
 pub(crate) fn spawn_loading(mut commands: Commands, fonts: Res<Fonts>) {
@@ -66,20 +68,22 @@ pub(crate) fn start_gameplay(
 pub(crate) fn finish_loading(
     mut next_progress_state: ResMut<NextState<ProgressScreenState>>,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
-    overmap_assets: Res<Assets<Overmap>>,
-    overmap_buffer_assets: Res<Assets<OvermapBuffer>>,
-    map_assets: Res<Assets<Map>>,
+    overmap_assets: Res<Assets<OvermapAsset>>,
+    overmap_buffer_assets: Res<Assets<OvermapBufferAsset>>,
+    map_assets: Res<Assets<MapAsset>>,
+    map_memory_assets: Res<Assets<MapMemoryAsset>>,
     explored: Res<Explored>,
     subzone_level_entities: Res<SubzoneLevelEntities>,
     mut counter: Local<u8>,
 ) {
     if 3 < *counter {
         println!(
-            "Loading status {}: {}, {}, {}, {:?}, and {:?}",
+            "Loading status {}: o {}, ob {}, m {}, mm {}, e {:?}, and sle {:?}",
             *counter,
             overmap_assets.len(),
             overmap_buffer_assets.len(),
             map_assets.len(),
+            map_memory_assets.len(),
             explored.loaded(),
             subzone_level_entities.loaded(),
         );

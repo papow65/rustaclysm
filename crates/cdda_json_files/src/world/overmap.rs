@@ -1,11 +1,9 @@
-use crate::ObjectId;
-use crate::{CddaAmount, FlatVec, RepetitionBlock};
-use bevy::{asset::Asset, reflect::TypePath, utils::HashMap};
+use crate::{CddaAmount, FlatVec, HashMap, ObjectId, RepetitionBlock};
 use serde::Deserialize;
 use std::sync::Arc;
 
 /// Corresponds to an 'overmap' in CDDA. It defines the layout of 180x180 `Zone`s.
-#[derive(Debug, Deserialize, Asset, TypePath)]
+#[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Overmap {
     pub layers: [OvermapLevel; Self::LEVEL_AMOUNT],

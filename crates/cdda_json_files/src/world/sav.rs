@@ -1,9 +1,8 @@
 use crate::CddaPlayer;
-use bevy::ecs::system::Resource;
 use serde::Deserialize;
 
 /// This represents a .sav file
-#[derive(Debug, Deserialize, Resource)]
+#[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Sav {
     pub achievements_tracker: serde_json::Value,

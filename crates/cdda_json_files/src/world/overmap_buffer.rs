@@ -1,9 +1,8 @@
 use crate::{Overmap, RepetitionBlock};
-use bevy::{asset::Asset, reflect::TypePath};
 use serde::Deserialize;
 
 /// Corresponds to an 'overmapbuffer' in CDDA. It defines the save-specific information of an `OverZone`.
-#[derive(Debug, Deserialize, Asset, TypePath)]
+#[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct OvermapBuffer {
     /// Visible on the overmap

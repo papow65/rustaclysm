@@ -1,6 +1,8 @@
-use crate::gameplay::{Overzone, ZoneLevel};
-use cdda_json_files::{Map, MapMemory, Overmap, OvermapBuffer, Sav};
-use std::{any::type_name, fmt, fs::read_to_string, marker::PhantomData, path::PathBuf};
+use crate::gameplay::{
+    MapAsset, MapMemoryAsset, OvermapAsset, OvermapBufferAsset, Overzone, ZoneLevel,
+};
+use cdda_json_files::Sav;
+use std::{any::type_name, fmt, marker::PhantomData, path::PathBuf};
 
 pub(crate) struct PathFor<T>(pub(crate) PathBuf, PhantomData<T>);
 
@@ -24,22 +26,7 @@ pub(crate) type WorldPath = PathFor<()>;
 
 pub(crate) type SavPath = PathFor<Sav>;
 
-impl TryFrom<&SavPath> for Sav {
-    type Error = serde_json::Error;
-
-    fn try_from(sav_path: &SavPath) -> Result<Self, Self::Error> {
-        read_to_string(&sav_path.0)
-            .ok()
-            .inspect(|_| {
-                println!("Loading {}...", sav_path.0.display());
-            })
-            .map(|s| String::from(s.split_at(s.find('\n').expect("Non-JSON first line")).1))
-            .map(|s| serde_json::from_str::<Self>(s.as_str()))
-            .expect(".sav file could not be read")
-    }
-}
-
-pub(super) type MapPath = PathFor<Map>;
+pub(super) type MapPath = PathFor<MapAsset>;
 
 impl MapPath {
     pub(super) fn new(world_path: &WorldPath, zone_level: ZoneLevel) -> Self {
@@ -61,7 +48,7 @@ impl MapPath {
     }
 }
 
-pub(super) type MapMemoryPath = PathFor<MapMemory>;
+pub(super) type MapMemoryPath = PathFor<MapMemoryAsset>;
 
 impl MapMemoryPath {
     pub(super) fn new(sav_path: &SavPath, zone_level: ZoneLevel) -> Self {
@@ -77,7 +64,7 @@ impl MapMemoryPath {
     }
 }
 
-pub(super) type OvermapPath = PathFor<Overmap>;
+pub(super) type OvermapPath = PathFor<OvermapAsset>;
 
 impl OvermapPath {
     pub(crate) fn new(world_path: &WorldPath, overzone: Overzone) -> Self {
@@ -89,7 +76,7 @@ impl OvermapPath {
     }
 }
 
-pub(super) type OvermapBufferPath = PathFor<OvermapBuffer>;
+pub(super) type OvermapBufferPath = PathFor<OvermapBufferAsset>;
 
 impl OvermapBufferPath {
     pub(crate) fn new(sav_path: &SavPath, overzone: Overzone) -> Self {

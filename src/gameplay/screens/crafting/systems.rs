@@ -7,8 +7,8 @@ use crate::gameplay::screens::crafting::components::{
 };
 use crate::gameplay::screens::crafting::resource::CraftingScreen;
 use crate::gameplay::{
-    Amount, BodyContainers, Clock, GameplayScreenState, Infos, InstructionQueue, LastSeen,
-    Location, ObjectCategory, ObjectDefinition, Player, Pos, QueuedInstruction,
+    ActiveSav, Amount, BodyContainers, Clock, GameplayScreenState, Infos, InstructionQueue,
+    LastSeen, Location, ObjectCategory, ObjectDefinition, Player, Pos, QueuedInstruction,
 };
 use bevy::prelude::*;
 use bevy::utils::HashMap;
@@ -138,7 +138,7 @@ pub(super) fn refresh_crafting_screen(
     location: Res<Location>,
     fonts: Res<Fonts>,
     infos: Res<Infos>,
-    sav: Res<Sav>,
+    active_sav: Res<ActiveSav>,
     mut crafting_screen: ResMut<CraftingScreen>,
     players: Query<(&Pos, &BodyContainers), With<Player>>,
     items_and_furniture: Query<(
@@ -162,7 +162,7 @@ pub(super) fn refresh_crafting_screen(
 
     let shown_recipes = shown_recipes(
         &infos,
-        &sav,
+        active_sav.sav(),
         &nearby_manuals,
         &nearby_qualities,
         &nearby_items,

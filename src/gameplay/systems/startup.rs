@@ -4,7 +4,6 @@ use crate::gameplay::{
     ZoneLevelEntities, ZoneLevelIds,
 };
 use bevy::prelude::{Commands, Res};
-use cdda_json_files::Sav;
 use units::Timestamp;
 
 /// Create resources that do not need other resources
@@ -25,19 +24,22 @@ pub(crate) fn create_independent_resources(mut commands: Commands) {
 
 /// Create resources that need other resources
 #[expect(clippy::needless_pass_by_value)]
-pub(crate) fn create_dependent_resources(mut commands: Commands, paths: Res<ActiveSav>) {
-    let sav = Sav::try_from(&paths.sav_path()).expect("Loading sav file failed");
+pub(crate) fn create_dependent_resources(mut commands: Commands, active_sav: Res<ActiveSav>) {
+    let sav = active_sav.sav();
     let season_length = 91; // TODO load from worldoptions.json
     let timestamp = Timestamp::new(sav.turn, season_length);
-
-    commands.insert_resource(sav);
     commands.insert_resource(Timeouts::new(timestamp));
 }
 
 #[expect(clippy::needless_pass_by_value)]
-pub(crate) fn spawn_initial_entities(infos: Res<Infos>, sav: Res<Sav>, mut spawner: Spawner) {
+pub(crate) fn spawn_initial_entities(
+    infos: Res<Infos>,
+    active_sav: Res<ActiveSav>,
+    mut spawner: Spawner,
+) {
     spawner.spawn_light();
 
+    let sav = active_sav.sav();
     let spawn_pos = Zone {
         x: i32::from(sav.om_x) * 180 + i32::from(sav.levx) / 2,
         z: i32::from(sav.om_y) * 180 + i32::from(sav.levy) / 2,

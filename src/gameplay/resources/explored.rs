@@ -1,7 +1,8 @@
 use crate::gameplay::cdda::{MapMemoryManager, OvermapBufferManager, RepetitionBlockExt};
-use crate::gameplay::{AssetState, Level, Overzone, Pos, SubzoneLevel, Zone, ZoneLevel};
+use crate::gameplay::{
+    AssetState, Level, OvermapBufferAsset, Overzone, Pos, SubzoneLevel, Zone, ZoneLevel,
+};
 use bevy::{prelude::Resource, utils::HashMap};
-use cdda_json_files::OvermapBuffer;
 
 /// Ever seen by the player character
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -53,10 +54,11 @@ impl Explored {
         self.pos.get(&pos) == Some(&true)
     }
 
-    pub(crate) fn load_buffer(&mut self, overzone: Overzone, overmap_buffer: &OvermapBuffer) {
+    pub(crate) fn load_buffer(&mut self, overzone: Overzone, overmap_buffer: &OvermapBufferAsset) {
         if !self.loaded_overzones.contains(&overzone) {
             for level in Level::GROUNDS {
                 let overmap = overmap_buffer
+                    .0
                     .visible
                     .get(level.index())
                     .expect("level missing")

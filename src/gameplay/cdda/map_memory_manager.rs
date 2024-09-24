@@ -1,15 +1,15 @@
 use crate::gameplay::cdda::{asset_storage::AssetStorage, paths::MapMemoryPath};
-use crate::gameplay::{ActiveSav, AssetState, SubzoneLevel, Zone, ZoneLevel};
+use crate::gameplay::{ActiveSav, AssetState, MapMemoryAsset, SubzoneLevel, Zone, ZoneLevel};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{AssetId, AssetServer, Assets, Res, ResMut};
-use cdda_json_files::{MapMemory, SubmapMemory};
+use cdda_json_files::SubmapMemory;
 
 #[derive(SystemParam)]
 pub(crate) struct MapMemoryManager<'w> {
     active_sav: Res<'w, ActiveSav>,
-    storage: ResMut<'w, AssetStorage<MapMemory, ZoneLevel>>,
+    storage: ResMut<'w, AssetStorage<MapMemoryAsset, ZoneLevel>>,
     asset_server: Res<'w, AssetServer>,
-    assets: Res<'w, Assets<MapMemory>>,
+    assets: Res<'w, Assets<MapMemoryAsset>>,
 }
 
 impl<'w> MapMemoryManager<'w> {
@@ -33,7 +33,7 @@ impl<'w> MapMemoryManager<'w> {
                 let index =
                     (subzone_level.z.rem_euclid(8) * 8 + subzone_level.x.rem_euclid(8)) as usize;
                 AssetState::Available {
-                    asset: &map_memory.0[index],
+                    asset: &map_memory.0 .0[index],
                 }
             }
             AssetState::Loading => AssetState::Loading,
@@ -41,7 +41,7 @@ impl<'w> MapMemoryManager<'w> {
         }
     }
 
-    pub(crate) fn base_zone_level(&self, handle: &AssetId<MapMemory>) -> Option<ZoneLevel> {
+    pub(crate) fn base_zone_level(&self, handle: &AssetId<MapMemoryAsset>) -> Option<ZoneLevel> {
         self.storage.region(handle).inspect(|zone_level| {
             assert!(
                 zone_level.zone.x.rem_euclid(4) == 0 && zone_level.zone.z.rem_euclid(4) == 0,

@@ -1,6 +1,4 @@
-use crate::ObjectId;
-use crate::{MaybeFlatVec, SpriteNumber};
-use bevy::utils::HashMap;
+use crate::{HashMap, MaybeFlatVec, ObjectId, SpriteNumber};
 use either::Either;
 use serde::Deserialize;
 

@@ -1,5 +1,4 @@
-use crate::{Alternative, RequiredQualities};
-use bevy::utils::HashMap;
+use crate::{Alternative, HashMap, RequiredQualities};
 use serde::Deserialize;
 use std::sync::Arc;
 

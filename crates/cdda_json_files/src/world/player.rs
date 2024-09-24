@@ -1,4 +1,4 @@
-use bevy::utils::HashMap;
+use crate::HashMap;
 use serde::Deserialize;
 use std::sync::Arc;
 

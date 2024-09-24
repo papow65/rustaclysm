@@ -1,5 +1,4 @@
-use crate::ItemName;
-use bevy::utils::HashMap;
+use crate::{HashMap, ItemName};
 use serde::Deserialize;
 use std::sync::Arc;
 

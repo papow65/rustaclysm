@@ -1,15 +1,14 @@
 use crate::common::log_if_slow;
 use crate::gameplay::{
     Accessible, Appearance, BaseSpeed, CurrentlyVisible, CurrentlyVisibleBuilder,
-    ElevationVisibility, Explored, Focus, GameplaySession, LastSeen, Player, Pos, SubzoneLevel,
-    ZoneLevel,
+    ElevationVisibility, Explored, Focus, GameplaySession, LastSeen, MapAsset, MapMemoryAsset,
+    OvermapAsset, OvermapBufferAsset, Player, Pos, SubzoneLevel, ZoneLevel,
 };
 use bevy::asset::UntypedAssetLoadFailedEvent;
 use bevy::prelude::{
     Assets, Camera, Changed, Children, Commands, EventReader, Font, GlobalTransform, Local, Mesh,
     ParallelCommands, Parent, Query, Res, ResMut, StandardMaterial, Visibility, With, Without,
 };
-use cdda_json_files::{Map, MapMemory, Overmap, OvermapBuffer};
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
@@ -188,10 +187,10 @@ pub(crate) fn update_visualization_on_item_move(
 
 pub(crate) fn count_assets(
     font_assets: Option<Res<Assets<Font>>>,
-    map_assets: Option<Res<Assets<Map>>>,
-    map_memory_assets: Option<Res<Assets<MapMemory>>>,
-    overmap_assets: Option<Res<Assets<Overmap>>>,
-    overmap_buffer_assets: Option<Res<Assets<OvermapBuffer>>>,
+    map_assets: Option<Res<Assets<MapAsset>>>,
+    map_memory_assets: Option<Res<Assets<MapMemoryAsset>>>,
+    overmap_assets: Option<Res<Assets<OvermapAsset>>>,
+    overmap_buffer_assets: Option<Res<Assets<OvermapBufferAsset>>>,
     materials: Option<Res<Assets<StandardMaterial>>>,
     meshes: Option<Res<Assets<Mesh>>>,
     mut last_counts: Local<Vec<usize>>,

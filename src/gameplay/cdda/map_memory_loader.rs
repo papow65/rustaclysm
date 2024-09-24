@@ -1,5 +1,5 @@
+use crate::gameplay::MapMemoryAsset;
 use bevy::asset::{io::Reader, AssetLoader, LoadContext};
-use cdda_json_files::MapMemory;
 use either::Either;
 use futures_lite::AsyncReadExt;
 use std::str::from_utf8;
@@ -8,7 +8,7 @@ use std::str::from_utf8;
 pub(crate) struct MapMemoryLoader;
 
 impl AssetLoader for MapMemoryLoader {
-    type Asset = MapMemory;
+    type Asset = MapMemoryAsset;
     type Settings = ();
     type Error = Either<std::io::Error, serde_json::Error>;
 
@@ -27,7 +27,7 @@ impl AssetLoader for MapMemoryLoader {
             })
             .map_err(Either::Left)?;
 
-        let map_memory = serde_json::from_slice::<MapMemory>(&bytes)
+        let map_memory = serde_json::from_slice::<MapMemoryAsset>(&bytes)
             .map_err(|e| {
                 eprintln!(
                     "Map memory json loading error: {:?} {:?} {e:?}",

@@ -7,8 +7,9 @@ use crate::gameplay::{
     events::EventPlugin, hud::HudPlugin, update_camera_offset, ActorPlugin, BaseScreenPlugin,
     CameraOffset, CddaPlugin, CharacterScreenPlugin, CraftingScreenPlugin, DeathScreenPlugin,
     DespawnSubzoneLevel, DespawnZoneLevel, ElevationVisibility, FocusPlugin, GameplayCounter,
-    GameplayScreenState, Infos, InventoryScreenPlugin, MenuScreenPlugin, RelativeSegments,
-    SpawnSubzoneLevel, SpawnZoneLevel, TileLoader, UpdateZoneLevelVisibility,
+    GameplayScreenState, Infos, InventoryScreenPlugin, MapAsset, MapMemoryAsset, MenuScreenPlugin,
+    OvermapAsset, OvermapBufferAsset, RelativeSegments, SpawnSubzoneLevel, SpawnZoneLevel,
+    TileLoader, UpdateZoneLevelVisibility,
 };
 use bevy::input::keyboard::KeyboardInput;
 use bevy::prelude::{
@@ -16,7 +17,6 @@ use bevy::prelude::{
     AssetEvent, FixedUpdate, IntoSystemConfigs, OnEnter, OnExit, Plugin, Update,
 };
 use bevy::{diagnostic::FrameTimeDiagnosticsPlugin, ecs::schedule::SystemConfigTupleMarker};
-use cdda_json_files::{Map, MapMemory, Overmap, OvermapBuffer};
 
 pub(crate) struct GameplayPlugin;
 
@@ -69,15 +69,16 @@ fn update_systems() -> impl IntoSystemConfigs<(SystemConfigTupleMarker, (), (), 
         (
             (
                 (
-                    handle_overmap_buffer_events.run_if(on_event::<AssetEvent<OvermapBuffer>>()),
-                    handle_overmap_events.run_if(on_event::<AssetEvent<Overmap>>()),
+                    handle_overmap_buffer_events
+                        .run_if(on_event::<AssetEvent<OvermapBufferAsset>>()),
+                    handle_overmap_events.run_if(on_event::<AssetEvent<OvermapAsset>>()),
                 ),
                 update_zone_levels_with_missing_assets
-                    .run_if(on_safe_event::<AssetEvent<OvermapBuffer>>()),
+                    .run_if(on_safe_event::<AssetEvent<OvermapBufferAsset>>()),
             )
                 .chain(),
-            handle_map_events.run_if(on_event::<AssetEvent<Map>>()),
-            handle_map_memory_events.run_if(on_event::<AssetEvent<MapMemory>>()),
+            handle_map_events.run_if(on_event::<AssetEvent<MapAsset>>()),
+            handle_map_memory_events.run_if(on_event::<AssetEvent<MapMemoryAsset>>()),
             (
                 spawn_subzones_for_camera,
                 (
