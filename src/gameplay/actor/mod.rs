@@ -9,18 +9,16 @@ mod query_data;
 mod stats;
 mod subject;
 
-pub(crate) use self::{
-    actions::{
-        Action, ActionIn, Attack, ChangePace, Close, ContinueCraft, ExamineItem, ItemAction,
-        MoveItem, Peek, Pickup, Pulp, Sleep, Smash, StartCraft, Stay, Step, Unwield, Wield,
-    },
-    breath::Breath,
-    faction::{Faction, Intelligence, LastEnemy},
-    impact::Impact,
-    planned_action::PlannedAction,
-    player::{Player, PlayerActionState},
-    plugin::ActorPlugin,
-    query_data::{Actor, ActorItem},
-    stats::{Aquatic, BaseSpeed, Health, Stamina, WalkingMode},
-    subject::Subject,
+pub(crate) use self::actions::{
+    Action, ActionIn, Attack, ChangePace, Close, ContinueCraft, ExamineItem, ItemAction, MoveItem,
+    Peek, Pickup, Pulp, Sleep, Smash, StartCraft, Stay, Step, Unwield, Wield,
 };
+pub(crate) use self::breath::Breath;
+pub(crate) use self::faction::{Faction, Intelligence, LastEnemy};
+pub(crate) use self::impact::Impact;
+pub(crate) use self::planned_action::PlannedAction;
+pub(crate) use self::player::{Player, PlayerActionState};
+pub(crate) use self::plugin::ActorPlugin;
+pub(crate) use self::query_data::{Actor, ActorItem};
+pub(crate) use self::stats::{Aquatic, BaseSpeed, Health, Stamina, WalkingMode};
+pub(crate) use self::subject::Subject;

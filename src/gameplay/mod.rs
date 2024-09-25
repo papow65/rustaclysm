@@ -11,14 +11,12 @@ mod resources;
 mod screens;
 mod systems;
 
-pub(crate) use self::{
-    actor::*,
-    cdda::*,
-    components::*,
-    core::*,
-    events::*,
-    focus::{Focus, FocusPlugin, FocusState},
-    plugin::GameplayPlugin,
-    resources::*,
-    screens::*,
-};
+pub(crate) use self::actor::*;
+pub(crate) use self::cdda::*;
+pub(crate) use self::components::*;
+pub(crate) use self::core::*;
+pub(crate) use self::events::*;
+pub(crate) use self::focus::{Focus, FocusPlugin, FocusState};
+pub(crate) use self::plugin::GameplayPlugin;
+pub(crate) use self::resources::*;
+pub(crate) use self::screens::*;

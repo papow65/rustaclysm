@@ -12,24 +12,22 @@ mod sizes;
 mod slow;
 mod text;
 
-pub(crate) use self::{
-    asset_paths::AssetPaths,
-    async_resource_loader::{load_async_resource, AsyncNew, AsyncResourceLoader},
-    colors::{
-        text_color, BAD_TEXT_COLOR, DEFAULT_BUTTON_COLOR, DEFAULT_TEXT_COLOR, FILTHY_COLOR,
-        GOOD_TEXT_COLOR, HOVERED_BUTTON_COLOR, PANEL_COLOR, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
-    },
-    components::QuitButton,
-    fonts::Fonts,
-    key::{InputChange, Key, KeyChange, Keys},
-    log_transition::log_transition_plugin,
-    on_safe_event::on_safe_event,
-    scrolling_list::ScrollingList,
-    selection_list::{SelectionList, StepDirection, StepSize},
-    sizes::{
-        HUGE_FONT_SIZE, LARGE_FONT_SIZE, LARGE_SPACING, LARGISH_FONT_SIZE, MEDIUM_SPACING,
-        REGULAR_FONT_SIZE, SMALL_SPACING,
-    },
-    slow::log_if_slow,
-    text::uppercase_first,
+pub(crate) use self::asset_paths::AssetPaths;
+pub(crate) use self::async_resource_loader::{load_async_resource, AsyncNew, AsyncResourceLoader};
+pub(crate) use self::colors::{
+    text_color, BAD_TEXT_COLOR, DEFAULT_BUTTON_COLOR, DEFAULT_TEXT_COLOR, FILTHY_COLOR,
+    GOOD_TEXT_COLOR, HOVERED_BUTTON_COLOR, PANEL_COLOR, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
 };
+pub(crate) use self::components::QuitButton;
+pub(crate) use self::fonts::Fonts;
+pub(crate) use self::key::{InputChange, Key, KeyChange, Keys};
+pub(crate) use self::log_transition::log_transition_plugin;
+pub(crate) use self::on_safe_event::on_safe_event;
+pub(crate) use self::scrolling_list::ScrollingList;
+pub(crate) use self::selection_list::{SelectionList, StepDirection, StepSize};
+pub(crate) use self::sizes::{
+    HUGE_FONT_SIZE, LARGE_FONT_SIZE, LARGE_SPACING, LARGISH_FONT_SIZE, MEDIUM_SPACING,
+    REGULAR_FONT_SIZE, SMALL_SPACING,
+};
+pub(crate) use self::slow::log_if_slow;
+pub(crate) use self::text::uppercase_first;
