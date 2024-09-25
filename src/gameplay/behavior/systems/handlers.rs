@@ -5,7 +5,7 @@ use crate::gameplay::{
     Actor, ActorEvent, Amount, Clock, ContainerLimits, Corpse, CorpseEvent, CorpseRaise, Damage,
     Faction, Fragment, GameplayScreenState, Healing, Health, Hierarchy, Infos, Integrity, Item,
     Life, Limited, MessageWriter, ObjectCategory, ObjectDefinition, ObjectName, Obstacle, Phrase,
-    Player, Pos, Spawner, Stamina, StaminaImpact, Subject, TerrainEvent, Toggle,
+    Player, Pos, Stamina, StaminaImpact, Subject, TerrainEvent, TileSpawner, Toggle,
     VisualizationUpdate, WalkingMode,
 };
 use bevy::prelude::{
@@ -42,7 +42,7 @@ pub(in super::super) fn toggle_doors(
     mut commands: Commands,
     mut toggle_reader: EventReader<TerrainEvent<Toggle>>,
     infos: Res<Infos>,
-    mut spawner: Spawner,
+    mut spawner: TileSpawner,
     mut visualization_update: ResMut<VisualizationUpdate>,
     terrain: Query<(Entity, &ObjectDefinition, &Pos, &Parent)>,
 ) {
@@ -329,7 +329,7 @@ pub(in super::super) fn update_damaged_terrain(
 #[expect(clippy::needless_pass_by_value)]
 pub(in super::super) fn spawn_broken_terrain(
     In(broken): In<Vec<(Entity, Pos, ObjectDefinition)>>,
-    mut spawner: Spawner,
+    mut spawner: TileSpawner,
     infos: Res<Infos>,
 ) {
     let start = Instant::now();

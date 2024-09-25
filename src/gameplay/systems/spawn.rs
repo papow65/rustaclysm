@@ -380,7 +380,7 @@ fn zone_level_visibility(
         && zone_level.subzone_levels().iter().all(|subzone_level| {
             visible_region.contains_zone_level(ZoneLevel::from(*subzone_level))
                 && zone_spawner
-                    .spawner
+                    .tile_spawner
                     .explored
                     .has_zone_level_been_seen(&mut zone_spawner.overmap_buffer_manager, zone_level)
                     .is_some_and(|seen_from| seen_from != SeenFrom::Never)
@@ -406,7 +406,7 @@ pub(crate) fn handle_map_events(
 
             for subzone_level in zone_level.subzone_levels() {
                 if subzone_spawner
-                    .subzone_level_entities
+                    .subzone_level_entities()
                     .get(subzone_level)
                     .is_none()
                 {
@@ -509,7 +509,7 @@ pub(crate) fn update_zone_levels_with_missing_assets(
 
     for (entity, &zone_level) in &zone_levels {
         let Some(seen_from) = zone_spawner
-            .spawner
+            .tile_spawner
             .explored
             .has_zone_level_been_seen(&mut zone_spawner.overmap_buffer_manager, zone_level)
         else {
@@ -538,7 +538,7 @@ pub(crate) fn update_zone_levels_with_missing_assets(
             &child_visibility,
         );
         zone_spawner
-            .spawner
+            .tile_spawner
             .commands
             .entity(entity)
             .remove::<MissingAsset>();

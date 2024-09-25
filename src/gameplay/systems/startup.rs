@@ -1,6 +1,6 @@
 use crate::gameplay::{
     ActiveSav, AppearanceCache, CameraOffset, Expanded, Explored, Infos, InstructionQueue, Level,
-    Location, MeshCaches, Spawner, SubzoneLevelEntities, Timeouts, VisualizationUpdate, Zone,
+    Location, MeshCaches, SubzoneLevelEntities, TileSpawner, Timeouts, VisualizationUpdate, Zone,
     ZoneLevelEntities, ZoneLevelIds,
 };
 use bevy::prelude::{Commands, Res};
@@ -35,7 +35,7 @@ pub(crate) fn create_dependent_resources(mut commands: Commands, active_sav: Res
 pub(crate) fn spawn_initial_entities(
     infos: Res<Infos>,
     active_sav: Res<ActiveSav>,
-    mut spawner: Spawner,
+    mut spawner: TileSpawner,
 ) {
     spawner.spawn_light();
 
