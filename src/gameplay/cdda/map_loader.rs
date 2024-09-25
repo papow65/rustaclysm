@@ -1,6 +1,6 @@
+use crate::gameplay::cdda::error::Error;
 use crate::gameplay::MapAsset;
 use bevy::asset::{io::Reader, AssetLoader, LoadContext};
-use cdda_json_files::Error;
 use futures_lite::AsyncReadExt;
 use std::{str::from_utf8, sync::Arc};
 

@@ -1,4 +1,3 @@
-mod error;
 mod hashmap;
 mod info;
 mod object_id;
@@ -6,7 +5,6 @@ mod structure;
 mod tile;
 mod world;
 
-pub use self::error::Error;
 pub use self::hashmap::HashMap;
 pub use self::info::*;
 pub use self::object_id::ObjectId;

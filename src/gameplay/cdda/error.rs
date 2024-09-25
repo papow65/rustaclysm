@@ -1,9 +1,9 @@
-use crate::SpriteNumber;
+use cdda_json_files::SpriteNumber;
 use std::fmt::{self, Display};
 use std::{error::Error as StdError, io, path::PathBuf, sync::Arc};
 
 #[derive(Debug)]
-pub enum Error {
+pub(crate) enum Error {
     UnknownSpriteNumber {
         _number: SpriteNumber,
     },

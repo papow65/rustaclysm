@@ -2,6 +2,7 @@ mod active_sav;
 mod asset_storage;
 mod assets;
 mod atlas;
+mod error;
 mod infos;
 mod map_loader;
 mod map_manager;
