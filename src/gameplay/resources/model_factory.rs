@@ -1,6 +1,6 @@
 use crate::gameplay::{
     Appearance, Infos, LastSeen, Layers, Model, ModelShape, ObjectDefinition, SpriteOrientation,
-    TileLoader,
+    TileLoader, TileVariant,
 };
 use bevy::prelude::{
     AssetServer, Assets, Handle, Mesh, PbrBundle, Res, ResMut, Resource, StandardMaterial,
@@ -81,7 +81,7 @@ impl<'w> ModelFactory<'w> {
     pub(crate) fn get_single_pbr_bundle(&mut self, definition: &ObjectDefinition) -> PbrBundle {
         let models = self
             .loader
-            .get_models(definition, &self.infos.variants(definition));
+            .get_models(definition, &self.infos.variants(definition), None);
         assert!(models.overlay.is_none(), "{models:?}");
         self.get_pbr_bundle(&models.base, Visibility::Hidden, false)
     }
@@ -91,10 +91,11 @@ impl<'w> ModelFactory<'w> {
         definition: &ObjectDefinition,
         visibility: Visibility,
         shading: bool,
+        tile_variant: Option<TileVariant>,
     ) -> Layers<(PbrBundle, Appearance)> {
-        let models = self
-            .loader
-            .get_models(definition, &self.infos.variants(definition));
+        let models =
+            self.loader
+                .get_models(definition, &self.infos.variants(definition), tile_variant);
         models.map_mut(|model| {
             (
                 self.get_pbr_bundle(&model, visibility, shading),

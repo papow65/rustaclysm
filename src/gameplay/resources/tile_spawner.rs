@@ -3,9 +3,9 @@ use crate::common::{BAD_TEXT_COLOR, DEFAULT_TEXT_COLOR, GOOD_TEXT_COLOR, WARN_TE
 use crate::gameplay::{
     Accessible, ActiveSav, Amount, Aquatic, BaseSpeed, BodyContainers, CameraBase, Closeable,
     Containable, Craft, ExamineCursor, Explored, Faction, Filthy, HealingDuration, Health, Hurdle,
-    Infos, Integrity, LastSeen, LevelOffset, Life, Limited, Melee, ModelFactory, ObjectCategory,
-    ObjectDefinition, ObjectName, Obstacle, Opaque, OpaqueFloor, Openable, Player, Pos, PosOffset,
-    StairsDown, StairsUp, Stamina, Vehicle, VehiclePart, WalkingMode,
+    Infos, Integrity, LastSeen, LevelOffset, Life, Limited, LocalTerrain, Melee, ModelFactory,
+    ObjectCategory, ObjectDefinition, ObjectName, Obstacle, Opaque, OpaqueFloor, Openable, Player,
+    Pos, PosOffset, StairsDown, StairsUp, Stamina, TileVariant, Vehicle, VehiclePart, WalkingMode,
 };
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{
@@ -40,13 +40,13 @@ impl<'w, 's> TileSpawner<'w, 's> {
         infos: &Infos,
         subzone_level_entity: Entity,
         pos: Pos,
-        terrain_id: &ObjectId,
+        local_terrain: &LocalTerrain,
         furniture_ids: impl Iterator<Item = &'a ObjectId>,
         item_repetitions: impl Iterator<Item = &'a Vec<Repetition<CddaItem>>>,
         spawns: impl Iterator<Item = &'a Spawn>,
         fields: impl Iterator<Item = &'a FlatVec<Field, 3>>,
     ) {
-        self.spawn_terrain(infos, subzone_level_entity, pos, terrain_id);
+        self.spawn_terrain(infos, subzone_level_entity, pos, local_terrain);
 
         for id in furniture_ids {
             self.spawn_furniture(infos, subzone_level_entity, pos, id);
@@ -102,7 +102,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
             category: ObjectCategory::Character,
             id: id.clone(),
         };
-        let entity = self.spawn_object(parent, pos, definition, object_name);
+        let entity = self.spawn_object(parent, pos, definition, object_name, None);
         let mut entity = self.commands.entity(entity);
         entity.insert((
             Life,
@@ -169,7 +169,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
             category: ObjectCategory::Field,
             id: id.clone(),
         };
-        self.spawn_object(parent, pos, definition, object_name);
+        self.spawn_object(parent, pos, definition, object_name, None);
     }
 
     pub(crate) fn spawn_item(
@@ -195,7 +195,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
             item_info.name.clone(),
             item_category_text_color(&item_info.category),
         );
-        let object_entity = self.spawn_object(parent, pos, definition, object_name);
+        let object_entity = self.spawn_object(parent, pos, definition, object_name, None);
 
         let (volume, mass) = match &item.corpse {
             Some(corpse_id) if corpse_id != &ObjectId::new("mon_null") => {
@@ -282,7 +282,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
             id: id.clone(),
         };
         let object_name = ObjectName::new(furniture_info.name.clone(), DEFAULT_TEXT_COLOR);
-        let object_entity = self.spawn_object(parent, pos, definition, object_name);
+        let object_entity = self.spawn_object(parent, pos, definition, object_name, None);
 
         if !furniture_info.flags.transparent() {
             self.commands.entity(object_entity).insert(Opaque);
@@ -306,23 +306,37 @@ impl<'w, 's> TileSpawner<'w, 's> {
         }
     }
 
-    pub(crate) fn spawn_terrain(&mut self, infos: &Infos, parent: Entity, pos: Pos, id: &ObjectId) {
-        let Some(terrain_info) = infos.try_terrain(id) else {
-            eprintln!("No info found for terrain {:?}", &id);
+    pub(crate) fn spawn_terrain(
+        &mut self,
+        infos: &Infos,
+        parent: Entity,
+        pos: Pos,
+        local_terrain: &LocalTerrain,
+    ) {
+        let Some(terrain_info) = infos.try_terrain(&local_terrain.id) else {
+            eprintln!("No info found for terrain {:?}", local_terrain.id);
             return;
         };
 
-        if id == &ObjectId::new("t_open_air") || id == &ObjectId::new("t_open_air_rooved") {
+        if local_terrain.id == ObjectId::new("t_open_air")
+            || local_terrain.id == ObjectId::new("t_open_air_rooved")
+        {
             // Don't spawn air terrain to keep the entity count low
             return;
         }
 
         let definition = &ObjectDefinition {
             category: ObjectCategory::Terrain,
-            id: id.clone(),
+            id: local_terrain.id.clone(),
         };
         let object_name = ObjectName::new(terrain_info.name.clone(), DEFAULT_TEXT_COLOR);
-        let object_entity = self.spawn_object(parent, pos, definition, object_name);
+        let object_entity = self.spawn_object(
+            parent,
+            pos,
+            definition,
+            object_name,
+            Some(local_terrain.variant),
+        );
 
         if terrain_info.move_cost.accessible() {
             if terrain_info.close.is_some() {
@@ -376,7 +390,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
         };
         let object_name = ObjectName::from_str(&vehicle.name, DEFAULT_TEXT_COLOR);
 
-        let entity = self.spawn_object(parent, pos, definition, object_name);
+        let entity = self.spawn_object(parent, pos, definition, object_name, None);
         self.commands.entity(entity).insert((
             Vehicle,
             pos,
@@ -394,33 +408,35 @@ impl<'w, 's> TileSpawner<'w, 's> {
         parent_pos: Pos,
         part: &CddaVehiclePart,
     ) {
-        let Some(info) = infos.try_vehicle_part(&part.id) else {
+        let Some(part_info) = infos.try_vehicle_part(&part.id) else {
             eprintln!(
                 "No info found for vehicle part {:?}. Spawning skipped",
                 &part.id
             );
             return;
         };
-
-        let Some(name) = info
-            .name
-            .as_ref()
-            .or_else(|| infos.try_item(&info.item).map(|item| &item.name))
-        else {
+        let Some(item_info) = infos.try_item(&part_info.item) else {
             eprintln!(
                 "No info found for item {:?} from vehicle part {:?}. Spawning skipped",
-                &info.item, &part.id
+                &part_info.item, &part.id
             );
             return;
         };
 
+        let name = part_info.name.as_ref().unwrap_or(&item_info.name);
         let pos = parent_pos.horizontal_offset(part.mount_dx, part.mount_dy);
         let definition = &ObjectDefinition {
             category: ObjectCategory::VehiclePart,
             id: part.id.clone(),
         };
         let object_name = ObjectName::new(name.clone(), DEFAULT_TEXT_COLOR);
-        let entity = self.spawn_object(parent, pos, definition, object_name);
+
+        let variant = part
+            .base
+            .broken()
+            .then_some(TileVariant::Broken)
+            .or_else(|| part.open.then_some(TileVariant::Open));
+        let entity = self.spawn_object(parent, pos, definition, object_name, variant);
         self.commands.entity(entity).insert(VehiclePart {
             offset: PosOffset {
                 x: part.mount_dx,
@@ -430,7 +446,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
             item: part.base.clone(),
         });
 
-        if info.flags.obstacle() {
+        if part_info.flags.obstacle() {
             self.commands.entity(entity).insert(Obstacle);
         }
     }
@@ -441,6 +457,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
         pos: Pos,
         definition: &ObjectDefinition,
         object_name: ObjectName,
+        tile_variant: Option<TileVariant>,
     ) -> Entity {
         //dbg!(&parent);
         //dbg!(pos);
@@ -462,7 +479,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
         } else {
             Some(
                 self.model_factory
-                    .get_layers(definition, Visibility::Inherited, true)
+                    .get_layers(definition, Visibility::Inherited, true, tile_variant)
                     .map(|(mut pbr_bundle, apprearance)| {
                         pbr_bundle.material = if last_seen == LastSeen::Never {
                             apprearance.material(&LastSeen::Currently)
@@ -664,7 +681,8 @@ impl<'w, 's> TileSpawner<'w, 's> {
                 ObjectCategory::Terrain,
                 "The terrain field requires a terrain category"
             );
-            self.spawn_terrain(infos, parent_entity, pos, terrain_id);
+            let local_terrain = LocalTerrain::unconnected(terrain_id.clone());
+            self.spawn_terrain(infos, parent_entity, pos, &local_terrain);
         } else if let Some(furniture_id) = &bash.furn_set {
             assert_eq!(
                 definition.category,

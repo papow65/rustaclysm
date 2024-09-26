@@ -17,6 +17,7 @@ mod repetition_block_ext;
 mod systems;
 mod texture_info;
 mod tile_loader;
+mod tile_variant;
 
 pub(crate) use self::active_sav::ActiveSav;
 pub(crate) use self::assets::{MapAsset, MapMemoryAsset, OvermapAsset, OvermapBufferAsset};
@@ -34,3 +35,4 @@ pub(crate) use self::plugin::CddaPlugin;
 pub(crate) use self::repetition_block_ext::RepetitionBlockExt;
 pub(crate) use self::texture_info::TextureInfo;
 pub(crate) use self::tile_loader::TileLoader;
+pub(crate) use self::tile_variant::TileVariant;

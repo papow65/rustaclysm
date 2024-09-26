@@ -85,7 +85,7 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
         let pbr_bundles = self
             .tile_spawner
             .model_factory()
-            .get_layers(definition, *child_visibiltiy, false)
+            .get_layers(definition, *child_visibiltiy, false, None)
             .map(|(pbr, _)| (pbr, RenderLayers::layer(2)));
 
         self.tile_spawner

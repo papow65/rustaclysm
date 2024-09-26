@@ -1,9 +1,11 @@
 use crate::common::{AssetPaths, AsyncNew};
 use crate::gameplay::cdda::{error::Error, Atlas, TextureInfo};
-use crate::gameplay::{Layers, Model, ObjectDefinition, SpriteLayer};
+use crate::gameplay::{Layers, Model, ObjectDefinition, SpriteLayer, TileVariant};
 use bevy::prelude::Resource;
 use bevy::utils::{Entry, HashMap};
-use cdda_json_files::{CddaTileConfig, ObjectId, SpriteNumber, TileInfo};
+use cdda_json_files::{
+    CddaTileConfig, CddaTileVariant, MaybeFlatVec, ObjectId, SpriteNumber, SpriteNumbers, TileInfo,
+};
 use std::{fs::read_to_string, sync::Arc};
 
 #[derive(Resource)]
@@ -71,9 +73,12 @@ impl TileLoader {
     pub(crate) fn get_models(
         &self,
         definition: &ObjectDefinition,
-        variants: &[ObjectId],
+        id_variants: &[ObjectId],
+        tile_variant: Option<TileVariant>,
     ) -> Layers<Model> {
-        let (foreground, background) = variants
+        let cdda_tile_variant: Option<CddaTileVariant> = tile_variant.map(Into::into);
+
+        let (multitile, foregrounds, backgrounds) = id_variants
             .iter()
             .find_map(|variant| self.tiles.get(variant))
             .unwrap_or_else(|| {
@@ -82,10 +87,30 @@ impl TileLoader {
                     .get(&ObjectId::new("unknown"))
                     .expect("Tile should be found")
             })
-            .sprite_numbers();
+            .sprite_numbers(&cdda_tile_variant);
         //if tile_name.0.as_str() != "t_dirt" && !tile_name.0.starts_with("t_grass") {
         //    println!("{tile_name:?} {foreground:?} {background:?}");
         //}
+
+        let foreground = if let (true, Some(tile_variant), SpriteNumbers::MaybeFlat(MaybeFlatVec(vec))) =
+            (multitile, tile_variant, foregrounds)
+        {
+            if let Some(expected_legth) = tile_variant.expected_length() {
+                if vec.len() != expected_legth {
+                    eprintln!(
+                        "Expected {expected_legth} variants for {tile_variant:?} tiles of {definition:?}, but got {:?}",
+                        &vec
+                    );
+                }
+            }
+
+            tile_variant.index().and_then(|index| vec.get(index))
+        } else {
+            None
+        }
+        .copied()
+        .or_else(|| foregrounds.random());
+        let background = backgrounds.random();
 
         let foreground_model = self.to_model(foreground, definition, SpriteLayer::Front);
         let background_model = self.to_model(background, definition, SpriteLayer::Back);
@@ -100,7 +125,7 @@ impl TileLoader {
                 overlay: None,
             },
             (None, None) => {
-                panic!("No foreground or background for {definition:?} and {variants:?}");
+                panic!("No foreground or background for {definition:?} and {id_variants:?}");
             }
         }
     }

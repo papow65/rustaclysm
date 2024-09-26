@@ -49,6 +49,14 @@ pub struct CddaItem {
     pub degradation: Option<u32>,
 }
 
+impl CddaItem {
+    pub fn broken(&self) -> bool {
+        const BROKEN_DAMAGE: i64 = 4000; // Based on itype.h:1311
+
+        self.damaged.is_some_and(|d| BROKEN_DAMAGE <= d)
+    }
+}
+
 impl From<ObjectId> for CddaItem {
     fn from(typeid: ObjectId) -> Self {
         Self {

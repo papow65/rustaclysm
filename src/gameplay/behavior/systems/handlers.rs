@@ -4,9 +4,9 @@ use crate::common::log_if_slow;
 use crate::gameplay::{
     Actor, ActorEvent, Amount, Clock, ContainerLimits, Corpse, CorpseEvent, CorpseRaise, Damage,
     Faction, Fragment, GameplayScreenState, Healing, Health, Hierarchy, Infos, Integrity, Item,
-    Life, Limited, MessageWriter, ObjectCategory, ObjectDefinition, ObjectName, Obstacle, Phrase,
-    Player, Pos, Stamina, StaminaImpact, Subject, TerrainEvent, TileSpawner, Toggle,
-    VisualizationUpdate, WalkingMode,
+    Life, Limited, LocalTerrain, MessageWriter, ObjectCategory, ObjectDefinition, ObjectName,
+    Obstacle, Phrase, Player, Pos, Stamina, StaminaImpact, Subject, TerrainEvent, TileSpawner,
+    Toggle, VisualizationUpdate, WalkingMode,
 };
 use bevy::prelude::{
     Changed, Commands, DespawnRecursiveExt, Entity, EventReader, In, NextState, ParamSet, Parent,
@@ -57,7 +57,8 @@ pub(in super::super) fn toggle_doors(
             Toggle::Open => terrain_info.open.as_ref().expect("Openable"),
             Toggle::Close => terrain_info.close.as_ref().expect("Closeable"),
         };
-        spawner.spawn_terrain(&infos, parent.get(), pos, toggled_id);
+        let local_terrain = LocalTerrain::unconnected(toggled_id.clone());
+        spawner.spawn_terrain(&infos, parent.get(), pos, &local_terrain);
         *visualization_update = VisualizationUpdate::Forced;
     }
 

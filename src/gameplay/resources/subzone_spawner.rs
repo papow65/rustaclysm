@@ -1,13 +1,12 @@
 use crate::application::ApplicationState;
 use crate::gameplay::{
-    AssetState, Infos, LevelOffset, MapManager, MapMemoryManager, OvermapManager, Overzone,
-    PosOffset, RepetitionBlockExt, SubzoneLevel, SubzoneLevelEntities, TileSpawner, ZoneLevel,
-    ZoneLevelIds,
+    AssetState, Infos, LevelOffset, LocalTerrain, MapManager, MapMemoryManager, OvermapManager,
+    Overzone, PosOffset, RepetitionBlockExt, SubzoneLevel, SubzoneLevelEntities, TileSpawner,
+    ZoneLevel, ZoneLevelIds,
 };
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{Res, ResMut, SpatialBundle, StateScoped};
-use cdda_json_files::FlatVec;
-use cdda_json_files::{CddaAmount, ObjectId, RepetitionBlock, Submap, SubzoneOffset};
+use cdda_json_files::{CddaAmount, FlatVec, ObjectId, RepetitionBlock, Submap, SubzoneOffset};
 
 #[derive(SystemParam)]
 pub(crate) struct SubzoneSpawner<'w, 's> {
@@ -85,7 +84,7 @@ impl<'w, 's> SubzoneSpawner<'w, 's> {
                     };
                     let pos = base_pos.horizontal_offset(x, z);
                     //dbg!("{pos:?}");
-                    let terrain_id = *terrain.get(&pos).expect("Terrain id should be found");
+                    let local_terrain = LocalTerrain::at(&terrain, pos);
                     let furniture_ids = submap.furniture.iter().filter_map(|at| pos_offset.get(at));
                     let item_repetitions =
                         submap.items.0.iter().filter_map(|at| pos_offset.get(at));
@@ -98,7 +97,7 @@ impl<'w, 's> SubzoneSpawner<'w, 's> {
                         &self.infos,
                         subzone_level_entity,
                         pos,
-                        terrain_id,
+                        &local_terrain,
                         furniture_ids,
                         item_repetitions,
                         spawns,

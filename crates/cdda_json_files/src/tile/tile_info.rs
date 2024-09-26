@@ -4,14 +4,14 @@ use serde::Deserialize;
 
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
-struct WeightedSpriteNumbers {
+pub struct WeightedSpriteNumbers {
     sprite: MaybeFlatVec<SpriteNumber>,
     weight: u16,
 }
 
 #[derive(Clone, Debug, Deserialize)]
 #[serde(untagged)]
-enum SpriteNumbers {
+pub enum SpriteNumbers {
     MaybeFlat(MaybeFlatVec<SpriteNumber>),
     Weighted(Vec<WeightedSpriteNumbers>),
 }
@@ -28,7 +28,7 @@ impl SpriteNumbers {
         .into_iter()
     }
 
-    fn random(&self) -> Option<SpriteNumber> {
+    pub fn random(&self) -> Option<SpriteNumber> {
         match self {
             Self::MaybeFlat(m) => fastrand::choice(m.0.iter()).copied(),
             Self::Weighted(w) => {
@@ -93,7 +93,6 @@ struct BasicTile {
     foreground: SpriteNumbers,
     background: SpriteNumbers,
 
-    #[expect(unused)]
     multitile: bool,
     #[expect(unused)]
     rotates: bool,
@@ -118,9 +117,7 @@ impl From<CddaBasicTile> for BasicTile {
 pub struct TileInfo {
     ids: Vec<ObjectId>,
     base: BasicTile,
-
-    #[expect(unused)]
-    variants: HashMap<ObjectId, BasicTile>,
+    variants: HashMap<CddaTileVariant, BasicTile>,
 }
 
 impl TileInfo {
@@ -128,8 +125,26 @@ impl TileInfo {
         self.ids.iter().cloned()
     }
 
-    pub fn sprite_numbers(&self) -> (Option<SpriteNumber>, Option<SpriteNumber>) {
-        (self.base.foreground.random(), self.base.background.random())
+    pub fn sprite_numbers(
+        &self,
+        tile_variant: &Option<CddaTileVariant>,
+    ) -> (bool, &SpriteNumbers, &SpriteNumbers) {
+        if self.base.multitile {
+            if let Some(tile_variant) = tile_variant {
+                if let Some(variant) = self.variants.get(tile_variant) {
+                    return (true, &variant.foreground, &variant.background);
+                } else {
+                    eprintln!(
+                        "Variant {tile_variant:?} could not be found for tile {:?}",
+                        &self.ids
+                    );
+                }
+            } else {
+                eprintln!("No variants found for multitile {:?}", &self.ids);
+            }
+        }
+
+        (false, &self.base.foreground, &self.base.background)
     }
 
     pub fn used_sprite_numbers(&self) -> impl Iterator<Item = SpriteNumber> + '_ {
@@ -137,6 +152,11 @@ impl TileInfo {
             .foreground
             .iter()
             .chain(self.base.background.iter())
+            .chain(
+                self.variants
+                    .values()
+                    .flat_map(|v| v.foreground.iter().chain(v.background.iter())),
+            )
     }
 }
 
@@ -145,7 +165,10 @@ impl From<CddaTileInfo> for TileInfo {
         let mut variants = HashMap::new();
         for tile_variant in cdda_tile.additional_tiles {
             for variant_id in &tile_variant.ids.0 {
-                variants.insert(variant_id.clone(), BasicTile::from(tile_variant.clone()));
+                variants.insert(
+                    CddaTileVariant::from(variant_id.clone()),
+                    BasicTile::from(tile_variant.clone()),
+                );
             }
         }
 
@@ -157,8 +180,38 @@ impl From<CddaTileInfo> for TileInfo {
     }
 }
 
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub enum CddaTileVariant {
+    // For vehicle parts:
+    Broken,
+    Open,
+    // For tiles:
+    Center,
+    Corner,
+    TConnection,
+    Edge,
+    End,
+    Unconnected,
+}
+
+impl From<ObjectId> for CddaTileVariant {
+    fn from(source: ObjectId) -> Self {
+        match &*source.fallback_name() {
+            "broken" => Self::Broken,
+            "open" => Self::Open,
+            "center" => Self::Center,
+            "corner" => Self::Corner,
+            "t_connection" => Self::TConnection,
+            "edge" => Self::Edge,
+            "end" | "end_piece" => Self::End,
+            "unconnected" => Self::Unconnected,
+            unexpected => panic!("Unexpected tile variant: {unexpected:?}"),
+        }
+    }
+}
+
 #[cfg(test)]
-mod recipe_tests {
+mod tile_info_tests {
     use super::*;
     #[test]
     fn it_works() {
