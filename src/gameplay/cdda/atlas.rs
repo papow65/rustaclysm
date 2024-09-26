@@ -2,6 +2,7 @@ use crate::gameplay::{MeshInfo, TextureInfo, Transform2d};
 use bevy::{prelude::Vec2, utils::HashMap};
 use cdda_json_files::{CddaAtlas, ObjectId, SpriteNumber, TileInfo};
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 #[derive(Debug)]
 pub(crate) struct Atlas {
@@ -14,7 +15,7 @@ impl Atlas {
     pub(crate) fn new(
         tileset_path: &Path,
         cdda_atlas: CddaAtlas,
-        tiles: &mut HashMap<ObjectId, TileInfo>,
+        tiles: &mut HashMap<ObjectId, Arc<TileInfo>>,
     ) -> Self {
         let filename = &*cdda_atlas.file;
         let image_path = tileset_path.join(filename);
@@ -46,6 +47,7 @@ impl Atlas {
             + (0.5 * height - 0.5));
 
         for tile_info in cdda_atlas.tiles {
+            let tile_info = Arc::from(tile_info);
             for id in tile_info.ids() {
                 tiles.insert(id.clone(), tile_info.clone());
             }

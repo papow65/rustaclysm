@@ -4,12 +4,11 @@ use crate::gameplay::{Layers, Model, ObjectDefinition, SpriteLayer};
 use bevy::prelude::Resource;
 use bevy::utils::{Entry, HashMap};
 use cdda_json_files::{CddaTileConfig, ObjectId, SpriteNumber, TileInfo};
-use std::fs::read_to_string;
-use std::sync::Arc;
+use std::{fs::read_to_string, sync::Arc};
 
 #[derive(Resource)]
 pub(crate) struct TileLoader {
-    tiles: HashMap<ObjectId, TileInfo>,
+    tiles: HashMap<ObjectId, Arc<TileInfo>>,
     textures: HashMap<SpriteNumber, TextureInfo>,
 }
 
@@ -35,7 +34,10 @@ impl TileLoader {
 
         let mut textures = HashMap::default();
 
-        for sprite_number in tiles.values().flat_map(TileInfo::used_sprite_numbers) {
+        for sprite_number in tiles
+            .values()
+            .flat_map(|tile_info| tile_info.used_sprite_numbers())
+        {
             let texture_info = Self::texture_info(&atlases, sprite_number)?;
             match textures.entry(sprite_number) {
                 Entry::Vacant(vacant) => {
