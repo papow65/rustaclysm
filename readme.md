@@ -40,12 +40,12 @@ Currently, these features are (partially) supported:
 7. Launch it by running the command `cargo run` on the command line.
 8. Follow the instructions to set up the necessary symlinks or directories in the `assets` directory.
 
-## Screenshots
-
-[<img src="screenshots/field.png" alt="Field" width="400"/>](screenshots/field.png)
-
-[<img src="screenshots/tower.png" alt="Tower" width="400"/>](screenshots/tower.png)
-
 ## License
 
 See [license.md](license.md)
+
+## Screenshots
+
+[<img src="screenshots/field.png" alt="Field" width="600"/>](screenshots/field.png)
+
+[<img src="screenshots/tower.png" alt="Tower" width="600"/>](screenshots/tower.png)
