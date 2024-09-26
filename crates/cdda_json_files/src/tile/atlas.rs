@@ -1,4 +1,4 @@
-use crate::tile::tile_info::CddaTileInfo;
+use crate::tile::tile_info::TileInfo;
 use serde::Deserialize;
 use std::sync::Arc;
 
@@ -10,7 +10,7 @@ pub struct CddaAtlas {
     pub sprite_height: Option<u8>,
     pub sprite_offset_x: Option<i8>,
     pub sprite_offset_y: Option<i8>,
-    pub tiles: Vec<CddaTileInfo>,
+    pub tiles: Vec<TileInfo>,
 
     pub ascii: Option<serde_json::Value>,
 

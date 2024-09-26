@@ -45,8 +45,7 @@ impl Atlas {
             .map_or(0.0, |y| f32::from(y) / 32.0)
             + (0.5 * height - 0.5));
 
-        for tile in cdda_atlas.tiles {
-            let tile_info = TileInfo::from(tile);
+        for tile_info in cdda_atlas.tiles {
             for id in tile_info.ids() {
                 tiles.insert(id.clone(), tile_info.clone());
             }
