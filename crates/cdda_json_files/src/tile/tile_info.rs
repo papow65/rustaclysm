@@ -4,19 +4,19 @@ use serde::Deserialize;
 
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
-struct WeightedSprinteNumbers {
+struct WeightedSpriteNumbers {
     sprite: MaybeFlatVec<SpriteNumber>,
     weight: u16,
 }
 
 #[derive(Clone, Debug, Deserialize)]
 #[serde(untagged)]
-enum SprinteNumbers {
+enum SpriteNumbers {
     MaybeFlat(MaybeFlatVec<SpriteNumber>),
-    Weighted(Vec<WeightedSprinteNumbers>),
+    Weighted(Vec<WeightedSpriteNumbers>),
 }
 
-impl SprinteNumbers {
+impl SpriteNumbers {
     fn iter(&self) -> impl Iterator<Item = SpriteNumber> + '_ {
         match self {
             Self::MaybeFlat(m) => Either::Left(m.0.iter().copied()),
@@ -46,7 +46,7 @@ impl SprinteNumbers {
     }
 }
 
-impl Default for SprinteNumbers {
+impl Default for SpriteNumbers {
     fn default() -> Self {
         Self::MaybeFlat(MaybeFlatVec(Vec::new()))
     }
@@ -60,10 +60,10 @@ struct CddaBasicTile {
 
     #[serde(rename = "fg")]
     #[serde(default)]
-    foreground: SprinteNumbers,
+    foreground: SpriteNumbers,
     #[serde(rename = "bg")]
     #[serde(default)]
-    background: SprinteNumbers,
+    background: SpriteNumbers,
 
     #[serde(default)] // false
     multitile: bool,
@@ -90,8 +90,8 @@ pub struct CddaTileInfo {
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct BasicTile {
-    foreground: SprinteNumbers,
-    background: SprinteNumbers,
+    foreground: SpriteNumbers,
+    background: SpriteNumbers,
 
     #[expect(unused)]
     multitile: bool,
