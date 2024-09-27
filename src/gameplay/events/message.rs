@@ -1,7 +1,7 @@
-use crate::common::{
-    BAD_TEXT_COLOR, DEFAULT_TEXT_COLOR, GOOD_TEXT_COLOR, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
-};
 use crate::gameplay::*;
+use crate::hud::{
+    BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
+};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{Color, Event, EventWriter};
 
@@ -19,7 +19,7 @@ impl Severity {
     pub(crate) const fn color(&self) -> Color {
         match self {
             Self::Low => SOFT_TEXT_COLOR,
-            Self::Info => DEFAULT_TEXT_COLOR,
+            Self::Info => HARD_TEXT_COLOR,
             Self::Warn => WARN_TEXT_COLOR,
             Self::Error => BAD_TEXT_COLOR,
             Self::Success => GOOD_TEXT_COLOR,

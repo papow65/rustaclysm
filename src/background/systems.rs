@@ -29,7 +29,7 @@ pub(super) fn spawn_background(
                 texture: background_image,
                 ..UiImage::default()
             },
-            z_index: ZIndex::Global(2),
+            z_index: ZIndex::Global(1),
             ..ImageBundle::default()
         },
         Background,

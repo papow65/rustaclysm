@@ -2,7 +2,8 @@ use bevy::prelude::{Color, Mix};
 
 // Text colors
 
-pub(crate) const DEFAULT_TEXT_COLOR: Color = Color::srgb(0.85, 0.85, 0.85);
+/// For important text
+pub(crate) const HARD_TEXT_COLOR: Color = Color::srgb(0.85, 0.85, 0.85);
 
 /// For unimportant text
 pub(crate) const SOFT_TEXT_COLOR: Color = Color::srgb(0.65, 0.65, 0.65);

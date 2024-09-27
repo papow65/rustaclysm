@@ -1,5 +1,5 @@
-use crate::common::{DEFAULT_TEXT_COLOR, WARN_TEXT_COLOR};
 use crate::gameplay::{Breath, Damage, Evolution, Healing, Limited, StaminaImpact};
+use crate::hud::{HARD_TEXT_COLOR, WARN_TEXT_COLOR};
 use bevy::prelude::{Color, Component};
 use std::fmt;
 use units::Speed;
@@ -86,7 +86,7 @@ impl WalkingMode {
     #[must_use]
     pub(crate) const fn color(&self) -> Color {
         match self {
-            Self::Walking => DEFAULT_TEXT_COLOR,
+            Self::Walking => HARD_TEXT_COLOR,
             Self::Crouching | Self::SpeedWalking | Self::Running => WARN_TEXT_COLOR,
         }
     }

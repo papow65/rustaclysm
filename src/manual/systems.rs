@@ -1,9 +1,15 @@
-use crate::gameplay::hud::{components::ManualDisplay, resources::HudDefaults};
-use crate::{application::ApplicationState, gameplay::GameplayScreenState};
+use crate::gameplay::GameplayScreenState;
+use crate::hud::{DefaultPanel, Fonts};
+use crate::manual::components::ManualDisplay;
 use bevy::prelude::{
     default, Alpha, BackgroundColor, BuildChildren, Children, Commands, NodeBundle, Query, Res,
-    State, StateScoped, Text, TextBundle, TextSection, Val, With, ZIndex,
+    State, Text, TextBundle, TextSection, Val, With, ZIndex,
 };
+
+static MAIN_MENU_CONTENTS: &str = "\
+    zoom ui         ctrl +/-\n\
+    toggle this     F1\n\
+    quit            ctrl c/q";
 
 static BASE_MANUAL_CONTENTS: &str = "\
     move            numpad\n\
@@ -42,7 +48,7 @@ static INVENTORY_MANUAL_CONTENTS: &str = "\
     unwield item    u\n\
     zoom ui         ctrl +/-\n\
     toggle this     F1\n\
-    close inventory &/esc\n\
+    close inventory i/esc\n\
     to main menu    F12\n\
     quit            ctrl c/q";
 
@@ -68,26 +74,29 @@ static DEATH_MANUAL_CONTENTS: &str = "\
     quit            ctrl c/q";
 
 #[expect(clippy::needless_pass_by_value)]
-pub(super) fn spawn_manual(mut commands: Commands, hud_defaults: Res<HudDefaults>) {
-    let mut background = hud_defaults.background.clone();
+pub(super) fn spawn_manual(
+    mut commands: Commands,
+    default_panel: Res<DefaultPanel>,
+    fonts: Res<Fonts>,
+) {
+    let mut background = default_panel.cloned();
     background.style.bottom = Val::Px(0.0);
     background.style.left = Val::Px(0.0);
 
     commands
         .spawn((
             NodeBundle {
-                z_index: ZIndex::Global(1),
+                z_index: ZIndex::Global(2),
                 ..background
             },
             ManualDisplay,
-            StateScoped(ApplicationState::Gameplay),
         ))
         .with_children(|parent| {
             parent.spawn(TextBundle {
                 text: Text {
                     sections: vec![TextSection {
                         value: String::from(BASE_MANUAL_CONTENTS),
-                        style: hud_defaults.text_style.clone(),
+                        style: fonts.standard(),
                     }],
                     ..default()
                 },
@@ -98,19 +107,24 @@ pub(super) fn spawn_manual(mut commands: Commands, hud_defaults: Res<HudDefaults
 
 #[expect(clippy::needless_pass_by_value)]
 pub(super) fn update_manual(
-    gameplay_screen_state: Res<State<GameplayScreenState>>,
-    hud_defaults: Res<HudDefaults>,
+    gameplay_screen_state: Option<Res<State<GameplayScreenState>>>,
+    default_panel: Res<DefaultPanel>,
     mut manual: Query<(&mut BackgroundColor, &mut Children), With<ManualDisplay>>,
     mut manual_text: Query<&mut Text>,
 ) {
     let mut manual = manual.single_mut();
 
     let background_color = &mut manual.0 .0;
-    background_color.set_alpha(if gameplay_screen_state.get().large_node_bundle() {
-        1.0
-    } else {
-        hud_defaults.background.background_color.0.alpha()
-    });
+    background_color.set_alpha(
+        if gameplay_screen_state
+            .as_ref()
+            .is_some_and(|state| state.get().large_node_bundle())
+        {
+            1.0
+        } else {
+            default_panel.ref_().background_color.0.alpha()
+        },
+    );
 
     let manual_text_entity = manual
         .1
@@ -125,12 +139,16 @@ pub(super) fn update_manual(
         .value
         .replace_range(
             ..,
-            match gameplay_screen_state.get() {
-                GameplayScreenState::Base => BASE_MANUAL_CONTENTS,
-                GameplayScreenState::Inventory => INVENTORY_MANUAL_CONTENTS,
-                GameplayScreenState::Crafting => CRAFTING_MANUAL_CONTENTS,
-                GameplayScreenState::Menu => MENU_MANUAL_CONTENTS,
-                GameplayScreenState::Death => DEATH_MANUAL_CONTENTS,
+            if let Some(gameplay_screen_state) = gameplay_screen_state {
+                match gameplay_screen_state.get() {
+                    GameplayScreenState::Base => BASE_MANUAL_CONTENTS,
+                    GameplayScreenState::Inventory => INVENTORY_MANUAL_CONTENTS,
+                    GameplayScreenState::Crafting => CRAFTING_MANUAL_CONTENTS,
+                    GameplayScreenState::Menu => MENU_MANUAL_CONTENTS,
+                    GameplayScreenState::Death => DEATH_MANUAL_CONTENTS,
+                }
+            } else {
+                MAIN_MENU_CONTENTS
             },
         );
 }

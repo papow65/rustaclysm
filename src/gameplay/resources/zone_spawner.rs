@@ -1,9 +1,9 @@
 use crate::application::ApplicationState;
-use crate::common::DEFAULT_TEXT_COLOR;
 use crate::gameplay::{
     Infos, LastSeen, Level, MissingAsset, ObjectCategory, ObjectDefinition, ObjectName,
     OvermapBufferManager, OvermapManager, SeenFrom, TileSpawner, ZoneLevel, ZoneLevelIds,
 };
+use crate::hud::HARD_TEXT_COLOR;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{
     BuildChildren, Entity, Res, ResMut, SpatialBundle, StateScoped, Transform, Vec3, Visibility,
@@ -74,7 +74,7 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
                 || ItemName::from(CddaItemName::Simple(definition.id.fallback_name())),
                 |z| z.name.clone(),
             ),
-            DEFAULT_TEXT_COLOR,
+            HARD_TEXT_COLOR,
         );
 
         let (seen_from, visibility) = match seen_from {

@@ -4,8 +4,10 @@ mod application;
 mod background;
 mod common;
 mod gameplay;
+mod hud;
 mod loading;
 mod main_menu;
+mod manual;
 
 use crate::application::run_application;
 use std::env;

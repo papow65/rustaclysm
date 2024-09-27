@@ -1,5 +1,5 @@
-use crate::common::{
-    Fonts, BAD_TEXT_COLOR, DEFAULT_TEXT_COLOR, GOOD_TEXT_COLOR, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
+use crate::hud::{
+    Fonts, BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
 };
 use bevy::prelude::{Color, Component, Entity, TextSection};
 use cdda_json_files::{ObjectId, Recipe};
@@ -35,7 +35,7 @@ impl RecipeSituation {
             if selected {
                 GOOD_TEXT_COLOR
             } else {
-                DEFAULT_TEXT_COLOR
+                HARD_TEXT_COLOR
             }
         } else if selected {
             BAD_TEXT_COLOR

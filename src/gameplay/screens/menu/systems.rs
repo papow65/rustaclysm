@@ -1,10 +1,8 @@
 use crate::application::ApplicationState;
-use crate::common::{
-    Fonts, Key, Keys, QuitButton, BAD_TEXT_COLOR, DEFAULT_TEXT_COLOR, GOOD_TEXT_COLOR,
-    MEDIUM_SPACING,
-};
+use crate::common::{Key, Keys, QuitButton};
 use crate::gameplay::screens::menu::components::{MainMenuButton, ReturnButton};
 use crate::gameplay::GameplayScreenState;
+use crate::hud::{Fonts, BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, MEDIUM_SPACING};
 use bevy::app::AppExit;
 use bevy::prelude::{
     default, AlignItems, BuildChildren, Button, ButtonBundle, Changed, ChildBuilder, Color,
@@ -47,7 +45,7 @@ pub(super) fn spawn_menu(mut commands: Commands, fonts: Res<Fonts>) {
                 .with_children(|parent| add_text(parent, &fonts, "Return", GOOD_TEXT_COLOR));
             parent
                 .spawn((button.clone(), MainMenuButton))
-                .with_children(|parent| add_text(parent, &fonts, "Main Menu", DEFAULT_TEXT_COLOR));
+                .with_children(|parent| add_text(parent, &fonts, "Main Menu", HARD_TEXT_COLOR));
             parent
                 .spawn((button, QuitButton))
                 .with_children(|parent| add_text(parent, &fonts, "Quit", BAD_TEXT_COLOR));

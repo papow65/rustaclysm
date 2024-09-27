@@ -5,10 +5,10 @@ mod components;
 mod core;
 mod events;
 mod focus;
-mod hud;
 mod plugin;
 mod resources;
 mod screens;
+mod sidebar;
 mod systems;
 
 pub(crate) use self::actor::*;

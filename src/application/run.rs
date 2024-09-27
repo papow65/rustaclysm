@@ -1,19 +1,18 @@
 use crate::application::systems::{
-    enter_main_menu, load_fonts, manage_button_color, manage_global_keyboard_input,
-    manage_scrolling_lists, maximize_window, preprocess_keyboard_input, resize_scrolling_lists,
+    enter_main_menu, manage_global_keyboard_input, maximize_window, preprocess_keyboard_input,
 };
 use crate::application::{check::check_delay, ApplicationState};
 use crate::background::BackgroundPlugin;
 use crate::common::{log_transition_plugin, Keys};
-use crate::gameplay::GameplayPlugin;
-use crate::{loading::LoadingIndicatorPlugin, main_menu::MainMenuPlugin};
-use bevy::input::{keyboard::KeyboardInput, mouse::MouseWheel, InputSystem};
+use crate::{gameplay::GameplayPlugin, hud::HudPlugin, loading::LoadingIndicatorPlugin};
+use crate::{main_menu::MainMenuPlugin, manual::ManualPlugin};
+use bevy::input::{keyboard::KeyboardInput, InputSystem};
 use bevy::prelude::{
-    on_event, resource_exists_and_changed, App, AppExtStates, AssetPlugin, Condition,
-    DefaultPlugins, Fixed, IVec2, ImagePlugin, IntoSystemConfigs, Last, Msaa, PluginGroup,
-    PreUpdate, Startup, Time, UiScale, Update, Window, WindowPlugin, WindowPosition,
+    on_event, App, AppExtStates, AssetPlugin, DefaultPlugins, Fixed, IVec2, ImagePlugin,
+    IntoSystemConfigs, Last, Msaa, PluginGroup, PreUpdate, Startup, Time, Update, Window,
+    WindowPlugin, WindowPosition,
 };
-use bevy::window::{PresentMode, WindowResized, WindowResolution};
+use bevy::window::{PresentMode, WindowResolution};
 use std::time::Duration;
 
 pub(crate) fn run_application() {
@@ -44,7 +43,9 @@ pub(crate) fn run_application() {
     app.insert_resource(Time::<Fixed>::from_duration(Duration::from_millis(250)));
 
     app.add_plugins((
+        HudPlugin,
         MainMenuPlugin,
+        ManualPlugin,
         BackgroundPlugin,
         GameplayPlugin,
         LoadingIndicatorPlugin,
@@ -54,21 +55,11 @@ pub(crate) fn run_application() {
     app.insert_state(ApplicationState::Startup);
     app.enable_state_scoped_entities::<ApplicationState>();
 
-    app.add_systems(
-        Startup,
-        (maximize_window, (load_fonts, enter_main_menu).chain()),
-    );
+    app.add_systems(Startup, (maximize_window, enter_main_menu));
     app.add_systems(PreUpdate, preprocess_keyboard_input.after(InputSystem));
     app.add_systems(
         Update,
-        (
-            manage_button_color,
-            manage_scrolling_lists.run_if(on_event::<MouseWheel>()),
-            manage_global_keyboard_input.run_if(on_event::<KeyboardInput>()),
-            resize_scrolling_lists.run_if(
-                on_event::<WindowResized>().or_else(resource_exists_and_changed::<UiScale>),
-            ),
-        ),
+        manage_global_keyboard_input.run_if(on_event::<KeyboardInput>()),
     );
     app.add_systems(Last, check_delay);
 

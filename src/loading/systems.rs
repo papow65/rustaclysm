@@ -1,9 +1,9 @@
 use crate::application::ApplicationState;
-use crate::common::{Fonts, DEFAULT_BUTTON_COLOR, DEFAULT_TEXT_COLOR};
 use crate::gameplay::{
     Explored, GameplayScreenState, MapAsset, MapMemoryAsset, OvermapAsset, OvermapBufferAsset,
     SubzoneLevelEntities,
 };
+use crate::hud::{Fonts, DEFAULT_BUTTON_COLOR, HARD_TEXT_COLOR};
 use crate::loading::ProgressScreenState;
 use bevy::prelude::{
     AlignItems, Assets, BuildChildren, Commands, JustifyContent, Local, NextState, NodeBundle,
@@ -44,7 +44,7 @@ pub(crate) fn spawn_loading(mut commands: Commands, fonts: Res<Fonts>) {
                 .with_children(|parent| {
                     parent.spawn(TextBundle::from_section(
                         "Loading...",
-                        fonts.large(DEFAULT_TEXT_COLOR),
+                        fonts.large(HARD_TEXT_COLOR),
                     ));
                 });
         });

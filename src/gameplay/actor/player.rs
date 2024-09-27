@@ -1,6 +1,6 @@
 use crate::application::ApplicationState;
-use crate::common::{text_color, BAD_TEXT_COLOR, DEFAULT_TEXT_COLOR, WARN_TEXT_COLOR};
 use crate::gameplay::*;
+use crate::hud::{text_color, BAD_TEXT_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR};
 use bevy::prelude::{
     Color, Component, DetectChanges, Entity, NextState, ResMut, StateSet, SubStates,
 };
@@ -615,7 +615,7 @@ impl PlayerActionState {
 
     pub(crate) const fn color_in_progress(&self) -> Color {
         match self {
-            Self::Normal | Self::PickingNbor(PickingNbor::Closing) => DEFAULT_TEXT_COLOR,
+            Self::Normal | Self::PickingNbor(PickingNbor::Closing) => HARD_TEXT_COLOR,
             Self::Waiting { .. }
             | Self::Sleeping { .. }
             | Self::PickingNbor { .. }

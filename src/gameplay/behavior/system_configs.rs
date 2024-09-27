@@ -85,8 +85,8 @@ fn loop_behavior(world: &mut World) {
 
 /// All NPC mave a timeout and the player has an empty instruction queue
 fn waiting_for_user_input(world: &mut World) -> bool {
-    let mut system_state = SystemState::<(Res<InstructionQueue>,)>::new(world);
-    let (instruction_queue,) = system_state.get(world);
+    let mut system_state = SystemState::<Res<InstructionQueue>>::new(world);
+    let instruction_queue = system_state.get(world);
     instruction_queue.is_waiting()
 }
 

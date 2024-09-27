@@ -1,7 +1,4 @@
-use crate::common::{
-    log_if_slow, uppercase_first, Fonts, InputChange, Key, Keys, ScrollingList, SelectionList,
-    BAD_TEXT_COLOR, GOOD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, WARN_TEXT_COLOR,
-};
+use crate::common::{log_if_slow, uppercase_first, InputChange, Key, Keys};
 use crate::gameplay::screens::crafting::components::{
     AlternativeSituation, ComponentSituation, QualitySituation, RecipeSituation,
 };
@@ -9,6 +6,10 @@ use crate::gameplay::screens::crafting::resource::CraftingScreen;
 use crate::gameplay::{
     ActiveSav, Amount, BodyContainers, Clock, GameplayScreenState, Infos, InstructionQueue,
     LastSeen, Location, ObjectCategory, ObjectDefinition, Player, Pos, QueuedInstruction,
+};
+use crate::hud::{
+    Fonts, ScrollingList, SelectionList, BAD_TEXT_COLOR, GOOD_TEXT_COLOR, PANEL_COLOR,
+    SMALL_SPACING, WARN_TEXT_COLOR,
 };
 use bevy::prelude::*;
 use bevy::utils::HashMap;
@@ -39,7 +40,7 @@ pub(super) fn spawn_crafting_screen(mut commands: Commands) {
         ))
         .id();
     let recipe_details = commands
-        .spawn((NodeBundle {
+        .spawn(NodeBundle {
             style: Style {
                 width: Val::Percent(100.0),
                 flex_direction: FlexDirection::Column,
@@ -48,7 +49,7 @@ pub(super) fn spawn_crafting_screen(mut commands: Commands) {
                 ..Style::default()
             },
             ..NodeBundle::default()
-        },))
+        })
         .id();
     commands
         .spawn((

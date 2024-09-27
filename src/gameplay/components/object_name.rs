@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
-use crate::common::BAD_TEXT_COLOR;
 use crate::gameplay::{Fragment, Pos};
+use crate::hud::BAD_TEXT_COLOR;
 use bevy::prelude::{Color, Component};
 use cdda_json_files::{CddaItemName, ItemName};
 

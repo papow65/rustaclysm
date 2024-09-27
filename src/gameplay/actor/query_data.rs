@@ -1,4 +1,4 @@
-use crate::{common::text_color, gameplay::*};
+use crate::{gameplay::*, hud::text_color};
 use bevy::ecs::query::QueryData;
 use bevy::prelude::{
     BuildChildren, Commands, DespawnRecursiveExt, Entity, Event, EventWriter, NextState, Query,

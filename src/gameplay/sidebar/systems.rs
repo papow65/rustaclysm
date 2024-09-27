@@ -1,9 +1,10 @@
-use crate::common::{
-    log_if_slow, on_safe_event, Fonts, ScrollingList, BAD_TEXT_COLOR, DEFAULT_TEXT_COLOR,
-    FILTHY_COLOR, GOOD_TEXT_COLOR, WARN_TEXT_COLOR,
+use crate::common::{log_if_slow, on_safe_event};
+use crate::gameplay::sidebar::components::{LogDisplay, StatusDisplay};
+use crate::gameplay::sidebar::resources::StatusTextSections;
+use crate::hud::{
+    DefaultPanel, Fonts, ScrollingList, BAD_TEXT_COLOR, FILTHY_COLOR, GOOD_TEXT_COLOR,
+    HARD_TEXT_COLOR, WARN_TEXT_COLOR,
 };
-use crate::gameplay::hud::components::{LogDisplay, StatusDisplay};
-use crate::gameplay::hud::resources::{HudDefaults, StatusTextSections};
 use crate::{application::ApplicationState, gameplay::*};
 use bevy::diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin};
 use bevy::ecs::system::EntityCommands;
@@ -25,23 +26,24 @@ const TEXT_WIDTH: f32 = 8.0 * 43.0; // 43 chars
 #[expect(clippy::needless_pass_by_value)]
 pub(super) fn spawn_sidebar(
     mut commands: Commands,
-    hud_defaults: Res<HudDefaults>,
+    default_panel: Res<DefaultPanel>,
+    fonts: Res<Fonts>,
     mut text_sections: ResMut<StatusTextSections>,
 ) {
-    text_sections.fps.style = hud_defaults.text_style.clone();
-    text_sections.time.style = hud_defaults.text_style.clone();
-    text_sections.player_action_state.style = hud_defaults.text_style.clone();
+    text_sections.fps.style = fonts.standard();
+    text_sections.time.style = fonts.standard();
+    text_sections.player_action_state.style = fonts.standard();
     for section in &mut text_sections.health {
-        section.style = hud_defaults.text_style.clone();
+        section.style = fonts.standard();
     }
     for section in &mut text_sections.stamina {
-        section.style = hud_defaults.text_style.clone();
+        section.style = fonts.standard();
     }
     for section in &mut text_sections.speed {
-        section.style = hud_defaults.text_style.clone();
+        section.style = fonts.standard();
     }
 
-    let mut background = hud_defaults.background.clone();
+    let mut background = default_panel.cloned();
     background.style.top = Val::Px(0.0);
     background.style.right = Val::Px(0.0);
     background.style.width = Val::Px(TEXT_WIDTH + 10.0); // 5px margin on both sides
@@ -140,7 +142,7 @@ pub(super) fn update_sidebar_systems() -> impl IntoSystemConfigs<()> {
 fn update_log(
     mut new_messages: EventReader<Message>,
     currently_visible_builder: CurrentlyVisibleBuilder,
-    hud_defaults: Res<HudDefaults>,
+    fonts: Res<Fonts>,
     mut session: GameplaySession,
     mut logs: Query<&mut Text, With<LogDisplay>>,
     mut previous_sections: Local<Vec<TextSection>>,
@@ -173,11 +175,7 @@ fn update_log(
         if let Some(message) = percieved_message {
             transient_message.clear();
             if message.transient {
-                transient_message.extend(to_text_sections(
-                    &hud_defaults.text_style,
-                    &message,
-                    SINGLE,
-                ));
+                transient_message.extend(to_text_sections(&fonts.standard(), &message, SINGLE));
             } else {
                 match &mut *last_message {
                     Some((last, ref mut count)) if *last == message => {
@@ -188,7 +186,7 @@ fn update_log(
                             last_message.replace((message, SINGLE))
                         {
                             previous_sections.extend(to_text_sections(
-                                &hud_defaults.text_style,
+                                &fonts.standard(),
                                 &previous_last,
                                 previous_count,
                             ));
@@ -207,7 +205,7 @@ fn update_log(
     sections.clear();
     sections.extend(previous_sections.clone());
     if let Some((message, count)) = &*last_message {
-        sections.extend(to_text_sections(&hud_defaults.text_style, message, *count));
+        sections.extend(to_text_sections(&fonts.standard(), message, *count));
     }
     sections.extend(transient_message.clone());
 
@@ -389,7 +387,7 @@ fn update_status_speed(
             text_sections.speed[0].value,
             text_sections.speed[0].style.color,
         ) = match player_actor.stamina.breath() {
-            Breath::Normal => (String::new(), DEFAULT_TEXT_COLOR),
+            Breath::Normal => (String::new(), HARD_TEXT_COLOR),
             Breath::AlmostWinded => (String::from("Almost winded "), WARN_TEXT_COLOR),
             Breath::Winded => (String::from("Winded "), BAD_TEXT_COLOR),
         };
@@ -439,8 +437,7 @@ fn update_status_player_wielded(
     }
     .add("\n");
 
-    let text_style = HudDefaults::new(&fonts).text_style;
-    text_sections.wielded = phrase.as_text_sections(&text_style);
+    text_sections.wielded = phrase.as_text_sections(&fonts.standard());
 
     update_status_display(&text_sections, &mut status_displays.single_mut());
 
@@ -491,8 +488,7 @@ fn update_status_enemies(
         }
         .add("\n");
 
-        let text_style = HudDefaults::new(&fonts).text_style;
-        text_sections.enemies = phrase.as_text_sections(&text_style);
+        text_sections.enemies = phrase.as_text_sections(&fonts.standard());
 
         update_status_display(&text_sections, &mut status_displays.single_mut());
     }
@@ -503,7 +499,7 @@ fn update_status_enemies(
 #[expect(clippy::needless_pass_by_value)]
 fn update_status_detais(
     focus_state: Res<State<FocusState>>,
-    hud_defaults: Res<HudDefaults>,
+    fonts: Res<Fonts>,
     mut explored: ResMut<Explored>,
     mut zone_level_ids: ResMut<ZoneLevelIds>,
     mut text_sections: ResMut<StatusTextSections>,
@@ -569,7 +565,7 @@ fn update_status_detais(
             )]
         }
     })
-    .as_text_sections(&hud_defaults.text_style);
+    .as_text_sections(&fonts.standard());
 
     update_status_display(&text_sections, &mut status_displays.single_mut());
 

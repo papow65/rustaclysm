@@ -1,7 +1,7 @@
-use crate::common::FILTHY_COLOR;
 use crate::gameplay::{
     Amount, Containable, Filthy, Fragment, ObjectDefinition, ObjectName, Pos, Positioning,
 };
+use crate::hud::FILTHY_COLOR;
 use bevy::ecs::query::QueryData;
 use bevy::prelude::{Entity, Parent};
 

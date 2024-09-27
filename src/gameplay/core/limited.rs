@@ -1,4 +1,4 @@
-use crate::common::text_color;
+use crate::hud::text_color;
 use bevy::prelude::Color;
 
 #[derive(Clone, Debug)]

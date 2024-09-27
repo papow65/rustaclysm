@@ -1,5 +1,4 @@
 use crate::application::ApplicationState;
-use crate::common::{BAD_TEXT_COLOR, DEFAULT_TEXT_COLOR, GOOD_TEXT_COLOR, WARN_TEXT_COLOR};
 use crate::gameplay::{
     Accessible, ActiveSav, Amount, Aquatic, BaseSpeed, BodyContainers, CameraBase, Closeable,
     Containable, Craft, ExamineCursor, Explored, Faction, Filthy, HealingDuration, Health, Hurdle,
@@ -7,6 +6,7 @@ use crate::gameplay::{
     ObjectCategory, ObjectDefinition, ObjectName, Obstacle, Opaque, OpaqueFloor, Openable, Player,
     Pos, PosOffset, StairsDown, StairsUp, Stamina, TileVariant, Vehicle, VehiclePart, WalkingMode,
 };
+use crate::hud::{BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{
     BuildChildren, Camera3dBundle, Color, Commands, DirectionalLight, DirectionalLightBundle,
@@ -281,7 +281,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
             category: ObjectCategory::Furniture,
             id: id.clone(),
         };
-        let object_name = ObjectName::new(furniture_info.name.clone(), DEFAULT_TEXT_COLOR);
+        let object_name = ObjectName::new(furniture_info.name.clone(), HARD_TEXT_COLOR);
         let object_entity = self.spawn_object(parent, pos, definition, object_name, None);
 
         if !furniture_info.flags.transparent() {
@@ -329,7 +329,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
             category: ObjectCategory::Terrain,
             id: local_terrain.id.clone(),
         };
-        let object_name = ObjectName::new(terrain_info.name.clone(), DEFAULT_TEXT_COLOR);
+        let object_name = ObjectName::new(terrain_info.name.clone(), HARD_TEXT_COLOR);
         let object_entity = self.spawn_object(
             parent,
             pos,
@@ -388,7 +388,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
             category: ObjectCategory::Vehicle,
             id: vehicle.id.clone(),
         };
-        let object_name = ObjectName::from_str(&vehicle.name, DEFAULT_TEXT_COLOR);
+        let object_name = ObjectName::from_str(&vehicle.name, HARD_TEXT_COLOR);
 
         let entity = self.spawn_object(parent, pos, definition, object_name, None);
         self.commands.entity(entity).insert((
@@ -429,7 +429,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
             category: ObjectCategory::VehiclePart,
             id: part.id.clone(),
         };
-        let object_name = ObjectName::new(name.clone(), DEFAULT_TEXT_COLOR);
+        let object_name = ObjectName::new(name.clone(), HARD_TEXT_COLOR);
 
         let variant = part
             .base
@@ -613,7 +613,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
             root,
             spawn_pos.horizontal_offset(10, 10),
             &ObjectId::new("human"),
-            Some(ObjectName::from_str("Survivor", DEFAULT_TEXT_COLOR)),
+            Some(ObjectName::from_str("Survivor", HARD_TEXT_COLOR)),
         );
 
         self.spawn_character(
@@ -731,6 +731,6 @@ fn item_category_text_color(from: &Option<Arc<str>>) -> Color {
     } else if from == &Some(Arc::from("bionics")) {
         WARN_TEXT_COLOR
     } else {
-        DEFAULT_TEXT_COLOR
+        HARD_TEXT_COLOR
     }
 }

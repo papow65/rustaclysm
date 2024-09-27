@@ -1,8 +1,4 @@
-use crate::common::{
-    Fonts, InputChange, Key, Keys, ScrollingList, SelectionList, StepDirection, StepSize,
-    DEFAULT_TEXT_COLOR, GOOD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, SOFT_TEXT_COLOR,
-    WARN_TEXT_COLOR,
-};
+use crate::common::{InputChange, Key, Keys};
 use crate::gameplay::screens::inventory::components::{
     InventoryAction, InventoryButton, InventoryItemDescription, InventoryItemLine,
 };
@@ -11,6 +7,10 @@ use crate::gameplay::{
     BodyContainers, Clock, Corpse, Envir, GameplayScreenState, HorizontalDirection, Infos,
     InstructionQueue, Integrity, Item, LastSeen, Nbor, Phrase, Player, PlayerDirection, Pos,
     QueuedInstruction,
+};
+use crate::hud::{
+    Fonts, ScrollingList, SelectionList, StepDirection, StepSize, GOOD_TEXT_COLOR, HARD_TEXT_COLOR,
+    PANEL_COLOR, SMALL_SPACING, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
 };
 use bevy::{ecs::entity::EntityHashMap, prelude::*, utils::HashMap};
 use cdda_json_files::{ItemInfo, ObjectId};
@@ -72,7 +72,7 @@ pub(super) fn spawn_inventory(mut commands: Commands, fonts: Res<Fonts>) {
         section_by_item: EntityHashMap::default(),
         section_text_style: fonts.regular(SOFT_TEXT_COLOR),
         drop_section_text_style: fonts.regular(WARN_TEXT_COLOR),
-        item_text_style: fonts.regular(DEFAULT_TEXT_COLOR),
+        item_text_style: fonts.regular(HARD_TEXT_COLOR),
         selected_item_text_style: fonts.regular(GOOD_TEXT_COLOR),
         last_time: Timestamp::ZERO,
     });
@@ -320,14 +320,14 @@ fn add_row(
 
             for action in actions(section, drop_section) {
                 parent
-                    .spawn((ButtonBundle {
+                    .spawn(ButtonBundle {
                         style: Style {
                             width: Val::Px(70.0),
                             justify_content: JustifyContent::Center,
                             ..Style::default()
                         },
                         ..ButtonBundle::default()
-                    },))
+                    })
                     .with_children(|parent| {
                         parent.spawn(TextBundle::from_section(
                             format!("{}", &action),

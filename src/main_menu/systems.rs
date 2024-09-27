@@ -1,8 +1,9 @@
-use crate::common::{
-    AssetPaths, Fonts, QuitButton, BAD_TEXT_COLOR, DEFAULT_TEXT_COLOR, GOOD_TEXT_COLOR,
-    LARGE_SPACING, MEDIUM_SPACING, PANEL_COLOR,
-};
+use crate::common::{AssetPaths, QuitButton};
 use crate::gameplay::{ActiveSav, GameplaySession};
+use crate::hud::{
+    Fonts, BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, LARGE_SPACING, MEDIUM_SPACING,
+    PANEL_COLOR,
+};
 use crate::main_menu::components::{LoadButton, LoadButtonArea, MessageField, MessageWrapper};
 use crate::main_menu::load_error::LoadError;
 use crate::{application::ApplicationState, loading::ProgressScreenState};
@@ -55,7 +56,7 @@ pub(super) fn spawn_main_menu(mut commands: Commands, fonts: Res<Fonts>) {
 fn add_title(parent: &mut ChildBuilder, fonts: &Fonts) {
     parent.spawn(TextBundle::from_section(
         "Rustaclysm",
-        fonts.huge(DEFAULT_TEXT_COLOR),
+        fonts.huge(HARD_TEXT_COLOR),
     ));
 }
 
@@ -63,7 +64,7 @@ fn add_tagline(parent: &mut ChildBuilder, fonts: &Fonts) {
     parent.spawn(
         TextBundle::from_section(
             "A 3D reimplementation of Cataclysm: Dark Days Ahead",
-            fonts.largish(DEFAULT_TEXT_COLOR),
+            fonts.largish(HARD_TEXT_COLOR),
         )
         .with_style(Style {
             margin: UiRect {
@@ -119,7 +120,7 @@ fn add_notification_area(parent: &mut ChildBuilder, fonts: &Fonts) {
         .with_children(|parent| {
             parent.spawn((
                 TextBundle {
-                    text: Text::from_section("", fonts.largish(DEFAULT_TEXT_COLOR)),
+                    text: Text::from_section("", fonts.largish(HARD_TEXT_COLOR)),
                     style: Style {
                         width: Val::Px(FULL_WIDTH),
                         padding: UiRect::horizontal(MEDIUM_SPACING),

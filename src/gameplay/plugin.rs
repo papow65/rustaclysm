@@ -4,12 +4,12 @@ use crate::common::{
 };
 use crate::gameplay::systems::*;
 use crate::gameplay::{
-    events::EventPlugin, hud::HudPlugin, update_camera_offset, ActorPlugin, BaseScreenPlugin,
-    CameraOffset, CddaPlugin, CharacterScreenPlugin, CraftingScreenPlugin, DeathScreenPlugin,
-    DespawnSubzoneLevel, DespawnZoneLevel, ElevationVisibility, FocusPlugin, GameplayCounter,
-    GameplayScreenState, InventoryScreenPlugin, MapAsset, MapMemoryAsset, MenuScreenPlugin,
-    OvermapAsset, OvermapBufferAsset, RelativeSegments, SpawnSubzoneLevel, SpawnZoneLevel,
-    TileLoader, UpdateZoneLevelVisibility,
+    events::EventPlugin, sidebar::SidebarPlugin, update_camera_offset, ActorPlugin,
+    BaseScreenPlugin, CameraOffset, CddaPlugin, CharacterScreenPlugin, CraftingScreenPlugin,
+    DeathScreenPlugin, DespawnSubzoneLevel, DespawnZoneLevel, ElevationVisibility, FocusPlugin,
+    GameplayCounter, GameplayScreenState, InventoryScreenPlugin, MapAsset, MapMemoryAsset,
+    MenuScreenPlugin, OvermapAsset, OvermapBufferAsset, RelativeSegments, SpawnSubzoneLevel,
+    SpawnZoneLevel, TileLoader, UpdateZoneLevelVisibility,
 };
 use bevy::input::keyboard::KeyboardInput;
 use bevy::prelude::{
@@ -28,7 +28,7 @@ impl Plugin for GameplayPlugin {
         app.add_plugins((
             ActorPlugin,
             FocusPlugin,
-            HudPlugin,
+            SidebarPlugin,
             BaseScreenPlugin,
             CddaPlugin,
             EventPlugin,

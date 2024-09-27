@@ -1,8 +1,8 @@
-use crate::common::{DEFAULT_TEXT_COLOR, FILTHY_COLOR, WARN_TEXT_COLOR};
 use crate::gameplay::{
     ActorItem, CurrentlyVisibleBuilder, Envir, Fragment, Health, Nbor, NborDistance, PlannedAction,
     Pos, Visible, WalkingCost,
 };
+use crate::hud::{FILTHY_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR};
 use bevy::prelude::{Color, Component};
 use cdda_json_files::MoveCost;
 use float_ord::FloatOrd;
@@ -77,7 +77,7 @@ impl Faction {
 
     pub(crate) const fn color(&self) -> Color {
         match self {
-            Self::Human => DEFAULT_TEXT_COLOR,
+            Self::Human => HARD_TEXT_COLOR,
             Self::Zombie => FILTHY_COLOR,
             Self::Animal => WARN_TEXT_COLOR,
         }
