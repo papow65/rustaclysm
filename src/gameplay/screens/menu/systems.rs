@@ -1,6 +1,6 @@
 use crate::application::ApplicationState;
-use crate::common::{Key, Keys, QuitButton};
-use crate::gameplay::screens::menu::components::{MainMenuButton, ReturnButton};
+use crate::common::{Key, Keys};
+use crate::gameplay::screens::menu::components::{MainMenuButton, QuitButton, ReturnButton};
 use crate::gameplay::GameplayScreenState;
 use crate::hud::{Fonts, BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, MEDIUM_SPACING};
 use bevy::app::AppExit;
