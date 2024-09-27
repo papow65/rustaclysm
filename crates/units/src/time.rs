@@ -32,6 +32,7 @@ impl Duration {
         milliseconds: Self::HOUR.milliseconds * 24,
     };
 
+    #[must_use]
     pub const fn milliseconds(&self) -> u64 {
         self.milliseconds
     }
@@ -43,6 +44,7 @@ impl Duration {
         extracted
     }
 
+    #[must_use]
     pub fn short_format(&self) -> String {
         format!("{self:1}")
     }
@@ -227,6 +229,7 @@ pub struct Timestamp {
 impl Timestamp {
     pub const ZERO: Self = Self::new(0, 1);
 
+    #[must_use]
     pub const fn new(turn: u64, season_length: u64) -> Self {
         Self {
             offset: Duration {
@@ -236,6 +239,7 @@ impl Timestamp {
         }
     }
 
+    #[must_use]
     pub const fn minute_of_day(&self) -> u64 {
         (self.offset.milliseconds() % Duration::DAY.milliseconds())
             / Duration::MINUTE.milliseconds()

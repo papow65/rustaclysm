@@ -68,6 +68,7 @@ pub enum CountRange {
 }
 
 impl CountRange {
+    #[must_use]
     pub fn random(&self) -> u32 {
         match self {
             Self::Fixed(fixed) => *fixed,

@@ -5,7 +5,10 @@ license = "AGPL-3.0-or-later"
 edition = "2021"
 
 [dependencies]
-pathfinding = "4"
-regex = "1"
-serde = { version = "1", features = ["derive"] }
+pathfinding = { workspace = true }
+regex = { workspace = true }
+serde = { workspace = true }
 time = "0.3"
+
+[lints]
+workspace = true

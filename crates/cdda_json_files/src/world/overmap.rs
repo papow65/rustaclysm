@@ -33,6 +33,7 @@ impl Overmap {
 pub struct OvermapLevel(pub RepetitionBlock<ObjectId>);
 
 impl OvermapLevel {
+    #[must_use]
     pub fn all(id: ObjectId) -> Self {
         Self(RepetitionBlock::new(CddaAmount {
             obj: id,

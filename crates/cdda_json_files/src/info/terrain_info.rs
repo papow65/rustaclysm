@@ -23,14 +23,17 @@ pub struct TerrainInfo {
 pub struct MoveCost(i8);
 
 impl MoveCost {
+    #[must_use]
     pub const fn accessible(&self) -> bool {
         0 < self.0
     }
 
+    #[must_use]
     pub fn value(&self) -> u8 {
         self.0.max(0) as u8
     }
 
+    #[must_use]
     pub fn adjust(&self, cost_mod: Option<MoveCostIncrease>) -> Self {
         let extra = cost_mod.map_or(0, |c| c.0);
         Self(self.0 + extra as i8)

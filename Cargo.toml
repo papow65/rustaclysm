@@ -19,18 +19,26 @@ bevy = { version = "0.14", default-features = false, features = [ "bevy_asset", 
 #bevy_dylib = "0.14.2" # Uncomment this line (once) when `cargo run --features bevy/dynamic_linking` does not look for the right version
 bresenham = "0.1"
 cdda_json_files = { path = "crates/cdda_json_files" }
-either = "1"
+either = { workspace = true }
+fastrand = { workspace = true }
 float-ord = "0.3"
 futures-lite = "2"
 glob = "0.3"
-pathfinding = "4"
+pathfinding = { workspace = true }
+regex = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thread_local = "1"
+units = { path = "crates/units" }
+
+[workspace.dependencies]
+# We limit this list to crates that are used in multiple crates.
+either = "1"
 fastrand = "2"
+pathfinding = "4"
 regex = "1"
 serde = { version = "1", features = ["derive", "rc" ] }
 serde_json = "1"
-thread_local = "1"
-time = "0.3"
-units = { path = "crates/units" }
 
 [features]
 log_archetypes = [] # print archetypes in use
@@ -43,7 +51,10 @@ debug = "line-tables-only" # For useful bug reports
 lto = "thin"
 panic = 'abort'
 
-[lints.rust]
+[lints]
+workspace = true
+
+[workspace.lints.rust]
 # Forbidden groups
 keyword_idents = { level = "forbid", priority = -1 }
 # Forbidden linsts
@@ -97,7 +108,7 @@ unused_macros = "deny"
 # Warned
 dead_code = "warn"
 
-[lints.clippy]
+[workspace.lints.clippy]
 # Denied categories
 complexity = { level = "deny", priority = -1 }
 correctness = { level = "deny", priority = -1 }
@@ -160,6 +171,7 @@ cast_precision_loss = { level = "allow", priority = 1 }
 cast_possible_wrap = { level = "allow", priority = 1 }
 cast_sign_loss = { level = "allow", priority = 1 }
 match_wildcard_for_single_variants = { level = "allow", priority = 1 }
+missing_panics_doc = { level = "allow", priority = 1 }
 module_name_repetitions = { level = "allow", priority = 1 }
 redundant_else = { level = "allow", priority = 1 }
 similar_names = { level = "allow", priority = 1 }

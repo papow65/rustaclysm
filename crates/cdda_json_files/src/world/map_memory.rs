@@ -13,6 +13,7 @@ pub struct MapMemory(pub Vec<SubmapMemory>);
 pub struct SubmapMemory(pub Vec<TileMemory>);
 
 impl SubmapMemory {
+    #[must_use]
     pub fn seen(&self, x: u8, z: u8) -> bool {
         assert!(self.0.len() <= 144, ":-(");
 

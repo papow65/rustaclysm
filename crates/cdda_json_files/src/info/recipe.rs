@@ -57,6 +57,7 @@ pub enum BookLearnItem {
 }
 
 impl BookLearnItem {
+    #[must_use]
     pub fn id(&self) -> ObjectId {
         match self {
             Self::Simple(id) | Self::Wrapped((id,)) | Self::WithSkill(id, _) => id.clone(),

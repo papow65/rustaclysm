@@ -14,6 +14,7 @@ pub struct FieldInfo {
 }
 
 impl FieldInfo {
+    #[must_use]
     pub fn name(&self) -> &ItemName {
         self.intensity_levels[0]
             .name

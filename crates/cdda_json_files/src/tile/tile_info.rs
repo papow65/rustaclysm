@@ -28,6 +28,7 @@ impl SpriteNumbers {
         .into_iter()
     }
 
+    #[must_use]
     pub fn random(&self) -> Option<SpriteNumber> {
         match self {
             Self::MaybeFlat(m) => fastrand::choice(m.0.iter()).copied(),
@@ -125,6 +126,7 @@ impl TileInfo {
         self.ids.iter().cloned()
     }
 
+    #[must_use]
     pub fn sprite_numbers(
         &self,
         tile_variant: &Option<CddaTileVariant>,

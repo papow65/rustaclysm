@@ -6,12 +6,14 @@ pub struct Speed {
 }
 
 impl Speed {
+    #[must_use]
     pub const fn from_kmph(n: u64) -> Self {
         Self {
             millimeter_per_second: n * 1_000_000 / 3_600,
         }
     }
 
+    #[must_use]
     pub const fn millimeter_per_second(&self) -> u64 {
         self.millimeter_per_second
     }

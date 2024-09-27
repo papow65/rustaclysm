@@ -50,6 +50,7 @@ pub struct CddaItem {
 }
 
 impl CddaItem {
+    #[must_use]
     pub fn broken(&self) -> bool {
         const BROKEN_DAMAGE: i64 = 4000; // Based on itype.h:1311
 
@@ -126,7 +127,7 @@ pub struct Pocket {
 #[serde(deny_unknown_fields)]
 pub struct AdditionalPocket {
     #[expect(unused)]
-    pub typeid: ObjectId,
+    typeid: ObjectId,
 
     #[expect(unused)]
     last_temp_check: Option<u64>,

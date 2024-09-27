@@ -6,12 +6,15 @@ edition = "2021"
 
 [dependencies]
 ahash = { version = "0.8", default-features = false, features = ["runtime-rng"] }
-either = "1"
+either = { workspace = true }
 hashbrown = { version = "0.14", features = ["serde"] }
-fastrand = "2"
-serde = { version = "1", features = ["derive", "rc" ] }
-serde_json = "1"
+fastrand = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
 units = { path = "../units" }
 
 [dev-dependencies]
 reqwest = { version = "0.12", features = ["blocking", "json"] }
+
+[lints]
+workspace = true

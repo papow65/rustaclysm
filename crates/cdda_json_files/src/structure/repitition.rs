@@ -71,6 +71,7 @@ impl<T> RepetitionBlock<T> {
 }
 
 impl RepetitionBlock<ObjectId> {
+    #[must_use]
     pub fn is_significant(&self) -> bool {
         1 < self.0.len()
             || ![

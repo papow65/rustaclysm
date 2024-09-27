@@ -12,26 +12,32 @@ impl Flags {
         self.0.contains(&Arc::from(value))
     }
 
+    #[must_use]
     pub fn aquatic(&self) -> bool {
         self.contains("AQUATIC")
     }
 
+    #[must_use]
     pub fn goes_up(&self) -> bool {
         self.contains("GOES_UP") || self.contains("RAMP_UP")
     }
 
+    #[must_use]
     pub fn goes_down(&self) -> bool {
         self.contains("GOES_DOWN") || self.contains("RAMP_DOWN")
     }
 
+    #[must_use]
     pub fn obstacle(&self) -> bool {
         self.contains("OBSTACLE")
     }
 
+    #[must_use]
     pub fn transparent(&self) -> bool {
         self.contains("TRANSPARENT")
     }
 
+    #[must_use]
     pub fn water(&self) -> bool {
         self.contains("SHALLOW_WATER") || self.contains("DEEP_WATER")
     }

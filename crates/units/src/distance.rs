@@ -12,14 +12,17 @@ impl Distance {
     pub const DIAGONAL: Self = Self::from_millimeter(1414);
     pub const VERTICAL: Self = Self::from_millimeter(1800);
 
+    #[must_use]
     pub const fn from_millimeter(millimeter: u64) -> Self {
         Self { millimeter }
     }
 
+    #[must_use]
     pub const fn millimeter(&self) -> u64 {
         self.millimeter
     }
 
+    #[must_use]
     pub fn meter_f32(&self) -> f32 {
         0.001 * self.millimeter as f32
     }

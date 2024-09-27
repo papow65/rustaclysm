@@ -135,6 +135,7 @@ pub struct ItemInfo {
 }
 
 impl ItemInfo {
+    #[must_use]
     pub fn melee_damage(&self) -> u16 {
         self.bashing.unwrap_or(0).max(self.cutting.unwrap_or(0))
     }
@@ -169,6 +170,7 @@ pub struct ItemName {
 }
 
 impl ItemName {
+    #[must_use]
     pub const fn amount(&self, amount: u32) -> &Arc<str> {
         if amount == 1 {
             &self.single

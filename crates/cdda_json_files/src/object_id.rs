@@ -5,26 +5,32 @@ use std::sync::Arc;
 pub struct ObjectId(Arc<str>);
 
 impl ObjectId {
+    #[must_use]
     pub fn new(value: &str) -> Self {
         Self(value.into())
     }
 
+    #[must_use]
     pub fn starts_with(&self, part: &str) -> bool {
         self.0.starts_with(part)
     }
 
+    #[must_use]
     pub fn contains(&self, part: &str) -> bool {
         self.0.contains(part)
     }
 
+    #[must_use]
     pub fn prefix(&self, part: impl Into<String>) -> Self {
         Self((part.into() + &*self.0).into())
     }
 
+    #[must_use]
     pub fn suffix(&self, part: &str) -> Self {
         Self((String::from(&*self.0) + part).into())
     }
 
+    #[must_use]
     pub fn truncate(&self) -> Self {
         Self(
             String::from(&*self.0)
@@ -48,26 +54,32 @@ impl ObjectId {
         )
     }
 
+    #[must_use]
     pub fn fallback_name(&self) -> Arc<str> {
         Arc::<str>::from(&*self.0)
     }
 
+    #[must_use]
     pub fn is_moving_deep_water_zone(&self) -> bool {
         self.0.starts_with("river_")
     }
 
+    #[must_use]
     pub fn is_still_deep_water_zone(&self) -> bool {
         self.0.starts_with("lake_")
     }
 
+    #[must_use]
     pub fn is_grassy_zone(&self) -> bool {
         &*self.0 == "field" || self.0.starts_with("forest")
     }
 
+    #[must_use]
     pub fn is_road_zone(&self) -> bool {
         self.0.starts_with("road_")
     }
 
+    #[must_use]
     pub fn is_ground(&self) -> bool {
         &*self.0 == "t_grass" || &*self.0 == "t_dirt"
     }
