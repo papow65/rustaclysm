@@ -1,5 +1,5 @@
-use crate::common::{InputChange, Key, KeyChange};
 use crate::gameplay::{Fragment, HorizontalDirection, Nbor, RecipeSituation};
+use crate::keyboard::{InputChange, Key, KeyChange};
 use bevy::{input::keyboard::KeyCode, prelude::Entity};
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]

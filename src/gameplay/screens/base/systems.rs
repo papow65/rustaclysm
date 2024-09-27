@@ -1,10 +1,11 @@
-use crate::common::{log_if_slow, InputChange, Keys};
+use crate::common::log_if_slow;
 use crate::gameplay::{
     CameraOffset, ElevationVisibility, Focus, FocusState, GameplayScreenState, Instruction,
     InstructionQueue, MessageWriter, PlayerActionState, QueuedInstruction, VisualizationUpdate,
     ZoomDirection, ZoomDistance,
 };
 use crate::hud::ScrollingList;
+use crate::keyboard::{InputChange, Keys};
 use bevy::input::mouse::{MouseMotion, MouseWheel};
 use bevy::{prelude::*, render::view::RenderLayers};
 use std::time::Instant;

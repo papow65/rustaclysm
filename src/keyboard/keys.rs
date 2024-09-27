@@ -4,7 +4,9 @@ use bevy::prelude::{ButtonInput, EventReader, KeyCode, Resource};
 use either::Either;
 use std::iter::empty;
 
-/// This resource is updated every frame, but this rate may differ from the keyboard input from bevy.
+/// This resource contains all user keyboard input
+///
+/// The keys are updated every frame, but this rate may differ from the keyboard input from bevy.
 /// So a key may not continuously be present in 'held', even when it is held down on the physical keyboard.
 #[derive(Debug, Default, Resource)]
 pub(crate) struct Keys {

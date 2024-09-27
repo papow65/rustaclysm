@@ -1,4 +1,5 @@
-use crate::common::{log_if_slow, Key, Keys};
+use crate::common::log_if_slow;
+use crate::keyboard::{Key, Keys};
 use crate::manual::components::ManualDisplay;
 use bevy::prelude::{KeyCode, Query, Res, Visibility, With};
 use std::time::Instant;

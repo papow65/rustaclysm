@@ -2,11 +2,11 @@ use crate::gameplay::GameplayScreenState;
 use crate::hud::{DefaultPanel, Fonts};
 use crate::manual::components::ManualDisplay;
 use bevy::prelude::{
-    default, Alpha, BackgroundColor, BuildChildren, Children, Commands, NodeBundle, Query, Res,
-    State, Text, TextBundle, TextSection, Val, With, ZIndex,
+    Alpha, BackgroundColor, BuildChildren, Children, Commands, NodeBundle, Query, Res, State, Text,
+    TextBundle, TextSection, Val, With, ZIndex,
 };
 
-static MAIN_MENU_CONTENTS: &str = "\
+static GLOBAL_MANUAL_CONTENTS: &str = "\
     zoom ui         ctrl +/-\n\
     toggle this     F1\n\
     quit            ctrl c/q";
@@ -32,11 +32,8 @@ static BASE_MANUAL_CONTENTS: &str = "\
     reset angle     0\n\
     zoom            z/Z\n\
     zoom            scroll wheel\n\
-    zoom ui         ctrl +/-\n\
-    toggle this     F1\n\
     open menu       esc\n\
-    to main menu    F12\n\
-    quit            ctrl c/q";
+    to main menu    F12\n";
 
 static INVENTORY_MANUAL_CONTENTS: &str = "\
     select item     arrow up/down\n\
@@ -46,32 +43,20 @@ static INVENTORY_MANUAL_CONTENTS: &str = "\
     take item       t\n\
     wield item      w\n\
     unwield item    u\n\
-    zoom ui         ctrl +/-\n\
-    toggle this     F1\n\
     close inventory i/esc\n\
-    to main menu    F12\n\
-    quit            ctrl c/q";
+    to main menu    F12\n";
 
 static CRAFTING_MANUAL_CONTENTS: &str = "\
     select craft    arrow up/down\n\
-    zoom ui         ctrl +/-\n\
-    toggle this     F1\n\
     close crafting  &/esc\n\
-    to main menu    F12\n\
-    quit            ctrl c/q";
+    to main menu    F12\n";
 
 static MENU_MANUAL_CONTENTS: &str = "\
-    zoom ui         ctrl +/-\n\
-    toggle this     F1\n\
     close this menu esc\n\
-    to main menu    F12\n\
-    quit            ctrl c/q";
+    to main menu    F12\n";
 
 static DEATH_MANUAL_CONTENTS: &str = "\
-    zoom ui         ctrl +/-\n\
-    toggle this     F1\n\
-    to main menu    F12/enter/space/esc\n\
-    quit            ctrl c/q";
+    to main menu    F12/enter/space/esc\n";
 
 #[expect(clippy::needless_pass_by_value)]
 pub(super) fn spawn_manual(
@@ -98,9 +83,9 @@ pub(super) fn spawn_manual(
                         value: String::from(BASE_MANUAL_CONTENTS),
                         style: fonts.standard(),
                     }],
-                    ..default()
+                    ..Text::default()
                 },
-                ..default()
+                ..TextBundle::default()
             });
         });
 }
@@ -130,25 +115,28 @@ pub(super) fn update_manual(
         .1
         .first()
         .expect("The manual should have a single child");
-    manual_text
+    let mut manual_text = manual_text
         .get_mut(*manual_text_entity)
-        .expect("Text should exist for the manual")
+        .expect("Text should exist for the manual");
+    let manual_string = &mut manual_text
         .sections
         .get_mut(0)
         .expect("Manual text should have a single section")
-        .value
-        .replace_range(
-            ..,
-            if let Some(gameplay_screen_state) = gameplay_screen_state {
-                match gameplay_screen_state.get() {
-                    GameplayScreenState::Base => BASE_MANUAL_CONTENTS,
-                    GameplayScreenState::Inventory => INVENTORY_MANUAL_CONTENTS,
-                    GameplayScreenState::Crafting => CRAFTING_MANUAL_CONTENTS,
-                    GameplayScreenState::Menu => MENU_MANUAL_CONTENTS,
-                    GameplayScreenState::Death => DEATH_MANUAL_CONTENTS,
-                }
-            } else {
-                MAIN_MENU_CONTENTS
-            },
-        );
+        .value;
+
+    manual_string.replace_range(
+        ..,
+        if let Some(gameplay_screen_state) = gameplay_screen_state {
+            match gameplay_screen_state.get() {
+                GameplayScreenState::Base => BASE_MANUAL_CONTENTS,
+                GameplayScreenState::Inventory => INVENTORY_MANUAL_CONTENTS,
+                GameplayScreenState::Crafting => CRAFTING_MANUAL_CONTENTS,
+                GameplayScreenState::Menu => MENU_MANUAL_CONTENTS,
+                GameplayScreenState::Death => DEATH_MANUAL_CONTENTS,
+            }
+        } else {
+            ""
+        },
+    );
+    *manual_string += GLOBAL_MANUAL_CONTENTS;
 }

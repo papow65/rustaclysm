@@ -1,4 +1,4 @@
-use crate::common::{log_if_slow, uppercase_first, InputChange, Key, Keys};
+use crate::common::{log_if_slow, uppercase_first};
 use crate::gameplay::screens::crafting::components::{
     AlternativeSituation, ComponentSituation, QualitySituation, RecipeSituation,
 };
@@ -11,6 +11,7 @@ use crate::hud::{
     Fonts, ScrollingList, SelectionList, BAD_TEXT_COLOR, GOOD_TEXT_COLOR, PANEL_COLOR,
     SMALL_SPACING, WARN_TEXT_COLOR,
 };
+use crate::keyboard::{InputChange, Key, Keys};
 use bevy::prelude::*;
 use bevy::utils::HashMap;
 use cdda_json_files::{

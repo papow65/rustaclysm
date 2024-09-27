@@ -5,6 +5,7 @@ mod background;
 mod common;
 mod gameplay;
 mod hud;
+mod keyboard;
 mod loading;
 mod main_menu;
 mod manual;

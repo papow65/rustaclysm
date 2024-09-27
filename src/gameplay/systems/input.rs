@@ -1,5 +1,5 @@
 use crate::application::ApplicationState;
-use crate::common::{Key, Keys};
+use crate::keyboard::{Key, Keys};
 use bevy::prelude::{KeyCode, NextState, Res, ResMut};
 
 #[expect(clippy::needless_pass_by_value)]

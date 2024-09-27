@@ -1,16 +1,12 @@
-use crate::application::systems::{
-    enter_main_menu, manage_global_keyboard_input, maximize_window, preprocess_keyboard_input,
-};
+use crate::application::systems::{enter_main_menu, maximize_window};
 use crate::application::{check::check_delay, ApplicationState};
 use crate::background::BackgroundPlugin;
-use crate::common::{log_transition_plugin, Keys};
-use crate::{gameplay::GameplayPlugin, hud::HudPlugin, loading::LoadingIndicatorPlugin};
-use crate::{main_menu::MainMenuPlugin, manual::ManualPlugin};
-use bevy::input::{keyboard::KeyboardInput, InputSystem};
+use crate::common::log_transition_plugin;
+use crate::{gameplay::GameplayPlugin, hud::HudPlugin, keyboard::KeyboardPlugin};
+use crate::{loading::LoadingIndicatorPlugin, main_menu::MainMenuPlugin, manual::ManualPlugin};
 use bevy::prelude::{
-    on_event, App, AppExtStates, AssetPlugin, DefaultPlugins, Fixed, IVec2, ImagePlugin,
-    IntoSystemConfigs, Last, Msaa, PluginGroup, PreUpdate, Startup, Time, Update, Window,
-    WindowPlugin, WindowPosition,
+    App, AppExtStates, AssetPlugin, DefaultPlugins, Fixed, IVec2, ImagePlugin, Last, Msaa,
+    PluginGroup, Startup, Time, Window, WindowPlugin, WindowPosition,
 };
 use bevy::window::{PresentMode, WindowResolution};
 use std::time::Duration;
@@ -18,8 +14,7 @@ use std::time::Duration;
 pub(crate) fn run_application() {
     let mut app = App::new();
 
-    app.insert_resource(Msaa::default())
-        .insert_resource(Keys::default());
+    app.insert_resource(Msaa::default());
 
     app.add_plugins(
         DefaultPlugins
@@ -44,6 +39,7 @@ pub(crate) fn run_application() {
 
     app.add_plugins((
         HudPlugin,
+        KeyboardPlugin,
         MainMenuPlugin,
         ManualPlugin,
         BackgroundPlugin,
@@ -56,11 +52,6 @@ pub(crate) fn run_application() {
     app.enable_state_scoped_entities::<ApplicationState>();
 
     app.add_systems(Startup, (maximize_window, enter_main_menu));
-    app.add_systems(PreUpdate, preprocess_keyboard_input.after(InputSystem));
-    app.add_systems(
-        Update,
-        manage_global_keyboard_input.run_if(on_event::<KeyboardInput>()),
-    );
     app.add_systems(Last, check_delay);
 
     app.run();

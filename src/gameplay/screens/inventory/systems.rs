@@ -1,4 +1,3 @@
-use crate::common::{InputChange, Key, Keys};
 use crate::gameplay::screens::inventory::components::{
     InventoryAction, InventoryButton, InventoryItemDescription, InventoryItemLine,
 };
@@ -12,6 +11,7 @@ use crate::hud::{
     Fonts, ScrollingList, SelectionList, StepDirection, StepSize, GOOD_TEXT_COLOR, HARD_TEXT_COLOR,
     PANEL_COLOR, SMALL_SPACING, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
 };
+use crate::keyboard::{InputChange, Key, Keys};
 use bevy::{ecs::entity::EntityHashMap, prelude::*, utils::HashMap};
 use cdda_json_files::{ItemInfo, ObjectId};
 use units::Timestamp;
