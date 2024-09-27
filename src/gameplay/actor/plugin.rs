@@ -9,6 +9,6 @@ impl Plugin for ActorPlugin {
         app.add_plugins(BehaviorPlugin);
 
         app.add_sub_state::<PlayerActionState>();
-        app.add_plugins((log_transition_plugin::<PlayerActionState>,));
+        app.add_plugins(log_transition_plugin::<PlayerActionState>);
     }
 }

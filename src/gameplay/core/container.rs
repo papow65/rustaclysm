@@ -83,7 +83,7 @@ impl<'a> Container<'a> {
                 };
                 message_writer
                     .subject(container_subject.clone())
-                    .simple(format!("can bear {free_mass}, but {added_mass} needed",).as_str())
+                    .simple(format!("can bear {free_mass}, but {added_mass} needed").as_str())
                     .send_warn();
             }
 

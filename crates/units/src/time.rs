@@ -107,7 +107,7 @@ impl fmt::Display for Duration {
                 plural(milliseconds)
             )?;
         } else if self.milliseconds == 0 {
-            write!(f, "no time",)?;
+            write!(f, "no time")?;
         }
 
         Ok(())

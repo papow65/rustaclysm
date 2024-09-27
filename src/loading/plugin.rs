@@ -14,7 +14,7 @@ impl Plugin for LoadingIndicatorPlugin {
         app.insert_state(ProgressScreenState::Complete);
         app.enable_state_scoped_entities::<ProgressScreenState>();
 
-        app.add_plugins((log_transition_plugin::<ProgressScreenState>,));
+        app.add_plugins(log_transition_plugin::<ProgressScreenState>);
 
         app.add_systems(OnEnter(ProgressScreenState::Loading), spawn_loading);
 

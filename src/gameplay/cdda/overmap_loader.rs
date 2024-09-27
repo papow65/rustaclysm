@@ -27,7 +27,7 @@ where
             .read_to_end(&mut bytes)
             .await
             .inspect_err(|e| {
-                eprintln!("Map file loading error: {:?} {e:?}", load_context.path(),);
+                eprintln!("Map file loading error: {:?} {e:?}", load_context.path());
             })
             .map_err(Either::Left)?;
 

@@ -11,7 +11,7 @@ pub(crate) struct FocusPlugin;
 impl Plugin for FocusPlugin {
     fn build(&self, app: &mut App) {
         app.add_sub_state::<FocusState>();
-        app.add_plugins((log_transition_plugin::<FocusState>,));
+        app.add_plugins(log_transition_plugin::<FocusState>);
 
         app.add_systems(
             Update,
