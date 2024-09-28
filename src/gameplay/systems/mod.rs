@@ -4,7 +4,9 @@ mod spawn;
 mod startup;
 mod update;
 
-pub(crate) use self::{input::*, shutdown::*, spawn::*, startup::*, update::*};
+pub(crate) use self::{
+    input::create_gameplay_key_bindings, shutdown::*, spawn::*, startup::*, update::*,
+};
 
 use crate::gameplay::*;
 use bevy::prelude::*;

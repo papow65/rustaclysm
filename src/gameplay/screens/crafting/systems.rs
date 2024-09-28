@@ -11,7 +11,7 @@ use crate::hud::{
     Fonts, ScrollingList, SelectionList, BAD_TEXT_COLOR, GOOD_TEXT_COLOR, PANEL_COLOR,
     SMALL_SPACING, WARN_TEXT_COLOR,
 };
-use crate::keyboard::{InputChange, Key, Keys};
+use crate::keyboard::{InputChange, Key, KeyBinding};
 use bevy::prelude::*;
 use bevy::utils::HashMap;
 use cdda_json_files::{
@@ -106,6 +106,98 @@ pub(super) fn spawn_crafting_screen(mut commands: Commands) {
         recipe_details,
         last_time: Timestamp::ZERO,
     });
+}
+
+pub(super) fn create_crafting_key_bindings(world: &mut World) {
+    let start = Instant::now();
+
+    let move_crafting_selection = world.register_system(move_crafting_selection);
+    world.spawn(
+        KeyBinding::from_multi(
+            [
+                KeyCode::ArrowUp,
+                KeyCode::ArrowDown,
+                KeyCode::PageUp,
+                KeyCode::PageDown,
+            ],
+            move_crafting_selection,
+        )
+        .held()
+        .scoped(GameplayScreenState::Crafting),
+    );
+
+    let start_craft_wrapper = world.register_system(start_craft_wrapper);
+    let exit_crafting = world.register_system(exit_crafting);
+    world.spawn_batch([
+        KeyBinding::from('c', start_craft_wrapper).scoped(GameplayScreenState::Crafting),
+        KeyBinding::new(
+            vec![Key::Code(KeyCode::Escape), Key::Character('&')],
+            exit_crafting,
+        )
+        .scoped(GameplayScreenState::Crafting),
+    ]);
+
+    log_if_slow("create_crafting_key_bindings", start);
+}
+
+fn exit_crafting(In(_): In<Key>, mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>) {
+    let start = Instant::now();
+
+    next_gameplay_state.set(GameplayScreenState::Base);
+
+    log_if_slow("exit_crafting", start);
+}
+
+#[expect(clippy::needless_pass_by_value)]
+pub(super) fn move_crafting_selection(
+    In(key): In<Key>,
+    mut commands: Commands,
+    infos: Res<Infos>,
+    fonts: Res<Fonts>,
+    mut crafting_screen: ResMut<CraftingScreen>,
+    mut recipes: Query<(&mut Text, &Transform, &Node, &RecipeSituation)>,
+    mut scrolling_lists: Query<(&mut ScrollingList, &mut Style, &Parent, &Node)>,
+    scrolling_parents: Query<(&Node, &Style), Without<ScrollingList>>,
+) {
+    let start = Instant::now();
+
+    let Key::Code(key_code) = key else {
+        eprintln!("Unexpected key {key:?} while moving crafting selection");
+        return;
+    };
+
+    crafting_screen.adjust_selection(&mut recipes.transmute_lens().query(), &key_code);
+    adapt_to_selected(
+        &mut commands,
+        &infos,
+        &fonts,
+        &crafting_screen,
+        &recipes.transmute_lens().query(),
+        &mut scrolling_lists,
+        &scrolling_parents,
+    );
+
+    log_if_slow("move_crafting_selection", start);
+}
+
+#[expect(clippy::needless_pass_by_value)]
+pub(super) fn start_craft_wrapper(
+    In(_): In<Key>,
+    mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
+    mut instruction_queue: ResMut<InstructionQueue>,
+    crafting_screen: Res<CraftingScreen>,
+    mut recipes: Query<(&mut Text, &Transform, &Node, &RecipeSituation)>,
+) {
+    let start = Instant::now();
+
+    start_craft(
+        &mut next_gameplay_state,
+        &mut instruction_queue,
+        &crafting_screen,
+        &recipes.transmute_lens().query(),
+    );
+
+    log_if_slow("start_craft_wrapper", start);
 }
 
 #[expect(clippy::needless_pass_by_value)]
@@ -533,61 +625,6 @@ fn expand_items<'a>(infos: &'a Infos, alternative: &'a Alternative) -> Vec<(&'a 
                 .collect()
         }
     }
-}
-
-#[expect(clippy::needless_pass_by_value)]
-pub(super) fn manage_crafting_keyboard_input(
-    mut commands: Commands,
-    mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
-    keys: Res<Keys>,
-    infos: Res<Infos>,
-    fonts: Res<Fonts>,
-    mut instruction_queue: ResMut<InstructionQueue>,
-    mut crafting_screen: ResMut<CraftingScreen>,
-    mut recipes: Query<(&mut Text, &Transform, &Node, &RecipeSituation)>,
-    mut scrolling_lists: Query<(&mut ScrollingList, &mut Style, &Parent, &Node)>,
-    scrolling_parents: Query<(&Node, &Style), Without<ScrollingList>>,
-) {
-    let start = Instant::now();
-
-    for key_change in keys.without_ctrl() {
-        match key_change.key {
-            Key::Code(KeyCode::Escape) | Key::Character('&')
-                if key_change.change == InputChange::JustPressed =>
-            {
-                println!("<- {key_change:?}");
-                next_gameplay_state.set(GameplayScreenState::Base);
-            }
-            Key::Code(
-                key_code @ (KeyCode::ArrowUp
-                | KeyCode::ArrowDown
-                | KeyCode::PageUp
-                | KeyCode::PageDown),
-            ) => {
-                crafting_screen.adjust_selection(&mut recipes.transmute_lens().query(), &key_code);
-                adapt_to_selected(
-                    &mut commands,
-                    &infos,
-                    &fonts,
-                    &crafting_screen,
-                    &recipes.transmute_lens().query(),
-                    &mut scrolling_lists,
-                    &scrolling_parents,
-                );
-            }
-            Key::Character('c') => {
-                start_craft(
-                    &mut next_gameplay_state,
-                    &mut instruction_queue,
-                    &crafting_screen,
-                    &recipes.transmute_lens().query(),
-                );
-            }
-            _ => {}
-        }
-    }
-
-    log_if_slow("manage_crafting_keyboard_input", start);
 }
 
 fn adapt_to_selected(

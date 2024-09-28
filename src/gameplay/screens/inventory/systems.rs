@@ -1,3 +1,4 @@
+use crate::common::log_if_slow;
 use crate::gameplay::screens::inventory::components::{
     InventoryAction, InventoryButton, InventoryItemDescription, InventoryItemLine,
 };
@@ -11,9 +12,10 @@ use crate::hud::{
     Fonts, ScrollingList, SelectionList, StepDirection, StepSize, GOOD_TEXT_COLOR, HARD_TEXT_COLOR,
     PANEL_COLOR, SMALL_SPACING, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
 };
-use crate::keyboard::{InputChange, Key, Keys};
+use crate::keyboard::{InputChange, Key, KeyBinding};
 use bevy::{ecs::entity::EntityHashMap, prelude::*, utils::HashMap};
 use cdda_json_files::{ItemInfo, ObjectId};
+use std::time::Instant;
 use units::Timestamp;
 
 #[expect(clippy::needless_pass_by_value)]
@@ -76,6 +78,137 @@ pub(super) fn spawn_inventory(mut commands: Commands, fonts: Res<Fonts>) {
         selected_item_text_style: fonts.regular(GOOD_TEXT_COLOR),
         last_time: Timestamp::ZERO,
     });
+}
+
+pub(super) fn create_inventory_key_bindings(world: &mut World) {
+    let start = Instant::now();
+
+    let move_inventory_selection = world.register_system(move_inventory_selection);
+    world.spawn(
+        KeyBinding::from_multi(
+            [
+                KeyCode::ArrowUp,
+                KeyCode::ArrowDown,
+                KeyCode::PageUp,
+                KeyCode::PageDown,
+            ],
+            move_inventory_selection,
+        )
+        .held()
+        .scoped(GameplayScreenState::Inventory),
+    );
+
+    let set_inventory_drop_direction = world.register_system(set_inventory_drop_direction);
+    let handle_selected_item_wrapper = world.register_system(handle_selected_item_wrapper);
+    let examine_selected_item_wrapper = world.register_system(examine_selected_item_wrapper);
+    let exit_inventory = world.register_system(exit_inventory);
+    world.spawn_batch([
+        KeyBinding::from_multi(
+            [
+                KeyCode::Numpad1,
+                KeyCode::Numpad2,
+                KeyCode::Numpad3,
+                KeyCode::Numpad4,
+                KeyCode::Numpad5,
+                KeyCode::Numpad6,
+                KeyCode::Numpad7,
+                KeyCode::Numpad8,
+                KeyCode::Numpad9,
+            ],
+            set_inventory_drop_direction,
+        )
+        .scoped(GameplayScreenState::Inventory),
+        KeyBinding::from_multi(['d', 't', 'u', 'w'], handle_selected_item_wrapper)
+            .scoped(GameplayScreenState::Inventory),
+        KeyBinding::from('e', examine_selected_item_wrapper).scoped(GameplayScreenState::Inventory),
+        KeyBinding::new(
+            vec![Key::Code(KeyCode::Escape), Key::Character('i')],
+            exit_inventory,
+        )
+        .scoped(GameplayScreenState::Inventory),
+    ]);
+
+    log_if_slow("create_inventory_key_bindings", start);
+}
+
+#[expect(clippy::needless_pass_by_value)]
+fn move_inventory_selection(
+    In(key): In<Key>,
+    mut inventory: ResMut<InventoryScreen>,
+    item_lines: Query<(&InventoryItemLine, &Children)>,
+    mut item_texts: Query<(&mut Text, Option<&InventoryItemDescription>)>,
+    item_buttons: Query<&Children, With<Button>>,
+    item_layouts: Query<(&Transform, &Node)>,
+    mut scrolling_lists: Query<(&mut ScrollingList, &mut Style, &Parent, &Node)>,
+    scrolling_parents: Query<(&Node, &Style), Without<ScrollingList>>,
+) {
+    let Key::Code(key_code) = key else {
+        eprintln!("Unexpected key {key:?} while moving inventory selection");
+        return;
+    };
+
+    inventory.adjust_selection(&item_lines, &mut item_texts, &item_buttons, &key_code);
+    follow_selected(
+        &inventory,
+        &item_layouts,
+        &mut scrolling_lists,
+        &scrolling_parents,
+    );
+}
+
+fn set_inventory_drop_direction(In(key): In<Key>, mut inventory: ResMut<InventoryScreen>) {
+    let Ok(player_direction) = PlayerDirection::try_from(key) else {
+        eprintln!("Unexpected key {key:?} while setting inventory drop direction");
+        return;
+    };
+
+    let Nbor::Horizontal(horizontal_direction) = player_direction.to_nbor() else {
+        eprintln!(
+            "Unexpected direction {player_direction:?} while setting inventory drop direction"
+        );
+        return;
+    };
+
+    inventory.drop_direction = horizontal_direction;
+    inventory.last_time = Timestamp::ZERO;
+}
+
+fn handle_selected_item_wrapper(
+    In(key): In<Key>,
+    mut instruction_queue: ResMut<InstructionQueue>,
+    mut inventory: ResMut<InventoryScreen>,
+    mut item_lines: Query<(&InventoryItemLine, &Children)>,
+) {
+    let Key::Character(char) = key else {
+        eprintln!("Unexpected key {key:?} while handling selected item");
+        return;
+    };
+
+    handle_selected_item(
+        &mut inventory,
+        &mut instruction_queue,
+        &item_lines.transmute_lens().query(),
+        char,
+    );
+}
+
+/// Special case, because we don't want to select another item after the action.
+#[expect(clippy::needless_pass_by_value)]
+fn examine_selected_item_wrapper(
+    In(_): In<Key>,
+    mut instruction_queue: ResMut<InstructionQueue>,
+    inventory: Res<InventoryScreen>,
+    mut item_lines: Query<(&InventoryItemLine, &Children)>,
+) {
+    examine_selected_item(
+        &inventory,
+        &mut instruction_queue,
+        &item_lines.transmute_lens().query(),
+    );
+}
+
+fn exit_inventory(In(_): In<Key>, mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>) {
+    next_gameplay_state.set(GameplayScreenState::Base);
 }
 
 #[expect(clippy::needless_pass_by_value)]
@@ -359,87 +492,6 @@ fn actions(section: &InventorySection, drop_section: bool) -> Vec<InventoryActio
         actions.push(InventoryAction::Wield);
     }
     actions
-}
-
-#[expect(clippy::needless_pass_by_value)]
-pub(super) fn manage_inventory_keyboard_input(
-    keys: Res<Keys>,
-    mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
-    mut instruction_queue: ResMut<InstructionQueue>,
-    mut inventory: ResMut<InventoryScreen>,
-    mut item_lines: Query<(&InventoryItemLine, &Children)>,
-    mut item_texts: Query<(&mut Text, Option<&InventoryItemDescription>)>,
-    item_buttons: Query<&Children, With<Button>>,
-    item_layouts: Query<(&Transform, &Node)>,
-    mut scrolling_lists: Query<(&mut ScrollingList, &mut Style, &Parent, &Node)>,
-    scrolling_parents: Query<(&Node, &Style), Without<ScrollingList>>,
-) {
-    for key_change in keys.without_ctrl() {
-        match key_change.key {
-            Key::Code(KeyCode::Escape) | Key::Character('i')
-                if key_change.change == InputChange::JustPressed =>
-            {
-                next_gameplay_state.set(GameplayScreenState::Base);
-            }
-            Key::Code(
-                KeyCode::Numpad1
-                | KeyCode::Numpad2
-                | KeyCode::Numpad3
-                | KeyCode::Numpad4
-                | KeyCode::Numpad5
-                | KeyCode::Numpad6
-                | KeyCode::Numpad7
-                | KeyCode::Numpad8
-                | KeyCode::Numpad9,
-            ) => {
-                drop_at(&mut inventory, &key_change.key);
-            }
-            Key::Code(
-                key_code @ (KeyCode::ArrowUp
-                | KeyCode::ArrowDown
-                | KeyCode::PageUp
-                | KeyCode::PageDown),
-            ) => {
-                inventory.adjust_selection(&item_lines, &mut item_texts, &item_buttons, &key_code);
-                follow_selected(
-                    &inventory,
-                    &item_layouts,
-                    &mut scrolling_lists,
-                    &scrolling_parents,
-                );
-            }
-            Key::Character(char @ ('d' | 't' | 'u' | 'w')) => {
-                handle_selected_item(
-                    &mut inventory,
-                    &mut instruction_queue,
-                    &item_lines.transmute_lens().query(),
-                    char,
-                );
-            }
-            Key::Character('e') => {
-                // Special case, because we don't want to select another item after the action.
-                examine_selected_item(
-                    &inventory,
-                    &mut instruction_queue,
-                    &item_lines.transmute_lens().query(),
-                );
-            }
-            _ => {}
-        }
-    }
-}
-
-fn drop_at(inventory: &mut InventoryScreen, key: &Key) {
-    let nbor = PlayerDirection::try_from(key)
-        .expect("The direction should be valid ({key:?})")
-        .to_nbor();
-    match nbor {
-        Nbor::Horizontal(horizontal_direction) => {
-            inventory.drop_direction = horizontal_direction;
-            inventory.last_time = Timestamp::ZERO;
-        }
-        _ => panic!("Only horizontal dropping allowed"),
-    }
 }
 
 fn follow_selected(

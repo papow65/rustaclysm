@@ -1,14 +1,16 @@
 use crate::application::ApplicationState;
+use crate::common::log_if_slow;
 use crate::gameplay::screens::menu::components::{MainMenuButton, QuitButton, ReturnButton};
 use crate::gameplay::GameplayScreenState;
 use crate::hud::{Fonts, BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, MEDIUM_SPACING};
-use crate::keyboard::{Key, Keys};
+use crate::keyboard::{Key, KeyBinding};
 use bevy::app::AppExit;
 use bevy::prelude::{
     default, AlignItems, BuildChildren, Button, ButtonBundle, Changed, ChildBuilder, Color,
-    Commands, Events, FlexDirection, Interaction, JustifyContent, KeyCode, NextState, NodeBundle,
-    Query, Res, ResMut, StateScoped, Style, TextBundle, Val, With,
+    Commands, Events, FlexDirection, In, Interaction, JustifyContent, KeyCode, NextState,
+    NodeBundle, Query, Res, ResMut, StateScoped, Style, TextBundle, Val, With, World,
 };
+use std::time::Instant;
 
 #[expect(clippy::needless_pass_by_value)]
 pub(super) fn spawn_menu(mut commands: Commands, fonts: Res<Fonts>) {
@@ -56,6 +58,22 @@ fn add_text(parent: &mut ChildBuilder, fonts: &Fonts, text: &str, color: Color) 
     parent.spawn(TextBundle::from_section(text, fonts.large(color)));
 }
 
+pub(super) fn create_menu_key_bindings(world: &mut World) {
+    let start = Instant::now();
+
+    let close_menu = world.register_system(close_menu);
+    world.spawn((
+        KeyBinding::from(KeyCode::Escape, close_menu),
+        StateScoped(GameplayScreenState::Menu),
+    ));
+
+    log_if_slow("create_menu_key_bindings", start);
+}
+
+fn close_menu(In(_): In<Key>, mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>) {
+    next_gameplay_state.set(GameplayScreenState::Base);
+}
+
 #[expect(clippy::needless_pass_by_value)]
 pub(super) fn manage_menu_button_input(
     mut next_application_state: ResMut<NextState<ApplicationState>>,
@@ -92,18 +110,5 @@ pub(super) fn manage_menu_button_input(
                 }
             }
         }
-    }
-}
-
-#[expect(clippy::needless_pass_by_value)]
-pub(super) fn manage_menu_keyboard_input(
-    keys: Res<Keys>,
-    mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
-) {
-    for _ in keys
-        .just_pressed_without_ctrl()
-        .filter(|key| **key == Key::Code(KeyCode::Escape))
-    {
-        next_gameplay_state.set(GameplayScreenState::Base);
     }
 }

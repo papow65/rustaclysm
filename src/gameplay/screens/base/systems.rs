@@ -5,7 +5,7 @@ use crate::gameplay::{
     ZoomDirection, ZoomDistance,
 };
 use crate::hud::ScrollingList;
-use crate::keyboard::{InputChange, Keys};
+use crate::keyboard::{InputChange, Key, KeyBinding, KeyChange};
 use bevy::input::mouse::{MouseMotion, MouseWheel};
 use bevy::{prelude::*, render::view::RenderLayers};
 use std::time::Instant;
@@ -163,61 +163,138 @@ fn handle_queued_instruction(
     }
 }
 
+pub(super) fn create_base_key_bindings(world: &mut World) {
+    let start = Instant::now();
+
+    let manage_held_keyboard_input =
+        world.register_system(to_held_instruction.pipe(manage_keyboard_input));
+
+    world.spawn_batch([
+        KeyBinding::from_multi(
+            [
+                KeyCode::Numpad1,
+                KeyCode::Numpad2,
+                KeyCode::Numpad3,
+                KeyCode::Numpad4,
+                KeyCode::Numpad5,
+                KeyCode::Numpad6,
+                KeyCode::Numpad7,
+                KeyCode::Numpad8,
+                KeyCode::Numpad9,
+            ],
+            manage_held_keyboard_input,
+        )
+        .held()
+        .scoped(GameplayScreenState::Base),
+        KeyBinding::from_multi(['<', '>'], manage_held_keyboard_input)
+            .held()
+            .scoped(GameplayScreenState::Base),
+    ]);
+
+    let manage_fresh_keyboard_input =
+        world.register_system(to_fresh_instruction.pipe(manage_keyboard_input));
+    world.spawn_batch([
+        KeyBinding::from_multi([KeyCode::Escape, KeyCode::Tab], manage_fresh_keyboard_input)
+            .scoped(GameplayScreenState::Base),
+        KeyBinding::from_multi(
+            [
+                'm', 'M', 'x', 'X', '&', 'i', 'Z', 'z', 'h', '0', '|', '$', 'a', 's', 'p', 'c',
+                '\\', 'G', 'A', '+',
+            ],
+            manage_fresh_keyboard_input,
+        )
+        .scoped(GameplayScreenState::Base),
+    ]);
+
+    log_if_slow("create_crafting_key_bindings", start);
+}
+
 #[expect(clippy::needless_pass_by_value)]
-pub(super) fn manage_keyboard_input(
+fn to_held_instruction(
+    In(key): In<Key>,
+    focus: Focus,
+    player_action_state: Res<State<PlayerActionState>>,
+) -> (Instruction, InputChange) {
+    let key_change = KeyChange {
+        key,
+        change: InputChange::Held,
+    }; // FIXME not correct
+
+    (
+        Instruction::try_from((
+            key_change,
+            focus.state.cancel_handling(&player_action_state),
+        ))
+        .expect("Conversion failed for held instruction"),
+        key_change.change,
+    )
+}
+
+#[expect(clippy::needless_pass_by_value)]
+fn to_fresh_instruction(
+    In(key): In<Key>,
+    focus: Focus,
+    player_action_state: Res<State<PlayerActionState>>,
+) -> (Instruction, InputChange) {
+    let key_change = KeyChange {
+        key,
+        change: InputChange::JustPressed,
+    };
+
+    (
+        Instruction::try_from((
+            key_change,
+            focus.state.cancel_handling(&player_action_state),
+        ))
+        .expect("Conversion failed for fresh instruction"),
+        key_change.change,
+    )
+}
+
+#[expect(clippy::needless_pass_by_value)]
+fn manage_keyboard_input(
+    In((instruction, input_change)): In<(Instruction, InputChange)>,
     mut message_writer: MessageWriter,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
     focus: Focus,
     mut next_focus_state: ResMut<NextState<FocusState>>,
-    keys: Res<Keys>,
     mut instruction_queue: ResMut<InstructionQueue>,
     mut elevation_visibility: ResMut<ElevationVisibility>,
     mut visualization_update: ResMut<VisualizationUpdate>,
     mut camera_offset: ResMut<CameraOffset>,
-    player_action_state: Res<State<PlayerActionState>>,
     mut next_player_action_state: ResMut<NextState<PlayerActionState>>,
     mut camera_layers: Query<&mut RenderLayers, With<Camera3d>>,
 ) {
     let start = Instant::now();
 
-    for key_change in keys.without_ctrl() {
-        let Ok(instruction) = Instruction::try_from((
-            key_change,
-            focus.state.cancel_handling(&player_action_state),
-        )) else {
-            println!("{key_change:?} not recognized");
-            continue;
-        };
-
-        println!("{key_change:?} -> {:?}", &instruction);
-        match instruction {
-            Instruction::ShowGameplayMenu => open_menu(&mut next_gameplay_state),
-            Instruction::ExaminePos => {
-                focus.toggle_examine_pos(&mut next_focus_state);
-            }
-            Instruction::ExamineZoneLevel => {
-                focus.toggle_examine_zone_level(&mut next_focus_state);
-            }
-            Instruction::CraftingScreen => open_crafting_screen(&mut next_gameplay_state),
-            Instruction::Inventory => open_inventory(&mut next_gameplay_state),
-            Instruction::ToggleMap(zoom_distance) => {
-                toggle_map(&mut camera_offset, &mut camera_layers, zoom_distance);
-            }
-            Instruction::Zoom(direction) => zoom(&mut camera_offset, &mut camera_layers, direction),
-            Instruction::ResetCameraAngle => reset_camera_angle(&mut camera_offset),
-            Instruction::ToggleElevation => {
-                toggle_elevation(&mut elevation_visibility, &mut visualization_update);
-            }
-            Instruction::Queued(instruction) => handle_queued_instruction(
-                &mut message_writer,
-                &focus.state,
-                &mut next_focus_state,
-                &mut next_player_action_state,
-                &mut instruction_queue,
-                instruction,
-                key_change.change,
-            ),
+    println!("'-> {:?}", &instruction);
+    match instruction {
+        Instruction::ShowGameplayMenu => open_menu(&mut next_gameplay_state),
+        Instruction::ExaminePos => {
+            focus.toggle_examine_pos(&mut next_focus_state);
         }
+        Instruction::ExamineZoneLevel => {
+            focus.toggle_examine_zone_level(&mut next_focus_state);
+        }
+        Instruction::CraftingScreen => open_crafting_screen(&mut next_gameplay_state),
+        Instruction::Inventory => open_inventory(&mut next_gameplay_state),
+        Instruction::ToggleMap(zoom_distance) => {
+            toggle_map(&mut camera_offset, &mut camera_layers, zoom_distance);
+        }
+        Instruction::Zoom(direction) => zoom(&mut camera_offset, &mut camera_layers, direction),
+        Instruction::ResetCameraAngle => reset_camera_angle(&mut camera_offset),
+        Instruction::ToggleElevation => {
+            toggle_elevation(&mut elevation_visibility, &mut visualization_update);
+        }
+        Instruction::Queued(instruction) => handle_queued_instruction(
+            &mut message_writer,
+            &focus.state,
+            &mut next_focus_state,
+            &mut next_player_action_state,
+            &mut instruction_queue,
+            instruction,
+            input_change,
+        ),
     }
 
     instruction_queue.log_if_long();

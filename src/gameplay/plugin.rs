@@ -11,7 +11,6 @@ use crate::gameplay::{
     MenuScreenPlugin, OvermapAsset, OvermapBufferAsset, RelativeSegments, SpawnSubzoneLevel,
     SpawnZoneLevel, TileLoader, UpdateZoneLevelVisibility,
 };
-use bevy::input::keyboard::KeyboardInput;
 use bevy::prelude::{
     in_state, on_event, resource_exists, resource_exists_and_changed, App, AppExtStates,
     AssetEvent, FixedUpdate, IntoSystemConfigs, OnEnter, OnExit, Plugin, Update,
@@ -59,6 +58,7 @@ fn startup_systems() -> impl IntoSystemConfigs<()> {
         create_independent_resources,
         create_dependent_resources,
         spawn_initial_entities,
+        create_gameplay_key_bindings,
     )
         .chain()
 }
@@ -104,7 +104,6 @@ fn update_systems() -> impl IntoSystemConfigs<(SystemConfigTupleMarker, (), (), 
                 ),
             )
                 .chain(),
-            manage_gameplay_keyboard_input.run_if(on_event::<KeyboardInput>()),
             update_camera_offset.run_if(resource_exists_and_changed::<CameraOffset>),
         )
             .run_if(in_state(ApplicationState::Gameplay)),

@@ -1,11 +1,13 @@
+use crate::common::log_if_slow;
 use crate::hud::{Fonts, BAD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, WARN_TEXT_COLOR};
-use crate::keyboard::{Key, Keys};
+use crate::keyboard::{Key, KeyBinding};
 use crate::{application::ApplicationState, gameplay::GameplayScreenState};
 use bevy::prelude::{
-    AlignItems, BuildChildren, Button, ButtonBundle, Changed, Commands, FlexDirection, Interaction,
-    JustifyContent, KeyCode, NextState, NodeBundle, Query, Res, ResMut, StateScoped, Style,
-    TextBundle, UiRect, Val, With,
+    AlignItems, BuildChildren, Button, ButtonBundle, Changed, Commands, FlexDirection, In,
+    Interaction, JustifyContent, KeyCode, NextState, NodeBundle, Query, Res, ResMut, StateScoped,
+    Style, TextBundle, UiRect, Val, With, World,
 };
+use std::time::Instant;
 
 #[expect(clippy::needless_pass_by_value)]
 pub(super) fn spawn_death_screen(mut commands: Commands, fonts: Res<Fonts>) {
@@ -79,19 +81,31 @@ pub(super) fn spawn_death_screen(mut commands: Commands, fonts: Res<Fonts>) {
         });
 }
 
-#[expect(clippy::needless_pass_by_value)]
-pub(super) fn manage_death_keyboard_input(
+pub(super) fn create_death_screen_key_bindings(world: &mut World) {
+    let start = Instant::now();
+
+    let return_to_main_menu = world.register_system(return_to_main_menu);
+    world.spawn((
+        KeyBinding::from_multi(
+            [
+                KeyCode::Escape,
+                KeyCode::Enter,
+                KeyCode::F12,
+                KeyCode::Space,
+            ],
+            return_to_main_menu,
+        ),
+        StateScoped(GameplayScreenState::Death),
+    ));
+
+    log_if_slow("create_death_screen_key_bindings", start);
+}
+
+fn return_to_main_menu(
+    In(_): In<Key>,
     mut next_application_state: ResMut<NextState<ApplicationState>>,
-    keys: Res<Keys>,
 ) {
-    for _ in keys.just_pressed_without_ctrl().filter(|key| {
-        matches!(
-            **key,
-            Key::Code(KeyCode::Escape | KeyCode::Enter | KeyCode::F12 | KeyCode::Space)
-        )
-    }) {
-        next_application_state.set(ApplicationState::MainMenu);
-    }
+    next_application_state.set(ApplicationState::MainMenu);
 }
 
 #[expect(clippy::needless_pass_by_value)]

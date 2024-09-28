@@ -41,10 +41,10 @@ impl PlayerDirection {
     }
 }
 
-impl TryFrom<&Key> for PlayerDirection {
+impl TryFrom<Key> for PlayerDirection {
     type Error = ();
 
-    fn try_from(key: &Key) -> Result<Self, ()> {
+    fn try_from(key: Key) -> Result<Self, ()> {
         Ok(match key {
             Key::Code(KeyCode::Numpad1) => Self::CloserLeft,
             Key::Code(KeyCode::Numpad2) => Self::Closer,
@@ -97,10 +97,10 @@ pub(crate) enum QueuedInstruction {
     Interrupt(Interruption),
 }
 
-impl TryFrom<&Key> for QueuedInstruction {
+impl TryFrom<Key> for QueuedInstruction {
     type Error = ();
 
-    fn try_from(key: &Key) -> Result<Self, ()> {
+    fn try_from(key: Key) -> Result<Self, ()> {
         match key {
             Key::Code(KeyCode::Escape) => Ok(Self::CancelAction),
             Key::Character('|') => Ok(Self::Wait),
@@ -145,10 +145,10 @@ pub(crate) enum Instruction {
     ResetCameraAngle,
 }
 
-impl TryFrom<(&KeyChange, CancelHandling)> for Instruction {
+impl TryFrom<(KeyChange, CancelHandling)> for Instruction {
     type Error = ();
 
-    fn try_from((key_change, context): (&KeyChange, CancelHandling)) -> Result<Self, ()> {
+    fn try_from((key_change, context): (KeyChange, CancelHandling)) -> Result<Self, ()> {
         match (key_change.key, key_change.change, context) {
             (Key::Code(KeyCode::Escape), InputChange::Held, _) => Err(()),
             (Key::Code(KeyCode::Escape), InputChange::JustPressed, CancelHandling::Menu) => {
@@ -170,7 +170,7 @@ impl TryFrom<(&KeyChange, CancelHandling)> for Instruction {
             (Key::Character('z'), InputChange::JustPressed, _) => Ok(Self::Zoom(ZoomDirection::In)),
             (Key::Character('h'), InputChange::JustPressed, _) => Ok(Self::ToggleElevation),
             (Key::Character('0'), InputChange::JustPressed, _) => Ok(Self::ResetCameraAngle),
-            _ => QueuedInstruction::try_from(&key_change.key).map(Self::Queued),
+            _ => QueuedInstruction::try_from(key_change.key).map(Self::Queued),
         }
     }
 }
