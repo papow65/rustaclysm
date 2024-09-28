@@ -11,7 +11,7 @@ use crate::hud::{
     Fonts, ScrollingList, SelectionList, BAD_TEXT_COLOR, GOOD_TEXT_COLOR, PANEL_COLOR,
     SMALL_SPACING, WARN_TEXT_COLOR,
 };
-use crate::keyboard::{InputChange, Key, KeyBinding};
+use crate::keyboard::{Held, Key, KeyBindings};
 use bevy::prelude::*;
 use bevy::utils::HashMap;
 use cdda_json_files::{
@@ -108,12 +108,16 @@ pub(super) fn spawn_crafting_screen(mut commands: Commands) {
     });
 }
 
-pub(super) fn create_crafting_key_bindings(world: &mut World) {
+#[allow(clippy::needless_pass_by_value)]
+pub(super) fn create_crafting_key_bindings(
+    world: &mut World,
+    held_bindings: Local<KeyBindings<GameplayScreenState, (), Held>>,
+    fresh_bindings: Local<KeyBindings<GameplayScreenState, (), ()>>,
+) {
     let start = Instant::now();
 
-    let move_crafting_selection = world.register_system(move_crafting_selection);
-    world.spawn(
-        KeyBinding::from_multi(
+    held_bindings.spawn(world, GameplayScreenState::Crafting, |bindings| {
+        bindings.add_multi(
             [
                 KeyCode::ArrowUp,
                 KeyCode::ArrowDown,
@@ -121,21 +125,16 @@ pub(super) fn create_crafting_key_bindings(world: &mut World) {
                 KeyCode::PageDown,
             ],
             move_crafting_selection,
-        )
-        .held()
-        .scoped(GameplayScreenState::Crafting),
-    );
+        );
+    });
 
-    let start_craft_wrapper = world.register_system(start_craft_wrapper);
-    let exit_crafting = world.register_system(exit_crafting);
-    world.spawn_batch([
-        KeyBinding::from('c', start_craft_wrapper).scoped(GameplayScreenState::Crafting),
-        KeyBinding::new(
-            vec![Key::Code(KeyCode::Escape), Key::Character('&')],
+    fresh_bindings.spawn(world, GameplayScreenState::Crafting, |bindings| {
+        bindings.add('c', start_craft_wrapper);
+        bindings.add_multi(
+            [Key::Code(KeyCode::Escape), Key::Character('&')],
             exit_crafting,
-        )
-        .scoped(GameplayScreenState::Crafting),
-    ]);
+        );
+    });
 
     log_if_slow("create_crafting_key_bindings", start);
 }
@@ -729,10 +728,7 @@ fn start_craft(
         .get(selected_craft)
         .expect("The selected craft should be found");
     println!("Craft {recipe:?}");
-    instruction_queue.add(
-        QueuedInstruction::StartCraft(recipe.clone()),
-        InputChange::JustPressed,
-    );
+    instruction_queue.add(QueuedInstruction::StartCraft(recipe.clone()));
     // Close the crafting screen
     next_gameplay_state.set(GameplayScreenState::Base);
 }

@@ -3,11 +3,11 @@ use crate::common::log_if_slow;
 use crate::gameplay::screens::menu::components::{MainMenuButton, QuitButton, ReturnButton};
 use crate::gameplay::GameplayScreenState;
 use crate::hud::{Fonts, BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, MEDIUM_SPACING};
-use crate::keyboard::{Key, KeyBinding};
+use crate::keyboard::{Key, KeyBindings};
 use bevy::app::AppExit;
 use bevy::prelude::{
     default, AlignItems, BuildChildren, Button, ButtonBundle, Changed, ChildBuilder, Color,
-    Commands, Events, FlexDirection, In, Interaction, JustifyContent, KeyCode, NextState,
+    Commands, Events, FlexDirection, In, Interaction, JustifyContent, KeyCode, Local, NextState,
     NodeBundle, Query, Res, ResMut, StateScoped, Style, TextBundle, Val, With, World,
 };
 use std::time::Instant;
@@ -58,14 +58,16 @@ fn add_text(parent: &mut ChildBuilder, fonts: &Fonts, text: &str, color: Color) 
     parent.spawn(TextBundle::from_section(text, fonts.large(color)));
 }
 
-pub(super) fn create_menu_key_bindings(world: &mut World) {
+#[allow(clippy::needless_pass_by_value)]
+pub(super) fn create_menu_key_bindings(
+    world: &mut World,
+    bindings: Local<KeyBindings<GameplayScreenState, (), ()>>,
+) {
     let start = Instant::now();
 
-    let close_menu = world.register_system(close_menu);
-    world.spawn((
-        KeyBinding::from(KeyCode::Escape, close_menu),
-        StateScoped(GameplayScreenState::Menu),
-    ));
+    bindings.spawn(world, GameplayScreenState::Menu, |bindings| {
+        bindings.add(KeyCode::Escape, close_menu);
+    });
 
     log_if_slow("create_menu_key_bindings", start);
 }

@@ -1,4 +1,4 @@
-use crate::keyboard::{keys::Keys, Ctrl, Held, Key, KeyBinding};
+use crate::keyboard::{key_binding::KeyBinding, keys::Keys, Ctrl, Held, Key, KeyBindings};
 use bevy::app::AppExit;
 use bevy::input::keyboard::KeyboardInput;
 use bevy::prelude::{
@@ -6,12 +6,10 @@ use bevy::prelude::{
 };
 
 pub(super) fn create_global_key_bindings(world: &mut World) {
-    let zoom_ui = world.register_system(zoom_ui);
-    let quit = world.register_system(quit);
-    world.spawn_batch([
-        KeyBinding::from_multi(['+', '-'], zoom_ui).with_ctrl(),
-        KeyBinding::from_multi(['c', 'q'], quit).with_ctrl(),
-    ]);
+    KeyBindings::<_, Ctrl, ()>::spawn_global(world, |bindings| {
+        bindings.add_multi(['+', '-'], zoom_ui);
+        bindings.add_multi(['c', 'q'], quit);
+    });
 }
 
 fn zoom_ui(In(key): In<Key>, mut ui_scale: ResMut<UiScale>) {

@@ -1,4 +1,6 @@
-use crate::keyboard::{Ctrl, CtrlState, Held, HeldState, InputChange, Key, KeyBinding, KeyChange};
+use crate::keyboard::{
+    key_binding::KeyBinding, Ctrl, CtrlState, Held, HeldState, InputChange, Key, KeyChange,
+};
 use bevy::ecs::system::SystemId;
 use bevy::input::keyboard::{Key as LogicalKey, KeyboardInput};
 use bevy::input::ButtonState;

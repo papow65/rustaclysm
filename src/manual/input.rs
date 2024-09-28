@@ -1,12 +1,13 @@
 use crate::common::log_if_slow;
-use crate::keyboard::{Key, KeyBinding};
+use crate::keyboard::{Key, KeyBindings};
 use crate::manual::components::ManualDisplay;
 use bevy::prelude::{In, KeyCode, Query, Visibility, With, World};
 use std::time::Instant;
 
 pub(super) fn create_manual_key_bindings(world: &mut World) {
-    let toggle_manual = world.register_system(toggle_manual);
-    world.spawn(KeyBinding::from(KeyCode::F1, toggle_manual));
+    KeyBindings::<_, (), ()>::spawn_global(world, |bindings| {
+        bindings.add(KeyCode::F1, toggle_manual);
+    });
 }
 
 fn toggle_manual(In(_): In<Key>, mut manual: Query<&mut Visibility, With<ManualDisplay>>) {

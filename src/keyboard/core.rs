@@ -2,7 +2,7 @@ use bevy::prelude::KeyCode;
 
 // Ctrl
 
-pub(crate) trait CtrlState: Send + Sync + 'static {}
+pub(crate) trait CtrlState: Clone + Default + Send + Sync + 'static {}
 
 impl CtrlState for () {}
 
@@ -13,7 +13,7 @@ impl CtrlState for Ctrl {}
 
 // Held
 
-pub(crate) trait HeldState: Send + Sync + 'static {}
+pub(crate) trait HeldState: Clone + Default + Send + Sync + 'static {}
 
 impl HeldState for () {}
 

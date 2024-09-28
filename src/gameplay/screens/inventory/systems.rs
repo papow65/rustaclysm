@@ -12,7 +12,7 @@ use crate::hud::{
     Fonts, ScrollingList, SelectionList, StepDirection, StepSize, GOOD_TEXT_COLOR, HARD_TEXT_COLOR,
     PANEL_COLOR, SMALL_SPACING, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
 };
-use crate::keyboard::{InputChange, Key, KeyBinding};
+use crate::keyboard::{Held, Key, KeyBindings};
 use bevy::{ecs::entity::EntityHashMap, prelude::*, utils::HashMap};
 use cdda_json_files::{ItemInfo, ObjectId};
 use std::time::Instant;
@@ -80,12 +80,16 @@ pub(super) fn spawn_inventory(mut commands: Commands, fonts: Res<Fonts>) {
     });
 }
 
-pub(super) fn create_inventory_key_bindings(world: &mut World) {
+#[allow(clippy::needless_pass_by_value)]
+pub(super) fn create_inventory_key_bindings(
+    world: &mut World,
+    held_bindings: Local<KeyBindings<GameplayScreenState, (), Held>>,
+    fresh_bindings: Local<KeyBindings<GameplayScreenState, (), ()>>,
+) {
     let start = Instant::now();
 
-    let move_inventory_selection = world.register_system(move_inventory_selection);
-    world.spawn(
-        KeyBinding::from_multi(
+    held_bindings.spawn(world, GameplayScreenState::Inventory, |bindings| {
+        bindings.add_multi(
             [
                 KeyCode::ArrowUp,
                 KeyCode::ArrowDown,
@@ -93,17 +97,11 @@ pub(super) fn create_inventory_key_bindings(world: &mut World) {
                 KeyCode::PageDown,
             ],
             move_inventory_selection,
-        )
-        .held()
-        .scoped(GameplayScreenState::Inventory),
-    );
+        );
+    });
 
-    let set_inventory_drop_direction = world.register_system(set_inventory_drop_direction);
-    let handle_selected_item_wrapper = world.register_system(handle_selected_item_wrapper);
-    let examine_selected_item_wrapper = world.register_system(examine_selected_item_wrapper);
-    let exit_inventory = world.register_system(exit_inventory);
-    world.spawn_batch([
-        KeyBinding::from_multi(
+    fresh_bindings.spawn(world, GameplayScreenState::Inventory, |bindings| {
+        bindings.add_multi(
             [
                 KeyCode::Numpad1,
                 KeyCode::Numpad2,
@@ -116,17 +114,14 @@ pub(super) fn create_inventory_key_bindings(world: &mut World) {
                 KeyCode::Numpad9,
             ],
             set_inventory_drop_direction,
-        )
-        .scoped(GameplayScreenState::Inventory),
-        KeyBinding::from_multi(['d', 't', 'u', 'w'], handle_selected_item_wrapper)
-            .scoped(GameplayScreenState::Inventory),
-        KeyBinding::from('e', examine_selected_item_wrapper).scoped(GameplayScreenState::Inventory),
-        KeyBinding::new(
-            vec![Key::Code(KeyCode::Escape), Key::Character('i')],
+        );
+        bindings.add_multi(['d', 't', 'u', 'w'], handle_selected_item_wrapper);
+        bindings.add('e', examine_selected_item_wrapper);
+        bindings.add_multi(
+            [Key::Code(KeyCode::Escape), Key::Character('i')],
             exit_inventory,
-        )
-        .scoped(GameplayScreenState::Inventory),
-    ]);
+        );
+    });
 
     log_if_slow("create_inventory_key_bindings", start);
 }
@@ -530,26 +525,23 @@ fn handle_selected_item(
     char: char,
 ) {
     if let Some(selected_item) = inventory.selected_item(item_lines) {
-        instruction_queue.add(
-            match char {
-                'd' => {
-                    let Some(item_section) = inventory.section_by_item.get(&selected_item) else {
-                        eprintln!("Section of item {selected_item:?} not found");
-                        return;
-                    };
-                    if &InventorySection::Nbor(inventory.drop_direction) == item_section {
-                        // Prevent moving an item to its current position.
-                        return;
-                    }
-                    QueuedInstruction::Dump(selected_item, inventory.drop_direction)
+        instruction_queue.add(match char {
+            'd' => {
+                let Some(item_section) = inventory.section_by_item.get(&selected_item) else {
+                    eprintln!("Section of item {selected_item:?} not found");
+                    return;
+                };
+                if &InventorySection::Nbor(inventory.drop_direction) == item_section {
+                    // Prevent moving an item to its current position.
+                    return;
                 }
-                't' => QueuedInstruction::Pickup(selected_item),
-                'u' => QueuedInstruction::Unwield(selected_item),
-                'w' => QueuedInstruction::Wield(selected_item),
-                _ => panic!("Unexpected key {char:?}"),
-            },
-            InputChange::Held,
-        );
+                QueuedInstruction::Dump(selected_item, inventory.drop_direction)
+            }
+            't' => QueuedInstruction::Pickup(selected_item),
+            'u' => QueuedInstruction::Unwield(selected_item),
+            'w' => QueuedInstruction::Wield(selected_item),
+            _ => panic!("Unexpected key {char:?}"),
+        });
         inventory
             .selection_list
             .adjust(StepSize::Single, StepDirection::Down);
@@ -562,10 +554,7 @@ fn examine_selected_item(
     item_lines: &Query<&InventoryItemLine>,
 ) {
     if let Some(selected_item) = inventory.selected_item(item_lines) {
-        instruction_queue.add(
-            QueuedInstruction::ExamineItem(selected_item),
-            InputChange::Held,
-        );
+        instruction_queue.add(QueuedInstruction::ExamineItem(selected_item));
     }
 }
 
@@ -590,7 +579,7 @@ pub(super) fn manage_inventory_button_input(
                 InventoryAction::Wield => QueuedInstruction::Wield(item),
                 InventoryAction::Unwield => QueuedInstruction::Unwield(item),
             };
-            instruction_queue.add(instruction, InputChange::Held);
+            instruction_queue.add(instruction);
         }
     }
 }

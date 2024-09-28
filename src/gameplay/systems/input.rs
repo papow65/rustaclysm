@@ -1,14 +1,20 @@
 use crate::application::ApplicationState;
 use crate::common::log_if_slow;
-use crate::keyboard::{Key, KeyBinding};
-use bevy::prelude::{In, KeyCode, NextState, ResMut, World};
+use crate::keyboard::{Key, KeyBindings};
+use bevy::prelude::{In, KeyCode, Local, NextState, ResMut, World};
 use std::time::Instant;
 
-pub(crate) fn create_gameplay_key_bindings(world: &mut World) {
+#[allow(clippy::needless_pass_by_value)]
+pub(crate) fn create_gameplay_key_bindings(
+    world: &mut World,
+    bindings: Local<KeyBindings<ApplicationState, (), ()>>,
+) {
     let start = Instant::now();
 
-    let to_main_menu = world.register_system(to_main_menu);
-    world.spawn(KeyBinding::from(KeyCode::F12, to_main_menu).scoped(ApplicationState::Gameplay));
+    bindings.spawn(world, ApplicationState::Gameplay, |bindings| {
+        bindings.add(KeyCode::F12, to_main_menu);
+    });
+
     log_if_slow("create_gameplay_key_bindings", start);
 }
 

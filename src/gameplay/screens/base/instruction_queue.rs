@@ -1,5 +1,4 @@
 use crate::gameplay::{Interruption, QueuedInstruction};
-use crate::keyboard::InputChange;
 use bevy::prelude::Resource;
 
 #[derive(Debug, Default, Resource)]
@@ -9,9 +8,9 @@ pub(crate) struct InstructionQueue {
 }
 
 impl InstructionQueue {
-    pub(crate) fn add(&mut self, instruction: QueuedInstruction, change: InputChange) {
+    pub(crate) fn add(&mut self, instruction: QueuedInstruction) {
         // Wait for an instruction to be processed until adding a duplicate when holding a key down.
-        if change == InputChange::JustPressed || !self.queue.contains(&instruction) {
+        if !instruction.held_key_allowed() || !self.queue.contains(&instruction) {
             self.queue.insert(0, instruction);
         }
 
@@ -19,10 +18,7 @@ impl InstructionQueue {
     }
 
     pub(crate) fn interrupt(&mut self, interruption: Interruption) {
-        self.add(
-            QueuedInstruction::Interrupt(interruption),
-            InputChange::JustPressed,
-        );
+        self.add(QueuedInstruction::Interrupt(interruption));
     }
 
     pub(crate) fn pop(&mut self) -> Option<QueuedInstruction> {
