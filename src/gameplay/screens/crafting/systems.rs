@@ -8,8 +8,8 @@ use crate::gameplay::{
     LastSeen, Location, ObjectCategory, ObjectDefinition, Player, Pos, QueuedInstruction,
 };
 use crate::hud::{
-    Fonts, ScrollingList, SelectionList, BAD_TEXT_COLOR, GOOD_TEXT_COLOR, PANEL_COLOR,
-    SMALL_SPACING, WARN_TEXT_COLOR,
+    ButtonBuilder, Fonts, ScrollingList, SelectionList, BAD_TEXT_COLOR, GOOD_TEXT_COLOR,
+    PANEL_COLOR, SMALL_SPACING, WARN_TEXT_COLOR,
 };
 use crate::keyboard::{Held, Key, KeyBindings};
 use crate::manual::ManualSection;
@@ -689,23 +689,10 @@ fn show_recipe(
     commands
         .entity(crafting_screen.recipe_details)
         .despawn_descendants()
-        .with_children(|builder| {
-            builder
-                .spawn(ButtonBundle {
-                    style: Style {
-                        width: Val::Px(70.0),
-                        justify_content: JustifyContent::Center,
-                        ..Style::default()
-                    },
-                    ..ButtonBundle::default()
-                })
-                .with_children(|parent| {
-                    parent.spawn(TextBundle::from_section(
-                        "Craft",
-                        fonts.regular(recipe_sitation.color(true)),
-                    ));
-                });
-            builder.spawn(TextBundle::from_sections(
+        .with_children(|parent| {
+            ButtonBuilder::new("Craft", fonts.regular(recipe_sitation.color(true)), Button)
+                .spawn(parent);
+            parent.spawn(TextBundle::from_sections(
                 recipe_sitation.text_sections(fonts, recipe),
             ));
         });

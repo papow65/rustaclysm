@@ -1,5 +1,6 @@
 //! This module provides the [`HudPlugin`], defaults colors, a default font, a default panel, and spacing defaults
 
+mod button_builder;
 mod colors;
 mod default_panel;
 mod fonts;
@@ -9,6 +10,7 @@ mod selection_list;
 mod spacing;
 mod systems;
 
+pub(crate) use self::button_builder::ButtonBuilder;
 pub(crate) use self::colors::{
     text_color, BAD_TEXT_COLOR, DEFAULT_BUTTON_COLOR, FILTHY_COLOR, GOOD_TEXT_COLOR,
     HARD_TEXT_COLOR, HOVERED_BUTTON_COLOR, PANEL_COLOR, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,

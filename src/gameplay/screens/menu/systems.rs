@@ -2,30 +2,21 @@ use crate::application::ApplicationState;
 use crate::common::log_if_slow;
 use crate::gameplay::screens::menu::components::{MainMenuButton, QuitButton, ReturnButton};
 use crate::gameplay::GameplayScreenState;
-use crate::hud::{Fonts, BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, MEDIUM_SPACING};
+use crate::hud::{
+    ButtonBuilder, Fonts, BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, MEDIUM_SPACING,
+};
 use crate::keyboard::{Key, KeyBindings};
 use crate::manual::ManualSection;
 use bevy::app::AppExit;
 use bevy::prelude::{
-    default, AlignItems, BuildChildren, Button, ButtonBundle, Changed, ChildBuilder, Color,
-    Commands, Events, FlexDirection, In, Interaction, JustifyContent, KeyCode, Local, NextState,
-    NodeBundle, Query, Res, ResMut, StateScoped, Style, TextBundle, Val, With, World,
+    AlignItems, BuildChildren, Button, Changed, Commands, Events, FlexDirection, In, Interaction,
+    JustifyContent, KeyCode, Local, NextState, NodeBundle, Query, Res, ResMut, StateScoped, Style,
+    Val, With, World,
 };
 use std::time::Instant;
 
 #[expect(clippy::needless_pass_by_value)]
 pub(super) fn spawn_menu(mut commands: Commands, fonts: Res<Fonts>) {
-    let button = ButtonBundle {
-        style: Style {
-            width: Val::Px(250.0),
-            height: Val::Px(70.0),
-            justify_content: JustifyContent::Center,
-            align_items: AlignItems::Center,
-            ..default()
-        },
-        ..default()
-    };
-
     commands
         .spawn((
             NodeBundle {
@@ -38,25 +29,21 @@ pub(super) fn spawn_menu(mut commands: Commands, fonts: Res<Fonts>) {
                     row_gap: MEDIUM_SPACING,
                     ..Style::default()
                 },
-                ..default()
+                ..NodeBundle::default()
             },
             StateScoped(GameplayScreenState::Menu),
         ))
         .with_children(|parent| {
-            parent
-                .spawn((button.clone(), ReturnButton))
-                .with_children(|parent| add_text(parent, &fonts, "Return", GOOD_TEXT_COLOR));
-            parent
-                .spawn((button.clone(), MainMenuButton))
-                .with_children(|parent| add_text(parent, &fonts, "Main Menu", HARD_TEXT_COLOR));
-            parent
-                .spawn((button, QuitButton))
-                .with_children(|parent| add_text(parent, &fonts, "Quit", BAD_TEXT_COLOR));
+            ButtonBuilder::new("Return", fonts.large(GOOD_TEXT_COLOR), ReturnButton)
+                .large()
+                .spawn(parent);
+            ButtonBuilder::new("Main Menu", fonts.large(HARD_TEXT_COLOR), MainMenuButton)
+                .large()
+                .spawn(parent);
+            ButtonBuilder::new("Quit", fonts.large(BAD_TEXT_COLOR), QuitButton)
+                .large()
+                .spawn(parent);
         });
-}
-
-fn add_text(parent: &mut ChildBuilder, fonts: &Fonts, text: &str, color: Color) {
-    parent.spawn(TextBundle::from_section(text, fonts.large(color)));
 }
 
 #[allow(clippy::needless_pass_by_value)]

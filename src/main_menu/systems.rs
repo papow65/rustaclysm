@@ -1,8 +1,8 @@
 use crate::common::AssetPaths;
 use crate::gameplay::{ActiveSav, GameplaySession};
 use crate::hud::{
-    Fonts, BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, LARGE_SPACING, MEDIUM_SPACING,
-    PANEL_COLOR,
+    ButtonBuilder, Fonts, BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, LARGE_SPACING,
+    MEDIUM_SPACING, PANEL_COLOR,
 };
 use crate::main_menu::components::{
     LoadButton, LoadButtonArea, MessageField, MessageWrapper, QuitButton,
@@ -12,10 +12,10 @@ use crate::{application::ApplicationState, loading::ProgressScreenState};
 use base64::{engine::general_purpose::STANDARD as base64, Engine};
 use bevy::app::AppExit;
 use bevy::prelude::{
-    AlignContent, AlignItems, BuildChildren, Button, ButtonBundle, Camera2dBundle, Changed,
-    ChildBuilder, Commands, DespawnRecursiveExt, Display, Entity, Events, FlexDirection, FlexWrap,
-    Interaction, JustifyContent, Local, NextState, NodeBundle, Query, Res, ResMut, StateScoped,
-    Style, Text, TextBundle, UiRect, Val, With, Without, ZIndex,
+    AlignContent, AlignItems, BuildChildren, Button, Camera2dBundle, Changed, ChildBuilder,
+    Commands, DespawnRecursiveExt, Display, Entity, Events, FlexDirection, FlexWrap, Interaction,
+    JustifyContent, Local, NextState, NodeBundle, Query, Res, ResMut, StateScoped, Style, Text,
+    TextBundle, UiRect, Val, With, Without, ZIndex,
 };
 use glob::glob;
 use std::path::{Path, PathBuf};
@@ -137,26 +137,9 @@ fn add_notification_area(parent: &mut ChildBuilder, fonts: &Fonts) {
 }
 
 fn add_quit_button(parent: &mut ChildBuilder, fonts: &Fonts) {
-    parent
-        .spawn((
-            ButtonBundle {
-                style: Style {
-                    width: Val::Px(200.0),
-                    height: Val::Px(70.0),
-                    justify_content: JustifyContent::Center,
-                    align_items: AlignItems::Center,
-                    ..Style::default()
-                },
-                ..ButtonBundle::default()
-            },
-            QuitButton,
-        ))
-        .with_children(|parent| {
-            parent.spawn(TextBundle::from_section(
-                "Quit",
-                fonts.large(BAD_TEXT_COLOR),
-            ));
-        });
+    ButtonBuilder::new("Quit", fonts.large(BAD_TEXT_COLOR), QuitButton)
+        .large()
+        .spawn(parent);
 }
 
 #[expect(clippy::needless_pass_by_value)]
@@ -279,52 +262,45 @@ fn check_directory_structure() -> Result<(), LoadError> {
 }
 
 fn add_load_button(fonts: &Fonts, parent: &mut ChildBuilder, path: &Path) {
-    parent
-        .spawn((
-            ButtonBundle {
-                style: Style {
-                    width: Val::Px(400.0),
-                    align_items: AlignItems::Center,
-                    justify_content: JustifyContent::Center,
-                    margin: UiRect {
-                        bottom: MEDIUM_SPACING,
-                        ..UiRect::default()
-                    },
-                    padding: UiRect {
-                        left: LARGE_SPACING,
-                        right: LARGE_SPACING,
-                        top: MEDIUM_SPACING,
-                        bottom: MEDIUM_SPACING,
-                    },
-                    ..Style::default()
-                },
-                ..ButtonBundle::default()
-            },
-            LoadButton {
-                path: path.to_path_buf(),
-            },
-        ))
-        .with_children(|parent| {
-            let world = path.parent().expect("World required");
-            let encoded_character = path
-                .file_name()
-                .expect("Filename required")
-                .to_str()
-                .expect("Valid utf-8 filename required")
-                .strip_prefix('#')
-                .expect("Expected # prefix")
-                .strip_suffix(".sav")
-                .expect("Expected .sav suffix");
-            let decoded_character = base64
-                .decode(encoded_character)
-                .expect("Valid base64 required");
-            let character = from_utf8(&decoded_character).expect("Valid utf8 required");
+    let world = path.parent().expect("World required");
+    let encoded_character = path
+        .file_name()
+        .expect("Filename required")
+        .to_str()
+        .expect("Valid utf-8 filename required")
+        .strip_prefix('#')
+        .expect("Expected # prefix")
+        .strip_suffix(".sav")
+        .expect("Expected .sav suffix");
+    let decoded_character = base64
+        .decode(encoded_character)
+        .expect("Valid base64 required");
+    let character = from_utf8(&decoded_character).expect("Valid utf8 required");
 
-            parent.spawn(TextBundle::from_section(
-                format!("Load {} in {}", character, world.display()),
-                fonts.largish(GOOD_TEXT_COLOR),
-            ));
-        });
+    ButtonBuilder::new(
+        format!("Load {character} in {}", world.display()),
+        fonts.largish(GOOD_TEXT_COLOR),
+        LoadButton {
+            path: path.to_path_buf(),
+        },
+    )
+    .with_style(Style {
+        width: Val::Px(400.0),
+        align_items: AlignItems::Center,
+        justify_content: JustifyContent::Center,
+        margin: UiRect {
+            bottom: MEDIUM_SPACING,
+            ..UiRect::default()
+        },
+        padding: UiRect {
+            left: LARGE_SPACING,
+            right: LARGE_SPACING,
+            top: MEDIUM_SPACING,
+            bottom: MEDIUM_SPACING,
+        },
+        ..Style::default()
+    })
+    .spawn(parent);
 }
 
 pub(super) fn manage_main_menu_button_input(

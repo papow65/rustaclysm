@@ -1,12 +1,14 @@
 use crate::common::log_if_slow;
-use crate::hud::{Fonts, BAD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, WARN_TEXT_COLOR};
+use crate::hud::{
+    ButtonBuilder, Fonts, BAD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, WARN_TEXT_COLOR,
+};
 use crate::keyboard::{Key, KeyBindings};
 use crate::manual::ManualSection;
 use crate::{application::ApplicationState, gameplay::GameplayScreenState};
 use bevy::prelude::{
-    AlignItems, BuildChildren, Button, ButtonBundle, Changed, Commands, FlexDirection, In,
-    Interaction, JustifyContent, KeyCode, Local, NextState, NodeBundle, Query, Res, ResMut,
-    StateScoped, Style, TextBundle, UiRect, Val, With, World,
+    AlignItems, BuildChildren, Button, Changed, Commands, FlexDirection, In, Interaction,
+    JustifyContent, KeyCode, Local, NextState, NodeBundle, Query, Res, ResMut, StateScoped, Style,
+    TextBundle, UiRect, Val, With, World,
 };
 use std::time::Instant;
 
@@ -61,23 +63,9 @@ pub(super) fn spawn_death_screen(mut commands: Commands, fonts: Res<Fonts>) {
                             ));
                         });
 
-                    parent
-                        .spawn(ButtonBundle {
-                            style: Style {
-                                width: Val::Px(250.0),
-                                height: Val::Px(70.0),
-                                justify_content: JustifyContent::Center,
-                                align_items: AlignItems::Center,
-                                ..Style::default()
-                            },
-                            ..ButtonBundle::default()
-                        })
-                        .with_children(|parent| {
-                            parent.spawn(TextBundle::from_section(
-                                "Main menu",
-                                fonts.large(WARN_TEXT_COLOR),
-                            ));
-                        });
+                    ButtonBuilder::new("Main menu", fonts.regular(WARN_TEXT_COLOR), Button)
+                        .large()
+                        .spawn(parent);
                 });
         });
 }

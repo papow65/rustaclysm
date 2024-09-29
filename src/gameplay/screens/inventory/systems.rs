@@ -9,8 +9,8 @@ use crate::gameplay::{
     QueuedInstruction,
 };
 use crate::hud::{
-    Fonts, ScrollingList, SelectionList, StepDirection, StepSize, GOOD_TEXT_COLOR, HARD_TEXT_COLOR,
-    PANEL_COLOR, SMALL_SPACING, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
+    ButtonBuilder, Fonts, ScrollingList, SelectionList, StepDirection, StepSize, GOOD_TEXT_COLOR,
+    HARD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
 };
 use crate::keyboard::{Held, Key, KeyBindings};
 use crate::manual::ManualSection;
@@ -475,25 +475,16 @@ fn add_row(
             );
 
             for action in actions(section, drop_section) {
-                parent
-                    .spawn(ButtonBundle {
-                        style: Style {
-                            width: Val::Px(70.0),
-                            justify_content: JustifyContent::Center,
-                            ..Style::default()
-                        },
-                        ..ButtonBundle::default()
-                    })
-                    .with_children(|parent| {
-                        parent.spawn(TextBundle::from_section(
-                            format!("{}", &action),
-                            item_syle.clone(),
-                        ));
-                    })
-                    .insert(InventoryButton {
+                let caption = format!("{}", &action);
+                ButtonBuilder::new(
+                    caption,
+                    item_syle.clone(),
+                    InventoryButton {
                         item: item_entity,
                         action,
-                    });
+                    },
+                )
+                .spawn(parent);
             }
         })
         .id()
