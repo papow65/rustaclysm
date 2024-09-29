@@ -4,6 +4,7 @@ use crate::gameplay::screens::menu::components::{MainMenuButton, QuitButton, Ret
 use crate::gameplay::GameplayScreenState;
 use crate::hud::{Fonts, BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, MEDIUM_SPACING};
 use crate::keyboard::{Key, KeyBindings};
+use crate::manual::ManualSection;
 use bevy::app::AppExit;
 use bevy::prelude::{
     default, AlignItems, BuildChildren, Button, ButtonBundle, Changed, ChildBuilder, Color,
@@ -65,9 +66,14 @@ pub(super) fn create_menu_key_bindings(
 ) {
     let start = Instant::now();
 
-    bindings.spawn(world, GameplayScreenState::Menu, |bindings| {
-        bindings.add(KeyCode::Escape, close_menu);
-    });
+    bindings.spawn(
+        world,
+        GameplayScreenState::Menu,
+        |bindings| {
+            bindings.add(KeyCode::Escape, close_menu);
+        },
+        ManualSection::new(&[("close menu", "esc")], 100),
+    );
 
     log_if_slow("create_menu_key_bindings", start);
 }

@@ -6,6 +6,7 @@ use crate::gameplay::{
 };
 use crate::hud::ScrollingList;
 use crate::keyboard::{Held, Key, KeyBindings};
+use crate::manual::ManualSection;
 use bevy::input::mouse::{MouseMotion, MouseWheel};
 use bevy::utils::HashMap;
 use bevy::{prelude::*, render::view::RenderLayers};
@@ -224,56 +225,91 @@ pub(super) fn create_base_key_bindings(
 ) {
     let start = Instant::now();
 
-    held_key_bindings.spawn(world, GameplayScreenState::Base, |builder| {
-        builder.add_multi(
-            [
-                KeyCode::Numpad1,
-                KeyCode::Numpad2,
-                KeyCode::Numpad3,
-                KeyCode::Numpad4,
-                KeyCode::Numpad5,
-                KeyCode::Numpad6,
-                KeyCode::Numpad7,
-                KeyCode::Numpad8,
-                KeyCode::Numpad9,
+    held_key_bindings.spawn(
+        world,
+        GameplayScreenState::Base,
+        |builder| {
+            builder.add_multi(
+                [
+                    KeyCode::Numpad1,
+                    KeyCode::Numpad2,
+                    KeyCode::Numpad3,
+                    KeyCode::Numpad4,
+                    KeyCode::Numpad5,
+                    KeyCode::Numpad6,
+                    KeyCode::Numpad7,
+                    KeyCode::Numpad8,
+                    KeyCode::Numpad9,
+                ],
+                to_offset.pipe(manage_queued_instruction),
+            );
+            builder.add_multi(['<', '>'], to_offset.pipe(manage_queued_instruction));
+        },
+        ManualSection::new(&[("move", "numpad"), ("move up/down", "</>")], 100),
+    );
+
+    fresh_key_bindings.spawn(
+        world,
+        GameplayScreenState::Base,
+        |builder| {
+            builder.add_multi(['m', 'M'], toggle_map);
+            builder.add('x', examine_pos);
+            builder.add('X', examine_zone_level);
+            builder.add('&', open_crafting_screen);
+            builder.add('i', open_inventory);
+            builder.add_multi(['z', 'Z'], manage_zoom);
+            builder.add('h', toggle_elevation);
+            builder.add('0', reset_camera_angle);
+
+            let mut char_to_queued_instruction = HashMap::default();
+            char_to_queued_instruction.insert('|', QueuedInstruction::Wait);
+            char_to_queued_instruction.insert('$', QueuedInstruction::Sleep);
+            char_to_queued_instruction.insert('a', QueuedInstruction::Attack);
+            char_to_queued_instruction.insert('s', QueuedInstruction::Smash);
+            char_to_queued_instruction.insert('p', QueuedInstruction::Pulp);
+            char_to_queued_instruction.insert('c', QueuedInstruction::Close);
+            char_to_queued_instruction.insert('\\', QueuedInstruction::Drag);
+            char_to_queued_instruction.insert('G', QueuedInstruction::ToggleAutoTravel);
+            char_to_queued_instruction.insert('A', QueuedInstruction::ToggleAutoDefend);
+            char_to_queued_instruction.insert('+', QueuedInstruction::ChangePace);
+
+            for (char, instruction) in char_to_queued_instruction {
+                let system =
+                    (move |_: In<Key>| instruction.clone()).pipe(manage_queued_instruction);
+                builder.add(char, system);
+            }
+
+            let peek_system =
+                (|_: In<Key>| QueuedInstruction::Peek).pipe(manage_queued_instruction);
+            builder.add(KeyCode::Tab, peek_system);
+
+            builder.add(KeyCode::Escape, handle_cancelation);
+        },
+        ManualSection::new(
+            &[
+                ("attack npc", "a"),
+                ("smash furniture", "s"),
+                ("pulp corpse", "p"),
+                ("walking mode", "+"),
+                ("auto defend", "A"),
+                ("peek", "tab"),
+                ("wait", "|"),
+                ("sleep", "$"),
+                ("show elevated", "h"),
+                ("examine", "x"),
+                ("examine map", "X"),
+                ("auto travel", "G"),
+                ("inventory", "i"),
+                ("crafting", "&"),
+                ("toggle map", "m/M"),
+                ("camera angle", "middle mouse button"),
+                ("reset angle", "0"),
+                ("zoom", "z/Z"),
+                ("zoom", "scroll wheel"),
             ],
-            to_offset.pipe(manage_queued_instruction),
-        );
-        builder.add_multi(['<', '>'], to_offset.pipe(manage_queued_instruction));
-    });
-
-    fresh_key_bindings.spawn(world, GameplayScreenState::Base, |builder| {
-        builder.add_multi(['m', 'M'], toggle_map);
-        builder.add('x', examine_pos);
-        builder.add('X', examine_zone_level);
-        builder.add('&', open_crafting_screen);
-        builder.add('i', open_inventory);
-        builder.add_multi(['z', 'Z'], manage_zoom);
-        builder.add('h', toggle_elevation);
-        builder.add('0', reset_camera_angle);
-
-        let mut char_to_queued_instruction = HashMap::default();
-        char_to_queued_instruction.insert('|', QueuedInstruction::Wait);
-        char_to_queued_instruction.insert('$', QueuedInstruction::Sleep);
-        char_to_queued_instruction.insert('a', QueuedInstruction::Attack);
-        char_to_queued_instruction.insert('s', QueuedInstruction::Smash);
-        char_to_queued_instruction.insert('p', QueuedInstruction::Pulp);
-        char_to_queued_instruction.insert('c', QueuedInstruction::Close);
-        char_to_queued_instruction.insert('\\', QueuedInstruction::Drag);
-        char_to_queued_instruction.insert('G', QueuedInstruction::ToggleAutoTravel);
-        char_to_queued_instruction.insert('A', QueuedInstruction::ToggleAutoDefend);
-        char_to_queued_instruction.insert('+', QueuedInstruction::ChangePace);
-
-        for (char, instruction) in char_to_queued_instruction {
-            let system = (move |_: In<Key>| instruction.clone()).pipe(manage_queued_instruction);
-            builder.add(char, system);
-        }
-
-        let peek_system = (|_: In<Key>| QueuedInstruction::Peek).pipe(manage_queued_instruction);
-        builder.add(KeyCode::Tab, peek_system);
-
-        builder.add(KeyCode::Escape, handle_cancelation);
-    });
+            101,
+        ),
+    );
 
     log_if_slow("create_crafting_key_bindings", start);
 }

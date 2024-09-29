@@ -13,6 +13,7 @@ use crate::hud::{
     PANEL_COLOR, SMALL_SPACING, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
 };
 use crate::keyboard::{Held, Key, KeyBindings};
+use crate::manual::ManualSection;
 use bevy::{ecs::entity::EntityHashMap, prelude::*, utils::HashMap};
 use cdda_json_files::{ItemInfo, ObjectId};
 use std::time::Instant;
@@ -88,40 +89,67 @@ pub(super) fn create_inventory_key_bindings(
 ) {
     let start = Instant::now();
 
-    held_bindings.spawn(world, GameplayScreenState::Inventory, |bindings| {
-        bindings.add_multi(
-            [
-                KeyCode::ArrowUp,
-                KeyCode::ArrowDown,
-                KeyCode::PageUp,
-                KeyCode::PageDown,
+    held_bindings.spawn(
+        world,
+        GameplayScreenState::Inventory,
+        |bindings| {
+            bindings.add_multi(
+                [
+                    KeyCode::ArrowUp,
+                    KeyCode::ArrowDown,
+                    KeyCode::PageUp,
+                    KeyCode::PageDown,
+                ],
+                move_inventory_selection,
+            );
+        },
+        ManualSection::new(
+            &[
+                ("select item", "arrow up/down"),
+                ("select item", "page up/down"),
             ],
-            move_inventory_selection,
-        );
-    });
+            100,
+        ),
+    );
 
-    fresh_bindings.spawn(world, GameplayScreenState::Inventory, |bindings| {
-        bindings.add_multi(
-            [
-                KeyCode::Numpad1,
-                KeyCode::Numpad2,
-                KeyCode::Numpad3,
-                KeyCode::Numpad4,
-                KeyCode::Numpad5,
-                KeyCode::Numpad6,
-                KeyCode::Numpad7,
-                KeyCode::Numpad8,
-                KeyCode::Numpad9,
+    fresh_bindings.spawn(
+        world,
+        GameplayScreenState::Inventory,
+        |bindings| {
+            bindings.add_multi(
+                [
+                    KeyCode::Numpad1,
+                    KeyCode::Numpad2,
+                    KeyCode::Numpad3,
+                    KeyCode::Numpad4,
+                    KeyCode::Numpad5,
+                    KeyCode::Numpad6,
+                    KeyCode::Numpad7,
+                    KeyCode::Numpad8,
+                    KeyCode::Numpad9,
+                ],
+                set_inventory_drop_direction,
+            );
+            bindings.add_multi(['d', 't', 'u', 'w'], handle_selected_item_wrapper);
+            bindings.add('e', examine_selected_item_wrapper);
+            bindings.add_multi(
+                [Key::Code(KeyCode::Escape), Key::Character('i')],
+                exit_inventory,
+            );
+        },
+        ManualSection::new(
+            &[
+                ("set drop spot", "numpad"),
+                ("drop item", "d"),
+                ("examine item", "e"),
+                ("take item", "t"),
+                ("wield item", "w"),
+                ("unwield item", "u"),
+                ("close inventory", "esc/i"),
             ],
-            set_inventory_drop_direction,
-        );
-        bindings.add_multi(['d', 't', 'u', 'w'], handle_selected_item_wrapper);
-        bindings.add('e', examine_selected_item_wrapper);
-        bindings.add_multi(
-            [Key::Code(KeyCode::Escape), Key::Character('i')],
-            exit_inventory,
-        );
-    });
+            101,
+        ),
+    );
 
     log_if_slow("create_inventory_key_bindings", start);
 }

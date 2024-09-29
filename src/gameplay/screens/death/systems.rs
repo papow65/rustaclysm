@@ -1,6 +1,7 @@
 use crate::common::log_if_slow;
 use crate::hud::{Fonts, BAD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, WARN_TEXT_COLOR};
 use crate::keyboard::{Key, KeyBindings};
+use crate::manual::ManualSection;
 use crate::{application::ApplicationState, gameplay::GameplayScreenState};
 use bevy::prelude::{
     AlignItems, BuildChildren, Button, ButtonBundle, Changed, Commands, FlexDirection, In,
@@ -88,17 +89,17 @@ pub(super) fn create_death_screen_key_bindings(
 ) {
     let start = Instant::now();
 
-    bindings.spawn(world, GameplayScreenState::Death, |bindings| {
-        bindings.add_multi(
-            [
-                KeyCode::Escape,
-                KeyCode::Enter,
-                KeyCode::Space,
-                KeyCode::F12,
-            ],
-            return_to_main_menu,
-        );
-    });
+    bindings.spawn(
+        world,
+        GameplayScreenState::Death,
+        |bindings| {
+            bindings.add_multi(
+                [KeyCode::Escape, KeyCode::Enter, KeyCode::Space],
+                return_to_main_menu,
+            );
+        },
+        ManualSection::new(&[("to main menu", "esc/enter/space")], 100),
+    );
 
     log_if_slow("create_death_screen_key_bindings", start);
 }

@@ -1,4 +1,5 @@
 use crate::keyboard::{key_binding::KeyBinding, keys::Keys, Ctrl, Held, Key, KeyBindings};
+use crate::manual::ManualSection;
 use bevy::app::AppExit;
 use bevy::input::keyboard::KeyboardInput;
 use bevy::prelude::{
@@ -6,10 +7,14 @@ use bevy::prelude::{
 };
 
 pub(super) fn create_global_key_bindings(world: &mut World) {
-    KeyBindings::<_, Ctrl, ()>::spawn_global(world, |bindings| {
-        bindings.add_multi(['+', '-'], zoom_ui);
-        bindings.add_multi(['c', 'q'], quit);
-    });
+    KeyBindings::<_, Ctrl, ()>::spawn_global(
+        world,
+        |bindings| {
+            bindings.add_multi(['+', '-'], zoom_ui);
+            bindings.add_multi(['c', 'q'], quit);
+        },
+        ManualSection::new(&[("zoom ui", "ctrl +/-"), ("quit", "ctrl c/q")], u8::MAX),
+    );
 }
 
 fn zoom_ui(In(key): In<Key>, mut ui_scale: ResMut<UiScale>) {

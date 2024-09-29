@@ -12,6 +12,7 @@ use crate::hud::{
     SMALL_SPACING, WARN_TEXT_COLOR,
 };
 use crate::keyboard::{Held, Key, KeyBindings};
+use crate::manual::ManualSection;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
 use cdda_json_files::{
@@ -116,25 +117,41 @@ pub(super) fn create_crafting_key_bindings(
 ) {
     let start = Instant::now();
 
-    held_bindings.spawn(world, GameplayScreenState::Crafting, |bindings| {
-        bindings.add_multi(
-            [
-                KeyCode::ArrowUp,
-                KeyCode::ArrowDown,
-                KeyCode::PageUp,
-                KeyCode::PageDown,
+    held_bindings.spawn(
+        world,
+        GameplayScreenState::Crafting,
+        |bindings| {
+            bindings.add_multi(
+                [
+                    KeyCode::ArrowUp,
+                    KeyCode::ArrowDown,
+                    KeyCode::PageUp,
+                    KeyCode::PageDown,
+                ],
+                move_crafting_selection,
+            );
+        },
+        ManualSection::new(
+            &[
+                ("select craft", "arrow up/down"),
+                ("select craft", "page up/down"),
             ],
-            move_crafting_selection,
-        );
-    });
+            100,
+        ),
+    );
 
-    fresh_bindings.spawn(world, GameplayScreenState::Crafting, |bindings| {
-        bindings.add('c', start_craft_wrapper);
-        bindings.add_multi(
-            [Key::Code(KeyCode::Escape), Key::Character('&')],
-            exit_crafting,
-        );
-    });
+    fresh_bindings.spawn(
+        world,
+        GameplayScreenState::Crafting,
+        |bindings| {
+            bindings.add('c', start_craft_wrapper);
+            bindings.add_multi(
+                [Key::Code(KeyCode::Escape), Key::Character('&')],
+                exit_crafting,
+            );
+        },
+        ManualSection::new(&[("craft", "c"), ("close crafting", "esc/&")], 100),
+    );
 
     log_if_slow("create_crafting_key_bindings", start);
 }

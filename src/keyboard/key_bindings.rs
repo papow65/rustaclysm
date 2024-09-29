@@ -1,9 +1,11 @@
 use crate::keyboard::{key_binding::KeyBinding, CtrlState, HeldState, Key};
+use crate::manual::ManualSection;
 use bevy::prelude::{ComputedStates, IntoSystem, StateScoped, States, World};
 use std::cell::OnceCell;
 
 struct KeyBindingsStorage<S: States, C: CtrlState, H: HeldState> {
     bindings: Vec<KeyBinding<C, H>>,
+    manual: ManualSection,
     state: S,
 }
 
@@ -44,7 +46,7 @@ pub(crate) struct KeyBindings<S: States, C: CtrlState, H: HeldState> {
 }
 
 impl<S: States, C: CtrlState, H: HeldState> KeyBindings<S, C, H> {
-    pub(crate) fn spawn<F>(&self, world: &mut World, state: S, init: F)
+    pub(crate) fn spawn<F>(&self, world: &mut World, state: S, init: F, manual: ManualSection)
     where
         F: FnOnce(&mut KeyBindingsBuilder<S, C, H>),
     {
@@ -52,6 +54,7 @@ impl<S: States, C: CtrlState, H: HeldState> KeyBindings<S, C, H> {
             let mut bindings = KeyBindingsBuilder {
                 storage: KeyBindingsStorage {
                     bindings: Vec::new(),
+                    manual,
                     state,
                 },
                 world,
@@ -67,6 +70,8 @@ impl<S: States, C: CtrlState, H: HeldState> KeyBindings<S, C, H> {
                 .cloned()
                 .map(|binding| (binding, StateScoped(builder.state.clone()))),
         );
+
+        world.spawn((builder.manual.clone(), StateScoped(builder.state.clone())));
     }
 }
 
@@ -82,10 +87,10 @@ impl ComputedStates for GlobalState {
 }
 
 impl<C: CtrlState, H: HeldState> KeyBindings<GlobalState, C, H> {
-    pub(crate) fn spawn_global<F>(world: &mut World, init: F)
+    pub(crate) fn spawn_global<F>(world: &mut World, init: F, manual: ManualSection)
     where
         F: FnOnce(&mut KeyBindingsBuilder<GlobalState, C, H>),
     {
-        Self::default().spawn(world, GlobalState, init);
+        Self::default().spawn(world, GlobalState, init, manual);
     }
 }

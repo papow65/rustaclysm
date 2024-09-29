@@ -1,6 +1,7 @@
 use crate::application::ApplicationState;
 use crate::common::log_if_slow;
 use crate::keyboard::{Key, KeyBindings};
+use crate::manual::ManualSection;
 use bevy::prelude::{In, KeyCode, Local, NextState, ResMut, World};
 use std::time::Instant;
 
@@ -11,9 +12,14 @@ pub(crate) fn create_gameplay_key_bindings(
 ) {
     let start = Instant::now();
 
-    bindings.spawn(world, ApplicationState::Gameplay, |bindings| {
-        bindings.add(KeyCode::F12, to_main_menu);
-    });
+    bindings.spawn(
+        world,
+        ApplicationState::Gameplay,
+        |bindings| {
+            bindings.add(KeyCode::F12, to_main_menu);
+        },
+        ManualSection::new(&[("to main menu", "F12")], u8::MAX - 2),
+    );
 
     log_if_slow("create_gameplay_key_bindings", start);
 }
