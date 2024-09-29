@@ -1,9 +1,11 @@
 use crate::hud::scrolling_list::ScrollingList;
-use crate::hud::{DefaultPanel, Fonts, DEFAULT_BUTTON_COLOR, HOVERED_BUTTON_COLOR};
+use crate::hud::{
+    DefaultPanel, Fonts, RunButton, RunButtonContext, DEFAULT_BUTTON_COLOR, HOVERED_BUTTON_COLOR,
+};
 use bevy::input::mouse::MouseWheel;
 use bevy::prelude::{
-    BackgroundColor, Button, Changed, EventReader, Interaction, Node, Parent, Query, Style, With,
-    Without, World,
+    BackgroundColor, Button, Changed, Commands, EventReader, Interaction, Node, Parent, Query,
+    Style, With, Without, World,
 };
 
 pub(super) fn create_default_panel(world: &mut World) {
@@ -28,6 +30,18 @@ pub(super) fn manage_button_color(
             Interaction::Hovered | Interaction::Pressed => HOVERED_BUTTON_COLOR,
             Interaction::None => DEFAULT_BUTTON_COLOR,
         };
+    }
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub(crate) fn manage_button_input<C: RunButtonContext>(
+    mut commands: Commands,
+    interaction_query: Query<(&Interaction, &RunButton<C>), (Changed<Interaction>, With<Button>)>,
+) {
+    for (interaction, button) in &interaction_query {
+        if *interaction == Interaction::Pressed {
+            button.run(&mut commands);
+        }
     }
 }
 

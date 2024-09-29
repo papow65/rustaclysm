@@ -1,8 +1,9 @@
 use crate::gameplay::screens::inventory::systems::{
-    clear_inventory, create_inventory_key_bindings, manage_inventory_button_input,
-    refresh_inventory, remove_inventory_resource, spawn_inventory,
+    clear_inventory, create_inventory_key_bindings, create_inventory_system, refresh_inventory,
+    remove_inventory_resource, spawn_inventory, InventoryButton,
 };
 use crate::gameplay::GameplayScreenState;
+use crate::hud::manage_button_input;
 use bevy::prelude::{
     in_state, App, IntoSystem, IntoSystemConfigs, OnEnter, OnExit, Plugin, Update,
 };
@@ -19,8 +20,8 @@ impl Plugin for InventoryScreenPlugin {
         app.add_systems(
             Update,
             (
-                clear_inventory.pipe(refresh_inventory),
-                manage_inventory_button_input,
+                create_inventory_system.pipe(clear_inventory.pipe(refresh_inventory)),
+                manage_button_input::<InventoryButton>,
             )
                 .run_if(in_state(GameplayScreenState::Inventory)),
         );

@@ -1,5 +1,5 @@
 use crate::gameplay::screens::crafting::systems::{
-    clear_crafting_screen, create_crafting_key_bindings, manage_crafting_button_input,
+    clear_crafting_screen, create_crafting_key_bindings, create_start_craft_system,
     refresh_crafting_screen, remove_crafting_resource, spawn_crafting_screen,
 };
 use crate::gameplay::GameplayScreenState;
@@ -18,10 +18,8 @@ impl Plugin for CraftingScreenPlugin {
 
         app.add_systems(
             Update,
-            (
-                manage_crafting_button_input,
-                clear_crafting_screen.pipe(refresh_crafting_screen),
-            )
+            create_start_craft_system
+                .pipe(clear_crafting_screen.pipe(refresh_crafting_screen))
                 .run_if(in_state(GameplayScreenState::Crafting)),
         );
 

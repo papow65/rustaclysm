@@ -1,4 +1,3 @@
-mod components;
 mod plugin;
 mod systems;
 

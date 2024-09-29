@@ -1,30 +1,65 @@
 use crate::common::AssetPaths;
 use crate::gameplay::{ActiveSav, GameplaySession};
 use crate::hud::{
-    ButtonBuilder, Fonts, BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, LARGE_SPACING,
-    MEDIUM_SPACING, PANEL_COLOR,
+    ButtonBuilder, Fonts, RunButtonContext, BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR,
+    LARGE_SPACING, MEDIUM_SPACING, PANEL_COLOR,
 };
-use crate::main_menu::components::{
-    LoadButton, LoadButtonArea, MessageField, MessageWrapper, QuitButton,
-};
+use crate::main_menu::components::{LoadButtonArea, MessageField, MessageWrapper};
 use crate::main_menu::load_error::LoadError;
 use crate::{application::ApplicationState, loading::ProgressScreenState};
 use base64::{engine::general_purpose::STANDARD as base64, Engine};
 use bevy::app::AppExit;
+use bevy::ecs::system::SystemId;
 use bevy::prelude::{
-    AlignContent, AlignItems, BuildChildren, Button, Camera2dBundle, Changed, ChildBuilder,
-    Commands, DespawnRecursiveExt, Display, Entity, Events, FlexDirection, FlexWrap, Interaction,
-    JustifyContent, Local, NextState, NodeBundle, Query, Res, ResMut, StateScoped, Style, Text,
-    TextBundle, UiRect, Val, With, Without, ZIndex,
+    AlignContent, AlignItems, BuildChildren, Camera2dBundle, ChildBuilder, Commands,
+    DespawnRecursiveExt, Display, Entity, Events, FlexDirection, FlexWrap, In, JustifyContent,
+    Local, NextState, NodeBundle, Query, Res, ResMut, StateScoped, Style, Text, TextBundle, UiRect,
+    Val, With, Without, World, ZIndex,
 };
 use glob::glob;
+use std::cell::OnceCell;
 use std::path::{Path, PathBuf};
 use std::str::from_utf8;
 
 const FULL_WIDTH: f32 = 720.0;
 
+#[derive(Clone)]
+pub(super) struct FoundSav(PathBuf);
+
+impl RunButtonContext for FoundSav {}
+
+#[derive(Clone, Debug)]
+pub(super) struct LoadSystem(SystemId<FoundSav, ()>);
+
+#[allow(clippy::needless_pass_by_value)]
+pub(super) fn create_load_system(
+    world: &mut World,
+    load_system: Local<OnceCell<LoadSystem>>,
+) -> LoadSystem {
+    load_system
+        .get_or_init(|| LoadSystem(world.register_system(load)))
+        .clone()
+}
+
+#[derive(Clone, Debug)]
+pub(super) struct QuitSystem(SystemId<(), ()>);
+
+#[allow(clippy::needless_pass_by_value)]
+pub(super) fn create_quit_system(
+    world: &mut World,
+    quit_system: Local<OnceCell<QuitSystem>>,
+) -> QuitSystem {
+    quit_system
+        .get_or_init(|| QuitSystem(world.register_system(quit)))
+        .clone()
+}
+
 #[expect(clippy::needless_pass_by_value)]
-pub(super) fn spawn_main_menu(mut commands: Commands, fonts: Res<Fonts>) {
+pub(super) fn spawn_main_menu(
+    In(quit_system): In<QuitSystem>,
+    mut commands: Commands,
+    fonts: Res<Fonts>,
+) {
     commands.spawn((
         Camera2dBundle::default(),
         StateScoped(ApplicationState::MainMenu),
@@ -51,7 +86,7 @@ pub(super) fn spawn_main_menu(mut commands: Commands, fonts: Res<Fonts>) {
             add_tagline(parent, &fonts);
             add_load_button_area(parent);
             add_notification_area(parent, &fonts);
-            add_quit_button(parent, &fonts);
+            add_quit_button(parent, &quit_system, &fonts);
         });
 }
 
@@ -112,6 +147,7 @@ fn add_notification_area(parent: &mut ChildBuilder, fonts: &Fonts) {
                         bottom: MEDIUM_SPACING,
                         ..UiRect::default()
                     },
+                    display: Display::None,
                     ..Style::default()
                 },
                 background_color: PANEL_COLOR.into(),
@@ -136,14 +172,15 @@ fn add_notification_area(parent: &mut ChildBuilder, fonts: &Fonts) {
         });
 }
 
-fn add_quit_button(parent: &mut ChildBuilder, fonts: &Fonts) {
-    ButtonBuilder::new("Quit", fonts.large(BAD_TEXT_COLOR), QuitButton)
+fn add_quit_button(parent: &mut ChildBuilder, quit_system: &QuitSystem, fonts: &Fonts) {
+    ButtonBuilder::new("Quit", fonts.large(BAD_TEXT_COLOR), quit_system.0)
         .large()
-        .spawn(parent);
+        .spawn(parent, ());
 }
 
 #[expect(clippy::needless_pass_by_value)]
 pub(super) fn update_sav_files(
+    In(load_system): In<LoadSystem>,
     mut commands: Commands,
     fonts: Res<Fonts>,
     mut session: GameplaySession,
@@ -174,7 +211,7 @@ pub(super) fn update_sav_files(
 
             for path in list {
                 commands.entity(load_button_area).with_children(|parent| {
-                    add_load_button(&fonts, parent, &path);
+                    add_load_button(&fonts, &load_system, parent, &path);
                 });
             }
         }
@@ -261,7 +298,12 @@ fn check_directory_structure() -> Result<(), LoadError> {
     Ok(())
 }
 
-fn add_load_button(fonts: &Fonts, parent: &mut ChildBuilder, path: &Path) {
+fn add_load_button(
+    fonts: &Fonts,
+    load_system: &LoadSystem,
+    parent: &mut ChildBuilder,
+    path: &Path,
+) {
     let world = path.parent().expect("World required");
     let encoded_character = path
         .file_name()
@@ -280,9 +322,7 @@ fn add_load_button(fonts: &Fonts, parent: &mut ChildBuilder, path: &Path) {
     ButtonBuilder::new(
         format!("Load {character} in {}", world.display()),
         fonts.largish(GOOD_TEXT_COLOR),
-        LoadButton {
-            path: path.to_path_buf(),
-        },
+        load_system.0,
     )
     .with_style(Style {
         width: Val::Px(400.0),
@@ -300,32 +340,18 @@ fn add_load_button(fonts: &Fonts, parent: &mut ChildBuilder, path: &Path) {
         },
         ..Style::default()
     })
-    .spawn(parent);
+    .spawn(parent, FoundSav(path.to_path_buf()));
 }
 
-pub(super) fn manage_main_menu_button_input(
+pub(super) fn load(
+    In(found_sav): In<FoundSav>,
     mut commands: Commands,
     mut next_progress_state: ResMut<NextState<ProgressScreenState>>,
-    mut app_exit_events: ResMut<Events<AppExit>>,
-    mut interaction_query: Query<
-        (&Interaction, Option<&LoadButton>, Option<&QuitButton>),
-        (Changed<Interaction>, With<Button>),
-    >,
 ) {
-    for (interaction, load_button, quit_button) in &mut interaction_query {
-        if *interaction == Interaction::Pressed {
-            match (load_button, quit_button.is_some()) {
-                (Some(load_button), false) => {
-                    commands.insert_resource(ActiveSav::new(&load_button.path));
-                    next_progress_state.set(ProgressScreenState::Loading);
-                }
-                (None, true) => {
-                    app_exit_events.send(AppExit::Success);
-                }
-                _ => {
-                    // This may happen when a button click causes a return to the main menu
-                }
-            }
-        }
-    }
+    commands.insert_resource(ActiveSav::new(&found_sav.0));
+    next_progress_state.set(ProgressScreenState::Loading);
+}
+
+fn quit(mut app_exit_events: ResMut<Events<AppExit>>) {
+    app_exit_events.send(AppExit::Success);
 }

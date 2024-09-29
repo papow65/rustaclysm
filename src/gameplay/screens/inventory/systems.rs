@@ -1,6 +1,6 @@
 use crate::common::log_if_slow;
 use crate::gameplay::screens::inventory::components::{
-    InventoryAction, InventoryButton, InventoryItemDescription, InventoryItemLine,
+    InventoryAction, InventoryItemDescription, InventoryItemLine,
 };
 use crate::gameplay::screens::inventory::{resource::InventoryScreen, section::InventorySection};
 use crate::gameplay::{
@@ -9,15 +9,37 @@ use crate::gameplay::{
     QueuedInstruction,
 };
 use crate::hud::{
-    ButtonBuilder, Fonts, ScrollingList, SelectionList, StepDirection, StepSize, GOOD_TEXT_COLOR,
-    HARD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
+    ButtonBuilder, Fonts, RunButtonContext, ScrollingList, SelectionList, StepDirection, StepSize,
+    GOOD_TEXT_COLOR, HARD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
 };
 use crate::keyboard::{Held, Key, KeyBindings};
 use crate::manual::ManualSection;
-use bevy::{ecs::entity::EntityHashMap, prelude::*, utils::HashMap};
+use bevy::ecs::{entity::EntityHashMap, system::SystemId};
+use bevy::{prelude::*, utils::HashMap};
 use cdda_json_files::{ItemInfo, ObjectId};
-use std::time::Instant;
+use std::{cell::OnceCell, time::Instant};
 use units::Timestamp;
+
+#[derive(Clone, Debug)]
+pub(super) struct InventoryButton {
+    pub(super) item: Entity,
+    pub(super) action: InventoryAction,
+}
+
+impl RunButtonContext for InventoryButton {}
+
+#[derive(Clone, Debug)]
+pub(super) struct InventorySystem(SystemId<InventoryButton, ()>);
+
+#[allow(clippy::needless_pass_by_value)]
+pub(super) fn create_inventory_system(
+    world: &mut World,
+    inventory_system: Local<OnceCell<InventorySystem>>,
+) -> InventorySystem {
+    inventory_system
+        .get_or_init(|| InventorySystem(world.register_system(handle_inventory_action)))
+        .clone()
+}
 
 #[expect(clippy::needless_pass_by_value)]
 pub(super) fn spawn_inventory(mut commands: Commands, fonts: Res<Fonts>) {
@@ -236,13 +258,14 @@ fn exit_inventory(In(_): In<Key>, mut next_gameplay_state: ResMut<NextState<Game
 
 #[expect(clippy::needless_pass_by_value)]
 pub(super) fn clear_inventory(
+    In(inventory_system): In<InventorySystem>,
     clock: Clock,
     mut inventory: ResMut<InventoryScreen>,
     children: Query<&Children>,
     mut styles: Query<&mut Style>,
-) -> bool {
+) -> Option<InventorySystem> {
     if inventory.last_time == clock.time() {
-        return false;
+        return None;
     }
     inventory.last_time = clock.time();
 
@@ -254,12 +277,12 @@ pub(super) fn clear_inventory(
         }
     }
 
-    true
+    Some(inventory_system)
 }
 
 #[expect(clippy::needless_pass_by_value)]
 pub(super) fn refresh_inventory(
-    In(run): In<bool>,
+    In(inventory_system): In<Option<InventorySystem>>,
     mut commands: Commands,
     envir: Envir,
     infos: Res<Infos>,
@@ -268,9 +291,9 @@ pub(super) fn refresh_inventory(
     items: Query<(Item, Option<&Corpse>, Option<&Integrity>, &LastSeen)>,
     previous_item_lines: Query<&InventoryItemLine>,
 ) {
-    if !run {
+    let Some(inventory_system) = inventory_system else {
         return;
-    }
+    };
 
     let previous_selected_item = inventory
         .selection_list
@@ -332,6 +355,7 @@ pub(super) fn refresh_inventory(
                         item_info,
                         item_style,
                         drop_section,
+                        &inventory_system,
                     );
 
                     inventory.selection_list.append(row_entity);
@@ -413,6 +437,7 @@ fn add_row(
     item_info: &ItemInfo,
     item_syle: &TextStyle,
     drop_section: bool,
+    inventory_system: &InventorySystem,
 ) -> Entity {
     parent
         .spawn((
@@ -476,15 +501,13 @@ fn add_row(
 
             for action in actions(section, drop_section) {
                 let caption = format!("{}", &action);
-                ButtonBuilder::new(
-                    caption,
-                    item_syle.clone(),
+                ButtonBuilder::new(caption, item_syle.clone(), inventory_system.0).spawn(
+                    parent,
                     InventoryButton {
                         item: item_entity,
                         action,
                     },
-                )
-                .spawn(parent);
+                );
             }
         })
         .id()
@@ -578,29 +601,22 @@ fn examine_selected_item(
 }
 
 #[expect(clippy::needless_pass_by_value)]
-pub(super) fn manage_inventory_button_input(
+pub(super) fn handle_inventory_action(
+    In(inventory_button): In<InventoryButton>,
     mut instruction_queue: ResMut<InstructionQueue>,
-    interactions: Query<
-        (&Interaction, &InventoryButton, &Parent),
-        (Changed<Interaction>, With<Button>),
-    >,
     inventory: Res<InventoryScreen>,
 ) {
-    for (&interaction, &InventoryButton { item, ref action }, parent) in interactions.iter() {
-        if interaction == Interaction::Pressed {
-            println!("{action} {item:?} {:?}", parent.get());
-            let instruction = match action {
-                InventoryAction::Examine => QueuedInstruction::ExamineItem(item),
-                InventoryAction::Take => QueuedInstruction::Pickup(item),
-                InventoryAction::Drop | InventoryAction::Move => {
-                    QueuedInstruction::Dump(item, inventory.drop_direction)
-                }
-                InventoryAction::Wield => QueuedInstruction::Wield(item),
-                InventoryAction::Unwield => QueuedInstruction::Unwield(item),
-            };
-            instruction_queue.add(instruction);
+    println!("{:?}", &inventory_button);
+    let instruction = match inventory_button.action {
+        InventoryAction::Examine => QueuedInstruction::ExamineItem(inventory_button.item),
+        InventoryAction::Take => QueuedInstruction::Pickup(inventory_button.item),
+        InventoryAction::Drop | InventoryAction::Move => {
+            QueuedInstruction::Dump(inventory_button.item, inventory.drop_direction)
         }
-    }
+        InventoryAction::Wield => QueuedInstruction::Wield(inventory_button.item),
+        InventoryAction::Unwield => QueuedInstruction::Unwield(inventory_button.item),
+    };
+    instruction_queue.add(instruction);
 }
 
 pub(super) fn remove_inventory_resource(mut commands: Commands) {

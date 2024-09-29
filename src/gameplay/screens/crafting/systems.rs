@@ -13,17 +13,38 @@ use crate::hud::{
 };
 use crate::keyboard::{Held, Key, KeyBindings};
 use crate::manual::ManualSection;
-use bevy::prelude::*;
-use bevy::utils::HashMap;
+use bevy::{ecs::system::SystemId, prelude::*, utils::HashMap};
 use cdda_json_files::{
     Alternative, AutoLearn, BookLearn, BookLearnItem, ObjectId, Recipe, RequiredQuality, Sav,
     Skill, Using,
 };
-use std::{ops::RangeInclusive, sync::Arc, time::Instant};
+use std::{cell::OnceCell, ops::RangeInclusive, sync::Arc, time::Instant};
 use units::Timestamp;
 
 const MAX_FIND_DISTANCE: i32 = 7;
 const FIND_RANGE: RangeInclusive<i32> = (-MAX_FIND_DISTANCE)..=MAX_FIND_DISTANCE;
+
+#[derive(Clone, Debug)]
+pub(super) struct StartCraftSystem(SystemId<(), ()>);
+
+#[allow(clippy::needless_pass_by_value)]
+pub(super) fn create_start_craft_system(
+    world: &mut World,
+    start_craft_system: Local<OnceCell<StartCraftSystem>>,
+) -> StartCraftSystem {
+    start_craft_system
+        .get_or_init(|| StartCraftSystem(world.register_system(start_craft)))
+        .clone()
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub(super) fn create_start_craft_system_with_key(
+    In(key): In<Key>,
+    world: &mut World,
+    start_craft_system: Local<OnceCell<StartCraftSystem>>,
+) -> (Key, StartCraftSystem) {
+    (key, create_start_craft_system(world, start_craft_system))
+}
 
 pub(super) fn spawn_crafting_screen(mut commands: Commands) {
     let recipe_list = commands
@@ -128,7 +149,7 @@ pub(super) fn create_crafting_key_bindings(
                     KeyCode::PageUp,
                     KeyCode::PageDown,
                 ],
-                move_crafting_selection,
+                create_start_craft_system_with_key.pipe(move_crafting_selection),
             );
         },
         ManualSection::new(
@@ -166,7 +187,7 @@ fn exit_crafting(In(_): In<Key>, mut next_gameplay_state: ResMut<NextState<Gamep
 
 #[expect(clippy::needless_pass_by_value)]
 pub(super) fn move_crafting_selection(
-    In(key): In<Key>,
+    In((key, start_craft_system)): In<(Key, StartCraftSystem)>,
     mut commands: Commands,
     infos: Res<Infos>,
     fonts: Res<Fonts>,
@@ -191,26 +212,26 @@ pub(super) fn move_crafting_selection(
         &recipes.transmute_lens().query(),
         &mut scrolling_lists,
         &scrolling_parents,
+        &start_craft_system,
     );
 
     log_if_slow("move_crafting_selection", start);
 }
 
-#[expect(clippy::needless_pass_by_value)]
 pub(super) fn start_craft_wrapper(
     In(_): In<Key>,
-    mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
-    mut instruction_queue: ResMut<InstructionQueue>,
+    next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
+    instruction_queue: ResMut<InstructionQueue>,
     crafting_screen: Res<CraftingScreen>,
     mut recipes: Query<(&mut Text, &Transform, &Node, &RecipeSituation)>,
 ) {
     let start = Instant::now();
 
     start_craft(
-        &mut next_gameplay_state,
-        &mut instruction_queue,
-        &crafting_screen,
-        &recipes.transmute_lens().query(),
+        next_gameplay_state,
+        instruction_queue,
+        crafting_screen,
+        recipes.transmute_lens().query(),
     );
 
     log_if_slow("start_craft_wrapper", start);
@@ -218,18 +239,18 @@ pub(super) fn start_craft_wrapper(
 
 #[expect(clippy::needless_pass_by_value)]
 pub(super) fn clear_crafting_screen(
+    In(start_craft_system): In<StartCraftSystem>,
     clock: Clock,
     mut crafting_screen: ResMut<CraftingScreen>,
     children: Query<&Children>,
     mut styles: Query<&mut Style>,
-) -> bool {
+) -> Option<StartCraftSystem> {
     if crafting_screen.last_time == clock.time() {
-        return false;
+        return None;
     }
     crafting_screen.last_time = clock.time();
     crafting_screen.selection_list.clear();
 
-    // TODO
     if let Ok(children) = children.get(crafting_screen.recipe_list) {
         for &child in children {
             if let Ok(mut style) = styles.get_mut(child) {
@@ -238,12 +259,12 @@ pub(super) fn clear_crafting_screen(
         }
     }
 
-    true
+    Some(start_craft_system)
 }
 
 #[expect(clippy::needless_pass_by_value)]
 pub(super) fn refresh_crafting_screen(
-    In(run): In<bool>,
+    In(start_craft_system): In<Option<StartCraftSystem>>,
     mut commands: Commands,
     location: Res<Location>,
     fonts: Res<Fonts>,
@@ -259,9 +280,9 @@ pub(super) fn refresh_crafting_screen(
         Option<&Parent>,
     )>,
 ) {
-    if !run {
+    let Some(start_craft_system) = start_craft_system else {
         return;
-    }
+    };
 
     let (&player_pos, body_containers) = players.single();
 
@@ -337,6 +358,7 @@ pub(super) fn refresh_crafting_screen(
             &fonts,
             &crafting_screen,
             &first_recipe,
+            &start_craft_system,
         );
     } else {
         commands
@@ -651,6 +673,7 @@ fn adapt_to_selected(
     recipes: &Query<(&Transform, &Node, &RecipeSituation)>,
     scrolling_lists: &mut Query<(&mut ScrollingList, &mut Style, &Parent, &Node)>,
     scrolling_parents: &Query<(&Node, &Style), Without<ScrollingList>>,
+    start_craft_system: &StartCraftSystem,
 ) {
     if let Some(selected) = crafting_screen.selection_list.selected {
         let (recipe_transform, recipe_node, recipe_sitation) = recipes
@@ -673,7 +696,14 @@ fn adapt_to_selected(
             );
         }
 
-        show_recipe(commands, infos, fonts, crafting_screen, recipe_sitation);
+        show_recipe(
+            commands,
+            infos,
+            fonts,
+            crafting_screen,
+            recipe_sitation,
+            start_craft_system,
+        );
     }
 }
 
@@ -683,6 +713,7 @@ fn show_recipe(
     fonts: &Fonts,
     crafting_screen: &CraftingScreen,
     recipe_sitation: &RecipeSituation,
+    start_craft_system: &StartCraftSystem,
 ) {
     let recipe = infos.recipe(&recipe_sitation.recipe_id);
 
@@ -690,8 +721,12 @@ fn show_recipe(
         .entity(crafting_screen.recipe_details)
         .despawn_descendants()
         .with_children(|parent| {
-            ButtonBuilder::new("Craft", fonts.regular(recipe_sitation.color(true)), Button)
-                .spawn(parent);
+            ButtonBuilder::new(
+                "Craft",
+                fonts.regular(recipe_sitation.color(true)),
+                start_craft_system.0,
+            )
+            .spawn(parent, ());
             parent.spawn(TextBundle::from_sections(
                 recipe_sitation.text_sections(fonts, recipe),
             ));
@@ -699,30 +734,11 @@ fn show_recipe(
 }
 
 #[expect(clippy::needless_pass_by_value)]
-pub(super) fn manage_crafting_button_input(
+fn start_craft(
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
     mut instruction_queue: ResMut<InstructionQueue>,
-    interactions: Query<&Interaction, (Changed<Interaction>, With<Button>)>,
     crafting_screen: Res<CraftingScreen>,
     recipes: Query<&RecipeSituation>,
-) {
-    for &interaction in interactions.iter() {
-        if interaction == Interaction::Pressed {
-            start_craft(
-                &mut next_gameplay_state,
-                &mut instruction_queue,
-                &crafting_screen,
-                &recipes,
-            );
-        }
-    }
-}
-
-fn start_craft(
-    next_gameplay_state: &mut NextState<GameplayScreenState>,
-    instruction_queue: &mut InstructionQueue,
-    crafting_screen: &CraftingScreen,
-    recipes: &Query<&RecipeSituation>,
 ) {
     let selected_craft = crafting_screen
         .selection_list

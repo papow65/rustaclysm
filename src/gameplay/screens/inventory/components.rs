@@ -2,7 +2,7 @@ use crate::gameplay::Phrase;
 use bevy::prelude::{Component, Entity};
 use std::fmt;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub(super) enum InventoryAction {
     Examine,
     Take,
@@ -23,12 +23,6 @@ impl fmt::Display for InventoryAction {
             Self::Unwield => write!(f, "Unwield"),
         }
     }
-}
-
-#[derive(Debug, Component)]
-pub(super) struct InventoryButton {
-    pub(super) item: Entity,
-    pub(super) action: InventoryAction,
 }
 
 #[derive(Debug, Component)]

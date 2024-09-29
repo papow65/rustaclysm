@@ -1,22 +1,45 @@
 use crate::application::ApplicationState;
 use crate::common::log_if_slow;
-use crate::gameplay::screens::menu::components::{MainMenuButton, QuitButton, ReturnButton};
 use crate::gameplay::GameplayScreenState;
 use crate::hud::{
     ButtonBuilder, Fonts, BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, MEDIUM_SPACING,
 };
 use crate::keyboard::{Key, KeyBindings};
 use crate::manual::ManualSection;
-use bevy::app::AppExit;
 use bevy::prelude::{
-    AlignItems, BuildChildren, Button, Changed, Commands, Events, FlexDirection, In, Interaction,
-    JustifyContent, KeyCode, Local, NextState, NodeBundle, Query, Res, ResMut, StateScoped, Style,
-    Val, With, World,
+    AlignItems, BuildChildren, Commands, Events, FlexDirection, In, JustifyContent, KeyCode, Local,
+    NextState, NodeBundle, Res, ResMut, StateScoped, Style, Val, World,
 };
-use std::time::Instant;
+use bevy::{app::AppExit, ecs::system::SystemId};
+use std::{cell::OnceCell, time::Instant};
+
+#[derive(Clone, Debug)]
+pub(super) struct MenuButtonActions {
+    return_: SystemId<(), ()>,
+    main_menu: SystemId<(), ()>,
+    quit: SystemId<(), ()>,
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub(super) fn create_menu_button_actions(
+    world: &mut World,
+    button_actions: Local<OnceCell<MenuButtonActions>>,
+) -> MenuButtonActions {
+    button_actions
+        .get_or_init(|| MenuButtonActions {
+            return_: world.register_system(return_),
+            main_menu: world.register_system(main_menu),
+            quit: world.register_system(quit),
+        })
+        .clone()
+}
 
 #[expect(clippy::needless_pass_by_value)]
-pub(super) fn spawn_menu(mut commands: Commands, fonts: Res<Fonts>) {
+pub(super) fn spawn_menu(
+    In(button_actions): In<MenuButtonActions>,
+    mut commands: Commands,
+    fonts: Res<Fonts>,
+) {
     commands
         .spawn((
             NodeBundle {
@@ -34,15 +57,23 @@ pub(super) fn spawn_menu(mut commands: Commands, fonts: Res<Fonts>) {
             StateScoped(GameplayScreenState::Menu),
         ))
         .with_children(|parent| {
-            ButtonBuilder::new("Return", fonts.large(GOOD_TEXT_COLOR), ReturnButton)
+            ButtonBuilder::new(
+                "Return",
+                fonts.large(GOOD_TEXT_COLOR),
+                button_actions.return_,
+            )
+            .large()
+            .spawn(parent, ());
+            ButtonBuilder::new(
+                "Main Menu",
+                fonts.large(HARD_TEXT_COLOR),
+                button_actions.main_menu,
+            )
+            .large()
+            .spawn(parent, ());
+            ButtonBuilder::new("Quit", fonts.large(BAD_TEXT_COLOR), button_actions.quit)
                 .large()
-                .spawn(parent);
-            ButtonBuilder::new("Main Menu", fonts.large(HARD_TEXT_COLOR), MainMenuButton)
-                .large()
-                .spawn(parent);
-            ButtonBuilder::new("Quit", fonts.large(BAD_TEXT_COLOR), QuitButton)
-                .large()
-                .spawn(parent);
+                .spawn(parent, ());
         });
 }
 
@@ -69,41 +100,14 @@ fn close_menu(In(_): In<Key>, mut next_gameplay_state: ResMut<NextState<Gameplay
     next_gameplay_state.set(GameplayScreenState::Base);
 }
 
-#[expect(clippy::needless_pass_by_value)]
-pub(super) fn manage_menu_button_input(
-    mut next_application_state: ResMut<NextState<ApplicationState>>,
-    mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
-    mut app_exit_events: ResMut<Events<AppExit>>,
-    interaction_query: Query<
-        (
-            &Interaction,
-            Option<&ReturnButton>,
-            Option<&MainMenuButton>,
-            Option<&QuitButton>,
-        ),
-        (Changed<Interaction>, With<Button>),
-    >,
-) {
-    for (interaction, return_button, main_menu_button, quit_button) in &interaction_query {
-        if *interaction == Interaction::Pressed {
-            match (
-                return_button.is_some(),
-                main_menu_button.is_some(),
-                quit_button.is_some(),
-            ) {
-                (true, false, false) => {
-                    next_gameplay_state.set(GameplayScreenState::Base);
-                }
-                (false, true, false) => {
-                    next_application_state.set(ApplicationState::MainMenu);
-                }
-                (false, false, true) => {
-                    app_exit_events.send(AppExit::Success);
-                }
-                (return_button, main_menu_button, quit_button) => {
-                    panic!("{return_button:?} {main_menu_button:?} {quit_button:?}");
-                }
-            }
-        }
-    }
+fn return_(mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>) {
+    next_gameplay_state.set(GameplayScreenState::Base);
+}
+
+pub(super) fn main_menu(mut next_application_state: ResMut<NextState<ApplicationState>>) {
+    next_application_state.set(ApplicationState::MainMenu);
+}
+
+pub(super) fn quit(mut app_exit_events: ResMut<Events<AppExit>>) {
+    app_exit_events.send(AppExit::Success);
 }

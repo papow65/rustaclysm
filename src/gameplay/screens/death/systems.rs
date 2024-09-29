@@ -5,15 +5,32 @@ use crate::hud::{
 use crate::keyboard::{Key, KeyBindings};
 use crate::manual::ManualSection;
 use crate::{application::ApplicationState, gameplay::GameplayScreenState};
+use bevy::ecs::system::SystemId;
 use bevy::prelude::{
-    AlignItems, BuildChildren, Button, Changed, Commands, FlexDirection, In, Interaction,
-    JustifyContent, KeyCode, Local, NextState, NodeBundle, Query, Res, ResMut, StateScoped, Style,
-    TextBundle, UiRect, Val, With, World,
+    AlignItems, BuildChildren, Commands, FlexDirection, In, JustifyContent, KeyCode, Local,
+    NextState, NodeBundle, Res, ResMut, StateScoped, Style, TextBundle, UiRect, Val, World,
 };
-use std::time::Instant;
+use std::{cell::OnceCell, time::Instant};
+
+#[derive(Clone, Debug)]
+pub(super) struct MainMenuSystem(SystemId<(), ()>);
+
+#[allow(clippy::needless_pass_by_value)]
+pub(super) fn create_main_menu_system(
+    world: &mut World,
+    main_menu_system: Local<OnceCell<MainMenuSystem>>,
+) -> MainMenuSystem {
+    main_menu_system
+        .get_or_init(|| MainMenuSystem(world.register_system(to_main_menu)))
+        .clone()
+}
 
 #[expect(clippy::needless_pass_by_value)]
-pub(super) fn spawn_death_screen(mut commands: Commands, fonts: Res<Fonts>) {
+pub(super) fn spawn_death_screen(
+    In(main_menu_system): In<MainMenuSystem>,
+    mut commands: Commands,
+    fonts: Res<Fonts>,
+) {
     commands
         .spawn((
             NodeBundle {
@@ -63,9 +80,13 @@ pub(super) fn spawn_death_screen(mut commands: Commands, fonts: Res<Fonts>) {
                             ));
                         });
 
-                    ButtonBuilder::new("Main menu", fonts.regular(WARN_TEXT_COLOR), Button)
-                        .large()
-                        .spawn(parent);
+                    ButtonBuilder::new(
+                        "Main menu",
+                        fonts.regular(WARN_TEXT_COLOR),
+                        main_menu_system.0,
+                    )
+                    .large()
+                    .spawn(parent, ());
                 });
         });
 }
@@ -83,7 +104,7 @@ pub(super) fn create_death_screen_key_bindings(
         |bindings| {
             bindings.add_multi(
                 [KeyCode::Escape, KeyCode::Enter, KeyCode::Space],
-                return_to_main_menu,
+                to_main_menu_wrapper,
             );
         },
         ManualSection::new(&[("to main menu", "esc/enter/space")], 100),
@@ -92,21 +113,13 @@ pub(super) fn create_death_screen_key_bindings(
     log_if_slow("create_death_screen_key_bindings", start);
 }
 
-fn return_to_main_menu(
+fn to_main_menu_wrapper(
     In(_): In<Key>,
-    mut next_application_state: ResMut<NextState<ApplicationState>>,
+    next_application_state: ResMut<NextState<ApplicationState>>,
 ) {
-    next_application_state.set(ApplicationState::MainMenu);
+    to_main_menu(next_application_state);
 }
 
-#[expect(clippy::needless_pass_by_value)]
-pub(super) fn manage_death_button_input(
-    mut next_application_state: ResMut<NextState<ApplicationState>>,
-    interactions: Query<&Interaction, (Changed<Interaction>, With<Button>)>,
-) {
-    for &interaction in &interactions {
-        if interaction == Interaction::Pressed {
-            next_application_state.set(ApplicationState::MainMenu);
-        }
-    }
+fn to_main_menu(mut next_application_state: ResMut<NextState<ApplicationState>>) {
+    next_application_state.set(ApplicationState::MainMenu);
 }

@@ -1,19 +1,36 @@
+use bevy::ecs::system::SystemId;
 use bevy::prelude::{
-    AlignItems, BuildChildren, ButtonBundle, ChildBuilder, Component, JustifyContent, Style,
-    TextBundle, TextStyle, Val,
+    AlignItems, BuildChildren, ButtonBundle, ChildBuilder, Commands, Component, JustifyContent,
+    Style, TextBundle, TextStyle, Val,
 };
 use std::fmt;
 
-pub(crate) struct ButtonBuilder<C: Component, D: fmt::Display> {
-    caption: D,
-    text_style: TextStyle,
-    style: Style,
+pub(crate) trait RunButtonContext: Clone + Send + Sync + Sized + 'static {}
+
+impl RunButtonContext for () {}
+
+#[derive(Debug, Component)]
+pub(crate) struct RunButton<C: RunButtonContext> {
+    system: SystemId<C, ()>,
     context: C,
 }
 
-impl<C: Component, D: fmt::Display> ButtonBuilder<C, D> {
+impl<C: RunButtonContext> RunButton<C> {
+    pub(super) fn run(&self, commands: &mut Commands) {
+        commands.run_system_with_input(self.system, self.context.clone());
+    }
+}
+
+pub(crate) struct ButtonBuilder<C: RunButtonContext, D: fmt::Display> {
+    caption: D,
+    text_style: TextStyle,
+    style: Style,
+    system: SystemId<C, ()>,
+}
+
+impl<C: RunButtonContext, D: fmt::Display> ButtonBuilder<C, D> {
     /// 70px wide, dynamic height
-    pub(crate) fn new(caption: D, text_style: TextStyle, context: C) -> Self {
+    pub(crate) fn new(caption: D, text_style: TextStyle, system: SystemId<C, ()>) -> Self {
         Self {
             caption,
             text_style,
@@ -24,7 +41,7 @@ impl<C: Component, D: fmt::Display> ButtonBuilder<C, D> {
                 align_items: AlignItems::Center,
                 ..Style::default()
             },
-            context,
+            system,
         }
     }
 
@@ -40,7 +57,7 @@ impl<C: Component, D: fmt::Display> ButtonBuilder<C, D> {
         self
     }
 
-    pub(crate) fn spawn(self, parent: &mut ChildBuilder) {
+    pub(crate) fn spawn(self, parent: &mut ChildBuilder, context: C) {
         parent
             .spawn(ButtonBundle {
                 style: self.style,
@@ -52,6 +69,9 @@ impl<C: Component, D: fmt::Display> ButtonBuilder<C, D> {
                     self.text_style,
                 ));
             })
-            .insert(self.context);
+            .insert(RunButton {
+                system: self.system,
+                context,
+            });
     }
 }
