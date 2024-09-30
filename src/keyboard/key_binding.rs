@@ -5,15 +5,15 @@ use std::marker::PhantomData;
 
 #[derive(Clone, Debug, Component)]
 pub(super) struct KeyBinding<C: CtrlState, H: HeldState> {
-    keys: Vec<Key>, // TODO SmallVec
+    keys: Vec<Key>,
     system: SystemId<Key, ()>,
     _phantom: PhantomData<(C, H)>,
 }
 
 impl<C: CtrlState, H: HeldState> KeyBinding<C, H> {
-    pub(super) fn new<const N: usize>(keys: [Key; N], system: SystemId<Key, ()>) -> Self {
+    pub(super) const fn new(keys: Vec<Key>, system: SystemId<Key, ()>) -> Self {
         Self {
-            keys: keys.into(),
+            keys,
             system,
             _phantom: PhantomData,
         }

@@ -1,12 +1,25 @@
 use crate::keyboard::{key_binding::KeyBinding, CtrlState, HeldState, Key};
 use crate::manual::ManualSection;
-use bevy::prelude::{ComputedStates, IntoSystem, StateScoped, States, World};
-use std::cell::OnceCell;
+use bevy::prelude::{Commands, ComputedStates, IntoSystem, StateScoped, States, World};
+use std::{cell::OnceCell, iter::once};
 
+#[derive(Clone)]
 struct KeyBindingsStorage<S: States, C: CtrlState, H: HeldState> {
     bindings: Vec<KeyBinding<C, H>>,
     manual: ManualSection,
     state: S,
+}
+
+impl<S: States, C: CtrlState, H: HeldState> KeyBindingsStorage<S, C, H> {
+    fn spawn(self, commands: &mut Commands) {
+        let scoped = StateScoped(self.state);
+        commands.spawn((self.manual, scoped.clone()));
+        commands.spawn_batch(
+            self.bindings
+                .into_iter()
+                .map(move |binding| (binding, scoped.clone())),
+        );
+    }
 }
 
 pub(crate) struct KeyBindingsBuilder<'w, S: States, C: CtrlState, H: HeldState> {
@@ -20,21 +33,21 @@ impl<'w, S: States, C: CtrlState, H: HeldState> KeyBindingsBuilder<'w, S, C, H> 
         key: K,
         system: T,
     ) {
-        self.add_multi([key], system);
+        self.add_multi(once(key), system);
     }
 
     pub(crate) fn add_multi<
         K: Into<Key>,
         M,
         T: IntoSystem<Key, (), M> + 'static,
-        const N: usize,
+        V: IntoIterator<Item = K>,
     >(
         &mut self,
-        keys: [K; N],
+        keys: V,
         system: T,
     ) {
         self.storage.bindings.push(KeyBinding::new(
-            keys.map(Into::into),
+            keys.into_iter().map(Into::into).collect(),
             self.world.register_system(system),
         ));
     }
@@ -50,8 +63,8 @@ impl<S: States, C: CtrlState, H: HeldState> KeyBindings<S, C, H> {
     where
         F: FnOnce(&mut KeyBindingsBuilder<S, C, H>),
     {
-        let builder = self.once.get_or_init(|| {
-            let mut bindings = KeyBindingsBuilder {
+        let storage = self.once.get_or_init(|| {
+            let mut builder = KeyBindingsBuilder {
                 storage: KeyBindingsStorage {
                     bindings: Vec::new(),
                     manual,
@@ -59,19 +72,11 @@ impl<S: States, C: CtrlState, H: HeldState> KeyBindings<S, C, H> {
                 },
                 world,
             };
-            init(&mut bindings);
-            bindings.storage
+            init(&mut builder);
+            builder.storage
         });
-
-        world.spawn_batch(
-            builder
-                .bindings
-                .iter()
-                .cloned()
-                .map(|binding| (binding, StateScoped(builder.state.clone()))),
-        );
-
-        world.spawn((builder.manual.clone(), StateScoped(builder.state.clone())));
+        storage.clone().spawn(&mut world.commands());
+        world.flush(); // apply commands
     }
 }
 
