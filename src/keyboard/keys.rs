@@ -1,10 +1,8 @@
-use crate::keyboard::{
-    key_binding::KeyBinding, Ctrl, CtrlState, Held, HeldState, InputChange, Key, KeyChange,
-};
-use bevy::ecs::system::SystemId;
+use crate::keyboard::key_binding::{KeyBinding, KeyBindingSystem};
+use crate::keyboard::{Ctrl, CtrlState, Held, HeldState, InputChange, Key, KeyChange};
 use bevy::input::keyboard::{Key as LogicalKey, KeyboardInput};
 use bevy::input::ButtonState;
-use bevy::prelude::{ButtonInput, Commands, EventReader, KeyCode, Query};
+use bevy::prelude::{ButtonInput, Commands, Entity, EventReader, KeyCode, Query};
 
 /// This resource contains all user keyboard input
 ///
@@ -69,10 +67,10 @@ impl Keys {
     pub(super) fn process(
         &self,
         commands: &mut Commands,
-        key_bindings_fresh_without_ctrl: &Query<&KeyBinding<(), ()>>,
-        key_bindings_held_without_ctrl: &Query<&KeyBinding<(), Held>>,
-        key_bindings_fresh_with_ctrl: &Query<&KeyBinding<Ctrl, ()>>,
-        key_bindings_held_with_ctrl: &Query<&KeyBinding<Ctrl, Held>>,
+        key_bindings_fresh_without_ctrl: &Query<(Entity, &KeyBinding<(), ()>)>,
+        key_bindings_held_without_ctrl: &Query<(Entity, &KeyBinding<(), Held>)>,
+        key_bindings_fresh_with_ctrl: &Query<(Entity, &KeyBinding<Ctrl, ()>)>,
+        key_bindings_held_with_ctrl: &Query<(Entity, &KeyBinding<Ctrl, Held>)>,
     ) {
         if self.ctrl.is_some() {
             self.process_inner(
@@ -92,8 +90,8 @@ impl Keys {
     fn process_inner<C: CtrlState>(
         &self,
         commands: &mut Commands,
-        key_bindings_fresh: &Query<&KeyBinding<C, ()>>,
-        key_bindings_held: &Query<&KeyBinding<C, Held>>,
+        key_bindings_fresh: &Query<(Entity, &KeyBinding<C, ()>)>,
+        key_bindings_held: &Query<(Entity, &KeyBinding<C, Held>)>,
     ) {
         for key_change in &self.key_changes {
             // Key bindings that may be held down, don't require checking `key_change.change`.
@@ -107,21 +105,33 @@ impl Keys {
                 }
             });
 
-            if let Some(system) = system {
+            if let Some((entity, system)) = system {
                 //println!("System found for {key_change:?}");
-                commands.run_system_with_input(system, key_change.key);
+                match system.clone() {
+                    KeyBindingSystem::Simple(system) => {
+                        commands.run_system(system);
+                    }
+                    KeyBindingSystem::Key(system) => {
+                        commands.run_system_with_input(system, key_change.key);
+                    }
+                    KeyBindingSystem::Entity(system) => {
+                        commands.run_system_with_input(system, entity);
+                    }
+                }
             } else {
                 //println!("No system found for {key_change:?}");
             }
         }
     }
 
-    fn matching_system<C: CtrlState, H: HeldState>(
-        key_bindings: &Query<&KeyBinding<C, H>>,
+    fn matching_system<'a, C: CtrlState, H: HeldState>(
+        key_bindings: &'a Query<(Entity, &KeyBinding<C, H>)>,
         key: Key,
-    ) -> Option<SystemId<Key, ()>> {
-        key_bindings
-            .iter()
-            .find_map(|binding| binding.matching_system(key))
+    ) -> Option<(Entity, &'a KeyBindingSystem)> {
+        key_bindings.iter().find_map(|(entity, binding)| {
+            binding
+                .matching_system(key)
+                .map(|binding| (entity, binding))
+        })
     }
 }

@@ -1,5 +1,7 @@
+use crate::keyboard::key_binding::KeyBindingSystem;
 use crate::keyboard::{key_binding::KeyBinding, CtrlState, HeldState, Key};
 use crate::manual::ManualSection;
+use bevy::ecs::system::SystemId;
 use bevy::prelude::{Commands, ComputedStates, IntoSystem, StateScoped, States, World};
 use std::{cell::OnceCell, iter::once};
 
@@ -28,27 +30,32 @@ pub(crate) struct KeyBindingsBuilder<'w, S: States, C: CtrlState, H: HeldState> 
 }
 
 impl<'w, S: States, C: CtrlState, H: HeldState> KeyBindingsBuilder<'w, S, C, H> {
-    pub(crate) fn add<K: Into<Key>, M, T: IntoSystem<Key, (), M> + 'static>(
+    pub(crate) fn add<I: 'static, K: Into<Key>, M, T: IntoSystem<I, (), M> + 'static>(
         &mut self,
         key: K,
         system: T,
-    ) {
+    ) where
+        SystemId<I, ()>: Into<KeyBindingSystem>,
+    {
         self.add_multi(once(key), system);
     }
 
     pub(crate) fn add_multi<
+        I: 'static,
         K: Into<Key>,
         M,
-        T: IntoSystem<Key, (), M> + 'static,
+        T: IntoSystem<I, (), M> + 'static,
         V: IntoIterator<Item = K>,
     >(
         &mut self,
         keys: V,
         system: T,
-    ) {
+    ) where
+        SystemId<I, ()>: Into<KeyBindingSystem>,
+    {
         self.storage.bindings.push(KeyBinding::new(
             keys.into_iter().map(Into::into).collect(),
-            self.world.register_system(system),
+            self.world.register_system(system).into(),
         ));
     }
 }

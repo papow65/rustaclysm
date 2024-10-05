@@ -4,8 +4,8 @@ use crate::hud::{
 };
 use bevy::input::mouse::MouseWheel;
 use bevy::prelude::{
-    BackgroundColor, Button, Changed, Commands, EventReader, Interaction, Node, Parent, Query,
-    Style, With, Without, World,
+    BackgroundColor, Button, Changed, Commands, Entity, EventReader, In, Interaction, Node, Parent,
+    Query, Style, With, Without, World,
 };
 
 pub(super) fn create_default_panel(world: &mut World) {
@@ -76,4 +76,16 @@ pub(crate) fn resize_scrolling_lists(
             .expect("Parent node should be found");
         style.top = scrolling_list.resize(list_node, parent_node, parent_style);
     }
+}
+
+#[expect(clippy::needless_pass_by_value)]
+pub(crate) fn trigger_button_action<C: RunButtonContext>(
+    In(entity): In<Entity>,
+    mut commands: Commands,
+    run_buttons: Query<&RunButton<C>>,
+) {
+    run_buttons
+        .get(entity)
+        .expect("Triggered run button should be found")
+        .run(&mut commands);
 }

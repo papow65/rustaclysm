@@ -177,7 +177,7 @@ pub(super) fn create_crafting_key_bindings(
     log_if_slow("create_crafting_key_bindings", start);
 }
 
-fn exit_crafting(In(_): In<Key>, mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>) {
+fn exit_crafting(mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>) {
     let start = Instant::now();
 
     next_gameplay_state.set(GameplayScreenState::Base);
@@ -219,7 +219,6 @@ pub(super) fn move_crafting_selection(
 }
 
 pub(super) fn start_craft_wrapper(
-    In(_): In<Key>,
     next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
     instruction_queue: ResMut<InstructionQueue>,
     crafting_screen: Res<CraftingScreen>,

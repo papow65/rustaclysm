@@ -240,7 +240,6 @@ fn handle_selected_item_wrapper(
 /// Special case, because we don't want to select another item after the action.
 #[expect(clippy::needless_pass_by_value)]
 fn examine_selected_item_wrapper(
-    In(_): In<Key>,
     mut instruction_queue: ResMut<InstructionQueue>,
     inventory: Res<InventoryScreen>,
     mut item_lines: Query<(&InventoryItemLine, &Children)>,
@@ -252,7 +251,7 @@ fn examine_selected_item_wrapper(
     );
 }
 
-fn exit_inventory(In(_): In<Key>, mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>) {
+fn exit_inventory(mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>) {
     next_gameplay_state.set(GameplayScreenState::Base);
 }
 

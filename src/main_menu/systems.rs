@@ -1,25 +1,24 @@
-use crate::common::AssetPaths;
+use crate::common::{log_if_slow, AssetPaths};
 use crate::gameplay::{ActiveSav, GameplaySession};
 use crate::hud::{
-    ButtonBuilder, Fonts, RunButtonContext, BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR,
-    LARGE_SPACING, MEDIUM_SPACING, PANEL_COLOR,
+    trigger_button_action, ButtonBuilder, Fonts, RunButtonContext, BAD_TEXT_COLOR, GOOD_TEXT_COLOR,
+    HARD_TEXT_COLOR, LARGE_SPACING, MEDIUM_SPACING, PANEL_COLOR,
 };
+use crate::keyboard::KeyBindings;
 use crate::main_menu::components::{LoadButtonArea, MessageField, MessageWrapper};
 use crate::main_menu::load_error::LoadError;
-use crate::{application::ApplicationState, loading::ProgressScreenState};
+use crate::{application::ApplicationState, loading::ProgressScreenState, manual::ManualSection};
 use base64::{engine::general_purpose::STANDARD as base64, Engine};
-use bevy::app::AppExit;
-use bevy::ecs::system::SystemId;
 use bevy::prelude::{
     AlignContent, AlignItems, BuildChildren, Camera2dBundle, ChildBuilder, Commands,
     DespawnRecursiveExt, Display, Entity, Events, FlexDirection, FlexWrap, In, JustifyContent,
     Local, NextState, NodeBundle, Query, Res, ResMut, StateScoped, Style, Text, TextBundle, UiRect,
     Val, With, Without, World, ZIndex,
 };
+use bevy::{app::AppExit, ecs::system::SystemId};
 use glob::glob;
-use std::cell::OnceCell;
 use std::path::{Path, PathBuf};
-use std::str::from_utf8;
+use std::{cell::OnceCell, str::from_utf8, time::Instant};
 
 const FULL_WIDTH: f32 = 720.0;
 
@@ -31,14 +30,25 @@ impl RunButtonContext for FoundSav {}
 #[derive(Clone, Debug)]
 pub(super) struct LoadSystem(SystemId<FoundSav, ()>);
 
+#[derive(Clone, Debug)]
+pub(super) struct TriggerLoadSystem(SystemId<Entity, ()>);
+
 #[allow(clippy::needless_pass_by_value)]
-pub(super) fn create_load_system(
+pub(super) fn create_button_systems(
     world: &mut World,
     load_system: Local<OnceCell<LoadSystem>>,
-) -> LoadSystem {
-    load_system
-        .get_or_init(|| LoadSystem(world.register_system(load)))
-        .clone()
+    trigger_load_system: Local<OnceCell<TriggerLoadSystem>>,
+) -> (LoadSystem, TriggerLoadSystem) {
+    (
+        load_system
+            .get_or_init(|| LoadSystem(world.register_system(load)))
+            .clone(),
+        trigger_load_system
+            .get_or_init(|| {
+                TriggerLoadSystem(world.register_system(trigger_button_action::<FoundSav>))
+            })
+            .clone(),
+    )
 }
 
 #[derive(Clone, Debug)]
@@ -88,6 +98,23 @@ pub(super) fn spawn_main_menu(
             add_notification_area(parent, &fonts);
             add_quit_button(parent, &quit_system, &fonts);
         });
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub(crate) fn create_main_menu_key_bindings(
+    world: &mut World,
+    bindings: Local<KeyBindings<ApplicationState, (), ()>>,
+) {
+    let start = Instant::now();
+
+    bindings.spawn(
+        world,
+        ApplicationState::MainMenu,
+        |_| {},
+        ManualSection::new(&[("load save", "a-z")], 100),
+    );
+
+    log_if_slow("create_main_menu_key_bindings", start);
 }
 
 fn add_title(parent: &mut ChildBuilder, fonts: &Fonts) {
@@ -180,7 +207,7 @@ fn add_quit_button(parent: &mut ChildBuilder, quit_system: &QuitSystem, fonts: &
 
 #[expect(clippy::needless_pass_by_value)]
 pub(super) fn update_sav_files(
-    In(load_system): In<LoadSystem>,
+    In((load_system, trigger_load_system)): In<(LoadSystem, TriggerLoadSystem)>,
     mut commands: Commands,
     fonts: Res<Fonts>,
     mut session: GameplaySession,
@@ -209,9 +236,16 @@ pub(super) fn update_sav_files(
             load_button_area_style.display = Display::Flex;
             message_wrapper_style.display = Display::None;
 
-            for path in list {
+            for (index, path) in list.iter().enumerate() {
                 commands.entity(load_button_area).with_children(|parent| {
-                    add_load_button(&fonts, &load_system, parent, &path);
+                    add_load_button(
+                        &fonts,
+                        &load_system,
+                        &trigger_load_system,
+                        parent,
+                        path,
+                        u32::try_from(index).ok(),
+                    );
                 });
             }
         }
@@ -301,10 +335,12 @@ fn check_directory_structure() -> Result<(), LoadError> {
 fn add_load_button(
     fonts: &Fonts,
     load_system: &LoadSystem,
+    trigger_load_system: &TriggerLoadSystem,
     parent: &mut ChildBuilder,
     path: &Path,
+    index: Option<u32>,
 ) {
-    let world = path.parent().expect("World required");
+    let world_path = path.parent().expect("World required");
     let encoded_character = path
         .file_name()
         .expect("Filename required")
@@ -319,8 +355,16 @@ fn add_load_button(
         .expect("Valid base64 required");
     let character = from_utf8(&decoded_character).expect("Valid utf8 required");
 
+    let mut key_binding = None;
+    if let Some(index) = index {
+        if index <= 26 {
+            key_binding =
+                Some(char::from_u32('a' as u32 + index).expect("Valid unicode character (a-z)"));
+        }
+    }
+
     ButtonBuilder::new(
-        format!("Load {character} in {}", world.display()),
+        format!("Load {character} in {}", world_path.display()),
         fonts.largish(GOOD_TEXT_COLOR),
         load_system.0,
     )
@@ -340,6 +384,7 @@ fn add_load_button(
         },
         ..Style::default()
     })
+    .key_binding(key_binding, trigger_load_system.0)
     .spawn(parent, FoundSav(path.to_path_buf()));
 }
 

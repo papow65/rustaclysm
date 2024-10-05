@@ -1,7 +1,9 @@
+use crate::hud::SOFT_TEXT_COLOR;
+use crate::keyboard::{Key, KeyBinding};
 use bevy::ecs::system::SystemId;
 use bevy::prelude::{
-    AlignItems, BuildChildren, ButtonBundle, ChildBuilder, Commands, Component, JustifyContent,
-    Style, TextBundle, TextStyle, Val,
+    AlignItems, BuildChildren, ButtonBundle, ChildBuilder, Commands, Component, Entity,
+    JustifyContent, NodeBundle, PositionType, Style, TextBundle, TextStyle, Val,
 };
 use std::fmt;
 
@@ -26,6 +28,7 @@ pub(crate) struct ButtonBuilder<C: RunButtonContext, D: fmt::Display> {
     text_style: TextStyle,
     style: Style,
     system: SystemId<C, ()>,
+    key_binding: Option<(Key, KeyBinding<(), ()>)>,
 }
 
 impl<C: RunButtonContext, D: fmt::Display> ButtonBuilder<C, D> {
@@ -42,6 +45,7 @@ impl<C: RunButtonContext, D: fmt::Display> ButtonBuilder<C, D> {
                 ..Style::default()
             },
             system,
+            key_binding: None,
         }
     }
 
@@ -57,21 +61,64 @@ impl<C: RunButtonContext, D: fmt::Display> ButtonBuilder<C, D> {
         self
     }
 
+    pub(crate) fn key_binding<K: Into<Key>>(
+        mut self,
+        key: Option<K>,
+        key_binding_system: SystemId<Entity, ()>,
+    ) -> Self {
+        self.key_binding = key
+            .map(Into::into)
+            .map(|key| (key, KeyBinding::new(vec![key], key_binding_system.into())));
+        self
+    }
+
     pub(crate) fn spawn(self, parent: &mut ChildBuilder, context: C) {
-        parent
-            .spawn(ButtonBundle {
+        let mut entity_commands = parent.spawn((
+            ButtonBundle {
                 style: self.style,
                 ..ButtonBundle::default()
-            })
-            .with_children(|parent| {
-                parent.spawn(TextBundle::from_section(
-                    format!("{}", self.caption),
-                    self.text_style,
-                ));
-            })
-            .insert(RunButton {
+            },
+            RunButton {
                 system: self.system,
                 context,
+            },
+        ));
+
+        entity_commands.with_children(|parent| {
+            parent.spawn(TextBundle::from_section(
+                format!("{}", self.caption),
+                self.text_style.clone(),
+            ));
+        });
+
+        if let Some((key, key_binding)) = self.key_binding {
+            entity_commands.insert(key_binding);
+
+            entity_commands.with_children(|parent| {
+                let mut key_text_style = self.text_style;
+                key_text_style.color = SOFT_TEXT_COLOR;
+                parent
+                    .spawn(NodeBundle {
+                        style: Style {
+                            position_type: PositionType::Absolute,
+                            width: Val::Percent(100.0),
+                            height: Val::Percent(100.0),
+                            justify_content: JustifyContent::End,
+                            align_items: AlignItems::Center,
+                            ..Style::default()
+                        },
+                        ..NodeBundle::default()
+                    })
+                    .with_children(|parent| {
+                        parent.spawn(TextBundle::from_section(
+                            match key {
+                                Key::Character(c) => format!("[{c}] "),
+                                Key::Code(c) => format!("[{c:?}] "),
+                            },
+                            key_text_style,
+                        ));
+                    });
             });
+        }
     }
 }

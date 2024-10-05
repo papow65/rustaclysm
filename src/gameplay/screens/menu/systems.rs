@@ -4,7 +4,7 @@ use crate::gameplay::GameplayScreenState;
 use crate::hud::{
     ButtonBuilder, Fonts, BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, MEDIUM_SPACING,
 };
-use crate::keyboard::{Key, KeyBindings};
+use crate::keyboard::KeyBindings;
 use crate::manual::ManualSection;
 use bevy::prelude::{
     AlignItems, BuildChildren, Commands, Events, FlexDirection, In, JustifyContent, KeyCode, Local,
@@ -96,7 +96,7 @@ pub(super) fn create_menu_key_bindings(
     log_if_slow("create_menu_key_bindings", start);
 }
 
-fn close_menu(In(_): In<Key>, mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>) {
+fn close_menu(mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>) {
     next_gameplay_state.set(GameplayScreenState::Base);
 }
 

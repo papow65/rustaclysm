@@ -13,7 +13,7 @@ use bevy::{prelude::*, render::view::RenderLayers};
 use std::time::Instant;
 
 #[expect(clippy::needless_pass_by_value)]
-fn examine_pos(In(_): In<Key>, focus: Focus, mut next_focus_state: ResMut<NextState<FocusState>>) {
+fn examine_pos(focus: Focus, mut next_focus_state: ResMut<NextState<FocusState>>) {
     let start = Instant::now();
 
     focus.toggle_examine_pos(&mut next_focus_state);
@@ -22,11 +22,7 @@ fn examine_pos(In(_): In<Key>, focus: Focus, mut next_focus_state: ResMut<NextSt
 }
 
 #[expect(clippy::needless_pass_by_value)]
-fn examine_zone_level(
-    In(_): In<Key>,
-    focus: Focus,
-    mut next_focus_state: ResMut<NextState<FocusState>>,
-) {
+fn examine_zone_level(focus: Focus, mut next_focus_state: ResMut<NextState<FocusState>>) {
     let start = Instant::now();
 
     focus.toggle_examine_zone_level(&mut next_focus_state);
@@ -34,10 +30,7 @@ fn examine_zone_level(
     log_if_slow("examine_zone_level", start);
 }
 
-fn open_crafting_screen(
-    In(_): In<Key>,
-    mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
-) {
+fn open_crafting_screen(mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>) {
     let start = Instant::now();
 
     next_gameplay_state.set(GameplayScreenState::Crafting);
@@ -45,7 +38,7 @@ fn open_crafting_screen(
     log_if_slow("open_crafting_screen", start);
 }
 
-fn open_inventory(In(_): In<Key>, mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>) {
+fn open_inventory(mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>) {
     let start = Instant::now();
 
     next_gameplay_state.set(GameplayScreenState::Inventory);
@@ -102,7 +95,7 @@ fn showing_map(camera_layers: &RenderLayers) -> bool {
     camera_layers.intersects(&RenderLayers::layer(2))
 }
 
-fn reset_camera_angle(In(_): In<Key>, mut camera_offset: ResMut<CameraOffset>) {
+fn reset_camera_angle(mut camera_offset: ResMut<CameraOffset>) {
     let start = Instant::now();
 
     camera_offset.reset_angle();
@@ -111,7 +104,6 @@ fn reset_camera_angle(In(_): In<Key>, mut camera_offset: ResMut<CameraOffset>) {
 }
 
 fn toggle_elevation(
-    In(_): In<Key>,
     mut elevation_visibility: ResMut<ElevationVisibility>,
     mut visualization_update: ResMut<VisualizationUpdate>,
 ) {

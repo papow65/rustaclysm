@@ -2,7 +2,7 @@ use crate::common::log_if_slow;
 use crate::hud::{
     ButtonBuilder, Fonts, BAD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, WARN_TEXT_COLOR,
 };
-use crate::keyboard::{Key, KeyBindings};
+use crate::keyboard::KeyBindings;
 use crate::manual::ManualSection;
 use crate::{application::ApplicationState, gameplay::GameplayScreenState};
 use bevy::ecs::system::SystemId;
@@ -113,10 +113,7 @@ pub(super) fn create_death_screen_key_bindings(
     log_if_slow("create_death_screen_key_bindings", start);
 }
 
-fn to_main_menu_wrapper(
-    In(_): In<Key>,
-    next_application_state: ResMut<NextState<ApplicationState>>,
-) {
+fn to_main_menu_wrapper(next_application_state: ResMut<NextState<ApplicationState>>) {
     to_main_menu(next_application_state);
 }
 

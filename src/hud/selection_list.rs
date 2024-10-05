@@ -1,7 +1,5 @@
-use bevy::{
-    ecs::entity::EntityHashMap,
-    prelude::{Component, Entity, KeyCode},
-};
+use bevy::ecs::entity::EntityHashMap;
+use bevy::prelude::{Component, Entity, KeyCode};
 
 #[derive(Clone, Copy)]
 pub(crate) enum StepSize {

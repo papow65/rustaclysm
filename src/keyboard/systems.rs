@@ -3,7 +3,8 @@ use crate::manual::ManualSection;
 use bevy::app::AppExit;
 use bevy::input::keyboard::KeyboardInput;
 use bevy::prelude::{
-    ButtonInput, Commands, EventReader, Events, In, KeyCode, Query, Res, ResMut, UiScale, World,
+    ButtonInput, Commands, Entity, EventReader, Events, In, KeyCode, Query, Res, ResMut, UiScale,
+    World,
 };
 
 pub(super) fn create_global_key_bindings(world: &mut World) {
@@ -30,7 +31,7 @@ fn zoom_ui(In(key): In<Key>, mut ui_scale: ResMut<UiScale>) {
     println!("UI scale: {ui_scale:?}");
 }
 
-fn quit(In(_): In<Key>, mut app_exit_events: ResMut<Events<AppExit>>) {
+fn quit(mut app_exit_events: ResMut<Events<AppExit>>) {
     app_exit_events.send(AppExit::Success);
 }
 
@@ -46,10 +47,10 @@ pub(super) fn preprocess_keyboard_input(
 pub(super) fn manage_binded_keyboard_input(
     In(keys): In<Keys>,
     mut commands: Commands,
-    key_bindings_fresh_without_ctrl: Query<&KeyBinding<(), ()>>,
-    key_bindings_held_without_ctrl: Query<&KeyBinding<(), Held>>,
-    key_bindings_fresh_with_ctrl: Query<&KeyBinding<Ctrl, ()>>,
-    key_bindings_held_with_ctrl: Query<&KeyBinding<Ctrl, Held>>,
+    key_bindings_fresh_without_ctrl: Query<(Entity, &KeyBinding<(), ()>)>,
+    key_bindings_held_without_ctrl: Query<(Entity, &KeyBinding<(), Held>)>,
+    key_bindings_fresh_with_ctrl: Query<(Entity, &KeyBinding<Ctrl, ()>)>,
+    key_bindings_held_with_ctrl: Query<(Entity, &KeyBinding<Ctrl, Held>)>,
 ) {
     keys.process(
         &mut commands,
