@@ -8,10 +8,10 @@ pub(crate) struct Fonts {
 }
 
 impl Fonts {
-    const REGULAR_FONT_SIZE: f32 = 16.0;
-    const LARGISH_FONT_SIZE: f32 = 22.0;
-    const LARGE_FONT_SIZE: f32 = 40.0;
-    const HUGE_FONT_SIZE: f32 = 120.0;
+    const REGULAR_FONT_SIZE: f32 = 13.0;
+    const LARGISH_FONT_SIZE: f32 = 18.0;
+    const LARGE_FONT_SIZE: f32 = 33.0;
+    const HUGE_FONT_SIZE: f32 = 100.0;
 
     pub(crate) fn new(asset_server: &AssetServer) -> Self {
         Self {
