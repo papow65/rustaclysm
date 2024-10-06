@@ -34,10 +34,10 @@ pub(in super::super) struct PlanSystems {
 impl PlanSystems {
     fn new(world: &mut World) -> Self {
         Self {
-            manual_player_action: world.register_system(plan_manual_player_action),
-            automatic_player_action: world.register_system(plan_automatic_player_action),
-            wait_for_player_input: world.register_system(wait_for_player_input),
-            npc_action: world.register_system(plan_npc_action),
+            manual_player_action: world.register_system_cached(plan_manual_player_action),
+            automatic_player_action: world.register_system_cached(plan_automatic_player_action),
+            wait_for_player_input: world.register_system_cached(wait_for_player_input),
+            npc_action: world.register_system_cached(plan_npc_action),
         }
     }
 }
@@ -205,22 +205,22 @@ pub(in super::super) struct PerformSystems {
 impl PerformSystems {
     fn new(world: &mut World) -> Self {
         Self {
-            stay: world.register_system(perform_stay),
-            sleep: world.register_system(perform_sleep),
-            step: world.register_system(perform_step),
-            attack: world.register_system(perform_attack),
-            smash: world.register_system(perform_smash),
-            pulp: world.register_system(perform_pulp),
-            peek: world.register_system(perform_peek),
-            close: world.register_system(perform_close),
-            wield: world.register_system(perform_wield),
-            unwield: world.register_system(perform_unwield),
-            pickup: world.register_system(perform_pickup),
-            move_item: world.register_system(perform_move_item),
-            start_craft: world.register_system(perform_start_craft),
-            continue_craft: world.register_system(perform_continue_craft),
-            examine_item: world.register_system(perform_examine_item),
-            change_pace: world.register_system(perform_change_pace),
+            stay: world.register_system_cached(perform_stay),
+            sleep: world.register_system_cached(perform_sleep),
+            step: world.register_system_cached(perform_step),
+            attack: world.register_system_cached(perform_attack),
+            smash: world.register_system_cached(perform_smash),
+            pulp: world.register_system_cached(perform_pulp),
+            peek: world.register_system_cached(perform_peek),
+            close: world.register_system_cached(perform_close),
+            wield: world.register_system_cached(perform_wield),
+            unwield: world.register_system_cached(perform_unwield),
+            pickup: world.register_system_cached(perform_pickup),
+            move_item: world.register_system_cached(perform_move_item),
+            start_craft: world.register_system_cached(perform_start_craft),
+            continue_craft: world.register_system_cached(perform_continue_craft),
+            examine_item: world.register_system_cached(perform_examine_item),
+            change_pace: world.register_system_cached(perform_change_pace),
         }
     }
 }

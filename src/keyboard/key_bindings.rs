@@ -7,7 +7,7 @@ use bevy::prelude::{
 };
 use std::{cell::OnceCell, iter::once};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 struct KeyBindingsStorage<S: States, C: CtrlState, H: HeldState> {
     bindings: Vec<KeyBinding<C, H>>,
     manual: ManualSection,

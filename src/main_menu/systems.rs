@@ -18,48 +18,33 @@ use bevy::prelude::{
 use bevy::{app::AppExit, ecs::system::SystemId};
 use glob::glob;
 use std::path::{Path, PathBuf};
-use std::{cell::OnceCell, str::from_utf8, time::Instant};
+use std::{str::from_utf8, time::Instant};
 
 const FULL_WIDTH: f32 = 720.0;
 
 #[derive(Clone, Debug)]
 pub(super) struct FoundSav(PathBuf);
 
-#[derive(Clone, Debug)]
-pub(super) struct LoadSystem(SystemId<In<FoundSav>, ()>);
-
-#[derive(Clone, Debug)]
-pub(super) struct TriggerLoadSystem(SystemId<In<Entity>, ()>);
-
-#[allow(clippy::needless_pass_by_value)]
-pub(super) fn create_button_systems(
-    world: &mut World,
-    load_system: Local<OnceCell<LoadSystem>>,
-    trigger_load_system: Local<OnceCell<TriggerLoadSystem>>,
-) -> (LoadSystem, TriggerLoadSystem) {
-    (
-        load_system
-            .get_or_init(|| LoadSystem(world.register_system(load)))
-            .clone(),
-        trigger_load_system
-            .get_or_init(|| {
-                TriggerLoadSystem(world.register_system(trigger_button_action::<In<FoundSav>>))
-            })
-            .clone(),
-    )
+#[derive(Debug)]
+pub(super) struct LoadSystems {
+    button: SystemId<In<FoundSav>, ()>,
+    key: SystemId<In<Entity>, ()>,
 }
 
-#[derive(Clone, Debug)]
+#[allow(clippy::needless_pass_by_value)]
+pub(super) fn create_load_systems(world: &mut World) -> LoadSystems {
+    LoadSystems {
+        button: world.register_system_cached(load),
+        key: world.register_system_cached(trigger_button_action::<In<FoundSav>>),
+    }
+}
+
+#[derive(Debug)]
 pub(super) struct QuitSystem(SystemId<(), ()>);
 
 #[allow(clippy::needless_pass_by_value)]
-pub(super) fn create_quit_system(
-    world: &mut World,
-    quit_system: Local<OnceCell<QuitSystem>>,
-) -> QuitSystem {
-    quit_system
-        .get_or_init(|| QuitSystem(world.register_system(quit)))
-        .clone()
+pub(super) fn create_quit_system(world: &mut World) -> QuitSystem {
+    QuitSystem(world.register_system_cached(quit))
 }
 
 #[expect(clippy::needless_pass_by_value)]
@@ -202,7 +187,7 @@ fn add_quit_button(parent: &mut ChildBuilder, quit_system: &QuitSystem, fonts: &
 
 #[expect(clippy::needless_pass_by_value)]
 pub(super) fn update_sav_files(
-    In((load_system, trigger_load_system)): In<(LoadSystem, TriggerLoadSystem)>,
+    In(load_systems): In<LoadSystems>,
     mut commands: Commands,
     fonts: Res<Fonts>,
     mut session: GameplaySession,
@@ -235,8 +220,7 @@ pub(super) fn update_sav_files(
                 commands.entity(load_button_area).with_children(|parent| {
                     add_load_button(
                         &fonts,
-                        &load_system,
-                        &trigger_load_system,
+                        &load_systems,
                         parent,
                         path,
                         u32::try_from(index).ok(),
@@ -329,8 +313,7 @@ fn check_directory_structure() -> Result<(), LoadError> {
 
 fn add_load_button(
     fonts: &Fonts,
-    load_system: &LoadSystem,
-    trigger_load_system: &TriggerLoadSystem,
+    load_systems: &LoadSystems,
     parent: &mut ChildBuilder,
     path: &Path,
     index: Option<u32>,
@@ -361,7 +344,7 @@ fn add_load_button(
     ButtonBuilder::new(
         format!("Load {character} in {}", world_path.display()),
         fonts.largish(GOOD_TEXT_COLOR),
-        load_system.0,
+        load_systems.button,
     )
     .with_style(Style {
         width: Val::Px(400.0),
@@ -379,7 +362,7 @@ fn add_load_button(
         },
         ..Style::default()
     })
-    .key_binding(key_binding, trigger_load_system.0)
+    .key_binding(key_binding, load_systems.key)
     .spawn(parent, FoundSav(path.to_path_buf()));
 }
 

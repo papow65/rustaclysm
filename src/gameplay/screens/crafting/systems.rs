@@ -18,32 +18,26 @@ use cdda_json_files::{
     Alternative, AutoLearn, BookLearn, BookLearnItem, ObjectId, Recipe, RequiredQuality, Sav,
     Skill, Using,
 };
-use std::{cell::OnceCell, ops::RangeInclusive, sync::Arc, time::Instant};
+use std::{ops::RangeInclusive, sync::Arc, time::Instant};
 use units::Timestamp;
 
 const MAX_FIND_DISTANCE: i32 = 7;
 const FIND_RANGE: RangeInclusive<i32> = (-MAX_FIND_DISTANCE)..=MAX_FIND_DISTANCE;
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub(super) struct StartCraftSystem(SystemId<(), ()>);
 
 #[allow(clippy::needless_pass_by_value)]
-pub(super) fn create_start_craft_system(
-    world: &mut World,
-    start_craft_system: Local<OnceCell<StartCraftSystem>>,
-) -> StartCraftSystem {
-    start_craft_system
-        .get_or_init(|| StartCraftSystem(world.register_system(start_craft)))
-        .clone()
+pub(super) fn create_start_craft_system(world: &mut World) -> StartCraftSystem {
+    StartCraftSystem(world.register_system_cached(start_craft))
 }
 
 #[allow(clippy::needless_pass_by_value)]
 pub(super) fn create_start_craft_system_with_key(
     In(key): In<Key>,
     world: &mut World,
-    start_craft_system: Local<OnceCell<StartCraftSystem>>,
 ) -> (Key, StartCraftSystem) {
-    (key, create_start_craft_system(world, start_craft_system))
+    (key, create_start_craft_system(world))
 }
 
 pub(super) fn spawn_crafting_screen(mut commands: Commands) {

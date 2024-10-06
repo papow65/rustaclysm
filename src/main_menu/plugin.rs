@@ -1,7 +1,7 @@
 use crate::application::ApplicationState;
 use crate::hud::manage_button_input;
 use crate::main_menu::systems::{
-    create_button_systems, create_main_menu_key_bindings, create_quit_system, spawn_main_menu,
+    create_load_systems, create_main_menu_key_bindings, create_quit_system, spawn_main_menu,
     update_sav_files, FoundSav,
 };
 use bevy::prelude::{
@@ -27,7 +27,7 @@ impl Plugin for MainMenuPlugin {
 
         app.add_systems(
             FixedUpdate,
-            create_button_systems
+            create_load_systems
                 .pipe(update_sav_files)
                 .run_if(in_state(ApplicationState::MainMenu)),
         );

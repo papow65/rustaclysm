@@ -11,9 +11,9 @@ use bevy::prelude::{
     NextState, NodeBundle, Res, ResMut, StateScoped, Style, Val, World,
 };
 use bevy::{app::AppExit, ecs::system::SystemId};
-use std::{cell::OnceCell, time::Instant};
+use std::time::Instant;
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub(super) struct MenuButtonActions {
     return_: SystemId<(), ()>,
     main_menu: SystemId<(), ()>,
@@ -21,17 +21,12 @@ pub(super) struct MenuButtonActions {
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(super) fn create_menu_button_actions(
-    world: &mut World,
-    button_actions: Local<OnceCell<MenuButtonActions>>,
-) -> MenuButtonActions {
-    button_actions
-        .get_or_init(|| MenuButtonActions {
-            return_: world.register_system(return_),
-            main_menu: world.register_system(main_menu),
-            quit: world.register_system(quit),
-        })
-        .clone()
+pub(super) fn create_menu_button_actions(world: &mut World) -> MenuButtonActions {
+    MenuButtonActions {
+        return_: world.register_system_cached(return_),
+        main_menu: world.register_system_cached(main_menu),
+        quit: world.register_system_cached(quit),
+    }
 }
 
 #[expect(clippy::needless_pass_by_value)]

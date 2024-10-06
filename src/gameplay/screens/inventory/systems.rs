@@ -17,7 +17,7 @@ use crate::manual::ManualSection;
 use bevy::ecs::{entity::EntityHashMap, system::SystemId};
 use bevy::{prelude::*, utils::HashMap};
 use cdda_json_files::{ItemInfo, ObjectId};
-use std::{cell::OnceCell, time::Instant};
+use std::time::Instant;
 use units::Timestamp;
 
 #[derive(Clone, Debug)]
@@ -26,17 +26,12 @@ pub(super) struct InventoryButton {
     pub(super) action: InventoryAction,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub(super) struct InventorySystem(SystemId<In<InventoryButton>, ()>);
 
 #[allow(clippy::needless_pass_by_value)]
-pub(super) fn create_inventory_system(
-    world: &mut World,
-    inventory_system: Local<OnceCell<InventorySystem>>,
-) -> InventorySystem {
-    inventory_system
-        .get_or_init(|| InventorySystem(world.register_system(handle_inventory_action)))
-        .clone()
+pub(super) fn create_inventory_system(world: &mut World) -> InventorySystem {
+    InventorySystem(world.register_system_cached(handle_inventory_action))
 }
 
 #[expect(clippy::needless_pass_by_value)]

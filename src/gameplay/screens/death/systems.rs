@@ -10,19 +10,14 @@ use bevy::prelude::{
     AlignItems, BuildChildren, ChildBuild, Commands, FlexDirection, In, JustifyContent, KeyCode,
     Local, NextState, NodeBundle, Res, ResMut, StateScoped, Style, TextBundle, UiRect, Val, World,
 };
-use std::{cell::OnceCell, time::Instant};
+use std::time::Instant;
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub(super) struct MainMenuSystem(SystemId<(), ()>);
 
 #[allow(clippy::needless_pass_by_value)]
-pub(super) fn create_main_menu_system(
-    world: &mut World,
-    main_menu_system: Local<OnceCell<MainMenuSystem>>,
-) -> MainMenuSystem {
-    main_menu_system
-        .get_or_init(|| MainMenuSystem(world.register_system(to_main_menu)))
-        .clone()
+pub(super) fn create_main_menu_system(world: &mut World) -> MainMenuSystem {
+    MainMenuSystem(world.register_system_cached(to_main_menu))
 }
 
 #[expect(clippy::needless_pass_by_value)]
