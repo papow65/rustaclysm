@@ -8,8 +8,8 @@ use crate::gameplay::{
     Player, PlayerActionState, Pos, Vehicle, VisualizationUpdate,
 };
 use bevy::prelude::{
-    Camera, Changed, Children, GlobalTransform, Handle, Local, Mesh, Or, ParallelCommands, Parent,
-    Query, RemovedComponents, Res, ResMut, State, Transform, Vec3, Visibility, With, Without,
+    Camera, Changed, Children, GlobalTransform, Local, Mesh3d, Or, ParallelCommands, Parent, Query,
+    RemovedComponents, Res, ResMut, State, Transform, Vec3, Visibility, With, Without,
 };
 use std::sync::{Arc, Mutex};
 use std::{cell::OnceCell, time::Instant};
@@ -31,7 +31,7 @@ pub(in super::super) fn update_transforms(
 pub(in super::super) fn update_peeking_transforms(
     player_action_state: Res<State<PlayerActionState>>,
     players: Query<&Children, With<Player>>,
-    mut mesh_transforms: Query<&mut Transform, With<Handle<Mesh>>>,
+    mut mesh_transforms: Query<&mut Transform, With<Mesh3d>>,
     initial_offset: Local<OnceCell<Vec3>>,
 ) {
     let start = Instant::now();

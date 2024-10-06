@@ -2,7 +2,9 @@ use crate::keyboard::key_binding::KeyBindingSystem;
 use crate::keyboard::{key_binding::KeyBinding, CtrlState, HeldState, Key};
 use crate::manual::ManualSection;
 use bevy::ecs::system::SystemId;
-use bevy::prelude::{Commands, ComputedStates, IntoSystem, StateScoped, States, World};
+use bevy::prelude::{
+    Commands, ComputedStates, IntoSystem, StateScoped, States, SystemInput, World,
+};
 use std::{cell::OnceCell, iter::once};
 
 #[derive(Clone)]
@@ -30,7 +32,12 @@ pub(crate) struct KeyBindingsBuilder<'w, S: States, C: CtrlState, H: HeldState> 
 }
 
 impl<'w, S: States, C: CtrlState, H: HeldState> KeyBindingsBuilder<'w, S, C, H> {
-    pub(crate) fn add<I: 'static, K: Into<Key>, M, T: IntoSystem<I, (), M> + 'static>(
+    pub(crate) fn add<
+        I: SystemInput + 'static,
+        K: Into<Key>,
+        M,
+        T: IntoSystem<I, (), M> + 'static,
+    >(
         &mut self,
         key: K,
         system: T,
@@ -41,7 +48,7 @@ impl<'w, S: States, C: CtrlState, H: HeldState> KeyBindingsBuilder<'w, S, C, H> 
     }
 
     pub(crate) fn add_multi<
-        I: 'static,
+        I: SystemInput + 'static,
         K: Into<Key>,
         M,
         T: IntoSystem<I, (), M> + 'static,

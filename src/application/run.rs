@@ -5,16 +5,14 @@ use crate::common::log_transition_plugin;
 use crate::{gameplay::GameplayPlugin, hud::HudPlugin, keyboard::KeyboardPlugin};
 use crate::{loading::LoadingIndicatorPlugin, main_menu::MainMenuPlugin, manual::ManualPlugin};
 use bevy::prelude::{
-    App, AppExtStates, AssetPlugin, DefaultPlugins, Fixed, IVec2, ImagePlugin, Last, Msaa,
-    PluginGroup, Startup, Time, Window, WindowPlugin, WindowPosition,
+    App, AppExtStates, AssetPlugin, DefaultPlugins, Fixed, IVec2, ImagePlugin, Last, PluginGroup,
+    Startup, Time, Window, WindowPlugin, WindowPosition,
 };
 use bevy::window::{PresentMode, WindowResolution};
 use std::time::Duration;
 
 pub(crate) fn run_application() {
     let mut app = App::new();
-
-    app.insert_resource(Msaa::default());
 
     app.add_plugins(
         DefaultPlugins

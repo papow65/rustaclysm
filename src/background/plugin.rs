@@ -20,8 +20,8 @@ impl Plugin for BackgroundPlugin {
         app.add_systems(
             Update,
             resize_background.run_if(
-                (on_event::<WindowResized>().or_else(on_event::<RequestRedraw>()))
-                    .and_then(state_exists::<BackgroundState>),
+                (on_event::<WindowResized>.or(on_event::<RequestRedraw>))
+                    .and(state_exists::<BackgroundState>),
             ),
         );
 

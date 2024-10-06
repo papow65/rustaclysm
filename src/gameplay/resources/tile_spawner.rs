@@ -9,9 +9,8 @@ use crate::gameplay::{
 use crate::hud::{BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{
-    BuildChildren, Camera3dBundle, Color, Commands, DirectionalLight, DirectionalLightBundle,
-    Entity, EulerRot, Mat4, PbrBundle, Res, ResMut, SpatialBundle, StateScoped, Transform, Vec3,
-    Visibility,
+    BuildChildren, Camera3d, ChildBuild, Color, Commands, DirectionalLight, Entity, EulerRot, Mat4,
+    Res, ResMut, SpatialBundle, StateScoped, Transform, Vec3, Visibility,
 };
 use bevy::render::camera::{PerspectiveProjection, Projection};
 use bevy::render::view::RenderLayers;
@@ -480,13 +479,20 @@ impl<'w, 's> TileSpawner<'w, 's> {
             Some(
                 self.model_factory
                     .get_layers(definition, Visibility::Inherited, true, tile_variant)
-                    .map(|(mut pbr_bundle, apprearance)| {
-                        pbr_bundle.material = if last_seen == LastSeen::Never {
+                    .map(|((mesh, _, transform, visibility), apprearance)| {
+                        let material = if last_seen == LastSeen::Never {
                             apprearance.material(&LastSeen::Currently)
                         } else {
                             apprearance.material(&last_seen)
                         };
-                        (pbr_bundle, apprearance, RenderLayers::layer(1))
+                        (
+                            mesh,
+                            material,
+                            transform,
+                            visibility,
+                            apprearance,
+                            RenderLayers::layer(1),
+                        )
                     }),
             )
         };
@@ -522,8 +528,8 @@ impl<'w, 's> TileSpawner<'w, 's> {
             id: ObjectId::new("cursor"),
         };
         let mut cursor_bundle = self.model_factory.get_single_pbr_bundle(&cursor_definition);
-        cursor_bundle.transform.translation.y = 0.1;
-        cursor_bundle.transform.scale = Vec3::new(1.1, 1.0, 1.1);
+        cursor_bundle.2.translation.y = 0.1;
+        cursor_bundle.2.scale = Vec3::new(1.1, 1.0, 1.1);
 
         self.commands
             .entity(player_entity)
@@ -538,23 +544,16 @@ impl<'w, 's> TileSpawner<'w, 's> {
                             .looking_at(Vec3::new(0.1, 0.0, -1.0), Vec3::Y)
                             * Transform::from_translation(Vec3::new(0.0, 0.3, 0.0));
                         child_builder
-                            .spawn(PbrBundle {
-                                transform: camera_direction,
-                                ..PbrBundle::default()
-                            })
+                            .spawn((camera_direction,))
                             .with_children(|child_builder| {
                                 println!("Camera");
                                 child_builder.spawn((
-                                    Camera3dBundle {
-                                        projection: Projection::Perspective(
-                                            PerspectiveProjection {
-                                                // more overview, less personal than the default
-                                                fov: 0.3,
-                                                ..PerspectiveProjection::default()
-                                            },
-                                        ),
-                                        ..Camera3dBundle::default()
-                                    },
+                                    Camera3d::default(),
+                                    Projection::Perspective(PerspectiveProjection {
+                                        // more overview, less personal than the default
+                                        fov: 0.3,
+                                        ..PerspectiveProjection::default()
+                                    }),
                                     RenderLayers::default().with(1).without(2),
                                 ));
                             });
@@ -571,15 +570,12 @@ impl<'w, 's> TileSpawner<'w, 's> {
         ));
         //dbg!(&light_transform);
         self.commands.spawn((
-            DirectionalLightBundle {
-                directional_light: DirectionalLight {
-                    illuminance: 10_000.0,
-                    shadows_enabled: false, // TODO shadow direction does not match buildin shadows
-                    ..DirectionalLight::default()
-                },
-                transform: light_transform,
-                ..DirectionalLightBundle::default()
+            DirectionalLight {
+                illuminance: 10_000.0,
+                shadows_enabled: false, // TODO shadow direction does not match buildin shadows
+                ..DirectionalLight::default()
             },
+            light_transform,
             StateScoped(ApplicationState::Gameplay),
         ));
     }

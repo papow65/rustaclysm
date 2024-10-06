@@ -108,7 +108,7 @@ fn visible_region(camera: &Camera, global_transform: &GlobalTransform) -> Region
             (Vec2::new(corner_max.x, corner_min.y), ceil, floor),
             (Vec2::new(corner_max.x, corner_max.y), ceil, ceil),
         ] {
-            let Some(ray) = camera.viewport_to_world(global_transform, corner) else {
+            let Ok(ray) = camera.viewport_to_world(global_transform, corner) else {
                 continue;
             };
 

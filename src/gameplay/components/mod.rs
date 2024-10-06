@@ -9,7 +9,7 @@ pub(crate) use pos::{Level, Overzone, Pos, SubzoneLevel, Zone, ZoneLevel};
 pub(crate) use vehicle::{Vehicle, VehiclePart};
 
 use crate::gameplay::*;
-use bevy::prelude::{AlphaMode, Assets, Color, Component, Handle, Srgba, StandardMaterial};
+use bevy::prelude::{AlphaMode, Assets, Color, Component, MeshMaterial3d, Srgba, StandardMaterial};
 use cdda_json_files::{ItemInfo, MoveCost, MoveCostIncrease, ObjectId};
 use std::ops::{Add, Sub};
 use units::{Duration, Mass, Timestamp, Volume};
@@ -217,8 +217,8 @@ impl LastSeen {
 
 #[derive(Component, Clone)]
 pub(crate) struct Appearance {
-    seen: Handle<StandardMaterial>,
-    remembered: Handle<StandardMaterial>,
+    seen: MeshMaterial3d<StandardMaterial>,
+    remembered: MeshMaterial3d<StandardMaterial>,
 }
 
 impl Appearance {
@@ -235,12 +235,12 @@ impl Appearance {
             ..StandardMaterial::default()
         });
         Self {
-            seen: materials.add(material),
-            remembered,
+            seen: materials.add(material).into(),
+            remembered: remembered.into(),
         }
     }
 
-    pub(crate) fn material(&self, last_seen: &LastSeen) -> Handle<StandardMaterial> {
+    pub(crate) fn material(&self, last_seen: &LastSeen) -> MeshMaterial3d<StandardMaterial> {
         match last_seen {
             LastSeen::Currently => self.seen.clone(),
             LastSeen::Previously => self.remembered.clone(),

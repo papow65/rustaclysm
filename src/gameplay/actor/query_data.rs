@@ -2,7 +2,7 @@ use crate::{gameplay::*, hud::text_color};
 use bevy::ecs::query::QueryData;
 use bevy::prelude::{
     BuildChildren, Commands, DespawnRecursiveExt, Entity, Event, EventWriter, NextState, Query,
-    SpatialBundle, VisibilityBundle,
+    SpatialBundle, Visibility,
 };
 use cdda_json_files::{CddaItem, Description};
 use units::{Distance, Duration, Speed};
@@ -569,7 +569,7 @@ impl ActorItem<'_> {
     fn take_all(commands: &mut Commands, container_entity: Entity, taken_entity: Entity) {
         commands
             .entity(container_entity)
-            .push_children(&[taken_entity]);
+            .add_children(&[taken_entity]);
         commands.entity(taken_entity).remove::<Pos>();
     }
 
@@ -616,7 +616,7 @@ impl ActorItem<'_> {
         };
         commands
             .entity(moved.entity)
-            .insert((VisibilityBundle::default(), to))
+            .insert((Visibility::default(), to))
             .set_parent(new_parent);
         location.move_(moved.entity, to);
         Some(self.activate())

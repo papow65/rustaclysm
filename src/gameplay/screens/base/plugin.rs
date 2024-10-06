@@ -16,9 +16,9 @@ impl Plugin for BaseScreenPlugin {
             Update,
             (
                 manage_mouse_scroll_input
-                    .run_if(on_event::<MouseWheel>())
+                    .run_if(on_event::<MouseWheel>)
                     .before(update_camera_offset),
-                manage_mouse_button_input.run_if(on_event::<MouseMotion>()),
+                manage_mouse_button_input.run_if(on_event::<MouseMotion>),
             )
                 .run_if(in_state(GameplayScreenState::Base)),
         );

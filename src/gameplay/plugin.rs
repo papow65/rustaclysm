@@ -1,7 +1,5 @@
 use crate::application::ApplicationState;
-use crate::common::{
-    load_async_resource, log_transition_plugin, on_safe_event, AsyncResourceLoader,
-};
+use crate::common::{load_async_resource, log_transition_plugin, AsyncResourceLoader};
 use crate::gameplay::systems::*;
 use crate::gameplay::{
     events::EventPlugin, sidebar::SidebarPlugin, update_camera_offset, ActorPlugin,
@@ -68,16 +66,15 @@ fn update_systems() -> impl IntoSystemConfigs<(SystemConfigTupleMarker, (), (), 
         (
             (
                 (
-                    handle_overmap_buffer_events
-                        .run_if(on_event::<AssetEvent<OvermapBufferAsset>>()),
-                    handle_overmap_events.run_if(on_event::<AssetEvent<OvermapAsset>>()),
+                    handle_overmap_buffer_events.run_if(on_event::<AssetEvent<OvermapBufferAsset>>),
+                    handle_overmap_events.run_if(on_event::<AssetEvent<OvermapAsset>>),
                 ),
                 update_zone_levels_with_missing_assets
-                    .run_if(on_safe_event::<AssetEvent<OvermapBufferAsset>>()),
+                    .run_if(on_event::<AssetEvent<OvermapBufferAsset>>),
             )
                 .chain(),
-            handle_map_events.run_if(on_event::<AssetEvent<MapAsset>>()),
-            handle_map_memory_events.run_if(on_event::<AssetEvent<MapMemoryAsset>>()),
+            handle_map_events.run_if(on_event::<AssetEvent<MapAsset>>),
+            handle_map_memory_events.run_if(on_event::<AssetEvent<MapMemoryAsset>>),
             (
                 spawn_subzones_for_camera,
                 (
@@ -87,8 +84,8 @@ fn update_systems() -> impl IntoSystemConfigs<(SystemConfigTupleMarker, (), (), 
                             .run_if(resource_exists::<RelativeSegments>),
                     )
                         .chain()
-                        .run_if(on_safe_event::<SpawnSubzoneLevel>()),
-                    despawn_subzone_levels.run_if(on_safe_event::<DespawnSubzoneLevel>()),
+                        .run_if(on_event::<SpawnSubzoneLevel>),
+                    despawn_subzone_levels.run_if(on_event::<DespawnSubzoneLevel>),
                 ),
             )
                 .chain(),
@@ -96,11 +93,10 @@ fn update_systems() -> impl IntoSystemConfigs<(SystemConfigTupleMarker, (), (), 
             (
                 update_zone_levels,
                 (
-                    spawn_zone_levels.run_if(on_safe_event::<SpawnZoneLevel>()),
-                    update_zone_level_visibility
-                        .run_if(on_safe_event::<UpdateZoneLevelVisibility>()),
-                    despawn_zone_level.run_if(on_safe_event::<DespawnZoneLevel>()),
-                    count_entities.run_if(on_safe_event::<DespawnZoneLevel>()),
+                    spawn_zone_levels.run_if(on_event::<SpawnZoneLevel>),
+                    update_zone_level_visibility.run_if(on_event::<UpdateZoneLevelVisibility>),
+                    despawn_zone_level.run_if(on_event::<DespawnZoneLevel>),
+                    count_entities.run_if(on_event::<DespawnZoneLevel>),
                 ),
             )
                 .chain(),

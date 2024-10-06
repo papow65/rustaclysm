@@ -6,7 +6,8 @@ use crate::gameplay::{
 use crate::hud::HARD_TEXT_COLOR;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{
-    BuildChildren, Entity, Res, ResMut, SpatialBundle, StateScoped, Transform, Vec3, Visibility,
+    BuildChildren, ChildBuild, Entity, Res, ResMut, SpatialBundle, StateScoped, Transform, Vec3,
+    Visibility,
 };
 use bevy::render::view::RenderLayers;
 use cdda_json_files::{CddaItemName, ItemName};

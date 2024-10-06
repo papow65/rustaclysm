@@ -1,7 +1,6 @@
 use crate::gameplay::MapMemoryAsset;
 use bevy::asset::{io::Reader, AssetLoader, LoadContext};
 use either::Either;
-use futures_lite::AsyncReadExt;
 use std::str::from_utf8;
 
 #[derive(Default)]
@@ -12,11 +11,11 @@ impl AssetLoader for MapMemoryLoader {
     type Settings = ();
     type Error = Either<std::io::Error, serde_json::Error>;
 
-    async fn load<'a>(
-        &'a self,
-        reader: &'a mut Reader<'_>,
-        _settings: &'a Self::Settings,
-        load_context: &'a mut LoadContext<'_>,
+    async fn load(
+        &self,
+        reader: &mut dyn Reader,
+        _settings: &Self::Settings,
+        load_context: &mut LoadContext<'_>,
     ) -> Result<Self::Asset, Self::Error> {
         let mut bytes = Vec::new();
         reader

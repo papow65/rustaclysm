@@ -15,7 +15,7 @@ impl Plugin for KeyboardPlugin {
             preprocess_keyboard_input
                 .pipe(manage_binded_keyboard_input)
                 .after(InputSystem)
-                .run_if(on_event::<KeyboardInput>()),
+                .run_if(on_event::<KeyboardInput>),
         );
     }
 }

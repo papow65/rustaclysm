@@ -5,7 +5,7 @@ use crate::main_menu::systems::{
     update_sav_files, FoundSav,
 };
 use bevy::prelude::{
-    in_state, App, FixedUpdate, IntoSystem, IntoSystemConfigs, OnEnter, Plugin, Update,
+    in_state, App, FixedUpdate, In, IntoSystem, IntoSystemConfigs, OnEnter, Plugin, Update,
 };
 
 pub(crate) struct MainMenuPlugin;
@@ -22,7 +22,7 @@ impl Plugin for MainMenuPlugin {
 
         app.add_systems(
             Update,
-            manage_button_input::<FoundSav>.run_if(in_state(ApplicationState::MainMenu)),
+            manage_button_input::<In<FoundSav>>.run_if(in_state(ApplicationState::MainMenu)),
         );
 
         app.add_systems(

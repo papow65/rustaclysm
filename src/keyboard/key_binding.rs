@@ -1,13 +1,13 @@
 use crate::keyboard::{CtrlState, HeldState, Key};
 use bevy::ecs::system::SystemId;
-use bevy::prelude::{Component, Entity};
+use bevy::prelude::{Component, Entity, In};
 use std::marker::PhantomData;
 
 #[derive(Clone, Debug)]
 pub(crate) enum KeyBindingSystem {
     Simple(SystemId<(), ()>),
-    Key(SystemId<Key, ()>),
-    Entity(SystemId<Entity, ()>),
+    Key(SystemId<In<Key>, ()>),
+    Entity(SystemId<In<Entity>, ()>),
 }
 
 impl From<SystemId<(), ()>> for KeyBindingSystem {
@@ -16,14 +16,14 @@ impl From<SystemId<(), ()>> for KeyBindingSystem {
     }
 }
 
-impl From<SystemId<Key, ()>> for KeyBindingSystem {
-    fn from(system: SystemId<Key, ()>) -> Self {
+impl From<SystemId<In<Key>, ()>> for KeyBindingSystem {
+    fn from(system: SystemId<In<Key>, ()>) -> Self {
         Self::Key(system)
     }
 }
 
-impl From<SystemId<Entity, ()>> for KeyBindingSystem {
-    fn from(system: SystemId<Entity, ()>) -> Self {
+impl From<SystemId<In<Entity>, ()>> for KeyBindingSystem {
+    fn from(system: SystemId<In<Entity>, ()>) -> Self {
         Self::Entity(system)
     }
 }

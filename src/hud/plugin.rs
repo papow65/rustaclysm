@@ -20,10 +20,9 @@ impl Plugin for HudPlugin {
             (
                 manage_button_color,
                 manage_button_input::<()>,
-                manage_scrolling_lists.run_if(on_event::<MouseWheel>()),
-                resize_scrolling_lists.run_if(
-                    on_event::<WindowResized>().or_else(resource_exists_and_changed::<UiScale>),
-                ),
+                manage_scrolling_lists.run_if(on_event::<MouseWheel>),
+                resize_scrolling_lists
+                    .run_if(on_event::<WindowResized>.or(resource_exists_and_changed::<UiScale>)),
             ),
         );
     }

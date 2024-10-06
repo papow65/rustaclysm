@@ -1,12 +1,12 @@
-use crate::hud::scrolling_list::ScrollingList;
 use crate::hud::{
-    DefaultPanel, Fonts, RunButton, RunButtonContext, DEFAULT_BUTTON_COLOR, HOVERED_BUTTON_COLOR,
+    DefaultPanel, Fonts, RunButton, ScrollingList, DEFAULT_BUTTON_COLOR, HOVERED_BUTTON_COLOR,
 };
 use bevy::input::mouse::MouseWheel;
 use bevy::prelude::{
     BackgroundColor, Button, Changed, Commands, Entity, EventReader, In, Interaction, Node, Parent,
-    Query, Style, With, Without, World,
+    Query, Style, SystemInput, With, Without, World,
 };
+use std::fmt;
 
 pub(super) fn create_default_panel(world: &mut World) {
     world.insert_resource(DefaultPanel::new());
@@ -34,11 +34,13 @@ pub(super) fn manage_button_color(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn manage_button_input<C: RunButtonContext>(
+pub(crate) fn manage_button_input<I: SystemInput + 'static>(
     mut commands: Commands,
-    interaction_query: Query<(&Interaction, &RunButton<C>), (Changed<Interaction>, With<Button>)>,
-) {
-    for (interaction, button) in &interaction_query {
+    interactions: Query<(&Interaction, &RunButton<I>), (Changed<Interaction>, With<Button>)>,
+) where
+    <I as SystemInput>::Inner<'static>: Clone + fmt::Debug + Send + Sync,
+{
+    for (interaction, button) in &interactions {
         if *interaction == Interaction::Pressed {
             button.run(&mut commands);
         }
@@ -79,11 +81,13 @@ pub(crate) fn resize_scrolling_lists(
 }
 
 #[expect(clippy::needless_pass_by_value)]
-pub(crate) fn trigger_button_action<C: RunButtonContext>(
+pub(crate) fn trigger_button_action<I: SystemInput + 'static>(
     In(entity): In<Entity>,
     mut commands: Commands,
-    run_buttons: Query<&RunButton<C>>,
-) {
+    run_buttons: Query<&RunButton<I>>,
+) where
+    <I as SystemInput>::Inner<'static>: Clone + fmt::Debug + Send + Sync,
+{
     run_buttons
         .get(entity)
         .expect("Triggered run button should be found")

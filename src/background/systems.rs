@@ -1,8 +1,8 @@
 use crate::background::{component::Background, state::BackgroundState};
 use crate::common::AssetPaths;
 use bevy::prelude::{
-    AssetServer, Commands, ImageBundle, PositionType, Query, Res, StateScoped, Style, UiImage, Val,
-    Window, With, ZIndex,
+    AssetServer, Commands, GlobalZIndex, ImageBundle, PositionType, Query, Res, StateScoped, Style,
+    UiImage, Val, Window, With,
 };
 
 const BACKGROUND_WIDTH: f32 = 1522.0;
@@ -29,9 +29,9 @@ pub(super) fn spawn_background(
                 texture: background_image,
                 ..UiImage::default()
             },
-            z_index: ZIndex::Global(1),
             ..ImageBundle::default()
         },
+        GlobalZIndex(1),
         Background,
         StateScoped(BackgroundState),
     ));

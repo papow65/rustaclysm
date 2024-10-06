@@ -10,7 +10,7 @@ mod selection_list;
 mod spacing;
 mod systems;
 
-pub(crate) use self::button_builder::{ButtonBuilder, RunButton, RunButtonContext};
+pub(crate) use self::button_builder::{ButtonBuilder, RunButton};
 pub(crate) use self::colors::{
     text_color, BAD_TEXT_COLOR, DEFAULT_BUTTON_COLOR, FILTHY_COLOR, GOOD_TEXT_COLOR,
     HARD_TEXT_COLOR, HOVERED_BUTTON_COLOR, PANEL_COLOR, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,

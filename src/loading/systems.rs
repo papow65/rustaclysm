@@ -6,8 +6,8 @@ use crate::gameplay::{
 use crate::hud::{Fonts, DEFAULT_BUTTON_COLOR, HARD_TEXT_COLOR};
 use crate::loading::ProgressScreenState;
 use bevy::prelude::{
-    AlignItems, Assets, BuildChildren, Commands, JustifyContent, Local, NextState, NodeBundle,
-    PositionType, Res, ResMut, State, StateScoped, Style, TextBundle, Val, ZIndex,
+    AlignItems, Assets, BuildChildren, ChildBuild, Commands, GlobalZIndex, JustifyContent, Local,
+    NextState, NodeBundle, PositionType, Res, ResMut, State, StateScoped, Style, TextBundle, Val,
 };
 
 #[expect(clippy::needless_pass_by_value)]
@@ -23,9 +23,9 @@ pub(crate) fn spawn_loading(mut commands: Commands, fonts: Res<Fonts>) {
                     justify_content: JustifyContent::Center,
                     ..Style::default()
                 },
-                z_index: ZIndex::Global(3),
                 ..NodeBundle::default()
             },
+            GlobalZIndex(3),
             StateScoped(ProgressScreenState::Loading),
         ))
         .with_children(|parent| {

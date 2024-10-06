@@ -22,9 +22,8 @@ impl Plugin for LoadingIndicatorPlugin {
             Update,
             (
                 start_gameplay.run_if(resource_exists::<Infos>),
-                finish_loading.run_if(
-                    resource_exists::<Explored>.and_then(resource_exists::<RelativeSegments>),
-                ),
+                finish_loading
+                    .run_if(resource_exists::<Explored>.and(resource_exists::<RelativeSegments>)),
             )
                 .run_if(in_state(ProgressScreenState::Loading)),
         );

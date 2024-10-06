@@ -2,7 +2,7 @@ use crate::{common::log_if_slow, gameplay::*};
 use bevy::ecs::system::SystemId;
 use bevy::prelude::{
     Commands, Entity, EventWriter, In, Local, NextState, Query, Res, ResMut, State,
-    StateTransition, With, World,
+    StateTransition, SystemInput, With, World,
 };
 use std::{cell::OnceCell, time::Instant};
 use units::Duration;
@@ -25,10 +25,10 @@ pub(in super::super) fn egible_character(
 }
 
 pub(in super::super) struct PlanSystems {
-    manual_player_action: SystemId<Entity, Option<PlannedAction>>,
-    automatic_player_action: SystemId<Entity, Option<PlannedAction>>,
+    manual_player_action: SystemId<In<Entity>, Option<PlannedAction>>,
+    automatic_player_action: SystemId<In<Entity>, Option<PlannedAction>>,
     wait_for_player_input: SystemId<(), ()>,
-    npc_action: SystemId<Entity, PlannedAction>,
+    npc_action: SystemId<In<Entity>, PlannedAction>,
 }
 
 impl PlanSystems {
@@ -184,22 +184,22 @@ fn plan_npc_action(
 }
 
 pub(in super::super) struct PerformSystems {
-    stay: SystemId<ActionIn<Stay>, Option<Impact>>,
-    sleep: SystemId<ActionIn<Sleep>, Option<Impact>>,
-    step: SystemId<ActionIn<Step>, Option<Impact>>,
-    attack: SystemId<ActionIn<Attack>, Option<Impact>>,
-    smash: SystemId<ActionIn<Smash>, Option<Impact>>,
-    pulp: SystemId<ActionIn<Pulp>, Option<Impact>>,
-    peek: SystemId<ActionIn<Peek>, Option<Impact>>,
-    close: SystemId<ActionIn<Close>, Option<Impact>>,
-    wield: SystemId<ActionIn<ItemAction<Wield>>, Option<Impact>>,
-    unwield: SystemId<ActionIn<ItemAction<Unwield>>, Option<Impact>>,
-    pickup: SystemId<ActionIn<ItemAction<Pickup>>, Option<Impact>>,
-    move_item: SystemId<ActionIn<ItemAction<MoveItem>>, Option<Impact>>,
-    start_craft: SystemId<ActionIn<StartCraft>, Option<Impact>>,
-    continue_craft: SystemId<ActionIn<ItemAction<ContinueCraft>>, Option<Impact>>,
-    examine_item: SystemId<ActionIn<ItemAction<ExamineItem>>, Option<Impact>>,
-    change_pace: SystemId<ActionIn<ChangePace>, Option<Impact>>,
+    stay: SystemId<In<ActionIn<Stay>>, Option<Impact>>,
+    sleep: SystemId<In<ActionIn<Sleep>>, Option<Impact>>,
+    step: SystemId<In<ActionIn<Step>>, Option<Impact>>,
+    attack: SystemId<In<ActionIn<Attack>>, Option<Impact>>,
+    smash: SystemId<In<ActionIn<Smash>>, Option<Impact>>,
+    pulp: SystemId<In<ActionIn<Pulp>>, Option<Impact>>,
+    peek: SystemId<In<ActionIn<Peek>>, Option<Impact>>,
+    close: SystemId<In<ActionIn<Close>>, Option<Impact>>,
+    wield: SystemId<In<ActionIn<ItemAction<Wield>>>, Option<Impact>>,
+    unwield: SystemId<In<ActionIn<ItemAction<Unwield>>>, Option<Impact>>,
+    pickup: SystemId<In<ActionIn<ItemAction<Pickup>>>, Option<Impact>>,
+    move_item: SystemId<In<ActionIn<ItemAction<MoveItem>>>, Option<Impact>>,
+    start_craft: SystemId<In<ActionIn<StartCraft>>, Option<Impact>>,
+    continue_craft: SystemId<In<ActionIn<ItemAction<ContinueCraft>>>, Option<Impact>>,
+    examine_item: SystemId<In<ActionIn<ItemAction<ExamineItem>>>, Option<Impact>>,
+    change_pace: SystemId<In<ActionIn<ChangePace>>, Option<Impact>>,
 }
 
 impl PerformSystems {
@@ -282,7 +282,7 @@ pub(in super::super) fn perform_action(
 }
 
 fn act_fn<A: Action>(
-    system: SystemId<ActionIn<A>, Option<Impact>>,
+    system: SystemId<In<ActionIn<A>>, Option<Impact>>,
     action: A,
 ) -> Box<dyn FnOnce(&mut World, Entity) -> Option<Impact>> {
     Box::new(move |world, actor_entity| {
@@ -290,7 +290,11 @@ fn act_fn<A: Action>(
     })
 }
 
-fn run_system<I: 'static, R: 'static>(world: &mut World, system_id: SystemId<I, R>, in_: I) -> R {
+fn run_system<I: SystemInput + 'static, R: 'static>(
+    world: &mut World,
+    system_id: SystemId<I, R>,
+    in_: I::Inner<'_>,
+) -> R {
     world
         .run_system_with_input(system_id, in_)
         .expect("Action should have succeeded")

@@ -3,8 +3,8 @@ use crate::gameplay::{
     TileLoader, TileVariant,
 };
 use bevy::prelude::{
-    AssetServer, Assets, Handle, Mesh, PbrBundle, Res, ResMut, Resource, StandardMaterial,
-    Visibility,
+    AssetServer, Assets, Mesh, Mesh3d, MeshMaterial3d, Res, ResMut, Resource, StandardMaterial,
+    Transform, Visibility,
 };
 use bevy::{ecs::system::SystemParam, utils::HashMap};
 use cdda_json_files::SpriteNumber;
@@ -15,9 +15,9 @@ pub(crate) struct AppearanceCache(HashMap<PathBuf, Appearance>);
 
 #[derive(Default, Resource)]
 pub(crate) struct MeshCaches {
-    horizontal_planes: HashMap<SpriteNumber, Handle<Mesh>>,
-    vertical_planes: HashMap<SpriteNumber, Handle<Mesh>>,
-    cuboids: HashMap<SpriteNumber, Handle<Mesh>>,
+    horizontal_planes: HashMap<SpriteNumber, Mesh3d>,
+    vertical_planes: HashMap<SpriteNumber, Mesh3d>,
+    cuboids: HashMap<SpriteNumber, Mesh3d>,
 }
 
 #[derive(SystemParam)]
@@ -32,7 +32,7 @@ pub(crate) struct ModelFactory<'w> {
 }
 
 impl<'w> ModelFactory<'w> {
-    fn get_mesh(&mut self, model: &Model) -> Handle<Mesh> {
+    fn get_mesh(&mut self, model: &Model) -> Mesh3d {
         match model.shape {
             ModelShape::Plane {
                 orientation: SpriteOrientation::Horizontal,
@@ -45,7 +45,7 @@ impl<'w> ModelFactory<'w> {
             ModelShape::Cuboid { .. } => &mut self.mesh_caches.cuboids,
         }
         .entry(model.sprite_number)
-        .or_insert_with(|| self.mesh_assets.add(model.to_mesh()))
+        .or_insert_with(|| self.mesh_assets.add(model.to_mesh()).into())
         .clone()
     }
 
@@ -64,21 +64,38 @@ impl<'w> ModelFactory<'w> {
             .clone()
     }
 
-    fn get_pbr_bundle(&mut self, model: &Model, visibility: Visibility, shaded: bool) -> PbrBundle {
-        PbrBundle {
-            mesh: self.get_mesh(model),
-            material: if shaded {
-                Handle::<StandardMaterial>::default()
+    fn get_pbr_bundle(
+        &mut self,
+        model: &Model,
+        visibility: Visibility,
+        shaded: bool,
+    ) -> (
+        Mesh3d,
+        MeshMaterial3d<StandardMaterial>,
+        Transform,
+        Visibility,
+    ) {
+        (
+            self.get_mesh(model),
+            if shaded {
+                MeshMaterial3d::<StandardMaterial>::default()
             } else {
                 self.get_appearance(model).material(&LastSeen::Currently)
             },
-            transform: model.to_transform(),
+            model.to_transform(),
             visibility,
-            ..PbrBundle::default()
-        }
+        )
     }
 
-    pub(crate) fn get_single_pbr_bundle(&mut self, definition: &ObjectDefinition) -> PbrBundle {
+    pub(crate) fn get_single_pbr_bundle(
+        &mut self,
+        definition: &ObjectDefinition,
+    ) -> (
+        Mesh3d,
+        MeshMaterial3d<StandardMaterial>,
+        Transform,
+        Visibility,
+    ) {
         let models = self
             .loader
             .get_models(definition, &self.infos.variants(definition), None);
@@ -92,7 +109,15 @@ impl<'w> ModelFactory<'w> {
         visibility: Visibility,
         shading: bool,
         tile_variant: Option<TileVariant>,
-    ) -> Layers<(PbrBundle, Appearance)> {
+    ) -> Layers<(
+        (
+            Mesh3d,
+            MeshMaterial3d<StandardMaterial>,
+            Transform,
+            Visibility,
+        ),
+        Appearance,
+    )> {
         let models =
             self.loader
                 .get_models(definition, &self.infos.variants(definition), tile_variant);

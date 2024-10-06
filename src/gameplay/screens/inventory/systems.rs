@@ -9,8 +9,8 @@ use crate::gameplay::{
     QueuedInstruction,
 };
 use crate::hud::{
-    ButtonBuilder, Fonts, RunButtonContext, ScrollingList, SelectionList, StepDirection, StepSize,
-    GOOD_TEXT_COLOR, HARD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
+    ButtonBuilder, Fonts, ScrollingList, SelectionList, StepDirection, StepSize, GOOD_TEXT_COLOR,
+    HARD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
 };
 use crate::keyboard::{Held, Key, KeyBindings};
 use crate::manual::ManualSection;
@@ -26,10 +26,8 @@ pub(super) struct InventoryButton {
     pub(super) action: InventoryAction,
 }
 
-impl RunButtonContext for InventoryButton {}
-
 #[derive(Clone, Debug)]
-pub(super) struct InventorySystem(SystemId<InventoryButton, ()>);
+pub(super) struct InventorySystem(SystemId<In<InventoryButton>, ()>);
 
 #[allow(clippy::needless_pass_by_value)]
 pub(super) fn create_inventory_system(

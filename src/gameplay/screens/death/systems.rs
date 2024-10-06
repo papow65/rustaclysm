@@ -7,8 +7,8 @@ use crate::manual::ManualSection;
 use crate::{application::ApplicationState, gameplay::GameplayScreenState};
 use bevy::ecs::system::SystemId;
 use bevy::prelude::{
-    AlignItems, BuildChildren, Commands, FlexDirection, In, JustifyContent, KeyCode, Local,
-    NextState, NodeBundle, Res, ResMut, StateScoped, Style, TextBundle, UiRect, Val, World,
+    AlignItems, BuildChildren, ChildBuild, Commands, FlexDirection, In, JustifyContent, KeyCode,
+    Local, NextState, NodeBundle, Res, ResMut, StateScoped, Style, TextBundle, UiRect, Val, World,
 };
 use std::{cell::OnceCell, time::Instant};
 

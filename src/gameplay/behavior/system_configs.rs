@@ -1,4 +1,4 @@
-use crate::common::{log_if_slow, on_safe_event};
+use crate::common::log_if_slow;
 use crate::gameplay::behavior::schedule::BehaviorSchedule;
 use crate::gameplay::behavior::systems::core::{
     egible_character, perform_action, plan_action, proces_impact,
@@ -19,8 +19,8 @@ use crate::gameplay::{
 };
 use bevy::ecs::system::SystemState;
 use bevy::prelude::{
-    resource_exists, resource_exists_and_changed, IntoSystem, IntoSystemConfigs, Res, State,
-    StateTransition, World,
+    on_event, resource_exists, resource_exists_and_changed, IntoSystem, IntoSystemConfigs, Res,
+    State, StateTransition, World,
 };
 use std::time::{Duration, Instant};
 
@@ -37,7 +37,7 @@ pub(super) fn loop_behavior_and_refresh() -> impl IntoSystemConfigs<()> {
             update_visualization_on_weather_change,
             check_items,
         )
-            .run_if(on_safe_event::<RefreshAfterBehavior>()),
+            .run_if(on_event::<RefreshAfterBehavior>),
     )
         .chain()
         .run_if(resource_exists::<RelativeSegments>)
@@ -101,10 +101,10 @@ pub(super) fn behavior_systems() -> impl IntoSystemConfigs<()> {
             (
                 // actor events
                 // Make sure killed actors are handled early
-                update_damaged_characters.run_if(on_safe_event::<ActorEvent<Damage>>()),
+                update_damaged_characters.run_if(on_event::<ActorEvent<Damage>>),
                 (
-                    update_stamina.run_if(on_safe_event::<ActorEvent<StaminaImpact>>()),
-                    update_healed_characters.run_if(on_safe_event::<ActorEvent<Healing>>()),
+                    update_stamina.run_if(on_event::<ActorEvent<StaminaImpact>>),
+                    update_healed_characters.run_if(on_event::<ActorEvent<Healing>>),
                     update_corpses,
                     update_explored,
                 ),
@@ -112,7 +112,7 @@ pub(super) fn behavior_systems() -> impl IntoSystemConfigs<()> {
                 .chain(),
             (
                 // item events
-                update_damaged_corpses.run_if(on_safe_event::<CorpseEvent<Damage>>()),
+                update_damaged_corpses.run_if(on_event::<CorpseEvent<Damage>>),
                 combine_items,
             )
                 .chain(),
@@ -121,8 +121,8 @@ pub(super) fn behavior_systems() -> impl IntoSystemConfigs<()> {
                 // Make sure destoyed items are handled early
                 update_damaged_terrain
                     .pipe(spawn_broken_terrain)
-                    .run_if(on_safe_event::<TerrainEvent<Damage>>()),
-                toggle_doors.run_if(on_safe_event::<TerrainEvent<Toggle>>()),
+                    .run_if(on_event::<TerrainEvent<Damage>>),
+                toggle_doors.run_if(on_event::<TerrainEvent<Toggle>>),
             )
                 .chain(),
         ),

@@ -2,38 +2,45 @@ use crate::hud::SOFT_TEXT_COLOR;
 use crate::keyboard::{Key, KeyBinding};
 use bevy::ecs::system::SystemId;
 use bevy::prelude::{
-    AlignItems, BuildChildren, ButtonBundle, ChildBuilder, Commands, Component, Entity,
-    JustifyContent, NodeBundle, PositionType, Style, TextBundle, TextStyle, Val,
+    AlignItems, BuildChildren, Bundle, ButtonBundle, ChildBuild, ChildBuilder, Commands, Component,
+    Entity, In, JustifyContent, NodeBundle, PositionType, Style, SystemInput, TextBundle,
+    TextStyle, Val,
 };
 use std::fmt;
 
-pub(crate) trait RunButtonContext: Clone + Send + Sync + Sized + 'static {}
-
-impl RunButtonContext for () {}
-
 #[derive(Debug, Component)]
-pub(crate) struct RunButton<C: RunButtonContext> {
-    system: SystemId<C, ()>,
-    context: C,
+pub(crate) struct RunButton<I: SystemInput>
+where
+    <I as SystemInput>::Inner<'static>: fmt::Debug,
+{
+    system: SystemId<I, ()>,
+    context: <I as SystemInput>::Inner<'static>,
 }
 
-impl<C: RunButtonContext> RunButton<C> {
+impl<I: SystemInput + 'static> RunButton<I>
+where
+    <I as SystemInput>::Inner<'static>: Clone + fmt::Debug + Send + 'static,
+{
     pub(super) fn run(&self, commands: &mut Commands) {
         commands.run_system_with_input(self.system, self.context.clone());
     }
 }
 
-pub(crate) struct ButtonBuilder<C: RunButtonContext, D: fmt::Display> {
+pub(crate) struct ButtonBuilder<D: fmt::Display, I: SystemInput> {
     caption: D,
     text_style: TextStyle,
     style: Style,
-    system: SystemId<C, ()>,
+    system: SystemId<I, ()>,
     key_binding: Option<(Key, KeyBinding<(), ()>)>,
 }
 
-impl<C: RunButtonContext, D: fmt::Display> ButtonBuilder<C, D> {
+impl<D: fmt::Display, I: SystemInput> ButtonBuilder<D, I>
+where
+    <I as SystemInput>::Inner<'static>: fmt::Debug,
+    (ButtonBundle, RunButton<I>): Bundle,
+{
     /// 70px wide, dynamic height
-    pub(crate) fn new(caption: D, text_style: TextStyle, system: SystemId<C, ()>) -> Self {
+    pub(crate) fn new(caption: D, text_style: TextStyle, system: SystemId<I, ()>) -> Self {
         Self {
             caption,
             text_style,
@@ -64,7 +71,7 @@ impl<C: RunButtonContext, D: fmt::Display> ButtonBuilder<C, D> {
     pub(crate) fn key_binding<K: Into<Key>>(
         mut self,
         key: Option<K>,
-        key_binding_system: SystemId<Entity, ()>,
+        key_binding_system: SystemId<In<Entity>, ()>,
     ) -> Self {
         self.key_binding = key
             .map(Into::into)
@@ -72,7 +79,11 @@ impl<C: RunButtonContext, D: fmt::Display> ButtonBuilder<C, D> {
         self
     }
 
-    pub(crate) fn spawn(self, parent: &mut ChildBuilder, context: C) {
+    pub(crate) fn spawn(
+        self,
+        parent: &mut ChildBuilder,
+        context: <I as SystemInput>::Inner<'static>,
+    ) {
         let mut entity_commands = parent.spawn((
             ButtonBundle {
                 style: self.style,

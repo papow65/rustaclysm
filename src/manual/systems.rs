@@ -3,8 +3,8 @@ use crate::hud::{DefaultPanel, Fonts};
 use crate::manual::components::{ManualDisplay, ManualText};
 use crate::manual::ManualSection;
 use bevy::prelude::{
-    Alpha, BackgroundColor, BuildChildren, Changed, Children, Commands, NodeBundle, Query,
-    RemovedComponents, Res, State, Text, TextBundle, TextSection, Val, With, ZIndex,
+    Alpha, BackgroundColor, BuildChildren, Changed, ChildBuild, Children, Commands, GlobalZIndex,
+    Query, RemovedComponents, Res, State, Text, TextBundle, TextSection, Val, With,
 };
 
 #[expect(clippy::needless_pass_by_value)]
@@ -18,13 +18,7 @@ pub(super) fn spawn_manual(
     background.style.left = Val::Px(0.0);
 
     commands
-        .spawn((
-            NodeBundle {
-                z_index: ZIndex::Global(2),
-                ..background
-            },
-            ManualDisplay,
-        ))
+        .spawn((background, GlobalZIndex(2), ManualDisplay))
         .with_children(|parent| {
             parent.spawn((
                 TextBundle {

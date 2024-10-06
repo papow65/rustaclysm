@@ -1,8 +1,8 @@
 use crate::common::{log_if_slow, AssetPaths};
 use crate::gameplay::{ActiveSav, GameplaySession};
 use crate::hud::{
-    trigger_button_action, ButtonBuilder, Fonts, RunButtonContext, BAD_TEXT_COLOR, GOOD_TEXT_COLOR,
-    HARD_TEXT_COLOR, LARGE_SPACING, MEDIUM_SPACING, PANEL_COLOR,
+    trigger_button_action, ButtonBuilder, Fonts, BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR,
+    LARGE_SPACING, MEDIUM_SPACING, PANEL_COLOR,
 };
 use crate::keyboard::KeyBindings;
 use crate::main_menu::components::{LoadButtonArea, MessageField, MessageWrapper};
@@ -10,10 +10,10 @@ use crate::main_menu::load_error::LoadError;
 use crate::{application::ApplicationState, loading::ProgressScreenState, manual::ManualSection};
 use base64::{engine::general_purpose::STANDARD as base64, Engine};
 use bevy::prelude::{
-    AlignContent, AlignItems, BuildChildren, Camera2dBundle, ChildBuilder, Commands,
-    DespawnRecursiveExt, Display, Entity, Events, FlexDirection, FlexWrap, In, JustifyContent,
-    Local, NextState, NodeBundle, Query, Res, ResMut, StateScoped, Style, Text, TextBundle, UiRect,
-    Val, With, Without, World, ZIndex,
+    AlignContent, AlignItems, BuildChildren, Camera2d, ChildBuild, ChildBuilder, Commands,
+    DespawnRecursiveExt, Display, Entity, Events, FlexDirection, FlexWrap, GlobalZIndex, In,
+    JustifyContent, Local, NextState, NodeBundle, Query, Res, ResMut, StateScoped, Style, Text,
+    TextBundle, UiRect, Val, With, Without, World,
 };
 use bevy::{app::AppExit, ecs::system::SystemId};
 use glob::glob;
@@ -22,16 +22,14 @@ use std::{cell::OnceCell, str::from_utf8, time::Instant};
 
 const FULL_WIDTH: f32 = 720.0;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub(super) struct FoundSav(PathBuf);
 
-impl RunButtonContext for FoundSav {}
+#[derive(Clone, Debug)]
+pub(super) struct LoadSystem(SystemId<In<FoundSav>, ()>);
 
 #[derive(Clone, Debug)]
-pub(super) struct LoadSystem(SystemId<FoundSav, ()>);
-
-#[derive(Clone, Debug)]
-pub(super) struct TriggerLoadSystem(SystemId<Entity, ()>);
+pub(super) struct TriggerLoadSystem(SystemId<In<Entity>, ()>);
 
 #[allow(clippy::needless_pass_by_value)]
 pub(super) fn create_button_systems(
@@ -45,7 +43,7 @@ pub(super) fn create_button_systems(
             .clone(),
         trigger_load_system
             .get_or_init(|| {
-                TriggerLoadSystem(world.register_system(trigger_button_action::<FoundSav>))
+                TriggerLoadSystem(world.register_system(trigger_button_action::<In<FoundSav>>))
             })
             .clone(),
     )
@@ -70,10 +68,7 @@ pub(super) fn spawn_main_menu(
     mut commands: Commands,
     fonts: Res<Fonts>,
 ) {
-    commands.spawn((
-        Camera2dBundle::default(),
-        StateScoped(ApplicationState::MainMenu),
-    ));
+    commands.spawn((Camera2d, StateScoped(ApplicationState::MainMenu)));
 
     commands
         .spawn((
@@ -86,9 +81,9 @@ pub(super) fn spawn_main_menu(
                     justify_content: JustifyContent::Center,
                     ..Style::default()
                 },
-                z_index: ZIndex::Global(3),
                 ..NodeBundle::default()
             },
+            GlobalZIndex(3),
             StateScoped(ApplicationState::MainMenu),
         ))
         .with_children(|parent| {

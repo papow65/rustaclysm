@@ -1,4 +1,4 @@
-use crate::common::{log_if_slow, on_safe_event};
+use crate::common::log_if_slow;
 use crate::gameplay::sidebar::components::{LogDisplay, StatusDisplay};
 use crate::gameplay::sidebar::resources::StatusTextSections;
 use crate::hud::{
@@ -9,11 +9,11 @@ use crate::{application::ApplicationState, gameplay::*};
 use bevy::diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin};
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::{
-    resource_exists, resource_exists_and_changed, BuildChildren, Changed, Commands, Condition,
-    DetectChanges, Entity, EventReader, FlexDirection, FlexWrap, FromWorld, IntoSystemConfigs,
-    JustifyContent, Local, NodeBundle, Or, Overflow, Parent, PositionType, Query, Res, ResMut,
-    State, StateScoped, Style, Text, TextBundle, TextSection, TextStyle, UiRect, Val, Visibility,
-    With, Without, World,
+    on_event, resource_exists, resource_exists_and_changed, BuildChildren, Changed, ChildBuild,
+    Commands, Condition, DetectChanges, Entity, EventReader, FlexDirection, FlexWrap, FromWorld,
+    IntoSystemConfigs, JustifyContent, Local, NodeBundle, Or, Overflow, Parent, PositionType,
+    Query, Res, ResMut, State, StateScoped, Style, Text, TextBundle, TextSection, TextStyle,
+    UiRect, Val, Visibility, With, Without, World,
 };
 use cdda_json_files::{MoveCost, ObjectId};
 use std::{num::Saturating, time::Instant};
@@ -123,19 +123,19 @@ pub(super) fn update_sidebar_systems() -> impl IntoSystemConfigs<()> {
         update_status_time.run_if(resource_exists_and_changed::<Timeouts>),
         update_status_health.run_if(resource_exists_and_changed::<Timeouts>),
         update_status_stamina.run_if(resource_exists_and_changed::<Timeouts>),
-        update_status_speed.run_if(on_safe_event::<RefreshAfterBehavior>()),
+        update_status_speed.run_if(on_event::<RefreshAfterBehavior>),
         update_status_player_action_state
             .run_if(resource_exists_and_changed::<State<PlayerActionState>>),
         update_status_player_wielded.run_if(resource_exists_and_changed::<Timeouts>),
         update_status_enemies.run_if(resource_exists_and_changed::<Timeouts>),
         update_status_detais.run_if(
             resource_exists_and_changed::<State<PlayerActionState>>
-                .or_else(resource_exists_and_changed::<State<FocusState>>),
+                .or(resource_exists_and_changed::<State<FocusState>>),
         ),
-        update_log.run_if(on_safe_event::<Message>()),
+        update_log.run_if(on_event::<Message>),
     )
         .chain()
-        .run_if(resource_exists::<StatusTextSections>.and_then(resource_exists::<RelativeSegments>))
+        .run_if(resource_exists::<StatusTextSections>.and(resource_exists::<RelativeSegments>))
 }
 
 #[expect(clippy::needless_pass_by_value)]
