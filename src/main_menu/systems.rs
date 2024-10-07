@@ -1,5 +1,5 @@
 use crate::common::{log_if_slow, AssetPaths};
-use crate::gameplay::{ActiveSav, GameplaySession};
+use crate::gameplay::{ActiveSav, GameplayScreenState, GameplaySession};
 use crate::hud::{
     trigger_button_action, ButtonBuilder, Fonts, BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR,
     LARGE_SPACING, MEDIUM_SPACING, PANEL_COLOR,
@@ -7,7 +7,7 @@ use crate::hud::{
 use crate::keyboard::KeyBindings;
 use crate::main_menu::components::{LoadButtonArea, MessageField, MessageWrapper};
 use crate::main_menu::load_error::LoadError;
-use crate::{application::ApplicationState, loading::ProgressScreenState, manual::ManualSection};
+use crate::{application::ApplicationState, manual::ManualSection};
 use base64::{engine::general_purpose::STANDARD as base64, Engine};
 use bevy::prelude::{
     AlignContent, AlignItems, BuildChildren, Camera2d, ChildBuild, ChildBuilder, Commands,
@@ -369,10 +369,12 @@ fn add_load_button(
 pub(super) fn load(
     In(found_sav): In<FoundSav>,
     mut commands: Commands,
-    mut next_progress_state: ResMut<NextState<ProgressScreenState>>,
+    mut next_application_state: ResMut<NextState<ApplicationState>>,
+    mut next_gameplay_screen_state: ResMut<NextState<GameplayScreenState>>,
 ) {
     commands.insert_resource(ActiveSav::new(&found_sav.0));
-    next_progress_state.set(ProgressScreenState::Loading);
+    next_application_state.set(ApplicationState::Gameplay);
+    next_gameplay_screen_state.set(GameplayScreenState::Loading);
 }
 
 fn quit(mut app_exit_events: ResMut<Events<AppExit>>) {

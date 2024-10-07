@@ -4,7 +4,7 @@ use crate::gameplay::{
     SubzoneLevelEntities,
 };
 use crate::hud::{Fonts, DEFAULT_BUTTON_COLOR, HARD_TEXT_COLOR};
-use crate::loading::ProgressScreenState;
+use crate::loading::LoadingState;
 use bevy::prelude::{
     AlignItems, Assets, BuildChildren, ChildBuild, Commands, GlobalZIndex, JustifyContent, Local,
     NextState, NodeBundle, PositionType, Res, ResMut, State, StateScoped, Style, TextBundle, Val,
@@ -26,7 +26,7 @@ pub(crate) fn spawn_loading(mut commands: Commands, fonts: Res<Fonts>) {
                 ..NodeBundle::default()
             },
             GlobalZIndex(3),
-            StateScoped(ProgressScreenState::Loading),
+            StateScoped(LoadingState),
         ))
         .with_children(|parent| {
             parent
@@ -66,7 +66,6 @@ pub(crate) fn start_gameplay(
 
 #[expect(clippy::needless_pass_by_value)]
 pub(crate) fn finish_loading(
-    mut next_progress_state: ResMut<NextState<ProgressScreenState>>,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
     overmap_assets: Res<Assets<OvermapAsset>>,
     overmap_buffer_assets: Res<Assets<OvermapBufferAsset>>,
@@ -98,7 +97,6 @@ pub(crate) fn finish_loading(
             && explored.loaded()
         {
             eprintln!("Loading complete");
-            next_progress_state.set(ProgressScreenState::Complete);
             next_gameplay_state.set(GameplayScreenState::Base);
         }
     }

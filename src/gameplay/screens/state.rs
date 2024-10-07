@@ -5,6 +5,7 @@ use bevy::prelude::{StateSet, SubStates};
 #[source(ApplicationState = ApplicationState::Gameplay)]
 pub(crate) enum GameplayScreenState {
     #[default]
+    Loading,
     Base,
     //Character, // TODO
     Inventory,

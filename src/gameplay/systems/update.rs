@@ -5,7 +5,7 @@ use crate::gameplay::{
     ElevationVisibility, Explored, Focus, GameplaySession, LastSeen, MapAsset, MapMemoryAsset,
     OvermapAsset, OvermapBufferAsset, Player, Pos, SubzoneLevel, ZoneLevel,
 };
-use crate::loading::ProgressScreenState;
+use crate::loading::LoadingState;
 use bevy::asset::{AssetLoadError, UntypedAssetLoadFailedEvent};
 use bevy::prelude::{
     Assets, Camera, Changed, Children, Commands, EventReader, Font, GlobalTransform, Local, Mesh,
@@ -263,8 +263,7 @@ pub(crate) fn count_zones(
 pub(crate) fn check_failed_asset_loading(
     mut fails: EventReader<UntypedAssetLoadFailedEvent>,
     mut next_application_state: ResMut<NextState<ApplicationState>>,
-    progres_state: Res<State<ProgressScreenState>>,
-    mut next_progres_state: ResMut<NextState<ProgressScreenState>>,
+    loading_state: Option<Res<State<LoadingState>>>,
 ) {
     let start = Instant::now();
 
@@ -273,9 +272,8 @@ pub(crate) fn check_failed_asset_loading(
 
         match &fail.error {
             AssetLoadError::AssetLoaderError(_) => {
-                if *progres_state == ProgressScreenState::Loading {
+                if loading_state.is_some() {
                     next_application_state.set(ApplicationState::MainMenu);
-                    next_progres_state.set(ProgressScreenState::Complete);
                 }
             }
             _ => {

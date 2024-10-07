@@ -2,4 +2,4 @@ mod plugin;
 mod state;
 mod systems;
 
-pub(crate) use self::{plugin::LoadingIndicatorPlugin, state::ProgressScreenState};
+pub(crate) use self::{plugin::LoadingIndicatorPlugin, state::LoadingState};
