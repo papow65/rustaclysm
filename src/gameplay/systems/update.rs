@@ -1,13 +1,16 @@
+use crate::application::ApplicationState;
 use crate::common::log_if_slow;
 use crate::gameplay::{
     Accessible, Appearance, BaseSpeed, CurrentlyVisible, CurrentlyVisibleBuilder,
     ElevationVisibility, Explored, Focus, GameplaySession, LastSeen, MapAsset, MapMemoryAsset,
     OvermapAsset, OvermapBufferAsset, Player, Pos, SubzoneLevel, ZoneLevel,
 };
-use bevy::asset::UntypedAssetLoadFailedEvent;
+use crate::loading::ProgressScreenState;
+use bevy::asset::{AssetLoadError, UntypedAssetLoadFailedEvent};
 use bevy::prelude::{
     Assets, Camera, Changed, Children, Commands, EventReader, Font, GlobalTransform, Local, Mesh,
-    ParallelCommands, Parent, Query, Res, ResMut, StandardMaterial, Visibility, With, Without,
+    NextState, ParallelCommands, Parent, Query, Res, ResMut, StandardMaterial, State, Visibility,
+    With, Without,
 };
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
@@ -256,14 +259,28 @@ pub(crate) fn count_zones(
     log_if_slow("count_zones", start);
 }
 
-pub(crate) fn check_failed_asset_loading(mut fails: EventReader<UntypedAssetLoadFailedEvent>) {
+#[expect(clippy::needless_pass_by_value)]
+pub(crate) fn check_failed_asset_loading(
+    mut fails: EventReader<UntypedAssetLoadFailedEvent>,
+    mut next_application_state: ResMut<NextState<ApplicationState>>,
+    progres_state: Res<State<ProgressScreenState>>,
+    mut next_progres_state: ResMut<NextState<ProgressScreenState>>,
+) {
     let start = Instant::now();
 
     for fail in fails.read() {
-        if cfg!(debug_assertions) {
-            panic!("Failed to load asset: {fail:#?}");
-        } else {
-            eprintln!("Failed to load asset: {fail:#?}");
+        eprintln!("Failed to load asset {}: {:#?}", fail.path, &fail.error);
+
+        match &fail.error {
+            AssetLoadError::AssetLoaderError(_) => {
+                if *progres_state == ProgressScreenState::Loading {
+                    next_application_state.set(ApplicationState::MainMenu);
+                    next_progres_state.set(ProgressScreenState::Complete);
+                }
+            }
+            _ => {
+                assert!(!cfg!(debug_assertions), "Failed to load asset: {fail:#?}");
+            }
         }
     }
 
