@@ -86,8 +86,16 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
         let pbr_bundles = self
             .tile_spawner
             .model_factory()
-            .get_layers(definition, *child_visibiltiy, false, None)
-            .map(|(pbr, _)| (pbr, RenderLayers::layer(2)));
+            .get_layers(definition, None)
+            .map(|(mesh, transform, appearance)| {
+                (
+                    mesh,
+                    transform,
+                    appearance.fixed_material(),
+                    *child_visibiltiy,
+                    RenderLayers::layer(2),
+                )
+            });
 
         self.tile_spawner
             .commands

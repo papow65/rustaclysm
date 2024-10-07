@@ -1,13 +1,13 @@
 use crate::gameplay::{
-    Appearance, Infos, LastSeen, Layers, Model, ModelShape, ObjectDefinition, SpriteOrientation,
-    TileLoader, TileVariant,
+    Appearance, Infos, Layers, Model, ModelShape, ObjectCategory, ObjectDefinition,
+    SpriteOrientation, TileLoader, TileVariant,
 };
 use bevy::prelude::{
     AssetServer, Assets, Mesh, Mesh3d, MeshMaterial3d, Res, ResMut, Resource, StandardMaterial,
-    Transform, Visibility,
+    Transform, Vec3,
 };
 use bevy::{ecs::system::SystemParam, utils::HashMap};
-use cdda_json_files::SpriteNumber;
+use cdda_json_files::{ObjectId, SpriteNumber};
 use std::path::PathBuf;
 
 #[derive(Default, Resource)]
@@ -64,68 +64,44 @@ impl<'w> ModelFactory<'w> {
             .clone()
     }
 
-    fn get_pbr_bundle(
-        &mut self,
-        model: &Model,
-        visibility: Visibility,
-        shaded: bool,
-    ) -> (
-        Mesh3d,
-        MeshMaterial3d<StandardMaterial>,
-        Transform,
-        Visibility,
-    ) {
-        (
-            self.get_mesh(model),
-            if shaded {
-                MeshMaterial3d::<StandardMaterial>::default()
-            } else {
-                self.get_appearance(model).material(&LastSeen::Currently)
-            },
-            model.to_transform(),
-            visibility,
-        )
-    }
-
-    pub(crate) fn get_single_pbr_bundle(
-        &mut self,
-        definition: &ObjectDefinition,
-    ) -> (
-        Mesh3d,
-        MeshMaterial3d<StandardMaterial>,
-        Transform,
-        Visibility,
-    ) {
-        let models = self
-            .loader
-            .get_models(definition, &self.infos.variants(definition), None);
-        assert!(models.overlay.is_none(), "{models:?}");
-        self.get_pbr_bundle(&models.base, Visibility::Hidden, false)
-    }
-
     pub(crate) fn get_layers(
         &mut self,
         definition: &ObjectDefinition,
-        visibility: Visibility,
-        shading: bool,
         tile_variant: Option<TileVariant>,
-    ) -> Layers<(
-        (
-            Mesh3d,
-            MeshMaterial3d<StandardMaterial>,
-            Transform,
-            Visibility,
-        ),
-        Appearance,
-    )> {
+    ) -> Layers<(Mesh3d, Transform, Appearance)> {
         let models =
             self.loader
                 .get_models(definition, &self.infos.variants(definition), tile_variant);
         models.map_mut(|model| {
             (
-                self.get_pbr_bundle(&model, visibility, shading),
+                self.get_mesh(&model),
+                model.to_transform(),
                 self.get_appearance(&model),
             )
         })
+    }
+
+    pub(crate) fn get_cursor(&mut self) -> (Mesh3d, Transform, MeshMaterial3d<StandardMaterial>) {
+        let cursor_definition = ObjectDefinition {
+            category: ObjectCategory::Meta,
+            id: ObjectId::new("cursor"),
+        };
+        let models = self.loader.get_models(
+            &cursor_definition,
+            &self.infos.variants(&cursor_definition),
+            None,
+        );
+        assert!(models.overlay.is_none(), "{models:?}");
+
+        let mesh3d = self.get_mesh(&models.base);
+        let mut transform = models.base.to_transform();
+        transform.translation.y = 0.1;
+        transform.scale = Vec3::new(1.1, 1.0, 1.1);
+
+        (
+            mesh3d,
+            transform,
+            self.get_appearance(&models.base).fixed_material(),
+        )
     }
 }

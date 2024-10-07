@@ -476,25 +476,23 @@ impl<'w, 's> TileSpawner<'w, 's> {
         let layers = if definition.category == ObjectCategory::Vehicle {
             None
         } else {
-            Some(
-                self.model_factory
-                    .get_layers(definition, Visibility::Inherited, true, tile_variant)
-                    .map(|((mesh, _, transform, visibility), apprearance)| {
-                        let material = if last_seen == LastSeen::Never {
-                            apprearance.material(&LastSeen::Currently)
-                        } else {
-                            apprearance.material(&last_seen)
-                        };
-                        (
-                            mesh,
-                            material,
-                            transform,
-                            visibility,
-                            apprearance,
-                            RenderLayers::layer(1),
-                        )
-                    }),
-            )
+            Some(self.model_factory.get_layers(definition, tile_variant).map(
+                |(mesh, transform, apprearance)| {
+                    let material = if last_seen == LastSeen::Never {
+                        apprearance.material(&LastSeen::Currently)
+                    } else {
+                        apprearance.material(&last_seen)
+                    };
+                    (
+                        mesh,
+                        material,
+                        transform,
+                        apprearance,
+                        Visibility::Inherited,
+                        RenderLayers::layer(1),
+                    )
+                },
+            ))
         };
 
         let mut entity_commands = self.commands.spawn((
@@ -523,14 +521,6 @@ impl<'w, 's> TileSpawner<'w, 's> {
     }
 
     fn configure_player(&mut self, player_entity: Entity) {
-        let cursor_definition = ObjectDefinition {
-            category: ObjectCategory::Meta,
-            id: ObjectId::new("cursor"),
-        };
-        let mut cursor_bundle = self.model_factory.get_single_pbr_bundle(&cursor_definition);
-        cursor_bundle.2.translation.y = 0.1;
-        cursor_bundle.2.scale = Vec3::new(1.1, 1.0, 1.1);
-
         self.commands
             .entity(player_entity)
             .with_children(|child_builder| {
@@ -538,7 +528,8 @@ impl<'w, 's> TileSpawner<'w, 's> {
                     .spawn(SpatialBundle::default())
                     .insert(CameraBase)
                     .with_children(|child_builder| {
-                        child_builder.spawn((cursor_bundle, ExamineCursor));
+                        let cursor_bundle = self.model_factory.get_cursor();
+                        child_builder.spawn((cursor_bundle, Visibility::Hidden, ExamineCursor));
 
                         let camera_direction = Transform::IDENTITY
                             .looking_at(Vec3::new(0.1, 0.0, -1.0), Vec3::Y)

@@ -240,6 +240,10 @@ impl Appearance {
         }
     }
 
+    pub(crate) fn fixed_material(&self) -> MeshMaterial3d<StandardMaterial> {
+        self.material(&LastSeen::Currently)
+    }
+
     pub(crate) fn material(&self, last_seen: &LastSeen) -> MeshMaterial3d<StandardMaterial> {
         match last_seen {
             LastSeen::Currently => self.seen.clone(),
