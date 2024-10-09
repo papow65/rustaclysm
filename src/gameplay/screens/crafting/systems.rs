@@ -5,7 +5,8 @@ use crate::gameplay::screens::crafting::components::{
 use crate::gameplay::screens::crafting::resource::CraftingScreen;
 use crate::gameplay::{
     ActiveSav, Amount, BodyContainers, Clock, GameplayScreenState, Infos, InstructionQueue,
-    LastSeen, Location, ObjectCategory, ObjectDefinition, Player, Pos, QueuedInstruction,
+    LastSeen, Location, MessageWriter, ObjectCategory, ObjectDefinition, Player, Pos,
+    QueuedInstruction,
 };
 use crate::hud::{
     ButtonBuilder, Fonts, ScrollingList, SelectionList, BAD_TEXT_COLOR, GOOD_TEXT_COLOR,
@@ -159,7 +160,7 @@ pub(super) fn create_crafting_key_bindings(
         world,
         GameplayScreenState::Crafting,
         |bindings| {
-            bindings.add('c', start_craft_wrapper);
+            bindings.add('c', start_craft);
             bindings.add_multi(
                 [Key::Code(KeyCode::Escape), Key::Character('&')],
                 exit_crafting,
@@ -210,24 +211,6 @@ pub(super) fn move_crafting_selection(
     );
 
     log_if_slow("move_crafting_selection", start);
-}
-
-pub(super) fn start_craft_wrapper(
-    next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
-    instruction_queue: ResMut<InstructionQueue>,
-    crafting_screen: Res<CraftingScreen>,
-    mut recipes: Query<(&mut Text, &Transform, &Node, &RecipeSituation)>,
-) {
-    let start = Instant::now();
-
-    start_craft(
-        next_gameplay_state,
-        instruction_queue,
-        crafting_screen,
-        recipes.transmute_lens().query(),
-    );
-
-    log_if_slow("start_craft_wrapper", start);
 }
 
 #[expect(clippy::needless_pass_by_value)]
@@ -728,11 +711,14 @@ fn show_recipe(
 
 #[expect(clippy::needless_pass_by_value)]
 fn start_craft(
+    mut message_writer: MessageWriter,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
     mut instruction_queue: ResMut<InstructionQueue>,
     crafting_screen: Res<CraftingScreen>,
     recipes: Query<&RecipeSituation>,
 ) {
+    let start = Instant::now();
+
     let selected_craft = crafting_screen
         .selection_list
         .selected
@@ -740,10 +726,19 @@ fn start_craft(
     let recipe = recipes
         .get(selected_craft)
         .expect("The selected craft should be found");
-    println!("Craft {recipe:?}");
-    instruction_queue.add(QueuedInstruction::StartCraft(recipe.clone()));
-    // Close the crafting screen
-    next_gameplay_state.set(GameplayScreenState::Base);
+    if recipe.craftable() {
+        println!("Craft {recipe:?}");
+        instruction_queue.add(QueuedInstruction::StartCraft(recipe.clone()));
+        // Close the crafting screen
+        next_gameplay_state.set(GameplayScreenState::Base);
+    } else {
+        message_writer
+            .you("lack the means to craft")
+            .add(&*recipe.name)
+            .send_error();
+    }
+
+    log_if_slow("start_craft", start);
 }
 
 pub(super) fn remove_crafting_resource(mut commands: Commands) {
