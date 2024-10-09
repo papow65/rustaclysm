@@ -228,7 +228,6 @@ impl ModelShape {
     }
 }
 
-/// Everything to make a `PbrBundle`
 #[derive(Debug)]
 pub(crate) struct Model {
     pub(crate) shape: ModelShape,
