@@ -15,7 +15,7 @@ pub(crate) use self::actions::{
 };
 pub(crate) use self::breath::Breath;
 pub(crate) use self::faction::{Faction, Intelligence, LastEnemy};
-pub(crate) use self::impact::Impact;
+pub(crate) use self::impact::ActorImpact;
 pub(crate) use self::planned_action::PlannedAction;
 pub(crate) use self::player::{Player, PlayerActionState};
 pub(crate) use self::plugin::ActorPlugin;

@@ -184,22 +184,22 @@ fn plan_npc_action(
 }
 
 pub(in super::super) struct PerformSystems {
-    stay: SystemId<In<ActionIn<Stay>>, Option<Impact>>,
-    sleep: SystemId<In<ActionIn<Sleep>>, Option<Impact>>,
-    step: SystemId<In<ActionIn<Step>>, Option<Impact>>,
-    attack: SystemId<In<ActionIn<Attack>>, Option<Impact>>,
-    smash: SystemId<In<ActionIn<Smash>>, Option<Impact>>,
-    pulp: SystemId<In<ActionIn<Pulp>>, Option<Impact>>,
-    peek: SystemId<In<ActionIn<Peek>>, Option<Impact>>,
-    close: SystemId<In<ActionIn<Close>>, Option<Impact>>,
-    wield: SystemId<In<ActionIn<ItemAction<Wield>>>, Option<Impact>>,
-    unwield: SystemId<In<ActionIn<ItemAction<Unwield>>>, Option<Impact>>,
-    pickup: SystemId<In<ActionIn<ItemAction<Pickup>>>, Option<Impact>>,
-    move_item: SystemId<In<ActionIn<ItemAction<MoveItem>>>, Option<Impact>>,
-    start_craft: SystemId<In<ActionIn<StartCraft>>, Option<Impact>>,
-    continue_craft: SystemId<In<ActionIn<ItemAction<ContinueCraft>>>, Option<Impact>>,
-    examine_item: SystemId<In<ActionIn<ItemAction<ExamineItem>>>, Option<Impact>>,
-    change_pace: SystemId<In<ActionIn<ChangePace>>, Option<Impact>>,
+    stay: SystemId<In<ActionIn<Stay>>, ActorImpact>,
+    sleep: SystemId<In<ActionIn<Sleep>>, ActorImpact>,
+    step: SystemId<In<ActionIn<Step>>, ActorImpact>,
+    attack: SystemId<In<ActionIn<Attack>>, ActorImpact>,
+    smash: SystemId<In<ActionIn<Smash>>, ActorImpact>,
+    pulp: SystemId<In<ActionIn<Pulp>>, ActorImpact>,
+    peek: SystemId<In<ActionIn<Peek>>, ActorImpact>,
+    close: SystemId<In<ActionIn<Close>>, ActorImpact>,
+    wield: SystemId<In<ActionIn<ItemAction<Wield>>>, ActorImpact>,
+    unwield: SystemId<In<ActionIn<ItemAction<Unwield>>>, ActorImpact>,
+    pickup: SystemId<In<ActionIn<ItemAction<Pickup>>>, ActorImpact>,
+    move_item: SystemId<In<ActionIn<ItemAction<MoveItem>>>, ActorImpact>,
+    start_craft: SystemId<In<ActionIn<StartCraft>>, ActorImpact>,
+    continue_craft: SystemId<In<ActionIn<ItemAction<ContinueCraft>>>, ActorImpact>,
+    examine_item: SystemId<In<ActionIn<ItemAction<ExamineItem>>>, ActorImpact>,
+    change_pace: SystemId<In<ActionIn<ChangePace>>, ActorImpact>,
 }
 
 impl PerformSystems {
@@ -230,7 +230,7 @@ pub(in super::super) fn perform_action(
     In(option): In<Option<(Entity, PlannedAction)>>,
     world: &mut World,
     perform_systems: Local<OnceCell<PerformSystems>>,
-) -> Option<Impact> {
+) -> Option<ActorImpact> {
     let start = Instant::now();
 
     let Some((actor_entity, planned_action)) = option else {
@@ -278,13 +278,13 @@ pub(in super::super) fn perform_action(
 
     log_if_slow("perform_action", start);
 
-    impact
+    Some(impact)
 }
 
 fn act_fn<A: Action>(
-    system: SystemId<In<ActionIn<A>>, Option<Impact>>,
+    system: SystemId<In<ActionIn<A>>, ActorImpact>,
     action: A,
-) -> Box<dyn FnOnce(&mut World, Entity) -> Option<Impact>> {
+) -> Box<dyn FnOnce(&mut World, Entity) -> ActorImpact> {
     Box::new(move |world, actor_entity| {
         run_system(world, system, ActionIn::new(actor_entity, action))
     })
@@ -301,16 +301,14 @@ fn run_system<I: SystemInput + 'static, R: 'static>(
 }
 
 #[expect(clippy::needless_pass_by_value)]
-#[expect(clippy::unnecessary_wraps)]
 pub(in super::super) fn perform_stay(
     In(stay): In<ActionIn<Stay>>,
     actors: Query<Actor>,
-) -> Option<Impact> {
-    Some(stay.actor(&actors).stay())
+) -> ActorImpact {
+    stay.actor(&actors).stay()
 }
 
 #[expect(clippy::needless_pass_by_value)]
-#[expect(clippy::unnecessary_wraps)]
 pub(in super::super) fn perform_sleep(
     In(sleep): In<ActionIn<Sleep>>,
     mut message_writer: MessageWriter,
@@ -319,14 +317,14 @@ pub(in super::super) fn perform_sleep(
     clock: Clock,
     mut healing_durations: Query<&mut HealingDuration>,
     actors: Query<Actor>,
-) -> Option<Impact> {
-    Some(sleep.actor(&actors).sleep(
+) -> ActorImpact {
+    sleep.actor(&actors).sleep(
         &mut message_writer,
         &mut healing_writer,
         player_action_state.get(),
         &clock,
         &mut healing_durations,
-    ))
+    )
 }
 
 #[expect(clippy::needless_pass_by_value)]
@@ -337,7 +335,7 @@ pub(in super::super) fn perform_step(
     mut toggle_writer: EventWriter<TerrainEvent<Toggle>>,
     mut envir: Envir,
     actors: Query<Actor>,
-) -> Option<Impact> {
+) -> ActorImpact {
     step.actor(&actors).step(
         &mut commands,
         &mut message_writer,
@@ -356,7 +354,7 @@ pub(in super::super) fn perform_attack(
     infos: Res<Infos>,
     hierarchy: Hierarchy,
     actors: Query<Actor>,
-) -> Option<Impact> {
+) -> ActorImpact {
     attack.actor(&actors).attack(
         &mut message_writer,
         &mut damage_writer,
@@ -376,7 +374,7 @@ pub(in super::super) fn perform_smash(
     infos: Res<Infos>,
     hierarchy: Hierarchy,
     actors: Query<Actor>,
-) -> Option<Impact> {
+) -> ActorImpact {
     smash.actor(&actors).smash(
         &mut message_writer,
         &mut damage_writer,
@@ -396,7 +394,7 @@ pub(in super::super) fn perform_pulp(
     infos: Res<Infos>,
     hierarchy: Hierarchy,
     actors: Query<Actor>,
-) -> Option<Impact> {
+) -> ActorImpact {
     pulp.actor(&actors).pulp(
         &mut message_writer,
         &mut corpse_damage_writer,
@@ -414,7 +412,7 @@ pub(in super::super) fn perform_peek(
     mut player_action_state: ResMut<NextState<PlayerActionState>>,
     envir: Envir,
     actors: Query<Actor>,
-) -> Option<Impact> {
+) -> ActorImpact {
     peek.actor(&actors).peek(
         &mut message_writer,
         &mut player_action_state,
@@ -430,7 +428,7 @@ pub(in super::super) fn perform_close(
     mut toggle_writer: EventWriter<TerrainEvent<Toggle>>,
     envir: Envir,
     actors: Query<Actor>,
-) -> Option<Impact> {
+) -> ActorImpact {
     close.actor(&actors).close(
         &mut message_writer,
         &mut toggle_writer,
@@ -447,7 +445,7 @@ pub(in super::super) fn perform_wield(
     hierarchy: Hierarchy,
     actors: Query<Actor>,
     items: Query<Item>,
-) -> Option<Impact> {
+) -> ActorImpact {
     wield.actor(&actors).wield(
         &mut commands,
         &mut message_writer,
@@ -464,7 +462,7 @@ pub(in super::super) fn perform_unwield(
     hierarchy: Hierarchy,
     actors: Query<Actor>,
     items: Query<Item>,
-) -> Option<Impact> {
+) -> ActorImpact {
     unwield.actor(&actors).unwield(
         &mut commands,
         &mut message_writer,
@@ -481,7 +479,7 @@ pub(in super::super) fn perform_pickup(
     hierarchy: Hierarchy,
     actors: Query<Actor>,
     items: Query<Item>,
-) -> Option<Impact> {
+) -> ActorImpact {
     pickup.actor(&actors).pickup(
         &mut commands,
         &mut message_writer,
@@ -499,7 +497,7 @@ pub(in super::super) fn perform_move_item(
     mut location: ResMut<Location>,
     actors: Query<Actor>,
     items: Query<Item>,
-) -> Option<Impact> {
+) -> ActorImpact {
     move_item.actor(&actors).move_item(
         &mut commands,
         &mut message_writer,
@@ -521,7 +519,7 @@ pub(in super::super) fn perform_start_craft(
     subzone_level_entities: Res<SubzoneLevelEntities>,
     actors: Query<Actor>,
     mut amounts: Query<&mut Amount>,
-) -> Option<Impact> {
+) -> ActorImpact {
     start_craft.actor(&actors).start_craft(
         &mut commands,
         &mut message_writer,
@@ -544,7 +542,7 @@ pub(in super::super) fn perform_continue_craft(
     infos: Res<Infos>,
     actors: Query<Actor>,
     mut items: Query<(Item, &mut Craft)>,
-) -> Option<Impact> {
+) -> ActorImpact {
     continue_craft.actor(&actors).continue_craft(
         &mut commands,
         &mut message_writer,
@@ -561,14 +559,14 @@ pub(in super::super) fn perform_examine_item(
     In(examine_item): In<ActionIn<ItemAction<ExamineItem>>>,
     mut message_writer: MessageWriter,
     infos: Res<Infos>,
+    actors: Query<Actor>,
     items: Query<Item>,
-) -> Option<Impact> {
-    ActorItem::examine_item(
+) -> ActorImpact {
+    examine_item.actor(&actors).examine_item(
         &mut message_writer,
         &infos,
         &examine_item.action.item(&items),
-    );
-    None
+    )
 }
 
 #[expect(clippy::needless_pass_by_value)]
@@ -576,14 +574,13 @@ pub(in super::super) fn perform_change_pace(
     In(change_pace): In<ActionIn<ChangePace>>,
     mut commands: Commands,
     actors: Query<Actor>,
-) -> Option<Impact> {
-    change_pace.actor(&actors).change_pace(&mut commands);
-    None
+) -> ActorImpact {
+    change_pace.actor(&actors).change_pace(&mut commands)
 }
 
 #[expect(clippy::needless_pass_by_value)]
 pub(in super::super) fn proces_impact(
-    In(impact): In<Option<Impact>>,
+    In(actor_impact): In<Option<ActorImpact>>,
     mut message_writer: MessageWriter,
     mut stamina_impact_events: EventWriter<ActorEvent<StaminaImpact>>,
     mut timeouts: ResMut<Timeouts>,
@@ -591,24 +588,21 @@ pub(in super::super) fn proces_impact(
 ) {
     let start = Instant::now();
 
-    let Some(impact) = impact else {
+    let Some(actor_impact) = actor_impact else {
+        // No egible characters
         return;
     };
 
-    impact.check_validity();
-    let Some(stamina_impact) = impact.stamina_impact else {
-        if players.get(impact.actor_entity).is_err() {
-            message_writer.str("NPC action failed").send_error();
-            // To prevent the application hanging on failing NPC actions, we add a small timeout
-            timeouts.add(impact.actor_entity, Duration::SECOND);
-        }
-
-        return;
-    };
-
-    timeouts.add(impact.actor_entity, impact.timeout);
-
-    stamina_impact_events.send(ActorEvent::new(impact.actor_entity, stamina_impact));
+    let actor = actor_impact.actor_entity;
+    if let Some(impact) = actor_impact.impact {
+        impact.check_validity();
+        timeouts.add(actor, impact.timeout);
+        stamina_impact_events.send(ActorEvent::new(actor, impact.stamina_impact));
+    } else if players.get(actor).is_err() {
+        message_writer.str("NPC action failed").send_error();
+        // To prevent the application hanging on failing NPC actions, we add a small timeout
+        timeouts.add(actor, Duration::SECOND);
+    }
 
     log_if_slow("proces_impact", start);
 }
