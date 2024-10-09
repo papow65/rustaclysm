@@ -145,8 +145,8 @@ pub(super) fn create_inventory_key_bindings(
                 ],
                 set_inventory_drop_direction,
             );
-            bindings.add_multi(['d', 't', 'u', 'w'], handle_selected_item_wrapper);
-            bindings.add('e', examine_selected_item_wrapper);
+            bindings.add_multi(['d', 't', 'u', 'w'], handle_selected_item);
+            bindings.add('e', examine_selected_item);
             bindings.add_multi(
                 [Key::Code(KeyCode::Escape), Key::Character('i')],
                 exit_inventory,
@@ -209,39 +209,6 @@ fn set_inventory_drop_direction(In(key): In<Key>, mut inventory: ResMut<Inventor
 
     inventory.drop_direction = horizontal_direction;
     inventory.last_time = Timestamp::ZERO;
-}
-
-fn handle_selected_item_wrapper(
-    In(key): In<Key>,
-    mut instruction_queue: ResMut<InstructionQueue>,
-    mut inventory: ResMut<InventoryScreen>,
-    mut item_lines: Query<(&InventoryItemLine, &Children)>,
-) {
-    let Key::Character(char) = key else {
-        eprintln!("Unexpected key {key:?} while handling selected item");
-        return;
-    };
-
-    handle_selected_item(
-        &mut inventory,
-        &mut instruction_queue,
-        &item_lines.transmute_lens().query(),
-        char,
-    );
-}
-
-/// Special case, because we don't want to select another item after the action.
-#[expect(clippy::needless_pass_by_value)]
-fn examine_selected_item_wrapper(
-    mut instruction_queue: ResMut<InstructionQueue>,
-    inventory: Res<InventoryScreen>,
-    mut item_lines: Query<(&InventoryItemLine, &Children)>,
-) {
-    examine_selected_item(
-        &inventory,
-        &mut instruction_queue,
-        &item_lines.transmute_lens().query(),
-    );
 }
 
 fn exit_inventory(mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>) {
@@ -552,13 +519,19 @@ fn follow_selected(
     );
 }
 
+#[expect(clippy::needless_pass_by_value)]
 fn handle_selected_item(
-    inventory: &mut InventoryScreen,
-    instruction_queue: &mut InstructionQueue,
-    item_lines: &Query<&InventoryItemLine>,
-    char: char,
+    In(key): In<Key>,
+    mut instruction_queue: ResMut<InstructionQueue>,
+    mut inventory: ResMut<InventoryScreen>,
+    item_lines: Query<&InventoryItemLine>,
 ) {
-    if let Some(selected_item) = inventory.selected_item(item_lines) {
+    let Key::Character(char) = key else {
+        eprintln!("Unexpected key {key:?} while handling selected item");
+        return;
+    };
+
+    if let Some(selected_item) = inventory.selected_item(&item_lines) {
         instruction_queue.add(match char {
             'd' => {
                 let Some(item_section) = inventory.section_by_item.get(&selected_item) else {
@@ -582,12 +555,14 @@ fn handle_selected_item(
     }
 }
 
+/// Special case, because we don't want to select another item after the action.
+#[expect(clippy::needless_pass_by_value)]
 fn examine_selected_item(
-    inventory: &InventoryScreen,
-    instruction_queue: &mut InstructionQueue,
-    item_lines: &Query<&InventoryItemLine>,
+    mut instruction_queue: ResMut<InstructionQueue>,
+    inventory: Res<InventoryScreen>,
+    item_lines: Query<&InventoryItemLine>,
 ) {
-    if let Some(selected_item) = inventory.selected_item(item_lines) {
+    if let Some(selected_item) = inventory.selected_item(&item_lines) {
         instruction_queue.add(QueuedInstruction::ExamineItem(selected_item));
     }
 }

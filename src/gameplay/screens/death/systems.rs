@@ -99,17 +99,13 @@ pub(super) fn create_death_screen_key_bindings(
         |bindings| {
             bindings.add_multi(
                 [KeyCode::Escape, KeyCode::Enter, KeyCode::Space],
-                to_main_menu_wrapper,
+                to_main_menu,
             );
         },
         ManualSection::new(&[("to main menu", "esc/enter/space")], 100),
     );
 
     log_if_slow("create_death_screen_key_bindings", start);
-}
-
-fn to_main_menu_wrapper(next_application_state: ResMut<NextState<ApplicationState>>) {
-    to_main_menu(next_application_state);
 }
 
 fn to_main_menu(mut next_application_state: ResMut<NextState<ApplicationState>>) {
