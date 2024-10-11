@@ -321,6 +321,7 @@ name = "bevy"
 version = "0.15.0-dev"
 source = "git+https://github.com/bevyengine/bevy.git#05b0f28ebfb0df975c91ab2c7f96ab00cbe9c912"
 dependencies = [
+ "bevy_dylib",
  "bevy_internal",
 ]
 
@@ -544,6 +545,14 @@ dependencies = [
  "bevy_time",
  "bevy_utils",
  "const-fnv1a-hash",
+]
+
+[[package]]
+name = "bevy_dylib"
+version = "0.15.0-dev"
+source = "git+https://github.com/bevyengine/bevy.git#5def6f2a58362741b470154bfa44400d29cd094d"
+dependencies = [
+ "bevy_internal",
 ]
 
 [[package]]

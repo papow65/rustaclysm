@@ -16,7 +16,6 @@ members = [ "crates/*" ]
 [dependencies]
 base64 = "0.22"
 bevy = { git = "https://github.com/bevyengine/bevy.git", default-features = false, features = [ "bevy_asset", "bevy_core_pipeline", "bevy_pbr", "bevy_state", "bevy_text", "bevy_ui", "bevy_dev_tools", "ktx2", "multi_threaded", "png", "tonemapping_luts", "wayland", "x11" ] }
-#bevy_dylib = { git = "https://github.com/bevyengine/bevy.git" } # Uncomment this line (once) when `cargo run --features bevy/dynamic_linking` does not look for the right version
 bresenham = "0.1"
 cdda_json_files = { path = "crates/cdda_json_files" }
 either = { workspace = true }
@@ -41,6 +40,8 @@ serde = { version = "1", features = ["derive", "rc" ] }
 serde_json = "1"
 
 [features]
+# We use --no-default-features for production builds. See .github/workflows/ci.yml
+default = ["bevy/dynamic_linking"]
 log_archetypes = [] # print archetypes in use
 
 [profile.dev]

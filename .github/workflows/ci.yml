@@ -46,7 +46,7 @@ jobs:
       - name: 'Print rustc verion'
         run: rustc --version --verbose
       - name: 'Build'
-        run: cargo build --release
+        run: cargo build --release --no-default-features
       - name: 'List built files'
         run: 'ls -l target/release'
       - name: 'Rename'
