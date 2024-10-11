@@ -1,17 +1,30 @@
-use crate::gameplay::StaminaImpact;
+use crate::gameplay::{Nbor, StaminaCost, StaminaImpact};
 use bevy::prelude::Entity;
 use units::Duration;
 
 #[must_use]
 #[derive(Debug)]
 pub(crate) struct Impact {
-    pub(crate) timeout: Duration,
-    pub(crate) stamina_impact: StaminaImpact,
+    duration: Duration,
+    stamina_impact: StaminaImpact,
 }
 
 impl Impact {
-    pub(crate) fn check_validity(&self) {
-        assert!(Duration::ZERO < self.timeout, "{self:?} is invalid");
+    pub(crate) fn new(duration: Duration, stamina_impact: StaminaImpact) -> Self {
+        assert!(Duration::ZERO < duration, "invalid duration: {duration:?}");
+
+        Self {
+            duration,
+            stamina_impact,
+        }
+    }
+
+    pub(crate) const fn duration(&self) -> Duration {
+        self.duration
+    }
+
+    pub(crate) const fn stamina_impact(&self) -> StaminaImpact {
+        self.stamina_impact
     }
 }
 
@@ -23,17 +36,14 @@ pub(crate) struct ActorImpact {
 }
 
 impl ActorImpact {
-    pub(crate) const fn new(
+    pub(crate) fn new(
         actor_entity: Entity,
-        timeout: Duration,
+        duration: Duration,
         stamina_impact: StaminaImpact,
     ) -> Self {
         Self {
             actor_entity,
-            impact: Some(Impact {
-                timeout,
-                stamina_impact,
-            }),
+            impact: Some(Impact::new(duration, stamina_impact)),
         }
     }
 
@@ -44,18 +54,35 @@ impl ActorImpact {
         }
     }
 
-    pub(crate) const fn standing_rest(actor_entity: Entity, timeout: Duration) -> Self {
-        Self::new(actor_entity, timeout, StaminaImpact::StandingRest)
+    pub(crate) fn by_duration(
+        actor_entity: Entity,
+        duration: Duration,
+        cost_per_second: StaminaCost,
+    ) -> Self {
+        Self::new(
+            actor_entity,
+            duration,
+            StaminaImpact::Duration { cost_per_second },
+        )
     }
 
-    pub(crate) const fn laying_rest(actor_entity: Entity, timeout: Duration) -> Self {
-        Self::new(actor_entity, timeout, StaminaImpact::LayingRest)
+    pub(crate) fn by_nbor(
+        actor_entity: Entity,
+        duration: Duration,
+        cost_per_meter: StaminaCost,
+        nbor: Nbor,
+    ) -> Self {
+        Self::new(
+            actor_entity,
+            duration,
+            StaminaImpact::Nbor {
+                cost_per_meter,
+                nbor,
+            },
+        )
     }
 
-    pub(crate) const fn heavy(actor_entity: Entity, timeout: Duration) -> Self {
-        Self::new(actor_entity, timeout, StaminaImpact::Heavy)
-    }
-
+    /// No time passed
     pub(crate) const fn is_some(&self) -> bool {
         self.impact.is_some()
     }

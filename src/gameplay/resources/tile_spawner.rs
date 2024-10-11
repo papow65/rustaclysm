@@ -591,7 +591,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
         self.commands
             .entity(player)
             .insert(Player)
-            .insert(Stamina::Limited(Limited::full(300))) // override
+            .insert(Stamina::FULL)
             .insert(WalkingMode::Walking); // override
         self.configure_player(player);
 

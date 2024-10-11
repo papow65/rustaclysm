@@ -21,9 +21,9 @@ impl WalkingCost {
             },
         };
         new.equivalent_distance *= u64::from(move_cost.value());
-        if nbor_distance != NborDistance::Up {
-            // 2 is both the penalty for muving up and default move cost.
-            new.equivalent_distance /= 2;
+        new.equivalent_distance /= u64::from(MoveCost::default().value());
+        if nbor_distance == NborDistance::Up {
+            new.equivalent_distance *= 2;
         }
 
         new
@@ -79,8 +79,8 @@ mod volume_tests {
     #[test]
     fn parsing_works() {
         assert_eq!(
-            WalkingCost::new(NborDistance::Adjacent, MoveCost::default()).f32(),
-            0.001
+            WalkingCost::new(NborDistance::Adjacent, MoveCost::default()).equivalent_distance,
+            Distance::ADJACENT
         );
     }
 }

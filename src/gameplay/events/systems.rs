@@ -1,6 +1,6 @@
 use crate::gameplay::events::{
     ActorEvent, CorpseEvent, Damage, DespawnSubzoneLevel, DespawnZoneLevel, Healing, Message,
-    RefreshAfterBehavior, SpawnSubzoneLevel, SpawnZoneLevel, StaminaImpact, TerrainEvent,
+    RefreshAfterBehavior, SpawnSubzoneLevel, SpawnZoneLevel, TerrainEvent,
     UpdateZoneLevelVisibility,
 };
 use crate::gameplay::Toggle;
@@ -9,7 +9,6 @@ use bevy::prelude::{Commands, Event, Events, IntoSystemConfigs, ResMut};
 pub(super) fn create_event_resources(mut commands: Commands) {
     commands.insert_resource(Events::<ActorEvent<Damage>>::default());
     commands.insert_resource(Events::<ActorEvent<Healing>>::default());
-    commands.insert_resource(Events::<ActorEvent<StaminaImpact>>::default());
     commands.insert_resource(Events::<CorpseEvent<Damage>>::default());
     commands.insert_resource(Events::<DespawnSubzoneLevel>::default());
     commands.insert_resource(Events::<DespawnZoneLevel>::default());
@@ -28,7 +27,6 @@ pub(super) fn clear_event_resources() -> impl IntoSystemConfigs<()> {
     (
         clear_events::<ActorEvent<Damage>>,
         clear_events::<ActorEvent<Healing>>,
-        clear_events::<ActorEvent<StaminaImpact>>,
         clear_events::<CorpseEvent<Damage>>,
         clear_events::<DespawnSubzoneLevel>,
         clear_events::<DespawnZoneLevel>,

@@ -89,6 +89,7 @@ impl TryFrom<PosOffset> for HorizontalDirection {
     }
 }
 
+/// Neighbor
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub(crate) enum Nbor {
     Up,

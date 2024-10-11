@@ -5,7 +5,6 @@ mod healing;
 mod message;
 mod plugin;
 mod refresh_after_behavior;
-mod stamina_impact;
 mod systems;
 mod terrain_event;
 mod toggle;
@@ -18,7 +17,6 @@ pub(crate) use self::healing::Healing;
 pub(crate) use self::message::{Message, MessageWriter, Severity};
 pub(crate) use self::plugin::EventPlugin;
 pub(crate) use self::refresh_after_behavior::RefreshAfterBehavior;
-pub(crate) use self::stamina_impact::StaminaImpact;
 pub(crate) use self::terrain_event::{TerrainChange, TerrainEvent};
 pub(crate) use self::toggle::Toggle;
 pub(crate) use self::zone_events::{

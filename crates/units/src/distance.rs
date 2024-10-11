@@ -1,7 +1,7 @@
 use crate::{Duration, Speed};
 use std::ops::{Add, Div, DivAssign, Mul, MulAssign};
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Distance {
     millimeter: u64,
 }

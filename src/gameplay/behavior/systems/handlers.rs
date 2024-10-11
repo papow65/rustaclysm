@@ -5,8 +5,8 @@ use crate::gameplay::{
     Actor, ActorEvent, Amount, Clock, ContainerLimits, Corpse, CorpseEvent, CorpseRaise, Damage,
     Faction, Fragment, GameplayScreenState, Healing, Health, Hierarchy, Infos, Integrity, Item,
     Life, Limited, LocalTerrain, MessageWriter, ObjectCategory, ObjectDefinition, ObjectName,
-    Obstacle, Phrase, Player, Pos, Stamina, StaminaImpact, Subject, TerrainEvent, TileSpawner,
-    Toggle, VisualizationUpdate, WalkingMode,
+    Obstacle, Phrase, Player, Pos, Stamina, Subject, TerrainEvent, TileSpawner, Toggle,
+    VisualizationUpdate, WalkingMode,
 };
 use bevy::prelude::{
     Changed, Commands, DespawnRecursiveExt, Entity, EventReader, In, NextState, ParamSet, Parent,
@@ -15,27 +15,6 @@ use bevy::prelude::{
 use cdda_json_files::ObjectId;
 use std::time::Instant;
 use units::Duration;
-
-pub(in super::super) fn update_stamina(
-    mut stamina_impact_events: EventReader<ActorEvent<StaminaImpact>>,
-    mut staminas: Query<&mut Stamina>,
-) {
-    let start = Instant::now();
-
-    assert!(
-        stamina_impact_events.len() <= 1,
-        "Multiple stamina impact events: {:?}",
-        stamina_impact_events.read().collect::<Vec<_>>()
-    );
-
-    for stamina_impact_event in stamina_impact_events.read() {
-        if let Ok(mut stamina) = staminas.get_mut(stamina_impact_event.actor_entity) {
-            stamina.apply(stamina_impact_event.action);
-        }
-    }
-
-    log_if_slow("update_stamina", start);
-}
 
 #[expect(clippy::needless_pass_by_value)]
 pub(in super::super) fn toggle_doors(

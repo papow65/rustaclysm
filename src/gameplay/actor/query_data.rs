@@ -49,15 +49,6 @@ impl ActorItem<'_> {
         }
     }
 
-    fn low_speed(&self) -> Option<Speed> {
-        match self.stamina.breath() {
-            Breath::Normal | Breath::AlmostWinded => {
-                Some(self.base_speed.speed(&WalkingMode::Walking, Breath::Normal))
-            }
-            Breath::Winded => None,
-        }
-    }
-
     fn hands<'a>(&self, hierarchy: &'a Hierarchy) -> Container<'a> {
         Container::new(
             self.body_containers.expect("Body containers present").hands,
@@ -78,18 +69,27 @@ impl ActorItem<'_> {
         ActorImpact::none(self.entity)
     }
 
-    const fn standard_impact(&self, timeout: Duration) -> ActorImpact {
-        ActorImpact::new(
-            self.entity,
-            timeout,
-            self.walking_mode.stamina_impact(self.stamina.breath()),
-        )
+    pub(crate) fn impact_from_duration(
+        &self,
+        duration: Duration,
+        cost_per_second: StaminaCost,
+    ) -> ActorImpact {
+        ActorImpact::by_duration(self.entity, duration, cost_per_second)
+    }
+
+    pub(crate) fn impact_from_nbor(
+        &self,
+        duration: Duration,
+        cost_per_meter: StaminaCost,
+        nbor: Nbor,
+    ) -> ActorImpact {
+        ActorImpact::by_nbor(self.entity, duration, cost_per_meter, nbor)
     }
 
     pub(crate) fn stay(&self) -> ActorImpact {
-        ActorImpact::standing_rest(
-            self.entity,
+        self.impact_from_duration(
             Distance::ADJACENT / 2 / self.high_speed().unwrap_or_else(|| self.speed()),
+            StaminaCost::STANDING_REST,
         )
     }
 
@@ -126,11 +126,7 @@ impl ActorItem<'_> {
             eprintln!("Unexpected {player_action_state:?} while sleeping");
         }
 
-        ActorImpact::laying_rest(self.entity, sleep_duration)
-    }
-
-    fn activate(&self) -> ActorImpact {
-        self.standard_impact(Distance::ADJACENT * 3 / self.speed())
+        self.impact_from_duration(sleep_duration, StaminaCost::LYING_REST)
     }
 
     pub(crate) fn step(
@@ -148,7 +144,12 @@ impl ActorItem<'_> {
             Collision::Pass => {
                 commands.entity(self.entity).insert(to);
                 envir.location.move_(self.entity, to);
-                self.standard_impact(envir.walking_cost(from, to).duration(self.speed()))
+                let walking_cost = envir.walking_cost(from, to);
+                self.impact_from_nbor(
+                    walking_cost.duration(self.speed()),
+                    self.walking_mode.stamina_impact(self.stamina.breath()),
+                    step.to,
+                )
             }
             //Collision::Fall(fall_pos) => {
             //    pos = fall_pos;
@@ -177,7 +178,7 @@ impl ActorItem<'_> {
                     terrain_entity: door,
                     change: Toggle::Open,
                 });
-                self.standard_impact(envir.walking_cost(from, to).duration(self.speed()))
+                self.impact_from_duration(Duration::SECOND, StaminaCost::NEUTRAL)
             }
         }
     }
@@ -185,12 +186,9 @@ impl ActorItem<'_> {
     fn damage<E: Event, N>(
         &self,
         damage_writer: &mut EventWriter<E>,
-        envir: &Envir,
         infos: &Infos,
         hierarchy: &Hierarchy,
         damaged: Entity,
-        damaged_pos: Pos,
-        speed: Speed,
         new: N,
     ) -> ActorImpact
     where
@@ -210,16 +208,7 @@ impl ActorItem<'_> {
         };
         damage_writer.send(new(damaged, damage));
 
-        // Needed when a character smashes something at it's own position
-        let cost_pos = if *self.pos == damaged_pos {
-            self.pos.horizontal_offset(1, 0)
-        } else {
-            damaged_pos
-        };
-        ActorImpact::heavy(
-            self.entity,
-            envir.walking_cost(*self.pos, cost_pos).duration(speed),
-        )
+        self.impact_from_duration(Duration::SECOND, StaminaCost::HEAVY)
     }
 
     pub(crate) fn attack(
@@ -231,7 +220,7 @@ impl ActorItem<'_> {
         hierarchy: &Hierarchy,
         attack: &Attack,
     ) -> ActorImpact {
-        let Some(high_speed) = self.high_speed() else {
+        if self.stamina.breath() == Breath::Winded {
             message_writer
                 .subject(self.subject())
                 .is()
@@ -243,16 +232,7 @@ impl ActorItem<'_> {
         let target = envir.get_nbor(*self.pos, attack.target).expect("Valid pos");
 
         if let Some((defender, _)) = envir.find_character(target) {
-            self.damage(
-                damage_writer,
-                envir,
-                infos,
-                hierarchy,
-                defender,
-                target,
-                high_speed,
-                ActorEvent::new,
-            )
+            self.damage(damage_writer, infos, hierarchy, defender, ActorEvent::new)
         } else {
             message_writer
                 .subject(self.subject())
@@ -272,7 +252,7 @@ impl ActorItem<'_> {
         hierarchy: &Hierarchy,
         smash: &Smash,
     ) -> ActorImpact {
-        let Some(high_speed) = self.high_speed() else {
+        if self.stamina.breath() == Breath::Winded {
             message_writer
                 .subject(self.subject())
                 .is()
@@ -303,12 +283,9 @@ impl ActorItem<'_> {
         } else if let Some(smashable) = envir.find_smashable(target) {
             self.damage(
                 damage_writer,
-                envir,
                 infos,
                 hierarchy,
                 smashable,
-                target,
-                high_speed,
                 TerrainEvent::new,
             )
         } else {
@@ -330,7 +307,7 @@ impl ActorItem<'_> {
         hierarchy: &Hierarchy,
         pulp: &Pulp,
     ) -> ActorImpact {
-        let Some(high_speed) = self.high_speed() else {
+        if self.stamina.breath() == Breath::Winded {
             message_writer
                 .subject(self.subject())
                 .is()
@@ -344,12 +321,9 @@ impl ActorItem<'_> {
         if let Some(pulpable_entity) = envir.find_pulpable(target) {
             self.damage(
                 corpse_damage_writer,
-                envir,
                 infos,
                 hierarchy,
                 pulpable_entity,
-                target,
-                high_speed,
                 CorpseEvent::new,
             )
         } else {
@@ -376,13 +350,14 @@ impl ActorItem<'_> {
             .expect("Valid pos");
 
         match envir.collide(from, to, true) {
-            Collision::Pass | Collision::Ledged => {
-                if let Some(low_speed) = self.low_speed() {
+            Collision::Pass | Collision::Ledged => match self.stamina.breath() {
+                Breath::Normal | Breath::AlmostWinded => {
                     player_action_state.set(PlayerActionState::Peeking {
                         direction: peek.target,
                     });
-                    self.standard_impact(envir.walking_cost(from, to).duration(low_speed))
-                } else {
+                    self.impact_from_duration(Duration::SECOND, StaminaCost::NEUTRAL)
+                }
+                Breath::Winded => {
                     message_writer
                         .subject(self.subject())
                         .is()
@@ -390,7 +365,7 @@ impl ActorItem<'_> {
                         .send_warn();
                     self.no_impact()
                 }
-            }
+            },
             _ => {
                 message_writer.you("can't peek there").send_warn();
                 self.no_impact()
@@ -422,7 +397,7 @@ impl ActorItem<'_> {
                     terrain_entity: closeable,
                     change: Toggle::Close,
                 });
-                self.standard_impact(envir.walking_cost(*self.pos, target).duration(self.speed()))
+                self.impact_from_duration(Duration::SECOND, StaminaCost::NEUTRAL)
             }
         } else {
             let missing = ObjectName::missing();
@@ -525,7 +500,7 @@ impl ActorItem<'_> {
             } else {
                 Self::take_all(commands, target.entity, taken.entity);
             }
-            self.activate()
+            self.impact_from_duration(Duration::SECOND, StaminaCost::NEUTRAL)
         } else {
             self.no_impact()
         }
@@ -619,7 +594,7 @@ impl ActorItem<'_> {
             .insert((Visibility::default(), to))
             .set_parent(new_parent);
         location.move_(moved.entity, to);
-        self.activate()
+        self.impact_from_duration(Duration::SECOND, StaminaCost::NEUTRAL)
     }
 
     pub(crate) fn start_craft(
@@ -720,8 +695,7 @@ impl ActorItem<'_> {
                 .add("left")
                 .send(Severity::Info, true);
         }
-
-        ActorImpact::new(self.entity, crafting_progress, StaminaImpact::Neutral)
+        self.impact_from_duration(crafting_progress, StaminaCost::NEUTRAL)
     }
 
     pub(crate) fn examine_item(

@@ -6,7 +6,6 @@ use crate::gameplay::behavior::systems::core::{
 use crate::gameplay::behavior::systems::handlers::{
     combine_items, spawn_broken_terrain, toggle_doors, update_corpses, update_damaged_characters,
     update_damaged_corpses, update_damaged_terrain, update_explored, update_healed_characters,
-    update_stamina,
 };
 use crate::gameplay::behavior::systems::refresh::{
     check_items, update_hidden_item_visibility, update_peeking_transforms, update_transforms,
@@ -15,7 +14,7 @@ use crate::gameplay::behavior::systems::refresh::{
 use crate::gameplay::systems::update_visualization_on_item_move;
 use crate::gameplay::{
     ActorEvent, CorpseEvent, Damage, Healing, InstructionQueue, PlayerActionState,
-    RefreshAfterBehavior, RelativeSegments, StaminaImpact, TerrainEvent, Toggle,
+    RefreshAfterBehavior, RelativeSegments, TerrainEvent, Toggle,
 };
 use bevy::ecs::system::SystemState;
 use bevy::prelude::{
@@ -103,7 +102,6 @@ pub(super) fn behavior_systems() -> impl IntoSystemConfigs<()> {
                 // Make sure killed actors are handled early
                 update_damaged_characters.run_if(on_event::<ActorEvent<Damage>>),
                 (
-                    update_stamina.run_if(on_event::<ActorEvent<StaminaImpact>>),
                     update_healed_characters.run_if(on_event::<ActorEvent<Healing>>),
                     update_corpses,
                     update_explored,

@@ -20,5 +20,7 @@ pub(crate) use self::planned_action::PlannedAction;
 pub(crate) use self::player::{Player, PlayerActionState};
 pub(crate) use self::plugin::ActorPlugin;
 pub(crate) use self::query_data::{Actor, ActorItem};
-pub(crate) use self::stats::{Aquatic, BaseSpeed, Health, Stamina, WalkingMode};
+pub(crate) use self::stats::{
+    Aquatic, BaseSpeed, Health, Stamina, StaminaCost, StaminaImpact, WalkingMode,
+};
 pub(crate) use self::subject::Subject;

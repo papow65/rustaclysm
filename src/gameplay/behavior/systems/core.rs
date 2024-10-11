@@ -582,22 +582,23 @@ pub(in super::super) fn perform_change_pace(
 pub(in super::super) fn proces_impact(
     In(actor_impact): In<Option<ActorImpact>>,
     mut message_writer: MessageWriter,
-    mut stamina_impact_events: EventWriter<ActorEvent<StaminaImpact>>,
     mut timeouts: ResMut<Timeouts>,
+    mut staminas: Query<&mut Stamina>,
     players: Query<Entity, With<Player>>,
 ) {
     let start = Instant::now();
 
     let Some(actor_impact) = actor_impact else {
-        // No egible characters
+        // No egible characters, usually because we are waiting for user input
         return;
     };
 
     let actor = actor_impact.actor_entity;
     if let Some(impact) = actor_impact.impact {
-        impact.check_validity();
-        timeouts.add(actor, impact.timeout);
-        stamina_impact_events.send(ActorEvent::new(actor, impact.stamina_impact));
+        timeouts.add(actor, impact.duration());
+        if let Ok(mut stamina) = staminas.get_mut(actor) {
+            stamina.apply(&impact);
+        }
     } else if players.get(actor).is_err() {
         message_writer.str("NPC action failed").send_error();
         // To prevent the application hanging on failing NPC actions, we add a small timeout
