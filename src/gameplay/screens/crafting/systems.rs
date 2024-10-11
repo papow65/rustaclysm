@@ -187,7 +187,7 @@ pub(super) fn move_crafting_selection(
     infos: Res<Infos>,
     fonts: Res<Fonts>,
     mut crafting_screen: ResMut<CraftingScreen>,
-    mut recipes: Query<(&mut Text, &Transform, &Node, &RecipeSituation)>,
+    mut recipes: Query<(&mut TextStyle, &Transform, &Node, &RecipeSituation)>,
     mut scrolling_lists: Query<(&mut ScrollingList, &mut Style, &Parent, &Node)>,
     scrolling_parents: Query<(&Node, &Style), Without<ScrollingList>>,
 ) {
@@ -291,8 +291,8 @@ pub(super) fn refresh_crafting_screen(
     commands
         .entity(crafting_screen.recipe_list)
         .with_children(|parent| {
-            parent.spawn(TextBundle::from_section(
-                String::from("Known recipies:"),
+            parent.spawn((
+                Text::from("Known recipies:"),
                 fonts.regular(WARN_TEXT_COLOR),
             ));
 
@@ -304,24 +304,22 @@ pub(super) fn refresh_crafting_screen(
 
                 let entity = parent
                     .spawn((
-                        TextBundle::from_section(
-                            String::from(&*recipe.name),
-                            fonts.regular(recipe.color(first)),
-                        ),
+                        Text::from(&*recipe.name),
+                        fonts.regular(recipe.color(first)),
                         recipe,
                     ))
                     .id();
                 crafting_screen.selection_list.append(entity);
             }
 
-            parent.spawn(TextBundle::from_section(
-                String::from("\nNearby tools:"),
+            parent.spawn((
+                Text::from("\nNearby tools:"),
                 fonts.regular(WARN_TEXT_COLOR),
             ));
 
             for (_, amount, name) in shown_qualities {
-                parent.spawn(TextBundle::from_section(
-                    format!("{amount} {name}"),
+                parent.spawn((
+                    Text::from(format!("{amount} {name}")),
                     fonts.regular(GOOD_TEXT_COLOR),
                 ));
             }
@@ -340,8 +338,8 @@ pub(super) fn refresh_crafting_screen(
         commands
             .entity(crafting_screen.recipe_details)
             .with_children(|parent| {
-                parent.spawn(TextBundle::from_section(
-                    String::from("No recipes known"),
+                parent.spawn((
+                    Text::from("No recipes known"),
                     fonts.regular(BAD_TEXT_COLOR),
                 ));
             });
@@ -703,9 +701,13 @@ fn show_recipe(
                 start_craft_system.0,
             )
             .spawn(parent, ());
-            parent.spawn(TextBundle::from_sections(
-                recipe_sitation.text_sections(fonts, recipe),
-            ));
+            parent
+                .spawn((Text::default(), fonts.standard()))
+                .with_children(|parent| {
+                    for section in recipe_sitation.text_sections(fonts, recipe) {
+                        parent.spawn(section);
+                    }
+                });
         });
 }
 

@@ -3,8 +3,7 @@ use crate::keyboard::{Key, KeyBinding};
 use bevy::ecs::system::SystemId;
 use bevy::prelude::{
     AlignItems, BuildChildren, Bundle, ButtonBundle, ChildBuild, ChildBuilder, Commands, Component,
-    Entity, In, JustifyContent, NodeBundle, PositionType, Style, SystemInput, TextBundle,
-    TextStyle, Val,
+    Entity, In, JustifyContent, NodeBundle, PositionType, Style, SystemInput, Text, TextStyle, Val,
 };
 use std::fmt;
 
@@ -96,10 +95,7 @@ where
         ));
 
         entity_commands.with_children(|parent| {
-            parent.spawn(TextBundle::from_section(
-                format!("{}", self.caption),
-                self.text_style.clone(),
-            ));
+            parent.spawn((Text(format!("{}", self.caption)), self.text_style.clone()));
         });
 
         if let Some((key, key_binding)) = self.key_binding {
@@ -121,11 +117,11 @@ where
                         ..NodeBundle::default()
                     })
                     .with_children(|parent| {
-                        parent.spawn(TextBundle::from_section(
-                            match key {
+                        parent.spawn((
+                            Text(match key {
                                 Key::Character(c) => format!("[{c}] "),
                                 Key::Code(c) => format!("[{c:?}] "),
-                            },
+                            }),
                             key_text_style,
                         ));
                     });

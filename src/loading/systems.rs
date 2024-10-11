@@ -7,7 +7,7 @@ use crate::hud::{Fonts, DEFAULT_BUTTON_COLOR, HARD_TEXT_COLOR};
 use crate::loading::LoadingState;
 use bevy::prelude::{
     AlignItems, Assets, BuildChildren, ChildBuild, Commands, GlobalZIndex, JustifyContent, Local,
-    NextState, NodeBundle, PositionType, Res, ResMut, State, StateScoped, Style, TextBundle, Val,
+    NextState, NodeBundle, PositionType, Res, ResMut, State, StateScoped, Style, Text, Val,
 };
 
 #[expect(clippy::needless_pass_by_value)]
@@ -42,10 +42,7 @@ pub(crate) fn spawn_loading(mut commands: Commands, fonts: Res<Fonts>) {
                     ..NodeBundle::default()
                 })
                 .with_children(|parent| {
-                    parent.spawn(TextBundle::from_section(
-                        "Loading...",
-                        fonts.large(HARD_TEXT_COLOR),
-                    ));
+                    parent.spawn((Text::from("Loading..."), fonts.large(HARD_TEXT_COLOR)));
                 });
         });
 }

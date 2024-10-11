@@ -4,7 +4,7 @@ use crate::manual::components::{ManualDisplay, ManualText};
 use crate::manual::ManualSection;
 use bevy::prelude::{
     Alpha, BackgroundColor, BuildChildren, Changed, ChildBuild, Children, Commands, GlobalZIndex,
-    Query, RemovedComponents, Res, State, Text, TextBundle, TextSection, Val, With,
+    Query, RemovedComponents, Res, State, Text, Val, With,
 };
 
 #[expect(clippy::needless_pass_by_value)]
@@ -20,19 +20,7 @@ pub(super) fn spawn_manual(
     commands
         .spawn((background, GlobalZIndex(2), ManualDisplay))
         .with_children(|parent| {
-            parent.spawn((
-                TextBundle {
-                    text: Text {
-                        sections: vec![TextSection {
-                            value: String::new(),
-                            style: fonts.standard(),
-                        }],
-                        ..Text::default()
-                    },
-                    ..TextBundle::default()
-                },
-                ManualText,
-            ));
+            parent.spawn((Text::default(), fonts.standard(), ManualText));
         });
 }
 
@@ -66,19 +54,13 @@ pub(super) fn update_manual(
 
     let mut sections = sections.iter().collect::<Vec<_>>();
     sections.sort_by_key(|section| section.sort_key());
-    manual_text
-        .single_mut()
-        .sections
-        .get_mut(0)
-        .expect("Manual text should have a single section")
-        .value
-        .replace_range(
-            ..,
-            sections
-                .iter()
-                .map(|section| section.text())
-                .collect::<Vec<_>>()
-                .join("\n")
-                .as_str(),
-        );
+    manual_text.single_mut().0.replace_range(
+        ..,
+        sections
+            .iter()
+            .map(|section| section.text())
+            .collect::<Vec<_>>()
+            .join("\n")
+            .as_str(),
+    );
 }

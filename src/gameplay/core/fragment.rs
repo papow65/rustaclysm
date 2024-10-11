@@ -1,5 +1,5 @@
 use crate::{gameplay::Pos, hud::GOOD_TEXT_COLOR};
-use bevy::prelude::{Color, TextSection, TextStyle};
+use bevy::prelude::{Color, TextSpan, TextStyle};
 use regex::Regex;
 use std::{cmp::Eq, fmt, sync::LazyLock};
 
@@ -107,27 +107,28 @@ impl Phrase {
     }
 
     #[must_use]
-    pub(crate) fn as_text_sections(&self, text_style: &TextStyle) -> Vec<TextSection> {
+    pub(crate) fn as_text_sections(&self, text_style: &TextStyle) -> Vec<(TextSpan, TextStyle)> {
         self.fragments.iter().filter(|f| !f.text.is_empty()).fold(
             Vec::new(),
             |mut text_sections, f| {
                 let text_style = text_style.clone();
 
-                text_sections.push(TextSection {
-                    value: if text_sections
-                        .last()
-                        .map_or(false, |l| Self::space_between(&l.value, &f.text))
-                    {
-                        format!(" {}", f.text)
-                    } else {
-                        f.text.clone()
-                    },
-                    style: TextStyle {
-                        font: text_style.font,
-                        font_size: text_style.font_size,
+                text_sections.push((
+                    TextSpan(
+                        if text_sections
+                            .last()
+                            .map_or(false, |l| Self::space_between(&l.0 .0, &f.text))
+                        {
+                            format!(" {}", f.text)
+                        } else {
+                            f.text.clone()
+                        },
+                    ),
+                    TextStyle {
                         color: f.color.unwrap_or(text_style.color),
+                        ..text_style
                     },
-                });
+                ));
                 text_sections
             },
         )
@@ -137,7 +138,7 @@ impl Phrase {
     pub(crate) fn as_string(&self) -> String {
         self.as_text_sections(&TextStyle::default())
             .into_iter()
-            .map(|text_section| text_section.value)
+            .map(|text_section| text_section.0 .0)
             .collect::<String>()
     }
 

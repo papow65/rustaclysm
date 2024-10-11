@@ -13,7 +13,7 @@ use bevy::prelude::{
     AlignContent, AlignItems, BuildChildren, Camera2d, ChildBuild, ChildBuilder, Commands,
     DespawnRecursiveExt, Display, Entity, Events, FlexDirection, FlexWrap, GlobalZIndex, In,
     JustifyContent, Local, NextState, NodeBundle, Query, Res, ResMut, StateScoped, Style, Text,
-    TextBundle, UiRect, Val, With, Without, World,
+    UiRect, Val, With, Without, World,
 };
 use bevy::{app::AppExit, ecs::system::SystemId};
 use glob::glob;
@@ -98,26 +98,21 @@ pub(crate) fn create_main_menu_key_bindings(
 }
 
 fn add_title(parent: &mut ChildBuilder, fonts: &Fonts) {
-    parent.spawn(TextBundle::from_section(
-        "Rustaclysm",
-        fonts.huge(HARD_TEXT_COLOR),
-    ));
+    parent.spawn((Text::from("Rustaclysm"), fonts.huge(HARD_TEXT_COLOR)));
 }
 
 fn add_tagline(parent: &mut ChildBuilder, fonts: &Fonts) {
-    parent.spawn(
-        TextBundle::from_section(
-            "A 3D reimplementation of Cataclysm: Dark Days Ahead",
-            fonts.largish(HARD_TEXT_COLOR),
-        )
-        .with_style(Style {
+    parent.spawn((
+        Text::from("A 3D reimplementation of Cataclysm: Dark Days Ahead"),
+        fonts.largish(HARD_TEXT_COLOR),
+        Style {
             margin: UiRect {
                 bottom: LARGE_SPACING,
                 ..UiRect::default()
             },
             ..Style::default()
-        }),
-    );
+        },
+    ));
 }
 
 fn add_load_button_area(parent: &mut ChildBuilder) {
@@ -164,15 +159,13 @@ fn add_notification_area(parent: &mut ChildBuilder, fonts: &Fonts) {
         ))
         .with_children(|parent| {
             parent.spawn((
-                TextBundle {
-                    text: Text::from_section("", fonts.largish(HARD_TEXT_COLOR)),
-                    style: Style {
-                        width: Val::Px(FULL_WIDTH),
-                        padding: UiRect::horizontal(MEDIUM_SPACING),
-                        flex_wrap: FlexWrap::Wrap,
-                        ..Style::default()
-                    },
-                    ..TextBundle::default()
+                Text::default(),
+                fonts.largish(HARD_TEXT_COLOR),
+                Style {
+                    width: Val::Px(FULL_WIDTH),
+                    padding: UiRect::horizontal(MEDIUM_SPACING),
+                    flex_wrap: FlexWrap::Wrap,
+                    ..Style::default()
                 },
                 MessageField,
             ));
@@ -235,7 +228,7 @@ pub(super) fn update_sav_files(
             message_wrapper_style.display = Display::Flex;
 
             let mut message_text = message_fields.single_mut();
-            message_text.sections[0].value = err.to_string();
+            message_text.0 = err.to_string();
         }
     }
 }

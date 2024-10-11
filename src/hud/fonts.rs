@@ -24,6 +24,7 @@ impl Fonts {
             font: self.fira.clone(),
             font_size: Self::REGULAR_FONT_SIZE,
             color,
+            ..TextStyle::default()
         }
     }
 
@@ -36,6 +37,7 @@ impl Fonts {
             font: self.fira.clone(),
             font_size: Self::LARGISH_FONT_SIZE,
             color,
+            ..TextStyle::default()
         }
     }
 
@@ -44,6 +46,7 @@ impl Fonts {
             font: self.fira.clone(),
             font_size: Self::LARGE_FONT_SIZE,
             color,
+            ..TextStyle::default()
         }
     }
 
@@ -52,6 +55,7 @@ impl Fonts {
             font: self.fira.clone(),
             font_size: Self::HUGE_FONT_SIZE,
             color,
+            ..TextStyle::default()
         }
     }
 }

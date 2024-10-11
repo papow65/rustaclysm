@@ -8,7 +8,7 @@ use crate::{application::ApplicationState, gameplay::GameplayScreenState};
 use bevy::ecs::system::SystemId;
 use bevy::prelude::{
     AlignItems, BuildChildren, ChildBuild, Commands, FlexDirection, In, JustifyContent, KeyCode,
-    Local, NextState, NodeBundle, Res, ResMut, StateScoped, Style, TextBundle, UiRect, Val, World,
+    Local, NextState, NodeBundle, Res, ResMut, StateScoped, Style, Text, UiRect, Val, World,
 };
 use std::time::Instant;
 
@@ -69,10 +69,7 @@ pub(super) fn spawn_death_screen(
                             ..NodeBundle::default()
                         })
                         .with_children(|parent| {
-                            parent.spawn(TextBundle::from_section(
-                                "You died",
-                                fonts.largish(BAD_TEXT_COLOR),
-                            ));
+                            parent.spawn((Text::from("You died"), fonts.largish(BAD_TEXT_COLOR)));
                         });
 
                     ButtonBuilder::new(

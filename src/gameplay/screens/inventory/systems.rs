@@ -172,10 +172,12 @@ pub(super) fn create_inventory_key_bindings(
 #[expect(clippy::needless_pass_by_value)]
 fn move_inventory_selection(
     In(key): In<Key>,
+    mut commands: Commands,
     mut inventory: ResMut<InventoryScreen>,
     item_lines: Query<(&InventoryItemLine, &Children)>,
-    mut item_texts: Query<(&mut Text, Option<&InventoryItemDescription>)>,
+    item_texts: Query<(Entity, &InventoryItemDescription)>,
     item_buttons: Query<&Children, With<Button>>,
+    mut text_styles: Query<&mut TextStyle>,
     item_layouts: Query<(&Transform, &Node)>,
     mut scrolling_lists: Query<(&mut ScrollingList, &mut Style, &Parent, &Node)>,
     scrolling_parents: Query<(&Node, &Style), Without<ScrollingList>>,
@@ -185,7 +187,14 @@ fn move_inventory_selection(
         return;
     };
 
-    inventory.adjust_selection(&item_lines, &mut item_texts, &item_buttons, &key_code);
+    inventory.adjust_selection(
+        &mut commands,
+        &item_lines,
+        &item_texts,
+        &item_buttons,
+        &mut text_styles,
+        &key_code,
+    );
     follow_selected(
         &inventory,
         &item_layouts,
@@ -277,17 +286,13 @@ pub(super) fn refresh_inventory(
                 &inventory.section_text_style
             };
 
-            let mut text_sections = vec![TextSection::new(
-                format!("[{section}]"),
-                section_style.clone(),
-            )];
-            if drop_section {
-                text_sections.push(TextSection::new(
-                    String::from("(dropping here)"),
-                    section_style.clone(),
-                ));
-            }
-            parent.spawn(TextBundle::from_sections(text_sections));
+            parent
+                .spawn((Text::new(format!("[{section}]")), section_style.clone()))
+                .with_children(|parent| {
+                    if drop_section {
+                        parent.spawn((TextSpan::from("(dropping here)"), section_style.clone()));
+                    }
+                });
 
             for (item_entity, id, item_phrase) in items {
                 if let Some(item_info) = infos.try_item(id) {
@@ -329,10 +334,7 @@ pub(super) fn refresh_inventory(
             }
 
             // empty line
-            parent.spawn(TextBundle::from_section(
-                String::from(" "),
-                inventory.section_text_style.clone(),
-            ));
+            parent.spawn((Text::from(" "), inventory.section_text_style.clone()));
         }
     });
 }
@@ -394,7 +396,7 @@ fn add_row(
     item_entity: Entity,
     item_phrase: &Phrase,
     item_info: &ItemInfo,
-    item_syle: &TextStyle,
+    item_text_style: &TextStyle,
     drop_section: bool,
     inventory_system: &InventorySystem,
 ) -> Entity {
@@ -413,54 +415,56 @@ fn add_row(
             InventoryItemLine { item: item_entity },
         ))
         .with_children(|parent| {
-            parent.spawn((
-                TextBundle::from_sections(item_phrase.as_text_sections(item_syle)).with_style(
+            parent
+                .spawn((
+                    Text::default(),
+                    item_text_style.clone(),
                     Style {
                         width: Val::Px(200.0),
                         overflow: Overflow::clip(),
                         ..Style::default()
                     },
-                ),
-                InventoryItemDescription(item_phrase.clone()),
+                    InventoryItemDescription(item_phrase.clone()),
+                ))
+                .with_children(|parent| {
+                    for section in item_phrase.as_text_sections(item_text_style) {
+                        parent.spawn(section);
+                    }
+                });
+
+            parent.spawn((
+                Text::from(if let Some(ref volume) = item_info.volume {
+                    format!("{volume}")
+                } else {
+                    String::new()
+                }),
+                item_text_style.clone(),
+                Style {
+                    width: Val::Px(60.0),
+                    overflow: Overflow::clip(),
+                    justify_content: JustifyContent::End,
+                    ..Style::default()
+                },
             ));
 
-            parent.spawn(
-                TextBundle::from_section(
-                    if let Some(ref volume) = item_info.volume {
-                        format!("{volume}")
-                    } else {
-                        String::new()
-                    },
-                    item_syle.clone(),
-                )
-                .with_style(Style {
+            parent.spawn((
+                Text::from(if let Some(ref mass) = item_info.mass {
+                    format!("{mass}")
+                } else {
+                    String::new()
+                }),
+                item_text_style.clone(),
+                Style {
                     width: Val::Px(60.0),
                     overflow: Overflow::clip(),
                     justify_content: JustifyContent::End,
                     ..Style::default()
-                }),
-            );
-
-            parent.spawn(
-                TextBundle::from_section(
-                    if let Some(ref mass) = item_info.mass {
-                        format!("{mass}")
-                    } else {
-                        String::new()
-                    },
-                    item_syle.clone(),
-                )
-                .with_style(Style {
-                    width: Val::Px(60.0),
-                    overflow: Overflow::clip(),
-                    justify_content: JustifyContent::End,
-                    ..Style::default()
-                }),
-            );
+                },
+            ));
 
             for action in actions(section, drop_section) {
                 let caption = format!("{}", &action);
-                ButtonBuilder::new(caption, item_syle.clone(), inventory_system.0).spawn(
+                ButtonBuilder::new(caption, item_text_style.clone(), inventory_system.0).spawn(
                     parent,
                     InventoryButton {
                         item: item_entity,
