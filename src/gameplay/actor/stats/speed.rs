@@ -1,7 +1,6 @@
 use crate::gameplay::{Breath, StaminaCost};
 use crate::hud::{BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR};
 use bevy::prelude::{Color, Component, Mix};
-use std::fmt;
 use units::Speed;
 
 // Stats for characters
@@ -22,12 +21,6 @@ impl BaseSpeed {
         let average_speed = WalkingMode::Walking.standard_speed(Breath::Normal);
         self.0
             .combine(walking_mode.standard_speed(breath), average_speed)
-    }
-}
-
-impl fmt::Display for BaseSpeed {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Max speed {}", self.0)
     }
 }
 
@@ -92,12 +85,23 @@ impl WalkingMode {
     }
 
     #[must_use]
-    pub(crate) fn color(&self) -> Color {
+    pub(crate) fn breath_color(&self) -> Color {
         match self {
             Self::Walking => GOOD_TEXT_COLOR,
             Self::Crouching | Self::SpeedWalking => HARD_TEXT_COLOR.mix(&WARN_TEXT_COLOR, 0.5),
             Self::Running => WARN_TEXT_COLOR,
             Self::Sprinting => BAD_TEXT_COLOR,
+        }
+    }
+
+    #[must_use]
+    pub(crate) fn speed_color(&self) -> Color {
+        match self {
+            Self::Crouching => BAD_TEXT_COLOR,
+            Self::Walking => HARD_TEXT_COLOR.mix(&BAD_TEXT_COLOR, 0.5),
+            Self::SpeedWalking => HARD_TEXT_COLOR,
+            Self::Running => HARD_TEXT_COLOR.mix(&GOOD_TEXT_COLOR, 0.5),
+            Self::Sprinting => GOOD_TEXT_COLOR,
         }
     }
 }

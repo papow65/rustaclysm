@@ -77,7 +77,9 @@ fn spawn_status_display(fonts: &Fonts, parent: &mut EntityCommands) {
                     .spawn((Text::default(), fonts.standard(), BreathText))
                     .with_children(|parent| {
                         parent.spawn((TextSpan::default(), fonts.standard(), WalkingModeTextSpan));
+                        parent.spawn((TextSpan::new(" ("), fonts.standard()));
                         parent.spawn((TextSpan::default(), fonts.standard(), SpeedTextSpan));
+                        parent.spawn((TextSpan::new(" km/h)"), fonts.standard()));
                     });
                 parent.spawn((Text::default(), fonts.standard(), PlayerActionStateText));
                 parent.spawn((Text::new("Weapon: "), fonts.standard(), WieldedText));
@@ -377,12 +379,17 @@ fn update_status_speed(
         let mut walking_mode_text_span = text_parts.p1();
         let (mut text_span, mut style) = walking_mode_text_span.single_mut();
         text_span.0 = String::from(walking_mode.as_str());
-        style.color = walking_mode.color();
+        style.color = walking_mode.breath_color();
 
         let mut speed_text_span = text_parts.p2();
         let (mut text_span, mut style) = speed_text_span.single_mut();
-        text_span.0 = format!(" ({})\n", player_actor.speed());
-        style.color = walking_mode.color();
+        let kmph = player_actor.speed().as_kmph();
+        text_span.0 = if kmph < 9.95 {
+            format!("{kmph:.1}")
+        } else {
+            format!("{kmph:.0}")
+        };
+        style.color = walking_mode.speed_color();
     }
 
     log_if_slow("update_status_speed", start);

@@ -19,6 +19,11 @@ impl Speed {
     }
 
     #[must_use]
+    pub fn as_kmph(&self) -> f32 {
+        self.millimeter_per_second as f32 * 3_600.0 / 1_000_000.0
+    }
+
+    #[must_use]
     pub const fn combine(&self, other: Self, average: Self) -> Self {
         Self {
             millimeter_per_second: self.millimeter_per_second * other.millimeter_per_second
@@ -28,12 +33,6 @@ impl Speed {
 }
 
 impl fmt::Debug for Speed {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{self}") // use Display
-    }
-}
-
-impl fmt::Display for Speed {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
