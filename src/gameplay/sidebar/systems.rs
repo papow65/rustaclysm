@@ -66,12 +66,12 @@ fn spawn_status_display(fonts: &Fonts, parent: &mut EntityCommands) {
                 parent
                     .spawn((Text::default(), fonts.standard(), HealthText))
                     .with_children(|parent| {
-                        parent.spawn((TextSpan::new(" health"), fonts.standard()));
+                        parent.spawn((TextSpan::new("% health"), fonts.standard()));
                     });
                 parent
                     .spawn((Text::default(), fonts.standard(), StaminaText))
                     .with_children(|parent| {
-                        parent.spawn((TextSpan::new(" stamina"), fonts.standard()));
+                        parent.spawn((TextSpan::new("% stamina"), fonts.standard()));
                     });
                 parent
                     .spawn((Text::default(), fonts.standard(), BreathText))
@@ -318,7 +318,7 @@ fn update_status_health(
     if let Ok(health) = health.get_single() {
         let (mut text, mut style) = text.single_mut();
 
-        text.0 = format!("{}", health.0.current());
+        text.0 = format!("{:3}", health.0.current());
         style.color = health.0.color();
 
         //dbg!((health, text, style));
@@ -337,7 +337,7 @@ fn update_status_stamina(
     if let Ok(Stamina::Limited(player_stamina)) = player_staminas.get_single() {
         let (mut text, mut style) = text.single_mut();
 
-        text.0 = format!("{}", player_stamina.current());
+        text.0 = format!("{:3.0}", 100.0 * player_stamina.relative());
         style.color = player_stamina.color();
 
         //dbg!((player_stamina, text, style));
