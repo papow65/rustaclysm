@@ -76,6 +76,7 @@ impl InventoryScreen {
         };
         for child in *children {
             if let Ok((entity, description)) = item_texts.get(*child) {
+                // Item name
                 commands
                     .entity(entity)
                     .despawn_descendants()
@@ -84,7 +85,11 @@ impl InventoryScreen {
                             parent.spawn(section);
                         }
                     });
+            } else if let Ok(mut text_style) = text_styles.get_mut(*child) {
+                // Item weight, and size
+                *text_style = used_text_style.clone();
             } else if let Ok(button_children) = item_buttons.get(*child) {
+                // Item buttons
                 for button_child in button_children {
                     let mut text_style = text_styles
                         .get_mut(*button_child)
