@@ -285,11 +285,11 @@ pub(super) fn update_status_fps(
 
     if diagnostics.is_changed() {
         if let Some(fps) = diagnostics.get(&FrameTimeDiagnosticsPlugin::FPS) {
-            if let Some(average) = fps.average() {
+            if let Some(fps) = fps.smoothed() {
                 let mut text = text.single_mut();
                 // Precision of 0.1s
                 // Padding to 6 characters, aligned right
-                text.0 = format!("{average:05.1} fps\n");
+                text.0 = format!("{fps:05.1} fps\n");
             }
         }
     }
