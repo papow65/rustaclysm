@@ -1,4 +1,4 @@
-use crate::{CddaItem, ObjectId};
+use crate::{CddaItem, HashMap, ObjectId, Repetition};
 use serde::Deserialize;
 use std::sync::Arc;
 
@@ -27,7 +27,10 @@ pub struct CddaVehicle {
     pub in_water: bool,
     pub floating: bool,
     pub flying: bool,
-    pub cruise_velocity: u16,
+
+    /// Usually positive, sometimes -400
+    pub cruise_velocity: i16,
+
     pub vertical_velocity: u8,
     pub cruise_on: bool,
     pub engine_on: bool,
@@ -39,11 +42,20 @@ pub struct CddaVehicle {
     pub old_owner: Arc<str>,
     pub theft_time: Option<serde_json::Value>,
     pub parts: Vec<CddaVehiclePart>,
-    pub tags: Vec<()>,
+
+    /// May contain "APPLICANCE"
+    pub tags: Vec<String>,
+
     pub fuel_remainder: serde_json::Value,
     pub fuel_used_last_turn: serde_json::Value,
     pub labels: Vec<()>,
-    pub zones: Vec<()>,
+
+    // TODO for example:
+    // {"point": [1,-1],"zone": {"name": "Loot: P.Food","type": "LOOT_PFOOD","faction": "your_followers",
+    // "invert": false,"enabled": false,"is_vehicle": true,"is_personal":false,"cached_shift":[0,0,0],
+    // "start":[-7803,2390,0],"end":[-7803,2390,0]}}
+    pub zones: Vec<HashMap<String, serde_json::Value>>,
+
     pub other_tow_point: (u8, u8, u8),
     pub is_locked: bool,
     pub is_alarm_on: bool,
@@ -77,13 +89,24 @@ pub struct CddaVehiclePart {
     pub mount_dy: i32,
 
     pub open: bool,
-    pub direction: u8,
+
+    /// In degrees
+    pub direction: u16,
+
     pub blood: i16,
     pub enabled: bool,
     pub flags: u8,
+    #[serde(default)]
+    pub carry: Vec<String>,
     pub passenger_id: i8,
     pub crew_id: i8,
-    pub items: Vec<CddaItem>,
+    pub items: Vec<Repetition<CddaItem>>,
+    pub target_first_x: Option<i16>,
+    pub target_first_y: Option<i16>,
+    pub target_first_z: Option<i16>,
+    pub target_second_x: Option<i16>,
+    pub target_second_y: Option<i16>,
+    pub target_second_z: Option<i16>,
     pub ammo_pref: Arc<str>,
 }
 
