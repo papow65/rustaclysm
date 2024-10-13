@@ -4,8 +4,8 @@ use crate::gameplay::sidebar::components::{
     SpeedTextSpan, StaminaText, TimeText, WalkingModeTextSpan, WieldedText,
 };
 use crate::hud::{
-    DefaultPanel, Fonts, ScrollingList, BAD_TEXT_COLOR, FILTHY_COLOR, GOOD_TEXT_COLOR,
-    HARD_TEXT_COLOR, WARN_TEXT_COLOR,
+    text_color_expect_half, DefaultPanel, Fonts, ScrollingList, BAD_TEXT_COLOR, FILTHY_COLOR,
+    GOOD_TEXT_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR,
 };
 use crate::{application::ApplicationState, gameplay::*};
 use bevy::diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin};
@@ -389,7 +389,7 @@ fn update_status_speed(
         } else {
             format!("{kmph:.0}")
         };
-        style.color = walking_mode.speed_color();
+        style.color = text_color_expect_half(kmph / 15.0);
     }
 
     log_if_slow("update_status_speed", start);

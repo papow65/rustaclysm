@@ -1,4 +1,4 @@
-use crate::{gameplay::*, hud::text_color};
+use crate::{gameplay::*, hud::text_color_expect_full};
 use bevy::ecs::query::QueryData;
 use bevy::prelude::{
     BuildChildren, Commands, DespawnRecursiveExt, Entity, Event, EventWriter, NextState, Query,
@@ -117,7 +117,7 @@ impl ActorItem<'_> {
 
         if let PlayerActionState::Sleeping { from } = player_action_state {
             let total_duration = clock.time() - *from;
-            let color = text_color(total_duration / (Duration::HOUR * 8));
+            let color = text_color_expect_full(total_duration / (Duration::HOUR * 8));
             message_writer
                 .you("sleep for")
                 .push(Fragment::colorized(total_duration.short_format(), color))
@@ -684,7 +684,7 @@ impl ActorItem<'_> {
             next_player_action_state.set(PlayerActionState::Normal);
         } else {
             let percent_progress = craft.percent_progress();
-            let color = text_color(percent_progress / 100.0);
+            let color = text_color_expect_full(percent_progress / 100.0);
             let percent_progress = format!("{percent_progress:.1}");
             let time_left = craft.time_left().short_format();
             message_writer

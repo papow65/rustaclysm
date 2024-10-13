@@ -30,11 +30,26 @@ pub(crate) const HOVERED_BUTTON_COLOR: Color = Color::srgb(0.25, 0.25, 0.25);
 pub(crate) const PANEL_COLOR: Color = Color::srgba(0.1, 0.1, 0.1, 0.85);
 
 /// Varying from `BAD_TEXT_COLOR` (0.0) over `WARN_TEXT_COLOR` (0.5) to `GOOD_TEXT_COLOR` (1.0)
-pub(crate) fn text_color(zero_to_one: f32) -> Color {
+///
+/// Suited where 1.0 is the normal situation, and for progressing time
+pub(crate) fn text_color_expect_full(zero_to_one: f32) -> Color {
+    text_color_over(zero_to_one, WARN_TEXT_COLOR)
+}
+
+/// Varying from `BAD_TEXT_COLOR` (0.0) over `WARN_TEXT_COLOR` (0.5) to `GOOD_TEXT_COLOR` (1.0)
+///
+/// Suited where 0.5 is more common than 0.0, or 1.0
+pub(crate) fn text_color_expect_half(zero_to_one: f32) -> Color {
+    text_color_over(zero_to_one, HARD_TEXT_COLOR)
+}
+
+/// Varying from `BAD_TEXT_COLOR` (0.0) over the given color (0.5) to `GOOD_TEXT_COLOR` (1.0)
+fn text_color_over(zero_to_one: f32, over: Color) -> Color {
+    let zero_to_one = zero_to_one.clamp(0.0, 1.0);
     let (part, min_color, max_color) = if 0.5 <= zero_to_one {
-        (2.0 * zero_to_one - 1.0, WARN_TEXT_COLOR, GOOD_TEXT_COLOR)
+        (2.0 * zero_to_one - 1.0, over, GOOD_TEXT_COLOR)
     } else {
-        (2.0 * zero_to_one, BAD_TEXT_COLOR, WARN_TEXT_COLOR)
+        (2.0 * zero_to_one, BAD_TEXT_COLOR, over)
     };
     min_color.mix(&max_color, part)
 }
@@ -45,8 +60,12 @@ mod color_tests {
 
     #[test]
     fn mixing_works() {
-        assert_eq!(text_color(0.0), BAD_TEXT_COLOR);
-        assert_eq!(text_color(0.5), WARN_TEXT_COLOR);
-        assert_eq!(text_color(1.0), GOOD_TEXT_COLOR);
+        assert_eq!(text_color_expect_full(0.0), BAD_TEXT_COLOR);
+        assert_eq!(text_color_expect_full(0.5), WARN_TEXT_COLOR);
+        assert_eq!(text_color_expect_full(1.0), GOOD_TEXT_COLOR);
+
+        assert_eq!(text_color_expect_half(0.0), BAD_TEXT_COLOR);
+        assert_eq!(text_color_expect_half(0.5), HARD_TEXT_COLOR);
+        assert_eq!(text_color_expect_half(1.0), GOOD_TEXT_COLOR);
     }
 }

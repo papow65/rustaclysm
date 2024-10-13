@@ -1,6 +1,6 @@
 use crate::application::ApplicationState;
 use crate::gameplay::*;
-use crate::hud::{text_color, BAD_TEXT_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR};
+use crate::hud::{text_color_expect_full, BAD_TEXT_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR};
 use bevy::prelude::{
     Color, Component, DetectChanges, Entity, NextState, ResMut, StateSet, SubStates,
 };
@@ -146,7 +146,7 @@ impl PlayerActionState {
         match (&self, instruction) {
             (Self::Sleeping { from }, QueuedInstruction::Interrupt(Interruption::Finished)) => {
                 let total_duration = now - *from;
-                let color = text_color(total_duration / (Duration::HOUR * 8));
+                let color = text_color_expect_full(total_duration / (Duration::HOUR * 8));
                 next_state.set(Self::Normal);
                 message_writer
                     .you("wake up after sleeping")

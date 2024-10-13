@@ -1,4 +1,4 @@
-use crate::hud::text_color;
+use crate::hud::text_color_expect_full;
 use bevy::prelude::Color;
 
 #[derive(Clone, Debug)]
@@ -107,6 +107,6 @@ impl Limited {
     }
 
     pub(crate) fn color(&self) -> Color {
-        text_color(self.relative())
+        text_color_expect_full(self.relative())
     }
 }

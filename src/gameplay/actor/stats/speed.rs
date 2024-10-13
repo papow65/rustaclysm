@@ -93,15 +93,4 @@ impl WalkingMode {
             Self::Sprinting => BAD_TEXT_COLOR,
         }
     }
-
-    #[must_use]
-    pub(crate) fn speed_color(&self) -> Color {
-        match self {
-            Self::Crouching => BAD_TEXT_COLOR,
-            Self::Walking => HARD_TEXT_COLOR.mix(&BAD_TEXT_COLOR, 0.5),
-            Self::SpeedWalking => HARD_TEXT_COLOR,
-            Self::Running => HARD_TEXT_COLOR.mix(&GOOD_TEXT_COLOR, 0.5),
-            Self::Sprinting => GOOD_TEXT_COLOR,
-        }
-    }
 }
