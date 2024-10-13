@@ -3,7 +3,7 @@ use crate::hud::{
     BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
 };
 use bevy::ecs::system::SystemParam;
-use bevy::prelude::{Color, Event, EventWriter};
+use bevy::prelude::{Event, EventWriter, TextColor};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) enum Severity {
@@ -16,7 +16,7 @@ pub(crate) enum Severity {
 
 impl Severity {
     #[must_use]
-    pub(crate) const fn color(&self) -> Color {
+    pub(crate) const fn color(&self) -> TextColor {
         match self {
             Self::Low => SOFT_TEXT_COLOR,
             Self::Info => HARD_TEXT_COLOR,

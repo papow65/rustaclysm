@@ -5,7 +5,7 @@ use crate::gameplay::sidebar::components::{
 };
 use crate::hud::{
     text_color_expect_half, DefaultPanel, Fonts, ScrollingList, BAD_TEXT_COLOR, FILTHY_COLOR,
-    GOOD_TEXT_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR,
+    GOOD_TEXT_COLOR, HARD_TEXT_COLOR, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
 };
 use crate::{application::ApplicationState, gameplay::*};
 use bevy::diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin};
@@ -15,7 +15,7 @@ use bevy::prelude::{
     ChildBuild, Commands, Condition, DespawnRecursiveExt, DetectChanges, Entity, EventReader,
     FlexDirection, FlexWrap, FromWorld, IntoSystemConfigs, JustifyContent, Local, NodeBundle, Or,
     Overflow, ParamSet, Parent, PositionType, Query, Res, ResMut, State, StateScoped, Style, Text,
-    TextSpan, TextStyle, UiRect, Val, Visibility, With, Without, World,
+    TextColor, TextFont, TextSpan, UiRect, Val, Visibility, With, Without, World,
 };
 use cdda_json_files::{MoveCost, ObjectId};
 use std::{num::Saturating, time::Instant};
@@ -61,30 +61,79 @@ fn spawn_status_display(fonts: &Fonts, parent: &mut EntityCommands) {
                 ..NodeBundle::default()
             })
             .with_children(|parent| {
-                parent.spawn((Text::default(), fonts.standard(), FpsText));
-                parent.spawn((Text::default(), fonts.standard(), TimeText));
+                parent.spawn((Text::default(), SOFT_TEXT_COLOR, fonts.regular(), FpsText));
+                parent.spawn((Text::default(), SOFT_TEXT_COLOR, fonts.regular(), TimeText));
                 parent
-                    .spawn((Text::default(), fonts.standard(), HealthText))
+                    .spawn((
+                        Text::default(),
+                        SOFT_TEXT_COLOR,
+                        fonts.regular(),
+                        HealthText,
+                    ))
                     .with_children(|parent| {
-                        parent.spawn((TextSpan::new("% health"), fonts.standard()));
+                        parent.spawn((TextSpan::new("% health"), SOFT_TEXT_COLOR, fonts.regular()));
                     });
                 parent
-                    .spawn((Text::default(), fonts.standard(), StaminaText))
+                    .spawn((
+                        Text::default(),
+                        SOFT_TEXT_COLOR,
+                        fonts.regular(),
+                        StaminaText,
+                    ))
                     .with_children(|parent| {
-                        parent.spawn((TextSpan::new("% stamina"), fonts.standard()));
+                        parent.spawn((
+                            TextSpan::new("% stamina"),
+                            SOFT_TEXT_COLOR,
+                            fonts.regular(),
+                        ));
                     });
                 parent
-                    .spawn((Text::default(), fonts.standard(), BreathText))
+                    .spawn((
+                        Text::default(),
+                        SOFT_TEXT_COLOR,
+                        fonts.regular(),
+                        BreathText,
+                    ))
                     .with_children(|parent| {
-                        parent.spawn((TextSpan::default(), fonts.standard(), WalkingModeTextSpan));
-                        parent.spawn((TextSpan::new(" ("), fonts.standard()));
-                        parent.spawn((TextSpan::default(), fonts.standard(), SpeedTextSpan));
-                        parent.spawn((TextSpan::new(" km/h)"), fonts.standard()));
+                        parent.spawn((
+                            TextSpan::default(),
+                            SOFT_TEXT_COLOR,
+                            fonts.regular(),
+                            WalkingModeTextSpan,
+                        ));
+                        parent.spawn((TextSpan::new(" ("), SOFT_TEXT_COLOR, fonts.regular()));
+                        parent.spawn((
+                            TextSpan::default(),
+                            SOFT_TEXT_COLOR,
+                            fonts.regular(),
+                            SpeedTextSpan,
+                        ));
+                        parent.spawn((TextSpan::new(" km/h)"), SOFT_TEXT_COLOR, fonts.regular()));
                     });
-                parent.spawn((Text::default(), fonts.standard(), PlayerActionStateText));
-                parent.spawn((Text::new("Weapon: "), fonts.standard(), WieldedText));
-                parent.spawn((Text::default(), fonts.standard(), EnemiesText));
-                parent.spawn((Text::default(), fonts.standard(), DetailsText));
+                parent.spawn((
+                    Text::default(),
+                    SOFT_TEXT_COLOR,
+                    fonts.regular(),
+                    PlayerActionStateText,
+                ));
+                parent.spawn((
+                    Text::new("Weapon: "),
+                    SOFT_TEXT_COLOR,
+                    fonts.regular(),
+                    WieldedText,
+                ));
+                parent.spawn((
+                    Text::default(),
+                    SOFT_TEXT_COLOR,
+                    fonts.regular(),
+                    EnemiesText,
+                ));
+                parent.spawn((
+                    Text::default(),
+                    SOFT_TEXT_COLOR,
+                    fonts.regular(),
+                    DetailsText,
+                ));
             });
     });
 }
@@ -112,7 +161,7 @@ fn spawn_log_display(fonts: &Fonts, parent: &mut EntityCommands) {
             .with_children(|child_builder| {
                 child_builder.spawn((
                     Text::default(),
-                    fonts.standard(),
+                    fonts.regular(),
                     Style {
                         width: Val::Px(TEXT_WIDTH),
                         flex_wrap: FlexWrap::Wrap,
@@ -156,9 +205,9 @@ fn update_log(
     fonts: Res<Fonts>,
     mut session: GameplaySession,
     logs: Query<Entity, With<LogDisplay>>,
-    mut previous_sections: Local<Vec<(TextSpan, TextStyle)>>,
+    mut previous_sections: Local<Vec<(TextSpan, TextColor, TextFont)>>,
     mut last_message: Local<Option<(Message, DuplicateMessageCount)>>,
-    mut transient_message: Local<Vec<(TextSpan, TextStyle)>>,
+    mut transient_message: Local<Vec<(TextSpan, TextColor, TextFont)>>,
 ) {
     const SINGLE: DuplicateMessageCount = Saturating(1);
 
@@ -186,7 +235,7 @@ fn update_log(
         if let Some(message) = percieved_message {
             transient_message.clear();
             if message.transient {
-                transient_message.extend(to_text_sections(&fonts.standard(), &message, SINGLE));
+                transient_message.extend(to_text_sections(&fonts, &message, SINGLE));
             } else {
                 match &mut *last_message {
                     Some((last, ref mut count)) if *last == message => {
@@ -197,7 +246,7 @@ fn update_log(
                             last_message.replace((message, SINGLE))
                         {
                             previous_sections.extend(to_text_sections(
-                                &fonts.standard(),
+                                &fonts,
                                 &previous_last,
                                 previous_count,
                             ));
@@ -215,7 +264,7 @@ fn update_log(
             parent.spawn(section);
         }
         if let Some((message, count)) = &*last_message {
-            for section in to_text_sections(&fonts.standard(), message, *count) {
+            for section in to_text_sections(&fonts, message, *count) {
                 parent.spawn(section);
             }
         }
@@ -228,17 +277,21 @@ fn update_log(
 }
 
 fn to_text_sections(
-    text_style: &TextStyle,
+    fonts: &Fonts,
     message: &Message,
     count: DuplicateMessageCount,
-) -> Vec<(TextSpan, TextStyle)> {
-    let mut style = text_style.clone();
-    style.color = message.severity.color();
-    let mut sections = message.phrase.as_text_sections(&style);
+) -> Vec<(TextSpan, TextColor, TextFont)> {
+    let mut sections = message
+        .phrase
+        .as_text_sections(message.severity.color(), &fonts.regular());
     if 1 < count.0 {
-        sections.push((TextSpan::new(format!(" ({count}x)")), text_style.clone()));
+        sections.push((
+            TextSpan::new(format!(" ({count}x)")),
+            SOFT_TEXT_COLOR,
+            fonts.regular(),
+        ));
     }
-    sections.push((TextSpan::from("\n"), text_style.clone()));
+    sections.push((TextSpan::from("\n"), SOFT_TEXT_COLOR, fonts.regular()));
     sections
 }
 
@@ -313,15 +366,15 @@ fn update_status_time(clock: Clock, mut text: Query<&mut Text, With<TimeText>>) 
 #[expect(clippy::needless_pass_by_value)]
 fn update_status_health(
     health: Query<&Health, (With<Player>, Changed<Health>)>,
-    mut text: Query<(&mut Text, &mut TextStyle), With<HealthText>>,
+    mut text: Query<(&mut Text, &mut TextColor), With<HealthText>>,
 ) {
     let start = Instant::now();
 
     if let Ok(health) = health.get_single() {
-        let (mut text, mut style) = text.single_mut();
+        let (mut text, mut color) = text.single_mut();
 
         text.0 = format!("{:3}", health.0.current());
-        style.color = health.0.color();
+        *color = health.0.color();
 
         //dbg!((health, text, style));
     }
@@ -332,15 +385,15 @@ fn update_status_health(
 #[expect(clippy::needless_pass_by_value)]
 fn update_status_stamina(
     player_staminas: Query<&Stamina, (With<Player>, Changed<Stamina>)>,
-    mut text: Query<(&mut Text, &mut TextStyle), With<StaminaText>>,
+    mut text: Query<(&mut Text, &mut TextColor), With<StaminaText>>,
 ) {
     let start = Instant::now();
 
     if let Ok(Stamina::Limited(player_stamina)) = player_staminas.get_single() {
-        let (mut text, mut style) = text.single_mut();
+        let (mut text, mut color) = text.single_mut();
 
         text.0 = format!("{:3.0}", 100.0 * player_stamina.relative());
-        style.color = player_stamina.color();
+        *color = player_stamina.color();
 
         //dbg!((player_stamina, text, style));
     }
@@ -358,9 +411,9 @@ fn update_status_speed(
         ),
     >,
     mut text_parts: ParamSet<(
-        Query<(&mut Text, &mut TextStyle), With<BreathText>>,
-        Query<(&mut TextSpan, &mut TextStyle), With<WalkingModeTextSpan>>,
-        Query<(&mut TextSpan, &mut TextStyle), With<SpeedTextSpan>>,
+        Query<(&mut Text, &mut TextColor), With<BreathText>>,
+        Query<(&mut TextSpan, &mut TextColor), With<WalkingModeTextSpan>>,
+        Query<(&mut TextSpan, &mut TextColor), With<SpeedTextSpan>>,
     )>,
 ) {
     let start = Instant::now();
@@ -369,27 +422,27 @@ fn update_status_speed(
         let walking_mode = player_actor.walking_mode;
 
         let mut breath_text = text_parts.p0();
-        let (mut text, mut style) = breath_text.single_mut();
-        (text.0, style.color) = match player_actor.stamina.breath() {
+        let (mut text, mut color) = breath_text.single_mut();
+        (text.0, *color) = match player_actor.stamina.breath() {
             Breath::Normal => (String::new(), HARD_TEXT_COLOR),
             Breath::AlmostWinded => (String::from("Almost winded "), WARN_TEXT_COLOR),
             Breath::Winded => (String::from("Winded "), BAD_TEXT_COLOR),
         };
 
         let mut walking_mode_text_span = text_parts.p1();
-        let (mut text_span, mut style) = walking_mode_text_span.single_mut();
+        let (mut text_span, mut color) = walking_mode_text_span.single_mut();
         text_span.0 = String::from(walking_mode.as_str());
-        style.color = walking_mode.breath_color();
+        *color = walking_mode.breath_color();
 
         let mut speed_text_span = text_parts.p2();
-        let (mut text_span, mut style) = speed_text_span.single_mut();
+        let (mut text_span, mut color) = speed_text_span.single_mut();
         let kmph = player_actor.speed().as_kmph();
         text_span.0 = if kmph < 9.95 {
             format!("{kmph:.1}")
         } else {
             format!("{kmph:.0}")
         };
-        style.color = text_color_expect_half(kmph / 15.0);
+        *color = text_color_expect_half(kmph / 15.0);
     }
 
     log_if_slow("update_status_speed", start);
@@ -398,13 +451,13 @@ fn update_status_speed(
 #[expect(clippy::needless_pass_by_value)]
 fn update_status_player_action_state(
     player_action_state: Res<State<PlayerActionState>>,
-    mut text: Query<(&mut Text, &mut TextStyle), With<PlayerActionStateText>>,
+    mut text: Query<(&mut Text, &mut TextColor), With<PlayerActionStateText>>,
 ) {
     let start = Instant::now();
 
-    let (mut text, mut style) = text.single_mut();
+    let (mut text, mut color) = text.single_mut();
     text.0 = format!("{}\n", **player_action_state);
-    style.color = player_action_state.color_in_progress();
+    *color = player_action_state.color_in_progress();
 
     log_if_slow("update_status_player_action_state", start);
 }
@@ -425,11 +478,11 @@ fn update_status_player_wielded(
         .with_children(|parent| {
             if let Ok(weapon) = player_weapon.get_single() {
                 let phrase = Phrase::from_fragments(weapon.fragments());
-                for section in phrase.as_text_sections(&fonts.standard()) {
+                for section in phrase.as_text_sections(HARD_TEXT_COLOR, &fonts.regular()) {
                     parent.spawn(section);
                 }
             } else {
-                parent.spawn((TextSpan::new("(none)"), fonts.standard()));
+                parent.spawn((TextSpan::new("(none)"), SOFT_TEXT_COLOR, fonts.regular()));
             }
         });
 
@@ -485,7 +538,7 @@ fn update_status_enemies(
             .entity(entity)
             .despawn_descendants()
             .with_children(|parent| {
-                for section in phrase.as_text_sections(&fonts.standard()) {
+                for section in phrase.as_text_sections(SOFT_TEXT_COLOR, &fonts.regular()) {
                     parent.spawn(section);
                 }
             });
@@ -563,7 +616,7 @@ fn update_status_detais(
             )]
         }
     })
-    .as_text_sections(&fonts.standard());
+    .as_text_sections(SOFT_TEXT_COLOR, &fonts.regular());
 
     let entity = text.single();
     commands

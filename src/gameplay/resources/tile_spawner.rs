@@ -9,8 +9,8 @@ use crate::gameplay::{
 use crate::hud::{BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{
-    BuildChildren, Camera3d, ChildBuild, Color, Commands, DirectionalLight, Entity, EulerRot, Mat4,
-    Res, ResMut, SpatialBundle, StateScoped, Transform, Vec3, Visibility,
+    BuildChildren, Camera3d, ChildBuild, Commands, DirectionalLight, Entity, EulerRot, Mat4, Res,
+    ResMut, StateScoped, TextColor, Transform, Vec3, Visibility,
 };
 use bevy::render::camera::{PerspectiveProjection, Projection};
 use bevy::render::view::RenderLayers;
@@ -136,7 +136,8 @@ impl<'w, 's> TileSpawner<'w, 's> {
                 .commands
                 .spawn((
                     BodyContainers::default_hands_container_limits(),
-                    SpatialBundle::HIDDEN_IDENTITY,
+                    Transform::default(),
+                    Visibility::Hidden,
                 ))
                 .set_parent(entity)
                 .id();
@@ -144,7 +145,8 @@ impl<'w, 's> TileSpawner<'w, 's> {
                 .commands
                 .spawn((
                     BodyContainers::default_clothing_container_limits(),
-                    SpatialBundle::HIDDEN_IDENTITY,
+                    Transform::default(),
+                    Visibility::Hidden,
                 ))
                 .set_parent(entity)
                 .id();
@@ -496,10 +498,8 @@ impl<'w, 's> TileSpawner<'w, 's> {
         };
 
         let mut entity_commands = self.commands.spawn((
-            SpatialBundle {
-                transform: Transform::from_translation(pos.vec3()),
-                ..SpatialBundle::HIDDEN_IDENTITY
-            },
+            Transform::from_translation(pos.vec3()),
+            Visibility::Hidden,
             definition.clone(),
             pos,
             object_name,
@@ -525,8 +525,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
             .entity(player_entity)
             .with_children(|child_builder| {
                 child_builder
-                    .spawn(SpatialBundle::default())
-                    .insert(CameraBase)
+                    .spawn((Transform::default(), Visibility::default(), CameraBase))
                     .with_children(|child_builder| {
                         let cursor_bundle = self.model_factory.get_cursor();
                         child_builder.spawn((cursor_bundle, Visibility::Hidden, ExamineCursor));
@@ -574,8 +573,11 @@ impl<'w, 's> TileSpawner<'w, 's> {
     pub(crate) fn spawn_characters(&mut self, infos: &Infos, spawn_pos: Pos) {
         let root = self
             .commands
-            .spawn(SpatialBundle::default())
-            .insert(StateScoped(ApplicationState::Gameplay))
+            .spawn((
+                Transform::default(),
+                Visibility::default(),
+                StateScoped(ApplicationState::Gameplay),
+            ))
             .id();
 
         let sav = self.active_sav.sav();
@@ -712,7 +714,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
     }
 }
 
-fn item_category_text_color(from: &Option<Arc<str>>) -> Color {
+fn item_category_text_color(from: &Option<Arc<str>>) -> TextColor {
     if from == &Some(Arc::from("manuals")) {
         GOOD_TEXT_COLOR
     } else if from == &Some(Arc::from("bionics")) {

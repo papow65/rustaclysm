@@ -1,6 +1,6 @@
 use crate::gameplay::screens::crafting::components::RecipeSituation;
 use crate::hud::SelectionList;
-use bevy::prelude::{Entity, KeyCode, Query, Resource, TextStyle};
+use bevy::prelude::{Entity, KeyCode, Query, Resource, TextColor};
 use units::Timestamp;
 
 #[derive(Resource)]
@@ -14,7 +14,7 @@ pub(super) struct CraftingScreen {
 impl CraftingScreen {
     pub(super) fn adjust_selection(
         &mut self,
-        recipes: &mut Query<(&mut TextStyle, &RecipeSituation)>,
+        recipes: &mut Query<(&mut TextColor, &RecipeSituation)>,
         key_code: &KeyCode,
     ) {
         self.highlight_selected(recipes, false);
@@ -24,15 +24,15 @@ impl CraftingScreen {
 
     pub(super) fn highlight_selected(
         &self,
-        recipes: &mut Query<(&mut TextStyle, &RecipeSituation)>,
+        recipes: &mut Query<(&mut TextColor, &RecipeSituation)>,
         show_selected: bool,
     ) {
         let Some(selected) = self.selection_list.selected else {
             return;
         };
-        let (text_style, recipe) = &mut recipes
+        let (text_color, recipe) = &mut recipes
             .get_mut(selected)
             .expect("Highlighted recipe should ba found");
-        text_style.color = recipe.color(show_selected);
+        **text_color = recipe.color(show_selected);
     }
 }

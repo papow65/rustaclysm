@@ -1,5 +1,5 @@
 use crate::hud::text_color_expect_full;
-use bevy::prelude::Color;
+use bevy::prelude::TextColor;
 
 #[derive(Clone, Debug)]
 pub(crate) struct Evolution {
@@ -106,7 +106,7 @@ impl Limited {
         self.current == self.max
     }
 
-    pub(crate) fn color(&self) -> Color {
+    pub(crate) fn color(&self) -> TextColor {
         text_color_expect_full(self.relative())
     }
 }

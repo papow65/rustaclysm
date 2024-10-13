@@ -2,13 +2,13 @@ use std::sync::Arc;
 
 use crate::gameplay::{Fragment, Pos};
 use crate::hud::BAD_TEXT_COLOR;
-use bevy::prelude::{Color, Component};
+use bevy::prelude::{Component, TextColor};
 use cdda_json_files::{CddaItemName, ItemName};
 
 #[derive(Clone, Component, Debug)]
 pub(crate) struct ObjectName {
     name: ItemName,
-    color: Color,
+    color: TextColor,
 }
 
 impl ObjectName {
@@ -23,12 +23,12 @@ impl ObjectName {
     }
 
     #[must_use]
-    pub(crate) const fn new(name: ItemName, color: Color) -> Self {
+    pub(crate) const fn new(name: ItemName, color: TextColor) -> Self {
         Self { name, color }
     }
 
     #[must_use]
-    pub(crate) fn from_str(text: &str, color: Color) -> Self {
+    pub(crate) fn from_str(text: &str, color: TextColor) -> Self {
         Self {
             name: ItemName::from(CddaItemName::Simple(Arc::from(text))),
             color,

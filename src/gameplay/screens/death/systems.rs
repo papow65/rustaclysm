@@ -69,12 +69,13 @@ pub(super) fn spawn_death_screen(
                             ..NodeBundle::default()
                         })
                         .with_children(|parent| {
-                            parent.spawn((Text::from("You died"), fonts.largish(BAD_TEXT_COLOR)));
+                            parent.spawn((Text::from("You died"), BAD_TEXT_COLOR, fonts.largish()));
                         });
 
                     ButtonBuilder::new(
                         "Main menu",
-                        fonts.regular(WARN_TEXT_COLOR),
+                        WARN_TEXT_COLOR,
+                        fonts.regular(),
                         main_menu_system.0,
                     )
                     .large()

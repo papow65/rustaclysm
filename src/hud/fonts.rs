@@ -1,6 +1,5 @@
 use crate::common::AssetPaths;
-use crate::hud::colors::SOFT_TEXT_COLOR;
-use bevy::prelude::{AssetServer, Color, Font, Handle, Resource, TextStyle};
+use bevy::prelude::{AssetServer, Font, Handle, Resource, TextFont};
 
 #[derive(Resource)]
 pub(crate) struct Fonts {
@@ -19,43 +18,35 @@ impl Fonts {
         }
     }
 
-    pub(crate) fn regular(&self, color: Color) -> TextStyle {
-        TextStyle {
+    pub(crate) fn regular(&self) -> TextFont {
+        TextFont {
             font: self.fira.clone(),
             font_size: Self::REGULAR_FONT_SIZE,
-            color,
-            ..TextStyle::default()
+            ..TextFont::default()
         }
     }
 
-    pub(crate) fn standard(&self) -> TextStyle {
-        self.regular(SOFT_TEXT_COLOR)
-    }
-
-    pub(crate) fn largish(&self, color: Color) -> TextStyle {
-        TextStyle {
+    pub(crate) fn largish(&self) -> TextFont {
+        TextFont {
             font: self.fira.clone(),
             font_size: Self::LARGISH_FONT_SIZE,
-            color,
-            ..TextStyle::default()
+            ..TextFont::default()
         }
     }
 
-    pub(crate) fn large(&self, color: Color) -> TextStyle {
-        TextStyle {
+    pub(crate) fn large(&self) -> TextFont {
+        TextFont {
             font: self.fira.clone(),
             font_size: Self::LARGE_FONT_SIZE,
-            color,
-            ..TextStyle::default()
+            ..TextFont::default()
         }
     }
 
-    pub(crate) fn huge(&self, color: Color) -> TextStyle {
-        TextStyle {
+    pub(crate) fn huge(&self) -> TextFont {
+        TextFont {
             font: self.fira.clone(),
             font_size: Self::HUGE_FONT_SIZE,
-            color,
-            ..TextStyle::default()
+            ..TextFont::default()
         }
     }
 }

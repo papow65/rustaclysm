@@ -42,7 +42,7 @@ pub(crate) fn spawn_loading(mut commands: Commands, fonts: Res<Fonts>) {
                     ..NodeBundle::default()
                 })
                 .with_children(|parent| {
-                    parent.spawn((Text::from("Loading..."), fonts.large(HARD_TEXT_COLOR)));
+                    parent.spawn((Text::from("Loading..."), HARD_TEXT_COLOR, fonts.large()));
                 });
         });
 }

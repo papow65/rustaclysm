@@ -1,6 +1,6 @@
 use crate::gameplay::{Breath, StaminaCost};
 use crate::hud::{BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR};
-use bevy::prelude::{Color, Component, Mix};
+use bevy::prelude::{Component, Mix, TextColor};
 use units::Speed;
 
 // Stats for characters
@@ -85,10 +85,12 @@ impl WalkingMode {
     }
 
     #[must_use]
-    pub(crate) fn breath_color(&self) -> Color {
+    pub(crate) fn breath_color(&self) -> TextColor {
         match self {
             Self::Walking => GOOD_TEXT_COLOR,
-            Self::Crouching | Self::SpeedWalking => HARD_TEXT_COLOR.mix(&WARN_TEXT_COLOR, 0.5),
+            Self::Crouching | Self::SpeedWalking => {
+                TextColor(HARD_TEXT_COLOR.0.mix(&WARN_TEXT_COLOR.0, 0.5))
+            }
             Self::Running => WARN_TEXT_COLOR,
             Self::Sprinting => BAD_TEXT_COLOR,
         }

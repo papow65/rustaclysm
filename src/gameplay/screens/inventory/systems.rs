@@ -2,15 +2,18 @@ use crate::common::log_if_slow;
 use crate::gameplay::screens::inventory::components::{
     InventoryAction, InventoryItemDescription, InventoryItemLine,
 };
-use crate::gameplay::screens::inventory::{resource::InventoryScreen, section::InventorySection};
+use crate::gameplay::screens::inventory::resource::{
+    InventoryScreen, ITEM_TEXT_COLOR, SELECTED_ITEM_TEXT_COLOR,
+};
+use crate::gameplay::screens::inventory::section::InventorySection;
 use crate::gameplay::{
     BodyContainers, Clock, Corpse, Envir, GameplayScreenState, HorizontalDirection, Infos,
     InstructionQueue, Integrity, Item, LastSeen, Nbor, Phrase, Player, PlayerDirection, Pos,
     QueuedInstruction,
 };
 use crate::hud::{
-    ButtonBuilder, Fonts, ScrollingList, SelectionList, StepDirection, StepSize, GOOD_TEXT_COLOR,
-    HARD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
+    ButtonBuilder, Fonts, ScrollingList, SelectionList, StepDirection, StepSize, PANEL_COLOR,
+    SMALL_SPACING, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
 };
 use crate::keyboard::{Held, Key, KeyBindings};
 use crate::manual::ManualSection;
@@ -34,8 +37,7 @@ pub(super) fn create_inventory_system(world: &mut World) -> InventorySystem {
     InventorySystem(world.register_system_cached(handle_inventory_action))
 }
 
-#[expect(clippy::needless_pass_by_value)]
-pub(super) fn spawn_inventory(mut commands: Commands, fonts: Res<Fonts>) {
+pub(super) fn spawn_inventory(mut commands: Commands) {
     let panel = commands
         .spawn((
             NodeBundle {
@@ -88,10 +90,6 @@ pub(super) fn spawn_inventory(mut commands: Commands, fonts: Res<Fonts>) {
         selection_list: SelectionList::default(),
         drop_direction: HorizontalDirection::Here,
         section_by_item: EntityHashMap::default(),
-        section_text_style: fonts.regular(SOFT_TEXT_COLOR),
-        drop_section_text_style: fonts.regular(WARN_TEXT_COLOR),
-        item_text_style: fonts.regular(HARD_TEXT_COLOR),
-        selected_item_text_style: fonts.regular(GOOD_TEXT_COLOR),
         last_time: Timestamp::ZERO,
     });
 }
@@ -173,11 +171,12 @@ pub(super) fn create_inventory_key_bindings(
 fn move_inventory_selection(
     In(key): In<Key>,
     mut commands: Commands,
+    fonts: Res<Fonts>,
     mut inventory: ResMut<InventoryScreen>,
     item_lines: Query<(&InventoryItemLine, &Children)>,
     item_texts: Query<(Entity, &InventoryItemDescription)>,
     item_buttons: Query<&Children, With<Button>>,
-    mut text_styles: Query<&mut TextStyle>,
+    mut text_styles: Query<&mut TextColor>,
     item_layouts: Query<(&Transform, &Node)>,
     mut scrolling_lists: Query<(&mut ScrollingList, &mut Style, &Parent, &Node)>,
     scrolling_parents: Query<(&Node, &Style), Without<ScrollingList>>,
@@ -189,6 +188,7 @@ fn move_inventory_selection(
 
     inventory.adjust_selection(
         &mut commands,
+        &fonts,
         &item_lines,
         &item_texts,
         &item_buttons,
@@ -252,6 +252,7 @@ pub(super) fn clear_inventory(
 pub(super) fn refresh_inventory(
     In(inventory_system): In<Option<InventorySystem>>,
     mut commands: Commands,
+    fonts: Res<Fonts>,
     envir: Envir,
     infos: Res<Infos>,
     mut inventory: ResMut<InventoryScreen>,
@@ -281,16 +282,24 @@ pub(super) fn refresh_inventory(
         for (section, items) in items_by_section {
             let drop_section = section == InventorySection::Nbor(inventory.drop_direction);
             let section_style = if drop_section {
-                &inventory.drop_section_text_style
+                WARN_TEXT_COLOR
             } else {
-                &inventory.section_text_style
+                SOFT_TEXT_COLOR
             };
 
             parent
-                .spawn((Text::new(format!("[{section}]")), section_style.clone()))
+                .spawn((
+                    Text::new(format!("[{section}]")),
+                    section_style,
+                    fonts.regular(),
+                ))
                 .with_children(|parent| {
                     if drop_section {
-                        parent.spawn((TextSpan::from("(dropping here)"), section_style.clone()));
+                        parent.spawn((
+                            TextSpan::from("(dropping here)"),
+                            section_style,
+                            fonts.regular(),
+                        ));
                     }
                 });
 
@@ -305,19 +314,20 @@ pub(super) fn refresh_inventory(
                         is_selected = inventory.selection_list.selected.is_none();
                         is_selected_previous = false;
                     }
-                    let item_style = if is_selected {
-                        &inventory.selected_item_text_style
+                    let item_text_color = if is_selected {
+                        SELECTED_ITEM_TEXT_COLOR
                     } else {
-                        &inventory.item_text_style
+                        ITEM_TEXT_COLOR
                     };
 
                     let row_entity = add_row(
+                        &fonts,
                         &section,
                         parent,
                         item_entity,
                         &item_phrase,
                         item_info,
-                        item_style,
+                        item_text_color,
                         drop_section,
                         &inventory_system,
                     );
@@ -334,7 +344,7 @@ pub(super) fn refresh_inventory(
             }
 
             // empty line
-            parent.spawn((Text::from(" "), inventory.section_text_style.clone()));
+            parent.spawn((Text::from(" "), SOFT_TEXT_COLOR, fonts.regular()));
         }
     });
 }
@@ -391,12 +401,13 @@ fn items_by_section<'a>(
 }
 
 fn add_row(
+    fonts: &Fonts,
     section: &InventorySection,
     parent: &mut ChildBuilder,
     item_entity: Entity,
     item_phrase: &Phrase,
     item_info: &ItemInfo,
-    item_text_style: &TextStyle,
+    item_text_color: TextColor,
     drop_section: bool,
     inventory_system: &InventorySystem,
 ) -> Entity {
@@ -418,7 +429,8 @@ fn add_row(
             parent
                 .spawn((
                     Text::default(),
-                    item_text_style.clone(),
+                    item_text_color,
+                    fonts.regular(),
                     Style {
                         width: Val::Px(200.0),
                         overflow: Overflow::clip(),
@@ -427,7 +439,7 @@ fn add_row(
                     InventoryItemDescription(item_phrase.clone()),
                 ))
                 .with_children(|parent| {
-                    for section in item_phrase.as_text_sections(item_text_style) {
+                    for section in item_phrase.as_text_sections(item_text_color, &fonts.regular()) {
                         parent.spawn(section);
                     }
                 });
@@ -438,7 +450,8 @@ fn add_row(
                 } else {
                     String::new()
                 }),
-                item_text_style.clone(),
+                item_text_color,
+                fonts.regular(),
                 Style {
                     width: Val::Px(60.0),
                     overflow: Overflow::clip(),
@@ -453,7 +466,8 @@ fn add_row(
                 } else {
                     String::new()
                 }),
-                item_text_style.clone(),
+                item_text_color,
+                fonts.regular(),
                 Style {
                     width: Val::Px(60.0),
                     overflow: Overflow::clip(),
@@ -464,7 +478,13 @@ fn add_row(
 
             for action in actions(section, drop_section) {
                 let caption = format!("{}", &action);
-                ButtonBuilder::new(caption, item_text_style.clone(), inventory_system.0).spawn(
+                ButtonBuilder::new(
+                    caption,
+                    item_text_color,
+                    fonts.regular(),
+                    inventory_system.0,
+                )
+                .spawn(
                     parent,
                     InventoryButton {
                         item: item_entity,

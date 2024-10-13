@@ -1,5 +1,5 @@
 use crate::{gameplay::Pos, hud::GOOD_TEXT_COLOR};
-use bevy::prelude::{Color, TextSpan, TextStyle};
+use bevy::prelude::{TextColor, TextFont, TextSpan};
 use regex::Regex;
 use std::{cmp::Eq, fmt, sync::LazyLock};
 
@@ -11,10 +11,10 @@ pub(crate) enum Positioning {
     None,
 }
 
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default)]
 pub(crate) struct Fragment {
     pub(crate) text: String,
-    pub(crate) color: Option<Color>,
+    pub(crate) color: Option<TextColor>,
     pub(crate) positioning: Positioning,
 }
 
@@ -38,7 +38,7 @@ impl Fragment {
         }
     }
 
-    pub(crate) fn colorized<S>(text: S, color: Color) -> Self
+    pub(crate) fn colorized<S>(text: S, color: TextColor) -> Self
     where
         S: Into<String>,
     {
@@ -49,7 +49,7 @@ impl Fragment {
         }
     }
 
-    pub(crate) fn positioned<S>(text: S, color: Color, pos: Pos) -> Self
+    pub(crate) fn positioned<S>(text: S, color: TextColor, pos: Pos) -> Self
     where
         S: Into<String>,
     {
@@ -61,7 +61,13 @@ impl Fragment {
     }
 }
 
-// The floats in color are unimportant and often come from constants
+impl PartialEq for Fragment {
+    fn eq(&self, other: &Self) -> bool {
+        // The floats in color are unimportant and often come from constants
+        self.text == other.text && self.positioning == other.positioning
+    }
+}
+
 impl Eq for Fragment {}
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -107,12 +113,14 @@ impl Phrase {
     }
 
     #[must_use]
-    pub(crate) fn as_text_sections(&self, text_style: &TextStyle) -> Vec<(TextSpan, TextStyle)> {
+    pub(crate) fn as_text_sections(
+        &self,
+        text_color: TextColor,
+        text_font: &TextFont,
+    ) -> Vec<(TextSpan, TextColor, TextFont)> {
         self.fragments.iter().filter(|f| !f.text.is_empty()).fold(
             Vec::new(),
             |mut text_sections, f| {
-                let text_style = text_style.clone();
-
                 text_sections.push((
                     TextSpan(
                         if text_sections
@@ -124,10 +132,8 @@ impl Phrase {
                             f.text.clone()
                         },
                     ),
-                    TextStyle {
-                        color: f.color.unwrap_or(text_style.color),
-                        ..text_style
-                    },
+                    f.color.unwrap_or(text_color),
+                    text_font.clone(),
                 ));
                 text_sections
             },
@@ -136,7 +142,7 @@ impl Phrase {
 
     #[must_use]
     pub(crate) fn as_string(&self) -> String {
-        self.as_text_sections(&TextStyle::default())
+        self.as_text_sections(TextColor::WHITE, &TextFont::default())
             .into_iter()
             .map(|text_section| text_section.0 .0)
             .collect::<String>()

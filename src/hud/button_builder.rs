@@ -3,7 +3,8 @@ use crate::keyboard::{Key, KeyBinding};
 use bevy::ecs::system::SystemId;
 use bevy::prelude::{
     AlignItems, BuildChildren, Bundle, ButtonBundle, ChildBuild, ChildBuilder, Commands, Component,
-    Entity, In, JustifyContent, NodeBundle, PositionType, Style, SystemInput, Text, TextStyle, Val,
+    Entity, In, JustifyContent, NodeBundle, PositionType, Style, SystemInput, Text, TextColor,
+    TextFont, Val,
 };
 use std::fmt;
 
@@ -27,7 +28,8 @@ where
 
 pub(crate) struct ButtonBuilder<D: fmt::Display, I: SystemInput> {
     caption: D,
-    text_style: TextStyle,
+    text_color: TextColor,
+    text_font: TextFont,
     style: Style,
     system: SystemId<I, ()>,
     key_binding: Option<(Key, KeyBinding<(), ()>)>,
@@ -39,10 +41,16 @@ where
     (ButtonBundle, RunButton<I>): Bundle,
 {
     /// 70px wide, dynamic height
-    pub(crate) fn new(caption: D, text_style: TextStyle, system: SystemId<I, ()>) -> Self {
+    pub(crate) fn new(
+        caption: D,
+        text_color: TextColor,
+        text_font: TextFont,
+        system: SystemId<I, ()>,
+    ) -> Self {
         Self {
             caption,
-            text_style,
+            text_color,
+            text_font,
             style: Style {
                 width: Val::Px(70.0),
                 height: Val::Auto,
@@ -95,15 +103,17 @@ where
         ));
 
         entity_commands.with_children(|parent| {
-            parent.spawn((Text(format!("{}", self.caption)), self.text_style.clone()));
+            parent.spawn((
+                Text(format!("{}", self.caption)),
+                self.text_color,
+                self.text_font.clone(),
+            ));
         });
 
         if let Some((key, key_binding)) = self.key_binding {
             entity_commands.insert(key_binding);
 
             entity_commands.with_children(|parent| {
-                let mut key_text_style = self.text_style;
-                key_text_style.color = SOFT_TEXT_COLOR;
                 parent
                     .spawn(NodeBundle {
                         style: Style {
@@ -122,7 +132,8 @@ where
                                 Key::Character(c) => format!("[{c}] "),
                                 Key::Code(c) => format!("[{c:?}] "),
                             }),
-                            key_text_style,
+                            SOFT_TEXT_COLOR,
+                            self.text_font,
                         ));
                     });
             });

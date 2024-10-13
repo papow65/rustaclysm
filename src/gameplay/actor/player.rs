@@ -2,7 +2,7 @@ use crate::application::ApplicationState;
 use crate::gameplay::*;
 use crate::hud::{text_color_expect_full, BAD_TEXT_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR};
 use bevy::prelude::{
-    Color, Component, DetectChanges, Entity, NextState, ResMut, StateSet, SubStates,
+    Component, DetectChanges, Entity, NextState, ResMut, StateSet, SubStates, TextColor,
 };
 use std::fmt;
 use units::{Duration, Timestamp};
@@ -613,7 +613,7 @@ impl PlayerActionState {
         }
     }
 
-    pub(crate) const fn color_in_progress(&self) -> Color {
+    pub(crate) const fn color_in_progress(&self) -> TextColor {
         match self {
             Self::Normal | Self::PickingNbor(PickingNbor::Closing) => HARD_TEXT_COLOR,
             Self::Waiting { .. }

@@ -98,13 +98,14 @@ pub(crate) fn create_main_menu_key_bindings(
 }
 
 fn add_title(parent: &mut ChildBuilder, fonts: &Fonts) {
-    parent.spawn((Text::from("Rustaclysm"), fonts.huge(HARD_TEXT_COLOR)));
+    parent.spawn((Text::from("Rustaclysm"), HARD_TEXT_COLOR, fonts.huge()));
 }
 
 fn add_tagline(parent: &mut ChildBuilder, fonts: &Fonts) {
     parent.spawn((
         Text::from("A 3D reimplementation of Cataclysm: Dark Days Ahead"),
-        fonts.largish(HARD_TEXT_COLOR),
+        HARD_TEXT_COLOR,
+        fonts.largish(),
         Style {
             margin: UiRect {
                 bottom: LARGE_SPACING,
@@ -160,7 +161,8 @@ fn add_notification_area(parent: &mut ChildBuilder, fonts: &Fonts) {
         .with_children(|parent| {
             parent.spawn((
                 Text::default(),
-                fonts.largish(HARD_TEXT_COLOR),
+                HARD_TEXT_COLOR,
+                fonts.largish(),
                 Style {
                     width: Val::Px(FULL_WIDTH),
                     padding: UiRect::horizontal(MEDIUM_SPACING),
@@ -173,7 +175,7 @@ fn add_notification_area(parent: &mut ChildBuilder, fonts: &Fonts) {
 }
 
 fn add_quit_button(parent: &mut ChildBuilder, quit_system: &QuitSystem, fonts: &Fonts) {
-    ButtonBuilder::new("Quit", fonts.large(BAD_TEXT_COLOR), quit_system.0)
+    ButtonBuilder::new("Quit", BAD_TEXT_COLOR, fonts.large(), quit_system.0)
         .large()
         .spawn(parent, ());
 }
@@ -336,7 +338,8 @@ fn add_load_button(
 
     ButtonBuilder::new(
         format!("Load {character} in {}", world_path.display()),
-        fonts.largish(GOOD_TEXT_COLOR),
+        GOOD_TEXT_COLOR,
+        fonts.largish(),
         load_systems.button,
     )
     .with_style(Style {

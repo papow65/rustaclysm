@@ -1,7 +1,7 @@
 use crate::hud::{
     Fonts, BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
 };
-use bevy::prelude::{Color, Component, Entity, TextSpan, TextStyle};
+use bevy::prelude::{Component, Entity, TextColor, TextFont, TextSpan};
 use cdda_json_files::{ObjectId, Recipe};
 use std::{cmp::Ordering, sync::Arc};
 
@@ -30,7 +30,7 @@ impl RecipeSituation {
         })
     }
 
-    pub(super) fn color(&self, selected: bool) -> Color {
+    pub(super) fn color(&self, selected: bool) -> TextColor {
         if self.craftable() {
             if selected {
                 GOOD_TEXT_COLOR
@@ -53,39 +53,56 @@ impl RecipeSituation {
         &self,
         fonts: &Fonts,
         recipe: &Recipe,
-    ) -> Vec<(TextSpan, TextStyle)> {
+    ) -> Vec<(TextSpan, TextColor, TextFont)> {
         let mut text_sections = vec![
-            (TextSpan::new("Result: "), fonts.regular(SOFT_TEXT_COLOR)),
-            (TextSpan::new(&*self.name), fonts.regular(self.color(true))),
+            (TextSpan::new("Result: "), SOFT_TEXT_COLOR, fonts.regular()),
+            (
+                TextSpan::new(&*self.name),
+                self.color(true),
+                fonts.regular(),
+            ),
             (
                 TextSpan::new(format!("\n({})", self.recipe_id.fallback_name())),
-                fonts.regular(SOFT_TEXT_COLOR),
+                SOFT_TEXT_COLOR,
+                fonts.regular(),
             ),
         ];
         if let Some(skill_used) = &recipe.skill_used {
-            text_sections.push((TextSpan::new("\n\nSkill: "), fonts.regular(SOFT_TEXT_COLOR)));
-            text_sections.push((TextSpan::new(&**skill_used), fonts.regular(WARN_TEXT_COLOR)));
+            text_sections.push((
+                TextSpan::new("\n\nSkill: "),
+                SOFT_TEXT_COLOR,
+                fonts.regular(),
+            ));
+            text_sections.push((
+                TextSpan::new(&**skill_used),
+                WARN_TEXT_COLOR,
+                fonts.regular(),
+            ));
             text_sections.push((
                 TextSpan::new("\nDifficulty: "),
-                fonts.regular(SOFT_TEXT_COLOR),
+                SOFT_TEXT_COLOR,
+                fonts.regular(),
             ));
             text_sections.push((
                 TextSpan::new(format!("{}", recipe.difficulty)),
-                fonts.regular(WARN_TEXT_COLOR),
+                WARN_TEXT_COLOR,
+                fonts.regular(),
             ));
         }
         if let Some(time) = &recipe.time {
             text_sections.push((
                 TextSpan::new("\n\nDuration: "),
-                fonts.regular(SOFT_TEXT_COLOR),
+                SOFT_TEXT_COLOR,
+                fonts.regular(),
             ));
             text_sections.push((
                 TextSpan::new(time.to_string()),
-                fonts.regular(WARN_TEXT_COLOR),
+                WARN_TEXT_COLOR,
+                fonts.regular(),
             ));
         }
         if !self.qualities.is_empty() {
-            text_sections.push((TextSpan::new("\n\nTools"), fonts.regular(SOFT_TEXT_COLOR)));
+            text_sections.push((TextSpan::new("\n\nTools"), SOFT_TEXT_COLOR, fonts.regular()));
         }
         for quality in &self.qualities {
             text_sections.extend_from_slice(&quality.text_sections(fonts));
@@ -93,7 +110,8 @@ impl RecipeSituation {
         if !self.components.is_empty() {
             text_sections.push((
                 TextSpan::new("\n\nComponents"),
-                fonts.regular(SOFT_TEXT_COLOR),
+                SOFT_TEXT_COLOR,
+                fonts.regular(),
             ));
         }
         for component in &self.components {
@@ -101,11 +119,13 @@ impl RecipeSituation {
         }
         text_sections.push((
             TextSpan::new("\n\nSource: "),
-            fonts.regular(SOFT_TEXT_COLOR),
+            SOFT_TEXT_COLOR,
+            fonts.regular(),
         ));
         text_sections.push((
             TextSpan::new(if self.autolearn { "Self-taught" } else { "" }),
-            fonts.regular(GOOD_TEXT_COLOR),
+            GOOD_TEXT_COLOR,
+            fonts.regular(),
         ));
         text_sections.push((
             TextSpan::new(if self.autolearn && !self.manuals.is_empty() {
@@ -113,11 +133,13 @@ impl RecipeSituation {
             } else {
                 ""
             }),
-            fonts.regular(GOOD_TEXT_COLOR),
+            GOOD_TEXT_COLOR,
+            fonts.regular(),
         ));
         text_sections.push((
             TextSpan::new(self.manuals.join(", ")),
-            fonts.regular(WARN_TEXT_COLOR),
+            WARN_TEXT_COLOR,
+            fonts.regular(),
         ));
 
         text_sections
@@ -137,45 +159,62 @@ impl QualitySituation {
             .is_some_and(|present| self.required as i8 <= present)
     }
 
-    fn text_sections(&self, fonts: &Fonts) -> Vec<(TextSpan, TextStyle)> {
-        let checked_style = fonts.regular(if self.is_present() {
+    fn text_sections(&self, fonts: &Fonts) -> Vec<(TextSpan, TextColor, TextFont)> {
+        let checked_color = if self.is_present() {
             GOOD_TEXT_COLOR
         } else {
             BAD_TEXT_COLOR
-        });
-        let soft_style = fonts.regular(SOFT_TEXT_COLOR);
+        };
 
         let mut text_sections = vec![
-            (TextSpan::new("\n- "), soft_style.clone()),
-            (TextSpan::new(&*self.name), checked_style.clone()),
-            (TextSpan::new(": a tool of "), soft_style.clone()),
+            (TextSpan::new("\n- "), SOFT_TEXT_COLOR, fonts.regular()),
+            (TextSpan::new(&*self.name), checked_color, fonts.regular()),
+            (
+                TextSpan::new(": a tool of "),
+                SOFT_TEXT_COLOR,
+                fonts.regular(),
+            ),
         ];
 
         if let Some(present) = self.present {
             match present.cmp(&(self.required as i8)) {
                 Ordering::Greater => {
-                    text_sections.push((TextSpan::new(format!("{present}")), checked_style));
+                    text_sections.push((
+                        TextSpan::new(format!("{present}")),
+                        checked_color,
+                        fonts.regular(),
+                    ));
                     text_sections.push((
                         TextSpan::new(format!(" ({} required)", self.required)),
-                        soft_style,
+                        SOFT_TEXT_COLOR,
+                        fonts.regular(),
                     ));
                 }
                 Ordering::Equal => {
-                    text_sections.push((TextSpan::new(format!("{present}")), checked_style));
+                    text_sections.push((
+                        TextSpan::new(format!("{present}")),
+                        checked_color,
+                        fonts.regular(),
+                    ));
                 }
                 Ordering::Less => {
                     text_sections.push((
                         TextSpan::new(format!("{} required", self.required)),
-                        checked_style,
+                        checked_color,
+                        fonts.regular(),
                     ));
-                    text_sections
-                        .push((TextSpan::new(format!(" ({present} present)")), soft_style));
+                    text_sections.push((
+                        TextSpan::new(format!(" ({present} present)")),
+                        SOFT_TEXT_COLOR,
+                        fonts.regular(),
+                    ));
                 }
             }
         } else {
             text_sections.push((
                 TextSpan::new(format!("{} required", self.required)),
-                checked_style,
+                checked_color,
+                fonts.regular(),
             ));
         }
 
@@ -195,9 +234,7 @@ impl ComponentSituation {
             .any(AlternativeSituation::is_present)
     }
 
-    fn text_sections(&self, fonts: &Fonts) -> Vec<(TextSpan, TextStyle)> {
-        let soft_style = fonts.regular(SOFT_TEXT_COLOR);
-
+    fn text_sections(&self, fonts: &Fonts) -> Vec<(TextSpan, TextColor, TextFont)> {
         let mut text_sections = Vec::new();
 
         for (index, alternative) in self.alternatives.iter().enumerate() {
@@ -208,7 +245,7 @@ impl ComponentSituation {
             } else {
                 ", or "
             };
-            text_sections.push((TextSpan::new(divider), soft_style.clone()));
+            text_sections.push((TextSpan::new(divider), SOFT_TEXT_COLOR, fonts.regular()));
             text_sections.extend_from_slice(&alternative.text_sections(fonts));
         }
 
@@ -230,16 +267,17 @@ impl AlternativeSituation {
         self.required <= self.present
     }
 
-    fn text_sections(&self, fonts: &Fonts) -> Vec<(TextSpan, TextStyle)> {
-        let checked_style = fonts.regular(if self.is_present() {
+    fn text_sections(&self, fonts: &Fonts) -> Vec<(TextSpan, TextColor, TextFont)> {
+        let checked_style = if self.is_present() {
             GOOD_TEXT_COLOR
         } else {
             BAD_TEXT_COLOR
-        });
+        };
 
         let mut text_sections = vec![(
             TextSpan::new(format!("{} {}", self.required, &self.name)),
             checked_style,
+            fonts.regular(),
         )];
 
         if 0 < self.present {
@@ -251,7 +289,8 @@ impl AlternativeSituation {
 
             text_sections.push((
                 TextSpan::new(format!(" ({only}{} present)", self.present)),
-                fonts.regular(SOFT_TEXT_COLOR),
+                SOFT_TEXT_COLOR,
+                fonts.regular(),
             ));
         }
 

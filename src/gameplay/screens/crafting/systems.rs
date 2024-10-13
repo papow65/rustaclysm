@@ -187,7 +187,7 @@ pub(super) fn move_crafting_selection(
     infos: Res<Infos>,
     fonts: Res<Fonts>,
     mut crafting_screen: ResMut<CraftingScreen>,
-    mut recipes: Query<(&mut TextStyle, &Transform, &Node, &RecipeSituation)>,
+    mut recipes: Query<(&mut TextColor, &Transform, &Node, &RecipeSituation)>,
     mut scrolling_lists: Query<(&mut ScrollingList, &mut Style, &Parent, &Node)>,
     scrolling_parents: Query<(&Node, &Style), Without<ScrollingList>>,
 ) {
@@ -293,7 +293,8 @@ pub(super) fn refresh_crafting_screen(
         .with_children(|parent| {
             parent.spawn((
                 Text::from("Known recipies:"),
-                fonts.regular(WARN_TEXT_COLOR),
+                WARN_TEXT_COLOR,
+                fonts.regular(),
             ));
 
             for recipe in shown_recipes {
@@ -305,7 +306,8 @@ pub(super) fn refresh_crafting_screen(
                 let entity = parent
                     .spawn((
                         Text::from(&*recipe.name),
-                        fonts.regular(recipe.color(first)),
+                        recipe.color(first),
+                        fonts.regular(),
                         recipe,
                     ))
                     .id();
@@ -314,13 +316,15 @@ pub(super) fn refresh_crafting_screen(
 
             parent.spawn((
                 Text::from("\nNearby tools:"),
-                fonts.regular(WARN_TEXT_COLOR),
+                WARN_TEXT_COLOR,
+                fonts.regular(),
             ));
 
             for (_, amount, name) in shown_qualities {
                 parent.spawn((
                     Text::from(format!("{amount} {name}")),
-                    fonts.regular(GOOD_TEXT_COLOR),
+                    GOOD_TEXT_COLOR,
+                    fonts.regular(),
                 ));
             }
         });
@@ -340,7 +344,8 @@ pub(super) fn refresh_crafting_screen(
             .with_children(|parent| {
                 parent.spawn((
                     Text::from("No recipes known"),
-                    fonts.regular(BAD_TEXT_COLOR),
+                    BAD_TEXT_COLOR,
+                    fonts.regular(),
                 ));
             });
     }
@@ -697,12 +702,13 @@ fn show_recipe(
         .with_children(|parent| {
             ButtonBuilder::new(
                 "Craft",
-                fonts.regular(recipe_sitation.color(true)),
+                recipe_sitation.color(true),
+                fonts.regular(),
                 start_craft_system.0,
             )
             .spawn(parent, ());
             parent
-                .spawn((Text::default(), fonts.standard()))
+                .spawn((Text::default(), fonts.regular()))
                 .with_children(|parent| {
                     for section in recipe_sitation.text_sections(fonts, recipe) {
                         parent.spawn(section);

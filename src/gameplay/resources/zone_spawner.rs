@@ -6,8 +6,7 @@ use crate::gameplay::{
 use crate::hud::HARD_TEXT_COLOR;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{
-    BuildChildren, ChildBuild, Entity, Res, ResMut, SpatialBundle, StateScoped, Transform, Vec3,
-    Visibility,
+    BuildChildren, ChildBuild, Entity, Res, ResMut, StateScoped, Transform, Vec3, Visibility,
 };
 use bevy::render::view::RenderLayers;
 use cdda_json_files::{CddaItemName, ItemName};
@@ -101,15 +100,12 @@ impl<'w, 's> ZoneSpawner<'w, 's> {
             .commands
             .entity(entity)
             .insert((
-                SpatialBundle {
-                    transform: Transform {
-                        translation: zone_level.base_corner().vec3() + Vec3::new(11.5, 0.0, 11.5),
-                        scale: Vec3::splat(24.0),
-                        ..Transform::default()
-                    },
-                    visibility,
-                    ..SpatialBundle::default()
+                Transform {
+                    translation: zone_level.base_corner().vec3() + Vec3::new(11.5, 0.0, 11.5),
+                    scale: Vec3::splat(24.0),
+                    ..Transform::default()
                 },
+                visibility,
                 name,
                 seen_from,
                 StateScoped(ApplicationState::Gameplay),

@@ -3,7 +3,7 @@ use crate::gameplay::{
     Pos, Visible, WalkingCost,
 };
 use crate::hud::{FILTHY_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR};
-use bevy::prelude::{Color, Component};
+use bevy::prelude::{Component, TextColor};
 use cdda_json_files::MoveCost;
 use float_ord::FloatOrd;
 use pathfinding::num_traits::Zero;
@@ -75,7 +75,7 @@ impl Faction {
         }
     }
 
-    pub(crate) const fn color(&self) -> Color {
+    pub(crate) const fn color(&self) -> TextColor {
         match self {
             Self::Human => HARD_TEXT_COLOR,
             Self::Zombie => FILTHY_COLOR,

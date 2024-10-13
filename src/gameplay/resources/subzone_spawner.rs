@@ -5,7 +5,7 @@ use crate::gameplay::{
     ZoneLevel, ZoneLevelIds,
 };
 use bevy::ecs::system::SystemParam;
-use bevy::prelude::{Res, ResMut, SpatialBundle, StateScoped};
+use bevy::prelude::{Res, ResMut, StateScoped, Transform, Visibility};
 use cdda_json_files::{CddaAmount, FlatVec, ObjectId, RepetitionBlock, Submap, SubzoneOffset};
 
 #[derive(SystemParam)]
@@ -65,7 +65,8 @@ impl<'w, 's> SubzoneSpawner<'w, 's> {
             .tile_spawner
             .commands
             .spawn((
-                SpatialBundle::default(),
+                Transform::default(),
+                Visibility::default(),
                 subzone_level,
                 StateScoped(ApplicationState::Gameplay),
             ))

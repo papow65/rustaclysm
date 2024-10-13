@@ -54,19 +54,21 @@ pub(super) fn spawn_menu(
         .with_children(|parent| {
             ButtonBuilder::new(
                 "Return",
-                fonts.large(GOOD_TEXT_COLOR),
+                GOOD_TEXT_COLOR,
+                fonts.large(),
                 button_actions.return_,
             )
             .large()
             .spawn(parent, ());
             ButtonBuilder::new(
                 "Main Menu",
-                fonts.large(HARD_TEXT_COLOR),
+                HARD_TEXT_COLOR,
+                fonts.large(),
                 button_actions.main_menu,
             )
             .large()
             .spawn(parent, ());
-            ButtonBuilder::new("Quit", fonts.large(BAD_TEXT_COLOR), button_actions.quit)
+            ButtonBuilder::new("Quit", BAD_TEXT_COLOR, fonts.large(), button_actions.quit)
                 .large()
                 .spawn(parent, ());
         });

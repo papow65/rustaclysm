@@ -2,7 +2,7 @@ use crate::{gameplay::*, hud::text_color_expect_full};
 use bevy::ecs::query::QueryData;
 use bevy::prelude::{
     BuildChildren, Commands, DespawnRecursiveExt, Entity, Event, EventWriter, NextState, Query,
-    SpatialBundle, Visibility,
+    Transform, Visibility,
 };
 use cdda_json_files::{CddaItem, Description};
 use units::{Distance, Duration, Speed};
@@ -523,7 +523,8 @@ impl ActorItem<'_> {
                 left_over_amount,
                 taken.containable.clone(),
                 LastSeen::Currently,
-                SpatialBundle::default(),
+                Transform::default(),
+                Visibility::default(),
             ))
             .set_parent(taken.parent.get())
             .id();

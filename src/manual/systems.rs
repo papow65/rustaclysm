@@ -1,5 +1,5 @@
 use crate::gameplay::GameplayScreenState;
-use crate::hud::{DefaultPanel, Fonts};
+use crate::hud::{DefaultPanel, Fonts, SOFT_TEXT_COLOR};
 use crate::manual::components::{ManualDisplay, ManualText};
 use crate::manual::ManualSection;
 use bevy::prelude::{
@@ -20,7 +20,12 @@ pub(super) fn spawn_manual(
     commands
         .spawn((background, GlobalZIndex(2), ManualDisplay))
         .with_children(|parent| {
-            parent.spawn((Text::default(), fonts.standard(), ManualText));
+            parent.spawn((
+                Text::default(),
+                SOFT_TEXT_COLOR,
+                fonts.regular(),
+                ManualText,
+            ));
         });
 }
 
