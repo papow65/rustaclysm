@@ -61,11 +61,11 @@ impl StaminaImpact {
             } => {
                 i64::from(cost_per_meter.0)
                     * match nbor.distance() {
-                        NborDistance::Up => unimplemented!("Up"),
+                        NborDistance::Up => Distance::VERTICAL * 5,
                         NborDistance::Adjacent => Distance::ADJACENT,
                         NborDistance::Diagonal => Distance::DIAGONAL,
                         NborDistance::Zero => panic!("Stamina impact nbor should not be 'here'"),
-                        NborDistance::Down => unimplemented!("Down"),
+                        NborDistance::Down => Distance::VERTICAL,
                     }
                     .millimeter() as i64
                     / Distance::ADJACENT.millimeter() as i64
