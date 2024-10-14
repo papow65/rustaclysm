@@ -722,10 +722,14 @@ impl ActorItem<'_> {
         self.no_impact()
     }
 
-    pub(crate) fn change_pace(&self, commands: &mut Commands) -> ActorImpact {
+    pub(crate) fn change_pace(
+        &self,
+        commands: &mut Commands,
+        change_pace: ChangePace,
+    ) -> ActorImpact {
         commands
             .entity(self.entity)
-            .insert(self.walking_mode.switch());
+            .insert(self.walking_mode.switch(change_pace));
         self.no_impact()
     }
 }

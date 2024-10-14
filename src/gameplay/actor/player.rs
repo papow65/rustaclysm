@@ -296,7 +296,9 @@ impl PlayerActionState {
                 None
             }
             QueuedInstruction::ExamineItem(item) => Some(PlannedAction::ExamineItem { item }),
-            QueuedInstruction::ChangePace => Some(PlannedAction::ChangePace),
+            QueuedInstruction::ChangePace(change_pace) => {
+                Some(PlannedAction::ChangePace(change_pace))
+            }
             QueuedInstruction::Interrupt(Interruption::Danger(fragments)) => {
                 next_state.set(Self::Normal);
                 message_writer

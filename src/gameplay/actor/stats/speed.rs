@@ -1,4 +1,4 @@
-use crate::gameplay::{Breath, StaminaCost};
+use crate::gameplay::{Breath, ChangePace, StaminaCost};
 use crate::hud::{BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR};
 use bevy::prelude::{Component, Mix, TextColor};
 use units::Speed;
@@ -63,13 +63,22 @@ impl WalkingMode {
     }
 
     #[must_use]
-    pub(crate) const fn switch(&self) -> Self {
-        match self {
-            Self::Crouching => Self::Walking,
-            Self::Walking => Self::SpeedWalking,
-            Self::SpeedWalking => Self::Running,
-            Self::Running => Self::Sprinting,
-            Self::Sprinting => Self::Crouching,
+    pub(crate) const fn switch(&self, change_pace: ChangePace) -> Self {
+        match change_pace {
+            ChangePace::Next => match self {
+                Self::Crouching => Self::Walking,
+                Self::Walking => Self::SpeedWalking,
+                Self::SpeedWalking => Self::Running,
+                Self::Running => Self::Sprinting,
+                Self::Sprinting => Self::Crouching,
+            },
+            ChangePace::Previous => match self {
+                Self::Crouching => Self::Sprinting,
+                Self::Walking => Self::Crouching,
+                Self::SpeedWalking => Self::Walking,
+                Self::Running => Self::SpeedWalking,
+                Self::Sprinting => Self::Running,
+            }
         }
     }
 

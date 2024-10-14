@@ -271,7 +271,7 @@ pub(in super::super) fn perform_action(
             perform_systems.examine_item,
             ItemAction::new(item, ExamineItem),
         ),
-        PlannedAction::ChangePace => act_fn(perform_systems.change_pace, ChangePace),
+        PlannedAction::ChangePace(change_pace) => act_fn(perform_systems.change_pace, change_pace),
     };
 
     let impact = perform_fn(world, actor_entity);
@@ -575,7 +575,9 @@ pub(in super::super) fn perform_change_pace(
     mut commands: Commands,
     actors: Query<Actor>,
 ) -> ActorImpact {
-    change_pace.actor(&actors).change_pace(&mut commands)
+    change_pace
+        .actor(&actors)
+        .change_pace(&mut commands, change_pace.action)
 }
 
 #[expect(clippy::needless_pass_by_value)]

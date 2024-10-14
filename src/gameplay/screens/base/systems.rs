@@ -1,8 +1,8 @@
 use crate::common::log_if_slow;
 use crate::gameplay::{
-    CameraOffset, CancelHandling, ElevationVisibility, Focus, FocusState, GameplayScreenState,
-    InstructionQueue, MessageWriter, PlayerActionState, PlayerDirection, QueuedInstruction,
-    VisualizationUpdate, ZoomDirection, ZoomDistance,
+    CameraOffset, CancelHandling, ChangePace, ElevationVisibility, Focus, FocusState,
+    GameplayScreenState, InstructionQueue, MessageWriter, PlayerActionState, PlayerDirection,
+    QueuedInstruction, VisualizationUpdate, ZoomDirection, ZoomDistance,
 };
 use crate::hud::ScrollingList;
 use crate::keyboard::{Held, Key, KeyBindings};
@@ -263,7 +263,9 @@ pub(super) fn create_base_key_bindings(
             char_to_queued_instruction.insert('\\', QueuedInstruction::Drag);
             char_to_queued_instruction.insert('G', QueuedInstruction::ToggleAutoTravel);
             char_to_queued_instruction.insert('A', QueuedInstruction::ToggleAutoDefend);
-            char_to_queued_instruction.insert('+', QueuedInstruction::ChangePace);
+            char_to_queued_instruction.insert('+', QueuedInstruction::ChangePace(ChangePace::Next));
+            char_to_queued_instruction
+                .insert('-', QueuedInstruction::ChangePace(ChangePace::Previous));
 
             for (char, instruction) in char_to_queued_instruction {
                 let system =
@@ -282,7 +284,7 @@ pub(super) fn create_base_key_bindings(
                 ("attack npc", "a"),
                 ("smash furniture", "s"),
                 ("pulp corpse", "p"),
-                ("walking mode", "+"),
+                ("walking mode", "+/-"),
                 ("auto defend", "A"),
                 ("peek", "tab"),
                 ("wait", "|"),

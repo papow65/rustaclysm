@@ -144,7 +144,10 @@ pub(crate) struct ExamineItem;
 
 impl ItemChange for ExamineItem {}
 
-#[derive(Clone, Debug)]
-pub(crate) struct ChangePace;
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(crate) enum ChangePace {
+    Next,
+    Previous,
+}
 
 impl Action for ChangePace {}

@@ -1,4 +1,4 @@
-use crate::gameplay::{Fragment, HorizontalDirection, Nbor, RecipeSituation};
+use crate::gameplay::{ChangePace, Fragment, HorizontalDirection, Nbor, RecipeSituation};
 use crate::keyboard::Key;
 use bevy::{input::keyboard::KeyCode, prelude::Entity};
 
@@ -90,7 +90,7 @@ pub(crate) enum QueuedInstruction {
     Sleep,
     ToggleAutoTravel,
     ToggleAutoDefend,
-    ChangePace,
+    ChangePace(ChangePace),
     ExamineItem(Entity),
     CancelAction,
     /// Set automatically

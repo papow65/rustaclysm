@@ -1,4 +1,4 @@
-use crate::gameplay::{CardinalDirection, HorizontalDirection, Nbor, StartCraft};
+use crate::gameplay::{CardinalDirection, ChangePace, HorizontalDirection, Nbor, StartCraft};
 use bevy::prelude::Entity;
 
 #[derive(Debug)]
@@ -45,5 +45,5 @@ pub(crate) enum PlannedAction {
     ExamineItem {
         item: Entity,
     },
-    ChangePace,
+    ChangePace(ChangePace),
 }
