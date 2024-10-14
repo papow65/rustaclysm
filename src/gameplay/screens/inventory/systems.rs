@@ -7,9 +7,9 @@ use crate::gameplay::screens::inventory::resource::{
 };
 use crate::gameplay::screens::inventory::section::InventorySection;
 use crate::gameplay::{
-    BodyContainers, Clock, Corpse, Envir, GameplayScreenState, HorizontalDirection, Infos,
-    InstructionQueue, Integrity, Item, LastSeen, Nbor, Phrase, Player, PlayerDirection, Pos,
-    QueuedInstruction,
+    BodyContainers, Clock, Corpse, Envir, ExamineItem, GameplayScreenState, HorizontalDirection,
+    Infos, InstructionQueue, Integrity, Item, LastSeen, MoveItem, Nbor, Phrase, Pickup, Player,
+    PlayerDirection, Pos, QueuedInstruction, Unwield, Wield,
 };
 use crate::hud::{
     ButtonBuilder, Fonts, ScrollingList, SelectionList, StepDirection, StepSize, PANEL_COLOR,
@@ -566,11 +566,20 @@ fn handle_selected_item(
                     // Prevent moving an item to its current position.
                     return;
                 }
-                QueuedInstruction::Dump(selected_item, inventory.drop_direction)
+                QueuedInstruction::MoveItem(MoveItem {
+                    item_entity: selected_item,
+                    to: Nbor::Horizontal(inventory.drop_direction),
+                })
             }
-            't' => QueuedInstruction::Pickup(selected_item),
-            'u' => QueuedInstruction::Unwield(selected_item),
-            'w' => QueuedInstruction::Wield(selected_item),
+            't' => QueuedInstruction::Pickup(Pickup {
+                item_entity: selected_item,
+            }),
+            'u' => QueuedInstruction::Unwield(Unwield {
+                item_entity: selected_item,
+            }),
+            'w' => QueuedInstruction::Wield(Wield {
+                item_entity: selected_item,
+            }),
             _ => panic!("Unexpected key {char:?}"),
         });
         inventory
@@ -586,8 +595,8 @@ fn examine_selected_item(
     inventory: Res<InventoryScreen>,
     item_lines: Query<&InventoryItemLine>,
 ) {
-    if let Some(selected_item) = inventory.selected_item(&item_lines) {
-        instruction_queue.add(QueuedInstruction::ExamineItem(selected_item));
+    if let Some(item_entity) = inventory.selected_item(&item_lines) {
+        instruction_queue.add(QueuedInstruction::ExamineItem(ExamineItem { item_entity }));
     }
 }
 
@@ -598,14 +607,16 @@ pub(super) fn handle_inventory_action(
     inventory: Res<InventoryScreen>,
 ) {
     println!("{:?}", &inventory_button);
+    let item_entity = inventory_button.item;
     let instruction = match inventory_button.action {
-        InventoryAction::Examine => QueuedInstruction::ExamineItem(inventory_button.item),
-        InventoryAction::Take => QueuedInstruction::Pickup(inventory_button.item),
-        InventoryAction::Drop | InventoryAction::Move => {
-            QueuedInstruction::Dump(inventory_button.item, inventory.drop_direction)
-        }
-        InventoryAction::Wield => QueuedInstruction::Wield(inventory_button.item),
-        InventoryAction::Unwield => QueuedInstruction::Unwield(inventory_button.item),
+        InventoryAction::Examine => QueuedInstruction::ExamineItem(ExamineItem { item_entity }),
+        InventoryAction::Take => QueuedInstruction::Pickup(Pickup { item_entity }),
+        InventoryAction::Drop | InventoryAction::Move => QueuedInstruction::MoveItem(MoveItem {
+            item_entity,
+            to: Nbor::Horizontal(inventory.drop_direction),
+        }),
+        InventoryAction::Wield => QueuedInstruction::Wield(Wield { item_entity }),
+        InventoryAction::Unwield => QueuedInstruction::Unwield(Unwield { item_entity }),
     };
     instruction_queue.add(instruction);
 }

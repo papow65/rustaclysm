@@ -78,7 +78,7 @@ impl WalkingMode {
                 Self::SpeedWalking => Self::Walking,
                 Self::Running => Self::SpeedWalking,
                 Self::Sprinting => Self::Running,
-            }
+            },
         }
     }
 

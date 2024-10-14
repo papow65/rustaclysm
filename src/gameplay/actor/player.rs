@@ -260,13 +260,10 @@ impl PlayerActionState {
                 player_pos,
                 direction.to_nbor(),
             ),
-            QueuedInstruction::Wield(item) => Some(PlannedAction::Wield { item }),
-            QueuedInstruction::Unwield(item) => Some(PlannedAction::Unwield { item }),
-            QueuedInstruction::Pickup(item) => Some(PlannedAction::Pickup { item }),
-            QueuedInstruction::Dump(item, direction) => Some(PlannedAction::MoveItem {
-                item,
-                to: Nbor::Horizontal(direction),
-            }),
+            QueuedInstruction::Wield(wield) => Some(PlannedAction::Wield(wield)),
+            QueuedInstruction::Unwield(unwield) => Some(PlannedAction::Unwield(unwield)),
+            QueuedInstruction::Pickup(pickup) => Some(PlannedAction::Pickup(pickup)),
+            QueuedInstruction::MoveItem(move_item) => Some(PlannedAction::MoveItem(move_item)),
             QueuedInstruction::StartCraft(recipe_situation) => Self::handle_start_craft(
                 next_state,
                 message_writer,
@@ -295,7 +292,9 @@ impl PlayerActionState {
                 next_state.set(Self::PickingNbor(PickingNbor::Dragging));
                 None
             }
-            QueuedInstruction::ExamineItem(item) => Some(PlannedAction::ExamineItem { item }),
+            QueuedInstruction::ExamineItem(examine_item) => {
+                Some(PlannedAction::ExamineItem(examine_item))
+            }
             QueuedInstruction::ChangePace(change_pace) => {
                 Some(PlannedAction::ChangePace(change_pace))
             }
@@ -361,22 +360,22 @@ impl PlayerActionState {
                 next_state.set(Self::Normal);
                 None
             }
-            Self::Normal => Some(PlannedAction::Step { to: raw_nbor }),
+            Self::Normal => Some(PlannedAction::step(raw_nbor)),
             Self::PickingNbor(picking_nbor) => {
                 match picking_nbor {
                     PickingNbor::Attacking => {
                         next_state.set(Self::Normal);
-                        Some(PlannedAction::Attack { target: raw_nbor })
+                        Some(PlannedAction::attack(raw_nbor))
                     }
                     PickingNbor::Smashing => {
                         next_state.set(Self::Normal);
-                        Some(PlannedAction::Smash { target: raw_nbor })
+                        Some(PlannedAction::smash(raw_nbor))
                     }
                     PickingNbor::Pulping => {
                         //eprintln!("Inactive pulping");
                         if let Nbor::Horizontal(target) = raw_nbor {
                             //eprintln!("Activating pulping");
-                            Some(PlannedAction::Pulp { target })
+                            Some(PlannedAction::pulp(target))
                         } else {
                             message_writer.you("can't pulp vertically").send_error();
                             None
@@ -388,7 +387,7 @@ impl PlayerActionState {
                     PickingNbor::Closing => {
                         next_state.set(Self::Normal);
                         if let Nbor::Horizontal(target) = raw_nbor {
-                            Some(PlannedAction::Close { target })
+                            Some(PlannedAction::close(target))
                         } else {
                             message_writer.you("can't close vertically").send_error();
                             None
@@ -396,7 +395,7 @@ impl PlayerActionState {
                     }
                     PickingNbor::Dragging => {
                         next_state.set(Self::Dragging { from: player_pos });
-                        Some(PlannedAction::Step { to: raw_nbor })
+                        Some(PlannedAction::step(raw_nbor))
                     }
                     PickingNbor::Crafting(recipe_situation) => {
                         if let Nbor::Horizontal(target) = raw_nbor {
@@ -451,7 +450,7 @@ impl PlayerActionState {
                 //eprintln!("Activating peeking");
                 // Not Self::Peeking, because that is not validated yet.
                 next_state.set(Self::Normal);
-                Some(PlannedAction::Peek { target })
+                Some(PlannedAction::peek(target))
             }
         }
     }
@@ -511,9 +510,7 @@ impl PlayerActionState {
                 message_writer.str("no targets nearby").send_error();
                 None
             }
-            1 => Some(PlannedAction::Attack {
-                target: attackable_nbors[0],
-            }),
+            1 => Some(PlannedAction::attack(attackable_nbors[0])),
             _ => {
                 next_state.set(Self::PickingNbor(PickingNbor::Attacking));
                 None
@@ -535,9 +532,7 @@ impl PlayerActionState {
                 message_writer.str("no targets nearby").send_error();
                 None
             }
-            1 => Some(PlannedAction::Smash {
-                target: smashable_nbors[0],
-            }),
+            1 => Some(PlannedAction::smash(smashable_nbors[0])),
             _ => {
                 next_state.set(Self::PickingNbor(PickingNbor::Smashing));
                 None
@@ -572,9 +567,7 @@ impl PlayerActionState {
                 next_state.set(Self::Pulping {
                     direction: pulpable_nbors[0],
                 });
-                Some(PlannedAction::Pulp {
-                    target: pulpable_nbors[0],
-                })
+                Some(PlannedAction::pulp(pulpable_nbors[0]))
             }
             _ => {
                 //eprintln!("Pulping choice -> inactive");
@@ -605,9 +598,7 @@ impl PlayerActionState {
                 message_writer.str("nothing to close nearby").send_error();
                 None
             }
-            1 => Some(PlannedAction::Close {
-                target: closable_nbors[0],
-            }),
+            1 => Some(PlannedAction::close(closable_nbors[0])),
             _ => {
                 next_state.set(Self::PickingNbor(PickingNbor::Closing));
                 None
@@ -703,14 +694,14 @@ fn plan_auto_drag(
     from: &Pos,
     enemy_name: Option<Fragment>,
 ) -> Option<PlannedAction> {
-    if let Some(item) = envir.find_item(*from) {
+    if let Some(item_entity) = envir.find_item(*from) {
         interrupt_on_danger(
             instruction_queue,
             enemy_name,
-            PlannedAction::MoveItem {
-                item,
+            PlannedAction::MoveItem(MoveItem {
+                item_entity,
                 to: Nbor::HERE,
-            },
+            }),
         )
     } else {
         instruction_queue.interrupt(Interruption::Finished);
@@ -720,14 +711,14 @@ fn plan_auto_drag(
 
 fn plan_auto_continue_craft(
     instruction_queue: &mut InstructionQueue,
-    item: Entity,
+    item_entity: Entity,
     enemy_name: Option<Fragment>,
 ) -> Option<PlannedAction> {
     // Finishing a craft is checked when performing the action
     interrupt_on_danger(
         instruction_queue,
         enemy_name,
-        PlannedAction::ContinueCraft { item },
+        PlannedAction::ContinueCraft(ContinueCraft { item_entity }),
     )
 }
 
@@ -773,7 +764,7 @@ fn plan_auto_travel(
                     })
                     .map(|(nbor, _)| nbor)
             })
-            .map(|to| PlannedAction::Step { to })
+            .map(PlannedAction::step)
     }
 }
 
@@ -790,7 +781,7 @@ fn plan_auto_defend(
         instruction_queue.interrupt(Interruption::LowStamina);
         None
     } else if let Some(target) = enemies.iter().find_map(|pos| envir.nbor(*player.pos, *pos)) {
-        Some(PlannedAction::Attack { target })
+        Some(PlannedAction::attack(target))
     } else {
         Some(PlannedAction::Stay)
     }
@@ -813,7 +804,7 @@ fn plan_auto_pulp(
             enemy_name,
             if player.stamina.breath() == Breath::Normal {
                 //eprintln!("Keep pulping");
-                PlannedAction::Pulp { target }
+                PlannedAction::Pulp(Pulp { target })
             } else {
                 //eprintln!("Keep pulping after catching breath");
                 PlannedAction::Stay

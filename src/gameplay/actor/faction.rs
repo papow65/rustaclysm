@@ -1,6 +1,6 @@
 use crate::gameplay::{
-    ActorItem, CurrentlyVisibleBuilder, Envir, Fragment, Health, Nbor, NborDistance, PlannedAction,
-    Pos, Visible, WalkingCost,
+    ActorItem, Attack, CurrentlyVisibleBuilder, Envir, Fragment, Health, Nbor, NborDistance,
+    PlannedAction, Pos, Smash, Step, Visible, WalkingCost,
 };
 use crate::hud::{FILTHY_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR};
 use bevy::prelude::{Component, TextColor};
@@ -130,7 +130,7 @@ impl Faction {
                         .filter(|(_, faction)| faction != &self)
                         .any(|(pos, _)| pos == &path.destination)
                     {
-                        Some((PlannedAction::Attack { target: nbor }, last_enemy))
+                        Some((PlannedAction::attack(nbor), last_enemy))
                     } else {
                         None
                     }
@@ -139,12 +139,12 @@ impl Faction {
                         if factions.iter().any(|(pos, _)| *pos == path.first) {
                             PlannedAction::Stay
                         } else {
-                            PlannedAction::Smash { target: nbor }
+                            PlannedAction::smash(nbor)
                         },
                         last_enemy,
                     ))
                 } else {
-                    Some((PlannedAction::Step { to: nbor }, last_enemy))
+                    Some((PlannedAction::step(nbor), last_enemy))
                 }
             })
     }
@@ -198,7 +198,7 @@ impl Faction {
         Some(if nbor == Nbor::HERE {
             PlannedAction::Stay
         } else {
-            PlannedAction::Step { to: nbor }
+            PlannedAction::step(nbor)
         })
     }
 
@@ -218,11 +218,11 @@ impl Faction {
             fastrand::choice(wander_options).map(|pos| {
                 let nbor = envir.to_nbor(*actor.pos, pos).expect("Nbors");
                 if envir.find_character(pos).is_some() {
-                    PlannedAction::Attack { target: nbor }
+                    PlannedAction::attack(nbor)
                 } else if envir.find_smashable(pos).is_some() {
-                    PlannedAction::Smash { target: nbor }
+                    PlannedAction::smash(nbor)
                 } else {
-                    PlannedAction::Step { to: nbor }
+                    PlannedAction::step(nbor)
                 }
             })
         } else {
@@ -251,9 +251,9 @@ impl Faction {
             Intent::Wait => Some(PlannedAction::Stay).map(|action| (action, None)),
         }
         .filter(|(action, _)| match action {
-            PlannedAction::Step { to: nbor }
-            | PlannedAction::Attack { target: nbor }
-            | PlannedAction::Smash { target: nbor } => {
+            PlannedAction::Step(Step { to: nbor })
+            | PlannedAction::Attack(Attack { target: nbor })
+            | PlannedAction::Smash(Smash { target: nbor }) => {
                 let pos = envir.get_nbor(*actor.pos, *nbor).expect("Valid pos");
                 // prevent fish from acting on land
                 actor.aquatic.is_none() || envir.is_water(pos)

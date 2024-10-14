@@ -192,13 +192,13 @@ pub(in super::super) struct PerformSystems {
     pulp: SystemId<In<ActionIn<Pulp>>, ActorImpact>,
     peek: SystemId<In<ActionIn<Peek>>, ActorImpact>,
     close: SystemId<In<ActionIn<Close>>, ActorImpact>,
-    wield: SystemId<In<ActionIn<ItemAction<Wield>>>, ActorImpact>,
-    unwield: SystemId<In<ActionIn<ItemAction<Unwield>>>, ActorImpact>,
-    pickup: SystemId<In<ActionIn<ItemAction<Pickup>>>, ActorImpact>,
-    move_item: SystemId<In<ActionIn<ItemAction<MoveItem>>>, ActorImpact>,
+    wield: SystemId<In<ActionIn<Wield>>, ActorImpact>,
+    unwield: SystemId<In<ActionIn<Unwield>>, ActorImpact>,
+    pickup: SystemId<In<ActionIn<Pickup>>, ActorImpact>,
+    move_item: SystemId<In<ActionIn<MoveItem>>, ActorImpact>,
     start_craft: SystemId<In<ActionIn<StartCraft>>, ActorImpact>,
-    continue_craft: SystemId<In<ActionIn<ItemAction<ContinueCraft>>>, ActorImpact>,
-    examine_item: SystemId<In<ActionIn<ItemAction<ExamineItem>>>, ActorImpact>,
+    continue_craft: SystemId<In<ActionIn<ContinueCraft>>, ActorImpact>,
+    examine_item: SystemId<In<ActionIn<ExamineItem>>, ActorImpact>,
     change_pace: SystemId<In<ActionIn<ChangePace>>, ActorImpact>,
 }
 
@@ -243,34 +243,23 @@ pub(in super::super) fn perform_action(
     let perform_fn = match planned_action {
         PlannedAction::Stay => act_fn(perform_systems.stay, Stay),
         PlannedAction::Sleep => act_fn(perform_systems.sleep, Sleep),
-        PlannedAction::Step { to } => act_fn(perform_systems.step, Step { to }),
-        PlannedAction::Attack { target } => act_fn(perform_systems.attack, Attack { target }),
-        PlannedAction::Smash { target } => act_fn(perform_systems.smash, Smash { target }),
-        PlannedAction::Pulp { target } => act_fn(perform_systems.pulp, Pulp { target }),
-        PlannedAction::Peek { target } => act_fn(perform_systems.peek, Peek { target }),
-        PlannedAction::Close { target } => act_fn(perform_systems.close, Close { target }),
-        PlannedAction::Wield { item } => {
-            act_fn(perform_systems.wield, ItemAction::new(item, Wield))
-        }
-        PlannedAction::Unwield { item } => {
-            act_fn(perform_systems.unwield, ItemAction::new(item, Unwield))
-        }
-        PlannedAction::Pickup { item } => {
-            act_fn(perform_systems.pickup, ItemAction::new(item, Pickup))
-        }
-        PlannedAction::MoveItem { item, to } => act_fn(
-            perform_systems.move_item,
-            ItemAction::new(item, MoveItem { to }),
-        ),
+        PlannedAction::Step(step) => act_fn(perform_systems.step, step),
+        PlannedAction::Attack(attack) => act_fn(perform_systems.attack, attack),
+        PlannedAction::Smash(smash) => act_fn(perform_systems.smash, smash),
+        PlannedAction::Pulp(pulp) => act_fn(perform_systems.pulp, pulp),
+        PlannedAction::Peek(peek) => act_fn(perform_systems.peek, peek),
+        PlannedAction::Close(close) => act_fn(perform_systems.close, close),
+        PlannedAction::Wield(wield) => act_fn(perform_systems.wield, wield),
+        PlannedAction::Unwield(unwield) => act_fn(perform_systems.unwield, unwield),
+        PlannedAction::Pickup(pickup) => act_fn(perform_systems.pickup, pickup),
+        PlannedAction::MoveItem(move_item) => act_fn(perform_systems.move_item, move_item),
         PlannedAction::StartCraft(start_craft) => act_fn(perform_systems.start_craft, start_craft),
-        PlannedAction::ContinueCraft { item } => act_fn(
-            perform_systems.continue_craft,
-            ItemAction::new(item, ContinueCraft),
-        ),
-        PlannedAction::ExamineItem { item } => act_fn(
-            perform_systems.examine_item,
-            ItemAction::new(item, ExamineItem),
-        ),
+        PlannedAction::ContinueCraft(continue_craft) => {
+            act_fn(perform_systems.continue_craft, continue_craft)
+        }
+        PlannedAction::ExamineItem(examine_item) => {
+            act_fn(perform_systems.examine_item, examine_item)
+        }
         PlannedAction::ChangePace(change_pace) => act_fn(perform_systems.change_pace, change_pace),
     };
 
@@ -439,7 +428,7 @@ pub(in super::super) fn perform_close(
 
 #[expect(clippy::needless_pass_by_value)]
 pub(in super::super) fn perform_wield(
-    In(wield): In<ActionIn<ItemAction<Wield>>>,
+    In(wield): In<ActionIn<Wield>>,
     mut commands: Commands,
     mut message_writer: MessageWriter,
     hierarchy: Hierarchy,
@@ -456,7 +445,7 @@ pub(in super::super) fn perform_wield(
 
 #[expect(clippy::needless_pass_by_value)]
 pub(in super::super) fn perform_unwield(
-    In(unwield): In<ActionIn<ItemAction<Unwield>>>,
+    In(unwield): In<ActionIn<Unwield>>,
     mut commands: Commands,
     mut message_writer: MessageWriter,
     hierarchy: Hierarchy,
@@ -473,7 +462,7 @@ pub(in super::super) fn perform_unwield(
 
 #[expect(clippy::needless_pass_by_value)]
 pub(in super::super) fn perform_pickup(
-    In(pickup): In<ActionIn<ItemAction<Pickup>>>,
+    In(pickup): In<ActionIn<Pickup>>,
     mut commands: Commands,
     mut message_writer: MessageWriter,
     hierarchy: Hierarchy,
@@ -490,7 +479,7 @@ pub(in super::super) fn perform_pickup(
 
 #[expect(clippy::needless_pass_by_value)]
 pub(in super::super) fn perform_move_item(
-    In(move_item): In<ActionIn<ItemAction<MoveItem>>>,
+    In(move_item): In<ActionIn<MoveItem>>,
     mut commands: Commands,
     mut message_writer: MessageWriter,
     subzone_level_entities: Res<SubzoneLevelEntities>,
@@ -504,7 +493,7 @@ pub(in super::super) fn perform_move_item(
         &subzone_level_entities,
         &mut location,
         &move_item.action.item(&items),
-        move_item.action.change.to,
+        move_item.action.to,
     )
 }
 
@@ -534,7 +523,7 @@ pub(in super::super) fn perform_start_craft(
 
 #[expect(clippy::needless_pass_by_value)]
 pub(in super::super) fn perform_continue_craft(
-    In(continue_craft): In<ActionIn<ItemAction<ContinueCraft>>>,
+    In(continue_craft): In<ActionIn<ContinueCraft>>,
     mut commands: Commands,
     mut message_writer: MessageWriter,
     mut next_player_action_state: ResMut<NextState<PlayerActionState>>,
@@ -556,7 +545,7 @@ pub(in super::super) fn perform_continue_craft(
 
 #[expect(clippy::needless_pass_by_value)]
 pub(in super::super) fn perform_examine_item(
-    In(examine_item): In<ActionIn<ItemAction<ExamineItem>>>,
+    In(examine_item): In<ActionIn<ExamineItem>>,
     mut message_writer: MessageWriter,
     infos: Res<Infos>,
     actors: Query<Actor>,

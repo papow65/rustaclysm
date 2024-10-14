@@ -1,6 +1,9 @@
-use crate::gameplay::{ChangePace, Fragment, HorizontalDirection, Nbor, RecipeSituation};
+use crate::gameplay::{
+    ChangePace, ExamineItem, Fragment, HorizontalDirection, MoveItem, Nbor, Pickup,
+    RecipeSituation, Unwield, Wield,
+};
 use crate::keyboard::Key;
-use bevy::{input::keyboard::KeyCode, prelude::Entity};
+use bevy::input::keyboard::KeyCode;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum CancelHandling {
@@ -75,10 +78,10 @@ pub(crate) enum Interruption {
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) enum QueuedInstruction {
     Offset(PlayerDirection),
-    Wield(Entity),
-    Unwield(Entity),
-    Pickup(Entity),
-    Dump(Entity, HorizontalDirection),
+    Wield(Wield),
+    Unwield(Unwield),
+    Pickup(Pickup),
+    MoveItem(MoveItem),
     StartCraft(RecipeSituation),
     Attack,
     Smash,
@@ -91,7 +94,7 @@ pub(crate) enum QueuedInstruction {
     ToggleAutoTravel,
     ToggleAutoDefend,
     ChangePace(ChangePace),
-    ExamineItem(Entity),
+    ExamineItem(ExamineItem),
     CancelAction,
     /// Set automatically
     Interrupt(Interruption),

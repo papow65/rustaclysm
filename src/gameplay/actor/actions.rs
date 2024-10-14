@@ -78,52 +78,66 @@ pub(crate) struct Close {
 
 impl Action for Close {}
 
-pub(crate) trait ItemChange: Clone + Send + Sync + 'static {}
+pub(crate) trait ItemAction: Action {
+    fn item_entity(&self) -> Entity;
 
-#[must_use]
-#[derive(Clone, Debug)]
-pub(crate) struct ItemAction<C: ItemChange> {
+    fn item<'a>(&self, items: &'a Query<Item>) -> ItemItem<'a> {
+        items.get(self.item_entity()).expect("Item entity")
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct Wield {
     pub(crate) item_entity: Entity,
-    pub(crate) change: C,
 }
 
-impl<C: ItemChange> ItemAction<C> {
-    pub(crate) const fn new(item_entity: Entity, change: C) -> Self {
-        Self {
-            item_entity,
-            change,
-        }
-    }
+impl Action for Wield {}
 
-    pub(crate) fn item<'a>(&self, items: &'a Query<Item>) -> ItemItem<'a> {
-        items.get(self.item_entity).expect("Actor entity")
+impl ItemAction for Wield {
+    fn item_entity(&self) -> Entity {
+        self.item_entity
     }
 }
 
-impl<C: ItemChange> Action for ItemAction<C> {}
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct Unwield {
+    pub(crate) item_entity: Entity,
+}
 
-#[derive(Clone, Debug)]
-pub(crate) struct Wield;
+impl Action for Unwield {}
 
-impl ItemChange for Wield {}
+impl ItemAction for Unwield {
+    fn item_entity(&self) -> Entity {
+        self.item_entity
+    }
+}
 
-#[derive(Clone, Debug)]
-pub(crate) struct Unwield;
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct Pickup {
+    pub(crate) item_entity: Entity,
+}
 
-impl ItemChange for Unwield {}
+impl Action for Pickup {}
 
-#[derive(Clone, Debug)]
-pub(crate) struct Pickup;
+impl ItemAction for Pickup {
+    fn item_entity(&self) -> Entity {
+        self.item_entity
+    }
+}
 
-impl ItemChange for Pickup {}
-
-/// Redundantly named to avoid confusion
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub(crate) struct MoveItem {
+    pub(crate) item_entity: Entity,
     pub(crate) to: Nbor,
 }
 
-impl ItemChange for MoveItem {}
+impl Action for MoveItem {}
+
+impl ItemAction for MoveItem {
+    fn item_entity(&self) -> Entity {
+        self.item_entity
+    }
+}
 
 #[derive(Clone, Debug)]
 pub(crate) struct StartCraft {
@@ -134,15 +148,31 @@ pub(crate) struct StartCraft {
 impl Action for StartCraft {}
 
 #[derive(Clone, Debug)]
-pub(crate) struct ContinueCraft;
+pub(crate) struct ContinueCraft {
+    pub(crate) item_entity: Entity,
+}
 
-impl ItemChange for ContinueCraft {}
+impl Action for ContinueCraft {}
+
+impl ItemAction for ContinueCraft {
+    fn item_entity(&self) -> Entity {
+        self.item_entity
+    }
+}
 
 /// Redundantly named to avoid confusion
-#[derive(Clone, Debug)]
-pub(crate) struct ExamineItem;
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct ExamineItem {
+    pub(crate) item_entity: Entity,
+}
 
-impl ItemChange for ExamineItem {}
+impl Action for ExamineItem {}
+
+impl ItemAction for ExamineItem {
+    fn item_entity(&self) -> Entity {
+        self.item_entity
+    }
+}
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(crate) enum ChangePace {
