@@ -1,4 +1,3 @@
-use crate::common::log_if_slow;
 use crate::gameplay::sidebar::components::{
     BreathText, DetailsText, EnemiesText, FpsText, HealthText, LogDisplay, PlayerActionStateText,
     SpeedTextSpan, StaminaText, TimeText, WalkingModeTextSpan, WieldedText,
@@ -7,6 +6,7 @@ use crate::hud::{
     text_color_expect_half, DefaultPanel, Fonts, ScrollingList, BAD_TEXT_COLOR, FILTHY_COLOR,
     GOOD_TEXT_COLOR, HARD_TEXT_COLOR, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
 };
+use crate::util::log_if_slow;
 use crate::{application::ApplicationState, gameplay::*};
 use bevy::diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin};
 use bevy::ecs::{schedule::SystemConfigs, system::EntityCommands};

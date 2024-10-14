@@ -1,4 +1,3 @@
-use crate::common::{log_if_slow, AssetPaths};
 use crate::gameplay::{ActiveSav, GameplayScreenState, GameplaySession};
 use crate::hud::{
     trigger_button_action, ButtonBuilder, Fonts, BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR,
@@ -7,6 +6,7 @@ use crate::hud::{
 use crate::keyboard::KeyBindings;
 use crate::main_menu::components::{LoadButtonArea, MessageField, MessageWrapper};
 use crate::main_menu::load_error::LoadError;
+use crate::util::{log_if_slow, AssetPaths};
 use crate::{application::ApplicationState, manual::ManualSection};
 use base64::{engine::general_purpose::STANDARD as base64, Engine};
 use bevy::prelude::{

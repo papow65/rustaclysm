@@ -1,4 +1,3 @@
-use crate::common::log_if_slow;
 use crate::gameplay::{
     DespawnSubzoneLevel, DespawnZoneLevel, Expanded, Explored, Focus, GameplaySession, Level,
     MapAsset, MapManager, MapMemoryAsset, MapMemoryManager, MissingAsset, ObjectCategory,
@@ -7,6 +6,7 @@ use crate::gameplay::{
     SubzoneSpawner, UpdateZoneLevelVisibility, VisionDistance, Zone, ZoneLevel, ZoneLevelEntities,
     ZoneLevelIds, ZoneRegion, ZoneSpawner,
 };
+use crate::util::log_if_slow;
 use bevy::{ecs::system::SystemState, prelude::*};
 use std::{cmp::Ordering, time::Instant};
 

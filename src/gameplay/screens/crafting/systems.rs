@@ -1,4 +1,3 @@
-use crate::common::{log_if_slow, uppercase_first};
 use crate::gameplay::screens::crafting::components::{
     AlternativeSituation, ComponentSituation, QualitySituation, RecipeSituation,
 };
@@ -14,6 +13,7 @@ use crate::hud::{
 };
 use crate::keyboard::{Held, Key, KeyBindings};
 use crate::manual::ManualSection;
+use crate::util::{log_if_slow, uppercase_first};
 use bevy::{ecs::system::SystemId, prelude::*, utils::HashMap};
 use cdda_json_files::{
     Alternative, AutoLearn, BookLearn, BookLearnItem, ObjectId, Recipe, RequiredQuality, Sav,

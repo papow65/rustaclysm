@@ -1,5 +1,5 @@
-use crate::common::log_if_slow;
 use crate::gameplay::{CameraBase, ExamineCursor, Focus, FocusState};
+use crate::util::log_if_slow;
 use bevy::prelude::{Camera3d, Query, Res, State, Transform, Vec3, Visibility, With, Without};
 use std::time::Instant;
 

@@ -1,4 +1,3 @@
-use crate::common::log_if_slow;
 use crate::gameplay::screens::inventory::components::{
     InventoryAction, InventoryItemDescription, InventoryItemLine,
 };
@@ -17,6 +16,7 @@ use crate::hud::{
 };
 use crate::keyboard::{Held, Key, KeyBindings};
 use crate::manual::ManualSection;
+use crate::util::log_if_slow;
 use bevy::ecs::{entity::EntityHashMap, system::SystemId};
 use bevy::{prelude::*, utils::HashMap};
 use cdda_json_files::{ItemInfo, ObjectId};

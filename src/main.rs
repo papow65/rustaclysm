@@ -2,13 +2,13 @@
 
 mod application;
 mod background;
-mod common;
 mod gameplay;
 mod hud;
 mod keyboard;
 mod loading;
 mod main_menu;
 mod manual;
+mod util;
 
 use crate::application::run_application;
 use std::env;

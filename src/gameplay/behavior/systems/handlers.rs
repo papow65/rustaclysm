@@ -1,6 +1,5 @@
 //! These systems are part of [`BehaviorSchedule`](`crate::gameplay::behavior::schedule::BehaviorSchedule`).
 
-use crate::common::log_if_slow;
 use crate::gameplay::{
     Actor, ActorEvent, Amount, Clock, ContainerLimits, Corpse, CorpseEvent, CorpseRaise, Damage,
     Faction, Fragment, GameplayScreenState, Healing, Health, Hierarchy, Infos, Integrity, Item,
@@ -8,6 +7,7 @@ use crate::gameplay::{
     Obstacle, Phrase, Player, Pos, Stamina, Subject, TerrainEvent, TileSpawner, Toggle,
     VisualizationUpdate, WalkingMode,
 };
+use crate::util::log_if_slow;
 use bevy::ecs::schedule::SystemConfigs;
 use bevy::prelude::{
     on_event, Changed, Commands, DespawnRecursiveExt, Entity, EventReader, In, IntoSystem,

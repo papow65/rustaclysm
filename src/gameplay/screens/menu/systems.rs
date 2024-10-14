@@ -1,11 +1,11 @@
 use crate::application::ApplicationState;
-use crate::common::log_if_slow;
 use crate::gameplay::GameplayScreenState;
 use crate::hud::{
     ButtonBuilder, Fonts, BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, MEDIUM_SPACING,
 };
 use crate::keyboard::KeyBindings;
 use crate::manual::ManualSection;
+use crate::util::log_if_slow;
 use bevy::prelude::{
     AlignItems, BuildChildren, Commands, Events, FlexDirection, In, JustifyContent, KeyCode, Local,
     NextState, NodeBundle, Res, ResMut, StateScoped, Style, Val, World,

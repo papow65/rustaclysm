@@ -1,8 +1,8 @@
 use crate::application::ApplicationState;
-use crate::common::{load_async_resource, AsyncResourceLoader};
 use crate::gameplay::cdda::systems::{create_cdda_resources, remove_cdda_resources};
 use crate::gameplay::cdda::{Infos, MapLoader, MapMemoryLoader, OvermapLoader};
 use crate::gameplay::{MapAsset, MapMemoryAsset, OvermapAsset, OvermapBufferAsset};
+use crate::util::{load_async_resource, AsyncResourceLoader};
 use bevy::prelude::{App, AssetApp, OnEnter, OnExit, Plugin, Update};
 
 pub(crate) struct CddaPlugin;

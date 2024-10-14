@@ -1,7 +1,7 @@
 use crate::application::ApplicationState;
-use crate::common::log_if_slow;
 use crate::keyboard::KeyBindings;
 use crate::manual::ManualSection;
+use crate::util::log_if_slow;
 use bevy::prelude::{KeyCode, Local, NextState, ResMut, World};
 use std::time::Instant;
 

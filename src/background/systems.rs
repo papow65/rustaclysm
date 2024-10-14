@@ -1,5 +1,5 @@
 use crate::background::{component::Background, state::BackgroundState};
-use crate::common::AssetPaths;
+use crate::util::AssetPaths;
 use bevy::prelude::{
     AssetServer, Commands, GlobalZIndex, ImageBundle, PositionType, Query, Res, StateScoped, Style,
     UiImage, Val, Window, With,

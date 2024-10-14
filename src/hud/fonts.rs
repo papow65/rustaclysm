@@ -1,4 +1,4 @@
-use crate::common::AssetPaths;
+use crate::util::AssetPaths;
 use bevy::prelude::{AssetServer, Font, Handle, Resource, TextFont};
 
 #[derive(Resource)]

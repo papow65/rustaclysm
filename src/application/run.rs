@@ -1,7 +1,7 @@
 use crate::application::systems::{enter_main_menu, maximize_window};
 use crate::application::{check::check_delay, ApplicationState};
 use crate::background::BackgroundPlugin;
-use crate::common::log_transition_plugin;
+use crate::util::log_transition_plugin;
 use crate::{gameplay::GameplayPlugin, hud::HudPlugin, keyboard::KeyboardPlugin};
 use crate::{loading::LoadingIndicatorPlugin, main_menu::MainMenuPlugin, manual::ManualPlugin};
 use bevy::prelude::{

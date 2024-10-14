@@ -1,4 +1,3 @@
-use crate::common::log_if_slow;
 use crate::gameplay::{
     CameraOffset, CancelHandling, ChangePace, ElevationVisibility, Focus, FocusState,
     GameplayScreenState, InstructionQueue, MessageWriter, PlayerActionState, PlayerDirection,
@@ -7,6 +6,7 @@ use crate::gameplay::{
 use crate::hud::ScrollingList;
 use crate::keyboard::{Held, Key, KeyBindings};
 use crate::manual::ManualSection;
+use crate::util::log_if_slow;
 use bevy::input::mouse::{MouseMotion, MouseWheel};
 use bevy::utils::HashMap;
 use bevy::{prelude::*, render::view::RenderLayers};

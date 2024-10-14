@@ -1,5 +1,5 @@
-use crate::common::AsyncNew;
 use crate::gameplay::{Level, LevelOffset, Nbor, Pos, PosOffset, VisionDistance};
+use crate::util::AsyncNew;
 use bevy::{prelude::Resource, utils::HashMap};
 use std::{array, iter::once};
 

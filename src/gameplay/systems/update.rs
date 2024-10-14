@@ -1,11 +1,11 @@
 use crate::application::ApplicationState;
-use crate::common::log_if_slow;
 use crate::gameplay::{
     Accessible, Appearance, BaseSpeed, CurrentlyVisible, CurrentlyVisibleBuilder,
     ElevationVisibility, Explored, Focus, GameplaySession, LastSeen, MapAsset, MapMemoryAsset,
     OvermapAsset, OvermapBufferAsset, Player, Pos, SubzoneLevel, ZoneLevel,
 };
 use crate::loading::LoadingState;
+use crate::util::log_if_slow;
 use bevy::asset::{AssetLoadError, UntypedAssetLoadFailedEvent};
 use bevy::prelude::{
     Assets, Camera, Changed, Children, Commands, EventReader, Font, GlobalTransform, Local, Mesh,

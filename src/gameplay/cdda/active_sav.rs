@@ -1,12 +1,12 @@
-use crate::common::AssetPaths;
 use crate::gameplay::cdda::{SavPath, WorldPath};
+use crate::util::AssetPaths;
 use bevy::ecs::system::Resource;
 use cdda_json_files::Sav;
 use std::{fs::read_to_string, path::PathBuf};
 
 /// This represents a world and a save in that world.
 ///
-/// See also [`AssetPaths`](`crate::common::AssetPaths`)
+/// See also [`AssetPaths`](`crate::util::AssetPaths`)
 #[derive(Resource)]
 pub(crate) struct ActiveSav {
     sav_path: PathBuf,

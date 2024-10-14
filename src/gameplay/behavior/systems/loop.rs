@@ -1,9 +1,9 @@
-use crate::common::log_if_slow;
 use crate::gameplay::behavior::schedule::BehaviorSchedule;
 use crate::gameplay::behavior::systems::refresh::refresh_all;
 use crate::gameplay::{
     InstructionQueue, PlayerActionState, RefreshAfterBehavior, RelativeSegments,
 };
+use crate::util::log_if_slow;
 use bevy::ecs::{schedule::SystemConfigs, system::SystemState};
 use bevy::prelude::{on_event, resource_exists, IntoSystemConfigs, Res, State, World};
 use std::time::{Duration, Instant};

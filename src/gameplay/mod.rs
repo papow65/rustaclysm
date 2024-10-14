@@ -1,8 +1,8 @@
 mod actor;
 mod behavior;
 mod cdda;
+mod common;
 mod components;
-mod core;
 mod events;
 mod focus;
 mod plugin;
@@ -13,8 +13,8 @@ mod systems;
 
 pub(crate) use self::actor::*;
 pub(crate) use self::cdda::*;
+pub(crate) use self::common::*;
 pub(crate) use self::components::*;
-pub(crate) use self::core::*;
 pub(crate) use self::events::*;
 pub(crate) use self::focus::{Focus, FocusPlugin, FocusState};
 pub(crate) use self::plugin::GameplayPlugin;

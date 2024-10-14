@@ -1,5 +1,4 @@
 use crate::application::ApplicationState;
-use crate::common::{load_async_resource, log_transition_plugin, AsyncResourceLoader};
 use crate::gameplay::systems::*;
 use crate::gameplay::{
     events::EventPlugin, sidebar::SidebarPlugin, update_camera_offset, ActorPlugin,
@@ -9,6 +8,7 @@ use crate::gameplay::{
     MenuScreenPlugin, OvermapAsset, OvermapBufferAsset, RelativeSegments, SpawnSubzoneLevel,
     SpawnZoneLevel, TileLoader, UpdateZoneLevelVisibility,
 };
+use crate::util::{load_async_resource, log_transition_plugin, AsyncResourceLoader};
 use bevy::prelude::{
     in_state, on_event, resource_exists, resource_exists_and_changed, App, AppExtStates,
     AssetEvent, FixedUpdate, IntoSystemConfigs, OnEnter, OnExit, Plugin, Update,

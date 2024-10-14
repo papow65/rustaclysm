@@ -1,12 +1,12 @@
 //! These systems run at most once at the end of [`loop_behavior_and_refresh`](`crate::gameplay::behavior::systems::loop::loop_behavior_and_refresh`).
 
-use crate::common::log_if_slow;
 use crate::gameplay::systems::{update_visualization, update_visualization_on_item_move};
 use crate::gameplay::{
     Accessible, Amount, Appearance, BaseSpeed, Clock, Containable, CurrentlyVisible,
     CurrentlyVisibleBuilder, ElevationVisibility, Explored, Focus, GameplaySession, LastSeen,
     Player, PlayerActionState, Pos, Vehicle, VisualizationUpdate,
 };
+use crate::util::log_if_slow;
 use bevy::ecs::schedule::SystemConfigs;
 use bevy::prelude::{
     resource_exists_and_changed, Camera, Changed, Children, GlobalTransform, IntoSystemConfigs,

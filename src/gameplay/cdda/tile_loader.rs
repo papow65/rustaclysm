@@ -1,6 +1,6 @@
-use crate::common::{AssetPaths, AsyncNew};
 use crate::gameplay::cdda::{error::Error, Atlas, TextureInfo};
 use crate::gameplay::{Layers, Model, ObjectDefinition, SpriteLayer, TileVariant};
+use crate::util::{AssetPaths, AsyncNew};
 use bevy::prelude::Resource;
 use bevy::utils::{Entry, HashMap};
 use cdda_json_files::{

@@ -1,9 +1,9 @@
-use crate::common::log_if_slow;
 use crate::hud::{
     ButtonBuilder, Fonts, BAD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, WARN_TEXT_COLOR,
 };
 use crate::keyboard::KeyBindings;
 use crate::manual::ManualSection;
+use crate::util::log_if_slow;
 use crate::{application::ApplicationState, gameplay::GameplayScreenState};
 use bevy::ecs::system::SystemId;
 use bevy::prelude::{
