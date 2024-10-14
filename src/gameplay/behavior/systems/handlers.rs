@@ -8,13 +8,47 @@ use crate::gameplay::{
     Obstacle, Phrase, Player, Pos, Stamina, Subject, TerrainEvent, TileSpawner, Toggle,
     VisualizationUpdate, WalkingMode,
 };
+use bevy::ecs::schedule::SystemConfigs;
 use bevy::prelude::{
-    Changed, Commands, DespawnRecursiveExt, Entity, EventReader, In, NextState, ParamSet, Parent,
-    Quat, Query, Res, ResMut, Transform, With, Without,
+    on_event, Changed, Commands, DespawnRecursiveExt, Entity, EventReader, In, IntoSystem,
+    IntoSystemConfigs, NextState, ParamSet, Parent, Quat, Query, Res, ResMut, Transform, With,
+    Without,
 };
 use cdda_json_files::ObjectId;
 use std::time::Instant;
 use units::Duration;
+
+pub(in super::super) fn handle_action_effects() -> SystemConfigs {
+    (
+        (
+            // actor events
+            // Make sure killed actors are handled early
+            update_damaged_characters.run_if(on_event::<ActorEvent<Damage>>),
+            (
+                update_healed_characters.run_if(on_event::<ActorEvent<Healing>>),
+                update_corpses,
+                update_explored,
+            ),
+        )
+            .chain(),
+        (
+            // item events
+            update_damaged_corpses.run_if(on_event::<CorpseEvent<Damage>>),
+            combine_items,
+        )
+            .chain(),
+        (
+            // terrain events
+            // Make sure destoyed items are handled early
+            update_damaged_terrain
+                .pipe(spawn_broken_terrain)
+                .run_if(on_event::<TerrainEvent<Damage>>),
+            toggle_doors.run_if(on_event::<TerrainEvent<Toggle>>),
+        )
+            .chain(),
+    )
+        .into_configs()
+}
 
 #[expect(clippy::needless_pass_by_value)]
 pub(in super::super) fn toggle_doors(

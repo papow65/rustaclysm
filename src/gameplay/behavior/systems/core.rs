@@ -1,14 +1,22 @@
 use crate::{common::log_if_slow, gameplay::*};
-use bevy::ecs::system::SystemId;
+use bevy::ecs::{schedule::SystemConfigs, system::SystemId};
 use bevy::prelude::{
-    Commands, Entity, EventWriter, In, Local, NextState, Query, Res, ResMut, State,
-    StateTransition, SystemInput, With, World,
+    Commands, Entity, EventWriter, In, IntoSystem, IntoSystemConfigs, Local, NextState, Query, Res,
+    ResMut, State, StateTransition, SystemInput, With, World,
 };
 use std::{cell::OnceCell, time::Instant};
 use units::Duration;
 
+pub(in super::super) fn perform_egible_character_action() -> SystemConfigs {
+    egible_character
+        .pipe(plan_action)
+        .pipe(perform_action)
+        .pipe(proces_impact)
+        .into_configs()
+}
+
 #[expect(clippy::needless_pass_by_value)]
-pub(in super::super) fn egible_character(
+fn egible_character(
     envir: Envir,
     mut timeouts: ResMut<Timeouts>,
     actors: Query<Actor>,
@@ -24,7 +32,7 @@ pub(in super::super) fn egible_character(
         .expect("There should be an egible character")
 }
 
-pub(in super::super) struct PlanSystems {
+struct PlanSystems {
     manual_player_action: SystemId<In<Entity>, Option<PlannedAction>>,
     automatic_player_action: SystemId<In<Entity>, Option<PlannedAction>>,
     wait_for_player_input: SystemId<(), ()>,
@@ -43,7 +51,7 @@ impl PlanSystems {
 }
 
 #[expect(clippy::needless_pass_by_value)]
-pub(in super::super) fn plan_action(
+fn plan_action(
     In(active_actor): In<Entity>,
     world: &mut World,
     plan_systems: Local<OnceCell<PlanSystems>>,
@@ -183,7 +191,7 @@ fn plan_npc_action(
     strategy.action
 }
 
-pub(in super::super) struct PerformSystems {
+struct PerformSystems {
     stay: SystemId<In<ActionIn<Stay>>, ActorImpact>,
     sleep: SystemId<In<ActionIn<Sleep>>, ActorImpact>,
     step: SystemId<In<ActionIn<Step>>, ActorImpact>,
@@ -223,10 +231,49 @@ impl PerformSystems {
             change_pace: world.register_system_cached(perform_change_pace),
         }
     }
+
+    fn perform(
+        &self,
+        world: &mut World,
+        planned_action: PlannedAction,
+        actor_entity: Entity,
+    ) -> ActorImpact {
+        let perform_fn = match planned_action {
+            PlannedAction::Stay => act_fn(self.stay, Stay),
+            PlannedAction::Sleep => act_fn(self.sleep, Sleep),
+            PlannedAction::Step(step) => act_fn(self.step, step),
+            PlannedAction::Attack(attack) => act_fn(self.attack, attack),
+            PlannedAction::Smash(smash) => act_fn(self.smash, smash),
+            PlannedAction::Pulp(pulp) => act_fn(self.pulp, pulp),
+            PlannedAction::Peek(peek) => act_fn(self.peek, peek),
+            PlannedAction::Close(close) => act_fn(self.close, close),
+            PlannedAction::Wield(wield) => act_fn(self.wield, wield),
+            PlannedAction::Unwield(unwield) => act_fn(self.unwield, unwield),
+            PlannedAction::Pickup(pickup) => act_fn(self.pickup, pickup),
+            PlannedAction::MoveItem(move_item) => act_fn(self.move_item, move_item),
+            PlannedAction::StartCraft(start_craft) => act_fn(self.start_craft, start_craft),
+            PlannedAction::ContinueCraft(continue_craft) => {
+                act_fn(self.continue_craft, continue_craft)
+            }
+            PlannedAction::ExamineItem(examine_item) => act_fn(self.examine_item, examine_item),
+            PlannedAction::ChangePace(change_pace) => act_fn(self.change_pace, change_pace),
+        };
+
+        perform_fn(world, actor_entity)
+    }
+}
+
+fn act_fn<A: Action>(
+    system: SystemId<In<ActionIn<A>>, ActorImpact>,
+    action: A,
+) -> Box<dyn FnOnce(&mut World, Entity) -> ActorImpact> {
+    Box::new(move |world, actor_entity| {
+        run_system(world, system, ActionIn::new(actor_entity, action))
+    })
 }
 
 #[expect(clippy::needless_pass_by_value)]
-pub(in super::super) fn perform_action(
+fn perform_action(
     In(option): In<Option<(Entity, PlannedAction)>>,
     world: &mut World,
     perform_systems: Local<OnceCell<PerformSystems>>,
@@ -238,45 +285,13 @@ pub(in super::super) fn perform_action(
         return None;
     };
 
-    let perform_systems = perform_systems.get_or_init(|| PerformSystems::new(world));
-
-    let perform_fn = match planned_action {
-        PlannedAction::Stay => act_fn(perform_systems.stay, Stay),
-        PlannedAction::Sleep => act_fn(perform_systems.sleep, Sleep),
-        PlannedAction::Step(step) => act_fn(perform_systems.step, step),
-        PlannedAction::Attack(attack) => act_fn(perform_systems.attack, attack),
-        PlannedAction::Smash(smash) => act_fn(perform_systems.smash, smash),
-        PlannedAction::Pulp(pulp) => act_fn(perform_systems.pulp, pulp),
-        PlannedAction::Peek(peek) => act_fn(perform_systems.peek, peek),
-        PlannedAction::Close(close) => act_fn(perform_systems.close, close),
-        PlannedAction::Wield(wield) => act_fn(perform_systems.wield, wield),
-        PlannedAction::Unwield(unwield) => act_fn(perform_systems.unwield, unwield),
-        PlannedAction::Pickup(pickup) => act_fn(perform_systems.pickup, pickup),
-        PlannedAction::MoveItem(move_item) => act_fn(perform_systems.move_item, move_item),
-        PlannedAction::StartCraft(start_craft) => act_fn(perform_systems.start_craft, start_craft),
-        PlannedAction::ContinueCraft(continue_craft) => {
-            act_fn(perform_systems.continue_craft, continue_craft)
-        }
-        PlannedAction::ExamineItem(examine_item) => {
-            act_fn(perform_systems.examine_item, examine_item)
-        }
-        PlannedAction::ChangePace(change_pace) => act_fn(perform_systems.change_pace, change_pace),
-    };
-
-    let impact = perform_fn(world, actor_entity);
+    let impact = perform_systems
+        .get_or_init(|| PerformSystems::new(world))
+        .perform(world, planned_action, actor_entity);
 
     log_if_slow("perform_action", start);
 
     Some(impact)
-}
-
-fn act_fn<A: Action>(
-    system: SystemId<In<ActionIn<A>>, ActorImpact>,
-    action: A,
-) -> Box<dyn FnOnce(&mut World, Entity) -> ActorImpact> {
-    Box::new(move |world, actor_entity| {
-        run_system(world, system, ActionIn::new(actor_entity, action))
-    })
 }
 
 fn run_system<I: SystemInput + 'static, R: 'static>(
@@ -290,15 +305,12 @@ fn run_system<I: SystemInput + 'static, R: 'static>(
 }
 
 #[expect(clippy::needless_pass_by_value)]
-pub(in super::super) fn perform_stay(
-    In(stay): In<ActionIn<Stay>>,
-    actors: Query<Actor>,
-) -> ActorImpact {
+fn perform_stay(In(stay): In<ActionIn<Stay>>, actors: Query<Actor>) -> ActorImpact {
     stay.actor(&actors).stay()
 }
 
 #[expect(clippy::needless_pass_by_value)]
-pub(in super::super) fn perform_sleep(
+fn perform_sleep(
     In(sleep): In<ActionIn<Sleep>>,
     mut message_writer: MessageWriter,
     mut healing_writer: EventWriter<ActorEvent<Healing>>,
@@ -317,7 +329,7 @@ pub(in super::super) fn perform_sleep(
 }
 
 #[expect(clippy::needless_pass_by_value)]
-pub(in super::super) fn perform_step(
+fn perform_step(
     In(step): In<ActionIn<Step>>,
     mut commands: Commands,
     mut message_writer: MessageWriter,
@@ -335,7 +347,7 @@ pub(in super::super) fn perform_step(
 }
 
 #[expect(clippy::needless_pass_by_value)]
-pub(in super::super) fn perform_attack(
+fn perform_attack(
     In(attack): In<ActionIn<Attack>>,
     mut message_writer: MessageWriter,
     mut damage_writer: EventWriter<ActorEvent<Damage>>,
@@ -355,7 +367,7 @@ pub(in super::super) fn perform_attack(
 }
 
 #[expect(clippy::needless_pass_by_value)]
-pub(in super::super) fn perform_smash(
+fn perform_smash(
     In(smash): In<ActionIn<Smash>>,
     mut message_writer: MessageWriter,
     mut damage_writer: EventWriter<TerrainEvent<Damage>>,
@@ -375,7 +387,7 @@ pub(in super::super) fn perform_smash(
 }
 
 #[expect(clippy::needless_pass_by_value)]
-pub(in super::super) fn perform_pulp(
+fn perform_pulp(
     In(pulp): In<ActionIn<Pulp>>,
     mut message_writer: MessageWriter,
     mut corpse_damage_writer: EventWriter<CorpseEvent<Damage>>,
@@ -395,7 +407,7 @@ pub(in super::super) fn perform_pulp(
 }
 
 #[expect(clippy::needless_pass_by_value)]
-pub(in super::super) fn perform_peek(
+fn perform_peek(
     In(peek): In<ActionIn<Peek>>,
     mut message_writer: MessageWriter,
     mut player_action_state: ResMut<NextState<PlayerActionState>>,
@@ -411,7 +423,7 @@ pub(in super::super) fn perform_peek(
 }
 
 #[expect(clippy::needless_pass_by_value)]
-pub(in super::super) fn perform_close(
+fn perform_close(
     In(close): In<ActionIn<Close>>,
     mut message_writer: MessageWriter,
     mut toggle_writer: EventWriter<TerrainEvent<Toggle>>,
@@ -427,7 +439,7 @@ pub(in super::super) fn perform_close(
 }
 
 #[expect(clippy::needless_pass_by_value)]
-pub(in super::super) fn perform_wield(
+fn perform_wield(
     In(wield): In<ActionIn<Wield>>,
     mut commands: Commands,
     mut message_writer: MessageWriter,
@@ -444,7 +456,7 @@ pub(in super::super) fn perform_wield(
 }
 
 #[expect(clippy::needless_pass_by_value)]
-pub(in super::super) fn perform_unwield(
+fn perform_unwield(
     In(unwield): In<ActionIn<Unwield>>,
     mut commands: Commands,
     mut message_writer: MessageWriter,
@@ -461,7 +473,7 @@ pub(in super::super) fn perform_unwield(
 }
 
 #[expect(clippy::needless_pass_by_value)]
-pub(in super::super) fn perform_pickup(
+fn perform_pickup(
     In(pickup): In<ActionIn<Pickup>>,
     mut commands: Commands,
     mut message_writer: MessageWriter,
@@ -478,7 +490,7 @@ pub(in super::super) fn perform_pickup(
 }
 
 #[expect(clippy::needless_pass_by_value)]
-pub(in super::super) fn perform_move_item(
+fn perform_move_item(
     In(move_item): In<ActionIn<MoveItem>>,
     mut commands: Commands,
     mut message_writer: MessageWriter,
@@ -498,7 +510,7 @@ pub(in super::super) fn perform_move_item(
 }
 
 #[expect(clippy::needless_pass_by_value)]
-pub(in super::super) fn perform_start_craft(
+fn perform_start_craft(
     In(start_craft): In<ActionIn<StartCraft>>,
     mut commands: Commands,
     mut message_writer: MessageWriter,
@@ -522,7 +534,7 @@ pub(in super::super) fn perform_start_craft(
 }
 
 #[expect(clippy::needless_pass_by_value)]
-pub(in super::super) fn perform_continue_craft(
+fn perform_continue_craft(
     In(continue_craft): In<ActionIn<ContinueCraft>>,
     mut commands: Commands,
     mut message_writer: MessageWriter,
@@ -544,7 +556,7 @@ pub(in super::super) fn perform_continue_craft(
 }
 
 #[expect(clippy::needless_pass_by_value)]
-pub(in super::super) fn perform_examine_item(
+fn perform_examine_item(
     In(examine_item): In<ActionIn<ExamineItem>>,
     mut message_writer: MessageWriter,
     infos: Res<Infos>,
@@ -559,7 +571,7 @@ pub(in super::super) fn perform_examine_item(
 }
 
 #[expect(clippy::needless_pass_by_value)]
-pub(in super::super) fn perform_change_pace(
+fn perform_change_pace(
     In(change_pace): In<ActionIn<ChangePace>>,
     mut commands: Commands,
     actors: Query<Actor>,
@@ -570,7 +582,7 @@ pub(in super::super) fn perform_change_pace(
 }
 
 #[expect(clippy::needless_pass_by_value)]
-pub(in super::super) fn proces_impact(
+fn proces_impact(
     In(actor_impact): In<Option<ActorImpact>>,
     mut message_writer: MessageWriter,
     mut timeouts: ResMut<Timeouts>,

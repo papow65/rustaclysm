@@ -1,5 +1,5 @@
 use crate::common::log_transition_plugin;
-use crate::gameplay::behavior::system_configs::{behavior_systems, loop_behavior_and_refresh};
+use crate::gameplay::behavior::systems::{behavior_systems, loop_behavior_and_refresh};
 use crate::gameplay::behavior::{schedule::BehaviorSchedule, state::BehaviorState};
 use bevy::prelude::{in_state, App, AppExtStates, IntoSystemConfigs, Plugin, Update};
 
@@ -10,13 +10,12 @@ impl Plugin for BehaviorPlugin {
         app.add_computed_state::<BehaviorState>();
         app.add_plugins(log_transition_plugin::<BehaviorState>);
 
+        app.init_schedule(BehaviorSchedule);
+        app.add_systems(BehaviorSchedule, behavior_systems());
+
         app.add_systems(
             Update,
             loop_behavior_and_refresh().run_if(in_state(BehaviorState)),
         );
-
-        app.init_schedule(BehaviorSchedule);
-
-        app.add_systems(BehaviorSchedule, behavior_systems());
     }
 }

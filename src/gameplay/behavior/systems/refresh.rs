@@ -1,20 +1,35 @@
-//! These systems run at most once at the end of [`loop_behavior_and_refresh`](`crate::gameplay::behavior::system_configs::loop_behavior_and_refresh`).
+//! These systems run at most once at the end of [`loop_behavior_and_refresh`](`crate::gameplay::behavior::systems::loop::loop_behavior_and_refresh`).
 
 use crate::common::log_if_slow;
-use crate::gameplay::systems::update_visualization;
+use crate::gameplay::systems::{update_visualization, update_visualization_on_item_move};
 use crate::gameplay::{
     Accessible, Amount, Appearance, BaseSpeed, Clock, Containable, CurrentlyVisible,
     CurrentlyVisibleBuilder, ElevationVisibility, Explored, Focus, GameplaySession, LastSeen,
     Player, PlayerActionState, Pos, Vehicle, VisualizationUpdate,
 };
+use bevy::ecs::schedule::SystemConfigs;
 use bevy::prelude::{
-    Camera, Changed, Children, GlobalTransform, Local, Mesh3d, Or, ParallelCommands, Parent, Query,
-    RemovedComponents, Res, ResMut, State, Transform, Vec3, Visibility, With, Without,
+    resource_exists_and_changed, Camera, Changed, Children, GlobalTransform, IntoSystemConfigs,
+    Local, Mesh3d, Or, ParallelCommands, Parent, Query, RemovedComponents, Res, ResMut, State,
+    Transform, Vec3, Visibility, With, Without,
 };
 use std::sync::{Arc, Mutex};
 use std::{cell::OnceCell, time::Instant};
 
-pub(in super::super) fn update_transforms(
+pub(super) fn refresh_all() -> SystemConfigs {
+    (
+        update_transforms,
+        update_peeking_transforms.run_if(resource_exists_and_changed::<State<PlayerActionState>>),
+        update_hidden_item_visibility,
+        update_visualization_on_item_move,
+        update_visualization_on_player_move,
+        update_visualization_on_weather_change,
+        check_items,
+    )
+        .into_configs()
+}
+
+fn update_transforms(
     mut obstacles: Query<(&Pos, &mut Transform), (Changed<Pos>, Without<Vehicle>)>,
 ) {
     let start = Instant::now();
@@ -28,7 +43,7 @@ pub(in super::super) fn update_transforms(
 
 /// Independent of `update_transforms`, because the systems affect different entities.
 #[expect(clippy::needless_pass_by_value)]
-pub(in super::super) fn update_peeking_transforms(
+fn update_peeking_transforms(
     player_action_state: Res<State<PlayerActionState>>,
     players: Query<&Children, With<Player>>,
     mut mesh_transforms: Query<&mut Transform, With<Mesh3d>>,
@@ -53,7 +68,7 @@ pub(in super::super) fn update_peeking_transforms(
     log_if_slow("update_peeking_transforms", start);
 }
 
-pub(in super::super) fn update_hidden_item_visibility(
+fn update_hidden_item_visibility(
     mut hidden_items: Query<&mut Visibility, Without<Pos>>,
     mut removed_positions: RemovedComponents<Pos>,
 ) {
@@ -71,7 +86,7 @@ pub(in super::super) fn update_hidden_item_visibility(
 
 /// This is a slow system. For performance, it is only ran once after [`BehaviorSchedule::run`[, instead of after every action
 #[expect(clippy::needless_pass_by_value)]
-pub(in super::super) fn update_visualization_on_player_move(
+fn update_visualization_on_player_move(
     par_commands: ParallelCommands,
     focus: Focus,
     currently_visible_builder: CurrentlyVisibleBuilder,
@@ -141,7 +156,7 @@ pub(in super::super) fn update_visualization_on_player_move(
 }
 
 #[expect(clippy::needless_pass_by_value)]
-pub(in super::super) fn update_visualization_on_weather_change(
+fn update_visualization_on_weather_change(
     clock: Clock,
     player_action_state: Res<State<PlayerActionState>>,
     mut visualization_update: ResMut<VisualizationUpdate>,
@@ -171,9 +186,7 @@ pub(in super::super) fn update_visualization_on_weather_change(
 }
 
 #[expect(clippy::needless_pass_by_value)]
-pub(in super::super) fn check_items(
-    item_parents: Query<Option<&Parent>, Or<(With<Amount>, With<Containable>)>>,
-) {
+fn check_items(item_parents: Query<Option<&Parent>, Or<(With<Amount>, With<Containable>)>>) {
     if cfg!(debug_assertions) {
         assert!(
             item_parents.iter().all(|o| o.is_some()),

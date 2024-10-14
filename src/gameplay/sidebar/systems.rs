@@ -9,7 +9,7 @@ use crate::hud::{
 };
 use crate::{application::ApplicationState, gameplay::*};
 use bevy::diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin};
-use bevy::ecs::system::EntityCommands;
+use bevy::ecs::{schedule::SystemConfigs, system::EntityCommands};
 use bevy::prelude::{
     on_event, resource_exists, resource_exists_and_changed, AlignItems, BuildChildren, Changed,
     ChildBuild, Commands, Condition, DespawnRecursiveExt, DetectChanges, Entity, EventReader,
@@ -174,7 +174,7 @@ fn spawn_log_display(fonts: &Fonts, parent: &mut EntityCommands) {
     });
 }
 
-pub(super) fn update_sidebar_systems() -> impl IntoSystemConfigs<()> {
+pub(super) fn update_sidebar_systems() -> SystemConfigs {
     (
         // sidebar components, in order:
         // (fps is handled elsewhere)
