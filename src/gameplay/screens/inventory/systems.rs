@@ -11,7 +11,7 @@ use crate::gameplay::{
     PlayerDirection, Pos, QueuedInstruction, Unwield, Wield,
 };
 use crate::hud::{
-    ButtonBuilder, Fonts, ScrollingList, SelectionList, StepDirection, StepSize, PANEL_COLOR,
+    ButtonBuilder, Fonts, ScrollList, SelectionList, StepDirection, StepSize, PANEL_COLOR,
     SMALL_SPACING, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
 };
 use crate::keyboard::{Held, Key, KeyBindings};
@@ -50,7 +50,7 @@ pub(super) fn spawn_inventory(mut commands: Commands) {
                 },
                 ..default()
             },
-            ScrollingList::default(),
+            ScrollList::default(),
         ))
         .id();
     commands
@@ -178,8 +178,8 @@ fn move_inventory_selection(
     item_buttons: Query<&Children, With<Button>>,
     mut text_styles: Query<&mut TextColor>,
     item_layouts: Query<(&Transform, &Node)>,
-    mut scrolling_lists: Query<(&mut ScrollingList, &mut Style, &Parent, &Node)>,
-    scrolling_parents: Query<(&Node, &Style), Without<ScrollingList>>,
+    mut scroll_lists: Query<(&mut ScrollList, &mut Style, &Parent, &Node)>,
+    scrolling_parents: Query<(&Node, &Style), Without<ScrollList>>,
 ) {
     let Key::Code(key_code) = key else {
         eprintln!("Unexpected key {key:?} while moving inventory selection");
@@ -198,7 +198,7 @@ fn move_inventory_selection(
     follow_selected(
         &inventory,
         &item_layouts,
-        &mut scrolling_lists,
+        &mut scroll_lists,
         &scrolling_parents,
     );
 }
@@ -517,8 +517,8 @@ fn actions(section: &InventorySection, drop_section: bool) -> Vec<InventoryActio
 fn follow_selected(
     inventory: &InventoryScreen,
     items: &Query<(&Transform, &Node)>,
-    scrolling_lists: &mut Query<(&mut ScrollingList, &mut Style, &Parent, &Node)>,
-    scrolling_parents: &Query<(&Node, &Style), Without<ScrollingList>>,
+    scroll_lists: &mut Query<(&mut ScrollList, &mut Style, &Parent, &Node)>,
+    scrolling_parents: &Query<(&Node, &Style), Without<ScrollList>>,
 ) {
     let Some(selected_row) = inventory.selection_list.selected else {
         return;
@@ -528,13 +528,13 @@ fn follow_selected(
         .get(selected_row)
         .expect("Selected item should be found");
 
-    let (mut scrolling_list, mut style, parent, list_node) = scrolling_lists
+    let (mut scroll_list, mut style, parent, list_node) = scroll_lists
         .get_mut(inventory.panel)
         .expect("The inventory panel should be a scrolling list");
     let (parent_node, parent_style) = scrolling_parents
         .get(parent.get())
         .expect("Parent node should be found");
-    style.top = scrolling_list.follow(
+    style.top = scroll_list.follow(
         item_transform,
         item_node,
         list_node,

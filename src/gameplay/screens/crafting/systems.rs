@@ -8,8 +8,8 @@ use crate::gameplay::{
     QueuedInstruction,
 };
 use crate::hud::{
-    ButtonBuilder, Fonts, ScrollingList, SelectionList, BAD_TEXT_COLOR, GOOD_TEXT_COLOR,
-    PANEL_COLOR, SMALL_SPACING, WARN_TEXT_COLOR,
+    ButtonBuilder, Fonts, ScrollList, SelectionList, BAD_TEXT_COLOR, GOOD_TEXT_COLOR, PANEL_COLOR,
+    SMALL_SPACING, WARN_TEXT_COLOR,
 };
 use crate::keyboard::{Held, Key, KeyBindings};
 use crate::manual::ManualSection;
@@ -54,7 +54,7 @@ pub(super) fn spawn_crafting_screen(mut commands: Commands) {
                 },
                 ..NodeBundle::default()
             },
-            ScrollingList::default(),
+            ScrollList::default(),
         ))
         .id();
     let recipe_details = commands
@@ -188,8 +188,8 @@ pub(super) fn move_crafting_selection(
     fonts: Res<Fonts>,
     mut crafting_screen: ResMut<CraftingScreen>,
     mut recipes: Query<(&mut TextColor, &Transform, &Node, &RecipeSituation)>,
-    mut scrolling_lists: Query<(&mut ScrollingList, &mut Style, &Parent, &Node)>,
-    scrolling_parents: Query<(&Node, &Style), Without<ScrollingList>>,
+    mut scroll_lists: Query<(&mut ScrollList, &mut Style, &Parent, &Node)>,
+    scrolling_parents: Query<(&Node, &Style), Without<ScrollList>>,
 ) {
     let start = Instant::now();
 
@@ -205,7 +205,7 @@ pub(super) fn move_crafting_selection(
         &fonts,
         &crafting_screen,
         &recipes.transmute_lens().query(),
-        &mut scrolling_lists,
+        &mut scroll_lists,
         &scrolling_parents,
         &start_craft_system,
     );
@@ -650,8 +650,8 @@ fn adapt_to_selected(
     fonts: &Res<Fonts>,
     crafting_screen: &CraftingScreen,
     recipes: &Query<(&Transform, &Node, &RecipeSituation)>,
-    scrolling_lists: &mut Query<(&mut ScrollingList, &mut Style, &Parent, &Node)>,
-    scrolling_parents: &Query<(&Node, &Style), Without<ScrollingList>>,
+    scroll_lists: &mut Query<(&mut ScrollList, &mut Style, &Parent, &Node)>,
+    scrolling_parents: &Query<(&Node, &Style), Without<ScrollList>>,
     start_craft_system: &StartCraftSystem,
 ) {
     if let Some(selected) = crafting_screen.selection_list.selected {
@@ -660,13 +660,13 @@ fn adapt_to_selected(
             .expect("Selected recipe should be found");
 
         {
-            let (mut scrolling_list, mut style, parent, list_node) = scrolling_lists
+            let (mut scroll_list, mut style, parent, list_node) = scroll_lists
                 .get_mut(crafting_screen.recipe_list)
                 .expect("The recipe list should be a scrolling list");
             let (parent_node, parent_style) = scrolling_parents
                 .get(parent.get())
                 .expect("Parent node should be found");
-            style.top = scrolling_list.follow(
+            style.top = scroll_list.follow(
                 recipe_transform,
                 recipe_node,
                 list_node,

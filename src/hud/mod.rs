@@ -5,7 +5,7 @@ mod colors;
 mod default_panel;
 mod fonts;
 mod plugin;
-mod scrolling_list;
+mod scroll_list;
 mod selection_list;
 mod spacing;
 mod systems;
@@ -19,7 +19,7 @@ pub(crate) use self::colors::{
 pub(crate) use self::default_panel::DefaultPanel;
 pub(crate) use self::fonts::Fonts;
 pub(crate) use self::plugin::HudPlugin;
-pub(crate) use self::scrolling_list::ScrollingList;
+pub(crate) use self::scroll_list::ScrollList;
 pub(crate) use self::selection_list::{SelectionList, StepDirection, StepSize};
 pub(crate) use self::spacing::{LARGE_SPACING, MEDIUM_SPACING, SMALL_SPACING};
 pub(crate) use self::systems::{manage_button_input, trigger_button_action};

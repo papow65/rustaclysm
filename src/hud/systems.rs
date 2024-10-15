@@ -1,5 +1,5 @@
 use crate::hud::{
-    DefaultPanel, Fonts, RunButton, ScrollingList, DEFAULT_BUTTON_COLOR, HOVERED_BUTTON_COLOR,
+    DefaultPanel, Fonts, RunButton, ScrollList, DEFAULT_BUTTON_COLOR, HOVERED_BUTTON_COLOR,
 };
 use bevy::input::mouse::MouseWheel;
 use bevy::prelude::{
@@ -48,35 +48,34 @@ pub(crate) fn manage_button_input<I: SystemInput + 'static>(
 }
 
 #[expect(clippy::needless_pass_by_value)]
-pub(super) fn manage_scrolling_lists(
+pub(super) fn manage_scroll_lists(
     mut mouse_wheel_events: EventReader<MouseWheel>,
-    mut scrolling_lists: Query<(&mut ScrollingList, &mut Style, &Parent, &Node, &Interaction)>,
-    parent_nodes: Query<(&Node, &Style), Without<ScrollingList>>,
+    mut scroll_lists: Query<(&mut ScrollList, &mut Style, &Parent, &Node, &Interaction)>,
+    parent_nodes: Query<(&Node, &Style), Without<ScrollList>>,
 ) {
     for mouse_wheel_event in mouse_wheel_events.read() {
-        for (mut scrolling_list, mut style, parent, list_node, interaction) in &mut scrolling_lists
-        {
+        for (mut scroll_list, mut style, parent, list_node, interaction) in &mut scroll_lists {
             if interaction != &Interaction::None {
                 let (parent_node, parent_style) = parent_nodes
                     .get(parent.get())
                     .expect("Parent node should be found");
                 style.top =
-                    scrolling_list.scroll(list_node, parent_node, parent_style, mouse_wheel_event);
+                    scroll_list.scroll(list_node, parent_node, parent_style, mouse_wheel_event);
             }
         }
     }
 }
 
 #[expect(clippy::needless_pass_by_value)]
-pub(crate) fn resize_scrolling_lists(
-    mut scrolling_lists: Query<(&mut ScrollingList, &mut Style, &Parent, &Node)>,
-    parent_nodes: Query<(&Node, &Style), Without<ScrollingList>>,
+pub(crate) fn resize_scroll_lists(
+    mut scroll_lists: Query<(&mut ScrollList, &mut Style, &Parent, &Node)>,
+    parent_nodes: Query<(&Node, &Style), Without<ScrollList>>,
 ) {
-    for (mut scrolling_list, mut style, parent, list_node) in &mut scrolling_lists {
+    for (mut scroll_list, mut style, parent, list_node) in &mut scroll_lists {
         let (parent_node, parent_style) = parent_nodes
             .get(parent.get())
             .expect("Parent node should be found");
-        style.top = scrolling_list.resize(list_node, parent_node, parent_style);
+        style.top = scroll_list.resize(list_node, parent_node, parent_style);
     }
 }
 

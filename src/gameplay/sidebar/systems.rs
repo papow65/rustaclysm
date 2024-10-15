@@ -3,7 +3,7 @@ use crate::gameplay::sidebar::components::{
     SpeedTextSpan, StaminaText, TimeText, WalkingModeTextSpan, WieldedText,
 };
 use crate::hud::{
-    text_color_expect_half, DefaultPanel, Fonts, ScrollingList, BAD_TEXT_COLOR, FILTHY_COLOR,
+    text_color_expect_half, DefaultPanel, Fonts, ScrollList, BAD_TEXT_COLOR, FILTHY_COLOR,
     GOOD_TEXT_COLOR, HARD_TEXT_COLOR, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
 };
 use crate::util::log_if_slow;
@@ -167,7 +167,7 @@ fn spawn_log_display(fonts: &Fonts, parent: &mut EntityCommands) {
                         flex_wrap: FlexWrap::Wrap,
                         ..Style::default()
                     },
-                    ScrollingList::default(),
+                    ScrollList::default(),
                     LogDisplay,
                 ));
             });

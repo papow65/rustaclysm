@@ -3,7 +3,7 @@ use crate::gameplay::{
     GameplayScreenState, InstructionQueue, MessageWriter, PlayerActionState, PlayerDirection,
     QueuedInstruction, VisualizationUpdate, ZoomDirection, ZoomDistance,
 };
-use crate::hud::ScrollingList;
+use crate::hud::ScrollList;
 use crate::keyboard::{Held, Key, KeyBindings};
 use crate::manual::ManualSection;
 use crate::util::log_if_slow;
@@ -123,11 +123,11 @@ pub(super) fn manage_mouse_scroll_input(
     mut mouse_wheel_events: EventReader<MouseWheel>,
     mut camera_offset: ResMut<CameraOffset>,
     mut camera_layers: Query<&mut RenderLayers, With<Camera3d>>,
-    scrolling_lists: Query<&Interaction, With<ScrollingList>>,
+    scroll_lists: Query<&Interaction, With<ScrollList>>,
 ) {
     let start = Instant::now();
 
-    if scrolling_lists.iter().all(|i| i == &Interaction::None) {
+    if scroll_lists.iter().all(|i| i == &Interaction::None) {
         for scroll_event in &mut mouse_wheel_events.read() {
             zoom(
                 &mut camera_offset,

@@ -4,12 +4,12 @@ use bevy::prelude::{Component, Interaction, JustifyContent, Node, Style, Transfo
 
 // Manually deriving `Component`
 #[derive(Debug, Default)]
-pub(crate) struct ScrollingList {
+pub(crate) struct ScrollList {
     /// Smaller than or equal to 0.0, this matches with `Style.top`.
     position: f32,
 }
 
-impl ScrollingList {
+impl ScrollList {
     /// Returns the new distance from the top
     #[must_use]
     pub(crate) fn scroll(
@@ -96,7 +96,7 @@ impl ScrollingList {
     }
 }
 
-impl Component for ScrollingList {
+impl Component for ScrollList {
     const STORAGE_TYPE: StorageType = StorageType::Table;
 
     fn register_component_hooks(hooks: &mut ComponentHooks) {
