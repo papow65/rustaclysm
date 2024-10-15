@@ -57,7 +57,10 @@ workspace = true
 
 [workspace.lints.rust]
 # Forbidden groups
-keyword_idents = { level = "forbid", priority = -1 }
+rust-2021-compatibility = { level = "forbid", priority = -1 }
+# Denied groups
+rust-2018-idioms = { level = "deny", priority = -1 }
+rust-2024-compatibility = { level = "deny", priority = -1 }
 # Forbidden linsts
 absolute_paths_not_starting_with_crate = "forbid"
 ambiguous_associated_items = "forbid"
@@ -75,6 +78,7 @@ forbidden_lint_groups = "forbid"
 ill_formed_attribute_input = "forbid"
 invalid_doc_attributes = "forbid"
 invalid_type_param_default = "forbid"
+keyword_idents_2018 = "forbid"
 late_bound_lifetime_arguments = "forbid"
 legacy_derive_helpers = "forbid"
 macro_expanded_macro_exports_accessed_by_absolute_paths = "forbid"
@@ -104,10 +108,12 @@ non_upper_case_globals = "deny"
 unreachable_code = "deny"
 unreachable_pub = "deny"
 unused_attributes = "deny"
-unused_extern_crates = "deny"
 unused_macros = "deny"
 # Warned
 dead_code = "warn"
+# Allow
+deprecated_safe = "allow" # We use set_env before any other threads start to enable RUST_BACKTRACE
+elided_lifetimes_in_paths = "allow" # See https://github.com/rust-lang/rust/issues/91639
 
 [workspace.lints.clippy]
 # Denied categories
