@@ -20,12 +20,16 @@ pub struct CddaVehicle {
     #[serde(rename = "moveDir")]
     pub move_dir: u16,
     pub turn_dir: u16,
-    pub last_turn: u8,
+    pub last_turn: Option<u8>,
     pub velocity: u8,
-    pub avg_velocity: u8,
+    pub avg_velocity: Option<u8>,
     pub falling: bool,
+
+    #[serde(default)]
     pub in_water: bool,
+    #[serde(default)]
     pub floating: bool,
+    #[serde(default)]
     pub flying: bool,
 
     /// Usually positive, sometimes -400
@@ -46,9 +50,9 @@ pub struct CddaVehicle {
     /// May contain "APPLICANCE"
     pub tags: Vec<String>,
 
-    pub fuel_remainder: serde_json::Value,
-    pub fuel_used_last_turn: serde_json::Value,
-    pub labels: Vec<()>,
+    pub fuel_remainder: Option<serde_json::Value>,
+    pub fuel_used_last_turn: Option<serde_json::Value>,
+    pub labels: Vec<serde_json::Value>,
 
     // TODO for example:
     // {"point": [1,-1],"zone": {"name": "Loot: P.Food","type": "LOOT_PFOOD","faction": "your_followers",
@@ -60,20 +64,32 @@ pub struct CddaVehicle {
     pub is_locked: bool,
     pub is_alarm_on: bool,
     pub camera_on: bool,
+
+    #[serde(default)]
     pub autopilot_on: bool,
+
     pub last_update_turn: u64,
     pub pivot: (i8, i8),
+
+    #[serde(default)]
     pub is_on_ramp: bool,
+    #[serde(default)]
     pub is_autodriving: bool,
+
     pub is_following: bool,
     pub is_patrolling: bool,
     pub autodrive_local_target: (u8, u8, u8),
     pub airworthy: bool,
+
+    #[serde(default)]
     pub requested_z_change: u8,
+
     pub summon_time_limit: Option<()>,
     pub magic: bool,
     pub smart_controller: Option<()>,
-    pub vehicle_noise: u8,
+
+    #[serde(default)]
+    pub vehicle_noise: Option<u8>,
 }
 
 #[derive(Debug, Deserialize)]
