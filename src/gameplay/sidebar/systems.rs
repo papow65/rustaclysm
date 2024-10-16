@@ -583,7 +583,7 @@ fn update_status_detais(
     let start = Instant::now();
 
     let text_sections = Phrase::from_fragments(match **focus_state {
-        FocusState::Normal => Vec::new(),
+        FocusState::Normal => vec![Fragment::new(" ")], // Fragment added as a Bevy 0.15-dev workaround
         FocusState::ExaminingPos(pos) => {
             let mut total = vec![Fragment::new(format!("\n{pos:?}\n"))];
             if explored.has_pos_been_seen(pos) {
