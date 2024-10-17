@@ -8,7 +8,7 @@ repository = "https://github.com/papow65/rustaclysm"
 authors = [ "papow65 <papow65@protonmail.com>" ]
 exclude = [ "/screenshots/" ]
 edition = "2021"
-rust-version = "1.81" # should be latest stable
+rust-version = "1.82" # should be latest stable
 
 [workspace]
 members = [ "crates/*" ]
@@ -61,7 +61,7 @@ rust-2021-compatibility = { level = "forbid", priority = -1 }
 # Denied groups
 rust-2018-idioms = { level = "deny", priority = -1 }
 rust-2024-compatibility = { level = "deny", priority = -1 }
-# Forbidden linsts
+# Forbidden lints
 absolute_paths_not_starting_with_crate = "forbid"
 ambiguous_associated_items = "forbid"
 anonymous_parameters = "forbid"
@@ -112,7 +112,7 @@ unused_macros = "deny"
 # Warned
 dead_code = "warn"
 # Allow
-deprecated_safe = "allow" # We use set_env before any other threads start to enable RUST_BACKTRACE
+deprecated_safe_2024 = "allow" # We use set_env before any other threads start to enable RUST_BACKTRACE
 elided_lifetimes_in_paths = "allow" # See https://github.com/rust-lang/rust/issues/91639
 
 [workspace.lints.clippy]
@@ -150,6 +150,7 @@ nonstandard_macro_braces = "deny"
 option_map_or_err_ok = "deny"
 or_fun_call = "deny"
 path_buf_push_overwrite = "deny"
+pathbuf_init_then_push = "deny"
 read_zero_byte_vec = "deny"
 redundant_clone = "deny"
 repeat_vec_with_capacity = "deny"
@@ -161,6 +162,7 @@ string_to_string = "deny"
 suspicious_operation_groupings = "deny"
 test_attr_in_doctest = "deny"
 tests_outside_test_module = "deny"
+too_long_first_doc_paragraph = "deny"
 trait_duplication_in_bounds = "deny"
 tuple_array_conversions = "deny"
 type_repetition_in_bounds = "deny"
@@ -169,6 +171,7 @@ use_self = "deny"
 uninhabited_references = "deny"
 unneeded_field_pattern = "deny"
 unseparated_literal_suffix = "deny"
+unused_result_ok = "deny"
 useless_let_if_seq = "deny"
 verbose_file_reads = "deny"
 while_float = "deny"

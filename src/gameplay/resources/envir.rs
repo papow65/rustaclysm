@@ -207,7 +207,7 @@ impl<'w, 's> Envir<'w, 's> {
         }
     }
 
-    fn nbors(&'s self, pos: Pos) -> impl Iterator<Item = (Nbor, Pos, WalkingCost)> + 's {
+    fn nbors(&'s self, pos: Pos) -> impl Iterator<Item = (Nbor, Pos, WalkingCost)> + use<'s> {
         Nbor::ALL.iter().filter_map(move |&nbor| {
             self.get_nbor(pos, nbor).ok().map(|npos| {
                 (
@@ -235,7 +235,7 @@ impl<'w, 's> Envir<'w, 's> {
         &'s self,
         pos: Pos,
         acceptable: F,
-    ) -> impl Iterator<Item = (Nbor, Pos, WalkingCost)> + 's
+    ) -> impl Iterator<Item = (Nbor, Pos, WalkingCost)> + use<'_, F>
     where
         F: 'w + 's + Fn(Pos) -> bool,
     {
@@ -249,7 +249,7 @@ impl<'w, 's> Envir<'w, 's> {
         destination: Option<Pos>,
         intelligence: Intelligence,
         speed: Speed,
-    ) -> impl Iterator<Item = (Nbor, Pos, Duration)> + 's {
+    ) -> impl Iterator<Item = (Nbor, Pos, Duration)> + use<'s> {
         self.nbors_if(pos, move |nbor| {
             (pos.level == Level::ZERO || self.location.all(pos).next().is_some()) && {
                 let at_destination = Some(nbor) == destination;
@@ -268,7 +268,7 @@ impl<'w, 's> Envir<'w, 's> {
     pub(crate) fn nbors_for_item_handling(
         &'s self,
         pos: Pos,
-    ) -> impl Iterator<Item = (Nbor, Pos)> + 's {
+    ) -> impl Iterator<Item = (Nbor, Pos)> + use<'_> {
         self.nbors_if(pos, move |nbor| pos.level == nbor.level)
             .map(move |(nbor, npos, _)| (nbor, npos))
     }
@@ -277,7 +277,7 @@ impl<'w, 's> Envir<'w, 's> {
         &'s self,
         pos: Pos,
         instruction: &'s QueuedInstruction,
-    ) -> impl Iterator<Item = Nbor> + 's {
+    ) -> impl Iterator<Item = Nbor> + use<'s> {
         self.nbors_if(pos, move |nbor| match instruction {
             QueuedInstruction::Attack => nbor != pos && self.find_character(nbor).is_some(),
             QueuedInstruction::Smash => self.find_smashable(nbor).is_some(),
@@ -399,7 +399,7 @@ impl<'w, 's> Envir<'w, 's> {
         }
     }
 
-    pub(crate) fn magic_stairs_up(&self) -> impl Iterator<Item = Pos> + '_ {
+    pub(crate) fn magic_stairs_up(&self) -> impl Iterator<Item = Pos> + use<'_> {
         self.stairs_up
             .iter()
             .filter(|pos| {
@@ -409,7 +409,7 @@ impl<'w, 's> Envir<'w, 's> {
             .copied()
     }
 
-    pub(crate) fn magic_stairs_down(&self) -> impl Iterator<Item = Pos> + '_ {
+    pub(crate) fn magic_stairs_down(&self) -> impl Iterator<Item = Pos> + use<'_> {
         self.stairs_down
             .iter()
             .filter(|pos| {

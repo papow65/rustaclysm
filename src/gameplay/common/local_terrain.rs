@@ -71,5 +71,5 @@ fn similar(
     // 'nbor.is_some()' is a mostly correct hack for missing data at zone borders
     nbor == Some(like)
         || (like == &*DIRT && nbor.is_none())
-        || (like == &*PAVEMENT && (nbor.is_none() || nbor == Some(&*PAVEMENT_DOT)))
+        || (like == &*PAVEMENT && nbor.is_none_or(|nbor| nbor == &*PAVEMENT_DOT))
 }

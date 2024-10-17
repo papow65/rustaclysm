@@ -68,7 +68,7 @@ pub(crate) struct Hierarchy<'w, 's> {
 }
 
 impl<'w, 's> Hierarchy<'w, 's> {
-    pub(crate) fn items_in(&self, container: Entity) -> impl Iterator<Item = ItemItem> + '_ {
+    pub(crate) fn items_in(&self, container: Entity) -> impl Iterator<Item = ItemItem> + use<'_> {
         self.children
             .iter_descendants(container)
             .flat_map(|item| self.items.get(item))
