@@ -2,9 +2,8 @@ use crate::hud::SOFT_TEXT_COLOR;
 use crate::keyboard::{Key, KeyBinding};
 use bevy::ecs::system::SystemId;
 use bevy::prelude::{
-    AlignItems, BuildChildren, Bundle, ButtonBundle, ChildBuild, ChildBuilder, Commands, Component,
-    Entity, In, JustifyContent, NodeBundle, PositionType, Style, SystemInput, Text, TextColor,
-    TextFont, Val,
+    AlignItems, BuildChildren, Bundle, Button, ChildBuild, ChildBuilder, Commands, Component,
+    Entity, In, JustifyContent, Node, PositionType, SystemInput, Text, TextColor, TextFont, Val,
 };
 use std::fmt;
 
@@ -30,7 +29,7 @@ pub(crate) struct ButtonBuilder<D: fmt::Display, I: SystemInput> {
     caption: D,
     text_color: TextColor,
     text_font: TextFont,
-    style: Style,
+    node: Node,
     system: SystemId<I, ()>,
     key_binding: Option<(Key, KeyBinding<(), ()>)>,
 }
@@ -38,7 +37,7 @@ pub(crate) struct ButtonBuilder<D: fmt::Display, I: SystemInput> {
 impl<D: fmt::Display, I: SystemInput> ButtonBuilder<D, I>
 where
     <I as SystemInput>::Inner<'static>: fmt::Debug,
-    (ButtonBundle, RunButton<I>): Bundle,
+    (Button, Node, RunButton<I>): Bundle,
 {
     /// 70px wide, dynamic height
     pub(crate) fn new(
@@ -51,12 +50,12 @@ where
             caption,
             text_color,
             text_font,
-            style: Style {
+            node: Node {
                 width: Val::Px(70.0),
                 height: Val::Auto,
                 justify_content: JustifyContent::Center,
                 align_items: AlignItems::Center,
-                ..Style::default()
+                ..Node::default()
             },
             system,
             key_binding: None,
@@ -65,13 +64,13 @@ where
 
     /// 250px wide, 70px high
     pub(crate) const fn large(mut self) -> Self {
-        self.style.width = Val::Px(250.0);
-        self.style.height = Val::Px(70.0);
+        self.node.width = Val::Px(250.0);
+        self.node.height = Val::Px(70.0);
         self
     }
 
-    pub(crate) fn with_style(mut self, style: Style) -> Self {
-        self.style = style;
+    pub(crate) fn with_node(mut self, node: Node) -> Self {
+        self.node = node;
         self
     }
 
@@ -92,10 +91,8 @@ where
         context: <I as SystemInput>::Inner<'static>,
     ) {
         let mut entity_commands = parent.spawn((
-            ButtonBundle {
-                style: self.style,
-                ..ButtonBundle::default()
-            },
+            Button,
+            self.node,
             RunButton {
                 system: self.system,
                 context,
@@ -115,16 +112,13 @@ where
 
             entity_commands.with_children(|parent| {
                 parent
-                    .spawn(NodeBundle {
-                        style: Style {
-                            position_type: PositionType::Absolute,
-                            width: Val::Percent(100.0),
-                            height: Val::Percent(100.0),
-                            justify_content: JustifyContent::End,
-                            align_items: AlignItems::Center,
-                            ..Style::default()
-                        },
-                        ..NodeBundle::default()
+                    .spawn(Node {
+                        position_type: PositionType::Absolute,
+                        width: Val::Percent(100.0),
+                        height: Val::Percent(100.0),
+                        justify_content: JustifyContent::End,
+                        align_items: AlignItems::Center,
+                        ..Node::default()
                     })
                     .with_children(|parent| {
                         parent.spawn((

@@ -1,6 +1,6 @@
 use bevy::ecs::component::{ComponentHooks, StorageType};
 use bevy::input::mouse::{MouseScrollUnit, MouseWheel};
-use bevy::prelude::{Component, Interaction, JustifyContent, Node, Style, Transform, Val};
+use bevy::prelude::{Component, ComputedNode, Interaction, JustifyContent, Node, Transform, Val};
 
 // Manually deriving `Component`
 #[derive(Debug, Default)]
@@ -14,16 +14,16 @@ impl ScrollList {
     #[must_use]
     pub(crate) fn scroll(
         &mut self,
-        my_node: &Node,
+        my_computed_node: &ComputedNode,
         parent_node: &Node,
-        parent_style: &Style,
+        parent_computed_node: &ComputedNode,
         mouse_wheel_event: &MouseWheel,
     ) -> Val {
         self.position += match mouse_wheel_event.unit {
             MouseScrollUnit::Line => mouse_wheel_event.y * 20.0,
             MouseScrollUnit::Pixel => mouse_wheel_event.y,
         };
-        self.adjust(my_node, parent_node, parent_style)
+        self.resize(my_computed_node, parent_node, parent_computed_node)
     }
 
     /// Returns the new distance from the top
@@ -31,13 +31,13 @@ impl ScrollList {
     pub(crate) fn follow(
         &mut self,
         child_transform: &Transform,
-        child_node: &Node,
-        my_node: &Node,
+        child_computed_node: &ComputedNode,
+        my_computed_node: &ComputedNode,
         parent_node: &Node,
-        parent_style: &Style,
+        parent_computed_node: &ComputedNode,
     ) -> Val {
-        let child_top =
-            my_node.size().y / 2.0 + child_transform.translation.y - child_node.size().y / 2.0;
+        let child_top = my_computed_node.size().y / 2.0 + child_transform.translation.y
+            - child_computed_node.size().y / 2.0;
 
         //let first_viewed_top = self.position;
         //let last_viewed_top = self.position + parent_node.size().y - child_node.size().y;
@@ -45,37 +45,32 @@ impl ScrollList {
 
         self.position = self.position.clamp(
             -child_top,
-            (parent_node.size().y - child_node.size().y) - child_top,
+            (parent_computed_node.size().y - child_computed_node.size().y) - child_top,
         );
 
         //let first_viewed_top = self.position;
         //let last_viewed_top = self.position + parent_node.size().y - child_node.size().y;
         //println!("-> {first_viewed_top:?} <= {child_top:?} <= {last_viewed_top:?}");
 
-        self.adjust(my_node, parent_node, parent_style)
+        self.resize(my_computed_node, parent_node, parent_computed_node)
     }
 
     /// Returns the new distance from the top
     #[must_use]
     pub(crate) fn resize(
         &mut self,
-        my_node: &Node,
+        my_computed_node: &ComputedNode,
         parent_node: &Node,
-        parent_style: &Style,
+        parent_computed_node: &ComputedNode,
     ) -> Val {
-        self.adjust(my_node, parent_node, parent_style)
-    }
+        let padding_top = Self::to_px(parent_node.padding.top);
+        let padding_bottom = Self::to_px(parent_node.padding.bottom);
 
-    #[must_use]
-    fn adjust(&mut self, my_node: &Node, parent_node: &Node, parent_style: &Style) -> Val {
-        let padding_top = Self::to_px(parent_style.padding.top);
-        let padding_bottom = Self::to_px(parent_style.padding.bottom);
-
-        let items_height = my_node.size().y + padding_top + padding_bottom;
-        let parent_height = parent_node.size().y;
+        let items_height = my_computed_node.size().y + padding_top + padding_bottom;
+        let parent_height = parent_computed_node.size().y;
         let max_scroll = (items_height - parent_height).max(0.0);
 
-        self.position = match parent_style.justify_content {
+        self.position = match parent_node.justify_content {
             JustifyContent::Default | JustifyContent::Start => {
                 self.position.clamp(-max_scroll, 0.0)
             }

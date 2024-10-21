@@ -1,24 +1,25 @@
 use crate::gameplay::GameplayScreenState;
-use crate::hud::{DefaultPanel, Fonts, SOFT_TEXT_COLOR};
+use crate::hud::{panel_node, Fonts, PANEL_COLOR, SOFT_TEXT_COLOR};
 use crate::manual::components::{ManualDisplay, ManualText};
 use crate::manual::ManualSection;
 use bevy::prelude::{
     Alpha, BackgroundColor, BuildChildren, Changed, ChildBuild, Children, Commands, GlobalZIndex,
-    Query, RemovedComponents, Res, State, Text, Val, With,
+    Node, Query, RemovedComponents, Res, State, Text, Val, With,
 };
 
 #[expect(clippy::needless_pass_by_value)]
-pub(super) fn spawn_manual(
-    mut commands: Commands,
-    default_panel: Res<DefaultPanel>,
-    fonts: Res<Fonts>,
-) {
-    let mut background = default_panel.cloned();
-    background.style.bottom = Val::Px(0.0);
-    background.style.left = Val::Px(0.0);
-
+pub(super) fn spawn_manual(mut commands: Commands, fonts: Res<Fonts>) {
     commands
-        .spawn((background, GlobalZIndex(2), ManualDisplay))
+        .spawn((
+            Node {
+                bottom: Val::Px(0.0),
+                left: Val::Px(0.0),
+                ..panel_node()
+            },
+            PANEL_COLOR,
+            GlobalZIndex(2),
+            ManualDisplay,
+        ))
         .with_children(|parent| {
             parent.spawn((
                 Text::default(),
@@ -32,7 +33,6 @@ pub(super) fn spawn_manual(
 #[expect(clippy::needless_pass_by_value)]
 pub(super) fn update_manual(
     gameplay_screen_state: Option<Res<State<GameplayScreenState>>>,
-    default_panel: Res<DefaultPanel>,
     mut manual: Query<(&mut BackgroundColor, &mut Children), With<ManualDisplay>>,
     mut manual_text: Query<&mut Text, With<ManualText>>,
     sections: Query<&ManualSection>,
@@ -53,7 +53,7 @@ pub(super) fn update_manual(
         {
             1.0
         } else {
-            default_panel.ref_().background_color.0.alpha()
+            PANEL_COLOR.0.alpha()
         },
     );
 

@@ -44,47 +44,38 @@ pub(super) fn create_start_craft_system_with_key(
 pub(super) fn spawn_crafting_screen(mut commands: Commands) {
     let recipe_list = commands
         .spawn((
-            NodeBundle {
-                style: Style {
-                    width: Val::Percent(100.0),
-                    flex_direction: FlexDirection::Column,
-                    align_items: AlignItems::Start,
-                    justify_content: JustifyContent::Start,
-                    ..Style::default()
-                },
-                ..NodeBundle::default()
+            Node {
+                width: Val::Percent(100.0),
+                flex_direction: FlexDirection::Column,
+                align_items: AlignItems::Start,
+                justify_content: JustifyContent::Start,
+                ..Node::default()
             },
             ScrollList::default(),
         ))
         .id();
     let recipe_details = commands
-        .spawn(NodeBundle {
-            style: Style {
-                width: Val::Percent(100.0),
-                flex_direction: FlexDirection::Column,
-                align_items: AlignItems::Start,
-                justify_content: JustifyContent::Start,
-                ..Style::default()
-            },
-            ..NodeBundle::default()
+        .spawn(Node {
+            width: Val::Percent(100.0),
+            flex_direction: FlexDirection::Column,
+            align_items: AlignItems::Start,
+            justify_content: JustifyContent::Start,
+            ..Node::default()
         })
         .id();
     commands
         .spawn((
-            NodeBundle {
-                style: Style {
-                    width: Val::Percent(100.0),
-                    height: Val::Percent(100.0),
-                    ..Style::default()
-                },
-                ..NodeBundle::default()
+            Node {
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                ..Node::default()
             },
             StateScoped(GameplayScreenState::Crafting),
         ))
         .with_children(|builder| {
             builder
-                .spawn(NodeBundle {
-                    style: Style {
+                .spawn((
+                    Node {
                         width: Val::Percent(100.0),
                         height: Val::Auto,
                         flex_direction: FlexDirection::Column,
@@ -93,24 +84,20 @@ pub(super) fn spawn_crafting_screen(mut commands: Commands) {
                         margin: UiRect::px(10.0, 365.0, 10.0, 10.0),
                         padding: UiRect::all(SMALL_SPACING),
                         overflow: Overflow::clip_y(),
-                        ..Style::default()
+                        ..Node::default()
                     },
-                    background_color: PANEL_COLOR.into(),
-                    ..NodeBundle::default()
-                })
+                    PANEL_COLOR,
+                ))
                 .with_children(|builder| {
                     builder
-                        .spawn(NodeBundle {
-                            style: Style {
-                                width: Val::Percent(100.0),
-                                height: Val::Percent(100.0),
-                                flex_direction: FlexDirection::Row,
-                                align_items: AlignItems::Start,
-                                justify_content: JustifyContent::Start,
-                                overflow: Overflow::clip_y(),
-                                ..Style::default()
-                            },
-                            ..NodeBundle::default()
+                        .spawn(Node {
+                            width: Val::Percent(100.0),
+                            height: Val::Percent(100.0),
+                            flex_direction: FlexDirection::Row,
+                            align_items: AlignItems::Start,
+                            justify_content: JustifyContent::Start,
+                            overflow: Overflow::clip_y(),
+                            ..Node::default()
                         })
                         .add_child(recipe_list)
                         .add_child(recipe_details);
@@ -187,9 +174,9 @@ pub(super) fn move_crafting_selection(
     infos: Res<Infos>,
     fonts: Res<Fonts>,
     mut crafting_screen: ResMut<CraftingScreen>,
-    mut recipes: Query<(&mut TextColor, &Transform, &Node, &RecipeSituation)>,
-    mut scroll_lists: Query<(&mut ScrollList, &mut Style, &Parent, &Node)>,
-    scrolling_parents: Query<(&Node, &Style), Without<ScrollList>>,
+    mut recipes: Query<(&mut TextColor, &Transform, &ComputedNode, &RecipeSituation)>,
+    mut scroll_lists: Query<(&mut ScrollList, &mut Node, &ComputedNode, &Parent)>,
+    scrolling_parents: Query<(&Node, &ComputedNode), Without<ScrollList>>,
 ) {
     let start = Instant::now();
 
@@ -219,7 +206,7 @@ pub(super) fn clear_crafting_screen(
     clock: Clock,
     mut crafting_screen: ResMut<CraftingScreen>,
     children: Query<&Children>,
-    mut styles: Query<&mut Style>,
+    mut styles: Query<&mut Node>,
 ) -> Option<StartCraftSystem> {
     if crafting_screen.last_time == clock.time() {
         return None;
@@ -649,29 +636,29 @@ fn adapt_to_selected(
     infos: &Res<Infos>,
     fonts: &Res<Fonts>,
     crafting_screen: &CraftingScreen,
-    recipes: &Query<(&Transform, &Node, &RecipeSituation)>,
-    scroll_lists: &mut Query<(&mut ScrollList, &mut Style, &Parent, &Node)>,
-    scrolling_parents: &Query<(&Node, &Style), Without<ScrollList>>,
+    recipes: &Query<(&Transform, &ComputedNode, &RecipeSituation)>,
+    scroll_lists: &mut Query<(&mut ScrollList, &mut Node, &ComputedNode, &Parent)>,
+    scrolling_parents: &Query<(&Node, &ComputedNode), Without<ScrollList>>,
     start_craft_system: &StartCraftSystem,
 ) {
     if let Some(selected) = crafting_screen.selection_list.selected {
-        let (recipe_transform, recipe_node, recipe_sitation) = recipes
+        let (recipe_transform, recipe_computed_node, recipe_sitation) = recipes
             .get(selected)
             .expect("Selected recipe should be found");
 
         {
-            let (mut scroll_list, mut style, parent, list_node) = scroll_lists
+            let (mut scroll_list, mut style, list_computed_node, parent) = scroll_lists
                 .get_mut(crafting_screen.recipe_list)
                 .expect("The recipe list should be a scrolling list");
-            let (parent_node, parent_style) = scrolling_parents
+            let (parent_node, parent_computed_node) = scrolling_parents
                 .get(parent.get())
                 .expect("Parent node should be found");
             style.top = scroll_list.follow(
                 recipe_transform,
-                recipe_node,
-                list_node,
+                recipe_computed_node,
+                list_computed_node,
                 parent_node,
-                parent_style,
+                parent_computed_node,
             );
         }
 

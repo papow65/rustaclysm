@@ -1,4 +1,4 @@
-use bevy::prelude::{Color, Mix, TextColor};
+use bevy::prelude::{BackgroundColor, Color, Mix, TextColor};
 
 // Text colors
 
@@ -22,12 +22,14 @@ pub(crate) const FILTHY_COLOR: TextColor = TextColor(Color::srgb(0.73, 0.4, 1.0)
 
 // Button colors
 
-pub(crate) const DEFAULT_BUTTON_COLOR: Color = Color::srgb(0.2, 0.2, 0.2);
-pub(crate) const HOVERED_BUTTON_COLOR: Color = Color::srgb(0.25, 0.25, 0.25);
+pub(crate) const DEFAULT_BUTTON_COLOR: BackgroundColor =
+    BackgroundColor(Color::srgb(0.2, 0.2, 0.2));
+pub(crate) const HOVERED_BUTTON_COLOR: BackgroundColor =
+    BackgroundColor(Color::srgb(0.25, 0.25, 0.25));
 
 // Panel colors
 
-pub(crate) const PANEL_COLOR: Color = Color::srgba(0.1, 0.1, 0.1, 0.85);
+pub(crate) const PANEL_COLOR: BackgroundColor = BackgroundColor(Color::srgba(0.1, 0.1, 0.1, 0.85));
 
 /// Varying from `BAD_TEXT_COLOR` (0.0) over `WARN_TEXT_COLOR` (0.5) to `GOOD_TEXT_COLOR` (1.0)
 ///

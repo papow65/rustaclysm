@@ -8,7 +8,7 @@ use crate::{application::ApplicationState, gameplay::GameplayScreenState};
 use bevy::ecs::system::SystemId;
 use bevy::prelude::{
     AlignItems, BuildChildren, ChildBuild, Commands, FlexDirection, In, JustifyContent, KeyCode,
-    Local, NextState, NodeBundle, Res, ResMut, StateScoped, Style, Text, UiRect, Val, World,
+    Local, NextState, Node, Res, ResMut, StateScoped, Text, UiRect, Val, World,
 };
 use std::time::Instant;
 
@@ -28,45 +28,38 @@ pub(super) fn spawn_death_screen(
 ) {
     commands
         .spawn((
-            NodeBundle {
-                style: Style {
-                    width: Val::Percent(100.0),
-                    height: Val::Percent(100.0),
-                    flex_direction: FlexDirection::Column,
-                    align_items: AlignItems::Center,
-                    justify_content: JustifyContent::Center,
-                    ..Style::default()
-                },
-                ..NodeBundle::default()
+            Node {
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                flex_direction: FlexDirection::Column,
+                align_items: AlignItems::Center,
+                justify_content: JustifyContent::Center,
+                ..Node::default()
             },
             StateScoped(GameplayScreenState::Death),
         ))
         .with_children(|parent| {
             parent
-                .spawn(NodeBundle {
-                    style: Style {
+                .spawn((
+                    Node {
                         width: Val::Px(300.0),
                         height: Val::Px(200.0),
                         flex_direction: FlexDirection::Column,
                         align_items: AlignItems::Center,
                         justify_content: JustifyContent::Center,
                         padding: UiRect::all(SMALL_SPACING),
-                        ..Style::default()
+                        ..Node::default()
                     },
-                    background_color: PANEL_COLOR.into(),
-                    ..NodeBundle::default()
-                })
+                    PANEL_COLOR,
+                ))
                 .with_children(|parent| {
                     parent
-                        .spawn(NodeBundle {
-                            style: Style {
-                                width: Val::Px(250.0),
-                                height: Val::Px(70.0),
-                                justify_content: JustifyContent::Center,
-                                align_items: AlignItems::Center,
-                                ..Style::default()
-                            },
-                            ..NodeBundle::default()
+                        .spawn(Node {
+                            width: Val::Px(250.0),
+                            height: Val::Px(70.0),
+                            justify_content: JustifyContent::Center,
+                            align_items: AlignItems::Center,
+                            ..Node::default()
                         })
                         .with_children(|parent| {
                             parent.spawn((Text::from("You died"), BAD_TEXT_COLOR, fonts.largish()));

@@ -1,16 +1,10 @@
-use crate::hud::{
-    DefaultPanel, Fonts, RunButton, ScrollList, DEFAULT_BUTTON_COLOR, HOVERED_BUTTON_COLOR,
-};
+use crate::hud::{Fonts, RunButton, ScrollList, DEFAULT_BUTTON_COLOR, HOVERED_BUTTON_COLOR};
 use bevy::input::mouse::MouseWheel;
 use bevy::prelude::{
-    BackgroundColor, Button, Changed, Commands, Entity, EventReader, In, Interaction, Node, Parent,
-    Query, Style, SystemInput, With, Without, World,
+    BackgroundColor, Button, Changed, Commands, ComputedNode, Entity, EventReader, In, Interaction,
+    Node, Parent, Query, SystemInput, With, Without, World,
 };
 use std::fmt;
-
-pub(super) fn create_default_panel(world: &mut World) {
-    world.insert_resource(DefaultPanel::new());
-}
 
 pub(super) fn load_fonts(world: &mut World) {
     let asset_server = world.get_resource().expect("AssetServer should exist");
@@ -26,7 +20,7 @@ pub(super) fn manage_button_color(
     >,
 ) {
     for (interaction, mut color) in &mut interactions {
-        color.0 = match *interaction {
+        *color = match *interaction {
             Interaction::Hovered | Interaction::Pressed => HOVERED_BUTTON_COLOR,
             Interaction::None => DEFAULT_BUTTON_COLOR,
         };
@@ -50,17 +44,27 @@ pub(crate) fn manage_button_input<I: SystemInput + 'static>(
 #[expect(clippy::needless_pass_by_value)]
 pub(super) fn manage_scroll_lists(
     mut mouse_wheel_events: EventReader<MouseWheel>,
-    mut scroll_lists: Query<(&mut ScrollList, &mut Style, &Parent, &Node, &Interaction)>,
-    parent_nodes: Query<(&Node, &Style), Without<ScrollList>>,
+    mut scroll_lists: Query<(
+        &mut ScrollList,
+        &mut Node,
+        &ComputedNode,
+        &Parent,
+        &Interaction,
+    )>,
+    parent_nodes: Query<(&Node, &ComputedNode), Without<ScrollList>>,
 ) {
     for mouse_wheel_event in mouse_wheel_events.read() {
-        for (mut scroll_list, mut style, parent, list_node, interaction) in &mut scroll_lists {
+        for (mut scroll_list, mut node, computed_node, parent, interaction) in &mut scroll_lists {
             if interaction != &Interaction::None {
-                let (parent_node, parent_style) = parent_nodes
+                let (parent_node, parent_computed_node) = parent_nodes
                     .get(parent.get())
                     .expect("Parent node should be found");
-                style.top =
-                    scroll_list.scroll(list_node, parent_node, parent_style, mouse_wheel_event);
+                node.top = scroll_list.scroll(
+                    computed_node,
+                    parent_node,
+                    parent_computed_node,
+                    mouse_wheel_event,
+                );
             }
         }
     }
@@ -68,14 +72,14 @@ pub(super) fn manage_scroll_lists(
 
 #[expect(clippy::needless_pass_by_value)]
 pub(crate) fn resize_scroll_lists(
-    mut scroll_lists: Query<(&mut ScrollList, &mut Style, &Parent, &Node)>,
-    parent_nodes: Query<(&Node, &Style), Without<ScrollList>>,
+    mut scroll_lists: Query<(&mut ScrollList, &mut Node, &ComputedNode, &Parent)>,
+    parent_nodes: Query<(&Node, &ComputedNode), Without<ScrollList>>,
 ) {
-    for (mut scroll_list, mut style, parent, list_node) in &mut scroll_lists {
-        let (parent_node, parent_style) = parent_nodes
+    for (mut scroll_list, mut style, computed_node, parent) in &mut scroll_lists {
+        let (parent_node, parent_computed_node) = parent_nodes
             .get(parent.get())
             .expect("Parent node should be found");
-        style.top = scroll_list.resize(list_node, parent_node, parent_style);
+        style.top = scroll_list.resize(computed_node, parent_node, parent_computed_node);
     }
 }
 

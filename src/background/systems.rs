@@ -1,8 +1,8 @@
 use crate::background::{component::Background, state::BackgroundState};
 use crate::util::AssetPaths;
 use bevy::prelude::{
-    AssetServer, Commands, GlobalZIndex, ImageBundle, PositionType, Query, Res, StateScoped, Style,
-    UiImage, Val, Window, With,
+    AssetServer, Commands, GlobalZIndex, Node, PositionType, Query, Res, StateScoped, UiImage, Val,
+    Window, With,
 };
 
 const BACKGROUND_WIDTH: f32 = 1522.0;
@@ -18,18 +18,15 @@ pub(super) fn spawn_background(
     let background_scale = background_scale(windows.get_single().ok());
     let background_image = asset_server.load(AssetPaths::backgrounds().join(BACKGROUND_NAME));
     commands.spawn((
-        ImageBundle {
-            style: Style {
-                position_type: PositionType::Absolute,
-                width: background_scale.0,
-                height: background_scale.1,
-                ..Style::default()
-            },
-            image: UiImage {
-                texture: background_image,
-                ..UiImage::default()
-            },
-            ..ImageBundle::default()
+        UiImage {
+            texture: background_image,
+            ..UiImage::default()
+        },
+        Node {
+            position_type: PositionType::Absolute,
+            width: background_scale.0,
+            height: background_scale.1,
+            ..Node::default()
         },
         GlobalZIndex(1),
         Background,
@@ -40,7 +37,7 @@ pub(super) fn spawn_background(
 #[expect(clippy::needless_pass_by_value)]
 pub(super) fn resize_background(
     windows: Query<&Window>,
-    mut backgrounds: Query<&mut Style, With<Background>>,
+    mut backgrounds: Query<&mut Node, With<Background>>,
 ) {
     if let Ok(mut style) = backgrounds.get_single_mut() {
         (style.width, style.height) = background_scale(windows.get_single().ok());

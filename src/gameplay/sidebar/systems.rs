@@ -3,8 +3,8 @@ use crate::gameplay::sidebar::components::{
     SpeedTextSpan, StaminaText, TimeText, WalkingModeTextSpan, WieldedText,
 };
 use crate::hud::{
-    text_color_expect_half, DefaultPanel, Fonts, ScrollList, BAD_TEXT_COLOR, FILTHY_COLOR,
-    GOOD_TEXT_COLOR, HARD_TEXT_COLOR, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
+    panel_node, text_color_expect_half, Fonts, ScrollList, BAD_TEXT_COLOR, FILTHY_COLOR,
+    GOOD_TEXT_COLOR, HARD_TEXT_COLOR, PANEL_COLOR, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
 };
 use crate::util::log_if_slow;
 use crate::{application::ApplicationState, gameplay::*};
@@ -13,8 +13,8 @@ use bevy::ecs::{schedule::SystemConfigs, system::EntityCommands};
 use bevy::prelude::{
     on_event, resource_exists, resource_exists_and_changed, AlignItems, BuildChildren, Changed,
     ChildBuild, Commands, Condition, DespawnRecursiveExt, DetectChanges, Entity, EventReader,
-    FlexDirection, FlexWrap, FromWorld, IntoSystemConfigs, JustifyContent, Local, NodeBundle, Or,
-    Overflow, ParamSet, Parent, PositionType, Query, Res, ResMut, State, StateScoped, Style, Text,
+    FlexDirection, FlexWrap, FromWorld, IntoSystemConfigs, JustifyContent, Local, Node, Or,
+    Overflow, ParamSet, Parent, PositionType, Query, Res, ResMut, State, StateScoped, Text,
     TextColor, TextFont, TextSpan, UiRect, Val, Visibility, With, Without, World,
 };
 use cdda_json_files::{MoveCost, ObjectId};
@@ -26,17 +26,18 @@ type DuplicateMessageCount = Saturating<u16>;
 const TEXT_WIDTH: f32 = 8.0 * 43.0; // 43 chars
 
 #[expect(clippy::needless_pass_by_value)]
-pub(super) fn spawn_sidebar(
-    mut commands: Commands,
-    default_panel: Res<DefaultPanel>,
-    fonts: Res<Fonts>,
-) {
-    let mut background = default_panel.cloned();
-    background.style.top = Val::Px(0.0);
-    background.style.right = Val::Px(0.0);
-    background.style.width = Val::Px(TEXT_WIDTH + 10.0); // 5px margin on both sides
-    background.style.height = Val::Percent(100.0);
-    let mut parent = commands.spawn((background, StateScoped(ApplicationState::Gameplay)));
+pub(super) fn spawn_sidebar(mut commands: Commands, fonts: Res<Fonts>) {
+    let mut parent = commands.spawn((
+        Node {
+            top: Val::Px(0.0),
+            right: Val::Px(0.0),
+            width: Val::Px(TEXT_WIDTH + 10.0), // 5px margin on both sides
+            height: Val::Percent(100.0),
+            ..panel_node()
+        },
+        PANEL_COLOR,
+        StateScoped(ApplicationState::Gameplay),
+    ));
 
     spawn_status_display(&fonts, &mut parent);
     spawn_log_display(&fonts, &mut parent);
@@ -45,20 +46,17 @@ pub(super) fn spawn_sidebar(
 fn spawn_status_display(fonts: &Fonts, parent: &mut EntityCommands) {
     parent.with_children(|child_builder| {
         child_builder
-            .spawn(NodeBundle {
-                style: Style {
-                    position_type: PositionType::Absolute,
-                    top: Val::Px(0.0),
-                    left: Val::Px(0.0),
-                    width: Val::Px(TEXT_WIDTH),
-                    height: Val::Percent(100.0),
-                    margin: UiRect::all(Val::Px(5.0)),
-                    flex_direction: FlexDirection::Column,
-                    align_items: AlignItems::Start,
-                    justify_content: JustifyContent::Start,
-                    ..Style::default()
-                },
-                ..NodeBundle::default()
+            .spawn(Node {
+                position_type: PositionType::Absolute,
+                top: Val::Px(0.0),
+                left: Val::Px(0.0),
+                width: Val::Px(TEXT_WIDTH),
+                height: Val::Percent(100.0),
+                margin: UiRect::all(Val::Px(5.0)),
+                flex_direction: FlexDirection::Column,
+                align_items: AlignItems::Start,
+                justify_content: JustifyContent::Start,
+                ..Node::default()
             })
             .with_children(|parent| {
                 parent.spawn((Text::default(), SOFT_TEXT_COLOR, fonts.regular(), FpsText));
@@ -143,29 +141,26 @@ fn spawn_log_display(fonts: &Fonts, parent: &mut EntityCommands) {
 
     parent.with_children(|child_builder| {
         child_builder
-            .spawn(NodeBundle {
-                style: Style {
-                    position_type: PositionType::Absolute,
-                    bottom: Val::Px(0.0),
-                    left: Val::Px(0.0),
-                    width: Val::Px(TEXT_WIDTH),
-                    height: Val::Px(20.0 * 16.0),
-                    margin: UiRect::all(Val::Px(5.0)),
-                    flex_direction: FlexDirection::Column,
-                    justify_content: JustifyContent::End,
-                    overflow: Overflow::clip(),
-                    ..Style::default()
-                },
-                ..NodeBundle::default()
+            .spawn(Node {
+                position_type: PositionType::Absolute,
+                bottom: Val::Px(0.0),
+                left: Val::Px(0.0),
+                width: Val::Px(TEXT_WIDTH),
+                height: Val::Px(20.0 * 16.0),
+                margin: UiRect::all(Val::Px(5.0)),
+                flex_direction: FlexDirection::Column,
+                justify_content: JustifyContent::End,
+                overflow: Overflow::clip(),
+                ..Node::default()
             })
             .with_children(|child_builder| {
                 child_builder.spawn((
                     Text::default(),
                     fonts.regular(),
-                    Style {
+                    Node {
                         width: Val::Px(TEXT_WIDTH),
                         flex_wrap: FlexWrap::Wrap,
-                        ..Style::default()
+                        ..Node::default()
                     },
                     ScrollList::default(),
                     LogDisplay,

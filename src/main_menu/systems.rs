@@ -12,8 +12,8 @@ use base64::{engine::general_purpose::STANDARD as base64, Engine};
 use bevy::prelude::{
     AlignContent, AlignItems, BuildChildren, Camera2d, ChildBuild, ChildBuilder, Commands,
     DespawnRecursiveExt, Display, Entity, Events, FlexDirection, FlexWrap, GlobalZIndex, In,
-    JustifyContent, Local, NextState, NodeBundle, Query, Res, ResMut, StateScoped, Style, Text,
-    UiRect, Val, With, Without, World,
+    JustifyContent, Local, NextState, Node, Query, Res, ResMut, StateScoped, Text, UiRect, Val,
+    With, Without, World,
 };
 use bevy::{app::AppExit, ecs::system::SystemId};
 use glob::glob;
@@ -57,16 +57,13 @@ pub(super) fn spawn_main_menu(
 
     commands
         .spawn((
-            NodeBundle {
-                style: Style {
-                    flex_direction: FlexDirection::Column,
-                    width: Val::Percent(100.0),
-                    height: Val::Percent(100.0),
-                    align_items: AlignItems::Center,
-                    justify_content: JustifyContent::Center,
-                    ..Style::default()
-                },
-                ..NodeBundle::default()
+            Node {
+                flex_direction: FlexDirection::Column,
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                align_items: AlignItems::Center,
+                justify_content: JustifyContent::Center,
+                ..Node::default()
             },
             GlobalZIndex(3),
             StateScoped(ApplicationState::MainMenu),
@@ -106,30 +103,27 @@ fn add_tagline(parent: &mut ChildBuilder, fonts: &Fonts) {
         Text::from("A 3D reimplementation of Cataclysm: Dark Days Ahead"),
         HARD_TEXT_COLOR,
         fonts.largish(),
-        Style {
+        Node {
             margin: UiRect {
                 bottom: LARGE_SPACING,
                 ..UiRect::default()
             },
-            ..Style::default()
+            ..Node::default()
         },
     ));
 }
 
 fn add_load_button_area(parent: &mut ChildBuilder) {
     parent.spawn((
-        NodeBundle {
-            style: Style {
-                flex_direction: FlexDirection::Column,
-                width: Val::Percent(100.0),
-                height: Val::Px(440.0),
-                align_items: AlignItems::Center,
-                flex_wrap: FlexWrap::Wrap,
-                align_content: AlignContent::Center,
-                column_gap: MEDIUM_SPACING,
-                ..Style::default()
-            },
-            ..NodeBundle::default()
+        Node {
+            flex_direction: FlexDirection::Column,
+            width: Val::Percent(100.0),
+            height: Val::Px(440.0),
+            align_items: AlignItems::Center,
+            flex_wrap: FlexWrap::Wrap,
+            align_content: AlignContent::Center,
+            column_gap: MEDIUM_SPACING,
+            ..Node::default()
         },
         LoadButtonArea,
     ));
@@ -138,24 +132,21 @@ fn add_load_button_area(parent: &mut ChildBuilder) {
 fn add_notification_area(parent: &mut ChildBuilder, fonts: &Fonts) {
     parent
         .spawn((
-            NodeBundle {
-                style: Style {
-                    width: Val::Px(FULL_WIDTH),
-                    height: MEDIUM_SPACING * 10.0,
-                    align_items: AlignItems::FlexStart,
-                    justify_content: JustifyContent::FlexStart,
-                    flex_direction: FlexDirection::Column,
-                    padding: UiRect::all(MEDIUM_SPACING),
-                    margin: UiRect {
-                        bottom: MEDIUM_SPACING,
-                        ..UiRect::default()
-                    },
-                    display: Display::None,
-                    ..Style::default()
+            Node {
+                width: Val::Px(FULL_WIDTH),
+                height: MEDIUM_SPACING * 10.0,
+                align_items: AlignItems::FlexStart,
+                justify_content: JustifyContent::FlexStart,
+                flex_direction: FlexDirection::Column,
+                padding: UiRect::all(MEDIUM_SPACING),
+                margin: UiRect {
+                    bottom: MEDIUM_SPACING,
+                    ..UiRect::default()
                 },
-                background_color: PANEL_COLOR.into(),
-                ..NodeBundle::default()
+                display: Display::None,
+                ..Node::default()
             },
+            PANEL_COLOR,
             MessageWrapper,
         ))
         .with_children(|parent| {
@@ -163,11 +154,11 @@ fn add_notification_area(parent: &mut ChildBuilder, fonts: &Fonts) {
                 Text::default(),
                 HARD_TEXT_COLOR,
                 fonts.largish(),
-                Style {
+                Node {
                     width: Val::Px(FULL_WIDTH),
                     padding: UiRect::horizontal(MEDIUM_SPACING),
                     flex_wrap: FlexWrap::Wrap,
-                    ..Style::default()
+                    ..Node::default()
                 },
                 MessageField,
             ));
@@ -188,10 +179,10 @@ pub(super) fn update_sav_files(
     mut session: GameplaySession,
     mut last_list_saves_result: Local<Option<Result<Vec<PathBuf>, LoadError>>>,
     mut load_button_areas: Query<
-        (Entity, &mut Style),
+        (Entity, &mut Node),
         (With<LoadButtonArea>, Without<MessageWrapper>),
     >,
-    mut message_wrappers: Query<&mut Style, (With<MessageWrapper>, Without<LoadButtonArea>)>,
+    mut message_wrappers: Query<&mut Node, (With<MessageWrapper>, Without<LoadButtonArea>)>,
     mut message_fields: Query<&mut Text, With<MessageField>>,
 ) {
     let mut message_wrapper_style = message_wrappers.single_mut();
@@ -342,7 +333,7 @@ fn add_load_button(
         fonts.largish(),
         load_systems.button,
     )
-    .with_style(Style {
+    .with_node(Node {
         width: Val::Px(400.0),
         align_items: AlignItems::Center,
         justify_content: JustifyContent::Center,
@@ -356,7 +347,7 @@ fn add_load_button(
             top: MEDIUM_SPACING,
             bottom: MEDIUM_SPACING,
         },
-        ..Style::default()
+        ..Node::default()
     })
     .key_binding(key_binding, load_systems.key)
     .spawn(parent, FoundSav(path.to_path_buf()));

@@ -7,40 +7,36 @@ use crate::hud::{Fonts, DEFAULT_BUTTON_COLOR, HARD_TEXT_COLOR};
 use crate::loading::LoadingState;
 use bevy::prelude::{
     AlignItems, Assets, BuildChildren, ChildBuild, Commands, GlobalZIndex, JustifyContent, Local,
-    NextState, NodeBundle, PositionType, Res, ResMut, State, StateScoped, Style, Text, Val,
+    NextState, Node, PositionType, Res, ResMut, State, StateScoped, Text, Val,
 };
 
 #[expect(clippy::needless_pass_by_value)]
 pub(crate) fn spawn_loading(mut commands: Commands, fonts: Res<Fonts>) {
     commands
         .spawn((
-            NodeBundle {
-                style: Style {
-                    position_type: PositionType::Absolute,
-                    width: Val::Percent(100.0),
-                    height: Val::Percent(100.0),
-                    align_items: AlignItems::Center,
-                    justify_content: JustifyContent::Center,
-                    ..Style::default()
-                },
-                ..NodeBundle::default()
+            Node {
+                position_type: PositionType::Absolute,
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                align_items: AlignItems::Center,
+                justify_content: JustifyContent::Center,
+                ..Node::default()
             },
             GlobalZIndex(3),
             StateScoped(LoadingState),
         ))
         .with_children(|parent| {
             parent
-                .spawn(NodeBundle {
-                    style: Style {
+                .spawn((
+                    Node {
                         width: Val::Px(250.0),
                         height: Val::Px(70.0),
                         justify_content: JustifyContent::Center,
                         align_items: AlignItems::Center,
-                        ..Style::default()
+                        ..Node::default()
                     },
-                    background_color: DEFAULT_BUTTON_COLOR.into(),
-                    ..NodeBundle::default()
-                })
+                    DEFAULT_BUTTON_COLOR,
+                ))
                 .with_children(|parent| {
                     parent.spawn((Text::from("Loading..."), HARD_TEXT_COLOR, fonts.large()));
                 });

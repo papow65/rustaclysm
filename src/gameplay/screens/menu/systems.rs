@@ -8,7 +8,7 @@ use crate::manual::ManualSection;
 use crate::util::log_if_slow;
 use bevy::prelude::{
     AlignItems, BuildChildren, Commands, Events, FlexDirection, In, JustifyContent, KeyCode, Local,
-    NextState, NodeBundle, Res, ResMut, StateScoped, Style, Val, World,
+    NextState, Node, Res, ResMut, StateScoped, Val, World,
 };
 use bevy::{app::AppExit, ecs::system::SystemId};
 use std::time::Instant;
@@ -37,17 +37,14 @@ pub(super) fn spawn_menu(
 ) {
     commands
         .spawn((
-            NodeBundle {
-                style: Style {
-                    width: Val::Percent(100.0),
-                    height: Val::Percent(100.0),
-                    flex_direction: FlexDirection::Column,
-                    align_items: AlignItems::Center,
-                    justify_content: JustifyContent::Center,
-                    row_gap: MEDIUM_SPACING,
-                    ..Style::default()
-                },
-                ..NodeBundle::default()
+            Node {
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                flex_direction: FlexDirection::Column,
+                align_items: AlignItems::Center,
+                justify_content: JustifyContent::Center,
+                row_gap: MEDIUM_SPACING,
+                ..Node::default()
             },
             StateScoped(GameplayScreenState::Menu),
         ))

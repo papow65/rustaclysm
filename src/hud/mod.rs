@@ -2,8 +2,8 @@
 
 mod button_builder;
 mod colors;
-mod default_panel;
 mod fonts;
+mod panel_node;
 mod plugin;
 mod scroll_list;
 mod selection_list;
@@ -16,8 +16,8 @@ pub(crate) use self::colors::{
     FILTHY_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, HOVERED_BUTTON_COLOR, PANEL_COLOR,
     SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
 };
-pub(crate) use self::default_panel::DefaultPanel;
 pub(crate) use self::fonts::Fonts;
+pub(crate) use self::panel_node::panel_node;
 pub(crate) use self::plugin::HudPlugin;
 pub(crate) use self::scroll_list::ScrollList;
 pub(crate) use self::selection_list::{SelectionList, StepDirection, StepSize};

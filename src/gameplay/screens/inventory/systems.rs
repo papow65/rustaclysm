@@ -40,35 +40,29 @@ pub(super) fn create_inventory_system(world: &mut World) -> InventorySystem {
 pub(super) fn spawn_inventory(mut commands: Commands) {
     let panel = commands
         .spawn((
-            NodeBundle {
-                style: Style {
-                    width: Val::Percent(100.0),
-                    flex_direction: FlexDirection::Column,
-                    align_items: AlignItems::Start,
-                    justify_content: JustifyContent::Start,
-                    ..default()
-                },
-                ..default()
+            Node {
+                width: Val::Percent(100.0),
+                flex_direction: FlexDirection::Column,
+                align_items: AlignItems::Start,
+                justify_content: JustifyContent::Start,
+                ..Node::default()
             },
             ScrollList::default(),
         ))
         .id();
     commands
         .spawn((
-            NodeBundle {
-                style: Style {
-                    width: Val::Percent(100.0),
-                    height: Val::Percent(100.0),
-                    ..default()
-                },
-                ..default()
+            Node {
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                ..Node::default()
             },
             StateScoped(GameplayScreenState::Inventory),
         ))
         .with_children(|builder| {
             builder
-                .spawn(NodeBundle {
-                    style: Style {
+                .spawn((
+                    Node {
                         width: Val::Percent(100.0),
                         height: Val::Auto,
                         flex_direction: FlexDirection::Column,
@@ -79,9 +73,8 @@ pub(super) fn spawn_inventory(mut commands: Commands) {
                         overflow: Overflow::clip_y(),
                         ..default()
                     },
-                    background_color: PANEL_COLOR.into(),
-                    ..default()
-                })
+                    PANEL_COLOR,
+                ))
                 .add_child(panel);
         });
 
@@ -177,9 +170,9 @@ fn move_inventory_selection(
     item_texts: Query<(Entity, &InventoryItemDescription)>,
     item_buttons: Query<&Children, With<Button>>,
     mut text_styles: Query<&mut TextColor>,
-    item_layouts: Query<(&Transform, &Node)>,
-    mut scroll_lists: Query<(&mut ScrollList, &mut Style, &Parent, &Node)>,
-    scrolling_parents: Query<(&Node, &Style), Without<ScrollList>>,
+    item_layouts: Query<(&Transform, &ComputedNode)>,
+    mut scroll_lists: Query<(&mut ScrollList, &mut Node, &ComputedNode, &Parent)>,
+    scrolling_parents: Query<(&Node, &ComputedNode), Without<ScrollList>>,
 ) {
     let Key::Code(key_code) = key else {
         eprintln!("Unexpected key {key:?} while moving inventory selection");
@@ -230,7 +223,7 @@ pub(super) fn clear_inventory(
     clock: Clock,
     mut inventory: ResMut<InventoryScreen>,
     children: Query<&Children>,
-    mut styles: Query<&mut Style>,
+    mut styles: Query<&mut Node>,
 ) -> Option<InventorySystem> {
     if inventory.last_time == clock.time() {
         return None;
@@ -413,15 +406,12 @@ fn add_row(
 ) -> Entity {
     parent
         .spawn((
-            NodeBundle {
-                style: Style {
-                    width: Val::Percent(100.0),
-                    align_items: AlignItems::Start,
-                    justify_content: JustifyContent::Start,
-                    column_gap: SMALL_SPACING,
-                    ..default()
-                },
-                ..default()
+            Node {
+                width: Val::Percent(100.0),
+                align_items: AlignItems::Start,
+                justify_content: JustifyContent::Start,
+                column_gap: SMALL_SPACING,
+                ..Node::default()
             },
             InventoryItemLine { item: item_entity },
         ))
@@ -431,10 +421,10 @@ fn add_row(
                     Text::default(),
                     item_text_color,
                     fonts.regular(),
-                    Style {
+                    Node {
                         width: Val::Px(200.0),
                         overflow: Overflow::clip(),
-                        ..Style::default()
+                        ..Node::default()
                     },
                     InventoryItemDescription(item_phrase.clone()),
                 ))
@@ -452,11 +442,11 @@ fn add_row(
                 }),
                 item_text_color,
                 fonts.regular(),
-                Style {
+                Node {
                     width: Val::Px(60.0),
                     overflow: Overflow::clip(),
                     justify_content: JustifyContent::End,
-                    ..Style::default()
+                    ..Node::default()
                 },
             ));
 
@@ -468,11 +458,11 @@ fn add_row(
                 }),
                 item_text_color,
                 fonts.regular(),
-                Style {
+                Node {
                     width: Val::Px(60.0),
                     overflow: Overflow::clip(),
                     justify_content: JustifyContent::End,
-                    ..Style::default()
+                    ..Node::default()
                 },
             ));
 
@@ -516,30 +506,30 @@ fn actions(section: &InventorySection, drop_section: bool) -> Vec<InventoryActio
 
 fn follow_selected(
     inventory: &InventoryScreen,
-    items: &Query<(&Transform, &Node)>,
-    scroll_lists: &mut Query<(&mut ScrollList, &mut Style, &Parent, &Node)>,
-    scrolling_parents: &Query<(&Node, &Style), Without<ScrollList>>,
+    items: &Query<(&Transform, &ComputedNode)>,
+    scroll_lists: &mut Query<(&mut ScrollList, &mut Node, &ComputedNode, &Parent)>,
+    scrolling_parents: &Query<(&Node, &ComputedNode), Without<ScrollList>>,
 ) {
     let Some(selected_row) = inventory.selection_list.selected else {
         return;
     };
 
-    let (item_transform, item_node) = items
+    let (item_transform, item_computed_node) = items
         .get(selected_row)
         .expect("Selected item should be found");
 
-    let (mut scroll_list, mut style, parent, list_node) = scroll_lists
+    let (mut scroll_list, mut style, list_computed_node, parent) = scroll_lists
         .get_mut(inventory.panel)
         .expect("The inventory panel should be a scrolling list");
-    let (parent_node, parent_style) = scrolling_parents
+    let (parent_node, parent_computed_node) = scrolling_parents
         .get(parent.get())
         .expect("Parent node should be found");
     style.top = scroll_list.follow(
         item_transform,
-        item_node,
-        list_node,
+        item_computed_node,
+        list_computed_node,
         parent_node,
-        parent_style,
+        parent_computed_node,
     );
 }
 
