@@ -1,7 +1,7 @@
 use crate::application::ApplicationState;
 use crate::gameplay::systems::*;
 use crate::gameplay::{
-    events::EventPlugin, sidebar::SidebarPlugin, update_camera_offset, ActorPlugin,
+    events::EventsPlugin, sidebar::SidebarPlugin, update_camera_offset, ActorPlugin,
     BaseScreenPlugin, CameraOffset, CddaPlugin, CharacterScreenPlugin, CraftingScreenPlugin,
     DeathScreenPlugin, DespawnSubzoneLevel, DespawnZoneLevel, ElevationVisibility, FocusPlugin,
     GameplayCounter, GameplayScreenState, InventoryScreenPlugin, MapAsset, MapMemoryAsset,
@@ -28,7 +28,7 @@ impl Plugin for GameplayPlugin {
             SidebarPlugin,
             BaseScreenPlugin,
             CddaPlugin,
-            EventPlugin,
+            EventsPlugin,
             CharacterScreenPlugin,
             CraftingScreenPlugin,
             DeathScreenPlugin,
