@@ -1,4 +1,4 @@
-use crate::application::systems::{enter_main_menu, maximize_window};
+use crate::application::systems::maximize_window;
 use crate::application::{check::check_delay, ApplicationState};
 use crate::{background::BackgroundPlugin, gameplay::GameplayPlugin, hud::HudPlugin};
 use crate::{keyboard::KeyboardPlugin, loading::LoadingIndicatorPlugin};
@@ -47,10 +47,10 @@ pub(crate) fn run_application() -> AppExit {
         log_transition_plugin::<ApplicationState>,
     ));
 
-    app.insert_state(ApplicationState::Startup);
+    app.init_state::<ApplicationState>();
     app.enable_state_scoped_entities::<ApplicationState>();
 
-    app.add_systems(Startup, (maximize_window, enter_main_menu));
+    app.add_systems(Startup, maximize_window);
     app.add_systems(Last, check_delay);
 
     app.run()

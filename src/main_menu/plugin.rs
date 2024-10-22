@@ -1,17 +1,19 @@
 use crate::application::ApplicationState;
 use crate::hud::manage_button_input;
 use crate::main_menu::systems::{
-    create_load_systems, create_main_menu_key_bindings, create_quit_system, spawn_main_menu,
-    update_sav_files, FoundSav,
+    create_load_systems, create_main_menu_key_bindings, create_quit_system, enter_main_menu,
+    spawn_main_menu, update_sav_files, FoundSav,
 };
 use bevy::prelude::{
-    in_state, App, FixedUpdate, In, IntoSystem, IntoSystemConfigs, OnEnter, Plugin, Update,
+    in_state, App, FixedUpdate, In, IntoSystem, IntoSystemConfigs, OnEnter, Plugin, Startup, Update,
 };
 
 pub(crate) struct MainMenuPlugin;
 
 impl Plugin for MainMenuPlugin {
     fn build(&self, app: &mut App) {
+        app.add_systems(Startup, enter_main_menu);
+
         app.add_systems(
             OnEnter(ApplicationState::MainMenu),
             (

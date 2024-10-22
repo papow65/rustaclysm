@@ -20,6 +20,10 @@ use glob::glob;
 use std::path::{Path, PathBuf};
 use std::{str::from_utf8, time::Instant};
 
+pub(super) fn enter_main_menu(mut next_application_state: ResMut<NextState<ApplicationState>>) {
+    next_application_state.set(ApplicationState::MainMenu);
+}
+
 const FULL_WIDTH: f32 = 720.0;
 
 #[derive(Clone, Debug)]
