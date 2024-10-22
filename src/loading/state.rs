@@ -1,4 +1,4 @@
-use crate::gameplay::GameplayScreenState;
+use crate::{application::ApplicationState, gameplay::GameplayScreenState};
 use bevy::prelude::ComputedStates;
 
 /// For `ApplicationState` transitions
@@ -6,9 +6,11 @@ use bevy::prelude::ComputedStates;
 pub(crate) struct LoadingState;
 
 impl ComputedStates for LoadingState {
-    type SourceStates = GameplayScreenState;
+    type SourceStates = (ApplicationState, Option<GameplayScreenState>);
 
-    fn compute(gameplay_screen_state: Self::SourceStates) -> Option<Self> {
-        (gameplay_screen_state == GameplayScreenState::Loading).then_some(Self)
+    fn compute((application_state, gameplay_screen_state): Self::SourceStates) -> Option<Self> {
+        (application_state == ApplicationState::PreGameplay
+            || gameplay_screen_state == Some(GameplayScreenState::Loading))
+        .then_some(Self)
     }
 }

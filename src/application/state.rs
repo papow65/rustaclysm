@@ -5,5 +5,6 @@ pub(crate) enum ApplicationState {
     #[default]
     Startup,
     MainMenu,
+    PreGameplay,
     Gameplay,
 }

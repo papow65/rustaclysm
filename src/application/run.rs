@@ -1,9 +1,9 @@
 use crate::application::systems::{enter_main_menu, maximize_window};
 use crate::application::{check::check_delay, ApplicationState};
-use crate::background::BackgroundPlugin;
-use crate::util::log_transition_plugin;
-use crate::{gameplay::GameplayPlugin, hud::HudPlugin, keyboard::KeyboardPlugin};
-use crate::{loading::LoadingIndicatorPlugin, main_menu::MainMenuPlugin, manual::ManualPlugin};
+use crate::{background::BackgroundPlugin, gameplay::GameplayPlugin, hud::HudPlugin};
+use crate::{keyboard::KeyboardPlugin, loading::LoadingIndicatorPlugin};
+use crate::{main_menu::MainMenuPlugin, manual::ManualPlugin};
+use crate::{pre_gameplay::PreGameplayPlugin, util::log_transition_plugin};
 use bevy::prelude::{
     App, AppExit, AppExtStates, AssetPlugin, DefaultPlugins, Fixed, IVec2, ImagePlugin, Last,
     PluginGroup, Startup, Time, Window, WindowPlugin, WindowPosition,
@@ -43,6 +43,7 @@ pub(crate) fn run_application() -> AppExit {
         BackgroundPlugin,
         GameplayPlugin,
         LoadingIndicatorPlugin,
+        PreGameplayPlugin,
         log_transition_plugin::<ApplicationState>,
     ));
 

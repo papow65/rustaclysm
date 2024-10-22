@@ -1,4 +1,4 @@
-use crate::gameplay::{ActiveSav, GameplayScreenState, GameplaySession};
+use crate::gameplay::{ActiveSav, GameplaySession};
 use crate::hud::{
     trigger_button_action, ButtonBuilder, Fonts, BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR,
     LARGE_SPACING, MEDIUM_SPACING, PANEL_COLOR,
@@ -357,11 +357,9 @@ pub(super) fn load(
     In(found_sav): In<FoundSav>,
     mut commands: Commands,
     mut next_application_state: ResMut<NextState<ApplicationState>>,
-    mut next_gameplay_screen_state: ResMut<NextState<GameplayScreenState>>,
 ) {
     commands.insert_resource(ActiveSav::new(&found_sav.0));
-    next_application_state.set(ApplicationState::Gameplay);
-    next_gameplay_screen_state.set(GameplayScreenState::Loading);
+    next_application_state.set(ApplicationState::PreGameplay);
 }
 
 fn quit(mut app_exit_events: ResMut<Events<AppExit>>) {
