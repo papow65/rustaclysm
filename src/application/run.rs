@@ -1,18 +1,24 @@
-use crate::application::systems::maximize_window;
 use crate::application::{check::check_delay, ApplicationState};
 use crate::{background::BackgroundPlugin, gameplay::GameplayPlugin, hud::HudPlugin};
 use crate::{keyboard::KeyboardPlugin, loading::LoadingIndicatorPlugin};
 use crate::{main_menu::MainMenuPlugin, manual::ManualPlugin};
 use crate::{pre_gameplay::PreGameplayPlugin, util::log_transition_plugin};
 use bevy::prelude::{
-    App, AppExit, AppExtStates, AssetPlugin, DefaultPlugins, Fixed, IVec2, ImagePlugin, Last,
-    PluginGroup, Startup, Time, Window, WindowPlugin, WindowPosition,
+    App, AppExit, AppExtStates, AssetPlugin, DefaultPlugins, Fixed, ImagePlugin, Last, PluginGroup,
+    Time, Window, WindowPlugin,
 };
-use bevy::window::{PresentMode, WindowResolution};
+use bevy::window::PresentMode;
 use std::time::Duration;
 
 pub(crate) fn run_application() -> AppExit {
     let mut app = App::new();
+
+    let mut window = Window {
+        title: String::from("Rustaclysm"),
+        present_mode: PresentMode::Mailbox, // much better responsiveness
+        ..Window::default()
+    };
+    window.set_maximized(true);
 
     app.add_plugins(
         DefaultPlugins
@@ -22,13 +28,7 @@ pub(crate) fn run_application() -> AppExit {
             })
             .set(ImagePlugin::default_nearest())
             .set(WindowPlugin {
-                primary_window: Some(Window {
-                    title: String::from("Rustaclysm"),
-                    present_mode: PresentMode::Mailbox, // much better responsiveness
-                    resolution: WindowResolution::new(50.0, 40.0),
-                    position: WindowPosition::At(IVec2::new(10, 10)),
-                    ..Window::default()
-                }),
+                primary_window: Some(window),
                 ..WindowPlugin::default()
             }),
     );
@@ -50,7 +50,6 @@ pub(crate) fn run_application() -> AppExit {
     app.init_state::<ApplicationState>();
     app.enable_state_scoped_entities::<ApplicationState>();
 
-    app.add_systems(Startup, maximize_window);
     app.add_systems(Last, check_delay);
 
     app.run()
