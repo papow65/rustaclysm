@@ -6,7 +6,7 @@ mod inventory;
 mod menu;
 mod state;
 
-pub(crate) use self::base::{update_camera_offset, BaseScreenPlugin, InstructionQueue};
+pub(crate) use self::base::{update_camera_offset, BaseScreenPlugin};
 pub(crate) use self::character::CharacterScreenPlugin;
 pub(crate) use self::crafting::{AlternativeSituation, CraftingScreenPlugin, RecipeSituation};
 pub(crate) use self::death::DeathScreenPlugin;

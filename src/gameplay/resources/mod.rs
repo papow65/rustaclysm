@@ -3,6 +3,7 @@ mod currently_visible;
 mod envir;
 mod expanded;
 mod explored;
+mod instruction_queue;
 mod location;
 mod model_factory;
 mod relative_segments;
@@ -19,6 +20,7 @@ pub(crate) use self::currently_visible::{CurrentlyVisible, CurrentlyVisibleBuild
 pub(crate) use self::envir::{Collision, Envir};
 pub(crate) use self::expanded::Expanded;
 pub(crate) use self::explored::{Explored, SeenFrom};
+pub(crate) use self::instruction_queue::InstructionQueue;
 pub(crate) use self::location::Location;
 pub(crate) use self::model_factory::{AppearanceCache, MeshCaches, ModelFactory};
 pub(crate) use self::relative_segments::{RelativeSegment, RelativeSegments};
