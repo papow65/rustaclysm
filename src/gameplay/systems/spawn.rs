@@ -3,8 +3,8 @@ use crate::gameplay::{
     MapAsset, MapManager, MapMemoryAsset, MapMemoryManager, MissingAsset, ObjectCategory,
     ObjectDefinition, OvermapAsset, OvermapBufferAsset, OvermapBufferManager, OvermapManager, Pos,
     Region, SeenFrom, SpawnSubzoneLevel, SpawnZoneLevel, SubzoneLevel, SubzoneLevelEntities,
-    SubzoneSpawner, UpdateZoneLevelVisibility, VisionDistance, Zone, ZoneLevel, ZoneLevelEntities,
-    ZoneLevelIds, ZoneRegion, ZoneSpawner,
+    SubzoneSpawner, UpdateZoneLevelVisibility, VisionDistance, VisualizationUpdate, Zone,
+    ZoneLevel, ZoneLevelEntities, ZoneLevelIds, ZoneRegion, ZoneSpawner,
 };
 use crate::util::log_if_slow;
 use bevy::{ecs::system::SystemState, prelude::*};
@@ -166,6 +166,7 @@ pub(crate) fn spawn_subzone_levels(
     mut subzone_spawner: SubzoneSpawner,
     mut map_manager: MapManager,
     mut map_memory_manager: MapMemoryManager,
+    mut vizualization_update: ResMut<VisualizationUpdate>,
 ) {
     let start = Instant::now();
 
@@ -180,6 +181,8 @@ pub(crate) fn spawn_subzone_levels(
             &mut map_memory_manager,
             spawn_event.subzone_level,
         );
+
+        *vizualization_update = VisualizationUpdate::Forced;
     }
 
     log_if_slow("spawn_subzone_levels", start);

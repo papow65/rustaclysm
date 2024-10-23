@@ -1,5 +1,5 @@
 use crate::application::ApplicationState;
-use crate::gameplay::systems::*;
+use crate::gameplay::{systems::*, VisualizationUpdate};
 use crate::gameplay::{
     events::EventsPlugin, sidebar::SidebarPlugin, update_camera_offset, ActorPlugin,
     BaseScreenPlugin, CameraOffset, CddaPlugin, CharacterScreenPlugin, CraftingScreenPlugin,
@@ -76,6 +76,7 @@ fn update_systems() -> impl IntoSystemConfigs<(SystemConfigTupleMarker, (), (), 
             handle_map_events.run_if(on_event::<AssetEvent<MapAsset>>),
             handle_map_memory_events.run_if(on_event::<AssetEvent<MapMemoryAsset>>),
             (
+                update_camera_offset.run_if(resource_exists_and_changed::<CameraOffset>),
                 spawn_subzones_for_camera,
                 (
                     (
@@ -87,6 +88,7 @@ fn update_systems() -> impl IntoSystemConfigs<(SystemConfigTupleMarker, (), (), 
                         .run_if(on_event::<SpawnSubzoneLevel>),
                     despawn_subzone_levels.run_if(on_event::<DespawnSubzoneLevel>),
                 ),
+                update_visibility.run_if(resource_exists_and_changed::<VisualizationUpdate>),
             )
                 .chain(),
             update_visibility.run_if(resource_exists_and_changed::<ElevationVisibility>),
@@ -100,7 +102,6 @@ fn update_systems() -> impl IntoSystemConfigs<(SystemConfigTupleMarker, (), (), 
                 ),
             )
                 .chain(),
-            update_camera_offset.run_if(resource_exists_and_changed::<CameraOffset>),
         )
             .run_if(in_state(ApplicationState::Gameplay)),
         // Resources that take a while to load, are loaded in the background, independent of the current ApplicationState
