@@ -15,7 +15,7 @@ members = [ "crates/*" ]
 
 [dependencies]
 base64 = "0.22"
-bevy = { git = "https://github.com/bevyengine/bevy.git", default-features = false, features = [ "bevy_asset", "bevy_core_pipeline", "bevy_pbr", "bevy_state", "bevy_text", "bevy_ui", "bevy_dev_tools", "ktx2", "multi_threaded", "png", "tonemapping_luts", "wayland", "x11" ] }
+bevy = { version = "0.15.0-rc.1", default-features = false, features = [ "bevy_asset", "bevy_core_pipeline", "bevy_pbr", "bevy_state", "bevy_text", "bevy_ui", "bevy_dev_tools", "ktx2", "multi_threaded", "png", "tonemapping_luts", "wayland", "x11" ] }
 bresenham = "0.1"
 cdda_json_files = { path = "crates/cdda_json_files" }
 either = { workspace = true }
