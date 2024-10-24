@@ -299,18 +299,8 @@ impl Infos {
         self.try_get(&self.fields, id)
     }
 
-    #[expect(unused)]
-    pub(crate) fn field<'a>(&'a self, id: &'a ObjectId) -> &'a FieldInfo {
-        self.get(&self.fields, id)
-    }
-
     pub(crate) fn try_furniture<'a>(&'a self, id: &'a ObjectId) -> Option<&'a FurnitureInfo> {
         self.try_get(&self.furniture, id)
-    }
-
-    #[expect(unused)]
-    pub(crate) fn furniture<'a>(&'a self, id: &'a ObjectId) -> &'a FurnitureInfo {
-        self.get(&self.furniture, id)
     }
 
     pub(crate) fn try_item<'a>(&'a self, id: &'a ObjectId) -> Option<&'a ItemInfo> {
@@ -321,13 +311,8 @@ impl Infos {
         self.get(&self.items, id)
     }
 
-    #[expect(unused)]
     pub(crate) fn try_item_group<'a>(&'a self, id: &'a ObjectId) -> Option<&'a ItemGroup> {
         self.try_get(&self.item_groups, id)
-    }
-
-    pub(crate) fn item_group<'a>(&'a self, id: &'a ObjectId) -> &'a ItemGroup {
-        self.get(&self.item_groups, id)
     }
 
     #[expect(unused)]
@@ -368,18 +353,8 @@ impl Infos {
         self.try_get(&self.vehicle_parts, id)
     }
 
-    #[expect(unused)]
-    pub(crate) fn vehicle_part<'a>(&'a self, id: &'a ObjectId) -> &'a VehiclePartInfo {
-        self.get(&self.vehicle_parts, id)
-    }
-
     pub(crate) fn try_zone_level<'a>(&'a self, id: &'a ObjectId) -> Option<&'a OvermapInfo> {
         self.try_get(&self.zone_levels, id)
-    }
-
-    #[expect(unused)]
-    pub(crate) fn zone_level<'a>(&'a self, id: &'a ObjectId) -> &'a OvermapInfo {
-        self.get(&self.zone_levels, id)
     }
 
     fn get<'a, T>(&'a self, map: &'a HashMap<ObjectId, T>, id: &'a ObjectId) -> &'a T {

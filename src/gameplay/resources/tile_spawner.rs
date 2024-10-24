@@ -263,7 +263,10 @@ impl<'w, 's> TileSpawner<'w, 's> {
         pos: Pos,
         id: &ObjectId,
     ) {
-        let item_group = &infos.item_group(id);
+        let Some(item_group) = &infos.try_item_group(id) else {
+            eprintln!("No info found for item group {id:?}. Spawning skipped");
+            return;
+        };
         let items = item_group
             .items
             .as_ref()
@@ -274,7 +277,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
 
     fn spawn_furniture(&mut self, infos: &Infos, parent: Entity, pos: Pos, id: &ObjectId) {
         let Some(furniture_info) = infos.try_furniture(id) else {
-            eprintln!("No info found for {id:?}. Spawning skipped");
+            eprintln!("No info found for furniture {id:?}. Spawning skipped");
             return;
         };
 
