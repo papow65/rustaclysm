@@ -177,14 +177,15 @@ impl Craft {
 
 #[derive(Debug, Component)]
 pub(crate) struct Melee {
+    /// Can be 0
     pub(crate) dices: u16,
+
+    /// Can be 0
     pub(crate) sides: u16,
 }
 
 impl Melee {
     pub(crate) fn damage(&self, melee_weapon: Option<&ItemInfo>) -> u16 {
-        assert!(0 < self.dices, "{}", self.dices);
-        assert!(0 < self.sides, "{}", self.sides);
         (1..=self.dices)
             .map(|_| fastrand::u16(1..=self.sides + melee_weapon.map_or(0, ItemInfo::melee_damage)))
             .sum()
