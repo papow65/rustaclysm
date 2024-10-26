@@ -2,7 +2,7 @@ use crate::structure::MaybeFlatVec;
 use serde::Deserialize;
 use std::sync::Arc;
 
-#[derive(Debug, Default, Deserialize)]
+#[derive(Clone, Debug, Default, Deserialize)]
 #[serde(from = "Option<MaybeFlatVec<Arc<str>>>")]
 #[serde(default)]
 pub struct Flags(Vec<Arc<str>>);

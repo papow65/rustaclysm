@@ -198,7 +198,7 @@ impl ActorItem<'_> {
         if let Some(body_containers) = self.body_containers {
             let mut hands_children = hierarchy.items_in(body_containers.hands);
             if let Some(weapon) = hands_children.next() {
-                melee_weapon = infos.try_item(&weapon.definition.id);
+                melee_weapon = infos.try_common_item_info(&weapon.definition.id);
             }
         }
 
@@ -705,7 +705,7 @@ impl ActorItem<'_> {
         infos: &Infos,
         item: &ItemItem,
     ) -> ActorImpact {
-        if let Some(item_info) = infos.try_item(&item.definition.id) {
+        if let Some(item_info) = infos.try_common_item_info(&item.definition.id) {
             if let Some(description) = &item_info.description {
                 message_writer
                     .str(&**match description {

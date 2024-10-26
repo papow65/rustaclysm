@@ -6,25 +6,22 @@ pub(crate) struct TypeId(&'static str);
 impl TypeId {
     pub(crate) const CHARACTER: &'static [Self] = &[Self("MONSTER")];
 
-    pub(crate) const ITEM: &'static [Self] = &[
-        Self("AMMO"),
-        Self("ARMOR"),
-        Self("BATTERY"),
-        Self("BIONIC_ITEM"),
-        Self("BOOK"),
-        Self("COMESTIBLE"),
-        Self("ENGINE"),
-        Self("GENERIC"),
-        Self("GUN"),
-        Self("GUNMOD"),
-        Self("MAGAZINE"),
-        Self("PET_ARMOR"),
-        Self("SPELL"),
-        Self("TOOL"),
-        Self("TOOL_ARMOR"),
-        Self("TOOLMOD"),
-        Self("WHEEL"),
-    ];
+    // Item types
+    pub(crate) const AMMO: &'static [Self] = &[Self("AMMO")];
+    pub(crate) const BIONIC_ITEM: &'static [Self] = &[Self("BIONIC_ITEM")];
+    pub(crate) const BOOK: &'static [Self] = &[Self("BOOK")];
+    pub(crate) const CLOTHING: &'static [Self] = &[Self("ARMOR")];
+    pub(crate) const COMESTIBLE: &'static [Self] = &[Self("COMESTIBLE")];
+    pub(crate) const ENGINE: &'static [Self] = &[Self("ENGINE")];
+    pub(crate) const GENERIC_ITEM: &'static [Self] = &[Self("GENERIC")];
+    pub(crate) const GUN: &'static [Self] = &[Self("GUN")];
+    pub(crate) const GUNMOD: &'static [Self] = &[Self("GUNMOD")];
+    pub(crate) const MAGAZINE: &'static [Self] = &[Self("MAGAZINE")];
+    pub(crate) const PET_ARMOR: &'static [Self] = &[Self("PET_ARMOR")];
+    pub(crate) const TOOL: &'static [Self] = &[Self("TOOL")];
+    pub(crate) const TOOL_CLOTHING: &'static [Self] = &[Self("TOOL_ARMOR")];
+    pub(crate) const TOOLMOD: &'static [Self] = &[Self("TOOLMOD")];
+    pub(crate) const WHEEL: &'static [Self] = &[Self("WHEEL")];
 
     pub(crate) const FIELD: &'static [Self] = &[Self("field_type")];
     pub(crate) const FURNITURE: &'static [Self] = &[Self("furniture")];
@@ -55,6 +52,7 @@ impl TypeId {
     // TODO use these types
     pub(crate) const UNUSED: &'static [Self] = &[
         Self("ammunition_type"),
+        Self("BATTERY"), // not used in CDDA 0.G (yet?)
         Self("behavior"),
         Self("enchantment"),
         Self("effect_on_condition"),
@@ -68,6 +66,7 @@ impl TypeId {
         Self("practice"),
         Self("recipe_category"),
         Self("recipe_group"),
+        Self("SPELL"),
         Self("ter_furn_transform"),
         Self("TRAIT_MIGRATION"),
         Self("trap"),
@@ -77,18 +76,32 @@ impl TypeId {
 
     pub(crate) const fn all() -> &'static [&'static [Self]] {
         &[
+            Self::AMMO,
+            Self::BIONIC_ITEM,
+            Self::BOOK,
             Self::CHARACTER,
+            Self::CLOTHING,
+            Self::COMESTIBLE,
+            Self::ENGINE,
             Self::FIELD,
             Self::FURNITURE,
-            Self::ITEM,
             Self::ITEM_GROUP,
+            Self::GENERIC_ITEM,
+            Self::GUN,
+            Self::GUNMOD,
+            Self::MAGAZINE,
             Self::MIGRATION,
             Self::OVERMAP,
+            Self::PET_ARMOR,
             Self::RECIPE,
             Self::REQUIREMENT,
             Self::TERRAIN,
+            Self::TOOL,
+            Self::TOOL_CLOTHING,
             Self::TOOL_QUALITY,
+            Self::TOOLMOD,
             Self::VEHICLE_PART,
+            Self::WHEEL,
             Self::UNUSED,
         ]
     }

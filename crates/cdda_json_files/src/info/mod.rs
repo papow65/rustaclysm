@@ -19,7 +19,11 @@ pub use self::furniture_info::{
     Bash, BashItem, BashItems, CountRange, FurnitureInfo, MoveCostIncrease, MoveCostMod,
 };
 pub use self::item_group::ItemGroup;
-pub use self::item_info::{CddaItemName, Description, ItemInfo, ItemName};
+pub use self::item_info::{
+    Ammo, BionicItem, Book, CddaItemName, Clothing, Comestible, CommonItemInfo, Description,
+    Engine, GenericItem, Gun, Gunmod, ItemName, Magazine, PetArmor, Tool, ToolClothing, Toolmod,
+    Wheel,
+};
 pub use self::migration::Migration;
 pub use self::overmap_info::OvermapInfo;
 pub use self::quality::Quality;

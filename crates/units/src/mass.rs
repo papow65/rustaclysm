@@ -4,7 +4,7 @@ use std::{
     ops::{Add, Div, Sub},
 };
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Deserialize)]
 #[serde(from = "String")]
 pub struct Mass {
     milligram: u64,

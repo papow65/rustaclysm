@@ -181,7 +181,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
         item: &CddaItem,
         amount: Amount,
     ) -> Result<Entity, ()> {
-        let Some(item_info) = infos.try_item(&item.typeid) else {
+        let Some(item_info) = infos.try_common_item_info(&item.typeid) else {
             eprintln!("No info found for {:?}. Spawning skipped", &item.typeid);
             return Err(());
         };
@@ -419,7 +419,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
             );
             return;
         };
-        let Some(item_info) = infos.try_item(&part_info.item) else {
+        let Some(item_info) = infos.try_common_item_info(&part_info.item) else {
             eprintln!(
                 "No info found for item {:?} from vehicle part {:?}. Spawning skipped",
                 &part_info.item, &part.id

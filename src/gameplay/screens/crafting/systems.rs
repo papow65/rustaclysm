@@ -378,15 +378,14 @@ fn nearby_manuals<'a>(
         .filter(|definition| {
             definition.category == ObjectCategory::Item
                 && infos
-                    .try_item(&definition.id)
+                    .try_common_item_info(&definition.id)
                     .filter(|item| item.category.as_ref().is_some_and(|s| &**s == "manuals"))
                     .is_some()
         })
-        .map(|definition| {
-            (
-                definition.id.clone(),
-                infos.item(&definition.id).name.single.clone(),
-            )
+        .filter_map(|definition| {
+            infos
+                .try_common_item_info(&definition.id)
+                .map(|item_info| (definition.id.clone(), item_info.name.single.clone()))
         })
         .collect::<HashMap<_, _>>()
 }
@@ -411,7 +410,7 @@ fn shown_recipes(
         .filter(|(.., autolearn, recipe_manuals)| *autolearn || !recipe_manuals.is_empty())
         .filter_map(|(recipe_id, recipe, autolearn, recipe_manuals)| {
             infos
-                .try_item(&recipe.result)
+                .try_common_item_info(&recipe.result)
                 .ok_or(0)
                 .inspect_err(|_| {
                     eprintln!("Recipe result {:?} should be a known item", recipe.result);
@@ -496,11 +495,17 @@ fn nearby_qualities<'a>(
     let found = nearby_items
         .iter()
         .filter_map(|(_, definition, _)| match definition.category {
-            ObjectCategory::Item => infos.try_item(&definition.id).map(|item| &item.qualities),
+            ObjectCategory::Item => infos
+                .try_common_item_info(&definition.id)
+                .map(|item| &item.qualities),
             ObjectCategory::Furniture => infos
                 .try_furniture(&definition.id)
                 .and_then(|furniture| furniture.crafting_pseudo_item.as_ref())
-                .and_then(|pseude_item| infos.try_item(pseude_item).map(|item| &item.qualities)),
+                .and_then(|pseude_item| {
+                    infos
+                        .try_common_item_info(pseude_item)
+                        .map(|item| &item.qualities)
+                }),
             _ => None,
         })
         .flatten()
@@ -565,7 +570,7 @@ fn recipe_components(
                     .flat_map(|alternative| expand_items(infos, alternative))
                     .filter_map(|(item_id, required)| {
                         infos
-                            .try_item(item_id)
+                            .try_common_item_info(item_id)
                             .ok_or(())
                             .inspect_err(|()| {
                                 eprintln!("Item {item_id:?} not found (maybe comestible?)");
@@ -604,7 +609,7 @@ fn expand_items<'a>(infos: &'a Infos, alternative: &'a Alternative) -> Vec<(&'a 
         } => {
             let Some(requirement) = infos.try_requirement(requirement) else {
                 assert!(
-                    infos.try_item(requirement).is_some(),
+                    infos.try_common_item_info(requirement).is_some(),
                     "Unkonwn requirement {:?} should be an items",
                     &requirement
                 );

@@ -10,7 +10,7 @@ pub(crate) use vehicle::{Vehicle, VehiclePart};
 
 use crate::gameplay::*;
 use bevy::prelude::{AlphaMode, Assets, Color, Component, MeshMaterial3d, Srgba, StandardMaterial};
-use cdda_json_files::{ItemInfo, MoveCost, MoveCostIncrease, ObjectId};
+use cdda_json_files::{CommonItemInfo, MoveCost, MoveCostIncrease, ObjectId};
 use std::ops::{Add, Sub};
 use units::{Duration, Mass, Timestamp, Volume};
 
@@ -185,9 +185,11 @@ pub(crate) struct Melee {
 }
 
 impl Melee {
-    pub(crate) fn damage(&self, melee_weapon: Option<&ItemInfo>) -> u16 {
+    pub(crate) fn damage(&self, melee_weapon: Option<&CommonItemInfo>) -> u16 {
         (1..=self.dices)
-            .map(|_| fastrand::u16(1..=self.sides + melee_weapon.map_or(0, ItemInfo::melee_damage)))
+            .map(|_| {
+                fastrand::u16(1..=self.sides + melee_weapon.map_or(0, CommonItemInfo::melee_damage))
+            })
             .sum()
     }
 }

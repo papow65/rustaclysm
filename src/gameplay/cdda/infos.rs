@@ -2,9 +2,10 @@ use crate::gameplay::{ObjectCategory, ObjectDefinition, TypeId};
 use crate::util::{AssetPaths, AsyncNew};
 use bevy::{ecs::system::Resource, utils::HashMap};
 use cdda_json_files::{
-    Alternative, CddaItemName, CharacterInfo, FieldInfo, Flags, FurnitureInfo, ItemGroup, ItemInfo,
-    ItemName, Migration, ObjectId, OvermapInfo, Quality, Recipe, Requirement, TerrainInfo, Using,
-    UsingKind, VehiclePartInfo,
+    Alternative, Ammo, BionicItem, Book, CddaItemName, CharacterInfo, Clothing, Comestible,
+    CommonItemInfo, Engine, FieldInfo, Flags, FurnitureInfo, GenericItem, Gun, Gunmod, ItemGroup,
+    ItemName, Magazine, Migration, ObjectId, OvermapInfo, PetArmor, Quality, Recipe, Requirement,
+    TerrainInfo, Tool, ToolClothing, Toolmod, Using, UsingKind, VehiclePartInfo, Wheel,
 };
 use glob::glob;
 use serde::de::DeserializeOwned;
@@ -15,17 +16,32 @@ use units::{Mass, Volume};
 
 #[derive(Resource)]
 pub(crate) struct Infos {
+    ammos: HashMap<ObjectId, Ammo>,
+    bionic_items: HashMap<ObjectId, BionicItem>,
+    books: HashMap<ObjectId, Book>,
     characters: HashMap<ObjectId, CharacterInfo>,
+    clothings: HashMap<ObjectId, Clothing>,
+    comestibles: HashMap<ObjectId, Comestible>,
+    common_item_info: HashMap<ObjectId, CommonItemInfo>,
+    engines: HashMap<ObjectId, Engine>,
     fields: HashMap<ObjectId, FieldInfo>,
     furniture: HashMap<ObjectId, FurnitureInfo>,
-    items: HashMap<ObjectId, ItemInfo>,
+    genenric_items: HashMap<ObjectId, GenericItem>,
+    guns: HashMap<ObjectId, Gun>,
+    gunmods: HashMap<ObjectId, Gunmod>,
     item_groups: HashMap<ObjectId, ItemGroup>,
+    magazines: HashMap<ObjectId, Magazine>,
     migrations: HashMap<ObjectId, Migration>,
+    pet_armors: HashMap<ObjectId, PetArmor>,
     qualities: HashMap<ObjectId, Quality>,
     recipes: HashMap<ObjectId, Recipe>,
     requirements: HashMap<ObjectId, Requirement>,
     terrain: HashMap<ObjectId, TerrainInfo>,
+    tools: HashMap<ObjectId, Tool>,
+    tool_clothings: HashMap<ObjectId, ToolClothing>,
+    toolmods: HashMap<ObjectId, Toolmod>,
     vehicle_parts: HashMap<ObjectId, VehiclePartInfo>,
+    wheels: HashMap<ObjectId, Wheel>,
     zone_levels: HashMap<ObjectId, OvermapInfo>,
 }
 
@@ -250,36 +266,98 @@ impl Infos {
 
         let mut enricheds = Self::enricheds();
         let mut this = Self {
+            ammos: Self::extract(&mut enricheds, TypeId::AMMO),
+            bionic_items: Self::extract(&mut enricheds, TypeId::BIONIC_ITEM),
+            books: Self::extract(&mut enricheds, TypeId::BOOK),
             characters: Self::extract(&mut enricheds, TypeId::CHARACTER),
+            clothings: Self::extract(&mut enricheds, TypeId::CLOTHING),
+            comestibles: Self::extract(&mut enricheds, TypeId::COMESTIBLE),
+            common_item_info: HashMap::default(),
+            engines: Self::extract(&mut enricheds, TypeId::ENGINE),
             fields: Self::extract(&mut enricheds, TypeId::FIELD),
             furniture: Self::extract(&mut enricheds, TypeId::FURNITURE),
-            items: Self::extract(&mut enricheds, TypeId::ITEM),
+            genenric_items: Self::extract(&mut enricheds, TypeId::GENERIC_ITEM),
+            guns: Self::extract(&mut enricheds, TypeId::GUN),
+            gunmods: Self::extract(&mut enricheds, TypeId::GUNMOD),
             item_groups: Self::extract(&mut enricheds, TypeId::ITEM_GROUP),
+            magazines: Self::extract(&mut enricheds, TypeId::MAGAZINE),
             migrations: Self::extract(&mut enricheds, TypeId::MIGRATION),
+            pet_armors: Self::extract(&mut enricheds, TypeId::PET_ARMOR),
             qualities: Self::extract(&mut enricheds, TypeId::TOOL_QUALITY),
             recipes: Self::extract(&mut enricheds, TypeId::RECIPE),
             requirements: Self::extract(&mut enricheds, TypeId::REQUIREMENT),
             terrain: Self::extract(&mut enricheds, TypeId::TERRAIN),
+            tools: Self::extract(&mut enricheds, TypeId::TOOL),
+            tool_clothings: Self::extract(&mut enricheds, TypeId::TOOL_CLOTHING),
+            toolmods: Self::extract(&mut enricheds, TypeId::TOOLMOD),
             vehicle_parts: Self::extract(&mut enricheds, TypeId::VEHICLE_PART),
+            wheels: Self::extract(&mut enricheds, TypeId::WHEEL),
             zone_levels: Self::extract(&mut enricheds, TypeId::OVERMAP),
         };
 
-        this.characters.insert(
-            ObjectId::new("human"),
-            CharacterInfo {
-                name: ItemName::from(CddaItemName::Simple(Arc::from("Human"))),
-                default_faction: Arc::from("human"),
-                looks_like: Some(ObjectId::new("overlay_male_mutation_SKIN_TAN")),
-                volume: Some(Volume::from("80 l")),
-                mass: Some(Mass::from("80 kg")),
-                hp: Some(100),
-                speed: 100,
-                melee_dice: 2,
-                melee_dice_sides: 4,
-                flags: Flags::default(),
-                extra: HashMap::default(),
-            },
-        );
+        this.characters
+            .insert(ObjectId::new("human"), default_human());
+
+        for (id, value) in &this.ammos {
+            this.common_item_info
+                .insert(id.clone(), value.common.clone());
+        }
+        for (id, value) in &this.bionic_items {
+            this.common_item_info
+                .insert(id.clone(), value.common.clone());
+        }
+        for (id, value) in &this.books {
+            this.common_item_info
+                .insert(id.clone(), value.common.clone());
+        }
+        for (id, value) in &this.clothings {
+            this.common_item_info
+                .insert(id.clone(), value.common.clone());
+        }
+        for (id, value) in &this.comestibles {
+            this.common_item_info
+                .insert(id.clone(), value.common.clone());
+        }
+        for (id, value) in &this.engines {
+            this.common_item_info
+                .insert(id.clone(), value.common.clone());
+        }
+        for (id, value) in &this.genenric_items {
+            this.common_item_info
+                .insert(id.clone(), value.common.clone());
+        }
+        for (id, value) in &this.guns {
+            this.common_item_info
+                .insert(id.clone(), value.common.clone());
+        }
+        for (id, value) in &this.gunmods {
+            this.common_item_info
+                .insert(id.clone(), value.common.clone());
+        }
+        for (id, value) in &this.magazines {
+            this.common_item_info
+                .insert(id.clone(), value.common.clone());
+        }
+        for (id, value) in &this.pet_armors {
+            this.common_item_info
+                .insert(id.clone(), value.common.clone());
+        }
+        for (id, value) in &this.tools {
+            this.common_item_info
+                .insert(id.clone(), value.common.clone());
+        }
+        for (id, value) in &this.tool_clothings {
+            this.common_item_info
+                .insert(id.clone(), value.clothing.common.clone());
+        }
+        for (id, value) in &this.toolmods {
+            this.common_item_info
+                .insert(id.clone(), value.common.clone());
+        }
+        for (id, value) in &this.wheels {
+            this.common_item_info
+                .insert(id.clone(), value.common.clone());
+        }
 
         let duration = start.elapsed();
         println!("The creation of Infos took {duration:?}");
@@ -295,20 +373,19 @@ impl Infos {
         self.get(&self.characters, id)
     }
 
+    pub(crate) fn try_common_item_info<'a>(
+        &'a self,
+        id: &'a ObjectId,
+    ) -> Option<&'a CommonItemInfo> {
+        self.try_get(&self.common_item_info, id)
+    }
+
     pub(crate) fn try_field<'a>(&'a self, id: &'a ObjectId) -> Option<&'a FieldInfo> {
         self.try_get(&self.fields, id)
     }
 
     pub(crate) fn try_furniture<'a>(&'a self, id: &'a ObjectId) -> Option<&'a FurnitureInfo> {
         self.try_get(&self.furniture, id)
-    }
-
-    pub(crate) fn try_item<'a>(&'a self, id: &'a ObjectId) -> Option<&'a ItemInfo> {
-        self.try_get(&self.items, id)
-    }
-
-    pub(crate) fn item<'a>(&'a self, id: &'a ObjectId) -> &'a ItemInfo {
-        self.get(&self.items, id)
     }
 
     pub(crate) fn try_item_group<'a>(&'a self, id: &'a ObjectId) -> Option<&'a ItemGroup> {
@@ -373,32 +450,25 @@ impl Infos {
     fn looks_like(&self, definition: &ObjectDefinition) -> Option<ObjectId> {
         match definition.category {
             ObjectCategory::Character => self
-                .characters
-                .get(&definition.id)
+                .try_character(&definition.id)
                 .and_then(|o| o.looks_like.clone()),
             ObjectCategory::Item => self
-                .items
-                .get(&definition.id)
+                .try_common_item_info(&definition.id)
                 .and_then(|o| o.looks_like.clone()),
             ObjectCategory::Field => self
-                .fields
-                .get(&definition.id)
+                .try_field(&definition.id)
                 .and_then(|o| o.looks_like.clone()),
             ObjectCategory::Furniture => self
-                .furniture
-                .get(&definition.id)
+                .try_furniture(&definition.id)
                 .and_then(|o| o.looks_like.clone()),
             ObjectCategory::Terrain => self
-                .terrain
-                .get(&definition.id)
+                .try_terrain(&definition.id)
                 .and_then(|o| o.looks_like.clone()),
             ObjectCategory::VehiclePart => self
-                .vehicle_parts
-                .get(&definition.id)
+                .try_vehicle_part(&definition.id)
                 .and_then(|o| o.looks_like.clone()),
             ObjectCategory::ZoneLevel => self
-                .zone_levels
-                .get(&definition.id)
+                .try_zone_level(&definition.id)
                 .and_then(|o| o.looks_like.clone()),
             _ => unimplemented!("{:?}", definition),
         }
@@ -467,7 +537,7 @@ impl Infos {
                 .remove(type_id)
                 .unwrap_or_else(|| panic!("Type {type_id:?} not found"));
             for (id, object_properties) in objects {
-                //println!("{:?}", &object_properties);
+                //println!("{:#?}", &object_properties);
                 let info: T = serde_json::from_value(serde_json::Value::Object(object_properties))
                     .unwrap_or_else(|e| panic!("{:?} {:?}", &id, &e));
                 result.insert(id, info);
@@ -504,6 +574,22 @@ impl Infos {
                 factor: using.factor,
             }]]
         }
+    }
+}
+
+fn default_human() -> CharacterInfo {
+    CharacterInfo {
+        name: ItemName::from(CddaItemName::Simple(Arc::from("Human"))),
+        default_faction: Arc::from("human"),
+        looks_like: Some(ObjectId::new("overlay_male_mutation_SKIN_TAN")),
+        volume: Some(Volume::from("80 l")),
+        mass: Some(Mass::from("80 kg")),
+        hp: Some(100),
+        speed: 100,
+        melee_dice: 2,
+        melee_dice_sides: 4,
+        flags: Flags::default(),
+        extra: HashMap::default(),
     }
 }
 

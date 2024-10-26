@@ -19,7 +19,7 @@ use crate::manual::ManualSection;
 use crate::util::log_if_slow;
 use bevy::ecs::{entity::EntityHashMap, system::SystemId};
 use bevy::{prelude::*, utils::HashMap};
-use cdda_json_files::{ItemInfo, ObjectId};
+use cdda_json_files::{CommonItemInfo, ObjectId};
 use std::time::Instant;
 use units::Timestamp;
 
@@ -297,7 +297,7 @@ pub(super) fn refresh_inventory(
                 });
 
             for (item_entity, id, item_phrase) in items {
-                if let Some(item_info) = infos.try_item(id) {
+                if let Some(item_info) = infos.try_common_item_info(id) {
                     let is_selected;
                     let is_selected_previous;
                     if let Some(previous_selected_item) = previous_selected_item {
@@ -399,7 +399,7 @@ fn add_row(
     parent: &mut ChildBuilder,
     item_entity: Entity,
     item_phrase: &Phrase,
-    item_info: &ItemInfo,
+    item_info: &CommonItemInfo,
     item_text_color: TextColor,
     drop_section: bool,
     inventory_system: &InventorySystem,
