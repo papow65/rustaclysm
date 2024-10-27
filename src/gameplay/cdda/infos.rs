@@ -80,7 +80,8 @@ impl Infos {
             })
     }
 
-    fn literals() -> HashMap<TypeId, HashMap<String, serde_json::Map<String, serde_json::Value>>> {
+    fn literals() -> HashMap<TypeId, HashMap<ObjectId, serde_json::Map<String, serde_json::Value>>>
+    {
         let mut literals = HashMap::default();
         for type_ids in TypeId::all() {
             for type_id in *type_ids {
@@ -111,11 +112,11 @@ impl Infos {
                 let mut ids = Vec::new();
                 match id_value(&content, &json_path) {
                     serde_json::Value::String(id) => {
-                        ids.push(String::from(id.as_str()));
+                        ids.push(ObjectId::new(id.as_str()));
                     }
                     serde_json::Value::Array(a) => {
                         for id in a {
-                            ids.push(String::from(
+                            ids.push(ObjectId::new(
                                 id.as_str().expect("Id should have a string value"),
                             ));
                         }
@@ -143,11 +144,11 @@ impl Infos {
                 if let Some(alias) = content.get("alias") {
                     match alias {
                         serde_json::Value::String(id) => {
-                            aliases.push(String::from(id.as_str()));
+                            aliases.push(ObjectId::new(id.as_str()));
                         }
                         serde_json::Value::Array(a) => {
                             for id in a {
-                                aliases.push(String::from(id.as_str().expect("")));
+                                aliases.push(ObjectId::new(id.as_str().expect("")));
                             }
                         }
                         _ => {
@@ -187,18 +188,20 @@ impl Infos {
                 let mut ancestors = vec![object_id.clone()];
                 while let Some(copy_from) = enriched.remove("copy-from") {
                     //println!("Copy from {:?}", &copy_from);
-                    let copy_from = copy_from
-                        .as_str()
-                        .expect("'copy-from' should have a string value");
-                    ancestors.push(String::from(copy_from));
+                    let copy_from = ObjectId::new(
+                        copy_from
+                            .as_str()
+                            .expect("'copy-from' should have a string value"),
+                    );
+                    ancestors.push(copy_from.clone());
                     assert!(ancestors.len() < 10, "{ancestors:?}");
                     let literals = &literals;
-                    let copy_from = if let Some(found) = literal_entry.get(copy_from) {
+                    let copy_from = if let Some(found) = literal_entry.get(&copy_from) {
                         found
                     } else {
                         let mut other_types = literals
                             .into_iter()
-                            .filter_map(|(_, literal_entry)| literal_entry.get(copy_from));
+                            .filter_map(|(_, literal_entry)| literal_entry.get(&copy_from));
                         let Some(single) = other_types.next() else {
                             eprintln!(
                                 "copy-from {copy_from:?} not found for ({:?}) {:?}",
@@ -251,7 +254,7 @@ impl Infos {
                     }
                 }
 
-                enriched_of_type.insert(ObjectId::new(object_id), enriched);
+                enriched_of_type.insert(object_id.clone(), enriched);
             }
         }
         enricheds
