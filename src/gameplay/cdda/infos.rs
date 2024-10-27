@@ -46,7 +46,7 @@ pub(crate) struct Infos {
 }
 
 impl Infos {
-    fn literals_paths() -> Vec<PathBuf> {
+    fn literals_paths() -> impl Iterator<Item = PathBuf> {
         let json_path = AssetPaths::data().join("json");
         let patterns = [
             json_path.join("field_type.json"),
@@ -63,19 +63,21 @@ impl Infos {
             json_path.join("vehicleparts").join("**").join("*.json"),
         ];
         patterns
-            .iter()
-            .map(|pattern| {
-                pattern
+            .into_iter()
+            .flat_map(|pattern| {
+                let pattern = pattern
                     .as_path()
                     .to_str()
-                    .expect("Path pattern should be valid UTF-8")
-            })
-            .flat_map(|pattern| {
+                    .expect("Path pattern should be valid UTF-8");
                 println!("Searching {pattern} for info files");
                 glob(pattern).expect("Glob pattern should match some readable paths")
             })
             .map(|json_path_result| json_path_result.expect("JSON path should be valid"))
-            .collect::<Vec<_>>()
+            .filter(|path| {
+                !path.ends_with("default_blacklist.json")
+                    && !path.ends_with("dreams.json")
+                    && !path.ends_with("effect_on_condition.json")
+            })
     }
 
     fn literals() -> HashMap<TypeId, HashMap<String, serde_json::Map<String, serde_json::Value>>> {
@@ -89,12 +91,6 @@ impl Infos {
         let mut file_count = 0;
         let mut info_count = 0;
         for json_path in Self::literals_paths() {
-            if json_path.ends_with("default_blacklist.json")
-                || json_path.ends_with("dreams.json")
-                || json_path.ends_with("effect_on_condition.json")
-            {
-                continue;
-            }
             //println!("Parsing {json_path:?}...");
             let file_contents = read_to_string(&json_path)
                 .unwrap_or_else(|_| panic!("Could not read {}", json_path.display()));
