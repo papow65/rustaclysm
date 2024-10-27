@@ -46,7 +46,7 @@ jobs:
       - name: 'Print rustc verion'
         run: rustc --version --verbose
       - name: 'Build'
-        run: cargo build --release --no-default-features
+        run: cargo build --release --no-default-features --features bevy/x11,bevy/accesskit_unix
       - name: 'List built files'
         run: 'ls -l target/release'
       - name: 'Rename'
