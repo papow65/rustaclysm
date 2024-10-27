@@ -80,6 +80,7 @@ impl Infos {
             })
     }
 
+    /// [`TypeId`] -> [`ObjectId`] -> property name -> property value
     fn literals() -> HashMap<TypeId, HashMap<ObjectId, serde_json::Map<String, serde_json::Value>>>
     {
         let mut literals = HashMap::default();
@@ -171,6 +172,7 @@ impl Infos {
         literals
     }
 
+    /// [`TypeId`] -> [`ObjectId`] -> property name -> property value
     fn enricheds() -> HashMap<TypeId, HashMap<ObjectId, serde_json::Map<String, serde_json::Value>>>
     {
         let mut enricheds = HashMap::default();
