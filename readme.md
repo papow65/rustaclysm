@@ -24,7 +24,7 @@ Currently, these features are (partially) supported:
 
 ## Getting started
 
-1. Download and install the [experimental version](https://cataclysmdda.org/experimental/) of Cataclysm: Dark Days Ahead.
+1. Download and install version [0.G Gaiman](https://cataclysmdda.org/releases/) of Cataclysm: Dark Days Ahead.
 2. Create a world in it and save a character in that world. An existing world and character will work as well. We will load this save later.
 3. Download the [latest release](https://github.com/papow65/rustaclysm/releases) of Rustaclysm.
 4. Run rustaclysm
@@ -32,7 +32,7 @@ Currently, these features are (partially) supported:
 
 ## Development
 
-1. Install the [experimental version](https://cataclysmdda.org/experimental/) of Cataclysm: Dark Days Ahead.
+1. Install version [0.G Gaiman](https://cataclysmdda.org/releases/) of Cataclysm: Dark Days Ahead.
 2. Create a world in it and save a character in that world. An existing world and character will work as well. We will load this save later.
 3. Install [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git), [Rust, and Cargo](https://forge.rust-lang.org/infra/other-installation-methods.html#which-installer-should-you-use)
 5. Clone the Rustaclism git repository. When using the command line: `git clone https://github.com/papow65/rustaclysm.git`
