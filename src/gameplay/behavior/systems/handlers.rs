@@ -1,10 +1,10 @@
 //! These systems are part of [`BehaviorSchedule`](`crate::gameplay::behavior::schedule::BehaviorSchedule`).
 
 use crate::gameplay::{
-    Actor, ActorEvent, Amount, Clock, ContainerLimits, Corpse, CorpseEvent, CorpseRaise, Damage,
-    Faction, Fragment, GameplayScreenState, Healing, Health, Hierarchy, Infos, Integrity, Item,
-    Life, Limited, LocalTerrain, MessageWriter, ObjectCategory, ObjectDefinition, ObjectName,
-    Obstacle, Phrase, Player, Pos, Stamina, Subject, TerrainEvent, TileSpawner, Toggle,
+    spawn::TileSpawner, Actor, ActorEvent, Amount, Clock, ContainerLimits, Corpse, CorpseEvent,
+    CorpseRaise, Damage, Faction, Fragment, GameplayScreenState, Healing, Health, Hierarchy, Infos,
+    Integrity, Item, Life, Limited, LocalTerrain, MessageWriter, ObjectCategory, ObjectDefinition,
+    ObjectName, Obstacle, Phrase, Player, Pos, Stamina, Subject, TerrainEvent, Toggle,
     VisualizationUpdate, WalkingMode,
 };
 use crate::util::log_if_slow;

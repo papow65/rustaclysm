@@ -1,7 +1,7 @@
 use crate::gameplay::{
-    ActiveSav, AppearanceCache, CameraOffset, Expanded, Explored, Infos, InstructionQueue, Level,
-    Location, MeshCaches, SubzoneLevelEntities, TileSpawner, Timeouts, VisualizationUpdate, Zone,
-    ZoneLevelEntities, ZoneLevelIds,
+    spawn::TileSpawner, ActiveSav, AppearanceCache, CameraOffset, Expanded, Explored, Infos,
+    InstructionQueue, Level, Location, MeshCaches, SubzoneLevelEntities, Timeouts,
+    VisualizationUpdate, Zone, ZoneLevelEntities, ZoneLevelIds,
 };
 use bevy::prelude::{Commands, Res};
 use units::Timestamp;

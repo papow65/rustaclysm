@@ -1,7 +1,7 @@
 use crate::application::ApplicationState;
 use crate::gameplay::{
-    Infos, LastSeen, Level, MissingAsset, ObjectCategory, ObjectDefinition, ObjectName,
-    OvermapBufferManager, OvermapManager, SeenFrom, TileSpawner, ZoneLevel, ZoneLevelIds,
+    spawn::TileSpawner, Infos, LastSeen, Level, MissingAsset, ObjectCategory, ObjectDefinition,
+    ObjectName, OvermapBufferManager, OvermapManager, SeenFrom, ZoneLevel, ZoneLevelIds,
 };
 use crate::hud::HARD_TEXT_COLOR;
 use bevy::ecs::system::SystemParam;

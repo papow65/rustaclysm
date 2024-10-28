@@ -1,7 +1,7 @@
 use crate::application::ApplicationState;
 use crate::gameplay::{
-    AssetState, Infos, LevelOffset, LocalTerrain, MapManager, MapMemoryManager, OvermapManager,
-    Overzone, PosOffset, RepetitionBlockExt, SubzoneLevel, SubzoneLevelEntities, TileSpawner,
+    spawn::TileSpawner, AssetState, Infos, LevelOffset, LocalTerrain, MapManager, MapMemoryManager,
+    OvermapManager, Overzone, PosOffset, RepetitionBlockExt, SubzoneLevel, SubzoneLevelEntities,
     ZoneLevel, ZoneLevelIds,
 };
 use bevy::ecs::system::SystemParam;

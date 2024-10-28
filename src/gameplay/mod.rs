@@ -9,6 +9,7 @@ mod plugin;
 mod resources;
 mod screens;
 mod sidebar;
+mod spawn;
 mod systems;
 
 pub(crate) use self::actor::*;

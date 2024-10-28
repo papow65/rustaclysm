@@ -8,12 +8,9 @@ mod location;
 mod model_factory;
 mod relative_segments;
 mod subzone_level_entities;
-mod subzone_spawner;
-mod tile_spawner;
 mod timeouts;
 mod zone_level_entities;
 mod zone_level_ids;
-mod zone_spawner;
 
 pub(crate) use self::camera_offset::CameraOffset;
 pub(crate) use self::currently_visible::{CurrentlyVisible, CurrentlyVisibleBuilder};
@@ -25,12 +22,9 @@ pub(crate) use self::location::Location;
 pub(crate) use self::model_factory::{AppearanceCache, MeshCaches, ModelFactory};
 pub(crate) use self::relative_segments::{RelativeSegment, RelativeSegments};
 pub(crate) use self::subzone_level_entities::SubzoneLevelEntities;
-pub(crate) use self::subzone_spawner::SubzoneSpawner;
-pub(crate) use self::tile_spawner::TileSpawner;
 pub(crate) use self::timeouts::{Clock, Timeouts};
 pub(crate) use self::zone_level_entities::ZoneLevelEntities;
 pub(crate) use self::zone_level_ids::ZoneLevelIds;
-pub(crate) use self::zone_spawner::ZoneSpawner;
 
 use crate::gameplay::*;
 use bevy::{ecs::system::SystemParam, prelude::*};

@@ -1,13 +1,24 @@
 use crate::application::ApplicationState;
+use crate::gameplay::spawn::{
+    despawn_subzone_levels, despawn_zone_level, handle_map_events, handle_map_memory_events,
+    handle_overmap_buffer_events, handle_overmap_events, spawn_subzone_levels,
+    spawn_subzones_for_camera, spawn_zone_levels, update_zone_level_visibility, update_zone_levels,
+    update_zone_levels_with_missing_assets,
+};
+use crate::gameplay::systems::{
+    check_failed_asset_loading, count_assets, count_entities, count_zones,
+    create_dependent_resources, create_gameplay_key_bindings, create_independent_resources,
+    increase_counter, remove_gameplay_resources, spawn_initial_entities, update_visibility,
+    update_visualization_on_item_move,
+};
 use crate::gameplay::{
     events::EventsPlugin, sidebar::SidebarPlugin, update_camera_offset, ActorPlugin,
     BaseScreenPlugin, CameraOffset, CddaPlugin, CharacterScreenPlugin, CraftingScreenPlugin,
     DeathScreenPlugin, DespawnSubzoneLevel, DespawnZoneLevel, ElevationVisibility, FocusPlugin,
     GameplayCounter, GameplayScreenState, InventoryScreenPlugin, MapAsset, MapMemoryAsset,
     MenuScreenPlugin, OvermapAsset, OvermapBufferAsset, RelativeSegments, SpawnSubzoneLevel,
-    SpawnZoneLevel, TileLoader, UpdateZoneLevelVisibility,
+    SpawnZoneLevel, TileLoader, UpdateZoneLevelVisibility, VisualizationUpdate,
 };
-use crate::gameplay::{systems::*, VisualizationUpdate};
 use crate::util::{load_async_resource, log_transition_plugin, AsyncResourceLoader};
 use bevy::prelude::{
     in_state, on_event, resource_exists, resource_exists_and_changed, App, AppExtStates,
@@ -91,14 +102,12 @@ fn update_systems() -> impl IntoSystemConfigs<(SystemConfigTupleMarker, (), (), 
                 update_visibility.run_if(resource_exists_and_changed::<VisualizationUpdate>),
             )
                 .chain(),
-            update_visibility.run_if(resource_exists_and_changed::<ElevationVisibility>),
             (
                 update_zone_levels,
                 (
                     spawn_zone_levels.run_if(on_event::<SpawnZoneLevel>),
                     update_zone_level_visibility.run_if(on_event::<UpdateZoneLevelVisibility>),
                     despawn_zone_level.run_if(on_event::<DespawnZoneLevel>),
-                    count_entities.run_if(on_event::<DespawnZoneLevel>),
                 ),
             )
                 .chain(),
@@ -112,7 +121,12 @@ fn update_systems() -> impl IntoSystemConfigs<(SystemConfigTupleMarker, (), (), 
 
 fn fixed_update_systems() -> impl IntoSystemConfigs<()> {
     (
-        (count_assets, count_zones, check_failed_asset_loading),
+        (
+            count_assets,
+            count_zones,
+            count_entities,
+            check_failed_asset_loading,
+        ),
         #[cfg(feature = "log_archetypes")]
         list_archetypes,
     )
