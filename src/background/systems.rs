@@ -19,7 +19,7 @@ pub(super) fn spawn_background(
     let background_image = asset_server.load(AssetPaths::backgrounds().join(BACKGROUND_NAME));
     commands.spawn((
         UiImage {
-            texture: background_image,
+            image: background_image,
             ..UiImage::default()
         },
         Node {
