@@ -6,9 +6,9 @@ use crate::gameplay::spawn::{
     update_zone_levels_with_missing_assets,
 };
 use crate::gameplay::systems::{
-    check_failed_asset_loading, count_assets, count_entities, count_zones,
-    create_dependent_resources, create_gameplay_key_bindings, create_independent_resources,
-    increase_counter, remove_gameplay_resources, spawn_initial_entities, update_visibility,
+    check_failed_asset_loading, count_assets, count_pos, create_dependent_resources,
+    create_gameplay_key_bindings, create_independent_resources, increase_counter,
+    remove_gameplay_resources, spawn_initial_entities, update_visibility,
     update_visualization_on_item_move,
 };
 use crate::gameplay::{
@@ -121,12 +121,7 @@ fn update_systems() -> impl IntoSystemConfigs<(SystemConfigTupleMarker, (), (), 
 
 fn fixed_update_systems() -> impl IntoSystemConfigs<()> {
     (
-        (
-            count_assets,
-            count_zones,
-            count_entities,
-            check_failed_asset_loading,
-        ),
+        (count_assets, count_pos, check_failed_asset_loading),
         #[cfg(feature = "log_archetypes")]
         list_archetypes,
     )

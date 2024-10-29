@@ -230,11 +230,11 @@ pub(crate) fn count_assets(
 }
 
 #[expect(clippy::needless_pass_by_value)]
-pub(crate) fn count_zones(
-    //zones: Query<&Zone>,
-    zone_levels: Query<&ZoneLevel>,
-    subzone_levels: Query<&SubzoneLevel>,
-    mut last_counts: Local<Vec<usize>>,
+pub(crate) fn count_pos(
+    zone_levels: Query<(), With<ZoneLevel>>,
+    subzone_levels: Query<(), With<SubzoneLevel>>,
+    pos: Query<(), With<Pos>>,
+    mut last_counts: Local<[usize; 3]>,
 ) {
     if !cfg!(debug_assertions) {
         return;
@@ -242,37 +242,19 @@ pub(crate) fn count_zones(
 
     let start = Instant::now();
 
-    let counts = vec![
-        //zones.len(),
-        zone_levels.iter().len(),
-        subzone_levels.iter().len(),
-    ];
+    let zone_levels = zone_levels.iter().len();
+    let subzone_levels = subzone_levels.iter().len();
+    let pos = pos.iter().len();
+
+    let counts = [zone_levels, subzone_levels, pos];
 
     if *last_counts != counts && counts.iter().any(|c| 0 < *c) {
-        //println!("{} zones", counts[0]);
-        println!("{} zone levels", counts[0]);
-        println!("{} subzone levels", counts[1]);
+        println!("{subzone_levels} zone levels, {zone_levels} subzone levels, and {pos} positions");
 
         *last_counts = counts;
     }
 
-    log_if_slow("count_zones", start);
-}
-
-#[expect(clippy::needless_pass_by_value)]
-pub(crate) fn count_entities(
-    all: Query<()>,
-    zone_levels: Query<(), With<ZoneLevel>>,
-    subzone_levels: Query<(), With<SubzoneLevel>>,
-    pos: Query<(), With<Pos>>,
-) {
-    let total = all.iter().len();
-    let subzone_levels = subzone_levels.iter().len();
-    let zone_levels = zone_levels.iter().len();
-    let pos = pos.iter().len();
-    let other = total - subzone_levels - zone_levels - pos;
-
-    println!("{subzone_levels} zone levels, {zone_levels} subzone levels, {pos} positions, and {other} other entities");
+    log_if_slow("count_pos", start);
 }
 
 #[expect(clippy::needless_pass_by_value)]
