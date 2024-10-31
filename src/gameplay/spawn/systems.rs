@@ -1,11 +1,11 @@
-use crate::gameplay::spawn::{SubzoneSpawner, ZoneSpawner};
+use crate::gameplay::spawn::{SubzoneSpawner, TileSpawner, ZoneSpawner};
 use crate::gameplay::{
-    DespawnSubzoneLevel, DespawnZoneLevel, Expanded, Explored, Focus, GameplaySession, Level,
-    MapAsset, MapManager, MapMemoryAsset, MapMemoryManager, MissingAsset, ObjectCategory,
-    ObjectDefinition, OvermapAsset, OvermapBufferAsset, OvermapBufferManager, OvermapManager, Pos,
-    Region, SeenFrom, SpawnSubzoneLevel, SpawnZoneLevel, SubzoneLevel, SubzoneLevelEntities,
-    UpdateZoneLevelVisibility, VisionDistance, VisualizationUpdate, Zone, ZoneLevel,
-    ZoneLevelEntities, ZoneLevelIds, ZoneRegion,
+    ActiveSav, DespawnSubzoneLevel, DespawnZoneLevel, Expanded, Explored, Focus, GameplayLocal,
+    Infos, Level, MapAsset, MapManager, MapMemoryAsset, MapMemoryManager, MissingAsset,
+    ObjectCategory, ObjectDefinition, OvermapAsset, OvermapBufferAsset, OvermapBufferManager,
+    OvermapManager, Pos, Region, SeenFrom, SpawnSubzoneLevel, SpawnZoneLevel, SubzoneLevel,
+    SubzoneLevelEntities, UpdateZoneLevelVisibility, VisionDistance, VisualizationUpdate, Zone,
+    ZoneLevel, ZoneLevelEntities, ZoneLevelIds, ZoneRegion,
 };
 use crate::util::log_if_slow;
 use bevy::{ecs::system::SystemState, prelude::*};
@@ -19,22 +19,17 @@ pub(crate) fn spawn_subzones_for_camera(
     mut despawn_subzone_level_writer: EventWriter<DespawnSubzoneLevel>,
     focus: Focus,
     subzone_level_entities: Res<SubzoneLevelEntities>,
-    mut session: GameplaySession,
-    mut previous_camera_global_transform: Local<GlobalTransform>,
+    mut previous_camera_global_transform: GameplayLocal<GlobalTransform>,
     mut expanded: ResMut<Expanded>,
     cameras: Query<(&Camera, &GlobalTransform)>,
     subzone_levels: Query<&SubzoneLevel>,
 ) {
     let start = Instant::now();
 
-    if session.is_changed() {
-        *previous_camera_global_transform = GlobalTransform::default();
-    }
-
     // TODO fix respawning expanded subzones after loading a save game twice, because the Local resources might not change
 
     let (camera, &global_transform) = cameras.single();
-    if global_transform == *previous_camera_global_transform {
+    if global_transform == *previous_camera_global_transform.get() {
         return;
     }
 
@@ -54,7 +49,7 @@ pub(crate) fn spawn_subzones_for_camera(
         &expanded.region,
     );
 
-    *previous_camera_global_transform = global_transform;
+    *previous_camera_global_transform.get() = global_transform;
 
     log_if_slow("spawn_subzones_for_camera", start);
 }
@@ -227,9 +222,8 @@ pub(crate) fn update_zone_levels(
     mut despawn_zone_level_writer: EventWriter<DespawnZoneLevel>,
     focus: Focus,
     zone_level_entities: Res<ZoneLevelEntities>,
-    mut session: GameplaySession,
-    mut previous_camera_global_transform: Local<GlobalTransform>,
-    mut previous_visible_region: Local<Region>,
+    mut previous_camera_global_transform: GameplayLocal<GlobalTransform>,
+    mut previous_visible_region: GameplayLocal<Region>,
     cameras: Query<(&Camera, &GlobalTransform)>,
     zone_levels: Query<(Entity, &ZoneLevel, &Children), With<Visibility>>,
     new_subzone_levels: Query<(), Added<SubzoneLevel>>,
@@ -239,11 +233,6 @@ pub(crate) fn update_zone_levels(
 
     let start = Instant::now();
 
-    if session.is_changed() {
-        *previous_camera_global_transform = GlobalTransform::default();
-        *previous_visible_region = Region::default();
-    }
-
     //println!(
     //    "update_zone_levels {:?} {:?}",
     //    new_subzone_levels.iter().collect::<Vec<_>>().len(),
@@ -251,14 +240,15 @@ pub(crate) fn update_zone_levels(
     //);
 
     let (camera, &global_transform) = cameras.single();
-    if global_transform == *previous_camera_global_transform && new_subzone_levels.is_empty() {
+    if global_transform == *previous_camera_global_transform.get() && new_subzone_levels.is_empty()
+    {
         return;
     }
 
     // Zone levels above zero add little value, so we always skip these.
     let visible_region = visible_region(camera, &global_transform).ground_only();
     //println!("Visible region: {:?}", &visible_region);
-    if visible_region == *previous_visible_region && new_subzone_levels.is_empty() {
+    if visible_region == *previous_visible_region.get() && new_subzone_levels.is_empty() {
         return;
     }
     //println!("update_zone_levels refresh");
@@ -291,8 +281,8 @@ pub(crate) fn update_zone_levels(
         }
     }
 
-    *previous_camera_global_transform = global_transform;
-    *previous_visible_region = visible_region;
+    *previous_camera_global_transform.get() = global_transform;
+    *previous_visible_region.get() = visible_region;
 
     log_if_slow("update_zone_levels", start);
 }
@@ -549,4 +539,26 @@ pub(crate) fn update_zone_levels_with_missing_assets(
     }
 
     log_if_slow("update_zone_level_visibility", start);
+}
+
+#[expect(clippy::needless_pass_by_value)]
+pub(crate) fn spawn_initial_entities(
+    infos: Res<Infos>,
+    active_sav: Res<ActiveSav>,
+    mut spawner: TileSpawner,
+) {
+    spawner.spawn_light();
+
+    let sav = active_sav.sav();
+    let spawn_pos = Zone {
+        x: i32::from(sav.om_x) * 180 + i32::from(sav.levx) / 2,
+        z: i32::from(sav.om_y) * 180 + i32::from(sav.levy) / 2,
+    }
+    .zone_level(Level::new(sav.levz))
+    .base_corner()
+    .horizontal_offset(
+        12 * i32::from(sav.levx % 2) + 24,
+        12 * i32::from(sav.levy % 2) + 24,
+    );
+    spawner.spawn_characters(&infos, spawn_pos);
 }

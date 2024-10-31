@@ -1,7 +1,7 @@
 use crate::application::ApplicationState;
 use crate::gameplay::{
     Accessible, Appearance, BaseSpeed, CurrentlyVisible, CurrentlyVisibleBuilder,
-    ElevationVisibility, Explored, Focus, GameplaySession, LastSeen, MapAsset, MapMemoryAsset,
+    ElevationVisibility, Explored, Focus, GameplayLocal, LastSeen, MapAsset, MapMemoryAsset,
     OvermapAsset, OvermapBufferAsset, Player, Pos, SubzoneLevel, ZoneLevel,
 };
 use crate::loading::LoadingState;
@@ -92,9 +92,8 @@ fn calculate_visibility(
 pub(crate) fn update_visibility(
     focus: Focus,
     elevation_visibility: Res<ElevationVisibility>,
-    mut session: GameplaySession,
-    mut previous_camera_global_transform: Local<GlobalTransform>,
-    mut last_elevation_visibility: Local<ElevationVisibility>,
+    mut previous_camera_global_transform: GameplayLocal<GlobalTransform>,
+    mut last_elevation_visibility: GameplayLocal<ElevationVisibility>,
     mut items: Query<(
         Option<&Player>,
         &Pos,
@@ -106,15 +105,10 @@ pub(crate) fn update_visibility(
 ) {
     let start = Instant::now();
 
-    if session.is_changed() {
-        *previous_camera_global_transform = GlobalTransform::default();
-        *last_elevation_visibility = ElevationVisibility::default();
-    }
-
     let &camera_global_transform = cameras.single();
     if focus.is_changed()
-        || camera_global_transform != *previous_camera_global_transform
-        || *elevation_visibility != *last_elevation_visibility
+        || camera_global_transform != *previous_camera_global_transform.get()
+        || *elevation_visibility != *last_elevation_visibility.get()
     {
         for (player, &pos, mut visibility, last_seen, speed) in &mut items {
             if *last_seen != LastSeen::Never {
@@ -131,8 +125,8 @@ pub(crate) fn update_visibility(
 
         println!("{}x visibility updated", items.iter().len());
 
-        *previous_camera_global_transform = camera_global_transform;
-        *last_elevation_visibility = *elevation_visibility;
+        *previous_camera_global_transform.get() = camera_global_transform;
+        *last_elevation_visibility.get() = *elevation_visibility;
     }
 
     log_if_slow("update_visibility", start);

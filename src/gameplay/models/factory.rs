@@ -1,24 +1,14 @@
+use crate::gameplay::models::resources::{AppearanceCache, MeshCaches};
 use crate::gameplay::{
     Appearance, Infos, Layers, Model, ModelShape, ObjectCategory, ObjectDefinition,
     SpriteOrientation, TileLoader, TileVariant,
 };
+use bevy::ecs::system::SystemParam;
 use bevy::prelude::{
-    AssetServer, Assets, Mesh, Mesh3d, MeshMaterial3d, Res, ResMut, Resource, StandardMaterial,
-    Transform, Vec3,
+    AssetServer, Assets, Mesh, Mesh3d, MeshMaterial3d, Res, ResMut, StandardMaterial, Transform,
+    Vec3,
 };
-use bevy::{ecs::system::SystemParam, utils::HashMap};
-use cdda_json_files::{ObjectId, SpriteNumber};
-use std::path::PathBuf;
-
-#[derive(Default, Resource)]
-pub(crate) struct AppearanceCache(HashMap<PathBuf, Appearance>);
-
-#[derive(Default, Resource)]
-pub(crate) struct MeshCaches {
-    horizontal_planes: HashMap<SpriteNumber, Mesh3d>,
-    vertical_planes: HashMap<SpriteNumber, Mesh3d>,
-    cuboids: HashMap<SpriteNumber, Mesh3d>,
-}
+use cdda_json_files::ObjectId;
 
 #[derive(SystemParam)]
 pub(crate) struct ModelFactory<'w> {

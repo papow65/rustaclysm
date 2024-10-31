@@ -2,10 +2,10 @@
 
 use crate::gameplay::{
     spawn::TileSpawner, Actor, ActorEvent, Amount, Clock, ContainerLimits, Corpse, CorpseEvent,
-    CorpseRaise, Damage, Faction, Fragment, GameplayScreenState, Healing, Health, Hierarchy, Infos,
-    Integrity, Item, Life, Limited, LocalTerrain, MessageWriter, ObjectCategory, ObjectDefinition,
-    ObjectName, Obstacle, Phrase, Player, Pos, Stamina, Subject, TerrainEvent, Toggle,
-    VisualizationUpdate, WalkingMode,
+    CorpseRaise, Damage, Faction, Fragment, GameplayScreenState, Healing, Health, Infos, Integrity,
+    Item, ItemHierarchy, Life, Limited, LocalTerrain, MessageWriter, ObjectCategory,
+    ObjectDefinition, ObjectName, Obstacle, Phrase, Player, Pos, Stamina, Subject, TerrainEvent,
+    Toggle, VisualizationUpdate, WalkingMode,
 };
 use crate::util::log_if_slow;
 use bevy::ecs::schedule::SystemConfigs;
@@ -358,7 +358,7 @@ pub(in super::super) fn spawn_broken_terrain(
 #[expect(clippy::needless_pass_by_value)]
 pub(in super::super) fn combine_items(
     mut commands: Commands,
-    hierarchy: Hierarchy,
+    hierarchy: ItemHierarchy,
     moved_items: Query<Item, (Changed<Parent>, Without<ContainerLimits>)>,
 ) {
     let start = Instant::now();

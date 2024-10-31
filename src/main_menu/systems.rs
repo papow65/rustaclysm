@@ -1,4 +1,4 @@
-use crate::gameplay::{ActiveSav, GameplaySession};
+use crate::gameplay::{ActiveSav, GameplayLocal};
 use crate::hud::{
     trigger_button_action, ButtonBuilder, Fonts, BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR,
     LARGE_SPACING, MEDIUM_SPACING, PANEL_COLOR,
@@ -180,8 +180,7 @@ pub(super) fn update_sav_files(
     In(load_systems): In<LoadSystems>,
     mut commands: Commands,
     fonts: Res<Fonts>,
-    mut session: GameplaySession,
-    mut last_list_saves_result: Local<Option<Result<Vec<PathBuf>, LoadError>>>,
+    mut last_list_saves_result: GameplayLocal<Option<Result<Vec<PathBuf>, LoadError>>>,
     mut load_button_areas: Query<
         (Entity, &mut Node),
         (With<LoadButtonArea>, Without<MessageWrapper>),
@@ -194,10 +193,10 @@ pub(super) fn update_sav_files(
 
     let list_saves_result = list_saves();
 
-    if !session.is_changed() && Some(&list_saves_result) == last_list_saves_result.as_ref() {
+    if Some(&list_saves_result) == last_list_saves_result.get().as_ref() {
         return;
     }
-    *last_list_saves_result = Some(list_saves_result.clone());
+    *last_list_saves_result.get() = Some(list_saves_result.clone());
 
     commands.entity(load_button_area).despawn_descendants();
 

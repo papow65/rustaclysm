@@ -3,8 +3,8 @@
 use crate::gameplay::systems::{update_visualization, update_visualization_on_item_move};
 use crate::gameplay::{
     Accessible, Amount, Appearance, BaseSpeed, Clock, Containable, CurrentlyVisible,
-    CurrentlyVisibleBuilder, ElevationVisibility, Explored, Focus, GameplaySession, LastSeen,
-    Player, PlayerActionState, Pos, Vehicle, VisualizationUpdate,
+    CurrentlyVisibleBuilder, ElevationVisibility, Explored, Focus, GameplayLocal, LastSeen, Player,
+    PlayerActionState, Pos, Vehicle, VisualizationUpdate,
 };
 use crate::util::log_if_slow;
 use bevy::ecs::schedule::SystemConfigs;
@@ -93,8 +93,7 @@ fn update_visualization_on_player_move(
     mut explored: ResMut<Explored>,
     elevation_visibility: Res<ElevationVisibility>,
     mut visualization_update: ResMut<VisualizationUpdate>,
-    mut session: GameplaySession,
-    mut previous_camera_global_transform: Local<GlobalTransform>,
+    mut previous_camera_global_transform: GameplayLocal<GlobalTransform>,
     mut items: Query<(
         Option<&Player>,
         &Pos,
@@ -109,12 +108,8 @@ fn update_visualization_on_player_move(
 ) {
     let start = Instant::now();
 
-    if session.is_changed() {
-        *previous_camera_global_transform = GlobalTransform::default();
-    }
-
     let &camera_global_transform = cameras.single();
-    let camera_moved = camera_global_transform != *previous_camera_global_transform;
+    let camera_moved = camera_global_transform != *previous_camera_global_transform.get();
 
     if focus.is_changed() || camera_moved || visualization_update.forced() {
         let currently_visible = thread_local::ThreadLocal::new();
@@ -148,7 +143,7 @@ fn update_visualization_on_player_move(
 
         println!("{}x visualization updated", items.iter().len());
 
-        *previous_camera_global_transform = camera_global_transform;
+        *previous_camera_global_transform.get() = camera_global_transform;
         (*visualization_update).reset();
     }
 
@@ -160,23 +155,18 @@ fn update_visualization_on_weather_change(
     clock: Clock,
     player_action_state: Res<State<PlayerActionState>>,
     mut visualization_update: ResMut<VisualizationUpdate>,
-    mut session: GameplaySession,
-    mut last_viewing_disttance: Local<Option<u8>>,
+    mut last_viewing_disttance: GameplayLocal<Option<u8>>,
     players: Query<&Pos, With<Player>>,
 ) {
     let start = Instant::now();
-
-    if session.is_changed() {
-        *last_viewing_disttance = None;
-    }
 
     let viewing_distance = CurrentlyVisible::viewing_distance(
         &clock,
         Some(&*player_action_state),
         players.single().level,
     );
-    if *last_viewing_disttance != viewing_distance {
-        *last_viewing_disttance = viewing_distance;
+    if *last_viewing_disttance.get() != viewing_distance {
+        *last_viewing_disttance.get() = viewing_distance;
 
         // Handled by update_visualization_on_player_move next frame
         *visualization_update = VisualizationUpdate::Forced;

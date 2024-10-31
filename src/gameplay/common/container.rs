@@ -1,14 +1,14 @@
-use crate::gameplay::{Amount, Containable, Hierarchy, MessageWriter, Subject};
+use crate::gameplay::{Amount, Containable, ItemHierarchy, MessageWriter, Subject};
 use bevy::prelude::Entity;
 use units::{Mass, Volume};
 
 pub(crate) struct Container<'a> {
     pub(crate) entity: Entity,
-    hierarchy: &'a Hierarchy<'a, 'a>,
+    hierarchy: &'a ItemHierarchy<'a, 'a>,
 }
 
 impl<'a> Container<'a> {
-    pub(crate) const fn new(entity: Entity, hierarchy: &'a Hierarchy) -> Self {
+    pub(crate) const fn new(entity: Entity, hierarchy: &'a ItemHierarchy) -> Self {
         Self { entity, hierarchy }
     }
 

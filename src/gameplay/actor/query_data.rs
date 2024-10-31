@@ -50,14 +50,14 @@ impl ActorItem<'_> {
         }
     }
 
-    fn hands<'a>(&self, hierarchy: &'a Hierarchy) -> Container<'a> {
+    fn hands<'a>(&self, hierarchy: &'a ItemHierarchy) -> Container<'a> {
         Container::new(
             self.body_containers.expect("Body containers present").hands,
             hierarchy,
         )
     }
 
-    fn clothing<'a>(&self, hierarchy: &'a Hierarchy) -> Container<'a> {
+    fn clothing<'a>(&self, hierarchy: &'a ItemHierarchy) -> Container<'a> {
         Container::new(
             self.body_containers
                 .expect("Body containers present")
@@ -188,7 +188,7 @@ impl ActorItem<'_> {
         &self,
         damage_writer: &mut EventWriter<E>,
         infos: &Infos,
-        hierarchy: &Hierarchy,
+        hierarchy: &ItemHierarchy,
         damaged: Entity,
         new: N,
     ) -> ActorImpact
@@ -218,7 +218,7 @@ impl ActorItem<'_> {
         damage_writer: &mut EventWriter<ActorEvent<Damage>>,
         envir: &Envir,
         infos: &Infos,
-        hierarchy: &Hierarchy,
+        hierarchy: &ItemHierarchy,
         attack: &Attack,
     ) -> ActorImpact {
         if self.stamina.breath() == Breath::Winded {
@@ -250,7 +250,7 @@ impl ActorItem<'_> {
         damage_writer: &mut EventWriter<TerrainEvent<Damage>>,
         envir: &Envir,
         infos: &Infos,
-        hierarchy: &Hierarchy,
+        hierarchy: &ItemHierarchy,
         smash: &Smash,
     ) -> ActorImpact {
         if self.stamina.breath() == Breath::Winded {
@@ -305,7 +305,7 @@ impl ActorItem<'_> {
         corpse_damage_writer: &mut EventWriter<CorpseEvent<Damage>>,
         envir: &Envir,
         infos: &Infos,
-        hierarchy: &Hierarchy,
+        hierarchy: &ItemHierarchy,
         pulp: &Pulp,
     ) -> ActorImpact {
         if self.stamina.breath() == Breath::Winded {
@@ -416,7 +416,7 @@ impl ActorItem<'_> {
         &self,
         commands: &mut Commands,
         message_writer: &mut MessageWriter,
-        hierarchy: &Hierarchy,
+        hierarchy: &ItemHierarchy,
         item: &ItemItem,
     ) -> ActorImpact {
         let impact = self.take(commands, message_writer, &self.hands(hierarchy), item);
@@ -430,7 +430,7 @@ impl ActorItem<'_> {
         &self,
         commands: &mut Commands,
         message_writer: &mut MessageWriter,
-        hierarchy: &Hierarchy,
+        hierarchy: &ItemHierarchy,
         item: &ItemItem,
     ) -> ActorImpact {
         let impact = self.take(commands, message_writer, &self.clothing(hierarchy), item);
@@ -444,7 +444,7 @@ impl ActorItem<'_> {
         &self,
         commands: &mut Commands,
         message_writer: &mut MessageWriter,
-        hierarchy: &Hierarchy,
+        hierarchy: &ItemHierarchy,
         item: &ItemItem,
     ) -> ActorImpact {
         self.take(commands, message_writer, &self.clothing(hierarchy), item)

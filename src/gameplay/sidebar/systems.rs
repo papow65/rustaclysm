@@ -198,20 +198,14 @@ fn update_log(
     mut new_messages: EventReader<Message>,
     currently_visible_builder: CurrentlyVisibleBuilder,
     fonts: Res<Fonts>,
-    mut session: GameplaySession,
     logs: Query<Entity, With<LogDisplay>>,
-    mut previous_sections: Local<Vec<(TextSpan, TextColor, TextFont)>>,
-    mut last_message: Local<Option<(Message, DuplicateMessageCount)>>,
+    mut previous_sections: GameplayLocal<Vec<(TextSpan, TextColor, TextFont)>>,
+    mut last_message: GameplayLocal<Option<(Message, DuplicateMessageCount)>>,
     mut transient_message: Local<Vec<(TextSpan, TextColor, TextFont)>>,
 ) {
     const SINGLE: DuplicateMessageCount = Saturating(1);
 
     let start = Instant::now();
-
-    if session.is_changed() {
-        *previous_sections = Vec::new();
-        *last_message = Option::None;
-    }
 
     for message in new_messages.read() {
         let percieved_message = percieve(&currently_visible_builder, message.clone());
@@ -232,15 +226,15 @@ fn update_log(
             if message.transient {
                 transient_message.extend(to_text_sections(&fonts, &message, SINGLE));
             } else {
-                match &mut *last_message {
+                match last_message.get() {
                     Some((last, ref mut count)) if *last == message => {
                         *count += 1;
                     }
                     _ => {
                         if let Some((previous_last, previous_count)) =
-                            last_message.replace((message, SINGLE))
+                            last_message.get().replace((message, SINGLE))
                         {
-                            previous_sections.extend(to_text_sections(
+                            previous_sections.get().extend(to_text_sections(
                                 &fonts,
                                 &previous_last,
                                 previous_count,
@@ -255,10 +249,10 @@ fn update_log(
     let mut logs = commands.entity(logs.single());
     logs.despawn_descendants();
     logs.with_children(|parent| {
-        for section in previous_sections.clone() {
+        for section in previous_sections.get().clone() {
             parent.spawn(section);
         }
-        if let Some((message, count)) = &*last_message {
+        if let Some((message, count)) = last_message.get() {
             for section in to_text_sections(&fonts, message, *count) {
                 parent.spawn(section);
             }

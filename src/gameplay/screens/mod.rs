@@ -4,6 +4,7 @@ mod crafting;
 mod death;
 mod inventory;
 mod menu;
+mod plugin;
 mod state;
 
 pub(crate) use self::base::{update_camera_offset, BaseScreenPlugin};
@@ -12,4 +13,5 @@ pub(crate) use self::crafting::{AlternativeSituation, CraftingScreenPlugin, Reci
 pub(crate) use self::death::DeathScreenPlugin;
 pub(crate) use self::inventory::InventoryScreenPlugin;
 pub(crate) use self::menu::MenuScreenPlugin;
+pub(crate) use self::plugin::ScreensPlugin;
 pub(crate) use self::state::GameplayScreenState;

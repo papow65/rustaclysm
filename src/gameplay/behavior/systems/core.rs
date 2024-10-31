@@ -354,7 +354,7 @@ fn perform_attack(
     mut damage_writer: EventWriter<ActorEvent<Damage>>,
     envir: Envir,
     infos: Res<Infos>,
-    hierarchy: Hierarchy,
+    hierarchy: ItemHierarchy,
     actors: Query<Actor>,
 ) -> ActorImpact {
     attack.actor(&actors).attack(
@@ -374,7 +374,7 @@ fn perform_smash(
     mut damage_writer: EventWriter<TerrainEvent<Damage>>,
     envir: Envir,
     infos: Res<Infos>,
-    hierarchy: Hierarchy,
+    hierarchy: ItemHierarchy,
     actors: Query<Actor>,
 ) -> ActorImpact {
     smash.actor(&actors).smash(
@@ -394,7 +394,7 @@ fn perform_pulp(
     mut corpse_damage_writer: EventWriter<CorpseEvent<Damage>>,
     envir: Envir,
     infos: Res<Infos>,
-    hierarchy: Hierarchy,
+    hierarchy: ItemHierarchy,
     actors: Query<Actor>,
 ) -> ActorImpact {
     pulp.actor(&actors).pulp(
@@ -444,7 +444,7 @@ fn perform_wield(
     In(wield): In<ActionIn<Wield>>,
     mut commands: Commands,
     mut message_writer: MessageWriter,
-    hierarchy: Hierarchy,
+    hierarchy: ItemHierarchy,
     actors: Query<Actor>,
     items: Query<Item>,
 ) -> ActorImpact {
@@ -461,7 +461,7 @@ fn perform_unwield(
     In(unwield): In<ActionIn<Unwield>>,
     mut commands: Commands,
     mut message_writer: MessageWriter,
-    hierarchy: Hierarchy,
+    hierarchy: ItemHierarchy,
     actors: Query<Actor>,
     items: Query<Item>,
 ) -> ActorImpact {
@@ -478,7 +478,7 @@ fn perform_pickup(
     In(pickup): In<ActionIn<Pickup>>,
     mut commands: Commands,
     mut message_writer: MessageWriter,
-    hierarchy: Hierarchy,
+    hierarchy: ItemHierarchy,
     actors: Query<Actor>,
     items: Query<Item>,
 ) -> ActorImpact {
