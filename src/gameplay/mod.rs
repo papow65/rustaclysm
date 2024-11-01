@@ -33,5 +33,7 @@ pub(crate) use self::scope::{GameplayLocal, GameplayResourcePlugin};
 pub(crate) use self::screens::{
     update_camera_offset, AlternativeSituation, GameplayScreenState, RecipeSituation,
 };
-pub(crate) use self::system_params::*;
+pub(crate) use self::system_params::{
+    Collision, CurrentlyVisible, CurrentlyVisibleBuilder, Envir, ItemHierarchy,
+};
 pub(crate) use self::time::{Clock, Timeouts};
