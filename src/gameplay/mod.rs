@@ -16,24 +16,54 @@ mod system_params;
 mod systems;
 mod time;
 
-pub(crate) use self::actor::*;
-pub(crate) use self::cdda::*;
-pub(crate) use self::common::*;
-pub(crate) use self::components::*;
-pub(crate) use self::events::*;
-pub(crate) use self::focus::{Focus, FocusState};
-pub(crate) use self::models::ModelFactory;
+pub(crate) use self::cdda::{
+    ActiveSav, Infos, MapAsset, MapMemoryAsset, OvermapAsset, OvermapBufferAsset,
+};
 pub(crate) use self::plugin::GameplayPlugin;
-pub(crate) use self::resources::{
-    CameraOffset, ElevationVisibility, Expanded, Explored, InstructionQueue, Location,
-    RelativeSegment, RelativeSegments, SeenFrom, SubzoneLevelEntities, VisualizationUpdate,
-    ZoneLevelEntities, ZoneLevelIds,
+pub(crate) use self::resources::{Explored, RelativeSegments, SubzoneLevelEntities};
+pub(crate) use self::scope::GameplayLocal;
+pub(crate) use self::screens::GameplayScreenState;
+
+use self::actor::{
+    Action, ActionIn, Actor, ActorImpact, ActorItem, ActorPlugin, Aquatic, Attack, BaseSpeed,
+    Breath, ChangePace, Close, ContinueCraft, ExamineItem, Faction, Health, Intelligence,
+    ItemAction, LastEnemy, MoveItem, Peek, Pickup, PlannedAction, Player, PlayerActionState, Pulp,
+    Sleep, Smash, Stamina, StaminaCost, StaminaImpact, StartCraft, Stay, Step, Subject, Unwield,
+    WalkingMode, Wield,
 };
-pub(crate) use self::scope::{GameplayLocal, GameplayResourcePlugin};
-pub(crate) use self::screens::{
-    update_camera_offset, AlternativeSituation, GameplayScreenState, RecipeSituation,
+use self::cdda::{
+    CddaPlugin, Layers, MapManager, MapMemoryManager, MeshInfo, Model, ModelShape, ObjectCategory,
+    OvermapBufferManager, OvermapManager, PathFor, RepetitionBlockExt, SpriteLayer,
+    SpriteOrientation, TextureInfo, TileLoader, TileVariant, Transform2d, TypeId,
 };
-pub(crate) use self::system_params::{
+use self::common::{
+    AssetState, CancelHandling, CardinalDirection, Container, Evolution, Fragment,
+    HorizontalDirection, Interruption, Item, ItemItem, LevelOffset, Limited, LocalTerrain, Nbor,
+    NborDistance, Phrase, PlayerDirection, PosOffset, Positioning, QueuedInstruction, Region,
+    Visible, VisionDistance, WalkingCost, ZoneRegion, ZoomDirection, ZoomDistance,
+};
+use self::components::{
+    Accessible, Amount, Appearance, BodyContainers, CameraBase, Closeable, Containable,
+    ContainerLimits, Corpse, CorpseRaise, Craft, ExamineCursor, Filthy, HealingDuration, Hurdle,
+    Integrity, LastSeen, Level, Life, Melee, MissingAsset, ObjectDefinition, ObjectName, Obstacle,
+    Opaque, OpaqueFloor, Openable, Overzone, PlayerWielded, Pos, StairsDown, StairsUp,
+    SubzoneLevel, Vehicle, VehiclePart, Zone, ZoneLevel,
+};
+use self::events::{
+    ActorChange, ActorEvent, CorpseChange, CorpseEvent, Damage, DespawnSubzoneLevel,
+    DespawnZoneLevel, Healing, Message, MessageWriter, RefreshAfterBehavior, Severity,
+    SpawnSubzoneLevel, SpawnZoneLevel, TerrainChange, TerrainEvent, Toggle,
+    UpdateZoneLevelVisibility,
+};
+use self::focus::{Focus, FocusState};
+use self::models::ModelFactory;
+use self::resources::{
+    CameraOffset, ElevationVisibility, Expanded, InstructionQueue, Location, RelativeSegment,
+    SeenFrom, VisualizationUpdate, ZoneLevelEntities, ZoneLevelIds,
+};
+use self::scope::GameplayResourcePlugin;
+use self::screens::{update_camera_offset, AlternativeSituation, RecipeSituation};
+use self::system_params::{
     Collision, CurrentlyVisible, CurrentlyVisibleBuilder, Envir, ItemHierarchy,
 };
-pub(crate) use self::time::{Clock, Timeouts};
+use self::time::{Clock, Timeouts};
