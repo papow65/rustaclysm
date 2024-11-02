@@ -1,4 +1,5 @@
-use crate::gameplay::cdda::{asset_storage::AssetStorage, paths::OvermapPath};
+use crate::gameplay::cdda::paths::OvermapPath;
+use crate::gameplay::cdda::region_assets::AssetStorage;
 use crate::gameplay::{ActiveSav, AssetState, OvermapAsset, Overzone};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{AssetId, AssetServer, Assets, Res, ResMut};
@@ -6,7 +7,7 @@ use bevy::prelude::{AssetId, AssetServer, Assets, Res, ResMut};
 #[derive(SystemParam)]
 pub(crate) struct OvermapManager<'w> {
     active_sav: Res<'w, ActiveSav>,
-    storage: ResMut<'w, AssetStorage<OvermapAsset, Overzone>>,
+    storage: ResMut<'w, AssetStorage<OvermapAsset>>,
     asset_server: Res<'w, AssetServer>,
     assets: Res<'w, Assets<OvermapAsset>>,
 }

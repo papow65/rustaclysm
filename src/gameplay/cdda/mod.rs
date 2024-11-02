@@ -1,48 +1,26 @@
 mod active_sav;
-mod asset_storage;
-mod assets;
-mod atlas;
 mod error;
 mod infos;
-mod map_loader;
-mod map_manager;
-mod map_memory_loader;
-mod map_memory_manager;
-mod mesh;
-mod model;
 mod object_definition;
-mod overmap_buffer_manager;
-mod overmap_loader;
-mod overmap_manager;
 mod paths;
 mod plugin;
+mod region_assets;
 mod repetition_block_ext;
-mod sprite_layer;
-mod systems;
-mod texture_info;
-mod tile_loader;
-mod tile_variant;
+mod tiles;
 mod type_id;
 
 pub(crate) use self::active_sav::ActiveSav;
-pub(crate) use self::assets::{MapAsset, MapMemoryAsset, OvermapAsset, OvermapBufferAsset};
-pub(crate) use self::atlas::Atlas;
 pub(crate) use self::infos::Infos;
-pub(crate) use self::map_loader::MapLoader;
-pub(crate) use self::map_manager::MapManager;
-pub(crate) use self::map_memory_loader::MapMemoryLoader;
-pub(crate) use self::map_memory_manager::MapMemoryManager;
-pub(crate) use self::mesh::MeshInfo;
-pub(crate) use self::model::{Layers, Model, ModelShape, SpriteOrientation, Transform2d};
 pub(crate) use self::object_definition::ObjectCategory;
-pub(crate) use self::overmap_buffer_manager::OvermapBufferManager;
-pub(crate) use self::overmap_loader::OvermapLoader;
-pub(crate) use self::overmap_manager::OvermapManager;
 pub(crate) use self::paths::{PathFor, SavPath, WorldPath};
 pub(crate) use self::plugin::CddaPlugin;
+pub(crate) use self::region_assets::{
+    MapAsset, MapManager, MapMemoryAsset, MapMemoryManager, OvermapAsset, OvermapBufferAsset,
+    OvermapBufferManager, OvermapManager,
+};
 pub(crate) use self::repetition_block_ext::RepetitionBlockExt;
-pub(crate) use self::sprite_layer::SpriteLayer;
-pub(crate) use self::texture_info::TextureInfo;
-pub(crate) use self::tile_loader::TileLoader;
-pub(crate) use self::tile_variant::TileVariant;
+pub(crate) use self::tiles::{
+    Atlas, Layers, MeshInfo, Model, ModelShape, SpriteLayer, SpriteOrientation, TextureInfo,
+    TileLoader, TileVariant, Transform2d,
+};
 pub(crate) use self::type_id::TypeId;

@@ -4,7 +4,7 @@ use bevy::asset::{io::Reader, AssetLoader, LoadContext};
 use std::{str::from_utf8, sync::Arc};
 
 #[derive(Default)]
-pub(crate) struct MapLoader;
+pub(super) struct MapLoader;
 
 impl AssetLoader for MapLoader {
     type Asset = MapAsset;

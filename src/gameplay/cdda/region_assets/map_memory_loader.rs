@@ -4,7 +4,7 @@ use either::Either;
 use std::str::from_utf8;
 
 #[derive(Default)]
-pub(crate) struct MapMemoryLoader;
+pub(super) struct MapMemoryLoader;
 
 impl AssetLoader for MapMemoryLoader {
     type Asset = MapMemoryAsset;
