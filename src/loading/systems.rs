@@ -1,4 +1,3 @@
-use crate::application::ApplicationState;
 use crate::gameplay::{
     Explored, GameplayScreenState, MapAsset, MapMemoryAsset, OvermapAsset, OvermapBufferAsset,
     SubzoneLevelEntities,
@@ -7,7 +6,7 @@ use crate::hud::{Fonts, DEFAULT_BUTTON_COLOR, HARD_TEXT_COLOR};
 use crate::loading::LoadingState;
 use bevy::prelude::{
     AlignItems, Assets, BuildChildren, ChildBuild, Commands, GlobalZIndex, JustifyContent, Local,
-    NextState, Node, PositionType, Res, ResMut, State, StateScoped, Text, Val,
+    NextState, Node, PositionType, Res, ResMut, StateScoped, Text, Val,
 };
 
 #[expect(clippy::needless_pass_by_value)]
@@ -41,20 +40,6 @@ pub(crate) fn spawn_loading(mut commands: Commands, fonts: Res<Fonts>) {
                     parent.spawn((Text::from("Loading..."), HARD_TEXT_COLOR, fonts.large()));
                 });
         });
-}
-
-/// We start loading after the frame that spawns the loading indicator, to ensure the loading indicator is visible to the user.
-#[expect(clippy::needless_pass_by_value)]
-pub(crate) fn start_gameplay(
-    application_state: Res<State<ApplicationState>>,
-    mut next_application_state: ResMut<NextState<ApplicationState>>,
-    mut delay: Local<bool>,
-) {
-    if *delay && application_state.get() != &ApplicationState::Gameplay {
-        next_application_state.set(ApplicationState::Gameplay);
-    } else {
-        *delay = true;
-    }
 }
 
 #[expect(clippy::needless_pass_by_value)]
