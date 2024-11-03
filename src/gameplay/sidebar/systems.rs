@@ -13,13 +13,12 @@ use bevy::ecs::{schedule::SystemConfigs, system::EntityCommands};
 use bevy::prelude::{
     on_event, resource_exists, resource_exists_and_changed, AlignItems, BuildChildren, Changed,
     ChildBuild, Commands, Condition, DespawnRecursiveExt, DetectChanges, Entity, EventReader,
-    FlexDirection, FlexWrap, FromWorld, IntoSystemConfigs, JustifyContent, Local, Node, Or,
-    Overflow, ParamSet, Parent, PositionType, Query, Res, ResMut, State, StateScoped, Text,
-    TextColor, TextFont, TextSpan, UiRect, Val, Visibility, With, Without, World,
+    FlexDirection, FlexWrap, IntoSystemConfigs, JustifyContent, Local, Node, Or, Overflow,
+    ParamSet, PositionType, Query, Res, ResMut, State, StateScoped, Text, TextColor, TextFont,
+    TextSpan, UiRect, Val, Visibility, With, Without,
 };
-use cdda_json_files::{MoveCost, ObjectId};
+use cdda_json_files::MoveCost;
 use std::{num::Saturating, time::Instant};
-use units::{Mass, Volume};
 
 type DuplicateMessageCount = Saturating<u16>;
 
@@ -546,18 +545,28 @@ fn update_status_detais(
     mut overmap_buffer_manager: OvermapBufferManager,
     envir: Envir,
     mut overmap_manager: OvermapManager,
-    characters: Query<(&ObjectDefinition, &ObjectName, &Health, Option<&Integrity>)>,
+    characters: Query<(
+        &ObjectDefinition,
+        &ObjectName,
+        &Health,
+        Option<&StandardIntegrity>,
+    )>,
+    items: Query<(
+        Item,
+        Option<&Corpse>,
+        Option<&StandardIntegrity>,
+        Option<&LastSeen>,
+        Option<&Visibility>,
+    )>,
     entities: Query<
         (
             Option<&ObjectDefinition>,
             Option<&ObjectName>,
-            Option<&Amount>,
-            Option<&Filthy>,
             Option<&Corpse>,
             Option<&Accessible>,
             Option<&StairsUp>,
             Option<&StairsDown>,
-            Option<&Integrity>,
+            Option<&StandardIntegrity>,
             Option<&Obstacle>,
             Option<&Hurdle>,
             Option<&Opaque>,
@@ -565,7 +574,7 @@ fn update_status_detais(
             Option<&LastSeen>,
             Option<&Visibility>,
         ),
-        Without<Health>,
+        (Without<Health>, Without<Amount>),
     >,
     text: Query<Entity, With<DetailsText>>,
 ) {
@@ -585,8 +594,15 @@ fn update_status_detais(
                     envir
                         .location
                         .all(pos)
-                        .flat_map(|i| entities.get(*i))
+                        .flat_map(|e| entities.get(*e))
                         .flat_map(entity_info),
+                );
+                total.extend(
+                    envir
+                        .location
+                        .all(pos)
+                        .flat_map(|e| items.get(*e))
+                        .flat_map(item_info),
                 );
             } else {
                 total.push(Fragment::new(String::from("Unseen")));
@@ -622,7 +638,12 @@ fn update_status_detais(
 
 fn characters_info(
     all_here: impl Iterator<Item = Entity>,
-    characters: &Query<(&ObjectDefinition, &ObjectName, &Health, Option<&Integrity>)>,
+    characters: &Query<(
+        &ObjectDefinition,
+        &ObjectName,
+        &Health,
+        Option<&StandardIntegrity>,
+    )>,
     pos: Pos,
 ) -> Vec<Fragment> {
     all_here
@@ -663,8 +684,6 @@ fn entity_info(
     (
         definition,
         name,
-        amount,
-        filthy,
         corpse,
         accessible,
         stairs_up,
@@ -679,13 +698,11 @@ fn entity_info(
     ): (
         Option<&ObjectDefinition>,
         Option<&ObjectName>,
-        Option<&Amount>,
-        Option<&Filthy>,
         Option<&Corpse>,
         Option<&Accessible>,
         Option<&StairsUp>,
         Option<&StairsDown>,
-        Option<&Integrity>,
+        Option<&StandardIntegrity>,
         Option<&Obstacle>,
         Option<&Hurdle>,
         Option<&Opaque>,
@@ -757,22 +774,49 @@ fn entity_info(
     }
 
     let fallbak_name = ObjectName::missing();
-    let item = ItemItem {
-        entity: Entity::PLACEHOLDER,
-        definition: &ObjectDefinition {
-            category: ObjectCategory::Meta,
-            id: ObjectId::new(""),
-        },
-        name: name.unwrap_or(&fallbak_name),
-        pos: None,
-        amount: amount.unwrap_or(&Amount::SINGLE),
-        filthy,
-        containable: &Containable {
-            volume: Volume::default(),
-            mass: Mass::ZERO,
-        },
-        parent: &Parent::from_world(&mut World::default()),
-    };
+    let mut output = Phrase::from_fragment(name.unwrap_or(&fallbak_name).single(Pos::ORIGIN));
+    for flag in &flags {
+        output = output.add(format!("\n- {flag}"));
+    }
+    output.add("\n").fragments
+}
+
+fn item_info(
+    (item, corpse, integrity, last_seen, visibility): (
+        ItemItem,
+        Option<&Corpse>,
+        Option<&StandardIntegrity>,
+        Option<&LastSeen>,
+        Option<&Visibility>,
+    ),
+) -> Vec<Fragment> {
+    let mut flags = Vec::new();
+    let id_str = format!("{:?}", item.definition.id);
+    flags.push(id_str.as_str());
+    let category_str = format!("{:?}", item.definition.category);
+    flags.push(category_str.as_str());
+    if corpse.is_some() {
+        flags.push("corpse");
+    }
+    let integrity_str;
+    if let Some(integrity) = integrity {
+        integrity_str = format!("integrity ({})", integrity.0.current());
+        flags.push(integrity_str.as_str());
+    }
+    if let Some(last_seen) = last_seen {
+        match *last_seen {
+            LastSeen::Currently => flags.push("currently seen"),
+            LastSeen::Previously => flags.push("previously seen"),
+            LastSeen::Never => flags.push("never seen"),
+        }
+    }
+    if let Some(visibility) = visibility {
+        if visibility == Visibility::Hidden {
+            flags.push("invisible");
+        } else {
+            flags.push("visible");
+        }
+    }
     let mut output = Phrase::from_fragments(item.fragments());
     for flag in &flags {
         output = output.add(format!("\n- {flag}"));

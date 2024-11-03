@@ -2,9 +2,10 @@ use crate::application::ApplicationState;
 use crate::gameplay::{
     Accessible, ActiveSav, Amount, Aquatic, BaseSpeed, BodyContainers, CameraBase, Closeable,
     Containable, Craft, ExamineCursor, Explored, Faction, Filthy, HealingDuration, Health, Hurdle,
-    Infos, Integrity, LastSeen, LevelOffset, Life, Limited, LocalTerrain, Melee, ModelFactory,
+    Infos, ItemIntegrity, LastSeen, LevelOffset, Life, Limited, LocalTerrain, Melee, ModelFactory,
     ObjectCategory, ObjectDefinition, ObjectName, Obstacle, Opaque, OpaqueFloor, Openable, Player,
-    Pos, PosOffset, StairsDown, StairsUp, Stamina, TileVariant, Vehicle, VehiclePart, WalkingMode,
+    Pos, PosOffset, StairsDown, StairsUp, Stamina, StandardIntegrity, TileVariant, Vehicle,
+    VehiclePart, WalkingMode,
 };
 use crate::hud::{BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR};
 use bevy::ecs::system::SystemParam;
@@ -217,6 +218,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
                 volume: volume.unwrap_or_else(|| Volume::from("62499 ml")),
                 mass: mass.unwrap_or_else(|| Mass::from("81499 g")),
             },
+            ItemIntegrity::from(item.damaged),
         ));
 
         if item.item_tags.contains(&Arc::from("FILTHY")) {
@@ -296,7 +298,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
             // TODO
             self.commands
                 .entity(object_entity)
-                .insert(Integrity(Limited::full(10)));
+                .insert(StandardIntegrity(Limited::full(10)));
         }
 
         match furniture_info.move_cost_mod {
@@ -376,7 +378,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
                     // TODO
                     self.commands
                         .entity(object_entity)
-                        .insert(Integrity(Limited::full(10)));
+                        .insert(StandardIntegrity(Limited::full(10)));
                 }
             }
         }
@@ -435,8 +437,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
         };
         let object_name = ObjectName::new(name.clone(), HARD_TEXT_COLOR);
 
-        let variant = part
-            .base
+        let variant = ItemIntegrity::from(part.base.damaged)
             .broken()
             .then_some(TileVariant::Broken)
             .or_else(|| part.open.then_some(TileVariant::Open));

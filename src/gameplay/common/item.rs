@@ -1,5 +1,6 @@
 use crate::gameplay::{
-    Amount, Containable, Filthy, Fragment, ObjectDefinition, ObjectName, Pos, Positioning,
+    Amount, Containable, Filthy, Fragment, ItemIntegrity, ObjectDefinition, ObjectName, Pos,
+    Positioning,
 };
 use crate::hud::FILTHY_COLOR;
 use bevy::ecs::query::QueryData;
@@ -14,6 +15,7 @@ pub(crate) struct Item {
     pub(crate) pos: Option<&'static Pos>,
     pub(crate) amount: &'static Amount,
     pub(crate) filthy: Option<&'static Filthy>,
+    pub(crate) integrity: &'static ItemIntegrity,
     pub(crate) containable: &'static Containable,
     pub(crate) parent: &'static Parent,
 }
@@ -27,6 +29,9 @@ impl ItemItem<'_> {
         }
         if self.filthy.is_some() {
             result.push(Fragment::colorized("filthy", FILTHY_COLOR));
+        }
+        if let Some(integrity_fragment) = self.integrity.fragment() {
+            result.push(integrity_fragment);
         }
         result.push(self.name.amount(self.amount.0, Pos::ORIGIN));
 

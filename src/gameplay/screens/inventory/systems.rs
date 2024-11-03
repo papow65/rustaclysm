@@ -7,8 +7,8 @@ use crate::gameplay::screens::inventory::resource::{
 use crate::gameplay::screens::inventory::section::InventorySection;
 use crate::gameplay::{
     BodyContainers, Clock, Corpse, Envir, ExamineItem, GameplayScreenState, HorizontalDirection,
-    Infos, InstructionQueue, Integrity, Item, LastSeen, MoveItem, Nbor, Phrase, Pickup, Player,
-    PlayerDirection, Pos, QueuedInstruction, Unwield, Wield,
+    Infos, InstructionQueue, Item, LastSeen, MoveItem, Nbor, Phrase, Pickup, Player,
+    PlayerDirection, Pos, QueuedInstruction, StandardIntegrity, Unwield, Wield,
 };
 use crate::hud::{
     ButtonBuilder, Fonts, ScrollList, SelectionList, StepDirection, StepSize, PANEL_COLOR,
@@ -250,7 +250,7 @@ pub(super) fn refresh_inventory(
     infos: Res<Infos>,
     mut inventory: ResMut<InventoryScreen>,
     players: Query<(&Pos, &BodyContainers), With<Player>>,
-    items: Query<(Item, Option<&Corpse>, Option<&Integrity>, &LastSeen)>,
+    items: Query<(Item, Option<&Corpse>, Option<&StandardIntegrity>, &LastSeen)>,
     previous_item_lines: Query<&InventoryItemLine>,
 ) {
     let Some(inventory_system) = inventory_system else {
@@ -344,7 +344,7 @@ pub(super) fn refresh_inventory(
 
 fn items_by_section<'a>(
     envir: &'a Envir,
-    items: &'a Query<(Item, Option<&Corpse>, Option<&Integrity>, &LastSeen)>,
+    items: &'a Query<(Item, Option<&Corpse>, Option<&StandardIntegrity>, &LastSeen)>,
     player_pos: Pos,
     body_containers: &'a BodyContainers,
 ) -> HashMap<InventorySection, Vec<(Entity, &'a ObjectId, Phrase)>> {

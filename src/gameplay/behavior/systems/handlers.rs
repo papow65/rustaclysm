@@ -2,9 +2,9 @@
 
 use crate::gameplay::{
     spawn::TileSpawner, Actor, ActorEvent, Amount, Clock, ContainerLimits, Corpse, CorpseEvent,
-    CorpseRaise, Damage, Faction, Fragment, GameplayScreenState, Healing, Health, Infos, Integrity,
-    Item, ItemHierarchy, Life, Limited, LocalTerrain, MessageWriter, ObjectCategory,
-    ObjectDefinition, ObjectName, Obstacle, Phrase, Player, Pos, Stamina, Subject, TerrainEvent,
+    CorpseRaise, Damage, Faction, Fragment, GameplayScreenState, Healing, Health, Infos, Item,
+    ItemHierarchy, Life, Limited, LocalTerrain, MessageWriter, ObjectCategory, ObjectDefinition,
+    ObjectName, Obstacle, Phrase, Player, Pos, Stamina, StandardIntegrity, Subject, TerrainEvent,
     Toggle, VisualizationUpdate, WalkingMode,
 };
 use crate::util::log_if_slow;
@@ -125,7 +125,7 @@ pub(in super::super) fn update_damaged_characters(
                         at: clock.time() + Duration::HOUR * 8,
                     },
                     ObjectName::corpse(),
-                    Integrity(Limited::full(400)),
+                    StandardIntegrity(Limited::full(400)),
                 ))
                 .remove::<(Life, Obstacle)>();
 
@@ -195,7 +195,7 @@ pub(in super::super) fn update_damaged_corpses(
     mut commands: Commands,
     mut message_writer: MessageWriter,
     mut damage_reader: EventReader<CorpseEvent<Damage>>,
-    mut corpses: Query<(&ObjectName, &Pos, &mut Integrity), With<Corpse>>,
+    mut corpses: Query<(&ObjectName, &Pos, &mut StandardIntegrity), With<Corpse>>,
 ) {
     let start = Instant::now();
 
@@ -221,7 +221,7 @@ pub(in super::super) fn update_damaged_corpses(
 
             commands
                 .entity(damage.corpse_entity)
-                .remove::<(CorpseRaise, Integrity)>();
+                .remove::<(CorpseRaise, StandardIntegrity)>();
         }
     }
 
@@ -261,7 +261,7 @@ pub(in super::super) fn update_corpses(
                     WalkingMode::Running,
                     Obstacle,
                 ))
-                .remove::<(Corpse, CorpseRaise, Integrity)>();
+                .remove::<(Corpse, CorpseRaise, StandardIntegrity)>();
         }
     }
 
@@ -291,7 +291,7 @@ pub(in super::super) fn update_damaged_terrain(
         Entity,
         &Pos,
         &ObjectName,
-        &mut Integrity,
+        &mut StandardIntegrity,
         &ObjectDefinition,
         &Parent,
     )>,

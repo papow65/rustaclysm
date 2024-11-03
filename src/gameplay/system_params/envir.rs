@@ -1,8 +1,8 @@
 use crate::gameplay::{
     Accessible, Amount, Closeable, Containable, Corpse, Health, HorizontalDirection, Hurdle,
-    Integrity, Intelligence, Level, LevelOffset, Life, Location, Nbor, NborDistance, ObjectName,
-    Obstacle, Opaque, OpaqueFloor, Openable, Pos, PosOffset, QueuedInstruction, StairsDown,
-    StairsUp, WalkingCost, Zone, ZoneLevel,
+    Intelligence, Level, LevelOffset, Life, Location, Nbor, NborDistance, ObjectName, Obstacle,
+    Opaque, OpaqueFloor, Openable, Pos, PosOffset, QueuedInstruction, StairsDown, StairsUp,
+    StandardIntegrity, WalkingCost, Zone, ZoneLevel,
 };
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{Entity, Query, ResMut, With, Without};
@@ -33,8 +33,8 @@ pub(crate) struct Envir<'w, 's> {
     opaques: Query<'w, 's, &'static ObjectName, With<Opaque>>,
     opaque_floors: Query<'w, 's, &'static OpaqueFloor>,
     characters: Query<'w, 's, (Entity, &'static ObjectName), With<Life>>,
-    smashables: Query<'w, 's, Entity, (With<Integrity>, Without<Corpse>)>,
-    pulpables: Query<'w, 's, Entity, (With<Integrity>, With<Corpse>)>,
+    smashables: Query<'w, 's, Entity, (With<StandardIntegrity>, Without<Corpse>)>,
+    pulpables: Query<'w, 's, Entity, (With<StandardIntegrity>, With<Corpse>)>,
     items: Query<'w, 's, Entity, With<Containable>>,
 }
 
