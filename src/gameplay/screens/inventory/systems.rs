@@ -378,7 +378,7 @@ fn items_by_section<'a>(
                 (
                     item.entity,
                     &item.definition.id,
-                    Phrase::from_fragments(item.fragments()),
+                    Phrase::from_fragments(item.fragments().collect()),
                 )
             })
             .collect::<Vec<_>>();

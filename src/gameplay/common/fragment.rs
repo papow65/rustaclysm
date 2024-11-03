@@ -107,7 +107,7 @@ impl Phrase {
     }
 
     #[must_use]
-    pub(crate) fn extend(mut self, fragments: Vec<Fragment>) -> Self {
+    pub(crate) fn extend(mut self, fragments: impl IntoIterator<Item = Fragment>) -> Self {
         self.fragments.extend(fragments);
         self
     }

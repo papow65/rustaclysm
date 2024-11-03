@@ -2,7 +2,6 @@ use crate::gameplay::{
     Amount, Containable, Filthy, Fragment, ItemIntegrity, ObjectDefinition, ObjectName, Pos,
     Positioning,
 };
-use crate::hud::FILTHY_COLOR;
 use bevy::ecs::query::QueryData;
 use bevy::prelude::{Entity, Parent};
 
@@ -20,29 +19,23 @@ pub(crate) struct Item {
     pub(crate) parent: &'static Parent,
 }
 
-impl ItemItem<'_> {
-    #[must_use]
-    pub(crate) fn fragments(&self) -> Vec<Fragment> {
-        let mut result = Vec::new();
-        if &Amount::SINGLE < self.amount {
-            result.push(Fragment::new(format!("{}", self.amount.0)));
-        }
-        if self.filthy.is_some() {
-            result.push(Fragment::colorized("filthy", FILTHY_COLOR));
-        }
-        if let Some(integrity_fragment) = self.integrity.fragment() {
-            result.push(integrity_fragment);
-        }
-        result.push(self.name.amount(self.amount.0, Pos::ORIGIN));
-
-        for fragment in &mut result {
+impl<'a> ItemItem<'a> {
+    pub(crate) fn fragments(&self) -> impl Iterator<Item = Fragment> + use<'_, 'a> {
+        [
+            self.amount.fragment(),
+            self.filthy.map(|_| Filthy::fragment()),
+            self.integrity.fragment(),
+            Some(self.name.amount(self.amount.0, Pos::ORIGIN)),
+        ]
+        .into_iter()
+        .flatten()
+        .map(|mut fragment| {
             fragment.positioning = if let Some(&pos) = self.pos {
                 Positioning::Pos(pos)
             } else {
                 Positioning::None
             };
-        }
-
-        result
+            fragment
+        })
     }
 }

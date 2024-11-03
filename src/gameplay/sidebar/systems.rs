@@ -465,7 +465,7 @@ fn update_status_player_wielded(
         .despawn_descendants()
         .with_children(|parent| {
             if let Ok(weapon) = player_weapon.get_single() {
-                let phrase = Phrase::from_fragments(weapon.fragments());
+                let phrase = Phrase::from_fragments(weapon.fragments().collect());
                 for section in phrase.as_text_sections(HARD_TEXT_COLOR, &fonts.regular()) {
                     parent.spawn(section);
                 }
@@ -817,7 +817,7 @@ fn item_info(
             flags.push("visible");
         }
     }
-    let mut output = Phrase::from_fragments(item.fragments());
+    let mut output = Phrase::from_fragments(item.fragments().collect());
     for flag in &flags {
         output = output.add(format!("\n- {flag}"));
     }

@@ -123,7 +123,7 @@ impl<'r, 'w> MessageBuilder<'r, 'w, Phrase> {
     }
 
     #[must_use]
-    pub(crate) fn extend(mut self, fragments: Vec<Fragment>) -> Self {
+    pub(crate) fn extend(mut self, fragments: impl IntoIterator<Item = Fragment>) -> Self {
         self.phrase = self.phrase.extend(fragments);
         self
     }
