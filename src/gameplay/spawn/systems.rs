@@ -394,9 +394,11 @@ pub(crate) fn handle_map_events(
 ) {
     for map_asset_event in map_asset_events.read() {
         if let AssetEvent::LoadedWithDependencies { id } = map_asset_event {
-            let zone_level = map_manager
-                .zone_level(id)
-                .unwrap_or_else(|| panic!("{id:?} shoould be a known map asset id"));
+            let Some(zone_level) = map_manager.zone_level(id) else {
+                // This may be an asset of a previous gameplay.
+                eprintln!("Unknown map asset {id:?} loaded");
+                continue;
+            };
 
             for subzone_level in zone_level.subzone_levels() {
                 if subzone_spawner
@@ -426,9 +428,12 @@ pub(crate) fn handle_map_memory_events(
 ) {
     for map_asset_event in map_memory_asset_events.read() {
         if let AssetEvent::LoadedWithDependencies { id } = map_asset_event {
-            let base_zone_level = map_memory_manager
-                .base_zone_level(id)
-                .expect("Map memory known");
+            let Some(base_zone_level) = map_memory_manager.base_zone_level(id) else {
+                // This may be an asset of a previous gameplay.
+                eprintln!("Unknown map memory asset {id:?} loaded");
+                continue;
+            };
+
             //println!("Loading map memory for {base_zone_level:?}");
             explored.load_memory(&mut map_memory_manager, base_zone_level);
         }
@@ -452,12 +457,16 @@ pub(crate) fn handle_overmap_buffer_events(
 
     for overmap_asset_event in overmap_buffer_events.read() {
         if let AssetEvent::LoadedWithDependencies { id } = overmap_asset_event {
-            if let Some(overzone) = overmap_buffer_manager.overzone(id) {
-                let overmap_buffer = overmap_buffer_assets
-                    .get(*id)
-                    .expect("Overmap buffer loaded");
-                explored.load_buffer(overzone, overmap_buffer);
-            }
+            let Some(overzone) = overmap_buffer_manager.overzone(id) else {
+                // This may be an asset of a previous gameplay.
+                eprintln!("Unknown overmap buffer asset {id:?} loaded");
+                continue;
+            };
+
+            let overmap_buffer = overmap_buffer_assets
+                .get(*id)
+                .expect("Overmap buffer loaded");
+            explored.load_buffer(overzone, overmap_buffer);
         }
     }
 
@@ -475,10 +484,14 @@ pub(crate) fn handle_overmap_events(
 
     for overmap_asset_event in overmap_events.read() {
         if let AssetEvent::LoadedWithDependencies { id } = overmap_asset_event {
-            if let Some(overzone) = overmap_manager.overzone(id) {
-                let overmap = overmap_assets.get(*id).expect("Overmap loaded");
-                zone_level_ids.load(overzone, overmap);
-            }
+            let Some(overzone) = overmap_manager.overzone(id) else {
+                // This may be an asset of a previous gameplay.
+                eprintln!("Unknown overmap asset {id:?} loaded");
+                continue;
+            };
+
+            let overmap = overmap_assets.get(*id).expect("Overmap loaded");
+            zone_level_ids.load(overzone, overmap);
         }
     }
 
