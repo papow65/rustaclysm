@@ -16,11 +16,8 @@ mod system_params;
 mod systems;
 mod time;
 
-pub(crate) use self::cdda::{
-    ActiveSav, MapAsset, MapMemoryAsset, OvermapAsset, OvermapBufferAsset,
-};
+pub(crate) use self::cdda::ActiveSav;
 pub(crate) use self::plugin::GameplayPlugin;
-pub(crate) use self::resources::{Explored, SubzoneLevelEntities};
 pub(crate) use self::scope::GameplayLocal;
 pub(crate) use self::screens::GameplayScreenState;
 pub(crate) use self::system_params::GameplayReadiness;
@@ -33,9 +30,10 @@ use self::actor::{
     WalkingMode, Wield,
 };
 use self::cdda::{
-    CddaPlugin, Infos, Layers, MapManager, MapMemoryManager, MeshInfo, Model, ModelShape,
-    ObjectCategory, OvermapBufferManager, OvermapManager, PathFor, RepetitionBlockExt, SpriteLayer,
-    SpriteOrientation, TextureInfo, TileLoader, TileVariant, Transform2d, TypeId,
+    CddaPlugin, Infos, Layers, MapAsset, MapManager, MapMemoryAsset, MapMemoryManager, MeshInfo,
+    Model, ModelShape, ObjectCategory, OvermapAsset, OvermapBufferAsset, OvermapBufferManager,
+    OvermapManager, PathFor, RepetitionBlockExt, SpriteLayer, SpriteOrientation, TextureInfo,
+    TileLoader, TileVariant, Transform2d, TypeId,
 };
 use self::common::{
     AssetState, CancelHandling, CardinalDirection, Container, Evolution, Fragment,
@@ -59,8 +57,9 @@ use self::events::{
 use self::focus::{Focus, FocusState};
 use self::models::ModelFactory;
 use self::resources::{
-    CameraOffset, ElevationVisibility, Expanded, InstructionQueue, Location, RelativeSegment,
-    RelativeSegments, SeenFrom, VisualizationUpdate, ZoneLevelEntities, ZoneLevelIds,
+    CameraOffset, ElevationVisibility, Expanded, Explored, InstructionQueue, Location,
+    RelativeSegment, RelativeSegments, SeenFrom, SubzoneLevelEntities, VisualizationUpdate,
+    ZoneLevelEntities, ZoneLevelIds,
 };
 use self::scope::GameplayResourcePlugin;
 use self::screens::{update_camera_offset, AlternativeSituation, RecipeSituation};

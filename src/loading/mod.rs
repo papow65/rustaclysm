@@ -1,5 +1,4 @@
 mod plugin;
 mod state;
-mod systems;
 
-pub(crate) use self::{plugin::LoadingIndicatorPlugin, state::LoadingState};
+pub(crate) use self::{plugin::LoadingIndicatorPlugin, state::LoadingIndicatorState};

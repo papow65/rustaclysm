@@ -2,7 +2,7 @@ use crate::gameplay::scope::gameplay_counter::{GameplayCount, GameplayCounter};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{Local, Res};
 
-/// This behaves like [`Local`], but resets every gameplay.
+/// This behaves like [`Local`], but resets at the end of every gameplay.
 #[derive(SystemParam)]
 pub(crate) struct GameplayLocal<'w, 's, T: Default + Send + 'static> {
     current: Res<'w, GameplayCounter>,

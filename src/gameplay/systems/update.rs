@@ -4,7 +4,7 @@ use crate::gameplay::{
     ElevationVisibility, Explored, Focus, GameplayLocal, LastSeen, MapAsset, MapMemoryAsset,
     OvermapAsset, OvermapBufferAsset, Player, Pos, SubzoneLevel, ZoneLevel,
 };
-use crate::loading::LoadingState;
+use crate::loading::LoadingIndicatorState;
 use crate::util::log_if_slow;
 use bevy::asset::{AssetLoadError, UntypedAssetLoadFailedEvent};
 use bevy::prelude::{
@@ -255,7 +255,7 @@ pub(crate) fn count_pos(
 pub(crate) fn check_failed_asset_loading(
     mut fails: EventReader<UntypedAssetLoadFailedEvent>,
     mut next_application_state: ResMut<NextState<ApplicationState>>,
-    loading_state: Option<Res<State<LoadingState>>>,
+    loading_state: Option<Res<State<LoadingIndicatorState>>>,
 ) {
     let start = Instant::now();
 

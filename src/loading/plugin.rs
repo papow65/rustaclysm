@@ -1,25 +1,52 @@
-use crate::gameplay::Explored;
-use crate::loading::systems::{finish_loading, spawn_loading};
-use crate::loading::LoadingState;
+use crate::hud::{Fonts, DEFAULT_BUTTON_COLOR, HARD_TEXT_COLOR};
+use crate::loading::LoadingIndicatorState;
 use crate::util::log_transition_plugin;
 use bevy::prelude::{
-    in_state, resource_exists, App, AppExtStates, Condition, IntoSystemConfigs, OnEnter, Plugin,
-    Update,
+    AlignItems, App, AppExtStates, BuildChildren, ChildBuild, Commands, GlobalZIndex,
+    JustifyContent, Node, OnEnter, Plugin, PositionType, Res, StateScoped, Text, Val,
 };
 
 pub(crate) struct LoadingIndicatorPlugin;
 
 impl Plugin for LoadingIndicatorPlugin {
     fn build(&self, app: &mut App) {
-        app.add_computed_state::<LoadingState>();
-        app.enable_state_scoped_entities::<LoadingState>();
-        app.add_plugins(log_transition_plugin::<LoadingState>);
+        app.add_computed_state::<LoadingIndicatorState>();
+        app.enable_state_scoped_entities::<LoadingIndicatorState>();
+        app.add_plugins(log_transition_plugin::<LoadingIndicatorState>);
 
-        app.add_systems(OnEnter(LoadingState), spawn_loading);
-
-        app.add_systems(
-            Update,
-            finish_loading.run_if(in_state(LoadingState).and(resource_exists::<Explored>)),
-        );
+        app.add_systems(OnEnter(LoadingIndicatorState), spawn_loading);
     }
+}
+
+#[expect(clippy::needless_pass_by_value)]
+fn spawn_loading(mut commands: Commands, fonts: Res<Fonts>) {
+    commands
+        .spawn((
+            Node {
+                position_type: PositionType::Absolute,
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                align_items: AlignItems::Center,
+                justify_content: JustifyContent::Center,
+                ..Node::default()
+            },
+            GlobalZIndex(3),
+            StateScoped(LoadingIndicatorState),
+        ))
+        .with_children(|parent| {
+            parent
+                .spawn((
+                    Node {
+                        width: Val::Px(250.0),
+                        height: Val::Px(70.0),
+                        justify_content: JustifyContent::Center,
+                        align_items: AlignItems::Center,
+                        ..Node::default()
+                    },
+                    DEFAULT_BUTTON_COLOR,
+                ))
+                .with_children(|parent| {
+                    parent.spawn((Text::from("Loading..."), HARD_TEXT_COLOR, fonts.large()));
+                });
+        });
 }
