@@ -1,22 +1,15 @@
-mod container_limits;
 mod object_name;
 mod pos;
 mod vehicle;
 
-pub(crate) use container_limits::{BodyContainers, ContainerLimits};
 pub(crate) use object_name::ObjectName;
 pub(crate) use pos::{Level, Overzone, Pos, SubzoneLevel, Zone, ZoneLevel};
 pub(crate) use vehicle::{Vehicle, VehiclePart};
 
-use crate::gameplay::*;
-use crate::hud::text_color_expect_full;
+use crate::gameplay::{BaseSpeed, Damage, Evolution, Limited, ObjectCategory, Player, Visible};
 use bevy::prelude::{AlphaMode, Assets, Color, Component, MeshMaterial3d, Srgba, StandardMaterial};
 use cdda_json_files::{CommonItemInfo, MoveCost, MoveCostIncrease, ObjectId};
-use std::ops::{Add, Sub};
-use units::{Duration, Mass, Timestamp, Volume};
-
-#[derive(PartialEq, Debug, Component)]
-pub(crate) struct Filthy;
+use units::{Duration, Timestamp};
 
 /// Terrain that can be accessed, like a floor
 #[derive(Component)]
@@ -52,34 +45,6 @@ pub(crate) struct Opaque;
 #[derive(Component)]
 pub(crate) struct OpaqueFloor;
 
-#[derive(Clone, Debug, Component)]
-pub(crate) struct Containable {
-    pub(crate) volume: Volume,
-    pub(crate) mass: Mass,
-}
-
-#[derive(Component, Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub(crate) struct Amount(pub(crate) u32);
-
-impl Amount {
-    pub(crate) const ZERO: Self = Self(0);
-    pub(crate) const SINGLE: Self = Self(1);
-}
-
-impl Add<Self> for &Amount {
-    type Output = Amount;
-    fn add(self, other: Self) -> Self::Output {
-        Amount(self.0 + other.0)
-    }
-}
-
-impl Sub<Self> for &Amount {
-    type Output = Amount;
-    fn sub(self, other: Self) -> Self::Output {
-        Amount(self.0 - other.0)
-    }
-}
-
 #[derive(Clone, Component, Debug, PartialEq)]
 pub(crate) struct ObjectDefinition {
     pub(crate) category: ObjectCategory,
@@ -92,49 +57,6 @@ impl ObjectDefinition {
             AlphaMode::Opaque
         } else {
             AlphaMode::Blend
-        }
-    }
-}
-
-#[derive(Debug, Component)]
-pub(crate) struct ItemIntegrity {
-    damage: i64,
-}
-
-impl ItemIntegrity {
-    // Based on itype.h:1311
-    const BROKEN_DAMAGE: i64 = 4000;
-    const REINFORCED_DAMAGE: i64 = -1000;
-
-    pub(crate) const fn broken(&self) -> bool {
-        Self::BROKEN_DAMAGE <= self.damage
-    }
-
-    pub(crate) fn fragment(&self) -> Option<Fragment> {
-        //println!("{self:?}");
-        Some(Fragment::colorized(
-            match self.damage {
-                damage if damage <= Self::REINFORCED_DAMAGE => "!!",
-                damage if Self::BROKEN_DAMAGE <= damage => "broken",
-                damage if Self::BROKEN_DAMAGE * 4 / 5 <= damage => "..",
-                damage if Self::BROKEN_DAMAGE * 3 / 5 <= damage => "./",
-                damage if Self::BROKEN_DAMAGE * 2 / 5 <= damage => ".|",
-                damage if Self::BROKEN_DAMAGE / 5 <= damage => "/|",
-                _ => {
-                    return None;
-                }
-            },
-            text_color_expect_full(
-                1.0 - self.damage.clamp(0, Self::BROKEN_DAMAGE) as f32 / Self::BROKEN_DAMAGE as f32,
-            ),
-        ))
-    }
-}
-
-impl From<Option<i64>> for ItemIntegrity {
-    fn from(source: Option<i64>) -> Self {
-        Self {
-            damage: source.unwrap_or(0),
         }
     }
 }

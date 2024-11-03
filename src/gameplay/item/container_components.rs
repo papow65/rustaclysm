@@ -2,6 +2,12 @@ use crate::gameplay::Amount;
 use bevy::prelude::{Component, Entity};
 use units::{Mass, Volume};
 
+#[derive(Clone, Debug, Component)]
+pub(crate) struct Containable {
+    pub(crate) volume: Volume,
+    pub(crate) mass: Mass,
+}
+
 #[derive(Component)]
 pub(crate) struct ContainerLimits {
     pub(crate) max_volume: Volume,

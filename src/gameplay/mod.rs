@@ -5,6 +5,7 @@ mod common;
 mod components;
 mod events;
 mod focus;
+mod item;
 mod models;
 mod plugin;
 mod resources;
@@ -36,17 +37,16 @@ use self::cdda::{
     TileLoader, TileVariant, Transform2d, TypeId,
 };
 use self::common::{
-    AssetState, CancelHandling, CardinalDirection, Container, Evolution, Fragment,
-    HorizontalDirection, Interruption, Item, ItemItem, LevelOffset, Limited, LocalTerrain, Nbor,
-    NborDistance, Phrase, PlayerDirection, PosOffset, Positioning, QueuedInstruction, Region,
-    Visible, VisionDistance, WalkingCost, ZoneRegion, ZoomDirection, ZoomDistance,
+    AssetState, CancelHandling, CardinalDirection, Evolution, Fragment, HorizontalDirection,
+    Interruption, LevelOffset, Limited, LocalTerrain, Nbor, NborDistance, Phrase, PlayerDirection,
+    PosOffset, Positioning, QueuedInstruction, Region, Visible, VisionDistance, WalkingCost,
+    ZoneRegion, ZoomDirection, ZoomDistance,
 };
 use self::components::{
-    Accessible, Amount, Appearance, BodyContainers, CameraBase, Closeable, Containable,
-    ContainerLimits, Corpse, CorpseRaise, Craft, ExamineCursor, Filthy, HealingDuration, Hurdle,
-    ItemIntegrity, LastSeen, Level, Life, Melee, MissingAsset, ObjectDefinition, ObjectName,
-    Obstacle, Opaque, OpaqueFloor, Openable, Overzone, PlayerWielded, Pos, StairsDown, StairsUp,
-    StandardIntegrity, SubzoneLevel, Vehicle, VehiclePart, Zone, ZoneLevel,
+    Accessible, Appearance, CameraBase, Closeable, Corpse, CorpseRaise, Craft, ExamineCursor,
+    HealingDuration, Hurdle, LastSeen, Level, Life, Melee, MissingAsset, ObjectDefinition,
+    ObjectName, Obstacle, Opaque, OpaqueFloor, Openable, Overzone, PlayerWielded, Pos, StairsDown,
+    StairsUp, StandardIntegrity, SubzoneLevel, Vehicle, VehiclePart, Zone, ZoneLevel,
 };
 use self::events::{
     ActorChange, ActorEvent, CorpseChange, CorpseEvent, Damage, DespawnSubzoneLevel,
@@ -55,6 +55,10 @@ use self::events::{
     UpdateZoneLevelVisibility,
 };
 use self::focus::{Focus, FocusState};
+use self::item::{
+    Amount, BodyContainers, Containable, Container, ContainerLimits, Filthy, Item, ItemIntegrity,
+    ItemItem,
+};
 use self::models::ModelFactory;
 use self::resources::{
     CameraOffset, ElevationVisibility, Expanded, Explored, InstructionQueue, Location,

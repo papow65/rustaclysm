@@ -1,8 +1,6 @@
 mod asset_state;
-mod container;
 mod fragment;
 mod instruction;
-mod item;
 mod limited;
 mod local_terrain;
 mod nbor;
@@ -12,10 +10,8 @@ mod vision_distance;
 mod walking_cost;
 
 pub(crate) use self::asset_state::AssetState;
-pub(crate) use self::container::Container;
 pub(crate) use self::fragment::{Fragment, Phrase, Positioning};
 pub(crate) use self::instruction::*;
-pub(crate) use self::item::{Item, ItemItem};
 pub(crate) use self::limited::{Evolution, Limited};
 pub(crate) use self::local_terrain::LocalTerrain;
 pub(crate) use self::nbor::{CardinalDirection, HorizontalDirection, Nbor, NborDistance};
