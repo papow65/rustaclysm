@@ -1,5 +1,6 @@
 use crate::{HashMap, ObjectId};
 use serde::Deserialize;
+use serde_repr::Deserialize_repr;
 use std::sync::Arc;
 
 #[derive(Clone, Debug, Deserialize)]
@@ -89,36 +90,58 @@ impl From<ObjectId> for CddaItem {
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct CddaContainer {
-    #[expect(unused)]
-    contents: Vec<Pocket>,
+    pub contents: Vec<CddaPocket>,
 
     #[expect(unused)]
-    additional_pockets: Option<Vec<AdditionalPocket>>,
+    #[serde(default)]
+    additional_pockets: Vec<AdditionalPocket>,
 }
 
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct Pocket {
-    #[expect(unused)]
-    pocket_type: u8,
+pub struct CddaPocket {
+    pub pocket_type: PocketType,
+    pub contents: Vec<CddaItem>,
 
-    #[expect(unused)]
-    contents: Vec<CddaItem>,
+    #[serde(rename = "_sealed")]
+    pub sealed: bool,
 
-    _sealed: bool,
-
-    #[expect(unused)]
-    allowed: Option<bool>,
+    #[serde(default = "return_true")]
+    pub allowed: bool,
 
     #[expect(unused)]
     favorite_settings: Option<serde_json::Value>,
 }
 
+const fn return_true() -> bool {
+    true
+}
+
+#[derive(Clone, Copy, Debug, Deserialize_repr)]
+#[serde(from = "u8")]
+#[repr(u8)]
+pub enum PocketType {
+    // Order-dependant!
+    // Based on item_pocket.h:40-48
+    Container,
+    Magazine,
+    /// Holds magazines
+    MagazineWell,
+    /// Gunmods or toolmods
+    Mod,
+    /// Bionics embedded in a corpse
+    Corpse,
+    Software,
+    Ebook,
+    /// Allows items to load contents that are too big, in order to spill them later.
+    Migration,
+    Last,
+}
+
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct AdditionalPocket {
-    #[expect(unused)]
-    typeid: ObjectId,
+    pub typeid: ObjectId,
 
     #[expect(unused)]
     last_temp_check: Option<u64>,

@@ -366,9 +366,12 @@ pub(in super::super) fn combine_items(
     let mut all_merged = Vec::new();
 
     for moved in &moved_items {
-        if moved.definition.category == ObjectCategory::Item && !all_merged.contains(&moved.entity)
+        if moved.definition.category == ObjectCategory::Item
+            && !all_merged.contains(&moved.entity)
+            && hierarchy.items_in(moved.entity).next().is_none()
+            && hierarchy.pockets_in(moved.entity).next().is_none()
         {
-            let mut merges = vec![moved.entity];
+            let mut merges = vec![];
             let mut total_amount = &Amount(0) + moved.amount;
 
             for sibling in hierarchy.items_in(moved.parent.get()) {
@@ -377,6 +380,8 @@ pub(in super::super) fn combine_items(
                     && sibling.definition == moved.definition
                     && sibling.pos == moved.pos
                     && sibling.filthy == moved.filthy
+                    && hierarchy.items_in(sibling.entity).next().is_none()
+                    && hierarchy.pockets_in(sibling.entity).next().is_none()
                     && !all_merged.contains(&sibling.entity)
                 {
                     merges.push(sibling.entity);
@@ -385,22 +390,16 @@ pub(in super::super) fn combine_items(
                 }
             }
 
-            if 1 < merges.len() {
-                let keep = *merges.iter().max().expect("'merges' should not be empty");
-
+            if !merges.is_empty() {
                 //println!(
-                //    "Combined {} with {} others to {}",
-                //    Phrase::from_fragments(moved_name.as_item(moved_amount, moved_filthy)),
-                //    merges.len() - 1,
-                //    Phrase::from_fragments(moved_name.as_item(Some(&total_amount), moved_filthy)),
+                //    "Merging {:?}/{:?} with {:?}: {} -> {}",
+                //    moved.name, moved.entity, &merges, moved.amount.0, total_amount.0
                 //);
 
-                commands.entity(keep).insert(total_amount);
+                commands.entity(moved.entity).insert(total_amount);
 
                 for merge in merges {
-                    if merge != keep {
-                        commands.entity(merge).despawn_recursive();
-                    }
+                    commands.entity(merge).despawn_recursive();
                 }
             }
         }

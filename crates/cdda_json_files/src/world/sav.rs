@@ -10,7 +10,7 @@ pub struct Sav {
     pub active_monsters: serde_json::Value,
     pub auto_travel_mode: serde_json::Value,
 
-    #[serde(rename(deserialize = "bVMonsterLookFire"))]
+    #[serde(rename = "bVMonsterLookFire")]
     pub b_v_monster_look_fire: serde_json::Value,
     pub calendar_start: u64,
     pub game_start: u64,

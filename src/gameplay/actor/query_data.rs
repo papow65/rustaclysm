@@ -682,7 +682,7 @@ impl ActorItem<'_> {
             let amount = *item.amount;
             let cdda_item = CddaItem::from(craft.object_id.clone());
             commands.entity(item.entity).despawn_recursive();
-            _ = spawner.spawn_item(infos, parent, pos, &cdda_item, amount);
+            _ = spawner.spawn_item(infos, parent, Some(pos), &cdda_item, amount);
             next_player_action_state.set(PlayerActionState::Normal);
         } else {
             let percent_progress = craft.percent_progress();

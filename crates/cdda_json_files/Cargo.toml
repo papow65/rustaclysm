@@ -11,6 +11,7 @@ hashbrown = { version = "0.14", features = ["serde"] }
 fastrand = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+serde_repr = "0.1"
 units = { path = "../units" }
 
 [dev-dependencies]

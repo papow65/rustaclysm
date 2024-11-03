@@ -10,7 +10,7 @@ mod spawn;
 mod vehicle;
 
 pub use self::field::{Field, FieldVec};
-pub use self::item::{AdditionalPocket, CddaItem, Pocket};
+pub use self::item::{AdditionalPocket, CddaItem, CddaPocket, PocketType};
 pub use self::map::{Map, Submap};
 pub use self::map_memory::{MapMemory, SubmapMemory};
 pub use self::overmap::{Overmap, OvermapLevel, SubzoneOffset};

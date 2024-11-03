@@ -1,4 +1,5 @@
 use crate::application::ApplicationState;
+use crate::gameplay::item::Pocket;
 use crate::gameplay::{
     Accessible, ActiveSav, Amount, Aquatic, BaseSpeed, BodyContainers, CameraBase, Closeable,
     Containable, Craft, ExamineCursor, Explored, Faction, Filthy, HealingDuration, Health, Hurdle,
@@ -59,7 +60,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
                 _ = self.spawn_item(
                     infos,
                     subzone_level_entity,
-                    pos,
+                    Some(pos),
                     item,
                     Amount(item.charges.unwrap_or(1) * amount),
                 );
@@ -102,7 +103,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
             category: ObjectCategory::Character,
             id: id.clone(),
         };
-        let entity = self.spawn_object(parent, pos, definition, object_name, None);
+        let entity = self.spawn_object(parent, Some(pos), definition, object_name, None);
         let mut entity = self.commands.entity(entity);
         entity.insert((
             Life,
@@ -171,14 +172,14 @@ impl<'w, 's> TileSpawner<'w, 's> {
             category: ObjectCategory::Field,
             id: id.clone(),
         };
-        self.spawn_object(parent, pos, definition, object_name, None);
+        self.spawn_object(parent, Some(pos), definition, object_name, None);
     }
 
     pub(crate) fn spawn_item(
         &mut self,
         infos: &Infos,
         parent: Entity,
-        pos: Pos,
+        pos: Option<Pos>,
         item: &CddaItem,
         amount: Amount,
     ) -> Result<Entity, ()> {
@@ -225,7 +226,31 @@ impl<'w, 's> TileSpawner<'w, 's> {
             entity.insert(Filthy);
         }
 
-        Ok(entity.id())
+        let entity = entity.id();
+        //println!("Item {entity:?} with parent {parent:?}");
+        if let Some(container) = &item.contents {
+            for cdda_pocket in &container.contents {
+                //println!("Pocket of {:?}: {:?}", &item.typeid, cdda_pocket);
+                assert!(
+                    cdda_pocket.allowed,
+                    "Unllowed cdda_pocket of {:?}: {:?}",
+                    &item.typeid, cdda_pocket
+                );
+                let pocket = self
+                    .commands
+                    .spawn(Pocket::from(cdda_pocket))
+                    .set_parent(entity)
+                    .id();
+                //println!("Pocket {pocket:?} with parent {entity:?}");
+                for content in &cdda_pocket.contents {
+                    let result = self.spawn_item(infos, pocket, None, content, Amount::SINGLE);
+                    assert!(result.is_ok(), "{:?}", &result);
+                }
+            }
+            // TODO container.additional_pockets
+        }
+
+        Ok(entity)
     }
 
     fn spawn_bashing_items(
@@ -248,7 +273,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
                         });
                         let mut cdda_item = CddaItem::from(item.item.clone());
                         cdda_item.charges = item.charges.as_ref().map(CountRange::random);
-                        _ = self.spawn_item(infos, parent_entity, pos, &cdda_item, amount);
+                        _ = self.spawn_item(infos, parent_entity, Some(pos), &cdda_item, amount);
                     }
                 }
                 BashItem::Group { ref group } => {
@@ -288,7 +313,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
             id: id.clone(),
         };
         let object_name = ObjectName::new(furniture_info.name.clone(), HARD_TEXT_COLOR);
-        let object_entity = self.spawn_object(parent, pos, definition, object_name, None);
+        let object_entity = self.spawn_object(parent, Some(pos), definition, object_name, None);
 
         if !furniture_info.flags.transparent() {
             self.commands.entity(object_entity).insert(Opaque);
@@ -338,7 +363,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
         let object_name = ObjectName::new(terrain_info.name.clone(), HARD_TEXT_COLOR);
         let object_entity = self.spawn_object(
             parent,
-            pos,
+            Some(pos),
             definition,
             object_name,
             Some(local_terrain.variant),
@@ -396,7 +421,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
         };
         let object_name = ObjectName::from_str(&vehicle.name, HARD_TEXT_COLOR);
 
-        let entity = self.spawn_object(parent, pos, definition, object_name, None);
+        let entity = self.spawn_object(parent, Some(pos), definition, object_name, None);
         self.commands.entity(entity).insert((
             Vehicle,
             pos,
@@ -441,7 +466,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
             .broken()
             .then_some(TileVariant::Broken)
             .or_else(|| part.open.then_some(TileVariant::Open));
-        let entity = self.spawn_object(parent, pos, definition, object_name, variant);
+        let entity = self.spawn_object(parent, Some(pos), definition, object_name, variant);
         self.commands.entity(entity).insert(VehiclePart {
             offset: PosOffset {
                 x: part.mount_dx,
@@ -459,7 +484,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
     fn spawn_object(
         &mut self,
         parent: Entity,
-        pos: Pos,
+        pos: Option<Pos>,
         definition: &ObjectDefinition,
         object_name: ObjectName,
         tile_variant: Option<TileVariant>,
@@ -468,7 +493,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
         //dbg!(pos);
         //dbg!(&definition);
         let last_seen = if definition.category.shading_applied() {
-            if self.explored.has_pos_been_seen(pos) {
+            if pos.is_some_and(|p| self.explored.has_pos_been_seen(p)) {
                 LastSeen::Previously
             } else {
                 LastSeen::Never
@@ -501,13 +526,12 @@ impl<'w, 's> TileSpawner<'w, 's> {
             ))
         };
 
-        let mut entity_commands = self.commands.spawn((
-            Transform::from_translation(pos.vec3()),
-            Visibility::Hidden,
-            definition.clone(),
-            pos,
-            object_name,
-        ));
+        let mut entity_commands =
+            self.commands
+                .spawn((Visibility::Hidden, definition.clone(), object_name));
+        if let Some(pos) = pos {
+            entity_commands.insert((Transform::from_translation(pos.vec3()), pos));
+        }
         entity_commands.set_parent(parent);
         if let Some(layers) = layers {
             entity_commands.with_children(|child_builder| {
@@ -706,7 +730,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
     ) -> Entity {
         let craft = CddaItem::from(ObjectId::new("craft"));
         let entity = self
-            .spawn_item(infos, parent_entity, pos, &craft, Amount::SINGLE)
+            .spawn_item(infos, parent_entity, Some(pos), &craft, Amount::SINGLE)
             .expect("Spawning craft item should have succeeded");
 
         let recipe = infos.recipe(&recipe_id);
