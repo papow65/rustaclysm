@@ -3,8 +3,8 @@ use cdda_json_files::{CddaPocket, PocketType};
 
 #[derive(Debug, Component)]
 pub(crate) struct Pocket {
-    type_: PocketType,
-    sealed: bool,
+    pub(crate) type_: PocketType,
+    pub(crate) sealed: bool,
 }
 
 impl From<&CddaPocket> for Pocket {

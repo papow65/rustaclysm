@@ -117,7 +117,7 @@ const fn return_true() -> bool {
     true
 }
 
-#[derive(Clone, Copy, Debug, Deserialize_repr)]
+#[derive(Clone, Copy, Debug, PartialEq, Deserialize_repr)]
 #[serde(from = "u8")]
 #[repr(u8)]
 pub enum PocketType {

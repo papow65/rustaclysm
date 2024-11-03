@@ -17,7 +17,7 @@ use bevy::prelude::{
     ParamSet, PositionType, Query, Res, ResMut, State, StateScoped, Text, TextColor, TextFont,
     TextSpan, UiRect, Val, Visibility, With, Without,
 };
-use cdda_json_files::MoveCost;
+use cdda_json_files::{MoveCost, PocketType};
 use std::{num::Saturating, time::Instant};
 
 type DuplicateMessageCount = Saturating<u16>;
@@ -545,15 +545,11 @@ fn update_status_detais(
     mut overmap_buffer_manager: OvermapBufferManager,
     envir: Envir,
     mut overmap_manager: OvermapManager,
+    item_hierarchy: ItemHierarchy,
     characters: Query<(
         &ObjectDefinition,
         &ObjectName,
         &Health,
-        Option<&StandardIntegrity>,
-    )>,
-    items: Query<(
-        Item,
-        Option<&Corpse>,
         Option<&StandardIntegrity>,
     )>,
     entities: Query<
@@ -574,6 +570,7 @@ fn update_status_detais(
         ),
         (Without<Health>, Without<Amount>),
     >,
+    items: Query<(Item, Option<&Corpse>, Option<&StandardIntegrity>)>,
     text: Query<Entity, With<DetailsText>>,
 ) {
     let start = Instant::now();
@@ -600,7 +597,7 @@ fn update_status_detais(
                         .location
                         .all(pos)
                         .flat_map(|e| items.get(*e))
-                        .flat_map(item_info),
+                        .flat_map(|components| item_info(&item_hierarchy, components)),
                 );
             } else {
                 total.push(Fragment::new(String::from("Unseen")));
@@ -710,14 +707,6 @@ fn entity_info(
     ),
 ) -> Vec<Fragment> {
     let mut flags = Vec::new();
-    let id_str;
-    let category_str;
-    if let Some(definition) = definition {
-        id_str = format!("{:?}", definition.id);
-        flags.push(id_str.as_str());
-        category_str = format!("{:?}", definition.category);
-        flags.push(category_str.as_str());
-    }
     if corpse.is_some() {
         flags.push("corpse");
     }
@@ -773,6 +762,13 @@ fn entity_info(
 
     let fallbak_name = ObjectName::missing();
     let mut output = Phrase::from_fragment(name.unwrap_or(&fallbak_name).single(Pos::ORIGIN));
+    if let Some(definition) = definition {
+        output = output.add(format!(
+            "[{:?}:{}]",
+            definition.category,
+            definition.id.fallback_name()
+        ));
+    }
     for flag in &flags {
         output = output.add(format!("\n- {flag}"));
     }
@@ -780,15 +776,20 @@ fn entity_info(
 }
 
 fn item_info(
-    (item, corpse, integrity): (
-        ItemItem,
-        Option<&Corpse>,
-        Option<&StandardIntegrity>,
-    ),
+    item_hierarchy: &ItemHierarchy,
+    components: (ItemItem, Option<&Corpse>, Option<&StandardIntegrity>),
+) -> Vec<Fragment> {
+    let mut fragments = item_info_inner(item_hierarchy, components, 0);
+    fragments.push(Fragment::new("\n"));
+    fragments
+}
+
+fn item_info_inner(
+    item_hierarchy: &ItemHierarchy,
+    (item, corpse, integrity): (ItemItem, Option<&Corpse>, Option<&StandardIntegrity>),
+    level: usize,
 ) -> Vec<Fragment> {
     let mut flags = Vec::new();
-    let id_str = format!("{:?}", item.definition.id);
-    flags.push(id_str.as_str());
     let category_str;
     if item.definition.category != ObjectCategory::Item {
         eprintln!("Incorrect category for item {:?}", &item.definition);
@@ -800,13 +801,49 @@ fn item_info(
     }
     let integrity_str;
     if let Some(integrity) = integrity {
-        eprintln!("Incorrect standard integrity for item {:?}", integrity.0.current());
+        eprintln!(
+            "Incorrect standard integrity for item {:?}",
+            integrity.0.current()
+        );
         integrity_str = format!("integrity ({})", integrity.0.current());
         flags.push(integrity_str.as_str());
     }
-    let mut output = Phrase::from_fragments(item.fragments().collect());
+    let indentation = "--- ".repeat(level);
+    let mut output = Phrase::from_fragment(Fragment::new(&indentation))
+        .extend(item.fragments())
+        .add(format!("[{}]", item.definition.id.fallback_name()));
+    //.add(format!("{:?}", item.entity));
     for flag in &flags {
-        output = output.add(format!("\n- {flag}"));
+        output = output.add(format!("\n{}- {flag}", &indentation));
     }
-    output.add("\n").fragments
+    for (pocket_entity, pocket) in item_hierarchy.pockets_in(item.entity) {
+        let sealed = if pocket.sealed { " (sealed)" } else { "" };
+        let container = pocket.type_ == PocketType::Container;
+        if item_hierarchy.items_in(pocket_entity).next().is_some() {
+            let type_ = if container {
+                String::new()
+            } else {
+                format!(" of {:?}", pocket.type_)
+            };
+            output = output.add(format!("\n{}- Contents{type_}{sealed}:", &indentation));
+            for subitem in item_hierarchy.items_in(pocket_entity) {
+                output = output.add("\n").extend(item_info_inner(
+                    item_hierarchy,
+                    (subitem, None, None),
+                    level + 1,
+                ));
+            }
+        } else if pocket.type_ == PocketType::Container {
+            output = output.add(format!("\n{}- Empty{sealed}:", &indentation));
+        }
+    }
+    for subitem in item_hierarchy.items_in(item.entity) {
+        output = output.add(format!("\n{}> direct subitem\n", &indentation));
+        output = output.extend(item_info_inner(
+            item_hierarchy,
+            (subitem, None, None),
+            level + 1,
+        ));
+    }
+    output.fragments
 }
