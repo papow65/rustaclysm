@@ -11,8 +11,8 @@ use crate::gameplay::{
     PlayerDirection, Pos, QueuedInstruction, StandardIntegrity, Unwield, Wield,
 };
 use crate::hud::{
-    ButtonBuilder, Fonts, ScrollList, SelectionList, StepDirection, StepSize, PANEL_COLOR,
-    SMALL_SPACING, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
+    ButtonBuilder, Fonts, ScrollList, SelectionList, StepDirection, StepSize, HARD_TEXT_COLOR,
+    PANEL_COLOR, SMALL_SPACING, SOFT_TEXT_COLOR,
 };
 use crate::keyboard::{Held, Key, KeyBindings};
 use crate::manual::ManualSection;
@@ -274,23 +274,18 @@ pub(super) fn refresh_inventory(
     commands.entity(inventory.panel).with_children(|parent| {
         for (section, items) in items_by_section {
             let drop_section = section == InventorySection::Nbor(inventory.drop_direction);
-            let section_style = if drop_section {
-                WARN_TEXT_COLOR
-            } else {
-                SOFT_TEXT_COLOR
-            };
 
             parent
                 .spawn((
                     Text::new(format!("[{section}]")),
-                    section_style,
+                    SOFT_TEXT_COLOR,
                     fonts.regular(),
                 ))
                 .with_children(|parent| {
                     if drop_section {
                         parent.spawn((
-                            TextSpan::from("(dropping here)"),
-                            section_style,
+                            TextSpan::from(" <- drop spot"),
+                            HARD_TEXT_COLOR,
                             fonts.regular(),
                         ));
                     }
