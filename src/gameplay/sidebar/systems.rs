@@ -555,8 +555,6 @@ fn update_status_detais(
         Item,
         Option<&Corpse>,
         Option<&StandardIntegrity>,
-        Option<&LastSeen>,
-        Option<&Visibility>,
     )>,
     entities: Query<
         (
@@ -782,40 +780,29 @@ fn entity_info(
 }
 
 fn item_info(
-    (item, corpse, integrity, last_seen, visibility): (
+    (item, corpse, integrity): (
         ItemItem,
         Option<&Corpse>,
         Option<&StandardIntegrity>,
-        Option<&LastSeen>,
-        Option<&Visibility>,
     ),
 ) -> Vec<Fragment> {
     let mut flags = Vec::new();
     let id_str = format!("{:?}", item.definition.id);
     flags.push(id_str.as_str());
-    let category_str = format!("{:?}", item.definition.category);
-    flags.push(category_str.as_str());
+    let category_str;
+    if item.definition.category != ObjectCategory::Item {
+        eprintln!("Incorrect category for item {:?}", &item.definition);
+        category_str = format!("{:?}", item.definition.category);
+        flags.push(category_str.as_str());
+    }
     if corpse.is_some() {
         flags.push("corpse");
     }
     let integrity_str;
     if let Some(integrity) = integrity {
+        eprintln!("Incorrect standard integrity for item {:?}", integrity.0.current());
         integrity_str = format!("integrity ({})", integrity.0.current());
         flags.push(integrity_str.as_str());
-    }
-    if let Some(last_seen) = last_seen {
-        match *last_seen {
-            LastSeen::Currently => flags.push("currently seen"),
-            LastSeen::Previously => flags.push("previously seen"),
-            LastSeen::Never => flags.push("never seen"),
-        }
-    }
-    if let Some(visibility) = visibility {
-        if visibility == Visibility::Hidden {
-            flags.push("invisible");
-        } else {
-            flags.push("visible");
-        }
     }
     let mut output = Phrase::from_fragments(item.fragments().collect());
     for flag in &flags {
