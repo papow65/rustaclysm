@@ -2,15 +2,15 @@
 
 use crate::gameplay::systems::{update_visualization, update_visualization_on_item_move};
 use crate::gameplay::{
-    Accessible, Amount, Appearance, BaseSpeed, Clock, Containable, CurrentlyVisible,
-    CurrentlyVisibleBuilder, ElevationVisibility, Explored, Focus, GameplayLocal, LastSeen, Player,
-    PlayerActionState, Pos, Vehicle, VisualizationUpdate,
+    Accessible, Appearance, BaseSpeed, Clock, CurrentlyVisible, CurrentlyVisibleBuilder,
+    ElevationVisibility, Explored, Focus, GameplayLocal, LastSeen, Player, PlayerActionState, Pos,
+    Vehicle, VisualizationUpdate,
 };
 use crate::util::log_if_slow;
 use bevy::ecs::schedule::SystemConfigs;
 use bevy::prelude::{
     resource_exists_and_changed, Camera, Changed, Children, GlobalTransform, IntoSystemConfigs,
-    Local, Mesh3d, Or, ParallelCommands, Parent, Query, RemovedComponents, Res, ResMut, State,
+    Local, Mesh3d, ParallelCommands, Parent, Query, RemovedComponents, Res, ResMut, State,
     Transform, Vec3, Visibility, With, Without,
 };
 use std::sync::{Arc, Mutex};
@@ -24,7 +24,6 @@ pub(super) fn refresh_all() -> SystemConfigs {
         update_visualization_on_item_move,
         update_visualization_on_player_move,
         update_visualization_on_weather_change,
-        check_items,
     )
         .into_configs()
 }
@@ -173,14 +172,4 @@ fn update_visualization_on_weather_change(
     }
 
     log_if_slow("update_visualization_on_weather_change", start);
-}
-
-#[expect(clippy::needless_pass_by_value)]
-fn check_items(item_parents: Query<Option<&Parent>, Or<(With<Amount>, With<Containable>)>>) {
-    if cfg!(debug_assertions) {
-        assert!(
-            item_parents.iter().all(|o| o.is_some()),
-            "All items should have a parent"
-        );
-    }
 }

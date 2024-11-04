@@ -570,7 +570,7 @@ fn update_status_detais(
         ),
         (Without<Health>, Without<Amount>),
     >,
-    items: Query<(Item, Option<&Corpse>, Option<&StandardIntegrity>)>,
+    items: Query<(Item, Option<&Corpse>)>,
     text: Query<Entity, With<DetailsText>>,
 ) {
     let start = Instant::now();
@@ -777,7 +777,7 @@ fn entity_info(
 
 fn item_info(
     item_hierarchy: &ItemHierarchy,
-    components: (ItemItem, Option<&Corpse>, Option<&StandardIntegrity>),
+    components: (ItemItem, Option<&Corpse>),
 ) -> Vec<Fragment> {
     let mut fragments = item_info_inner(item_hierarchy, components, 0);
     fragments.push(Fragment::new("\n"));
@@ -786,7 +786,7 @@ fn item_info(
 
 fn item_info_inner(
     item_hierarchy: &ItemHierarchy,
-    (item, corpse, integrity): (ItemItem, Option<&Corpse>, Option<&StandardIntegrity>),
+    (item, corpse): (ItemItem, Option<&Corpse>),
     level: usize,
 ) -> Vec<Fragment> {
     let mut flags = Vec::new();
@@ -798,15 +798,6 @@ fn item_info_inner(
     }
     if corpse.is_some() {
         flags.push("corpse");
-    }
-    let integrity_str;
-    if let Some(integrity) = integrity {
-        eprintln!(
-            "Incorrect standard integrity for item {:?}",
-            integrity.0.current()
-        );
-        integrity_str = format!("integrity ({})", integrity.0.current());
-        flags.push(integrity_str.as_str());
     }
     let indentation = "--- ".repeat(level);
     let mut output = Phrase::from_fragment(Fragment::new(&indentation))
@@ -829,21 +820,17 @@ fn item_info_inner(
             for subitem in item_hierarchy.items_in(pocket_entity) {
                 output = output.add("\n").extend(item_info_inner(
                     item_hierarchy,
-                    (subitem, None, None),
+                    (subitem, None),
                     level + 1,
                 ));
             }
         } else if pocket.type_ == PocketType::Container {
-            output = output.add(format!("\n{}- Empty{sealed}:", &indentation));
+            output = output.add(format!("\n{}- Empty{sealed}", &indentation));
         }
     }
     for subitem in item_hierarchy.items_in(item.entity) {
         output = output.add(format!("\n{}> direct subitem\n", &indentation));
-        output = output.extend(item_info_inner(
-            item_hierarchy,
-            (subitem, None, None),
-            level + 1,
-        ));
+        output = output.extend(item_info_inner(item_hierarchy, (subitem, None), level + 1));
     }
     output.fragments
 }

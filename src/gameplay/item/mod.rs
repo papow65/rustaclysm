@@ -1,4 +1,5 @@
 mod amount;
+mod checks;
 mod container;
 mod container_components;
 mod filthy;
@@ -7,6 +8,7 @@ mod pocket;
 mod query_data;
 
 pub(crate) use self::amount::Amount;
+pub(crate) use self::checks::ItemChecksPlugin;
 pub(crate) use self::container::Container;
 pub(crate) use self::container_components::{BodyContainers, Containable, ContainerLimits};
 pub(crate) use self::filthy::Filthy;

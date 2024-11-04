@@ -9,11 +9,11 @@ use crate::gameplay::systems::{
     check_failed_asset_loading, count_assets, count_pos, create_gameplay_key_bindings,
     update_visibility, update_visualization_on_item_move,
 };
-use crate::gameplay::{events::EventsPlugin, focus::FocusPlugin, models::ModelPlugin};
+use crate::gameplay::{events::EventsPlugin, focus::FocusPlugin, item::ItemChecksPlugin};
+use crate::gameplay::{models::ModelPlugin, sidebar::SidebarPlugin, time::TimePlugin};
 use crate::gameplay::{
     resources::ResourcePlugin, scope::GameplayLocalPlugin, screens::ScreensPlugin,
 };
-use crate::gameplay::{sidebar::SidebarPlugin, time::TimePlugin};
 use crate::gameplay::{
     update_camera_offset, ActorPlugin, CameraOffset, CddaPlugin, DespawnSubzoneLevel,
     DespawnZoneLevel, GameplayScreenState, MapAsset, MapMemoryAsset, OvermapAsset,
@@ -40,6 +40,7 @@ impl Plugin for GameplayPlugin {
             SidebarPlugin,
             CddaPlugin,
             EventsPlugin,
+            ItemChecksPlugin,
             ModelPlugin,
             ResourcePlugin,
             GameplayLocalPlugin,

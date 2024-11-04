@@ -18,7 +18,7 @@ use bevy::render::camera::{PerspectiveProjection, Projection};
 use bevy::render::view::RenderLayers;
 use cdda_json_files::{
     BashItem, BashItems, CddaAmount, CddaItem, CddaVehicle, CddaVehiclePart, CountRange, Field,
-    FlatVec, MoveCostMod, ObjectId, Repetition, Spawn,
+    FlatVec, MoveCostMod, ObjectId, PocketType, Repetition, Spawn,
 };
 use std::sync::Arc;
 use units::{Mass, Volume};
@@ -140,6 +140,10 @@ impl<'w, 's> TileSpawner<'w, 's> {
                     BodyContainers::default_hands_container_limits(),
                     Transform::default(),
                     Visibility::Hidden,
+                    Pocket {
+                        type_: PocketType::Container,
+                        sealed: false,
+                    },
                 ))
                 .set_parent(entity)
                 .id();
@@ -149,6 +153,10 @@ impl<'w, 's> TileSpawner<'w, 's> {
                     BodyContainers::default_clothing_container_limits(),
                     Transform::default(),
                     Visibility::Hidden,
+                    Pocket {
+                        type_: PocketType::Container,
+                        sealed: false,
+                    },
                 ))
                 .set_parent(entity)
                 .id();
