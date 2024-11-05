@@ -1,12 +1,30 @@
 use crate::gameplay::item::Pocket;
-use crate::gameplay::{Amount, Containable, ItemIntegrity, Pos, StandardIntegrity};
+use crate::gameplay::{
+    Amount, Containable, ItemIntegrity, ObjectCategory, ObjectDefinition, Pos, StandardIntegrity,
+};
 use bevy::prelude::{App, Entity, FixedUpdate, Or, Parent, Plugin, Query, With};
 
 pub(crate) struct ItemChecksPlugin;
 
 impl Plugin for ItemChecksPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(FixedUpdate, (check_item_parents, check_integrity));
+        app.add_systems(
+            FixedUpdate,
+            (check_item_category, check_item_parents, check_integrity),
+        );
+    }
+}
+
+#[expect(clippy::needless_pass_by_value)]
+fn check_item_category(items: Query<&ObjectDefinition, Or<(With<Amount>, With<Containable>)>>) {
+    if cfg!(debug_assertions) {
+        let definition = items
+            .iter()
+            .find(|definition| definition.category != ObjectCategory::Item);
+        assert_eq!(
+            definition, None,
+            "Incorrect category for item {definition:?}"
+        );
     }
 }
 
