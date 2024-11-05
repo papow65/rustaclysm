@@ -1,3 +1,4 @@
+use crate::gameplay::item::Pocket;
 use crate::gameplay::sidebar::components::{
     BreathText, DetailsText, EnemiesText, FpsText, HealthText, LogDisplay, PlayerActionStateText,
     SpeedTextSpan, StaminaText, TimeText, WalkingModeTextSpan, WieldedText,
@@ -776,36 +777,53 @@ fn entity_info(
 }
 
 fn item_info(item_hierarchy: &ItemHierarchy, item: &ItemItem) -> Vec<Fragment> {
-    let mut fragments = item_info_inner(item_hierarchy, item, 0);
-    fragments.push(Fragment::new("\n"));
-    fragments
+    item_hierarchy.walk(&SidebarItemWalker, item.entity, 0)
 }
 
-fn item_info_inner(item_hierarchy: &ItemHierarchy, item: &ItemItem, level: usize) -> Vec<Fragment> {
-    let indentation = "--- ".repeat(level);
-    let mut output = Phrase::from_fragment(Fragment::new(&indentation))
-        .extend(item.fragments())
-        .add(format!("[{}]", item.definition.id.fallback_name()));
-    //.add(format!("{:?}", item.entity));
-    for (pocket_entity, pocket) in item_hierarchy.pockets_in(item.entity) {
+struct SidebarItemWalker;
+
+impl ItemHierarchyWalker for SidebarItemWalker {
+    type Output = Vec<Fragment>;
+
+    fn visit_item(
+        &self,
+        item: ItemItem,
+        pockets_output: impl Iterator<Item = Self::Output>,
+        level: usize,
+    ) -> Self::Output {
+        let indentation = "--- ".repeat(level);
+
+        Phrase::from_fragment(Fragment::new(&indentation))
+            .extend(item.fragments())
+            .add(format!("[{}]\n", item.definition.id.fallback_name()))
+            .extend(pockets_output.flatten())
+            .fragments
+    }
+
+    fn visit_pocket(
+        &self,
+        pocket: &Pocket,
+        contents_output: impl Iterator<Item = Self::Output>,
+        level: usize,
+    ) -> Self::Output {
+        let indentation = "--- ".repeat(level);
         let sealed = if pocket.sealed { " (sealed)" } else { "" };
-        let container = pocket.type_ == PocketType::Container;
-        if item_hierarchy.items_in(pocket_entity).next().is_some() {
+
+        let mut contents_output = contents_output.peekable();
+        if contents_output.peek().is_some() {
+            let container = pocket.type_ == PocketType::Container;
             let type_ = if container {
                 String::new()
             } else {
                 format!(" of {:?}", pocket.type_)
             };
-            output = output.add(format!("\n{}- Contents{type_}{sealed}:", &indentation));
-            for subitem in item_hierarchy.items_in(pocket_entity) {
-                output =
-                    output
-                        .add("\n")
-                        .extend(item_info_inner(item_hierarchy, &subitem, level + 1));
-            }
+            Phrase::new(format!("{}- Contents{type_}{sealed}:\n", &indentation))
+                .extend(contents_output.flatten())
+                .fragments
         } else if pocket.type_ == PocketType::Container {
-            output = output.add(format!("\n{}- Empty{sealed}", &indentation));
+            vec![Fragment::new(format!("{}- Empty{sealed}\n", &indentation))]
+        } else {
+            Vec::new()
         }
     }
-    output.fragments
 }

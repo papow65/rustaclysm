@@ -56,8 +56,8 @@ use self::events::{
 };
 use self::focus::{Focus, FocusState};
 use self::item::{
-    Amount, BodyContainers, Containable, Container, ContainerLimits, Filthy, Item, ItemIntegrity,
-    ItemItem,
+    Amount, BodyContainers, Containable, Container, ContainerLimits, Filthy, Item, ItemHierarchy,
+    ItemHierarchyWalker, ItemIntegrity, ItemItem,
 };
 use self::models::ModelFactory;
 use self::resources::{
@@ -67,7 +67,5 @@ use self::resources::{
 };
 use self::scope::GameplayResourcePlugin;
 use self::screens::{update_camera_offset, AlternativeSituation, RecipeSituation};
-use self::system_params::{
-    Collision, CurrentlyVisible, CurrentlyVisibleBuilder, Envir, ItemHierarchy,
-};
+use self::system_params::{Collision, CurrentlyVisible, CurrentlyVisibleBuilder, Envir};
 use self::time::{Clock, Timeouts};

@@ -34,4 +34,41 @@ impl<'w, 's> ItemHierarchy<'w, 's> {
             .get(container_entity)
             .expect("An existing container")
     }
+
+    pub(crate) fn walk<W: ItemHierarchyWalker>(
+        &self,
+        walker: &W,
+        item_entity: Entity,
+        level: usize,
+    ) -> W::Output {
+        let pockets_output = self.pockets_in(item_entity).map(|(pocket_entity, pocket)| {
+            let contents_output = self
+                .items_in(pocket_entity)
+                .map(|content| self.walk(walker, content.entity, level + 1));
+            walker.visit_pocket(pocket, contents_output, level)
+        });
+        walker.visit_item(
+            self.items.get(item_entity).expect("Valid item expected"),
+            pockets_output,
+            level,
+        )
+    }
+}
+
+pub(crate) trait ItemHierarchyWalker {
+    type Output;
+
+    fn visit_item(
+        &self,
+        item: ItemItem,
+        pockets_output: impl Iterator<Item = Self::Output>,
+        level: usize,
+    ) -> Self::Output;
+
+    fn visit_pocket(
+        &self,
+        pocket: &Pocket,
+        contents_output: impl Iterator<Item = Self::Output>,
+        level: usize,
+    ) -> Self::Output;
 }
