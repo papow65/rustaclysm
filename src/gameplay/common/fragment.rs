@@ -192,8 +192,9 @@ mod container_tests {
                 Fragment::new("D"),
                 Fragment::new(".E"),
                 Fragment::new(". F"),
+                Fragment::new("\nG"),
             ]);
-        assert_eq!(&phrase.as_string(), "A, B. C; D .E. F");
+        assert_eq!(&phrase.as_string(), "A, B. C; D .E. F\nG");
     }
 
     #[test]
