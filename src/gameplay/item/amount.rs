@@ -10,7 +10,7 @@ impl Amount {
     pub(crate) const SINGLE: Self = Self(1);
 
     pub(crate) fn fragment(&self) -> Option<Fragment> {
-        (Self::SINGLE < *self).then_some(Fragment::new(format!("{}", self.0)))
+        (Self::SINGLE != *self).then_some(Fragment::new(format!("{}", self.0)))
     }
 }
 

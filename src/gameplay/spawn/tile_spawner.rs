@@ -56,7 +56,6 @@ impl<'w, 's> TileSpawner<'w, 's> {
         for repetitions in item_repetitions {
             for repetition in repetitions {
                 let CddaAmount { obj: item, amount } = repetition.as_amount();
-                //dbg!(&item.typeid);
                 _ = self.spawn_item(
                     infos,
                     subzone_level_entity,
@@ -251,7 +250,13 @@ impl<'w, 's> TileSpawner<'w, 's> {
                     .id();
                 //println!("Pocket {pocket:?} with parent {entity:?}");
                 for content in &cdda_pocket.contents {
-                    let result = self.spawn_item(infos, pocket, None, content, Amount::SINGLE);
+                    let result = self.spawn_item(
+                        infos,
+                        pocket,
+                        None,
+                        content,
+                        Amount(content.charges.unwrap_or(1)),
+                    );
                     assert!(result.is_ok(), "{:?}", &result);
                 }
             }
