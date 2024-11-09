@@ -1,4 +1,4 @@
-use crate::gameplay::item::Pocket;
+use crate::gameplay::item::{InPocket, Subitems};
 use crate::gameplay::sidebar::components::{
     BreathText, DetailsText, EnemiesText, FpsText, HealthText, LogDisplay, PlayerActionStateText,
     SpeedTextSpan, StaminaText, TimeText, WalkingModeTextSpan, WieldedText,
@@ -19,6 +19,8 @@ use bevy::prelude::{
     TextSpan, UiRect, Val, Visibility, With, Without,
 };
 use cdda_json_files::{MoveCost, PocketType};
+use either::Either;
+use std::iter::{empty, once};
 use std::{num::Saturating, time::Instant};
 
 type DuplicateMessageCount = Saturating<u16>;
@@ -777,53 +779,133 @@ fn entity_info(
 }
 
 fn item_info(item_hierarchy: &ItemHierarchy, item: &ItemItem) -> Vec<Fragment> {
-    item_hierarchy.walk(&SidebarItemWalker, item.entity, 0)
+    item_hierarchy.walk(&SidebarItemWalker, None, item.entity)
 }
 
 struct SidebarItemWalker;
 
+impl SidebarItemWalker {
+    fn prefix(in_pocket: Option<InPocket>) -> String {
+        let Some(in_pocket) = in_pocket else {
+            return String::new();
+        };
+        let indicator = match in_pocket.type_ {
+            PocketType::Container => {
+                if in_pocket.single_in_type {
+                    return String::new();
+                } else {
+                    '>'
+                }
+            }
+            PocketType::Magazine | PocketType::MagazineWell => {
+                // While magazines or wells can contain only one item, there may be multiple magazines.
+                return String::new();
+            }
+            PocketType::Mod => '+',
+            PocketType::Corpse => '_',
+            PocketType::Software => 'S',
+            PocketType::Ebook => 'E',
+            PocketType::Migration => 'M',
+            PocketType::Last => '9',
+        };
+        format!("{}'-{indicator}", "    ".repeat(in_pocket.depth.get() - 1))
+    }
+
+    const fn suffix(in_pocket: Option<InPocket>) -> &'static str {
+        match in_pocket {
+            Some(
+                InPocket {
+                    type_: PocketType::Magazine | PocketType::MagazineWell,
+                    ..
+                }
+                | InPocket {
+                    type_: PocketType::Container,
+                    single_in_type: true,
+                    ..
+                },
+            ) => "",
+            _ => "\n",
+        }
+    }
+}
+
 impl ItemHierarchyWalker for SidebarItemWalker {
     type Output = Vec<Fragment>;
 
-    fn visit_item(
-        &self,
+    fn visit_item<'p>(
+        &'p self,
         item: ItemItem,
-        pockets_output: impl Iterator<Item = Self::Output>,
-        level: usize,
+        contents: impl Iterator<Item = Subitems<'p, Self::Output>>,
+        magazines: impl Iterator<Item = Subitems<'p, Self::Output>>,
+        magazine_wells: impl Iterator<Item = Subitems<'p, Self::Output>>,
+        other_pockets: impl Iterator<Item = Subitems<'p, Self::Output>>,
+        in_pocket: Option<InPocket>,
     ) -> Self::Output {
-        let indentation = "--- ".repeat(level);
+        let prefix = Self::prefix(in_pocket);
+        let suffix = Self::suffix(in_pocket);
 
-        Phrase::from_fragment(Fragment::new(&indentation))
+        let contents = contents.collect::<Vec<_>>();
+        let is_container = 0 < contents.iter().len();
+        let is_empty = contents.iter().all(|info| info.output.is_empty());
+        let is_sealed = contents.iter().all(|info| info.pocket.sealed);
+        let direct_subitems = contents.iter().map(|info| info.direct_items).sum::<usize>();
+
+        // TODO make sure all pockets are present on containers
+        //println!("{:?} {is_container:?} {is_empty:?}", item.definition.id.fallback_name());
+
+        let phrase = Phrase::from_fragment(Fragment::new(prefix.clone()))
             .extend(item.fragments())
-            .add(format!("[{}]\n", item.definition.id.fallback_name()))
-            .extend(pockets_output.flatten())
-            .fragments
+            .add(format!("[{}]", item.definition.id.fallback_name())) // TODO
+            .extend(magazines.flat_map(|info| once(Fragment::new("with")).chain(info.output)))
+            .extend(magazine_wells.flat_map(|info| {
+                once(Fragment::new("("))
+                    .chain(if info.output.is_empty() {
+                        Phrase::new("not loaded").fragments
+                    } else {
+                        info.output
+                    })
+                    .chain(once(Fragment::new(")")))
+            }))
+            .add(match (is_container, is_empty, is_sealed) {
+                (true, true, true) => "(empty, sealed)",
+                (true, true, false) => "(empty)",
+                (true, false, true) => "(sealed)",
+                _ => "",
+            });
+
+        if !is_container || is_empty {
+            phrase.add(suffix)
+        } else if direct_subitems == 1 {
+            phrase
+                .push(Fragment::colorized(">", GOOD_TEXT_COLOR))
+                .extend(contents.into_iter().flat_map(|info| info.output))
+                .add(suffix)
+        } else {
+            phrase
+                .push(Fragment::colorized(
+                    format!("> {direct_subitems}+"),
+                    GOOD_TEXT_COLOR,
+                ))
+                .add(suffix)
+                .extend(contents.into_iter().flat_map(|info| info.output))
+        }
+        .extend(other_pockets.flat_map(|info| {
+            if info.output.is_empty() {
+                Either::Right(empty())
+            } else {
+                Either::Left(
+                    once(Fragment::new(format!(
+                        "{}{:?}:\n",
+                        &prefix, info.pocket.type_
+                    )))
+                    .chain(info.output),
+                )
+            }
+        }))
+        .fragments
     }
 
-    fn visit_pocket(
-        &self,
-        pocket: &Pocket,
-        contents_output: impl Iterator<Item = Self::Output>,
-        level: usize,
-    ) -> Self::Output {
-        let indentation = "--- ".repeat(level);
-        let sealed = if pocket.sealed { " (sealed)" } else { "" };
-
-        let mut contents_output = contents_output.peekable();
-        if contents_output.peek().is_some() {
-            let container = pocket.type_ == PocketType::Container;
-            let type_ = if container {
-                String::new()
-            } else {
-                format!(" of {:?}", pocket.type_)
-            };
-            Phrase::new(format!("{}- Contents{type_}{sealed}:\n", &indentation))
-                .extend(contents_output.flatten())
-                .fragments
-        } else if pocket.type_ == PocketType::Container {
-            vec![Fragment::new(format!("{}- Empty{sealed}\n", &indentation))]
-        } else {
-            Vec::new()
-        }
+    fn visit_pocket(&self, contents_output: impl Iterator<Item = Self::Output>) -> Self::Output {
+        contents_output.flatten().collect()
     }
 }

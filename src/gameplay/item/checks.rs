@@ -1,8 +1,10 @@
 use crate::gameplay::item::Pocket;
 use crate::gameplay::{
-    Amount, Containable, ItemIntegrity, ObjectCategory, ObjectDefinition, Pos, StandardIntegrity,
+    Amount, Containable, ItemHierarchy, ItemIntegrity, ObjectCategory, ObjectDefinition, Pos,
+    StandardIntegrity,
 };
 use bevy::prelude::{App, Entity, FixedUpdate, Or, Parent, Plugin, Query, With};
+use cdda_json_files::PocketType;
 
 pub(crate) struct ItemChecksPlugin;
 
@@ -10,7 +12,12 @@ impl Plugin for ItemChecksPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             FixedUpdate,
-            (check_item_category, check_item_parents, check_integrity),
+            (
+                check_item_category,
+                check_item_parents,
+                check_single_item,
+                check_integrities,
+            ),
         );
     }
 }
@@ -54,7 +61,27 @@ fn check_item_parents(
 }
 
 #[expect(clippy::needless_pass_by_value)]
-fn check_integrity(integrities: Query<(&ItemIntegrity, &StandardIntegrity)>) {
+fn check_single_item(
+    item_hierarchy: ItemHierarchy,
+    pockets: Query<(Entity, &Pocket), With<Pocket>>,
+) {
+    if cfg!(debug_assertions) {
+        for (entity, pocket) in pockets.iter() {
+            let count = item_hierarchy.items_in(entity).count();
+            match pocket.type_ {
+                PocketType::MagazineWell => assert!(
+                    count <= 1,
+                    "At most one item expected in {pocket:?} ({count})"
+                ),
+                PocketType::Magazine => assert_eq!(count, 1, "Single item expected in {pocket:?}"),
+                _ => {}
+            }
+        }
+    }
+}
+
+#[expect(clippy::needless_pass_by_value)]
+fn check_integrities(integrities: Query<(&ItemIntegrity, &StandardIntegrity)>) {
     assert!(
         !cfg!(debug_assertions) || integrities.is_empty(),
         "ItemIntegrity and StandardIntegrity may not be combined"
