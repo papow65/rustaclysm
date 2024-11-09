@@ -106,6 +106,7 @@ pub struct CddaPocket {
     #[serde(rename = "_sealed")]
     pub sealed: bool,
 
+    /// TODO Related to stealing? Also set on (some?) corpses
     #[serde(default = "return_true")]
     pub allowed: bool,
 

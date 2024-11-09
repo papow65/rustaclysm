@@ -238,11 +238,6 @@ impl<'w, 's> TileSpawner<'w, 's> {
         if let Some(container) = &item.contents {
             for cdda_pocket in &container.contents {
                 //println!("Pocket of {:?}: {:?}", &item.typeid, cdda_pocket);
-                assert!(
-                    cdda_pocket.allowed,
-                    "Unllowed cdda_pocket of {:?}: {:?}",
-                    &item.typeid, cdda_pocket
-                );
                 let pocket = self
                     .commands
                     .spawn(Pocket::from(cdda_pocket))
