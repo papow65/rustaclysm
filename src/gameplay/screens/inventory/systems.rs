@@ -1,25 +1,29 @@
 use crate::gameplay::screens::inventory::components::{
-    InventoryAction, InventoryItemDescription, InventoryItemLine,
+    InventoryAction, InventoryItemDescription, InventoryItemRow,
 };
-use crate::gameplay::screens::inventory::resource::{
-    InventoryScreen, ITEM_TEXT_COLOR, SELECTED_ITEM_TEXT_COLOR,
-};
+use crate::gameplay::screens::inventory::resource::InventoryScreen;
+use crate::gameplay::screens::inventory::row_spawner::RowSpawner;
 use crate::gameplay::screens::inventory::section::InventorySection;
 use crate::gameplay::{
-    BodyContainers, Clock, Corpse, Envir, ExamineItem, GameplayScreenState, HorizontalDirection,
-    Infos, InstructionQueue, Item, LastSeen, MoveItem, Nbor, Phrase, Pickup, Player,
-    PlayerDirection, Pos, QueuedInstruction, StandardIntegrity, Unwield, Wield,
+    BodyContainers, Clock, Envir, ExamineItem, GameplayScreenState, HorizontalDirection, Infos,
+    InstructionQueue, ItemHierarchy, MoveItem, Nbor, Phrase, Pickup, Player, PlayerDirection, Pos,
+    QueuedInstruction, Unwield, Wield,
 };
 use crate::hud::{
-    ButtonBuilder, Fonts, ScrollList, SelectionList, StepDirection, StepSize, HARD_TEXT_COLOR,
-    PANEL_COLOR, SMALL_SPACING, SOFT_TEXT_COLOR,
+    Fonts, ScrollList, SelectionList, StepDirection, StepSize, HARD_TEXT_COLOR, PANEL_COLOR,
+    SMALL_SPACING, SOFT_TEXT_COLOR,
 };
 use crate::keyboard::{Held, Key, KeyBindings};
 use crate::manual::ManualSection;
 use crate::util::log_if_slow;
 use bevy::ecs::{entity::EntityHashMap, system::SystemId};
-use bevy::{prelude::*, utils::HashMap};
-use cdda_json_files::{CommonItemInfo, ObjectId};
+use bevy::prelude::{
+    AlignItems, BuildChildren, Button, ChildBuild, Children, Commands, ComputedNode, Display,
+    Entity, FlexDirection, In, JustifyContent, KeyCode, Local, NextState, Node, Overflow, Parent,
+    Query, Res, ResMut, StateScoped, Text, TextColor, TextSpan, Transform, UiRect, Val, With,
+    Without, World,
+};
+use cdda_json_files::HashMap;
 use std::time::Instant;
 use units::Timestamp;
 
@@ -30,7 +34,7 @@ pub(super) struct InventoryButton {
 }
 
 #[derive(Debug)]
-pub(super) struct InventorySystem(SystemId<In<InventoryButton>, ()>);
+pub(super) struct InventorySystem(pub(super) SystemId<In<InventoryButton>, ()>);
 
 #[allow(clippy::needless_pass_by_value)]
 pub(super) fn create_inventory_system(world: &mut World) -> InventorySystem {
@@ -71,7 +75,7 @@ pub(super) fn spawn_inventory(mut commands: Commands) {
                         margin: UiRect::px(10.0, 365.0, 10.0, 10.0),
                         padding: UiRect::all(SMALL_SPACING),
                         overflow: Overflow::clip_y(),
-                        ..default()
+                        ..Node::default()
                     },
                     PANEL_COLOR,
                 ))
@@ -166,7 +170,7 @@ fn move_inventory_selection(
     mut commands: Commands,
     fonts: Res<Fonts>,
     mut inventory: ResMut<InventoryScreen>,
-    item_lines: Query<(&InventoryItemLine, &Children)>,
+    item_rows: Query<(&InventoryItemRow, &Children)>,
     item_texts: Query<(Entity, &InventoryItemDescription)>,
     item_buttons: Query<&Children, With<Button>>,
     mut text_styles: Query<&mut TextColor>,
@@ -182,7 +186,7 @@ fn move_inventory_selection(
     inventory.adjust_selection(
         &mut commands,
         &fonts,
-        &item_lines,
+        &item_rows,
         &item_texts,
         &item_buttons,
         &mut text_styles,
@@ -248,32 +252,34 @@ pub(super) fn refresh_inventory(
     fonts: Res<Fonts>,
     envir: Envir,
     infos: Res<Infos>,
+    item_hierarchy: ItemHierarchy,
     mut inventory: ResMut<InventoryScreen>,
     players: Query<(&Pos, &BodyContainers), With<Player>>,
-    items: Query<(Item, Option<&Corpse>, Option<&StandardIntegrity>, &LastSeen)>,
-    previous_item_lines: Query<&InventoryItemLine>,
+    previous_item_rows: Query<&InventoryItemRow>,
 ) {
     let Some(inventory_system) = inventory_system else {
         return;
     };
 
+    let inventory = &mut *inventory;
     let previous_selected_item = inventory
         .selection_list
         .selected
-        .and_then(|row| previous_item_lines.get(row).ok())
-        .map(|line| line.item)
-        .filter(|item| items.contains(*item));
+        .and_then(|row| previous_item_rows.get(row).ok())
+        .map(|row| row.item)
+        .filter(|item| item_hierarchy.exists(*item));
     println!("Refresh inventory, with previous selected {previous_selected_item:?}");
     inventory.selection_list.clear();
 
     let (&player_pos, body_containers) = players.single();
-    let items_by_section = items_by_section(&envir, &items, player_pos, body_containers);
+    let items_by_section = items_by_section(&envir, &item_hierarchy, player_pos, body_containers);
     let mut items_by_section = items_by_section.into_iter().collect::<Vec<_>>();
     items_by_section.sort_by_key(|(section, _)| *section);
 
+    let drop_direction = inventory.drop_direction;
     commands.entity(inventory.panel).with_children(|parent| {
         for (section, items) in items_by_section {
-            let drop_section = section == InventorySection::Nbor(inventory.drop_direction);
+            let drop_section = section == InventorySection::Nbor(drop_direction);
 
             parent
                 .spawn((
@@ -291,82 +297,50 @@ pub(super) fn refresh_inventory(
                     }
                 });
 
-            for (item_entity, id, item_phrase) in items {
-                if let Some(item_info) = infos.try_common_item_info(id) {
-                    let is_selected;
-                    let is_selected_previous;
-                    if let Some(previous_selected_item) = previous_selected_item {
-                        is_selected = item_entity == previous_selected_item;
-                        is_selected_previous = is_selected;
-                    } else {
-                        is_selected = inventory.selection_list.selected.is_none();
-                        is_selected_previous = false;
-                    }
-                    let item_text_color = if is_selected {
-                        SELECTED_ITEM_TEXT_COLOR
-                    } else {
-                        ITEM_TEXT_COLOR
-                    };
-
-                    let row_entity = add_row(
-                        &fonts,
-                        &section,
-                        parent,
-                        item_entity,
-                        &item_phrase,
-                        item_info,
-                        item_text_color,
-                        drop_section,
-                        &inventory_system,
-                    );
-
-                    inventory.selection_list.append(row_entity);
-                    if is_selected_previous {
-                        println!("Previous selected found");
-                        inventory.selection_list.selected = Some(row_entity);
-                    }
-                    inventory.section_by_item.insert(item_entity, section);
-                } else {
-                    eprintln!("Unknown item: {id:?}");
-                }
+            let row_spawner = RowSpawner::new(
+                &fonts,
+                &infos,
+                &inventory_system,
+                &mut inventory.selection_list,
+                &mut inventory.section_by_item,
+                parent,
+                previous_selected_item,
+                section,
+                drop_section,
+            );
+            for item in items {
+                item_hierarchy.walk(&row_spawner, None, item);
             }
 
-            // empty line
+            // empty row
             parent.spawn((Text::from(" "), SOFT_TEXT_COLOR, fonts.regular()));
         }
     });
 }
 
-fn items_by_section<'a>(
-    envir: &'a Envir,
-    items: &'a Query<(Item, Option<&Corpse>, Option<&StandardIntegrity>, &LastSeen)>,
+fn items_by_section(
+    envir: &Envir,
+    item_hierarchy: &ItemHierarchy,
     player_pos: Pos,
-    body_containers: &'a BodyContainers,
-) -> HashMap<InventorySection, Vec<(Entity, &'a ObjectId, Phrase)>> {
+    body_containers: &BodyContainers,
+) -> HashMap<InventorySection, Vec<Entity>> {
     let mut fields_by_section = HashMap::default();
     for (nbor, nbor_pos) in envir.nbors_for_item_handling(player_pos) {
         fields_by_section.insert(
             InventorySection::Nbor(nbor.horizontal_projection()),
-            items
-                .iter()
-                .filter(|(item, .., last_seen)| {
-                    *last_seen == &LastSeen::Currently && Some(&nbor_pos) == item.pos
-                })
-                .collect::<Vec<_>>(),
+            envir.all_items(nbor_pos).collect::<Vec<_>>(),
         );
     }
     fields_by_section.insert(
         InventorySection::Hands,
-        items
-            .iter()
-            .filter(|(item, ..)| item.parent.get() == body_containers.hands)
+        item_hierarchy
+            .items_in(body_containers.hands)
             .collect::<Vec<_>>(),
     );
     fields_by_section.insert(
         InventorySection::Clothing,
-        items
-            .iter()
-            .filter(|(item, ..)| item.parent.get() == body_containers.clothing)
+        item_hierarchy
+            .items_in(body_containers.clothing)
             .collect::<Vec<_>>(),
     );
 
@@ -374,129 +348,18 @@ fn items_by_section<'a>(
     for (section, fields_iter) in fields_by_section {
         let mut items = fields_iter
             .into_iter()
-            .map(|(item, ..)| {
+            .map(|item| {
                 (
                     item.entity,
-                    &item.definition.id,
                     Phrase::from_fragments(item.fragments().collect()),
                 )
             })
             .collect::<Vec<_>>();
         items.sort_by_key(|(.., phrase)| format!("{phrase}"));
+        let items = items.into_iter().map(|(item, _)| item).collect();
         items_by_section.insert(section, items);
     }
     items_by_section
-}
-
-fn add_row(
-    fonts: &Fonts,
-    section: &InventorySection,
-    parent: &mut ChildBuilder,
-    item_entity: Entity,
-    item_phrase: &Phrase,
-    item_info: &CommonItemInfo,
-    item_text_color: TextColor,
-    drop_section: bool,
-    inventory_system: &InventorySystem,
-) -> Entity {
-    parent
-        .spawn((
-            Node {
-                width: Val::Percent(100.0),
-                align_items: AlignItems::Start,
-                justify_content: JustifyContent::Start,
-                column_gap: SMALL_SPACING,
-                ..Node::default()
-            },
-            InventoryItemLine { item: item_entity },
-        ))
-        .with_children(|parent| {
-            parent
-                .spawn((
-                    Text::default(),
-                    item_text_color,
-                    fonts.regular(),
-                    Node {
-                        width: Val::Px(200.0),
-                        overflow: Overflow::clip(),
-                        ..Node::default()
-                    },
-                    InventoryItemDescription(item_phrase.clone()),
-                ))
-                .with_children(|parent| {
-                    for section in item_phrase.as_text_sections(item_text_color, &fonts.regular()) {
-                        parent.spawn(section);
-                    }
-                });
-
-            parent.spawn((
-                Text::from(if let Some(ref volume) = item_info.volume {
-                    format!("{volume}")
-                } else {
-                    String::new()
-                }),
-                item_text_color,
-                fonts.regular(),
-                Node {
-                    width: Val::Px(60.0),
-                    overflow: Overflow::clip(),
-                    justify_content: JustifyContent::End,
-                    ..Node::default()
-                },
-            ));
-
-            parent.spawn((
-                Text::from(if let Some(ref mass) = item_info.mass {
-                    format!("{mass}")
-                } else {
-                    String::new()
-                }),
-                item_text_color,
-                fonts.regular(),
-                Node {
-                    width: Val::Px(60.0),
-                    overflow: Overflow::clip(),
-                    justify_content: JustifyContent::End,
-                    ..Node::default()
-                },
-            ));
-
-            for action in actions(section, drop_section) {
-                let caption = format!("{}", &action);
-                ButtonBuilder::new(
-                    caption,
-                    item_text_color,
-                    fonts.regular(),
-                    inventory_system.0,
-                )
-                .spawn(
-                    parent,
-                    InventoryButton {
-                        item: item_entity,
-                        action,
-                    },
-                );
-            }
-        })
-        .id()
-}
-
-fn actions(section: &InventorySection, drop_section: bool) -> Vec<InventoryAction> {
-    let mut actions = vec![InventoryAction::Examine];
-    if matches!(section, InventorySection::Nbor(_)) {
-        actions.push(InventoryAction::Take);
-        if !drop_section {
-            actions.push(InventoryAction::Move);
-        }
-    } else {
-        actions.push(InventoryAction::Drop);
-    }
-    if matches!(section, InventorySection::Hands) {
-        actions.push(InventoryAction::Unwield);
-    } else {
-        actions.push(InventoryAction::Wield);
-    }
-    actions
 }
 
 fn follow_selected(
@@ -533,14 +396,14 @@ fn handle_selected_item(
     In(key): In<Key>,
     mut instruction_queue: ResMut<InstructionQueue>,
     mut inventory: ResMut<InventoryScreen>,
-    item_lines: Query<&InventoryItemLine>,
+    item_rows: Query<&InventoryItemRow>,
 ) {
     let Key::Character(char) = key else {
         eprintln!("Unexpected key {key:?} while handling selected item");
         return;
     };
 
-    if let Some(selected_item) = inventory.selected_item(&item_lines) {
+    if let Some(selected_item) = inventory.selected_item(&item_rows) {
         instruction_queue.add(match char {
             'd' => {
                 let Some(item_section) = inventory.section_by_item.get(&selected_item) else {
@@ -578,9 +441,9 @@ fn handle_selected_item(
 fn examine_selected_item(
     mut instruction_queue: ResMut<InstructionQueue>,
     inventory: Res<InventoryScreen>,
-    item_lines: Query<&InventoryItemLine>,
+    item_rows: Query<&InventoryItemRow>,
 ) {
-    if let Some(item_entity) = inventory.selected_item(&item_lines) {
+    if let Some(item_entity) = inventory.selected_item(&item_rows) {
         instruction_queue.add(QueuedInstruction::ExamineItem(ExamineItem { item_entity }));
     }
 }

@@ -797,9 +797,11 @@ impl SidebarItemWalker {
                     '>'
                 }
             }
-            PocketType::Magazine | PocketType::MagazineWell => {
-                // While magazines or wells can contain only one item, there may be multiple magazines.
-                return String::new();
+            PocketType::Magazine => {
+                return String::from("with");
+            }
+            PocketType::MagazineWell => {
+                return String::from("(");
             }
             PocketType::Mod => '+',
             PocketType::Corpse => '_',
@@ -815,7 +817,7 @@ impl SidebarItemWalker {
         match in_pocket {
             Some(
                 InPocket {
-                    type_: PocketType::Magazine | PocketType::MagazineWell,
+                    type_: PocketType::Magazine,
                     ..
                 }
                 | InPocket {
@@ -824,23 +826,25 @@ impl SidebarItemWalker {
                     ..
                 },
             ) => "",
+            Some(InPocket {
+                type_: PocketType::MagazineWell,
+                ..
+            }) => ")",
             _ => "\n",
         }
     }
 }
 
 impl ItemHierarchyWalker for SidebarItemWalker {
-    type Output = Vec<Fragment>;
-
     fn visit_item<'p>(
         &'p self,
         item: ItemItem,
-        contents: impl Iterator<Item = Subitems<'p, Self::Output>>,
-        magazines: impl Iterator<Item = Subitems<'p, Self::Output>>,
-        magazine_wells: impl Iterator<Item = Subitems<'p, Self::Output>>,
-        other_pockets: impl Iterator<Item = Subitems<'p, Self::Output>>,
+        contents: impl Iterator<Item = Subitems<'p>>,
+        magazines: impl Iterator<Item = Subitems<'p>>,
+        magazine_wells: impl Iterator<Item = Subitems<'p>>,
+        other_pockets: impl Iterator<Item = Subitems<'p>>,
         in_pocket: Option<InPocket>,
-    ) -> Self::Output {
+    ) -> Vec<Fragment> {
         let prefix = Self::prefix(in_pocket);
         let suffix = Self::suffix(in_pocket);
 
@@ -853,18 +857,16 @@ impl ItemHierarchyWalker for SidebarItemWalker {
         // TODO make sure all pockets are present on containers
         //println!("{:?} {is_container:?} {is_empty:?}", item.definition.id.fallback_name());
 
-        let phrase = Phrase::from_fragment(Fragment::new(prefix.clone()))
+        let phrase = Phrase::from_fragment(Fragment::colorized(prefix.clone(), SOFT_TEXT_COLOR))
             .extend(item.fragments())
             .add(format!("[{}]", item.definition.id.fallback_name())) // TODO
-            .extend(magazines.flat_map(|info| once(Fragment::new("with")).chain(info.output)))
+            .extend(magazines.flat_map(|info| info.output))
             .extend(magazine_wells.flat_map(|info| {
-                once(Fragment::new("("))
-                    .chain(if info.output.is_empty() {
-                        Phrase::new("not loaded").fragments
-                    } else {
-                        info.output
-                    })
-                    .chain(once(Fragment::new(")")))
+                if info.output.is_empty() {
+                    vec![Fragment::colorized("not loaded", SOFT_TEXT_COLOR)]
+                } else {
+                    info.output
+                }
             }))
             .add(match (is_container, is_empty, is_sealed) {
                 (true, true, true) => "(empty, sealed)",
@@ -903,9 +905,5 @@ impl ItemHierarchyWalker for SidebarItemWalker {
             }
         }))
         .fragments
-    }
-
-    fn visit_pocket(&self, contents_output: impl Iterator<Item = Self::Output>) -> Self::Output {
-        contents_output.flatten().collect()
     }
 }

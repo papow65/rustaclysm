@@ -694,12 +694,12 @@ fn plan_auto_drag(
     from: &Pos,
     enemy_name: Option<Fragment>,
 ) -> Option<PlannedAction> {
-    if let Some(item_entity) = envir.find_item(*from) {
+    if let Some(item) = envir.find_item(*from) {
         interrupt_on_danger(
             instruction_queue,
             enemy_name,
             PlannedAction::MoveItem(MoveItem {
-                item_entity,
+                item_entity: item.entity,
                 to: Nbor::HERE,
             }),
         )

@@ -1,6 +1,7 @@
 mod components;
 mod plugin;
 mod resource;
+mod row_spawner;
 mod section;
 mod systems;
 

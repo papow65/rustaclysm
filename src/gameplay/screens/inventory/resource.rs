@@ -1,6 +1,4 @@
-use crate::gameplay::screens::inventory::components::{
-    InventoryItemDescription, InventoryItemLine,
-};
+use crate::gameplay::screens::inventory::components::{InventoryItemDescription, InventoryItemRow};
 use crate::gameplay::screens::inventory::section::InventorySection;
 use crate::gameplay::HorizontalDirection;
 use crate::hud::{Fonts, SelectionList, GOOD_TEXT_COLOR, HARD_TEXT_COLOR};
@@ -28,7 +26,7 @@ impl InventoryScreen {
         &mut self,
         commands: &mut Commands,
         fonts: &Fonts,
-        item_lines: &Query<(&InventoryItemLine, &Children)>,
+        item_rows: &Query<(&InventoryItemRow, &Children)>,
         item_texts: &Query<(Entity, &InventoryItemDescription)>,
         item_buttons: &Query<&Children, With<Button>>,
         text_styles: &mut Query<&mut TextColor>,
@@ -37,7 +35,7 @@ impl InventoryScreen {
         self.highlight_selected(
             commands,
             fonts,
-            item_lines,
+            item_rows,
             item_texts,
             item_buttons,
             text_styles,
@@ -47,7 +45,7 @@ impl InventoryScreen {
         self.highlight_selected(
             commands,
             fonts,
-            item_lines,
+            item_rows,
             item_texts,
             item_buttons,
             text_styles,
@@ -59,7 +57,7 @@ impl InventoryScreen {
         &self,
         commands: &mut Commands,
         fonts: &Fonts,
-        item_lines: &Query<(&InventoryItemLine, &Children)>,
+        item_rows: &Query<(&InventoryItemRow, &Children)>,
         item_texts: &Query<(Entity, &InventoryItemDescription)>,
         item_buttons: &Query<&Children, With<Button>>,
         text_styles: &mut Query<&mut TextColor>,
@@ -68,7 +66,7 @@ impl InventoryScreen {
         let Some(selected) = self.selection_list.selected else {
             return;
         };
-        let (_, children) = &item_lines
+        let (_, children) = &item_rows
             .get(selected)
             .expect("Highlighted item should ba found");
 
@@ -99,17 +97,17 @@ impl InventoryScreen {
                 for button_child in button_children {
                     let mut text_style = text_styles
                         .get_mut(*button_child)
-                        .expect("Item line buttons should contain text");
+                        .expect("Item row buttons should contain text");
                     *text_style = used_text_style;
                 }
             }
         }
     }
 
-    pub(super) fn selected_item(&self, item_lines: &Query<&InventoryItemLine>) -> Option<Entity> {
-        self.selection_list.selected.map(|selected_line| {
-            item_lines
-                .get(selected_line)
+    pub(super) fn selected_item(&self, item_rows: &Query<&InventoryItemRow>) -> Option<Entity> {
+        self.selection_list.selected.map(|selected_row| {
+            item_rows
+                .get(selected_row)
                 .expect("Selected row should be found")
                 .item
         })

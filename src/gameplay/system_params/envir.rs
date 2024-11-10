@@ -1,7 +1,7 @@
 use crate::gameplay::{
-    Accessible, Amount, Closeable, Containable, Corpse, Health, HorizontalDirection, Hurdle,
-    Intelligence, Level, LevelOffset, Life, Location, Nbor, NborDistance, ObjectName, Obstacle,
-    Opaque, OpaqueFloor, Openable, Pos, PosOffset, QueuedInstruction, StairsDown, StairsUp,
+    Accessible, Amount, Closeable, Corpse, Health, HorizontalDirection, Hurdle, Intelligence, Item,
+    ItemItem, Level, LevelOffset, Life, Location, Nbor, NborDistance, ObjectName, Obstacle, Opaque,
+    OpaqueFloor, Openable, Pos, PosOffset, QueuedInstruction, StairsDown, StairsUp,
     StandardIntegrity, WalkingCost, Zone, ZoneLevel,
 };
 use bevy::ecs::system::SystemParam;
@@ -35,7 +35,7 @@ pub(crate) struct Envir<'w, 's> {
     characters: Query<'w, 's, (Entity, &'static ObjectName), With<Life>>,
     smashables: Query<'w, 's, Entity, (With<StandardIntegrity>, Without<Corpse>)>,
     pulpables: Query<'w, 's, Entity, (With<StandardIntegrity>, With<Corpse>)>,
-    items: Query<'w, 's, Entity, With<Containable>>,
+    items: Query<'w, 's, Item>,
 }
 
 impl<'w, 's> Envir<'w, 's> {
@@ -161,8 +161,14 @@ impl<'w, 's> Envir<'w, 's> {
         self.location.get_first(pos, &self.pulpables)
     }
 
-    pub(crate) fn find_item(&self, pos: Pos) -> Option<Entity> {
+    pub(crate) fn find_item(&self, pos: Pos) -> Option<ItemItem> {
         self.location.get_first(pos, &self.items)
+    }
+
+    pub(crate) fn all_items(&self, pos: Pos) -> impl Iterator<Item = ItemItem> + use<'_> {
+        self.location
+            .all(pos)
+            .flat_map(|&entity| self.items.get(entity))
     }
 
     // helper methods

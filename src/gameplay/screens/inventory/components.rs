@@ -26,7 +26,7 @@ impl fmt::Display for InventoryAction {
 }
 
 #[derive(Debug, Component)]
-pub(super) struct InventoryItemLine {
+pub(super) struct InventoryItemRow {
     pub(super) item: Entity,
 }
 
