@@ -10,7 +10,7 @@ pub(super) fn create_manual_key_bindings(world: &mut World) {
         |bindings| {
             bindings.add(KeyCode::F1, toggle_manual);
         },
-        ManualSection::new(&[("toggle this", "F1")], u8::MAX - 1),
+        ManualSection::new(&[("key bindings", "F1")], u8::MAX - 1),
     );
 }
 
@@ -24,5 +24,5 @@ fn toggle_manual(mut manual: Query<&mut Visibility, With<ManualDisplay>>) {
         Visibility::Hidden
     };
 
-    log_if_slow("manage_manual_keyboard_input", start);
+    log_if_slow("toggle_manual", start);
 }
