@@ -45,7 +45,7 @@ pub(crate) struct Opaque;
 #[derive(Component)]
 pub(crate) struct OpaqueFloor;
 
-#[derive(Clone, Component, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Component)]
 pub(crate) struct ObjectDefinition {
     pub(crate) category: ObjectCategory,
     pub(crate) id: ObjectId,

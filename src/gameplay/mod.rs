@@ -7,6 +7,7 @@ mod events;
 mod focus;
 mod item;
 mod models;
+mod phrase;
 mod plugin;
 mod resources;
 mod scope;
@@ -37,10 +38,10 @@ use self::cdda::{
     TileLoader, TileVariant, Transform2d, TypeId,
 };
 use self::common::{
-    AssetState, CancelHandling, CardinalDirection, Evolution, Fragment, HorizontalDirection,
-    Interruption, LevelOffset, Limited, LocalTerrain, Nbor, NborDistance, Phrase, PlayerDirection,
-    PosOffset, Positioning, QueuedInstruction, Region, Visible, VisionDistance, WalkingCost,
-    ZoneRegion, ZoomDirection, ZoomDistance,
+    AssetState, CancelHandling, CardinalDirection, Evolution, HorizontalDirection, Interruption,
+    LevelOffset, Limited, LocalTerrain, Nbor, NborDistance, PlayerDirection, PosOffset,
+    QueuedInstruction, Region, Visible, VisionDistance, WalkingCost, ZoneRegion, ZoomDirection,
+    ZoomDistance,
 };
 use self::components::{
     Accessible, Appearance, CameraBase, Closeable, Corpse, CorpseRaise, Craft, ExamineCursor,
@@ -50,16 +51,18 @@ use self::components::{
 };
 use self::events::{
     ActorChange, ActorEvent, CorpseChange, CorpseEvent, Damage, DespawnSubzoneLevel,
-    DespawnZoneLevel, Healing, Message, MessageWriter, RefreshAfterBehavior, Severity,
-    SpawnSubzoneLevel, SpawnZoneLevel, TerrainChange, TerrainEvent, Toggle,
-    UpdateZoneLevelVisibility,
+    DespawnZoneLevel, Healing, Message, RefreshAfterBehavior, Severity, SpawnSubzoneLevel,
+    SpawnZoneLevel, TerrainChange, TerrainEvent, Toggle, UpdateZoneLevelVisibility,
 };
 use self::focus::{Focus, FocusState};
 use self::item::{
-    Amount, BodyContainers, Containable, Container, ContainerLimits, Filthy, Item, ItemHierarchy,
-    ItemHierarchyWalker, ItemIntegrity, ItemItem,
+    Amount, BodyContainers, Containable, Container, ContainerLimits, Filthy, InPocket, Item,
+    ItemHierarchy, ItemHierarchyWalker, ItemIntegrity, ItemItem, Subitems,
 };
 use self::models::ModelFactory;
+use self::phrase::{
+    DebugText, DebugTextShown, Fragment, MessageWriter, Phrase, PhrasePlugin, Positioning,
+};
 use self::resources::{
     CameraOffset, ElevationVisibility, Expanded, Explored, InstructionQueue, Location,
     RelativeSegment, RelativeSegments, SeenFrom, SubzoneLevelEntities, VisualizationUpdate,

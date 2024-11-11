@@ -1,8 +1,8 @@
-use crate::gameplay::item::{InPocket, Subitems};
 use crate::gameplay::sidebar::components::{
     BreathText, DetailsText, EnemiesText, FpsText, HealthText, LogDisplay, PlayerActionStateText,
     SpeedTextSpan, StaminaText, TimeText, WalkingModeTextSpan, WieldedText,
 };
+use crate::gameplay::{DebugText, InPocket, Subitems};
 use crate::hud::{
     panel_node, text_color_expect_half, Fonts, ScrollList, BAD_TEXT_COLOR, FILTHY_COLOR,
     GOOD_TEXT_COLOR, HARD_TEXT_COLOR, PANEL_COLOR, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
@@ -200,10 +200,11 @@ fn update_log(
     mut new_messages: EventReader<Message>,
     currently_visible_builder: CurrentlyVisibleBuilder,
     fonts: Res<Fonts>,
+    debug_text_shown: Res<DebugTextShown>,
     logs: Query<Entity, With<LogDisplay>>,
-    mut previous_sections: GameplayLocal<Vec<(TextSpan, TextColor, TextFont)>>,
+    mut previous_sections: GameplayLocal<Vec<(TextSpan, TextColor, TextFont, Option<DebugText>)>>,
     mut last_message: GameplayLocal<Option<(Message, DuplicateMessageCount)>>,
-    mut transient_message: Local<Vec<(TextSpan, TextColor, TextFont)>>,
+    mut transient_message: Local<Vec<(TextSpan, TextColor, TextFont, Option<DebugText>)>>,
 ) {
     const SINGLE: DuplicateMessageCount = Saturating(1);
 
@@ -248,19 +249,29 @@ fn update_log(
         }
     }
 
+    let debug_font = debug_text_shown.text_font(fonts.regular());
     let mut logs = commands.entity(logs.single());
     logs.despawn_descendants();
     logs.with_children(|parent| {
-        for section in previous_sections.get().clone() {
-            parent.spawn(section);
-        }
-        if let Some((message, count)) = last_message.get() {
-            for section in to_text_sections(&fonts, message, *count) {
-                parent.spawn(section);
+        for (span, color, font, debug) in previous_sections.get().clone() {
+            let mut entity = parent.spawn((span, color, font));
+            if let Some(debug) = debug {
+                entity.insert((debug, debug_font.clone()));
             }
         }
-        for section in transient_message.clone() {
-            parent.spawn(section);
+        if let Some((message, count)) = last_message.get() {
+            for (span, color, font, debug) in to_text_sections(&fonts, message, *count) {
+                let mut entity = parent.spawn((span, color, font));
+                if let Some(debug) = debug {
+                    entity.insert((debug, debug_font.clone()));
+                }
+            }
+        }
+        for (span, color, font, debug) in transient_message.clone() {
+            let mut entity = parent.spawn((span, color, font));
+            if let Some(debug) = debug {
+                entity.insert((debug, debug_font.clone()));
+            }
         }
     });
 
@@ -271,7 +282,7 @@ fn to_text_sections(
     fonts: &Fonts,
     message: &Message,
     count: DuplicateMessageCount,
-) -> Vec<(TextSpan, TextColor, TextFont)> {
+) -> Vec<(TextSpan, TextColor, TextFont, Option<DebugText>)> {
     let mut sections = message
         .phrase
         .clone()
@@ -282,9 +293,10 @@ fn to_text_sections(
             TextSpan::new(format!(" ({count}x)")),
             SOFT_TEXT_COLOR,
             fonts.regular(),
+            None,
         ));
     }
-    sections.push((TextSpan::from("\n"), SOFT_TEXT_COLOR, fonts.regular()));
+    sections.push((TextSpan::from("\n"), SOFT_TEXT_COLOR, fonts.regular(), None));
     sections
 }
 
@@ -459,6 +471,7 @@ fn update_status_player_action_state(
 fn update_status_player_wielded(
     mut commands: Commands,
     fonts: Res<Fonts>,
+    debug_text_shown: Res<DebugTextShown>,
     player_weapon: Query<Item, With<PlayerWielded>>,
     text: Query<Entity, With<WieldedText>>,
 ) {
@@ -471,8 +484,11 @@ fn update_status_player_wielded(
         .with_children(|parent| {
             if let Ok(weapon) = player_weapon.get_single() {
                 let phrase = Phrase::from_fragments(weapon.fragments().collect());
-                for section in phrase.as_text_sections(&fonts.regular()) {
-                    parent.spawn(section);
+                for (span, color, font, debug) in phrase.as_text_sections(&fonts.regular()) {
+                    let mut entity = parent.spawn((span, color, font));
+                    if let Some(debug) = debug {
+                        entity.insert((debug, debug_text_shown.text_font(fonts.regular())));
+                    }
                 }
             } else {
                 parent.spawn((TextSpan::new("(none)"), SOFT_TEXT_COLOR, fonts.regular()));
@@ -486,6 +502,7 @@ fn update_status_player_wielded(
 fn update_status_enemies(
     mut commands: Commands,
     fonts: Res<Fonts>,
+    debug_text_shown: Res<DebugTextShown>,
     currently_visible_builder: CurrentlyVisibleBuilder,
     player_actors: Query<Actor, With<Player>>,
     factions: Query<(&Pos, &Faction), With<Life>>,
@@ -527,12 +544,16 @@ fn update_status_enemies(
         .soft("\n");
 
         let entity = text.single();
+        let debug_font = debug_text_shown.text_font(fonts.regular());
         commands
             .entity(entity)
             .despawn_descendants()
             .with_children(|parent| {
-                for section in phrase.as_text_sections(&fonts.regular()) {
-                    parent.spawn(section);
+                for (span, color, font, debug) in phrase.as_text_sections(&fonts.regular()) {
+                    let mut entity = parent.spawn((span, color, font));
+                    if let Some(debug) = debug {
+                        entity.insert((debug, debug_font.clone()));
+                    }
                 }
             });
     }
@@ -545,6 +566,7 @@ fn update_status_detais(
     mut commands: Commands,
     focus_state: Res<State<FocusState>>,
     fonts: Res<Fonts>,
+    debug_text_shown: Res<DebugTextShown>,
     mut explored: ResMut<Explored>,
     mut zone_level_ids: ResMut<ZoneLevelIds>,
     mut overmap_buffer_manager: OvermapBufferManager,
@@ -628,8 +650,11 @@ fn update_status_detais(
         .entity(entity)
         .despawn_descendants()
         .with_children(|parent| {
-            for section in text_sections {
-                parent.spawn(section);
+            for (span, color, font, debug) in text_sections {
+                let mut entity = parent.spawn((span, color, font));
+                if let Some(debug) = debug {
+                    entity.insert((debug, debug_text_shown.text_font(fonts.regular())));
+                }
             }
         });
 
@@ -768,7 +793,7 @@ fn entity_info(
     let fallbak_name = ObjectName::missing();
     let mut output = Phrase::from_fragment(name.unwrap_or(&fallbak_name).single(Pos::ORIGIN));
     if let Some(definition) = definition {
-        output = output.soft(format!(
+        output = output.debug(format!(
             "[{:?}:{}]",
             definition.category,
             definition.id.fallback_name()
@@ -862,7 +887,7 @@ impl ItemHierarchyWalker for SidebarItemWalker {
 
         let phrase = Phrase::from_fragment(Fragment::soft(prefix.clone()))
             .extend(item.fragments())
-            .soft(format!("[{}]", item.definition.id.fallback_name())) // TODO
+            .debug(format!("[{}]", item.definition.id.fallback_name())) // TODO
             .extend(magazines.flat_map(|info| info.output))
             .extend(magazine_wells.flat_map(|info| {
                 if info.output.is_empty() {

@@ -17,7 +17,7 @@ use crate::gameplay::{
 use crate::gameplay::{
     update_camera_offset, ActorPlugin, CameraOffset, CddaPlugin, DespawnSubzoneLevel,
     DespawnZoneLevel, GameplayScreenState, MapAsset, MapMemoryAsset, OvermapAsset,
-    OvermapBufferAsset, RelativeSegments, SpawnSubzoneLevel, SpawnZoneLevel,
+    OvermapBufferAsset, PhrasePlugin, RelativeSegments, SpawnSubzoneLevel, SpawnZoneLevel,
     UpdateZoneLevelVisibility, VisualizationUpdate,
 };
 use crate::util::log_transition_plugin;
@@ -42,6 +42,7 @@ impl Plugin for GameplayPlugin {
             EventsPlugin,
             ItemChecksPlugin,
             ModelPlugin,
+            PhrasePlugin,
             ResourcePlugin,
             GameplayLocalPlugin,
             ScreensPlugin,

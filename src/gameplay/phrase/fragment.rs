@@ -1,5 +1,5 @@
-use crate::hud::{HARD_TEXT_COLOR, SOFT_TEXT_COLOR};
-use crate::{gameplay::Pos, hud::GOOD_TEXT_COLOR};
+use crate::gameplay::{DebugText, Pos};
+use crate::hud::{GOOD_TEXT_COLOR, HARD_TEXT_COLOR, SOFT_TEXT_COLOR};
 use bevy::prelude::{TextColor, TextFont, TextSpan};
 use regex::Regex;
 use std::{cmp::Eq, fmt, sync::LazyLock};
@@ -18,6 +18,7 @@ pub(crate) struct Fragment {
     pub(crate) text: String,
     pub(crate) color: TextColor,
     pub(crate) positioning: Positioning,
+    pub(crate) debug: bool,
 }
 
 impl Fragment {
@@ -26,6 +27,7 @@ impl Fragment {
             text: String::from("You"),
             color: GOOD_TEXT_COLOR,
             positioning: Positioning::Player,
+            debug: false,
         }
     }
 
@@ -37,6 +39,7 @@ impl Fragment {
             text: text.into(),
             color: SOFT_TEXT_COLOR,
             positioning: Positioning::None,
+            debug: false,
         }
     }
 
@@ -48,6 +51,7 @@ impl Fragment {
             text: text.into(),
             color: HARD_TEXT_COLOR,
             positioning: Positioning::None,
+            debug: false,
         }
     }
 
@@ -59,11 +63,17 @@ impl Fragment {
             text: text.into(),
             color,
             positioning: Positioning::None,
+            debug: false,
         }
     }
 
     pub(crate) const fn positioned(mut self, pos: Pos) -> Self {
         self.positioning = Positioning::Pos(pos);
+        self
+    }
+
+    pub(crate) const fn debug(mut self) -> Self {
+        self.debug = true;
         self
     }
 }
@@ -113,6 +123,11 @@ impl Phrase {
     }
 
     #[must_use]
+    pub(crate) fn debug(self, text: impl Into<String>) -> Self {
+        self.push(Fragment::soft(text.into()).debug())
+    }
+
+    #[must_use]
     pub(crate) fn push(mut self, fragment: Fragment) -> Self {
         self.fragments.push(fragment);
         self
@@ -140,7 +155,7 @@ impl Phrase {
     pub(crate) fn as_text_sections(
         &self,
         text_font: &TextFont,
-    ) -> Vec<(TextSpan, TextColor, TextFont)> {
+    ) -> Vec<(TextSpan, TextColor, TextFont, Option<DebugText>)> {
         self.fragments.iter().filter(|f| !f.text.is_empty()).fold(
             Vec::new(),
             |mut text_sections, f| {
@@ -157,6 +172,7 @@ impl Phrase {
                     ),
                     f.color,
                     text_font.clone(),
+                    f.debug.then_some(DebugText),
                 ));
                 text_sections
             },

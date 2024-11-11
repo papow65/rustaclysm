@@ -3,9 +3,9 @@ use crate::gameplay::screens::inventory::resource::InventoryScreen;
 use crate::gameplay::screens::inventory::row_spawner::RowSpawner;
 use crate::gameplay::screens::inventory::section::InventorySection;
 use crate::gameplay::{
-    BodyContainers, Clock, Envir, ExamineItem, GameplayScreenState, HorizontalDirection, Infos,
-    InstructionQueue, ItemHierarchy, MoveItem, Nbor, Phrase, Pickup, Player, PlayerDirection, Pos,
-    QueuedInstruction, Unwield, Wield,
+    BodyContainers, Clock, DebugTextShown, Envir, ExamineItem, GameplayScreenState,
+    HorizontalDirection, Infos, InstructionQueue, ItemHierarchy, MoveItem, Nbor, Phrase, Pickup,
+    Player, PlayerDirection, Pos, QueuedInstruction, Unwield, Wield,
 };
 use crate::hud::{
     Fonts, ScrollList, SelectionList, StepDirection, StepSize, HARD_TEXT_COLOR, PANEL_COLOR,
@@ -239,6 +239,7 @@ pub(super) fn refresh_inventory(
     fonts: Res<Fonts>,
     envir: Envir,
     infos: Res<Infos>,
+    debug_text_shown: Res<DebugTextShown>,
     item_hierarchy: ItemHierarchy,
     mut inventory: ResMut<InventoryScreen>,
     players: Query<(&Pos, &BodyContainers), With<Player>>,
@@ -287,6 +288,7 @@ pub(super) fn refresh_inventory(
             let row_spawner = RowSpawner::new(
                 &fonts,
                 &infos,
+                &debug_text_shown,
                 &inventory_system,
                 &mut inventory.selection_list,
                 &mut inventory.section_by_item,

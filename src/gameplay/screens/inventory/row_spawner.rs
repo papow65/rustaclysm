@@ -3,7 +3,7 @@ use crate::gameplay::screens::inventory::components::{InventoryAction, Inventory
 use crate::gameplay::screens::inventory::resource::{ITEM_TEXT_COLOR, SELECTED_ITEM_TEXT_COLOR};
 use crate::gameplay::screens::inventory::section::InventorySection;
 use crate::gameplay::screens::inventory::systems::{InventoryButton, InventorySystem};
-use crate::gameplay::{Fragment, Infos, ItemHierarchyWalker, ItemItem, Phrase};
+use crate::gameplay::{DebugTextShown, Fragment, Infos, ItemHierarchyWalker, ItemItem, Phrase};
 use crate::hud::{
     ButtonBuilder, Fonts, SelectionList, HOVERED_BUTTON_COLOR, SMALL_SPACING, SOFT_TEXT_COLOR,
 };
@@ -24,6 +24,7 @@ struct InventoryBuilder<'r, 'c> {
 pub(super) struct RowSpawner<'r, 'c> {
     fonts: &'r Fonts,
     infos: &'r Infos,
+    debug_text_shown: &'r DebugTextShown,
     inventory_system: &'r InventorySystem,
     builder: RefCell<InventoryBuilder<'r, 'c>>,
     previous_selected_item: Option<Entity>,
@@ -38,6 +39,7 @@ where
     pub(super) fn new(
         fonts: &'r Fonts,
         infos: &'r Infos,
+        debug_text_shown: &'r DebugTextShown,
         inventory_system: &'r InventorySystem,
         selection_list: &'r mut SelectionList,
         section_by_item: &'r mut EntityHashMap<InventorySection>,
@@ -49,6 +51,7 @@ where
         Self {
             fonts,
             infos,
+            debug_text_shown,
             inventory_system,
             builder: RefCell::new(InventoryBuilder {
                 selection_list,
@@ -160,8 +163,14 @@ where
                 },
             ))
             .with_children(|parent| {
-                for section in item_phrase.as_text_sections(&self.fonts.regular()) {
-                    parent.spawn(section);
+                for (span, color, font, debug) in
+                    item_phrase.as_text_sections(&self.fonts.regular())
+                {
+                    let mut entity = parent.spawn((span, color, font));
+                    if let Some(debug) = debug {
+                        entity
+                            .insert((debug, self.debug_text_shown.text_font(self.fonts.regular())));
+                    }
                 }
             });
     }
