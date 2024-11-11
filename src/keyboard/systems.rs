@@ -12,9 +12,22 @@ pub(super) fn create_global_key_bindings(world: &mut World) {
         world,
         |bindings| {
             bindings.add_multi(['+', '-'], zoom_ui);
-            bindings.add_multi(['c', 'q'], quit);
+            bindings.add_multi(
+                if cfg!(windows) {
+                    ['q', 'q']
+                } else {
+                    ['c', 'q']
+                },
+                quit,
+            );
         },
-        ManualSection::new(&[("zoom ui", "ctrl +/-"), ("quit", "ctrl c/q")], u8::MAX),
+        ManualSection::new(
+            &[
+                ("zoom ui", "ctrl +/-"),
+                ("quit", if cfg!(windows) { "ctrl q" } else { "ctrl c/q" }),
+            ],
+            u8::MAX,
+        ),
     );
 }
 
