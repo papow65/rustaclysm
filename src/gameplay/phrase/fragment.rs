@@ -1,6 +1,6 @@
 use crate::gameplay::{DebugText, Pos};
 use crate::hud::{GOOD_TEXT_COLOR, HARD_TEXT_COLOR, SOFT_TEXT_COLOR};
-use bevy::prelude::{TextColor, TextFont, TextSpan};
+use bevy::prelude::{TextColor, TextSpan};
 use regex::Regex;
 use std::{cmp::Eq, fmt, sync::LazyLock};
 
@@ -152,10 +152,7 @@ impl Phrase {
     }
 
     #[must_use]
-    pub(crate) fn as_text_sections(
-        &self,
-        text_font: &TextFont,
-    ) -> Vec<(TextSpan, TextColor, TextFont, Option<DebugText>)> {
+    pub(crate) fn as_text_sections(&self) -> Vec<(TextSpan, TextColor, Option<DebugText>)> {
         self.fragments.iter().filter(|f| !f.text.is_empty()).fold(
             Vec::new(),
             |mut text_sections, f| {
@@ -171,7 +168,6 @@ impl Phrase {
                         },
                     ),
                     f.color,
-                    text_font.clone(),
                     f.debug.then_some(DebugText),
                 ));
                 text_sections
@@ -181,7 +177,7 @@ impl Phrase {
 
     #[must_use]
     pub(crate) fn as_string(&self) -> String {
-        self.as_text_sections(&TextFont::default())
+        self.as_text_sections()
             .into_iter()
             .map(|text_section| text_section.0 .0)
             .collect::<String>()

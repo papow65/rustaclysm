@@ -15,8 +15,8 @@ use bevy::prelude::{
     on_event, resource_exists, resource_exists_and_changed, AlignItems, BuildChildren, Changed,
     ChildBuild, Commands, Condition, DespawnRecursiveExt, DetectChanges, Entity, EventReader,
     FlexDirection, FlexWrap, IntoSystemConfigs, JustifyContent, Local, Node, Or, Overflow,
-    ParamSet, PositionType, Query, Res, ResMut, State, StateScoped, Text, TextColor, TextFont,
-    TextSpan, UiRect, Val, Visibility, With, Without,
+    ParamSet, PositionType, Query, Res, ResMut, State, StateScoped, Text, TextColor, TextSpan,
+    UiRect, Val, Visibility, With, Without,
 };
 use cdda_json_files::{MoveCost, PocketType};
 use either::Either;
@@ -202,9 +202,9 @@ fn update_log(
     fonts: Res<Fonts>,
     debug_text_shown: Res<DebugTextShown>,
     logs: Query<Entity, With<LogDisplay>>,
-    mut previous_sections: GameplayLocal<Vec<(TextSpan, TextColor, TextFont, Option<DebugText>)>>,
+    mut previous_sections: GameplayLocal<Vec<(TextSpan, TextColor, Option<DebugText>)>>,
     mut last_message: GameplayLocal<Option<(Message, DuplicateMessageCount)>>,
-    mut transient_message: Local<Vec<(TextSpan, TextColor, TextFont, Option<DebugText>)>>,
+    mut transient_message: Local<Vec<(TextSpan, TextColor, Option<DebugText>)>>,
 ) {
     const SINGLE: DuplicateMessageCount = Saturating(1);
 
@@ -227,7 +227,7 @@ fn update_log(
         if let Some(message) = percieved_message {
             transient_message.clear();
             if message.transient {
-                transient_message.extend(to_text_sections(&fonts, &message, SINGLE));
+                transient_message.extend(to_text_sections(&message, SINGLE));
             } else {
                 match last_message.get() {
                     Some((last, ref mut count)) if *last == message => {
@@ -237,11 +237,9 @@ fn update_log(
                         if let Some((previous_last, previous_count)) =
                             last_message.get().replace((message, SINGLE))
                         {
-                            previous_sections.get().extend(to_text_sections(
-                                &fonts,
-                                &previous_last,
-                                previous_count,
-                            ));
+                            previous_sections
+                                .get()
+                                .extend(to_text_sections(&previous_last, previous_count));
                         }
                     }
                 }
@@ -253,22 +251,22 @@ fn update_log(
     let mut logs = commands.entity(logs.single());
     logs.despawn_descendants();
     logs.with_children(|parent| {
-        for (span, color, font, debug) in previous_sections.get().clone() {
-            let mut entity = parent.spawn((span, color, font));
+        for (span, color, debug) in previous_sections.get().clone() {
+            let mut entity = parent.spawn((span, color, fonts.regular()));
             if let Some(debug) = debug {
                 entity.insert((debug, debug_font.clone()));
             }
         }
         if let Some((message, count)) = last_message.get() {
-            for (span, color, font, debug) in to_text_sections(&fonts, message, *count) {
-                let mut entity = parent.spawn((span, color, font));
+            for (span, color, debug) in to_text_sections(message, *count) {
+                let mut entity = parent.spawn((span, color, fonts.regular()));
                 if let Some(debug) = debug {
                     entity.insert((debug, debug_font.clone()));
                 }
             }
         }
-        for (span, color, font, debug) in transient_message.clone() {
-            let mut entity = parent.spawn((span, color, font));
+        for (span, color, debug) in transient_message.clone() {
+            let mut entity = parent.spawn((span, color, fonts.regular()));
             if let Some(debug) = debug {
                 entity.insert((debug, debug_font.clone()));
             }
@@ -279,24 +277,18 @@ fn update_log(
 }
 
 fn to_text_sections(
-    fonts: &Fonts,
     message: &Message,
     count: DuplicateMessageCount,
-) -> Vec<(TextSpan, TextColor, TextFont, Option<DebugText>)> {
+) -> Vec<(TextSpan, TextColor, Option<DebugText>)> {
     let mut sections = message
         .phrase
         .clone()
         .color_override(message.severity.color_override())
-        .as_text_sections(&fonts.regular());
+        .as_text_sections();
     if 1 < count.0 {
-        sections.push((
-            TextSpan::new(format!(" ({count}x)")),
-            SOFT_TEXT_COLOR,
-            fonts.regular(),
-            None,
-        ));
+        sections.push((TextSpan::new(format!(" ({count}x)")), SOFT_TEXT_COLOR, None));
     }
-    sections.push((TextSpan::from("\n"), SOFT_TEXT_COLOR, fonts.regular(), None));
+    sections.push((TextSpan::from("\n"), SOFT_TEXT_COLOR, None));
     sections
 }
 
@@ -484,8 +476,8 @@ fn update_status_player_wielded(
         .with_children(|parent| {
             if let Ok(weapon) = player_weapon.get_single() {
                 let phrase = Phrase::from_fragments(weapon.fragments().collect());
-                for (span, color, font, debug) in phrase.as_text_sections(&fonts.regular()) {
-                    let mut entity = parent.spawn((span, color, font));
+                for (span, color, debug) in phrase.as_text_sections() {
+                    let mut entity = parent.spawn((span, color, fonts.regular()));
                     if let Some(debug) = debug {
                         entity.insert((debug, debug_text_shown.text_font(fonts.regular())));
                     }
@@ -544,15 +536,14 @@ fn update_status_enemies(
         .soft("\n");
 
         let entity = text.single();
-        let debug_font = debug_text_shown.text_font(fonts.regular());
         commands
             .entity(entity)
             .despawn_descendants()
             .with_children(|parent| {
-                for (span, color, font, debug) in phrase.as_text_sections(&fonts.regular()) {
-                    let mut entity = parent.spawn((span, color, font));
+                for (span, color, debug) in phrase.as_text_sections() {
+                    let mut entity = parent.spawn((span, color, fonts.regular()));
                     if let Some(debug) = debug {
-                        entity.insert((debug, debug_font.clone()));
+                        entity.insert((debug, debug_text_shown.text_font(fonts.regular())));
                     }
                 }
             });
@@ -643,15 +634,15 @@ fn update_status_detais(
             )]
         }
     })
-    .as_text_sections(&fonts.regular());
+    .as_text_sections();
 
     let entity = text.single();
     commands
         .entity(entity)
         .despawn_descendants()
         .with_children(|parent| {
-            for (span, color, font, debug) in text_sections {
-                let mut entity = parent.spawn((span, color, font));
+            for (span, color, debug) in text_sections {
+                let mut entity = parent.spawn((span, color, fonts.regular()));
                 if let Some(debug) = debug {
                     entity.insert((debug, debug_text_shown.text_font(fonts.regular())));
                 }

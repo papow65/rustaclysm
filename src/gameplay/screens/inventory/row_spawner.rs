@@ -163,10 +163,8 @@ where
                 },
             ))
             .with_children(|parent| {
-                for (span, color, font, debug) in
-                    item_phrase.as_text_sections(&self.fonts.regular())
-                {
-                    let mut entity = parent.spawn((span, color, font));
+                for (span, color, debug) in item_phrase.as_text_sections() {
+                    let mut entity = parent.spawn((span, color, self.fonts.regular()));
                     if let Some(debug) = debug {
                         entity
                             .insert((debug, self.debug_text_shown.text_font(self.fonts.regular())));
