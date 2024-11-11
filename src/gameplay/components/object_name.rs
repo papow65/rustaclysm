@@ -5,6 +5,7 @@ use crate::hud::BAD_TEXT_COLOR;
 use bevy::prelude::{Component, TextColor};
 use cdda_json_files::{CddaItemName, ItemName};
 
+#[must_use]
 #[derive(Clone, Component, Debug)]
 pub(crate) struct ObjectName {
     name: ItemName,
@@ -12,22 +13,18 @@ pub(crate) struct ObjectName {
 }
 
 impl ObjectName {
-    #[must_use]
     pub(crate) fn single(&self, pos: Pos) -> Fragment {
-        Fragment::positioned(&*self.name.single, self.color, pos)
+        Fragment::colorized(&*self.name.single, self.color).positioned(pos)
     }
 
-    #[must_use]
     pub(crate) fn amount(&self, amount: u32, pos: Pos) -> Fragment {
-        Fragment::positioned(&**self.name.amount(amount), self.color, pos)
+        Fragment::colorized(&**self.name.amount(amount), self.color).positioned(pos)
     }
 
-    #[must_use]
     pub(crate) const fn new(name: ItemName, color: TextColor) -> Self {
         Self { name, color }
     }
 
-    #[must_use]
     pub(crate) fn from_str(text: &str, color: TextColor) -> Self {
         Self {
             name: ItemName::from(CddaItemName::Simple(Arc::from(text))),
@@ -35,12 +32,10 @@ impl ObjectName {
         }
     }
 
-    #[must_use]
     pub(crate) fn corpse() -> Self {
         Self::from_str("corpse", BAD_TEXT_COLOR)
     }
 
-    #[must_use]
     pub(crate) fn missing() -> Self {
         Self::from_str("(missing name)", BAD_TEXT_COLOR)
     }

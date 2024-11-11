@@ -133,21 +133,16 @@ pub(in super::super) fn update_damaged_characters(
                 next_gameplay_state.set(GameplayScreenState::Death);
             }
         } else {
-            message_writer
+            let mut builder = message_writer
                 .subject(damage.action.attacker.clone())
                 .verb("hit", "s")
-                .push(victim)
-                .add(if evolution.changed() {
-                    format!(
-                        "for {} ({} -> {})",
-                        evolution.change_abs(),
-                        evolution.before,
-                        evolution.after
-                    )
-                } else {
-                    String::from("but it has no effect")
-                })
-                .send_warn();
+                .push(victim);
+            if evolution.changed() {
+                builder = builder.soft("for").extend(evolution.fragments());
+            } else {
+                builder = builder.soft("but it has").hard("no effect");
+            }
+            builder.send_warn();
         }
     }
 
@@ -171,20 +166,13 @@ pub(in super::super) fn update_healed_characters(
         if evolution.changed() {
             let actors = actors.p1();
             let actor = actors.get(healing.actor_entity).expect("Actor found");
-            message_writer
-                .subject(actor.subject())
-                .verb("heal", "s")
-                .add(if evolution.change_abs() == 1 {
-                    String::from("a bit")
-                } else {
-                    format!(
-                        "for {} ({} -> {})",
-                        evolution.change_abs(),
-                        evolution.before,
-                        evolution.after
-                    )
-                })
-                .send_info();
+            let mut builder = message_writer.subject(actor.subject()).verb("heal", "s");
+            if evolution.change_abs() == 1 {
+                builder = builder.hard("a bit");
+            } else {
+                builder = builder.soft("for").extend(evolution.fragments());
+            }
+            builder.send_info();
         }
     }
 
@@ -216,7 +204,7 @@ pub(in super::super) fn update_damaged_corpses(
             message_writer
                 .subject(Subject::Other(Phrase::from_fragment(name.single(*pos))))
                 .is()
-                .add("thoroughly pulped")
+                .hard("thoroughly pulped")
                 .send_info();
 
             commands
@@ -315,21 +303,16 @@ pub(in super::super) fn update_damaged_terrain(
             broken.push((parent.get(), pos, definition.clone()));
             *visualization_update = VisualizationUpdate::Forced;
         } else {
-            message_writer
+            let mut builder = message_writer
                 .subject(damage.change.attacker.clone())
                 .verb("hit", "s")
-                .push(name.single(pos))
-                .add(if evolution.changed() {
-                    format!(
-                        "for {} ({} -> {})",
-                        evolution.change_abs(),
-                        evolution.before,
-                        evolution.after
-                    )
-                } else {
-                    String::from("but it has no effect")
-                })
-                .send_warn();
+                .push(name.single(pos));
+            if evolution.changed() {
+                builder = builder.soft("for").extend(evolution.fragments());
+            } else {
+                builder = builder.soft("but it has").hard("no effect");
+            }
+            builder.send_warn();
         }
     }
 

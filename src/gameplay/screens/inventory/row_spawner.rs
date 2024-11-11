@@ -1,16 +1,16 @@
 use crate::gameplay::item::{InPocket, Subitems};
-use crate::gameplay::screens::inventory::components::{
-    InventoryAction, InventoryItemDescription, InventoryItemRow,
-};
+use crate::gameplay::screens::inventory::components::{InventoryAction, InventoryItemRow};
 use crate::gameplay::screens::inventory::resource::{ITEM_TEXT_COLOR, SELECTED_ITEM_TEXT_COLOR};
 use crate::gameplay::screens::inventory::section::InventorySection;
 use crate::gameplay::screens::inventory::systems::{InventoryButton, InventorySystem};
 use crate::gameplay::{Fragment, Infos, ItemHierarchyWalker, ItemItem, Phrase};
-use crate::hud::{ButtonBuilder, Fonts, SelectionList, SMALL_SPACING, SOFT_TEXT_COLOR};
+use crate::hud::{
+    ButtonBuilder, Fonts, SelectionList, HOVERED_BUTTON_COLOR, SMALL_SPACING, SOFT_TEXT_COLOR,
+};
 use bevy::ecs::entity::EntityHashMap;
 use bevy::prelude::{
-    AlignItems, BuildChildren, ChildBuild, ChildBuilder, Entity, JustifyContent, Node, Overflow,
-    Text, TextColor, Val,
+    AlignItems, BackgroundColor, BuildChildren, ChildBuild, ChildBuilder, Entity, JustifyContent,
+    Node, Overflow, Text, TextColor, Val,
 };
 use cdda_json_files::{CommonItemInfo, PocketType};
 use std::{cell::RefCell, iter::once};
@@ -80,6 +80,11 @@ where
             is_selected_previous = false;
         }
 
+        let background_color = if is_selected {
+            HOVERED_BUTTON_COLOR
+        } else {
+            BackgroundColor::DEFAULT
+        };
         let item_text_color = if is_selected {
             SELECTED_ITEM_TEXT_COLOR
         } else {
@@ -106,6 +111,7 @@ where
                     ..Node::default()
                 },
                 InventoryItemRow { item: item.entity },
+                background_color,
             ))
             .with_children(|parent| {
                 self.add_expansion_button(parent, item_text_color);
@@ -114,9 +120,8 @@ where
                     &Phrase::from_fragment(identation)
                         .extend(item.fragments())
                         .extend(magazines.flat_map(|info| info.output)),
-                    item_text_color,
                 );
-                self.add_item_properties(parent, item_info, item_text_color);
+                self.add_item_properties(parent, item_info);
                 self.add_item_action_buttons(parent, item.entity, item_text_color);
             })
             .id();
@@ -142,38 +147,26 @@ where
         ));
     }
 
-    fn add_item_name(
-        &self,
-        parent: &mut ChildBuilder,
-        item_phrase: &Phrase,
-        item_text_color: TextColor,
-    ) {
+    fn add_item_name(&self, parent: &mut ChildBuilder, item_phrase: &Phrase) {
         parent
             .spawn((
                 Text::default(),
-                item_text_color,
+                SOFT_TEXT_COLOR,
                 self.fonts.regular(),
                 Node {
                     width: Val::Px(500.0),
                     overflow: Overflow::clip(),
                     ..Node::default()
                 },
-                InventoryItemDescription(item_phrase.clone()),
             ))
             .with_children(|parent| {
-                for section in item_phrase.as_text_sections(item_text_color, &self.fonts.regular())
-                {
+                for section in item_phrase.as_text_sections(&self.fonts.regular()) {
                     parent.spawn(section);
                 }
             });
     }
 
-    fn add_item_properties(
-        &self,
-        parent: &mut ChildBuilder,
-        item_info: &CommonItemInfo,
-        item_text_color: TextColor,
-    ) {
+    fn add_item_properties(&self, parent: &mut ChildBuilder, item_info: &CommonItemInfo) {
         let property_node = Node {
             width: Val::Px(60.0),
             overflow: Overflow::clip(),
@@ -187,7 +180,7 @@ where
             } else {
                 String::new()
             }),
-            item_text_color,
+            SOFT_TEXT_COLOR,
             self.fonts.regular(),
             property_node.clone(),
         ));
@@ -198,7 +191,7 @@ where
             } else {
                 String::new()
             }),
-            item_text_color,
+            SOFT_TEXT_COLOR,
             self.fonts.regular(),
             property_node,
         ));

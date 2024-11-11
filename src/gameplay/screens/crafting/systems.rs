@@ -734,7 +734,7 @@ fn start_craft(
     } else {
         message_writer
             .you("lack the means to craft")
-            .add(&*recipe.name)
+            .hard(&*recipe.name)
             .send_error();
     }
 

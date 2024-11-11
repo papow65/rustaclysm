@@ -1,13 +1,10 @@
-use crate::gameplay::*;
-use crate::hud::{
-    BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
-};
+use crate::gameplay::{Fragment, Phrase, Subject};
+use crate::hud::{BAD_TEXT_COLOR, GOOD_TEXT_COLOR, WARN_TEXT_COLOR};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{Event, EventWriter, TextColor};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) enum Severity {
-    Low,
     Info,
     Warn,
     Error,
@@ -16,13 +13,12 @@ pub(crate) enum Severity {
 
 impl Severity {
     #[must_use]
-    pub(crate) const fn color(&self) -> TextColor {
+    pub(crate) const fn color_override(&self) -> Option<TextColor> {
         match self {
-            Self::Low => SOFT_TEXT_COLOR,
-            Self::Info => HARD_TEXT_COLOR,
-            Self::Warn => WARN_TEXT_COLOR,
-            Self::Error => BAD_TEXT_COLOR,
-            Self::Success => GOOD_TEXT_COLOR,
+            Self::Info => None,
+            Self::Warn => Some(WARN_TEXT_COLOR),
+            Self::Error => Some(BAD_TEXT_COLOR),
+            Self::Success => Some(GOOD_TEXT_COLOR),
         }
     }
 }
@@ -111,8 +107,14 @@ impl<'r, 'w> MessageBuilder<'r, 'w, Subject> {
 
 impl<'r, 'w> MessageBuilder<'r, 'w, Phrase> {
     #[must_use]
-    pub(crate) fn add(mut self, added: impl Into<String>) -> Self {
-        self.phrase = self.phrase.add(added);
+    pub(crate) fn soft(mut self, added: impl Into<String>) -> Self {
+        self.phrase = self.phrase.soft(added);
+        self
+    }
+
+    #[must_use]
+    pub(crate) fn hard(mut self, added: impl Into<String>) -> Self {
+        self.phrase = self.phrase.hard(added);
         self
     }
 

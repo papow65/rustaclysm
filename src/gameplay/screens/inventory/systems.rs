@@ -1,6 +1,4 @@
-use crate::gameplay::screens::inventory::components::{
-    InventoryAction, InventoryItemDescription, InventoryItemRow,
-};
+use crate::gameplay::screens::inventory::components::{InventoryAction, InventoryItemRow};
 use crate::gameplay::screens::inventory::resource::InventoryScreen;
 use crate::gameplay::screens::inventory::row_spawner::RowSpawner;
 use crate::gameplay::screens::inventory::section::InventorySection;
@@ -18,10 +16,10 @@ use crate::manual::ManualSection;
 use crate::util::log_if_slow;
 use bevy::ecs::{entity::EntityHashMap, system::SystemId};
 use bevy::prelude::{
-    AlignItems, BuildChildren, Button, ChildBuild, Children, Commands, ComputedNode, Display,
-    Entity, FlexDirection, In, JustifyContent, KeyCode, Local, NextState, Node, Overflow, Parent,
-    Query, Res, ResMut, StateScoped, Text, TextColor, TextSpan, Transform, UiRect, Val, With,
-    Without, World,
+    AlignItems, BackgroundColor, BuildChildren, Button, ChildBuild, Children, Commands,
+    ComputedNode, Display, Entity, FlexDirection, In, JustifyContent, KeyCode, Local, NextState,
+    Node, Overflow, Parent, Query, Res, ResMut, StateScoped, Text, TextColor, TextSpan, Transform,
+    UiRect, Val, With, Without, World,
 };
 use cdda_json_files::HashMap;
 use std::time::Instant;
@@ -167,11 +165,8 @@ pub(super) fn create_inventory_key_bindings(
 #[expect(clippy::needless_pass_by_value)]
 fn move_inventory_selection(
     In(key): In<Key>,
-    mut commands: Commands,
-    fonts: Res<Fonts>,
     mut inventory: ResMut<InventoryScreen>,
-    item_rows: Query<(&InventoryItemRow, &Children)>,
-    item_texts: Query<(Entity, &InventoryItemDescription)>,
+    mut item_rows: Query<(&InventoryItemRow, &mut BackgroundColor, &Children)>,
     item_buttons: Query<&Children, With<Button>>,
     mut text_styles: Query<&mut TextColor>,
     item_layouts: Query<(&Transform, &ComputedNode)>,
@@ -183,15 +178,7 @@ fn move_inventory_selection(
         return;
     };
 
-    inventory.adjust_selection(
-        &mut commands,
-        &fonts,
-        &item_rows,
-        &item_texts,
-        &item_buttons,
-        &mut text_styles,
-        &key_code,
-    );
+    inventory.adjust_selection(&mut item_rows, &item_buttons, &mut text_styles, &key_code);
     follow_selected(
         &inventory,
         &item_layouts,

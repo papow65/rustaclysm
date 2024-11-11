@@ -9,8 +9,8 @@ pub(crate) enum Subject {
 impl Subject {
     fn phrase(self, second_person: &str, third_person: String) -> Phrase {
         match self {
-            Self::You => Phrase::from_fragment(Fragment::you()).add(second_person),
-            Self::Other(phrase) => phrase.add(third_person),
+            Self::You => Phrase::from_fragment(Fragment::you()).hard(second_person),
+            Self::Other(phrase) => phrase.hard(third_person),
         }
     }
 

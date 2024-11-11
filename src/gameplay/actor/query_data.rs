@@ -161,7 +161,7 @@ impl ActorItem<'_> {
                 message_writer
                     .subject(self.subject())
                     .verb("crash", "es")
-                    .add("into")
+                    .soft("into")
                     .push(obstacle.single(to))
                     .send_warn();
                 self.no_impact()
@@ -170,7 +170,8 @@ impl ActorItem<'_> {
                 message_writer
                     .subject(self.subject())
                     .verb("halt", "s")
-                    .add("at the ledge")
+                    .soft("at")
+                    .hard("the ledge")
                     .send_warn();
                 self.no_impact()
             }
@@ -225,7 +226,7 @@ impl ActorItem<'_> {
             message_writer
                 .subject(self.subject())
                 .is()
-                .add("too exhausted to attack")
+                .hard("too exhausted to attack")
                 .send_error();
             return self.no_impact();
         };
@@ -238,7 +239,7 @@ impl ActorItem<'_> {
             message_writer
                 .subject(self.subject())
                 .verb("attack", "s")
-                .add("nothing")
+                .hard("nothing")
                 .send_warn();
             self.no_impact()
         }
@@ -257,7 +258,7 @@ impl ActorItem<'_> {
             message_writer
                 .subject(self.subject())
                 .is()
-                .add("too exhausted to smash")
+                .hard("too exhausted to smash")
                 .send_error();
             return self.no_impact();
         };
@@ -269,7 +270,7 @@ impl ActorItem<'_> {
             message_writer
                 .subject(self.subject())
                 .verb("smash", "es")
-                .add("the ceiling")
+                .hard("the ceiling")
                 .send_warn();
             self.no_impact()
         } else if self.pos.level.down() == Some(target.level)
@@ -278,7 +279,7 @@ impl ActorItem<'_> {
             message_writer
                 .subject(self.subject())
                 .verb("smash", "es")
-                .add("the floor")
+                .hard("the floor")
                 .send_warn();
             self.no_impact()
         } else if let Some(smashable) = envir.find_smashable(target) {
@@ -293,7 +294,7 @@ impl ActorItem<'_> {
             message_writer
                 .subject(self.subject())
                 .verb("smash", "es")
-                .add("nothing")
+                .hard("nothing")
                 .send_warn();
             self.no_impact()
         }
@@ -312,7 +313,7 @@ impl ActorItem<'_> {
             message_writer
                 .subject(self.subject())
                 .is()
-                .add("too exhausted to pulp")
+                .hard("too exhausted to pulp")
                 .send_warn();
             return self.no_impact();
         };
@@ -331,7 +332,7 @@ impl ActorItem<'_> {
             message_writer
                 .subject(self.subject())
                 .verb("pulp", "s")
-                .add("nothing")
+                .hard("nothing")
                 .send_warn();
             self.no_impact()
         }
@@ -362,7 +363,7 @@ impl ActorItem<'_> {
                     message_writer
                         .subject(self.subject())
                         .is()
-                        .add("too exhausted to peek")
+                        .hard("too exhausted to peek")
                         .send_warn();
                     self.no_impact()
                 }
@@ -389,7 +390,7 @@ impl ActorItem<'_> {
                     .subject(self.subject())
                     .simple("can't close")
                     .push(closeable_name.single(target))
-                    .add("on")
+                    .soft("on")
                     .push(character.single(target))
                     .send_warn();
                 self.no_impact()
@@ -492,7 +493,7 @@ impl ActorItem<'_> {
             message_writer
                 .subject(self.subject())
                 .verb("pick", "s")
-                .add("up")
+                .hard("up")
                 .extend(taken.fragments())
                 .send_info();
 
@@ -673,7 +674,7 @@ impl ActorItem<'_> {
 
         craft.work(crafting_progress);
         if craft.finished() {
-            message_writer.you("finish").add("your craft").send(
+            message_writer.you("finish").hard("your craft").send(
                 PlayerActionState::Crafting { item: craft_entity }.severity_finishing(),
                 false,
             );
@@ -692,9 +693,9 @@ impl ActorItem<'_> {
             message_writer
                 .str("Craft:")
                 .push(Fragment::colorized(percent_progress, color))
-                .add("% progress -")
+                .hard("% progress -")
                 .push(Fragment::colorized(time_left, color))
-                .add("left")
+                .hard("left")
                 .send(Severity::Info, true);
         }
         self.impact_from_duration(crafting_progress, StaminaCost::NEUTRAL)

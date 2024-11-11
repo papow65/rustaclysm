@@ -1,3 +1,4 @@
+use crate::hud::{HARD_TEXT_COLOR, SOFT_TEXT_COLOR};
 use crate::{gameplay::Pos, hud::GOOD_TEXT_COLOR};
 use bevy::prelude::{TextColor, TextFont, TextSpan};
 use regex::Regex;
@@ -11,10 +12,11 @@ pub(crate) enum Positioning {
     None,
 }
 
+#[must_use]
 #[derive(Clone, Debug, Default)]
 pub(crate) struct Fragment {
     pub(crate) text: String,
-    pub(crate) color: Option<TextColor>,
+    pub(crate) color: TextColor,
     pub(crate) positioning: Positioning,
 }
 
@@ -22,18 +24,29 @@ impl Fragment {
     pub(crate) fn you() -> Self {
         Self {
             text: String::from("You"),
-            color: Some(GOOD_TEXT_COLOR),
+            color: GOOD_TEXT_COLOR,
             positioning: Positioning::Player,
         }
     }
 
-    pub(crate) fn new<S>(text: S) -> Self
+    pub(crate) fn soft<S>(text: S) -> Self
     where
         S: Into<String>,
     {
         Self {
             text: text.into(),
-            color: None,
+            color: SOFT_TEXT_COLOR,
+            positioning: Positioning::None,
+        }
+    }
+
+    pub(crate) fn hard<S>(text: S) -> Self
+    where
+        S: Into<String>,
+    {
+        Self {
+            text: text.into(),
+            color: HARD_TEXT_COLOR,
             positioning: Positioning::None,
         }
     }
@@ -44,20 +57,14 @@ impl Fragment {
     {
         Self {
             text: text.into(),
-            color: Some(color),
+            color,
             positioning: Positioning::None,
         }
     }
 
-    pub(crate) fn positioned<S>(text: S, color: TextColor, pos: Pos) -> Self
-    where
-        S: Into<String>,
-    {
-        Self {
-            text: text.into(),
-            color: Some(color),
-            positioning: Positioning::Pos(pos),
-        }
+    pub(crate) const fn positioned(mut self, pos: Pos) -> Self {
+        self.positioning = Positioning::Pos(pos);
+        self
     }
 }
 
@@ -79,7 +86,7 @@ impl Phrase {
     #[must_use]
     pub(crate) fn new(text: impl Into<String>) -> Self {
         Self {
-            fragments: vec![Fragment::new(text.into())],
+            fragments: vec![Fragment::hard(text.into())],
         }
     }
 
@@ -96,8 +103,13 @@ impl Phrase {
     }
 
     #[must_use]
-    pub(crate) fn add(self, text: impl Into<String>) -> Self {
-        self.push(Fragment::new(text.into()))
+    pub(crate) fn soft(self, text: impl Into<String>) -> Self {
+        self.push(Fragment::soft(text.into()))
+    }
+
+    #[must_use]
+    pub(crate) fn hard(self, text: impl Into<String>) -> Self {
+        self.push(Fragment::hard(text.into()))
     }
 
     #[must_use]
@@ -113,9 +125,20 @@ impl Phrase {
     }
 
     #[must_use]
+    pub(crate) fn color_override(mut self, color_override: Option<TextColor>) -> Self {
+        if let Some(color_override) = color_override {
+            for fragment in &mut self.fragments {
+                if fragment.color.0 == HARD_TEXT_COLOR.0 {
+                    fragment.color = color_override;
+                }
+            }
+        }
+        self
+    }
+
+    #[must_use]
     pub(crate) fn as_text_sections(
         &self,
-        text_color: TextColor,
         text_font: &TextFont,
     ) -> Vec<(TextSpan, TextColor, TextFont)> {
         self.fragments.iter().filter(|f| !f.text.is_empty()).fold(
@@ -132,7 +155,7 @@ impl Phrase {
                             f.text.clone()
                         },
                     ),
-                    f.color.unwrap_or(text_color),
+                    f.color,
                     text_font.clone(),
                 ));
                 text_sections
@@ -142,7 +165,7 @@ impl Phrase {
 
     #[must_use]
     pub(crate) fn as_string(&self) -> String {
-        self.as_text_sections(TextColor::WHITE, &TextFont::default())
+        self.as_text_sections(&TextFont::default())
             .into_iter()
             .map(|text_section| text_section.0 .0)
             .collect::<String>()
@@ -174,25 +197,25 @@ mod container_tests {
     #[test]
     fn words() {
         let phrase = Phrase::new("one")
-            .add("two")
-            .push(Fragment::new("three"))
-            .extend(vec![Fragment::new("four"), Fragment::new("five")]);
+            .soft("two")
+            .push(Fragment::soft("three"))
+            .extend(vec![Fragment::hard("four"), Fragment::soft("five")]);
         assert_eq!(&phrase.as_string(), "one two three four five");
     }
 
     #[test]
     fn punctuation() {
         let phrase = Phrase::new("A")
-            .add(",")
-            .push(Fragment::new("B"))
-            .add(".")
+            .hard(",")
+            .push(Fragment::hard("B"))
+            .soft(".")
             .extend(vec![
-                Fragment::new("C"),
-                Fragment::new(";"),
-                Fragment::new("D"),
-                Fragment::new(".E"),
-                Fragment::new(". F"),
-                Fragment::new("\nG"),
+                Fragment::hard("C"),
+                Fragment::hard(";"),
+                Fragment::hard("D"),
+                Fragment::hard(".E"),
+                Fragment::hard(". F"),
+                Fragment::hard("\nG"),
             ]);
         assert_eq!(&phrase.as_string(), "A, B. C; D .E. F\nG");
     }
@@ -200,19 +223,19 @@ mod container_tests {
     #[test]
     fn brackets() {
         let phrase = Phrase::new("(a)")
-            .add("(")
-            .add("b")
-            .add(")")
-            .push(Fragment::new("[c]"))
-            .push(Fragment::new("["))
-            .push(Fragment::new("d"))
-            .push(Fragment::new("]"))
+            .soft("(")
+            .soft("b")
+            .soft(")")
+            .push(Fragment::soft("[c]"))
+            .push(Fragment::soft("["))
+            .push(Fragment::soft("d"))
+            .push(Fragment::soft("]"))
             .extend(vec![
-                Fragment::new("{e}"),
-                Fragment::new("{"),
-                Fragment::new("f"),
-                Fragment::new("}"),
-                Fragment::new("(g)"),
+                Fragment::soft("{e}"),
+                Fragment::soft("{"),
+                Fragment::soft("f"),
+                Fragment::soft("}"),
+                Fragment::soft("(g)"),
             ]);
         assert_eq!(&phrase.as_string(), "(a) (b) [c] [d] {e} {f} (g)");
     }
@@ -220,26 +243,26 @@ mod container_tests {
     #[test]
     fn empty() {
         let phrase = Phrase::new("one")
-            .add("")
-            .add("{")
-            .add("")
-            .add("two")
-            .add("")
-            .add("}")
-            .add("")
-            .add("three");
+            .soft("")
+            .soft("{")
+            .soft("")
+            .soft("two")
+            .soft("")
+            .soft("}")
+            .soft("")
+            .soft("three");
         assert_eq!(&phrase.as_string(), "one {two} three");
     }
 
     #[test]
     fn mix() {
         let phrase = Phrase::new("one")
-            .add("2")
-            .add(",")
-            .push(Fragment::new("three"))
-            .extend(vec![Fragment::new("(four)"), Fragment::new("five")])
-            .add("6")
-            .add("%");
+            .soft("2")
+            .soft(",")
+            .push(Fragment::soft("three"))
+            .extend(vec![Fragment::soft("(four)"), Fragment::soft("five")])
+            .hard("6")
+            .hard("%");
         assert_eq!(&phrase.as_string(), "one 2, three (four) five 6%");
     }
 }

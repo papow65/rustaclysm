@@ -1,11 +1,10 @@
-use crate::gameplay::screens::inventory::components::{InventoryItemDescription, InventoryItemRow};
+use crate::gameplay::screens::inventory::components::InventoryItemRow;
 use crate::gameplay::screens::inventory::section::InventorySection;
 use crate::gameplay::HorizontalDirection;
-use crate::hud::{Fonts, SelectionList, GOOD_TEXT_COLOR, HARD_TEXT_COLOR};
+use crate::hud::{SelectionList, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, HOVERED_BUTTON_COLOR};
 use bevy::ecs::entity::EntityHashMap;
 use bevy::prelude::{
-    BuildChildren, Button, ChildBuild, Children, Commands, DespawnRecursiveExt, Entity, KeyCode,
-    Query, Resource, TextColor, With,
+    BackgroundColor, Button, Children, Entity, KeyCode, Query, Resource, TextColor, With,
 };
 use units::Timestamp;
 
@@ -24,41 +23,19 @@ pub(super) struct InventoryScreen {
 impl InventoryScreen {
     pub(super) fn adjust_selection(
         &mut self,
-        commands: &mut Commands,
-        fonts: &Fonts,
-        item_rows: &Query<(&InventoryItemRow, &Children)>,
-        item_texts: &Query<(Entity, &InventoryItemDescription)>,
+        item_rows: &mut Query<(&InventoryItemRow, &mut BackgroundColor, &Children)>,
         item_buttons: &Query<&Children, With<Button>>,
         text_styles: &mut Query<&mut TextColor>,
         key_code: &KeyCode,
     ) {
-        self.highlight_selected(
-            commands,
-            fonts,
-            item_rows,
-            item_texts,
-            item_buttons,
-            text_styles,
-            false,
-        );
+        self.highlight_selected(item_rows, item_buttons, text_styles, false);
         self.selection_list.adjust(key_code.into(), key_code.into());
-        self.highlight_selected(
-            commands,
-            fonts,
-            item_rows,
-            item_texts,
-            item_buttons,
-            text_styles,
-            true,
-        );
+        self.highlight_selected(item_rows, item_buttons, text_styles, true);
     }
 
     pub(super) fn highlight_selected(
         &self,
-        commands: &mut Commands,
-        fonts: &Fonts,
-        item_rows: &Query<(&InventoryItemRow, &Children)>,
-        item_texts: &Query<(Entity, &InventoryItemDescription)>,
+        item_rows: &mut Query<(&InventoryItemRow, &mut BackgroundColor, &Children)>,
         item_buttons: &Query<&Children, With<Button>>,
         text_styles: &mut Query<&mut TextColor>,
         show_selected: bool,
@@ -66,33 +43,23 @@ impl InventoryScreen {
         let Some(selected) = self.selection_list.selected else {
             return;
         };
-        let (_, children) = &item_rows
-            .get(selected)
+        let (_, mut background_color, children) = item_rows
+            .get_mut(selected)
             .expect("Highlighted item should ba found");
+
+        *background_color = if show_selected {
+            HOVERED_BUTTON_COLOR
+        } else {
+            BackgroundColor::DEFAULT
+        };
 
         let used_text_style = if show_selected {
             SELECTED_ITEM_TEXT_COLOR
         } else {
             ITEM_TEXT_COLOR
         };
-        for child in *children {
-            if let Ok((entity, description)) = item_texts.get(*child) {
-                // Item name
-                commands
-                    .entity(entity)
-                    .despawn_descendants()
-                    .with_children(|parent| {
-                        for section in description
-                            .0
-                            .as_text_sections(used_text_style, &fonts.regular())
-                        {
-                            parent.spawn(section);
-                        }
-                    });
-            } else if let Ok(mut text_style) = text_styles.get_mut(*child) {
-                // Item weight, and size
-                *text_style = used_text_style;
-            } else if let Ok(button_children) = item_buttons.get(*child) {
+        for child in children {
+            if let Ok(button_children) = item_buttons.get(*child) {
                 // Item buttons
                 for button_child in button_children {
                     let mut text_style = text_styles

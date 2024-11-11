@@ -274,7 +274,9 @@ fn to_text_sections(
 ) -> Vec<(TextSpan, TextColor, TextFont)> {
     let mut sections = message
         .phrase
-        .as_text_sections(message.severity.color(), &fonts.regular());
+        .clone()
+        .color_override(message.severity.color_override())
+        .as_text_sections(&fonts.regular());
     if 1 < count.0 {
         sections.push((
             TextSpan::new(format!(" ({count}x)")),
@@ -469,7 +471,7 @@ fn update_status_player_wielded(
         .with_children(|parent| {
             if let Ok(weapon) = player_weapon.get_single() {
                 let phrase = Phrase::from_fragments(weapon.fragments().collect());
-                for section in phrase.as_text_sections(HARD_TEXT_COLOR, &fonts.regular()) {
+                for section in phrase.as_text_sections(&fonts.regular()) {
                     parent.spawn(section);
                 }
             } else {
@@ -499,7 +501,7 @@ fn update_status_enemies(
 
         let begin = Phrase::new("Enemies:");
         let phrase = if enemies.is_empty() {
-            begin.add("(none)")
+            begin.soft("(none)")
         } else {
             begin.extend(
                 enemies
@@ -515,21 +517,21 @@ fn update_status_enemies(
                     })
                     .map(|(pos, (_, name))| {
                         Phrase::from_fragment(name.single(pos))
-                            .add((pos - *player_actor.pos).player_hint())
+                            .hard((pos - *player_actor.pos).player_hint())
                             .fragments
                     })
                     .collect::<Vec<_>>()
-                    .join(&Fragment::new(",")),
+                    .join(&Fragment::soft(",")),
             )
         }
-        .add("\n");
+        .soft("\n");
 
         let entity = text.single();
         commands
             .entity(entity)
             .despawn_descendants()
             .with_children(|parent| {
-                for section in phrase.as_text_sections(SOFT_TEXT_COLOR, &fonts.regular()) {
+                for section in phrase.as_text_sections(&fonts.regular()) {
                     parent.spawn(section);
                 }
             });
@@ -579,9 +581,9 @@ fn update_status_detais(
     let start = Instant::now();
 
     let text_sections = Phrase::from_fragments(match **focus_state {
-        FocusState::Normal => vec![Fragment::new(" ")], // Fragment added as a Bevy 0.15-dev workaround
+        FocusState::Normal => vec![Fragment::soft(" ")], // Fragment added as a Bevy 0.15-dev workaround
         FocusState::ExaminingPos(pos) => {
-            let mut total = vec![Fragment::new(format!("\n{pos:?}\n"))];
+            let mut total = vec![Fragment::soft(format!("\n{pos:?}\n"))];
             if explored.has_pos_been_seen(pos) {
                 total.extend(characters_info(
                     envir.location.all(pos).copied(),
@@ -603,12 +605,12 @@ fn update_status_detais(
                         .flat_map(|item| item_info(&item_hierarchy, &item)),
                 );
             } else {
-                total.push(Fragment::new(String::from("Unseen")));
+                total.push(Fragment::soft("Unseen"));
             }
             total
         }
         FocusState::ExaminingZoneLevel(zone_level) => {
-            vec![Fragment::new(
+            vec![Fragment::soft(
                 match explored.has_zone_level_been_seen(&mut overmap_buffer_manager, zone_level) {
                     seen_from @ Some(SeenFrom::CloseBy | SeenFrom::FarAway) => format!(
                         "\n{zone_level:?}\n{:?}\n{seen_from:?}",
@@ -619,7 +621,7 @@ fn update_status_detais(
             )]
         }
     })
-    .as_text_sections(SOFT_TEXT_COLOR, &fonts.regular());
+    .as_text_sections(&fonts.regular());
 
     let entity = text.single();
     commands
@@ -647,7 +649,7 @@ fn characters_info(
     all_here
         .flat_map(|i| characters.get(i))
         .flat_map(|(definition, name, health, integrity)| {
-            let start = Phrase::from_fragment(name.single(pos)).add("(");
+            let start = Phrase::from_fragment(name.single(pos)).soft("(");
 
             if health.0.is_nonzero() {
                 start
@@ -670,9 +672,9 @@ fn characters_info(
                     None => start.push(Fragment::colorized("thoroughly pulped", GOOD_TEXT_COLOR)),
                 }
             }
-            .add(")\n- ")
-            .add(String::from(&*definition.id.fallback_name()))
-            .add("\n")
+            .soft(")\n- ")
+            .hard(&*definition.id.fallback_name())
+            .soft("\n")
             .fragments
         })
         .collect()
@@ -766,16 +768,17 @@ fn entity_info(
     let fallbak_name = ObjectName::missing();
     let mut output = Phrase::from_fragment(name.unwrap_or(&fallbak_name).single(Pos::ORIGIN));
     if let Some(definition) = definition {
-        output = output.add(format!(
+        output = output.soft(format!(
             "[{:?}:{}]",
             definition.category,
             definition.id.fallback_name()
         ));
     }
+    output = output.soft("\n");
     for flag in &flags {
-        output = output.add(format!("\n- {flag}"));
+        output = output.soft("- ").hard(*flag).soft("\n");
     }
-    output.add("\n").fragments
+    output.fragments
 }
 
 fn item_info(item_hierarchy: &ItemHierarchy, item: &ItemItem) -> Vec<Fragment> {
@@ -857,9 +860,9 @@ impl ItemHierarchyWalker for SidebarItemWalker {
         // TODO make sure all pockets are present on containers
         //println!("{:?} {is_container:?} {is_empty:?}", item.definition.id.fallback_name());
 
-        let phrase = Phrase::from_fragment(Fragment::colorized(prefix.clone(), SOFT_TEXT_COLOR))
+        let phrase = Phrase::from_fragment(Fragment::soft(prefix.clone()))
             .extend(item.fragments())
-            .add(format!("[{}]", item.definition.id.fallback_name())) // TODO
+            .soft(format!("[{}]", item.definition.id.fallback_name())) // TODO
             .extend(magazines.flat_map(|info| info.output))
             .extend(magazine_wells.flat_map(|info| {
                 if info.output.is_empty() {
@@ -868,7 +871,7 @@ impl ItemHierarchyWalker for SidebarItemWalker {
                     info.output
                 }
             }))
-            .add(match (is_container, is_empty, is_sealed) {
+            .soft(match (is_container, is_empty, is_sealed) {
                 (true, true, true) => "(empty, sealed)",
                 (true, true, false) => "(empty)",
                 (true, false, true) => "(sealed)",
@@ -876,19 +879,19 @@ impl ItemHierarchyWalker for SidebarItemWalker {
             });
 
         if !is_container || is_empty {
-            phrase.add(suffix)
+            phrase.soft(suffix)
         } else if direct_subitems == 1 {
             phrase
                 .push(Fragment::colorized(">", GOOD_TEXT_COLOR))
                 .extend(contents.into_iter().flat_map(|info| info.output))
-                .add(suffix)
+                .soft(suffix)
         } else {
             phrase
                 .push(Fragment::colorized(
                     format!("> {direct_subitems}+"),
                     GOOD_TEXT_COLOR,
                 ))
-                .add(suffix)
+                .soft(suffix)
                 .extend(contents.into_iter().flat_map(|info| info.output))
         }
         .extend(other_pockets.flat_map(|info| {
@@ -896,9 +899,9 @@ impl ItemHierarchyWalker for SidebarItemWalker {
                 Either::Right(empty())
             } else {
                 Either::Left(
-                    once(Fragment::new(format!(
-                        "{}{:?}:\n",
-                        &prefix, info.pocket.type_
+                    once(Fragment::soft(format!(
+                        "{prefix}{:?}:\n",
+                        info.pocket.type_
                     )))
                     .chain(info.output),
                 )

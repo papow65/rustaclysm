@@ -1,4 +1,3 @@
-use crate::gameplay::Phrase;
 use bevy::prelude::{Component, Entity};
 use std::fmt;
 
@@ -29,6 +28,3 @@ impl fmt::Display for InventoryAction {
 pub(super) struct InventoryItemRow {
     pub(super) item: Entity,
 }
-
-#[derive(Debug, Component)]
-pub(super) struct InventoryItemDescription(pub(super) Phrase);

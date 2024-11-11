@@ -303,16 +303,19 @@ impl PlayerActionState {
                 message_writer
                     .you("spot")
                     .push(fragments)
-                    .add("and stop")
-                    .add(self.to_string().to_lowercase())
+                    .soft("and")
+                    .hard("stop")
+                    .hard(self.to_string().to_lowercase())
                     .send_warn();
                 None
             }
             QueuedInstruction::Interrupt(Interruption::LowStamina) => {
                 next_state.set(Self::Normal);
                 message_writer
-                    .you("are almost out of breath and stop")
-                    .add(self.to_string().to_lowercase())
+                    .you("are almost out of breath")
+                    .soft("and")
+                    .hard("stop")
+                    .hard(self.to_string().to_lowercase())
                     .send_warn();
                 None
             }
@@ -320,7 +323,7 @@ impl PlayerActionState {
                 next_state.set(Self::Normal);
                 message_writer
                     .you("finish")
-                    .add(if let Self::Crafting { .. } = self {
+                    .hard(if let Self::Crafting { .. } = self {
                         String::from("your craft")
                     } else {
                         self.to_string().to_lowercase()
@@ -626,7 +629,7 @@ impl PlayerActionState {
             Self::Pulping { .. }
             | Self::Crafting { .. }
             | Self::PickingNbor(PickingNbor::Crafting { .. }) => Severity::Success,
-            _ => Severity::Low,
+            _ => Severity::Info,
         }
     }
 
