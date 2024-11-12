@@ -878,7 +878,7 @@ impl ItemHierarchyWalker for SidebarItemWalker {
 
         let phrase = Phrase::from_fragment(Fragment::soft(prefix.clone()))
             .extend(item.fragments())
-            .debug(format!("[{}]", item.definition.id.fallback_name())) // TODO
+            .debug(format!("[{}]", item.definition.id.fallback_name()))
             .extend(magazines.flat_map(|info| info.output))
             .extend(magazine_wells.flat_map(|info| {
                 if info.output.is_empty() {

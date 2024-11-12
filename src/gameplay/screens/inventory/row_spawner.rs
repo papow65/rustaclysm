@@ -122,6 +122,7 @@ where
                     parent,
                     &Phrase::from_fragment(identation)
                         .extend(item.fragments())
+                        .debug(format!("[{}]", item.definition.id.fallback_name()))
                         .extend(magazines.flat_map(|info| info.output)),
                 );
                 self.add_item_properties(parent, item_info);
