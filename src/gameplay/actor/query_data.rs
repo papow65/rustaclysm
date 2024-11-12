@@ -472,17 +472,8 @@ impl ActorItem<'_> {
                 offset.z.abs() <= 1,
                 "Taking is not possible from more than one tile away"
             );
-        } else {
-            assert!(
-                taken.parent.get() == self.body_containers.expect("Body containers present").hands
-                    || taken.parent.get()
-                        == self
-                            .body_containers
-                            .expect("Body containers present")
-                            .clothing,
-                "Item parents should be part of the body"
-            );
         }
+        // TODO check position of root item
 
         if let Ok(allowed_amount) = target.check_add(
             message_writer,
