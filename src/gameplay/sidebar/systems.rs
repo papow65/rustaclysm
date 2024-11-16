@@ -508,11 +508,10 @@ fn update_status_enemies(
             Faction::Human.enemies(&currently_visible_builder, &factions, &player_actor);
         enemies.sort_by_key(|&pos| pos.vision_distance(*player_actor.pos).as_tiles());
 
-        let begin = Phrase::new("Enemies:");
-        let phrase = if enemies.is_empty() {
-            begin.soft("(none)")
-        } else {
-            begin.extend(
+        let phrase = Phrase::new("Enemies:")
+            .extend(if enemies.is_empty() {
+                vec![Fragment::soft("(none)")]
+            } else {
                 enemies
                     .iter()
                     .map(|&pos| {
@@ -530,10 +529,9 @@ fn update_status_enemies(
                             .fragments
                     })
                     .collect::<Vec<_>>()
-                    .join(&Fragment::soft(",")),
-            )
-        }
-        .soft("\n");
+                    .join(&Fragment::soft(","))
+            })
+            .soft("\n");
 
         let entity = text.single();
         commands
