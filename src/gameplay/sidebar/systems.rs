@@ -19,8 +19,7 @@ use bevy::prelude::{
     UiRect, Val, Visibility, With, Without,
 };
 use cdda_json_files::{MoveCost, ObjectId, PocketType};
-use either::Either;
-use std::iter::{empty, once};
+use std::iter::once;
 use std::{num::Saturating, time::Instant};
 
 type DuplicateMessageCount = Saturating<u16>;
@@ -935,17 +934,17 @@ impl<'i> ItemHierarchyWalker for SidebarItemWalker<'i> {
                 .extend(contents.into_iter().flat_map(|info| info.output))
         }
         .extend(other_pockets.flat_map(|info| {
-            if info.output.is_empty() {
-                Either::Right(empty())
-            } else {
-                Either::Left(
+            Some(info.output)
+                .filter(|output| !output.is_empty())
+                .map(|output| {
                     once(Fragment::soft(format!(
                         "{prefix}{:?}:\n",
                         info.pocket.type_
                     )))
-                    .chain(info.output),
-                )
-            }
+                    .chain(output)
+                })
+                .into_iter()
+                .flatten()
         }))
         .fragments
     }
