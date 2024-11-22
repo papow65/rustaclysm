@@ -18,7 +18,7 @@ use bevy::prelude::{
     ParamSet, PositionType, Query, Res, ResMut, State, StateScoped, Text, TextColor, TextSpan,
     UiRect, Val, Visibility, With, Without,
 };
-use cdda_json_files::{MoveCost, PocketType};
+use cdda_json_files::{MoveCost, ObjectId, PocketType};
 use either::Either;
 use std::iter::{empty, once};
 use std::{num::Saturating, time::Instant};
@@ -555,12 +555,13 @@ fn update_status_detais(
     mut commands: Commands,
     focus_state: Res<State<FocusState>>,
     fonts: Res<Fonts>,
+    infos: Res<Infos>,
     debug_text_shown: Res<DebugTextShown>,
     mut explored: ResMut<Explored>,
     mut zone_level_ids: ResMut<ZoneLevelIds>,
     mut overmap_buffer_manager: OvermapBufferManager,
-    envir: Envir,
     mut overmap_manager: OvermapManager,
+    envir: Envir,
     item_hierarchy: ItemHierarchy,
     characters: Query<(
         &ObjectDefinition,
@@ -613,7 +614,7 @@ fn update_status_detais(
                         .location
                         .all(pos)
                         .flat_map(|e| items.get(*e))
-                        .flat_map(|item| item_info(&item_hierarchy, &item)),
+                        .flat_map(|item| item_info(&infos, &item_hierarchy, &item)),
                 );
             } else {
                 total.push(Fragment::soft("Unseen"));
@@ -795,13 +796,15 @@ fn entity_info(
     output.fragments
 }
 
-fn item_info(item_hierarchy: &ItemHierarchy, item: &ItemItem) -> Vec<Fragment> {
-    item_hierarchy.walk(&SidebarItemWalker, None, item.entity)
+fn item_info(infos: &Infos, item_hierarchy: &ItemHierarchy, item: &ItemItem) -> Vec<Fragment> {
+    item_hierarchy.walk(&SidebarItemWalker { infos }, None, item.entity)
 }
 
-struct SidebarItemWalker;
+struct SidebarItemWalker<'i> {
+    infos: &'i Infos,
+}
 
-impl SidebarItemWalker {
+impl<'i> SidebarItemWalker<'i> {
     fn prefix(in_pocket: Option<InPocket>) -> String {
         let Some(in_pocket) = in_pocket else {
             return String::new();
@@ -852,7 +855,7 @@ impl SidebarItemWalker {
     }
 }
 
-impl ItemHierarchyWalker for SidebarItemWalker {
+impl<'i> ItemHierarchyWalker for SidebarItemWalker<'i> {
     fn visit_item<'p>(
         &'p self,
         item: ItemItem,
@@ -874,10 +877,33 @@ impl ItemHierarchyWalker for SidebarItemWalker {
         // TODO make sure all pockets are present on containers
         //println!("{:?} {is_container:?} {is_empty:?}", item.definition.id.fallback_name());
 
+        let mut magazine_output = magazines
+            .flat_map(|subitems| subitems.output)
+            .collect::<Vec<_>>();
+
         let phrase = Phrase::from_fragment(Fragment::soft(prefix.clone()))
+            .extend({
+                self.infos
+                    .try_magazine(&item.definition.id)
+                    .filter(|magazine| {
+                        magazine.ammo_type.as_ref().is_some_and(|ammo_type| {
+                            ammo_type.0.contains(&ObjectId::new("battery"))
+                        })
+                    })
+                    .map(|magazine| {
+                        #[allow(clippy::iter_with_drain)] // don't drop 'magazine_output'
+                        magazine_output.drain(..).chain(once(Fragment::soft(
+                            magazine
+                                .capacity
+                                .map_or_else(String::new, |capacity| format!("/{capacity}")),
+                        )))
+                    })
+                    .into_iter()
+                    .flatten()
+            })
             .extend(item.fragments())
             .debug(format!("[{}]", item.definition.id.fallback_name()))
-            .extend(magazines.flat_map(|info| info.output))
+            .extend(magazine_output)
             .extend(magazine_wells.flat_map(|info| {
                 if info.output.is_empty() {
                     vec![Fragment::colorized("not loaded", SOFT_TEXT_COLOR)]

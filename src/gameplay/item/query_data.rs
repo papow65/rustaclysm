@@ -38,6 +38,8 @@ impl<'a> ItemItem<'a> {
                 self.integrity.fragment(),
                 Some(Fragment::colorized(dollars, color)),
             ]
+        } else if self.definition.id == ObjectId::new("battery") {
+            [self.amount.fragment(), None, None, None]
         } else {
             [
                 self.amount.fragment(),

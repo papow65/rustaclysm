@@ -393,6 +393,10 @@ impl Infos {
         self.try_get(&self.item_groups, id)
     }
 
+    pub(crate) fn try_magazine<'a>(&'a self, id: &'a ObjectId) -> Option<&'a Magazine> {
+        self.try_get(&self.magazines, id)
+    }
+
     #[expect(unused)]
     pub(crate) fn try_quality<'a>(&'a self, id: &'a ObjectId) -> Option<&'a Quality> {
         self.try_get(&self.qualities, id)

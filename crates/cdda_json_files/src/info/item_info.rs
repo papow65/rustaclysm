@@ -5,7 +5,8 @@ use units::{Duration, Mass, Volume};
 
 #[derive(Debug, Deserialize)]
 pub struct Ammo {
-    pub casing: Option<Arc<str>>,
+    pub ammo_type: Option<MaybeFlatVec<ObjectId>>,
+    pub casing: Option<ObjectId>,
     pub critical_multiplier: Option<u8>,
 
     // example: { "damage_type": "bullet", "amount": 28, "armor_penetration": 4 }
@@ -148,6 +149,7 @@ pub struct GenericItem {
 
 #[derive(Debug, Deserialize)]
 pub struct Gun {
+    pub ammo: Option<MaybeFlatVec<ObjectId>>,
     pub ammo_to_fire: Option<u8>,
     pub barrel_volume: Option<Volume>,
     pub blackpowder_tolerance: Option<u8>,
@@ -239,9 +241,10 @@ pub struct Gunmod {
 
 #[derive(Debug, Deserialize)]
 pub struct Magazine {
+    pub ammo_type: Option<MaybeFlatVec<ObjectId>>,
     pub capacity: Option<u32>,
-    pub default_ammo: Option<Arc<str>>,
-    pub linkage: Option<Arc<str>>,
+    pub default_ammo: Option<ObjectId>,
+    pub linkage: Option<ObjectId>,
     pub reload_time: Option<u16>,
 
     #[serde(flatten)]
@@ -260,6 +263,7 @@ pub struct PetArmor {
 
 #[derive(Debug, Deserialize)]
 pub struct Tool {
+    pub ammo: Option<MaybeFlatVec<ObjectId>>,
     pub charge_factor: Option<u8>,
 
     #[serde(default)]
@@ -317,7 +321,6 @@ pub struct CommonItemInfo {
 
     pub count: Option<u32>,
     pub stack_size: Option<u8>,
-    pub ammo_type: Option<MaybeFlatVec<Arc<str>>>,
     pub range: Option<i16>, // examples: -6, 140
     pub dispersion: Option<u16>,
     pub recoil: Option<u16>,

@@ -185,12 +185,13 @@ impl Phrase {
 
     fn space_between(previous: &str, next: &str) -> bool {
         static SPACE_AFTER: LazyLock<Regex> =
-            LazyLock::new(|| Regex::new(r"[^(\[{ \n]$").expect("Valid regex after"));
+            LazyLock::new(|| Regex::new(r"[^(\[{/ \n]$").expect("Valid regex after"));
 
         // Don't add a space before '.' when it's used as the end of a sentence
         // Add a space before '.' when it's used as the start of a name, like '.22'.
-        static SPACE_BEFORE: LazyLock<Regex> =
-            LazyLock::new(|| Regex::new(r"^([^)\]},;%\. \n]|\.[^ ])").expect("Valid regex before"));
+        static SPACE_BEFORE: LazyLock<Regex> = LazyLock::new(|| {
+            Regex::new(r"^([^)\]},;/%\. \n]|\.[^ ])").expect("Valid regex before")
+        });
 
         SPACE_AFTER.is_match(previous) && SPACE_BEFORE.is_match(next)
     }
@@ -274,7 +275,9 @@ mod container_tests {
             .push(Fragment::soft("three"))
             .extend(vec![Fragment::soft("(four)"), Fragment::soft("five")])
             .hard("6")
-            .hard("%");
-        assert_eq!(&phrase.as_string(), "one 2, three (four) five 6%");
+            .hard("%")
+            .hard("/")
+            .hard("7");
+        assert_eq!(&phrase.as_string(), "one 2, three (four) five 6%/7");
     }
 }
