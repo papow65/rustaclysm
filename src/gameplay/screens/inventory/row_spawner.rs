@@ -8,8 +8,8 @@ use crate::hud::{
 };
 use bevy::ecs::entity::EntityHashMap;
 use bevy::prelude::{
-    AlignItems, BackgroundColor, BuildChildren, ChildBuild, ChildBuilder, Entity, JustifyContent,
-    Node, Overflow, Text, TextColor, Val,
+    AlignItems, BackgroundColor, BuildChildren as _, ChildBuild as _, ChildBuilder, Entity,
+    JustifyContent, Node, Overflow, Text, TextColor, Val,
 };
 use cdda_json_files::CommonItemInfo;
 
@@ -23,7 +23,7 @@ struct SectionData<'r> {
     drop_section: bool,
 }
 
-impl<'r> SectionData<'r> {
+impl SectionData<'_> {
     fn add_expansion_button(&self, parent: &mut ChildBuilder, item_text_color: TextColor) {
         parent.spawn((
             Text::default(),
@@ -137,7 +137,7 @@ struct InventoryBuilder<'r, 'c> {
     panel: &'r mut ChildBuilder<'c>,
 }
 
-impl<'r, 'c> InventoryBuilder<'r, 'c> {
+impl InventoryBuilder<'_, '_> {
     fn add_row(
         &mut self,
         section_data: &SectionData,
@@ -246,7 +246,7 @@ where
     }
 }
 
-impl<'r, 'c> ItemHandler for RowSpawner<'r, 'c> {
+impl ItemHandler for RowSpawner<'_, '_> {
     fn handle_item(&mut self, item: &ItemItem, item_fragments: Vec<Fragment>) {
         let Some(item_info) = self
             .section_data

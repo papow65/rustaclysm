@@ -22,8 +22,8 @@ use crate::gameplay::{
 };
 use crate::util::log_transition_plugin;
 use bevy::prelude::{
-    in_state, on_event, resource_exists, resource_exists_and_changed, App, AppExtStates,
-    AssetEvent, FixedUpdate, IntoSystemConfigs, OnEnter, Plugin, Update,
+    in_state, on_event, resource_exists, resource_exists_and_changed, App, AppExtStates as _,
+    AssetEvent, FixedUpdate, IntoSystemConfigs as _, OnEnter, Plugin, Update,
 };
 use bevy::{diagnostic::FrameTimeDiagnosticsPlugin, ecs::schedule::SystemConfigs};
 

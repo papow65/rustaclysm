@@ -3,8 +3,8 @@ use crate::hud::{panel_node, Fonts, PANEL_COLOR, SOFT_TEXT_COLOR};
 use crate::manual::components::{ManualDisplay, ManualText};
 use crate::manual::ManualSection;
 use bevy::prelude::{
-    Alpha, BackgroundColor, BuildChildren, Changed, ChildBuild, Children, Commands, GlobalZIndex,
-    Node, Query, RemovedComponents, Res, State, Text, Val, With,
+    Alpha as _, BackgroundColor, BuildChildren as _, Changed, ChildBuild as _, Children, Commands,
+    GlobalZIndex, Node, Query, RemovedComponents, Res, State, Text, Val, With,
 };
 
 #[expect(clippy::needless_pass_by_value)]

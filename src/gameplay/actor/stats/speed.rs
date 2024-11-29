@@ -1,6 +1,6 @@
 use crate::gameplay::{Breath, ChangePace, StaminaCost};
 use crate::hud::{BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR};
-use bevy::prelude::{Component, Mix, TextColor};
+use bevy::prelude::{Component, Mix as _, TextColor};
 use units::Speed;
 
 // Stats for characters

@@ -2,8 +2,8 @@ use crate::gameplay::{spawn::TileSpawner, *};
 use crate::hud::text_color_expect_full;
 use bevy::ecs::query::QueryData;
 use bevy::prelude::{
-    BuildChildren, Commands, DespawnRecursiveExt, Entity, Event, EventWriter, NextState, Query,
-    Transform, Visibility,
+    BuildChildren as _, Commands, DespawnRecursiveExt as _, Entity, Event, EventWriter, NextState,
+    Query, Transform, Visibility,
 };
 use cdda_json_files::{CddaItem, Description};
 use units::{Distance, Duration, Speed};
@@ -50,14 +50,14 @@ impl ActorItem<'_> {
         }
     }
 
-    fn hands<'a>(&self, hierarchy: &'a ItemHierarchy) -> Container<'a> {
+    const fn hands<'a>(&self, hierarchy: &'a ItemHierarchy) -> Container<'a> {
         Container::new(
             self.body_containers.expect("Body containers present").hands,
             hierarchy,
         )
     }
 
-    fn clothing<'a>(&self, hierarchy: &'a ItemHierarchy) -> Container<'a> {
+    const fn clothing<'a>(&self, hierarchy: &'a ItemHierarchy) -> Container<'a> {
         Container::new(
             self.body_containers
                 .expect("Body containers present")

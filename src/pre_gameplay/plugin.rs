@@ -1,6 +1,6 @@
 use crate::application::ApplicationState;
 use crate::pre_gameplay::systems::{spawn_pre_gameplay_camera, start_gameplay};
-use bevy::prelude::{in_state, App, IntoSystemConfigs, OnEnter, Plugin, Update};
+use bevy::prelude::{in_state, App, IntoSystemConfigs as _, OnEnter, Plugin, Update};
 
 /// This plugin launches the gameplay when the required resources become available.
 pub(crate) struct PreGameplayPlugin;

@@ -7,8 +7,8 @@ use crate::util::log_if_slow;
 use crate::{application::ApplicationState, gameplay::GameplayScreenState};
 use bevy::ecs::system::SystemId;
 use bevy::prelude::{
-    AlignItems, BuildChildren, ChildBuild, Commands, FlexDirection, In, JustifyContent, KeyCode,
-    Local, NextState, Node, Res, ResMut, StateScoped, Text, UiRect, Val, World,
+    AlignItems, BuildChildren as _, ChildBuild as _, Commands, FlexDirection, In, JustifyContent,
+    KeyCode, Local, NextState, Node, Res, ResMut, StateScoped, Text, UiRect, Val, World,
 };
 use std::time::Instant;
 

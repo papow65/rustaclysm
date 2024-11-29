@@ -18,7 +18,7 @@ pub(crate) struct CurrentlyVisibleBuilder<'w, 's> {
     players: Query<'w, 's, &'static Pos, With<Player>>,
 }
 
-impl<'w, 's> CurrentlyVisibleBuilder<'w, 's> {
+impl CurrentlyVisibleBuilder<'_, '_> {
     pub(crate) fn for_npc(&self, pos: Pos) -> CurrentlyVisible {
         let viewing_distance = CurrentlyVisible::viewing_distance(&self.clock, None, pos.level);
         self.build(viewing_distance, pos, true)
@@ -135,7 +135,7 @@ pub(crate) struct CurrentlyVisible<'a> {
     magic_stairs_down: Vec<PosOffset>,
 }
 
-impl<'a> CurrentlyVisible<'a> {
+impl CurrentlyVisible<'_> {
     const MIN_DISTANCE: f32 = 3.0;
 
     pub(crate) fn viewing_distance(

@@ -7,8 +7,8 @@ use crate::keyboard::KeyBindings;
 use crate::manual::ManualSection;
 use crate::util::log_if_slow;
 use bevy::prelude::{
-    AlignItems, BuildChildren, Commands, Events, FlexDirection, In, JustifyContent, KeyCode, Local,
-    NextState, Node, Res, ResMut, StateScoped, Val, World,
+    AlignItems, BuildChildren as _, Commands, Events, FlexDirection, In, JustifyContent, KeyCode,
+    Local, NextState, Node, Res, ResMut, StateScoped, Val, World,
 };
 use bevy::{app::AppExit, ecs::system::SystemId};
 use std::time::Instant;

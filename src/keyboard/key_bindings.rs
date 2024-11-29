@@ -31,7 +31,7 @@ pub(crate) struct KeyBindingsBuilder<'w, S: States, C: CtrlState, H: HeldState> 
     world: &'w mut World,
 }
 
-impl<'w, S: States, C: CtrlState, H: HeldState> KeyBindingsBuilder<'w, S, C, H> {
+impl<S: States, C: CtrlState, H: HeldState> KeyBindingsBuilder<'_, S, C, H> {
     pub(crate) fn add<
         I: SystemInput + 'static,
         K: Into<Key>,

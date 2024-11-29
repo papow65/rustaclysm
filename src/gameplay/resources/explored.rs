@@ -1,4 +1,4 @@
-use crate::gameplay::cdda::{MapMemoryManager, OvermapBufferManager, RepetitionBlockExt};
+use crate::gameplay::cdda::{MapMemoryManager, OvermapBufferManager, RepetitionBlockExt as _};
 use crate::gameplay::{
     AssetState, Level, OvermapBufferAsset, Overzone, Pos, SubzoneLevel, Zone, ZoneLevel,
 };

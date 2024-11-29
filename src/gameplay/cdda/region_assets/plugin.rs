@@ -3,7 +3,7 @@ use crate::gameplay::cdda::region_assets::{
 };
 use crate::gameplay::cdda::{MapAsset, MapMemoryAsset, OvermapAsset, OvermapBufferAsset};
 use crate::gameplay::GameplayResourcePlugin;
-use bevy::prelude::{App, AssetApp, Plugin};
+use bevy::prelude::{App, AssetApp as _, Plugin};
 
 pub(in super::super) struct RegionAssetsPlugin;
 

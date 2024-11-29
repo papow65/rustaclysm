@@ -13,7 +13,7 @@ pub(crate) struct MapMemoryManager<'w> {
     assets: Res<'w, Assets<MapMemoryAsset>>,
 }
 
-impl<'w> MapMemoryManager<'w> {
+impl MapMemoryManager<'_> {
     pub(crate) fn submap(&mut self, subzone_level: SubzoneLevel) -> AssetState<SubmapMemory> {
         let sav_path = self.active_sav.sav_path();
         let zone = ZoneLevel::from(subzone_level).zone;

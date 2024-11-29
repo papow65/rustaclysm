@@ -11,8 +11,8 @@ use crate::gameplay::{
 use crate::hud::{BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{
-    BuildChildren, Camera3d, ChildBuild, Commands, DirectionalLight, Entity, EulerRot, Mat4, Res,
-    ResMut, StateScoped, TextColor, Transform, Vec3, Visibility,
+    BuildChildren as _, Camera3d, ChildBuild as _, Commands, DirectionalLight, Entity, EulerRot,
+    Mat4, Res, ResMut, StateScoped, TextColor, Transform, Vec3, Visibility,
 };
 use bevy::render::camera::{PerspectiveProjection, Projection};
 use bevy::render::view::RenderLayers;
@@ -31,7 +31,7 @@ pub(crate) struct TileSpawner<'w, 's> {
     model_factory: ModelFactory<'w>,
 }
 
-impl<'w, 's> TileSpawner<'w, 's> {
+impl<'w> TileSpawner<'w, '_> {
     pub(crate) fn model_factory(&mut self) -> &mut ModelFactory<'w> {
         &mut self.model_factory
     }
@@ -203,7 +203,7 @@ impl<'w, 's> TileSpawner<'w, 's> {
         //println!("{:?} @ {pos:?}", &definition);
         let object_name = ObjectName::new(
             item_info.name.clone(),
-            item_category_text_color(&item_info.category),
+            item_category_text_color(item_info.category.as_ref()),
         );
         let object_entity = self.spawn_object(parent, pos, definition, object_name, None);
 
@@ -750,10 +750,10 @@ impl<'w, 's> TileSpawner<'w, 's> {
     }
 }
 
-fn item_category_text_color(from: &Option<Arc<str>>) -> TextColor {
-    if from == &Some(Arc::from("manuals")) {
+fn item_category_text_color(from: Option<&Arc<str>>) -> TextColor {
+    if from == Some(&Arc::from("manuals")) {
         GOOD_TEXT_COLOR
-    } else if from == &Some(Arc::from("bionics")) {
+    } else if from == Some(&Arc::from("bionics")) {
         WARN_TEXT_COLOR
     } else {
         HARD_TEXT_COLOR

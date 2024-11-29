@@ -2,8 +2,9 @@ use crate::hud::SOFT_TEXT_COLOR;
 use crate::keyboard::{Key, KeyBinding};
 use bevy::ecs::system::SystemId;
 use bevy::prelude::{
-    AlignItems, BuildChildren, Bundle, Button, ChildBuild, ChildBuilder, Commands, Component,
-    Entity, In, JustifyContent, Node, PositionType, SystemInput, Text, TextColor, TextFont, Val,
+    AlignItems, BuildChildren as _, Bundle, Button, ChildBuild as _, ChildBuilder, Commands,
+    Component, Entity, In, JustifyContent, Node, PositionType, SystemInput, Text, TextColor,
+    TextFont, Val,
 };
 use std::fmt;
 

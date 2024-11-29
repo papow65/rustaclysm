@@ -27,9 +27,9 @@ pub(crate) use self::system_params::GameplayReadiness;
 use self::actor::{
     Action, ActionIn, Actor, ActorImpact, ActorItem, ActorPlugin, Aquatic, Attack, BaseSpeed,
     Breath, ChangePace, Close, ContinueCraft, ExamineItem, Faction, Health, Intelligence,
-    ItemAction, LastEnemy, MoveItem, Peek, Pickup, PlannedAction, Player, PlayerActionState, Pulp,
-    Sleep, Smash, Stamina, StaminaCost, StaminaImpact, StartCraft, Stay, Step, Subject, Unwield,
-    WalkingMode, Wield,
+    ItemAction as _, LastEnemy, MoveItem, Peek, Pickup, PlannedAction, Player, PlayerActionState,
+    Pulp, Sleep, Smash, Stamina, StaminaCost, StaminaImpact, StartCraft, Stay, Step, Subject,
+    Unwield, WalkingMode, Wield,
 };
 use self::cdda::{
     CddaPlugin, Infos, Layers, MapAsset, MapManager, MapMemoryAsset, MapMemoryManager, MeshInfo,

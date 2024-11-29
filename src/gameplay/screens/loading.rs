@@ -1,5 +1,5 @@
 use crate::gameplay::{GameplayReadiness, GameplayScreenState};
-use bevy::prelude::{in_state, App, IntoSystemConfigs, NextState, Plugin, ResMut, Update};
+use bevy::prelude::{in_state, App, IntoSystemConfigs as _, NextState, Plugin, ResMut, Update};
 
 pub(crate) struct LoadingScreenPlugin;
 

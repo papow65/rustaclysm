@@ -13,7 +13,7 @@ pub(crate) struct MapManager<'w> {
     assets: Res<'w, Assets<MapAsset>>,
 }
 
-impl<'w> MapManager<'w> {
+impl MapManager<'_> {
     fn path(&self, zone_level: ZoneLevel) -> MapPath {
         let world_map = self.active_sav.world_path();
         MapPath::new(&world_map, zone_level)

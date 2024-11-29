@@ -16,7 +16,7 @@ pub(crate) trait RepetitionBlockExt<'a, T> {
         F: Fn(i32, i32) -> X;
 }
 
-impl<'a, T> RepetitionBlockExt<'a, T> for RepetitionBlock<T> {
+impl<T> RepetitionBlockExt<'_, T> for RepetitionBlock<T> {
     fn load_as_subzone(&self, subzone_level: SubzoneLevel) -> HashMap<Pos, &T> {
         self.load(
             |x, z| subzone_level.base_corner().horizontal_offset(x, z),

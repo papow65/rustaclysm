@@ -4,8 +4,8 @@ use crate::{keyboard::KeyboardPlugin, loading::LoadingIndicatorPlugin};
 use crate::{main_menu::MainMenuPlugin, manual::ManualPlugin};
 use crate::{pre_gameplay::PreGameplayPlugin, util::log_transition_plugin};
 use bevy::prelude::{
-    App, AppExit, AppExtStates, AssetPlugin, DefaultPlugins, Fixed, ImagePlugin, Last, PluginGroup,
-    Time, Window, WindowPlugin,
+    App, AppExit, AppExtStates as _, AssetPlugin, DefaultPlugins, Fixed, ImagePlugin, Last,
+    PluginGroup as _, Time, Window, WindowPlugin,
 };
 use bevy::window::PresentMode;
 use std::time::Duration;

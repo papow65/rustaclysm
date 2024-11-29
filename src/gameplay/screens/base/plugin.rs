@@ -4,7 +4,9 @@ use crate::gameplay::screens::base::systems::{
 };
 use crate::gameplay::{CardinalDirection, GameplayScreenState, PlayerActionState};
 use bevy::input::mouse::{MouseMotion, MouseWheel};
-use bevy::prelude::{in_state, on_event, App, IntoSystemConfigs, OnEnter, OnExit, Plugin, Update};
+use bevy::prelude::{
+    in_state, on_event, App, IntoSystemConfigs as _, OnEnter, OnExit, Plugin, Update,
+};
 
 pub(crate) struct BaseScreenPlugin;
 

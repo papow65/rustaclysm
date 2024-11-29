@@ -282,6 +282,7 @@ pub struct Tool {
     pub common: CommonItemInfo,
 }
 
+#[allow(clippy::doc_markdown)]
 /// 'TOOL_ARMOR' in CDDA
 #[derive(Debug, Deserialize)]
 pub struct ToolClothing {

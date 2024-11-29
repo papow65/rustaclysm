@@ -10,7 +10,7 @@ pub(crate) struct GameplayLocal<'w, 's, T: Default + Send + 'static> {
     wrapped: Local<'s, T>,
 }
 
-impl<'w, 's, T: Default + Send + 'static> GameplayLocal<'w, 's, T> {
+impl<T: Default + Send + 'static> GameplayLocal<'_, '_, T> {
     pub(crate) fn get(&mut self) -> &mut T {
         let reset = self.current.get() != *self.last;
         *self.last = self.current.get();

@@ -1,7 +1,9 @@
 use crate::application::ApplicationState;
 use crate::gameplay::scope::gameplay_counter::GameplayCounter;
 use crate::gameplay::spawn::spawn_initial_entities;
-use bevy::prelude::{App, Commands, IntoSystemConfigs, OnEnter, OnExit, Plugin, ResMut, Resource};
+use bevy::prelude::{
+    App, Commands, IntoSystemConfigs as _, OnEnter, OnExit, Plugin, ResMut, Resource,
+};
 use std::marker::PhantomData;
 
 /// This makes make [`GameplayLocal`](`crate::gameplay::scope::GameplayLocal`) work, by creating and increasing a [`GameplayCounter`].

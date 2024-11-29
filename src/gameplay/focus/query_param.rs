@@ -1,6 +1,6 @@
 use crate::gameplay::{ElevationVisibility, FocusState, Level, Player, Pos, ZoneLevel};
 use bevy::ecs::system::SystemParam;
-use bevy::prelude::{DetectChanges, NextState, Query, Ref, Res, State, Vec3, With};
+use bevy::prelude::{DetectChanges as _, NextState, Query, Ref, Res, State, Vec3, With};
 use std::cmp::Ordering;
 
 #[derive(SystemParam)]
@@ -9,7 +9,7 @@ pub(crate) struct Focus<'w, 's> {
     players: Query<'w, 's, Ref<'static, Pos>, With<Player>>,
 }
 
-impl<'w, 's> Focus<'w, 's> {
+impl Focus<'_, '_> {
     pub(crate) fn toggle_examine_pos(&self, next_focus_state: &mut NextState<FocusState>) {
         next_focus_state.set(match **self.state {
             FocusState::ExaminingPos(_) => FocusState::Normal,
@@ -72,7 +72,7 @@ impl<'w, 's> Focus<'w, 's> {
     }
 }
 
-impl<'w, 's> From<&Focus<'w, 's>> for Level {
+impl From<&Focus<'_, '_>> for Level {
     fn from(focus: &Focus) -> Self {
         match **focus.state {
             FocusState::Normal => focus.players.single().into_inner().level,
@@ -82,7 +82,7 @@ impl<'w, 's> From<&Focus<'w, 's>> for Level {
     }
 }
 
-impl<'w, 's> From<&Focus<'w, 's>> for Pos {
+impl From<&Focus<'_, '_>> for Pos {
     fn from(focus: &Focus) -> Self {
         match **focus.state {
             FocusState::Normal => *focus.players.single().into_inner(),
@@ -92,7 +92,7 @@ impl<'w, 's> From<&Focus<'w, 's>> for Pos {
     }
 }
 
-impl<'w, 's> From<&Focus<'w, 's>> for ZoneLevel {
+impl From<&Focus<'_, '_>> for ZoneLevel {
     fn from(focus: &Focus) -> Self {
         match **focus.state {
             FocusState::Normal => Self::from(*focus.players.single().into_inner()),

@@ -2,8 +2,8 @@ use crate::background::state::BackgroundState;
 use crate::background::systems::{resize_background, spawn_background};
 use crate::util::log_transition_plugin;
 use bevy::prelude::{
-    on_event, state_exists, App, AppExtStates, Condition, FixedUpdate, IntoSystemConfigs, OnEnter,
-    Plugin, Update,
+    on_event, state_exists, App, AppExtStates as _, Condition as _, FixedUpdate,
+    IntoSystemConfigs as _, OnEnter, Plugin, Update,
 };
 use bevy::window::{RequestRedraw, WindowResized};
 

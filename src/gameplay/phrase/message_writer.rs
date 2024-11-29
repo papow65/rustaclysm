@@ -76,7 +76,7 @@ impl<'r, 'w> MessageBuilder<'r, 'w, Subject> {
     }
 }
 
-impl<'r, 'w> MessageBuilder<'r, 'w, Phrase> {
+impl MessageBuilder<'_, '_, Phrase> {
     #[must_use]
     pub(crate) fn soft(mut self, added: impl Into<String>) -> Self {
         self.phrase = self.phrase.soft(added);

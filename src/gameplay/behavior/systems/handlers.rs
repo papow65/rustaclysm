@@ -10,9 +10,9 @@ use crate::gameplay::{
 use crate::util::log_if_slow;
 use bevy::ecs::schedule::SystemConfigs;
 use bevy::prelude::{
-    on_event, Changed, Commands, DespawnRecursiveExt, Entity, EventReader, In, IntoSystem,
-    IntoSystemConfigs, NextState, ParamSet, Parent, Quat, Query, Res, ResMut, Transform, With,
-    Without,
+    on_event, Changed, Commands, DespawnRecursiveExt as _, Entity, EventReader, In,
+    IntoSystem as _, IntoSystemConfigs as _, NextState, ParamSet, Parent, Quat, Query, Res, ResMut,
+    Transform, With, Without,
 };
 use cdda_json_files::ObjectId;
 use std::time::Instant;

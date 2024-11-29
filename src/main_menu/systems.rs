@@ -8,12 +8,12 @@ use crate::main_menu::components::{LoadButtonArea, MessageField, MessageWrapper}
 use crate::main_menu::load_error::LoadError;
 use crate::util::{log_if_slow, AssetPaths};
 use crate::{application::ApplicationState, manual::ManualSection};
-use base64::{engine::general_purpose::STANDARD as base64, Engine};
+use base64::{engine::general_purpose::STANDARD as base64, Engine as _};
 use bevy::prelude::{
-    AlignContent, AlignItems, BuildChildren, Camera2d, ChildBuild, ChildBuilder, Commands,
-    DespawnRecursiveExt, Display, Entity, Events, FlexDirection, FlexWrap, GlobalZIndex, In,
-    JustifyContent, Local, NextState, Node, Query, Res, ResMut, StateScoped, Text, UiRect, Val,
-    With, Without, World,
+    AlignContent, AlignItems, BuildChildren as _, Camera2d, ChildBuild as _, ChildBuilder,
+    Commands, DespawnRecursiveExt as _, Display, Entity, Events, FlexDirection, FlexWrap,
+    GlobalZIndex, In, JustifyContent, Local, NextState, Node, Query, Res, ResMut, StateScoped,
+    Text, UiRect, Val, With, Without, World,
 };
 use bevy::{app::AppExit, ecs::system::SystemId};
 use glob::glob;

@@ -2,7 +2,9 @@ use crate::keyboard::systems::{
     create_global_key_bindings, manage_binded_keyboard_input, preprocess_keyboard_input,
 };
 use bevy::input::{keyboard::KeyboardInput, InputSystem};
-use bevy::prelude::{on_event, App, IntoSystem, IntoSystemConfigs, Plugin, PreUpdate, Startup};
+use bevy::prelude::{
+    on_event, App, IntoSystem as _, IntoSystemConfigs as _, Plugin, PreUpdate, Startup,
+};
 
 pub(crate) struct KeyboardPlugin;
 

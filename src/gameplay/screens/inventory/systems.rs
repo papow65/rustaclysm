@@ -16,7 +16,7 @@ use crate::manual::ManualSection;
 use crate::util::log_if_slow;
 use bevy::ecs::{entity::EntityHashMap, system::SystemId};
 use bevy::prelude::{
-    AlignItems, BackgroundColor, BuildChildren, Button, ChildBuild, Children, Commands,
+    AlignItems, BackgroundColor, BuildChildren as _, Button, ChildBuild as _, Children, Commands,
     ComputedNode, Display, Entity, FlexDirection, In, JustifyContent, KeyCode, Local, NextState,
     Node, Overflow, Parent, Query, Res, ResMut, StateScoped, Text, TextColor, TextSpan, Transform,
     UiRect, Val, With, Without, World,

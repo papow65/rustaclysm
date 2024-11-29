@@ -5,7 +5,7 @@ use crate::gameplay::screens::inventory::systems::{
 use crate::gameplay::GameplayScreenState;
 use crate::hud::manage_button_input;
 use bevy::prelude::{
-    in_state, App, In, IntoSystem, IntoSystemConfigs, OnEnter, OnExit, Plugin, Update,
+    in_state, App, In, IntoSystem as _, IntoSystemConfigs as _, OnEnter, OnExit, Plugin, Update,
 };
 
 pub(crate) struct InventoryScreenPlugin;

@@ -2,8 +2,8 @@ use crate::gameplay::{spawn::TileSpawner, *};
 use crate::util::log_if_slow;
 use bevy::ecs::{schedule::SystemConfigs, system::SystemId};
 use bevy::prelude::{
-    Commands, Entity, EventWriter, In, IntoSystem, IntoSystemConfigs, Local, NextState, Query, Res,
-    ResMut, State, StateTransition, SystemInput, With, World,
+    Commands, Entity, EventWriter, In, IntoSystem as _, IntoSystemConfigs as _, Local, NextState,
+    Query, Res, ResMut, State, StateTransition, SystemInput, With, World,
 };
 use std::{cell::OnceCell, time::Instant};
 use units::Duration;

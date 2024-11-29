@@ -2,8 +2,8 @@ use crate::hud::{Fonts, DEFAULT_BUTTON_COLOR, HARD_TEXT_COLOR};
 use crate::loading::LoadingIndicatorState;
 use crate::util::log_transition_plugin;
 use bevy::prelude::{
-    AlignItems, App, AppExtStates, BuildChildren, ChildBuild, Commands, GlobalZIndex,
-    JustifyContent, Node, OnEnter, Plugin, PositionType, Res, StateScoped, Text, Val,
+    AlignItems, App, AppExtStates as _, BuildChildren as _, ChildBuild as _, Commands,
+    GlobalZIndex, JustifyContent, Node, OnEnter, Plugin, PositionType, Res, StateScoped, Text, Val,
 };
 
 pub(crate) struct LoadingIndicatorPlugin;

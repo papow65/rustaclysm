@@ -1,4 +1,4 @@
-use bevy::prelude::{BackgroundColor, Color, Mix, TextColor};
+use bevy::prelude::{BackgroundColor, Color, Mix as _, TextColor};
 
 // Text colors
 

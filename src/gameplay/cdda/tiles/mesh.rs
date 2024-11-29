@@ -15,7 +15,7 @@ pub(crate) struct MeshInfo {
 impl MeshInfo {
     pub(crate) fn new(index: u16, tiles_per_row: u16, size: u16) -> Self {
         // rounding up 'size / tiles_per_row'
-        let tiles_per_column = (size + tiles_per_row - 1) / tiles_per_row;
+        let tiles_per_column = size.div_ceil(tiles_per_row);
 
         assert!(0 < tiles_per_row, "At least one tile per row");
         assert!(0 < tiles_per_column, "At least one tile per column");

@@ -241,7 +241,7 @@ impl<'w, 's> Envir<'w, 's> {
         &'s self,
         pos: Pos,
         acceptable: F,
-    ) -> impl Iterator<Item = (Nbor, Pos, WalkingCost)> + use<'_, F>
+    ) -> impl Iterator<Item = (Nbor, Pos, WalkingCost)> + use<'s, F>
     where
         F: 'w + 's + Fn(Pos) -> bool,
     {
@@ -274,7 +274,7 @@ impl<'w, 's> Envir<'w, 's> {
     pub(crate) fn nbors_for_item_handling(
         &'s self,
         pos: Pos,
-    ) -> impl Iterator<Item = (Nbor, Pos)> + use<'_> {
+    ) -> impl Iterator<Item = (Nbor, Pos)> + use<'s> {
         self.nbors_if(pos, move |nbor| pos.level == nbor.level)
             .map(move |(nbor, npos, _)| (nbor, npos))
     }

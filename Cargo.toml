@@ -8,7 +8,7 @@ repository = "https://github.com/papow65/rustaclysm"
 authors = [ "papow65 <papow65@protonmail.com>" ]
 exclude = [ "/screenshots/" ]
 edition = "2021"
-rust-version = "1.82" # should be latest stable
+rust-version = "1.83" # should be latest stable
 
 [workspace]
 members = [ "crates/*" ]
@@ -147,6 +147,7 @@ mutex_integer = "deny"
 needless_collect = "deny"
 needless_pass_by_ref_mut = "deny"
 nonstandard_macro_braces = "deny"
+non_zero_suggestions = "deny"
 option_map_or_err_ok = "deny"
 or_fun_call = "deny"
 path_buf_push_overwrite = "deny"
@@ -172,6 +173,7 @@ uninhabited_references = "deny"
 unneeded_field_pattern = "deny"
 unseparated_literal_suffix = "deny"
 unused_result_ok = "deny"
+unused_trait_names = "deny"
 useless_let_if_seq = "deny"
 verbose_file_reads = "deny"
 while_float = "deny"

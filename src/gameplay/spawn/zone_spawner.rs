@@ -6,7 +6,8 @@ use crate::gameplay::{
 use crate::hud::HARD_TEXT_COLOR;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{
-    BuildChildren, ChildBuild, Entity, Res, ResMut, StateScoped, Transform, Vec3, Visibility,
+    BuildChildren as _, ChildBuild as _, Entity, Res, ResMut, StateScoped, Transform, Vec3,
+    Visibility,
 };
 use bevy::render::view::RenderLayers;
 use cdda_json_files::{CddaItemName, ItemName};
@@ -20,7 +21,7 @@ pub(crate) struct ZoneSpawner<'w, 's> {
     pub(crate) tile_spawner: TileSpawner<'w, 's>,
 }
 
-impl<'w, 's> ZoneSpawner<'w, 's> {
+impl ZoneSpawner<'_, '_> {
     pub(crate) fn spawn_zone_level(
         &mut self,
         zone_level: ZoneLevel,

@@ -21,7 +21,7 @@ pub(crate) struct ModelFactory<'w> {
     loader: Res<'w, TileLoader>,
 }
 
-impl<'w> ModelFactory<'w> {
+impl ModelFactory<'_> {
     fn get_mesh(&mut self, model: &Model) -> Mesh3d {
         match model.shape {
             ModelShape::Plane {

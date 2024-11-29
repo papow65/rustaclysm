@@ -8,7 +8,7 @@ pub(crate) struct Clock<'w> {
     timeouts: Res<'w, Timeouts>,
 }
 
-impl<'w> Clock<'w> {
+impl Clock<'_> {
     pub(crate) fn time(&self) -> Timestamp {
         self.timeouts.max_timestamp()
     }

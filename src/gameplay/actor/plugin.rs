@@ -1,6 +1,6 @@
 use crate::gameplay::{behavior::BehaviorPlugin, PlayerActionState};
 use crate::util::log_transition_plugin;
-use bevy::prelude::{App, AppExtStates, Plugin};
+use bevy::prelude::{App, AppExtStates as _, Plugin};
 
 pub(crate) struct ActorPlugin;
 

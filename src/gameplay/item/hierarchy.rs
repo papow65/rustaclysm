@@ -1,6 +1,6 @@
 use crate::gameplay::{item::Pocket, ContainerLimits, Fragment, Infos, Item, ItemItem, Phrase};
 use bevy::ecs::system::SystemParam;
-use bevy::prelude::{Children, Entity, HierarchyQueryExt, Query, Res};
+use bevy::prelude::{Children, Entity, HierarchyQueryExt as _, Query, Res};
 use cdda_json_files::{ObjectId, PocketType};
 use std::{iter::once, num::NonZeroUsize};
 
@@ -25,7 +25,7 @@ pub(crate) struct ItemHierarchy<'w, 's> {
     pockets: Query<'w, 's, (Entity, &'static Pocket)>,
 }
 
-impl<'w, 's> ItemHierarchy<'w, 's> {
+impl<'w> ItemHierarchy<'w, '_> {
     pub(crate) fn exists(&self, item: Entity) -> bool {
         self.items.get(item).is_ok()
     }

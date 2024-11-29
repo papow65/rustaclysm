@@ -5,7 +5,8 @@ use crate::main_menu::systems::{
     spawn_main_menu, update_sav_files, FoundSav,
 };
 use bevy::prelude::{
-    in_state, App, FixedUpdate, In, IntoSystem, IntoSystemConfigs, OnEnter, Plugin, Startup, Update,
+    in_state, App, FixedUpdate, In, IntoSystem as _, IntoSystemConfigs as _, OnEnter, Plugin,
+    Startup, Update,
 };
 
 pub(crate) struct MainMenuPlugin;

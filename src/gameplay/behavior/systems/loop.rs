@@ -5,7 +5,7 @@ use crate::gameplay::{
 };
 use crate::util::log_if_slow;
 use bevy::ecs::{schedule::SystemConfigs, system::SystemState};
-use bevy::prelude::{on_event, resource_exists, IntoSystemConfigs, Res, State, World};
+use bevy::prelude::{on_event, resource_exists, IntoSystemConfigs as _, Res, State, World};
 use std::time::{Duration, Instant};
 
 pub(in super::super) fn loop_behavior_and_refresh() -> SystemConfigs {

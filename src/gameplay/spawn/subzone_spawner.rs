@@ -1,8 +1,8 @@
 use crate::application::ApplicationState;
 use crate::gameplay::{
     spawn::TileSpawner, AssetState, Infos, LevelOffset, LocalTerrain, MapManager, MapMemoryManager,
-    OvermapManager, Overzone, PosOffset, RepetitionBlockExt, SubzoneLevel, SubzoneLevelEntities,
-    ZoneLevel, ZoneLevelIds,
+    OvermapManager, Overzone, PosOffset, RepetitionBlockExt as _, SubzoneLevel,
+    SubzoneLevelEntities, ZoneLevel, ZoneLevelIds,
 };
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{Res, ResMut, StateScoped, Transform, Visibility};
@@ -17,7 +17,7 @@ pub(crate) struct SubzoneSpawner<'w, 's> {
     tile_spawner: TileSpawner<'w, 's>,
 }
 
-impl<'w, 's> SubzoneSpawner<'w, 's> {
+impl SubzoneSpawner<'_, '_> {
     pub(crate) fn subzone_level_entities(&self) -> &SubzoneLevelEntities {
         &self.subzone_level_entities
     }

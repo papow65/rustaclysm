@@ -18,7 +18,7 @@ pub(crate) struct GameplayReadiness<'w> {
     subzone_level_entities: Option<Res<'w, SubzoneLevelEntities>>,
 }
 
-impl<'w> GameplayReadiness<'w> {
+impl GameplayReadiness<'_> {
     pub(crate) const fn ready_to_load(&self) -> bool {
         self.tile_loader.is_some() && self.infos.is_some() && self.relative_segments.is_some()
     }

@@ -12,11 +12,11 @@ use crate::{application::ApplicationState, gameplay::*};
 use bevy::diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin};
 use bevy::ecs::{schedule::SystemConfigs, system::EntityCommands};
 use bevy::prelude::{
-    on_event, resource_exists, resource_exists_and_changed, AlignItems, BuildChildren, Changed,
-    ChildBuild, Commands, Condition, DespawnRecursiveExt, DetectChanges, Entity, EventReader,
-    FlexDirection, FlexWrap, IntoSystemConfigs, JustifyContent, Local, Node, Or, Overflow,
-    ParamSet, PositionType, Query, Res, ResMut, State, StateScoped, Text, TextColor, TextSpan,
-    UiRect, Val, Visibility, With, Without,
+    on_event, resource_exists, resource_exists_and_changed, AlignItems, BuildChildren as _,
+    Changed, ChildBuild as _, Commands, Condition as _, DespawnRecursiveExt as _,
+    DetectChanges as _, Entity, EventReader, FlexDirection, FlexWrap, IntoSystemConfigs as _,
+    JustifyContent, Local, Node, Or, Overflow, ParamSet, PositionType, Query, Res, ResMut, State,
+    StateScoped, Text, TextColor, TextSpan, UiRect, Val, Visibility, With, Without,
 };
 use cdda_json_files::MoveCost;
 use std::{num::Saturating, time::Instant};
