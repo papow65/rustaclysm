@@ -1,5 +1,7 @@
 use crate::gameplay::{DebugText, Pos};
-use crate::hud::{GOOD_TEXT_COLOR, HARD_TEXT_COLOR, SOFT_TEXT_COLOR};
+use crate::hud::{
+    FILTHY_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
+};
 use bevy::prelude::{TextColor, TextSpan};
 use regex::Regex;
 use std::{cmp::Eq, fmt, sync::LazyLock};
@@ -35,24 +37,35 @@ impl Fragment {
     where
         S: Into<String>,
     {
-        Self {
-            text: text.into(),
-            color: SOFT_TEXT_COLOR,
-            positioning: Positioning::None,
-            debug: false,
-        }
+        Self::colorized(text, SOFT_TEXT_COLOR)
     }
 
     pub(crate) fn hard<S>(text: S) -> Self
     where
         S: Into<String>,
     {
-        Self {
-            text: text.into(),
-            color: HARD_TEXT_COLOR,
-            positioning: Positioning::None,
-            debug: false,
-        }
+        Self::colorized(text, HARD_TEXT_COLOR)
+    }
+
+    pub(crate) fn good<S>(text: S) -> Self
+    where
+        S: Into<String>,
+    {
+        Self::colorized(text, GOOD_TEXT_COLOR)
+    }
+
+    pub(crate) fn filthy<S>(text: S) -> Self
+    where
+        S: Into<String>,
+    {
+        Self::colorized(text, FILTHY_COLOR)
+    }
+
+    pub(crate) fn warn<S>(text: S) -> Self
+    where
+        S: Into<String>,
+    {
+        Self::colorized(text, WARN_TEXT_COLOR)
     }
 
     pub(crate) fn colorized<S>(text: S, color: TextColor) -> Self
@@ -185,12 +198,15 @@ impl Phrase {
 
     fn space_between(previous: &str, next: &str) -> bool {
         static SPACE_AFTER: LazyLock<Regex> =
-            LazyLock::new(|| Regex::new(r"[^(\[{/ \n]$").expect("Valid regex after"));
+            LazyLock::new(|| Regex::new(r"[^(\[{ \n]$").expect("Valid regex after"));
 
+        // We don't add spaces before a '/' follwed by a digit, to allow '15/20' from '15', and '/20'.
+        // In other cases, we do add a space before slashes, for the damage markers on items.
+        //
         // Don't add a space before '.' when it's used as the end of a sentence
         // Add a space before '.' when it's used as the start of a name, like '.22'.
         static SPACE_BEFORE: LazyLock<Regex> = LazyLock::new(|| {
-            Regex::new(r"^([^)\]},;/%\. \n]|\.[^ ])").expect("Valid regex before")
+            Regex::new(r"^([^)\]},;/%\. \n]|\.[^ ]|/[^0-9])").expect("Valid regex before")
         });
 
         SPACE_AFTER.is_match(previous) && SPACE_BEFORE.is_match(next)
@@ -276,8 +292,9 @@ mod container_tests {
             .extend(vec![Fragment::soft("(four)"), Fragment::soft("five")])
             .hard("6")
             .hard("%")
-            .hard("/")
-            .hard("7");
-        assert_eq!(&phrase.as_string(), "one 2, three (four) five 6%/7");
+            .hard("/7")
+            .hard("/u8")
+            .hard("9");
+        assert_eq!(&phrase.as_string(), "one 2, three (four) five 6%/7 /u8 9");
     }
 }

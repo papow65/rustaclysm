@@ -13,7 +13,7 @@ pub(crate) use self::checks::ItemChecksPlugin;
 pub(crate) use self::container::Container;
 pub(crate) use self::container_components::{BodyContainers, Containable, ContainerLimits};
 pub(crate) use self::filthy::Filthy;
-pub(crate) use self::hierarchy::{InPocket, ItemHierarchy, ItemHierarchyWalker, Subitems};
+pub(crate) use self::hierarchy::{ItemHandler, ItemHierarchy};
 pub(crate) use self::integrity::ItemIntegrity;
 pub(crate) use self::pocket::Pocket;
 pub(crate) use self::query_data::{Item, ItemItem};

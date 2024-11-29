@@ -4,8 +4,8 @@ use crate::gameplay::screens::inventory::row_spawner::RowSpawner;
 use crate::gameplay::screens::inventory::section::InventorySection;
 use crate::gameplay::{
     BodyContainers, Clock, DebugTextShown, Envir, ExamineItem, GameplayScreenState,
-    HorizontalDirection, Infos, InstructionQueue, ItemHierarchy, MoveItem, Nbor, Phrase, Pickup,
-    Player, PlayerDirection, Pos, QueuedInstruction, Unwield, Wield,
+    HorizontalDirection, Infos, InstructionQueue, ItemHierarchy, ItemItem, MoveItem, Nbor, Phrase,
+    Pickup, Player, PlayerDirection, Pos, QueuedInstruction, Unwield, Wield,
 };
 use crate::hud::{
     Fonts, ScrollList, SelectionList, StepDirection, StepSize, HARD_TEXT_COLOR, PANEL_COLOR,
@@ -285,7 +285,7 @@ pub(super) fn refresh_inventory(
                     }
                 });
 
-            let row_spawner = RowSpawner::new(
+            let mut row_spawner = RowSpawner::new(
                 &fonts,
                 &infos,
                 &debug_text_shown,
@@ -297,9 +297,7 @@ pub(super) fn refresh_inventory(
                 section,
                 drop_section,
             );
-            for item in items {
-                item_hierarchy.walk(&row_spawner, None, item);
-            }
+            item_hierarchy.walk(&mut row_spawner, items);
 
             // empty row
             parent.spawn((Text::from(" "), SOFT_TEXT_COLOR, fonts.regular()));
@@ -307,47 +305,36 @@ pub(super) fn refresh_inventory(
     });
 }
 
-fn items_by_section(
-    envir: &Envir,
-    item_hierarchy: &ItemHierarchy,
+fn items_by_section<'i>(
+    envir: &'i Envir,
+    item_hierarchy: &'i ItemHierarchy,
     player_pos: Pos,
-    body_containers: &BodyContainers,
-) -> HashMap<InventorySection, Vec<Entity>> {
-    let mut fields_by_section = HashMap::default();
+    body_containers: &'i BodyContainers,
+) -> HashMap<InventorySection, Vec<ItemItem<'i>>> {
+    let mut items_by_section = HashMap::default();
     for (nbor, nbor_pos) in envir.nbors_for_item_handling(player_pos) {
-        fields_by_section.insert(
+        items_by_section.insert(
             InventorySection::Nbor(nbor.horizontal_projection()),
             envir.all_items(nbor_pos).collect::<Vec<_>>(),
         );
     }
-    fields_by_section.insert(
+    items_by_section.insert(
         InventorySection::Hands,
         item_hierarchy
             .items_in(body_containers.hands)
             .collect::<Vec<_>>(),
     );
-    fields_by_section.insert(
+    items_by_section.insert(
         InventorySection::Clothing,
         item_hierarchy
             .items_in(body_containers.clothing)
             .collect::<Vec<_>>(),
     );
 
-    let mut items_by_section = HashMap::default();
-    for (section, fields_iter) in fields_by_section {
-        let mut items = fields_iter
-            .into_iter()
-            .map(|item| {
-                (
-                    item.entity,
-                    Phrase::from_fragments(item.fragments().collect()),
-                )
-            })
-            .collect::<Vec<_>>();
-        items.sort_by_key(|(.., phrase)| format!("{phrase}"));
-        let items = items.into_iter().map(|(item, _)| item).collect();
-        items_by_section.insert(section, items);
+    for items in items_by_section.values_mut() {
+        items.sort_by_key(|item| Phrase::from_fragments(item.fragments().collect()).as_string());
     }
+
     items_by_section
 }
 

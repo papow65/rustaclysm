@@ -2,10 +2,10 @@ use crate::gameplay::sidebar::components::{
     BreathText, DetailsText, EnemiesText, FpsText, HealthText, LogDisplay, PlayerActionStateText,
     SpeedTextSpan, StaminaText, TimeText, WalkingModeTextSpan, WieldedText,
 };
-use crate::gameplay::{DebugText, InPocket, Subitems};
+use crate::gameplay::DebugText;
 use crate::hud::{
-    panel_node, text_color_expect_half, Fonts, ScrollList, BAD_TEXT_COLOR, FILTHY_COLOR,
-    GOOD_TEXT_COLOR, HARD_TEXT_COLOR, PANEL_COLOR, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
+    panel_node, text_color_expect_half, Fonts, ScrollList, BAD_TEXT_COLOR, HARD_TEXT_COLOR,
+    PANEL_COLOR, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
 };
 use crate::util::log_if_slow;
 use crate::{application::ApplicationState, gameplay::*};
@@ -18,8 +18,7 @@ use bevy::prelude::{
     ParamSet, PositionType, Query, Res, ResMut, State, StateScoped, Text, TextColor, TextSpan,
     UiRect, Val, Visibility, With, Without,
 };
-use cdda_json_files::{MoveCost, ObjectId, PocketType};
-use std::iter::once;
+use cdda_json_files::MoveCost;
 use std::{num::Saturating, time::Instant};
 
 type DuplicateMessageCount = Saturating<u16>;
@@ -554,7 +553,6 @@ fn update_status_detais(
     mut commands: Commands,
     focus_state: Res<State<FocusState>>,
     fonts: Res<Fonts>,
-    infos: Res<Infos>,
     debug_text_shown: Res<DebugTextShown>,
     mut explored: ResMut<Explored>,
     mut zone_level_ids: ResMut<ZoneLevelIds>,
@@ -608,13 +606,12 @@ fn update_status_detais(
                         .flat_map(|e| entities.get(*e))
                         .flat_map(entity_info),
                 );
-                total.extend(
-                    envir
-                        .location
-                        .all(pos)
-                        .flat_map(|e| items.get(*e))
-                        .flat_map(|item| item_info(&infos, &item_hierarchy, &item)),
-                );
+                total.extend({
+                    let items = envir.location.all(pos).flat_map(|e| items.get(*e));
+                    let mut handler = SidebarItemHandler { output: Vec::new() };
+                    item_hierarchy.walk(&mut handler, items);
+                    handler.output
+                });
             } else {
                 total.push(Fragment::soft("Unseen"));
             }
@@ -675,15 +672,15 @@ fn characters_info(
             } else {
                 match integrity {
                     Some(integrity) if integrity.0.is_max() => {
-                        start.push(Fragment::colorized("fresh", FILTHY_COLOR))
+                        start.push(Fragment::filthy("fresh"))
                     }
                     Some(integrity) => start
                         .push(Fragment::colorized(
                             format!("{:.0}", 100.0 - 100.0 * integrity.0.relative()),
                             integrity.0.color(),
                         ))
-                        .push(Fragment::colorized("% pulped", WARN_TEXT_COLOR)),
-                    None => start.push(Fragment::colorized("thoroughly pulped", GOOD_TEXT_COLOR)),
+                        .push(Fragment::warn("% pulped")),
+                    None => start.push(Fragment::good("thoroughly pulped")),
                 }
             }
             .soft(")\n- ")
@@ -795,157 +792,16 @@ fn entity_info(
     output.fragments
 }
 
-fn item_info(infos: &Infos, item_hierarchy: &ItemHierarchy, item: &ItemItem) -> Vec<Fragment> {
-    item_hierarchy.walk(&SidebarItemWalker { infos }, None, item.entity)
+struct SidebarItemHandler {
+    output: Vec<Fragment>,
 }
 
-struct SidebarItemWalker<'i> {
-    infos: &'i Infos,
-}
-
-impl<'i> SidebarItemWalker<'i> {
-    fn prefix(in_pocket: Option<InPocket>) -> String {
-        let Some(in_pocket) = in_pocket else {
-            return String::new();
-        };
-        let indicator = match in_pocket.type_ {
-            PocketType::Container => {
-                if in_pocket.single_in_type {
-                    return String::new();
-                } else {
-                    '>'
-                }
-            }
-            PocketType::Magazine => {
-                return String::from("with");
-            }
-            PocketType::MagazineWell => {
-                return String::from("(");
-            }
-            PocketType::Mod => '+',
-            PocketType::Corpse => '_',
-            PocketType::Software => 'S',
-            PocketType::Ebook => 'E',
-            PocketType::Migration => 'M',
-            PocketType::Last => '9',
-        };
-        format!("{}'-{indicator}", "    ".repeat(in_pocket.depth.get() - 1))
+impl ItemHandler for SidebarItemHandler {
+    fn handle_item(&mut self, _item: &ItemItem, item_fragments: Vec<Fragment>) {
+        self.output.extend(item_fragments);
     }
 
-    const fn suffix(in_pocket: Option<InPocket>) -> &'static str {
-        match in_pocket {
-            Some(
-                InPocket {
-                    type_: PocketType::Magazine,
-                    ..
-                }
-                | InPocket {
-                    type_: PocketType::Container,
-                    single_in_type: true,
-                    ..
-                },
-            ) => "",
-            Some(InPocket {
-                type_: PocketType::MagazineWell,
-                ..
-            }) => ")",
-            _ => "\n",
-        }
-    }
-}
-
-impl<'i> ItemHierarchyWalker for SidebarItemWalker<'i> {
-    fn visit_item<'p>(
-        &'p self,
-        item: ItemItem,
-        contents: impl Iterator<Item = Subitems<'p>>,
-        magazines: impl Iterator<Item = Subitems<'p>>,
-        magazine_wells: impl Iterator<Item = Subitems<'p>>,
-        other_pockets: impl Iterator<Item = Subitems<'p>>,
-        in_pocket: Option<InPocket>,
-    ) -> Vec<Fragment> {
-        let prefix = Self::prefix(in_pocket);
-        let suffix = Self::suffix(in_pocket);
-
-        let contents = contents.collect::<Vec<_>>();
-        let is_container = 0 < contents.iter().len();
-        let is_empty = contents.iter().all(|info| info.output.is_empty());
-        let is_sealed = contents.iter().all(|info| info.pocket.sealed);
-        let direct_subitems = contents.iter().map(|info| info.direct_items).sum::<usize>();
-
-        // TODO make sure all pockets are present on containers
-        //println!("{:?} {is_container:?} {is_empty:?}", item.definition.id.fallback_name());
-
-        let mut magazine_output = magazines
-            .flat_map(|subitems| subitems.output)
-            .collect::<Vec<_>>();
-
-        let phrase = Phrase::from_fragment(Fragment::soft(prefix.clone()))
-            .extend({
-                self.infos
-                    .try_magazine(&item.definition.id)
-                    .filter(|magazine| {
-                        magazine.ammo_type.as_ref().is_some_and(|ammo_type| {
-                            ammo_type.0.contains(&ObjectId::new("battery"))
-                        })
-                    })
-                    .map(|magazine| {
-                        #[allow(clippy::iter_with_drain)] // don't drop 'magazine_output'
-                        magazine_output.drain(..).chain(once(Fragment::soft(
-                            magazine
-                                .capacity
-                                .map_or_else(String::new, |capacity| format!("/{capacity}")),
-                        )))
-                    })
-                    .into_iter()
-                    .flatten()
-            })
-            .extend(item.fragments())
-            .debug(format!("[{}]", item.definition.id.fallback_name()))
-            .extend(magazine_output)
-            .extend(magazine_wells.flat_map(|info| {
-                if info.output.is_empty() {
-                    vec![Fragment::colorized("not loaded", SOFT_TEXT_COLOR)]
-                } else {
-                    info.output
-                }
-            }))
-            .soft(match (is_container, is_empty, is_sealed) {
-                (true, true, true) => "(empty, sealed)",
-                (true, true, false) => "(empty)",
-                (true, false, true) => "(sealed)",
-                _ => "",
-            });
-
-        if !is_container || is_empty {
-            phrase.soft(suffix)
-        } else if direct_subitems == 1 {
-            phrase
-                .push(Fragment::colorized(">", GOOD_TEXT_COLOR))
-                .extend(contents.into_iter().flat_map(|info| info.output))
-                .soft(suffix)
-        } else {
-            phrase
-                .push(Fragment::colorized(
-                    format!("> {direct_subitems}+"),
-                    GOOD_TEXT_COLOR,
-                ))
-                .soft(suffix)
-                .extend(contents.into_iter().flat_map(|info| info.output))
-        }
-        .extend(other_pockets.flat_map(|info| {
-            Some(info.output)
-                .filter(|output| !output.is_empty())
-                .map(|output| {
-                    once(Fragment::soft(format!(
-                        "{prefix}{:?}:\n",
-                        info.pocket.type_
-                    )))
-                    .chain(output)
-                })
-                .into_iter()
-                .flatten()
-        }))
-        .fragments
+    fn show_other_pockets(&self) -> bool {
+        true
     }
 }
