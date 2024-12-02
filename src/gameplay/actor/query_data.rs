@@ -36,12 +36,12 @@ impl ActorItem<'_> {
         }
     }
 
-    pub(crate) fn speed(&self) -> Speed {
+    pub(crate) const fn speed(&self) -> Speed {
         self.base_speed
             .speed(self.walking_mode, self.stamina.breath())
     }
 
-    fn high_speed(&self) -> Option<Speed> {
+    const fn high_speed(&self) -> Option<Speed> {
         match self.stamina.breath() {
             Breath::Normal | Breath::AlmostWinded => {
                 Some(self.base_speed.speed(&WalkingMode::Running, Breath::Normal))
@@ -102,13 +102,13 @@ impl ActorItem<'_> {
         clock: &Clock,
         healing_durations: &mut Query<&mut HealingDuration>,
     ) -> ActorImpact {
-        let sleep_duration = Duration::MINUTE;
+        const SLEEP_DURATION: Duration = Duration::MINUTE;
 
         let mut healing_duration = healing_durations
             .get_mut(self.entity)
             .expect("Actor entity should be found");
 
-        let healing_amount = healing_duration.heal(sleep_duration);
+        let healing_amount = healing_duration.heal(SLEEP_DURATION);
         healing_writer.send(ActorEvent::new(
             self.entity,
             Healing {
@@ -127,7 +127,7 @@ impl ActorItem<'_> {
             eprintln!("Unexpected {player_action_state:?} while sleeping");
         }
 
-        self.impact_from_duration(sleep_duration, StaminaCost::LYING_REST)
+        self.impact_from_duration(SLEEP_DURATION, StaminaCost::LYING_REST)
     }
 
     pub(crate) fn step(

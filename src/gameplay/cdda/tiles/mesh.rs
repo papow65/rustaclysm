@@ -36,19 +36,19 @@ impl MeshInfo {
 
     // Based on bevy_render-0.7.0/src/mesh/shape/mod.rs - line 194-223
     pub(crate) fn to_plane(self, orientation: SpriteOrientation) -> Mesh {
-        let extent = 0.5;
+        const EXTENT: f32 = 0.5;
         let corners = match orientation {
             SpriteOrientation::Horizontal => [
-                [-extent, 0.0, extent],
-                [-extent, 0.0, -extent],
-                [extent, 0.0, -extent],
-                [extent, 0.0, extent],
+                [-EXTENT, 0.0, EXTENT],
+                [-EXTENT, 0.0, -EXTENT],
+                [EXTENT, 0.0, -EXTENT],
+                [EXTENT, 0.0, EXTENT],
             ],
             SpriteOrientation::Vertical => [
-                [-extent, 0.0, 0.0],
-                [-extent, 1.0, 0.0],
-                [extent, 1.0, 0.0],
-                [extent, 0.0, 0.0],
+                [-EXTENT, 0.0, 0.0],
+                [-EXTENT, 1.0, 0.0],
+                [EXTENT, 1.0, 0.0],
+                [EXTENT, 0.0, 0.0],
             ],
         };
 

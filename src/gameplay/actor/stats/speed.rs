@@ -13,11 +13,11 @@ impl BaseSpeed {
         Self::from_kmph(percent as f32 * 0.05) // 100 % -> 5 km/h
     }
 
-    pub(crate) fn from_kmph(s: f32) -> Self {
+    pub(crate) const fn from_kmph(s: f32) -> Self {
         Self(Speed::from_kmph(s))
     }
 
-    pub(crate) fn speed(&self, walking_mode: &WalkingMode, breath: Breath) -> Speed {
+    pub(crate) const fn speed(&self, walking_mode: &WalkingMode, breath: Breath) -> Speed {
         let average_speed = WalkingMode::Walking.standard_speed(Breath::Normal);
         self.0
             .combine(walking_mode.standard_speed(breath), average_speed)
@@ -36,7 +36,7 @@ pub(crate) enum WalkingMode {
 impl WalkingMode {
     /// Various factors may adjuct this speed
     #[must_use]
-    pub(crate) fn standard_speed(&self, breath: Breath) -> Speed {
+    pub(crate) const fn standard_speed(&self, breath: Breath) -> Speed {
         Speed::from_kmph(match breath {
             Breath::Normal | Breath::AlmostWinded => match self {
                 Self::Crouching => 2.0,

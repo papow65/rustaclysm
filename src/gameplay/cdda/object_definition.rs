@@ -20,7 +20,7 @@ impl ObjectCategory {
         !matches!(self, Self::ZoneLevel | Self::Meta)
     }
 
-    pub(crate) fn vertical_offset(&self, layer: &SpriteLayer) -> f32 {
+    pub(crate) const fn vertical_offset(&self, layer: &SpriteLayer) -> f32 {
         let level = 2 * match self {
             Self::ZoneLevel => -1,
             Self::Terrain => 0,

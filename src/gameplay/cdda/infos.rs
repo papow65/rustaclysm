@@ -176,8 +176,8 @@ impl Infos {
     fn enricheds() -> HashMap<TypeId, HashMap<ObjectId, serde_json::Map<String, serde_json::Value>>>
     {
         let mut enricheds = HashMap::default();
-        let literals = Self::literals();
-        for (type_id, literal_entry) in &literals {
+        let literals = &Self::literals();
+        for (type_id, literal_entry) in literals {
             let enriched_of_type = enricheds
                 .entry(type_id.clone())
                 .or_insert_with(HashMap::default);
@@ -197,7 +197,6 @@ impl Infos {
                     );
                     ancestors.push(copy_from.clone());
                     assert!(ancestors.len() < 10, "{ancestors:?}");
-                    let literals = &literals;
                     let copy_from = if let Some(found) = literal_entry.get(&copy_from) {
                         found
                     } else {

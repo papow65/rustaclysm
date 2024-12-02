@@ -38,7 +38,7 @@ impl Duration {
     }
 
     /// Euclidian division, return the quotient and keep the remainder
-    pub fn extract_div(&mut self, modulo: Self) -> u64 {
+    pub const fn extract_div(&mut self, modulo: Self) -> u64 {
         let extracted = self.milliseconds / modulo.milliseconds;
         self.milliseconds %= modulo.milliseconds;
         extracted

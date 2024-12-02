@@ -23,7 +23,7 @@ impl Distance {
     }
 
     #[must_use]
-    pub fn meter_f32(&self) -> f32 {
+    pub const fn meter_f32(&self) -> f32 {
         0.001 * self.millimeter as f32
     }
 }

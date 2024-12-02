@@ -24,8 +24,8 @@ impl CameraOffset {
             * length
     }
 
-    pub(crate) fn zoom(&mut self, zoom_direction: ZoomDirection) {
-        self.zoom_in_level += if zoom_direction == ZoomDirection::In {
+    pub(crate) const fn zoom(&mut self, zoom_direction: ZoomDirection) {
+        self.zoom_in_level += if matches!(zoom_direction, ZoomDirection::In) {
             1
         } else {
             -1
@@ -37,16 +37,16 @@ impl CameraOffset {
         self.zoom_in_level < -10
     }
 
-    pub(crate) fn zoom_to_map(&mut self, zoom_distance: ZoomDistance) {
-        self.zoom_in_level = if zoom_distance == ZoomDistance::Close {
+    pub(crate) const fn zoom_to_map(&mut self, zoom_distance: ZoomDistance) {
+        self.zoom_in_level = if matches!(zoom_distance, ZoomDistance::Close) {
             -8
         } else {
             -12
         };
     }
 
-    pub(crate) fn zoom_to_tiles(&mut self, zoom_distance: ZoomDistance) {
-        self.zoom_in_level = if zoom_distance == ZoomDistance::Close {
+    pub(crate) const fn zoom_to_tiles(&mut self, zoom_distance: ZoomDistance) {
+        self.zoom_in_level = if matches!(zoom_distance, ZoomDistance::Close) {
             0
         } else {
             -7
@@ -59,8 +59,8 @@ impl CameraOffset {
 
     pub(crate) fn adjust_angle(&mut self, delta: Vec2) {
         // Reduced sensitivity for better control
-        let input_sensitivity = 0.125;
-        let delta = delta * input_sensitivity;
+        const INPUT_SENSITIVITY: f32 = 0.125;
+        let delta = delta * INPUT_SENSITIVITY;
 
         // An almost vertical angle makes sprites look more 2D.
         // An almost horizontal angle is bad for performance.
@@ -72,7 +72,7 @@ impl CameraOffset {
         self.yaw_offset = (self.yaw_offset - delta.x).clamp(-yaw_limit, yaw_limit);
     }
 
-    pub(crate) fn reset_angle(&mut self) {
+    pub(crate) const fn reset_angle(&mut self) {
         self.yaw_offset = 0.0;
         self.pitch_offset = 0.0;
     }

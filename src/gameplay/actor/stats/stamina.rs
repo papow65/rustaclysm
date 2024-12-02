@@ -19,10 +19,10 @@ impl Stamina {
         match self {
             Self::Unlimited => Breath::Normal,
             Self::Limited(limited) => {
-                let sprint_cost = (-StaminaCost::EXTREME.0) as u16;
-                if 2 * sprint_cost <= limited.current() {
+                const SPRINT_COST: u16 = (-StaminaCost::EXTREME.0) as u16;
+                if 2 * SPRINT_COST <= limited.current() {
                     Breath::Normal
-                } else if sprint_cost <= limited.current() {
+                } else if SPRINT_COST <= limited.current() {
                     Breath::AlmostWinded
                 } else {
                     Breath::Winded

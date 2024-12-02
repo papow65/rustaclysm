@@ -16,9 +16,9 @@ use bevy::prelude::AppExit;
 use std::env;
 
 fn main() -> AppExit {
-    let rust_backtrace = "RUST_BACKTRACE";
-    if env::var_os(rust_backtrace).is_none() {
-        env::set_var(rust_backtrace, "1");
+    const RUST_BACKTRACE: &str = "RUST_BACKTRACE";
+    if env::var_os(RUST_BACKTRACE).is_none() {
+        env::set_var(RUST_BACKTRACE, "1");
     }
 
     run_application()
