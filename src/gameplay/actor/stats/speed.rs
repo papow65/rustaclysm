@@ -3,8 +3,6 @@ use crate::hud::{BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COL
 use bevy::prelude::{Component, Mix as _, TextColor};
 use units::Speed;
 
-// Stats for characters
-
 #[derive(Debug, Clone, Copy, Component)]
 pub(crate) struct BaseSpeed(Speed);
 
@@ -31,6 +29,8 @@ pub(crate) enum WalkingMode {
     SpeedWalking,
     Running,
     Sprinting,
+    /// Used for enemies (without stamina)
+    Perpetual,
 }
 
 impl WalkingMode {
@@ -41,9 +41,10 @@ impl WalkingMode {
             Breath::Normal | Breath::AlmostWinded => match self {
                 Self::Crouching => 2.0,
                 Self::Walking => 5.0,
-                Self::SpeedWalking => 6.5, // just below 7.0, the speed of zombies
+                Self::SpeedWalking => 6.5,
                 Self::Running => 10.0,
                 Self::Sprinting => 15.0,
+                Self::Perpetual => 12.3,
             },
             Breath::Winded => 1.0,
         })
@@ -54,7 +55,7 @@ impl WalkingMode {
         match breath {
             Breath::Normal | Breath::AlmostWinded => match self {
                 Self::Walking => StaminaCost::LIGHT,
-                Self::Crouching | Self::SpeedWalking => StaminaCost::NEUTRAL,
+                Self::Crouching | Self::SpeedWalking | Self::Perpetual => StaminaCost::NEUTRAL,
                 Self::Running => StaminaCost::HEAVY,
                 Self::Sprinting => StaminaCost::EXTREME,
             },
@@ -71,6 +72,7 @@ impl WalkingMode {
                 Self::SpeedWalking => Self::Running,
                 Self::Running => Self::Sprinting,
                 Self::Sprinting => Self::Crouching,
+                Self::Perpetual => Self::Perpetual,
             },
             ChangePace::Previous => match self {
                 Self::Crouching => Self::Sprinting,
@@ -78,6 +80,7 @@ impl WalkingMode {
                 Self::SpeedWalking => Self::Walking,
                 Self::Running => Self::SpeedWalking,
                 Self::Sprinting => Self::Running,
+                Self::Perpetual => Self::Perpetual,
             },
         }
     }
@@ -90,13 +93,14 @@ impl WalkingMode {
             Self::SpeedWalking => "Speed walking",
             Self::Running => "Running",
             Self::Sprinting => "Sprinting",
+            Self::Perpetual => "Perpetual speed",
         }
     }
 
     #[must_use]
     pub(crate) fn breath_color(&self) -> TextColor {
         match self {
-            Self::Walking => GOOD_TEXT_COLOR,
+            Self::Walking | Self::Perpetual => GOOD_TEXT_COLOR,
             Self::Crouching | Self::SpeedWalking => {
                 TextColor(HARD_TEXT_COLOR.0.mix(&WARN_TEXT_COLOR.0, 0.5))
             }

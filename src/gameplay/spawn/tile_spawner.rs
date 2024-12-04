@@ -109,7 +109,7 @@ impl<'w> TileSpawner<'w, '_> {
             Obstacle,
             Health(Limited::full(character_info.hp.unwrap_or(60) as u16)),
             Stamina::Unlimited,
-            WalkingMode::Running,
+            WalkingMode::Perpetual,
             faction.clone(),
             Melee {
                 dices: character_info.melee_dice,
