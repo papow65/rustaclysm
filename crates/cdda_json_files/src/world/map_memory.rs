@@ -1,4 +1,4 @@
-use serde::de::{Deserialize, Deserializer, Error, SeqAccess, Visitor};
+use serde::de::{Deserialize, Deserializer, Error as _, SeqAccess, Visitor};
 use std::fmt;
 use std::sync::Arc;
 

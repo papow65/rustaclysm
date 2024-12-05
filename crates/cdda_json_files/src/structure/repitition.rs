@@ -1,5 +1,5 @@
 use crate::ObjectId;
-use serde::de::{Deserializer, Error};
+use serde::de::{Deserializer, Error as _};
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]

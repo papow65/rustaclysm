@@ -1,4 +1,4 @@
-use serde::de::{Deserialize, DeserializeOwned, Deserializer, Error, SeqAccess, Visitor};
+use serde::de::{Deserialize, DeserializeOwned, Deserializer, Error as _, SeqAccess, Visitor};
 use std::{fmt, marker::PhantomData};
 
 #[derive(Debug, Default)]
