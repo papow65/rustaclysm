@@ -65,8 +65,8 @@ impl SubzoneSpawner<'_, '_> {
             .tile_spawner
             .commands
             .spawn((
-                Transform::default(),
-                Visibility::default(),
+                Transform::IDENTITY,
+                Visibility::Inherited,
                 subzone_level,
                 StateScoped(ApplicationState::Gameplay),
             ))

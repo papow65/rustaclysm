@@ -240,7 +240,11 @@ impl<'w> TileSpawner<'w, '_> {
                 //println!("Pocket of {:?}: {:?}", &item.typeid, cdda_pocket);
                 let pocket = self
                     .commands
-                    .spawn(Pocket::from(cdda_pocket))
+                    .spawn((
+                        Pocket::from(cdda_pocket),
+                        Visibility::Hidden,
+                        Transform::IDENTITY,
+                    ))
                     .set_parent(entity)
                     .id();
                 //println!("Pocket {pocket:?} with parent {entity:?}");
@@ -434,6 +438,7 @@ impl<'w> TileSpawner<'w, '_> {
             Vehicle,
             pos,
             Transform::IDENTITY,
+            Visibility::Inherited,
             StateScoped(ApplicationState::Gameplay),
         ));
 
@@ -534,9 +539,12 @@ impl<'w> TileSpawner<'w, '_> {
             ))
         };
 
-        let mut entity_commands =
-            self.commands
-                .spawn((Visibility::Hidden, definition.clone(), object_name));
+        let mut entity_commands = self.commands.spawn((
+            definition.clone(),
+            object_name,
+            Visibility::Hidden,
+            Transform::IDENTITY,
+        ));
         if let Some(pos) = pos {
             entity_commands.insert((Transform::from_translation(pos.vec3()), pos));
         }
@@ -570,9 +578,8 @@ impl<'w> TileSpawner<'w, '_> {
                             .looking_at(Vec3::new(0.1, 0.0, -1.0), Vec3::Y)
                             * Transform::from_translation(Vec3::new(0.0, 0.3, 0.0));
                         child_builder
-                            .spawn((camera_direction,))
+                            .spawn((camera_direction, Visibility::Hidden))
                             .with_children(|child_builder| {
-                                println!("Camera");
                                 child_builder.spawn((
                                     Camera3d::default(),
                                     Projection::Perspective(PerspectiveProjection {
