@@ -1,3 +1,5 @@
+#![cfg(test)]
+
 use cdda_json_files::CddaTileConfig;
 use reqwest::blocking::get as get_request;
 use std::fs::read;
