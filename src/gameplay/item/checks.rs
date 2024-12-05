@@ -3,7 +3,7 @@ use crate::gameplay::{
     Amount, Containable, ItemHierarchy, ItemIntegrity, ObjectCategory, ObjectDefinition, Pos,
     StandardIntegrity,
 };
-use bevy::prelude::{App, Entity, FixedUpdate, Or, Parent, Plugin, Query, With};
+use bevy::prelude::{App, Changed, Children, Entity, FixedUpdate, Or, Parent, Plugin, Query, With};
 use cdda_json_files::PocketType;
 
 pub(crate) struct ItemChecksPlugin;
@@ -63,7 +63,7 @@ fn check_item_parents(
 #[expect(clippy::needless_pass_by_value)]
 fn check_single_item(
     item_hierarchy: ItemHierarchy,
-    pockets: Query<(Entity, &Pocket), With<Pocket>>,
+    pockets: Query<(Entity, &Pocket), Changed<Children>>,
 ) {
     if cfg!(debug_assertions) {
         for (entity, pocket) in pockets.iter() {
