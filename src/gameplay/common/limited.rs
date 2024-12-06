@@ -1,4 +1,3 @@
-use crate::gameplay::Fragment;
 use crate::hud::text_color_expect_full;
 use bevy::prelude::TextColor;
 
@@ -15,13 +14,6 @@ impl Evolution {
 
     pub(crate) const fn changed(&self) -> bool {
         self.after != self.before
-    }
-
-    pub(crate) fn fragments(&self) -> [Fragment; 2] {
-        [
-            Fragment::hard(format!("{}", self.change_abs())),
-            Fragment::soft(format!("({} -> {})", self.before, self.after)),
-        ]
     }
 }
 

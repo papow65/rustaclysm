@@ -138,7 +138,10 @@ pub(in super::super) fn update_damaged_characters(
                 .verb("hit", "s")
                 .push(victim);
             if evolution.changed() {
-                builder = builder.soft("for").extend(evolution.fragments());
+                builder = builder
+                    .soft("for")
+                    .push(Fragment::warn(format!("{}", evolution.change_abs())))
+                    .soft(format!("({} -> {})", evolution.before, evolution.after));
             } else {
                 builder = builder.soft("but it has").hard("no effect");
             }
@@ -168,9 +171,12 @@ pub(in super::super) fn update_healed_characters(
             let actor = actors.get(healing.actor_entity).expect("Actor found");
             let mut builder = message_writer.subject(actor.subject()).verb("heal", "s");
             if evolution.change_abs() == 1 {
-                builder = builder.hard("a bit");
+                builder = builder.push(Fragment::good("a bit"));
             } else {
-                builder = builder.soft("for").extend(evolution.fragments());
+                builder = builder
+                    .soft("for")
+                    .push(Fragment::good(format!("{}", evolution.change_abs())))
+                    .soft(format!("({} -> {})", evolution.before, evolution.after));
             }
             builder.send_info();
         }
@@ -308,7 +314,10 @@ pub(in super::super) fn update_damaged_terrain(
                 .verb("hit", "s")
                 .push(name.single(pos));
             if evolution.changed() {
-                builder = builder.soft("for").extend(evolution.fragments());
+                builder = builder
+                    .soft("for")
+                    .push(Fragment::warn(format!("{}", evolution.change_abs())))
+                    .soft(format!("({} -> {})", evolution.before, evolution.after));
             } else {
                 builder = builder.soft("but it has").hard("no effect");
             }
