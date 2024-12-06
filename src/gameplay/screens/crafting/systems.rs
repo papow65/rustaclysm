@@ -14,7 +14,13 @@ use crate::hud::{
 use crate::keyboard::{Held, Key, KeyBindings};
 use crate::manual::ManualSection;
 use crate::util::{log_if_slow, uppercase_first};
-use bevy::{ecs::system::SystemId, prelude::*, utils::HashMap};
+use bevy::prelude::{
+    AlignItems, BuildChildren as _, ChildBuild as _, Children, Commands, ComputedNode,
+    DespawnRecursiveExt as _, Display, Entity, FlexDirection, In, IntoSystem as _, JustifyContent,
+    KeyCode, Local, NextState, Node, Overflow, Parent, Query, Res, ResMut, StateScoped, Text,
+    TextColor, Transform, UiRect, Val, With, Without, World,
+};
+use bevy::{ecs::system::SystemId, utils::HashMap};
 use cdda_json_files::{
     Alternative, AutoLearn, BookLearn, BookLearnItem, ObjectId, Recipe, RequiredQuality, Sav,
     Skill, Using,
