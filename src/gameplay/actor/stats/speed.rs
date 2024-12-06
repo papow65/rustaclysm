@@ -7,7 +7,7 @@ use units::Speed;
 pub(crate) struct BaseSpeed(Speed);
 
 impl BaseSpeed {
-    pub(crate) fn from_percent(percent: u64) -> Self {
+    pub(crate) const fn from_percent(percent: u64) -> Self {
         Self::from_kmph(percent as f32 * 0.05) // 100 % -> 5 km/h
     }
 
