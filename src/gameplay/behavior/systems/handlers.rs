@@ -1,5 +1,6 @@
 //! These systems are part of [`BehaviorSchedule`](`crate::gameplay::behavior::schedule::BehaviorSchedule`).
 
+use crate::gameplay::Info;
 use crate::gameplay::{
     spawn::TileSpawner, Actor, ActorEvent, Amount, Clock, ContainerLimits, Corpse, CorpseEvent,
     CorpseRaise, Damage, Faction, Fragment, GameplayScreenState, Healing, Health, Infos, Item,
@@ -10,11 +11,11 @@ use crate::gameplay::{
 use crate::util::log_if_slow;
 use bevy::ecs::schedule::SystemConfigs;
 use bevy::prelude::{
-    on_event, Changed, Commands, DespawnRecursiveExt as _, Entity, EventReader, In,
-    IntoSystem as _, IntoSystemConfigs as _, NextState, ParamSet, Parent, Quat, Query, Res, ResMut,
-    Transform, With, Without,
+    on_event, Changed, Commands, DespawnRecursiveExt as _, Entity, EventReader,
+    IntoSystemConfigs as _, NextState, ParamSet, Parent, Quat, Query, Res, ResMut, Transform, With,
+    Without,
 };
-use cdda_json_files::ObjectId;
+use cdda_json_files::{FurnitureInfo, ObjectId, TerrainInfo};
 use std::time::Instant;
 use units::Duration;
 
@@ -40,9 +41,7 @@ pub(in super::super) fn handle_action_effects() -> SystemConfigs {
         (
             // terrain events
             // Make sure destoyed items are handled early
-            update_damaged_terrain
-                .pipe(spawn_broken_terrain)
-                .run_if(on_event::<TerrainEvent<Damage>>),
+            update_damaged_terrain.run_if(on_event::<TerrainEvent<Damage>>),
             toggle_doors.run_if(on_event::<TerrainEvent<Toggle>>),
         )
             .chain(),
@@ -276,10 +275,13 @@ pub(in super::super) fn update_explored(moved_players: Query<(), (With<Player>, 
 }
 
 /// For terrain and furniture
+#[expect(clippy::needless_pass_by_value)]
 pub(in super::super) fn update_damaged_terrain(
     mut commands: Commands,
     mut message_writer: MessageWriter,
     mut damage_reader: EventReader<TerrainEvent<Damage>>,
+    mut spawner: TileSpawner,
+    infos: Res<Infos>,
     mut visualization_update: ResMut<VisualizationUpdate>,
     mut terrain: Query<(
         Entity,
@@ -287,17 +289,18 @@ pub(in super::super) fn update_damaged_terrain(
         &ObjectName,
         &mut StandardIntegrity,
         &ObjectDefinition,
+        Option<&Info<TerrainInfo>>,
+        Option<&Info<FurnitureInfo>>,
         &Parent,
     )>,
-) -> Vec<(Entity, Pos, ObjectDefinition)> {
+) {
     let start = Instant::now();
 
-    let mut broken = Vec::new();
-
     for damage in damage_reader.read() {
-        let (terrain, &pos, name, mut integrity, definition, parent) = terrain
-            .get_mut(damage.terrain_entity)
-            .expect("Terrain or furniture found");
+        let (terrain, &pos, name, mut integrity, definition, terrain_info, furniture_info, parent) =
+            terrain
+                .get_mut(damage.terrain_entity)
+                .expect("Terrain or furniture found");
         let evolution = integrity.lower(&damage.change);
         if integrity.0.is_zero() {
             message_writer
@@ -306,7 +309,17 @@ pub(in super::super) fn update_damaged_terrain(
                 .push(name.single(pos))
                 .send_warn();
             commands.entity(terrain).despawn_recursive();
-            broken.push((parent.get(), pos, definition.clone()));
+            spawner.spawn_smashed(
+                &infos,
+                parent.get(),
+                pos,
+                definition,
+                terrain_info
+                    .map(|terrain| terrain.bash.as_ref())
+                    .or_else(|| furniture_info.map(|furniture| furniture.bash.as_ref()))
+                    .expect("Either terrain or furniture")
+                    .expect("Smashable"),
+            );
             *visualization_update = VisualizationUpdate::Forced;
         } else {
             let mut builder = message_writer
@@ -326,25 +339,6 @@ pub(in super::super) fn update_damaged_terrain(
     }
 
     log_if_slow("update_damaged_items", start);
-
-    broken
-}
-
-// Separate from 'update_damaged_terrain' to prevent a conflict with 'Location'.
-/// For terrain and furniture
-#[expect(clippy::needless_pass_by_value)]
-pub(in super::super) fn spawn_broken_terrain(
-    In(broken): In<Vec<(Entity, Pos, ObjectDefinition)>>,
-    mut spawner: TileSpawner,
-    infos: Res<Infos>,
-) {
-    let start = Instant::now();
-
-    for (parent_entity, pos, definition) in broken {
-        spawner.spawn_smashed(&infos, parent_entity, pos, &definition);
-    }
-
-    log_if_slow("spawn_broken_terrain", start);
 }
 
 #[expect(clippy::needless_pass_by_value)]

@@ -3,10 +3,10 @@ use crate::gameplay::item::Pocket;
 use crate::gameplay::{
     Accessible, ActiveSav, Amount, Aquatic, BaseSpeed, BodyContainers, CameraBase, Closeable,
     Containable, Craft, ExamineCursor, Explored, Faction, Filthy, HealingDuration, Health, Hurdle,
-    Infos, ItemIntegrity, LastSeen, LevelOffset, Life, Limited, LocalTerrain, Melee, ModelFactory,
-    ObjectCategory, ObjectDefinition, ObjectName, Obstacle, Opaque, OpaqueFloor, Openable, Player,
-    Pos, PosOffset, StairsDown, StairsUp, Stamina, StandardIntegrity, TileVariant, Vehicle,
-    VehiclePart, WalkingMode,
+    Info, Infos, ItemIntegrity, LastSeen, LevelOffset, Life, Limited, LocalTerrain, Melee,
+    ModelFactory, ObjectCategory, ObjectDefinition, ObjectName, Obstacle, Opaque, OpaqueFloor,
+    Openable, Player, Pos, PosOffset, StairsDown, StairsUp, Stamina, StandardIntegrity,
+    TileVariant, Vehicle, VehiclePart, WalkingMode,
 };
 use crate::hud::{BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR};
 use bevy::ecs::system::SystemParam;
@@ -17,8 +17,8 @@ use bevy::prelude::{
 use bevy::render::camera::{PerspectiveProjection, Projection};
 use bevy::render::view::RenderLayers;
 use cdda_json_files::{
-    BashItem, BashItems, CddaAmount, CddaItem, CddaVehicle, CddaVehiclePart, CountRange, Field,
-    FlatVec, MoveCostMod, ObjectId, PocketType, Repetition, Spawn,
+    Bash, BashItem, BashItems, CddaAmount, CddaItem, CddaVehicle, CddaVehiclePart, CountRange,
+    Field, FlatVec, MoveCostMod, ObjectId, PocketType, Repetition, Spawn,
 };
 use std::sync::Arc;
 use units::{Mass, Volume};
@@ -105,6 +105,7 @@ impl<'w> TileSpawner<'w, '_> {
         let entity = self.spawn_object(parent, Some(pos), definition, object_name, None);
         let mut entity = self.commands.entity(entity);
         entity.insert((
+            Info::new(character_info.clone()),
             Life,
             Obstacle,
             Health(Limited::full(character_info.hp.unwrap_or(60) as u16)),
@@ -179,7 +180,10 @@ impl<'w> TileSpawner<'w, '_> {
             category: ObjectCategory::Field,
             id: id.clone(),
         };
-        self.spawn_object(parent, Some(pos), definition, object_name, None);
+        let entity = self.spawn_object(parent, Some(pos), definition, object_name, None);
+        self.commands
+            .entity(entity)
+            .insert(Info::new(field_info.clone()));
     }
 
     pub(crate) fn spawn_item(
@@ -220,6 +224,7 @@ impl<'w> TileSpawner<'w, '_> {
 
         let mut entity = self.commands.entity(object_entity);
         entity.insert((
+            Info::new(item_info.clone()),
             amount,
             Containable {
                 // Based on cataclysm-ddasrc/mtype.cpp lines 47-48
@@ -325,26 +330,26 @@ impl<'w> TileSpawner<'w, '_> {
             id: id.clone(),
         };
         let object_name = ObjectName::new(furniture_info.name.clone(), HARD_TEXT_COLOR);
-        let object_entity = self.spawn_object(parent, Some(pos), definition, object_name, None);
+        let entity = self.spawn_object(parent, Some(pos), definition, object_name, None);
+        let mut entity = self.commands.entity(entity);
+        entity.insert(Info::new(furniture_info.clone()));
 
         if !furniture_info.flags.transparent() {
-            self.commands.entity(object_entity).insert(Opaque);
+            entity.insert(Opaque);
         }
 
         if furniture_info.bash.is_some() {
             // TODO
-            self.commands
-                .entity(object_entity)
-                .insert(StandardIntegrity(Limited::full(10)));
+            entity.insert(StandardIntegrity(Limited::full(10)));
         }
 
         match furniture_info.move_cost_mod {
             None => {}
             Some(MoveCostMod::Impossible(_)) => {
-                self.commands.entity(object_entity).insert(Obstacle);
+                entity.insert(Obstacle);
             }
             Some(MoveCostMod::Slower(increase)) => {
-                self.commands.entity(object_entity).insert(Hurdle(increase));
+                entity.insert(Hurdle(increase));
             }
         }
     }
@@ -373,49 +378,49 @@ impl<'w> TileSpawner<'w, '_> {
             id: local_terrain.id.clone(),
         };
         let object_name = ObjectName::new(terrain_info.name.clone(), HARD_TEXT_COLOR);
-        let object_entity = self.spawn_object(
+        let entity = self.spawn_object(
             parent,
             Some(pos),
             definition,
             object_name,
             Some(local_terrain.variant),
         );
+        let mut entity = self.commands.entity(entity);
+        entity.insert(Info::new(terrain_info.clone()));
 
         if terrain_info.move_cost.accessible() {
             if terrain_info.close.is_some() {
-                self.commands.entity(object_entity).insert(Closeable);
+                entity.insert(Closeable);
             }
-            self.commands.entity(object_entity).insert(Accessible {
+            entity.insert(Accessible {
                 water: terrain_info.flags.water(),
                 move_cost: terrain_info.move_cost,
             });
         } else if terrain_info.open.is_some() {
-            self.commands.entity(object_entity).insert(Openable);
+            entity.insert(Openable);
         } else {
-            self.commands.entity(object_entity).insert(Obstacle);
+            entity.insert(Obstacle);
         }
 
         if !terrain_info.flags.transparent() {
-            self.commands.entity(object_entity).insert(Opaque);
+            entity.insert(Opaque);
         }
 
         if terrain_info.flags.goes_up() {
-            self.commands.entity(object_entity).insert(StairsUp);
+            entity.insert(StairsUp);
         }
 
         if terrain_info.flags.goes_down() {
-            self.commands.entity(object_entity).insert(StairsDown);
+            entity.insert(StairsDown);
         } else {
-            self.commands.entity(object_entity).insert(OpaqueFloor);
+            entity.insert(OpaqueFloor);
         }
 
         if let Some(bash) = &terrain_info.bash {
             if let Some(ter_set) = &bash.ter_set {
                 if ter_set != &ObjectId::new("t_null") {
                     // TODO
-                    self.commands
-                        .entity(object_entity)
-                        .insert(StandardIntegrity(Limited::full(10)));
+                    entity.insert(StandardIntegrity(Limited::full(10)));
                 }
             }
         }
@@ -459,6 +464,7 @@ impl<'w> TileSpawner<'w, '_> {
             );
             return;
         };
+
         let Some(item_info) = infos.try_common_item_info(&part_info.item) else {
             eprintln!(
                 "No info found for item {:?} from vehicle part {:?}. Spawning skipped",
@@ -480,14 +486,17 @@ impl<'w> TileSpawner<'w, '_> {
             .then_some(TileVariant::Broken)
             .or_else(|| part.open.then_some(TileVariant::Open));
         let entity = self.spawn_object(parent, Some(pos), definition, object_name, variant);
-        self.commands.entity(entity).insert(VehiclePart {
-            offset: PosOffset {
-                x: part.mount_dx,
-                level: LevelOffset::ZERO,
-                z: part.mount_dy,
+        self.commands.entity(entity).insert((
+            Info::new(part_info.clone()),
+            VehiclePart {
+                offset: PosOffset {
+                    x: part.mount_dx,
+                    level: LevelOffset::ZERO,
+                    z: part.mount_dy,
+                },
+                item: part.base.clone(),
             },
-            item: part.base.clone(),
-        });
+        ));
 
         if part_info.flags.obstacle() {
             self.commands.entity(entity).insert(Obstacle);
@@ -691,6 +700,7 @@ impl<'w> TileSpawner<'w, '_> {
         parent_entity: Entity,
         pos: Pos,
         definition: &ObjectDefinition,
+        bash: &Bash,
     ) {
         assert!(
             matches!(
@@ -699,13 +709,6 @@ impl<'w> TileSpawner<'w, '_> {
             ),
             "Only furniture and terrain can be smashed"
         );
-
-        let bash = infos
-            .try_furniture(&definition.id)
-            .map(|f| f.bash.as_ref())
-            .or_else(|| infos.try_terrain(&definition.id).map(|f| f.bash.as_ref()))
-            .expect("Furniture, or terrain")
-            .expect("Smashable");
 
         if let Some(terrain_id) = &bash.ter_set {
             assert_eq!(

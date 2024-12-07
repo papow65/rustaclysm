@@ -52,7 +52,7 @@ impl RecipeSituation {
     pub(super) fn text_sections(
         &self,
         fonts: &Fonts,
-        recipe: &Recipe,
+        recipe: &Arc<Recipe>,
     ) -> Vec<(TextSpan, TextColor, TextFont)> {
         let mut text_sections = vec![
             (TextSpan::new("Result: "), SOFT_TEXT_COLOR, fonts.regular()),

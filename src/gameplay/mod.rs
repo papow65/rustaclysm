@@ -32,10 +32,10 @@ use self::actor::{
     Unwield, WalkingMode, Wield,
 };
 use self::cdda::{
-    CddaPlugin, Infos, Layers, MapAsset, MapManager, MapMemoryAsset, MapMemoryManager, MeshInfo,
-    Model, ModelShape, ObjectCategory, OvermapAsset, OvermapBufferAsset, OvermapBufferManager,
-    OvermapManager, PathFor, RepetitionBlockExt, SpriteLayer, SpriteOrientation, TextureInfo,
-    TileLoader, TileVariant, Transform2d, TypeId,
+    CddaPlugin, Info, Infos, Layers, MapAsset, MapManager, MapMemoryAsset, MapMemoryManager,
+    MeshInfo, Model, ModelShape, ObjectCategory, OvermapAsset, OvermapBufferAsset,
+    OvermapBufferManager, OvermapManager, PathFor, RepetitionBlockExt, SpriteLayer,
+    SpriteOrientation, TextureInfo, TileLoader, TileVariant, Transform2d, TypeId,
 };
 use self::common::{
     AssetState, CancelHandling, CardinalDirection, Evolution, HorizontalDirection, Interruption,

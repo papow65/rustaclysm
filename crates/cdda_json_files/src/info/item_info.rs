@@ -25,7 +25,7 @@ pub struct Ammo {
     pub show_stats: Option<bool>,
 
     #[serde(flatten)]
-    pub common: CommonItemInfo,
+    pub common: Arc<CommonItemInfo>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -35,7 +35,7 @@ pub struct BionicItem {
     pub is_upgrade: bool,
 
     #[serde(flatten)]
-    pub common: CommonItemInfo,
+    pub common: Arc<CommonItemInfo>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -59,7 +59,7 @@ pub struct Book {
     pub martial_art: Option<Arc<str>>,
 
     #[serde(flatten)]
-    pub common: CommonItemInfo,
+    pub common: Arc<CommonItemInfo>,
 }
 
 /// 'ARMOR' in CDDA
@@ -68,7 +68,7 @@ pub struct Clothing {
     pub non_functional: Option<Arc<str>>,
 
     #[serde(flatten)]
-    pub common: CommonItemInfo,
+    pub common: Arc<CommonItemInfo>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -124,7 +124,7 @@ pub struct Comestible {
     pub vitamins: Option<Arc<[(String, u16)]>>,
 
     #[serde(flatten)]
-    pub common: CommonItemInfo,
+    pub common: Arc<CommonItemInfo>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -132,7 +132,7 @@ pub struct Engine {
     pub displacement: Option<u16>,
 
     #[serde(flatten)]
-    pub common: CommonItemInfo,
+    pub common: Arc<CommonItemInfo>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -144,7 +144,7 @@ pub struct GenericItem {
     pub template_requirements: Option<Arc<str>>,
 
     #[serde(flatten)]
-    pub common: CommonItemInfo,
+    pub common: Arc<CommonItemInfo>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -185,7 +185,7 @@ pub struct Gun {
     pub valid_mod_locations: Arc<[serde_json::Value]>,
 
     #[serde(flatten)]
-    pub common: CommonItemInfo,
+    pub common: Arc<CommonItemInfo>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -236,7 +236,7 @@ pub struct Gunmod {
     pub weight_multiplier: Option<f32>,
 
     #[serde(flatten)]
-    pub common: CommonItemInfo,
+    pub common: Arc<CommonItemInfo>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -248,7 +248,7 @@ pub struct Magazine {
     pub reload_time: Option<u16>,
 
     #[serde(flatten)]
-    pub common: CommonItemInfo,
+    pub common: Arc<CommonItemInfo>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -258,7 +258,7 @@ pub struct PetArmor {
     pub pet_bodytype: Arc<str>,
 
     #[serde(flatten)]
-    pub common: CommonItemInfo,
+    pub common: Arc<CommonItemInfo>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -279,7 +279,7 @@ pub struct Tool {
     pub variables: Option<HashMap<String, serde_json::Value>>,
 
     #[serde(flatten)]
-    pub common: CommonItemInfo,
+    pub common: Arc<CommonItemInfo>,
 }
 
 #[allow(clippy::doc_markdown)]
@@ -298,7 +298,7 @@ pub struct Toolmod {
     pub pocket_mods: Option<Arc<[HashMap<String, serde_json::Value>]>>,
 
     #[serde(flatten)]
-    pub common: CommonItemInfo,
+    pub common: Arc<CommonItemInfo>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -307,7 +307,7 @@ pub struct Wheel {
     pub width: u8,
 
     #[serde(flatten)]
-    pub common: CommonItemInfo,
+    pub common: Arc<CommonItemInfo>,
 }
 
 #[derive(Clone, Debug, Deserialize)]

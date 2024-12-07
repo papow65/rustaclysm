@@ -353,7 +353,6 @@ fn perform_attack(
     mut message_writer: MessageWriter,
     mut damage_writer: EventWriter<ActorEvent<Damage>>,
     envir: Envir,
-    infos: Res<Infos>,
     hierarchy: ItemHierarchy,
     actors: Query<Actor>,
 ) -> ActorImpact {
@@ -361,7 +360,6 @@ fn perform_attack(
         &mut message_writer,
         &mut damage_writer,
         &envir,
-        &infos,
         &hierarchy,
         &attack.action,
     )
@@ -373,7 +371,6 @@ fn perform_smash(
     mut message_writer: MessageWriter,
     mut damage_writer: EventWriter<TerrainEvent<Damage>>,
     envir: Envir,
-    infos: Res<Infos>,
     hierarchy: ItemHierarchy,
     actors: Query<Actor>,
 ) -> ActorImpact {
@@ -381,7 +378,6 @@ fn perform_smash(
         &mut message_writer,
         &mut damage_writer,
         &envir,
-        &infos,
         &hierarchy,
         &smash.action,
     )
@@ -393,7 +389,6 @@ fn perform_pulp(
     mut message_writer: MessageWriter,
     mut corpse_damage_writer: EventWriter<CorpseEvent<Damage>>,
     envir: Envir,
-    infos: Res<Infos>,
     hierarchy: ItemHierarchy,
     actors: Query<Actor>,
 ) -> ActorImpact {
@@ -401,7 +396,6 @@ fn perform_pulp(
         &mut message_writer,
         &mut corpse_damage_writer,
         &envir,
-        &infos,
         &hierarchy,
         &pulp.action,
     )
@@ -560,15 +554,12 @@ fn perform_continue_craft(
 fn perform_examine_item(
     In(examine_item): In<ActionIn<ExamineItem>>,
     mut message_writer: MessageWriter,
-    infos: Res<Infos>,
     actors: Query<Actor>,
     items: Query<Item>,
 ) -> ActorImpact {
-    examine_item.actor(&actors).examine_item(
-        &mut message_writer,
-        &infos,
-        &examine_item.action.item(&items),
-    )
+    examine_item
+        .actor(&actors)
+        .examine_item(&mut message_writer, &examine_item.action.item(&items))
 }
 
 #[expect(clippy::needless_pass_by_value)]

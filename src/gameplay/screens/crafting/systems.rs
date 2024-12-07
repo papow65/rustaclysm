@@ -3,7 +3,7 @@ use crate::gameplay::screens::crafting::components::{
 };
 use crate::gameplay::screens::crafting::resource::CraftingScreen;
 use crate::gameplay::{
-    ActiveSav, Amount, BodyContainers, Clock, GameplayScreenState, Infos, InstructionQueue,
+    ActiveSav, Amount, BodyContainers, Clock, GameplayScreenState, Info, Infos, InstructionQueue,
     LastSeen, Location, MessageWriter, ObjectCategory, ObjectDefinition, Player, Pos,
     QueuedInstruction,
 };
@@ -20,16 +20,26 @@ use bevy::prelude::{
     KeyCode, Local, NextState, Node, Overflow, Parent, Query, Res, ResMut, StateScoped, Text,
     TextColor, Transform, UiRect, Val, With, Without, World,
 };
-use bevy::{ecs::system::SystemId, utils::HashMap};
+use bevy::{ecs::query::QueryData, ecs::system::SystemId, utils::HashMap};
 use cdda_json_files::{
-    Alternative, AutoLearn, BookLearn, BookLearnItem, ObjectId, Recipe, RequiredQuality, Sav,
-    Skill, Using,
+    Alternative, AutoLearn, BookLearn, BookLearnItem, CommonItemInfo, FurnitureInfo, ObjectId,
+    Recipe, RequiredQuality, Sav, Skill, Using,
 };
 use std::{ops::RangeInclusive, sync::Arc, time::Instant};
 use units::Timestamp;
 
 const MAX_FIND_DISTANCE: i32 = 7;
 const FIND_RANGE: RangeInclusive<i32> = (-MAX_FIND_DISTANCE)..=MAX_FIND_DISTANCE;
+
+#[derive(QueryData)]
+#[query_data(derive(Debug))]
+pub(super) struct Nearby {
+    entity: Entity,
+    definition: &'static ObjectDefinition,
+    amount: &'static Amount,
+    common_item_info: Option<&'static Info<CommonItemInfo>>,
+    furniture_info: Option<&'static Info<FurnitureInfo>>,
+}
 
 #[derive(Debug)]
 pub(super) struct StartCraftSystem(SystemId<(), ()>);
@@ -241,13 +251,7 @@ pub(super) fn refresh_crafting_screen(
     active_sav: Res<ActiveSav>,
     mut crafting_screen: ResMut<CraftingScreen>,
     players: Query<(&Pos, &BodyContainers), With<Player>>,
-    items_and_furniture: Query<(
-        Entity,
-        &ObjectDefinition,
-        &Amount,
-        &LastSeen,
-        Option<&Parent>,
-    )>,
+    items_and_furniture: Query<(Nearby, &LastSeen, Option<&Parent>)>,
 ) {
     let Some(start_craft_system) = start_craft_system else {
         return;
@@ -256,7 +260,7 @@ pub(super) fn refresh_crafting_screen(
     let (&player_pos, body_containers) = players.single();
 
     let nearby_items = find_nearby(&location, &items_and_furniture, player_pos, body_containers);
-    let nearby_manuals = nearby_manuals(&infos, &nearby_items);
+    let nearby_manuals = nearby_manuals(&nearby_items);
     let nearby_qualities = nearby_qualities(&infos, &nearby_items);
     //println!("{:?}", &nearby_manuals);
 
@@ -346,16 +350,10 @@ pub(super) fn refresh_crafting_screen(
 
 fn find_nearby<'a>(
     location: &'a Location,
-    items_and_furniture: &'a Query<(
-        Entity,
-        &ObjectDefinition,
-        &Amount,
-        &LastSeen,
-        Option<&Parent>,
-    )>,
+    items_and_furniture: &'a Query<(Nearby, &LastSeen, Option<&Parent>)>,
     player_pos: Pos,
     body_containers: &'a BodyContainers,
-) -> Vec<(Entity, &'a ObjectDefinition, &'a Amount)> {
+) -> Vec<NearbyItem<'a>> {
     FIND_RANGE
         .flat_map(move |dz| {
             FIND_RANGE.flat_map(move |dx| {
@@ -370,28 +368,24 @@ fn find_nearby<'a>(
                 p.get() == body_containers.hands || p.get() == body_containers.clothing
             })
         }))
-        .map(|(entity, definition, amount, ..)| (entity, definition, amount))
+        .map(|(nearby, ..)| nearby)
         .collect::<Vec<_>>()
 }
 
-fn nearby_manuals<'a>(
-    infos: &'a Infos,
-    nearby_items: &[(Entity, &'a ObjectDefinition, &'a Amount)],
-) -> HashMap<ObjectId, Arc<str>> {
+fn nearby_manuals(nearby_items: &[NearbyItem]) -> HashMap<ObjectId, Arc<str>> {
     nearby_items
         .iter()
-        .map(|(_, definition, _)| *definition)
-        .filter(|definition| {
-            definition.category == ObjectCategory::Item
-                && infos
-                    .try_common_item_info(&definition.id)
+        .filter(|nearby| {
+            nearby.definition.category == ObjectCategory::Item
+                && nearby
+                    .common_item_info
                     .filter(|item| item.category.as_ref().is_some_and(|s| &**s == "manuals"))
                     .is_some()
         })
-        .filter_map(|definition| {
-            infos
-                .try_common_item_info(&definition.id)
-                .map(|item_info| (definition.id.clone(), item_info.name.single.clone()))
+        .filter_map(|nearby| {
+            nearby
+                .common_item_info
+                .map(|item_info| (nearby.definition.id.clone(), item_info.name.single.clone()))
         })
         .collect::<HashMap<_, _>>()
 }
@@ -401,7 +395,7 @@ fn shown_recipes(
     sav: &Sav,
     nearby_manuals: &HashMap<ObjectId, Arc<str>>,
     nearby_qualities: &HashMap<ObjectId, i8>,
-    nearby_items: &[(Entity, &ObjectDefinition, &Amount)],
+    nearby_items: &[NearbyItem],
 ) -> Vec<RecipeSituation> {
     let mut shown_recipes = infos
         .recipes()
@@ -494,18 +488,13 @@ fn recipe_manuals(recipe: &Recipe, nearby_manuals: &HashMap<ObjectId, Arc<str>>)
     manuals
 }
 
-fn nearby_qualities<'a>(
-    infos: &'a Infos,
-    nearby_items: &[(Entity, &'a ObjectDefinition, &'a Amount)],
-) -> HashMap<ObjectId, i8> {
+fn nearby_qualities(infos: &Infos, nearby_items: &[NearbyItem]) -> HashMap<ObjectId, i8> {
     let found = nearby_items
         .iter()
-        .filter_map(|(_, definition, _)| match definition.category {
-            ObjectCategory::Item => infos
-                .try_common_item_info(&definition.id)
-                .map(|item| &item.qualities),
-            ObjectCategory::Furniture => infos
-                .try_furniture(&definition.id)
+        .filter_map(|nearby| match nearby.definition.category {
+            ObjectCategory::Item => nearby.common_item_info.map(|item| &item.qualities),
+            ObjectCategory::Furniture => nearby
+                .furniture_info
                 .and_then(|furniture| furniture.crafting_pseudo_item.as_ref())
                 .and_then(|pseude_item| {
                     infos
@@ -559,7 +548,7 @@ fn recipe_components(
     infos: &Infos,
     required: &[Vec<Alternative>],
     using: &[Using],
-    present: &[(Entity, &ObjectDefinition, &Amount)],
+    present: &[NearbyItem],
 ) -> Vec<ComponentSituation> {
     let using = using
         .iter()
@@ -587,8 +576,8 @@ fn recipe_components(
                     .map(|(item_id, item, required)| {
                         let (item_entities, amounts): (Vec<_>, Vec<&Amount>) = present
                             .iter()
-                            .filter(|(_, definition, _)| definition.id == *item_id)
-                            .map(|(entity, _, amount)| (entity, amount))
+                            .filter(|nearby| nearby.definition.id == *item_id)
+                            .map(|nearby| (nearby.entity, nearby.amount))
                             .unzip();
                         AlternativeSituation {
                             id: item_id.clone(),

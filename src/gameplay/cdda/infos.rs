@@ -1,6 +1,7 @@
 use crate::gameplay::{ObjectCategory, ObjectDefinition, TypeId};
 use crate::util::{AssetPaths, AsyncNew};
-use bevy::{ecs::system::Resource, utils::HashMap};
+use bevy::prelude::{Component, Resource};
+use bevy::utils::HashMap;
 use cdda_json_files::{
     Alternative, Ammo, BionicItem, Book, CddaItemName, CharacterInfo, Clothing, Comestible,
     CommonItemInfo, Engine, FieldInfo, Flags, FurnitureInfo, GenericItem, Gun, Gunmod, ItemGroup,
@@ -10,39 +11,69 @@ use cdda_json_files::{
 use glob::glob;
 use serde::de::DeserializeOwned;
 use serde_json::map::Entry;
-use std::sync::Arc;
-use std::{any::type_name, fs::read_to_string, path::PathBuf, time::Instant};
+use std::{
+    any::type_name, fs::read_to_string, ops::Deref, path::PathBuf, sync::Arc, time::Instant,
+};
 use units::{Mass, Volume};
+
+#[derive(Debug, Component)]
+pub(crate) struct Info<T>(Arc<T>);
+
+impl<T> Info<T> {
+    pub(crate) const fn new(arc: Arc<T>) -> Self {
+        Self(arc)
+    }
+}
+
+impl<T> AsRef<T> for Info<T> {
+    fn as_ref(&self) -> &T {
+        &self.0
+    }
+}
+
+impl<T> Clone for Info<T> {
+    fn clone(&self) -> Self {
+        Self(self.0.clone())
+    }
+}
+
+impl<T> Deref for Info<T> {
+    type Target = T;
+
+    fn deref(&self) -> &T {
+        &self.0
+    }
+}
 
 #[derive(Resource)]
 pub(crate) struct Infos {
-    ammos: HashMap<ObjectId, Ammo>,
-    bionic_items: HashMap<ObjectId, BionicItem>,
-    books: HashMap<ObjectId, Book>,
-    characters: HashMap<ObjectId, CharacterInfo>,
-    clothings: HashMap<ObjectId, Clothing>,
-    comestibles: HashMap<ObjectId, Comestible>,
-    common_item_info: HashMap<ObjectId, CommonItemInfo>,
-    engines: HashMap<ObjectId, Engine>,
-    fields: HashMap<ObjectId, FieldInfo>,
-    furniture: HashMap<ObjectId, FurnitureInfo>,
-    genenric_items: HashMap<ObjectId, GenericItem>,
-    guns: HashMap<ObjectId, Gun>,
-    gunmods: HashMap<ObjectId, Gunmod>,
-    item_groups: HashMap<ObjectId, ItemGroup>,
-    magazines: HashMap<ObjectId, Magazine>,
-    migrations: HashMap<ObjectId, Migration>,
-    pet_armors: HashMap<ObjectId, PetArmor>,
-    qualities: HashMap<ObjectId, Quality>,
-    recipes: HashMap<ObjectId, Recipe>,
-    requirements: HashMap<ObjectId, Requirement>,
-    terrain: HashMap<ObjectId, TerrainInfo>,
-    tools: HashMap<ObjectId, Tool>,
-    tool_clothings: HashMap<ObjectId, ToolClothing>,
-    toolmods: HashMap<ObjectId, Toolmod>,
-    vehicle_parts: HashMap<ObjectId, VehiclePartInfo>,
-    wheels: HashMap<ObjectId, Wheel>,
-    zone_levels: HashMap<ObjectId, OvermapInfo>,
+    ammos: HashMap<ObjectId, Arc<Ammo>>,
+    bionic_items: HashMap<ObjectId, Arc<BionicItem>>,
+    books: HashMap<ObjectId, Arc<Book>>,
+    characters: HashMap<ObjectId, Arc<CharacterInfo>>,
+    clothings: HashMap<ObjectId, Arc<Clothing>>,
+    comestibles: HashMap<ObjectId, Arc<Comestible>>,
+    common_item_info: HashMap<ObjectId, Arc<CommonItemInfo>>,
+    engines: HashMap<ObjectId, Arc<Engine>>,
+    fields: HashMap<ObjectId, Arc<FieldInfo>>,
+    furniture: HashMap<ObjectId, Arc<FurnitureInfo>>,
+    genenric_items: HashMap<ObjectId, Arc<GenericItem>>,
+    guns: HashMap<ObjectId, Arc<Gun>>,
+    gunmods: HashMap<ObjectId, Arc<Gunmod>>,
+    item_groups: HashMap<ObjectId, Arc<ItemGroup>>,
+    magazines: HashMap<ObjectId, Arc<Magazine>>,
+    migrations: HashMap<ObjectId, Arc<Migration>>,
+    pet_armors: HashMap<ObjectId, Arc<PetArmor>>,
+    qualities: HashMap<ObjectId, Arc<Quality>>,
+    recipes: HashMap<ObjectId, Arc<Recipe>>,
+    requirements: HashMap<ObjectId, Arc<Requirement>>,
+    terrain: HashMap<ObjectId, Arc<TerrainInfo>>,
+    tools: HashMap<ObjectId, Arc<Tool>>,
+    tool_clothings: HashMap<ObjectId, Arc<ToolClothing>>,
+    toolmods: HashMap<ObjectId, Arc<Toolmod>>,
+    vehicle_parts: HashMap<ObjectId, Arc<VehiclePartInfo>>,
+    wheels: HashMap<ObjectId, Arc<Wheel>>,
+    zone_levels: HashMap<ObjectId, Arc<OvermapInfo>>,
 }
 
 impl Infos {
@@ -296,7 +327,7 @@ impl Infos {
         };
 
         this.characters
-            .insert(ObjectId::new("human"), default_human());
+            .insert(ObjectId::new("human"), Arc::new(default_human()));
 
         for (id, value) in &this.ammos {
             this.common_item_info
@@ -365,85 +396,92 @@ impl Infos {
         this
     }
 
-    pub(crate) fn try_character<'a>(&'a self, id: &'a ObjectId) -> Option<&'a CharacterInfo> {
+    pub(crate) fn try_character<'a>(&'a self, id: &'a ObjectId) -> Option<&'a Arc<CharacterInfo>> {
         self.try_get(&self.characters, id)
     }
 
-    pub(crate) fn character<'a>(&'a self, id: &'a ObjectId) -> &'a CharacterInfo {
+    pub(crate) fn character<'a>(&'a self, id: &'a ObjectId) -> &'a Arc<CharacterInfo> {
         self.get(&self.characters, id)
     }
 
     pub(crate) fn try_common_item_info<'a>(
         &'a self,
         id: &'a ObjectId,
-    ) -> Option<&'a CommonItemInfo> {
+    ) -> Option<&'a Arc<CommonItemInfo>> {
         self.try_get(&self.common_item_info, id)
     }
 
-    pub(crate) fn try_field<'a>(&'a self, id: &'a ObjectId) -> Option<&'a FieldInfo> {
+    pub(crate) fn try_field<'a>(&'a self, id: &'a ObjectId) -> Option<&'a Arc<FieldInfo>> {
         self.try_get(&self.fields, id)
     }
 
-    pub(crate) fn try_furniture<'a>(&'a self, id: &'a ObjectId) -> Option<&'a FurnitureInfo> {
+    pub(crate) fn try_furniture<'a>(&'a self, id: &'a ObjectId) -> Option<&'a Arc<FurnitureInfo>> {
         self.try_get(&self.furniture, id)
     }
 
-    pub(crate) fn try_item_group<'a>(&'a self, id: &'a ObjectId) -> Option<&'a ItemGroup> {
+    pub(crate) fn try_item_group<'a>(&'a self, id: &'a ObjectId) -> Option<&'a Arc<ItemGroup>> {
         self.try_get(&self.item_groups, id)
     }
 
-    pub(crate) fn try_magazine<'a>(&'a self, id: &'a ObjectId) -> Option<&'a Magazine> {
+    pub(crate) fn try_magazine<'a>(&'a self, id: &'a ObjectId) -> Option<&'a Arc<Magazine>> {
         self.try_get(&self.magazines, id)
     }
 
     #[expect(unused)]
-    pub(crate) fn try_quality<'a>(&'a self, id: &'a ObjectId) -> Option<&'a Quality> {
+    pub(crate) fn try_quality<'a>(&'a self, id: &'a ObjectId) -> Option<&'a Arc<Quality>> {
         self.try_get(&self.qualities, id)
     }
 
-    pub(crate) fn quality<'a>(&'a self, id: &'a ObjectId) -> &'a Quality {
+    pub(crate) fn quality<'a>(&'a self, id: &'a ObjectId) -> &'a Arc<Quality> {
         self.get(&self.qualities, id)
     }
 
     #[expect(unused)]
-    pub(crate) fn try_recipe<'a>(&'a self, id: &'a ObjectId) -> Option<&'a Recipe> {
+    pub(crate) fn try_recipe<'a>(&'a self, id: &'a ObjectId) -> Option<&'a Arc<Recipe>> {
         self.try_get(&self.recipes, id)
     }
 
-    pub(crate) fn recipe<'a>(&'a self, id: &'a ObjectId) -> &'a Recipe {
+    pub(crate) fn recipe<'a>(&'a self, id: &'a ObjectId) -> &'a Arc<Recipe> {
         self.get(&self.recipes, id)
     }
 
-    pub(crate) fn try_requirement<'a>(&'a self, id: &'a ObjectId) -> Option<&'a Requirement> {
+    pub(crate) fn try_requirement<'a>(&'a self, id: &'a ObjectId) -> Option<&'a Arc<Requirement>> {
         self.try_get(&self.requirements, id)
     }
 
-    pub(crate) fn requirement<'a>(&'a self, id: &'a ObjectId) -> &'a Requirement {
+    pub(crate) fn requirement<'a>(&'a self, id: &'a ObjectId) -> &'a Arc<Requirement> {
         self.get(&self.requirements, id)
     }
 
-    pub(crate) fn try_terrain<'a>(&'a self, id: &'a ObjectId) -> Option<&'a TerrainInfo> {
+    pub(crate) fn try_terrain<'a>(&'a self, id: &'a ObjectId) -> Option<&'a Arc<TerrainInfo>> {
         self.try_get(&self.terrain, id)
     }
 
-    pub(crate) fn terrain<'a>(&'a self, id: &'a ObjectId) -> &'a TerrainInfo {
+    pub(crate) fn terrain<'a>(&'a self, id: &'a ObjectId) -> &'a Arc<TerrainInfo> {
         self.get(&self.terrain, id)
     }
 
-    pub(crate) fn try_vehicle_part<'a>(&'a self, id: &'a ObjectId) -> Option<&'a VehiclePartInfo> {
+    pub(crate) fn try_vehicle_part<'a>(
+        &'a self,
+        id: &'a ObjectId,
+    ) -> Option<&'a Arc<VehiclePartInfo>> {
         self.try_get(&self.vehicle_parts, id)
     }
 
-    pub(crate) fn try_zone_level<'a>(&'a self, id: &'a ObjectId) -> Option<&'a OvermapInfo> {
+    pub(crate) fn try_zone_level<'a>(&'a self, id: &'a ObjectId) -> Option<&'a Arc<OvermapInfo>> {
         self.try_get(&self.zone_levels, id)
     }
 
-    fn get<'a, T>(&'a self, map: &'a HashMap<ObjectId, T>, id: &'a ObjectId) -> &'a T {
+    fn get<'a, T>(&'a self, map: &'a HashMap<ObjectId, Arc<T>>, id: &'a ObjectId) -> &'a Arc<T> {
         self.try_get(map, id)
             .unwrap_or_else(|| panic!("{id:?} ({}) should be known", type_name::<T>()))
     }
 
-    fn try_get<'a, T>(&'a self, map: &'a HashMap<ObjectId, T>, id: &'a ObjectId) -> Option<&'a T> {
+    fn try_get<'a, T>(
+        &'a self,
+        map: &'a HashMap<ObjectId, Arc<T>>,
+        id: &'a ObjectId,
+    ) -> Option<&'a Arc<T>> {
         map.get(self.maybe_migrated(id))
     }
 
@@ -524,7 +562,7 @@ impl Infos {
         self.qualities.keys().cloned()
     }
 
-    pub(crate) fn recipes(&self) -> impl Iterator<Item = (&ObjectId, &Recipe)> {
+    pub(crate) fn recipes(&self) -> impl Iterator<Item = (&ObjectId, &Arc<Recipe>)> {
         self.recipes.iter()
     }
 

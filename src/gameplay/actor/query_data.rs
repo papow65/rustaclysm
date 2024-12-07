@@ -188,7 +188,6 @@ impl ActorItem<'_> {
     fn damage<E: Event, N>(
         &self,
         damage_writer: &mut EventWriter<E>,
-        infos: &Infos,
         hierarchy: &ItemHierarchy,
         damaged: Entity,
         new: N,
@@ -200,7 +199,7 @@ impl ActorItem<'_> {
         if let Some(body_containers) = self.body_containers {
             let mut hands_children = hierarchy.items_in(body_containers.hands);
             if let Some(weapon) = hands_children.next() {
-                melee_weapon = infos.try_common_item_info(&weapon.definition.id);
+                melee_weapon = Some(weapon.common_info);
             }
         }
 
@@ -218,7 +217,6 @@ impl ActorItem<'_> {
         message_writer: &mut MessageWriter,
         damage_writer: &mut EventWriter<ActorEvent<Damage>>,
         envir: &Envir,
-        infos: &Infos,
         hierarchy: &ItemHierarchy,
         attack: &Attack,
     ) -> ActorImpact {
@@ -234,7 +232,7 @@ impl ActorItem<'_> {
         let target = envir.get_nbor(*self.pos, attack.target).expect("Valid pos");
 
         if let Some((defender, _)) = envir.find_character(target) {
-            self.damage(damage_writer, infos, hierarchy, defender, ActorEvent::new)
+            self.damage(damage_writer, hierarchy, defender, ActorEvent::new)
         } else {
             message_writer
                 .subject(self.subject())
@@ -250,7 +248,6 @@ impl ActorItem<'_> {
         message_writer: &mut MessageWriter,
         damage_writer: &mut EventWriter<TerrainEvent<Damage>>,
         envir: &Envir,
-        infos: &Infos,
         hierarchy: &ItemHierarchy,
         smash: &Smash,
     ) -> ActorImpact {
@@ -283,13 +280,7 @@ impl ActorItem<'_> {
                 .send_warn();
             self.no_impact()
         } else if let Some(smashable) = envir.find_smashable(target) {
-            self.damage(
-                damage_writer,
-                infos,
-                hierarchy,
-                smashable,
-                TerrainEvent::new,
-            )
+            self.damage(damage_writer, hierarchy, smashable, TerrainEvent::new)
         } else {
             message_writer
                 .subject(self.subject())
@@ -305,7 +296,6 @@ impl ActorItem<'_> {
         message_writer: &mut MessageWriter,
         corpse_damage_writer: &mut EventWriter<CorpseEvent<Damage>>,
         envir: &Envir,
-        infos: &Infos,
         hierarchy: &ItemHierarchy,
         pulp: &Pulp,
     ) -> ActorImpact {
@@ -323,7 +313,6 @@ impl ActorItem<'_> {
         if let Some(pulpable_entity) = envir.find_pulpable(target) {
             self.damage(
                 corpse_damage_writer,
-                infos,
                 hierarchy,
                 pulpable_entity,
                 CorpseEvent::new,
@@ -695,22 +684,17 @@ impl ActorItem<'_> {
     pub(crate) fn examine_item(
         &self,
         message_writer: &mut MessageWriter,
-        infos: &Infos,
         item: &ItemItem,
     ) -> ActorImpact {
-        if let Some(item_info) = infos.try_common_item_info(&item.definition.id) {
-            if let Some(description) = &item_info.description {
-                message_writer
-                    .str(&**match description {
-                        Description::Simple(simple) => simple,
-                        Description::Complex(complex) => complex.get("str").expect("'str' key"),
-                    })
-                    .send_info();
-            } else {
-                eprintln!("No description");
-            }
+        if let Some(description) = &item.common_info.description {
+            message_writer
+                .str(&**match description {
+                    Description::Simple(simple) => simple,
+                    Description::Complex(complex) => complex.get("str").expect("'str' key"),
+                })
+                .send_info();
         } else {
-            eprintln!("No info");
+            eprintln!("No description");
         }
         self.no_impact()
     }

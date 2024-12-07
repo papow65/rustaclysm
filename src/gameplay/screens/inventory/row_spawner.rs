@@ -2,7 +2,7 @@ use crate::gameplay::screens::inventory::components::{InventoryAction, Inventory
 use crate::gameplay::screens::inventory::resource::{ITEM_TEXT_COLOR, SELECTED_ITEM_TEXT_COLOR};
 use crate::gameplay::screens::inventory::section::InventorySection;
 use crate::gameplay::screens::inventory::systems::{InventoryButton, InventorySystem};
-use crate::gameplay::{DebugTextShown, Fragment, Infos, ItemHandler, ItemItem, Phrase};
+use crate::gameplay::{DebugTextShown, Fragment, ItemHandler, ItemItem, Phrase};
 use crate::hud::{
     ButtonBuilder, Fonts, SelectionList, HOVERED_BUTTON_COLOR, SMALL_SPACING, SOFT_TEXT_COLOR,
 };
@@ -15,7 +15,6 @@ use cdda_json_files::CommonItemInfo;
 
 struct SectionData<'r> {
     fonts: &'r Fonts,
-    infos: &'r Infos,
     debug_text_shown: &'r DebugTextShown,
     inventory_system: &'r InventorySystem,
     previous_selected_item: Option<Entity>,
@@ -217,7 +216,6 @@ where
 {
     pub(super) fn new(
         fonts: &'r Fonts,
-        infos: &'r Infos,
         debug_text_shown: &'r DebugTextShown,
         inventory_system: &'r InventorySystem,
         selection_list: &'r mut SelectionList,
@@ -235,7 +233,6 @@ where
             },
             section_data: SectionData {
                 fonts,
-                infos,
                 debug_text_shown,
                 inventory_system,
                 previous_selected_item,
@@ -248,20 +245,11 @@ where
 
 impl ItemHandler for RowSpawner<'_, '_> {
     fn handle_item(&mut self, item: &ItemItem, item_fragments: Vec<Fragment>) {
-        let Some(item_info) = self
-            .section_data
-            .infos
-            .try_common_item_info(&item.definition.id)
-        else {
-            eprintln!("Unknown item: {:?}", item.definition.id);
-            return;
-        };
-
         self.builder.add_row(
             &self.section_data,
             item.entity,
             &Phrase::from_fragments(item_fragments),
-            item_info,
+            item.common_info,
         );
     }
 

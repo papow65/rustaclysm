@@ -1,11 +1,11 @@
 use crate::gameplay::{
-    Amount, Containable, Filthy, Fragment, ItemIntegrity, ObjectDefinition, ObjectName, Pos,
+    Amount, Containable, Filthy, Fragment, Info, ItemIntegrity, ObjectDefinition, ObjectName, Pos,
     Positioning,
 };
 use crate::hud::text_color_expect_half;
 use bevy::ecs::query::QueryData;
 use bevy::prelude::{ops::atan2, Entity, Parent};
-use cdda_json_files::ObjectId;
+use cdda_json_files::{CommonItemInfo, ObjectId};
 use std::f32::consts::FRAC_1_PI;
 
 #[derive(QueryData)]
@@ -20,6 +20,7 @@ pub(crate) struct Item {
     pub(crate) integrity: &'static ItemIntegrity,
     pub(crate) containable: &'static Containable,
     pub(crate) parent: &'static Parent,
+    pub(crate) common_info: &'static Info<CommonItemInfo>,
 }
 
 impl<'a> ItemItem<'a> {
