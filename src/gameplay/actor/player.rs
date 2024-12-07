@@ -64,6 +64,14 @@ impl PlayerActionState {
         Self::Sleeping { from: now }
     }
 
+    /// Automatic progress without movement or (expected) danger
+    pub(crate) const fn is_still(&self) -> bool {
+        matches!(
+            *self,
+            Self::Crafting { .. } | Self::Waiting { .. } | Self::Sleeping { .. }
+        )
+    }
+
     pub(crate) fn plan_manual_action(
         &self,
         next_state: &mut ResMut<NextState<Self>>,

@@ -23,14 +23,8 @@ fn loop_behavior(world: &mut World) {
 
     let max_time = if world
         .get_resource::<State<PlayerActionState>>()
-        .is_some_and(|state| {
-            matches!(
-                **state,
-                PlayerActionState::Crafting { .. }
-                    | PlayerActionState::Waiting { .. }
-                    | PlayerActionState::Sleeping { .. }
-            )
-        }) {
+        .is_some_and(|state| state.is_still())
+    {
         // Allows 10 fps
         Duration::from_secs_f32(0.09)
     } else {
