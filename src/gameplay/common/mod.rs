@@ -19,7 +19,7 @@ pub(crate) use self::vision_distance::VisionDistance;
 pub(crate) use self::walking_cost::WalkingCost;
 
 /// Visible to the player character
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum Visible {
     Seen,
     Unseen,

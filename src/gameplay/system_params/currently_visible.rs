@@ -2,12 +2,56 @@ use crate::gameplay::{
     Accessible, Clock, Envir, Level, LevelOffset, Player, PlayerActionState, Pos, PosOffset,
     RelativeSegment, RelativeSegments, SubzoneLevel, Visible, VisionDistance,
 };
-use bevy::{
-    ecs::system::SystemParam,
-    prelude::{Query, Res, State, With},
-    utils::HashMap,
-};
+use bevy::prelude::{Query, Res, State, With};
+use bevy::{ecs::system::SystemParam, utils::HashMap};
 use std::cell::RefCell;
+
+const WIDTH: usize = 2 * VisionDistance::MAX_VISION_TILES as usize + 1;
+
+struct FullMap<V: Clone + Copy>([Option<Box<[[Option<V>; WIDTH]; WIDTH]>>; Level::AMOUNT]);
+
+impl<V: Clone + Copy> FullMap<V> {
+    fn insert(&mut self, key: PosOffset, value: V) {
+        let x_index = (key.x + VisionDistance::MAX_VISION_TILES) as usize;
+        let level_index = key.level.h.rem_euclid(Level::AMOUNT as i8) as usize;
+        let z_index = (key.z + VisionDistance::MAX_VISION_TILES) as usize;
+        if let Some(level) = &mut self.0[level_index] {
+            level[x_index][z_index] = Some(value);
+        } else {
+            let mut level = Box::new([[None; WIDTH]; WIDTH]);
+            level[x_index][z_index] = Some(value);
+            self.0[level_index] = Some(level);
+        }
+    }
+
+    fn get(&self, key: &PosOffset) -> Option<V> {
+        let x_index = (key.x + VisionDistance::MAX_VISION_TILES) as usize;
+        let level_index = key.level.h.rem_euclid(Level::AMOUNT as i8) as usize;
+        let z_index = (key.z + VisionDistance::MAX_VISION_TILES) as usize;
+        if let Some(level) = &self.0[level_index] {
+            level[x_index][z_index]
+        } else {
+            None
+        }
+    }
+
+    fn get_or_insert_with(&mut self, key: PosOffset, on_missing: impl FnOnce() -> V) -> V {
+        let current = self.get(&key);
+        if let Some(value) = current {
+            value
+        } else {
+            let value = on_missing();
+            self.insert(key, value);
+            value
+        }
+    }
+}
+
+impl<V: Clone + Copy> Default for FullMap<V> {
+    fn default() -> Self {
+        Self([const { None }; Level::AMOUNT])
+    }
+}
 
 #[derive(SystemParam)]
 pub(crate) struct CurrentlyVisibleBuilder<'w, 's> {
@@ -63,7 +107,7 @@ impl CurrentlyVisibleBuilder<'_, '_> {
             .map(|pos| pos - from)
             .collect::<Vec<_>>();
 
-        let visible_cache = RefCell::<HashMap<PosOffset, Visible>>::default();
+        let visible_cache = RefCell::<FullMap<Visible>>::default();
         if magic_stairs_up.contains(&PosOffset::HERE) {
             if let Some(up) = self.envir.stairs_up_to(from) {
                 visible_cache.borrow_mut().insert(up - from, Visible::Seen);
@@ -122,9 +166,9 @@ pub(crate) struct CurrentlyVisible<'a> {
     /// Rounded up in calculations - None when not even 'from' is visible
     viewing_distance: Option<u8>,
     from: Pos,
-    opaque_cache: RefCell<HashMap<PosOffset, bool>>, // is opaque
-    down_cache: RefCell<HashMap<PosOffset, bool>>,   // can see down
-    visible_cache: RefCell<HashMap<PosOffset, Visible>>,
+    opaque_cache: RefCell<FullMap<bool>>, // is opaque
+    down_cache: RefCell<FullMap<bool>>,   // can see down
+    visible_cache: RefCell<FullMap<Visible>>,
 
     /// None is used when everything should be updated
     nearby_subzone_limits: Option<(SubzoneLevel, SubzoneLevel)>,
@@ -179,7 +223,7 @@ impl CurrentlyVisible<'_> {
 
     pub(crate) fn can_see_relative(&self, relative_to: PosOffset) -> Visible {
         if let Some(visible) = self.visible_cache.borrow().get(&relative_to) {
-            return visible.clone();
+            return visible;
         }
 
         let Some(relative_segment) = self.segments.get(&relative_to) else {
@@ -216,11 +260,9 @@ impl CurrentlyVisible<'_> {
     }
 
     fn is_opaque(&self, offset: PosOffset) -> bool {
-        *self
-            .opaque_cache
+        self.opaque_cache
             .borrow_mut()
-            .entry(offset)
-            .or_insert_with(|| {
+            .get_or_insert_with(offset, || {
                 let to = self.from.offset(offset).expect("Valid offset");
                 self.envir.is_opaque(to)
                     || (to.level < Level::ZERO && self.envir.find_terrain(to).is_none())
@@ -228,31 +270,25 @@ impl CurrentlyVisible<'_> {
     }
 
     fn can_look_vertical(&self, above: PosOffset) -> bool {
-        *self
-            .down_cache
-            .borrow_mut()
-            .entry(above)
-            .or_insert_with(|| {
-                if LevelOffset::ZERO < above.level {
-                    // looking up
-                    let below = above.down();
-                    if self.magic_stairs_up.contains(&below) {
-                        return false;
-                    }
-                } else if self.magic_stairs_down.contains(&above) {
+        self.down_cache.borrow_mut().get_or_insert_with(above, || {
+            if LevelOffset::ZERO < above.level {
+                // looking up
+                let below = above.down();
+                if self.magic_stairs_up.contains(&below) {
                     return false;
                 }
+            } else if self.magic_stairs_down.contains(&above) {
+                return false;
+            }
 
-                let above = self.from.offset(above).expect("Valid offset");
-                !self.envir.has_opaque_floor(above)
-                    && (Level::ZERO <= above.level || self.envir.is_accessible(above))
-            })
+            let above = self.from.offset(above).expect("Valid offset");
+            !self.envir.has_opaque_floor(above)
+                && (Level::ZERO <= above.level || self.envir.is_accessible(above))
+        })
     }
 
     fn remember_visible(&self, relative_to: PosOffset, visible: Visible) -> Visible {
-        self.visible_cache
-            .borrow_mut()
-            .insert(relative_to, visible.clone());
+        self.visible_cache.borrow_mut().insert(relative_to, visible);
         visible
     }
 

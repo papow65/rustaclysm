@@ -15,6 +15,7 @@ use bevy::prelude::{
 };
 use std::sync::{Arc, Mutex};
 use std::{cell::OnceCell, time::Instant};
+use thread_local::ThreadLocal;
 
 pub(super) fn refresh_all() -> SystemConfigs {
     (
@@ -111,7 +112,7 @@ fn update_visualization_on_player_move(
     let camera_moved = camera_global_transform != *previous_camera_global_transform.get();
 
     if focus.is_changed() || camera_moved || visualization_update.forced() {
-        let currently_visible = thread_local::ThreadLocal::new();
+        let currently_visible = ThreadLocal::new();
         let explored = Arc::new(Mutex::new(&mut *explored));
 
         items.par_iter_mut().for_each(
