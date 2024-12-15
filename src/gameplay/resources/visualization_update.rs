@@ -1,7 +1,7 @@
 use bevy::prelude::Resource;
 
 /// Strategy to use when updating visualizations
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Resource)]
+#[derive(Debug, Default, PartialEq, Eq, Resource)]
 pub(crate) enum VisualizationUpdate {
     #[default]
     Smart,
