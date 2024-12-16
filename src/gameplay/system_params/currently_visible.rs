@@ -4,7 +4,6 @@ use crate::gameplay::{
 };
 use bevy::prelude::{Query, Res, State, With};
 use bevy::{ecs::system::SystemParam, utils::HashMap};
-use std::cell::RefCell;
 
 const WIDTH: usize = 2 * VisionDistance::MAX_VISION_TILES as usize + 1;
 
@@ -35,7 +34,11 @@ impl<V: Clone + Copy> FullMap<V> {
         }
     }
 
-    fn get_or_insert_with(&mut self, key: PosOffset, on_missing: impl FnOnce() -> V) -> V {
+    fn get_or_insert_with(
+        &mut self,
+        key: PosOffset,
+        on_missing: impl FnOnce() -> V,
+    ) -> V {
         let current = self.get(&key);
         if let Some(value) = current {
             value
@@ -107,15 +110,14 @@ impl CurrentlyVisibleBuilder<'_, '_> {
             .map(|pos| pos - from)
             .collect::<Vec<_>>();
 
-        let visible_cache = RefCell::<FullMap<Visible>>::default();
+        let mut visible_cache = Box::<FullMap<Visible>>::default();
         if magic_stairs_up.contains(&PosOffset::HERE) {
             if let Some(up) = self.envir.stairs_up_to(from) {
-                visible_cache.borrow_mut().insert(up - from, Visible::Seen);
+                visible_cache.insert(up - from, Visible::Seen);
             }
         } else if magic_stairs_down.contains(&PosOffset::HERE) {
             if let Some(down) = self.envir.stairs_down_to(from) {
                 visible_cache
-                    .borrow_mut()
                     .insert(down - from, Visible::Seen);
             }
         }
@@ -145,8 +147,8 @@ impl CurrentlyVisibleBuilder<'_, '_> {
             segments,
             viewing_distance,
             from,
-            opaque_cache: RefCell::default(),
-            down_cache: RefCell::default(),
+            opaque_cache: Box::default(),
+            down_cache: Box::default(),
             visible_cache,
             nearby_subzone_limits,
             magic_stairs_up,
@@ -166,9 +168,9 @@ pub(crate) struct CurrentlyVisible<'a> {
     /// Rounded up in calculations - None when not even 'from' is visible
     viewing_distance: Option<u8>,
     from: Pos,
-    opaque_cache: RefCell<FullMap<bool>>, // is opaque
-    down_cache: RefCell<FullMap<bool>>,   // can see down
-    visible_cache: RefCell<FullMap<Visible>>,
+    opaque_cache: Box<FullMap<bool>>, // is opaque
+    down_cache: Box<FullMap<bool>>,   // can see down
+    visible_cache: Box<FullMap<Visible>>,
 
     /// None is used when everything should be updated
     nearby_subzone_limits: Option<(SubzoneLevel, SubzoneLevel)>,
@@ -202,7 +204,7 @@ impl CurrentlyVisible<'_> {
         }
     }
 
-    pub(crate) fn can_see(&self, to: Pos, accessible: Option<&Accessible>) -> Visible {
+    pub(crate) fn can_see(&mut self, to: Pos, accessible: Option<&Accessible>) -> Visible {
         // We ignore floors seen from below. Those are not particulary interesting and require complex logic to do properly.
 
         if self.nearby_pos(to, 0) && (to.level <= self.from.level || accessible.is_none()) {
@@ -221,8 +223,8 @@ impl CurrentlyVisible<'_> {
             && self.from.z.abs_diff(pos.z) <= viewing_distance as u32 + extra as u32
     }
 
-    pub(crate) fn can_see_relative(&self, relative_to: PosOffset) -> Visible {
-        if let Some(visible) = self.visible_cache.borrow().get(&relative_to) {
+    pub(crate) fn can_see_relative(&mut self, relative_to: PosOffset) -> Visible {
+        if let Some(visible) = self.visible_cache.get(&relative_to) {
             return visible;
         }
 
@@ -259,18 +261,17 @@ impl CurrentlyVisible<'_> {
         self.remember_visible(relative_to, visible)
     }
 
-    fn is_opaque(&self, offset: PosOffset) -> bool {
-        self.opaque_cache
-            .borrow_mut()
-            .get_or_insert_with(offset, || {
+    fn is_opaque(&mut self, offset: PosOffset) -> bool {
+        self.opaque_cache.get_or_insert_with(
+            offset, || {
                 let to = self.from.offset(offset).expect("Valid offset");
                 self.envir.is_opaque(to)
                     || (to.level < Level::ZERO && self.envir.find_terrain(to).is_none())
             })
     }
 
-    fn can_look_vertical(&self, above: PosOffset) -> bool {
-        self.down_cache.borrow_mut().get_or_insert_with(above, || {
+    fn can_look_vertical(&mut self, above: PosOffset) -> bool {
+        self.down_cache.get_or_insert_with(above, || {
             if LevelOffset::ZERO < above.level {
                 // looking up
                 let below = above.down();
@@ -287,8 +288,8 @@ impl CurrentlyVisible<'_> {
         })
     }
 
-    fn remember_visible(&self, relative_to: PosOffset, visible: Visible) -> Visible {
-        self.visible_cache.borrow_mut().insert(relative_to, visible);
+    fn remember_visible(&mut self, relative_to: PosOffset, visible: Visible) -> Visible {
+        self.visible_cache.insert(relative_to, visible);
         visible
     }
 

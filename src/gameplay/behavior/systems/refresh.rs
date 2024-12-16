@@ -13,6 +13,7 @@ use bevy::prelude::{
     IntoSystemConfigs as _, Local, Mesh3d, ParallelCommands, Parent, Query, RemovedComponents, Res,
     ResMut, State, Transform, Vec3, Visibility, With, Without,
 };
+use std::cell::RefCell;
 use std::sync::{Arc, Mutex};
 use std::{cell::OnceCell, time::Instant};
 use thread_local::ThreadLocal;
@@ -118,14 +119,14 @@ fn update_visualization_on_player_move(
         items.par_iter_mut().for_each(
             |(player, &pos, mut visibility, mut last_seen, accessible, speed, children)| {
                 let currently_visible = currently_visible.get_or(|| {
-                    currently_visible_builder.for_player(!visualization_update.forced())
+                    RefCell::new(currently_visible_builder.for_player(!visualization_update.forced()))
                 });
 
                 par_commands.command_scope(|mut commands| {
                     update_visualization(
                         &mut commands,
                         &explored.clone(),
-                        currently_visible,
+                        &mut currently_visible.borrow_mut(),
                         *elevation_visibility,
                         &focus,
                         player,

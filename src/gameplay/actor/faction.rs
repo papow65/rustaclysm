@@ -290,7 +290,7 @@ impl Faction {
         factions: &[(Pos, &Self)],
         actor: &ActorItem,
     ) -> Option<Fragment> {
-        let currently_visible = currently_visible_builder.for_npc(*actor.pos);
+        let mut currently_visible = currently_visible_builder.for_npc(*actor.pos);
         let player_pos = currently_visible_builder.player_pos();
 
         factions
@@ -317,7 +317,7 @@ impl Faction {
         factions: &[(Pos, &Self)],
         actor: &ActorItem,
     ) -> Vec<Pos> {
-        let currently_visible = currently_visible_builder.for_npc(*actor.pos);
+        let mut currently_visible = currently_visible_builder.for_npc(*actor.pos);
 
         factions
             .iter()
