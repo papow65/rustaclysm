@@ -1,4 +1,4 @@
-use crate::gameplay::cdda::{MapMemoryManager, OvermapBufferManager, RepetitionBlockExt as _};
+use crate::gameplay::cdda::{MapMemoryManager, RepetitionBlockExt as _};
 use crate::gameplay::{
     AssetState, Level, OvermapBufferAsset, Overzone, Pos, SubzoneLevel, Zone, ZoneLevel,
 };
@@ -31,23 +31,8 @@ impl Explored {
         self.pos.insert(pos, true);
     }
 
-    pub(crate) fn has_zone_level_been_seen(
-        &mut self,
-        overmap_buffer_manager: &mut OvermapBufferManager,
-        zone_level: ZoneLevel,
-    ) -> Option<SeenFrom> {
-        self.zone_level.get(&zone_level).copied().or_else(|| {
-            let overzone = Overzone::from(zone_level.zone);
-            if let AssetState::Available {
-                asset: overmap_buffer,
-            } = overmap_buffer_manager.get(overzone)
-            {
-                self.load_buffer(overzone, overmap_buffer);
-                self.zone_level.get(&zone_level).copied()
-            } else {
-                None
-            }
-        })
+    pub(crate) fn has_zone_level_been_seen(&self, zone_level: ZoneLevel) -> Option<SeenFrom> {
+        self.zone_level.get(&zone_level).copied()
     }
 
     pub(crate) fn has_pos_been_seen(&self, pos: Pos) -> bool {

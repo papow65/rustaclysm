@@ -12,7 +12,7 @@ use crate::hud::{BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COL
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{
     BuildChildren as _, Camera3d, ChildBuild as _, Commands, DirectionalLight, Entity, EulerRot,
-    Mat4, Res, ResMut, StateScoped, TextColor, Transform, Vec3, Visibility,
+    Mat4, Res, StateScoped, TextColor, Transform, Vec3, Visibility,
 };
 use bevy::render::camera::{PerspectiveProjection, Projection};
 use bevy::render::view::RenderLayers;
@@ -26,7 +26,7 @@ use units::{Mass, Volume};
 #[derive(SystemParam)]
 pub(crate) struct TileSpawner<'w, 's> {
     pub(crate) commands: Commands<'w, 's>,
-    pub(crate) explored: ResMut<'w, Explored>,
+    pub(crate) explored: Res<'w, Explored>,
     active_sav: Res<'w, ActiveSav>,
     model_factory: ModelFactory<'w>,
 }

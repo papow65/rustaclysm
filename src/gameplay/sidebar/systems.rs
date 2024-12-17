@@ -15,7 +15,7 @@ use bevy::prelude::{
     on_event, resource_exists, resource_exists_and_changed, AlignItems, BuildChildren as _,
     Changed, ChildBuild as _, Commands, Condition as _, DespawnRecursiveExt as _,
     DetectChanges as _, Entity, EventReader, FlexDirection, FlexWrap, IntoSystemConfigs as _,
-    JustifyContent, Local, Node, Or, Overflow, ParamSet, PositionType, Query, Res, ResMut, State,
+    JustifyContent, Local, Node, Or, Overflow, ParamSet, PositionType, Query, Res, State,
     StateScoped, Text, TextColor, TextSpan, UiRect, Val, Visibility, With, Without,
 };
 use cdda_json_files::MoveCost;
@@ -554,10 +554,8 @@ fn update_status_detais(
     focus_state: Res<State<FocusState>>,
     fonts: Res<Fonts>,
     debug_text_shown: Res<DebugTextShown>,
-    mut explored: ResMut<Explored>,
-    mut zone_level_ids: ResMut<ZoneLevelIds>,
-    mut overmap_buffer_manager: OvermapBufferManager,
-    mut overmap_manager: OvermapManager,
+    explored: Res<Explored>,
+    zone_level_ids: Res<ZoneLevelIds>,
     envir: Envir,
     item_hierarchy: ItemHierarchy,
     characters: Query<(
@@ -619,10 +617,10 @@ fn update_status_detais(
         }
         FocusState::ExaminingZoneLevel(zone_level) => {
             vec![Fragment::soft(
-                match explored.has_zone_level_been_seen(&mut overmap_buffer_manager, zone_level) {
+                match explored.has_zone_level_been_seen(zone_level) {
                     seen_from @ Some(SeenFrom::CloseBy | SeenFrom::FarAway) => format!(
                         "\n{zone_level:?}\n{:?}\n{seen_from:?}",
-                        zone_level_ids.get(&mut overmap_manager, zone_level)
+                        zone_level_ids.get(zone_level)
                     ),
                     None | Some(SeenFrom::Never) => format!("\n{zone_level:?}\nUnseen"),
                 },

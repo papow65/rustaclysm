@@ -1,13 +1,12 @@
 use crate::application::ApplicationState;
 use crate::gameplay::{
     spawn::TileSpawner, Infos, LastSeen, Level, MissingAsset, ObjectCategory, ObjectDefinition,
-    ObjectName, OvermapBufferManager, OvermapManager, SeenFrom, ZoneLevel, ZoneLevelIds,
+    ObjectName, SeenFrom, ZoneLevel, ZoneLevelIds,
 };
 use crate::hud::HARD_TEXT_COLOR;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{
-    BuildChildren as _, ChildBuild as _, Entity, Res, ResMut, StateScoped, Transform, Vec3,
-    Visibility,
+    BuildChildren as _, ChildBuild as _, Entity, Res, StateScoped, Transform, Vec3, Visibility,
 };
 use bevy::render::view::RenderLayers;
 use cdda_json_files::{CddaItemName, ItemName};
@@ -15,9 +14,7 @@ use cdda_json_files::{CddaItemName, ItemName};
 #[derive(SystemParam)]
 pub(crate) struct ZoneSpawner<'w, 's> {
     infos: Res<'w, Infos>,
-    pub(crate) zone_level_ids: ResMut<'w, ZoneLevelIds>,
-    pub(crate) overmap_manager: OvermapManager<'w>,
-    pub(crate) overmap_buffer_manager: OvermapBufferManager<'w>,
+    pub(crate) zone_level_ids: Res<'w, ZoneLevelIds>,
     pub(crate) tile_spawner: TileSpawner<'w, 's>,
 }
 
@@ -38,19 +35,19 @@ impl ZoneSpawner<'_, '_> {
         let Some(seen_from) = self
             .tile_spawner
             .explored
-            .has_zone_level_been_seen(&mut self.overmap_buffer_manager, zone_level)
+            .has_zone_level_been_seen(zone_level)
         else {
             entity.insert(MissingAsset);
             return;
         };
 
-        let Some(definition) = self
-            .zone_level_ids
-            .get(&mut self.overmap_manager, zone_level)
-            .map(|object_id| ObjectDefinition {
-                category: ObjectCategory::ZoneLevel,
-                id: object_id.clone(),
-            })
+        let Some(definition) =
+            self.zone_level_ids
+                .get(zone_level)
+                .map(|object_id| ObjectDefinition {
+                    category: ObjectCategory::ZoneLevel,
+                    id: object_id.clone(),
+                })
         else {
             entity.insert(MissingAsset);
             return;

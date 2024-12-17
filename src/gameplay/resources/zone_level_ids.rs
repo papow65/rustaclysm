@@ -1,6 +1,4 @@
-use crate::gameplay::{
-    AssetState, Level, OvermapAsset, OvermapManager, Overzone, RepetitionBlockExt as _, ZoneLevel,
-};
+use crate::gameplay::{Level, OvermapAsset, Overzone, RepetitionBlockExt as _, ZoneLevel};
 use bevy::{prelude::Resource, utils::HashMap};
 use cdda_json_files::{FlatVec, ObjectId, Overmap, OvermapLevel};
 
@@ -11,31 +9,8 @@ pub(crate) struct ZoneLevelIds {
 }
 
 impl ZoneLevelIds {
-    pub(crate) fn get(
-        &mut self,
-        overmap_manager: &mut OvermapManager,
-        zone_level: ZoneLevel,
-    ) -> Option<&ObjectId> {
-        if !self.names.contains_key(&zone_level) {
-            let overzone = Overzone::from(zone_level.zone);
-            let fallback;
-            let overmap = match overmap_manager.get(overzone) {
-                AssetState::Available { asset: overmap } => overmap,
-                AssetState::Loading => {
-                    return None;
-                }
-                AssetState::Nonexistent => {
-                    fallback = Self::fallback_overmap();
-                    &fallback
-                }
-            };
-            self.load(overzone, overmap);
-        }
-        Some(
-            self.names
-                .get(&zone_level)
-                .expect("zone level should be known"),
-        )
+    pub(crate) fn get(&self, zone_level: ZoneLevel) -> Option<&ObjectId> {
+        self.names.get(&zone_level)
     }
 
     pub(crate) fn load(&mut self, overzone: Overzone, overmap: &OvermapAsset) {
@@ -53,8 +28,8 @@ impl ZoneLevelIds {
         }
     }
 
-    pub(crate) fn fallback_overmap() -> OvermapAsset {
-        OvermapAsset(Overmap {
+    pub(crate) fn create_missing(&mut self, overzone: Overzone) {
+        let fallback = OvermapAsset(Overmap {
             layers: [
                 OvermapLevel::all(ObjectId::new("deep_rock")),
                 OvermapLevel::all(ObjectId::new("deep_rock")),
@@ -93,6 +68,8 @@ impl ZoneLevelIds {
             mapgen_arg_index: None,
             joins_used: None,
             predecessors: None,
-        })
+        });
+
+        self.load(overzone, &fallback);
     }
 }

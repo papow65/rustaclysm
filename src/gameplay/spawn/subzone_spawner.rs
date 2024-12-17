@@ -1,8 +1,8 @@
 use crate::application::ApplicationState;
 use crate::gameplay::{
     spawn::TileSpawner, AssetState, Infos, LevelOffset, LocalTerrain, MapManager, MapMemoryManager,
-    OvermapManager, Overzone, PosOffset, RepetitionBlockExt as _, SubzoneLevel,
-    SubzoneLevelEntities, ZoneLevel, ZoneLevelIds,
+    OvermapBufferManager, OvermapManager, Overzone, PosOffset, RepetitionBlockExt as _,
+    SubzoneLevel, SubzoneLevelEntities, ZoneLevel, ZoneLevelIds,
 };
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{Res, ResMut, StateScoped, Transform, Visibility};
@@ -26,12 +26,21 @@ impl SubzoneSpawner<'_, '_> {
         &mut self,
         map_manager: &mut MapManager,
         map_memory_manager: &mut MapMemoryManager,
+        overmap_buffer_manager: &mut OvermapBufferManager,
         subzone_level: SubzoneLevel,
     ) {
         if self.subzone_level_entities.get(subzone_level).is_some() {
             eprintln!("{subzone_level:?} already exists");
             return;
         }
+
+        // Ensure all required assets
+        let overzone = Overzone::from(ZoneLevel::from(subzone_level).zone);
+        let asset_state = self.overmap_manager.load(overzone);
+        if matches!(asset_state, AssetState::Nonexistent) {
+            self.zone_level_ids.create_missing(overzone);
+        }
+        overmap_buffer_manager.load(overzone);
 
         match map_manager.submap(subzone_level) {
             AssetState::Available { asset: submap } => {
@@ -48,10 +57,7 @@ impl SubzoneSpawner<'_, '_> {
                 // It will be spawned when it's fully loaded.
             }
             AssetState::Nonexistent => {
-                if let Some(object_id) = self
-                    .zone_level_ids
-                    .get(&mut self.overmap_manager, ZoneLevel::from(subzone_level))
-                {
+                if let Some(object_id) = self.zone_level_ids.get(ZoneLevel::from(subzone_level)) {
                     let submap = Self::fallback_submap(subzone_level, object_id);
                     self.spawn_submap(&submap, subzone_level);
                 }
@@ -125,7 +131,7 @@ impl SubzoneSpawner<'_, '_> {
 
             if let AssetState::Available { asset: overmap } = self
                 .overmap_manager
-                .get(Overzone::from(ZoneLevel::from(subzone_level).zone))
+                .load(Overzone::from(ZoneLevel::from(subzone_level).zone))
             {
                 let spawned_offset = SubzoneOffset::from(subzone_level);
                 for monster in overmap

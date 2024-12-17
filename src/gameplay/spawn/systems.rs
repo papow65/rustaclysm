@@ -162,6 +162,7 @@ pub(crate) fn spawn_subzone_levels(
     mut subzone_spawner: SubzoneSpawner,
     mut map_manager: MapManager,
     mut map_memory_manager: MapMemoryManager,
+    mut overmap_buffer_manager: OvermapBufferManager,
     mut vizualization_update: ResMut<VisualizationUpdate>,
 ) {
     let start = Instant::now();
@@ -175,6 +176,7 @@ pub(crate) fn spawn_subzone_levels(
         subzone_spawner.spawn_subzone_level(
             &mut map_manager,
             &mut map_memory_manager,
+            &mut overmap_buffer_manager,
             spawn_event.subzone_level,
         );
 
@@ -303,7 +305,7 @@ pub(crate) fn spawn_zone_levels(
 
     for spawn_event in spawn_zone_level_reader.read() {
         let visibility = zone_level_visibility(
-            &mut zone_spawner,
+            &zone_spawner.tile_spawner.explored,
             spawn_event.zone_level,
             &visible_region,
             &focus,
@@ -319,7 +321,7 @@ pub(crate) fn update_zone_level_visibility(
     mut commands: Commands,
     mut update_zone_level_visibility_reader: EventReader<UpdateZoneLevelVisibility>,
     focus: Focus,
-    mut zone_spawner: ZoneSpawner,
+    explored: Res<Explored>,
     cameras: Query<(&Camera, &GlobalTransform)>,
 ) {
     let start = Instant::now();
@@ -334,7 +336,7 @@ pub(crate) fn update_zone_level_visibility(
 
     for update_zone_level_visibility_event in update_zone_level_visibility_reader.read() {
         let visibility = zone_level_visibility(
-            &mut zone_spawner,
+            &explored,
             update_zone_level_visibility_event.zone_level,
             &visible_region,
             &focus,
@@ -365,7 +367,7 @@ pub(crate) fn despawn_zone_level(
 }
 
 fn zone_level_visibility(
-    zone_spawner: &mut ZoneSpawner,
+    explored: &Explored,
     zone_level: ZoneLevel,
     visible_region: &Region,
     focus: &Focus,
@@ -373,10 +375,8 @@ fn zone_level_visibility(
     if zone_level.level == Level::from(focus).min(Level::ZERO)
         && zone_level.subzone_levels().iter().all(|subzone_level| {
             visible_region.contains_zone_level(ZoneLevel::from(*subzone_level))
-                && zone_spawner
-                    .tile_spawner
-                    .explored
-                    .has_zone_level_been_seen(&mut zone_spawner.overmap_buffer_manager, zone_level)
+                && explored
+                    .has_zone_level_been_seen(zone_level)
                     .is_some_and(|seen_from| seen_from != SeenFrom::Never)
         })
     {
@@ -391,6 +391,7 @@ pub(crate) fn handle_map_events(
     mut subzone_spawner: SubzoneSpawner,
     mut map_manager: MapManager,
     mut map_memory_manager: MapMemoryManager,
+    mut overmap_buffer_manager: OvermapBufferManager,
 ) {
     for map_asset_event in map_asset_events.read() {
         if let AssetEvent::LoadedWithDependencies { id } = map_asset_event {
@@ -409,6 +410,7 @@ pub(crate) fn handle_map_events(
                     subzone_spawner.spawn_subzone_level(
                         &mut map_manager,
                         &mut map_memory_manager,
+                        &mut overmap_buffer_manager,
                         subzone_level,
                     );
                 }
@@ -518,14 +520,14 @@ pub(crate) fn update_zone_levels_with_missing_assets(
         let Some(seen_from) = zone_spawner
             .tile_spawner
             .explored
-            .has_zone_level_been_seen(&mut zone_spawner.overmap_buffer_manager, zone_level)
+            .has_zone_level_been_seen(zone_level)
         else {
             continue;
         };
 
         let Some(definition) = zone_spawner
             .zone_level_ids
-            .get(&mut zone_spawner.overmap_manager, zone_level)
+            .get(zone_level)
             .map(|object_id| ObjectDefinition {
                 category: ObjectCategory::ZoneLevel,
                 id: object_id.clone(),
@@ -534,8 +536,12 @@ pub(crate) fn update_zone_levels_with_missing_assets(
             continue;
         };
 
-        let child_visibility =
-            zone_level_visibility(&mut zone_spawner, zone_level, &visible_region, &focus);
+        let child_visibility = zone_level_visibility(
+            &zone_spawner.tile_spawner.explored,
+            zone_level,
+            &visible_region,
+            &focus,
+        );
 
         zone_spawner.complete_zone_level(
             entity,
