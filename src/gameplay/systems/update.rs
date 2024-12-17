@@ -1,13 +1,13 @@
+use crate::gameplay::events::Exploration;
 use crate::gameplay::{
     Accessible, Appearance, BaseSpeed, CurrentlyVisible, CurrentlyVisibleBuilder,
-    ElevationVisibility, Explored, Focus, GameplayLocal, LastSeen, Player, Pos, SubzoneLevel,
+    ElevationVisibility, Focus, GameplayLocal, LastSeen, Player, Pos, SubzoneLevel,
 };
 use crate::util::log_if_slow;
 use bevy::prelude::{
-    Camera, Changed, Children, Commands, GlobalTransform, ParallelCommands, Parent, Query, Res,
-    ResMut, Visibility, With, Without,
+    Camera, Changed, Children, Commands, EventWriter, GlobalTransform, ParallelCommands, Parent,
+    Query, Res, Visibility, With, Without,
 };
-use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
 #[cfg(feature = "log_archetypes")]
@@ -30,7 +30,6 @@ fn update_material(
 
 pub(crate) fn update_visualization(
     commands: &mut Commands,
-    explored: &Arc<Mutex<&mut Explored>>,
     currently_visible: &mut CurrentlyVisible,
     elevation_visibility: ElevationVisibility,
     focus: &Focus,
@@ -42,7 +41,9 @@ pub(crate) fn update_visualization(
     speed: Option<&BaseSpeed>,
     children: &Children,
     child_items: &Query<&Appearance, (With<Parent>, Without<Pos>)>,
-) {
+) -> Option<Exploration> {
+    let mut exploration = None;
+
     if currently_visible.nearby(SubzoneLevel::from(pos)) {
         let previously_seen = last_seen.clone();
 
@@ -53,7 +54,7 @@ pub(crate) fn update_visualization(
         if last_seen != &LastSeen::Never {
             if last_seen != &previously_seen {
                 if previously_seen == LastSeen::Never {
-                    explored.lock().expect("Unpoisoned").mark_pos_seen(pos);
+                    exploration = Some(Exploration::new(pos));
                 }
 
                 // TODO select an appearance based on amount of perceived light
@@ -64,6 +65,8 @@ pub(crate) fn update_visualization(
                 calculate_visibility(focus, player, pos, elevation_visibility, last_seen, speed);
         }
     }
+
+    exploration
 }
 
 /// Visible to the camera
@@ -130,9 +133,9 @@ pub(crate) fn update_visibility(
 #[expect(clippy::needless_pass_by_value)]
 pub(crate) fn update_visualization_on_item_move(
     par_commands: ParallelCommands,
+    mut explorations: EventWriter<Exploration>,
     focus: Focus,
     currently_visible_builder: CurrentlyVisibleBuilder,
-    mut explored: ResMut<Explored>,
     elevation_visibility: Res<ElevationVisibility>,
     mut moved_items: Query<
         (
@@ -151,13 +154,11 @@ pub(crate) fn update_visualization_on_item_move(
 
     if moved_items.iter().peekable().peek().is_some() {
         let mut currently_visible = currently_visible_builder.for_player(true);
-        let explored = Arc::new(Mutex::new(&mut *explored));
 
         for (&pos, mut visibility, mut last_seen, accessible, speed, children) in &mut moved_items {
-            par_commands.command_scope(|mut commands| {
+            let exploration = par_commands.command_scope(|mut commands| {
                 update_visualization(
                     &mut commands,
-                    &explored.clone(),
                     &mut currently_visible,
                     *elevation_visibility,
                     &focus,
@@ -169,8 +170,12 @@ pub(crate) fn update_visualization_on_item_move(
                     speed,
                     children,
                     &child_items,
-                );
+                )
             });
+
+            if let Some(exploration) = exploration {
+                explorations.send(exploration);
+            }
         }
     }
 

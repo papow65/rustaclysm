@@ -34,11 +34,7 @@ impl<V: Clone + Copy> FullMap<V> {
         }
     }
 
-    fn get_or_insert_with(
-        &mut self,
-        key: PosOffset,
-        on_missing: impl FnOnce() -> V,
-    ) -> V {
+    fn get_or_insert_with(&mut self, key: PosOffset, on_missing: impl FnOnce() -> V) -> V {
         let current = self.get(&key);
         if let Some(value) = current {
             value
@@ -117,8 +113,7 @@ impl CurrentlyVisibleBuilder<'_, '_> {
             }
         } else if magic_stairs_down.contains(&PosOffset::HERE) {
             if let Some(down) = self.envir.stairs_down_to(from) {
-                visible_cache
-                    .insert(down - from, Visible::Seen);
+                visible_cache.insert(down - from, Visible::Seen);
             }
         }
 
@@ -262,12 +257,11 @@ impl CurrentlyVisible<'_> {
     }
 
     fn is_opaque(&mut self, offset: PosOffset) -> bool {
-        self.opaque_cache.get_or_insert_with(
-            offset, || {
-                let to = self.from.offset(offset).expect("Valid offset");
-                self.envir.is_opaque(to)
-                    || (to.level < Level::ZERO && self.envir.find_terrain(to).is_none())
-            })
+        self.opaque_cache.get_or_insert_with(offset, || {
+            let to = self.from.offset(offset).expect("Valid offset");
+            self.envir.is_opaque(to)
+                || (to.level < Level::ZERO && self.envir.find_terrain(to).is_none())
+        })
     }
 
     fn can_look_vertical(&mut self, above: PosOffset) -> bool {

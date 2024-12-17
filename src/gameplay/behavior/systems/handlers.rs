@@ -28,7 +28,6 @@ pub(in super::super) fn handle_action_effects() -> SystemConfigs {
             (
                 update_healed_characters.run_if(on_event::<ActorEvent<Healing>>),
                 update_corpses,
-                update_explored,
             ),
         )
             .chain(),
@@ -257,19 +256,6 @@ pub(in super::super) fn update_corpses(
                 .remove::<(Corpse, CorpseRaise, StandardIntegrity)>();
         }
     }
-
-    log_if_slow("update_corpses", start);
-}
-
-#[expect(clippy::needless_pass_by_value)]
-pub(in super::super) fn update_explored(moved_players: Query<(), (With<Player>, Changed<Pos>)>) {
-    let start = Instant::now();
-
-    if moved_players.get_single().is_err() {
-        return;
-    }
-
-    // TODO
 
     log_if_slow("update_corpses", start);
 }

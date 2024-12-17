@@ -1,4 +1,5 @@
 use crate::application::ApplicationState;
+use crate::gameplay::events::Exploration;
 use crate::gameplay::{
     ActorEvent, CorpseEvent, Damage, DespawnSubzoneLevel, DespawnZoneLevel, Healing, Message,
     RefreshAfterBehavior, SpawnSubzoneLevel, SpawnZoneLevel, TerrainEvent, Toggle,
@@ -16,6 +17,7 @@ impl Plugin for EventsPlugin {
         app.add_state_scoped_event::<CorpseEvent<Damage>>(ApplicationState::Gameplay);
         app.add_state_scoped_event::<DespawnSubzoneLevel>(ApplicationState::Gameplay);
         app.add_state_scoped_event::<DespawnZoneLevel>(ApplicationState::Gameplay);
+        app.add_state_scoped_event::<Exploration>(ApplicationState::Gameplay);
         app.add_state_scoped_event::<Message>(ApplicationState::Gameplay);
         app.add_state_scoped_event::<RefreshAfterBehavior>(ApplicationState::Gameplay);
         app.add_state_scoped_event::<SpawnSubzoneLevel>(ApplicationState::Gameplay);

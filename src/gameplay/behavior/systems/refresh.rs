@@ -1,5 +1,6 @@
 //! These systems run at most once at the end of [`loop_behavior_and_refresh`](`crate::gameplay::behavior::systems::loop::loop_behavior_and_refresh`).
 
+use crate::gameplay::events::Exploration;
 use crate::gameplay::systems::{update_visualization, update_visualization_on_item_move};
 use crate::gameplay::{
     Accessible, Appearance, BaseSpeed, Clock, CurrentlyVisible, CurrentlyVisibleBuilder,
@@ -9,12 +10,11 @@ use crate::gameplay::{
 use crate::util::log_if_slow;
 use bevy::ecs::schedule::SystemConfigs;
 use bevy::prelude::{
-    resource_exists_and_changed, Camera, Changed, Children, GlobalTransform,
-    IntoSystemConfigs as _, Local, Mesh3d, ParallelCommands, Parent, Query, RemovedComponents, Res,
-    ResMut, State, Transform, Vec3, Visibility, With, Without,
+    resource_exists_and_changed, Camera, Changed, Children, EventReader, EventWriter,
+    GlobalTransform, IntoSystemConfigs as _, Local, Mesh3d, ParallelCommands, Parent, Query,
+    RemovedComponents, Res, ResMut, State, Transform, Vec3, Visibility, With, Without,
 };
 use std::cell::RefCell;
-use std::sync::{Arc, Mutex};
 use std::{cell::OnceCell, time::Instant};
 use thread_local::ThreadLocal;
 
@@ -23,9 +23,18 @@ pub(super) fn refresh_all() -> SystemConfigs {
         update_transforms,
         update_peeking_transforms.run_if(resource_exists_and_changed::<State<PlayerActionState>>),
         update_hidden_item_visibility,
-        update_visualization_on_item_move,
-        update_visualization_on_player_move,
-        update_visualization_on_weather_change,
+        (
+            (
+                update_visualization_on_item_move,
+                (
+                    update_visualization_on_weather_change,
+                    update_visualization_on_player_move,
+                )
+                    .chain(),
+            ),
+            update_explored,
+        )
+            .chain(),
     )
         .into_configs()
 }
@@ -91,7 +100,7 @@ fn update_visualization_on_player_move(
     par_commands: ParallelCommands,
     focus: Focus,
     currently_visible_builder: CurrentlyVisibleBuilder,
-    mut explored: ResMut<Explored>,
+    mut explorations: EventWriter<Exploration>,
     elevation_visibility: Res<ElevationVisibility>,
     mut visualization_update: ResMut<VisualizationUpdate>,
     mut previous_camera_global_transform: GameplayLocal<GlobalTransform>,
@@ -114,18 +123,21 @@ fn update_visualization_on_player_move(
 
     if focus.is_changed() || camera_moved || visualization_update.forced() {
         let currently_visible = ThreadLocal::new();
-        let explored = Arc::new(Mutex::new(&mut *explored));
+        let new_explorations = ThreadLocal::new();
 
         items.par_iter_mut().for_each(
             |(player, &pos, mut visibility, mut last_seen, accessible, speed, children)| {
                 let currently_visible = currently_visible.get_or(|| {
-                    RefCell::new(currently_visible_builder.for_player(!visualization_update.forced()))
+                    RefCell::new(
+                        currently_visible_builder.for_player(!visualization_update.forced()),
+                    )
                 });
+                let new_explorations =
+                    new_explorations.get_or(RefCell::<Vec<Exploration>>::default);
 
-                par_commands.command_scope(|mut commands| {
+                let exploration = par_commands.command_scope(|mut commands| {
                     update_visualization(
                         &mut commands,
-                        &explored.clone(),
                         &mut currently_visible.borrow_mut(),
                         *elevation_visibility,
                         &focus,
@@ -137,10 +149,18 @@ fn update_visualization_on_player_move(
                         speed,
                         children,
                         &child_items,
-                    );
+                    )
                 });
+
+                if let Some(exploration) = exploration {
+                    new_explorations.borrow_mut().push(exploration);
+                }
             },
         );
+
+        for ref_cell in new_explorations {
+            explorations.send_batch(ref_cell.into_inner());
+        }
 
         println!("{}x visualization updated", items.iter().len());
 
@@ -174,4 +194,17 @@ fn update_visualization_on_weather_change(
     }
 
     log_if_slow("update_visualization_on_weather_change", start);
+}
+
+pub(in super::super) fn update_explored(
+    mut explorations: EventReader<Exploration>,
+    mut explored: ResMut<Explored>,
+) {
+    let start = Instant::now();
+
+    for exploration in explorations.read() {
+        explored.mark_pos_seen(exploration.pos());
+    }
+
+    log_if_slow("update_explored", start);
 }
