@@ -1,7 +1,5 @@
-use crate::gameplay::cdda::{MapMemoryManager, RepetitionBlockExt as _};
-use crate::gameplay::{
-    AssetState, Level, OvermapBufferAsset, Overzone, Pos, SubzoneLevel, Zone, ZoneLevel,
-};
+use crate::gameplay::cdda::RepetitionBlockExt as _;
+use crate::gameplay::{Level, OvermapBufferAsset, Overzone, Pos, Zone, ZoneLevel};
 use bevy::{prelude::Resource, utils::HashMap};
 
 /// Ever seen by the player character
@@ -57,42 +55,6 @@ impl Explored {
                 }
             }
             self.loaded_overzones.push(overzone);
-        }
-    }
-
-    pub(crate) fn load_memory(
-        &mut self,
-        map_memory_manager: &mut MapMemoryManager,
-        base_zone_level: ZoneLevel,
-    ) {
-        // TODO check if performant enough
-
-        let base_subzone_level = base_zone_level.subzone_levels()[0];
-        for z in 0..8 {
-            for x in 0..8 {
-                let subzone_level = SubzoneLevel {
-                    x: base_subzone_level.x + x,
-                    level: base_subzone_level.level,
-                    z: base_subzone_level.z + z,
-                };
-                let AssetState::Available {
-                    asset: submap_memory,
-                } = map_memory_manager.submap(subzone_level)
-                else {
-                    panic!("Map memory asset not available for {subzone_level:?}");
-                };
-                for zz in 0..12 {
-                    for xx in 0..12 {
-                        if submap_memory.seen(xx, zz) {
-                            self.mark_pos_seen(
-                                subzone_level
-                                    .base_corner()
-                                    .horizontal_offset(i32::from(xx), i32::from(zz)),
-                            );
-                        }
-                    }
-                }
-            }
         }
     }
 

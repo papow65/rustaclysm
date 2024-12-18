@@ -1,11 +1,12 @@
+use crate::gameplay::events::Exploration;
 use crate::gameplay::spawn::{SubzoneSpawner, TileSpawner, ZoneSpawner};
 use crate::gameplay::{
     ActiveSav, DespawnSubzoneLevel, DespawnZoneLevel, Expanded, Explored, Focus, GameplayLocal,
-    Infos, Level, MapAsset, MapManager, MapMemoryAsset, MapMemoryManager, MissingAsset,
-    ObjectCategory, ObjectDefinition, OvermapAsset, OvermapBufferAsset, OvermapBufferManager,
-    OvermapManager, Pos, Region, SeenFrom, SpawnSubzoneLevel, SpawnZoneLevel, SubzoneLevel,
-    SubzoneLevelEntities, UpdateZoneLevelVisibility, VisionDistance, VisualizationUpdate, Zone,
-    ZoneLevel, ZoneLevelEntities, ZoneLevelIds, ZoneRegion,
+    Infos, Level, MapManager, MapMemoryManager, MissingAsset, ObjectCategory, ObjectDefinition,
+    OvermapAsset, OvermapBufferAsset, OvermapBufferManager, OvermapManager, Pos, Region, SeenFrom,
+    SpawnSubzoneLevel, SpawnZoneLevel, SubzoneLevel, SubzoneLevelEntities,
+    UpdateZoneLevelVisibility, VisionDistance, VisualizationUpdate, Zone, ZoneLevel,
+    ZoneLevelEntities, ZoneLevelIds, ZoneRegion,
 };
 use crate::util::log_if_slow;
 use bevy::{ecs::system::SystemState, prelude::*};
@@ -386,56 +387,33 @@ fn zone_level_visibility(
     }
 }
 
-#[expect(clippy::needless_pass_by_value)]
 pub(crate) fn handle_map_events(
-    mut map_asset_events: EventReader<AssetEvent<MapAsset>>,
     mut spawn_subzone_level_writer: EventWriter<SpawnSubzoneLevel>,
-    map_manager: MapManager,
+    mut map_manager: MapManager,
 ) {
     let start = Instant::now();
 
-    for map_asset_event in map_asset_events.read() {
-        if let AssetEvent::LoadedWithDependencies { id } = map_asset_event {
-            let Some(zone_level) = map_manager.zone_level(id) else {
-                // This may be an asset of a previous gameplay.
-                eprintln!("Unknown map asset {id:?} loaded");
-                continue;
-            };
-
-            spawn_subzone_level_writer.send_batch(
-                zone_level
-                    .subzone_levels()
-                    .map(|subzone_level| SpawnSubzoneLevel { subzone_level }),
-            );
-        }
-    }
+    spawn_subzone_level_writer.send_batch(
+        map_manager
+            .read_loaded_map_assets()
+            .flat_map(|zone_level| zone_level.subzone_levels())
+            .map(|subzone_level| SpawnSubzoneLevel { subzone_level }),
+    );
 
     log_if_slow("handle_map_events", start);
 }
 
 #[expect(clippy::needless_pass_by_value)]
 pub(crate) fn handle_map_memory_events(
-    mut map_memory_asset_events: EventReader<AssetEvent<MapMemoryAsset>>,
+    mut explorations: EventWriter<Exploration>,
     mut spawn_subzone_level_writer: EventWriter<SpawnSubzoneLevel>,
     subzone_level_entities: Res<SubzoneLevelEntities>,
     expanded: Res<Expanded>,
-    mut explored: ResMut<Explored>,
     mut map_memory_manager: MapMemoryManager,
 ) {
     let start = Instant::now();
 
-    for map_asset_event in map_memory_asset_events.read() {
-        if let AssetEvent::LoadedWithDependencies { id } = map_asset_event {
-            let Some(base_zone_level) = map_memory_manager.base_zone_level(id) else {
-                // This may be an asset of a previous gameplay.
-                eprintln!("Unknown map memory asset {id:?} loaded");
-                continue;
-            };
-
-            //println!("Loading map memory for {base_zone_level:?}");
-            explored.load_memory(&mut map_memory_manager, base_zone_level);
-        }
-    }
+    explorations.send_batch(map_memory_manager.read_seen_pos().map(Exploration::new));
 
     spawn_expanded_subzone_levels(
         &mut spawn_subzone_level_writer,
@@ -578,4 +556,17 @@ pub(crate) fn spawn_initial_entities(
         12 * i32::from(sav.levy % 2) + 24,
     );
     spawner.spawn_characters(&infos, spawn_pos);
+}
+
+pub(crate) fn update_explored(
+    mut explorations: EventReader<Exploration>,
+    mut explored: ResMut<Explored>,
+) {
+    let start = Instant::now();
+
+    for exploration in explorations.read() {
+        explored.mark_pos_seen(exploration.pos());
+    }
+
+    log_if_slow("update_explored", start);
 }

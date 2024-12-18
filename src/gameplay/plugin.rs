@@ -2,7 +2,7 @@ use crate::application::ApplicationState;
 use crate::gameplay::spawn::{
     despawn_subzone_levels, despawn_zone_level, handle_map_events, handle_map_memory_events,
     handle_overmap_buffer_events, handle_overmap_events, spawn_initial_entities,
-    spawn_subzone_levels, spawn_subzones_for_camera, spawn_zone_levels,
+    spawn_subzone_levels, spawn_subzones_for_camera, spawn_zone_levels, update_explored,
     update_zone_level_visibility, update_zone_levels, update_zone_levels_with_missing_assets,
 };
 use crate::gameplay::systems::{
@@ -75,7 +75,10 @@ fn update_systems() -> SystemConfigs {
         handle_map_events.run_if(on_event::<AssetEvent<MapAsset>>),
         handle_map_memory_events.run_if(on_event::<AssetEvent<MapMemoryAsset>>),
         (
-            update_camera_offset.run_if(resource_exists_and_changed::<CameraOffset>),
+            (
+                update_explored,
+                update_camera_offset.run_if(resource_exists_and_changed::<CameraOffset>),
+            ),
             spawn_subzones_for_camera,
             (
                 (

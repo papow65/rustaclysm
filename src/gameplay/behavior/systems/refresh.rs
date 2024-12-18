@@ -4,13 +4,13 @@ use crate::gameplay::events::Exploration;
 use crate::gameplay::systems::{update_visualization, update_visualization_on_item_move};
 use crate::gameplay::{
     Accessible, Appearance, BaseSpeed, Clock, CurrentlyVisible, CurrentlyVisibleBuilder,
-    ElevationVisibility, Explored, Focus, GameplayLocal, LastSeen, Player, PlayerActionState, Pos,
+    ElevationVisibility, Focus, GameplayLocal, LastSeen, Player, PlayerActionState, Pos,
     Vehicle, VisualizationUpdate,
 };
 use crate::util::log_if_slow;
 use bevy::ecs::schedule::SystemConfigs;
 use bevy::prelude::{
-    resource_exists_and_changed, Camera, Changed, Children, EventReader, EventWriter,
+    resource_exists_and_changed, Camera, Changed, Children, EventWriter,
     GlobalTransform, IntoSystemConfigs as _, Local, Mesh3d, ParallelCommands, Parent, Query,
     RemovedComponents, Res, ResMut, State, Transform, Vec3, Visibility, With, Without,
 };
@@ -23,17 +23,14 @@ pub(super) fn refresh_all() -> SystemConfigs {
         update_transforms,
         update_peeking_transforms.run_if(resource_exists_and_changed::<State<PlayerActionState>>),
         update_hidden_item_visibility,
-        (
+        ((
+            update_visualization_on_item_move,
             (
-                update_visualization_on_item_move,
-                (
-                    update_visualization_on_weather_change,
-                    update_visualization_on_player_move,
-                )
-                    .chain(),
-            ),
-            update_explored,
-        )
+                update_visualization_on_weather_change,
+                update_visualization_on_player_move,
+            )
+                .chain(),
+        ),)
             .chain(),
     )
         .into_configs()
@@ -194,17 +191,4 @@ fn update_visualization_on_weather_change(
     }
 
     log_if_slow("update_visualization_on_weather_change", start);
-}
-
-pub(in super::super) fn update_explored(
-    mut explorations: EventReader<Exploration>,
-    mut explored: ResMut<Explored>,
-) {
-    let start = Instant::now();
-
-    for exploration in explorations.read() {
-        explored.mark_pos_seen(exploration.pos());
-    }
-
-    log_if_slow("update_explored", start);
 }

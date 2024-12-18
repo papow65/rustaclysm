@@ -18,9 +18,9 @@ impl<A: RegionAsset> AssetStorage<A> {
         path: PathFor<A>,
     ) -> AssetState<'a, A> {
         if path.0.exists() {
-            let overmap_handle = asset_server.load::<A>(path.0);
-            let id = overmap_handle.id();
-            self.live_handles.push(overmap_handle);
+            let region_handle = asset_server.load::<A>(path.0);
+            let id = region_handle.id();
+            self.live_handles.push(region_handle);
             self.regions.insert(id, region);
             if let Some(asset) = assets.get(id) {
                 AssetState::Available { asset }
