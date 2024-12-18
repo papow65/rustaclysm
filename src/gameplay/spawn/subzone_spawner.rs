@@ -18,10 +18,6 @@ pub(crate) struct SubzoneSpawner<'w, 's> {
 }
 
 impl SubzoneSpawner<'_, '_> {
-    pub(crate) fn subzone_level_entities(&self) -> &SubzoneLevelEntities {
-        &self.subzone_level_entities
-    }
-
     pub(crate) fn spawn_subzone_level(
         &mut self,
         map_manager: &mut MapManager,

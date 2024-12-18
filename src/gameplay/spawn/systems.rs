@@ -386,13 +386,14 @@ fn zone_level_visibility(
     }
 }
 
+#[expect(clippy::needless_pass_by_value)]
 pub(crate) fn handle_map_events(
     mut map_asset_events: EventReader<AssetEvent<MapAsset>>,
-    mut subzone_spawner: SubzoneSpawner,
-    mut map_manager: MapManager,
-    mut map_memory_manager: MapMemoryManager,
-    mut overmap_buffer_manager: OvermapBufferManager,
+    mut spawn_subzone_level_writer: EventWriter<SpawnSubzoneLevel>,
+    map_manager: MapManager,
 ) {
+    let start = Instant::now();
+
     for map_asset_event in map_asset_events.read() {
         if let AssetEvent::LoadedWithDependencies { id } = map_asset_event {
             let Some(zone_level) = map_manager.zone_level(id) else {
@@ -401,22 +402,15 @@ pub(crate) fn handle_map_events(
                 continue;
             };
 
-            for subzone_level in zone_level.subzone_levels() {
-                if subzone_spawner
-                    .subzone_level_entities()
-                    .get(subzone_level)
-                    .is_none()
-                {
-                    subzone_spawner.spawn_subzone_level(
-                        &mut map_manager,
-                        &mut map_memory_manager,
-                        &mut overmap_buffer_manager,
-                        subzone_level,
-                    );
-                }
-            }
+            spawn_subzone_level_writer.send_batch(
+                zone_level
+                    .subzone_levels()
+                    .map(|subzone_level| SpawnSubzoneLevel { subzone_level }),
+            );
         }
     }
+
+    log_if_slow("handle_map_events", start);
 }
 
 #[expect(clippy::needless_pass_by_value)]
@@ -428,6 +422,8 @@ pub(crate) fn handle_map_memory_events(
     mut explored: ResMut<Explored>,
     mut map_memory_manager: MapMemoryManager,
 ) {
+    let start = Instant::now();
+
     for map_asset_event in map_memory_asset_events.read() {
         if let AssetEvent::LoadedWithDependencies { id } = map_asset_event {
             let Some(base_zone_level) = map_memory_manager.base_zone_level(id) else {
@@ -446,6 +442,8 @@ pub(crate) fn handle_map_memory_events(
         &subzone_level_entities,
         &expanded.region,
     );
+
+    log_if_slow("handle_map_memory_events", start);
 }
 
 #[expect(clippy::needless_pass_by_value)]
