@@ -37,7 +37,7 @@ impl MapManager<'_, '_> {
         }
     }
 
-    pub(crate) fn read_loaded_map_assets(&mut self) -> impl Iterator<Item = ZoneLevel> + use<'_> {
+    pub(crate) fn read_loaded_assets(&mut self) -> impl Iterator<Item = ZoneLevel> + use<'_> {
         self.asset_events.read().filter_map(|event| {
             if let AssetEvent::LoadedWithDependencies { id } = event {
                 if let Some(zone_level) = self.storage.region(id) {

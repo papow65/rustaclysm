@@ -1,6 +1,7 @@
-use crate::gameplay::cdda::RepetitionBlockExt as _;
-use crate::gameplay::{Level, OvermapBufferAsset, Overzone, Pos, Zone, ZoneLevel};
-use bevy::{prelude::Resource, utils::HashMap};
+use crate::gameplay::{Level, Overzone, Pos, Zone, ZoneLevel};
+use bevy::prelude::Resource;
+use bevy::utils::hashbrown::hash_map::Entry;
+use bevy::utils::{HashMap, HashSet};
 
 /// Ever seen by the player character
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -12,9 +13,9 @@ pub(crate) enum SeenFrom {
 
 #[derive(Default, Resource)]
 pub(crate) struct Explored {
-    zone_level: HashMap<ZoneLevel, SeenFrom>,
+    zone_levels: HashMap<ZoneLevel, SeenFrom>,
     pos: HashMap<Pos, bool>,
-    loaded_overzones: Vec<Overzone>,
+    loaded_overzones: HashSet<Overzone>,
 }
 
 impl Explored {
@@ -25,40 +26,32 @@ impl Explored {
             level: pos.level.min(Level::ZERO),
         };
 
-        self.zone_level.insert(zone_level, SeenFrom::CloseBy);
+        self.zone_levels.insert(zone_level, SeenFrom::CloseBy);
         self.pos.insert(pos, true);
     }
 
+    /// Also mark the overzone as loaded
+    pub(crate) fn mark_zone_level_seen(&mut self, zone_level: ZoneLevel) {
+        if let Entry::Vacant(vacant) = self.zone_levels.entry(zone_level) {
+            vacant.insert(SeenFrom::FarAway);
+            self.loaded_overzones
+                .insert(Overzone::from(zone_level.zone));
+        }
+    }
+
     pub(crate) fn has_zone_level_been_seen(&self, zone_level: ZoneLevel) -> Option<SeenFrom> {
-        self.zone_level.get(&zone_level).copied()
+        self.zone_levels.get(&zone_level).copied().or_else(|| {
+            self.loaded_overzones
+                .contains(&Overzone::from(zone_level.zone))
+                .then_some(SeenFrom::Never)
+        })
     }
 
     pub(crate) fn has_pos_been_seen(&self, pos: Pos) -> bool {
         self.pos.get(&pos) == Some(&true)
     }
 
-    pub(crate) fn load_buffer(&mut self, overzone: Overzone, overmap_buffer: &OvermapBufferAsset) {
-        if !self.loaded_overzones.contains(&overzone) {
-            for level in Level::GROUNDS {
-                let overmap = overmap_buffer
-                    .0
-                    .visible
-                    .get(level.index())
-                    .expect("level missing")
-                    .load_as_overzone(overzone, level);
-                for (zone_level, seen) in overmap {
-                    self.zone_level.entry(zone_level).or_insert(if *seen {
-                        SeenFrom::FarAway
-                    } else {
-                        SeenFrom::Never
-                    });
-                }
-            }
-            self.loaded_overzones.push(overzone);
-        }
-    }
-
     pub(crate) fn loaded(&self) -> bool {
-        !self.zone_level.is_empty()
+        !self.zone_levels.is_empty()
     }
 }

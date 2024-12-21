@@ -3,7 +3,7 @@ use crate::gameplay::spawn::{SubzoneSpawner, TileSpawner, ZoneSpawner};
 use crate::gameplay::{
     ActiveSav, DespawnSubzoneLevel, DespawnZoneLevel, Expanded, Explored, Focus, GameplayLocal,
     Infos, Level, MapManager, MapMemoryManager, MissingAsset, ObjectCategory, ObjectDefinition,
-    OvermapAsset, OvermapBufferAsset, OvermapBufferManager, OvermapManager, Pos, Region, SeenFrom,
+    OvermapAsset, OvermapBufferManager, OvermapManager, Pos, Region, SeenFrom,
     SpawnSubzoneLevel, SpawnZoneLevel, SubzoneLevel, SubzoneLevelEntities,
     UpdateZoneLevelVisibility, VisionDistance, VisualizationUpdate, Zone, ZoneLevel,
     ZoneLevelEntities, ZoneLevelIds, ZoneRegion,
@@ -395,7 +395,7 @@ pub(crate) fn handle_map_events(
 
     spawn_subzone_level_writer.send_batch(
         map_manager
-            .read_loaded_map_assets()
+            .read_loaded_assets()
             .flat_map(|zone_level| zone_level.subzone_levels())
             .map(|subzone_level| SpawnSubzoneLevel { subzone_level }),
     );
@@ -413,7 +413,7 @@ pub(crate) fn handle_map_memory_events(
 ) {
     let start = Instant::now();
 
-    explorations.send_batch(map_memory_manager.read_seen_pos().map(Exploration::new));
+    explorations.send_batch(map_memory_manager.read_seen_pos().map(Exploration::Pos));
 
     spawn_expanded_subzone_levels(
         &mut spawn_subzone_level_writer,
@@ -424,31 +424,19 @@ pub(crate) fn handle_map_memory_events(
     log_if_slow("handle_map_memory_events", start);
 }
 
-#[expect(clippy::needless_pass_by_value)]
 pub(crate) fn handle_overmap_buffer_events(
-    mut overmap_buffer_events: EventReader<AssetEvent<OvermapBufferAsset>>,
-    overmap_buffer_assets: Res<Assets<OvermapBufferAsset>>,
-    mut explored: ResMut<Explored>,
-    overmap_buffer_manager: OvermapBufferManager,
+    mut explorations: EventWriter<Exploration>,
+    mut overmap_buffer_manager: OvermapBufferManager,
 ) {
     let start = Instant::now();
 
-    for overmap_asset_event in overmap_buffer_events.read() {
-        if let AssetEvent::LoadedWithDependencies { id } = overmap_asset_event {
-            let Some(overzone) = overmap_buffer_manager.overzone(id) else {
-                // This may be an asset of a previous gameplay.
-                eprintln!("Unknown overmap buffer asset {id:?} loaded");
-                continue;
-            };
+    explorations.send_batch(
+        overmap_buffer_manager
+            .read_seen_zone_levels()
+            .map(Exploration::ZoneLevel),
+    );
 
-            let overmap_buffer = overmap_buffer_assets
-                .get(*id)
-                .expect("Overmap buffer loaded");
-            explored.load_buffer(overzone, overmap_buffer);
-        }
-    }
-
-    log_if_slow("update_zone_level_visibility", start);
+    log_if_slow("handle_overmap_buffer_events", start);
 }
 
 #[expect(clippy::needless_pass_by_value)]
@@ -473,7 +461,7 @@ pub(crate) fn handle_overmap_events(
         }
     }
 
-    log_if_slow("update_zone_level_visibility", start);
+    log_if_slow("handle_overmap_events", start);
 }
 
 #[expect(clippy::needless_pass_by_value)]
@@ -533,7 +521,7 @@ pub(crate) fn update_zone_levels_with_missing_assets(
             .remove::<MissingAsset>();
     }
 
-    log_if_slow("update_zone_level_visibility", start);
+    log_if_slow("update_zone_levels_with_missing_assets", start);
 }
 
 #[expect(clippy::needless_pass_by_value)]
@@ -565,7 +553,10 @@ pub(crate) fn update_explored(
     let start = Instant::now();
 
     for exploration in explorations.read() {
-        explored.mark_pos_seen(exploration.pos());
+        match exploration {
+            Exploration::Pos(pos) => explored.mark_pos_seen(*pos),
+            Exploration::ZoneLevel(zone_level) => explored.mark_zone_level_seen(*zone_level),
+        }
     }
 
     log_if_slow("update_explored", start);

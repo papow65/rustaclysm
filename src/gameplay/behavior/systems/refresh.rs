@@ -4,15 +4,15 @@ use crate::gameplay::events::Exploration;
 use crate::gameplay::systems::{update_visualization, update_visualization_on_item_move};
 use crate::gameplay::{
     Accessible, Appearance, BaseSpeed, Clock, CurrentlyVisible, CurrentlyVisibleBuilder,
-    ElevationVisibility, Focus, GameplayLocal, LastSeen, Player, PlayerActionState, Pos,
-    Vehicle, VisualizationUpdate,
+    ElevationVisibility, Focus, GameplayLocal, LastSeen, Player, PlayerActionState, Pos, Vehicle,
+    VisualizationUpdate,
 };
 use crate::util::log_if_slow;
 use bevy::ecs::schedule::SystemConfigs;
 use bevy::prelude::{
-    resource_exists_and_changed, Camera, Changed, Children, EventWriter,
-    GlobalTransform, IntoSystemConfigs as _, Local, Mesh3d, ParallelCommands, Parent, Query,
-    RemovedComponents, Res, ResMut, State, Transform, Vec3, Visibility, With, Without,
+    resource_exists_and_changed, Camera, Changed, Children, EventWriter, GlobalTransform,
+    IntoSystemConfigs as _, Local, Mesh3d, ParallelCommands, Parent, Query, RemovedComponents, Res,
+    ResMut, State, Transform, Vec3, Visibility, With, Without,
 };
 use std::cell::RefCell;
 use std::{cell::OnceCell, time::Instant};

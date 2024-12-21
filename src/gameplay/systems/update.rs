@@ -54,7 +54,7 @@ pub(crate) fn update_visualization(
         if last_seen != &LastSeen::Never {
             if last_seen != &previously_seen {
                 if previously_seen == LastSeen::Never {
-                    exploration = Some(Exploration::new(pos));
+                    exploration = Some(Exploration::Pos(pos));
                 }
 
                 // TODO select an appearance based on amount of perceived light

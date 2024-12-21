@@ -1,16 +1,10 @@
-use crate::gameplay::Pos;
+use crate::gameplay::{Pos, ZoneLevel};
 use bevy::prelude::Event;
 
-/// The player has seen the pos
 #[derive(Debug, Event)]
-pub(crate) struct Exploration(Pos);
-
-impl Exploration {
-    pub(crate) const fn new(pos: Pos) -> Self {
-        Self(pos)
-    }
-
-    pub(crate) const fn pos(&self) -> Pos {
-        self.0
-    }
+pub(crate) enum Exploration {
+    /// The player has seen the pos
+    Pos(Pos),
+    /// The player has seen the zone level on the map
+    ZoneLevel(ZoneLevel),
 }
