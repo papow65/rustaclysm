@@ -1,7 +1,8 @@
 use crate::gameplay::cdda::paths::OvermapBufferPath;
 use crate::gameplay::cdda::region_assets::AssetStorage;
 use crate::gameplay::{
-    ActiveSav, AssetState, Level, OvermapBufferAsset, Overzone, RepetitionBlockExt as _, ZoneLevel,
+    ActiveSav, AssetState, Exploration, Level, OvermapBufferAsset, Overzone,
+    RepetitionBlockExt as _,
 };
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{AssetEvent, AssetServer, Assets, EventReader, Res, ResMut};
@@ -22,33 +23,36 @@ impl OvermapBufferManager<'_, '_> {
             .handle(&self.asset_server, &self.assets, overzone, path)
     }
 
-    pub(crate) fn read_seen_zone_levels(&mut self) -> impl Iterator<Item = ZoneLevel> + use<'_> {
-        self.asset_events
-            .read()
-            .filter_map(|event| {
-                if let AssetEvent::LoadedWithDependencies { id } = event {
-                    let overzone = self.storage.region(id);
-                    match (overzone, self.assets.get(*id)) {
-                        (Some(overzone), Some(OvermapBufferAsset(overmap_buffer))) => {
-                            Some((overzone, overmap_buffer))
-                        }
-                        (None, None) => None,
-                        unexpected => panic!("{unexpected:?}"),
+    pub(crate) fn read_seen_zone_levels(
+        &mut self,
+    ) -> impl Iterator<Item = Exploration> + use<'_> + '_ {
+        self.asset_events.read().filter_map(|event| {
+            if let AssetEvent::LoadedWithDependencies { id } = event {
+                let overzone = self.storage.region(id);
+                match (overzone, self.assets.get(*id)) {
+                    (Some(overzone), Some(OvermapBufferAsset(overmap_buffer))) => {
+                        Some(Exploration::Overzone(
+                            overzone,
+                            Level::GROUNDS
+                                .iter()
+                                .flat_map(move |level| {
+                                    overmap_buffer
+                                        .visible
+                                        .get(level.index())
+                                        .expect("All levels should be present")
+                                        .load_as_overzone(overzone, *level)
+                                        .into_iter()
+                                        .filter_map(|(zone_level, seen)| seen.then_some(zone_level))
+                                })
+                                .collect(),
+                        ))
                     }
-                } else {
-                    None
+                    (None, None) => None,
+                    unexpected => panic!("{unexpected:?}"),
                 }
-            })
-            .flat_map(|(overzone, overmap_buffer)| {
-                Level::GROUNDS.iter().flat_map(move |level| {
-                    overmap_buffer
-                        .visible
-                        .get(level.index())
-                        .expect("All levels should be present")
-                        .load_as_overzone(overzone, *level)
-                        .into_iter()
-                        .filter_map(|(zone_level, seen)| seen.then_some(zone_level))
-                })
-            })
+            } else {
+                None
+            }
+        })
     }
 }

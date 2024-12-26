@@ -3,10 +3,9 @@ use crate::gameplay::spawn::{SubzoneSpawner, TileSpawner, ZoneSpawner};
 use crate::gameplay::{
     ActiveSav, DespawnSubzoneLevel, DespawnZoneLevel, Expanded, Explored, Focus, GameplayLocal,
     Infos, Level, MapManager, MapMemoryManager, MissingAsset, ObjectCategory, ObjectDefinition,
-    OvermapAsset, OvermapBufferManager, OvermapManager, Pos, Region, SeenFrom,
-    SpawnSubzoneLevel, SpawnZoneLevel, SubzoneLevel, SubzoneLevelEntities,
-    UpdateZoneLevelVisibility, VisionDistance, VisualizationUpdate, Zone, ZoneLevel,
-    ZoneLevelEntities, ZoneLevelIds, ZoneRegion,
+    OvermapAsset, OvermapBufferManager, OvermapManager, Pos, Region, SeenFrom, SpawnSubzoneLevel,
+    SpawnZoneLevel, SubzoneLevel, SubzoneLevelEntities, UpdateZoneLevelVisibility, VisionDistance,
+    VisualizationUpdate, Zone, ZoneLevel, ZoneLevelEntities, ZoneLevelIds, ZoneRegion,
 };
 use crate::util::log_if_slow;
 use bevy::{ecs::system::SystemState, prelude::*};
@@ -413,7 +412,7 @@ pub(crate) fn handle_map_memory_events(
 ) {
     let start = Instant::now();
 
-    explorations.send_batch(map_memory_manager.read_seen_pos().map(Exploration::Pos));
+    explorations.send_batch(map_memory_manager.read_seen_pos());
 
     spawn_expanded_subzone_levels(
         &mut spawn_subzone_level_writer,
@@ -430,11 +429,7 @@ pub(crate) fn handle_overmap_buffer_events(
 ) {
     let start = Instant::now();
 
-    explorations.send_batch(
-        overmap_buffer_manager
-            .read_seen_zone_levels()
-            .map(Exploration::ZoneLevel),
-    );
+    explorations.send_batch(overmap_buffer_manager.read_seen_zone_levels());
 
     log_if_slow("handle_overmap_buffer_events", start);
 }
@@ -552,12 +547,7 @@ pub(crate) fn update_explored(
 ) {
     let start = Instant::now();
 
-    for exploration in explorations.read() {
-        match exploration {
-            Exploration::Pos(pos) => explored.mark_pos_seen(*pos),
-            Exploration::ZoneLevel(zone_level) => explored.mark_zone_level_seen(*zone_level),
-        }
-    }
+    explored.add(explorations.read());
 
     log_if_slow("update_explored", start);
 }

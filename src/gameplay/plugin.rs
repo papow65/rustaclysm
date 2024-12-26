@@ -16,7 +16,7 @@ use crate::gameplay::{
 };
 use crate::gameplay::{
     update_camera_offset, ActorPlugin, CameraOffset, CddaPlugin, DespawnSubzoneLevel,
-    DespawnZoneLevel, GameplayScreenState, MapAsset, MapMemoryAsset, OvermapAsset,
+    DespawnZoneLevel, Exploration, GameplayScreenState, MapAsset, MapMemoryAsset, OvermapAsset,
     OvermapBufferAsset, PhrasePlugin, RelativeSegments, SpawnSubzoneLevel, SpawnZoneLevel,
     UpdateZoneLevelVisibility, VisualizationUpdate,
 };
@@ -76,7 +76,7 @@ fn update_systems() -> SystemConfigs {
         handle_map_memory_events.run_if(on_event::<AssetEvent<MapMemoryAsset>>),
         (
             (
-                update_explored,
+                update_explored.run_if(on_event::<Exploration>),
                 update_camera_offset.run_if(resource_exists_and_changed::<CameraOffset>),
             ),
             spawn_subzones_for_camera,

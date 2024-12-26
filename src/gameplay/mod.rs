@@ -51,8 +51,9 @@ use self::components::{
 };
 use self::events::{
     ActorChange, ActorEvent, CorpseChange, CorpseEvent, Damage, DespawnSubzoneLevel,
-    DespawnZoneLevel, Healing, Message, RefreshAfterBehavior, Severity, SpawnSubzoneLevel,
-    SpawnZoneLevel, TerrainChange, TerrainEvent, Toggle, UpdateZoneLevelVisibility,
+    DespawnZoneLevel, Exploration, Healing, Message, RefreshAfterBehavior, Severity,
+    SpawnSubzoneLevel, SpawnZoneLevel, TerrainChange, TerrainEvent, Toggle,
+    UpdateZoneLevelVisibility,
 };
 use self::focus::{Focus, FocusState};
 use self::item::{

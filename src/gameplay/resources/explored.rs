@@ -1,4 +1,4 @@
-use crate::gameplay::{Level, Overzone, Pos, Zone, ZoneLevel};
+use crate::gameplay::{Exploration, Level, Overzone, Pos, SubzoneLevel, Zone, ZoneLevel};
 use bevy::prelude::Resource;
 use bevy::utils::hashbrown::hash_map::Entry;
 use bevy::utils::{HashMap, HashSet};
@@ -19,23 +19,49 @@ pub(crate) struct Explored {
 }
 
 impl Explored {
-    pub(crate) fn mark_pos_seen(&mut self, pos: Pos) {
-        // Lower the zone level to the ground
+    fn mark_pos_seen(&mut self, pos: Pos) {
         let zone_level = ZoneLevel {
             zone: Zone::from(pos),
-            level: pos.level.min(Level::ZERO),
+            level: pos.level.min(Level::ZERO), // Lower the zone level to the ground
         };
-
         self.zone_levels.insert(zone_level, SeenFrom::CloseBy);
+
         self.pos.insert(pos, true);
     }
 
-    /// Also mark the overzone as loaded
-    pub(crate) fn mark_zone_level_seen(&mut self, zone_level: ZoneLevel) {
-        if let Entry::Vacant(vacant) = self.zone_levels.entry(zone_level) {
-            vacant.insert(SeenFrom::FarAway);
-            self.loaded_overzones
-                .insert(Overzone::from(zone_level.zone));
+    fn add_subzone_level(&mut self, subzone_level: SubzoneLevel, pos: &[Pos]) {
+        let zone_level = ZoneLevel {
+            zone: ZoneLevel::from(subzone_level).zone,
+            level: subzone_level.level.min(Level::ZERO), // Lower the zone level to the ground
+        };
+        self.zone_levels.insert(zone_level, SeenFrom::CloseBy);
+
+        for &pos in pos {
+            self.pos.insert(pos, true);
+        }
+    }
+
+    fn add_overzone(&mut self, overzone: Overzone, zone_levels: &[ZoneLevel]) {
+        self.loaded_overzones.insert(overzone);
+
+        for &zone_level in zone_levels {
+            if let Entry::Vacant(vacant) = self.zone_levels.entry(zone_level) {
+                vacant.insert(SeenFrom::FarAway);
+            }
+        }
+    }
+
+    pub(crate) fn add<'e>(&mut self, explorations: impl Iterator<Item = &'e Exploration>) {
+        for exploration in explorations {
+            match exploration {
+                Exploration::Pos(pos) => self.mark_pos_seen(*pos),
+                Exploration::SubzoneLevel(subzone_level, pos) => {
+                    self.add_subzone_level(*subzone_level, pos);
+                }
+                Exploration::Overzone(overzone, zone_levels) => {
+                    self.add_overzone(*overzone, zone_levels);
+                }
+            }
         }
     }
 

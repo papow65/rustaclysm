@@ -1,6 +1,8 @@
 use crate::gameplay::cdda::paths::MapMemoryPath;
 use crate::gameplay::cdda::region_assets::AssetStorage;
-use crate::gameplay::{ActiveSav, AssetState, MapMemoryAsset, Pos, SubzoneLevel, Zone, ZoneLevel};
+use crate::gameplay::{
+    ActiveSav, AssetState, Exploration, MapMemoryAsset, SubzoneLevel, Zone, ZoneLevel,
+};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{AssetEvent, AssetServer, Assets, EventReader, Res, ResMut};
 use cdda_json_files::SubmapMemory;
@@ -43,7 +45,7 @@ impl MapMemoryManager<'_, '_> {
         }
     }
 
-    pub(crate) fn read_seen_pos(&mut self) -> impl Iterator<Item = Pos> + use<'_> {
+    pub(crate) fn read_seen_pos(&mut self) -> impl Iterator<Item = Exploration> + use<'_> {
         self.asset_events
             .read()
             .filter_map(|event| {
@@ -83,16 +85,20 @@ impl MapMemoryManager<'_, '_> {
                     })
                 })
             })
-            .flat_map(|(subzone_level, submap_memory)| {
-                (0..12).flat_map(move |local_pos_z| {
-                    (0..12).filter_map(move |local_pos_x| {
-                        submap_memory.seen(local_pos_x, local_pos_z).then_some(
-                            subzone_level
-                                .base_corner()
-                                .horizontal_offset(i32::from(local_pos_x), i32::from(local_pos_z)),
-                        )
+            .map(|(subzone_level, submap_memory)| {
+                let pos = (0..12)
+                    .flat_map(move |local_pos_z| {
+                        (0..12).filter_map(move |local_pos_x| {
+                            submap_memory.seen(local_pos_x, local_pos_z).then_some(
+                                subzone_level.base_corner().horizontal_offset(
+                                    i32::from(local_pos_x),
+                                    i32::from(local_pos_z),
+                                ),
+                            )
+                        })
                     })
-                })
+                    .collect();
+                Exploration::SubzoneLevel(subzone_level, pos)
             })
     }
 }
