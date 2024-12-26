@@ -18,7 +18,10 @@ pub(crate) fn create_gameplay_key_bindings(
             bindings.add('!', spawn_zombies);
             bindings.add(KeyCode::F12, to_main_menu);
         },
-        ManualSection::new(&[("to main menu", "F12")], u8::MAX - 2),
+        ManualSection::new(
+            &[("add debug zeds", "!"), ("to main menu", "F12")],
+            u8::MAX - 2,
+        ),
     );
 
     log_if_slow("create_gameplay_key_bindings", start);
