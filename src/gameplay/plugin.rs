@@ -23,7 +23,7 @@ use crate::gameplay::{
 use crate::util::log_transition_plugin;
 use bevy::prelude::{
     in_state, on_event, resource_exists, resource_exists_and_changed, App, AppExtStates as _,
-    AssetEvent, FixedUpdate, IntoSystemConfigs as _, OnEnter, Plugin, Update,
+    AssetEvent, FixedUpdate, IntoSystemConfigs as _, Last, OnEnter, Plugin, Update,
 };
 use bevy::{diagnostic::FrameTimeDiagnosticsPlugin, ecs::schedule::SystemConfigs};
 
@@ -54,6 +54,7 @@ impl Plugin for GameplayPlugin {
         app.add_systems(OnEnter(ApplicationState::Gameplay), startup_systems());
         app.add_systems(Update, update_systems());
         app.add_systems(FixedUpdate, fixed_update_systems());
+        app.add_systems(Last, despawn_systems());
     }
 }
 
@@ -81,14 +82,11 @@ fn update_systems() -> SystemConfigs {
             ),
             spawn_subzones_for_camera,
             (
-                (
-                    spawn_subzone_levels.run_if(on_event::<SpawnSubzoneLevel>),
-                    update_visualization_on_item_move.run_if(resource_exists::<RelativeSegments>),
-                )
-                    .chain()
-                    .run_if(on_event::<SpawnSubzoneLevel>),
-                despawn_subzone_levels.run_if(on_event::<DespawnSubzoneLevel>),
-            ),
+                spawn_subzone_levels.run_if(on_event::<SpawnSubzoneLevel>),
+                update_visualization_on_item_move.run_if(resource_exists::<RelativeSegments>),
+            )
+                .chain()
+                .run_if(on_event::<SpawnSubzoneLevel>),
             update_visibility.run_if(resource_exists_and_changed::<VisualizationUpdate>),
         )
             .chain(),
@@ -97,7 +95,6 @@ fn update_systems() -> SystemConfigs {
             (
                 spawn_zone_levels.run_if(on_event::<SpawnZoneLevel>),
                 update_zone_level_visibility.run_if(on_event::<UpdateZoneLevelVisibility>),
-                despawn_zone_level.run_if(on_event::<DespawnZoneLevel>),
             ),
         )
             .chain(),
@@ -112,4 +109,13 @@ fn fixed_update_systems() -> SystemConfigs {
         list_archetypes,
     )
         .into_configs()
+}
+
+/// This should run last, to prevent Bevy crashing on despawned entities being modified.
+fn despawn_systems() -> SystemConfigs {
+    (
+        despawn_subzone_levels.run_if(on_event::<DespawnSubzoneLevel>),
+        despawn_zone_level.run_if(on_event::<DespawnZoneLevel>),
+    )
+        .run_if(in_state(ApplicationState::Gameplay))
 }
