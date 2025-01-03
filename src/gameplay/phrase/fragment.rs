@@ -172,7 +172,8 @@ impl Phrase {
                 text_sections.push((
                     TextSpan(
                         if text_sections
-                            .last().is_some_and(|l| Self::space_between(&l.0 .0, &f.text))
+                            .last()
+                            .is_some_and(|l| Self::space_between(&l.0 .0, &f.text))
                         {
                             format!(" {}", f.text)
                         } else {

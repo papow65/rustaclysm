@@ -1,9 +1,12 @@
 use crate::gameplay::item::Pocket;
 use crate::gameplay::{
-    Amount, Containable, ItemHierarchy, ItemIntegrity, ObjectCategory, ObjectDefinition, Pos,
-    StandardIntegrity,
+    Amount, Containable, Infos, ItemHierarchy, ItemIntegrity, ObjectCategory, ObjectDefinition,
+    Pos, StandardIntegrity,
 };
-use bevy::prelude::{App, Changed, Children, Entity, FixedUpdate, Or, Parent, Plugin, Query, With};
+use bevy::prelude::{
+    resource_exists, App, Changed, Children, Entity, FixedUpdate, IntoSystemConfigs as _, Or,
+    Parent, Plugin, Query, With,
+};
 use cdda_json_files::PocketType;
 
 pub(crate) struct ItemChecksPlugin;
@@ -15,7 +18,7 @@ impl Plugin for ItemChecksPlugin {
             (
                 check_item_category,
                 check_item_parents,
-                check_single_item,
+                check_single_item.run_if(resource_exists::<Infos>),
                 check_integrities,
             ),
         );
