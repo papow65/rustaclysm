@@ -51,8 +51,9 @@ pub(crate) fn update_visualization(
         // TODO check if there is enough light
         last_seen.update(&visible);
 
-        if last_seen != &LastSeen::Never {
-            if last_seen != &previously_seen {
+        let ever_seen = *last_seen != LastSeen::Never;
+        if ever_seen {
+            if *last_seen != previously_seen {
                 if previously_seen == LastSeen::Never {
                     exploration = Some(Exploration::Pos(pos));
                 }
@@ -64,6 +65,12 @@ pub(crate) fn update_visualization(
             *visibility =
                 calculate_visibility(focus, player, pos, elevation_visibility, last_seen, speed);
         }
+
+        let hidden = *visibility == Visibility::Hidden;
+        assert!(
+            ever_seen || hidden,
+            "Visibility is only possible when seen or remembered"
+        );
     }
 
     exploration
