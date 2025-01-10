@@ -32,7 +32,7 @@ impl Stamina {
     }
 
     pub(crate) fn apply(&mut self, impact: &Impact) {
-        if let Self::Limited(ref mut limited) = self {
+        if let &mut Self::Limited(ref mut limited) = self {
             limited.adjust(impact.stamina_impact().as_i16(impact.duration()));
         }
     }

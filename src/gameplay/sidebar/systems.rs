@@ -228,7 +228,7 @@ fn update_log(
                 transient_message.extend(to_text_sections(&message, SINGLE));
             } else {
                 match last_message.get() {
-                    Some((last, ref mut count)) if *last == message => {
+                    &mut Some((ref last, ref mut count)) if *last == message => {
                         *count += 1;
                     }
                     _ => {

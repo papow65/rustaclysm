@@ -278,7 +278,7 @@ impl<'w> TileSpawner<'w, '_> {
         items: &Vec<BashItem>,
     ) {
         for item in items {
-            match item {
+            match *item {
                 BashItem::Single(ref item) => {
                     if match &item.prob {
                         Some(probability) => probability.random(),
@@ -416,8 +416,8 @@ impl<'w> TileSpawner<'w, '_> {
             entity.insert(OpaqueFloor);
         }
 
-        if let Some(bash) = &terrain_info.bash {
-            if let Some(ter_set) = &bash.ter_set {
+        if let Some(ref bash) = terrain_info.bash {
+            if let Some(ref ter_set) = bash.ter_set {
                 if ter_set != &ObjectId::new("t_null") {
                     // TODO
                     entity.insert(StandardIntegrity(Limited::full(10)));

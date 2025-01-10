@@ -119,7 +119,7 @@ mod container_tests {
         assert!(
             matches!(
                 &result,
-                Ok([
+                &Ok([
                     TileMemory {
                         type_id: Some(ref x),
                         subtile: 0,
