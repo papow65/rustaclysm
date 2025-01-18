@@ -32,10 +32,6 @@ impl WalkingCost {
     pub(crate) fn duration(&self, speed: Speed) -> Duration {
         self.equivalent_distance / speed
     }
-
-    pub(crate) fn f32(&self) -> f32 {
-        0.001 / self.equivalent_distance.meter_f32()
-    }
 }
 
 impl Add<Self> for WalkingCost {

@@ -13,6 +13,11 @@ impl VisionDistance {
     pub(crate) const MAX_VISION_RANGE: RangeInclusive<i32> =
         -Self::MAX_VISION_TILES..=Self::MAX_VISION_TILES;
 
+    /// Useful for estimates
+    pub(crate) fn f32(&self) -> f32 {
+        (self.square_mm as f32).sqrt()
+    }
+
     /// Often slower than `in_range`
     pub(crate) fn as_tiles(&self) -> usize {
         (self.square_mm as f32 / Distance::ADJACENT.millimeter().pow(2) as f32)

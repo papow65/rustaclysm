@@ -168,6 +168,7 @@ impl Faction {
         let min_time = up_time * (PLANNING_LIMIT - 1); // included
         let max_time = up_time * PLANNING_LIMIT; // not included
 
+        //let start = Instant::now();
         let graph = dijkstra_all(&(*actor.pos, Duration::ZERO), |(pos, prev_total_ms)| {
             envir
                 .nbors_for_moving(*pos, None, self.intelligence(), actor.speed())
@@ -178,13 +179,14 @@ impl Faction {
                     } else {
                         Some((
                             (nbor_pos, total_ms),
-                            Danger::new(envir, &ms, nbor_pos, enemies),
+                            Danger::estimated(&ms, nbor_pos, enemies),
                         ))
                     }
                 })
                 .collect::<Vec<((Pos, Duration), Danger)>>()
                 .into_iter()
         });
+        //log_if_slow("flee dijkstra_all", start);
         let safest_longtime_pos = graph
             .iter()
             .filter(|((_, ms), _)| min_time < *ms)
@@ -336,14 +338,14 @@ impl Faction {
 pub(crate) struct Danger(FloatOrd<f32>);
 
 impl Danger {
-    pub(crate) fn new(envir: &Envir, duration: &Duration, pos: Pos, froms: &[Pos]) -> Self {
-        Self(FloatOrd(
+    pub(crate) fn estimated(duration: &Duration, pos: Pos, froms: &[Pos]) -> Self {
+        Self(FloatOrd({
             duration.milliseconds() as f32
                 * froms
                     .iter()
-                    .map(|from| 1.0 / (envir.walking_cost(pos, *from).f32()))
-                    .sum::<f32>(),
-        ))
+                    .map(|from| 1.0 / pos.vision_distance(*from).f32().max(1.0))
+                    .sum::<f32>()
+        }))
     }
 
     pub(crate) fn average(&self, duration: &Duration) -> Self {
