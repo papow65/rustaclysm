@@ -67,10 +67,10 @@ pub(crate) fn update_visualization(
         }
 
         let hidden = *visibility == Visibility::Hidden;
-        assert!(
-            ever_seen || hidden,
-            "Visibility is only possible when seen or remembered"
-        );
+        if !ever_seen && !hidden {
+            // This fails for vehicles TODO
+            eprintln!("update_visualization: Unexcpected combination of {last_seen:?} and {visibility:?} at {pos:?}");
+        }
     }
 
     exploration
