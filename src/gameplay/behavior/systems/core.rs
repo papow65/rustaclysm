@@ -187,7 +187,7 @@ fn plan_npc_action(
         strategy.action
     );
 
-    log_if_slow("wait_for_player_input", start);
+    log_if_slow("plan_npc_action", start);
 
     strategy.action
 }
