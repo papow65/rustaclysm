@@ -1,5 +1,5 @@
 use crate::application::ApplicationState;
-use crate::gameplay::cdda::{region_assets::RegionAssetsPlugin, ActiveSav, Infos, TileLoader};
+use crate::gameplay::cdda::{ActiveSav, Infos, TileLoader, region_assets::RegionAssetsPlugin};
 use crate::util::AsyncResourcePlugin;
 use bevy::prelude::{App, Commands, OnExit, Plugin};
 

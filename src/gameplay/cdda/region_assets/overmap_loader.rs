@@ -1,4 +1,4 @@
-use bevy::asset::{io::Reader, Asset, AssetLoader, LoadContext};
+use bevy::asset::{Asset, AssetLoader, LoadContext, io::Reader};
 use either::Either;
 use serde::Deserialize;
 use std::{marker::PhantomData, str::from_utf8};

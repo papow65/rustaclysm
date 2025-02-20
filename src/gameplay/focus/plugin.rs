@@ -1,9 +1,9 @@
 use crate::gameplay::focus::systems::{update_camera_base, update_focus_cursor_visibility};
-use crate::gameplay::{systems::update_visibility, FocusState};
+use crate::gameplay::{FocusState, systems::update_visibility};
 use crate::util::log_transition_plugin;
 use bevy::prelude::{
-    in_state, not, resource_exists_and_changed, App, AppExtStates as _, IntoSystemConfigs as _,
-    Plugin, State, Update,
+    App, AppExtStates as _, IntoSystemConfigs as _, Plugin, State, Update, in_state, not,
+    resource_exists_and_changed,
 };
 
 pub(crate) struct FocusPlugin;

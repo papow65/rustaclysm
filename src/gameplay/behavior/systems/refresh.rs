@@ -10,9 +10,9 @@ use crate::gameplay::{
 use crate::util::log_if_slow;
 use bevy::ecs::schedule::SystemConfigs;
 use bevy::prelude::{
-    resource_exists_and_changed, Camera, Changed, Children, EventWriter, GlobalTransform,
-    IntoSystemConfigs as _, Local, Mesh3d, ParallelCommands, Parent, Query, RemovedComponents, Res,
-    ResMut, State, Transform, Vec3, Visibility, With, Without,
+    Camera, Changed, Children, EventWriter, GlobalTransform, IntoSystemConfigs as _, Local, Mesh3d,
+    ParallelCommands, Parent, Query, RemovedComponents, Res, ResMut, State, Transform, Vec3,
+    Visibility, With, Without, resource_exists_and_changed,
 };
 use std::cell::RefCell;
 use std::{cell::OnceCell, time::Instant};

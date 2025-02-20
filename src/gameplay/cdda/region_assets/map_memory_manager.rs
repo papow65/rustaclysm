@@ -37,7 +37,7 @@ impl MapMemoryManager<'_, '_> {
                 let index =
                     (subzone_level.z.rem_euclid(8) * 8 + subzone_level.x.rem_euclid(8)) as usize;
                 AssetState::Available {
-                    asset: &map_memory.0 .0[index],
+                    asset: &map_memory.0.0[index],
                 }
             }
             AssetState::Loading => AssetState::Loading,

@@ -1,5 +1,5 @@
 use bevy::prelude::{
-    not, resource_exists, App, Commands, IntoSystemConfigs as _, Plugin, ResMut, Resource, Update,
+    App, Commands, IntoSystemConfigs as _, Plugin, ResMut, Resource, Update, not, resource_exists,
 };
 use bevy::tasks::{AsyncComputeTaskPool, Task};
 use futures_lite::future::{block_on, poll_once};

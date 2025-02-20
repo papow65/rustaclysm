@@ -1,10 +1,10 @@
+use crate::gameplay::GameplayScreenState;
 use crate::gameplay::screens::crafting::systems::{
     clear_crafting_screen, create_crafting_key_bindings, create_start_craft_system,
     refresh_crafting_screen, remove_crafting_resource, spawn_crafting_screen,
 };
-use crate::gameplay::GameplayScreenState;
 use bevy::prelude::{
-    in_state, App, IntoSystem as _, IntoSystemConfigs as _, OnEnter, OnExit, Plugin, Update,
+    App, IntoSystem as _, IntoSystemConfigs as _, OnEnter, OnExit, Plugin, Update, in_state,
 };
 
 pub(crate) struct CraftingScreenPlugin;

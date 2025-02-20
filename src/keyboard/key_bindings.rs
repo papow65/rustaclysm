@@ -1,5 +1,5 @@
 use crate::keyboard::key_binding::KeyBindingSystem;
-use crate::keyboard::{key_binding::KeyBinding, CtrlState, HeldState, Key};
+use crate::keyboard::{CtrlState, HeldState, Key, key_binding::KeyBinding};
 use crate::manual::ManualSection;
 use bevy::ecs::system::SystemId;
 use bevy::prelude::{

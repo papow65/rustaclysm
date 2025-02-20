@@ -1,7 +1,7 @@
+use crate::gameplay::GameplayScreenState;
 use crate::gameplay::screens::death::systems::{
     create_death_screen_key_bindings, create_main_menu_system, spawn_death_screen,
 };
-use crate::gameplay::GameplayScreenState;
 use bevy::prelude::{App, IntoSystem as _, OnEnter, Plugin};
 
 pub(crate) struct DeathScreenPlugin;

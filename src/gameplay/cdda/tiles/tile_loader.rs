@@ -1,4 +1,4 @@
-use crate::gameplay::cdda::{error::Error, Atlas, TextureInfo};
+use crate::gameplay::cdda::{Atlas, TextureInfo, error::Error};
 use crate::gameplay::{Layers, Model, ObjectDefinition, SpriteLayer, TileVariant};
 use crate::util::{AssetPaths, AsyncNew};
 use bevy::prelude::Resource;

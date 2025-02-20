@@ -1,4 +1,4 @@
-use crate::keyboard::{key_binding::KeyBinding, keys::Keys, Ctrl, Held, Key, KeyBindings};
+use crate::keyboard::{Ctrl, Held, Key, KeyBindings, key_binding::KeyBinding, keys::Keys};
 use crate::manual::ManualSection;
 use bevy::app::AppExit;
 use bevy::input::keyboard::KeyboardInput;

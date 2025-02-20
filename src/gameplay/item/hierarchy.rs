@@ -1,4 +1,4 @@
-use crate::gameplay::{item::Pocket, ContainerLimits, Fragment, Infos, Item, ItemItem, Phrase};
+use crate::gameplay::{ContainerLimits, Fragment, Infos, Item, ItemItem, Phrase, item::Pocket};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{Children, Entity, HierarchyQueryExt as _, Query, Res};
 use cdda_json_files::{ObjectId, PocketType};

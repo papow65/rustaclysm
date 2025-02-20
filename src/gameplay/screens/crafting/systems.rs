@@ -8,8 +8,8 @@ use crate::gameplay::{
     QueuedInstruction,
 };
 use crate::hud::{
-    ButtonBuilder, Fonts, ScrollList, SelectionList, BAD_TEXT_COLOR, GOOD_TEXT_COLOR, PANEL_COLOR,
-    SMALL_SPACING, WARN_TEXT_COLOR,
+    BAD_TEXT_COLOR, ButtonBuilder, Fonts, GOOD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, ScrollList,
+    SelectionList, WARN_TEXT_COLOR,
 };
 use crate::keyboard::{Held, Key, KeyBindings};
 use crate::manual::ManualSection;

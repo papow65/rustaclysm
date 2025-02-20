@@ -2,7 +2,7 @@ use crate::gameplay::SubzoneLevel;
 use bevy::{
     ecs::entity::EntityHashMap,
     prelude::{Entity, Resource},
-    utils::{hashbrown::hash_map::Entry, HashMap},
+    utils::{HashMap, hashbrown::hash_map::Entry},
 };
 
 #[derive(Default, Resource)]

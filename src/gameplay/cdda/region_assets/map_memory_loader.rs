@@ -1,5 +1,5 @@
 use crate::gameplay::MapMemoryAsset;
-use bevy::asset::{io::Reader, AssetLoader, LoadContext};
+use bevy::asset::{AssetLoader, LoadContext, io::Reader};
 use either::Either;
 use std::str::from_utf8;
 

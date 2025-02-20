@@ -1,5 +1,5 @@
 use crate::hud::{
-    ButtonBuilder, Fonts, BAD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, WARN_TEXT_COLOR,
+    BAD_TEXT_COLOR, ButtonBuilder, Fonts, PANEL_COLOR, SMALL_SPACING, WARN_TEXT_COLOR,
 };
 use crate::keyboard::KeyBindings;
 use crate::manual::ManualSection;

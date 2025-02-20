@@ -1,8 +1,8 @@
+use crate::gameplay::GameplayResourcePlugin;
 use crate::gameplay::cdda::region_assets::{
     AssetStorage, MapLoader, MapMemoryLoader, OvermapLoader,
 };
 use crate::gameplay::cdda::{MapAsset, MapMemoryAsset, OvermapAsset, OvermapBufferAsset};
-use crate::gameplay::GameplayResourcePlugin;
 use bevy::prelude::{App, AssetApp as _, Plugin};
 
 pub(in super::super) struct RegionAssetsPlugin;

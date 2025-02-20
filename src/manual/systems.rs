@@ -1,7 +1,7 @@
 use crate::gameplay::GameplayScreenState;
-use crate::hud::{panel_node, Fonts, PANEL_COLOR, SOFT_TEXT_COLOR};
-use crate::manual::components::{ManualDisplay, ManualText};
+use crate::hud::{Fonts, PANEL_COLOR, SOFT_TEXT_COLOR, panel_node};
 use crate::manual::ManualSection;
+use crate::manual::components::{ManualDisplay, ManualText};
 use bevy::prelude::{
     Alpha as _, BackgroundColor, BuildChildren as _, Changed, ChildBuild as _, Children, Commands,
     GlobalZIndex, Node, Query, RemovedComponents, Res, State, Text, Val, With,
@@ -45,7 +45,7 @@ pub(super) fn update_manual(
 
     let mut manual = manual.single_mut();
 
-    let background_color = &mut manual.0 .0;
+    let background_color = &mut manual.0.0;
     background_color.set_alpha(
         if gameplay_screen_state
             .as_ref()

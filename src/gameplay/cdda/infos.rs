@@ -690,8 +690,13 @@ fn id_value<'a>(
     if content.get("from").is_some() {
         count += 1;
     }
-    assert_eq!(count, 1, "Not one of id, abstract, or from for json with type {:?} and keys  ({:?}) from {json_path:?}",
-             content.get("type"), content.keys().collect::<Vec<_>>());
+    assert_eq!(
+        count,
+        1,
+        "Not one of id, abstract, or from for json with type {:?} and keys  ({:?}) from {json_path:?}",
+        content.get("type"),
+        content.keys().collect::<Vec<_>>()
+    );
     content
         .get("id")
         .or_else(|| content.get("abstract"))

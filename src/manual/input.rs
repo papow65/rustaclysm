@@ -1,5 +1,5 @@
 use crate::keyboard::KeyBindings;
-use crate::manual::{components::ManualDisplay, ManualSection};
+use crate::manual::{ManualSection, components::ManualDisplay};
 use crate::util::log_if_slow;
 use bevy::prelude::{KeyCode, Query, Visibility, With, World};
 use std::time::Instant;

@@ -8,7 +8,7 @@ mod menu;
 mod plugin;
 mod state;
 
-pub(crate) use self::base::{update_camera_offset, BaseScreenPlugin};
+pub(crate) use self::base::{BaseScreenPlugin, update_camera_offset};
 pub(crate) use self::character::CharacterScreenPlugin;
 pub(crate) use self::crafting::{AlternativeSituation, CraftingScreenPlugin, RecipeSituation};
 pub(crate) use self::death::DeathScreenPlugin;

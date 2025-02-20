@@ -349,7 +349,7 @@ impl Danger {
     }
 
     pub(crate) fn average(&self, duration: &Duration) -> Self {
-        Self(FloatOrd(self.0 .0 / (duration.milliseconds() as f32)))
+        Self(FloatOrd(self.0.0 / (duration.milliseconds() as f32)))
     }
 }
 
@@ -357,7 +357,7 @@ impl Add<Self> for Danger {
     type Output = Self;
 
     fn add(self, other: Self) -> Self {
-        Self(FloatOrd(self.0 .0 + other.0 .0))
+        Self(FloatOrd(self.0.0 + other.0.0))
     }
 }
 

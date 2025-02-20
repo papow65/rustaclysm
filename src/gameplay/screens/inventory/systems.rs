@@ -8,8 +8,8 @@ use crate::gameplay::{
     Player, PlayerDirection, Pos, QueuedInstruction, Unwield, Wield,
 };
 use crate::hud::{
-    Fonts, ScrollList, SelectionList, StepDirection, StepSize, HARD_TEXT_COLOR, PANEL_COLOR,
-    SMALL_SPACING, SOFT_TEXT_COLOR,
+    Fonts, HARD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, SOFT_TEXT_COLOR, ScrollList, SelectionList,
+    StepDirection, StepSize,
 };
 use crate::keyboard::{Held, Key, KeyBindings};
 use crate::manual::ManualSection;

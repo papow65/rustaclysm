@@ -30,7 +30,7 @@ impl MapManager<'_, '_> {
         let zone_level = ZoneLevel::from(subzone_level);
         match self.map(zone_level) {
             AssetState::Available { asset: map } => AssetState::Available {
-                asset: &map.0 .0[subzone_level.index()],
+                asset: &map.0.0[subzone_level.index()],
             },
             AssetState::Loading => AssetState::Loading,
             AssetState::Nonexistent => AssetState::Nonexistent,

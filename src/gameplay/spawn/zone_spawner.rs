@@ -1,7 +1,7 @@
 use crate::application::ApplicationState;
 use crate::gameplay::{
-    spawn::TileSpawner, Infos, LastSeen, Level, MissingAsset, ObjectCategory, ObjectDefinition,
-    ObjectName, SeenFrom, ZoneLevel, ZoneLevelIds,
+    Infos, LastSeen, Level, MissingAsset, ObjectCategory, ObjectDefinition, ObjectName, SeenFrom,
+    ZoneLevel, ZoneLevelIds, spawn::TileSpawner,
 };
 use crate::hud::HARD_TEXT_COLOR;
 use bevy::ecs::system::SystemParam;

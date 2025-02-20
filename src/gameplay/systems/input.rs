@@ -1,5 +1,5 @@
 use crate::application::ApplicationState;
-use crate::gameplay::{spawn::TileSpawner, Infos, Player, Pos};
+use crate::gameplay::{Infos, Player, Pos, spawn::TileSpawner};
 use crate::{keyboard::KeyBindings, manual::ManualSection, util::log_if_slow};
 use bevy::prelude::{KeyCode, Local, NextState, Query, Res, ResMut, With, World};
 use std::time::Instant;

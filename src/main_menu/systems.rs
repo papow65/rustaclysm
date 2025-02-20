@@ -1,14 +1,14 @@
 use crate::gameplay::{ActiveSav, GameplayLocal};
 use crate::hud::{
-    trigger_button_action, ButtonBuilder, Fonts, BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR,
-    LARGE_SPACING, MEDIUM_SPACING, PANEL_COLOR,
+    BAD_TEXT_COLOR, ButtonBuilder, Fonts, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, LARGE_SPACING,
+    MEDIUM_SPACING, PANEL_COLOR, trigger_button_action,
 };
 use crate::keyboard::KeyBindings;
 use crate::main_menu::components::{LoadButtonArea, MessageField, MessageWrapper};
 use crate::main_menu::load_error::LoadError;
-use crate::util::{log_if_slow, AssetPaths};
+use crate::util::{AssetPaths, log_if_slow};
 use crate::{application::ApplicationState, manual::ManualSection};
-use base64::{engine::general_purpose::STANDARD as base64, Engine as _};
+use base64::{Engine as _, engine::general_purpose::STANDARD as base64};
 use bevy::prelude::{
     AlignContent, AlignItems, BuildChildren as _, Camera2d, ChildBuild as _, ChildBuilder,
     Commands, DespawnRecursiveExt as _, Display, Entity, Events, FlexDirection, FlexWrap,
@@ -248,12 +248,10 @@ fn list_saves() -> Result<Vec<PathBuf>, LoadError> {
         .next();
 
     if worlds.is_none() {
-        Err(LoadError::new(
-            format!(
-                "No Cataclysm: DDA worlds found to load under {}\nCreate a new world using Cataclysm: DDA to continue.",
-                AssetPaths::save().display()
-            )
-        ))
+        Err(LoadError::new(format!(
+            "No Cataclysm: DDA worlds found to load under {}\nCreate a new world using Cataclysm: DDA to continue.",
+            AssetPaths::save().display()
+        )))
     } else {
         let savs_pattern = worlds_pattern.join("#*.sav");
         let pattern = savs_pattern
@@ -270,12 +268,10 @@ fn list_saves() -> Result<Vec<PathBuf>, LoadError> {
             .collect::<Vec<_>>();
 
         if savs.is_empty() {
-            Err(LoadError::new(
-                format!(
-                    "No Cataclysm: DDA saves found to load in any world directory under {}\nCreate a new save file using Cataclysm: DDA to continue.",
-                    AssetPaths::save().display()
-                )
-            ))
+            Err(LoadError::new(format!(
+                "No Cataclysm: DDA saves found to load in any world directory under {}\nCreate a new save file using Cataclysm: DDA to continue.",
+                AssetPaths::save().display()
+            )))
         } else {
             Ok(savs)
         }
@@ -284,16 +280,24 @@ fn list_saves() -> Result<Vec<PathBuf>, LoadError> {
 
 fn check_directory_structure() -> Result<(), LoadError> {
     if !AssetPaths::assets().is_dir() {
-        return Err(LoadError::new(
-            format!("Directory '{}' not found.\nPlease run this application in the directory containing the 'assets' directory.", AssetPaths::assets().display())
-        ));
+        return Err(LoadError::new(format!(
+            "Directory '{}' not found.\nPlease run this application in the directory containing the 'assets' directory.",
+            AssetPaths::assets().display()
+        )));
     }
 
     for asset_subdir in [AssetPaths::data(), AssetPaths::gfx(), AssetPaths::save()] {
         if !asset_subdir.is_dir() {
-            return Err(LoadError::new(
-                format!("Directory '{}/' not found.\nPlease make sure the '{}/' directory contains a copy of (or a symlink to) Cataclysm-DDA's '{}/' directory.", asset_subdir.display(), AssetPaths::assets().display(), asset_subdir.file_name().expect("Named directory").to_str().expect("Valid path"))
-            ));
+            return Err(LoadError::new(format!(
+                "Directory '{}/' not found.\nPlease make sure the '{}/' directory contains a copy of (or a symlink to) Cataclysm-DDA's '{}/' directory.",
+                asset_subdir.display(),
+                AssetPaths::assets().display(),
+                asset_subdir
+                    .file_name()
+                    .expect("Named directory")
+                    .to_str()
+                    .expect("Valid path")
+            )));
         }
     }
 

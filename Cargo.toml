@@ -7,7 +7,7 @@ readme = "readme.md"
 repository = "https://github.com/papow65/rustaclysm"
 authors = [ "papow65 <papow65@protonmail.com>" ]
 exclude = [ "/screenshots/" ]
-edition = "2021"
+edition = "2024"
 rust-version = "1.85" # should be latest stable
 
 [workspace]
@@ -112,7 +112,6 @@ unused_macros = "deny"
 # Warned
 dead_code = "warn"
 # Allow
-deprecated_safe_2024 = "allow" # We use set_env before any other threads start to enable RUST_BACKTRACE
 elided_lifetimes_in_paths = "allow" # See https://github.com/rust-lang/rust/issues/91639
 if_let_rescope = "allow"
 

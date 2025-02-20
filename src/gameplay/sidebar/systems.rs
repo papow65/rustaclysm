@@ -1,22 +1,22 @@
+use crate::gameplay::DebugText;
 use crate::gameplay::sidebar::components::{
     BreathText, DetailsText, EnemiesText, FpsText, HealthText, LogDisplay, PlayerActionStateText,
     SpeedTextSpan, StaminaText, TimeText, WalkingModeTextSpan, WieldedText,
 };
-use crate::gameplay::DebugText;
 use crate::hud::{
-    panel_node, text_color_expect_half, Fonts, ScrollList, BAD_TEXT_COLOR, HARD_TEXT_COLOR,
-    PANEL_COLOR, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
+    BAD_TEXT_COLOR, Fonts, HARD_TEXT_COLOR, PANEL_COLOR, SOFT_TEXT_COLOR, ScrollList,
+    WARN_TEXT_COLOR, panel_node, text_color_expect_half,
 };
 use crate::util::log_if_slow;
 use crate::{application::ApplicationState, gameplay::*};
 use bevy::diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin};
 use bevy::ecs::{schedule::SystemConfigs, system::EntityCommands};
 use bevy::prelude::{
-    on_event, resource_exists, resource_exists_and_changed, AlignItems, BuildChildren as _,
-    Changed, ChildBuild as _, Commands, Condition as _, DespawnRecursiveExt as _,
-    DetectChanges as _, Entity, EventReader, FlexDirection, FlexWrap, IntoSystemConfigs as _,
-    JustifyContent, Local, Node, Or, Overflow, ParamSet, PositionType, Query, Res, State,
-    StateScoped, Text, TextColor, TextSpan, UiRect, Val, Visibility, With, Without,
+    AlignItems, BuildChildren as _, Changed, ChildBuild as _, Commands, Condition as _,
+    DespawnRecursiveExt as _, DetectChanges as _, Entity, EventReader, FlexDirection, FlexWrap,
+    IntoSystemConfigs as _, JustifyContent, Local, Node, Or, Overflow, ParamSet, PositionType,
+    Query, Res, State, StateScoped, Text, TextColor, TextSpan, UiRect, Val, Visibility, With,
+    Without, on_event, resource_exists, resource_exists_and_changed,
 };
 use cdda_json_files::MoveCost;
 use std::{num::Saturating, time::Instant};
@@ -750,7 +750,7 @@ fn entity_info(
     }
     let hurdle_str;
     if let Some(hurdle) = hurdle {
-        hurdle_str = format!("hurdle ({})", hurdle.0 .0);
+        hurdle_str = format!("hurdle ({})", hurdle.0.0);
         flags.push(hurdle_str.as_str());
     }
     if opaque.is_some() {

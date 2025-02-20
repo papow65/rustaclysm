@@ -1,4 +1,4 @@
-use crate::hud::{Fonts, DEFAULT_BUTTON_COLOR, HARD_TEXT_COLOR};
+use crate::hud::{DEFAULT_BUTTON_COLOR, Fonts, HARD_TEXT_COLOR};
 use crate::loading::LoadingIndicatorState;
 use crate::util::log_transition_plugin;
 use bevy::prelude::{

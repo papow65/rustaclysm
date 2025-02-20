@@ -69,7 +69,9 @@ pub(crate) fn update_visualization(
         let hidden = *visibility == Visibility::Hidden;
         if !ever_seen && !hidden {
             // This fails for vehicles TODO
-            eprintln!("update_visualization: Unexcpected combination of {last_seen:?} and {visibility:?} at {pos:?}");
+            eprintln!(
+                "update_visualization: Unexcpected combination of {last_seen:?} and {visibility:?} at {pos:?}"
+            );
         }
     }
 

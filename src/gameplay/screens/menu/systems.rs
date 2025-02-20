@@ -1,7 +1,7 @@
 use crate::application::ApplicationState;
 use crate::gameplay::GameplayScreenState;
 use crate::hud::{
-    ButtonBuilder, Fonts, BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, MEDIUM_SPACING,
+    BAD_TEXT_COLOR, ButtonBuilder, Fonts, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, MEDIUM_SPACING,
 };
 use crate::keyboard::KeyBindings;
 use crate::manual::ManualSection;

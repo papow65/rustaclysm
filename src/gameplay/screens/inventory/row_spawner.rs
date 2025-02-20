@@ -4,7 +4,7 @@ use crate::gameplay::screens::inventory::section::InventorySection;
 use crate::gameplay::screens::inventory::systems::{InventoryButton, InventorySystem};
 use crate::gameplay::{DebugTextShown, Fragment, ItemHandler, ItemItem, Phrase};
 use crate::hud::{
-    ButtonBuilder, Fonts, SelectionList, HOVERED_BUTTON_COLOR, SMALL_SPACING, SOFT_TEXT_COLOR,
+    ButtonBuilder, Fonts, HOVERED_BUTTON_COLOR, SMALL_SPACING, SOFT_TEXT_COLOR, SelectionList,
 };
 use bevy::ecs::entity::EntityHashMap;
 use bevy::prelude::{

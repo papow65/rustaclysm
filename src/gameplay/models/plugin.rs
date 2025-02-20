@@ -1,5 +1,5 @@
-use crate::gameplay::models::resources::{AppearanceCache, MeshCaches};
 use crate::gameplay::GameplayResourcePlugin;
+use crate::gameplay::models::resources::{AppearanceCache, MeshCaches};
 use bevy::prelude::{App, Plugin};
 
 pub(crate) struct ModelPlugin;

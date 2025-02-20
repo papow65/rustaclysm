@@ -173,7 +173,7 @@ impl Phrase {
                     TextSpan(
                         if text_sections
                             .last()
-                            .is_some_and(|l| Self::space_between(&l.0 .0, &f.text))
+                            .is_some_and(|l| Self::space_between(&l.0.0, &f.text))
                         {
                             format!(" {}", f.text)
                         } else {
@@ -192,7 +192,7 @@ impl Phrase {
     pub(crate) fn as_string(&self) -> String {
         self.as_text_sections()
             .into_iter()
-            .map(|text_section| text_section.0 .0)
+            .map(|text_section| text_section.0.0)
             .collect::<String>()
     }
 

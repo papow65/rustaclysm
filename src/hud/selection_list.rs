@@ -9,11 +9,7 @@ pub(crate) enum StepSize {
 
 impl StepSize {
     const fn amount(&self) -> u8 {
-        if matches!(self, Self::Many) {
-            10
-        } else {
-            1
-        }
+        if matches!(self, Self::Many) { 10 } else { 1 }
     }
 }
 

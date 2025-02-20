@@ -4,7 +4,7 @@ use crate::gameplay::{
 };
 use crate::hud::text_color_expect_half;
 use bevy::ecs::query::QueryData;
-use bevy::prelude::{ops::atan2, Entity, Parent};
+use bevy::prelude::{Entity, Parent, ops::atan2};
 use cdda_json_files::{CommonItemInfo, ObjectId};
 use std::f32::consts::FRAC_1_PI;
 

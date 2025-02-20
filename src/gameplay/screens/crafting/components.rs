@@ -1,5 +1,5 @@
 use crate::hud::{
-    Fonts, BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
+    BAD_TEXT_COLOR, Fonts, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
 };
 use bevy::prelude::{Component, Entity, TextColor, TextFont, TextSpan};
 use cdda_json_files::{ObjectId, Recipe};

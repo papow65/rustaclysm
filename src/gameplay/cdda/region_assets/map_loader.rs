@@ -1,6 +1,6 @@
-use crate::gameplay::cdda::error::Error;
 use crate::gameplay::MapAsset;
-use bevy::asset::{io::Reader, AssetLoader, LoadContext};
+use crate::gameplay::cdda::error::Error;
+use bevy::asset::{AssetLoader, LoadContext, io::Reader};
 use std::{str::from_utf8, sync::Arc};
 
 #[derive(Default)]

@@ -4,8 +4,8 @@ use crate::gameplay::{
     Pos, StandardIntegrity,
 };
 use bevy::prelude::{
-    resource_exists, App, Changed, Children, Entity, FixedUpdate, IntoSystemConfigs as _, Or,
-    Parent, Plugin, Query, With,
+    App, Changed, Children, Entity, FixedUpdate, IntoSystemConfigs as _, Or, Parent, Plugin, Query,
+    With, resource_exists,
 };
 use cdda_json_files::PocketType;
 
@@ -53,12 +53,17 @@ fn check_item_parents(
             "Items should not be pockets"
         );
         assert!(
-            checked_item.iter().all(|(entity, _, parent)| parent.inspect(|parent| {
-                let pos = pos.contains(entity);
-                let pocket = pockets.contains(parent.get());
-                assert_eq!(pos, !pocket, "Items should either have a pos ({pos:?}), xor a parent pocket ({pocket:?})");
-            }).is_some()),
-                "All items should have a parent"
+            checked_item.iter().all(|(entity, _, parent)| parent
+                .inspect(|parent| {
+                    let pos = pos.contains(entity);
+                    let pocket = pockets.contains(parent.get());
+                    assert_eq!(
+                        pos, !pocket,
+                        "Items should either have a pos ({pos:?}), xor a parent pocket ({pocket:?})"
+                    );
+                })
+                .is_some()),
+            "All items should have a parent"
         );
     }
 }

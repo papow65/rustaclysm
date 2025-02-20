@@ -39,17 +39,9 @@ impl PosOffset {
                 _ => "D",
             }
         } else if 2 * self.z.abs() <= self.x.abs() {
-            if 0 < self.x {
-                "E"
-            } else {
-                "W"
-            }
+            if 0 < self.x { "E" } else { "W" }
         } else if 2 * self.x.abs() <= self.z.abs() {
-            if 0 < self.z {
-                "S"
-            } else {
-                "N"
-            }
+            if 0 < self.z { "S" } else { "N" }
         } else if 0 < self.x {
             if 0 < self.z {
                 "SE"

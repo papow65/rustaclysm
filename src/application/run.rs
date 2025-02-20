@@ -1,4 +1,4 @@
-use crate::application::{check::check_delay, ApplicationState};
+use crate::application::{ApplicationState, check::check_delay};
 use crate::{background::BackgroundPlugin, gameplay::GameplayPlugin, hud::HudPlugin};
 use crate::{keyboard::KeyboardPlugin, loading::LoadingIndicatorPlugin};
 use crate::{main_menu::MainMenuPlugin, manual::ManualPlugin};
