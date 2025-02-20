@@ -8,7 +8,7 @@ repository = "https://github.com/papow65/rustaclysm"
 authors = [ "papow65 <papow65@protonmail.com>" ]
 exclude = [ "/screenshots/" ]
 edition = "2021"
-rust-version = "1.84" # should be latest stable
+rust-version = "1.85" # should be latest stable
 
 [workspace]
 members = [ "crates/*" ]

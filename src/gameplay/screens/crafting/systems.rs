@@ -451,7 +451,7 @@ fn autolearn_recipe(recipe: &Recipe, skills: &HashMap<Arc<str>, Skill>) -> bool 
     match &recipe.autolearn {
         AutoLearn::Bool(autolearn) => {
             *autolearn
-                && recipe.skill_used.as_ref().map_or(true, |skill_used| {
+                && recipe.skill_used.as_ref().is_none_or(|skill_used| {
                     recipe.difficulty
                         <= skills
                             .get(skill_used)
