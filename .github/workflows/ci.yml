@@ -58,7 +58,7 @@ jobs:
           filename: "rustaclysm-${{ matrix.os.short }}.zip"
           path: rustaclysm-${{ matrix.os.short }}* assets
       - name: 'Upload as artifact'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           path: rustaclysm-${{ matrix.os.short }}.zip
           if-no-files-found: error
