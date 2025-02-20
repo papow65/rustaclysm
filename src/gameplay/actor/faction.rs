@@ -101,12 +101,12 @@ impl Faction {
     ) -> Option<(PlannedAction, LastEnemy)> {
         enemies
             .iter()
-            .copied()
-            .map(|pos| (false, pos))
+            .map(|pos| (false, *pos))
             .chain(
                 actor
                     .last_enemy
                     .iter()
+                    .filter(|last_enemy| !enemies.contains(&last_enemy.0))
                     .map(|last_enemy| (true, last_enemy.0)),
             )
             .filter_map(|(memory, enemy_pos)| {
