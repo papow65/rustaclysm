@@ -60,7 +60,7 @@ jobs:
       - name: 'Upload as artifact'
         uses: actions/upload-artifact@v4
         with:
-          name: rustaclysm-${{ matrix.os.short }}.zip
+          name: rustaclysm-${{ matrix.os.short }}
           path: rustaclysm-${{ matrix.os.short }}.zip
           if-no-files-found: error
   release:
@@ -75,11 +75,11 @@ jobs:
       - name: 'Get all artifacts'
         uses: actions/download-artifact@v4
       - name: 'List files to release'
-        run: 'ls -l rustaclysm-*.zip'
+        run: 'ls -l rustaclysm-*'
       - name: 'Create a release'
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "rustaclysm-*.zip"
+          artifacts: "rustaclysm-*/rustaclysm-*.zip"
           generateReleaseNotes: true
           makeLatest: true
           tag: ci-${{ github.run_number }}-${{ github.run_attempt }}
