@@ -73,13 +73,13 @@ jobs:
       contents: write
     steps:
       - name: 'Get all artifacts'
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
       - name: 'List files to release'
-        run: 'ls -l artifact'
+        run: 'ls -l rustaclysm-*.zip'
       - name: 'Create a release'
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "artifact/*"
+          artifacts: "rustaclysm-*.zip"
           generateReleaseNotes: true
           makeLatest: true
           tag: ci-${{ github.run_number }}-${{ github.run_attempt }}
