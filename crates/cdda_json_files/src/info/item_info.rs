@@ -1,4 +1,4 @@
-use crate::{structure::MaybeFlatVec, Flags, HashMap, ObjectId};
+use crate::{Flags, HashMap, ObjectId, structure::MaybeFlatVec};
 use serde::Deserialize;
 use std::sync::Arc;
 use units::{Duration, Mass, Volume};

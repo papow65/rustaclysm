@@ -2,7 +2,7 @@
 name = "units"
 description = "A library for expressing physical units relevant to this game"
 license = "AGPL-3.0-or-later"
-edition = "2021"
+edition = "2024"
 
 [dependencies]
 pathfinding = { workspace = true }

@@ -115,11 +115,7 @@ impl fmt::Display for Duration {
 }
 
 const fn plural(i: u64) -> &'static str {
-    if i == 1 {
-        ""
-    } else {
-        "s"
-    }
+    if i == 1 { "" } else { "s" }
 }
 
 impl Add for Duration {

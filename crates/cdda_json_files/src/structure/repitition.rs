@@ -1,6 +1,6 @@
 use crate::ObjectId;
-use serde::de::{Deserializer, Error as _};
 use serde::Deserialize;
+use serde::de::{Deserializer, Error as _};
 
 #[derive(Debug, Deserialize)]
 pub struct CddaAmount<T> {
