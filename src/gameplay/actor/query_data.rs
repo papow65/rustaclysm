@@ -87,11 +87,12 @@ impl ActorItem<'_> {
         ActorImpact::by_nbor(self.entity, duration, cost_per_meter, nbor)
     }
 
+    pub(crate) fn stay_duration(&self) -> Duration {
+        Distance::ADJACENT / 2 / self.high_speed().unwrap_or_else(|| self.speed())
+    }
+
     pub(crate) fn stay(&self) -> ActorImpact {
-        self.impact_from_duration(
-            Distance::ADJACENT / 2 / self.high_speed().unwrap_or_else(|| self.speed()),
-            StaminaCost::STANDING_REST,
-        )
+        self.impact_from_duration(self.stay_duration(), StaminaCost::STANDING_REST)
     }
 
     pub(crate) fn sleep(

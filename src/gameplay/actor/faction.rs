@@ -109,7 +109,7 @@ impl Faction {
                     .filter(|last_enemy| !enemies.contains(&last_enemy.0))
                     .map(|last_enemy| (true, last_enemy.0)),
             )
-            .filter_map(|(memory, enemy_pos)| {
+            .filter_map(|(memory_only, enemy_pos)| {
                 envir
                     .path(
                         *actor.pos,
@@ -117,10 +117,11 @@ impl Faction {
                         self.intelligence(),
                         |_| true,
                         actor.speed(),
+                        actor.stay_duration(),
                     )
-                    .map(|path| (memory, path))
+                    .map(|path| (memory_only, path))
             })
-            .min_by_key(|(memory, path)| (*memory, path.duration.milliseconds()))
+            .min_by_key(|(memory_only, path)| (*memory_only, path.duration.milliseconds()))
             .and_then(|(_, path)| {
                 let last_enemy = LastEnemy(path.destination);
                 let nbor = envir.to_nbor(*actor.pos, path.first).expect("Nbors");

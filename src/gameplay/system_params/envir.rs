@@ -341,6 +341,7 @@ impl<'w, 's> Envir<'w, 's> {
         intelligence: Intelligence,
         seen: F,
         speed: Speed,
+        stay_duration: Duration,
     ) -> Option<MovementPath>
     where
         F: Fn(Pos) -> bool,
@@ -354,7 +355,12 @@ impl<'w, 's> Envir<'w, 's> {
                 .filter(|(_, pos, _)| seen(*pos))
                 .map(|(_, pos, cost)| (pos, cost))
         };
-        let estimated_duration_fn = |&pos: &Pos| self.walking_cost(pos, to).duration(speed);
+        let estimated_duration_fn = |&pos: &Pos| {
+            self.walking_cost(from, pos)
+                .duration(speed)
+                .max(stay_duration)
+                + self.walking_cost(pos, to).duration(speed)
+        };
 
         //println!("dumb? {dumb:?} @{from:?}");
         if intelligence == Intelligence::Smart && seen(to) {
@@ -479,12 +485,53 @@ impl MovementPath {
         I: Iterator<Item = (Pos, Duration)>,
         FH: FnMut(&Pos) -> Duration,
     {
-        nbors
+        let paths = nbors
             .map(|(first, _)| Self {
                 first,
                 duration: heuristic(&first),
                 destination,
             })
-            .min_by_key(|path| (path.first == from, path.duration))
+            .inspect(|path| {
+                println!(
+                    "MovementPath::improvize {from:?} by {:?} to {destination:?} @ {:?}",
+                    path.first, path.duration
+                );
+            })
+            .collect::<Vec<_>>();
+
+        let shortest = paths
+            .iter()
+            .min_by_key(|path| (path.first == from, path.duration))?
+            .duration;
+        let offset = (destination - from).vec3();
+        let all_best = paths
+            .into_iter()
+            .filter(|path| path.duration == shortest)
+            .map(|path| {
+                if path.first == destination {
+                    (1.0, path)
+                } else {
+                    let match_with_straight_line = offset
+                        .angle_between((destination - path.first).vec3())
+                        .cos();
+                    (match_with_straight_line, path)
+                }
+            })
+            .scan(0.0, |total, (score, path)| {
+                *total += score;
+                Some((score, path, *total))
+            })
+            .inspect(|(score, path, total)| {
+                println!(
+                    "{from:?}->{:?}->{destination:?}  {score:?} / {total:?}",
+                    path.first
+                );
+            })
+            .collect::<Vec<_>>();
+        let pick = all_best.last().expect("Not empty").2 * fastrand::f32();
+        all_best
+            .into_iter()
+            .find(|(_, _, total)| pick <= *total)
+            .map(|(_, path, _)| path)
     }
 }

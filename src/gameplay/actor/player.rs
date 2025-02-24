@@ -758,6 +758,7 @@ fn plan_auto_travel(
                 Intelligence::Smart,
                 |pos| explored.has_pos_been_seen(pos),
                 player.speed(),
+                player.stay_duration(),
             )
             .map(|path| {
                 envir
