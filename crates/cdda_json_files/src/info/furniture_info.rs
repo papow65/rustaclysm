@@ -1,4 +1,4 @@
-use crate::ObjectId;
+use crate::{CommonItemInfo, ObjectId};
 use crate::{Flags, HashMap, ItemName};
 use serde::Deserialize;
 use std::sync::Arc;
@@ -10,7 +10,12 @@ pub struct FurnitureInfo {
     pub looks_like: Option<ObjectId>,
     pub flags: Flags,
     pub bash: Option<Bash>,
-    pub crafting_pseudo_item: Option<ObjectId>,
+
+    /// Use [`Self.crafting_pseudo_item`] where possible
+    #[serde(rename(deserialize = "crafting_pseudo_item"))]
+    pub crafting_pseudo_item_id: Option<ObjectId>,
+    #[serde(skip)]
+    pub crafting_pseudo_item: Option<Arc<CommonItemInfo>>,
 
     #[expect(unused)]
     #[serde(flatten)]

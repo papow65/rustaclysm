@@ -323,6 +323,16 @@ impl Infos {
         let wheels = item_loader.item_extract(TypeId::WHEEL);
         // item_loader is dropped
 
+        let furniture = Self::extract::<FurnitureInfo>(&mut enriched_json_infos, TypeId::FURNITURE)
+            .into_iter()
+            .map(|(id, mut furniture_info)| {
+                if let Some(item_id) = &furniture_info.crafting_pseudo_item_id {
+                    furniture_info.crafting_pseudo_item = common_item_infos.get(item_id).cloned();
+                }
+                (id, Arc::new(furniture_info))
+            })
+            .collect();
+
         let mut this = Self {
             ammos,
             bionic_items,
@@ -333,7 +343,7 @@ impl Infos {
             common_item_infos,
             engines,
             fields: Self::extract(&mut enriched_json_infos, TypeId::FIELD),
-            furniture: Self::extract(&mut enriched_json_infos, TypeId::FURNITURE),
+            furniture,
             genenric_items,
             guns,
             gunmods,

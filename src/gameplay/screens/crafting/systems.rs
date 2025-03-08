@@ -262,7 +262,7 @@ pub(super) fn refresh_crafting_screen(
 
     let nearby_items = find_nearby(&location, &items_and_furniture, player_pos, body_containers);
     let nearby_manuals = nearby_manuals(&nearby_items);
-    let nearby_qualities = nearby_qualities(&infos, &nearby_items);
+    let nearby_qualities = nearby_qualities(&nearby_items);
     //println!("{:?}", &nearby_manuals);
 
     let shown_recipes = shown_recipes(
@@ -492,23 +492,15 @@ fn recipe_manuals(recipe: &Recipe, nearby_manuals: &HashMap<ObjectId, Arc<str>>)
 }
 
 fn nearby_qualities(
-    infos: &Infos,
     nearby_items: &[NearbyItem],
 ) -> HashMap<ObjectId, (Arc<Quality>, i8)> {
     nearby_items
         .iter()
         .filter_map(|nearby| match nearby.definition.category {
-            ObjectCategory::Item => nearby.common_item_info.map(|item| &item.qualities),
+            ObjectCategory::Item => nearby.common_item_info.map(|item| item.qualities.clone()),
             ObjectCategory::Furniture => nearby
                 .furniture_info
-                .and_then(|furniture| furniture.crafting_pseudo_item.as_ref())
-                .and_then(|pseude_item| {
-                    infos
-                        .common_item_info(pseude_item)
-                        .inspect_err(|error| eprintln!("Pseudo item not found: {error:#?}"))
-                        .ok()
-                        .map(|item| &item.qualities)
-                }),
+                .and_then(|furniture| furniture.crafting_pseudo_item.as_ref().map(|item| item.qualities.clone())),
             _ => None,
         })
         .flatten()
@@ -518,10 +510,10 @@ fn nearby_qualities(
                 match map.entry(quality.id.clone()) {
                     Entry::Occupied(mut occ) => {
                         let value = occ.get_mut();
-                        value.1 = value.1.max(*amount);
+                        value.1 = value.1.max(amount);
                     }
                     Entry::Vacant(vac) => {
-                        vac.insert((quality.clone(), *amount));
+                        vac.insert((quality.clone(), amount));
                     }
                 };
                 map
