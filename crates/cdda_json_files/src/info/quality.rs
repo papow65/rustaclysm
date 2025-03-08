@@ -5,7 +5,6 @@ use std::sync::Arc;
 #[derive(Debug, Deserialize)]
 pub struct Quality {
     pub id: ObjectId,
-
     pub name: ItemName,
 
     #[serde(default)]

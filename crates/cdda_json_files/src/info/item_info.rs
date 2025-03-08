@@ -331,6 +331,7 @@ impl ItemWithCommonInfo for PetArmor {
         &mut self.common
     }
 }
+
 #[derive(Debug, Deserialize)]
 pub struct Tool {
     pub ammo: Option<MaybeFlatVec<ObjectId>>,

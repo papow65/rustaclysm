@@ -491,16 +491,17 @@ fn recipe_manuals(recipe: &Recipe, nearby_manuals: &HashMap<ObjectId, Arc<str>>)
     manuals
 }
 
-fn nearby_qualities(
-    nearby_items: &[NearbyItem],
-) -> HashMap<ObjectId, (Arc<Quality>, i8)> {
+fn nearby_qualities(nearby_items: &[NearbyItem]) -> HashMap<ObjectId, (Arc<Quality>, i8)> {
     nearby_items
         .iter()
         .filter_map(|nearby| match nearby.definition.category {
             ObjectCategory::Item => nearby.common_item_info.map(|item| item.qualities.clone()),
-            ObjectCategory::Furniture => nearby
-                .furniture_info
-                .and_then(|furniture| furniture.crafting_pseudo_item.as_ref().map(|item| item.qualities.clone())),
+            ObjectCategory::Furniture => nearby.furniture_info.and_then(|furniture| {
+                furniture
+                    .crafting_pseudo_item
+                    .as_ref()
+                    .map(|item| item.qualities.clone())
+            }),
             _ => None,
         })
         .flatten()

@@ -12,6 +12,7 @@ use cdda_json_files::{
 use glob::glob;
 use serde::de::DeserializeOwned;
 use serde_json::map::Entry;
+use std::cell::RefCell;
 use std::{fs::read_to_string, ops::Deref, path::PathBuf, sync::Arc, time::Instant};
 use units::{Mass, Volume};
 
@@ -255,7 +256,7 @@ impl Infos {
                     }
                 }
 
-                if !TypeId::TOOL_QUALITY.contains(type_id) {
+                if !TypeId::TERRAIN.contains(type_id) && !TypeId::TOOL_QUALITY.contains(type_id) {
                     enriched.remove("id");
                 }
                 enriched.remove("from");
@@ -323,15 +324,8 @@ impl Infos {
         let wheels = item_loader.item_extract(TypeId::WHEEL);
         // item_loader is dropped
 
-        let furniture = Self::extract::<FurnitureInfo>(&mut enriched_json_infos, TypeId::FURNITURE)
-            .into_iter()
-            .map(|(id, mut furniture_info)| {
-                if let Some(item_id) = &furniture_info.crafting_pseudo_item_id {
-                    furniture_info.crafting_pseudo_item = common_item_infos.get(item_id).cloned();
-                }
-                (id, Arc::new(furniture_info))
-            })
-            .collect();
+        let furniture = load_furniture(&mut enriched_json_infos, &common_item_infos);
+        let terrain = load_terrain(&mut enriched_json_infos);
 
         let mut this = Self {
             ammos,
@@ -354,7 +348,7 @@ impl Infos {
             qualities,
             recipes: Self::extract(&mut enriched_json_infos, TypeId::RECIPE),
             requirements: Self::extract(&mut enriched_json_infos, TypeId::REQUIREMENT),
-            terrain: Self::extract(&mut enriched_json_infos, TypeId::TERRAIN),
+            terrain,
             tools,
             tool_clothings,
             toolmods,
@@ -590,6 +584,80 @@ impl Infos {
             }]]
         })
     }
+}
+
+fn load_furniture(
+    enriched_json_infos: &mut HashMap<
+        TypeId,
+        HashMap<ObjectId, serde_json::Map<String, serde_json::Value>>,
+    >,
+    common_item_infos: &HashMap<ObjectId, Arc<CommonItemInfo>>,
+) -> HashMap<ObjectId, Arc<FurnitureInfo>> {
+    Infos::extract::<FurnitureInfo>(enriched_json_infos, TypeId::FURNITURE)
+        .into_iter()
+        .map(|(id, mut furniture_info)| {
+            if let Some(item_id) = &furniture_info.crafting_pseudo_item_id {
+                if let Some(crafting_pseudo_item) = common_item_infos.get(item_id) {
+                    furniture_info.crafting_pseudo_item = Some(crafting_pseudo_item.clone());
+                } else {
+                    eprintln!("Could not find pseudo item {item_id:?}");
+                }
+            }
+            (id, Arc::new(furniture_info))
+        })
+        .collect()
+}
+
+fn load_terrain(
+    enriched_json_infos: &mut HashMap<
+        TypeId,
+        HashMap<ObjectId, serde_json::Map<String, serde_json::Value>>,
+    >,
+) -> HashMap<ObjectId, Arc<TerrainInfo>> {
+    let terrain = Infos::extract::<RefCell<Arc<TerrainInfo>>>(enriched_json_infos, TypeId::TERRAIN);
+    for terrain_info in terrain.values() {
+        let terrain_info = terrain_info.borrow();
+        if let Some(open_id) = &terrain_info.open_id {
+            if let Some(open_terrain) = terrain.get(open_id) {
+                terrain_info
+                    .open
+                    .set(Arc::downgrade(&*open_terrain.borrow()))
+                    .expect("No previous value");
+            } else {
+                eprintln!("Could not find open terrain {open_id:?}");
+            }
+        }
+        if let Some(close_id) = &terrain_info.close_id {
+            if let Some(closed_terrain) = terrain.get(close_id) {
+                terrain_info
+                    .close
+                    .set(Arc::downgrade(&*closed_terrain.borrow()))
+                    .expect("No previous value");
+            } else {
+                eprintln!("Could not find closed terrain {close_id:?}");
+            }
+        }
+        if let Some(bash) = &terrain_info.bash {
+            if let Some(ter_set_id) = &bash.ter_set_id {
+                if let Some(bashed_terrain) = terrain.get(ter_set_id) {
+                    bash.terrain
+                        .set(Arc::downgrade(&*bashed_terrain.borrow()))
+                        .expect("No previous value");
+                } else {
+                    eprintln!(
+                        "Could not find bashed terrain {ter_set_id:?} for {:?}",
+                        terrain_info.id
+                    );
+                }
+            } else {
+                eprintln!("No bashed terrain set for {:?}", terrain_info.id);
+            }
+        }
+    }
+    terrain
+        .into_iter()
+        .map(|(key, value)| (key, value.into_inner()))
+        .collect()
 }
 
 struct ItemLoader<'a> {

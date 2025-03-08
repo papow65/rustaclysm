@@ -18,7 +18,7 @@ use bevy::render::camera::{PerspectiveProjection, Projection};
 use bevy::render::view::RenderLayers;
 use cdda_json_files::{
     Bash, BashItem, BashItems, CddaAmount, CddaItem, CddaVehicle, CddaVehiclePart, CountRange,
-    Field, FlatVec, MoveCostMod, ObjectId, PocketType, Repetition, Spawn,
+    Field, FlatVec, MoveCostMod, ObjectId, PocketType, Repetition, Spawn, TerrainInfo,
 };
 use std::sync::Arc;
 use units::{Mass, Volume};
@@ -47,7 +47,14 @@ impl<'w> TileSpawner<'w, '_> {
         spawns: impl Iterator<Item = &'a Spawn>,
         fields: impl Iterator<Item = &'a FlatVec<Field, 3>>,
     ) {
-        self.spawn_terrain(infos, subzone_level_entity, pos, local_terrain);
+        let terrain_info = match infos.terrain(&local_terrain.id) {
+            Ok(terrain_info) => terrain_info,
+            Err(error) => {
+                dbg!(error);
+                return;
+            }
+        };
+        self.spawn_terrain(terrain_info, subzone_level_entity, pos, local_terrain);
 
         for id in furniture_ids {
             self.spawn_furniture(infos, subzone_level_entity, pos, id);
@@ -367,19 +374,11 @@ impl<'w> TileSpawner<'w, '_> {
 
     pub(crate) fn spawn_terrain(
         &mut self,
-        infos: &Infos,
+        terrain_info: &Arc<TerrainInfo>,
         parent: Entity,
         pos: Pos,
         local_terrain: &LocalTerrain,
     ) {
-        let terrain_info = match infos.terrain(&local_terrain.id) {
-            Ok(terrain_info) => terrain_info,
-            Err(error) => {
-                dbg!(error);
-                return;
-            }
-        };
-
         if local_terrain.id == ObjectId::new("t_open_air")
             || local_terrain.id == ObjectId::new("t_open_air_rooved")
         {
@@ -403,14 +402,14 @@ impl<'w> TileSpawner<'w, '_> {
         entity.insert(Info::new(terrain_info.clone()));
 
         if terrain_info.move_cost.accessible() {
-            if terrain_info.close.is_some() {
+            if terrain_info.close.get().is_some() {
                 entity.insert(Closeable);
             }
             entity.insert(Accessible {
                 water: terrain_info.flags.water(),
                 move_cost: terrain_info.move_cost,
             });
-        } else if terrain_info.open.is_some() {
+        } else if terrain_info.open.get().is_some() {
             entity.insert(Openable);
         } else {
             entity.insert(Obstacle);
@@ -431,8 +430,8 @@ impl<'w> TileSpawner<'w, '_> {
         }
 
         if let Some(ref bash) = terrain_info.bash {
-            if let Some(ref ter_set) = bash.ter_set {
-                if ter_set != &ObjectId::new("t_null") {
+            if let Some(terrain) = bash.terrain.get() {
+                if terrain.upgrade().expect("Should still exist").id != ObjectId::new("t_null") {
                     // TODO
                     entity.insert(StandardIntegrity(Limited::full(10)));
                 }
@@ -734,15 +733,16 @@ impl<'w> TileSpawner<'w, '_> {
             "Only furniture and terrain can be smashed"
         );
 
-        if let Some(terrain_id) = &bash.ter_set {
+        if let Some(terrain) = &bash.terrain.get() {
             assert_eq!(
                 definition.category,
                 ObjectCategory::Terrain,
                 "The terrain field requires a terrain category"
             );
-            let local_terrain = LocalTerrain::unconnected(terrain_id.clone());
-            self.spawn_terrain(infos, parent_entity, pos, &local_terrain);
-        } else if let Some(furniture_id) = &bash.furn_set {
+            let terrain = terrain.upgrade().expect("Should still exist");
+            let local_terrain = LocalTerrain::unconnected(terrain.id.clone());
+            self.spawn_terrain(&terrain, parent_entity, pos, &local_terrain);
+        } else if let Some(furniture_id) = &bash.furniture {
             assert_eq!(
                 definition.category,
                 ObjectCategory::Furniture,

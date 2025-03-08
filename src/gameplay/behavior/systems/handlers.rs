@@ -51,30 +51,30 @@ pub(in super::super) fn handle_action_effects() -> SystemConfigs {
 pub(in super::super) fn toggle_doors(
     mut commands: Commands,
     mut toggle_reader: EventReader<TerrainEvent<Toggle>>,
-    infos: Res<Infos>,
     mut spawner: TileSpawner,
     mut visualization_update: ResMut<VisualizationUpdate>,
-    terrain: Query<(Entity, &ObjectDefinition, &Pos, &Parent)>,
+    terrain: Query<(&Pos, &Info<TerrainInfo>, &Parent)>,
 ) {
     let start = Instant::now();
 
     for toggle in toggle_reader.read() {
-        let (entity, definition, &pos, parent) = terrain.get(toggle.terrain_entity).expect("Found");
+        let (&pos, terrain_info, parent) = terrain
+            .get(toggle.terrain_entity)
+            .expect("Terrain should be found");
 
-        commands.entity(entity).despawn_recursive();
-        let terrain_info = match infos.terrain(&definition.id) {
-            Ok(terrain_info) => terrain_info,
-            Err(error) => {
-                eprintln!("Could not toggle {definition:?}: {error:#?}");
-                continue;
-            }
-        };
-        let toggled_id = match toggle.change {
-            Toggle::Open => terrain_info.open.as_ref().expect("Openable"),
-            Toggle::Close => terrain_info.close.as_ref().expect("Closeable"),
-        };
-        let local_terrain = LocalTerrain::unconnected(toggled_id.clone());
-        spawner.spawn_terrain(&infos, parent.get(), pos, &local_terrain);
+        commands.entity(toggle.terrain_entity).despawn_recursive();
+
+        let toggled = match toggle.change {
+            Toggle::Open => terrain_info.open.get().expect("Terrain should be openable"),
+            Toggle::Close => terrain_info
+                .close
+                .get()
+                .expect("Terrain should be closeable"),
+        }
+        .upgrade()
+        .expect("Should still exist");
+        let local_terrain = LocalTerrain::unconnected(toggled.id.clone());
+        spawner.spawn_terrain(&toggled, parent.get(), pos, &local_terrain);
         *visualization_update = VisualizationUpdate::Forced;
     }
 

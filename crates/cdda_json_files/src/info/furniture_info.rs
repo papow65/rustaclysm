@@ -1,7 +1,7 @@
-use crate::{CommonItemInfo, ObjectId};
+use crate::{CommonItemInfo, ObjectId, TerrainInfo};
 use crate::{Flags, HashMap, ItemName};
 use serde::Deserialize;
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock, Weak};
 
 #[derive(Debug, Deserialize)]
 pub struct FurnitureInfo {
@@ -34,8 +34,14 @@ pub struct MoveCostIncrease(pub u8);
 
 #[derive(Debug, Deserialize)]
 pub struct Bash {
-    pub ter_set: Option<ObjectId>,
-    pub furn_set: Option<ObjectId>,
+    /// Use [`Self.terrain`] where possible
+    #[serde(rename(deserialize = "ter_set"))]
+    pub ter_set_id: Option<ObjectId>,
+    #[serde(skip)]
+    pub terrain: OnceLock<Weak<TerrainInfo>>,
+
+    #[serde(rename(deserialize = "furn_set"))]
+    pub furniture: Option<ObjectId>,
     pub items: Option<BashItems>,
 
     #[expect(unused)]
