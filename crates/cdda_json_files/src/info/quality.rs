@@ -1,9 +1,11 @@
-use crate::{HashMap, ItemName};
+use crate::{HashMap, ItemName, ObjectId};
 use serde::Deserialize;
 use std::sync::Arc;
 
 #[derive(Debug, Deserialize)]
 pub struct Quality {
+    pub id: ObjectId,
+
     pub name: ItemName,
 
     #[serde(default)]

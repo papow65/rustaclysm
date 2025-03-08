@@ -5,8 +5,9 @@ use bevy::utils::HashMap;
 use cdda_json_files::{
     Alternative, Ammo, BionicItem, Book, CddaItemName, CharacterInfo, Clothing, Comestible,
     CommonItemInfo, Engine, FieldInfo, Flags, FurnitureInfo, GenericItem, Gun, Gunmod, ItemGroup,
-    ItemName, Magazine, Migration, ObjectId, OvermapInfo, PetArmor, Quality, Recipe, Requirement,
-    TerrainInfo, Tool, ToolClothing, Toolmod, Using, UsingKind, VehiclePartInfo, Wheel,
+    ItemName, ItemWithCommonInfo, Magazine, Migration, ObjectId, OvermapInfo, PetArmor, Quality,
+    Recipe, Requirement, TerrainInfo, Tool, ToolClothing, Toolmod, Using, UsingKind,
+    VehiclePartInfo, Wheel,
 };
 use glob::glob;
 use serde::de::DeserializeOwned;
@@ -43,6 +44,7 @@ impl<T> Deref for Info<T> {
     }
 }
 
+#[allow(unused)]
 #[derive(Resource)]
 pub(crate) struct Infos {
     ammos: HashMap<ObjectId, Arc<Ammo>>,
@@ -51,7 +53,7 @@ pub(crate) struct Infos {
     characters: HashMap<ObjectId, Arc<CharacterInfo>>,
     clothings: HashMap<ObjectId, Arc<Clothing>>,
     comestibles: HashMap<ObjectId, Arc<Comestible>>,
-    common_item_info: HashMap<ObjectId, Arc<CommonItemInfo>>,
+    common_item_infos: HashMap<ObjectId, Arc<CommonItemInfo>>,
     engines: HashMap<ObjectId, Arc<Engine>>,
     fields: HashMap<ObjectId, Arc<FieldInfo>>,
     furniture: HashMap<ObjectId, Arc<FurnitureInfo>>,
@@ -110,8 +112,8 @@ impl Infos {
     }
 
     /// [`TypeId`] -> [`ObjectId`] -> property name -> property value
-    fn literals() -> HashMap<TypeId, HashMap<ObjectId, serde_json::Map<String, serde_json::Value>>>
-    {
+    fn literal_json_infos()
+    -> HashMap<TypeId, HashMap<ObjectId, serde_json::Map<String, serde_json::Value>>> {
         let mut literals = HashMap::default();
         for type_ids in TypeId::all() {
             for type_id in *type_ids {
@@ -202,12 +204,12 @@ impl Infos {
     }
 
     /// [`TypeId`] -> [`ObjectId`] -> property name -> property value
-    fn enricheds() -> HashMap<TypeId, HashMap<ObjectId, serde_json::Map<String, serde_json::Value>>>
-    {
-        let mut enricheds = HashMap::default();
-        let literals = &Self::literals();
+    fn enriched_json_infos()
+    -> HashMap<TypeId, HashMap<ObjectId, serde_json::Map<String, serde_json::Value>>> {
+        let mut enriched_json_infos = HashMap::default();
+        let literals = &Self::literal_json_infos();
         for (type_id, literal_entry) in literals {
-            let enriched_of_type = enricheds
+            let enriched_of_type = enriched_json_infos
                 .entry(type_id.clone())
                 .or_insert_with(HashMap::default);
             'enricheds: for (object_id, literal) in literal_entry {
@@ -253,7 +255,9 @@ impl Infos {
                     }
                 }
 
-                enriched.remove("id");
+                if !TypeId::TOOL_QUALITY.contains(type_id) {
+                    enriched.remove("id");
+                }
                 enriched.remove("from");
                 enriched.remove("copy-from");
 
@@ -287,106 +291,74 @@ impl Infos {
                 enriched_of_type.insert(object_id.clone(), enriched);
             }
         }
-        enricheds
+        enriched_json_infos
     }
 
     fn load() -> Self {
         let start = Instant::now();
 
-        let mut enricheds = Self::enricheds();
-        let mut this = Self {
-            ammos: Self::extract(&mut enricheds, TypeId::AMMO),
-            bionic_items: Self::extract(&mut enricheds, TypeId::BIONIC_ITEM),
-            books: Self::extract(&mut enricheds, TypeId::BOOK),
-            characters: Self::extract(&mut enricheds, TypeId::CHARACTER),
-            clothings: Self::extract(&mut enricheds, TypeId::CLOTHING),
-            comestibles: Self::extract(&mut enricheds, TypeId::COMESTIBLE),
-            common_item_info: HashMap::default(),
-            engines: Self::extract(&mut enricheds, TypeId::ENGINE),
-            fields: Self::extract(&mut enricheds, TypeId::FIELD),
-            furniture: Self::extract(&mut enricheds, TypeId::FURNITURE),
-            genenric_items: Self::extract(&mut enricheds, TypeId::GENERIC_ITEM),
-            guns: Self::extract(&mut enricheds, TypeId::GUN),
-            gunmods: Self::extract(&mut enricheds, TypeId::GUNMOD),
-            item_groups: Self::extract(&mut enricheds, TypeId::ITEM_GROUP),
-            magazines: Self::extract(&mut enricheds, TypeId::MAGAZINE),
-            migrations: Self::extract(&mut enricheds, TypeId::MIGRATION),
-            pet_armors: Self::extract(&mut enricheds, TypeId::PET_ARMOR),
-            qualities: Self::extract(&mut enricheds, TypeId::TOOL_QUALITY),
-            recipes: Self::extract(&mut enricheds, TypeId::RECIPE),
-            requirements: Self::extract(&mut enricheds, TypeId::REQUIREMENT),
-            terrain: Self::extract(&mut enricheds, TypeId::TERRAIN),
-            tools: Self::extract(&mut enricheds, TypeId::TOOL),
-            tool_clothings: Self::extract(&mut enricheds, TypeId::TOOL_CLOTHING),
-            toolmods: Self::extract(&mut enricheds, TypeId::TOOLMOD),
-            vehicle_parts: Self::extract(&mut enricheds, TypeId::VEHICLE_PART),
-            wheels: Self::extract(&mut enricheds, TypeId::WHEEL),
-            zone_levels: Self::extract(&mut enricheds, TypeId::OVERMAP),
+        let mut enriched_json_infos = Self::enriched_json_infos();
+        let mut common_item_infos = HashMap::default();
+        let qualities = Self::extract(&mut enriched_json_infos, TypeId::TOOL_QUALITY);
+
+        let mut item_loader = ItemLoader {
+            enriched_json_infos: &mut enriched_json_infos,
+            common_item_infos: &mut common_item_infos,
+            qualities: &qualities,
         };
+        let ammos = item_loader.item_extract(TypeId::AMMO);
+        let bionic_items = item_loader.item_extract(TypeId::BIONIC_ITEM);
+        let books = item_loader.item_extract(TypeId::BOOK);
+        let clothings = item_loader.item_extract(TypeId::CLOTHING);
+        let comestibles = item_loader.item_extract(TypeId::COMESTIBLE);
+        let engines = item_loader.item_extract(TypeId::ENGINE);
+        let genenric_items = item_loader.item_extract(TypeId::GENERIC_ITEM);
+        let guns = item_loader.item_extract(TypeId::GUN);
+        let gunmods = item_loader.item_extract(TypeId::GUNMOD);
+        let magazines = item_loader.item_extract(TypeId::MAGAZINE);
+        let pet_armors = item_loader.item_extract(TypeId::PET_ARMOR);
+        let tools = item_loader.item_extract(TypeId::TOOL);
+        let tool_clothings = item_loader.item_extract(TypeId::TOOL_CLOTHING);
+        let toolmods = item_loader.item_extract(TypeId::TOOLMOD);
+        let wheels = item_loader.item_extract(TypeId::WHEEL);
+        // item_loader is dropped
+
+        let mut this = Self {
+            ammos,
+            bionic_items,
+            books,
+            characters: Self::extract(&mut enriched_json_infos, TypeId::CHARACTER),
+            clothings,
+            comestibles,
+            common_item_infos,
+            engines,
+            fields: Self::extract(&mut enriched_json_infos, TypeId::FIELD),
+            furniture: Self::extract(&mut enriched_json_infos, TypeId::FURNITURE),
+            genenric_items,
+            guns,
+            gunmods,
+            item_groups: Self::extract(&mut enriched_json_infos, TypeId::ITEM_GROUP),
+            magazines,
+            migrations: Self::extract(&mut enriched_json_infos, TypeId::MIGRATION),
+            pet_armors,
+            qualities,
+            recipes: Self::extract(&mut enriched_json_infos, TypeId::RECIPE),
+            requirements: Self::extract(&mut enriched_json_infos, TypeId::REQUIREMENT),
+            terrain: Self::extract(&mut enriched_json_infos, TypeId::TERRAIN),
+            tools,
+            tool_clothings,
+            toolmods,
+            vehicle_parts: Self::extract(&mut enriched_json_infos, TypeId::VEHICLE_PART),
+            wheels,
+            zone_levels: Self::extract(&mut enriched_json_infos, TypeId::OVERMAP),
+        };
+
+        for type_id in enriched_json_infos.into_keys() {
+            eprintln!("Unprocessed type: {type_id:?}");
+        }
 
         this.characters
             .insert(ObjectId::new("human"), Arc::new(default_human()));
-
-        for (id, value) in &this.ammos {
-            this.common_item_info
-                .insert(id.clone(), value.common.clone());
-        }
-        for (id, value) in &this.bionic_items {
-            this.common_item_info
-                .insert(id.clone(), value.common.clone());
-        }
-        for (id, value) in &this.books {
-            this.common_item_info
-                .insert(id.clone(), value.common.clone());
-        }
-        for (id, value) in &this.clothings {
-            this.common_item_info
-                .insert(id.clone(), value.common.clone());
-        }
-        for (id, value) in &this.comestibles {
-            this.common_item_info
-                .insert(id.clone(), value.common.clone());
-        }
-        for (id, value) in &this.engines {
-            this.common_item_info
-                .insert(id.clone(), value.common.clone());
-        }
-        for (id, value) in &this.genenric_items {
-            this.common_item_info
-                .insert(id.clone(), value.common.clone());
-        }
-        for (id, value) in &this.guns {
-            this.common_item_info
-                .insert(id.clone(), value.common.clone());
-        }
-        for (id, value) in &this.gunmods {
-            this.common_item_info
-                .insert(id.clone(), value.common.clone());
-        }
-        for (id, value) in &this.magazines {
-            this.common_item_info
-                .insert(id.clone(), value.common.clone());
-        }
-        for (id, value) in &this.pet_armors {
-            this.common_item_info
-                .insert(id.clone(), value.common.clone());
-        }
-        for (id, value) in &this.tools {
-            this.common_item_info
-                .insert(id.clone(), value.common.clone());
-        }
-        for (id, value) in &this.tool_clothings {
-            this.common_item_info
-                .insert(id.clone(), value.clothing.common.clone());
-        }
-        for (id, value) in &this.toolmods {
-            this.common_item_info
-                .insert(id.clone(), value.common.clone());
-        }
-        for (id, value) in &this.wheels {
-            this.common_item_info
-                .insert(id.clone(), value.common.clone());
-        }
 
         let duration = start.elapsed();
         println!("The creation of Infos took {duration:?}");
@@ -405,7 +377,7 @@ impl Infos {
         &'a self,
         id: &'a ObjectId,
     ) -> Result<&'a Arc<CommonItemInfo>, Error> {
-        self.get(&self.common_item_info, id, TypeId::GENERIC_ITEM)
+        self.get(&self.common_item_infos, id, TypeId::GENERIC_ITEM)
     }
 
     pub(crate) fn field<'a>(&'a self, id: &'a ObjectId) -> Result<&'a Arc<FieldInfo>, Error> {
@@ -553,10 +525,6 @@ impl Infos {
         variants
     }
 
-    pub(crate) fn qualities(&self) -> impl Iterator<Item = ObjectId> + '_ {
-        self.qualities.keys().cloned()
-    }
-
     pub(crate) fn recipes(&self) -> impl Iterator<Item = (&ObjectId, &Arc<Recipe>)> {
         self.recipes.iter()
     }
@@ -611,6 +579,45 @@ impl Infos {
                 factor: using.factor,
             }]]
         })
+    }
+}
+
+struct ItemLoader<'a> {
+    enriched_json_infos:
+        &'a mut HashMap<TypeId, HashMap<ObjectId, serde_json::Map<String, serde_json::Value>>>,
+    common_item_infos: &'a mut HashMap<ObjectId, Arc<CommonItemInfo>>,
+    qualities: &'a HashMap<ObjectId, Arc<Quality>>,
+}
+
+impl ItemLoader<'_> {
+    fn item_extract<T>(&mut self, type_ids: &[TypeId]) -> HashMap<ObjectId, Arc<T>>
+    where
+        T: DeserializeOwned + ItemWithCommonInfo,
+    {
+        let mut result = Infos::extract::<T>(self.enriched_json_infos, type_ids);
+
+        for (id, item_info) in &mut result {
+            let common_item_info = item_info.common();
+            for (quality_id, amount) in &common_item_info.quality_ids {
+                if let Some(quality) = self.qualities.get(quality_id) {
+                    common_item_info.qualities.push((quality.clone(), *amount));
+                } else {
+                    dbg!(Error::UnknownObject {
+                        _id: quality_id.clone(),
+                        _type: TypeId::TOOL_QUALITY
+                    });
+                    continue;
+                }
+            }
+
+            self.common_item_infos
+                .insert(id.clone(), Arc::new(common_item_info.clone()));
+        }
+
+        result
+            .into_iter()
+            .map(|(key, value)| (key, Arc::new(value)))
+            .collect()
     }
 }
 

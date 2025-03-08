@@ -20,10 +20,11 @@ use bevy::prelude::{
     KeyCode, Local, NextState, Node, Overflow, Parent, Query, Res, ResMut, StateScoped, Text,
     TextColor, Transform, UiRect, Val, With, Without, World,
 };
+use bevy::utils::hashbrown::hash_map::Entry;
 use bevy::{ecs::query::QueryData, ecs::system::SystemId, utils::HashMap};
 use cdda_json_files::{
     Alternative, AutoLearn, BookLearn, BookLearnItem, CommonItemInfo, FurnitureInfo, ObjectId,
-    Recipe, RequiredQuality, Sav, Skill, Using,
+    Quality, Recipe, RequiredQuality, Sav, Skill, Using,
 };
 use std::{ops::RangeInclusive, sync::Arc, time::Instant};
 use units::Timestamp;
@@ -273,19 +274,13 @@ pub(super) fn refresh_crafting_screen(
     );
 
     let mut shown_qualities = nearby_qualities
-        .iter()
-        .filter_map(|(quality_id, amount)| {
-            infos
-                .quality(quality_id)
-                .inspect_err(|error| eprintln!("Quality not found: {error:#?}"))
-                .ok()
-                .map(|quality| {
-                    (
-                        quality_id,
-                        amount,
-                        uppercase_first(quality.name.single.clone()),
-                    )
-                })
+        .values()
+        .map(|(quality, amount)| {
+            (
+                quality.id.clone(),
+                amount,
+                uppercase_first(quality.name.single.clone()),
+            )
         })
         .collect::<Vec<_>>();
     shown_qualities.sort_by_key(|(.., name)| name.clone());
@@ -400,7 +395,7 @@ fn shown_recipes(
     infos: &Infos,
     sav: &Sav,
     nearby_manuals: &HashMap<ObjectId, Arc<str>>,
-    nearby_qualities: &HashMap<ObjectId, i8>,
+    nearby_qualities: &HashMap<ObjectId, (Arc<Quality>, i8)>,
     nearby_items: &[NearbyItem],
 ) -> Vec<RecipeSituation> {
     let mut shown_recipes = infos
@@ -496,8 +491,11 @@ fn recipe_manuals(recipe: &Recipe, nearby_manuals: &HashMap<ObjectId, Arc<str>>)
     manuals
 }
 
-fn nearby_qualities(infos: &Infos, nearby_items: &[NearbyItem]) -> HashMap<ObjectId, i8> {
-    let found = nearby_items
+fn nearby_qualities(
+    infos: &Infos,
+    nearby_items: &[NearbyItem],
+) -> HashMap<ObjectId, (Arc<Quality>, i8)> {
+    nearby_items
         .iter()
         .filter_map(|nearby| match nearby.definition.category {
             ObjectCategory::Item => nearby.common_item_info.map(|item| &item.qualities),
@@ -514,26 +512,28 @@ fn nearby_qualities(infos: &Infos, nearby_items: &[NearbyItem]) -> HashMap<Objec
             _ => None,
         })
         .flatten()
-        .collect::<Vec<_>>();
-
-    infos
-        .qualities()
-        .filter_map(|quality_id| {
-            found
-                .iter()
-                .filter(|item_quality| item_quality.0 == quality_id)
-                .map(|item_quality| item_quality.1)
-                .max()
-                .map(|max| (quality_id, max))
-        })
-        .collect::<HashMap<_, _>>()
+        .fold(
+            HashMap::default(),
+            |mut map: HashMap<ObjectId, (Arc<Quality>, i8)>, (quality, amount)| {
+                match map.entry(quality.id.clone()) {
+                    Entry::Occupied(mut occ) => {
+                        let value = occ.get_mut();
+                        value.1 = value.1.max(*amount);
+                    }
+                    Entry::Vacant(vac) => {
+                        vac.insert((quality.clone(), *amount));
+                    }
+                };
+                map
+            },
+        )
 }
 
 fn recipe_qualities(
     infos: &Infos,
     required: &[RequiredQuality],
     using: &[Using],
-    present: &HashMap<ObjectId, i8>,
+    present: &HashMap<ObjectId, (Arc<Quality>, i8)>,
 ) -> Vec<QualitySituation> {
     let mut qualities = required
         .iter()
@@ -556,7 +556,7 @@ fn recipe_qualities(
                 .ok()
                 .map(|quality| QualitySituation {
                     name: uppercase_first(quality.name.single.clone()),
-                    present: present.get(&required_quality.id).copied(),
+                    present: present.get(&required_quality.id).map(|(_, amount)| *amount),
                     required: required_quality.level,
                 })
         })

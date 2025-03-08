@@ -21,8 +21,8 @@ pub use self::furniture_info::{
 pub use self::item_group::ItemGroup;
 pub use self::item_info::{
     Ammo, BionicItem, Book, CddaItemName, Clothing, Comestible, CommonItemInfo, Description,
-    Engine, GenericItem, Gun, Gunmod, ItemName, Magazine, PetArmor, Tool, ToolClothing, Toolmod,
-    Wheel,
+    Engine, GenericItem, Gun, Gunmod, ItemName, ItemWithCommonInfo, Magazine, PetArmor, Tool,
+    ToolClothing, Toolmod, Wheel,
 };
 pub use self::migration::Migration;
 pub use self::overmap_info::OvermapInfo;
