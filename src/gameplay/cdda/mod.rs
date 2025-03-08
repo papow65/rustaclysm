@@ -10,6 +10,7 @@ mod tiles;
 mod type_id;
 
 pub(crate) use self::active_sav::ActiveSav;
+pub(crate) use self::error::Error;
 pub(crate) use self::infos::{Info, Infos};
 pub(crate) use self::object_definition::ObjectCategory;
 pub(crate) use self::paths::{PathFor, SavPath, WorldPath};

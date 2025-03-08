@@ -633,8 +633,12 @@ impl ActorItem<'_> {
             pos,
             start_craft.recipe_situation.recipe_id().clone(),
         );
-
-        next_player_action_state.set(PlayerActionState::Crafting { item });
+        match item {
+            Ok(item) => {
+                next_player_action_state.set(PlayerActionState::Crafting { item });
+            }
+            Err(error) => eprintln!("Failed to start crafting: {error:#?}"),
+        }
 
         self.no_impact()
     }

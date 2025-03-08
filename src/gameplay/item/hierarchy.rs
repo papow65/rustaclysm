@@ -154,7 +154,9 @@ impl<'w> ItemHierarchy<'w, '_> {
         let phrase = Phrase::from_fragments(prefix.into_iter().collect())
             .extend({
                 self.infos
-                    .try_magazine(&item.definition.id)
+                    .magazine(&item.definition.id)
+                    .inspect_err(|error| eprintln!("Magazine not found: {error:?}"))
+                    .ok()
                     .filter(|magazine| {
                         magazine.ammo_type.as_ref().is_some_and(|ammo_type| {
                             ammo_type.0.contains(&ObjectId::new("battery"))

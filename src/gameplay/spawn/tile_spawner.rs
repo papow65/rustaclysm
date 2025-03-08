@@ -1,12 +1,12 @@
 use crate::application::ApplicationState;
-use crate::gameplay::item::Pocket;
 use crate::gameplay::{
     Accessible, ActiveSav, Amount, Aquatic, BaseSpeed, BodyContainers, CameraBase, Closeable,
     Containable, Craft, ExamineCursor, Explored, Faction, Filthy, HealingDuration, Health, Hurdle,
     Info, Infos, ItemIntegrity, LastSeen, LevelOffset, Life, Limited, LocalTerrain, Melee,
     ModelFactory, ObjectCategory, ObjectDefinition, ObjectName, Obstacle, Opaque, OpaqueFloor,
     Openable, Player, Pos, PosOffset, StairsDown, StairsUp, Stamina, StandardIntegrity,
-    TileVariant, Vehicle, VehiclePart, WalkingMode,
+    TileVariant, Vehicle, VehiclePart, WalkingMode, cdda::Error, item::Pocket,
+    spawn::log_spawn_result,
 };
 use crate::hud::{BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR};
 use bevy::ecs::system::SystemParam;
@@ -68,7 +68,13 @@ impl<'w> TileSpawner<'w, '_> {
 
         for spawn in spawns {
             //dbg!(&spawn.id);
-            self.spawn_character(infos, subzone_level_entity, pos, &spawn.id, None);
+            log_spawn_result(self.spawn_character(
+                infos,
+                subzone_level_entity,
+                pos,
+                &spawn.id,
+                None,
+            ));
         }
 
         for fields in fields {
@@ -86,11 +92,8 @@ impl<'w> TileSpawner<'w, '_> {
         pos: Pos,
         id: &ObjectId,
         name: Option<ObjectName>,
-    ) -> Option<Entity> {
-        let Some(character_info) = infos.try_character(id) else {
-            println!("No info found for {id:?}. Spawning skipped");
-            return None;
-        };
+    ) -> Result<Entity, Error> {
+        let character_info = infos.character(id)?;
         let faction = match &*character_info.default_faction {
             "human" => Faction::Human,
             "zombie" => Faction::Zombie,
@@ -166,13 +169,16 @@ impl<'w> TileSpawner<'w, '_> {
         }
 
         println!("Spawned a {:?} at {pos:?}", definition.id);
-        Some(entity)
+        Ok(entity)
     }
 
     fn spawn_field(&mut self, infos: &Infos, parent: Entity, pos: Pos, id: &ObjectId) {
-        let Some(field_info) = infos.try_field(id) else {
-            println!("No info found for field {id:?}");
-            return;
+        let field_info = match infos.field(id) {
+            Ok(field_info) => field_info,
+            Err(error) => {
+                dbg!(error);
+                return;
+            }
         };
         let object_name = ObjectName::new(field_info.name().clone(), BAD_TEXT_COLOR);
 
@@ -193,11 +199,8 @@ impl<'w> TileSpawner<'w, '_> {
         pos: Option<Pos>,
         item: &CddaItem,
         amount: Amount,
-    ) -> Result<Entity, ()> {
-        let Some(item_info) = infos.try_common_item_info(&item.typeid) else {
-            eprintln!("No info found for {:?}. Spawning skipped", &item.typeid);
-            return Err(());
-        };
+    ) -> Result<Entity, Error> {
+        let item_info = infos.common_item_info(&item.typeid)?;
 
         //println!("{:?} {:?} {:?} {:?}", &parent, pos, &id, &amount);
         let definition = &ObjectDefinition {
@@ -214,9 +217,9 @@ impl<'w> TileSpawner<'w, '_> {
         let (volume, mass) = match &item.corpse {
             Some(corpse_id) if corpse_id != &ObjectId::new("mon_null") => {
                 println!("{:?}", &corpse_id);
-                match infos.try_character(corpse_id) {
-                    Some(monster_info) => (monster_info.volume, monster_info.mass),
-                    None => (item_info.volume, item_info.mass),
+                match infos.character(corpse_id) {
+                    Ok(monster_info) => (monster_info.volume, monster_info.mass),
+                    Err(_) => (item_info.volume, item_info.mass),
                 }
             }
             _ => (item_info.volume, item_info.mass),
@@ -261,7 +264,9 @@ impl<'w> TileSpawner<'w, '_> {
                         content,
                         Amount(content.charges.unwrap_or(1)),
                     );
-                    assert!(result.is_ok(), "{:?}", &result);
+                    if let Err(error) = result {
+                        dbg!(error);
+                    }
                 }
             }
             // TODO container.additional_pockets
@@ -307,9 +312,12 @@ impl<'w> TileSpawner<'w, '_> {
         pos: Pos,
         id: &ObjectId,
     ) {
-        let Some(item_group) = &infos.try_item_group(id) else {
-            eprintln!("No info found for item group {id:?}. Spawning skipped");
-            return;
+        let item_group = match infos.item_group(id) {
+            Ok(item_group) => item_group,
+            Err(error) => {
+                dbg!(error);
+                return;
+            }
         };
         let items = item_group
             .items
@@ -320,9 +328,12 @@ impl<'w> TileSpawner<'w, '_> {
     }
 
     fn spawn_furniture(&mut self, infos: &Infos, parent: Entity, pos: Pos, id: &ObjectId) {
-        let Some(furniture_info) = infos.try_furniture(id) else {
-            eprintln!("No info found for furniture {id:?}. Spawning skipped");
-            return;
+        let furniture_info = match infos.furniture(id) {
+            Ok(furniture_info) => furniture_info,
+            Err(error) => {
+                dbg!(error);
+                return;
+            }
         };
 
         let definition = &ObjectDefinition {
@@ -361,9 +372,12 @@ impl<'w> TileSpawner<'w, '_> {
         pos: Pos,
         local_terrain: &LocalTerrain,
     ) {
-        let Some(terrain_info) = infos.try_terrain(&local_terrain.id) else {
-            eprintln!("No info found for terrain {:?}", local_terrain.id);
-            return;
+        let terrain_info = match infos.terrain(&local_terrain.id) {
+            Ok(terrain_info) => terrain_info,
+            Err(error) => {
+                dbg!(error);
+                return;
+            }
         };
 
         if local_terrain.id == ObjectId::new("t_open_air")
@@ -457,20 +471,19 @@ impl<'w> TileSpawner<'w, '_> {
         parent_pos: Pos,
         part: &CddaVehiclePart,
     ) {
-        let Some(part_info) = infos.try_vehicle_part(&part.id) else {
-            eprintln!(
-                "No info found for vehicle part {:?}. Spawning skipped",
-                &part.id
-            );
-            return;
+        let part_info = match infos.vehicle_part(&part.id) {
+            Ok(part_info) => part_info,
+            Err(error) => {
+                dbg!(error);
+                return;
+            }
         };
-
-        let Some(item_info) = infos.try_common_item_info(&part_info.item) else {
-            eprintln!(
-                "No info found for item {:?} from vehicle part {:?}. Spawning skipped",
-                &part_info.item, &part.id
-            );
-            return;
+        let item_info = match infos.common_item_info(&part_info.item) {
+            Ok(item_info) => item_info,
+            Err(error) => {
+                dbg!(error);
+                return;
+            }
         };
 
         let name = part_info.name.as_ref().unwrap_or(&item_info.name);
@@ -660,49 +673,49 @@ impl<'w> TileSpawner<'w, '_> {
             ))
             .id();
 
-        self.spawn_character(
+        log_spawn_result(self.spawn_character(
             infos,
             root,
             around_pos.horizontal_offset(-26, -36),
             &ObjectId::new("human"),
             Some(ObjectName::from_str("Survivor", HARD_TEXT_COLOR)),
-        );
+        ));
 
-        self.spawn_character(
+        log_spawn_result(self.spawn_character(
             infos,
             root,
             around_pos.horizontal_offset(-24, -30),
             &ObjectId::new("mon_zombie"),
             None,
-        );
-        self.spawn_character(
+        ));
+        log_spawn_result(self.spawn_character(
             infos,
             root,
             around_pos.horizontal_offset(4, -26),
             &ObjectId::new("mon_zombie"),
             None,
-        );
-        self.spawn_character(
+        ));
+        log_spawn_result(self.spawn_character(
             infos,
             root,
             around_pos.horizontal_offset(2, -27),
             &ObjectId::new("mon_zombie"),
             None,
-        );
-        self.spawn_character(
+        ));
+        log_spawn_result(self.spawn_character(
             infos,
             root,
             around_pos.horizontal_offset(1, -29),
             &ObjectId::new("mon_zombie"),
             None,
-        );
-        self.spawn_character(
+        ));
+        log_spawn_result(self.spawn_character(
             infos,
             root,
             around_pos.horizontal_offset(-2, -42),
             &ObjectId::new("mon_zombie"),
             None,
-        );
+        ));
     }
 
     pub(crate) fn spawn_smashed(
@@ -756,18 +769,18 @@ impl<'w> TileSpawner<'w, '_> {
         parent_entity: Entity,
         pos: Pos,
         recipe_id: ObjectId,
-    ) -> Entity {
+    ) -> Result<Entity, Error> {
         let craft = CddaItem::from(ObjectId::new("craft"));
-        let entity = self
-            .spawn_item(infos, parent_entity, Some(pos), &craft, Amount::SINGLE)
-            .expect("Spawning craft item should have succeeded");
+        let entity = self.spawn_item(infos, parent_entity, Some(pos), &craft, Amount::SINGLE)?;
 
-        let recipe = infos.recipe(&recipe_id);
-        let crafting_time = recipe.time.expect("Craftable recipes should have a time");
+        let recipe = infos.recipe(&recipe_id)?;
+        let crafting_time = recipe.time.ok_or_else(|| Error::RecipeWithoutTime {
+            _id: recipe_id.clone(),
+        })?;
         let craft = Craft::new(recipe_id, crafting_time);
         self.commands.entity(entity).insert(craft);
 
-        entity
+        Ok(entity)
     }
 }
 

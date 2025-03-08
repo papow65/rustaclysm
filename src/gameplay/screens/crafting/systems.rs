@@ -5,7 +5,7 @@ use crate::gameplay::screens::crafting::resource::CraftingScreen;
 use crate::gameplay::{
     ActiveSav, Amount, BodyContainers, Clock, GameplayScreenState, Info, Infos, InstructionQueue,
     LastSeen, Location, MessageWriter, ObjectCategory, ObjectDefinition, Player, Pos,
-    QueuedInstruction,
+    QueuedInstruction, cdda::Error,
 };
 use crate::hud::{
     BAD_TEXT_COLOR, ButtonBuilder, Fonts, GOOD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, ScrollList,
@@ -274,12 +274,18 @@ pub(super) fn refresh_crafting_screen(
 
     let mut shown_qualities = nearby_qualities
         .iter()
-        .map(|(quality_id, amount)| {
-            (
-                quality_id,
-                amount,
-                uppercase_first(infos.quality(quality_id).name.single.clone()),
-            )
+        .filter_map(|(quality_id, amount)| {
+            infos
+                .quality(quality_id)
+                .inspect_err(|error| eprintln!("Quality not found: {error:#?}"))
+                .ok()
+                .map(|quality| {
+                    (
+                        quality_id,
+                        amount,
+                        uppercase_first(quality.name.single.clone()),
+                    )
+                })
         })
         .collect::<Vec<_>>();
     shown_qualities.sort_by_key(|(.., name)| name.clone());
@@ -410,7 +416,9 @@ fn shown_recipes(
         .filter(|(.., autolearn, recipe_manuals)| *autolearn || !recipe_manuals.is_empty())
         .filter_map(|(recipe_id, recipe, autolearn, recipe_manuals)| {
             infos
-                .try_common_item_info(&recipe.result)
+                .common_item_info(&recipe.result)
+                .inspect_err(|error| eprintln!("Unknown recipe result: {error:#?}"))
+                .ok()
                 .ok_or(0)
                 .inspect_err(|_| {
                     eprintln!("Recipe result {:?} should be a known item", recipe.result);
@@ -498,7 +506,9 @@ fn nearby_qualities(infos: &Infos, nearby_items: &[NearbyItem]) -> HashMap<Objec
                 .and_then(|furniture| furniture.crafting_pseudo_item.as_ref())
                 .and_then(|pseude_item| {
                     infos
-                        .try_common_item_info(pseude_item)
+                        .common_item_info(pseude_item)
+                        .inspect_err(|error| eprintln!("Pseudo item not found: {error:#?}"))
+                        .ok()
                         .map(|item| &item.qualities)
                 }),
             _ => None,
@@ -530,13 +540,25 @@ fn recipe_qualities(
         .chain(
             using
                 .iter()
+                .filter_map(|using| {
+                    infos
+                        .requirement(&using.requirement)
+                        .inspect_err(|error| eprintln!("Requirement not found: {error:#?}"))
+                        .ok()
+                })
                 //.inspect(|using| println!("Using qualities from {using:?}"))
-                .flat_map(|using| &infos.requirement(&using.requirement).qualities.0),
+                .flat_map(|requirement| &requirement.qualities.0),
         )
-        .map(|required_quality| QualitySituation {
-            name: uppercase_first(infos.quality(&required_quality.id).name.single.clone()),
-            present: present.get(&required_quality.id).copied(),
-            required: required_quality.level,
+        .filter_map(|required_quality| {
+            infos
+                .quality(&required_quality.id)
+                .inspect_err(|error| eprintln!("Quality not found: {error:#?}"))
+                .ok()
+                .map(|quality| QualitySituation {
+                    name: uppercase_first(quality.name.single.clone()),
+                    present: present.get(&required_quality.id).copied(),
+                    required: required_quality.level,
+                })
         })
         .collect::<Vec<_>>();
 
@@ -552,7 +574,13 @@ fn recipe_components(
 ) -> Vec<ComponentSituation> {
     let using = using
         .iter()
-        .flat_map(|using| infos.to_components(using))
+        .filter_map(|using| {
+            infos
+                .to_components(using)
+                .inspect_err(|error| eprintln!("Using not found: {error:#?}"))
+                .ok()
+        })
+        .flatten()
         .collect::<Vec<_>>();
 
     required
@@ -562,13 +590,23 @@ fn recipe_components(
             alternatives: {
                 let mut alternatives = component
                     .iter()
-                    .flat_map(|alternative| expand_items(infos, alternative))
+                    .filter_map(|alternative| {
+                        expand_items(infos, alternative)
+                            .inspect_err(|error| {
+                                eprintln!(
+                                    "Could not process alternative {alternative:?}: {error:#?}"
+                                );
+                            })
+                            .ok()
+                    })
+                    .flatten()
                     .filter_map(|(item_id, required)| {
                         infos
-                            .try_common_item_info(item_id)
-                            .ok_or(())
-                            .inspect_err(|()| {
-                                eprintln!("Item {item_id:?} not found (maybe comestible?)");
+                            .common_item_info(item_id)
+                            .inspect_err(|error| {
+                                eprintln!(
+                                    "Item {item_id:?} not found (maybe comestible?): {error:#?}"
+                                );
                             })
                             .ok()
                             .map(|item| (item_id, item, required))
@@ -595,21 +633,28 @@ fn recipe_components(
         .collect::<Vec<_>>()
 }
 
-fn expand_items<'a>(infos: &'a Infos, alternative: &'a Alternative) -> Vec<(&'a ObjectId, u32)> {
+fn expand_items<'a>(
+    infos: &'a Infos,
+    alternative: &'a Alternative,
+) -> Result<Vec<(&'a ObjectId, u32)>, Error> {
     match alternative {
-        Alternative::Item { item, required } => vec![(item, *required)],
+        Alternative::Item { item, required } => Ok(vec![(item, *required)]),
         Alternative::Requirement {
             requirement,
             factor,
         } => {
-            let Some(requirement) = infos.try_requirement(requirement) else {
-                assert!(
-                    infos.try_common_item_info(requirement).is_some(),
-                    "Unkonwn requirement {:?} should be an items",
-                    &requirement
-                );
-                return vec![(requirement, *factor)];
+            let requirement = match infos.requirement(requirement) {
+                Ok(requirement) => requirement,
+                Err(_req_error) => match infos.common_item_info(requirement) {
+                    Ok(_) => return Ok(vec![(requirement, *factor)]),
+                    Err(_item_error) => {
+                        return Err(Error::UnexpectedRequirement {
+                            _id: requirement.clone(),
+                        });
+                    }
+                },
             };
+
             if requirement.components.len() != 1 {
                 eprintln!(
                     "Unexpected structure for {requirement:?}: {:?}",
@@ -617,16 +662,20 @@ fn expand_items<'a>(infos: &'a Infos, alternative: &'a Alternative) -> Vec<(&'a 
                 );
             }
 
-            requirement
+            Ok(requirement
                 .components
                 .iter()
                 .flatten()
                 .flat_map(|alternative| {
                     expand_items(infos, alternative)
+                        .inspect_err(|error| eprintln!("Could not expand: {error:#?}"))
+                })
+                .flat_map(|expanded| {
+                    expanded
                         .into_iter()
                         .map(|(item_id, amount)| (item_id, factor * amount))
                 })
-                .collect()
+                .collect())
         }
     }
 }
@@ -681,7 +730,13 @@ fn show_recipe(
     recipe_sitation: &RecipeSituation,
     start_craft_system: &StartCraftSystem,
 ) {
-    let recipe = infos.recipe(&recipe_sitation.recipe_id);
+    let recipe = match infos.recipe(&recipe_sitation.recipe_id) {
+        Ok(recipe) => recipe,
+        Err(error) => {
+            eprintln!("Recipe not found: {error:#?}");
+            return;
+        }
+    };
 
     commands
         .entity(crafting_screen.recipe_details)

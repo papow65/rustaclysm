@@ -65,10 +65,8 @@ impl ZoneSpawner<'_, '_> {
         definition: &ObjectDefinition,
         child_visibiltiy: &Visibility,
     ) {
-        let zone_level_info = self.infos.try_zone_level(&definition.id);
-
         let name = ObjectName::new(
-            zone_level_info.map_or_else(
+            self.infos.zone_level(&definition.id).ok().map_or_else(
                 || ItemName::from(CddaItemName::Simple(definition.id.fallback_name())),
                 |z| z.name.clone(),
             ),

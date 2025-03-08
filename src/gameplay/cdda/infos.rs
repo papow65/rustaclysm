@@ -1,4 +1,4 @@
-use crate::gameplay::{ObjectCategory, ObjectDefinition, TypeId};
+use crate::gameplay::{ObjectCategory, ObjectDefinition, TypeId, cdda::Error};
 use crate::util::{AssetPaths, AsyncNew};
 use bevy::prelude::{Component, Resource};
 use bevy::utils::HashMap;
@@ -11,9 +11,7 @@ use cdda_json_files::{
 use glob::glob;
 use serde::de::DeserializeOwned;
 use serde_json::map::Entry;
-use std::{
-    any::type_name, fs::read_to_string, ops::Deref, path::PathBuf, sync::Arc, time::Instant,
-};
+use std::{fs::read_to_string, ops::Deref, path::PathBuf, sync::Arc, time::Instant};
 use units::{Mass, Volume};
 
 #[derive(Debug, Component)]
@@ -292,7 +290,7 @@ impl Infos {
         enricheds
     }
 
-    pub(crate) fn load() -> Self {
+    fn load() -> Self {
         let start = Instant::now();
 
         let mut enricheds = Self::enricheds();
@@ -396,93 +394,83 @@ impl Infos {
         this
     }
 
-    pub(crate) fn try_character<'a>(&'a self, id: &'a ObjectId) -> Option<&'a Arc<CharacterInfo>> {
-        self.try_get(&self.characters, id)
-    }
-
-    pub(crate) fn character<'a>(&'a self, id: &'a ObjectId) -> &'a Arc<CharacterInfo> {
-        self.get(&self.characters, id)
-    }
-
-    pub(crate) fn try_common_item_info<'a>(
+    pub(crate) fn character<'a>(
         &'a self,
         id: &'a ObjectId,
-    ) -> Option<&'a Arc<CommonItemInfo>> {
-        self.try_get(&self.common_item_info, id)
+    ) -> Result<&'a Arc<CharacterInfo>, Error> {
+        self.get(&self.characters, id, TypeId::CHARACTER)
     }
 
-    pub(crate) fn try_field<'a>(&'a self, id: &'a ObjectId) -> Option<&'a Arc<FieldInfo>> {
-        self.try_get(&self.fields, id)
-    }
-
-    pub(crate) fn try_furniture<'a>(&'a self, id: &'a ObjectId) -> Option<&'a Arc<FurnitureInfo>> {
-        self.try_get(&self.furniture, id)
-    }
-
-    pub(crate) fn try_item_group<'a>(&'a self, id: &'a ObjectId) -> Option<&'a Arc<ItemGroup>> {
-        self.try_get(&self.item_groups, id)
-    }
-
-    pub(crate) fn try_magazine<'a>(&'a self, id: &'a ObjectId) -> Option<&'a Arc<Magazine>> {
-        self.try_get(&self.magazines, id)
-    }
-
-    #[expect(unused)]
-    pub(crate) fn try_quality<'a>(&'a self, id: &'a ObjectId) -> Option<&'a Arc<Quality>> {
-        self.try_get(&self.qualities, id)
-    }
-
-    pub(crate) fn quality<'a>(&'a self, id: &'a ObjectId) -> &'a Arc<Quality> {
-        self.get(&self.qualities, id)
-    }
-
-    #[expect(unused)]
-    pub(crate) fn try_recipe<'a>(&'a self, id: &'a ObjectId) -> Option<&'a Arc<Recipe>> {
-        self.try_get(&self.recipes, id)
-    }
-
-    pub(crate) fn recipe<'a>(&'a self, id: &'a ObjectId) -> &'a Arc<Recipe> {
-        self.get(&self.recipes, id)
-    }
-
-    pub(crate) fn try_requirement<'a>(&'a self, id: &'a ObjectId) -> Option<&'a Arc<Requirement>> {
-        self.try_get(&self.requirements, id)
-    }
-
-    pub(crate) fn requirement<'a>(&'a self, id: &'a ObjectId) -> &'a Arc<Requirement> {
-        self.get(&self.requirements, id)
-    }
-
-    pub(crate) fn try_terrain<'a>(&'a self, id: &'a ObjectId) -> Option<&'a Arc<TerrainInfo>> {
-        self.try_get(&self.terrain, id)
-    }
-
-    pub(crate) fn terrain<'a>(&'a self, id: &'a ObjectId) -> &'a Arc<TerrainInfo> {
-        self.get(&self.terrain, id)
-    }
-
-    pub(crate) fn try_vehicle_part<'a>(
+    pub(crate) fn common_item_info<'a>(
         &'a self,
         id: &'a ObjectId,
-    ) -> Option<&'a Arc<VehiclePartInfo>> {
-        self.try_get(&self.vehicle_parts, id)
+    ) -> Result<&'a Arc<CommonItemInfo>, Error> {
+        self.get(&self.common_item_info, id, TypeId::GENERIC_ITEM)
     }
 
-    pub(crate) fn try_zone_level<'a>(&'a self, id: &'a ObjectId) -> Option<&'a Arc<OvermapInfo>> {
-        self.try_get(&self.zone_levels, id)
+    pub(crate) fn field<'a>(&'a self, id: &'a ObjectId) -> Result<&'a Arc<FieldInfo>, Error> {
+        self.get(&self.fields, id, TypeId::FIELD)
     }
 
-    fn get<'a, T>(&'a self, map: &'a HashMap<ObjectId, Arc<T>>, id: &'a ObjectId) -> &'a Arc<T> {
-        self.try_get(map, id)
-            .unwrap_or_else(|| panic!("{id:?} ({}) should be known", type_name::<T>()))
+    pub(crate) fn furniture<'a>(
+        &'a self,
+        id: &'a ObjectId,
+    ) -> Result<&'a Arc<FurnitureInfo>, Error> {
+        self.get(&self.furniture, id, TypeId::FURNITURE)
     }
 
-    fn try_get<'a, T>(
+    pub(crate) fn item_group<'a>(&'a self, id: &'a ObjectId) -> Result<&'a Arc<ItemGroup>, Error> {
+        self.get(&self.item_groups, id, TypeId::ITEM_GROUP)
+    }
+
+    pub(crate) fn magazine<'a>(&'a self, id: &'a ObjectId) -> Result<&'a Arc<Magazine>, Error> {
+        self.get(&self.magazines, id, TypeId::MAGAZINE)
+    }
+
+    pub(crate) fn quality<'a>(&'a self, id: &'a ObjectId) -> Result<&'a Arc<Quality>, Error> {
+        self.get(&self.qualities, id, TypeId::TOOL_QUALITY)
+    }
+
+    pub(crate) fn recipe<'a>(&'a self, id: &'a ObjectId) -> Result<&'a Arc<Recipe>, Error> {
+        self.get(&self.recipes, id, TypeId::RECIPE)
+    }
+
+    pub(crate) fn requirement<'a>(
+        &'a self,
+        id: &'a ObjectId,
+    ) -> Result<&'a Arc<Requirement>, Error> {
+        self.get(&self.requirements, id, TypeId::REQUIREMENT)
+    }
+
+    pub(crate) fn terrain<'a>(&'a self, id: &'a ObjectId) -> Result<&'a Arc<TerrainInfo>, Error> {
+        self.get(&self.terrain, id, TypeId::TERRAIN)
+    }
+
+    pub(crate) fn vehicle_part<'a>(
+        &'a self,
+        id: &'a ObjectId,
+    ) -> Result<&'a Arc<VehiclePartInfo>, Error> {
+        self.get(&self.vehicle_parts, id, TypeId::VEHICLE_PART)
+    }
+
+    pub(crate) fn zone_level<'a>(
+        &'a self,
+        id: &'a ObjectId,
+    ) -> Result<&'a Arc<OvermapInfo>, Error> {
+        self.get(&self.zone_levels, id, TypeId::OVERMAP)
+    }
+
+    fn get<'a, T>(
         &'a self,
         map: &'a HashMap<ObjectId, Arc<T>>,
         id: &'a ObjectId,
-    ) -> Option<&'a Arc<T>> {
+        type_id: &'static [TypeId],
+    ) -> Result<&'a Arc<T>, Error> {
         map.get(self.maybe_migrated(id))
+            .ok_or_else(|| Error::UnknownObject {
+                _id: id.clone(),
+                _type: type_id,
+            })
     }
 
     fn maybe_migrated<'a>(&'a self, id: &'a ObjectId) -> &'a ObjectId {
@@ -492,25 +480,32 @@ impl Infos {
     fn looks_like(&self, definition: &ObjectDefinition) -> Option<ObjectId> {
         match definition.category {
             ObjectCategory::Character => self
-                .try_character(&definition.id)
+                .character(&definition.id)
+                .ok()
                 .and_then(|o| o.looks_like.clone()),
             ObjectCategory::Item => self
-                .try_common_item_info(&definition.id)
+                .common_item_info(&definition.id)
+                .ok()
                 .and_then(|o| o.looks_like.clone()),
             ObjectCategory::Field => self
-                .try_field(&definition.id)
+                .field(&definition.id)
+                .ok()
                 .and_then(|o| o.looks_like.clone()),
             ObjectCategory::Furniture => self
-                .try_furniture(&definition.id)
+                .furniture(&definition.id)
+                .ok()
                 .and_then(|o| o.looks_like.clone()),
             ObjectCategory::Terrain => self
-                .try_terrain(&definition.id)
+                .terrain(&definition.id)
+                .ok()
                 .and_then(|o| o.looks_like.clone()),
             ObjectCategory::VehiclePart => self
-                .try_vehicle_part(&definition.id)
+                .vehicle_part(&definition.id)
+                .ok()
                 .and_then(|o| o.looks_like.clone()),
             ObjectCategory::ZoneLevel => self
-                .try_zone_level(&definition.id)
+                .zone_level(&definition.id)
+                .ok()
                 .and_then(|o| o.looks_like.clone()),
             _ => unimplemented!("{:?}", definition),
         }
@@ -589,9 +584,9 @@ impl Infos {
         result
     }
 
-    pub(crate) fn to_components(&self, using: &Using) -> Vec<Vec<Alternative>> {
-        if using.kind == UsingKind::Components {
-            self.requirement(&using.requirement)
+    pub(crate) fn to_components(&self, using: &Using) -> Result<Vec<Vec<Alternative>>, Error> {
+        Ok(if using.kind == UsingKind::Components {
+            self.requirement(&using.requirement)?
                 .components
                 .clone()
                 .into_iter()
@@ -615,7 +610,7 @@ impl Infos {
                 requirement: using.requirement.clone(),
                 factor: using.factor,
             }]]
-        }
+        })
     }
 }
 

@@ -1,9 +1,24 @@
-use cdda_json_files::SpriteNumber;
+use crate::gameplay::cdda::TypeId;
+use cdda_json_files::{ObjectId, SpriteNumber};
 use std::fmt::{self, Display};
 use std::{error::Error as StdError, io, path::PathBuf, sync::Arc};
 
 #[derive(Debug)]
 pub(crate) enum Error {
+    /// This recipe has no time set, where it is expected
+    RecipeWithoutTime {
+        _id: ObjectId,
+    },
+    /// This id, or combination of id and type is not known
+    UnknownObject {
+        _id: ObjectId,
+        _type: &'static [TypeId],
+    },
+    /// This id doesn't match with items or requirments
+    UnexpectedRequirement {
+        _id: ObjectId,
+    },
+    /// This sprite numer is not known
     UnknownSpriteNumber {
         _number: SpriteNumber,
     },

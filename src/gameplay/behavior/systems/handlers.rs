@@ -62,7 +62,13 @@ pub(in super::super) fn toggle_doors(
         let (entity, definition, &pos, parent) = terrain.get(toggle.terrain_entity).expect("Found");
 
         commands.entity(entity).despawn_recursive();
-        let terrain_info = infos.terrain(&definition.id);
+        let terrain_info = match infos.terrain(&definition.id) {
+            Ok(terrain_info) => terrain_info,
+            Err(error) => {
+                eprintln!("Could not toggle {definition:?}: {error:#?}");
+                continue;
+            }
+        };
         let toggled_id = match toggle.change {
             Toggle::Open => terrain_info.open.as_ref().expect("Openable"),
             Toggle::Close => terrain_info.close.as_ref().expect("Closeable"),
@@ -236,7 +242,9 @@ pub(in super::super) fn update_corpses(
                 category: ObjectCategory::Character,
                 id: ObjectId::new("mon_zombie"),
             };
-            let character_info = infos.character(&definition.id);
+            let character_info = infos
+                .character(&definition.id)
+                .unwrap_or_else(|e| panic!("{definition:?} should be found: {e:#?}"));
             let object_name = ObjectName::new(character_info.name.clone(), Faction::Zombie.color());
             let health = Health(Limited::full(character_info.hp.unwrap_or(60) as u16));
 

@@ -3,6 +3,7 @@ use crate::gameplay::{
     AssetState, Infos, LevelOffset, LocalTerrain, MapManager, MapMemoryManager,
     OvermapBufferManager, OvermapManager, Overzone, PosOffset, RepetitionBlockExt as _,
     SubzoneLevel, SubzoneLevelEntities, ZoneLevel, ZoneLevelIds, spawn::TileSpawner,
+    spawn::log_spawn_result,
 };
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{Res, ResMut, StateScoped, Transform, Visibility};
@@ -138,14 +139,13 @@ impl SubzoneSpawner<'_, '_> {
                     .filter(|(at, _)| at == &spawned_offset)
                     .map(|(_, monster)| monster)
                 {
-                    println!("Spawning {monster:?} at {spawned_offset:?}");
-                    self.tile_spawner.spawn_character(
+                    log_spawn_result(self.tile_spawner.spawn_character(
                         &self.infos,
                         subzone_level_entity,
                         base_pos,
                         &monster.typeid,
                         None,
-                    );
+                    ));
                 }
             }
 
