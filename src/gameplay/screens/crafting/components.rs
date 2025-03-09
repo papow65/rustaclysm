@@ -7,7 +7,7 @@ use std::{cmp::Ordering, sync::Arc};
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Component)]
 pub(crate) struct RecipeSituation {
-    pub(super) recipe_id: ObjectId,
+    pub(super) recipe: Arc<Recipe>,
     pub(super) name: Arc<str>,
     pub(super) autolearn: bool,
     pub(super) manuals: Vec<Arc<str>>,
@@ -16,8 +16,8 @@ pub(crate) struct RecipeSituation {
 }
 
 impl RecipeSituation {
-    pub(crate) const fn recipe_id(&self) -> &ObjectId {
-        &self.recipe_id
+    pub(crate) const fn recipe(&self) -> &Arc<Recipe> {
+        &self.recipe
     }
 
     pub(crate) fn consumed_components(&self) -> impl Iterator<Item = &AlternativeSituation> {
@@ -62,7 +62,7 @@ impl RecipeSituation {
                 fonts.regular(),
             ),
             (
-                TextSpan::new(format!("\n({})", self.recipe_id.fallback_name())),
+                TextSpan::new(format!("\n({})", self.recipe.id.fallback_name())),
                 SOFT_TEXT_COLOR,
                 fonts.regular(),
             ),

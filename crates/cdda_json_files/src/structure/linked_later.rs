@@ -105,6 +105,39 @@ impl<T: fmt::Debug, U: Clone + fmt::Debug> From<Vec<(ObjectId, U)>> for VecLinke
     }
 }
 
+#[derive(Debug, Deserialize)]
+#[serde(from = "ObjectId")]
+pub struct RequiredLinkedLater<T: fmt::Debug> {
+    required: LinkedLater<T>,
+}
+
+impl<T: fmt::Debug> RequiredLinkedLater<T> {
+    pub fn get<E>(&self, error: impl FnOnce(&ObjectId) -> E) -> Result<Arc<T>, E> {
+        self.required
+            .get()
+            .ok_or_else(|| error(&self.required.object_id))
+    }
+
+    /// May only be called once
+    pub fn finalize_arc(&self, map: &HashMap<ObjectId, Arc<T>>, err_description: &str) {
+        self.required.finalize(
+            map.get(&self.required.object_id).map(Arc::downgrade),
+            err_description,
+        );
+    }
+}
+
+impl<T: fmt::Debug> From<ObjectId> for RequiredLinkedLater<T> {
+    fn from(object_id: ObjectId) -> Self {
+        Self {
+            required: LinkedLater {
+                object_id,
+                lock: OnceLock::default(),
+            },
+        }
+    }
+}
+
 #[derive(Debug)]
 struct LinkedLater<T: fmt::Debug> {
     object_id: ObjectId,

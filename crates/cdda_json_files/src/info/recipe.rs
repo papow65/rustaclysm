@@ -1,11 +1,14 @@
-use crate::{HashMap, ObjectId};
+use crate::{CommonItemInfo, HashMap, ObjectId, Quality, RequiredLinkedLater};
 use serde::Deserialize;
+use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 use units::Duration;
 
+// PartialEq, Eq, and Hash manually implemented below
 #[derive(Debug, Deserialize)]
 pub struct Recipe {
-    pub result: ObjectId,
+    pub id: ObjectId,
+    pub result: RequiredLinkedLater<CommonItemInfo>,
 
     pub skill_used: Option<Arc<str>>,
 
@@ -32,6 +35,20 @@ pub struct Recipe {
     #[expect(unused)]
     #[serde(flatten)]
     extra: HashMap<Arc<str>, serde_json::Value>,
+}
+
+impl PartialEq for Recipe {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
+}
+
+impl Eq for Recipe {}
+
+impl Hash for Recipe {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.id.hash(state);
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -104,7 +121,8 @@ pub enum Wrap<T> {
 
 #[derive(Debug, Deserialize)]
 pub struct RequiredQuality {
-    pub id: ObjectId,
+    #[serde(rename = "id")]
+    pub quality: RequiredLinkedLater<Quality>,
     pub level: u8,
 }
 

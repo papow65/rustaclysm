@@ -18,7 +18,7 @@ use bevy::render::camera::{PerspectiveProjection, Projection};
 use bevy::render::view::RenderLayers;
 use cdda_json_files::{
     Bash, BashItem, BashItems, CddaAmount, CddaItem, CddaVehicle, CddaVehiclePart, CountRange,
-    Field, FlatVec, MoveCostMod, ObjectId, PocketType, Repetition, Spawn, TerrainInfo,
+    Field, FlatVec, MoveCostMod, ObjectId, PocketType, Recipe, Repetition, Spawn, TerrainInfo,
 };
 use std::sync::Arc;
 use units::{Mass, Volume};
@@ -764,16 +764,15 @@ impl<'w> TileSpawner<'w, '_> {
         infos: &Infos,
         parent_entity: Entity,
         pos: Pos,
-        recipe_id: ObjectId,
+        recipe: Arc<Recipe>,
     ) -> Result<Entity, Error> {
         let craft = CddaItem::from(ObjectId::new("craft"));
         let entity = self.spawn_item(infos, parent_entity, Some(pos), &craft, Amount::SINGLE)?;
 
-        let recipe = infos.recipe(&recipe_id)?;
         let crafting_time = recipe.time.ok_or_else(|| Error::RecipeWithoutTime {
-            _id: recipe_id.clone(),
+            _id: recipe.id.clone(),
         })?;
-        let craft = Craft::new(recipe_id, crafting_time);
+        let craft = Craft::new(recipe, crafting_time);
         self.commands.entity(entity).insert(craft);
 
         Ok(entity)

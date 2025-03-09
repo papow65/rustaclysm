@@ -1,7 +1,9 @@
 use crate::{HashMap, ItemName, ObjectId};
 use serde::Deserialize;
+use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 
+// PartialEq, Eq, and Hash manually implemented below
 #[derive(Debug, Deserialize)]
 pub struct Quality {
     pub id: ObjectId,
@@ -12,6 +14,20 @@ pub struct Quality {
 
     #[serde(flatten)]
     pub extra: HashMap<Arc<str>, serde_json::Value>,
+}
+
+impl PartialEq for Quality {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
+}
+
+impl Eq for Quality {}
+
+impl Hash for Quality {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.id.hash(state);
+    }
 }
 
 #[cfg(test)]

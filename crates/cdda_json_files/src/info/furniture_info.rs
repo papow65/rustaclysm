@@ -29,10 +29,10 @@ pub struct MoveCostIncrease(pub u8);
 
 #[derive(Debug, Deserialize)]
 pub struct Bash {
-    #[serde(rename(deserialize = "ter_set"))]
+    #[serde(rename = "ter_set")]
     pub terrain: OptionalLinkedLater<TerrainInfo>,
 
-    #[serde(rename(deserialize = "furn_set"))]
+    #[serde(rename = "furn_set")]
     pub furniture: Option<ObjectId>,
     pub items: Option<BashItems>,
 

@@ -256,7 +256,11 @@ impl Infos {
                     }
                 }
 
-                if !TypeId::TERRAIN.contains(type_id) && !TypeId::TOOL_QUALITY.contains(type_id) {
+                if TypeId::RECIPE.contains(type_id) {
+                    set_recipe_id(&mut enriched);
+                } else if !TypeId::TERRAIN.contains(type_id)
+                    && !TypeId::TOOL_QUALITY.contains(type_id)
+                {
                     enriched.remove("id");
                 }
                 enriched.remove("from");
@@ -276,10 +280,6 @@ impl Infos {
                         );
                         replace.or_insert(new_id);
                     } else if let Some(to) = enriched.remove("to") {
-                        assert!(
-                            !enriched.contains_key("new_id"),
-                            "'to' a..   ..nd 'new_id' can not be combined"
-                        );
                         let replace = enriched.entry("replace");
                         assert!(
                             matches!(replace, Entry::Vacant { .. }),
@@ -326,6 +326,8 @@ impl Infos {
 
         let furniture = load_furniture(&mut enriched_json_infos, &common_item_infos);
         let terrain = load_terrain(&mut enriched_json_infos);
+        let requirements = load_requirements(&mut enriched_json_infos, &qualities);
+        let recipes = load_recipes(&mut enriched_json_infos, &qualities, &common_item_infos);
 
         let mut this = Self {
             ammos,
@@ -346,8 +348,8 @@ impl Infos {
             migrations: Self::extract(&mut enriched_json_infos, TypeId::MIGRATION),
             pet_armors,
             qualities,
-            recipes: Self::extract(&mut enriched_json_infos, TypeId::RECIPE),
-            requirements: Self::extract(&mut enriched_json_infos, TypeId::REQUIREMENT),
+            recipes,
+            requirements,
             terrain,
             tools,
             tool_clothings,
@@ -403,10 +405,12 @@ impl Infos {
         self.get(&self.magazines, id, TypeId::MAGAZINE)
     }
 
+    #[expect(unused)]
     pub(crate) fn quality<'a>(&'a self, id: &'a ObjectId) -> Result<&'a Arc<Quality>, Error> {
         self.get(&self.qualities, id, TypeId::TOOL_QUALITY)
     }
 
+    #[expect(unused)]
     pub(crate) fn recipe<'a>(&'a self, id: &'a ObjectId) -> Result<&'a Arc<Recipe>, Error> {
         self.get(&self.recipes, id, TypeId::RECIPE)
     }
@@ -529,8 +533,8 @@ impl Infos {
         variants
     }
 
-    pub(crate) fn recipes(&self) -> impl Iterator<Item = (&ObjectId, &Arc<Recipe>)> {
-        self.recipes.iter()
+    pub(crate) fn recipes(&self) -> impl Iterator<Item = &Arc<Recipe>> {
+        self.recipes.values()
     }
 
     fn extract<T>(
@@ -584,6 +588,70 @@ impl Infos {
             }]]
         })
     }
+}
+
+fn set_recipe_id(enriched: &mut serde_json::Map<String, serde_json::Value>) {
+    if let Some(recipe_id) = enriched.get("id") {
+        eprintln!("Recipe should not have an id: {recipe_id:?}");
+    } else if let Some(result) = enriched.get("result").cloned() {
+        if let Some(result_str) = result.as_str() {
+            let id = String::from(result_str)
+                + enriched
+                    .get("id_suffix")
+                    .and_then(|s| s.as_str())
+                    .unwrap_or("");
+            enriched
+                .entry("id")
+                .or_insert(serde_json::Value::String(id));
+        } else {
+            panic!("Recipe result should be a string: {result:#?}");
+        }
+    } else {
+        panic!("Recipe should have a result: {enriched:#?}");
+    }
+}
+
+fn load_requirements(
+    enriched_json_infos: &mut HashMap<
+        TypeId,
+        HashMap<ObjectId, serde_json::Map<String, serde_json::Value>>,
+    >,
+    qualities: &HashMap<ObjectId, Arc<Quality>>,
+) -> HashMap<ObjectId, Arc<Requirement>> {
+    let requirements = Infos::extract::<Arc<Requirement>>(enriched_json_infos, TypeId::REQUIREMENT);
+
+    for requirement in requirements.values() {
+        for required_quality in &requirement.qualities.0 {
+            required_quality
+                .quality
+                .finalize_arc(qualities, "required quality for requirement");
+        }
+    }
+
+    requirements
+}
+
+fn load_recipes(
+    enriched_json_infos: &mut HashMap<
+        TypeId,
+        HashMap<ObjectId, serde_json::Map<String, serde_json::Value>>,
+    >,
+    qualities: &HashMap<ObjectId, Arc<Quality>>,
+    common_item_infos: &HashMap<ObjectId, Arc<CommonItemInfo>>,
+) -> HashMap<ObjectId, Arc<Recipe>> {
+    let recipes = Infos::extract::<Arc<Recipe>>(enriched_json_infos, TypeId::RECIPE);
+
+    for recipe in recipes.values() {
+        for required_quality in &recipe.qualities.0 {
+            required_quality
+                .quality
+                .finalize_arc(qualities, "required quality for recipe");
+        }
+
+        recipe.result.finalize_arc(common_item_infos, "recipe");
+    }
+
+    recipes
 }
 
 fn load_furniture(

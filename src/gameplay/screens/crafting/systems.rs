@@ -1,3 +1,4 @@
+use crate::gameplay::cdda::TypeId;
 use crate::gameplay::screens::crafting::components::{
     AlternativeSituation, ComponentSituation, QualitySituation, RecipeSituation,
 };
@@ -188,7 +189,6 @@ fn exit_crafting(mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>
 pub(super) fn move_crafting_selection(
     In((key, start_craft_system)): In<(Key, StartCraftSystem)>,
     mut commands: Commands,
-    infos: Res<Infos>,
     fonts: Res<Fonts>,
     mut crafting_screen: ResMut<CraftingScreen>,
     mut recipes: Query<(&mut TextColor, &Transform, &ComputedNode, &RecipeSituation)>,
@@ -205,7 +205,6 @@ pub(super) fn move_crafting_selection(
     crafting_screen.adjust_selection(&mut recipes.transmute_lens().query(), &key_code);
     adapt_to_selected(
         &mut commands,
-        &infos,
         &fonts,
         &crafting_screen,
         &recipes.transmute_lens().query(),
@@ -274,7 +273,7 @@ pub(super) fn refresh_crafting_screen(
     );
 
     let mut shown_qualities = nearby_qualities
-        .values()
+        .iter()
         .map(|(quality, amount)| {
             (
                 quality.id.clone(),
@@ -330,7 +329,6 @@ pub(super) fn refresh_crafting_screen(
     if let Some(first_recipe) = first_recipe {
         show_recipe(
             &mut commands,
-            &infos,
             &fonts,
             &crafting_screen,
             &first_recipe,
@@ -395,32 +393,30 @@ fn shown_recipes(
     infos: &Infos,
     sav: &Sav,
     nearby_manuals: &HashMap<ObjectId, Arc<str>>,
-    nearby_qualities: &HashMap<ObjectId, (Arc<Quality>, i8)>,
+    nearby_qualities: &HashMap<Arc<Quality>, i8>,
     nearby_items: &[NearbyItem],
 ) -> Vec<RecipeSituation> {
     let mut shown_recipes = infos
         .recipes()
-        .map(|(recipe_id, recipe)| {
+        .map(|recipe| {
             (
-                recipe_id,
                 recipe,
                 autolearn_recipe(recipe, &sav.player.skills),
                 recipe_manuals(recipe, nearby_manuals),
             )
         })
         .filter(|(.., autolearn, recipe_manuals)| *autolearn || !recipe_manuals.is_empty())
-        .filter_map(|(recipe_id, recipe, autolearn, recipe_manuals)| {
-            infos
-                .common_item_info(&recipe.result)
+        .filter_map(|(recipe, autolearn, recipe_manuals)| {
+            recipe
+                .result
+                .get(|object_id| Error::UnknownObject {
+                    _id: object_id.clone(),
+                    _type: TypeId::GENERIC_ITEM,
+                })
                 .inspect_err(|error| eprintln!("Unknown recipe result: {error:#?}"))
                 .ok()
-                .ok_or(0)
-                .inspect_err(|_| {
-                    eprintln!("Recipe result {:?} should be a known item", recipe.result);
-                })
-                .ok()
                 .map(|item| RecipeSituation {
-                    recipe_id: recipe_id.clone(),
+                    recipe: recipe.clone(),
                     name: uppercase_first(item.name.single.clone()),
                     autolearn,
                     manuals: recipe_manuals,
@@ -444,7 +440,7 @@ fn shown_recipes(
         (
             !recipe.craftable(),
             recipe.name.clone(),
-            recipe.recipe_id.fallback_name(),
+            recipe.recipe.id.fallback_name(),
         )
     });
     shown_recipes
@@ -491,7 +487,7 @@ fn recipe_manuals(recipe: &Recipe, nearby_manuals: &HashMap<ObjectId, Arc<str>>)
     manuals
 }
 
-fn nearby_qualities(nearby_items: &[NearbyItem]) -> HashMap<ObjectId, (Arc<Quality>, i8)> {
+fn nearby_qualities(nearby_items: &[NearbyItem]) -> HashMap<Arc<Quality>, i8> {
     nearby_items
         .iter()
         .filter_map(|nearby| match nearby.definition.category {
@@ -507,14 +503,13 @@ fn nearby_qualities(nearby_items: &[NearbyItem]) -> HashMap<ObjectId, (Arc<Quali
         .flatten()
         .fold(
             HashMap::default(),
-            |mut map: HashMap<ObjectId, (Arc<Quality>, i8)>, (quality, amount)| {
-                match map.entry(quality.id.clone()) {
-                    Entry::Occupied(mut occ) => {
-                        let value = occ.get_mut();
-                        value.1 = value.1.max(amount);
+            |mut map: HashMap<Arc<Quality>, i8>, (quality, amount)| {
+                match map.entry(quality) {
+                    Entry::Occupied(occ) => {
+                        *occ.into_mut() = (*occ.get()).max(amount);
                     }
                     Entry::Vacant(vac) => {
-                        vac.insert((quality.clone(), amount));
+                        vac.insert(amount);
                     }
                 };
                 map
@@ -526,7 +521,7 @@ fn recipe_qualities(
     infos: &Infos,
     required: &[RequiredQuality],
     using: &[Using],
-    present: &HashMap<ObjectId, (Arc<Quality>, i8)>,
+    present: &HashMap<Arc<Quality>, i8>,
 ) -> Vec<QualitySituation> {
     let mut qualities = required
         .iter()
@@ -543,13 +538,17 @@ fn recipe_qualities(
                 .flat_map(|requirement| &requirement.qualities.0),
         )
         .filter_map(|required_quality| {
-            infos
-                .quality(&required_quality.id)
+            required_quality
+                .quality
+                .get(|object_id| Error::UnknownObject {
+                    _id: object_id.clone(),
+                    _type: TypeId::TOOL_QUALITY,
+                })
                 .inspect_err(|error| eprintln!("Quality not found: {error:#?}"))
                 .ok()
                 .map(|quality| QualitySituation {
                     name: uppercase_first(quality.name.single.clone()),
-                    present: present.get(&required_quality.id).map(|(_, amount)| *amount),
+                    present: present.get(&quality).copied(),
                     required: required_quality.level,
                 })
         })
@@ -675,7 +674,6 @@ fn expand_items<'a>(
 
 fn adapt_to_selected(
     commands: &mut Commands,
-    infos: &Res<Infos>,
     fonts: &Res<Fonts>,
     crafting_screen: &CraftingScreen,
     recipes: &Query<(&Transform, &ComputedNode, &RecipeSituation)>,
@@ -706,7 +704,6 @@ fn adapt_to_selected(
 
         show_recipe(
             commands,
-            infos,
             fonts,
             crafting_screen,
             recipe_sitation,
@@ -717,20 +714,11 @@ fn adapt_to_selected(
 
 fn show_recipe(
     commands: &mut Commands,
-    infos: &Infos,
     fonts: &Fonts,
     crafting_screen: &CraftingScreen,
     recipe_sitation: &RecipeSituation,
     start_craft_system: &StartCraftSystem,
 ) {
-    let recipe = match infos.recipe(&recipe_sitation.recipe_id) {
-        Ok(recipe) => recipe,
-        Err(error) => {
-            eprintln!("Recipe not found: {error:#?}");
-            return;
-        }
-    };
-
     commands
         .entity(crafting_screen.recipe_details)
         .despawn_descendants()
@@ -745,7 +733,7 @@ fn show_recipe(
             parent
                 .spawn((Text::default(), fonts.regular()))
                 .with_children(|parent| {
-                    for section in recipe_sitation.text_sections(fonts, recipe) {
+                    for section in recipe_sitation.text_sections(fonts, &recipe_sitation.recipe) {
                         parent.spawn(section);
                     }
                 });

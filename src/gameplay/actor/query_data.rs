@@ -631,7 +631,7 @@ impl ActorItem<'_> {
             infos,
             parent_entity,
             pos,
-            start_craft.recipe_situation.recipe_id().clone(),
+            start_craft.recipe_situation.recipe().clone(),
         );
         match item {
             Ok(item) => {
@@ -666,7 +666,7 @@ impl ActorItem<'_> {
             let parent = item.parent.get();
             let pos = *item.pos.unwrap_or(self.pos);
             let amount = *item.amount;
-            let cdda_item = CddaItem::from(craft.object_id.clone());
+            let cdda_item = CddaItem::from(craft.recipe.id.clone());
             commands.entity(item.entity).despawn_recursive();
             _ = spawner.spawn_item(infos, parent, Some(pos), &cdda_item, amount);
             next_player_action_state.set(PlayerActionState::Normal);

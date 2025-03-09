@@ -10,7 +10,8 @@ use crate::gameplay::{
     BaseSpeed, Damage, Evolution, Info, Limited, ObjectCategory, Player, Visible,
 };
 use bevy::prelude::{AlphaMode, Assets, Color, Component, MeshMaterial3d, Srgba, StandardMaterial};
-use cdda_json_files::{CommonItemInfo, MoveCost, MoveCostIncrease, ObjectId};
+use cdda_json_files::{CommonItemInfo, MoveCost, MoveCostIncrease, ObjectId, Recipe};
+use std::sync::Arc;
 use units::{Duration, Timestamp};
 
 /// Terrain that can be accessed, like a floor
@@ -112,15 +113,15 @@ impl HealingDuration {
 
 #[derive(Debug, Component)]
 pub(crate) struct Craft {
-    pub(crate) object_id: ObjectId,
+    pub(crate) recipe: Arc<Recipe>,
     pub(crate) work_needed: Duration,
     pub(crate) work_done: Duration,
 }
 
 impl Craft {
-    pub(crate) const fn new(object_id: ObjectId, work_needed: Duration) -> Self {
+    pub(crate) const fn new(recipe: Arc<Recipe>, work_needed: Duration) -> Self {
         Self {
-            object_id,
+            recipe,
             work_needed,
             work_done: Duration::ZERO,
         }

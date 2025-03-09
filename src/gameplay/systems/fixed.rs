@@ -3,9 +3,7 @@ use crate::gameplay::{
 };
 use crate::util::log_if_slow;
 use bevy::asset::UntypedAssetLoadFailedEvent;
-use bevy::prelude::{
-    Assets, EventReader, Font, Local, Mesh, Query, Res, StandardMaterial, With,
-};
+use bevy::prelude::{Assets, EventReader, Font, Local, Mesh, Query, Res, StandardMaterial, With};
 use std::time::Instant;
 
 pub(crate) fn count_assets(
@@ -77,9 +75,7 @@ pub(crate) fn count_pos(
     log_if_slow("count_pos", start);
 }
 
-pub(crate) fn check_failed_asset_loading(
-    mut fails: EventReader<UntypedAssetLoadFailedEvent>,
-) {
+pub(crate) fn check_failed_asset_loading(mut fails: EventReader<UntypedAssetLoadFailedEvent>) {
     let start = Instant::now();
 
     for fail in fails.read() {
