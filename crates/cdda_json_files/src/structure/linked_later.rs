@@ -141,22 +141,25 @@ impl<T: fmt::Debug> From<ObjectId> for RequiredLinkedLater<T> {
 #[derive(Debug)]
 struct LinkedLater<T: fmt::Debug> {
     object_id: ObjectId,
-    lock: OnceLock<Weak<T>>,
+    lock: OnceLock<Option<Weak<T>>>,
 }
 
 impl<T: fmt::Debug> LinkedLater<T> {
     fn get(&self) -> Option<Arc<T>> {
-        self.lock.get().map(|lock| {
-            lock.upgrade()
-                .expect("Referenced value should be available")
-        })
+        self.lock
+            .get()
+            .expect("Should be finalized")
+            .as_ref()
+            .map(|weak| {
+                weak.upgrade()
+                    .expect("Referenced value should be available")
+            })
     }
 
     fn finalize(&self, found: Option<Weak<T>>, err_description: &str) {
-        if let Some(weak) = found {
-            self.lock.set(weak).expect("{self:?} is already finalized");
-        } else {
+        if found.is_none() {
             eprintln!("Could not find {err_description}: {self:?}");
         }
+        self.lock.set(found).expect("{self:?} is already finalized");
     }
 }
