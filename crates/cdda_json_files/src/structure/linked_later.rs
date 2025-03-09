@@ -52,6 +52,59 @@ impl<T: fmt::Debug> From<Option<ObjectId>> for OptionalLinkedLater<T> {
     }
 }
 
+#[derive(Debug, Deserialize)]
+#[serde(from = "Vec<(ObjectId, U)>")]
+pub struct VecLinkedLater<T: fmt::Debug, U: Clone + fmt::Debug> {
+    vec: Vec<(LinkedLater<T>, U)>,
+}
+
+impl<T: fmt::Debug, U: Clone + fmt::Debug> VecLinkedLater<T, U> {
+    pub fn finalize(&self, map: &HashMap<ObjectId, Arc<T>>, err_description: &str) {
+        for (linked_later, _assoc) in &self.vec {
+            linked_later.finalize(
+                map.get(&linked_later.object_id).map(Arc::downgrade),
+                err_description,
+            );
+        }
+    }
+
+    pub fn get_all(&self) -> Vec<(Arc<T>, U)> {
+        self.vec
+            .iter()
+            .filter_map(|(linked_later, assoc)| {
+                linked_later.get().map(|item| (item.clone(), assoc.clone()))
+            })
+            .collect()
+    }
+}
+
+impl<T: fmt::Debug, U: Clone + fmt::Debug> Default for VecLinkedLater<T, U> {
+    fn default() -> Self {
+        Self {
+            vec: Vec::default(),
+        }
+    }
+}
+
+impl<T: fmt::Debug, U: Clone + fmt::Debug> From<Vec<(ObjectId, U)>> for VecLinkedLater<T, U> {
+    fn from(vec: Vec<(ObjectId, U)>) -> Self {
+        Self {
+            vec: vec
+                .into_iter()
+                .map(|(object_id, assoc)| {
+                    (
+                        LinkedLater {
+                            object_id,
+                            lock: OnceLock::default(),
+                        },
+                        assoc,
+                    )
+                })
+                .collect(),
+        }
+    }
+}
+
 #[derive(Debug)]
 struct LinkedLater<T: fmt::Debug> {
     object_id: ObjectId,

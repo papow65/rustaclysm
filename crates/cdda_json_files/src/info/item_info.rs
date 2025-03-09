@@ -1,11 +1,10 @@
-use crate::Quality;
-use crate::{Flags, HashMap, ObjectId, structure::MaybeFlatVec};
+use crate::{Flags, HashMap, ObjectId, Quality, VecLinkedLater, structure::MaybeFlatVec};
 use serde::Deserialize;
 use std::sync::Arc;
 use units::{Duration, Mass, Volume};
 
 pub trait ItemWithCommonInfo {
-    fn common(&mut self) -> &mut CommonItemInfo;
+    fn common(&self) -> Arc<CommonItemInfo>;
 }
 
 #[derive(Debug, Deserialize)]
@@ -30,12 +29,12 @@ pub struct Ammo {
     pub show_stats: Option<bool>,
 
     #[serde(flatten)]
-    pub common: CommonItemInfo,
+    pub common: Arc<CommonItemInfo>,
 }
 
 impl ItemWithCommonInfo for Ammo {
-    fn common(&mut self) -> &mut CommonItemInfo {
-        &mut self.common
+    fn common(&self) -> Arc<CommonItemInfo> {
+        self.common.clone()
     }
 }
 
@@ -46,12 +45,12 @@ pub struct BionicItem {
     pub is_upgrade: bool,
 
     #[serde(flatten)]
-    pub common: CommonItemInfo,
+    pub common: Arc<CommonItemInfo>,
 }
 
 impl ItemWithCommonInfo for BionicItem {
-    fn common(&mut self) -> &mut CommonItemInfo {
-        &mut self.common
+    fn common(&self) -> Arc<CommonItemInfo> {
+        self.common.clone()
     }
 }
 
@@ -76,12 +75,12 @@ pub struct Book {
     pub martial_art: Option<Arc<str>>,
 
     #[serde(flatten)]
-    pub common: CommonItemInfo,
+    pub common: Arc<CommonItemInfo>,
 }
 
 impl ItemWithCommonInfo for Book {
-    fn common(&mut self) -> &mut CommonItemInfo {
-        &mut self.common
+    fn common(&self) -> Arc<CommonItemInfo> {
+        self.common.clone()
     }
 }
 
@@ -91,12 +90,12 @@ pub struct Clothing {
     pub non_functional: Option<Arc<str>>,
 
     #[serde(flatten)]
-    pub common: CommonItemInfo,
+    pub common: Arc<CommonItemInfo>,
 }
 
 impl ItemWithCommonInfo for Clothing {
-    fn common(&mut self) -> &mut CommonItemInfo {
-        &mut self.common
+    fn common(&self) -> Arc<CommonItemInfo> {
+        self.common.clone()
     }
 }
 
@@ -153,12 +152,12 @@ pub struct Comestible {
     pub vitamins: Option<Arc<[(String, u16)]>>,
 
     #[serde(flatten)]
-    pub common: CommonItemInfo,
+    pub common: Arc<CommonItemInfo>,
 }
 
 impl ItemWithCommonInfo for Comestible {
-    fn common(&mut self) -> &mut CommonItemInfo {
-        &mut self.common
+    fn common(&self) -> Arc<CommonItemInfo> {
+        self.common.clone()
     }
 }
 
@@ -167,12 +166,12 @@ pub struct Engine {
     pub displacement: Option<u16>,
 
     #[serde(flatten)]
-    pub common: CommonItemInfo,
+    pub common: Arc<CommonItemInfo>,
 }
 
 impl ItemWithCommonInfo for Engine {
-    fn common(&mut self) -> &mut CommonItemInfo {
-        &mut self.common
+    fn common(&self) -> Arc<CommonItemInfo> {
+        self.common.clone()
     }
 }
 
@@ -185,12 +184,12 @@ pub struct GenericItem {
     pub template_requirements: Option<Arc<str>>,
 
     #[serde(flatten)]
-    pub common: CommonItemInfo,
+    pub common: Arc<CommonItemInfo>,
 }
 
 impl ItemWithCommonInfo for GenericItem {
-    fn common(&mut self) -> &mut CommonItemInfo {
-        &mut self.common
+    fn common(&self) -> Arc<CommonItemInfo> {
+        self.common.clone()
     }
 }
 
@@ -232,12 +231,12 @@ pub struct Gun {
     pub valid_mod_locations: Arc<[serde_json::Value]>,
 
     #[serde(flatten)]
-    pub common: CommonItemInfo,
+    pub common: Arc<CommonItemInfo>,
 }
 
 impl ItemWithCommonInfo for Gun {
-    fn common(&mut self) -> &mut CommonItemInfo {
-        &mut self.common
+    fn common(&self) -> Arc<CommonItemInfo> {
+        self.common.clone()
     }
 }
 
@@ -289,12 +288,12 @@ pub struct Gunmod {
     pub weight_multiplier: Option<f32>,
 
     #[serde(flatten)]
-    pub common: CommonItemInfo,
+    pub common: Arc<CommonItemInfo>,
 }
 
 impl ItemWithCommonInfo for Gunmod {
-    fn common(&mut self) -> &mut CommonItemInfo {
-        &mut self.common
+    fn common(&self) -> Arc<CommonItemInfo> {
+        self.common.clone()
     }
 }
 
@@ -307,12 +306,12 @@ pub struct Magazine {
     pub reload_time: Option<u16>,
 
     #[serde(flatten)]
-    pub common: CommonItemInfo,
+    pub common: Arc<CommonItemInfo>,
 }
 
 impl ItemWithCommonInfo for Magazine {
-    fn common(&mut self) -> &mut CommonItemInfo {
-        &mut self.common
+    fn common(&self) -> Arc<CommonItemInfo> {
+        self.common.clone()
     }
 }
 
@@ -323,12 +322,12 @@ pub struct PetArmor {
     pub pet_bodytype: Arc<str>,
 
     #[serde(flatten)]
-    pub common: CommonItemInfo,
+    pub common: Arc<CommonItemInfo>,
 }
 
 impl ItemWithCommonInfo for PetArmor {
-    fn common(&mut self) -> &mut CommonItemInfo {
-        &mut self.common
+    fn common(&self) -> Arc<CommonItemInfo> {
+        self.common.clone()
     }
 }
 
@@ -350,12 +349,12 @@ pub struct Tool {
     pub variables: Option<HashMap<String, serde_json::Value>>,
 
     #[serde(flatten)]
-    pub common: CommonItemInfo,
+    pub common: Arc<CommonItemInfo>,
 }
 
 impl ItemWithCommonInfo for Tool {
-    fn common(&mut self) -> &mut CommonItemInfo {
-        &mut self.common
+    fn common(&self) -> Arc<CommonItemInfo> {
+        self.common.clone()
     }
 }
 
@@ -371,8 +370,8 @@ pub struct ToolClothing {
 }
 
 impl ItemWithCommonInfo for ToolClothing {
-    fn common(&mut self) -> &mut CommonItemInfo {
-        &mut self.clothing.common
+    fn common(&self) -> Arc<CommonItemInfo> {
+        self.clothing.common.clone()
     }
 }
 
@@ -381,12 +380,12 @@ pub struct Toolmod {
     pub pocket_mods: Option<Arc<[HashMap<String, serde_json::Value>]>>,
 
     #[serde(flatten)]
-    pub common: CommonItemInfo,
+    pub common: Arc<CommonItemInfo>,
 }
 
 impl ItemWithCommonInfo for Toolmod {
-    fn common(&mut self) -> &mut CommonItemInfo {
-        &mut self.common
+    fn common(&self) -> Arc<CommonItemInfo> {
+        self.common.clone()
     }
 }
 
@@ -396,16 +395,16 @@ pub struct Wheel {
     pub width: u8,
 
     #[serde(flatten)]
-    pub common: CommonItemInfo,
+    pub common: Arc<CommonItemInfo>,
 }
 
 impl ItemWithCommonInfo for Wheel {
-    fn common(&mut self) -> &mut CommonItemInfo {
-        &mut self.common
+    fn common(&self) -> Arc<CommonItemInfo> {
+        self.common.clone()
     }
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct CommonItemInfo {
     pub category: Option<Arc<str>>,
 
@@ -469,13 +468,8 @@ pub struct CommonItemInfo {
     pub flags: Flags,
     pub faults: Option<serde_json::Value>,
 
-    /// Use [`Self.qualities`] where possible
-    #[serde(rename(deserialize = "qualities"))]
     #[serde(default)]
-    pub quality_ids: Vec<(ObjectId, i8)>,
-    #[serde(skip)]
-    #[serde(default)]
-    pub qualities: Vec<(Arc<Quality>, i8)>,
+    pub qualities: VecLinkedLater<Quality, i8>,
 
     // example: { "effects": [ "RECYCLED" ] }
     pub extend: Option<serde_json::Value>,

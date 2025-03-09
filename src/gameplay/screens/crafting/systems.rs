@@ -495,12 +495,12 @@ fn nearby_qualities(nearby_items: &[NearbyItem]) -> HashMap<ObjectId, (Arc<Quali
     nearby_items
         .iter()
         .filter_map(|nearby| match nearby.definition.category {
-            ObjectCategory::Item => nearby.common_item_info.map(|item| item.qualities.clone()),
+            ObjectCategory::Item => nearby.common_item_info.map(|item| item.qualities.get_all()),
             ObjectCategory::Furniture => nearby.furniture_info.and_then(|furniture| {
                 furniture
                     .crafting_pseudo_item
                     .get()
-                    .map(|item| item.qualities.clone())
+                    .map(|item| item.qualities.get_all())
             }),
             _ => None,
         })

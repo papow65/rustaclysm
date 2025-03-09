@@ -651,20 +651,12 @@ impl ItemLoader<'_> {
 
         for (id, item_info) in &mut result {
             let common_item_info = item_info.common();
-            for (quality_id, amount) in &common_item_info.quality_ids {
-                if let Some(quality) = self.qualities.get(quality_id) {
-                    common_item_info.qualities.push((quality.clone(), *amount));
-                } else {
-                    dbg!(Error::UnknownObject {
-                        _id: quality_id.clone(),
-                        _type: TypeId::TOOL_QUALITY
-                    });
-                    continue;
-                }
-            }
 
-            self.common_item_infos
-                .insert(id.clone(), Arc::new(common_item_info.clone()));
+            common_item_info
+                .qualities
+                .finalize(self.qualities, "quality");
+
+            self.common_item_infos.insert(id.clone(), common_item_info);
         }
 
         result
