@@ -60,7 +60,6 @@ fn similar(
     direction: HorizontalDirection,
     like: &ObjectId,
 ) -> bool {
-    static DIRT: LazyLock<ObjectId> = LazyLock::new(|| ObjectId::new("t_dirt"));
     static PAVEMENT: LazyLock<ObjectId> = LazyLock::new(|| ObjectId::new("t_pavement"));
     static PAVEMENT_DOT: LazyLock<ObjectId> = LazyLock::new(|| ObjectId::new("t_pavement_y"));
 
@@ -69,7 +68,6 @@ fn similar(
     let nbor = terrain.get(&pos.horizontal_nbor(direction)).copied();
 
     // 'nbor.is_some()' is a mostly correct hack for missing data at zone borders
-    nbor == Some(like)
-        || (like == &*DIRT && nbor.is_none())
+    nbor.is_none_or(|nbor| nbor == like)
         || (like == &*PAVEMENT && nbor.is_none_or(|nbor| nbor == &*PAVEMENT_DOT))
 }
