@@ -1,6 +1,6 @@
-use crate::{Bash, Flags, HashMap, ItemName, MoveCostIncrease, ObjectId};
+use crate::{Bash, Flags, HashMap, ItemName, LinkedLater, MoveCostIncrease, ObjectId};
 use serde::Deserialize;
-use std::sync::{Arc, OnceLock, Weak};
+use std::sync::Arc;
 
 #[derive(Debug, Deserialize)]
 pub struct TerrainInfo {
@@ -9,17 +9,8 @@ pub struct TerrainInfo {
     pub move_cost: MoveCost,
     pub looks_like: Option<ObjectId>,
 
-    /// Use [`Self.open`] where possible
-    #[serde(rename(deserialize = "open"))]
-    pub open_id: Option<ObjectId>,
-    #[serde(skip)]
-    pub open: OnceLock<Weak<TerrainInfo>>,
-
-    /// Use [`Self.close`] where possible
-    #[serde(rename(deserialize = "close"))]
-    pub close_id: Option<ObjectId>,
-    #[serde(skip)]
-    pub close: OnceLock<Weak<TerrainInfo>>,
+    pub open: Option<LinkedLater<TerrainInfo>>,
+    pub close: Option<LinkedLater<TerrainInfo>>,
 
     pub flags: Flags,
     pub bash: Option<Bash>,

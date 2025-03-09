@@ -43,7 +43,7 @@ impl<T> Repetition<T> {
 
 impl<'de, T> Deserialize<'de> for Repetition<T>
 where
-    T: serde::de::Deserialize<'de>,
+    T: Deserialize<'de>,
 {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let value = serde_json::Value::deserialize(deserializer)?;

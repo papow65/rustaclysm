@@ -617,35 +617,29 @@ fn load_terrain(
     let terrain = Infos::extract::<RefCell<Arc<TerrainInfo>>>(enriched_json_infos, TypeId::TERRAIN);
     for terrain_info in terrain.values() {
         let terrain_info = terrain_info.borrow();
-        if let Some(open_id) = &terrain_info.open_id {
-            if let Some(open_terrain) = terrain.get(open_id) {
-                terrain_info
-                    .open
-                    .set(Arc::downgrade(&*open_terrain.borrow()))
-                    .expect("No previous value");
+        if let Some(open) = &terrain_info.open {
+            if let Some(open_terrain) = terrain.get(open.initial()) {
+               open.finalize(&*open_terrain.borrow());
             } else {
-                eprintln!("Could not find open terrain {open_id:?}");
+                eprintln!("Could not find open terrain {open:?}");
             }
         }
-        if let Some(close_id) = &terrain_info.close_id {
-            if let Some(closed_terrain) = terrain.get(close_id) {
-                terrain_info
-                    .close
-                    .set(Arc::downgrade(&*closed_terrain.borrow()))
-                    .expect("No previous value");
+        if let Some(close) = &terrain_info.close {
+            if let Some(closed_terrain) = terrain.get(close.initial()) {
+                close.finalize(&*closed_terrain.borrow());
             } else {
-                eprintln!("Could not find closed terrain {close_id:?}");
+                eprintln!("Could not find closed terrain {close:?}");
             }
         }
         if let Some(bash) = &terrain_info.bash {
-            if let Some(ter_set_id) = &bash.ter_set_id {
-                if let Some(bashed_terrain) = terrain.get(ter_set_id) {
-                    bash.terrain
-                        .set(Arc::downgrade(&*bashed_terrain.borrow()))
-                        .expect("No previous value");
+            if let Some(terrain_link) = &bash.terrain {
+                if terrain_link.initial() == &ObjectId::new("t_null") {
+                    eprintln!("Skipping un-set terrain for {:?}", terrain_info.id);
+                } else if let Some(bashed_terrain) = terrain.get(terrain_link.initial()) {
+                    terrain_link.finalize(&*bashed_terrain.borrow());
                 } else {
                     eprintln!(
-                        "Could not find bashed terrain {ter_set_id:?} for {:?}",
+                        "Could not find bashed terrain {terrain_link:?} for {:?}",
                         terrain_info.id
                     );
                 }
