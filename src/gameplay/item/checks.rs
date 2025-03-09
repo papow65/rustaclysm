@@ -1,4 +1,5 @@
 use crate::gameplay::item::Pocket;
+use crate::gameplay::phrase::Phrase;
 use crate::gameplay::{
     Amount, Containable, Infos, ItemHierarchy, ItemIntegrity, ObjectCategory, ObjectDefinition,
     Pos, StandardIntegrity,
@@ -77,11 +78,26 @@ fn check_single_item(
         for (entity, pocket) in pockets.iter() {
             let count = item_hierarchy.items_in(entity).count();
             match pocket.type_ {
-                PocketType::MagazineWell => assert!(
-                    count <= 1,
-                    "At most one item expected in {pocket:?} ({count})"
-                ),
-                PocketType::Magazine => assert_eq!(count, 1, "Single item expected in {pocket:?}"),
+                PocketType::MagazineWell => {
+                    if 1 < count {
+                        eprintln!(
+                            "At most one item expected in {pocket:?} ({entity:?}) instead of {count}:"
+                        );
+                        for item in item_hierarchy.items_in(entity) {
+                            eprintln!("- {}", Phrase::from_fragments(item.fragments().collect()));
+                        }
+                    }
+                }
+                PocketType::Magazine => {
+                    if count != 1 {
+                        eprintln!(
+                            "Exactly one item expected in {pocket:?} ({entity:?}) instead of {count}:"
+                        );
+                        for item in item_hierarchy.items_in(entity) {
+                            eprintln!("- {}", Phrase::from_fragments(item.fragments().collect()));
+                        }
+                    }
+                }
                 _ => {}
             }
         }

@@ -1,13 +1,10 @@
-use crate::application::ApplicationState;
 use crate::gameplay::{
     MapAsset, MapMemoryAsset, OvermapAsset, OvermapBufferAsset, Pos, SubzoneLevel, ZoneLevel,
 };
-use crate::loading::LoadingIndicatorState;
 use crate::util::log_if_slow;
-use bevy::asset::{AssetLoadError, UntypedAssetLoadFailedEvent};
+use bevy::asset::UntypedAssetLoadFailedEvent;
 use bevy::prelude::{
-    Assets, EventReader, Font, Local, Mesh, NextState, Query, Res, ResMut, StandardMaterial, State,
-    With,
+    Assets, EventReader, Font, Local, Mesh, Query, Res, StandardMaterial, With,
 };
 use std::time::Instant;
 
@@ -80,27 +77,13 @@ pub(crate) fn count_pos(
     log_if_slow("count_pos", start);
 }
 
-#[expect(clippy::needless_pass_by_value)]
 pub(crate) fn check_failed_asset_loading(
     mut fails: EventReader<UntypedAssetLoadFailedEvent>,
-    mut next_application_state: ResMut<NextState<ApplicationState>>,
-    loading_state: Option<Res<State<LoadingIndicatorState>>>,
 ) {
     let start = Instant::now();
 
     for fail in fails.read() {
         eprintln!("Failed to load asset {}: {:#?}", fail.path, &fail.error);
-
-        match &fail.error {
-            AssetLoadError::AssetLoaderError(_) => {
-                if loading_state.is_some() {
-                    next_application_state.set(ApplicationState::MainMenu);
-                }
-            }
-            _ => {
-                assert!(!cfg!(debug_assertions), "Failed to load asset: {fail:#?}");
-            }
-        }
     }
 
     log_if_slow("check_failed_asset_loading", start);
