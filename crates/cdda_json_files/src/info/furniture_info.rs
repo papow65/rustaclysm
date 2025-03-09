@@ -1,4 +1,4 @@
-use crate::{CommonItemInfo, LinkedLater, ObjectId, TerrainInfo};
+use crate::{CommonItemInfo, ObjectId, OptionalLinkedLater, TerrainInfo};
 use crate::{Flags, HashMap, ItemName};
 use serde::Deserialize;
 use std::sync::Arc;
@@ -10,12 +10,7 @@ pub struct FurnitureInfo {
     pub looks_like: Option<ObjectId>,
     pub flags: Flags,
     pub bash: Option<Bash>,
-
-    /// Use [`Self.crafting_pseudo_item`] where possible
-    #[serde(rename(deserialize = "crafting_pseudo_item"))]
-    pub crafting_pseudo_item_id: Option<ObjectId>,
-    #[serde(skip)]
-    pub crafting_pseudo_item: Option<Arc<CommonItemInfo>>,
+    pub crafting_pseudo_item: OptionalLinkedLater<CommonItemInfo>,
 
     #[expect(unused)]
     #[serde(flatten)]
@@ -35,7 +30,7 @@ pub struct MoveCostIncrease(pub u8);
 #[derive(Debug, Deserialize)]
 pub struct Bash {
     #[serde(rename(deserialize = "ter_set"))]
-    pub terrain: Option<LinkedLater<TerrainInfo>>,
+    pub terrain: OptionalLinkedLater<TerrainInfo>,
 
     #[serde(rename(deserialize = "furn_set"))]
     pub furniture: Option<ObjectId>,

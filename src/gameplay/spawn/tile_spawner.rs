@@ -430,7 +430,7 @@ impl<'w> TileSpawner<'w, '_> {
         }
 
         if let Some(ref bash) = terrain_info.bash {
-            if let Some(_new_terrain) = bash.terrain.as_ref().and_then(LinkedLater::get) {
+            if let Some(_new_terrain) = bash.terrain.get() {
                 entity.insert(StandardIntegrity(Limited::full(10)));
             }
         }
@@ -730,7 +730,7 @@ impl<'w> TileSpawner<'w, '_> {
             "Only furniture and terrain can be smashed"
         );
 
-        if let Some(new_terrain) = &bash.terrain.as_ref().and_then(LinkedLater::get) {
+        if let Some(new_terrain) = &bash.terrain.get() {
             assert_eq!(
                 definition.category,
                 ObjectCategory::Terrain,

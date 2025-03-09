@@ -595,14 +595,10 @@ fn load_furniture(
 ) -> HashMap<ObjectId, Arc<FurnitureInfo>> {
     Infos::extract::<FurnitureInfo>(enriched_json_infos, TypeId::FURNITURE)
         .into_iter()
-        .map(|(id, mut furniture_info)| {
-            if let Some(item_id) = &furniture_info.crafting_pseudo_item_id {
-                if let Some(crafting_pseudo_item) = common_item_infos.get(item_id) {
-                    furniture_info.crafting_pseudo_item = Some(crafting_pseudo_item.clone());
-                } else {
-                    eprintln!("Could not find pseudo item {item_id:?}");
-                }
-            }
+        .map(|(id, furniture_info)| {
+            furniture_info
+                .crafting_pseudo_item
+                .finalize_arc(common_item_infos, "pseudo item");
             (id, Arc::new(furniture_info))
         })
         .collect()
@@ -614,36 +610,20 @@ fn load_terrain(
         HashMap<ObjectId, serde_json::Map<String, serde_json::Value>>,
     >,
 ) -> HashMap<ObjectId, Arc<TerrainInfo>> {
-    let terrain = Infos::extract::<RefCell<Arc<TerrainInfo>>>(enriched_json_infos, TypeId::TERRAIN);
+    let mut terrain =
+        Infos::extract::<RefCell<Arc<TerrainInfo>>>(enriched_json_infos, TypeId::TERRAIN);
+    dbg!(terrain.remove(&ObjectId::new("t_null")));
     for terrain_info in terrain.values() {
         let terrain_info = terrain_info.borrow();
         if let Some(open) = &terrain_info.open {
-            if let Some(open_terrain) = terrain.get(open.initial()) {
-               open.finalize(&*open_terrain.borrow());
-            } else {
-                eprintln!("Could not find open terrain {open:?}");
-            }
+            open.finalize_refcell_arc(&terrain, "open terrain");
         }
         if let Some(close) = &terrain_info.close {
-            if let Some(closed_terrain) = terrain.get(close.initial()) {
-                close.finalize(&*closed_terrain.borrow());
-            } else {
-                eprintln!("Could not find closed terrain {close:?}");
-            }
+            close.finalize_refcell_arc(&terrain, "closed terrain");
         }
         if let Some(bash) = &terrain_info.bash {
-            if let Some(terrain_link) = &bash.terrain {
-                if terrain_link.initial() == &ObjectId::new("t_null") {
-                    eprintln!("Skipping un-set terrain for {:?}", terrain_info.id);
-                } else if let Some(bashed_terrain) = terrain.get(terrain_link.initial()) {
-                    terrain_link.finalize(&*bashed_terrain.borrow());
-                } else {
-                    eprintln!(
-                        "Could not find bashed terrain {terrain_link:?} for {:?}",
-                        terrain_info.id
-                    );
-                }
-            } else {
+            bash.terrain.finalize_refcell_arc(&terrain, "bashed terrain");
+            if bash.terrain.get().is_none() {
                 eprintln!("No bashed terrain set for {:?}", terrain_info.id);
             }
         }

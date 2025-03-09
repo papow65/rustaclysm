@@ -65,8 +65,14 @@ pub(in super::super) fn toggle_doors(
         commands.entity(toggle.terrain_entity).despawn_recursive();
 
         let toggled = match toggle.change {
-            Toggle::Open => terrain_info.open.as_ref().expect("Terrain should be openable"),
-            Toggle::Close => terrain_info.close.as_ref().expect("Terrain should be closeable"),
+            Toggle::Open => terrain_info
+                .open
+                .as_ref()
+                .expect("Terrain should be openable"),
+            Toggle::Close => terrain_info
+                .close
+                .as_ref()
+                .expect("Terrain should be closeable"),
         }
         .get()
         .expect("Should still exist");

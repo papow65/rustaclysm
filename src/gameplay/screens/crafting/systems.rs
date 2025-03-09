@@ -499,7 +499,7 @@ fn nearby_qualities(nearby_items: &[NearbyItem]) -> HashMap<ObjectId, (Arc<Quali
             ObjectCategory::Furniture => nearby.furniture_info.and_then(|furniture| {
                 furniture
                     .crafting_pseudo_item
-                    .as_ref()
+                    .get()
                     .map(|item| item.qualities.clone())
             }),
             _ => None,
