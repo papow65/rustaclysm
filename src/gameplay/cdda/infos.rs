@@ -615,14 +615,15 @@ fn load_terrain(
     dbg!(terrain.remove(&ObjectId::new("t_null")));
     for terrain_info in terrain.values() {
         let terrain_info = terrain_info.borrow();
-        if let Some(open) = &terrain_info.open {
-            open.finalize_refcell_arc(&terrain, "open terrain");
-        }
-        if let Some(close) = &terrain_info.close {
-            close.finalize_refcell_arc(&terrain, "closed terrain");
-        }
+        terrain_info
+            .open
+            .finalize_refcell_arc(&terrain, "open terrain");
+        terrain_info
+            .close
+            .finalize_refcell_arc(&terrain, "closed terrain");
         if let Some(bash) = &terrain_info.bash {
-            bash.terrain.finalize_refcell_arc(&terrain, "bashed terrain");
+            bash.terrain
+                .finalize_refcell_arc(&terrain, "bashed terrain");
             if bash.terrain.get().is_none() {
                 eprintln!("No bashed terrain set for {:?}", terrain_info.id);
             }

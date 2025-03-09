@@ -18,7 +18,7 @@ use bevy::render::camera::{PerspectiveProjection, Projection};
 use bevy::render::view::RenderLayers;
 use cdda_json_files::{
     Bash, BashItem, BashItems, CddaAmount, CddaItem, CddaVehicle, CddaVehiclePart, CountRange,
-    Field, FlatVec, LinkedLater, MoveCostMod, ObjectId, PocketType, Repetition, Spawn, TerrainInfo,
+    Field, FlatVec, MoveCostMod, ObjectId, PocketType, Repetition, Spawn, TerrainInfo,
 };
 use std::sync::Arc;
 use units::{Mass, Volume};
@@ -402,14 +402,14 @@ impl<'w> TileSpawner<'w, '_> {
         entity.insert(Info::new(terrain_info.clone()));
 
         if terrain_info.move_cost.accessible() {
-            if terrain_info.close.as_ref().map(LinkedLater::get).is_some() {
+            if terrain_info.close.get().is_some() {
                 entity.insert(Closeable);
             }
             entity.insert(Accessible {
                 water: terrain_info.flags.water(),
                 move_cost: terrain_info.move_cost,
             });
-        } else if terrain_info.open.as_ref().map(LinkedLater::get).is_some() {
+        } else if terrain_info.open.get().is_some() {
             entity.insert(Openable);
         } else {
             entity.insert(Obstacle);

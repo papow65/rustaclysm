@@ -1,4 +1,4 @@
-use crate::{Bash, Flags, HashMap, ItemName, LinkedLater, MoveCostIncrease, ObjectId};
+use crate::{Bash, Flags, HashMap, ItemName, MoveCostIncrease, ObjectId, OptionalLinkedLater};
 use serde::Deserialize;
 use std::sync::Arc;
 
@@ -9,8 +9,8 @@ pub struct TerrainInfo {
     pub move_cost: MoveCost,
     pub looks_like: Option<ObjectId>,
 
-    pub open: Option<LinkedLater<TerrainInfo>>,
-    pub close: Option<LinkedLater<TerrainInfo>>,
+    pub open: OptionalLinkedLater<TerrainInfo>,
+    pub close: OptionalLinkedLater<TerrainInfo>,
 
     pub flags: Flags,
     pub bash: Option<Bash>,
