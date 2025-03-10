@@ -1,8 +1,8 @@
 use crate::{Error, HashMap, ObjectId, TerrainInfo};
 use serde::Deserialize;
 use std::any::TypeId;
+use std::fmt;
 use std::sync::{Arc, OnceLock, Weak};
-use std::{cell::RefCell, fmt};
 
 #[derive(Debug, Deserialize)]
 #[serde(from = "Option<ObjectId>")]
@@ -15,26 +15,11 @@ impl<T: fmt::Debug> OptionalLinkedLater<T> {
         self.option.as_ref().and_then(LinkedLater::get)
     }
 
-    /// All finalize methods combined may only be called once
-    pub fn finalize_arc(&self, map: &HashMap<ObjectId, Arc<T>>, err_description: &str) {
+    /// May only be called once
+    pub fn finalize(&self, map: &HashMap<ObjectId, Arc<T>>, err_description: &str) {
         self.option.as_ref().map(|linked_later| {
             linked_later.finalize(
                 map.get(&linked_later.object_id).map(Arc::downgrade),
-                err_description,
-            )
-        });
-    }
-
-    /// All finalize methods combined may only be called once
-    pub fn finalize_refcell_arc(
-        &self,
-        map: &HashMap<ObjectId, RefCell<Arc<T>>>,
-        err_description: &str,
-    ) {
-        self.option.as_ref().map(|linked_later| {
-            linked_later.finalize(
-                map.get(&linked_later.object_id)
-                    .map(|refcell| Arc::downgrade(&*refcell.borrow())),
                 err_description,
             )
         });
@@ -59,6 +44,7 @@ pub struct VecLinkedLater<T: fmt::Debug, U: Clone + fmt::Debug> {
 }
 
 impl<T: fmt::Debug, U: Clone + fmt::Debug> VecLinkedLater<T, U> {
+    /// May only be called once
     pub fn finalize(&self, map: &HashMap<ObjectId, Arc<T>>, err_description: &str) {
         for (linked_later, _assoc) in &self.vec {
             linked_later.finalize(
@@ -124,7 +110,7 @@ impl<T: fmt::Debug + 'static> RequiredLinkedLater<T> {
     }
 
     /// May only be called once
-    pub fn finalize_arc(&self, map: &HashMap<ObjectId, Arc<T>>, err_description: &str) {
+    pub fn finalize(&self, map: &HashMap<ObjectId, Arc<T>>, err_description: &str) {
         self.required.finalize(
             map.get(&self.required.object_id).map(Arc::downgrade),
             err_description,

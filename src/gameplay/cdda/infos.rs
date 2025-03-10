@@ -12,7 +12,6 @@ use cdda_json_files::{
 use glob::glob;
 use serde::de::DeserializeOwned;
 use serde_json::map::Entry;
-use std::cell::RefCell;
 use std::{fs::read_to_string, ops::Deref, path::PathBuf, sync::Arc, time::Instant};
 use units::{Mass, Volume};
 
@@ -598,12 +597,12 @@ impl Infos {
             terrain_repetition
                 .as_amount()
                 .obj
-                .finalize_arc(&self.terrain, "submap terrain");
+                .finalize(&self.terrain, "submap terrain");
         }
         for furniture_at in &submap.furniture {
             furniture_at
                 .obj
-                .finalize_arc(&self.furniture, "submap furniture");
+                .finalize(&self.furniture, "submap furniture");
         }
     }
 }
@@ -642,7 +641,7 @@ fn load_requirements(
         for required_quality in &requirement.qualities.0 {
             required_quality
                 .quality
-                .finalize_arc(qualities, "required quality for requirement");
+                .finalize(qualities, "required quality for requirement");
         }
     }
 
@@ -663,10 +662,10 @@ fn load_recipes(
         for required_quality in &recipe.qualities.0 {
             required_quality
                 .quality
-                .finalize_arc(qualities, "required quality for recipe");
+                .finalize(qualities, "required quality for recipe");
         }
 
-        recipe.result.finalize_arc(common_item_infos, "recipe");
+        recipe.result.finalize(common_item_infos, "recipe");
     }
 
     recipes
@@ -679,26 +678,20 @@ fn load_furniture(
     >,
     common_item_infos: &HashMap<ObjectId, Arc<CommonItemInfo>>,
 ) -> HashMap<ObjectId, Arc<FurnitureInfo>> {
-    let furniture =
-        Infos::extract::<RefCell<Arc<FurnitureInfo>>>(enriched_json_infos, TypeId::FURNITURE);
+    let furniture = Infos::extract::<Arc<FurnitureInfo>>(enriched_json_infos, TypeId::FURNITURE);
 
     for furniture_info in furniture.values() {
-        let furniture_info = furniture_info.borrow();
         furniture_info
             .crafting_pseudo_item
-            .finalize_arc(common_item_infos, "pseudo item");
+            .finalize(common_item_infos, "pseudo item");
         if let Some(bash) = &furniture_info.bash {
             bash.terrain
-                .finalize_refcell_arc(&HashMap::default(), "terrain for bashed furniture");
-            bash.furniture
-                .finalize_refcell_arc(&furniture, "bashed furniture");
+                .finalize(&HashMap::default(), "terrain for bashed furniture");
+            bash.furniture.finalize(&furniture, "bashed furniture");
         }
     }
 
     furniture
-        .into_iter()
-        .map(|(key, value)| (key, value.into_inner()))
-        .collect()
 }
 
 fn load_terrain(
@@ -708,31 +701,26 @@ fn load_terrain(
     >,
     furniture: &HashMap<ObjectId, Arc<FurnitureInfo>>,
 ) -> HashMap<ObjectId, Arc<TerrainInfo>> {
-    let mut terrain =
-        Infos::extract::<RefCell<Arc<TerrainInfo>>>(enriched_json_infos, TypeId::TERRAIN);
-    dbg!(terrain.remove(&ObjectId::new("t_null")));
+    let mut terrain = Infos::extract::<Arc<TerrainInfo>>(enriched_json_infos, TypeId::TERRAIN);
+    if terrain.remove(&ObjectId::new("t_null")).is_some() {
+        eprintln!("The terrain t_null was not expected to be present");
+    }
+
     for terrain_info in terrain.values() {
-        let terrain_info = terrain_info.borrow();
-        terrain_info
-            .open
-            .finalize_refcell_arc(&terrain, "open terrain");
-        terrain_info
-            .close
-            .finalize_refcell_arc(&terrain, "closed terrain");
+        terrain_info.open.finalize(&terrain, "open terrain");
+        terrain_info.close.finalize(&terrain, "closed terrain");
         if let Some(bash) = &terrain_info.bash {
-            bash.terrain
-                .finalize_refcell_arc(&terrain, "bashed terrain");
+            bash.terrain.finalize(&terrain, "bashed terrain");
             if bash.terrain.get().is_none() {
                 eprintln!("No bashed terrain set for {:?}", terrain_info.id);
             }
 
-            bash.furniture.finalize_arc(furniture, "bashed furniture");
+            bash.furniture
+                .finalize(furniture, "furniture for bashed terrain");
         }
     }
+
     terrain
-        .into_iter()
-        .map(|(key, value)| (key, value.into_inner()))
-        .collect()
 }
 
 struct ItemLoader<'a> {
