@@ -1,6 +1,6 @@
 use crate::{Bash, Flags, HashMap, ItemName, MoveCostIncrease, ObjectId, OptionalLinkedLater};
 use serde::Deserialize;
-use std::sync::Arc;
+use std::sync::{Arc, LazyLock};
 
 #[derive(Debug, Deserialize)]
 pub struct TerrainInfo {
@@ -18,6 +18,17 @@ pub struct TerrainInfo {
     #[expect(unused)]
     #[serde(flatten)]
     extra: HashMap<Arc<str>, serde_json::Value>,
+}
+
+impl TerrainInfo {
+    pub fn is_similar(&self, other: &Self) -> bool {
+        static PAVEMENT: LazyLock<ObjectId> = LazyLock::new(|| ObjectId::new("t_pavement"));
+        static PAVEMENT_DOT: LazyLock<ObjectId> = LazyLock::new(|| ObjectId::new("t_pavement_y"));
+
+        self.id == other.id
+            || (self.id == *PAVEMENT && other.id == *PAVEMENT_DOT)
+            || (self.id == *PAVEMENT_DOT && other.id == *PAVEMENT)
+    }
 }
 
 // TODO What does a negative value mean?

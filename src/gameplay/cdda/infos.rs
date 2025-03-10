@@ -6,7 +6,7 @@ use cdda_json_files::{
     Alternative, Ammo, BionicItem, Book, CddaItemName, CharacterInfo, Clothing, Comestible,
     CommonItemInfo, Engine, FieldInfo, Flags, FurnitureInfo, GenericItem, Gun, Gunmod, ItemGroup,
     ItemName, ItemWithCommonInfo, Magazine, Migration, ObjectId, OvermapInfo, PetArmor, Quality,
-    Recipe, Requirement, TerrainInfo, Tool, ToolClothing, Toolmod, Using, UsingKind,
+    Recipe, Requirement, Submap, TerrainInfo, Tool, ToolClothing, Toolmod, Using, UsingKind,
     VehiclePartInfo, Wheel,
 };
 use glob::glob;
@@ -258,7 +258,8 @@ impl Infos {
 
                 if TypeId::RECIPE.contains(type_id) {
                     set_recipe_id(&mut enriched);
-                } else if !TypeId::TERRAIN.contains(type_id)
+                } else if !TypeId::FURNITURE.contains(type_id)
+                    && !TypeId::TERRAIN.contains(type_id)
                     && !TypeId::TOOL_QUALITY.contains(type_id)
                 {
                     enriched.remove("id");
@@ -325,7 +326,7 @@ impl Infos {
         // item_loader is dropped
 
         let furniture = load_furniture(&mut enriched_json_infos, &common_item_infos);
-        let terrain = load_terrain(&mut enriched_json_infos);
+        let terrain = load_terrain(&mut enriched_json_infos, &furniture);
         let requirements = load_requirements(&mut enriched_json_infos, &qualities);
         let recipes = load_recipes(&mut enriched_json_infos, &qualities, &common_item_infos);
 
@@ -588,6 +589,24 @@ impl Infos {
             }]]
         })
     }
+
+    pub(crate) fn link_submap(&self, submap: &Submap) {
+        if submap.linked.set(()).is_err() {
+            return;
+        }
+
+        for terrain_repetition in &submap.terrain.0 {
+            terrain_repetition
+                .as_amount()
+                .obj
+                .finalize_arc(&self.terrain, "submap terrain");
+        }
+        for furniture_at in &submap.furniture {
+            furniture_at
+                .obj
+                .finalize_arc(&self.furniture, "submap furniture");
+        }
+    }
 }
 
 fn set_recipe_id(enriched: &mut serde_json::Map<String, serde_json::Value>) {
@@ -661,14 +680,25 @@ fn load_furniture(
     >,
     common_item_infos: &HashMap<ObjectId, Arc<CommonItemInfo>>,
 ) -> HashMap<ObjectId, Arc<FurnitureInfo>> {
-    Infos::extract::<FurnitureInfo>(enriched_json_infos, TypeId::FURNITURE)
+    let furniture =
+        Infos::extract::<RefCell<Arc<FurnitureInfo>>>(enriched_json_infos, TypeId::FURNITURE);
+
+    for furniture_info in furniture.values() {
+        let furniture_info = furniture_info.borrow();
+        furniture_info
+            .crafting_pseudo_item
+            .finalize_arc(common_item_infos, "pseudo item");
+        if let Some(bash) = &furniture_info.bash {
+            bash.terrain
+                .finalize_refcell_arc(&HashMap::default(), "terrain for bashed furniture");
+            bash.furniture
+                .finalize_refcell_arc(&furniture, "bashed furniture");
+        }
+    }
+
+    furniture
         .into_iter()
-        .map(|(id, furniture_info)| {
-            furniture_info
-                .crafting_pseudo_item
-                .finalize_arc(common_item_infos, "pseudo item");
-            (id, Arc::new(furniture_info))
-        })
+        .map(|(key, value)| (key, value.into_inner()))
         .collect()
 }
 
@@ -677,6 +707,7 @@ fn load_terrain(
         TypeId,
         HashMap<ObjectId, serde_json::Map<String, serde_json::Value>>,
     >,
+    furniture: &HashMap<ObjectId, Arc<FurnitureInfo>>,
 ) -> HashMap<ObjectId, Arc<TerrainInfo>> {
     let mut terrain =
         Infos::extract::<RefCell<Arc<TerrainInfo>>>(enriched_json_infos, TypeId::TERRAIN);
@@ -695,6 +726,8 @@ fn load_terrain(
             if bash.terrain.get().is_none() {
                 eprintln!("No bashed terrain set for {:?}", terrain_info.id);
             }
+
+            bash.furniture.finalize_arc(furniture, "bashed furniture");
         }
     }
     terrain

@@ -1,4 +1,7 @@
+use std::sync::OnceLock;
+
 use crate::application::ApplicationState;
+use crate::gameplay::cdda::{Error, TypeId};
 use crate::gameplay::{
     AssetState, Infos, LevelOffset, LocalTerrain, MapManager, MapMemoryManager,
     OvermapBufferManager, OvermapManager, Overzone, PosOffset, RepetitionBlockExt as _,
@@ -7,7 +10,9 @@ use crate::gameplay::{
 };
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{Res, ResMut, StateScoped, Transform, Visibility};
-use cdda_json_files::{CddaAmount, FlatVec, ObjectId, RepetitionBlock, Submap, SubzoneOffset};
+use cdda_json_files::{
+    CddaAmount, FlatVec, ObjectId, RepetitionBlock, RequiredLinkedLater, Submap, SubzoneOffset,
+};
 
 #[derive(SystemParam)]
 pub(crate) struct SubzoneSpawner<'w, 's> {
@@ -76,6 +81,8 @@ impl SubzoneSpawner<'_, '_> {
             .id();
 
         if submap.terrain.is_significant() {
+            self.infos.link_submap(submap);
+
             let terrain = submap.terrain.load_as_subzone(subzone_level);
             let base_pos = subzone_level.base_corner();
 
@@ -88,8 +95,25 @@ impl SubzoneSpawner<'_, '_> {
                     };
                     let pos = base_pos.horizontal_offset(x, z);
                     //dbg!("{pos:?}");
-                    let local_terrain = LocalTerrain::at(&terrain, pos);
-                    let furniture_ids = submap.furniture.iter().filter_map(|at| pos_offset.get(at));
+                    let Some(local_terrain) = LocalTerrain::at(&terrain, pos) else {
+                        return;
+                    };
+                    let furniture_ids = submap
+                        .furniture
+                        .iter()
+                        .filter_map(|at| pos_offset.get(at))
+                        .filter_map(|required| {
+                            {
+                                required.get(|object_id| Error::UnknownObject {
+                                    _id: object_id.clone(),
+                                    _type: TypeId::FURNITURE,
+                                })
+                            }
+                            .inspect_err(|error| {
+                                dbg!(error);
+                            })
+                            .ok()
+                        });
                     let item_repetitions =
                         submap.items.0.iter().filter_map(|at| pos_offset.get(at));
                     let spawns = submap
@@ -157,6 +181,24 @@ impl SubzoneSpawner<'_, '_> {
     }
 
     fn fallback_submap(subzone_level: SubzoneLevel, zone_object_id: &ObjectId) -> Submap {
+        let terrain_id = ObjectId::new(if zone_object_id == &ObjectId::new("open_air") {
+            "t_open_air"
+        } else if zone_object_id == &ObjectId::new("solid_earth") {
+            "t_soil"
+        } else if [ObjectId::new("empty_rock"), ObjectId::new("deep_rock")].contains(zone_object_id)
+        {
+            "t_rock"
+        } else if zone_object_id.is_moving_deep_water_zone() {
+            "t_water_moving_dp"
+        } else if zone_object_id.is_still_deep_water_zone() {
+            "t_water_dp"
+        } else if zone_object_id.is_grassy_zone() {
+            "t_grass"
+        } else if zone_object_id.is_road_zone() {
+            "t_pavement"
+        } else {
+            "t_dirt"
+        });
         Submap {
             version: 0,
             turn_last_touched: 0,
@@ -164,25 +206,7 @@ impl SubzoneSpawner<'_, '_> {
             temperature: 0,
             radiation: Vec::new(),
             terrain: RepetitionBlock::new(CddaAmount {
-                obj: ObjectId::new(if zone_object_id == &ObjectId::new("open_air") {
-                    "t_open_air"
-                } else if zone_object_id == &ObjectId::new("solid_earth") {
-                    "t_soil"
-                } else if [ObjectId::new("empty_rock"), ObjectId::new("deep_rock")]
-                    .contains(zone_object_id)
-                {
-                    "t_rock"
-                } else if zone_object_id.is_moving_deep_water_zone() {
-                    "t_water_moving_dp"
-                } else if zone_object_id.is_still_deep_water_zone() {
-                    "t_water_dp"
-                } else if zone_object_id.is_grassy_zone() {
-                    "t_grass"
-                } else if zone_object_id.is_road_zone() {
-                    "t_pavement"
-                } else {
-                    "t_dirt"
-                }),
+                obj: RequiredLinkedLater::from(terrain_id),
                 amount: 144,
             }),
             furniture: Vec::new(),
@@ -194,6 +218,7 @@ impl SubzoneSpawner<'_, '_> {
             vehicles: Vec::new(),
             partial_constructions: Vec::new(),
             computers: Vec::new(),
+            linked: OnceLock::default(),
         }
     }
 }

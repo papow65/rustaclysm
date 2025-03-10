@@ -1,8 +1,9 @@
 use crate::{
-    At, AtVec, CddaItem, CddaVehicle, FieldVec, ObjectId, Repetition, RepetitionBlock, Spawn,
+    At, AtVec, CddaItem, CddaVehicle, FieldVec, FurnitureInfo, ObjectId, Repetition,
+    RepetitionBlock, RequiredLinkedLater, Spawn, TerrainInfo,
 };
 use serde::Deserialize;
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 
 // Reference: https://github.com/CleverRaven/Cataclysm-DDA/blob/master/src/savegame_json.cpp
 
@@ -19,8 +20,8 @@ pub struct Submap {
     pub turn_last_touched: u64,
     pub temperature: i64,
     pub radiation: Vec<i64>,
-    pub terrain: RepetitionBlock<ObjectId>,
-    pub furniture: Vec<At<ObjectId>>,
+    pub terrain: RepetitionBlock<RequiredLinkedLater<TerrainInfo>>,
+    pub furniture: Vec<At<RequiredLinkedLater<FurnitureInfo>>>,
     pub items: AtVec<Vec<Repetition<CddaItem>>>,
     pub traps: Vec<At<ObjectId>>,
     pub fields: AtVec<FieldVec>,
@@ -31,4 +32,8 @@ pub struct Submap {
 
     #[serde(default)]
     pub computers: Vec<serde_json::Value>,
+
+    /// Marker to remember the state of the links
+    #[serde(skip)]
+    pub linked: OnceLock<()>,
 }

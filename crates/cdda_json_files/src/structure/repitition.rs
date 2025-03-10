@@ -1,4 +1,4 @@
-use crate::ObjectId;
+use crate::{RequiredLinkedLater, TerrainInfo};
 use serde::Deserialize;
 use serde::de::{Deserializer, Error as _};
 
@@ -41,6 +41,16 @@ impl<T> Repetition<T> {
     }
 }
 
+impl Repetition<RequiredLinkedLater<TerrainInfo>> {
+    fn is_significant(&self) -> bool {
+        if let Self::Multiple(amount) = self {
+            amount.obj.is_significant()
+        } else {
+            true
+        }
+    }
+}
+
 impl<'de, T> Deserialize<'de> for Repetition<T>
 where
     T: Deserialize<'de>,
@@ -70,15 +80,8 @@ impl<T> RepetitionBlock<T> {
     }
 }
 
-impl RepetitionBlock<ObjectId> {
-    #[must_use]
+impl RepetitionBlock<RequiredLinkedLater<TerrainInfo>> {
     pub fn is_significant(&self) -> bool {
-        1 < self.0.len()
-            || ![
-                ObjectId::new("t_open_air"),
-                ObjectId::new("t_soil"),
-                ObjectId::new("t_rock"),
-            ]
-            .contains(&self.0.first().expect("Non-empty list").as_amount().obj)
+        1 < self.0.len() || self.0.first().expect("Non-empty list").is_significant()
     }
 }

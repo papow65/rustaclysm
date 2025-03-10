@@ -18,7 +18,7 @@ use bevy::render::camera::{PerspectiveProjection, Projection};
 use bevy::render::view::RenderLayers;
 use cdda_json_files::{
     Bash, BashItem, BashItems, CddaAmount, CddaItem, CddaVehicle, CddaVehiclePart, CountRange,
-    Field, FlatVec, MoveCostMod, ObjectId, PocketType, Recipe, Repetition, Spawn, TerrainInfo,
+    Field, FlatVec, FurnitureInfo, MoveCostMod, ObjectId, PocketType, Recipe, Repetition, Spawn,
 };
 use std::sync::Arc;
 use units::{Mass, Volume};
@@ -42,22 +42,15 @@ impl<'w> TileSpawner<'w, '_> {
         subzone_level_entity: Entity,
         pos: Pos,
         local_terrain: &LocalTerrain,
-        furniture_ids: impl Iterator<Item = &'a ObjectId>,
+        furniture_infos: impl Iterator<Item = Arc<FurnitureInfo>>,
         item_repetitions: impl Iterator<Item = &'a Vec<Repetition<CddaItem>>>,
         spawns: impl Iterator<Item = &'a Spawn>,
         fields: impl Iterator<Item = &'a FlatVec<Field, 3>>,
     ) {
-        let terrain_info = match infos.terrain(&local_terrain.id) {
-            Ok(terrain_info) => terrain_info,
-            Err(error) => {
-                dbg!(error);
-                return;
-            }
-        };
-        self.spawn_terrain(terrain_info, subzone_level_entity, pos, local_terrain);
+        self.spawn_terrain(subzone_level_entity, pos, local_terrain);
 
-        for id in furniture_ids {
-            self.spawn_furniture(infos, subzone_level_entity, pos, id);
+        for furniture_info in furniture_infos {
+            self.spawn_furniture(subzone_level_entity, pos, &furniture_info);
         }
 
         for repetitions in item_repetitions {
@@ -334,18 +327,10 @@ impl<'w> TileSpawner<'w, '_> {
         self.spawn_bashing_items(infos, parent_entity, pos, items);
     }
 
-    fn spawn_furniture(&mut self, infos: &Infos, parent: Entity, pos: Pos, id: &ObjectId) {
-        let furniture_info = match infos.furniture(id) {
-            Ok(furniture_info) => furniture_info,
-            Err(error) => {
-                dbg!(error);
-                return;
-            }
-        };
-
+    fn spawn_furniture(&mut self, parent: Entity, pos: Pos, furniture_info: &Arc<FurnitureInfo>) {
         let definition = &ObjectDefinition {
             category: ObjectCategory::Furniture,
-            id: id.clone(),
+            id: furniture_info.id.clone(),
         };
         let object_name = ObjectName::new(furniture_info.name.clone(), HARD_TEXT_COLOR);
         let entity = self.spawn_object(parent, Some(pos), definition, object_name, None);
@@ -372,15 +357,9 @@ impl<'w> TileSpawner<'w, '_> {
         }
     }
 
-    pub(crate) fn spawn_terrain(
-        &mut self,
-        terrain_info: &Arc<TerrainInfo>,
-        parent: Entity,
-        pos: Pos,
-        local_terrain: &LocalTerrain,
-    ) {
-        if local_terrain.id == ObjectId::new("t_open_air")
-            || local_terrain.id == ObjectId::new("t_open_air_rooved")
+    pub(crate) fn spawn_terrain(&mut self, parent: Entity, pos: Pos, local_terrain: &LocalTerrain) {
+        if local_terrain.info.id == ObjectId::new("t_open_air")
+            || local_terrain.info.id == ObjectId::new("t_open_air_rooved")
         {
             // Don't spawn air terrain to keep the entity count low
             return;
@@ -388,9 +367,9 @@ impl<'w> TileSpawner<'w, '_> {
 
         let definition = &ObjectDefinition {
             category: ObjectCategory::Terrain,
-            id: local_terrain.id.clone(),
+            id: local_terrain.info.id.clone(),
         };
-        let object_name = ObjectName::new(terrain_info.name.clone(), HARD_TEXT_COLOR);
+        let object_name = ObjectName::new(local_terrain.info.name.clone(), HARD_TEXT_COLOR);
         let entity = self.spawn_object(
             parent,
             Some(pos),
@@ -399,37 +378,37 @@ impl<'w> TileSpawner<'w, '_> {
             Some(local_terrain.variant),
         );
         let mut entity = self.commands.entity(entity);
-        entity.insert(Info::new(terrain_info.clone()));
+        entity.insert(Info::new(local_terrain.info.clone()));
 
-        if terrain_info.move_cost.accessible() {
-            if terrain_info.close.get().is_some() {
+        if local_terrain.info.move_cost.accessible() {
+            if local_terrain.info.close.get().is_some() {
                 entity.insert(Closeable);
             }
             entity.insert(Accessible {
-                water: terrain_info.flags.water(),
-                move_cost: terrain_info.move_cost,
+                water: local_terrain.info.flags.water(),
+                move_cost: local_terrain.info.move_cost,
             });
-        } else if terrain_info.open.get().is_some() {
+        } else if local_terrain.info.open.get().is_some() {
             entity.insert(Openable);
         } else {
             entity.insert(Obstacle);
         }
 
-        if !terrain_info.flags.transparent() {
+        if !local_terrain.info.flags.transparent() {
             entity.insert(Opaque);
         }
 
-        if terrain_info.flags.goes_up() {
+        if local_terrain.info.flags.goes_up() {
             entity.insert(StairsUp);
         }
 
-        if terrain_info.flags.goes_down() {
+        if local_terrain.info.flags.goes_down() {
             entity.insert(StairsDown);
         } else {
             entity.insert(OpaqueFloor);
         }
 
-        if let Some(ref bash) = terrain_info.bash {
+        if let Some(ref bash) = local_terrain.info.bash {
             if let Some(_new_terrain) = bash.terrain.get() {
                 entity.insert(StandardIntegrity(Limited::full(10)));
             }
@@ -736,15 +715,15 @@ impl<'w> TileSpawner<'w, '_> {
                 ObjectCategory::Terrain,
                 "The terrain field requires a terrain category"
             );
-            let local_terrain = LocalTerrain::unconnected(new_terrain.id.clone());
-            self.spawn_terrain(new_terrain, parent_entity, pos, &local_terrain);
-        } else if let Some(furniture_id) = &bash.furniture {
+            let local_terrain = LocalTerrain::unconnected(new_terrain.clone());
+            self.spawn_terrain(parent_entity, pos, &local_terrain);
+        } else if let Some(furniture_id) = &bash.furniture.get() {
             assert_eq!(
                 definition.category,
                 ObjectCategory::Furniture,
                 "The furniture field requires a furniture category"
             );
-            self.spawn_furniture(infos, parent_entity, pos, furniture_id);
+            self.spawn_furniture(parent_entity, pos, furniture_id);
         }
 
         if let Some(items) = &bash.items {

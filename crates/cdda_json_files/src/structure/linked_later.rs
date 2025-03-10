@@ -1,4 +1,4 @@
-use crate::{HashMap, ObjectId};
+use crate::{HashMap, ObjectId, TerrainInfo};
 use serde::Deserialize;
 use std::cell::RefCell;
 use std::fmt;
@@ -124,6 +124,17 @@ impl<T: fmt::Debug> RequiredLinkedLater<T> {
             map.get(&self.required.object_id).map(Arc::downgrade),
             err_description,
         );
+    }
+}
+
+impl RequiredLinkedLater<TerrainInfo> {
+    pub(crate) fn is_significant(&self) -> bool {
+        ![
+            ObjectId::new("t_open_air"),
+            ObjectId::new("t_soil"),
+            ObjectId::new("t_rock"),
+        ]
+        .contains(&self.required.object_id)
     }
 }
 

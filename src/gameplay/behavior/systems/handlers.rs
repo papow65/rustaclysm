@@ -71,8 +71,8 @@ pub(in super::super) fn toggle_doors(
                 .get()
                 .expect("Terrain should be closeable"),
         };
-        let local_terrain = LocalTerrain::unconnected(toggled.id.clone());
-        spawner.spawn_terrain(&toggled, parent.get(), pos, &local_terrain);
+        let local_terrain = LocalTerrain::unconnected(toggled.clone());
+        spawner.spawn_terrain(parent.get(), pos, &local_terrain);
         *visualization_update = VisualizationUpdate::Forced;
     }
 

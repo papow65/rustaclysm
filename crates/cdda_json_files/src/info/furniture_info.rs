@@ -5,6 +5,7 @@ use std::sync::Arc;
 
 #[derive(Debug, Deserialize)]
 pub struct FurnitureInfo {
+    pub id: ObjectId,
     pub name: ItemName,
     pub move_cost_mod: Option<MoveCostMod>,
     pub looks_like: Option<ObjectId>,
@@ -33,7 +34,7 @@ pub struct Bash {
     pub terrain: OptionalLinkedLater<TerrainInfo>,
 
     #[serde(rename = "furn_set")]
-    pub furniture: Option<ObjectId>,
+    pub furniture: OptionalLinkedLater<FurnitureInfo>,
     pub items: Option<BashItems>,
 
     #[expect(unused)]

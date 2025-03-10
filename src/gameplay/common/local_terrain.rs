@@ -1,30 +1,28 @@
-use std::sync::LazyLock;
-
-use crate::gameplay::{CardinalDirection, Pos, TileVariant};
+use crate::gameplay::cdda::{Error, TypeId};
+use crate::gameplay::{CardinalDirection, Pos, TileVariant, common::HorizontalDirection};
 use bevy::utils::HashMap;
-use cdda_json_files::ObjectId;
-
-use super::HorizontalDirection;
+use cdda_json_files::{RequiredLinkedLater, TerrainInfo};
+use std::sync::Arc;
 
 pub(crate) struct LocalTerrain {
-    pub(crate) id: ObjectId,
+    pub(crate) info: Arc<TerrainInfo>,
     pub(crate) variant: TileVariant,
 }
 
 impl LocalTerrain {
-    pub(crate) fn at(terrain: &HashMap<Pos, &ObjectId>, pos: Pos) -> Self {
-        let id = terrain
-            .get(&pos)
-            .copied()
-            .expect("Terrain id should be found");
+    pub(crate) fn at(
+        terrain: &HashMap<Pos, &RequiredLinkedLater<TerrainInfo>>,
+        pos: Pos,
+    ) -> Option<Self> {
+        let info = at(terrain, pos)?;
 
-        let similar_north = similar(terrain, pos, HorizontalDirection::North, id);
-        let similar_east = similar(terrain, pos, HorizontalDirection::East, id);
-        let similar_west = similar(terrain, pos, HorizontalDirection::West, id);
-        let similar_south = similar(terrain, pos, HorizontalDirection::South, id);
+        let similar_north = similar(terrain, pos, HorizontalDirection::North, &info);
+        let similar_east = similar(terrain, pos, HorizontalDirection::East, &info);
+        let similar_west = similar(terrain, pos, HorizontalDirection::West, &info);
+        let similar_south = similar(terrain, pos, HorizontalDirection::South, &info);
 
-        Self {
-            id: id.clone(),
+        Some(Self {
+            info,
             variant: match (similar_north, similar_east, similar_west, similar_south) {
                 (false, false, false, false) => TileVariant::Unconnected,
                 (false, false, false, true) => TileVariant::EndPiece(CardinalDirection::South),
@@ -43,31 +41,40 @@ impl LocalTerrain {
                 (true, true, true, false) => TileVariant::TConnection(CardinalDirection::South),
                 (true, true, true, true) => TileVariant::Center,
             },
-        }
+        })
     }
 
-    pub(crate) const fn unconnected(id: ObjectId) -> Self {
+    /// Use [`Self.at`] where possible
+    pub(crate) const fn unconnected(info: Arc<TerrainInfo>) -> Self {
         Self {
-            id,
+            info,
             variant: TileVariant::Unconnected,
         }
     }
 }
 
 fn similar(
-    terrain: &HashMap<Pos, &ObjectId>,
+    terrain: &HashMap<Pos, &RequiredLinkedLater<TerrainInfo>>,
     pos: Pos,
     direction: HorizontalDirection,
-    like: &ObjectId,
+    like: &Arc<TerrainInfo>,
 ) -> bool {
-    static PAVEMENT: LazyLock<ObjectId> = LazyLock::new(|| ObjectId::new("t_pavement"));
-    static PAVEMENT_DOT: LazyLock<ObjectId> = LazyLock::new(|| ObjectId::new("t_pavement_y"));
-
     // TODO Make the terrain for the tiles bordering this zone also available.
+    at(terrain, pos.horizontal_nbor(direction)).is_none_or(|nbor| nbor.is_similar(like))
+}
 
-    let nbor = terrain.get(&pos.horizontal_nbor(direction)).copied();
-
-    // 'nbor.is_some()' is a mostly correct hack for missing data at zone borders
-    nbor.is_none_or(|nbor| nbor == like)
-        || (like == &*PAVEMENT && nbor.is_none_or(|nbor| nbor == &*PAVEMENT_DOT))
+fn at(
+    terrain: &HashMap<Pos, &RequiredLinkedLater<TerrainInfo>>,
+    pos: Pos,
+) -> Option<Arc<TerrainInfo>> {
+    terrain
+        .get(&pos)?
+        .get(|id| Error::UnknownObject {
+            _id: id.clone(),
+            _type: TypeId::TERRAIN,
+        })
+        .inspect_err(|error| {
+            dbg!(error);
+        })
+        .ok()
 }
