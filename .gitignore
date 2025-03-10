@@ -5,6 +5,7 @@
 /commands*
 /*.map
 /o.*
+/*.scip
 /*.seen.*
 /*.tracy
 /trace-*.json
