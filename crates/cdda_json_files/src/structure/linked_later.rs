@@ -1,8 +1,8 @@
-use crate::{HashMap, ObjectId, TerrainInfo};
+use crate::{Error, HashMap, ObjectId, TerrainInfo};
 use serde::Deserialize;
-use std::cell::RefCell;
-use std::fmt;
+use std::any::TypeId;
 use std::sync::{Arc, OnceLock, Weak};
+use std::{cell::RefCell, fmt};
 
 #[derive(Debug, Deserialize)]
 #[serde(from = "Option<ObjectId>")]
@@ -111,11 +111,16 @@ pub struct RequiredLinkedLater<T: fmt::Debug> {
     required: LinkedLater<T>,
 }
 
-impl<T: fmt::Debug> RequiredLinkedLater<T> {
-    pub fn get<E>(&self, error: impl FnOnce(&ObjectId) -> E) -> Result<Arc<T>, E> {
-        self.required
-            .get()
-            .ok_or_else(|| error(&self.required.object_id))
+impl<T: fmt::Debug + 'static> RequiredLinkedLater<T> {
+    fn get(&self) -> Result<Arc<T>, Error> {
+        self.required.get().ok_or_else(|| Error::LinkUnavailable {
+            _id: self.required.object_id.clone(),
+            _type: TypeId::of::<T>(),
+        })
+    }
+
+    pub fn get_or<F: FnOnce(&Error)>(&self, handle_error: F) -> Option<Arc<T>> {
+        self.get().inspect_err(handle_error).ok()
     }
 
     /// May only be called once

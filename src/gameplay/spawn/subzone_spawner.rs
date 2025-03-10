@@ -1,7 +1,4 @@
-use std::sync::OnceLock;
-
 use crate::application::ApplicationState;
-use crate::gameplay::cdda::{Error, TypeId};
 use crate::gameplay::{
     AssetState, Infos, LevelOffset, LocalTerrain, MapManager, MapMemoryManager,
     OvermapBufferManager, OvermapManager, Overzone, PosOffset, RepetitionBlockExt as _,
@@ -13,6 +10,7 @@ use bevy::prelude::{Res, ResMut, StateScoped, Transform, Visibility};
 use cdda_json_files::{
     CddaAmount, FlatVec, ObjectId, RepetitionBlock, RequiredLinkedLater, Submap, SubzoneOffset,
 };
+use std::sync::OnceLock;
 
 #[derive(SystemParam)]
 pub(crate) struct SubzoneSpawner<'w, 's> {
@@ -103,16 +101,9 @@ impl SubzoneSpawner<'_, '_> {
                         .iter()
                         .filter_map(|at| pos_offset.get(at))
                         .filter_map(|required| {
-                            {
-                                required.get(|object_id| Error::UnknownObject {
-                                    _id: object_id.clone(),
-                                    _type: TypeId::FURNITURE,
-                                })
-                            }
-                            .inspect_err(|error| {
+                            required.get_or(|error| {
                                 dbg!(error);
                             })
-                            .ok()
                         });
                     let item_repetitions =
                         submap.items.0.iter().filter_map(|at| pos_offset.get(at));

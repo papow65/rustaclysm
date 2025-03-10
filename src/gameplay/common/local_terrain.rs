@@ -1,4 +1,3 @@
-use crate::gameplay::cdda::{Error, TypeId};
 use crate::gameplay::{CardinalDirection, Pos, TileVariant, common::HorizontalDirection};
 use bevy::utils::HashMap;
 use cdda_json_files::{RequiredLinkedLater, TerrainInfo};
@@ -67,14 +66,7 @@ fn at(
     terrain: &HashMap<Pos, &RequiredLinkedLater<TerrainInfo>>,
     pos: Pos,
 ) -> Option<Arc<TerrainInfo>> {
-    terrain
-        .get(&pos)?
-        .get(|id| Error::UnknownObject {
-            _id: id.clone(),
-            _type: TypeId::TERRAIN,
-        })
-        .inspect_err(|error| {
-            dbg!(error);
-        })
-        .ok()
+    terrain.get(&pos)?.get_or(|error| {
+        dbg!(error);
+    })
 }

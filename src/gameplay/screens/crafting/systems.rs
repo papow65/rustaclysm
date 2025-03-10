@@ -1,4 +1,3 @@
-use crate::gameplay::cdda::TypeId;
 use crate::gameplay::screens::crafting::components::{
     AlternativeSituation, ComponentSituation, QualitySituation, RecipeSituation,
 };
@@ -409,12 +408,7 @@ fn shown_recipes(
         .filter_map(|(recipe, autolearn, recipe_manuals)| {
             recipe
                 .result
-                .get(|object_id| Error::UnknownObject {
-                    _id: object_id.clone(),
-                    _type: TypeId::GENERIC_ITEM,
-                })
-                .inspect_err(|error| eprintln!("Unknown recipe result: {error:#?}"))
-                .ok()
+                .get_or(|error| eprintln!("Unknown recipe result: {error:#?}"))
                 .map(|item| RecipeSituation {
                     recipe: recipe.clone(),
                     name: uppercase_first(item.name.single.clone()),
@@ -540,12 +534,7 @@ fn recipe_qualities(
         .filter_map(|required_quality| {
             required_quality
                 .quality
-                .get(|object_id| Error::UnknownObject {
-                    _id: object_id.clone(),
-                    _type: TypeId::TOOL_QUALITY,
-                })
-                .inspect_err(|error| eprintln!("Quality not found: {error:#?}"))
-                .ok()
+                .get_or(|error| eprintln!("Quality not found: {error:#?}"))
                 .map(|quality| QualitySituation {
                     name: uppercase_first(quality.name.single.clone()),
                     present: present.get(&quality).copied(),
