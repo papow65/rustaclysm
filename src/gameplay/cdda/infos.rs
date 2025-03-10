@@ -377,80 +377,79 @@ impl Infos {
         &'a self,
         id: &'a ObjectId,
     ) -> Result<&'a Arc<CharacterInfo>, Error> {
-        self.get(&self.characters, id, TypeId::CHARACTER)
+        self.get(&self.characters, id)
     }
 
     pub(crate) fn common_item_info<'a>(
         &'a self,
         id: &'a ObjectId,
     ) -> Result<&'a Arc<CommonItemInfo>, Error> {
-        self.get(&self.common_item_infos, id, TypeId::GENERIC_ITEM)
+        self.get(&self.common_item_infos, id)
     }
 
     pub(crate) fn field<'a>(&'a self, id: &'a ObjectId) -> Result<&'a Arc<FieldInfo>, Error> {
-        self.get(&self.fields, id, TypeId::FIELD)
+        self.get(&self.fields, id)
     }
 
     pub(crate) fn furniture<'a>(
         &'a self,
         id: &'a ObjectId,
     ) -> Result<&'a Arc<FurnitureInfo>, Error> {
-        self.get(&self.furniture, id, TypeId::FURNITURE)
+        self.get(&self.furniture, id)
     }
 
     pub(crate) fn item_group<'a>(&'a self, id: &'a ObjectId) -> Result<&'a Arc<ItemGroup>, Error> {
-        self.get(&self.item_groups, id, TypeId::ITEM_GROUP)
+        self.get(&self.item_groups, id)
     }
 
     pub(crate) fn magazine<'a>(&'a self, id: &'a ObjectId) -> Result<&'a Arc<Magazine>, Error> {
-        self.get(&self.magazines, id, TypeId::MAGAZINE)
+        self.get(&self.magazines, id)
     }
 
     #[expect(unused)]
     pub(crate) fn quality<'a>(&'a self, id: &'a ObjectId) -> Result<&'a Arc<Quality>, Error> {
-        self.get(&self.qualities, id, TypeId::TOOL_QUALITY)
+        self.get(&self.qualities, id)
     }
 
     #[expect(unused)]
     pub(crate) fn recipe<'a>(&'a self, id: &'a ObjectId) -> Result<&'a Arc<Recipe>, Error> {
-        self.get(&self.recipes, id, TypeId::RECIPE)
+        self.get(&self.recipes, id)
     }
 
     pub(crate) fn requirement<'a>(
         &'a self,
         id: &'a ObjectId,
     ) -> Result<&'a Arc<Requirement>, Error> {
-        self.get(&self.requirements, id, TypeId::REQUIREMENT)
+        self.get(&self.requirements, id)
     }
 
     pub(crate) fn terrain<'a>(&'a self, id: &'a ObjectId) -> Result<&'a Arc<TerrainInfo>, Error> {
-        self.get(&self.terrain, id, TypeId::TERRAIN)
+        self.get(&self.terrain, id)
     }
 
     pub(crate) fn vehicle_part<'a>(
         &'a self,
         id: &'a ObjectId,
     ) -> Result<&'a Arc<VehiclePartInfo>, Error> {
-        self.get(&self.vehicle_parts, id, TypeId::VEHICLE_PART)
+        self.get(&self.vehicle_parts, id)
     }
 
     pub(crate) fn zone_level<'a>(
         &'a self,
         id: &'a ObjectId,
     ) -> Result<&'a Arc<OvermapInfo>, Error> {
-        self.get(&self.zone_levels, id, TypeId::OVERMAP)
+        self.get(&self.zone_levels, id)
     }
 
-    fn get<'a, T>(
+    fn get<'a, T: 'static>(
         &'a self,
         map: &'a HashMap<ObjectId, Arc<T>>,
         id: &'a ObjectId,
-        type_id: &'static [TypeId],
     ) -> Result<&'a Arc<T>, Error> {
         map.get(self.maybe_migrated(id))
             .ok_or_else(|| Error::UnknownObject {
                 _id: id.clone(),
-                _type: type_id,
+                _type: std::any::TypeId::of::<T>(),
             })
     }
 

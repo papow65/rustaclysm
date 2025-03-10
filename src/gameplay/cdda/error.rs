@@ -1,7 +1,6 @@
-use crate::gameplay::cdda::TypeId;
 use cdda_json_files::{ObjectId, SpriteNumber};
 use std::fmt::{self, Display};
-use std::{error::Error as StdError, io, path::PathBuf, sync::Arc};
+use std::{any::TypeId, error::Error as StdError, io, path::PathBuf, sync::Arc};
 
 #[derive(Debug)]
 pub(crate) enum Error {
@@ -12,7 +11,7 @@ pub(crate) enum Error {
     /// This id, or combination of id and type is not known
     UnknownObject {
         _id: ObjectId,
-        _type: &'static [TypeId],
+        _type: TypeId,
     },
     /// This id doesn't match with items or requirments
     UnexpectedRequirement {
