@@ -1,6 +1,5 @@
 use cdda_json_files::{ObjectId, SpriteNumber};
-use std::fmt::{self, Display};
-use std::{any::TypeId, error::Error as StdError, io, path::PathBuf, sync::Arc};
+use std::{error::Error as StdError, fmt, io, path::PathBuf, sync::Arc};
 
 #[derive(Debug)]
 pub(crate) enum Error {
@@ -11,7 +10,7 @@ pub(crate) enum Error {
     /// This id, or combination of id and type is not known
     UnknownObject {
         _id: ObjectId,
-        _type: TypeId,
+        _type: &'static str,
     },
     /// This id doesn't match with items or requirments
     UnexpectedRequirement {
@@ -34,7 +33,7 @@ pub(crate) enum Error {
 }
 
 // Requirement for StdError
-impl Display for Error {
+impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{self:#?}")
     }

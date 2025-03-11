@@ -1,10 +1,10 @@
 use crate::ObjectId;
-use std::{any::TypeId, error::Error as StdError, fmt};
+use std::{error::Error as StdError, fmt};
 
 #[derive(Debug)]
 pub enum Error {
     /// This id, or combination of id and type is not known
-    LinkUnavailable { _id: ObjectId, _type: TypeId },
+    LinkUnavailable { _id: ObjectId, _type: &'static str },
 }
 
 // Requirement for StdError

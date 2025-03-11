@@ -1,8 +1,7 @@
 use crate::{Error, HashMap, ObjectId, TerrainInfo};
 use serde::Deserialize;
-use std::any::TypeId;
-use std::fmt;
 use std::sync::{Arc, OnceLock, Weak};
+use std::{any::type_name, fmt};
 
 #[derive(Debug, Deserialize)]
 #[serde(from = "Option<ObjectId>")]
@@ -101,7 +100,7 @@ impl<T: fmt::Debug + 'static> RequiredLinkedLater<T> {
     fn get(&self) -> Result<Arc<T>, Error> {
         self.required.get().ok_or_else(|| Error::LinkUnavailable {
             _id: self.required.object_id.clone(),
-            _type: TypeId::of::<T>(),
+            _type: type_name::<T>(),
         })
     }
 

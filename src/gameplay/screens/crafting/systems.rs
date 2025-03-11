@@ -396,7 +396,8 @@ fn shown_recipes(
     nearby_items: &[NearbyItem],
 ) -> Vec<RecipeSituation> {
     let mut shown_recipes = infos
-        .recipes.values()
+        .recipes
+        .values()
         .map(|recipe| {
             (
                 recipe,
