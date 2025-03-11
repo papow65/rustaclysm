@@ -288,31 +288,13 @@ pub(crate) struct Infos {
 
 impl Infos {
     fn literals_paths() -> impl Iterator<Item = PathBuf> {
-        let json_path = AssetPaths::data().join("json");
-        let patterns = [
-            json_path.join("field_type.json"),
-            json_path.join("tool_qualities.json"),
-            json_path
-                .join("furniture_and_terrain")
-                .join("**")
-                .join("*.json"),
-            json_path.join("items").join("**").join("*.json"),
-            json_path.join("monsters").join("**").join("*.json"),
-            json_path.join("obsoletion").join("migration_items.json"),
-            json_path.join("recipes").join("**").join("*.json"),
-            json_path.join("requirements").join("**").join("*.json"),
-            json_path.join("vehicleparts").join("**").join("*.json"),
-        ];
-        patterns
-            .into_iter()
-            .flat_map(|pattern| {
-                let pattern = pattern
+        let json_file_pattern = AssetPaths::data().join("json").join("**").join("*.json");
+        let json_file_pattern = json_file_pattern
                     .as_path()
                     .to_str()
                     .expect("Path pattern should be valid UTF-8");
-                println!("Searching {pattern} for info files");
-                glob(pattern).expect("Glob pattern should match some readable paths")
-            })
+            println!("Searching {json_file_pattern} for info files");
+            glob(json_file_pattern).expect("Glob pattern should match some readable paths")
             .map(|json_path_result| json_path_result.expect("JSON path should be valid"))
             .filter(|path| {
                 !path.ends_with("default_blacklist.json")
@@ -337,15 +319,26 @@ impl Infos {
             //println!("Parsing {json_path:?}...");
             let file_contents = read_to_string(&json_path)
                 .unwrap_or_else(|_| panic!("Could not read {}", json_path.display()));
-            let contents = serde_json::from_str::<Vec<serde_json::Map<String, serde_json::Value>>>(
-                file_contents.as_str(),
-            );
-            let contents =
-                contents.expect("The file should be valid JSON, containing a list of objects");
+            let contents = match serde_json::from_str::<
+                Vec<serde_json::Map<String, serde_json::Value>>,
+            >(file_contents.as_str())
+            {
+                Ok(contents) => contents,
+                Err(error) => {
+                    // TODO Correct this incorrect assumption, for example mapgen is not a list.
+                    eprintln!(
+                        "The file {json_path:?} should be valid JSON, containing a list of objects: {error:#?}"
+                    );
+                    continue;
+                }
+            };
             file_count += 1;
 
             for content in contents {
-                let type_ = content.get("type").expect("'type' key should be present");
+                let Some(type_) = content.get("type") else {
+                    eprintln!("'type' key not found in {json_path:?}");
+                    continue;
+                };
                 let type_ = TypeId::get(type_.as_str().expect("'type' should have string value"));
                 if TypeId::UNUSED.contains(type_) || content.get("from_variant").is_some() {
                     continue; // TODO
