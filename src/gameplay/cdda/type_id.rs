@@ -43,11 +43,8 @@ impl TypeId {
     pub(crate) const TOOL_QUALITY: &'static [Self] = &[Self("tool_quality")];
     pub(crate) const VEHICLE_PART: &'static [Self] = &[Self("vehicle_part")];
 
-    pub(crate) const MIGRATION: &'static [Self] = &[
-        Self("MIGRATION"),
-        Self("overmap_terrain"),
-        Self("vehicle_part_migration"),
-    ];
+    pub(crate) const ITEM_MIGRATION: &'static [Self] = &[Self("MIGRATION")];
+    pub(crate) const VEHICLE_PART_MIGRATION: &'static [Self] = &[Self("vehicle_part_migration")];
 
     // TODO use these types
     pub(crate) const UNUSED: &'static [Self] = &[
@@ -63,6 +60,7 @@ impl TypeId {
         Self("monster_flag"),
         Self("monstergroup"),
         Self("nested_category"),
+        Self("overmap_terrain"),
         Self("practice"),
         Self("recipe_category"),
         Self("recipe_group"),
@@ -86,11 +84,11 @@ impl TypeId {
             Self::FIELD,
             Self::FURNITURE,
             Self::ITEM_GROUP,
+            Self::ITEM_MIGRATION,
             Self::GENERIC_ITEM,
             Self::GUN,
             Self::GUNMOD,
             Self::MAGAZINE,
-            Self::MIGRATION,
             Self::OVERMAP,
             Self::PET_ARMOR,
             Self::RECIPE,
@@ -101,6 +99,7 @@ impl TypeId {
             Self::TOOL_QUALITY,
             Self::TOOLMOD,
             Self::VEHICLE_PART,
+            Self::VEHICLE_PART_MIGRATION,
             Self::WHEEL,
             Self::UNUSED,
         ]

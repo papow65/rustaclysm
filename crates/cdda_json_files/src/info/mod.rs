@@ -24,7 +24,7 @@ pub use self::item_info::{
     Engine, GenericItem, Gun, Gunmod, ItemName, ItemWithCommonInfo, Magazine, PetArmor, Tool,
     ToolClothing, Toolmod, Wheel,
 };
-pub use self::migration::Migration;
+pub use self::migration::{ItemMigration, VehiclePartMigration};
 pub use self::overmap_info::OvermapInfo;
 pub use self::quality::Quality;
 pub use self::recipe::{

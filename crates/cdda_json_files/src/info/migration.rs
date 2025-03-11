@@ -1,12 +1,12 @@
 use crate::ObjectId;
 use serde::Deserialize;
-use std::sync::Arc;
 
 #[derive(Debug, Deserialize)]
-pub struct Migration {
-    #[serde(rename(deserialize = "type"))]
-    #[expect(dead_code)]
-    type_: Arc<str>,
+pub struct ItemMigration {
+    pub replace: ObjectId,
+}
 
+#[derive(Debug, Deserialize)]
+pub struct VehiclePartMigration {
     pub replace: ObjectId,
 }
