@@ -47,7 +47,36 @@ pub(crate) struct InfoMap<T> {
     map: HashMap<ObjectId, Arc<T>>,
 }
 
-impl<T: 'static> InfoMap<T> {
+impl<T: DeserializeOwned + 'static> InfoMap<T> {
+    fn new(
+        all: &mut HashMap<TypeId, HashMap<ObjectId, serde_json::Map<String, serde_json::Value>>>,
+        type_ids: &[TypeId],
+    ) -> Self {
+        let mut map = HashMap::default();
+        for type_id in type_ids {
+            let objects = all
+                .remove(type_id)
+                .unwrap_or_else(|| panic!("Type {type_id:?} not found"));
+            for (id, object_properties) in objects {
+                //println!("{:#?}", &object_properties);
+                match serde_json::from_value::<T>(serde_json::Value::Object(object_properties)) {
+                    Ok(info) => {
+                        map.insert(id, Arc::new(info));
+                    }
+                    Err(error) => {
+                        eprintln!(
+                            "Failed loading json for {:?} {:?}: {error:#?}",
+                            std::any::TypeId::of::<T>(),
+                            &id
+                        );
+                    }
+                }
+            }
+        }
+
+        Self { map }
+    }
+
     pub(crate) fn get(&self, id: &ObjectId) -> Result<&Arc<T>, Error> {
         self.map.get(id).ok_or_else(|| Error::UnknownObject {
             _id: id.clone(),
@@ -63,65 +92,67 @@ impl<T: 'static> InfoMap<T> {
 #[derive(Resource)]
 pub(crate) struct Infos {
     #[expect(unused)]
-    ammos: InfoMap<Ammo>,
+    pub(crate) ammos: InfoMap<Ammo>,
 
     #[expect(unused)]
-    bionic_items: InfoMap<BionicItem>,
+    pub(crate) bionic_items: InfoMap<BionicItem>,
 
     #[expect(unused)]
-    books: InfoMap<Book>,
+    pub(crate) books: InfoMap<Book>,
 
-    characters: InfoMap<CharacterInfo>,
-
-    #[expect(unused)]
-    clothings: InfoMap<Clothing>,
+    pub(crate) characters: InfoMap<CharacterInfo>,
 
     #[expect(unused)]
-    comestibles: InfoMap<Comestible>,
-
-    common_item_infos: InfoMap<CommonItemInfo>,
+    pub(crate) clothings: InfoMap<Clothing>,
 
     #[expect(unused)]
-    engines: InfoMap<Engine>,
+    pub(crate) comestibles: InfoMap<Comestible>,
 
-    fields: InfoMap<FieldInfo>,
-    furniture: InfoMap<FurnitureInfo>,
-
-    #[expect(unused)]
-    genenric_items: InfoMap<GenericItem>,
+    pub(crate) common_item_infos: InfoMap<CommonItemInfo>,
 
     #[expect(unused)]
-    guns: InfoMap<Gun>,
+    pub(crate) engines: InfoMap<Engine>,
+
+    pub(crate) fields: InfoMap<FieldInfo>,
+    pub(crate) furniture: InfoMap<FurnitureInfo>,
 
     #[expect(unused)]
-    gunmods: InfoMap<Gunmod>,
-
-    item_groups: InfoMap<ItemGroup>,
-    magazines: InfoMap<Magazine>,
+    pub(crate) genenric_items: InfoMap<GenericItem>,
 
     #[expect(unused)]
-    pet_armors: InfoMap<PetArmor>,
-
-    qualities: InfoMap<Quality>,
-    recipes: InfoMap<Recipe>,
-    requirements: InfoMap<Requirement>,
-    terrain: InfoMap<TerrainInfo>,
+    pub(crate) guns: InfoMap<Gun>,
 
     #[expect(unused)]
-    tools: InfoMap<Tool>,
+    pub(crate) gunmods: InfoMap<Gunmod>,
+
+    pub(crate) item_groups: InfoMap<ItemGroup>,
+    pub(crate) magazines: InfoMap<Magazine>,
 
     #[expect(unused)]
-    tool_clothings: InfoMap<ToolClothing>,
+    pub(crate) pet_armors: InfoMap<PetArmor>,
 
     #[expect(unused)]
-    toolmods: InfoMap<Toolmod>,
+    pub(crate) qualities: InfoMap<Quality>,
 
-    vehicle_parts: InfoMap<VehiclePartInfo>,
+    pub(crate) recipes: InfoMap<Recipe>,
+    pub(crate) requirements: InfoMap<Requirement>,
+    pub(crate) terrain: InfoMap<TerrainInfo>,
 
     #[expect(unused)]
-    wheels: InfoMap<Wheel>,
+    pub(crate) tools: InfoMap<Tool>,
 
-    zone_levels: InfoMap<OvermapInfo>,
+    #[expect(unused)]
+    pub(crate) tool_clothings: InfoMap<ToolClothing>,
+
+    #[expect(unused)]
+    pub(crate) toolmods: InfoMap<Toolmod>,
+
+    pub(crate) vehicle_parts: InfoMap<VehiclePartInfo>,
+
+    #[expect(unused)]
+    pub(crate) wheels: InfoMap<Wheel>,
+
+    pub(crate) zone_levels: InfoMap<OvermapInfo>,
 }
 
 impl Infos {
@@ -328,10 +359,9 @@ impl Infos {
         let mut common_item_infos = InfoMap {
             map: HashMap::default(),
         };
-        let qualities = Self::extract(&mut enriched_json_infos, TypeId::TOOL_QUALITY);
+        let qualities = InfoMap::new(&mut enriched_json_infos, TypeId::TOOL_QUALITY);
 
-        let item_migrations =
-            Self::extract::<ItemMigration>(&mut enriched_json_infos, TypeId::ITEM_MIGRATION).map;
+        let item_migrations = InfoMap::new(&mut enriched_json_infos, TypeId::ITEM_MIGRATION).map;
         let mut item_loader = ItemLoader {
             enriched_json_infos: &mut enriched_json_infos,
             item_migrations,
@@ -360,10 +390,8 @@ impl Infos {
         let requirements = load_requirements(&mut enriched_json_infos, &qualities);
         let recipes = load_recipes(&mut enriched_json_infos, &qualities, &common_item_infos);
 
-        let vehicle_part_migrations = Self::extract::<VehiclePartMigration>(
-            &mut enriched_json_infos,
-            TypeId::VEHICLE_PART_MIGRATION,
-        );
+        let vehicle_part_migrations =
+            InfoMap::new(&mut enriched_json_infos, TypeId::VEHICLE_PART_MIGRATION);
         let vehicle_parts =
             load_vehicle_parts(&mut enriched_json_infos, &vehicle_part_migrations.map);
 
@@ -371,17 +399,17 @@ impl Infos {
             ammos,
             bionic_items,
             books,
-            characters: Self::extract(&mut enriched_json_infos, TypeId::CHARACTER),
+            characters: InfoMap::new(&mut enriched_json_infos, TypeId::CHARACTER),
             clothings,
             comestibles,
             common_item_infos,
             engines,
-            fields: Self::extract(&mut enriched_json_infos, TypeId::FIELD),
+            fields: InfoMap::new(&mut enriched_json_infos, TypeId::FIELD),
             furniture,
             genenric_items,
             guns,
             gunmods,
-            item_groups: Self::extract(&mut enriched_json_infos, TypeId::ITEM_GROUP),
+            item_groups: InfoMap::new(&mut enriched_json_infos, TypeId::ITEM_GROUP),
             magazines,
             pet_armors,
             qualities,
@@ -393,7 +421,7 @@ impl Infos {
             toolmods,
             vehicle_parts,
             wheels,
-            zone_levels: Self::extract(&mut enriched_json_infos, TypeId::OVERMAP),
+            zone_levels: InfoMap::new(&mut enriched_json_infos, TypeId::OVERMAP),
         };
 
         for type_id in enriched_json_infos.into_keys() {
@@ -410,102 +438,41 @@ impl Infos {
         this
     }
 
-    pub(crate) fn character<'a>(
-        &'a self,
-        id: &'a ObjectId,
-    ) -> Result<&'a Arc<CharacterInfo>, Error> {
-        self.characters.get(id)
-    }
-
-    pub(crate) fn common_item_info<'a>(
-        &'a self,
-        id: &'a ObjectId,
-    ) -> Result<&'a Arc<CommonItemInfo>, Error> {
-        self.common_item_infos.get(id)
-    }
-
-    pub(crate) fn field<'a>(&'a self, id: &'a ObjectId) -> Result<&'a Arc<FieldInfo>, Error> {
-        self.fields.get(id)
-    }
-
-    pub(crate) fn furniture<'a>(
-        &'a self,
-        id: &'a ObjectId,
-    ) -> Result<&'a Arc<FurnitureInfo>, Error> {
-        self.furniture.get(id)
-    }
-
-    pub(crate) fn item_group<'a>(&'a self, id: &'a ObjectId) -> Result<&'a Arc<ItemGroup>, Error> {
-        self.item_groups.get(id)
-    }
-
-    pub(crate) fn magazine<'a>(&'a self, id: &'a ObjectId) -> Result<&'a Arc<Magazine>, Error> {
-        self.magazines.get(id)
-    }
-
-    #[expect(unused)]
-    pub(crate) fn quality<'a>(&'a self, id: &'a ObjectId) -> Result<&'a Arc<Quality>, Error> {
-        self.qualities.get(id)
-    }
-
-    #[expect(unused)]
-    pub(crate) fn recipe<'a>(&'a self, id: &'a ObjectId) -> Result<&'a Arc<Recipe>, Error> {
-        self.recipes.get(id)
-    }
-
-    pub(crate) fn requirement<'a>(
-        &'a self,
-        id: &'a ObjectId,
-    ) -> Result<&'a Arc<Requirement>, Error> {
-        self.requirements.get(id)
-    }
-
-    pub(crate) fn terrain<'a>(&'a self, id: &'a ObjectId) -> Result<&'a Arc<TerrainInfo>, Error> {
-        self.terrain.get(id)
-    }
-
-    pub(crate) fn vehicle_part<'a>(
-        &'a self,
-        id: &'a ObjectId,
-    ) -> Result<&'a Arc<VehiclePartInfo>, Error> {
-        self.vehicle_parts.get(id)
-    }
-
-    pub(crate) fn zone_level<'a>(
-        &'a self,
-        id: &'a ObjectId,
-    ) -> Result<&'a Arc<OvermapInfo>, Error> {
-        self.zone_levels.get(id)
-    }
-
     fn looks_like(&self, definition: &ObjectDefinition) -> Option<ObjectId> {
         match definition.category {
             ObjectCategory::Character => self
-                .character(&definition.id)
+                .characters
+                .get(&definition.id)
                 .ok()
                 .and_then(|o| o.looks_like.clone()),
             ObjectCategory::Item => self
-                .common_item_info(&definition.id)
+                .common_item_infos
+                .get(&definition.id)
                 .ok()
                 .and_then(|o| o.looks_like.clone()),
             ObjectCategory::Field => self
-                .field(&definition.id)
+                .fields
+                .get(&definition.id)
                 .ok()
                 .and_then(|o| o.looks_like.clone()),
             ObjectCategory::Furniture => self
-                .furniture(&definition.id)
+                .furniture
+                .get(&definition.id)
                 .ok()
                 .and_then(|o| o.looks_like.clone()),
             ObjectCategory::Terrain => self
-                .terrain(&definition.id)
+                .terrain
+                .get(&definition.id)
                 .ok()
                 .and_then(|o| o.looks_like.clone()),
             ObjectCategory::VehiclePart => self
-                .vehicle_part(&definition.id)
+                .vehicle_parts
+                .get(&definition.id)
                 .ok()
                 .and_then(|o| o.looks_like.clone()),
             ObjectCategory::ZoneLevel => self
-                .zone_level(&definition.id)
+                .zone_levels
+                .get(&definition.id)
                 .ok()
                 .and_then(|o| o.looks_like.clone()),
             _ => unimplemented!("{:?}", definition),
@@ -554,45 +521,10 @@ impl Infos {
         variants
     }
 
-    pub(crate) fn recipes(&self) -> impl Iterator<Item = &Arc<Recipe>> {
-        self.recipes.values()
-    }
-
-    fn extract<T>(
-        all: &mut HashMap<TypeId, HashMap<ObjectId, serde_json::Map<String, serde_json::Value>>>,
-        type_ids: &[TypeId],
-    ) -> InfoMap<T>
-    where
-        T: DeserializeOwned + 'static,
-    {
-        let mut map = HashMap::default();
-        for type_id in type_ids {
-            let objects = all
-                .remove(type_id)
-                .unwrap_or_else(|| panic!("Type {type_id:?} not found"));
-            for (id, object_properties) in objects {
-                //println!("{:#?}", &object_properties);
-                match serde_json::from_value::<T>(serde_json::Value::Object(object_properties)) {
-                    Ok(info) => {
-                        map.insert(id, Arc::new(info));
-                    }
-                    Err(error) => {
-                        eprintln!(
-                            "Failed loading json for {:?} {:?}: {error:#?}",
-                            std::any::TypeId::of::<T>(),
-                            &id
-                        );
-                    }
-                }
-            }
-        }
-
-        InfoMap { map }
-    }
-
     pub(crate) fn to_components(&self, using: &Using) -> Result<Vec<Vec<Alternative>>, Error> {
         Ok(if using.kind == UsingKind::Components {
-            self.requirement(&using.requirement)?
+            self.requirements
+                .get(&using.requirement)?
                 .components
                 .clone()
                 .into_iter()
@@ -666,7 +598,7 @@ fn load_requirements(
     >,
     qualities: &InfoMap<Quality>,
 ) -> InfoMap<Requirement> {
-    let requirements = Infos::extract::<Requirement>(enriched_json_infos, TypeId::REQUIREMENT);
+    let requirements = InfoMap::<Requirement>::new(enriched_json_infos, TypeId::REQUIREMENT);
 
     for requirement in requirements.values() {
         for required_quality in &requirement.qualities.0 {
@@ -687,7 +619,7 @@ fn load_recipes(
     qualities: &InfoMap<Quality>,
     common_item_infos: &InfoMap<CommonItemInfo>,
 ) -> InfoMap<Recipe> {
-    let recipes = Infos::extract::<Recipe>(enriched_json_infos, TypeId::RECIPE);
+    let recipes = InfoMap::<Recipe>::new(enriched_json_infos, TypeId::RECIPE);
 
     for recipe in recipes.values() {
         for required_quality in &recipe.qualities.0 {
@@ -709,7 +641,7 @@ fn load_furniture(
     >,
     common_item_infos: &InfoMap<CommonItemInfo>,
 ) -> InfoMap<FurnitureInfo> {
-    let furniture = Infos::extract::<FurnitureInfo>(enriched_json_infos, TypeId::FURNITURE);
+    let furniture = InfoMap::<FurnitureInfo>::new(enriched_json_infos, TypeId::FURNITURE);
 
     for furniture_info in furniture.values() {
         furniture_info
@@ -732,7 +664,7 @@ fn load_terrain(
     >,
     furniture: &InfoMap<FurnitureInfo>,
 ) -> InfoMap<TerrainInfo> {
-    let mut terrain = Infos::extract::<TerrainInfo>(enriched_json_infos, TypeId::TERRAIN);
+    let mut terrain = InfoMap::<TerrainInfo>::new(enriched_json_infos, TypeId::TERRAIN);
     if terrain.map.remove(&ObjectId::new("t_null")).is_some() {
         eprintln!("The terrain t_null was not expected to be present");
     }
@@ -762,7 +694,7 @@ fn load_vehicle_parts(
     vehicle_part_migrations: &HashMap<ObjectId, Arc<VehiclePartMigration>>,
 ) -> InfoMap<VehiclePartInfo> {
     let mut vehicle_parts =
-        Infos::extract::<VehiclePartInfo>(enriched_json_infos, TypeId::VEHICLE_PART);
+        InfoMap::<VehiclePartInfo>::new(enriched_json_infos, TypeId::VEHICLE_PART);
 
     // TODO Make this recursive
     for (migration_from, migration) in vehicle_part_migrations {
@@ -787,7 +719,7 @@ impl ItemLoader<'_> {
     where
         T: DeserializeOwned + ItemWithCommonInfo + 'static,
     {
-        let mut items = Infos::extract::<T>(self.enriched_json_infos, type_ids);
+        let mut items = InfoMap::<T>::new(self.enriched_json_infos, type_ids);
 
         // TODO Make this recursive
         for (migration_from, migration) in &self.item_migrations {

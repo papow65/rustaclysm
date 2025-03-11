@@ -93,7 +93,7 @@ impl<'w> TileSpawner<'w, '_> {
         id: &ObjectId,
         name: Option<ObjectName>,
     ) -> Result<Entity, Error> {
-        let character_info = infos.character(id)?;
+        let character_info = infos.characters.get(id)?;
         let faction = match &*character_info.default_faction {
             "human" => Faction::Human,
             "zombie" => Faction::Zombie,
@@ -173,7 +173,7 @@ impl<'w> TileSpawner<'w, '_> {
     }
 
     fn spawn_field(&mut self, infos: &Infos, parent: Entity, pos: Pos, id: &ObjectId) {
-        let field_info = match infos.field(id) {
+        let field_info = match infos.fields.get(id) {
             Ok(field_info) => field_info,
             Err(error) => {
                 dbg!(error);
@@ -200,7 +200,7 @@ impl<'w> TileSpawner<'w, '_> {
         item: &CddaItem,
         amount: Amount,
     ) -> Result<Entity, Error> {
-        let item_info = infos.common_item_info(&item.typeid)?;
+        let item_info = infos.common_item_infos.get(&item.typeid)?;
 
         //println!("{:?} {:?} {:?} {:?}", &parent, pos, &id, &amount);
         let definition = &ObjectDefinition {
@@ -217,7 +217,7 @@ impl<'w> TileSpawner<'w, '_> {
         let (volume, mass) = match &item.corpse {
             Some(corpse_id) if corpse_id != &ObjectId::new("mon_null") => {
                 println!("{:?}", &corpse_id);
-                match infos.character(corpse_id) {
+                match infos.characters.get(corpse_id) {
                     Ok(monster_info) => (monster_info.volume, monster_info.mass),
                     Err(_) => (item_info.volume, item_info.mass),
                 }
@@ -312,7 +312,7 @@ impl<'w> TileSpawner<'w, '_> {
         pos: Pos,
         id: &ObjectId,
     ) {
-        let item_group = match infos.item_group(id) {
+        let item_group = match infos.item_groups.get(id) {
             Ok(item_group) => item_group,
             Err(error) => {
                 dbg!(error);
@@ -446,14 +446,14 @@ impl<'w> TileSpawner<'w, '_> {
         parent_pos: Pos,
         part: &CddaVehiclePart,
     ) {
-        let part_info = match infos.vehicle_part(&part.id) {
+        let part_info = match infos.vehicle_parts.get(&part.id) {
             Ok(part_info) => part_info,
             Err(error) => {
                 dbg!(error);
                 return;
             }
         };
-        let item_info = match infos.common_item_info(&part_info.item) {
+        let item_info = match infos.common_item_infos.get(&part_info.item) {
             Ok(item_info) => item_info,
             Err(error) => {
                 dbg!(error);

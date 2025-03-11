@@ -396,7 +396,7 @@ fn shown_recipes(
     nearby_items: &[NearbyItem],
 ) -> Vec<RecipeSituation> {
     let mut shown_recipes = infos
-        .recipes()
+        .recipes.values()
         .map(|recipe| {
             (
                 recipe,
@@ -524,7 +524,8 @@ fn recipe_qualities(
                 .iter()
                 .filter_map(|using| {
                     infos
-                        .requirement(&using.requirement)
+                        .requirements
+                        .get(&using.requirement)
                         .inspect_err(|error| eprintln!("Requirement not found: {error:#?}"))
                         .ok()
                 })
@@ -583,7 +584,8 @@ fn recipe_components(
                     .flatten()
                     .filter_map(|(item_id, required)| {
                         infos
-                            .common_item_info(item_id)
+                            .common_item_infos
+                            .get(item_id)
                             .inspect_err(|error| {
                                 eprintln!(
                                     "Item {item_id:?} not found (maybe comestible?): {error:#?}"
@@ -624,9 +626,9 @@ fn expand_items<'a>(
             requirement,
             factor,
         } => {
-            let requirement = match infos.requirement(requirement) {
+            let requirement = match infos.requirements.get(requirement) {
                 Ok(requirement) => requirement,
-                Err(_req_error) => match infos.common_item_info(requirement) {
+                Err(_req_error) => match infos.common_item_infos.get(requirement) {
                     Ok(_) => return Ok(vec![(requirement, *factor)]),
                     Err(_item_error) => {
                         return Err(Error::UnexpectedRequirement {

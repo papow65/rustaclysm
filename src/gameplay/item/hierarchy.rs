@@ -154,7 +154,8 @@ impl<'w> ItemHierarchy<'w, '_> {
         let phrase = Phrase::from_fragments(prefix.into_iter().collect())
             .extend({
                 self.infos
-                    .magazine(&item.definition.id)
+                    .magazines
+                    .get(&item.definition.id)
                     .inspect_err(|error| eprintln!("Magazine not found: {error:?}"))
                     .ok()
                     .filter(|magazine| {

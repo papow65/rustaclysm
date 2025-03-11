@@ -241,7 +241,8 @@ pub(in super::super) fn update_corpses(
                 id: ObjectId::new("mon_zombie"),
             };
             let character_info = infos
-                .character(&definition.id)
+                .characters
+                .get(&definition.id)
                 .unwrap_or_else(|e| panic!("{definition:?} should be found: {e:#?}"));
             let object_name = ObjectName::new(character_info.name.clone(), Faction::Zombie.color());
             let health = Health(Limited::full(character_info.hp.unwrap_or(60) as u16));
