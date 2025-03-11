@@ -11,7 +11,9 @@ use cdda_json_files::{
 };
 use glob::glob;
 use serde::de::DeserializeOwned;
-use std::{any::type_name, fs::read_to_string, ops::Deref, path::PathBuf, sync::Arc, time::Instant};
+use std::{
+    any::type_name, fs::read_to_string, ops::Deref, path::PathBuf, sync::Arc, time::Instant,
+};
 use units::{Mass, Volume};
 
 #[derive(Debug, Component)]
@@ -55,8 +57,8 @@ impl<T: DeserializeOwned + 'static> InfoMap<T> {
         let mut map = HashMap::default();
         for type_id in type_ids {
             let objects = all
-            .remove(type_id)
-            .unwrap_or_else(|| panic!("Type {type_id:?} not found"));
+                .remove(type_id)
+                .unwrap_or_else(|| panic!("Type {type_id:?} not found"));
             for (id, object_properties) in objects {
                 //println!("{:#?}", &object_properties);
                 match serde_json::from_value::<T>(serde_json::Value::Object(object_properties)) {
@@ -67,7 +69,7 @@ impl<T: DeserializeOwned + 'static> InfoMap<T> {
                         eprintln!(
                             "Failed loading json for {:?} {:?}: {error:#?}",
                             std::any::TypeId::of::<T>(),
-                                  &id
+                            &id
                         );
                     }
                 }
@@ -361,8 +363,7 @@ impl Infos {
         };
         let qualities = InfoMap::new(&mut enriched_json_infos, TypeId::TOOL_QUALITY);
 
-        let item_migrations =
-            InfoMap::new(&mut enriched_json_infos, TypeId::ITEM_MIGRATION).map;
+        let item_migrations = InfoMap::new(&mut enriched_json_infos, TypeId::ITEM_MIGRATION).map;
         let mut item_loader = ItemLoader {
             enriched_json_infos: &mut enriched_json_infos,
             item_migrations,
@@ -391,10 +392,8 @@ impl Infos {
         let requirements = load_requirements(&mut enriched_json_infos, &qualities);
         let recipes = load_recipes(&mut enriched_json_infos, &qualities, &common_item_infos);
 
-        let vehicle_part_migrations = InfoMap::new(
-            &mut enriched_json_infos,
-            TypeId::VEHICLE_PART_MIGRATION,
-        );
+        let vehicle_part_migrations =
+            InfoMap::new(&mut enriched_json_infos, TypeId::VEHICLE_PART_MIGRATION);
         let vehicle_parts =
             load_vehicle_parts(&mut enriched_json_infos, &vehicle_part_migrations.map);
 
@@ -444,31 +443,38 @@ impl Infos {
     fn looks_like(&self, definition: &ObjectDefinition) -> Option<ObjectId> {
         match definition.category {
             ObjectCategory::Character => self
-                .characters.get(&definition.id)
+                .characters
+                .get(&definition.id)
                 .ok()
                 .and_then(|o| o.looks_like.clone()),
             ObjectCategory::Item => self
-                .common_item_infos.get(&definition.id)
+                .common_item_infos
+                .get(&definition.id)
                 .ok()
                 .and_then(|o| o.looks_like.clone()),
             ObjectCategory::Field => self
-                .fields.get(&definition.id)
+                .fields
+                .get(&definition.id)
                 .ok()
                 .and_then(|o| o.looks_like.clone()),
             ObjectCategory::Furniture => self
-                .furniture.get(&definition.id)
+                .furniture
+                .get(&definition.id)
                 .ok()
                 .and_then(|o| o.looks_like.clone()),
             ObjectCategory::Terrain => self
-                .terrain.get(&definition.id)
+                .terrain
+                .get(&definition.id)
                 .ok()
                 .and_then(|o| o.looks_like.clone()),
             ObjectCategory::VehiclePart => self
-                .vehicle_parts.get(&definition.id)
+                .vehicle_parts
+                .get(&definition.id)
                 .ok()
                 .and_then(|o| o.looks_like.clone()),
             ObjectCategory::ZoneLevel => self
-                .zone_levels.get(&definition.id)
+                .zone_levels
+                .get(&definition.id)
                 .ok()
                 .and_then(|o| o.looks_like.clone()),
             _ => unimplemented!("{:?}", definition),
@@ -519,7 +525,8 @@ impl Infos {
 
     pub(crate) fn to_components(&self, using: &Using) -> Result<Vec<Vec<Alternative>>, Error> {
         Ok(if using.kind == UsingKind::Components {
-            self.requirements.get(&using.requirement)?
+            self.requirements
+                .get(&using.requirement)?
                 .components
                 .clone()
                 .into_iter()

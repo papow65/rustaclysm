@@ -641,7 +641,7 @@ fn expand_items<'a>(
 
             if requirement.components.len() != 1 {
                 eprintln!(
-                    "Unexpected structure for {requirement:?}: {:?}",
+                    "Unexpected components ({:?}) in {requirement:#?}",
                     &requirement.components
                 );
             }
