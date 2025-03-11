@@ -5,6 +5,7 @@ use units::{Mass, Volume};
 
 #[derive(Debug, Deserialize)]
 pub struct CharacterInfo {
+    pub id: ObjectId,
     pub name: ItemName,
     pub default_faction: Arc<str>,
     pub looks_like: Option<ObjectId>,

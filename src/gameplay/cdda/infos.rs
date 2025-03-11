@@ -3,11 +3,11 @@ use crate::util::{AssetPaths, AsyncNew};
 use bevy::prelude::{Component, Resource};
 use bevy::utils::HashMap;
 use cdda_json_files::{
-    Alternative, Ammo, BionicItem, Book, CddaItemName, CharacterInfo, Clothing, Comestible,
-    CommonItemInfo, Engine, FieldInfo, Flags, FurnitureInfo, GenericItem, Gun, Gunmod, ItemGroup,
-    ItemMigration, ItemName, ItemWithCommonInfo, Magazine, ObjectId, OvermapInfo, PetArmor,
-    Quality, Recipe, Requirement, Submap, TerrainInfo, Tool, ToolClothing, Toolmod, Using,
-    UsingKind, VehiclePartInfo, VehiclePartMigration, Wheel,
+    Alternative, Ammo, BionicItem, Book, CddaItem, CddaItemName, CharacterInfo, Clothing,
+    Comestible, CommonItemInfo, Engine, FieldInfo, Flags, FurnitureInfo, GenericItem, Gun, Gunmod,
+    ItemGroup, ItemMigration, ItemName, ItemWithCommonInfo, Magazine, ObjectId, OvermapInfo,
+    PetArmor, Quality, Recipe, Requirement, Submap, TerrainInfo, Tool, ToolClothing, Toolmod,
+    Using, UsingKind, VehiclePartInfo, VehiclePartMigration, Wheel,
 };
 use glob::glob;
 use serde::de::DeserializeOwned;
@@ -68,7 +68,7 @@ impl<T: DeserializeOwned + 'static> InfoMap<T> {
                     Err(error) => {
                         eprintln!(
                             "Failed loading json for {:?} {:?}: {error:#?}",
-                            std::any::TypeId::of::<T>(),
+                            type_name::<T>(),
                             &id
                         );
                     }
@@ -176,7 +176,7 @@ impl InfoMap<VehiclePartInfo> {
         // TODO Make this recursive
         for (migration_from, migration) in vehicle_part_migrations {
             if let Ok(new) = self.get(migration_from).cloned() {
-                self.map.insert(migration.replace.clone(), new);
+                self.map.insert(migration.from.clone(), new);
             }
         }
     }
@@ -208,6 +208,13 @@ impl ItemInfoMapLoader<'_> {
                 .map
                 .insert(id.clone(), item_info.common());
         }
+
+        println!(
+            "{}x {}, and {}x common items",
+            items.map.len(),
+            std::any::type_name::<T>(),
+            self.common_item_infos.map.len()
+        );
 
         items
     }
@@ -459,14 +466,8 @@ impl Infos {
                 }
 
                 enriched.remove("copy-from");
-
                 if TypeId::RECIPE.contains(type_id) {
                     set_recipe_id(&mut enriched);
-                } else if !TypeId::FURNITURE.contains(type_id)
-                    && !TypeId::TERRAIN.contains(type_id)
-                    && !TypeId::TOOL_QUALITY.contains(type_id)
-                {
-                    enriched.remove("id");
                 }
 
                 enriched_of_type.insert(object_id.clone(), enriched);
@@ -695,6 +696,27 @@ impl Infos {
                 .obj
                 .finalize(&self.furniture.map, "submap furniture");
         }
+
+        for items_at in &submap.items.0 {
+            for item in &items_at.obj {
+                self.link_item(&item.as_amount().obj);
+            }
+        }
+    }
+
+    fn link_item(&self, item: &CddaItem) {
+        item.item_info
+            .finalize(&self.common_item_infos.map, "submap item");
+        item.corpse
+            .finalize(&self.characters.map, "submap item corpse");
+
+        if let Some(contents) = &item.contents {
+            for pocket in &contents.contents {
+                for content in &pocket.contents {
+                    self.link_item(content);
+                }
+            }
+        }
     }
 }
 
@@ -721,6 +743,7 @@ fn set_recipe_id(enriched: &mut serde_json::Map<String, serde_json::Value>) {
 
 fn default_human() -> CharacterInfo {
     CharacterInfo {
+        id: ObjectId::new("human"),
         name: ItemName::from(CddaItemName::Simple(Arc::from("Human"))),
         default_faction: Arc::from("human"),
         looks_like: Some(ObjectId::new("overlay_male_mutation_SKIN_TAN")),

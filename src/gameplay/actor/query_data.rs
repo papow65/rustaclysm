@@ -587,7 +587,6 @@ impl ActorItem<'_> {
         message_writer: &mut MessageWriter,
         next_player_action_state: &mut NextState<PlayerActionState>,
         spawner: &mut TileSpawner,
-        infos: &Infos,
         subzone_level_entities: &SubzoneLevelEntities,
         item_amounts: &mut Query<&mut Amount>,
         start_craft: &StartCraft,
@@ -628,7 +627,6 @@ impl ActorItem<'_> {
         }
 
         let item = spawner.spawn_craft(
-            infos,
             parent_entity,
             pos,
             start_craft.recipe_situation.recipe().clone(),
@@ -649,7 +647,6 @@ impl ActorItem<'_> {
         message_writer: &mut MessageWriter,
         next_player_action_state: &mut NextState<PlayerActionState>,
         spawner: &mut TileSpawner,
-        infos: &Infos,
         crafts: &mut Query<(Item, &mut Craft)>,
         craft_entity: Entity,
     ) -> ActorImpact {
@@ -666,9 +663,15 @@ impl ActorItem<'_> {
             let parent = item.parent.get();
             let pos = *item.pos.unwrap_or(self.pos);
             let amount = *item.amount;
-            let cdda_item = CddaItem::from(craft.recipe.id.clone());
             commands.entity(item.entity).despawn_recursive();
-            _ = spawner.spawn_item(infos, parent, Some(pos), &cdda_item, amount);
+            if let Some(result) = craft.recipe.result.get_or(|error| {
+                dbg!(error);
+            }) {
+                let cdda_item = CddaItem::from(&result);
+                if let Err(error) = spawner.spawn_item(parent, Some(pos), &cdda_item, amount) {
+                    eprintln!("Spawning crafted item failed: {error:#?}");
+                }
+            }
             next_player_action_state.set(PlayerActionState::Normal);
         } else {
             let percent_progress = craft.percent_progress();

@@ -97,7 +97,7 @@ pub struct CddaVehicle {
 pub struct CddaVehiclePart {
     pub id: ObjectId,
     pub variant: Option<Arc<str>>,
-    pub base: CddaItem,
+    pub base: Arc<CddaItem>,
 
     /// i8 would suffice, but i32 requires less casting
     pub mount_dx: i32,

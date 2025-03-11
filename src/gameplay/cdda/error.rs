@@ -1,4 +1,4 @@
-use cdda_json_files::{ObjectId, SpriteNumber};
+use cdda_json_files::{Error as CddaJsonError, ObjectId, SpriteNumber};
 use std::{error::Error as StdError, fmt, io, path::PathBuf, sync::Arc};
 
 #[derive(Debug)]
@@ -21,6 +21,11 @@ pub(crate) enum Error {
         _number: SpriteNumber,
     },
 
+    // Workspace error wrappers
+    CddaJsonFiles {
+        _wrapped: CddaJsonError,
+    },
+
     // External error wrappers
     Io {
         _wrapped: io::Error,
@@ -36,6 +41,12 @@ pub(crate) enum Error {
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{self:#?}")
+    }
+}
+
+impl From<CddaJsonError> for Error {
+    fn from(value: CddaJsonError) -> Self {
+        Self::CddaJsonFiles { _wrapped: value }
     }
 }
 

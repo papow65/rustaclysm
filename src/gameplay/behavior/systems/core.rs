@@ -511,7 +511,6 @@ fn perform_start_craft(
     mut message_writer: MessageWriter,
     mut next_player_action_state: ResMut<NextState<PlayerActionState>>,
     mut spawner: TileSpawner,
-    infos: Res<Infos>,
     subzone_level_entities: Res<SubzoneLevelEntities>,
     actors: Query<Actor>,
     mut amounts: Query<&mut Amount>,
@@ -521,7 +520,6 @@ fn perform_start_craft(
         &mut message_writer,
         &mut next_player_action_state,
         &mut spawner,
-        &infos,
         &subzone_level_entities,
         &mut amounts,
         &start_craft.action,
@@ -535,7 +533,6 @@ fn perform_continue_craft(
     mut message_writer: MessageWriter,
     mut next_player_action_state: ResMut<NextState<PlayerActionState>>,
     mut spawner: TileSpawner,
-    infos: Res<Infos>,
     actors: Query<Actor>,
     mut items: Query<(Item, &mut Craft)>,
 ) -> ActorImpact {
@@ -544,7 +541,6 @@ fn perform_continue_craft(
         &mut message_writer,
         &mut next_player_action_state,
         &mut spawner,
-        &infos,
         &mut items,
         continue_craft.action.item_entity,
     )

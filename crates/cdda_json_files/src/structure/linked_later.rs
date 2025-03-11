@@ -10,6 +10,10 @@ pub struct OptionalLinkedLater<T: fmt::Debug> {
 }
 
 impl<T: fmt::Debug> OptionalLinkedLater<T> {
+    pub fn new_final_none() -> Self {
+        Self { option: None }
+    }
+
     pub fn get(&self) -> Option<Arc<T>> {
         self.option.as_ref().and_then(LinkedLater::get)
     }
@@ -43,6 +47,10 @@ pub struct VecLinkedLater<T: fmt::Debug, U: Clone + fmt::Debug> {
 }
 
 impl<T: fmt::Debug, U: Clone + fmt::Debug> VecLinkedLater<T, U> {
+    pub fn new_final_empty() -> Self {
+        Self { vec: Vec::new() }
+    }
+
     /// May only be called once
     pub fn finalize(&self, map: &HashMap<ObjectId, Arc<T>>, err_description: &str) {
         for (linked_later, _assoc) in &self.vec {
@@ -97,7 +105,13 @@ pub struct RequiredLinkedLater<T: fmt::Debug> {
 }
 
 impl<T: fmt::Debug + 'static> RequiredLinkedLater<T> {
-    fn get(&self) -> Result<Arc<T>, Error> {
+    pub fn new_final(object_id: ObjectId, value: &Arc<T>) -> Self {
+        Self {
+            required: LinkedLater::new_final(object_id, value),
+        }
+    }
+
+    pub fn get(&self) -> Result<Arc<T>, Error> {
         self.required.get().ok_or_else(|| Error::LinkUnavailable {
             _id: self.required.object_id.clone(),
             _type: type_name::<T>(),
@@ -146,6 +160,14 @@ struct LinkedLater<T: fmt::Debug> {
 }
 
 impl<T: fmt::Debug> LinkedLater<T> {
+    fn new_final(object_id: ObjectId, value: &Arc<T>) -> Self {
+        let lock = OnceLock::new();
+        lock.set(Some(Arc::downgrade(value)))
+            .expect("This lock should be unused");
+
+        Self { object_id, lock }
+    }
+
     fn get(&self) -> Option<Arc<T>> {
         self.lock
             .get()
@@ -159,7 +181,7 @@ impl<T: fmt::Debug> LinkedLater<T> {
 
     fn finalize(&self, found: Option<Weak<T>>, err_description: &str) {
         if found.is_none() {
-            eprintln!("Could not find {err_description}: {self:?}");
+            eprintln!("Could not find {err_description}: {:?}", &self.object_id);
         }
         self.lock.set(found).expect("{self:?} is already finalized");
     }

@@ -16,9 +16,11 @@ use bevy::prelude::{
 };
 use bevy::render::camera::{PerspectiveProjection, Projection};
 use bevy::render::view::RenderLayers;
+use bevy::utils::HashMap;
 use cdda_json_files::{
-    Bash, BashItem, BashItems, CddaAmount, CddaItem, CddaVehicle, CddaVehiclePart, CountRange,
-    Field, FlatVec, FurnitureInfo, MoveCostMod, ObjectId, PocketType, Recipe, Repetition, Spawn,
+    Bash, BashItem, BashItems, CddaAmount, CddaItem, CddaItemName, CddaVehicle, CddaVehiclePart,
+    CommonItemInfo, CountRange, Field, Flags, FlatVec, FurnitureInfo, ItemName, MoveCostMod,
+    ObjectId, PocketType, Recipe, Repetition, Spawn, VecLinkedLater,
 };
 use std::sync::Arc;
 use units::{Mass, Volume};
@@ -56,13 +58,14 @@ impl<'w> TileSpawner<'w, '_> {
         for repetitions in item_repetitions {
             for repetition in repetitions {
                 let CddaAmount { obj: item, amount } = repetition.as_amount();
-                _ = self.spawn_item(
-                    infos,
+                if let Err(error) = self.spawn_item(
                     subzone_level_entity,
                     Some(pos),
                     item,
                     Amount(item.charges.unwrap_or(1) * amount),
-                );
+                ) {
+                    dbg!(error);
+                }
             }
         }
 
@@ -194,18 +197,17 @@ impl<'w> TileSpawner<'w, '_> {
 
     pub(crate) fn spawn_item(
         &mut self,
-        infos: &Infos,
         parent: Entity,
         pos: Option<Pos>,
         item: &CddaItem,
         amount: Amount,
     ) -> Result<Entity, Error> {
-        let item_info = infos.common_item_infos.get(&item.typeid)?;
+        let item_info = &item.item_info.get()?;
 
         //println!("{:?} {:?} {:?} {:?}", &parent, pos, &id, &amount);
         let definition = &ObjectDefinition {
             category: ObjectCategory::Item,
-            id: item.typeid.clone(),
+            id: item_info.id.clone(),
         };
         //println!("{:?} @ {pos:?}", &definition);
         let object_name = ObjectName::new(
@@ -214,12 +216,13 @@ impl<'w> TileSpawner<'w, '_> {
         );
         let object_entity = self.spawn_object(parent, pos, definition, object_name, None);
 
-        let (volume, mass) = match &item.corpse {
-            Some(corpse_id) if corpse_id != &ObjectId::new("mon_null") => {
-                println!("{:?}", &corpse_id);
-                match infos.characters.get(corpse_id) {
-                    Ok(monster_info) => (monster_info.volume, monster_info.mass),
-                    Err(_) => (item_info.volume, item_info.mass),
+        let (volume, mass) = match &item.corpse.get() {
+            Some(corpse_character) => {
+                if corpse_character.id == ObjectId::new("mon_null") {
+                    (item_info.volume, item_info.mass)
+                } else {
+                    println!("{:?}", &corpse_character.id);
+                    (corpse_character.volume, corpse_character.mass)
                 }
             }
             _ => (item_info.volume, item_info.mass),
@@ -257,14 +260,9 @@ impl<'w> TileSpawner<'w, '_> {
                     .id();
                 //println!("Pocket {pocket:?} with parent {entity:?}");
                 for content in &cdda_pocket.contents {
-                    let result = self.spawn_item(
-                        infos,
-                        pocket,
-                        None,
-                        content,
-                        Amount(content.charges.unwrap_or(1)),
-                    );
-                    if let Err(error) = result {
+                    if let Err(error) =
+                        self.spawn_item(pocket, None, content, Amount(content.charges.unwrap_or(1)))
+                    {
                         dbg!(error);
                     }
                 }
@@ -289,13 +287,21 @@ impl<'w> TileSpawner<'w, '_> {
                         Some(probability) => probability.random(),
                         None => true,
                     } {
-                        let amount = Amount(match &item.count {
-                            Some(count) => count.random(),
-                            None => 1,
-                        });
-                        let mut cdda_item = CddaItem::from(item.item.clone());
-                        cdda_item.charges = item.charges.as_ref().map(CountRange::random);
-                        _ = self.spawn_item(infos, parent_entity, Some(pos), &cdda_item, amount);
+                        if let Some(item_info) = item.item.get_or(|error| {
+                            dbg!(error);
+                        }) {
+                            let amount = Amount(match &item.count {
+                                Some(count) => count.random(),
+                                None => 1,
+                            });
+                            let mut cdda_item = CddaItem::from(&item_info);
+                            cdda_item.charges = item.charges.as_ref().map(CountRange::random);
+                            if let Err(error) =
+                                self.spawn_item(parent_entity, Some(pos), &cdda_item, amount)
+                            {
+                                dbg!(error);
+                            }
+                        }
                     }
                 }
                 BashItem::Group { ref group } => {
@@ -740,14 +746,90 @@ impl<'w> TileSpawner<'w, '_> {
 
     pub(crate) fn spawn_craft(
         &mut self,
-        infos: &Infos,
         parent_entity: Entity,
         pos: Pos,
         recipe: Arc<Recipe>,
     ) -> Result<Entity, Error> {
-        let craft = CddaItem::from(ObjectId::new("craft"));
-        let entity = self.spawn_item(infos, parent_entity, Some(pos), &craft, Amount::SINGLE)?;
-
+        let craft_item_info = CommonItemInfo {
+            id: ObjectId::new("craft"),
+            category: None,
+            proportional: None,
+            relative: None,
+            count: None,
+            stack_size: None,
+            range: None,
+            dispersion: None,
+            recoil: None,
+            loudness: None,
+            mass: None,
+            integral_mass: None,
+            volume: None,
+            longest_side: None,
+            price: None,
+            price_postapoc: None,
+            integral_volume: None,
+            integral_longest_side: None,
+            bashing: None,
+            cutting: None,
+            to_hit: None,
+            variant_type: None,
+            variants: None,
+            container: None,
+            sealed: None,
+            emits: None,
+            explode_in_fire: None,
+            solar_efficiency: None,
+            ascii_picture: None,
+            thrown_damage: None,
+            repairs_like: None,
+            weapon_category: None,
+            degradation_multiplier: None,
+            type_: String::from("craft type").into(),
+            name: ItemName::from(CddaItemName::Simple(String::from("Craft").into())),
+            description: None,
+            symbol: None,
+            color: None,
+            material: None,
+            material_thickness: None,
+            chat_topics: None,
+            phase: None,
+            magazines: None,
+            min_skills: None,
+            explosion: None,
+            flags: Flags::default(),
+            faults: None,
+            qualities: VecLinkedLater::new_final_empty(),
+            extend: None,
+            delete: None,
+            properties: None,
+            techniques: None,
+            max_charges: None,
+            initial_charges: None,
+            use_action: None,
+            countdown_interval: None,
+            countdown_destroy: None,
+            countdown_action: None,
+            looks_like: None,
+            conditional_names: None,
+            armor_data: None,
+            pet_armor_data: None,
+            gun_data: None,
+            bionic_data: None,
+            seed_data: None,
+            relic_data: None,
+            milling: None,
+            gunmod_data: None,
+            pocket_data: None,
+            armor: None,
+            snippet_category: None,
+            extra: HashMap::default(),
+        };
+        let entity = self.spawn_item(
+            parent_entity,
+            Some(pos),
+            &CddaItem::from(&Arc::new(craft_item_info)),
+            Amount::SINGLE,
+        )?;
         let crafting_time = recipe.time.ok_or_else(|| Error::RecipeWithoutTime {
             _id: recipe.id.clone(),
         })?;

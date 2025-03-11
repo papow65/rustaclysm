@@ -1,18 +1,21 @@
-use crate::{HashMap, ObjectId};
+use crate::{
+    CharacterInfo, CommonItemInfo, HashMap, ObjectId, OptionalLinkedLater, RequiredLinkedLater,
+};
 use serde::Deserialize;
 use serde_repr::Deserialize_repr;
 use std::sync::Arc;
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct CddaItem {
-    pub typeid: ObjectId,
+    #[serde(rename = "typeid")]
+    pub item_info: RequiredLinkedLater<CommonItemInfo>,
 
     pub snip_id: Option<Arc<str>>,
     pub charges: Option<u32>,
     pub active: Option<bool>,
 
-    pub corpse: Option<ObjectId>,
+    pub corpse: OptionalLinkedLater<CharacterInfo>,
 
     pub name: Option<Arc<str>>,
     pub owner: Option<Arc<str>>,
@@ -50,14 +53,14 @@ pub struct CddaItem {
     pub degradation: Option<u32>,
 }
 
-impl From<ObjectId> for CddaItem {
-    fn from(typeid: ObjectId) -> Self {
+impl From<&Arc<CommonItemInfo>> for CddaItem {
+    fn from(item_info: &Arc<CommonItemInfo>) -> Self {
         Self {
-            typeid,
+            item_info: RequiredLinkedLater::new_final(item_info.id.clone(), item_info),
             snip_id: None,
             charges: None,
             active: None,
-            corpse: None,
+            corpse: OptionalLinkedLater::new_final_none(),
             name: None,
             owner: None,
             bday: None,
@@ -87,7 +90,7 @@ impl From<ObjectId> for CddaItem {
     }
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct CddaContainer {
     pub contents: Vec<CddaPocket>,
@@ -97,7 +100,7 @@ pub struct CddaContainer {
     additional_pockets: Vec<AdditionalPocket>,
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct CddaPocket {
     pub pocket_type: PocketType,

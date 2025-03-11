@@ -406,6 +406,7 @@ impl ItemWithCommonInfo for Wheel {
 
 #[derive(Debug, Deserialize)]
 pub struct CommonItemInfo {
+    pub id: ObjectId,
     pub category: Option<Arc<str>>,
 
     // example: { "price": 0.7, "damage": { "damage_type": "bullet", "amount": 0.9 }, "dispersion": 1.1 }
@@ -451,8 +452,7 @@ pub struct CommonItemInfo {
     pub degradation_multiplier: Option<serde_json::Value>,
 
     #[serde(rename(deserialize = "type"))]
-    #[expect(dead_code)] // TODO
-    type_: Arc<str>,
+    pub type_: Arc<str>,
 
     pub name: ItemName,
     pub description: Option<Description>,
@@ -500,9 +500,8 @@ pub struct CommonItemInfo {
     pub snippet_category: Option<serde_json::Value>,
 
     // Plenty of fields already availalble
-    #[expect(unused)]
     #[serde(flatten)]
-    extra: HashMap<Arc<str>, serde_json::Value>,
+    pub extra: HashMap<Arc<str>, serde_json::Value>,
 }
 
 impl CommonItemInfo {

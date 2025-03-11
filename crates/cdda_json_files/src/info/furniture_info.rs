@@ -1,4 +1,4 @@
-use crate::{CommonItemInfo, ObjectId, OptionalLinkedLater, TerrainInfo};
+use crate::{CommonItemInfo, ObjectId, OptionalLinkedLater, RequiredLinkedLater, TerrainInfo};
 use crate::{Flags, HashMap, ItemName};
 use serde::Deserialize;
 use std::sync::Arc;
@@ -58,7 +58,7 @@ pub enum BashItem {
 
 #[derive(Debug, Deserialize)]
 pub struct ItemOccurrence {
-    pub item: ObjectId,
+    pub item: RequiredLinkedLater<CommonItemInfo>,
     pub charges: Option<CountRange>,
     pub count: Option<CountRange>,
     pub prob: Option<Probability>,
