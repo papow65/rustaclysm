@@ -7,6 +7,7 @@ use crate::gameplay::{
     LastSeen, Location, MessageWriter, ObjectCategory, ObjectDefinition, Player, Pos,
     QueuedInstruction, cdda::Error,
 };
+use crate::here;
 use crate::hud::{
     BAD_TEXT_COLOR, ButtonBuilder, Fonts, GOOD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, ScrollList,
     SelectionList, WARN_TEXT_COLOR,
@@ -409,7 +410,7 @@ fn shown_recipes(
         .filter_map(|(recipe, autolearn, recipe_manuals)| {
             recipe
                 .result
-                .get_or(|error| eprintln!("Unknown recipe result: {error:#?}"))
+                .get_option(here!())
                 .map(|item| RecipeSituation {
                     recipe: recipe.clone(),
                     name: uppercase_first(item.name.single.clone()),
@@ -536,7 +537,7 @@ fn recipe_qualities(
         .filter_map(|required_quality| {
             required_quality
                 .quality
-                .get_or(|error| eprintln!("Quality not found: {error:#?}"))
+                .get_option(here!())
                 .map(|quality| QualitySituation {
                     name: uppercase_first(quality.name.single.clone()),
                     present: present.get(&quality).copied(),

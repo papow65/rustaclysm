@@ -1,4 +1,5 @@
 use crate::gameplay::{CardinalDirection, Pos, TileVariant, common::HorizontalDirection};
+use crate::here;
 use bevy::utils::HashMap;
 use cdda_json_files::{RequiredLinkedLater, TerrainInfo};
 use std::sync::Arc;
@@ -66,7 +67,5 @@ fn at(
     terrain: &HashMap<Pos, &RequiredLinkedLater<TerrainInfo>>,
     pos: Pos,
 ) -> Option<Arc<TerrainInfo>> {
-    terrain.get(&pos)?.get_or(|error| {
-        dbg!(error);
-    })
+    terrain.get(&pos)?.get_option(here!())
 }

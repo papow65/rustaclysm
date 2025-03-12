@@ -6,8 +6,17 @@ pub struct ObjectId(Arc<str>);
 
 impl ObjectId {
     #[must_use]
-    pub fn new(value: &str) -> Self {
+    pub fn new(value: impl Into<Arc<str>>) -> Self {
         Self(value.into())
+    }
+
+    #[must_use]
+    pub fn new_suffix(value: &String, suffix: Option<&str>) -> Self {
+        if let Some(suffix) = suffix {
+            Self::new(value.clone() + suffix)
+        } else {
+            Self::new(value.as_str())
+        }
     }
 
     #[must_use]

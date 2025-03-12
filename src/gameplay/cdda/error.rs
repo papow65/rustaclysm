@@ -32,6 +32,9 @@ pub(crate) enum Error {
     },
     Json {
         _wrapped: serde_json::Error,
+    },
+    JsonWithContext {
+        _wrapped: serde_json::Error,
         _file_path: PathBuf,
         _contents: Arc<str>,
     },
@@ -53,6 +56,12 @@ impl From<CddaJsonError> for Error {
 impl From<io::Error> for Error {
     fn from(value: io::Error) -> Self {
         Self::Io { _wrapped: value }
+    }
+}
+
+impl From<serde_json::Error> for Error {
+    fn from(value: serde_json::Error) -> Self {
+        Self::Json { _wrapped: value }
     }
 }
 

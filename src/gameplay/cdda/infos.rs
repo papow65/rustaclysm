@@ -11,6 +11,7 @@ use cdda_json_files::{
 };
 use glob::glob;
 use serde::de::DeserializeOwned;
+use std::path::Path;
 use std::{
     any::type_name, fs::read_to_string, ops::Deref, path::PathBuf, sync::Arc, time::Instant,
 };
@@ -287,24 +288,20 @@ pub(crate) struct Infos {
 }
 
 impl Infos {
-    fn literals_paths() -> impl Iterator<Item = PathBuf> {
+    fn json_infos_paths() -> impl Iterator<Item = PathBuf> {
         let json_file_pattern = AssetPaths::data().join("json").join("**").join("*.json");
         let json_file_pattern = json_file_pattern
-                    .as_path()
-                    .to_str()
-                    .expect("Path pattern should be valid UTF-8");
-            println!("Searching {json_file_pattern} for info files");
-            glob(json_file_pattern).expect("Glob pattern should match some readable paths")
+            .as_path()
+            .to_str()
+            .expect("Path pattern should be valid UTF-8");
+        println!("Searching {json_file_pattern} for info files");
+        glob(json_file_pattern)
+            .expect("Glob pattern should match some readable paths")
             .map(|json_path_result| json_path_result.expect("JSON path should be valid"))
-            .filter(|path| {
-                !path.ends_with("default_blacklist.json")
-                    && !path.ends_with("dreams.json")
-                    && !path.ends_with("effect_on_condition.json")
-            })
     }
 
     /// [`TypeId`] -> [`ObjectId`] -> property name -> property value
-    fn literal_json_infos()
+    fn parse_json_info_files()
     -> HashMap<TypeId, HashMap<ObjectId, serde_json::Map<String, serde_json::Value>>> {
         let mut literals = HashMap::default();
         for type_ids in TypeId::all() {
@@ -313,104 +310,125 @@ impl Infos {
             }
         }
 
-        let mut file_count = 0;
-        let mut info_count = 0;
-        for json_path in Self::literals_paths() {
-            //println!("Parsing {json_path:?}...");
-            let file_contents = read_to_string(&json_path)
-                .unwrap_or_else(|_| panic!("Could not read {}", json_path.display()));
-            let contents = match serde_json::from_str::<
-                Vec<serde_json::Map<String, serde_json::Value>>,
-            >(file_contents.as_str())
-            {
-                Ok(contents) => contents,
+        let mut parsed_file_count = 0;
+        let mut skipped_count = 0;
+        for json_path in Self::json_infos_paths() {
+            match Self::parse_json_info_file(&json_path, &mut literals, &mut skipped_count) {
+                Ok(()) => {
+                    parsed_file_count += 1;
+                }
                 Err(error) => {
-                    // TODO Correct this incorrect assumption, for example mapgen is not a list.
-                    eprintln!(
-                        "The file {json_path:?} should be valid JSON, containing a list of objects: {error:#?}"
-                    );
-                    continue;
+                    eprintln!("Error while processing {json_path:?}: {error:#?}");
                 }
+            }
+        }
+
+        let id_count = literals.values().map(HashMap::len).sum::<usize>();
+        println!(
+            "Found {id_count} ids ({skipped_count} skipped) in {parsed_file_count} info files"
+        );
+        assert!(!literals.is_empty(), "Some info should have been found");
+        literals
+    }
+
+    fn parse_json_info_file(
+        json_path: &Path,
+        literals: &mut HashMap<
+            TypeId,
+            HashMap<ObjectId, serde_json::Map<String, serde_json::Value>>,
+        >,
+        skipped_count: &mut usize,
+    ) -> Result<(), Error> {
+        //println!("Parsing {json_path:?}...");
+        let file_contents = read_to_string(json_path)?;
+        // TODO Correct the incorrect assumption that all files contain a list.
+        let contents = serde_json::from_str::<Vec<serde_json::Map<String, serde_json::Value>>>(
+            file_contents.as_str(),
+        )?;
+
+        for content in contents {
+            let Some(type_) = content.get("type") else {
+                eprintln!("'type' key not found in {json_path:?}");
+                *skipped_count += 1;
+                continue;
             };
-            file_count += 1;
+            let type_ = TypeId::get(type_.as_str().expect("'type' should have string value"));
+            if TypeId::UNUSED.contains(type_) || content.get("from_variant").is_some() {
+                *skipped_count += 1;
+                continue; // TODO
+            }
 
-            for content in contents {
-                let Some(type_) = content.get("type") else {
-                    eprintln!("'type' key not found in {json_path:?}");
-                    continue;
-                };
-                let type_ = TypeId::get(type_.as_str().expect("'type' should have string value"));
-                if TypeId::UNUSED.contains(type_) || content.get("from_variant").is_some() {
-                    continue; // TODO
+            let id_suffix = content.get("id_suffix").and_then(|suffix| suffix.as_str());
+
+            let mut ids = Vec::new();
+            match id_value(&content, json_path) {
+                serde_json::Value::String(id) => {
+                    ids.push(ObjectId::new_suffix(id, id_suffix));
                 }
+                serde_json::Value::Array(ids_array) => {
+                    for id in ids_array {
+                        match id {
+                            serde_json::Value::String(id) => {
+                                ids.push(ObjectId::new_suffix(id, id_suffix));
+                            }
+                            id => {
+                                eprintln!("Skipping non-string id in {json_path:?}: {id:?}");
+                            }
+                        }
+                    }
+                }
+                id => {
+                    eprintln!("Skipping unexpected id structure in {json_path:?}: {id:?}");
+                }
+            }
+            //println!("Info abount {:?} > {:?}", &type_, &ids);
+            let by_type = literals
+                .get_mut(&type_.clone())
+                .expect("All types should be present");
+            for id in ids {
+                if by_type.get(&id).is_some() {
+                    // TODO Provide a workaround for types (like recipes) where another id would not matter.
+                    eprintln!(
+                        "Duplicate usage of id {:?} in {:?} detected. One will be ignored.",
+                        &id, &type_
+                    );
+                }
+                by_type.insert(id.clone(), content.clone());
+            }
 
-                let mut ids = Vec::new();
-                match id_value(&content, &json_path) {
+            let mut aliases = Vec::new();
+            if let Some(alias) = content.get("alias") {
+                match alias {
                     serde_json::Value::String(id) => {
-                        ids.push(ObjectId::new(id.as_str()));
+                        aliases.push(ObjectId::new(id.as_str()));
                     }
                     serde_json::Value::Array(a) => {
                         for id in a {
-                            ids.push(ObjectId::new(
-                                id.as_str().expect("Id should have a string value"),
-                            ));
+                            aliases.push(ObjectId::new(id.as_str().expect("")));
                         }
                     }
                     _ => {
                         unreachable!();
                     }
                 }
-                //println!("Info abount {:?} > {:?}", &type_, &ids);
-                let by_type = literals
-                    .get_mut(&type_.clone())
-                    .expect("All types should be present");
-                for id in ids {
-                    if by_type.get(&id).is_some() {
-                        eprintln!(
-                            "Duplicate usage of id {:?} in {:?} detected. One will be ignored.",
-                            &id, &type_
-                        );
-                    }
-                    by_type.insert(id.clone(), content.clone());
-                    info_count += 1;
-                }
-
-                let mut aliases = Vec::new();
-                if let Some(alias) = content.get("alias") {
-                    match alias {
-                        serde_json::Value::String(id) => {
-                            aliases.push(ObjectId::new(id.as_str()));
-                        }
-                        serde_json::Value::Array(a) => {
-                            for id in a {
-                                aliases.push(ObjectId::new(id.as_str().expect("")));
-                            }
-                        }
-                        _ => {
-                            unreachable!();
-                        }
-                    }
-                }
-                //println!("Info abount {:?} > aliases {:?}", &type_, &aliases);
-                for alias in aliases {
-                    // Duplicates possible
-                    if by_type.get(&alias).is_none() {
-                        by_type.insert(alias.clone(), content.clone());
-                        info_count += 1;
-                    }
+            }
+            //println!("Info abount {:?} > aliases {:?}", &type_, &aliases);
+            for alias in aliases {
+                // Duplicates possible
+                if by_type.get(&alias).is_none() {
+                    by_type.insert(alias.clone(), content.clone());
                 }
             }
         }
-        println!("Found {info_count} ids in {file_count} info files");
-        assert!(!literals.is_empty(), "Some info should have been found");
-        literals
+
+        Ok(())
     }
 
     /// [`TypeId`] -> [`ObjectId`] -> property name -> property value
     fn enriched_json_infos()
     -> HashMap<TypeId, HashMap<ObjectId, serde_json::Map<String, serde_json::Value>>> {
         let mut enriched_json_infos = HashMap::default();
-        let literals = &Self::literal_json_infos();
+        let literals = &Self::parse_json_info_files();
         for (type_id, literal_entry) in literals {
             let enriched_of_type = enriched_json_infos
                 .entry(type_id.clone())
@@ -759,7 +777,7 @@ impl AsyncNew<Self> for Infos {
 
 fn id_value<'a>(
     content: &'a serde_json::Map<String, serde_json::Value>,
-    json_path: &'a PathBuf,
+    json_path: &'a Path,
 ) -> &'a serde_json::Value {
     if content
         .get("type")
@@ -768,31 +786,12 @@ fn id_value<'a>(
         assert_eq!(content.get("id"), None, "No 'id' field allowed");
         assert_eq!(content.get("from"), None, "No 'from' field allowed");
 
-        if let Some(suffix) = content.get("id_suffix") {
-            let composite = serde_json::Value::String(
-                content
-                    .get("result")
-                    .or_else(|| content.get("copy-from"))
-                    .unwrap_or_else(|| {
-                        panic!(
-                            "A recipe with an id suffix should have a 'result', or a 'copy-from' field: {content:?}"
-                        )
-                    })
-                    .as_str()
-                    .expect("'result' should be a string field")
-                    .to_owned()
-                    + " " + suffix
-                        .as_str()
-                        .expect("'id_suffix' should be a string field"),
-            );
-            return Box::leak(Box::new(composite));
-        }
-
         return content
             .get("abstract")
             .or_else(|| content.get("result"))
+            .or_else(|| content.get("copy-from"))
             .unwrap_or_else(|| {
-                panic!("A recipe should have an 'abstract' field, or a 'result' field: {content:?}")
+                panic!("A recipe should have an 'abstract' field, a 'result' field, or a 'copy-from' field: {content:#?}")
             });
     }
 

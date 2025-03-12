@@ -23,11 +23,12 @@ impl AssetLoader for MapLoader {
             .await
             .map_err(|err| Error::Io { _wrapped: err })?;
 
-        let map = serde_json::from_slice::<MapAsset>(&bytes).map_err(|err| Error::Json {
-            _wrapped: err,
-            _file_path: load_context.path().to_path_buf(),
-            _contents: Arc::from(from_utf8(&bytes[0..1000]).unwrap_or("(invalid UTF8)")),
-        })?;
+        let map =
+            serde_json::from_slice::<MapAsset>(&bytes).map_err(|err| Error::JsonWithContext {
+                _wrapped: err,
+                _file_path: load_context.path().to_path_buf(),
+                _contents: Arc::from(from_utf8(&bytes[0..1000]).unwrap_or("(invalid UTF8)")),
+            })?;
         Ok(map)
     }
 

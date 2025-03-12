@@ -20,7 +20,7 @@ impl TileLoader {
         let file_path = tileset_path.join("tile_config.json");
         let file_contents = read_to_string(&file_path)?;
         let cdda_tile_config = serde_json::from_str::<CddaTileConfig>(file_contents.as_str())
-            .map_err(|e| Error::Json {
+            .map_err(|e| Error::JsonWithContext {
                 _wrapped: e,
                 _file_path: file_path,
                 _contents: Arc::from(file_contents.as_str()),

@@ -118,8 +118,11 @@ impl<T: fmt::Debug + 'static> RequiredLinkedLater<T> {
         })
     }
 
-    pub fn get_or<F: FnOnce(&Error)>(&self, handle_error: F) -> Option<Arc<T>> {
-        self.get().inspect_err(handle_error).ok()
+    /// Logs the error that [`Self.get`] would give and converts the result to an option
+    pub fn get_option(&self, called_from: String) -> Option<Arc<T>> {
+        self.get()
+            .inspect_err(|error| eprintln!("{called_from} caused {error:#?}"))
+            .ok()
     }
 
     /// May only be called once

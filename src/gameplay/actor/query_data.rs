@@ -1,4 +1,5 @@
 use crate::gameplay::{spawn::TileSpawner, *};
+use crate::here;
 use crate::hud::text_color_expect_full;
 use bevy::ecs::query::QueryData;
 use bevy::prelude::{
@@ -664,9 +665,7 @@ impl ActorItem<'_> {
             let pos = *item.pos.unwrap_or(self.pos);
             let amount = *item.amount;
             commands.entity(item.entity).despawn_recursive();
-            if let Some(result) = craft.recipe.result.get_or(|error| {
-                dbg!(error);
-            }) {
+            if let Some(result) = craft.recipe.result.get_option(here!()) {
                 let cdda_item = CddaItem::from(&result);
                 if let Err(error) = spawner.spawn_item(parent, Some(pos), &cdda_item, amount) {
                     eprintln!("Spawning crafted item failed: {error:#?}");

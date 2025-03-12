@@ -5,6 +5,7 @@ use crate::gameplay::{
     SubzoneLevel, SubzoneLevelEntities, ZoneLevel, ZoneLevelIds, spawn::TileSpawner,
     spawn::log_spawn_result,
 };
+use crate::here;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{Res, ResMut, StateScoped, Transform, Visibility};
 use cdda_json_files::{
@@ -100,11 +101,7 @@ impl SubzoneSpawner<'_, '_> {
                         .furniture
                         .iter()
                         .filter_map(|at| pos_offset.get(at))
-                        .filter_map(|required| {
-                            required.get_or(|error| {
-                                dbg!(error);
-                            })
-                        });
+                        .filter_map(|required| required.get_option(here!()));
                     let item_repetitions =
                         submap.items.0.iter().filter_map(|at| pos_offset.get(at));
                     let spawns = submap

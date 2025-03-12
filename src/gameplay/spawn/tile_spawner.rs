@@ -8,6 +8,7 @@ use crate::gameplay::{
     TileVariant, Vehicle, VehiclePart, WalkingMode, cdda::Error, item::Pocket,
     spawn::log_spawn_result,
 };
+use crate::here;
 use crate::hud::{BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{
@@ -287,9 +288,7 @@ impl<'w> TileSpawner<'w, '_> {
                         Some(probability) => probability.random(),
                         None => true,
                     } {
-                        if let Some(item_info) = item.item.get_or(|error| {
-                            dbg!(error);
-                        }) {
+                        if let Some(item_info) = item.item.get_option(here!()) {
                             let amount = Amount(match &item.count {
                                 Some(count) => count.random(),
                                 None => 1,
