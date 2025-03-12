@@ -382,9 +382,12 @@ impl Infos {
                 }
             }
             //println!("Info abount {:?} > {:?}", &type_, &ids);
-            let by_type = literals
-                .get_mut(&type_.clone())
-                .expect("All types should be present");
+            let Some(by_type) = literals.get_mut(type_) else {
+                return Err(Error::UnknownTypeId {
+                    _type: type_.clone(),
+                });
+            };
+
             for id in ids {
                 if by_type.get(&id).is_some() {
                     // TODO Provide a workaround for types (like recipes) where another id would not matter.
