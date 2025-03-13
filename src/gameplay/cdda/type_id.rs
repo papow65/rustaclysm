@@ -61,7 +61,6 @@ impl TypeId {
         Self("BATTERY"), // not used in CDDA 0.G (yet?)
         Self("behavior"),
         Self("bionic"),
-        Self("BIONIC_ITEM"),
         Self("body_graph"),
         Self("body_part"),
         Self("butchery_requirement"),
