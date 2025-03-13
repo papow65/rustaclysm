@@ -423,9 +423,9 @@ impl Infos {
                         id.add_suffix(random_string.as_str());
                     } else {
                         eprintln!(
-                            "Duplicate usage of id {:?} in {:?} detected. One will be ignored.",
-                            &id, &type_
+                            "Duplicate usage of id {id:?} in {json_path:?} detected. One will be ignored.",
                         );
+                        continue;
                     }
                 }
                 by_type.insert(id.clone(), content.clone());
@@ -439,11 +439,17 @@ impl Infos {
                     }
                     serde_json::Value::Array(a) => {
                         for id in a {
-                            aliases.push(ObjectId::new(id.as_str().expect("")));
+                            if let Some(id) = id.as_str() {
+                                aliases.push(ObjectId::new(id));
+                            } else {
+                                eprintln!("Skipping unexpected alias in {json_path:?}: {alias:#?}");
+                            }
                         }
                     }
                     _ => {
-                        unreachable!();
+                        eprintln!(
+                            "Skipping unexpected alias structure in {json_path:?}: {alias:#?}",
+                        );
                     }
                 }
             }
