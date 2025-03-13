@@ -19,6 +19,11 @@ impl ObjectId {
         }
     }
 
+    pub fn add_suffix(&mut self, suffix: &str) {
+        assert!(!suffix.is_empty());
+        self.0 = (String::from(&*self.0) + suffix).into();
+    }
+
     #[must_use]
     pub fn starts_with(&self, part: &str) -> bool {
         self.0.starts_with(part)

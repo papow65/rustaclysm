@@ -9,6 +9,7 @@ use cdda_json_files::{
     PetArmor, Quality, Recipe, Requirement, Submap, TerrainInfo, Tool, ToolClothing, Toolmod,
     Using, UsingKind, VehiclePartInfo, VehiclePartMigration, Wheel,
 };
+use fastrand::alphabetic;
 use glob::glob;
 use serde::de::DeserializeOwned;
 use std::path::Path;
@@ -313,6 +314,10 @@ impl Infos {
         let mut parsed_file_count = 0;
         let mut skipped_count = 0;
         for json_path in Self::json_infos_paths() {
+            if json_path.ends_with(PathBuf::from("obsolete.json")) {
+                continue;
+            }
+
             match Self::parse_json_info_file(&json_path, &mut literals, &mut skipped_count) {
                 Ok(()) => {
                     parsed_file_count += 1;
@@ -347,12 +352,27 @@ impl Infos {
         )?;
 
         for content in contents {
+            if content
+                .get("obsolete")
+                .is_some_and(|value| value.as_bool().unwrap_or(false))
+            {
+                //println!("Skipping obsolete info in {json_path:?}");
+                *skipped_count += 1;
+                continue;
+            }
             let Some(type_) = content.get("type") else {
-                eprintln!("'type' key not found in {json_path:?}");
+                eprintln!("Skipping info without a 'type' in {json_path:?}: {content:#?}");
                 *skipped_count += 1;
                 continue;
             };
-            let type_ = TypeId::get(type_.as_str().expect("'type' should have string value"));
+            let Some(type_) = type_.as_str() else {
+                eprintln!(
+                    "Skipping info where 'type' is not a string ({type_:?}) in {json_path:?}: {content:#?}"
+                );
+                continue;
+            };
+            let type_ = TypeId::get(type_);
+
             if TypeId::UNUSED.contains(type_) || content.get("from_variant").is_some() {
                 *skipped_count += 1;
                 continue; // TODO
@@ -388,13 +408,25 @@ impl Infos {
                 });
             };
 
-            for id in ids {
-                if by_type.get(&id).is_some() {
-                    // TODO Provide a workaround for types (like recipes) where another id would not matter.
-                    eprintln!(
-                        "Duplicate usage of id {:?} in {:?} detected. One will be ignored.",
-                        &id, &type_
-                    );
+            for mut id in ids {
+                if let Some(previous) = by_type.get(&id) {
+                    if &content == previous {
+                        //println!("Ignoring exact duplicate info for {id:?}");
+                        continue;
+                    } else if TypeId::RECIPE.contains(type_) {
+                        //println!("Old: {:#?}", by_type.get(&id));
+                        //println!("New: {content:#?}");
+                        let random_string: String = [(); 16]
+                            .map(|()| alphabetic().to_ascii_lowercase())
+                            .iter()
+                            .collect();
+                        id.add_suffix(random_string.as_str());
+                    } else {
+                        eprintln!(
+                            "Duplicate usage of id {:?} in {:?} detected. One will be ignored.",
+                            &id, &type_
+                        );
+                    }
                 }
                 by_type.insert(id.clone(), content.clone());
             }
