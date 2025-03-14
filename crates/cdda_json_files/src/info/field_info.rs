@@ -5,6 +5,7 @@ use std::sync::Arc;
 #[derive(Debug, Deserialize)]
 #[serde(tag = "type")]
 pub struct FieldInfo {
+    pub id: ObjectId,
     pub intensity_levels: Vec<IntensityLevel>,
     pub looks_like: Option<ObjectId>,
 

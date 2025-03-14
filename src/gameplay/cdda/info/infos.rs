@@ -301,6 +301,12 @@ impl Infos {
                 .finalize(&self.furniture.map, "submap furniture");
         }
 
+        for fields_at in &submap.fields.0 {
+            for field in &fields_at.obj.0 {
+                field.field_info.finalize(&self.fields.map, "submap field");
+            }
+        }
+
         for items_at in &submap.items.0 {
             for item in &items_at.obj {
                 self.link_item(&item.as_amount().obj);

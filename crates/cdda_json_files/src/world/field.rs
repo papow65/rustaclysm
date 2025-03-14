@@ -1,9 +1,10 @@
-use crate::{FlatVec, ObjectId};
+use crate::{FieldInfo, FlatVec, RequiredLinkedLater};
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
 pub struct Field {
-    pub id: ObjectId,
+    #[serde(rename = "id")]
+    pub field_info: RequiredLinkedLater<FieldInfo>,
 
     #[expect(unused)]
     intensity: i32,

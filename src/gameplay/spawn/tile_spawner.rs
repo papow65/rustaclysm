@@ -83,7 +83,7 @@ impl<'w> TileSpawner<'w, '_> {
         for fields in fields {
             //dbg!(&fields);
             for field in &fields.0 {
-                self.spawn_field(infos, subzone_level_entity, pos, &field.id);
+                self.spawn_field(subzone_level_entity, pos, field);
             }
         }
     }
@@ -175,24 +175,19 @@ impl<'w> TileSpawner<'w, '_> {
         Ok(entity)
     }
 
-    fn spawn_field(&mut self, infos: &Infos, parent: Entity, pos: Pos, id: &ObjectId) {
-        let field_info = match infos.fields.get(id) {
-            Ok(field_info) => field_info,
-            Err(error) => {
-                dbg!(error);
-                return;
-            }
+    fn spawn_field(&mut self, parent: Entity, pos: Pos, field: &Field) {
+        let Some(field_info) = field.field_info.get_option(here!()) else {
+            return;
         };
+
         let object_name = ObjectName::new(field_info.name().clone(), BAD_TEXT_COLOR);
 
         let definition = &ObjectDefinition {
             category: ObjectCategory::Field,
-            id: id.clone(),
+            id: field_info.id.clone(),
         };
         let entity = self.spawn_object(parent, Some(pos), definition, object_name, None);
-        self.commands
-            .entity(entity)
-            .insert(Shared::new(field_info.clone()));
+        self.commands.entity(entity).insert(Shared::new(field_info));
     }
 
     pub(crate) fn spawn_item(
