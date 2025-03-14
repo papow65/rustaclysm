@@ -32,10 +32,10 @@ use self::actor::{
     Unwield, WalkingMode, Wield,
 };
 use self::cdda::{
-    CddaPlugin, Info, Infos, Layers, MapAsset, MapManager, MapMemoryAsset, MapMemoryManager,
-    MeshInfo, Model, ModelShape, ObjectCategory, OvermapAsset, OvermapBufferAsset,
-    OvermapBufferManager, OvermapManager, PathFor, RepetitionBlockExt, SpriteLayer,
-    SpriteOrientation, TextureInfo, TileLoader, TileVariant, Transform2d, TypeId,
+    CddaPlugin, Infos, Layers, MapAsset, MapManager, MapMemoryAsset, MapMemoryManager, MeshInfo,
+    Model, ModelShape, ObjectCategory, OvermapAsset, OvermapBufferAsset, OvermapBufferManager,
+    OvermapManager, PathFor, RepetitionBlockExt, SpriteLayer, SpriteOrientation, TextureInfo,
+    TileLoader, TileVariant, Transform2d, TypeId,
 };
 use self::common::{
     AssetState, CancelHandling, CardinalDirection, Evolution, HorizontalDirection, Interruption,
@@ -46,8 +46,8 @@ use self::common::{
 use self::components::{
     Accessible, Appearance, CameraBase, Closeable, Corpse, CorpseRaise, Craft, ExamineCursor,
     HealingDuration, Hurdle, LastSeen, Level, Life, Melee, MissingAsset, ObjectDefinition,
-    ObjectName, Obstacle, Opaque, OpaqueFloor, Openable, Overzone, PlayerWielded, Pos, StairsDown,
-    StairsUp, StandardIntegrity, SubzoneLevel, Vehicle, VehiclePart, Zone, ZoneLevel,
+    ObjectName, Obstacle, Opaque, OpaqueFloor, Openable, Overzone, PlayerWielded, Pos, Shared,
+    StairsDown, StairsUp, StandardIntegrity, SubzoneLevel, Vehicle, VehiclePart, Zone, ZoneLevel,
 };
 use self::events::{
     ActorChange, ActorEvent, CorpseChange, CorpseEvent, Damage, DespawnSubzoneLevel,

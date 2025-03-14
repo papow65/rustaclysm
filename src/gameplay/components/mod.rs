@@ -1,14 +1,14 @@
 mod object_name;
 mod pos;
+mod shared;
 mod vehicle;
 
-pub(crate) use object_name::ObjectName;
-pub(crate) use pos::{Level, Overzone, Pos, SubzoneLevel, Zone, ZoneLevel};
-pub(crate) use vehicle::{Vehicle, VehiclePart};
+pub(crate) use self::object_name::ObjectName;
+pub(crate) use self::pos::{Level, Overzone, Pos, SubzoneLevel, Zone, ZoneLevel};
+pub(crate) use self::shared::Shared;
+pub(crate) use self::vehicle::{Vehicle, VehiclePart};
 
-use crate::gameplay::{
-    BaseSpeed, Damage, Evolution, Info, Limited, ObjectCategory, Player, Visible,
-};
+use crate::gameplay::{BaseSpeed, Damage, Evolution, Limited, ObjectCategory, Player, Visible};
 use bevy::prelude::{AlphaMode, Assets, Color, Component, MeshMaterial3d, Srgba, StandardMaterial};
 use cdda_json_files::{CommonItemInfo, MoveCost, MoveCostIncrease, ObjectId, Recipe};
 use std::sync::Arc;
@@ -154,7 +154,7 @@ pub(crate) struct Melee {
 }
 
 impl Melee {
-    pub(crate) fn damage(&self, melee_weapon: Option<&Info<CommonItemInfo>>) -> u16 {
+    pub(crate) fn damage(&self, melee_weapon: Option<&Shared<CommonItemInfo>>) -> u16 {
         (1..=self.dices)
             .map(|_| {
                 fastrand::u16(

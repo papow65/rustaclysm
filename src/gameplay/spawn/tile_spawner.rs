@@ -2,11 +2,10 @@ use crate::application::ApplicationState;
 use crate::gameplay::{
     Accessible, ActiveSav, Amount, Aquatic, BaseSpeed, BodyContainers, CameraBase, Closeable,
     Containable, Craft, ExamineCursor, Explored, Faction, Filthy, HealingDuration, Health, Hurdle,
-    Info, Infos, ItemIntegrity, LastSeen, LevelOffset, Life, Limited, LocalTerrain, Melee,
-    ModelFactory, ObjectCategory, ObjectDefinition, ObjectName, Obstacle, Opaque, OpaqueFloor,
-    Openable, Player, Pos, PosOffset, StairsDown, StairsUp, Stamina, StandardIntegrity,
-    TileVariant, Vehicle, VehiclePart, WalkingMode, cdda::Error, item::Pocket,
-    spawn::log_spawn_result,
+    Infos, ItemIntegrity, LastSeen, LevelOffset, Life, Limited, LocalTerrain, Melee, ModelFactory,
+    ObjectCategory, ObjectDefinition, ObjectName, Obstacle, Opaque, OpaqueFloor, Openable, Player,
+    Pos, PosOffset, Shared, StairsDown, StairsUp, Stamina, StandardIntegrity, TileVariant, Vehicle,
+    VehiclePart, WalkingMode, cdda::Error, item::Pocket, spawn::log_spawn_result,
 };
 use crate::here;
 use crate::hud::{BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR};
@@ -112,7 +111,7 @@ impl<'w> TileSpawner<'w, '_> {
         let entity = self.spawn_object(parent, Some(pos), definition, object_name, None);
         let mut entity = self.commands.entity(entity);
         entity.insert((
-            Info::new(character_info.clone()),
+            Shared::new(character_info.clone()),
             Life,
             Obstacle,
             Health(Limited::full(character_info.hp.unwrap_or(60) as u16)),
@@ -193,7 +192,7 @@ impl<'w> TileSpawner<'w, '_> {
         let entity = self.spawn_object(parent, Some(pos), definition, object_name, None);
         self.commands
             .entity(entity)
-            .insert(Info::new(field_info.clone()));
+            .insert(Shared::new(field_info.clone()));
     }
 
     pub(crate) fn spawn_item(
@@ -231,7 +230,7 @@ impl<'w> TileSpawner<'w, '_> {
 
         let mut entity = self.commands.entity(object_entity);
         entity.insert((
-            Info::new(item_info.clone()),
+            Shared::new(item_info.clone()),
             amount,
             Containable {
                 // Based on cataclysm-ddasrc/mtype.cpp lines 47-48
@@ -340,7 +339,7 @@ impl<'w> TileSpawner<'w, '_> {
         let object_name = ObjectName::new(furniture_info.name.clone(), HARD_TEXT_COLOR);
         let entity = self.spawn_object(parent, Some(pos), definition, object_name, None);
         let mut entity = self.commands.entity(entity);
-        entity.insert(Info::new(furniture_info.clone()));
+        entity.insert(Shared::new(furniture_info.clone()));
 
         if !furniture_info.flags.transparent() {
             entity.insert(Opaque);
@@ -383,7 +382,7 @@ impl<'w> TileSpawner<'w, '_> {
             Some(local_terrain.variant),
         );
         let mut entity = self.commands.entity(entity);
-        entity.insert(Info::new(local_terrain.info.clone()));
+        entity.insert(Shared::new(local_terrain.info.clone()));
 
         if local_terrain.info.move_cost.accessible() {
             if local_terrain.info.close.get().is_some() {
@@ -480,7 +479,7 @@ impl<'w> TileSpawner<'w, '_> {
             .or_else(|| part.open.then_some(TileVariant::Open));
         let entity = self.spawn_object(parent, Some(pos), definition, object_name, variant);
         self.commands.entity(entity).insert((
-            Info::new(part_info.clone()),
+            Shared::new(part_info.clone()),
             VehiclePart {
                 offset: PosOffset {
                     x: part.mount_dx,

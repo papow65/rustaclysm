@@ -1,6 +1,6 @@
 use crate::gameplay::{
-    Amount, Containable, Filthy, Fragment, Info, ItemIntegrity, ObjectDefinition, ObjectName, Pos,
-    Positioning,
+    Amount, Containable, Filthy, Fragment, ItemIntegrity, ObjectDefinition, ObjectName, Pos,
+    Positioning, Shared,
 };
 use crate::hud::text_color_expect_half;
 use bevy::ecs::query::QueryData;
@@ -20,7 +20,7 @@ pub(crate) struct Item {
     pub(crate) integrity: &'static ItemIntegrity,
     pub(crate) containable: &'static Containable,
     pub(crate) parent: &'static Parent,
-    pub(crate) common_info: &'static Info<CommonItemInfo>,
+    pub(crate) common_info: &'static Shared<CommonItemInfo>,
 }
 
 impl<'a> ItemItem<'a> {

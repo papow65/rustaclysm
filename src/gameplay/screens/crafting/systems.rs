@@ -3,9 +3,9 @@ use crate::gameplay::screens::crafting::components::{
 };
 use crate::gameplay::screens::crafting::resource::CraftingScreen;
 use crate::gameplay::{
-    ActiveSav, Amount, BodyContainers, Clock, GameplayScreenState, Info, Infos, InstructionQueue,
+    ActiveSav, Amount, BodyContainers, Clock, GameplayScreenState, Infos, InstructionQueue,
     LastSeen, Location, MessageWriter, ObjectCategory, ObjectDefinition, Player, Pos,
-    QueuedInstruction, cdda::Error,
+    QueuedInstruction, Shared, cdda::Error,
 };
 use crate::here;
 use crate::hud::{
@@ -39,8 +39,8 @@ pub(super) struct Nearby {
     entity: Entity,
     definition: &'static ObjectDefinition,
     amount: &'static Amount,
-    common_item_info: Option<&'static Info<CommonItemInfo>>,
-    furniture_info: Option<&'static Info<FurnitureInfo>>,
+    common_item_info: Option<&'static Shared<CommonItemInfo>>,
+    furniture_info: Option<&'static Shared<FurnitureInfo>>,
 }
 
 #[derive(Debug)]

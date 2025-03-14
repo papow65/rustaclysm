@@ -1,6 +1,6 @@
 mod active_sav;
 mod error;
-mod infos;
+mod info;
 mod object_definition;
 mod paths;
 mod plugin;
@@ -11,7 +11,7 @@ mod type_id;
 
 pub(crate) use self::active_sav::ActiveSav;
 pub(crate) use self::error::Error;
-pub(crate) use self::infos::{Info, Infos};
+pub(crate) use self::info::Infos;
 pub(crate) use self::object_definition::ObjectCategory;
 pub(crate) use self::paths::{PathFor, SavPath, WorldPath};
 pub(crate) use self::plugin::CddaPlugin;

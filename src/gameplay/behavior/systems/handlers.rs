@@ -1,11 +1,10 @@
 //! These systems are part of [`BehaviorSchedule`](`crate::gameplay::behavior::schedule::BehaviorSchedule`).
 
-use crate::gameplay::Info;
 use crate::gameplay::{
     Actor, ActorEvent, Amount, Clock, ContainerLimits, Corpse, CorpseEvent, CorpseRaise, Damage,
     Faction, Fragment, GameplayScreenState, Healing, Health, Infos, Item, ItemHierarchy, Life,
     Limited, LocalTerrain, MessageWriter, ObjectCategory, ObjectDefinition, ObjectName, Obstacle,
-    Phrase, Player, Pos, Stamina, StandardIntegrity, Subject, TerrainEvent, Toggle,
+    Phrase, Player, Pos, Shared, Stamina, StandardIntegrity, Subject, TerrainEvent, Toggle,
     VisualizationUpdate, WalkingMode, spawn::TileSpawner,
 };
 use crate::util::log_if_slow;
@@ -53,7 +52,7 @@ pub(in super::super) fn toggle_doors(
     mut toggle_reader: EventReader<TerrainEvent<Toggle>>,
     mut spawner: TileSpawner,
     mut visualization_update: ResMut<VisualizationUpdate>,
-    terrain: Query<(&Pos, &Info<TerrainInfo>, &Parent)>,
+    terrain: Query<(&Pos, &Shared<TerrainInfo>, &Parent)>,
 ) {
     let start = Instant::now();
 
@@ -281,8 +280,8 @@ pub(in super::super) fn update_damaged_terrain(
         &ObjectName,
         &mut StandardIntegrity,
         &ObjectDefinition,
-        Option<&Info<TerrainInfo>>,
-        Option<&Info<FurnitureInfo>>,
+        Option<&Shared<TerrainInfo>>,
+        Option<&Shared<FurnitureInfo>>,
         &Parent,
     )>,
 ) {
