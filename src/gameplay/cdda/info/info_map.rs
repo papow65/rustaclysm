@@ -148,14 +148,14 @@ fn link_bash(
     );
     bash.furniture.finalize(
         &furniture_info.map,
-        format!("terrain for bashed {name}").as_str(),
+        format!("furniture for bashed {name}").as_str(),
     );
     if let Some(BashItems::Explicit(bash_items)) = &bash.items {
         for bash_item in bash_items {
             if let BashItem::Single(item_occurrence) = bash_item {
                 item_occurrence.item.finalize(
                     &common_item_infos.map,
-                    format!("terrain for bashed {name}").as_str(),
+                    format!("items for bashed {name}").as_str(),
                 );
             }
         }

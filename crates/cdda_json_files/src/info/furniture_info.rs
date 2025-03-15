@@ -38,6 +38,7 @@ pub struct Bash {
 
     #[serde(rename = "furn_set")]
     pub furniture: OptionalLinkedLater<FurnitureInfo>,
+
     pub items: Option<BashItems>,
 
     #[expect(unused)]
