@@ -2,7 +2,7 @@ use crate::gameplay::SpriteLayer;
 
 const SEPARATION_OFFSET: f32 = 0.005;
 
-#[derive(Clone, Debug, Hash, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
 pub(crate) enum ObjectCategory {
     Terrain,
     Field,

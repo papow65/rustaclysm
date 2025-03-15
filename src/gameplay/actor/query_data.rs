@@ -502,7 +502,7 @@ impl ActorItem<'_> {
         //trace!("{:?}", (&left_over_amount);
         let left_over_entity = commands
             .spawn((
-                taken.definition.clone(),
+                taken.common_info.clone(),
                 taken.name.clone(),
                 left_over_amount,
                 taken.containable.clone(),

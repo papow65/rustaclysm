@@ -1,6 +1,6 @@
-use crate::gameplay::{MeshInfo, ObjectCategory, ObjectDefinition, SpriteLayer, TextureInfo};
+use crate::gameplay::{MeshInfo, ObjectCategory, SpriteLayer, TextureInfo};
 use bevy::prelude::{AlphaMode, Mesh, Transform, Vec2, Vec3};
-use cdda_json_files::SpriteNumber;
+use cdda_json_files::{InfoId, SpriteNumber, TerrainInfo, UntypedInfoId};
 use std::path::PathBuf;
 use units::Distance;
 
@@ -119,19 +119,20 @@ pub(crate) enum ModelShape {
 
 impl ModelShape {
     fn derive(
-        definition: &ObjectDefinition,
+        info_id: &UntypedInfoId,
+        category: ObjectCategory,
         layer: SpriteLayer,
         transform2d: &Transform2d,
     ) -> Self {
-        if definition.category == ObjectCategory::ZoneLevel
-            || definition.id.starts_with("t_rock_floor")
-            || definition.id.starts_with("t_rock_roof")
+        if category == ObjectCategory::ZoneLevel
+            || info_id.starts_with("t_rock_floor")
+            || info_id.starts_with("t_rock_roof")
         {
             Self::Plane {
                 orientation: SpriteOrientation::Horizontal,
                 transform2d: transform2d.clone(),
             }
-        } else if definition.id.contains("solar_panel") {
+        } else if info_id.contains("solar_panel") {
             Self::Plane {
                 orientation: SpriteOrientation::Horizontal,
                 transform2d: Transform2d {
@@ -140,21 +141,21 @@ impl ModelShape {
                         + Vec2::new(0.0, -0.5 * Distance::ADJACENT.meter_f32()),
                 },
             }
-        } else if definition.id.starts_with("t_rock")
-            || definition.id.starts_with("t_wall")
-            || definition.id.starts_with("t_brick_wall")
-            || definition.id.starts_with("t_concrete_wall")
-            || definition.id.starts_with("t_reinforced_glass")
-            || definition.id.starts_with("t_paper")
-            || definition.id.starts_with("t_soil")
+        } else if info_id.starts_with("t_rock")
+            || info_id.starts_with("t_wall")
+            || info_id.starts_with("t_brick_wall")
+            || info_id.starts_with("t_concrete_wall")
+            || info_id.starts_with("t_reinforced_glass")
+            || info_id.starts_with("t_paper")
+            || info_id.starts_with("t_soil")
         {
             Self::Cuboid {
                 height: Distance::VERTICAL.meter_f32(),
             }
-        } else if definition.id.starts_with("t_window")
-            || definition.id.starts_with("t_door")
-            || definition.id.starts_with("t_curtains")
-            || definition.id.starts_with("t_bars")
+        } else if info_id.starts_with("t_window")
+            || info_id.starts_with("t_door")
+            || info_id.starts_with("t_curtains")
+            || info_id.starts_with("t_bars")
         {
             Self::Plane {
                 orientation: SpriteOrientation::Vertical,
@@ -166,11 +167,11 @@ impl ModelShape {
                     offset: Vec2::ZERO,
                 },
             }
-        } else if definition.id.starts_with("t_sewage_pipe") {
+        } else if info_id.starts_with("t_sewage_pipe") {
             Self::Cuboid {
                 height: Distance::ADJACENT.meter_f32(),
             }
-        } else if definition.id.starts_with("mon_") {
+        } else if info_id.starts_with("mon_") {
             Self::Plane {
                 orientation: SpriteOrientation::Vertical,
                 transform2d: transform2d.clone(),
@@ -181,15 +182,15 @@ impl ModelShape {
                 transform2d: transform2d.clone(),
             }
         } else if 1.0 < transform2d.scale.x.max(transform2d.scale.y)
-            || definition.id.starts_with("t_fence")
-            || definition.id.starts_with("t_chainfence")
-            || definition.id.starts_with("t_chaingate")
-            || definition.id.starts_with("t_splitrail_fence")
-            || definition.id.starts_with("t_shrub")
-            || definition.id.starts_with("t_flower")
-            || definition.id.starts_with("f_plant")
-            || definition.id.starts_with("t_grass_long")
-            || definition.id.starts_with("t_grass_tall")
+            || info_id.starts_with("t_fence")
+            || info_id.starts_with("t_chainfence")
+            || info_id.starts_with("t_chaingate")
+            || info_id.starts_with("t_splitrail_fence")
+            || info_id.starts_with("t_shrub")
+            || info_id.starts_with("t_flower")
+            || info_id.starts_with("f_plant")
+            || info_id.starts_with("t_grass_long")
+            || info_id.starts_with("t_grass_tall")
         {
             Self::Plane {
                 orientation: SpriteOrientation::Vertical,
@@ -241,19 +242,28 @@ pub(crate) struct Model {
 
 impl Model {
     pub(crate) fn new(
-        definition: &ObjectDefinition,
+        info_id: &UntypedInfoId,
+        category: ObjectCategory,
         layer: SpriteLayer,
         sprite_number: SpriteNumber,
         texture_info: &TextureInfo,
     ) -> Self {
+        let alpha_mode = if category == ObjectCategory::Terrain
+            && InfoId::<TerrainInfo>::from(info_id.clone()).is_ground()
+        {
+            AlphaMode::Opaque
+        } else {
+            AlphaMode::Blend
+        };
+
         Self {
-            shape: ModelShape::derive(definition, layer, &texture_info.transform2d),
+            shape: ModelShape::derive(info_id, category, layer, &texture_info.transform2d),
             layer,
             sprite_number,
             mesh_info: texture_info.mesh_info,
             texture_path: texture_info.image_path.clone(),
-            vertical_offset: definition.category.vertical_offset(&layer),
-            alpha_mode: definition.alpha_mode(),
+            vertical_offset: category.vertical_offset(&layer),
+            alpha_mode,
         }
     }
 

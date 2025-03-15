@@ -1,8 +1,6 @@
-use crate::gameplay::item::Pocket;
-use crate::gameplay::phrase::Phrase;
 use crate::gameplay::{
-    Amount, Containable, Infos, ItemHierarchy, ItemIntegrity, ObjectCategory, ObjectDefinition,
-    Pos, StandardIntegrity,
+    Amount, Containable, Infos, ItemHierarchy, ItemIntegrity, Pos, StandardIntegrity, item::Pocket,
+    phrase::Phrase,
 };
 use bevy::prelude::{
     App, Changed, Children, Entity, FixedUpdate, IntoSystemConfigs as _, Or, Parent, Plugin, Query,
@@ -18,24 +16,10 @@ impl Plugin for ItemChecksPlugin {
         app.add_systems(
             FixedUpdate,
             (
-                check_item_category,
                 check_item_parents,
                 check_single_item.run_if(resource_exists::<Infos>),
                 check_integrities,
             ),
-        );
-    }
-}
-
-#[expect(clippy::needless_pass_by_value)]
-fn check_item_category(items: Query<&ObjectDefinition, Or<(With<Amount>, With<Containable>)>>) {
-    if cfg!(debug_assertions) {
-        let definition = items
-            .iter()
-            .find(|definition| definition.category != ObjectCategory::Item);
-        assert_eq!(
-            definition, None,
-            "Incorrect category for item {definition:?}"
         );
     }
 }

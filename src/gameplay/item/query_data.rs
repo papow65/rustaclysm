@@ -1,6 +1,5 @@
 use crate::gameplay::{
-    Amount, Containable, Filthy, Fragment, ItemIntegrity, ObjectDefinition, ObjectName, Pos,
-    Positioning, Shared,
+    Amount, Containable, Filthy, Fragment, ItemIntegrity, ObjectName, Pos, Positioning, Shared,
 };
 use crate::hud::text_color_expect_half;
 use bevy::ecs::query::QueryData;
@@ -12,7 +11,6 @@ use std::f32::consts::FRAC_1_PI;
 #[query_data(derive(Debug))]
 pub(crate) struct Item {
     pub(crate) entity: Entity,
-    pub(crate) definition: &'static ObjectDefinition,
     pub(crate) name: &'static ObjectName,
     pub(crate) pos: Option<&'static Pos>,
     pub(crate) amount: &'static Amount,

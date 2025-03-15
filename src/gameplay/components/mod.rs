@@ -8,9 +8,9 @@ pub(crate) use self::pos::{Level, Overzone, Pos, SubzoneLevel, Zone, ZoneLevel};
 pub(crate) use self::shared::Shared;
 pub(crate) use self::vehicle::{Vehicle, VehiclePart};
 
-use crate::gameplay::{BaseSpeed, Damage, Evolution, Limited, ObjectCategory, Player, Visible};
+use crate::gameplay::{BaseSpeed, Damage, Evolution, Limited, Player, Visible};
 use bevy::prelude::{AlphaMode, Assets, Color, Component, MeshMaterial3d, Srgba, StandardMaterial};
-use cdda_json_files::{CommonItemInfo, InfoId, MoveCost, MoveCostIncrease, Recipe, TerrainInfo, UntypedInfoId};
+use cdda_json_files::{CommonItemInfo, MoveCost, MoveCostIncrease, Recipe};
 use std::sync::Arc;
 use units::{Duration, Timestamp};
 
@@ -47,22 +47,6 @@ pub(crate) struct Opaque;
 /// Blocks vision to and from the level below
 #[derive(Component)]
 pub(crate) struct OpaqueFloor;
-
-#[derive(Clone, Debug, PartialEq, Component)]
-pub(crate) struct ObjectDefinition {
-    pub(crate) category: ObjectCategory,
-    pub(crate) id: UntypedInfoId,
-}
-
-impl ObjectDefinition {
-    pub(crate) fn alpha_mode(&self) -> AlphaMode {
-        if self.category == ObjectCategory::Terrain && InfoId::<TerrainInfo>::from(self.id.clone()).is_ground() {
-            AlphaMode::Opaque
-        } else {
-            AlphaMode::Blend
-        }
-    }
-}
 
 #[derive(PartialEq, Component)]
 pub(crate) struct StandardIntegrity(pub(crate) Limited);

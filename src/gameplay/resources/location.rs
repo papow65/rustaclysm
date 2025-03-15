@@ -20,7 +20,7 @@ impl Location {
                 .get::<Pos>()
                 .expect("Pos should be present because it was just added");
             //if let Some(faction) = world.entity(entity).get::<Faction>() {
-            //    trace!("Adding {pos:?} to {faction:?} {:?}", world.entity(entity).get::<ObjectDefinition>());
+            //    trace!("Adding {pos:?} to {faction:?} {:?}", world.entity(entity).get::<CharacterInfo>());
             //}
 
             let Some(mut this) = world.get_resource_mut::<Self>() else {
@@ -35,7 +35,7 @@ impl Location {
         hooks.on_remove(|mut world, entity, _component_id| {
             //let removed_pos = *world.entity(entity).get::<Pos>().expect("Pos should be present because it is being removed");
             //if let Some(faction) = world.entity(entity).get::<Faction>() {
-            //    trace!("Removing {removed_pos:?} from {faction:?} {:?}",world.entity(entity).get::<ObjectDefinition>());
+            //    trace!("Removing {removed_pos:?} from {faction:?} {:?}",world.entity(entity).get::<CharacterInfo>());
             //}
 
             let Some(mut this) = world.get_resource_mut::<Self>() else {

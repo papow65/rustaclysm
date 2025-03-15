@@ -1,5 +1,6 @@
+use crate::gameplay::cdda::ObjectCategory;
 use crate::gameplay::cdda::{Atlas, TextureInfo, error::Error};
-use crate::gameplay::{Layers, Model, ObjectDefinition, SpriteLayer, TileVariant};
+use crate::gameplay::{Layers, Model, SpriteLayer, TileVariant};
 use crate::util::{AssetPaths, AsyncNew};
 use bevy::prelude::{Resource, error, warn};
 use bevy::utils::{Entry, HashMap};
@@ -73,7 +74,8 @@ impl TileLoader {
 
     pub(crate) fn get_models(
         &self,
-        definition: &ObjectDefinition,
+        info_id: &UntypedInfoId,
+        category: ObjectCategory,
         id_variants: &[UntypedInfoId],
         tile_variant: Option<TileVariant>,
     ) -> Layers<Model> {
@@ -99,7 +101,7 @@ impl TileLoader {
             if let Some(expected_legth) = tile_variant.expected_length() {
                 if vec.len() != expected_legth {
                     warn!(
-                        "Expected {expected_legth} variants for {tile_variant:?} tiles of {definition:?}, but got {:?}",
+                        "Expected {expected_legth} variants for {tile_variant:?} tiles of {category:?} {info_id:?}, but got {:?}",
                         &vec
                     );
                 }
@@ -113,8 +115,8 @@ impl TileLoader {
         .or_else(|| foregrounds.random());
         let background = backgrounds.random();
 
-        let foreground_model = self.to_model(foreground, definition, SpriteLayer::Front);
-        let background_model = self.to_model(background, definition, SpriteLayer::Back);
+        let foreground_model = self.to_model(foreground, info_id, category, SpriteLayer::Front);
+        let background_model = self.to_model(background, info_id, category, SpriteLayer::Back);
 
         match (foreground_model, background_model) {
             (foreground_model, Some(background_model)) => Layers {
@@ -126,7 +128,9 @@ impl TileLoader {
                 overlay: None,
             },
             (None, None) => {
-                panic!("No foreground or background for {definition:?} and {id_variants:?}");
+                panic!(
+                    "No foreground or background for {category:?} {info_id:?} and {id_variants:?}"
+                );
             }
         }
     }
@@ -134,12 +138,14 @@ impl TileLoader {
     fn to_model(
         &self,
         sprite_number: Option<SpriteNumber>,
-        definition: &ObjectDefinition,
+        info_id: &UntypedInfoId,
+        category: ObjectCategory,
         layer: SpriteLayer,
     ) -> Option<Model> {
         sprite_number.map(|sprite_number| {
             Model::new(
-                definition,
+                info_id,
+                category,
                 layer,
                 sprite_number,
                 &self.textures[&sprite_number],

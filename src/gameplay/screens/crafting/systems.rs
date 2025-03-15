@@ -1,11 +1,10 @@
 use crate::gameplay::screens::crafting::components::{
     AlternativeSituation, ComponentSituation, QualitySituation, RecipeSituation,
 };
-use crate::gameplay::screens::crafting::resource::CraftingScreen;
 use crate::gameplay::{
     ActiveSav, Amount, BodyContainers, Clock, GameplayScreenState, Infos, InstructionQueue,
-    LastSeen, Location, MessageWriter, ObjectCategory, ObjectDefinition, Player, Pos,
-    QueuedInstruction, Shared, cdda::Error,
+    LastSeen, Location, MessageWriter, Player, Pos, QueuedInstruction, Shared, cdda::Error,
+    screens::crafting::resource::CraftingScreen,
 };
 use crate::here;
 use crate::hud::{
@@ -37,7 +36,6 @@ const FIND_RANGE: RangeInclusive<i32> = (-MAX_FIND_DISTANCE)..=MAX_FIND_DISTANCE
 #[query_data(derive(Debug))]
 pub(super) struct Nearby {
     entity: Entity,
-    definition: &'static ObjectDefinition,
     amount: &'static Amount,
     common_item_info: Option<&'static Shared<CommonItemInfo>>,
     furniture_info: Option<&'static Shared<FurnitureInfo>>,
@@ -374,7 +372,6 @@ fn find_nearby<'a>(
 fn nearby_manuals(nearby_items: &[NearbyItem]) -> HashMap<InfoId<CommonItemInfo>, Arc<str>> {
     nearby_items
         .iter()
-        .filter(|nearby| nearby.definition.category == ObjectCategory::Item)
         .filter_map(|nearby| nearby.common_item_info)
         .filter(|common_item_info| {
             common_item_info
@@ -491,15 +488,17 @@ fn recipe_manuals(
 fn nearby_qualities(nearby_items: &[NearbyItem]) -> HashMap<Arc<Quality>, i8> {
     nearby_items
         .iter()
-        .filter_map(|nearby| match nearby.definition.category {
-            ObjectCategory::Item => nearby.common_item_info.map(|item| item.qualities.get_all()),
-            ObjectCategory::Furniture => nearby.furniture_info.and_then(|furniture| {
-                furniture
+        .filter_map(|nearby| {
+            if let Some(common_item_info) = nearby.common_item_info {
+                Some(common_item_info.qualities.get_all())
+            } else if let Some(furniture_info) = nearby.furniture_info {
+                furniture_info
                     .crafting_pseudo_item
                     .get()
                     .map(|item| item.qualities.get_all())
-            }),
-            _ => None,
+            } else {
+                unreachable!()
+            }
         })
         .flatten()
         .fold(
@@ -602,7 +601,12 @@ fn recipe_components(
                     .map(|(item_id, item, required)| {
                         let (item_entities, amounts): (Vec<_>, Vec<&Amount>) = present
                             .iter()
-                            .filter(|nearby| nearby.definition.id == *item_id.untyped())
+                            .filter(|nearby| {
+                                nearby
+                                    .common_item_info
+                                    .map(|common_item_info| common_item_info.id == item_id)
+                                    == Some(true)
+                            })
                             .map(|nearby| (nearby.entity, nearby.amount))
                             .unzip();
                         AlternativeSituation {

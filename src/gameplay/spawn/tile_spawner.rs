@@ -3,9 +3,9 @@ use crate::gameplay::{
     Accessible, ActiveSav, Amount, Aquatic, BaseSpeed, BodyContainers, CameraBase, Closeable,
     Containable, Craft, ExamineCursor, Explored, Faction, Filthy, HealingDuration, Health, Hurdle,
     Infos, ItemIntegrity, LastSeen, LevelOffset, Life, Limited, LocalTerrain, Melee, ModelFactory,
-    ObjectCategory, ObjectDefinition, ObjectName, Obstacle, Opaque, OpaqueFloor, Openable, Player,
-    Pos, PosOffset, Shared, StairsDown, StairsUp, Stamina, StandardIntegrity, TileVariant, Vehicle,
-    VehiclePart, WalkingMode, cdda::Error, item::Pocket, spawn::log_spawn_result,
+    ObjectCategory, ObjectName, Obstacle, Opaque, OpaqueFloor, Openable, Player, Pos, PosOffset,
+    Shared, StairsDown, StairsUp, Stamina, StandardIntegrity, TileVariant, Vehicle, VehiclePart,
+    WalkingMode, cdda::Error, item::Pocket, spawn::log_spawn_result,
 };
 use crate::here;
 use crate::hud::{BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR};
@@ -18,11 +18,12 @@ use bevy::render::camera::{PerspectiveProjection, Projection};
 use bevy::render::view::RenderLayers;
 use bevy::utils::HashMap;
 use cdda_json_files::{
-    Bash, BashItem, BashItems, CddaAmount, CddaItem, CddaItemName, CddaVehicle, CddaVehiclePart,
+    BashItem, BashItems, CddaAmount, CddaItem, CddaItemName, CddaVehicle, CddaVehiclePart,
     Character, CharacterInfo, CommonItemInfo, CountRange, Field, Flags, FlatVec, FurnitureInfo,
     InfoId, ItemGroup, ItemName, MoveCostMod, PocketType, Recipe, Repetition, RequiredLinkedLater,
-    VecLinkedLater,
+    TerrainInfo, UntypedInfoId, VecLinkedLater,
 };
+use either::Either;
 use std::sync::Arc;
 use units::{Mass, Volume};
 
@@ -97,11 +98,14 @@ impl<'w> TileSpawner<'w, '_> {
         };
         let object_name = ObjectName::new(character_info.name.clone(), faction.color());
 
-        let definition = &ObjectDefinition {
-            category: ObjectCategory::Character,
-            id: character_info.id.untyped().clone(),
-        };
-        let entity = self.spawn_object(parent, Some(pos), definition, object_name, None);
+        let entity = self.spawn_object(
+            parent,
+            Some(pos),
+            character_info.id.untyped(),
+            ObjectCategory::Character,
+            object_name,
+            None,
+        );
         let mut entity = self.commands.entity(entity);
         entity.insert((
             Shared::new(character_info.clone()),
@@ -164,7 +168,7 @@ impl<'w> TileSpawner<'w, '_> {
                 .insert(BodyContainers { hands, clothing });
         }
 
-        debug!("Spawned a {:?} at {pos:?}", definition.id);
+        debug!("Spawned a {:?} at {pos:?}", character_info.id);
         Ok(entity)
     }
 
@@ -175,11 +179,14 @@ impl<'w> TileSpawner<'w, '_> {
 
         let object_name = ObjectName::new(field_info.name().clone(), BAD_TEXT_COLOR);
 
-        let definition = &ObjectDefinition {
-            category: ObjectCategory::Field,
-            id: field_info.id.untyped().clone(),
-        };
-        let entity = self.spawn_object(parent, Some(pos), definition, object_name, None);
+        let entity = self.spawn_object(
+            parent,
+            Some(pos),
+            field_info.id.untyped(),
+            ObjectCategory::Field,
+            object_name,
+            None,
+        );
         self.commands.entity(entity).insert(Shared::new(field_info));
     }
 
@@ -193,16 +200,18 @@ impl<'w> TileSpawner<'w, '_> {
         let item_info = &item.item_info.get()?;
 
         //trace!("{:?} {:?} {:?} {:?}", &parent, pos, &id, &amount);
-        let definition = &ObjectDefinition {
-            category: ObjectCategory::Item,
-            id: item_info.id.untyped().clone(),
-        };
-        //trace!("{:?} @ {pos:?}", &definition);
         let object_name = ObjectName::new(
             item_info.name.clone(),
             item_category_text_color(item_info.category.as_ref()),
         );
-        let object_entity = self.spawn_object(parent, pos, definition, object_name, None);
+        let object_entity = self.spawn_object(
+            parent,
+            pos,
+            item_info.id.untyped(),
+            ObjectCategory::Item,
+            object_name,
+            None,
+        );
 
         let (volume, mass) = match &item.corpse.get() {
             Some(corpse_character) => {
@@ -320,12 +329,15 @@ impl<'w> TileSpawner<'w, '_> {
     }
 
     fn spawn_furniture(&mut self, parent: Entity, pos: Pos, furniture_info: &Arc<FurnitureInfo>) {
-        let definition = &ObjectDefinition {
-            category: ObjectCategory::Furniture,
-            id: furniture_info.id.untyped().clone(),
-        };
         let object_name = ObjectName::new(furniture_info.name.clone(), HARD_TEXT_COLOR);
-        let entity = self.spawn_object(parent, Some(pos), definition, object_name, None);
+        let entity = self.spawn_object(
+            parent,
+            Some(pos),
+            furniture_info.id.untyped(),
+            ObjectCategory::Furniture,
+            object_name,
+            None,
+        );
         let mut entity = self.commands.entity(entity);
         entity.insert(Shared::new(furniture_info.clone()));
 
@@ -357,15 +369,12 @@ impl<'w> TileSpawner<'w, '_> {
             return;
         }
 
-        let definition = &ObjectDefinition {
-            category: ObjectCategory::Terrain,
-            id: local_terrain.info.id.untyped().clone(),
-        };
         let object_name = ObjectName::new(local_terrain.info.name.clone(), HARD_TEXT_COLOR);
         let entity = self.spawn_object(
             parent,
             Some(pos),
-            definition,
+            local_terrain.info.id.untyped(),
+            ObjectCategory::Terrain,
             object_name,
             Some(local_terrain.variant),
         );
@@ -413,13 +422,16 @@ impl<'w> TileSpawner<'w, '_> {
         pos: Pos,
         vehicle: &CddaVehicle,
     ) -> Entity {
-        let definition = &ObjectDefinition {
-            category: ObjectCategory::Vehicle,
-            id: vehicle.id.clone(),
-        };
         let object_name = ObjectName::from_str(&vehicle.name, HARD_TEXT_COLOR);
 
-        let entity = self.spawn_object(parent, Some(pos), definition, object_name, None);
+        let entity = self.spawn_object(
+            parent,
+            Some(pos),
+            &vehicle.id,
+            ObjectCategory::Vehicle,
+            object_name,
+            None,
+        );
         self.commands.entity(entity).insert((
             Vehicle,
             pos,
@@ -455,17 +467,20 @@ impl<'w> TileSpawner<'w, '_> {
 
         let name = part_info.name.as_ref().unwrap_or(&item_info.name);
         let pos = parent_pos.horizontal_offset(part.mount_dx, part.mount_dy);
-        let definition = &ObjectDefinition {
-            category: ObjectCategory::VehiclePart,
-            id: part.id.untyped().clone(),
-        };
         let object_name = ObjectName::new(name.clone(), HARD_TEXT_COLOR);
 
         let variant = ItemIntegrity::from(part.base.damaged)
             .broken()
             .then_some(TileVariant::Broken)
             .or_else(|| part.open.then_some(TileVariant::Open));
-        let entity = self.spawn_object(parent, Some(pos), definition, object_name, variant);
+        let entity = self.spawn_object(
+            parent,
+            Some(pos),
+            part.id.untyped(),
+            ObjectCategory::VehiclePart,
+            object_name,
+            variant,
+        );
         self.commands.entity(entity).insert((
             Shared::new(part_info.clone()),
             VehiclePart {
@@ -487,14 +502,13 @@ impl<'w> TileSpawner<'w, '_> {
         &mut self,
         parent: Entity,
         pos: Option<Pos>,
-        definition: &ObjectDefinition,
+        info_id: &UntypedInfoId,
+        category: ObjectCategory,
         object_name: ObjectName,
         tile_variant: Option<TileVariant>,
     ) -> Entity {
-        //trace!("{:?}", (&parent);
-        //trace!("{:?}", (pos);
-        //trace!("{:?}", (&definition);
-        let last_seen = if definition.category.shading_applied() {
+        //trace!("{:?} {pos:?} {:?} {:?} {:?}", &parent, &info_id, &category);
+        let last_seen = if category.shading_applied() {
             if pos.is_some_and(|p| self.explored.has_pos_been_seen(p)) {
                 LastSeen::Previously
             } else {
@@ -504,36 +518,35 @@ impl<'w> TileSpawner<'w, '_> {
             // cursor -> dummy value that gives normal material
             LastSeen::Currently
         };
-        //trace!("{:?}", (&last_seen);
+        //trace!("{:?}", &last_seen);
 
-        let layers = if definition.category == ObjectCategory::Vehicle {
+        let layers = if category == ObjectCategory::Vehicle {
             None
         } else {
-            Some(self.model_factory.get_layers(definition, tile_variant).map(
-                |(mesh, transform, apprearance)| {
-                    let material = if last_seen == LastSeen::Never {
-                        apprearance.material(&LastSeen::Currently)
-                    } else {
-                        apprearance.material(&last_seen)
-                    };
-                    (
-                        mesh,
-                        material,
-                        transform,
-                        apprearance,
-                        Visibility::Inherited,
-                        RenderLayers::layer(1),
-                    )
-                },
-            ))
+            Some(
+                self.model_factory
+                    .get_layers(info_id, category, tile_variant)
+                    .map(|(mesh, transform, apprearance)| {
+                        let material = if last_seen == LastSeen::Never {
+                            apprearance.material(&LastSeen::Currently)
+                        } else {
+                            apprearance.material(&last_seen)
+                        };
+                        (
+                            mesh,
+                            material,
+                            transform,
+                            apprearance,
+                            Visibility::Inherited,
+                            RenderLayers::layer(1),
+                        )
+                    }),
+            )
         };
 
-        let mut entity_commands = self.commands.spawn((
-            definition.clone(),
-            object_name,
-            Visibility::Hidden,
-            Transform::IDENTITY,
-        ));
+        let mut entity_commands =
+            self.commands
+                .spawn((object_name, Visibility::Hidden, Transform::IDENTITY));
         if let Some(pos) = pos {
             entity_commands.insert((Transform::from_translation(pos.vec3()), pos));
         }
@@ -546,7 +559,7 @@ impl<'w> TileSpawner<'w, '_> {
                 }
             });
         }
-        if definition.category.shading_applied() {
+        if category.shading_applied() {
             entity_commands.insert(last_seen);
         }
 
@@ -692,31 +705,21 @@ impl<'w> TileSpawner<'w, '_> {
         infos: &Infos,
         parent_entity: Entity,
         pos: Pos,
-        definition: &ObjectDefinition,
-        bash: &Bash,
+        info: Either<&TerrainInfo, &FurnitureInfo>,
     ) {
-        assert!(
-            matches!(
-                definition.category,
-                ObjectCategory::Furniture | ObjectCategory::Terrain
-            ),
-            "Only furniture and terrain can be smashed"
-        );
+        let Some(bash) = info.either(
+            |terrain_info| terrain_info.bash.as_ref(),
+            |furniture_info| furniture_info.bash.as_ref(),
+        ) else {
+            return;
+        };
 
         if let Some(new_terrain) = &bash.terrain.get() {
-            assert_eq!(
-                definition.category,
-                ObjectCategory::Terrain,
-                "The terrain field requires a terrain category"
-            );
             let local_terrain = LocalTerrain::unconnected(new_terrain.clone());
             self.spawn_terrain(parent_entity, pos, &local_terrain);
-        } else if let Some(furniture_id) = &bash.furniture.get() {
-            assert_eq!(
-                definition.category,
-                ObjectCategory::Furniture,
-                "The furniture field requires a furniture category"
-            );
+        }
+
+        if let Some(furniture_id) = &bash.furniture.get() {
             self.spawn_furniture(parent_entity, pos, furniture_id);
         }
 

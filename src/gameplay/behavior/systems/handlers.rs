@@ -3,9 +3,9 @@
 use crate::gameplay::{
     Actor, ActorEvent, Amount, Clock, ContainerLimits, Corpse, CorpseEvent, CorpseRaise, Damage,
     Faction, Fragment, GameplayScreenState, Healing, Health, Infos, Item, ItemHierarchy, Life,
-    Limited, LocalTerrain, MessageWriter, ObjectCategory, ObjectDefinition, ObjectName, Obstacle,
-    Phrase, Player, Pos, Shared, Stamina, StandardIntegrity, Subject, TerrainEvent, Toggle,
-    VisualizationUpdate, WalkingMode, spawn::TileSpawner,
+    Limited, LocalTerrain, MessageWriter, ObjectName, Obstacle, Phrase, Player, Pos, Shared,
+    Stamina, StandardIntegrity, Subject, TerrainEvent, Toggle, VisualizationUpdate, WalkingMode,
+    spawn::TileSpawner,
 };
 use crate::util::log_if_slow;
 use bevy::ecs::schedule::SystemConfigs;
@@ -13,7 +13,8 @@ use bevy::prelude::{
     Changed, Commands, DespawnRecursiveExt as _, Entity, EventReader, IntoSystemConfigs as _,
     NextState, ParamSet, Parent, Quat, Query, Res, ResMut, Transform, With, Without, on_event,
 };
-use cdda_json_files::{FurnitureInfo, InfoId, TerrainInfo, UntypedInfoId};
+use cdda_json_files::{FurnitureInfo, InfoId, TerrainInfo};
+use either::Either;
 use std::time::Instant;
 use units::Duration;
 
@@ -235,21 +236,17 @@ pub(in super::super) fn update_corpses(
         if raise.at <= clock.time() {
             transform.rotation = Quat::IDENTITY;
 
-            let definition = ObjectDefinition {
-                category: ObjectCategory::Character,
-                id: UntypedInfoId::new("mon_zombie"),
-            };
+            let info_id = InfoId::new("mon_zombie");
             let character_info = infos
                 .characters
-                .get(&InfoId::from(definition.id.clone()))
-                .unwrap_or_else(|e| panic!("{definition:?} should be found: {e:#?}"));
+                .get(&info_id)
+                .unwrap_or_else(|e| panic!("{info_id:?} should be found: {e:#?}"));
             let object_name = ObjectName::new(character_info.name.clone(), Faction::Zombie.color());
             let health = Health(Limited::full(character_info.hp.unwrap_or(60) as u16));
 
             commands
                 .entity(corpse)
                 .insert((
-                    definition,
                     object_name,
                     Faction::Zombie,
                     Life,
@@ -279,7 +276,6 @@ pub(in super::super) fn update_damaged_terrain(
         &Pos,
         &ObjectName,
         &mut StandardIntegrity,
-        &ObjectDefinition,
         Option<&Shared<TerrainInfo>>,
         Option<&Shared<FurnitureInfo>>,
         &Parent,
@@ -288,10 +284,9 @@ pub(in super::super) fn update_damaged_terrain(
     let start = Instant::now();
 
     for damage in damage_reader.read() {
-        let (terrain, &pos, name, mut integrity, definition, terrain_info, furniture_info, parent) =
-            terrain
-                .get_mut(damage.terrain_entity)
-                .expect("Terrain or furniture found");
+        let (terrain, &pos, name, mut integrity, terrain_info, furniture_info, parent) = terrain
+            .get_mut(damage.terrain_entity)
+            .expect("Terrain or furniture found");
         let evolution = integrity.lower(&damage.change);
         if integrity.0.is_zero() {
             message_writer
@@ -304,12 +299,11 @@ pub(in super::super) fn update_damaged_terrain(
                 &infos,
                 parent.get(),
                 pos,
-                definition,
                 terrain_info
-                    .map(|terrain| terrain.bash.as_ref())
-                    .or_else(|| furniture_info.map(|furniture| furniture.bash.as_ref()))
-                    .expect("Either terrain or furniture")
-                    .expect("Smashable"),
+                    .map(Shared::as_ref)
+                    .map(Either::Left)
+                    .or_else(|| furniture_info.map(Shared::as_ref).map(Either::Right))
+                    .expect("Either terrain or furniture"),
             );
             *visualization_update = VisualizationUpdate::Forced;
         } else {
@@ -343,8 +337,7 @@ pub(in super::super) fn combine_items(
     let mut all_merged = Vec::new();
 
     for moved in &moved_items {
-        if moved.definition.category == ObjectCategory::Item
-            && !all_merged.contains(&moved.entity)
+        if !all_merged.contains(&moved.entity)
             && hierarchy.items_in(moved.entity).next().is_none()
             && hierarchy.pockets_in(moved.entity).next().is_none()
         {
@@ -354,7 +347,7 @@ pub(in super::super) fn combine_items(
             for sibling in hierarchy.items_in(moved.parent.get()) {
                 // Note that the positions may differ when the parents are the same.
                 if sibling.entity != moved.entity
-                    && sibling.definition == moved.definition
+                    && sibling.common_info.id == moved.common_info.id
                     && sibling.pos == moved.pos
                     && sibling.filthy == moved.filthy
                     && hierarchy.items_in(sibling.entity).next().is_none()

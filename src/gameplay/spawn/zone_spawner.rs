@@ -1,7 +1,7 @@
 use crate::application::ApplicationState;
 use crate::gameplay::{
-    Infos, LastSeen, Level, MissingAsset, ObjectCategory, ObjectDefinition, ObjectName, SeenFrom,
-    ZoneLevel, ZoneLevelIds, spawn::TileSpawner,
+    Infos, LastSeen, Level, MissingAsset, ObjectCategory, ObjectName, SeenFrom, ZoneLevel,
+    ZoneLevelIds, spawn::TileSpawner,
 };
 use crate::hud::HARD_TEXT_COLOR;
 use bevy::ecs::system::SystemParam;
@@ -9,7 +9,7 @@ use bevy::prelude::{
     BuildChildren as _, ChildBuild as _, Entity, Res, StateScoped, Transform, Vec3, Visibility,
 };
 use bevy::render::view::RenderLayers;
-use cdda_json_files::{CddaItemName, ItemName};
+use cdda_json_files::{CddaItemName, InfoId, ItemName, OvermapInfo};
 
 #[derive(SystemParam)]
 pub(crate) struct ZoneSpawner<'w, 's> {
@@ -41,20 +41,13 @@ impl ZoneSpawner<'_, '_> {
             return;
         };
 
-        let Some(definition) =
-            self.zone_level_ids
-                .get(zone_level)
-                .map(|object_id| ObjectDefinition {
-                    category: ObjectCategory::ZoneLevel,
-                    id: object_id.untyped().clone(),
-                })
-        else {
+        let Some(info_id) = self.zone_level_ids.get(zone_level).cloned() else {
             entity.insert(MissingAsset);
             return;
         };
 
         let entity = entity.id();
-        self.complete_zone_level(entity, zone_level, seen_from, &definition, child_visibiltiy);
+        self.complete_zone_level(entity, zone_level, seen_from, &info_id, child_visibiltiy);
     }
 
     pub(crate) fn complete_zone_level(
@@ -62,18 +55,14 @@ impl ZoneSpawner<'_, '_> {
         entity: Entity,
         zone_level: ZoneLevel,
         seen_from: SeenFrom,
-        definition: &ObjectDefinition,
+        info_id: &InfoId<OvermapInfo>,
         child_visibiltiy: &Visibility,
     ) {
         let name = ObjectName::new(
-            self.infos
-                .zone_levels
-                .get(&definition.id.clone().into())
-                .ok()
-                .map_or_else(
-                    || ItemName::from(CddaItemName::Simple(definition.id.fallback_name())),
-                    |z| z.name.clone(),
-                ),
+            self.infos.zone_levels.get(info_id).ok().map_or_else(
+                || ItemName::from(CddaItemName::Simple(info_id.fallback_name())),
+                |z| z.name.clone(),
+            ),
             HARD_TEXT_COLOR,
         );
 
@@ -85,7 +74,7 @@ impl ZoneSpawner<'_, '_> {
         let pbr_bundles = self
             .tile_spawner
             .model_factory()
-            .get_layers(definition, None)
+            .get_layers(info_id.untyped(), ObjectCategory::ZoneLevel, None)
             .map(|(mesh, transform, appearance)| {
                 (
                     mesh,

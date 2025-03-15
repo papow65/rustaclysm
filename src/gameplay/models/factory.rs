@@ -1,7 +1,7 @@
 use crate::gameplay::models::resources::{AppearanceCache, MeshCaches};
 use crate::gameplay::{
-    Appearance, Infos, Layers, Model, ModelShape, ObjectCategory, ObjectDefinition,
-    SpriteOrientation, TileLoader, TileVariant,
+    Appearance, Infos, Layers, Model, ModelShape, ObjectCategory, SpriteOrientation, TileLoader,
+    TileVariant,
 };
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{
@@ -56,12 +56,16 @@ impl ModelFactory<'_> {
 
     pub(crate) fn get_layers(
         &mut self,
-        definition: &ObjectDefinition,
+        info_id: &UntypedInfoId,
+        category: ObjectCategory,
         tile_variant: Option<TileVariant>,
     ) -> Layers<(Mesh3d, Transform, Appearance)> {
-        let models =
-            self.loader
-                .get_models(definition, &self.infos.variants(definition), tile_variant);
+        let models = self.loader.get_models(
+            info_id,
+            category,
+            &self.infos.variants(info_id.clone(), category),
+            tile_variant,
+        );
         models.map_mut(|model| {
             (
                 self.get_mesh(&model),
@@ -72,13 +76,11 @@ impl ModelFactory<'_> {
     }
 
     pub(crate) fn get_cursor(&mut self) -> (Mesh3d, Transform, MeshMaterial3d<StandardMaterial>) {
-        let cursor_definition = ObjectDefinition {
-            category: ObjectCategory::Meta,
-            id: UntypedInfoId::new("cursor"),
-        };
+        let info_id = UntypedInfoId::new("cursor");
         let models = self.loader.get_models(
-            &cursor_definition,
-            &self.infos.variants(&cursor_definition),
+            &info_id,
+            ObjectCategory::Meta,
+            &self.infos.variants(info_id.clone(), ObjectCategory::Meta),
             None,
         );
         assert!(models.overlay.is_none(), "{models:?}");

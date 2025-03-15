@@ -155,7 +155,7 @@ impl<'w> ItemHierarchy<'w, '_> {
             .extend({
                 self.infos
                     .magazines
-                    .get(&item.definition.id.clone().into())
+                    .get(&item.common_info.id.untyped().clone().into())
                     .inspect_err(|error| error!("Magazine not found: {error:?}"))
                     .ok()
                     .filter(|magazine| {
@@ -178,7 +178,7 @@ impl<'w> ItemHierarchy<'w, '_> {
                     .flatten()
             })
             .extend(item.fragments())
-            .debug(format!("[{}]", item.definition.id.fallback_name()))
+            .debug(format!("[{}]", item.common_info.id.fallback_name()))
             .extend(magazine_output.join(&Fragment::soft(", ")))
             .extend(magazine_wells.flat_map(|info| {
                 if info.items.is_empty() {

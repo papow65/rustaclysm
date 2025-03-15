@@ -18,7 +18,7 @@ use bevy::prelude::{
     Query, Res, State, StateScoped, Text, TextColor, TextSpan, UiRect, Val, Visibility, With,
     Without, info, on_event, resource_exists, resource_exists_and_changed, warn,
 };
-use cdda_json_files::MoveCost;
+use cdda_json_files::{CharacterInfo, MoveCost};
 use std::{num::Saturating, time::Instant};
 
 type DuplicateMessageCount = Saturating<u16>;
@@ -559,14 +559,13 @@ fn update_status_detais(
     envir: Envir,
     item_hierarchy: ItemHierarchy,
     characters: Query<(
-        &ObjectDefinition,
+        &Shared<CharacterInfo>,
         &ObjectName,
         &Health,
         Option<&StandardIntegrity>,
     )>,
     entities: Query<
         (
-            Option<&ObjectDefinition>,
             Option<&ObjectName>,
             Option<&Corpse>,
             Option<&Accessible>,
@@ -648,7 +647,7 @@ fn update_status_detais(
 fn characters_info(
     all_here: impl Iterator<Item = Entity>,
     characters: &Query<(
-        &ObjectDefinition,
+        &Shared<CharacterInfo>,
         &ObjectName,
         &Health,
         Option<&StandardIntegrity>,
@@ -657,7 +656,7 @@ fn characters_info(
 ) -> Vec<Fragment> {
     all_here
         .flat_map(|i| characters.get(i))
-        .flat_map(|(definition, name, health, integrity)| {
+        .flat_map(|(info, name, health, integrity)| {
             let start = Phrase::from_fragment(name.single(pos)).soft("(");
 
             if health.0.is_nonzero() {
@@ -682,7 +681,7 @@ fn characters_info(
                 }
             }
             .soft(")\n- ")
-            .hard(&*definition.id.fallback_name())
+            .hard(&*info.id.fallback_name())
             .soft("\n")
             .fragments
         })
@@ -691,7 +690,6 @@ fn characters_info(
 
 fn entity_info(
     (
-        definition,
         name,
         corpse,
         accessible,
@@ -705,7 +703,6 @@ fn entity_info(
         last_seen,
         visibility,
     ): (
-        Option<&ObjectDefinition>,
         Option<&ObjectName>,
         Option<&Corpse>,
         Option<&Accessible>,
@@ -776,13 +773,6 @@ fn entity_info(
 
     let fallbak_name = ObjectName::missing();
     let mut output = Phrase::from_fragment(name.unwrap_or(&fallbak_name).single(Pos::ORIGIN));
-    if let Some(definition) = definition {
-        output = output.debug(format!(
-            "[{:?}:{}]",
-            definition.category,
-            definition.id.fallback_name()
-        ));
-    }
     output = output.soft("\n");
     for flag in &flags {
         output = output.soft("- ").hard(*flag).soft("\n");

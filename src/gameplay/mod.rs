@@ -45,9 +45,9 @@ use self::common::{
 };
 use self::components::{
     Accessible, Appearance, CameraBase, Closeable, Corpse, CorpseRaise, Craft, ExamineCursor,
-    HealingDuration, Hurdle, LastSeen, Level, Life, Melee, MissingAsset, ObjectDefinition,
-    ObjectName, Obstacle, Opaque, OpaqueFloor, Openable, Overzone, PlayerWielded, Pos, Shared,
-    StairsDown, StairsUp, StandardIntegrity, SubzoneLevel, Vehicle, VehiclePart, Zone, ZoneLevel,
+    HealingDuration, Hurdle, LastSeen, Level, Life, Melee, MissingAsset, ObjectName, Obstacle,
+    Opaque, OpaqueFloor, Openable, Overzone, PlayerWielded, Pos, Shared, StairsDown, StairsUp,
+    StandardIntegrity, SubzoneLevel, Vehicle, VehiclePart, Zone, ZoneLevel,
 };
 use self::events::{
     ActorChange, ActorEvent, CorpseChange, CorpseEvent, Damage, DespawnSubzoneLevel,

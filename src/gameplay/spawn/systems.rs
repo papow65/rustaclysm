@@ -2,9 +2,9 @@ use crate::gameplay::events::Exploration;
 use crate::gameplay::spawn::{SubzoneSpawner, TileSpawner, ZoneSpawner};
 use crate::gameplay::{
     ActiveSav, DespawnSubzoneLevel, DespawnZoneLevel, Expanded, Explored, Focus, GameplayLocal,
-    Infos, Level, MapManager, MapMemoryManager, MissingAsset, ObjectCategory, ObjectDefinition,
-    OvermapAsset, OvermapBufferManager, OvermapManager, Pos, Region, SeenFrom, SpawnSubzoneLevel,
-    SpawnZoneLevel, SubzoneLevel, SubzoneLevelEntities, UpdateZoneLevelVisibility, VisionDistance,
+    Infos, Level, MapManager, MapMemoryManager, MissingAsset, OvermapAsset,
+    OvermapBufferManager, OvermapManager, Pos, Region, SeenFrom, SpawnSubzoneLevel, SpawnZoneLevel,
+    SubzoneLevel, SubzoneLevelEntities, UpdateZoneLevelVisibility, VisionDistance,
     VisualizationUpdate, Zone, ZoneLevel, ZoneLevelEntities, ZoneLevelIds, ZoneRegion,
 };
 use crate::util::log_if_slow;
@@ -484,14 +484,7 @@ pub(crate) fn update_zone_levels_with_missing_assets(
             continue;
         };
 
-        let Some(definition) = zone_spawner
-            .zone_level_ids
-            .get(zone_level)
-            .map(|object_id| ObjectDefinition {
-                category: ObjectCategory::ZoneLevel,
-                id: object_id.untyped().clone(),
-            })
-        else {
+        let Some(overmap_info_id) = zone_spawner.zone_level_ids.get(zone_level).cloned() else {
             continue;
         };
 
@@ -506,7 +499,7 @@ pub(crate) fn update_zone_levels_with_missing_assets(
             entity,
             zone_level,
             seen_from,
-            &definition,
+            &overmap_info_id,
             &child_visibility,
         );
         zone_spawner

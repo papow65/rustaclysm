@@ -1,6 +1,6 @@
 use crate::gameplay::cdda::info::info_map::{InfoMap, ItemInfoMapLoader};
 use crate::gameplay::cdda::info::parsed_json::ParsedJson;
-use crate::gameplay::{ObjectCategory, ObjectDefinition, TypeId, cdda::Error};
+use crate::gameplay::{ObjectCategory, TypeId, cdda::Error};
 use crate::util::AsyncNew;
 use bevy::prelude::{Resource, debug, info};
 use bevy::utils::HashMap;
@@ -174,72 +174,73 @@ impl Infos {
         this
     }
 
-    fn looks_like(&self, definition: &ObjectDefinition) -> Option<UntypedInfoId> {
-        match definition.category {
+    fn looks_like(
+        &self,
+        info_id: UntypedInfoId,
+        category: ObjectCategory,
+    ) -> Option<UntypedInfoId> {
+        match category {
             ObjectCategory::Character => self
                 .characters
-                .get(&definition.id.clone().into())
+                .get(&info_id.into())
                 .ok()
                 .and_then(|o| o.looks_like.clone()),
             ObjectCategory::Item => self
                 .common_item_infos
-                .get(&definition.id.clone().into())
+                .get(&info_id.into())
                 .ok()
                 .and_then(|o| o.looks_like.clone()),
             ObjectCategory::Field => self
                 .fields
-                .get(&definition.id.clone().into())
+                .get(&info_id.into())
                 .ok()
                 .and_then(|o| o.looks_like.clone()),
             ObjectCategory::Furniture => self
                 .furniture
-                .get(&definition.id.clone().into())
+                .get(&info_id.into())
                 .ok()
                 .and_then(|o| o.looks_like.clone()),
             ObjectCategory::Terrain => self
                 .terrain
-                .get(&definition.id.clone().into())
+                .get(&info_id.into())
                 .ok()
                 .and_then(|o| o.looks_like.clone()),
             ObjectCategory::VehiclePart => self
                 .vehicle_parts
-                .get(&definition.id.clone().into())
+                .get(&info_id.into())
                 .ok()
                 .and_then(|o| o.looks_like.clone()),
             ObjectCategory::ZoneLevel => self
                 .zone_levels
-                .get(&definition.id.clone().into())
+                .get(&info_id.into())
                 .ok()
                 .and_then(|o| o.looks_like.clone()),
-            _ => unimplemented!("{:?}", definition),
+            _ => unimplemented!("{info_id:?} {category:?}"),
         }
     }
 
-    pub(crate) fn variants(&self, definition: &ObjectDefinition) -> Vec<UntypedInfoId> {
-        if definition.category == ObjectCategory::Meta {
-            return vec![definition.id.clone()];
+    pub(crate) fn variants(
+        &self,
+        info_id: UntypedInfoId,
+        category: ObjectCategory,
+    ) -> Vec<UntypedInfoId> {
+        if category == ObjectCategory::Meta {
+            return vec![info_id];
         }
 
-        let current_id;
-        let mut current_definition;
-        let mut current_definition_ref = definition;
-        if definition.category == ObjectCategory::ZoneLevel {
-            current_id = current_definition_ref.id.truncate();
-            current_definition = ObjectDefinition {
-                category: definition.category.clone(),
-                id: current_id,
-            };
-            current_definition_ref = &current_definition;
-        }
-
+        let mut current_id = if category == ObjectCategory::ZoneLevel {
+            info_id.truncate()
+        } else {
+            info_id
+        };
         let mut variants = vec![
-            current_definition_ref.id.suffix("_season_summer"),
-            current_definition_ref.id.clone(),
-            current_definition_ref.id.prefix("vp_"),
-            current_definition_ref.id.prefix("vp_").suffix("_cover"),
+            current_id.suffix("_season_summer"),
+            current_id.clone(),
+            current_id.prefix("vp_"),
+            current_id.prefix("vp_").suffix("_cover"),
         ];
 
-        while let Some(other) = self.looks_like(current_definition_ref) {
+        while let Some(other) = self.looks_like(current_id, category) {
             if variants.contains(&other) {
                 //trace!("Variants {:?} already contains {:?}", &variants, &other); // TODO
                 break;
@@ -248,11 +249,7 @@ impl Infos {
             variants.push(other.clone());
             variants.push(other.prefix("vp_"));
             variants.push(other.prefix("vp_").suffix("_cover"));
-            current_definition = ObjectDefinition {
-                category: definition.category.clone(),
-                id: other.clone(),
-            };
-            current_definition_ref = &current_definition;
+            current_id = other.clone();
         }
         variants
     }
