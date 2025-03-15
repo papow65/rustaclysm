@@ -1,8 +1,8 @@
 use crate::gameplay::{TypeId, cdda::Error};
 use bevy::utils::HashMap;
 use cdda_json_files::{
-    CommonItemInfo, FurnitureInfo, ItemMigration, ItemWithCommonInfo, ObjectId, Quality, Recipe,
-    Requirement, TerrainInfo, VehiclePartInfo, VehiclePartMigration,
+    Bash, BashItem, BashItems, CommonItemInfo, FurnitureInfo, ItemMigration, ItemWithCommonInfo,
+    ObjectId, Quality, Recipe, Requirement, TerrainInfo, VehiclePartInfo, VehiclePartMigration,
 };
 use serde::de::DeserializeOwned;
 use std::{any::type_name, sync::Arc};
@@ -65,14 +65,17 @@ impl InfoMap<CommonItemInfo> {
 
 impl InfoMap<FurnitureInfo> {
     pub(crate) fn link_furniture(&self, common_item_infos: &InfoMap<CommonItemInfo>) {
-        for furniture_info in self.map.values() {
-            furniture_info
+        for furniture in self.map.values() {
+            furniture
                 .crafting_pseudo_item
                 .finalize(&common_item_infos.map, "pseudo item");
-            if let Some(bash) = &furniture_info.bash {
-                bash.terrain
-                    .finalize(&HashMap::default(), "terrain for bashed furniture");
-                bash.furniture.finalize(&self.map, "bashed furniture");
+            if let Some(bash) = &furniture.bash {
+                // Not expected to occur
+                let terrain = InfoMap {
+                    map: HashMap::default(),
+                };
+
+                link_bash(bash, &terrain, self, common_item_infos, "furniture");
             }
         }
     }
@@ -109,22 +112,47 @@ impl InfoMap<Requirement> {
 }
 
 impl InfoMap<TerrainInfo> {
-    pub(crate) fn fix_and_link_terrain(&mut self, furniture: &InfoMap<FurnitureInfo>) {
+    pub(crate) fn fix_and_link_terrain(
+        &mut self,
+        furniture: &InfoMap<FurnitureInfo>,
+        common_item_infos: &InfoMap<CommonItemInfo>,
+    ) {
         if self.map.remove(&ObjectId::new("t_null")).is_some() {
             eprintln!("The terrain t_null was not expected to be present");
         }
 
-        for terrain_info in self.map.values() {
-            terrain_info.open.finalize(&self.map, "open terrain");
-            terrain_info.close.finalize(&self.map, "closed terrain");
-            if let Some(bash) = &terrain_info.bash {
-                bash.terrain.finalize(&self.map, "bashed terrain");
-                if bash.terrain.get().is_none() {
-                    eprintln!("No bashed terrain set for {:?}", terrain_info.id);
-                }
+        for terrain in self.map.values() {
+            terrain.open.finalize(&self.map, "open terrain");
+            terrain.close.finalize(&self.map, "closed terrain");
+            if let Some(bash) = &terrain.bash {
+                link_bash(bash, self, furniture, common_item_infos, "terrain");
+            }
+        }
+    }
+}
 
-                bash.furniture
-                    .finalize(&furniture.map, "furniture for bashed terrain");
+fn link_bash(
+    bash: &Bash,
+    terrain_info: &InfoMap<TerrainInfo>,
+    furniture_info: &InfoMap<FurnitureInfo>,
+    common_item_infos: &InfoMap<CommonItemInfo>,
+    name: &str,
+) {
+    bash.terrain.finalize(
+        &terrain_info.map,
+        format!("terrain for bashed {name}").as_str(),
+    );
+    bash.furniture.finalize(
+        &furniture_info.map,
+        format!("terrain for bashed {name}").as_str(),
+    );
+    if let Some(BashItems::Explicit(bash_item_vec)) = &bash.items {
+        for bash_item in bash_item_vec {
+            if let BashItem::Single(item_occurrence) = bash_item {
+                item_occurrence.item.finalize(
+                    &common_item_infos.map,
+                    format!("terrain for bashed {name}").as_str(),
+                );
             }
         }
     }

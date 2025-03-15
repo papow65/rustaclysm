@@ -117,7 +117,7 @@ impl Infos {
         let furniture = InfoMap::new(&mut enriched_json_infos, TypeId::FURNITURE);
         furniture.link_furniture(&common_item_infos);
         let mut terrain = InfoMap::new(&mut enriched_json_infos, TypeId::TERRAIN);
-        terrain.fix_and_link_terrain(&furniture);
+        terrain.fix_and_link_terrain(&furniture, &common_item_infos);
         let requirements = InfoMap::new(&mut enriched_json_infos, TypeId::REQUIREMENT);
         requirements.link_requirements(&qualities);
         let recipes = InfoMap::new(&mut enriched_json_infos, TypeId::RECIPE);
