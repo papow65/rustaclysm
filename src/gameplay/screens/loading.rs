@@ -1,5 +1,7 @@
 use crate::gameplay::{GameplayReadiness, GameplayScreenState};
-use bevy::prelude::{App, IntoSystemConfigs as _, NextState, Plugin, ResMut, Update, in_state};
+use bevy::prelude::{
+    App, IntoSystemConfigs as _, NextState, Plugin, ResMut, Update, debug, in_state,
+};
 
 pub(crate) struct LoadingScreenPlugin;
 
@@ -18,7 +20,7 @@ pub(crate) fn finish_loading(
     gameplay_readiness: GameplayReadiness,
 ) {
     if gameplay_readiness.ready_to_run() {
-        println!("Loading complete");
+        debug!("Loading complete");
         next_gameplay_state.set(GameplayScreenState::Base);
     }
 }

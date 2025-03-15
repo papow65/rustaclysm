@@ -13,7 +13,7 @@ use bevy::prelude::{
     AlignContent, AlignItems, BuildChildren as _, Camera2d, ChildBuild as _, ChildBuilder,
     Commands, DespawnRecursiveExt as _, Display, Entity, Events, FlexDirection, FlexWrap,
     GlobalZIndex, In, JustifyContent, Local, NextState, Node, Query, Res, ResMut, StateScoped,
-    Text, UiRect, Val, With, Without, World,
+    Text, UiRect, Val, With, Without, World, error,
 };
 use bevy::{app::AppExit, ecs::system::SystemId};
 use glob::glob;
@@ -218,7 +218,7 @@ pub(super) fn update_sav_files(
             }
         }
         Err(err) => {
-            eprintln!("{}", &err);
+            error!("{}", &err);
 
             load_button_area_style.display = Display::None;
             message_wrapper_style.display = Display::Flex;

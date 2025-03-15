@@ -278,7 +278,7 @@ impl Faction {
         enemies: &[Pos],
         actor: &ActorItem,
     ) -> Strategy {
-        // println!("{self:?} can see {:?} enemies", enemies.len());
+        //trace!("{self:?} can see {:?} enemies", enemies.len());
         Intent::ALL
             .into_iter()
             .filter(|intent| self.consider(*intent, actor.health))

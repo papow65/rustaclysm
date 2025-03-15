@@ -32,6 +32,7 @@ units = { path = "crates/units" }
 
 [workspace.dependencies]
 # We limit this list to crates that are used in multiple crates.
+bevy_log = "0"
 either = "1"
 fastrand = "2"
 pathfinding = "4"

@@ -1,4 +1,5 @@
 use crate::{Error, HashMap, InfoId, TerrainInfo};
+use bevy_log::{error, warn};
 use serde::Deserialize;
 use std::sync::{Arc, OnceLock, Weak};
 use std::{any::type_name, fmt};
@@ -110,7 +111,7 @@ impl<T: fmt::Debug + 'static> RequiredLinkedLater<T> {
     /// Logs the error that [`Self.get`] would give and converts the result to an option
     pub fn get_option(&self, called_from: String) -> Option<Arc<T>> {
         self.get()
-            .inspect_err(|error| eprintln!("{called_from} caused {error:#?}"))
+            .inspect_err(|error| warn!("{called_from} caused {error:#?}"))
             .ok()
     }
 
@@ -177,7 +178,7 @@ impl<T: fmt::Debug> LinkedLater<T> {
 
     fn finalize(&self, found: Option<Weak<T>>, err_description: &str) {
         if found.is_none() {
-            eprintln!("Could not find {err_description}: {:?}", &self.object_id);
+            error!("Could not find {err_description}: {:?}", &self.object_id);
         }
         self.lock.set(found).expect("{self:?} is already finalized");
     }

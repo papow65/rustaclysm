@@ -112,7 +112,7 @@ fn visible_region(camera: &Camera, global_transform: &GlobalTransform) -> Region
             // The camera only looks forward.
             if 0.0 < ray_distance {
                 let floor = ray.get_point(ray_distance);
-                //dbg!((level, ray_distance, floor.x, floor.z));
+                //trace!("{:?}", ((level, ray_distance, floor.x, floor.z));
                 zone_levels.push(ZoneLevel::from(Pos {
                     x: round_x(floor.x) as i32,
                     level,
@@ -167,7 +167,7 @@ pub(crate) fn spawn_subzone_levels(
 ) {
     let start = Instant::now();
 
-    println!(
+    debug!(
         "Spawning {} subzone levels",
         spawn_subzone_level_reader.len()
     );
@@ -201,7 +201,7 @@ pub(crate) fn despawn_subzone_levels(
     let (mut commands, mut despawn_subzone_level_reader, mut subzone_level_entities) =
         sytem_state.get_mut(world);
 
-    println!(
+    debug!(
         "Despawning {} subzone levels",
         despawn_subzone_level_reader.len()
     );
@@ -235,7 +235,7 @@ pub(crate) fn update_zone_levels(
 
     let start = Instant::now();
 
-    //println!(
+    //trace!(
     //    "update_zone_levels {:?} {:?}",
     //    new_subzone_levels.iter().collect::<Vec<_>>().len(),
     //    new_subzone_levels.is_empty()
@@ -249,12 +249,12 @@ pub(crate) fn update_zone_levels(
 
     // Zone levels above zero add little value, so we always skip these.
     let visible_region = visible_region(camera, &global_transform).ground_only();
-    //println!("Visible region: {:?}", &visible_region);
+    //trace!("Visible region: {:?}", &visible_region);
     if visible_region == *previous_visible_region.get() && new_subzone_levels.is_empty() {
         return;
     }
-    //println!("update_zone_levels refresh");
-    //dbg!(&visible_region);
+    //trace!("update_zone_levels refresh");
+    //trace!("{:?}", (&visible_region);
 
     let shown_level = if Level::from(&focus).compare_to_ground() == Ordering::Less {
         Level::from(&focus)
@@ -298,7 +298,7 @@ pub(crate) fn spawn_zone_levels(
 ) {
     let start = Instant::now();
 
-    println!("Spawning {} zone levels", spawn_zone_level_reader.len());
+    debug!("Spawning {} zone levels", spawn_zone_level_reader.len());
 
     let (camera, &global_transform) = cameras.single();
     let visible_region = visible_region(camera, &global_transform).ground_only();
@@ -326,7 +326,7 @@ pub(crate) fn update_zone_level_visibility(
 ) {
     let start = Instant::now();
 
-    println!(
+    debug!(
         "Updating the visibility of {} zone levels",
         update_zone_level_visibility_reader.len()
     );
@@ -356,7 +356,7 @@ pub(crate) fn despawn_zone_level(
 ) {
     let start = Instant::now();
 
-    println!("Despawning {} zone levels", despawn_zone_level_reader.len());
+    debug!("Despawning {} zone levels", despawn_zone_level_reader.len());
 
     for despawn_zone_level_event in despawn_zone_level_reader.read() {
         let entity = despawn_zone_level_event.entity;
@@ -447,7 +447,7 @@ pub(crate) fn handle_overmap_events(
         if let AssetEvent::LoadedWithDependencies { id } = overmap_asset_event {
             let Some(overzone) = overmap_manager.overzone(id) else {
                 // This may be an asset of a previous gameplay.
-                eprintln!("Unknown overmap asset {id:?} loaded");
+                warn!("Unknown overmap asset {id:?} loaded");
                 continue;
             };
 

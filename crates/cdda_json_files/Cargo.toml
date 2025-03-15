@@ -6,6 +6,7 @@ edition = "2024"
 
 [dependencies]
 ahash = { version = "0.8", default-features = false, features = ["runtime-rng"] }
+bevy_log = { workspace = true }
 either = { workspace = true }
 hashbrown = { version = "0.14", features = ["serde"] }
 fastrand = { workspace = true }

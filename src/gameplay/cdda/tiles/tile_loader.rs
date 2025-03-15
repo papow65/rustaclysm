@@ -1,7 +1,7 @@
 use crate::gameplay::cdda::{Atlas, TextureInfo, error::Error};
 use crate::gameplay::{Layers, Model, ObjectDefinition, SpriteLayer, TileVariant};
 use crate::util::{AssetPaths, AsyncNew};
-use bevy::prelude::Resource;
+use bevy::prelude::{Resource, error, warn};
 use bevy::utils::{Entry, HashMap};
 use cdda_json_files::{
     CddaTileConfig, CddaTileVariant, InfoId, MaybeFlatVec, SpriteNumber, SpriteNumbers, TileInfo,
@@ -47,7 +47,7 @@ impl TileLoader {
                 }
                 Entry::Occupied(o) => {
                     if cfg!(debug_assertions) && o.get() != &texture_info {
-                        eprintln!(
+                        error!(
                             "Multiple texture infos for {sprite_number:?}: {:?} {:?}",
                             o.get(),
                             &texture_info
@@ -82,14 +82,14 @@ impl TileLoader {
             .iter()
             .find_map(|variant| self.tiles.get(variant))
             .unwrap_or_else(|| {
-                //println!("No variant found from {variants:?}. Falling back to default sprite"); // TODO
+                //trace!("No variant found from {variants:?}. Falling back to default sprite"); // TODO
                 self.tiles
                     .get(&InfoId::new("unknown"))
                     .expect("Tile should be found")
             })
             .sprite_numbers(&cdda_tile_variant);
         //if tile_name.0.as_str() != "t_dirt" && !tile_name.0.starts_with("t_grass") {
-        //    println!("{tile_name:?} {foreground:?} {background:?}");
+        //    trace!("{tile_name:?} {foreground:?} {background:?}");
         //}
 
         let foreground = if let (true, Some(tile_variant), SpriteNumbers::MaybeFlat(MaybeFlatVec(vec))) =
@@ -97,7 +97,7 @@ impl TileLoader {
         {
             if let Some(expected_legth) = tile_variant.expected_length() {
                 if vec.len() != expected_legth {
-                    eprintln!(
+                    warn!(
                         "Expected {expected_legth} variants for {tile_variant:?} tiles of {definition:?}, but got {:?}",
                         &vec
                     );

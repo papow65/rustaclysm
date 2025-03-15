@@ -1,5 +1,6 @@
 use crate::gameplay::{TypeId, cdda::Error};
 use crate::util::AssetPaths;
+use bevy::prelude::{debug, error, warn};
 use bevy::utils::HashMap;
 use cdda_json_files::InfoId;
 use fastrand::alphabetic;
@@ -20,7 +21,7 @@ impl ParsedJson {
             .as_path()
             .to_str()
             .expect("Path pattern should be valid UTF-8");
-        println!("Searching {json_file_pattern} for info files");
+        debug!("Searching {json_file_pattern} for info files");
         glob(json_file_pattern)
             .expect("Glob pattern should match some readable paths")
             .map(|json_path_result| json_path_result.expect("JSON path should be valid"))
@@ -48,7 +49,7 @@ impl ParsedJson {
                     parsed_file_count += 1;
                 }
                 Err(error) => {
-                    eprintln!("Error while processing {json_path:?}: {error:#?}");
+                    error!("Error while processing {json_path:?}: {error:#?}");
                 }
             }
         }
@@ -58,9 +59,7 @@ impl ParsedJson {
             .values()
             .map(HashMap::len)
             .sum::<usize>();
-        println!(
-            "Found {id_count} ids ({skipped_count} skipped) in {parsed_file_count} info files"
-        );
+        debug!("Found {id_count} ids ({skipped_count} skipped) in {parsed_file_count} info files");
         assert!(
             !parsed_json.objects_by_type.is_empty(),
             "Some info should have been found"
@@ -73,7 +72,7 @@ impl ParsedJson {
         json_path: &Path,
         skipped_count: &mut usize,
     ) -> Result<(), Error> {
-        //println!("Parsing {json_path:?}...");
+        //trace!("Parsing {json_path:?}...");
         let file_contents = read_to_string(json_path)?;
         // TODO Correct the incorrect assumption that all files contain a list.
         let contents = serde_json::from_str::<Vec<serde_json::Map<String, serde_json::Value>>>(
@@ -85,17 +84,17 @@ impl ParsedJson {
                 .get("obsolete")
                 .is_some_and(|value| value.as_bool().unwrap_or(false))
             {
-                //println!("Skipping obsolete info in {json_path:?}");
+                //trace!("Skipping obsolete info in {json_path:?}");
                 *skipped_count += 1;
                 continue;
             }
             let Some(type_) = content.get("type") else {
-                eprintln!("Skipping info without a 'type' in {json_path:?}: {content:#?}");
+                warn!("Skipping info without a 'type' in {json_path:?}: {content:#?}");
                 *skipped_count += 1;
                 continue;
             };
             let Some(type_) = type_.as_str() else {
-                eprintln!(
+                warn!(
                     "Skipping info where 'type' is not a string ({type_:?}) in {json_path:?}: {content:#?}"
                 );
                 continue;
@@ -107,7 +106,7 @@ impl ParsedJson {
                 continue; // TODO
             }
 
-            //println!("Info abount {:?} > {:?}", &type_, &ids);
+            //trace!("Info abount {:?} > {:?}", &type_, &ids);
             let Some(by_type) = self.objects_by_type.get_mut(type_) else {
                 return Err(Error::UnknownTypeId {
                     _type: type_.clone(),
@@ -134,11 +133,11 @@ impl ParsedJson {
                 if literal.contains_key("abstract") {
                     continue;
                 }
-                //println!("{:?}", &object_id);
+                //trace!("{:?}", &object_id);
                 let mut enriched = literal.clone();
                 let mut ancestors = vec![object_id.clone()];
                 while let Some(copy_from) = enriched.remove("copy-from") {
-                    //println!("Copy from {:?}", &copy_from);
+                    //trace!("Copy from {:?}", &copy_from);
                     let copy_from = InfoId::new(
                         copy_from
                             .as_str()
@@ -153,14 +152,14 @@ impl ParsedJson {
                             .into_iter()
                             .filter_map(|(_, literal_entry)| literal_entry.get(&copy_from));
                         let Some(single) = other_types.next() else {
-                            eprintln!(
+                            error!(
                                 "copy-from {copy_from:?} not found for ({:?}) {:?}",
                                 &type_id, &copy_from
                             );
                             continue 'enricheds;
                         };
                         if other_types.next().is_some() {
-                            eprintln!(
+                            error!(
                                 "Multiple copy-from {copy_from:?} found for {:?} {:?}",
                                 &type_id, &object_id
                             );
@@ -205,31 +204,31 @@ fn load_ids(
                         ids.push(InfoId::new_suffix(id, id_suffix));
                     }
                     id => {
-                        eprintln!("Skipping non-string id in {json_path:?}: {id:?}");
+                        error!("Skipping non-string id in {json_path:?}: {id:?}");
                     }
                 }
             }
         }
         id => {
-            eprintln!("Skipping unexpected id structure in {json_path:?}: {id:?}");
+            error!("Skipping unexpected id structure in {json_path:?}: {id:?}");
         }
     }
 
     for mut id in ids {
         if let Some(previous) = by_type.get(&id) {
             if content == previous {
-                //println!("Ignoring exact duplicate info for {id:?}");
+                //trace!("Ignoring exact duplicate info for {id:?}");
                 continue;
             } else if TypeId::RECIPE.contains(type_) {
-                //println!("Old: {:#?}", by_type.get(&id));
-                //println!("New: {content:#?}");
+                //trace!("Old: {:#?}", by_type.get(&id));
+                //trace!("New: {content:#?}");
                 let random_string: String = [(); 16]
                     .map(|()| alphabetic().to_ascii_lowercase())
                     .iter()
                     .collect();
                 id.add_suffix(random_string.as_str());
             } else {
-                eprintln!(
+                error!(
                     "Duplicate usage of id {id:?} in {json_path:?} detected. One will be ignored.",
                 );
                 continue;
@@ -255,16 +254,16 @@ fn load_aliases(
                     if let Some(id) = id.as_str() {
                         aliases.push(InfoId::new(id));
                     } else {
-                        eprintln!("Skipping unexpected alias in {json_path:?}: {alias:#?}");
+                        error!("Skipping unexpected alias in {json_path:?}: {alias:#?}");
                     }
                 }
             }
             _ => {
-                eprintln!("Skipping unexpected alias structure in {json_path:?}: {alias:#?}",);
+                error!("Skipping unexpected alias structure in {json_path:?}: {alias:#?}",);
             }
         }
     }
-    //println!("Info abount {:?} > aliases {:?}", &type_, &aliases);
+    //trace!("Info abount {:?} > aliases {:?}", &type_, &aliases);
     for alias in aliases {
         // Duplicates possible
         if by_type.get(&alias).is_none() {
@@ -319,7 +318,7 @@ fn id_value<'a>(
 
 fn set_recipe_id(enriched: &mut serde_json::Map<String, serde_json::Value>) {
     if let Some(recipe_id) = enriched.get("id") {
-        eprintln!("Recipe should not have an id: {recipe_id:?}");
+        warn!("Recipe should not have an id: {recipe_id:?}");
     } else if let Some(result) = enriched.get("result").cloned() {
         if let Some(result_str) = result.as_str() {
             let id = String::from(result_str)
@@ -331,9 +330,9 @@ fn set_recipe_id(enriched: &mut serde_json::Map<String, serde_json::Value>) {
                 .entry("id")
                 .or_insert(serde_json::Value::String(id));
         } else {
-            panic!("Recipe result should be a string: {result:#?}");
+            error!("Recipe result should be a string: {result:#?}");
         }
     } else {
-        panic!("Recipe should have a result: {enriched:#?}");
+        error!("Recipe should have a result: {enriched:#?}");
     }
 }

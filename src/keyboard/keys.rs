@@ -2,7 +2,7 @@ use crate::keyboard::key_binding::{KeyBinding, KeyBindingSystem};
 use crate::keyboard::{Ctrl, CtrlState, Held, HeldState, InputChange, Key, KeyChange};
 use bevy::input::ButtonState;
 use bevy::input::keyboard::{Key as LogicalKey, KeyboardInput};
-use bevy::prelude::{ButtonInput, Commands, Entity, EventReader, KeyCode, Query};
+use bevy::prelude::{ButtonInput, Commands, Entity, EventReader, KeyCode, Query, error};
 
 /// This resource contains all user keyboard input
 ///
@@ -34,13 +34,13 @@ impl Keys {
                     let mut chars = key.chars();
                     if let Some(char) = chars.next() {
                         if chars.next().is_some() {
-                            eprintln!("Could not process keyboard input {keyboard_input:?}, because it's multiple characters.");
+                            error!("Could not process keyboard input {keyboard_input:?}, because it's multiple characters.");
                             None
                         } else {
                             Some((Key::Character(char), *key_code))
                         }
                     } else {
-                        eprintln!("Could not process keyboard input {keyboard_input:?}, because it's an empty character.");
+                        error!("Could not process keyboard input {keyboard_input:?}, because it's an empty character.");
                         None
                     }
                 }
@@ -52,10 +52,10 @@ impl Keys {
                 KeyChange {
                     key,
                 change: if ctrl_change || key_states.just_pressed(key_code) {
-                    //println!("{:?} just pressed", &key);
+                    //trace!("{:?} just pressed", &key);
                     InputChange::JustPressed
                 } else {
-                    //println!("{:?} held", &key);
+                    //trace!("{:?} held", &key);
                     InputChange::Held
                 },
                 }
@@ -106,7 +106,7 @@ impl Keys {
             });
 
             if let Some((entity, system)) = system {
-                //println!("System found for {key_change:?}");
+                //trace!("System found for {key_change:?}");
                 match system.clone() {
                     KeyBindingSystem::Simple(system) => {
                         commands.run_system(system);
@@ -119,7 +119,7 @@ impl Keys {
                     }
                 }
             } else {
-                //println!("No system found for {key_change:?}");
+                //trace!("No system found for {key_change:?}");
             }
         }
     }

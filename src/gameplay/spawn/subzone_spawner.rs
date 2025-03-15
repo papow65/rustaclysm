@@ -7,7 +7,7 @@ use crate::gameplay::{
 };
 use crate::here;
 use bevy::ecs::system::SystemParam;
-use bevy::prelude::{Res, ResMut, StateScoped, Transform, Visibility};
+use bevy::prelude::{Res, ResMut, StateScoped, Transform, Visibility, warn};
 use cdda_json_files::{
     CddaAmount, FlatVec, InfoId, RepetitionBlock, RequiredLinkedLater, Submap, SubzoneOffset,
 };
@@ -31,7 +31,7 @@ impl SubzoneSpawner<'_, '_> {
         subzone_level: SubzoneLevel,
     ) {
         if self.subzone_level_entities.get(subzone_level).is_some() {
-            eprintln!("{subzone_level:?} already exists");
+            warn!("{subzone_level:?} already exists");
             return;
         }
 
@@ -67,7 +67,7 @@ impl SubzoneSpawner<'_, '_> {
     }
 
     fn spawn_submap(&mut self, submap: &Submap, subzone_level: SubzoneLevel) {
-        //println!("{:?} started...", subzone_level);
+        //trace!("{:?} started...", subzone_level);
         let subzone_level_entity = self
             .tile_spawner
             .commands
@@ -93,7 +93,7 @@ impl SubzoneSpawner<'_, '_> {
                         z,
                     };
                     let pos = base_pos.horizontal_offset(x, z);
-                    //dbg!("{pos:?}");
+                    //trace!("{:?}", ("{pos:?}");
                     let Some(local_terrain) = LocalTerrain::at(&terrain, pos) else {
                         return;
                     };
@@ -161,7 +161,7 @@ impl SubzoneSpawner<'_, '_> {
                 }
             }
 
-            //println!("{:?} done", subzone_level);
+            //trace!("{:?} done", subzone_level);
         }
 
         self.subzone_level_entities

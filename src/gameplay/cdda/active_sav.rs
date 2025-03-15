@@ -1,6 +1,6 @@
 use crate::gameplay::cdda::{SavPath, WorldPath};
 use crate::util::AssetPaths;
-use bevy::ecs::system::Resource;
+use bevy::prelude::{Resource, debug};
 use cdda_json_files::Sav;
 use std::{fs::read_to_string, path::PathBuf};
 
@@ -16,12 +16,12 @@ pub(crate) struct ActiveSav {
 impl ActiveSav {
     pub(crate) fn new(path: &PathBuf) -> Self {
         let sav_path = AssetPaths::save().join(path);
-        //println!("Loading {}...", sav_path.display());
+        //trace!("Loading {}...", sav_path.display());
 
         let sav = read_to_string(&sav_path)
             .ok()
             .inspect(|_| {
-                println!("Loading {}...", sav_path.display());
+                debug!("Loading {}...", sav_path.display());
             })
             .map(|s| String::from(s.split_at(s.find('\n').expect("Non-JSON first line")).1))
             .map(|s| serde_json::from_str::<Sav>(s.as_str()))

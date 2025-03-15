@@ -5,7 +5,7 @@ use crate::gameplay::{
     StandardIntegrity, WalkingCost, Zone, ZoneLevel,
 };
 use bevy::ecs::system::SystemParam;
-use bevy::prelude::{Entity, Query, ResMut, With, Without};
+use bevy::prelude::{Entity, Query, ResMut, With, Without, debug, warn};
 use cdda_json_files::MoveCost;
 use pathfinding::prelude::astar;
 use std::cmp::Ordering;
@@ -77,7 +77,7 @@ impl<'w, 's> Envir<'w, 's> {
                 }
             }
 
-            eprintln!("No matching stairs up found");
+            warn!("No matching stairs up found");
             from.offset(PosOffset {
                 x: 0,
                 level: LevelOffset::UP,
@@ -114,7 +114,7 @@ impl<'w, 's> Envir<'w, 's> {
                 }
             }
 
-            eprintln!("No matching stairs down found");
+            warn!("No matching stairs down found");
             from.offset(PosOffset {
                 x: 0,
                 level: LevelOffset::DOWN,
@@ -362,7 +362,7 @@ impl<'w, 's> Envir<'w, 's> {
                 + self.walking_cost(pos, to).duration(speed)
         };
 
-        //println!("dumb? {dumb:?} @{from:?}");
+        //trace!("dumb? {dumb:?} @{from:?}");
         if intelligence == Intelligence::Smart && seen(to) {
             MovementPath::plan(from, nbors_fn, estimated_duration_fn, to)
         } else {
@@ -492,7 +492,7 @@ impl MovementPath {
                 destination,
             })
             .inspect(|path| {
-                println!(
+                debug!(
                     "MovementPath::improvize {from:?} by {:?} to {destination:?} @ {:?}",
                     path.first, path.duration
                 );
@@ -522,7 +522,7 @@ impl MovementPath {
                 Some((score, path, *total))
             })
             .inspect(|(score, path, total)| {
-                println!(
+                debug!(
                     "{from:?}->{:?}->{destination:?}  {score:?} / {total:?}",
                     path.first
                 );

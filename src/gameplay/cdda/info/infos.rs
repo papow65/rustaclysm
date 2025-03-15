@@ -2,7 +2,7 @@ use crate::gameplay::cdda::info::info_map::{InfoMap, ItemInfoMapLoader};
 use crate::gameplay::cdda::info::parsed_json::ParsedJson;
 use crate::gameplay::{ObjectCategory, ObjectDefinition, TypeId, cdda::Error};
 use crate::util::AsyncNew;
-use bevy::prelude::Resource;
+use bevy::prelude::{Resource, debug, info};
 use bevy::utils::HashMap;
 use cdda_json_files::{
     Alternative, Ammo, BionicItem, Book, CddaItem, CddaItemName, CharacterInfo, Clothing,
@@ -159,7 +159,7 @@ impl Infos {
         };
 
         for type_id in enriched_json_infos.into_keys() {
-            eprintln!("Unprocessed type: {type_id:?}");
+            debug!("Unprocessed type: {type_id:?}");
         }
 
         this.characters
@@ -167,7 +167,7 @@ impl Infos {
             .insert(InfoId::new("human"), Arc::new(default_human()));
 
         let duration = start.elapsed();
-        println!("The creation of Infos took {duration:?}");
+        info!("The creation of Infos took {duration:?}");
 
         this
     }
@@ -239,7 +239,7 @@ impl Infos {
 
         while let Some(other) = self.looks_like(current_definition_ref) {
             if variants.contains(&other) {
-                //eprintln!("Variants {:?} already contains {:?}", &variants, &other); // TODO
+                //trace!("Variants {:?} already contains {:?}", &variants, &other); // TODO
                 break;
             }
             variants.push(other.suffix("_season_summer"));

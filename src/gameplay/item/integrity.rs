@@ -17,7 +17,7 @@ impl ItemIntegrity {
     }
 
     pub(crate) fn fragment(&self) -> Option<Fragment> {
-        //println!("{self:?}");
+        //trace!("{self:?}");
         Some(Fragment::colorized(
             match self.damage {
                 damage if damage <= Self::REINFORCED_DAMAGE => "!!",

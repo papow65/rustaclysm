@@ -16,7 +16,7 @@ use bevy::prelude::{
     DespawnRecursiveExt as _, DetectChanges as _, Entity, EventReader, FlexDirection, FlexWrap,
     IntoSystemConfigs as _, JustifyContent, Local, Node, Or, Overflow, ParamSet, PositionType,
     Query, Res, State, StateScoped, Text, TextColor, TextSpan, UiRect, Val, Visibility, With,
-    Without, on_event, resource_exists, resource_exists_and_changed,
+    Without, info, on_event, resource_exists, resource_exists_and_changed, warn,
 };
 use cdda_json_files::MoveCost;
 use std::{num::Saturating, time::Instant};
@@ -217,9 +217,9 @@ fn update_log(
                 " (not perceived)"
             };
             if message.severity == Severity::Error {
-                eprintln!("{}{suffix}", &message.phrase);
+                warn!("{}{suffix}", &message.phrase);
             } else {
-                println!("{}{suffix}", &message.phrase);
+                info!("{}{suffix}", &message.phrase);
             }
         }
         if let Some(message) = percieved_message {
@@ -371,7 +371,7 @@ fn update_status_health(
         text.0 = format!("{:3}", health.0.current());
         *color = health.0.color();
 
-        //dbg!((health, text, style));
+        //trace!("{:?}", ((health, text, style));
     }
 
     log_if_slow("update_status_health", start);
@@ -390,7 +390,7 @@ fn update_status_stamina(
         text.0 = format!("{:3.0}", 100.0 * player_stamina.relative());
         *color = player_stamina.color();
 
-        //dbg!((player_stamina, text, style));
+        //trace!("{:?}", ((player_stamina, text, style));
     }
 
     log_if_slow("update_status_stamina", start);

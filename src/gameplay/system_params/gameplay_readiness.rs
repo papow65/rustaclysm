@@ -3,7 +3,7 @@ use crate::gameplay::{
     SubzoneLevelEntities, TileLoader,
 };
 use bevy::ecs::system::SystemParam;
-use bevy::prelude::{Assets, Res};
+use bevy::prelude::{Assets, Res, debug};
 
 #[derive(SystemParam)]
 pub(crate) struct GameplayReadiness<'w> {
@@ -24,7 +24,7 @@ impl GameplayReadiness<'_> {
     }
 
     pub(crate) fn ready_to_run(&self) -> bool {
-        println!(
+        debug!(
             "Readiness: {} overmaps, {} overmap bufers, {} maps, {} map memories, explored {}, and subzone levels {}",
             self.overmap_assets.len(),
             self.overmap_buffer_assets.len(),

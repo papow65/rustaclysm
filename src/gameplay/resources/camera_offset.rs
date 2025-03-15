@@ -30,7 +30,7 @@ impl CameraOffset {
         } else {
             -1
         };
-        //dbg!(self.zoom_in_level);
+        //trace!("{:?}", (self.zoom_in_level);
     }
 
     pub(crate) const fn zoom_map_only(&self) -> bool {

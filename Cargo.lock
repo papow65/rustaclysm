@@ -1366,6 +1366,7 @@ name = "cdda_json_files"
 version = "0.0.0"
 dependencies = [
  "ahash",
+ "bevy_log",
  "either",
  "fastrand",
  "hashbrown 0.14.5",

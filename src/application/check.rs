@@ -1,5 +1,5 @@
 use crate::util::log_if_slow;
-use bevy::prelude::Local;
+use bevy::prelude::{Local, warn};
 use std::time::{Duration, Instant};
 
 pub(super) struct StdInstant(Instant);
@@ -23,7 +23,7 @@ pub(super) fn check_delay(mut last_time: Local<StdInstant>) {
 
     let delay = last_time.next();
     if Duration::from_millis(600) < delay {
-        eprintln!("Very large delay: {delay:?}");
+        warn!("Very large delay: {delay:?}");
     }
 
     log_if_slow("check_delay", start);

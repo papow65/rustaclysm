@@ -1,6 +1,6 @@
 use crate::gameplay::{ContainerLimits, Fragment, Infos, Item, ItemItem, Phrase, item::Pocket};
 use bevy::ecs::system::SystemParam;
-use bevy::prelude::{Children, Entity, HierarchyQueryExt as _, Query, Res};
+use bevy::prelude::{Children, Entity, HierarchyQueryExt as _, Query, Res, error};
 use cdda_json_files::{InfoId, PocketType};
 use std::{iter::once, num::NonZeroUsize};
 
@@ -156,7 +156,7 @@ impl<'w> ItemHierarchy<'w, '_> {
                 self.infos
                     .magazines
                     .get(&item.definition.id)
-                    .inspect_err(|error| eprintln!("Magazine not found: {error:?}"))
+                    .inspect_err(|error| error!("Magazine not found: {error:?}"))
                     .ok()
                     .filter(|magazine| {
                         magazine

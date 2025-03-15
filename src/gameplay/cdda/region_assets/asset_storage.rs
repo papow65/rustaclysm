@@ -33,7 +33,7 @@ impl<A: RegionAsset> AssetStorage<A> {
     }
 
     pub(super) fn region(&self, handle: &AssetId<A>) -> Option<A::Region> {
-        //println!("Looking for {handle:?} in {:?}", self.overzones);
+        //trace!("Looking for {handle:?} in {:?}", self.overzones);
         self.regions.get(handle).copied()
     }
 }

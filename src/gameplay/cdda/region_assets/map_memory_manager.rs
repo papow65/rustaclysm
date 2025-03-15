@@ -28,7 +28,7 @@ impl MapMemoryManager<'_, '_> {
             level: subzone_level.level,
         };
         let path = MapMemoryPath::new(&sav_path, base_zone_level);
-        //println!("{:?}", &path);
+        //trace!("{:?}", &path);
         let map_memory =
             self.storage
                 .handle(&self.asset_server, &self.assets, base_zone_level, path);

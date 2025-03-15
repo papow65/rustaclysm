@@ -1,4 +1,5 @@
 use crate::{HashMap, InfoId, MaybeFlatVec, SpriteNumber};
+use bevy_log::warn;
 use either::Either;
 use serde::Deserialize;
 
@@ -136,13 +137,13 @@ impl TileInfo {
                 if let Some(variant) = self.variants.get(tile_variant) {
                     return (true, &variant.foreground, &variant.background);
                 } else {
-                    eprintln!(
+                    warn!(
                         "Variant {tile_variant:?} could not be found for tile {:?}",
                         &self.ids
                     );
                 }
             } else {
-                eprintln!("No variants found for multitile {:?}", &self.ids);
+                warn!("No variants found for multitile {:?}", &self.ids);
             }
         }
 

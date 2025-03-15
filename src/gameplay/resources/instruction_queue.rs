@@ -1,5 +1,5 @@
 use crate::gameplay::{Interruption, QueuedInstruction};
-use bevy::prelude::Resource;
+use bevy::prelude::{Resource, debug, warn};
 
 #[derive(Debug, Default, Resource)]
 pub(crate) struct InstructionQueue {
@@ -27,7 +27,7 @@ impl InstructionQueue {
 
     pub(crate) fn log_if_long(&self) {
         if 1 < self.queue.len() {
-            println!("Unprocessed key codes: {:?}", self.queue);
+            warn!("Unprocessed key codes: {:?}", self.queue);
         }
     }
 
@@ -40,7 +40,7 @@ impl InstructionQueue {
             );
 
             self.waiting_for_user = true;
-            println!("Waiting for user action");
+            debug!("Waiting for user action");
         }
     }
 

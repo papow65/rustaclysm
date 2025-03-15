@@ -4,7 +4,7 @@ use crate::hud::text_color_expect_full;
 use bevy::ecs::query::QueryData;
 use bevy::prelude::{
     BuildChildren as _, Commands, DespawnRecursiveExt as _, Entity, Event, EventWriter, NextState,
-    Query, Transform, Visibility,
+    Query, Transform, Visibility, error, warn,
 };
 use cdda_json_files::{CddaItem, Description};
 use units::{Distance, Duration, Speed};
@@ -126,7 +126,7 @@ impl ActorItem<'_> {
                 .push(Fragment::colorized(total_duration.short_format(), color))
                 .send(Severity::Info, true);
         } else {
-            eprintln!("Unexpected {player_action_state:?} while sleeping");
+            error!("Unexpected {player_action_state:?} while sleeping");
         }
 
         self.impact_from_duration(SLEEP_DURATION, StaminaCost::LYING_REST)
@@ -497,9 +497,9 @@ impl ActorItem<'_> {
         taken: &ItemItem,
     ) {
         let left_over_amount = taken.amount - &allowed_amount;
-        //dbg!(&split_amount);
-        //dbg!(&allowed_amount);
-        //dbg!(&left_over_amount);
+        //trace!("{:?}", &split_amount);
+        //trace!("{:?}", (&allowed_amount);
+        //trace!("{:?}", (&left_over_amount);
         let left_over_entity = commands
             .spawn((
                 taken.definition.clone(),
@@ -606,21 +606,21 @@ impl ActorItem<'_> {
             ..
         } in start_craft.recipe_situation.consumed_components()
         {
-            //println!("Consume {required} from {item_entities:?}:");
+            //trace!("Consume {required} from {item_entities:?}:");
             let mut missing = *required;
             for &item_entity in item_entities {
                 let mut item_amount = item_amounts
                     .get_mut(item_entity)
                     .expect("Consumed component items should be found");
                 if item_amount.0 <= missing {
-                    //println!(" - Consume {item_entity} fully ({:?}x)", item_amount.0);
+                    //trace!(" - Consume {item_entity} fully ({:?}x)", item_amount.0);
                     commands.entity(item_entity).despawn_recursive();
                     missing -= item_amount.0;
                     if missing == 0 {
                         break;
                     }
                 } else {
-                    //println!(" - Consume {item_entity:?} partially ({}/{})",missing, item_amount.0);
+                    //trace!(" - Consume {item_entity:?} partially ({}/{})",missing, item_amount.0);
                     item_amount.0 -= missing;
                     break;
                 }
@@ -636,7 +636,7 @@ impl ActorItem<'_> {
             Ok(item) => {
                 next_player_action_state.set(PlayerActionState::Crafting { item });
             }
-            Err(error) => eprintln!("Failed to start crafting: {error:#?}"),
+            Err(error) => error!("Failed to start crafting: {error:#?}"),
         }
 
         self.no_impact()
@@ -668,7 +668,7 @@ impl ActorItem<'_> {
             if let Some(result) = craft.recipe.result.get_option(here!()) {
                 let cdda_item = CddaItem::from(&result);
                 if let Err(error) = spawner.spawn_item(parent, Some(pos), &cdda_item, amount) {
-                    eprintln!("Spawning crafted item failed: {error:#?}");
+                    error!("Spawning crafted item failed: {error:#?}");
                 }
             }
             next_player_action_state.set(PlayerActionState::Normal);
@@ -701,7 +701,7 @@ impl ActorItem<'_> {
                 })
                 .send_info();
         } else {
-            eprintln!("No description");
+            warn!("No description");
         }
         self.no_impact()
     }

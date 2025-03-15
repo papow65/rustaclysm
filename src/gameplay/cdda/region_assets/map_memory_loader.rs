@@ -1,5 +1,6 @@
 use crate::gameplay::MapMemoryAsset;
 use bevy::asset::{AssetLoader, LoadContext, io::Reader};
+use bevy::prelude::error;
 use either::Either;
 use std::str::from_utf8;
 
@@ -22,13 +23,13 @@ impl AssetLoader for MapMemoryLoader {
             .read_to_end(&mut bytes)
             .await
             .inspect_err(|e| {
-                eprintln!("Map file loading error: {:?} {e:?}", load_context.path());
+                error!("Map file loading error: {:?} {e:?}", load_context.path());
             })
             .map_err(Either::Left)?;
 
         let map_memory = serde_json::from_slice::<MapMemoryAsset>(&bytes)
             .map_err(|e| {
-                eprintln!(
+                error!(
                     "Map memory json loading error: {:?} {:?} {e:?}",
                     load_context.path(),
                     from_utf8(&bytes[0..40])

@@ -24,7 +24,7 @@ impl ZoneSpawner<'_, '_> {
         zone_level: ZoneLevel,
         child_visibiltiy: &Visibility,
     ) {
-        //println!("zone_level: {zone_level:?} {:?}", &definition);
+        //trace!("zone_level: {zone_level:?} {:?}", &definition);
         assert!(
             zone_level.level <= Level::ZERO,
             "Zone levels above ground may not be spawned"

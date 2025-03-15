@@ -2,7 +2,7 @@ use crate::background::{component::Background, state::BackgroundState};
 use crate::util::AssetPaths;
 use bevy::prelude::{
     AssetServer, Commands, GlobalZIndex, ImageNode, Node, PositionType, Query, Res, StateScoped,
-    Val, Window, With,
+    Val, Window, With, warn,
 };
 
 const BACKGROUND_WIDTH: f32 = 1522.0;
@@ -49,7 +49,7 @@ fn background_scale(window: Option<&Window>) -> (Val, Val) {
         window.resolution.height() * BACKGROUND_WIDTH
             / (BACKGROUND_HEIGHT * window.resolution.width())
     } else {
-        eprintln!("No window size available (yet?) to resize the background to");
+        warn!("No window size available (yet?) to resize the background to");
         1.0
     };
 

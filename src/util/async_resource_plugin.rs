@@ -1,5 +1,6 @@
 use bevy::prelude::{
-    App, Commands, IntoSystemConfigs as _, Plugin, ResMut, Resource, Update, not, resource_exists,
+    App, Commands, IntoSystemConfigs as _, Plugin, ResMut, Resource, Update, debug, not,
+    resource_exists,
 };
 use bevy::tasks::{AsyncComputeTaskPool, Task};
 use futures_lite::future::{block_on, poll_once};
@@ -45,12 +46,12 @@ impl<T: AsyncNew<T> + Send + 'static> Default for AsyncResourceLoader<T> {
 
             let start = Instant::now();
             let type_name = MODULE_PREFIX.replace_all(type_name::<T>(), "");
-            println!("Started loading {type_name}");
+            debug!("Started loading {type_name}");
 
             let result = T::async_new().await;
 
             let duration = start.elapsed();
-            println!("Finished loading {type_name} in {duration:?}");
+            debug!("Finished loading {type_name} in {duration:?}");
 
             result
         });

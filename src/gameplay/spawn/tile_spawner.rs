@@ -12,7 +12,7 @@ use crate::hud::{BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COL
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{
     BuildChildren as _, Camera3d, ChildBuild as _, Commands, DirectionalLight, Entity, EulerRot,
-    Mat4, Res, StateScoped, TextColor, Transform, Vec3, Visibility,
+    Mat4, Res, StateScoped, TextColor, Transform, Vec3, Visibility, debug, error,
 };
 use bevy::render::camera::{PerspectiveProjection, Projection};
 use bevy::render::view::RenderLayers;
@@ -64,18 +64,18 @@ impl<'w> TileSpawner<'w, '_> {
                     item,
                     Amount(item.charges.unwrap_or(1) * amount),
                 ) {
-                    dbg!(error);
+                    error!("While spawning an item: {error:#?}");
                 }
             }
         }
 
         for spawn in spawns {
-            //dbg!(&spawn.id);
+            //trace!("{:?}", (&spawn.id);
             log_spawn_result(self.spawn_character(subzone_level_entity, pos, &spawn.info, None));
         }
 
         for fields in fields {
-            //dbg!(&fields);
+            //trace!("{:?}", (&fields);
             for field in &fields.0 {
                 self.spawn_field(subzone_level_entity, pos, field);
             }
@@ -164,7 +164,7 @@ impl<'w> TileSpawner<'w, '_> {
                 .insert(BodyContainers { hands, clothing });
         }
 
-        println!("Spawned a {:?} at {pos:?}", definition.id);
+        debug!("Spawned a {:?} at {pos:?}", definition.id);
         Ok(entity)
     }
 
@@ -192,12 +192,12 @@ impl<'w> TileSpawner<'w, '_> {
     ) -> Result<Entity, Error> {
         let item_info = &item.item_info.get()?;
 
-        //println!("{:?} {:?} {:?} {:?}", &parent, pos, &id, &amount);
+        //trace!("{:?} {:?} {:?} {:?}", &parent, pos, &id, &amount);
         let definition = &ObjectDefinition {
             category: ObjectCategory::Item,
             id: item_info.id.clone(),
         };
-        //println!("{:?} @ {pos:?}", &definition);
+        //trace!("{:?} @ {pos:?}", &definition);
         let object_name = ObjectName::new(
             item_info.name.clone(),
             item_category_text_color(item_info.category.as_ref()),
@@ -209,7 +209,7 @@ impl<'w> TileSpawner<'w, '_> {
                 if corpse_character.id == InfoId::new("mon_null") {
                     (item_info.volume, item_info.mass)
                 } else {
-                    println!("{:?}", &corpse_character.id);
+                    debug!("{:?}", &corpse_character.id);
                     (corpse_character.volume, corpse_character.mass)
                 }
             }
@@ -233,10 +233,10 @@ impl<'w> TileSpawner<'w, '_> {
         }
 
         let entity = entity.id();
-        //println!("Item {entity:?} with parent {parent:?}");
+        //trace!("Item {entity:?} with parent {parent:?}");
         if let Some(container) = &item.contents {
             for cdda_pocket in &container.contents {
-                //println!("Pocket of {:?}: {:?}", &item.typeid, cdda_pocket);
+                //trace!("Pocket of {:?}: {:?}", &item.typeid, cdda_pocket);
                 let pocket = self
                     .commands
                     .spawn((
@@ -246,12 +246,12 @@ impl<'w> TileSpawner<'w, '_> {
                     ))
                     .set_parent(entity)
                     .id();
-                //println!("Pocket {pocket:?} with parent {entity:?}");
+                //trace!("Pocket {pocket:?} with parent {entity:?}");
                 for content in &cdda_pocket.contents {
                     if let Err(error) =
                         self.spawn_item(pocket, None, content, Amount(content.charges.unwrap_or(1)))
                     {
-                        dbg!(error);
+                        error!("While spawning a nested item: {:#?}", error);
                     }
                 }
             }
@@ -285,7 +285,7 @@ impl<'w> TileSpawner<'w, '_> {
                             if let Err(error) =
                                 self.spawn_item(parent_entity, Some(pos), &cdda_item, amount)
                             {
-                                dbg!(error);
+                                error!("While spawning a bashing item: {:#?}", error);
                             }
                         }
                     }
@@ -307,7 +307,7 @@ impl<'w> TileSpawner<'w, '_> {
         let item_group = match infos.item_groups.get(id) {
             Ok(item_group) => item_group,
             Err(error) => {
-                dbg!(error);
+                error!("While spawning an items collection: {:#?}", error);
                 return;
             }
         };
@@ -441,14 +441,14 @@ impl<'w> TileSpawner<'w, '_> {
         let part_info = match infos.vehicle_parts.get(&part.id) {
             Ok(part_info) => part_info,
             Err(error) => {
-                dbg!(error);
+                error!("While looking up vehicle part info: {:#?}", error);
                 return;
             }
         };
         let item_info = match infos.common_item_infos.get(&part_info.item) {
             Ok(item_info) => item_info,
             Err(error) => {
-                dbg!(error);
+                error!("While looking up a vehicle part item: {:#?}", error);
                 return;
             }
         };
@@ -491,9 +491,9 @@ impl<'w> TileSpawner<'w, '_> {
         object_name: ObjectName,
         tile_variant: Option<TileVariant>,
     ) -> Entity {
-        //dbg!(&parent);
-        //dbg!(pos);
-        //dbg!(&definition);
+        //trace!("{:?}", (&parent);
+        //trace!("{:?}", (pos);
+        //trace!("{:?}", (&definition);
         let last_seen = if definition.category.shading_applied() {
             if pos.is_some_and(|p| self.explored.has_pos_been_seen(p)) {
                 LastSeen::Previously
@@ -504,7 +504,7 @@ impl<'w> TileSpawner<'w, '_> {
             // cursor -> dummy value that gives normal material
             LastSeen::Currently
         };
-        //dbg!(&last_seen);
+        //trace!("{:?}", (&last_seen);
 
         let layers = if definition.category == ObjectCategory::Vehicle {
             None
@@ -590,7 +590,7 @@ impl<'w> TileSpawner<'w, '_> {
             -0.18 * std::f32::consts::TAU,
             -std::f32::consts::FRAC_PI_4,
         ));
-        //dbg!(&light_transform);
+        //trace!("{:?}", (&light_transform);
         self.commands.spawn((
             DirectionalLight {
                 illuminance: 10_000.0,

@@ -3,7 +3,9 @@ use crate::gameplay::{
 };
 use crate::util::log_if_slow;
 use bevy::asset::UntypedAssetLoadFailedEvent;
-use bevy::prelude::{Assets, EventReader, Font, Local, Mesh, Query, Res, StandardMaterial, With};
+use bevy::prelude::{
+    Assets, EventReader, Font, Local, Mesh, Query, Res, StandardMaterial, With, debug, error,
+};
 use std::time::Instant;
 
 pub(crate) fn count_assets(
@@ -33,13 +35,13 @@ pub(crate) fn count_assets(
     ];
 
     if *last_counts != counts && counts.iter().any(|c| 0 < *c) {
-        println!("{} font assets", counts[0]);
-        println!("{} map assets", counts[1]);
-        println!("{} map memory assets", counts[2]);
-        println!("{} overmap assets", counts[3]);
-        println!("{} overmap buffer assets", counts[4]);
-        println!("{} material assets", counts[5]);
-        println!("{} mesh assets", counts[6]);
+        debug!("{} font assets", counts[0]);
+        debug!("{} map assets", counts[1]);
+        debug!("{} map memory assets", counts[2]);
+        debug!("{} overmap assets", counts[3]);
+        debug!("{} overmap buffer assets", counts[4]);
+        debug!("{} material assets", counts[5]);
+        debug!("{} mesh assets", counts[6]);
 
         *last_counts = counts;
     }
@@ -67,7 +69,7 @@ pub(crate) fn count_pos(
     let counts = [zone_levels, subzone_levels, pos];
 
     if *last_counts != counts && counts.iter().any(|c| 0 < *c) {
-        println!("{subzone_levels} zone levels, {zone_levels} subzone levels, and {pos} positions");
+        debug!("{subzone_levels} zone levels, {zone_levels} subzone levels, and {pos} positions");
 
         *last_counts = counts;
     }
@@ -79,7 +81,7 @@ pub(crate) fn check_failed_asset_loading(mut fails: EventReader<UntypedAssetLoad
     let start = Instant::now();
 
     for fail in fails.read() {
-        eprintln!("Failed to load asset {}: {:#?}", fail.path, &fail.error);
+        error!("Failed to load asset {}: {:#?}", fail.path, &fail.error);
     }
 
     log_if_slow("check_failed_asset_loading", start);
@@ -103,7 +105,7 @@ pub(crate) fn log_archetypes(world: &mut World) {
 
     for archetype in world.archetypes().iter() {
         if !archetype.is_empty() {
-            println!(
+            debug!(
                 "{:?} {:?} {:?}",
                 archetype.id(),
                 archetype.len(),

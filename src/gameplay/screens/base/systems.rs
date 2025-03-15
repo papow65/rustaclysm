@@ -57,7 +57,7 @@ fn toggle_map(
         Key::Character('m') => ZoomDistance::Close,
         Key::Character('M') => ZoomDistance::Far,
         _ => {
-            eprintln!("Key {key:?} not recognized when toggling the map");
+            warn!("Key {key:?} not recognized when toggling the map");
             return;
         }
     };
@@ -171,18 +171,18 @@ fn handle_queued_instruction(
     instruction_queue: &mut ResMut<InstructionQueue>,
     instruction: QueuedInstruction,
 ) {
-    //println!("{focus_state:?} {instruction:?}");
+    //trace!("{focus_state:?} {instruction:?}");
     match (*focus_state, &instruction) {
         (FocusState::Normal, _) => instruction_queue.add(instruction),
         (FocusState::ExaminingPos(target), QueuedInstruction::ToggleAutoTravel) => {
-            //println!("Autotravel pos");
+            //trace!("Autotravel pos");
             next_focus_state.set(FocusState::Normal);
             next_player_action_state.set(PlayerActionState::AutoTravel { target });
             instruction_queue.stop_waiting();
             message_writer.you("start traveling...").send_info();
         }
         (FocusState::ExaminingZoneLevel(zone_level), QueuedInstruction::ToggleAutoTravel) => {
-            //println!("Autotravel zone level");
+            //trace!("Autotravel zone level");
             next_focus_state.set(FocusState::Normal);
             next_player_action_state.set(PlayerActionState::AutoTravel {
                 target: zone_level.center_pos(),
@@ -202,7 +202,7 @@ fn handle_queued_instruction(
         }
         (_, QueuedInstruction::CancelAction) => next_focus_state.set(FocusState::Normal),
         _ => {
-            println!("Ignoring {:?} in {:?}", &instruction, &focus_state);
+            warn!("Ignoring {:?} in {:?}", &instruction, &focus_state);
         }
     }
 
@@ -354,7 +354,7 @@ fn manage_zoom(
         Key::Character('z') => ZoomDirection::In,
         Key::Character('Z') => ZoomDirection::Out,
         _ => {
-            eprintln!("Key {key:?} not recognized when zooming");
+            warn!("Key {key:?} not recognized when zooming");
             return;
         }
     };
@@ -375,7 +375,7 @@ fn manage_queued_instruction(
 ) {
     let start = Instant::now();
 
-    println!("Player instruction: {:?}", &instruction);
+    debug!("Player instruction: {:?}", &instruction);
     handle_queued_instruction(
         &mut message_writer,
         &focus.state,

@@ -2,7 +2,7 @@ use crate::gameplay::cdda::paths::MapPath;
 use crate::gameplay::cdda::region_assets::AssetStorage;
 use crate::gameplay::{ActiveSav, AssetState, MapAsset, SubzoneLevel, ZoneLevel};
 use bevy::ecs::system::SystemParam;
-use bevy::prelude::{AssetEvent, AssetServer, Assets, EventReader, Res, ResMut};
+use bevy::prelude::{AssetEvent, AssetServer, Assets, EventReader, Res, ResMut, warn};
 use cdda_json_files::Submap;
 
 #[derive(SystemParam)]
@@ -44,7 +44,7 @@ impl MapManager<'_, '_> {
                     Some(zone_level)
                 } else {
                     // This may be an asset of a previous gameplay.
-                    eprintln!("Unknown map asset {id:?} loaded");
+                    warn!("Unknown map asset {id:?} loaded");
                     None
                 }
             } else {

@@ -6,9 +6,10 @@ use crate::gameplay::{
 };
 use bevy::prelude::{
     App, Changed, Children, Entity, FixedUpdate, IntoSystemConfigs as _, Or, Parent, Plugin, Query,
-    With, resource_exists,
+    With, resource_exists, warn,
 };
 use cdda_json_files::PocketType;
+use std::fmt::Write as _;
 
 pub(crate) struct ItemChecksPlugin;
 
@@ -80,22 +81,40 @@ fn check_single_item(
             match pocket.type_ {
                 PocketType::MagazineWell => {
                     if 1 < count {
-                        eprintln!(
-                            "At most one item expected in {pocket:?} ({entity:?}) instead of {count}:"
+                        warn!(
+                            "At most one item expected in {pocket:?} ({entity:?}) instead of {count}: {}",
+                            item_hierarchy.items_in(entity).fold(
+                                String::new(),
+                                |mut output, item| {
+                                    write!(
+                                        output,
+                                        "\n- {}",
+                                        Phrase::from_fragments(item.fragments().collect())
+                                    )
+                                    .expect("Writing should succeed");
+                                    output
+                                }
+                            )
                         );
-                        for item in item_hierarchy.items_in(entity) {
-                            eprintln!("- {}", Phrase::from_fragments(item.fragments().collect()));
-                        }
                     }
                 }
                 PocketType::Magazine => {
                     if count != 1 {
-                        eprintln!(
-                            "Exactly one item expected in {pocket:?} ({entity:?}) instead of {count}:"
+                        warn!(
+                            "Exactly one item expected in {pocket:?} ({entity:?}) instead of {count}: {}",
+                            item_hierarchy.items_in(entity).fold(
+                                String::new(),
+                                |mut output, item| {
+                                    write!(
+                                        output,
+                                        "\n- {}",
+                                        Phrase::from_fragments(item.fragments().collect())
+                                    )
+                                    .expect("Writing should succeed");
+                                    output
+                                }
+                            )
                         );
-                        for item in item_hierarchy.items_in(entity) {
-                            eprintln!("- {}", Phrase::from_fragments(item.fragments().collect()));
-                        }
                     }
                 }
                 _ => {}

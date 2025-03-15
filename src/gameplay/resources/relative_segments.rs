@@ -53,7 +53,7 @@ impl RelativeRay {
             })
             .collect::<Vec<_>>();
 
-        //println!("{:?} {:?} {}", &self.path, &preceding, skipped);
+        //trace!("{:?} {:?} {}", &self.path, &preceding, skipped);
 
         RelativeSegment {
             preceding,

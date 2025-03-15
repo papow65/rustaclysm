@@ -9,7 +9,7 @@ use crate::hud::{
 use bevy::ecs::entity::EntityHashMap;
 use bevy::prelude::{
     AlignItems, BackgroundColor, BuildChildren as _, ChildBuild as _, ChildBuilder, Entity,
-    JustifyContent, Node, Overflow, Text, TextColor, Val,
+    JustifyContent, Node, Overflow, Text, TextColor, Val, debug,
 };
 use cdda_json_files::CommonItemInfo;
 
@@ -197,7 +197,7 @@ impl InventoryBuilder<'_, '_> {
 
         self.selection_list.append(row_entity);
         if is_selected_previous {
-            println!("Previous selected found");
+            debug!("Previous selected found");
             self.selection_list.selected = Some(row_entity);
         }
         self.section_by_item

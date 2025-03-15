@@ -1,4 +1,5 @@
 use crate::{RequiredLinkedLater, TerrainInfo};
+use bevy_log::error;
 use serde::Deserialize;
 use serde::de::{Deserializer, Error as _};
 
@@ -62,8 +63,8 @@ where
             Err(single_error) => match CddaAmount::deserialize(value) {
                 Ok(amount) => Ok(Self::Multiple(amount)),
                 Err(amount_error) => {
-                    eprintln!("{single_error:?}");
-                    eprintln!("{amount_error:?}");
+                    error!("{single_error:?}");
+                    error!("{amount_error:?}");
                     Err(D::Error::custom(amount_error))
                 }
             },

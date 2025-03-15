@@ -1,9 +1,7 @@
 use crate::gameplay::ZoneLevel;
-use bevy::{
-    ecs::component::ComponentHooks,
-    prelude::{Entity, Resource},
-    utils::{HashMap, hashbrown::hash_map::Entry},
-};
+use bevy::ecs::component::ComponentHooks;
+use bevy::prelude::{Entity, Resource, error};
+use bevy::utils::{HashMap, hashbrown::hash_map::Entry};
 
 #[derive(Default, Resource)]
 pub(crate) struct ZoneLevelEntities {
@@ -39,7 +37,7 @@ impl ZoneLevelEntities {
                         occupied.remove();
                     }
                     Entry::Vacant(..) => {
-                        eprintln!("The removed zone level entity should have been found");
+                        error!("The removed zone level entity should have been found");
                     }
                 }
             }

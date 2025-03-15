@@ -131,7 +131,7 @@ impl CurrentlyVisibleBuilder<'_, '_> {
                 level: from.level,
                 z: from.z + distance,
             });
-            //println!("{from:?} {distance:?} -> ({min:?}, {max:?})");
+            //trace!("{from:?} {distance:?} -> ({min:?}, {max:?})");
             assert!(min.x <= max.x, "Invalid range for x {min:?}-{max:?}");
             assert!(min.z <= max.z, "Invalid range for z {min:?}-{max:?}");
             (min, max)

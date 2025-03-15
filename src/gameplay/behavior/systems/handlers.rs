@@ -193,7 +193,7 @@ pub(in super::super) fn update_damaged_corpses(
 ) {
     let start = Instant::now();
 
-    //eprintln!("{} corpses found", corpses.iter().len());
+    //trace!("{} corpses found", corpses.iter().len());
 
     for damage in damage_reader.read() {
         let (name, pos, mut integrity) =
@@ -368,7 +368,7 @@ pub(in super::super) fn combine_items(
             }
 
             if !merges.is_empty() {
-                //println!(
+                //trace!(
                 //    "Merging {:?}/{:?} with {:?}: {} -> {}",
                 //    moved.name, moved.entity, &merges, moved.amount.0, total_amount.0
                 //);

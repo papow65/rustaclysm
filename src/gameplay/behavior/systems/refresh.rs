@@ -12,7 +12,7 @@ use bevy::ecs::schedule::SystemConfigs;
 use bevy::prelude::{
     Camera, Changed, Children, EventWriter, GlobalTransform, IntoSystemConfigs as _, Local, Mesh3d,
     ParallelCommands, Parent, Query, RemovedComponents, Res, ResMut, State, Transform, Vec3,
-    Visibility, With, Without, resource_exists_and_changed,
+    Visibility, With, Without, debug, resource_exists_and_changed,
 };
 use std::cell::RefCell;
 use std::{cell::OnceCell, time::Instant};
@@ -159,7 +159,7 @@ fn update_visualization_on_player_move(
             explorations.send_batch(ref_cell.into_inner());
         }
 
-        println!("{}x visualization updated", items.iter().len());
+        debug!("{}x visualization updated", items.iter().len());
 
         *previous_camera_global_transform.get() = camera_global_transform;
         (*visualization_update).reset();

@@ -3,6 +3,7 @@ use crate::gameplay::*;
 use crate::hud::{BAD_TEXT_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR, text_color_expect_full};
 use bevy::prelude::{
     Component, DetectChanges as _, Entity, NextState, ResMut, StateSet as _, SubStates, TextColor,
+    debug,
 };
 use std::fmt;
 use units::{Duration, Timestamp};
@@ -150,7 +151,7 @@ impl PlayerActionState {
         instruction: QueuedInstruction,
         now: Timestamp,
     ) -> Option<PlannedAction> {
-        println!("processing instruction: {instruction:?}");
+        debug!("processing instruction: {instruction:?}");
         match (&self, instruction) {
             (Self::Sleeping { from }, QueuedInstruction::Interrupt(Interruption::Finished)) => {
                 let total_duration = now - *from;
@@ -251,7 +252,7 @@ impl PlayerActionState {
         player_pos: Pos,
         instruction: QueuedInstruction,
     ) -> Option<PlannedAction> {
-        //println!("processing generic instruction: {instruction:?}");
+        //trace!("processing generic instruction: {instruction:?}");
         match instruction {
             QueuedInstruction::CancelAction
             | QueuedInstruction::Wait
@@ -383,9 +384,9 @@ impl PlayerActionState {
                         Some(PlannedAction::smash(raw_nbor))
                     }
                     PickingNbor::Pulping => {
-                        //eprintln!("Inactive pulping");
+                        //trace!("Inactive pulping");
                         if let Nbor::Horizontal(target) = raw_nbor {
-                            //eprintln!("Activating pulping");
+                            //trace!("Activating pulping");
                             Some(PlannedAction::pulp(target))
                         } else {
                             message_writer.you("can't pulp vertically").send_error();
@@ -458,7 +459,7 @@ impl PlayerActionState {
                     CardinalDirection::try_from(horizontal_direction).unwrap_or_else(|()| {
                         panic!("{horizontal_direction:?} should match a cardinal direction");
                     });
-                //eprintln!("Activating peeking");
+                //trace!("Activating peeking");
                 // Not Self::Peeking, because that is not validated yet.
                 next_state.set(Self::Normal);
                 Some(PlannedAction::peek(target))
@@ -567,21 +568,21 @@ impl PlayerActionState {
                 }
             })
             .collect::<Vec<_>>();
-        //eprintln!("Pulping {} targets", pulpable_nbors.len());
+        //trace!("Pulping {} targets", pulpable_nbors.len());
         match pulpable_nbors.len() {
             0 => {
                 message_writer.str("no targets nearby").send_error();
                 None
             }
             1 => {
-                //eprintln!("Pulping target found -> active");
+                //trace!("Pulping target found -> active");
                 next_state.set(Self::Pulping {
                     direction: pulpable_nbors[0],
                 });
                 Some(PlannedAction::pulp(pulpable_nbors[0]))
             }
             _ => {
-                //eprintln!("Pulping choice -> inactive");
+                //trace!("Pulping choice -> inactive");
                 next_state.set(Self::PickingNbor(PickingNbor::Pulping));
                 None
             }
@@ -806,7 +807,7 @@ fn plan_auto_pulp(
     target: HorizontalDirection,
     enemy_name: Option<Fragment>,
 ) -> Option<PlannedAction> {
-    //eprintln!("Post instruction pulp handling...");
+    //trace!("Post instruction pulp handling...");
     if envir
         .find_pulpable(player.pos.horizontal_nbor(target))
         .is_some()
@@ -815,15 +816,15 @@ fn plan_auto_pulp(
             instruction_queue,
             enemy_name,
             if player.stamina.breath() == Breath::Normal {
-                //eprintln!("Keep pulping");
+                //trace!("Keep pulping");
                 PlannedAction::Pulp(Pulp { target })
             } else {
-                //eprintln!("Keep pulping after catching breath");
+                //trace!("Keep pulping after catching breath");
                 PlannedAction::Stay
             },
         )
     } else {
-        //eprintln!("Stop pulping");
+        //trace!("Stop pulping");
         instruction_queue.interrupt(Interruption::Finished);
         None
     }

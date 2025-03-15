@@ -5,7 +5,7 @@ use crate::gameplay::{
 };
 use crate::util::log_if_slow;
 use bevy::ecs::{schedule::SystemConfigs, system::SystemState};
-use bevy::prelude::{IntoSystemConfigs as _, Res, State, World, on_event, resource_exists};
+use bevy::prelude::{IntoSystemConfigs as _, Res, State, World, debug, on_event, resource_exists};
 use std::time::{Duration, Instant};
 
 pub(in super::super) fn loop_behavior_and_refresh() -> SystemConfigs {
@@ -37,9 +37,7 @@ fn loop_behavior(world: &mut World) {
         world.run_schedule(BehaviorSchedule);
         count += 1;
         if max_time < start.elapsed() {
-            println!(
-                "run_behavior_schedule could only handle {count} iterations before the timeout"
-            );
+            debug!("run_behavior_schedule could only handle {count} iterations before the timeout");
             break;
         }
     }

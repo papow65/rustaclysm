@@ -1,4 +1,5 @@
 use crate::gameplay::{TypeId, cdda::Error};
+use bevy::prelude::{debug, error, warn};
 use bevy::utils::HashMap;
 use cdda_json_files::{
     Bash, BashItem, BashItems, CommonItemInfo, FurnitureInfo, InfoId, ItemMigration,
@@ -23,13 +24,13 @@ impl<T: DeserializeOwned + 'static> InfoMap<T> {
                 .remove(type_id)
                 .unwrap_or_else(|| panic!("Type {type_id:?} not found"));
             for (id, object_properties) in objects {
-                //println!("{:#?}", &object_properties);
+                //trace!("{:#?}", &object_properties);
                 match serde_json::from_value::<T>(serde_json::Value::Object(object_properties)) {
                     Ok(info) => {
                         map.insert(id, Arc::new(info));
                     }
                     Err(error) => {
-                        eprintln!(
+                        error!(
                             "Failed loading json for {:?} {:?}: {error:#?}",
                             type_name::<T>(),
                             &id
@@ -119,7 +120,7 @@ impl InfoMap<TerrainInfo> {
         common_item_infos: &InfoMap<CommonItemInfo>,
     ) {
         if self.map.remove(&InfoId::new("t_null")).is_some() {
-            eprintln!("The terrain t_null was not expected to be present");
+            warn!("The terrain t_null was not expected to be present");
         }
 
         for terrain in self.map.values() {
@@ -200,7 +201,7 @@ impl ItemInfoMapLoader<'_> {
                 .insert(id.clone(), item_info.common());
         }
 
-        println!(
+        debug!(
             "{}x {}, and {}x common items",
             items.map.len(),
             std::any::type_name::<T>(),

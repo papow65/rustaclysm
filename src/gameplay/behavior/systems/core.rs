@@ -3,7 +3,7 @@ use crate::util::log_if_slow;
 use bevy::ecs::{schedule::SystemConfigs, system::SystemId};
 use bevy::prelude::{
     Commands, Entity, EventWriter, In, IntoSystem as _, IntoSystemConfigs as _, Local, NextState,
-    Query, Res, ResMut, State, StateTransition, SystemInput, With, World,
+    Query, Res, ResMut, State, StateTransition, SystemInput, With, World, debug,
 };
 use std::{cell::OnceCell, time::Instant};
 use units::Duration;
@@ -179,7 +179,7 @@ fn plan_npc_action(
     if let Some(last_enemy) = strategy.last_enemy {
         commands.entity(actor.entity).insert(last_enemy);
     }
-    println!(
+    debug!(
         "{} at {:?} plans {:?} and does {:?}",
         actor.name.single(*actor.pos).text,
         actor.pos,

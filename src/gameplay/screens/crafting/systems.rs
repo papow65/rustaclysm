@@ -19,7 +19,7 @@ use bevy::prelude::{
     AlignItems, BuildChildren as _, ChildBuild as _, Children, Commands, ComputedNode,
     DespawnRecursiveExt as _, Display, Entity, FlexDirection, In, IntoSystem as _, JustifyContent,
     KeyCode, Local, NextState, Node, Overflow, Parent, Query, Res, ResMut, StateScoped, Text,
-    TextColor, Transform, UiRect, Val, With, Without, World,
+    TextColor, Transform, UiRect, Val, With, Without, World, debug, error, warn,
 };
 use bevy::utils::hashbrown::hash_map::Entry;
 use bevy::{ecs::query::QueryData, ecs::system::SystemId, utils::HashMap};
@@ -198,7 +198,7 @@ pub(super) fn move_crafting_selection(
     let start = Instant::now();
 
     let Key::Code(key_code) = key else {
-        eprintln!("Unexpected key {key:?} while moving crafting selection");
+        warn!("Unexpected key {key:?} while moving crafting selection");
         return;
     };
 
@@ -262,7 +262,7 @@ pub(super) fn refresh_crafting_screen(
     let nearby_items = find_nearby(&location, &items_and_furniture, player_pos, body_containers);
     let nearby_manuals = nearby_manuals(&nearby_items);
     let nearby_qualities = nearby_qualities(&nearby_items);
-    //println!("{:?}", &nearby_manuals);
+    //trace!("{:?}", &nearby_manuals);
 
     let shown_recipes = shown_recipes(
         &infos,
@@ -528,10 +528,10 @@ fn recipe_qualities(
                     infos
                         .requirements
                         .get(&using.requirement)
-                        .inspect_err(|error| eprintln!("Requirement not found: {error:#?}"))
+                        .inspect_err(|error| error!("Requirement not found: {error:#?}"))
                         .ok()
                 })
-                //.inspect(|using| println!("Using qualities from {using:?}"))
+                //.inspect(|using| trace!("Using qualities from {using:?}"))
                 .flat_map(|requirement| &requirement.qualities.0),
         )
         .filter_map(|required_quality| {
@@ -561,7 +561,7 @@ fn recipe_components(
         .filter_map(|using| {
             infos
                 .to_components(using)
-                .inspect_err(|error| eprintln!("Using not found: {error:#?}"))
+                .inspect_err(|error| error!("Using not found: {error:#?}"))
                 .ok()
         })
         .flatten()
@@ -577,9 +577,7 @@ fn recipe_components(
                     .filter_map(|alternative| {
                         expand_items(infos, alternative)
                             .inspect_err(|error| {
-                                eprintln!(
-                                    "Could not process alternative {alternative:?}: {error:#?}"
-                                );
+                                error!("Could not process alternative {alternative:?}: {error:#?}");
                             })
                             .ok()
                     })
@@ -589,7 +587,7 @@ fn recipe_components(
                             .common_item_infos
                             .get(item_id)
                             .inspect_err(|error| {
-                                eprintln!(
+                                error!(
                                     "Item {item_id:?} not found (maybe comestible?): {error:#?}"
                                 );
                             })
@@ -641,7 +639,7 @@ fn expand_items<'a>(
             };
 
             if requirement.components.len() != 1 {
-                eprintln!(
+                error!(
                     "Unexpected components ({:?}) in {requirement:#?}",
                     &requirement.components
                 );
@@ -653,7 +651,7 @@ fn expand_items<'a>(
                 .flatten()
                 .flat_map(|alternative| {
                     expand_items(infos, alternative)
-                        .inspect_err(|error| eprintln!("Could not expand: {error:#?}"))
+                        .inspect_err(|error| error!("Could not expand: {error:#?}"))
                 })
                 .flat_map(|expanded| {
                     expanded
@@ -751,7 +749,7 @@ fn start_craft(
         .get(selected_craft)
         .expect("The selected craft should be found");
     if recipe.craftable() {
-        println!("Craft {recipe:?}");
+        debug!("Craft {recipe:?}");
         instruction_queue.add(QueuedInstruction::StartCraft(recipe.clone()));
         // Close the crafting screen
         next_gameplay_state.set(GameplayScreenState::Base);

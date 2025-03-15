@@ -1,4 +1,5 @@
 use bevy::asset::{Asset, AssetLoader, LoadContext, io::Reader};
+use bevy::prelude::error;
 use either::Either;
 use serde::Deserialize;
 use std::{marker::PhantomData, str::from_utf8};
@@ -26,7 +27,7 @@ where
             .read_to_end(&mut bytes)
             .await
             .inspect_err(|e| {
-                eprintln!("Map file loading error: {:?} {e:?}", load_context.path());
+                error!("Map file loading error: {:?} {e:?}", load_context.path());
             })
             .map_err(Either::Left)?;
 
@@ -45,7 +46,7 @@ where
 
         serde_json::from_slice::<T>(after_first_line)
             .inspect_err(|e| {
-                eprintln!(
+                error!(
                     "Overmap (buffer?) loading error: {file_name:?} {:?} {e:?}",
                     from_utf8(&bytes[0..40])
                 );

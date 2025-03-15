@@ -19,7 +19,7 @@ use bevy::prelude::{
     AlignItems, BackgroundColor, BuildChildren as _, Button, ChildBuild as _, Children, Commands,
     ComputedNode, Display, Entity, FlexDirection, In, JustifyContent, KeyCode, Local, NextState,
     Node, Overflow, Parent, Query, Res, ResMut, StateScoped, Text, TextColor, TextSpan, Transform,
-    UiRect, Val, With, Without, World,
+    UiRect, Val, With, Without, World, debug, error, warn,
 };
 use cdda_json_files::HashMap;
 use std::time::Instant;
@@ -174,7 +174,7 @@ fn move_inventory_selection(
     scrolling_parents: Query<(&Node, &ComputedNode), Without<ScrollList>>,
 ) {
     let Key::Code(key_code) = key else {
-        eprintln!("Unexpected key {key:?} while moving inventory selection");
+        warn!("Unexpected key {key:?} while moving inventory selection");
         return;
     };
 
@@ -189,14 +189,12 @@ fn move_inventory_selection(
 
 fn set_inventory_drop_direction(In(key): In<Key>, mut inventory: ResMut<InventoryScreen>) {
     let Ok(player_direction) = PlayerDirection::try_from(key) else {
-        eprintln!("Unexpected key {key:?} while setting inventory drop direction");
+        warn!("Unexpected key {key:?} while setting inventory drop direction");
         return;
     };
 
     let Nbor::Horizontal(horizontal_direction) = player_direction.to_nbor() else {
-        eprintln!(
-            "Unexpected direction {player_direction:?} while setting inventory drop direction"
-        );
+        error!("Unexpected direction {player_direction:?} while setting inventory drop direction");
         return;
     };
 
@@ -255,7 +253,7 @@ pub(super) fn refresh_inventory(
         .and_then(|row| previous_item_rows.get(row).ok())
         .map(|row| row.item)
         .filter(|item| item_hierarchy.exists(*item));
-    println!("Refresh inventory, with previous selected {previous_selected_item:?}");
+    debug!("Refresh inventory, with previous selected {previous_selected_item:?}");
     inventory.selection_list.clear();
 
     let (&player_pos, body_containers) = players.single();
@@ -373,7 +371,7 @@ fn handle_selected_item(
     item_rows: Query<&InventoryItemRow>,
 ) {
     let Key::Character(char) = key else {
-        eprintln!("Unexpected key {key:?} while handling selected item");
+        warn!("Unexpected key {key:?} while handling selected item");
         return;
     };
 
@@ -381,7 +379,7 @@ fn handle_selected_item(
         instruction_queue.add(match char {
             'd' => {
                 let Some(item_section) = inventory.section_by_item.get(&selected_item) else {
-                    eprintln!("Section of item {selected_item:?} not found");
+                    error!("Section of item {selected_item:?} not found");
                     return;
                 };
                 if &InventorySection::Nbor(inventory.drop_direction) == item_section {
@@ -428,7 +426,7 @@ pub(super) fn handle_inventory_action(
     mut instruction_queue: ResMut<InstructionQueue>,
     inventory: Res<InventoryScreen>,
 ) {
-    println!("{:?}", &inventory_button);
+    debug!("{:?}", &inventory_button);
     let item_entity = inventory_button.item;
     let instruction = match inventory_button.action {
         InventoryAction::Examine => QueuedInstruction::ExamineItem(ExamineItem { item_entity }),

@@ -168,7 +168,7 @@ impl<S: AsRef<str>> From<S> for Duration {
                 .parse::<u64>()
                 .unwrap_or_else(|err| panic!("{err:?} when parsing {quantity:?}"));
             let unit = unit.to_lowercase();
-            //println!("{capture:?} {_full:?} {&quantity} {&unit}");
+            //trace!("{capture:?} {_full:?} {&quantity} {&unit}");
 
             let unit_factor = match unit.as_str() {
                 "ms" | "millisecond" | "milliseconds" => Self::MILLISECOND.milliseconds,

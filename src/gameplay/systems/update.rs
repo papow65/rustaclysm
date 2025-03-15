@@ -6,7 +6,7 @@ use crate::gameplay::{
 use crate::util::log_if_slow;
 use bevy::prelude::{
     Camera, Changed, Children, Commands, EventWriter, GlobalTransform, ParallelCommands, Parent,
-    Query, Res, Visibility, With, Without,
+    Query, Res, Visibility, With, Without, debug, error,
 };
 use std::time::Instant;
 
@@ -69,7 +69,7 @@ pub(crate) fn update_visualization(
         let hidden = *visibility == Visibility::Hidden;
         if !ever_seen && !hidden {
             // This fails for vehicles TODO
-            eprintln!(
+            error!(
                 "update_visualization: Unexcpected combination of {last_seen:?} and {visibility:?} at {pos:?}"
             );
         }
@@ -130,7 +130,7 @@ pub(crate) fn update_visibility(
             }
         }
 
-        println!("{}x visibility updated", items.iter().len());
+        debug!("{}x visibility updated", items.iter().len());
 
         *previous_camera_global_transform.get() = camera_global_transform;
         *last_elevation_visibility.get() = *elevation_visibility;

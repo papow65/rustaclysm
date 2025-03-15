@@ -41,7 +41,7 @@ impl ScrollList {
 
         //let first_viewed_top = self.position;
         //let last_viewed_top = self.position + parent_node.size().y - child_node.size().y;
-        //println!("{first_viewed_top:?} <= {child_top:?} <= {last_viewed_top:?}");
+        //trace!("{first_viewed_top:?} <= {child_top:?} <= {last_viewed_top:?}");
 
         self.position = self.position.clamp(
             -child_top,
@@ -50,7 +50,7 @@ impl ScrollList {
 
         //let first_viewed_top = self.position;
         //let last_viewed_top = self.position + parent_node.size().y - child_node.size().y;
-        //println!("-> {first_viewed_top:?} <= {child_top:?} <= {last_viewed_top:?}");
+        //trace!("-> {first_viewed_top:?} <= {child_top:?} <= {last_viewed_top:?}");
 
         self.resize(my_computed_node, parent_node, parent_computed_node)
     }
@@ -77,7 +77,7 @@ impl ScrollList {
             JustifyContent::End => self.position.clamp(0.0, max_scroll),
             missing => todo!("{missing:?}"),
         };
-        //println!("=> {:?}", self.position);
+        //trace!("=> {:?}", self.position);
         Val::Px(self.position)
     }
 
