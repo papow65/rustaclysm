@@ -1,6 +1,8 @@
-use crate::{CddaAmount, FlatVec, HashMap, ObjectId, RepetitionBlock};
+use crate::{
+    CddaAmount, CharacterInfo, FlatVec, HashMap, ObjectId, RepetitionBlock, RequiredLinkedLater,
+};
 use serde::Deserialize;
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 
 /// Corresponds to an 'overmap' in CDDA. It defines the layout of 180x180 `Zone`s.
 #[derive(Debug, Deserialize)]
@@ -22,6 +24,10 @@ pub struct Overmap {
     pub mapgen_arg_index: Option<serde_json::Value>,
     pub joins_used: Option<serde_json::Value>,
     pub predecessors: Option<serde_json::Value>,
+
+    /// Marker to remember the state of the links
+    #[serde(skip)]
+    pub linked: OnceLock<()>,
 }
 
 impl Overmap {
@@ -79,7 +85,10 @@ pub struct Monster {
     archery_aim_counter: u8,
     last_updated: u32,
     body: HashMap<Arc<str>, serde_json::Value>,
-    pub typeid: ObjectId,
+
+    #[serde(rename = "typeid")]
+    pub info: RequiredLinkedLater<CharacterInfo>,
+
     unique_name: Arc<str>,
     nickname: Arc<str>,
     goal: Option<serde_json::Value>,

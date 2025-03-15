@@ -19,8 +19,9 @@ use bevy::render::view::RenderLayers;
 use bevy::utils::HashMap;
 use cdda_json_files::{
     Bash, BashItem, BashItems, CddaAmount, CddaItem, CddaItemName, CddaVehicle, CddaVehiclePart,
-    CommonItemInfo, CountRange, Field, Flags, FlatVec, FurnitureInfo, ItemName, MoveCostMod,
-    ObjectId, PocketType, Recipe, Repetition, Spawn, VecLinkedLater,
+    Character, CharacterInfo, CommonItemInfo, CountRange, Field, Flags, FlatVec, FurnitureInfo,
+    ItemName, MoveCostMod, ObjectId, PocketType, Recipe, Repetition, RequiredLinkedLater,
+    VecLinkedLater,
 };
 use std::sync::Arc;
 use units::{Mass, Volume};
@@ -40,13 +41,12 @@ impl<'w> TileSpawner<'w, '_> {
 
     pub(crate) fn spawn_tile<'a>(
         &mut self,
-        infos: &Infos,
         subzone_level_entity: Entity,
         pos: Pos,
         local_terrain: &LocalTerrain,
         furniture_infos: impl Iterator<Item = Arc<FurnitureInfo>>,
         item_repetitions: impl Iterator<Item = &'a Vec<Repetition<CddaItem>>>,
-        spawns: impl Iterator<Item = &'a Spawn>,
+        spawns: impl Iterator<Item = &'a Character>,
         fields: impl Iterator<Item = &'a FlatVec<Field, 3>>,
     ) {
         self.spawn_terrain(subzone_level_entity, pos, local_terrain);
@@ -71,13 +71,7 @@ impl<'w> TileSpawner<'w, '_> {
 
         for spawn in spawns {
             //dbg!(&spawn.id);
-            log_spawn_result(self.spawn_character(
-                infos,
-                subzone_level_entity,
-                pos,
-                &spawn.id,
-                None,
-            ));
+            log_spawn_result(self.spawn_character(subzone_level_entity, pos, &spawn.info, None));
         }
 
         for fields in fields {
@@ -90,13 +84,12 @@ impl<'w> TileSpawner<'w, '_> {
 
     pub(crate) fn spawn_character(
         &mut self,
-        infos: &Infos,
         parent: Entity,
         pos: Pos,
-        id: &ObjectId,
+        character_info: &RequiredLinkedLater<CharacterInfo>,
         name: Option<ObjectName>,
     ) -> Result<Entity, Error> {
-        let character_info = infos.characters.get(id)?;
+        let character_info = character_info.get()?;
         let faction = match &*character_info.default_faction {
             "human" => Faction::Human,
             "zombie" => Faction::Zombie,
@@ -106,7 +99,7 @@ impl<'w> TileSpawner<'w, '_> {
 
         let definition = &ObjectDefinition {
             category: ObjectCategory::Character,
-            id: id.clone(),
+            id: character_info.id.clone(),
         };
         let entity = self.spawn_object(parent, Some(pos), definition, object_name, None);
         let mut entity = self.commands.entity(entity);
@@ -619,13 +612,15 @@ impl<'w> TileSpawner<'w, '_> {
             ))
             .id();
 
+        let human = RequiredLinkedLater::from(ObjectId::new("human"));
+        infos.link_character(&human, "player");
+
         let sav = self.active_sav.sav();
         let player = self
             .spawn_character(
-                infos,
                 root,
                 spawn_pos.horizontal_offset(36, 56),
-                &ObjectId::new("human"),
+                &human,
                 Some(ObjectName::from_str(&sav.player.name, GOOD_TEXT_COLOR)),
             )
             .expect("Player character should be spawned");
@@ -647,47 +642,47 @@ impl<'w> TileSpawner<'w, '_> {
             ))
             .id();
 
+        let human = RequiredLinkedLater::from(ObjectId::new("human"));
+        infos.link_character(&human, "survivor");
+
         log_spawn_result(self.spawn_character(
-            infos,
             root,
             around_pos.horizontal_offset(-26, -36),
-            &ObjectId::new("human"),
+            &human,
             Some(ObjectName::from_str("Survivor", HARD_TEXT_COLOR)),
         ));
 
+        let zombie = RequiredLinkedLater::from(ObjectId::new("mon_zombie"));
+        infos.link_character(&zombie, "zombie");
+
         log_spawn_result(self.spawn_character(
-            infos,
             root,
             around_pos.horizontal_offset(-24, -30),
-            &ObjectId::new("mon_zombie"),
+            &zombie,
             None,
         ));
         log_spawn_result(self.spawn_character(
-            infos,
             root,
             around_pos.horizontal_offset(4, -26),
-            &ObjectId::new("mon_zombie"),
+            &zombie,
             None,
         ));
         log_spawn_result(self.spawn_character(
-            infos,
             root,
             around_pos.horizontal_offset(2, -27),
-            &ObjectId::new("mon_zombie"),
+            &zombie,
             None,
         ));
         log_spawn_result(self.spawn_character(
-            infos,
             root,
             around_pos.horizontal_offset(1, -29),
-            &ObjectId::new("mon_zombie"),
+            &zombie,
             None,
         ));
         log_spawn_result(self.spawn_character(
-            infos,
             root,
             around_pos.horizontal_offset(-2, -42),
-            &ObjectId::new("mon_zombie"),
+            &zombie,
             None,
         ));
     }

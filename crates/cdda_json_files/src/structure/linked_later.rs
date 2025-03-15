@@ -32,10 +32,7 @@ impl<T: fmt::Debug> OptionalLinkedLater<T> {
 impl<T: fmt::Debug> From<Option<ObjectId>> for OptionalLinkedLater<T> {
     fn from(object_id: Option<ObjectId>) -> Self {
         Self {
-            option: object_id.map(|object_id| LinkedLater {
-                object_id,
-                lock: OnceLock::default(),
-            }),
+            option: object_id.map(LinkedLater::new),
         }
     }
 }
@@ -84,15 +81,7 @@ impl<T: fmt::Debug, U: Clone + fmt::Debug> From<Vec<(ObjectId, U)>> for VecLinke
         Self {
             vec: vec
                 .into_iter()
-                .map(|(object_id, assoc)| {
-                    (
-                        LinkedLater {
-                            object_id,
-                            lock: OnceLock::default(),
-                        },
-                        assoc,
-                    )
-                })
+                .map(|(object_id, assoc)| (LinkedLater::new(object_id), assoc))
                 .collect(),
         }
     }
@@ -148,10 +137,7 @@ impl RequiredLinkedLater<TerrainInfo> {
 impl<T: fmt::Debug> From<ObjectId> for RequiredLinkedLater<T> {
     fn from(object_id: ObjectId) -> Self {
         Self {
-            required: LinkedLater {
-                object_id,
-                lock: OnceLock::default(),
-            },
+            required: LinkedLater::new(object_id),
         }
     }
 }
@@ -163,6 +149,13 @@ struct LinkedLater<T: fmt::Debug> {
 }
 
 impl<T: fmt::Debug> LinkedLater<T> {
+    fn new(object_id: ObjectId) -> Self {
+        Self {
+            object_id,
+            lock: OnceLock::default(),
+        }
+    }
+
     fn new_final(object_id: ObjectId, value: &Arc<T>) -> Self {
         let lock = OnceLock::new();
         lock.set(Some(Arc::downgrade(value)))

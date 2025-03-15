@@ -7,8 +7,9 @@ use bevy::utils::HashMap;
 use cdda_json_files::{
     Alternative, Ammo, BionicItem, Book, CddaItem, CddaItemName, CharacterInfo, Clothing,
     Comestible, CommonItemInfo, Engine, FieldInfo, Flags, FurnitureInfo, GenericItem, Gun, Gunmod,
-    ItemGroup, ItemName, Magazine, ObjectId, OvermapInfo, PetArmor, Quality, Recipe, Requirement,
-    Submap, TerrainInfo, Tool, ToolClothing, Toolmod, Using, UsingKind, VehiclePartInfo, Wheel,
+    ItemGroup, ItemName, Magazine, ObjectId, Overmap, OvermapInfo, PetArmor, Quality, Recipe,
+    RequiredLinkedLater, Requirement, Submap, TerrainInfo, Tool, ToolClothing, Toolmod, Using,
+    UsingKind, VehiclePartInfo, Wheel,
 };
 use std::{sync::Arc, time::Instant};
 use units::{Mass, Volume};
@@ -284,6 +285,18 @@ impl Infos {
         })
     }
 
+    pub(crate) fn link_overmap(&self, overmap: &Overmap) {
+        if overmap.linked.set(()).is_err() {
+            return;
+        }
+
+        for (_, monster) in &overmap.monster_map.0 {
+            monster
+                .info
+                .finalize(&self.characters.map, "overmap monster");
+        }
+    }
+
     pub(crate) fn link_submap(&self, submap: &Submap) {
         if submap.linked.set(()).is_err() {
             return;
@@ -307,6 +320,10 @@ impl Infos {
             }
         }
 
+        for character in &submap.spawns {
+            self.link_character(&character.info, "submap spawn");
+        }
+
         for items_at in &submap.items.0 {
             for item in &items_at.obj {
                 self.link_item(&item.as_amount().obj);
@@ -327,6 +344,14 @@ impl Infos {
                 }
             }
         }
+    }
+
+    pub(crate) fn link_character(
+        &self,
+        character: &RequiredLinkedLater<CharacterInfo>,
+        err_description: &str,
+    ) {
+        character.finalize(&self.characters.map, err_description);
     }
 }
 

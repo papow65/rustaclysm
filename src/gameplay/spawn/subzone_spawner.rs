@@ -110,7 +110,6 @@ impl SubzoneSpawner<'_, '_> {
                         .filter(|spawn| spawn.x == pos_offset.x && spawn.z == pos_offset.z);
                     let fields = submap.fields.0.iter().filter_map(|at| pos_offset.get(at));
                     self.tile_spawner.spawn_tile(
-                        &self.infos,
                         subzone_level_entity,
                         pos,
                         &local_terrain,
@@ -142,6 +141,8 @@ impl SubzoneSpawner<'_, '_> {
                 .overmap_manager
                 .load(Overzone::from(ZoneLevel::from(subzone_level).zone))
             {
+                self.infos.link_overmap(&overmap.0);
+
                 let spawned_offset = SubzoneOffset::from(subzone_level);
                 for monster in overmap
                     .0
@@ -152,10 +153,9 @@ impl SubzoneSpawner<'_, '_> {
                     .map(|(_, monster)| monster)
                 {
                     log_spawn_result(self.tile_spawner.spawn_character(
-                        &self.infos,
                         subzone_level_entity,
                         base_pos,
-                        &monster.typeid,
+                        &monster.info,
                         None,
                     ));
                 }

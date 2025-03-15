@@ -1,11 +1,12 @@
-use crate::ObjectId;
+use crate::{CharacterInfo, RequiredLinkedLater};
 use serde::Deserialize;
 use std::sync::Arc;
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct Spawn {
-    pub id: ObjectId,
+pub struct Character {
+    #[serde(rename = "id")]
+    pub info: RequiredLinkedLater<CharacterInfo>,
 
     #[expect(unused)]
     count: i32,

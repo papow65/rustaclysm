@@ -1,3 +1,5 @@
+use std::sync::OnceLock;
+
 use crate::gameplay::{Level, OvermapAsset, Overzone, RepetitionBlockExt as _, ZoneLevel};
 use bevy::{prelude::Resource, utils::HashMap};
 use cdda_json_files::{FlatVec, ObjectId, Overmap, OvermapLevel};
@@ -68,6 +70,7 @@ impl ZoneLevelIds {
             mapgen_arg_index: None,
             joins_used: None,
             predecessors: None,
+            linked: OnceLock::new(),
         });
 
         self.load(overzone, &fallback);

@@ -1,3 +1,4 @@
+mod character;
 mod field;
 mod item;
 mod map;
@@ -6,9 +7,9 @@ mod overmap;
 mod overmap_buffer;
 mod player;
 mod sav;
-mod spawn;
 mod vehicle;
 
+pub use self::character::Character;
 pub use self::field::{Field, FieldVec};
 pub use self::item::{AdditionalPocket, CddaItem, CddaPocket, PocketType};
 pub use self::map::{Map, Submap};
@@ -17,5 +18,4 @@ pub use self::overmap::{Overmap, OvermapLevel, SubzoneOffset};
 pub use self::overmap_buffer::OvermapBuffer;
 pub use self::player::{CddaPlayer, Skill};
 pub use self::sav::Sav;
-pub use self::spawn::Spawn;
 pub use self::vehicle::{CddaVehicle, CddaVehiclePart};
