@@ -1,13 +1,13 @@
-use crate::{Bash, Flags, HashMap, ItemName, MoveCostIncrease, ObjectId, OptionalLinkedLater};
+use crate::{Bash, Flags, HashMap, InfoId, ItemName, MoveCostIncrease, OptionalLinkedLater};
 use serde::Deserialize;
 use std::sync::{Arc, LazyLock};
 
 #[derive(Debug, Deserialize)]
 pub struct TerrainInfo {
-    pub id: ObjectId,
+    pub id: InfoId,
     pub name: ItemName,
     pub move_cost: MoveCost,
-    pub looks_like: Option<ObjectId>,
+    pub looks_like: Option<InfoId>,
 
     pub open: OptionalLinkedLater<TerrainInfo>,
     pub close: OptionalLinkedLater<TerrainInfo>,
@@ -22,8 +22,8 @@ pub struct TerrainInfo {
 
 impl TerrainInfo {
     pub fn is_similar(&self, other: &Self) -> bool {
-        static PAVEMENT: LazyLock<ObjectId> = LazyLock::new(|| ObjectId::new("t_pavement"));
-        static PAVEMENT_DOT: LazyLock<ObjectId> = LazyLock::new(|| ObjectId::new("t_pavement_y"));
+        static PAVEMENT: LazyLock<InfoId> = LazyLock::new(|| InfoId::new("t_pavement"));
+        static PAVEMENT_DOT: LazyLock<InfoId> = LazyLock::new(|| InfoId::new("t_pavement_y"));
 
         self.id == other.id
             || (self.id == *PAVEMENT && other.id == *PAVEMENT_DOT)

@@ -2,7 +2,7 @@ use crate::hud::{
     BAD_TEXT_COLOR, Fonts, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
 };
 use bevy::prelude::{Component, Entity, TextColor, TextFont, TextSpan};
-use cdda_json_files::{ObjectId, Recipe};
+use cdda_json_files::{InfoId, Recipe};
 use std::{cmp::Ordering, sync::Arc};
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Component)]
@@ -255,7 +255,7 @@ impl ComponentSituation {
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub(crate) struct AlternativeSituation {
-    pub(super) id: ObjectId,
+    pub(super) id: InfoId,
     pub(super) name: Arc<str>,
     pub(crate) required: u32,
     pub(super) present: u32,

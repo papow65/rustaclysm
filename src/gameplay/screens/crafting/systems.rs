@@ -24,7 +24,7 @@ use bevy::prelude::{
 use bevy::utils::hashbrown::hash_map::Entry;
 use bevy::{ecs::query::QueryData, ecs::system::SystemId, utils::HashMap};
 use cdda_json_files::{
-    Alternative, AutoLearn, BookLearn, BookLearnItem, CommonItemInfo, FurnitureInfo, ObjectId,
+    Alternative, AutoLearn, BookLearn, BookLearnItem, CommonItemInfo, FurnitureInfo, InfoId,
     Quality, Recipe, RequiredQuality, Sav, Skill, Using,
 };
 use std::{ops::RangeInclusive, sync::Arc, time::Instant};
@@ -371,7 +371,7 @@ fn find_nearby<'a>(
         .collect::<Vec<_>>()
 }
 
-fn nearby_manuals(nearby_items: &[NearbyItem]) -> HashMap<ObjectId, Arc<str>> {
+fn nearby_manuals(nearby_items: &[NearbyItem]) -> HashMap<InfoId, Arc<str>> {
     nearby_items
         .iter()
         .filter(|nearby| {
@@ -392,7 +392,7 @@ fn nearby_manuals(nearby_items: &[NearbyItem]) -> HashMap<ObjectId, Arc<str>> {
 fn shown_recipes(
     infos: &Infos,
     sav: &Sav,
-    nearby_manuals: &HashMap<ObjectId, Arc<str>>,
+    nearby_manuals: &HashMap<InfoId, Arc<str>>,
     nearby_qualities: &HashMap<Arc<Quality>, i8>,
     nearby_items: &[NearbyItem],
 ) -> Vec<RecipeSituation> {
@@ -466,7 +466,7 @@ fn autolearn_recipe(recipe: &Recipe, skills: &HashMap<Arc<str>, Skill>) -> bool 
     }
 }
 
-fn recipe_manuals(recipe: &Recipe, nearby_manuals: &HashMap<ObjectId, Arc<str>>) -> Vec<Arc<str>> {
+fn recipe_manuals(recipe: &Recipe, nearby_manuals: &HashMap<InfoId, Arc<str>>) -> Vec<Arc<str>> {
     // TODO check skill level
 
     let mut manuals = match &recipe.book_learn {
@@ -621,7 +621,7 @@ fn recipe_components(
 fn expand_items<'a>(
     infos: &'a Infos,
     alternative: &'a Alternative,
-) -> Result<Vec<(&'a ObjectId, u32)>, Error> {
+) -> Result<Vec<(&'a InfoId, u32)>, Error> {
     match alternative {
         Alternative::Item { item, required } => Ok(vec![(item, *required)]),
         Alternative::Requirement {

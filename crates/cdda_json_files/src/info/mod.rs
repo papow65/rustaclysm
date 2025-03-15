@@ -2,6 +2,7 @@ mod character_info;
 mod field_info;
 mod flags;
 mod furniture_info;
+mod info_id;
 mod item_group;
 mod item_info;
 mod migration;
@@ -18,6 +19,7 @@ pub use self::flags::Flags;
 pub use self::furniture_info::{
     Bash, BashItem, BashItems, CountRange, FurnitureInfo, MoveCostIncrease, MoveCostMod,
 };
+pub use self::info_id::InfoId;
 pub use self::item_group::ItemGroup;
 pub use self::item_info::{
     Ammo, BionicItem, Book, CddaItemName, Clothing, Comestible, CommonItemInfo, Description,

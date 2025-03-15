@@ -1,4 +1,4 @@
-use crate::{HashMap, ItemName, ObjectId};
+use crate::{HashMap, InfoId, ItemName};
 use serde::Deserialize;
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
@@ -6,7 +6,7 @@ use std::sync::Arc;
 // PartialEq, Eq, and Hash manually implemented below
 #[derive(Debug, Deserialize)]
 pub struct Quality {
-    pub id: ObjectId,
+    pub id: InfoId,
     pub name: ItemName,
 
     #[serde(default)]

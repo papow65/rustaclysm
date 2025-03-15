@@ -7,7 +7,7 @@ use bevy::utils::HashMap;
 use cdda_json_files::{
     Alternative, Ammo, BionicItem, Book, CddaItem, CddaItemName, CharacterInfo, Clothing,
     Comestible, CommonItemInfo, Engine, FieldInfo, Flags, FurnitureInfo, GenericItem, Gun, Gunmod,
-    ItemGroup, ItemName, Magazine, ObjectId, Overmap, OvermapInfo, PetArmor, Quality, Recipe,
+    InfoId, ItemGroup, ItemName, Magazine, Overmap, OvermapInfo, PetArmor, Quality, Recipe,
     RequiredLinkedLater, Requirement, Submap, TerrainInfo, Tool, ToolClothing, Toolmod, Using,
     UsingKind, VehiclePartInfo, Wheel,
 };
@@ -164,7 +164,7 @@ impl Infos {
 
         this.characters
             .map
-            .insert(ObjectId::new("human"), Arc::new(default_human()));
+            .insert(InfoId::new("human"), Arc::new(default_human()));
 
         let duration = start.elapsed();
         println!("The creation of Infos took {duration:?}");
@@ -172,7 +172,7 @@ impl Infos {
         this
     }
 
-    fn looks_like(&self, definition: &ObjectDefinition) -> Option<ObjectId> {
+    fn looks_like(&self, definition: &ObjectDefinition) -> Option<InfoId> {
         match definition.category {
             ObjectCategory::Character => self
                 .characters
@@ -213,7 +213,7 @@ impl Infos {
         }
     }
 
-    pub(crate) fn variants(&self, definition: &ObjectDefinition) -> Vec<ObjectId> {
+    pub(crate) fn variants(&self, definition: &ObjectDefinition) -> Vec<InfoId> {
         if definition.category == ObjectCategory::Meta {
             return vec![definition.id.clone()];
         }
@@ -363,10 +363,10 @@ impl AsyncNew<Self> for Infos {
 
 fn default_human() -> CharacterInfo {
     CharacterInfo {
-        id: ObjectId::new("human"),
+        id: InfoId::new("human"),
         name: ItemName::from(CddaItemName::Simple(Arc::from("Human"))),
         default_faction: Arc::from("human"),
-        looks_like: Some(ObjectId::new("overlay_male_mutation_SKIN_TAN")),
+        looks_like: Some(InfoId::new("overlay_male_mutation_SKIN_TAN")),
         volume: Some(Volume::from("80 l")),
         mass: Some(Mass::from("80 kg")),
         hp: Some(100),

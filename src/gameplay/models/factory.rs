@@ -8,7 +8,7 @@ use bevy::prelude::{
     AssetServer, Assets, Mesh, Mesh3d, MeshMaterial3d, Res, ResMut, StandardMaterial, Transform,
     Vec3,
 };
-use cdda_json_files::ObjectId;
+use cdda_json_files::InfoId;
 
 #[derive(SystemParam)]
 pub(crate) struct ModelFactory<'w> {
@@ -74,7 +74,7 @@ impl ModelFactory<'_> {
     pub(crate) fn get_cursor(&mut self) -> (Mesh3d, Transform, MeshMaterial3d<StandardMaterial>) {
         let cursor_definition = ObjectDefinition {
             category: ObjectCategory::Meta,
-            id: ObjectId::new("cursor"),
+            id: InfoId::new("cursor"),
         };
         let models = self.loader.get_models(
             &cursor_definition,

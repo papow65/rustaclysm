@@ -1,12 +1,12 @@
-use crate::ObjectId;
+use crate::InfoId;
 use crate::{Flags, ItemName};
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
 pub struct VehiclePartInfo {
     pub name: Option<ItemName>,
-    pub item: ObjectId,
-    pub looks_like: Option<ObjectId>,
+    pub item: InfoId,
+    pub looks_like: Option<InfoId>,
     pub flags: Flags,
 }
 

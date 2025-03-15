@@ -2,16 +2,16 @@ use std::sync::OnceLock;
 
 use crate::gameplay::{Level, OvermapAsset, Overzone, RepetitionBlockExt as _, ZoneLevel};
 use bevy::{prelude::Resource, utils::HashMap};
-use cdda_json_files::{FlatVec, ObjectId, Overmap, OvermapLevel};
+use cdda_json_files::{FlatVec, InfoId, Overmap, OvermapLevel};
 
 #[derive(Default, Resource)]
 pub(crate) struct ZoneLevelIds {
-    names: HashMap<ZoneLevel, ObjectId>,
+    names: HashMap<ZoneLevel, InfoId>,
     loaded_overzones: Vec<Overzone>,
 }
 
 impl ZoneLevelIds {
-    pub(crate) fn get(&self, zone_level: ZoneLevel) -> Option<&ObjectId> {
+    pub(crate) fn get(&self, zone_level: ZoneLevel) -> Option<&InfoId> {
         self.names.get(&zone_level)
     }
 
@@ -33,27 +33,27 @@ impl ZoneLevelIds {
     pub(crate) fn create_missing(&mut self, overzone: Overzone) {
         let fallback = OvermapAsset(Overmap {
             layers: [
-                OvermapLevel::all(ObjectId::new("deep_rock")),
-                OvermapLevel::all(ObjectId::new("deep_rock")),
-                OvermapLevel::all(ObjectId::new("deep_rock")),
-                OvermapLevel::all(ObjectId::new("deep_rock")),
-                OvermapLevel::all(ObjectId::new("deep_rock")),
-                OvermapLevel::all(ObjectId::new("deep_rock")),
-                OvermapLevel::all(ObjectId::new("deep_rock")),
-                OvermapLevel::all(ObjectId::new("empty_rock")),
-                OvermapLevel::all(ObjectId::new("empty_rock")),
-                OvermapLevel::all(ObjectId::new("solid_earth")),
-                OvermapLevel::all(ObjectId::new("field")),
-                OvermapLevel::all(ObjectId::new("open_air")),
-                OvermapLevel::all(ObjectId::new("open_air")),
-                OvermapLevel::all(ObjectId::new("open_air")),
-                OvermapLevel::all(ObjectId::new("open_air")),
-                OvermapLevel::all(ObjectId::new("open_air")),
-                OvermapLevel::all(ObjectId::new("open_air")),
-                OvermapLevel::all(ObjectId::new("open_air")),
-                OvermapLevel::all(ObjectId::new("open_air")),
-                OvermapLevel::all(ObjectId::new("open_air")),
-                OvermapLevel::all(ObjectId::new("open_air")),
+                OvermapLevel::all(InfoId::new("deep_rock")),
+                OvermapLevel::all(InfoId::new("deep_rock")),
+                OvermapLevel::all(InfoId::new("deep_rock")),
+                OvermapLevel::all(InfoId::new("deep_rock")),
+                OvermapLevel::all(InfoId::new("deep_rock")),
+                OvermapLevel::all(InfoId::new("deep_rock")),
+                OvermapLevel::all(InfoId::new("deep_rock")),
+                OvermapLevel::all(InfoId::new("empty_rock")),
+                OvermapLevel::all(InfoId::new("empty_rock")),
+                OvermapLevel::all(InfoId::new("solid_earth")),
+                OvermapLevel::all(InfoId::new("field")),
+                OvermapLevel::all(InfoId::new("open_air")),
+                OvermapLevel::all(InfoId::new("open_air")),
+                OvermapLevel::all(InfoId::new("open_air")),
+                OvermapLevel::all(InfoId::new("open_air")),
+                OvermapLevel::all(InfoId::new("open_air")),
+                OvermapLevel::all(InfoId::new("open_air")),
+                OvermapLevel::all(InfoId::new("open_air")),
+                OvermapLevel::all(InfoId::new("open_air")),
+                OvermapLevel::all(InfoId::new("open_air")),
+                OvermapLevel::all(InfoId::new("open_air")),
             ],
             region_id: serde_json::Value::Null,
             monster_groups: serde_json::Value::Null,

@@ -10,7 +10,7 @@ pub(crate) use self::vehicle::{Vehicle, VehiclePart};
 
 use crate::gameplay::{BaseSpeed, Damage, Evolution, Limited, ObjectCategory, Player, Visible};
 use bevy::prelude::{AlphaMode, Assets, Color, Component, MeshMaterial3d, Srgba, StandardMaterial};
-use cdda_json_files::{CommonItemInfo, MoveCost, MoveCostIncrease, ObjectId, Recipe};
+use cdda_json_files::{CommonItemInfo, InfoId, MoveCost, MoveCostIncrease, Recipe};
 use std::sync::Arc;
 use units::{Duration, Timestamp};
 
@@ -51,7 +51,7 @@ pub(crate) struct OpaqueFloor;
 #[derive(Clone, Debug, PartialEq, Component)]
 pub(crate) struct ObjectDefinition {
     pub(crate) category: ObjectCategory,
-    pub(crate) id: ObjectId,
+    pub(crate) id: InfoId,
 }
 
 impl ObjectDefinition {

@@ -5,7 +5,7 @@ use crate::gameplay::{
 use crate::hud::text_color_expect_half;
 use bevy::ecs::query::QueryData;
 use bevy::prelude::{Entity, Parent, ops::atan2};
-use cdda_json_files::{CommonItemInfo, ObjectId};
+use cdda_json_files::{CommonItemInfo, InfoId};
 use std::f32::consts::FRAC_1_PI;
 
 #[derive(QueryData)]
@@ -25,7 +25,7 @@ pub(crate) struct Item {
 
 impl<'a> ItemItem<'a> {
     pub(crate) fn fragments(&self) -> impl Iterator<Item = Fragment> + use<'_, 'a> {
-        let fragments = if self.definition.id == ObjectId::new("money") {
+        let fragments = if self.definition.id == InfoId::new("money") {
             let cents = self.amount.0 as f32;
             let dollars = format!("$ {:.2}", cents / 100.0);
 
@@ -39,7 +39,7 @@ impl<'a> ItemItem<'a> {
                 self.integrity.fragment(),
                 Some(Fragment::colorized(dollars, color)),
             ]
-        } else if self.definition.id == ObjectId::new("battery") {
+        } else if self.definition.id == InfoId::new("battery") {
             [self.amount.fragment(), None, None, None]
         } else {
             [

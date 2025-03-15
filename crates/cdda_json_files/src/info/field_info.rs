@@ -1,13 +1,13 @@
-use crate::{HashMap, ItemName, ObjectId};
+use crate::{HashMap, InfoId, ItemName};
 use serde::Deserialize;
 use std::sync::Arc;
 
 #[derive(Debug, Deserialize)]
 #[serde(tag = "type")]
 pub struct FieldInfo {
-    pub id: ObjectId,
+    pub id: InfoId,
     pub intensity_levels: Vec<IntensityLevel>,
-    pub looks_like: Option<ObjectId>,
+    pub looks_like: Option<InfoId>,
 
     #[expect(unused)]
     #[serde(flatten)]

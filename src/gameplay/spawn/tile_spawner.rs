@@ -20,7 +20,7 @@ use bevy::utils::HashMap;
 use cdda_json_files::{
     Bash, BashItem, BashItems, CddaAmount, CddaItem, CddaItemName, CddaVehicle, CddaVehiclePart,
     Character, CharacterInfo, CommonItemInfo, CountRange, Field, Flags, FlatVec, FurnitureInfo,
-    ItemName, MoveCostMod, ObjectId, PocketType, Recipe, Repetition, RequiredLinkedLater,
+    InfoId, ItemName, MoveCostMod, PocketType, Recipe, Repetition, RequiredLinkedLater,
     VecLinkedLater,
 };
 use std::sync::Arc;
@@ -206,7 +206,7 @@ impl<'w> TileSpawner<'w, '_> {
 
         let (volume, mass) = match &item.corpse.get() {
             Some(corpse_character) => {
-                if corpse_character.id == ObjectId::new("mon_null") {
+                if corpse_character.id == InfoId::new("mon_null") {
                     (item_info.volume, item_info.mass)
                 } else {
                     println!("{:?}", &corpse_character.id);
@@ -302,7 +302,7 @@ impl<'w> TileSpawner<'w, '_> {
         infos: &Infos,
         parent_entity: Entity,
         pos: Pos,
-        id: &ObjectId,
+        id: &InfoId,
     ) {
         let item_group = match infos.item_groups.get(id) {
             Ok(item_group) => item_group,
@@ -350,8 +350,8 @@ impl<'w> TileSpawner<'w, '_> {
     }
 
     pub(crate) fn spawn_terrain(&mut self, parent: Entity, pos: Pos, local_terrain: &LocalTerrain) {
-        if local_terrain.info.id == ObjectId::new("t_open_air")
-            || local_terrain.info.id == ObjectId::new("t_open_air_rooved")
+        if local_terrain.info.id == InfoId::new("t_open_air")
+            || local_terrain.info.id == InfoId::new("t_open_air_rooved")
         {
             // Don't spawn air terrain to keep the entity count low
             return;
@@ -612,7 +612,7 @@ impl<'w> TileSpawner<'w, '_> {
             ))
             .id();
 
-        let human = RequiredLinkedLater::from(ObjectId::new("human"));
+        let human = RequiredLinkedLater::from(InfoId::new("human"));
         infos.link_character(&human, "player");
 
         let sav = self.active_sav.sav();
@@ -642,7 +642,7 @@ impl<'w> TileSpawner<'w, '_> {
             ))
             .id();
 
-        let human = RequiredLinkedLater::from(ObjectId::new("human"));
+        let human = RequiredLinkedLater::from(InfoId::new("human"));
         infos.link_character(&human, "survivor");
 
         log_spawn_result(self.spawn_character(
@@ -652,7 +652,7 @@ impl<'w> TileSpawner<'w, '_> {
             Some(ObjectName::from_str("Survivor", HARD_TEXT_COLOR)),
         ));
 
-        let zombie = RequiredLinkedLater::from(ObjectId::new("mon_zombie"));
+        let zombie = RequiredLinkedLater::from(InfoId::new("mon_zombie"));
         infos.link_character(&zombie, "zombie");
 
         log_spawn_result(self.spawn_character(
@@ -739,7 +739,7 @@ impl<'w> TileSpawner<'w, '_> {
         recipe: Arc<Recipe>,
     ) -> Result<Entity, Error> {
         let craft_item_info = CommonItemInfo {
-            id: ObjectId::new("craft"),
+            id: InfoId::new("craft"),
             category: None,
             proportional: None,
             relative: None,

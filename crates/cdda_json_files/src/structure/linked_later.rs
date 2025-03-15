@@ -1,10 +1,10 @@
-use crate::{Error, HashMap, ObjectId, TerrainInfo};
+use crate::{Error, HashMap, InfoId, TerrainInfo};
 use serde::Deserialize;
 use std::sync::{Arc, OnceLock, Weak};
 use std::{any::type_name, fmt};
 
 #[derive(Debug, Deserialize)]
-#[serde(from = "Option<ObjectId>")]
+#[serde(from = "Option<InfoId>")]
 pub struct OptionalLinkedLater<T: fmt::Debug> {
     option: Option<LinkedLater<T>>,
 }
@@ -19,7 +19,7 @@ impl<T: fmt::Debug> OptionalLinkedLater<T> {
     }
 
     /// May only be called once
-    pub fn finalize(&self, map: &HashMap<ObjectId, Arc<T>>, err_description: &str) {
+    pub fn finalize(&self, map: &HashMap<InfoId, Arc<T>>, err_description: &str) {
         self.option.as_ref().map(|linked_later| {
             linked_later.finalize(
                 map.get(&linked_later.object_id).map(Arc::downgrade),
@@ -29,8 +29,8 @@ impl<T: fmt::Debug> OptionalLinkedLater<T> {
     }
 }
 
-impl<T: fmt::Debug> From<Option<ObjectId>> for OptionalLinkedLater<T> {
-    fn from(object_id: Option<ObjectId>) -> Self {
+impl<T: fmt::Debug> From<Option<InfoId>> for OptionalLinkedLater<T> {
+    fn from(object_id: Option<InfoId>) -> Self {
         Self {
             option: object_id.map(LinkedLater::new),
         }
@@ -38,7 +38,7 @@ impl<T: fmt::Debug> From<Option<ObjectId>> for OptionalLinkedLater<T> {
 }
 
 #[derive(Debug, Deserialize)]
-#[serde(from = "Vec<(ObjectId, U)>")]
+#[serde(from = "Vec<(InfoId, U)>")]
 pub struct VecLinkedLater<T: fmt::Debug, U: Clone + fmt::Debug> {
     vec: Vec<(LinkedLater<T>, U)>,
 }
@@ -49,7 +49,7 @@ impl<T: fmt::Debug, U: Clone + fmt::Debug> VecLinkedLater<T, U> {
     }
 
     /// May only be called once
-    pub fn finalize(&self, map: &HashMap<ObjectId, Arc<T>>, err_description: &str) {
+    pub fn finalize(&self, map: &HashMap<InfoId, Arc<T>>, err_description: &str) {
         for (linked_later, _assoc) in &self.vec {
             linked_later.finalize(
                 map.get(&linked_later.object_id).map(Arc::downgrade),
@@ -76,8 +76,8 @@ impl<T: fmt::Debug, U: Clone + fmt::Debug> Default for VecLinkedLater<T, U> {
     }
 }
 
-impl<T: fmt::Debug, U: Clone + fmt::Debug> From<Vec<(ObjectId, U)>> for VecLinkedLater<T, U> {
-    fn from(vec: Vec<(ObjectId, U)>) -> Self {
+impl<T: fmt::Debug, U: Clone + fmt::Debug> From<Vec<(InfoId, U)>> for VecLinkedLater<T, U> {
+    fn from(vec: Vec<(InfoId, U)>) -> Self {
         Self {
             vec: vec
                 .into_iter()
@@ -88,13 +88,13 @@ impl<T: fmt::Debug, U: Clone + fmt::Debug> From<Vec<(ObjectId, U)>> for VecLinke
 }
 
 #[derive(Debug, Deserialize)]
-#[serde(from = "ObjectId")]
+#[serde(from = "InfoId")]
 pub struct RequiredLinkedLater<T: fmt::Debug> {
     required: LinkedLater<T>,
 }
 
 impl<T: fmt::Debug + 'static> RequiredLinkedLater<T> {
-    pub fn new_final(object_id: ObjectId, value: &Arc<T>) -> Self {
+    pub fn new_final(object_id: InfoId, value: &Arc<T>) -> Self {
         Self {
             required: LinkedLater::new_final(object_id, value),
         }
@@ -115,7 +115,7 @@ impl<T: fmt::Debug + 'static> RequiredLinkedLater<T> {
     }
 
     /// May only be called once
-    pub fn finalize(&self, map: &HashMap<ObjectId, Arc<T>>, err_description: &str) {
+    pub fn finalize(&self, map: &HashMap<InfoId, Arc<T>>, err_description: &str) {
         self.required.finalize(
             map.get(&self.required.object_id).map(Arc::downgrade),
             err_description,
@@ -126,16 +126,16 @@ impl<T: fmt::Debug + 'static> RequiredLinkedLater<T> {
 impl RequiredLinkedLater<TerrainInfo> {
     pub(crate) fn is_significant(&self) -> bool {
         ![
-            ObjectId::new("t_open_air"),
-            ObjectId::new("t_soil"),
-            ObjectId::new("t_rock"),
+            InfoId::new("t_open_air"),
+            InfoId::new("t_soil"),
+            InfoId::new("t_rock"),
         ]
         .contains(&self.required.object_id)
     }
 }
 
-impl<T: fmt::Debug> From<ObjectId> for RequiredLinkedLater<T> {
-    fn from(object_id: ObjectId) -> Self {
+impl<T: fmt::Debug> From<InfoId> for RequiredLinkedLater<T> {
+    fn from(object_id: InfoId) -> Self {
         Self {
             required: LinkedLater::new(object_id),
         }
@@ -144,19 +144,19 @@ impl<T: fmt::Debug> From<ObjectId> for RequiredLinkedLater<T> {
 
 #[derive(Debug)]
 struct LinkedLater<T: fmt::Debug> {
-    object_id: ObjectId,
+    object_id: InfoId,
     lock: OnceLock<Option<Weak<T>>>,
 }
 
 impl<T: fmt::Debug> LinkedLater<T> {
-    fn new(object_id: ObjectId) -> Self {
+    fn new(object_id: InfoId) -> Self {
         Self {
             object_id,
             lock: OnceLock::default(),
         }
     }
 
-    fn new_final(object_id: ObjectId, value: &Arc<T>) -> Self {
+    fn new_final(object_id: InfoId, value: &Arc<T>) -> Self {
         let lock = OnceLock::new();
         lock.set(Some(Arc::downgrade(value)))
             .expect("This lock should be unused");

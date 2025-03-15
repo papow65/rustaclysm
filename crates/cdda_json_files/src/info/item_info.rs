@@ -1,4 +1,4 @@
-use crate::{Flags, HashMap, ObjectId, Quality, VecLinkedLater, structure::MaybeFlatVec};
+use crate::{Flags, HashMap, InfoId, Quality, VecLinkedLater, structure::MaybeFlatVec};
 use serde::Deserialize;
 use std::sync::Arc;
 use units::{Duration, Mass, Volume};
@@ -9,8 +9,8 @@ pub trait ItemWithCommonInfo {
 
 #[derive(Debug, Deserialize)]
 pub struct Ammo {
-    pub ammo_type: Option<MaybeFlatVec<ObjectId>>,
-    pub casing: Option<ObjectId>,
+    pub ammo_type: Option<MaybeFlatVec<InfoId>>,
+    pub casing: Option<InfoId>,
     pub critical_multiplier: Option<u8>,
 
     // example: { "damage_type": "bullet", "amount": 28, "armor_penetration": 4 }
@@ -138,9 +138,9 @@ pub struct Comestible {
 
     pub petfood: Option<serde_json::Value>,
     pub primary_material: Option<Arc<str>>,
-    pub rot_spawn: Option<ObjectId>,
+    pub rot_spawn: Option<InfoId>,
     pub rot_spawn_chance: Option<u8>,
-    pub smoking_result: Option<ObjectId>,
+    pub smoking_result: Option<InfoId>,
 
     // Duration as String or u16
     pub spoils_in: Option<serde_json::Value>,
@@ -148,7 +148,7 @@ pub struct Comestible {
     #[serde(default)]
     pub stim: i8,
 
-    pub tool: Option<ObjectId>,
+    pub tool: Option<InfoId>,
     pub vitamins: Option<Arc<[(String, u16)]>>,
 
     #[serde(flatten)]
@@ -195,16 +195,16 @@ impl ItemWithCommonInfo for GenericItem {
 
 #[derive(Debug, Deserialize)]
 pub struct Gun {
-    pub ammo: Option<MaybeFlatVec<ObjectId>>,
+    pub ammo: Option<MaybeFlatVec<InfoId>>,
     pub ammo_to_fire: Option<u8>,
     pub barrel_volume: Option<Volume>,
     pub blackpowder_tolerance: Option<u8>,
 
     #[serde(default)]
-    pub built_in_mods: Arc<[ObjectId]>,
+    pub built_in_mods: Arc<[InfoId]>,
 
     #[serde(default)]
-    pub default_mods: Arc<[ObjectId]>,
+    pub default_mods: Arc<[InfoId]>,
 
     pub clip_size: Option<u8>,
     pub durability: Option<u16>,
@@ -299,10 +299,10 @@ impl ItemWithCommonInfo for Gunmod {
 
 #[derive(Debug, Deserialize)]
 pub struct Magazine {
-    pub ammo_type: Option<MaybeFlatVec<ObjectId>>,
+    pub ammo_type: Option<MaybeFlatVec<InfoId>>,
     pub capacity: Option<u32>,
-    pub default_ammo: Option<ObjectId>,
-    pub linkage: Option<ObjectId>,
+    pub default_ammo: Option<InfoId>,
+    pub linkage: Option<InfoId>,
     pub reload_time: Option<u16>,
 
     #[serde(flatten)]
@@ -333,7 +333,7 @@ impl ItemWithCommonInfo for PetArmor {
 
 #[derive(Debug, Deserialize)]
 pub struct Tool {
-    pub ammo: Option<MaybeFlatVec<ObjectId>>,
+    pub ammo: Option<MaybeFlatVec<InfoId>>,
     pub charge_factor: Option<u8>,
 
     #[serde(default)]
@@ -345,7 +345,7 @@ pub struct Tool {
     pub max_charges: Option<u16>,
     pub rand_charges: Option<Arc<[u32]>>,
     pub revert_msg: Option<Arc<str>>,
-    pub sub: Option<ObjectId>,
+    pub sub: Option<InfoId>,
     pub variables: Option<HashMap<String, serde_json::Value>>,
 
     #[serde(flatten)]
@@ -406,7 +406,7 @@ impl ItemWithCommonInfo for Wheel {
 
 #[derive(Debug, Deserialize)]
 pub struct CommonItemInfo {
-    pub id: ObjectId,
+    pub id: InfoId,
     pub category: Option<Arc<str>>,
 
     // example: { "price": 0.7, "damage": { "damage_type": "bullet", "amount": 0.9 }, "dispersion": 1.1 }
@@ -485,7 +485,7 @@ pub struct CommonItemInfo {
     pub countdown_interval: Option<serde_json::Value>,
     pub countdown_destroy: Option<serde_json::Value>,
     pub countdown_action: Option<serde_json::Value>,
-    pub looks_like: Option<ObjectId>,
+    pub looks_like: Option<InfoId>,
     pub conditional_names: Option<serde_json::Value>,
     pub armor_data: Option<serde_json::Value>,
     pub pet_armor_data: Option<serde_json::Value>,

@@ -9,7 +9,7 @@ use crate::here;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{Res, ResMut, StateScoped, Transform, Visibility};
 use cdda_json_files::{
-    CddaAmount, FlatVec, ObjectId, RepetitionBlock, RequiredLinkedLater, Submap, SubzoneOffset,
+    CddaAmount, FlatVec, InfoId, RepetitionBlock, RequiredLinkedLater, Submap, SubzoneOffset,
 };
 use std::sync::OnceLock;
 
@@ -168,13 +168,12 @@ impl SubzoneSpawner<'_, '_> {
             .add(subzone_level, subzone_level_entity);
     }
 
-    fn fallback_submap(subzone_level: SubzoneLevel, zone_object_id: &ObjectId) -> Submap {
-        let terrain_id = ObjectId::new(if zone_object_id == &ObjectId::new("open_air") {
+    fn fallback_submap(subzone_level: SubzoneLevel, zone_object_id: &InfoId) -> Submap {
+        let terrain_id = InfoId::new(if zone_object_id == &InfoId::new("open_air") {
             "t_open_air"
-        } else if zone_object_id == &ObjectId::new("solid_earth") {
+        } else if zone_object_id == &InfoId::new("solid_earth") {
             "t_soil"
-        } else if [ObjectId::new("empty_rock"), ObjectId::new("deep_rock")].contains(zone_object_id)
-        {
+        } else if [InfoId::new("empty_rock"), InfoId::new("deep_rock")].contains(zone_object_id) {
             "t_rock"
         } else if zone_object_id.is_moving_deep_water_zone() {
             "t_water_moving_dp"

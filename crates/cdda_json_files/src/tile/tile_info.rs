@@ -1,4 +1,4 @@
-use crate::{HashMap, MaybeFlatVec, ObjectId, SpriteNumber};
+use crate::{HashMap, InfoId, MaybeFlatVec, SpriteNumber};
 use either::Either;
 use serde::Deserialize;
 
@@ -57,7 +57,7 @@ impl Default for SpriteNumbers {
 #[serde(deny_unknown_fields)]
 struct CddaBasicTile {
     #[serde(rename = "id")]
-    ids: MaybeFlatVec<ObjectId>,
+    ids: MaybeFlatVec<InfoId>,
 
     #[serde(rename = "fg")]
     #[serde(default)]
@@ -116,13 +116,13 @@ impl From<CddaBasicTile> for BasicTile {
 #[derive(Clone, Debug, Deserialize)]
 #[serde(from = "CddaTileInfo")]
 pub struct TileInfo {
-    ids: Vec<ObjectId>,
+    ids: Vec<InfoId>,
     base: BasicTile,
     variants: HashMap<CddaTileVariant, BasicTile>,
 }
 
 impl TileInfo {
-    pub fn ids(&self) -> impl Iterator<Item = ObjectId> + '_ {
+    pub fn ids(&self) -> impl Iterator<Item = InfoId> + '_ {
         self.ids.iter().cloned()
     }
 
@@ -196,8 +196,8 @@ pub enum CddaTileVariant {
     Unconnected,
 }
 
-impl From<ObjectId> for CddaTileVariant {
-    fn from(source: ObjectId) -> Self {
+impl From<InfoId> for CddaTileVariant {
+    fn from(source: InfoId) -> Self {
         match &*source.fallback_name() {
             "broken" => Self::Broken,
             "open" => Self::Open,

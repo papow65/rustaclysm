@@ -1,19 +1,20 @@
 use crate::gameplay::{TypeId, cdda::Error};
 use bevy::utils::HashMap;
 use cdda_json_files::{
-    Bash, BashItem, BashItems, CommonItemInfo, FurnitureInfo, ItemMigration, ItemWithCommonInfo,
-    ObjectId, Quality, Recipe, Requirement, TerrainInfo, VehiclePartInfo, VehiclePartMigration,
+    Bash, BashItem, BashItems, CommonItemInfo, FurnitureInfo, InfoId, ItemMigration,
+    ItemWithCommonInfo, Quality, Recipe, Requirement, TerrainInfo, VehiclePartInfo,
+    VehiclePartMigration,
 };
 use serde::de::DeserializeOwned;
 use std::{any::type_name, sync::Arc};
 
 pub(crate) struct InfoMap<T> {
-    pub(crate) map: HashMap<ObjectId, Arc<T>>,
+    pub(crate) map: HashMap<InfoId, Arc<T>>,
 }
 
 impl<T: DeserializeOwned + 'static> InfoMap<T> {
     pub(crate) fn new(
-        all: &mut HashMap<TypeId, HashMap<ObjectId, serde_json::Map<String, serde_json::Value>>>,
+        all: &mut HashMap<TypeId, HashMap<InfoId, serde_json::Map<String, serde_json::Value>>>,
         type_ids: &[TypeId],
     ) -> Self {
         let mut map = HashMap::default();
@@ -41,7 +42,7 @@ impl<T: DeserializeOwned + 'static> InfoMap<T> {
         Self { map }
     }
 
-    pub(crate) fn get(&self, id: &ObjectId) -> Result<&Arc<T>, Error> {
+    pub(crate) fn get(&self, id: &InfoId) -> Result<&Arc<T>, Error> {
         self.map.get(id).ok_or_else(|| Error::UnknownObject {
             _id: id.clone(),
             _type: type_name::<T>(),
@@ -117,7 +118,7 @@ impl InfoMap<TerrainInfo> {
         furniture: &InfoMap<FurnitureInfo>,
         common_item_infos: &InfoMap<CommonItemInfo>,
     ) {
-        if self.map.remove(&ObjectId::new("t_null")).is_some() {
+        if self.map.remove(&InfoId::new("t_null")).is_some() {
             eprintln!("The terrain t_null was not expected to be present");
         }
 
@@ -161,7 +162,7 @@ fn link_bash(
 impl InfoMap<VehiclePartInfo> {
     pub(crate) fn add_vehicle_part_migrations(
         &mut self,
-        vehicle_part_migrations: &HashMap<ObjectId, Arc<VehiclePartMigration>>,
+        vehicle_part_migrations: &HashMap<InfoId, Arc<VehiclePartMigration>>,
     ) {
         // TODO Make this recursive
         for (migration_from, migration) in vehicle_part_migrations {
@@ -174,8 +175,8 @@ impl InfoMap<VehiclePartInfo> {
 
 pub(crate) struct ItemInfoMapLoader<'a> {
     pub(crate) enriched_json_infos:
-        &'a mut HashMap<TypeId, HashMap<ObjectId, serde_json::Map<String, serde_json::Value>>>,
-    pub(crate) item_migrations: HashMap<ObjectId, Arc<ItemMigration>>,
+        &'a mut HashMap<TypeId, HashMap<InfoId, serde_json::Map<String, serde_json::Value>>>,
+    pub(crate) item_migrations: HashMap<InfoId, Arc<ItemMigration>>,
     pub(crate) common_item_infos: &'a mut InfoMap<CommonItemInfo>,
 }
 

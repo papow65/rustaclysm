@@ -1,7 +1,7 @@
 use crate::gameplay::{ContainerLimits, Fragment, Infos, Item, ItemItem, Phrase, item::Pocket};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{Children, Entity, HierarchyQueryExt as _, Query, Res};
-use cdda_json_files::{ObjectId, PocketType};
+use cdda_json_files::{InfoId, PocketType};
 use std::{iter::once, num::NonZeroUsize};
 
 #[derive(Clone, Copy, Debug)]
@@ -159,9 +159,10 @@ impl<'w> ItemHierarchy<'w, '_> {
                     .inspect_err(|error| eprintln!("Magazine not found: {error:?}"))
                     .ok()
                     .filter(|magazine| {
-                        magazine.ammo_type.as_ref().is_some_and(|ammo_type| {
-                            ammo_type.0.contains(&ObjectId::new("battery"))
-                        })
+                        magazine
+                            .ammo_type
+                            .as_ref()
+                            .is_some_and(|ammo_type| ammo_type.0.contains(&InfoId::new("battery")))
                     })
                     .map(|magazine| {
                         #[allow(clippy::iter_with_drain)] // don't drop 'magazine_output'

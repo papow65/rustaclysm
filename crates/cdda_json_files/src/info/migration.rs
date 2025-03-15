@@ -1,14 +1,14 @@
-use crate::ObjectId;
+use crate::InfoId;
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
 pub struct ItemMigration {
-    pub id: ObjectId,
-    pub replace: ObjectId,
+    pub id: InfoId,
+    pub replace: InfoId,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct VehiclePartMigration {
-    pub from: ObjectId,
-    pub to: ObjectId,
+    pub from: InfoId,
+    pub to: InfoId,
 }

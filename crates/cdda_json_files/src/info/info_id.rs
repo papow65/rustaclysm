@@ -1,10 +1,11 @@
 use serde::Deserialize;
 use std::sync::Arc;
 
+/// Note that different info types may use the same ids.
 #[derive(Clone, Debug, Hash, PartialEq, Eq, Deserialize)]
-pub struct ObjectId(Arc<str>);
+pub struct InfoId(Arc<str>);
 
-impl ObjectId {
+impl InfoId {
     #[must_use]
     pub fn new(value: impl Into<Arc<str>>) -> Self {
         Self(value.into())

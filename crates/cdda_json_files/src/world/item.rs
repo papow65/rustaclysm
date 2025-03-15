@@ -1,5 +1,5 @@
 use crate::{
-    CharacterInfo, CommonItemInfo, HashMap, ObjectId, OptionalLinkedLater, RequiredLinkedLater,
+    CharacterInfo, CommonItemInfo, HashMap, InfoId, OptionalLinkedLater, RequiredLinkedLater,
 };
 use serde::Deserialize;
 use serde_repr::Deserialize_repr;
@@ -145,7 +145,7 @@ pub enum PocketType {
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct AdditionalPocket {
-    pub typeid: ObjectId,
+    pub typeid: InfoId,
 
     #[expect(unused)]
     last_temp_check: Option<u64>,
