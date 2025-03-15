@@ -2,7 +2,7 @@ use crate::gameplay::cdda::info::info_map::{InfoMap, ItemInfoMapLoader};
 use crate::gameplay::cdda::info::parsed_json::ParsedJson;
 use crate::gameplay::{ObjectCategory, TypeId, cdda::Error};
 use crate::util::AsyncNew;
-use bevy::prelude::{Resource, debug, info};
+use bevy::prelude::{Resource, debug, error, info};
 use bevy::utils::HashMap;
 use cdda_json_files::{
     Alternative, Ammo, BionicItem, Book, CddaItem, CddaItemName, CharacterInfo, Clothing,
@@ -85,13 +85,24 @@ impl Infos {
         let start = Instant::now();
 
         let mut enriched_json_infos = ParsedJson::enriched();
+        debug!(
+            "Collected {} enriched categories",
+            enriched_json_infos.len()
+        );
+        for (type_id, values) in &enriched_json_infos {
+            if values.is_empty() {
+                error!("Collected no {type_id:?} entries");
+            } else {
+                debug!("Collected {} {type_id:?} entries", values.len());
+            }
+        }
 
-        let mut common_item_infos = InfoMap {
-            map: HashMap::default(),
-        };
         let qualities = InfoMap::new(&mut enriched_json_infos, TypeId::TOOL_QUALITY);
 
         let item_migrations = InfoMap::new(&mut enriched_json_infos, TypeId::ITEM_MIGRATION).map;
+        let mut common_item_infos = InfoMap {
+            map: HashMap::default(),
+        };
         let mut item_loader = ItemInfoMapLoader {
             enriched_json_infos: &mut enriched_json_infos,
             item_migrations,
