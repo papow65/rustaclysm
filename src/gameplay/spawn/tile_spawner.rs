@@ -20,7 +20,7 @@ use bevy::utils::HashMap;
 use cdda_json_files::{
     Bash, BashItem, BashItems, CddaAmount, CddaItem, CddaItemName, CddaVehicle, CddaVehiclePart,
     Character, CharacterInfo, CommonItemInfo, CountRange, Field, Flags, FlatVec, FurnitureInfo,
-    InfoId, ItemName, MoveCostMod, PocketType, Recipe, Repetition, RequiredLinkedLater,
+    InfoId, ItemGroup, ItemName, MoveCostMod, PocketType, Recipe, Repetition, RequiredLinkedLater,
     VecLinkedLater,
 };
 use std::sync::Arc;
@@ -99,7 +99,7 @@ impl<'w> TileSpawner<'w, '_> {
 
         let definition = &ObjectDefinition {
             category: ObjectCategory::Character,
-            id: character_info.id.clone(),
+            id: character_info.id.untyped().clone(),
         };
         let entity = self.spawn_object(parent, Some(pos), definition, object_name, None);
         let mut entity = self.commands.entity(entity);
@@ -177,7 +177,7 @@ impl<'w> TileSpawner<'w, '_> {
 
         let definition = &ObjectDefinition {
             category: ObjectCategory::Field,
-            id: field_info.id.clone(),
+            id: field_info.id.untyped().clone(),
         };
         let entity = self.spawn_object(parent, Some(pos), definition, object_name, None);
         self.commands.entity(entity).insert(Shared::new(field_info));
@@ -195,7 +195,7 @@ impl<'w> TileSpawner<'w, '_> {
         //trace!("{:?} {:?} {:?} {:?}", &parent, pos, &id, &amount);
         let definition = &ObjectDefinition {
             category: ObjectCategory::Item,
-            id: item_info.id.clone(),
+            id: item_info.id.untyped().clone(),
         };
         //trace!("{:?} @ {pos:?}", &definition);
         let object_name = ObjectName::new(
@@ -302,7 +302,7 @@ impl<'w> TileSpawner<'w, '_> {
         infos: &Infos,
         parent_entity: Entity,
         pos: Pos,
-        id: &InfoId,
+        id: &InfoId<ItemGroup>,
     ) {
         let item_group = match infos.item_groups.get(id) {
             Ok(item_group) => item_group,
@@ -322,7 +322,7 @@ impl<'w> TileSpawner<'w, '_> {
     fn spawn_furniture(&mut self, parent: Entity, pos: Pos, furniture_info: &Arc<FurnitureInfo>) {
         let definition = &ObjectDefinition {
             category: ObjectCategory::Furniture,
-            id: furniture_info.id.clone(),
+            id: furniture_info.id.untyped().clone(),
         };
         let object_name = ObjectName::new(furniture_info.name.clone(), HARD_TEXT_COLOR);
         let entity = self.spawn_object(parent, Some(pos), definition, object_name, None);
@@ -359,7 +359,7 @@ impl<'w> TileSpawner<'w, '_> {
 
         let definition = &ObjectDefinition {
             category: ObjectCategory::Terrain,
-            id: local_terrain.info.id.clone(),
+            id: local_terrain.info.id.untyped().clone(),
         };
         let object_name = ObjectName::new(local_terrain.info.name.clone(), HARD_TEXT_COLOR);
         let entity = self.spawn_object(
@@ -457,7 +457,7 @@ impl<'w> TileSpawner<'w, '_> {
         let pos = parent_pos.horizontal_offset(part.mount_dx, part.mount_dy);
         let definition = &ObjectDefinition {
             category: ObjectCategory::VehiclePart,
-            id: part.id.clone(),
+            id: part.id.untyped().clone(),
         };
         let object_name = ObjectName::new(name.clone(), HARD_TEXT_COLOR);
 

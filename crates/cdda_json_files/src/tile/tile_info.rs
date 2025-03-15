@@ -1,4 +1,4 @@
-use crate::{HashMap, InfoId, MaybeFlatVec, SpriteNumber};
+use crate::{HashMap, MaybeFlatVec, SpriteNumber, UntypedInfoId};
 use bevy_log::warn;
 use either::Either;
 use serde::Deserialize;
@@ -58,7 +58,7 @@ impl Default for SpriteNumbers {
 #[serde(deny_unknown_fields)]
 struct CddaBasicTile {
     #[serde(rename = "id")]
-    ids: MaybeFlatVec<InfoId>,
+    ids: MaybeFlatVec<UntypedInfoId>,
 
     #[serde(rename = "fg")]
     #[serde(default)]
@@ -117,13 +117,13 @@ impl From<CddaBasicTile> for BasicTile {
 #[derive(Clone, Debug, Deserialize)]
 #[serde(from = "CddaTileInfo")]
 pub struct TileInfo {
-    ids: Vec<InfoId>,
+    ids: Vec<UntypedInfoId>,
     base: BasicTile,
     variants: HashMap<CddaTileVariant, BasicTile>,
 }
 
 impl TileInfo {
-    pub fn ids(&self) -> impl Iterator<Item = InfoId> + '_ {
+    pub fn ids(&self) -> impl Iterator<Item = UntypedInfoId> + '_ {
         self.ids.iter().cloned()
     }
 
@@ -197,8 +197,8 @@ pub enum CddaTileVariant {
     Unconnected,
 }
 
-impl From<InfoId> for CddaTileVariant {
-    fn from(source: InfoId) -> Self {
+impl From<UntypedInfoId> for CddaTileVariant {
+    fn from(source: UntypedInfoId) -> Self {
         match &*source.fallback_name() {
             "broken" => Self::Broken,
             "open" => Self::Open,

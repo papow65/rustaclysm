@@ -1,5 +1,6 @@
 use crate::{
-    CddaAmount, CharacterInfo, FlatVec, HashMap, InfoId, RepetitionBlock, RequiredLinkedLater,
+    CddaAmount, CharacterInfo, FlatVec, HashMap, InfoId, OvermapInfo, RepetitionBlock,
+    RequiredLinkedLater,
 };
 use serde::Deserialize;
 use std::sync::{Arc, OnceLock};
@@ -36,11 +37,11 @@ impl Overmap {
 
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct OvermapLevel(pub RepetitionBlock<InfoId>);
+pub struct OvermapLevel(pub RepetitionBlock<InfoId<OvermapInfo>>);
 
 impl OvermapLevel {
     #[must_use]
-    pub fn all(id: InfoId) -> Self {
+    pub fn all(id: InfoId<OvermapInfo>) -> Self {
         Self(RepetitionBlock::new(CddaAmount {
             obj: id,
             amount: 180 * 180,

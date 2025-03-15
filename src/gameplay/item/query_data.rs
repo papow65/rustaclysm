@@ -25,7 +25,7 @@ pub(crate) struct Item {
 
 impl<'a> ItemItem<'a> {
     pub(crate) fn fragments(&self) -> impl Iterator<Item = Fragment> + use<'_, 'a> {
-        let fragments = if self.definition.id == InfoId::new("money") {
+        let fragments = if self.common_info.id == InfoId::new("money") {
             let cents = self.amount.0 as f32;
             let dollars = format!("$ {:.2}", cents / 100.0);
 
@@ -39,7 +39,7 @@ impl<'a> ItemItem<'a> {
                 self.integrity.fragment(),
                 Some(Fragment::colorized(dollars, color)),
             ]
-        } else if self.definition.id == InfoId::new("battery") {
+        } else if self.common_info.id == InfoId::new("battery") {
             [self.amount.fragment(), None, None, None]
         } else {
             [

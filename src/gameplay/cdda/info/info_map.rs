@@ -2,20 +2,23 @@ use crate::gameplay::{TypeId, cdda::Error};
 use bevy::prelude::{debug, error, warn};
 use bevy::utils::HashMap;
 use cdda_json_files::{
-    Bash, BashItem, BashItems, CommonItemInfo, FurnitureInfo, InfoId, ItemMigration,
-    ItemWithCommonInfo, Quality, Recipe, Requirement, TerrainInfo, VehiclePartInfo,
-    VehiclePartMigration,
+    Bash, BashItem, BashItems, CommonItemInfo, FurnitureInfo, InfoId, InfoIdDescription,
+    ItemMigration, ItemWithCommonInfo, Quality, Recipe, Requirement, TerrainInfo, UntypedInfoId,
+    VehiclePartInfo, VehiclePartMigration,
 };
 use serde::de::DeserializeOwned;
 use std::{any::type_name, sync::Arc};
 
 pub(crate) struct InfoMap<T> {
-    pub(crate) map: HashMap<InfoId, Arc<T>>,
+    pub(crate) map: HashMap<InfoId<T>, Arc<T>>,
 }
 
 impl<T: DeserializeOwned + 'static> InfoMap<T> {
     pub(crate) fn new(
-        all: &mut HashMap<TypeId, HashMap<InfoId, serde_json::Map<String, serde_json::Value>>>,
+        all: &mut HashMap<
+            TypeId,
+            HashMap<UntypedInfoId, serde_json::Map<String, serde_json::Value>>,
+        >,
         type_ids: &[TypeId],
     ) -> Self {
         let mut map = HashMap::default();
@@ -27,7 +30,7 @@ impl<T: DeserializeOwned + 'static> InfoMap<T> {
                 //trace!("{:#?}", &object_properties);
                 match serde_json::from_value::<T>(serde_json::Value::Object(object_properties)) {
                     Ok(info) => {
-                        map.insert(id, Arc::new(info));
+                        map.insert(id.into(), Arc::new(info));
                     }
                     Err(error) => {
                         error!(
@@ -43,10 +46,9 @@ impl<T: DeserializeOwned + 'static> InfoMap<T> {
         Self { map }
     }
 
-    pub(crate) fn get(&self, id: &InfoId) -> Result<&Arc<T>, Error> {
+    pub(crate) fn get(&self, id: &InfoId<T>) -> Result<&Arc<T>, Error> {
         self.map.get(id).ok_or_else(|| Error::UnknownObject {
-            _id: id.clone(),
-            _type: type_name::<T>(),
+            _id: InfoIdDescription::from(id.clone()),
         })
     }
 
@@ -161,13 +163,13 @@ fn link_bash(
 }
 
 impl InfoMap<VehiclePartInfo> {
-    pub(crate) fn add_vehicle_part_migrations(
+    pub(crate) fn add_vehicle_part_migrations<'a>(
         &mut self,
-        vehicle_part_migrations: &HashMap<InfoId, Arc<VehiclePartMigration>>,
+        vehicle_part_migrations: impl Iterator<Item = &'a Arc<VehiclePartMigration>>,
     ) {
         // TODO Make this recursive
-        for (migration_from, migration) in vehicle_part_migrations {
-            if let Ok(new) = self.get(migration_from).cloned() {
+        for migration in vehicle_part_migrations {
+            if let Ok(new) = self.get(&migration.from).cloned() {
                 self.map.insert(migration.from.clone(), new);
             }
         }
@@ -176,8 +178,8 @@ impl InfoMap<VehiclePartInfo> {
 
 pub(crate) struct ItemInfoMapLoader<'a> {
     pub(crate) enriched_json_infos:
-        &'a mut HashMap<TypeId, HashMap<InfoId, serde_json::Map<String, serde_json::Value>>>,
-    pub(crate) item_migrations: HashMap<InfoId, Arc<ItemMigration>>,
+        &'a mut HashMap<TypeId, HashMap<UntypedInfoId, serde_json::Map<String, serde_json::Value>>>,
+    pub(crate) item_migrations: HashMap<InfoId<ItemMigration>, Arc<ItemMigration>>,
     pub(crate) common_item_infos: &'a mut InfoMap<CommonItemInfo>,
 }
 
@@ -190,15 +192,17 @@ impl ItemInfoMapLoader<'_> {
 
         // TODO Make this recursive
         for (migration_from, migration) in &self.item_migrations {
-            if let Ok(new) = items.get(migration_from).cloned() {
-                items.map.insert(migration.replace.clone(), new);
+            if let Ok(new) = items.get(&migration_from.untyped().clone().into()).cloned() {
+                items
+                    .map
+                    .insert(migration.replace.untyped().clone().into(), new);
             }
         }
 
         for (id, item_info) in &mut items.map {
             self.common_item_infos
                 .map
-                .insert(id.clone(), item_info.common());
+                .insert(id.untyped().clone().into(), item_info.common());
         }
 
         debug!(

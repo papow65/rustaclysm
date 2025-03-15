@@ -489,7 +489,7 @@ pub(crate) fn update_zone_levels_with_missing_assets(
             .get(zone_level)
             .map(|object_id| ObjectDefinition {
                 category: ObjectCategory::ZoneLevel,
-                id: object_id.clone(),
+                id: object_id.untyped().clone(),
             })
         else {
             continue;

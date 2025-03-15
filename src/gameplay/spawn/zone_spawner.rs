@@ -46,7 +46,7 @@ impl ZoneSpawner<'_, '_> {
                 .get(zone_level)
                 .map(|object_id| ObjectDefinition {
                     category: ObjectCategory::ZoneLevel,
-                    id: object_id.clone(),
+                    id: object_id.untyped().clone(),
                 })
         else {
             entity.insert(MissingAsset);
@@ -66,10 +66,14 @@ impl ZoneSpawner<'_, '_> {
         child_visibiltiy: &Visibility,
     ) {
         let name = ObjectName::new(
-            self.infos.zone_levels.get(&definition.id).ok().map_or_else(
-                || ItemName::from(CddaItemName::Simple(definition.id.fallback_name())),
-                |z| z.name.clone(),
-            ),
+            self.infos
+                .zone_levels
+                .get(&definition.id.clone().into())
+                .ok()
+                .map_or_else(
+                    || ItemName::from(CddaItemName::Simple(definition.id.fallback_name())),
+                    |z| z.name.clone(),
+                ),
             HARD_TEXT_COLOR,
         );
 

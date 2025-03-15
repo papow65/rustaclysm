@@ -1,6 +1,6 @@
 use crate::{
-    At, AtVec, CddaItem, CddaVehicle, Character, FieldVec, FurnitureInfo, InfoId, Repetition,
-    RepetitionBlock, RequiredLinkedLater, TerrainInfo,
+    At, AtVec, CddaItem, CddaVehicle, Character, FieldVec, FurnitureInfo, Repetition,
+    RepetitionBlock, RequiredLinkedLater, TerrainInfo, UntypedInfoId,
 };
 use serde::Deserialize;
 use std::sync::{Arc, OnceLock};
@@ -23,7 +23,7 @@ pub struct Submap {
     pub terrain: RepetitionBlock<RequiredLinkedLater<TerrainInfo>>,
     pub furniture: Vec<At<RequiredLinkedLater<FurnitureInfo>>>,
     pub items: AtVec<Vec<Repetition<CddaItem>>>,
-    pub traps: Vec<At<InfoId>>,
+    pub traps: Vec<At<UntypedInfoId>>,
     pub fields: AtVec<FieldVec>,
     pub cosmetics: Vec<(u8, u8, Arc<str>, Arc<str>)>,
     pub spawns: Vec<Character>,

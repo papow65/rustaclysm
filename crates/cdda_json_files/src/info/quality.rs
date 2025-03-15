@@ -6,7 +6,7 @@ use std::sync::Arc;
 // PartialEq, Eq, and Hash manually implemented below
 #[derive(Debug, Deserialize)]
 pub struct Quality {
-    pub id: InfoId,
+    pub id: InfoId<Self>,
     pub name: ItemName,
 
     #[serde(default)]

@@ -19,7 +19,7 @@ pub use self::flags::Flags;
 pub use self::furniture_info::{
     Bash, BashItem, BashItems, CountRange, FurnitureInfo, MoveCostIncrease, MoveCostMod,
 };
-pub use self::info_id::InfoId;
+pub use self::info_id::{InfoId, InfoIdDescription, UntypedInfoId};
 pub use self::item_group::ItemGroup;
 pub use self::item_info::{
     Ammo, BionicItem, Book, CddaItemName, Clothing, Comestible, CommonItemInfo, Description,

@@ -1,14 +1,17 @@
-use crate::{CommonItemInfo, InfoId, OptionalLinkedLater, RequiredLinkedLater, TerrainInfo};
+use crate::{
+    CommonItemInfo, InfoId, ItemGroup, OptionalLinkedLater, RequiredLinkedLater, TerrainInfo,
+    UntypedInfoId,
+};
 use crate::{Flags, HashMap, ItemName};
 use serde::Deserialize;
 use std::sync::Arc;
 
 #[derive(Debug, Deserialize)]
 pub struct FurnitureInfo {
-    pub id: InfoId,
+    pub id: InfoId<Self>,
     pub name: ItemName,
     pub move_cost_mod: Option<MoveCostMod>,
-    pub looks_like: Option<InfoId>,
+    pub looks_like: Option<UntypedInfoId>,
     pub flags: Flags,
     pub bash: Option<Bash>,
     pub crafting_pseudo_item: OptionalLinkedLater<CommonItemInfo>,
@@ -46,14 +49,14 @@ pub struct Bash {
 #[serde(untagged)]
 pub enum BashItems {
     Explicit(Vec<BashItem>),
-    Collection(InfoId),
+    Collection(InfoId<ItemGroup>),
 }
 
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
 pub enum BashItem {
     Single(ItemOccurrence),
-    Group { group: InfoId },
+    Group { group: InfoId<ItemGroup> },
 }
 
 #[derive(Debug, Deserialize)]

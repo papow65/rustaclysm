@@ -1,11 +1,15 @@
 use serde::Deserialize;
-use std::sync::Arc;
+use std::hash::{Hash, Hasher};
+use std::{any::type_name, fmt, marker::PhantomData, sync::Arc};
 
+use crate::{OvermapInfo, TerrainInfo};
+
+/// Use [`InfoId`] wherever possible.
 /// Note that different info types may use the same ids.
 #[derive(Clone, Debug, Hash, PartialEq, Eq, Deserialize)]
-pub struct InfoId(Arc<str>);
+pub struct UntypedInfoId(Arc<str>);
 
-impl InfoId {
+impl UntypedInfoId {
     #[must_use]
     pub fn new(value: impl Into<Arc<str>>) -> Self {
         Self(value.into())
@@ -73,29 +77,127 @@ impl InfoId {
     pub fn fallback_name(&self) -> Arc<str> {
         Arc::<str>::from(&*self.0)
     }
+}
+
+#[derive(Deserialize)]
+#[serde(from = "UntypedInfoId")]
+pub struct InfoId<T> {
+    untyped: UntypedInfoId,
+    _phantom: PhantomData<T>,
+}
+
+impl<T> InfoId<T> {
+    #[must_use]
+    pub fn new(value: impl Into<Arc<str>>) -> Self {
+        Self::from(UntypedInfoId::new(value))
+    }
 
     #[must_use]
+    pub fn new_suffix(value: &String, suffix: Option<&str>) -> Self {
+        Self::from(UntypedInfoId::new_suffix(value, suffix))
+    }
+
+    pub fn add_suffix(&mut self, suffix: &str) {
+        self.untyped.add_suffix(suffix);
+    }
+
+    #[must_use]
+    pub const fn untyped(&self) -> &UntypedInfoId {
+        &self.untyped
+    }
+
+    #[must_use]
+    pub fn fallback_name(&self) -> Arc<str> {
+        self.untyped.fallback_name()
+    }
+}
+
+impl InfoId<OvermapInfo> {
+    #[must_use]
     pub fn is_moving_deep_water_zone(&self) -> bool {
-        self.0.starts_with("river_")
+        self.untyped.starts_with("river_")
     }
 
     #[must_use]
     pub fn is_still_deep_water_zone(&self) -> bool {
-        self.0.starts_with("lake_")
+        self.untyped.starts_with("lake_")
     }
 
     #[must_use]
     pub fn is_grassy_zone(&self) -> bool {
-        &*self.0 == "field" || self.0.starts_with("forest")
+        *self == Self::new("field") || self.untyped.starts_with("forest")
     }
 
     #[must_use]
     pub fn is_road_zone(&self) -> bool {
-        self.0.starts_with("road_")
+        self.untyped.starts_with("road_")
     }
+}
 
+impl InfoId<TerrainInfo> {
     #[must_use]
     pub fn is_ground(&self) -> bool {
-        &*self.0 == "t_grass" || &*self.0 == "t_dirt"
+        [Self::new("t_grass"), Self::new("t_dirt")].contains(self)
+    }
+}
+
+impl<T> Clone for InfoId<T> {
+    fn clone(&self) -> Self {
+        Self::from(self.untyped.clone())
+    }
+}
+
+impl<T> fmt::Debug for InfoId<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let full_type_name = type_name::<T>();
+        let type_short = full_type_name.split("::").last().unwrap_or(&full_type_name);
+        write!(f, "{type_short} {}", self.untyped.0)
+    }
+}
+
+impl<T> From<UntypedInfoId> for InfoId<T> {
+    fn from(untyped: UntypedInfoId) -> Self {
+        Self {
+            untyped,
+            _phantom: PhantomData::default(),
+        }
+    }
+}
+
+impl<T> Hash for InfoId<T> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.untyped.hash(state);
+    }
+}
+
+impl<T> PartialEq for InfoId<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.untyped == other.untyped
+    }
+}
+
+impl<T> Eq for InfoId<T> {}
+
+/// Usefull for debugging
+#[derive(Deserialize)]
+pub struct InfoIdDescription {
+    untyped: UntypedInfoId,
+    type_name: String,
+}
+
+impl fmt::Debug for InfoIdDescription {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {}", self.type_name, self.untyped.0)
+    }
+}
+
+impl<T> From<InfoId<T>> for InfoIdDescription {
+    fn from(info_id: InfoId<T>) -> Self {
+        let full_type_name = type_name::<T>();
+        let type_short = full_type_name.split("::").last().unwrap_or(full_type_name);
+        Self {
+            untyped: info_id.untyped,
+            type_name: String::from(type_short),
+        }
     }
 }

@@ -1,21 +1,20 @@
 use crate::gameplay::cdda::TypeId;
-use cdda_json_files::{Error as CddaJsonError, InfoId, SpriteNumber};
+use cdda_json_files::{Error as CddaJsonError, InfoId, InfoIdDescription, Recipe, SpriteNumber};
 use std::{error::Error as StdError, fmt, io, path::PathBuf, sync::Arc};
 
 #[derive(Debug)]
 pub(crate) enum Error {
     /// This recipe has no time set, where it is expected
     RecipeWithoutTime {
-        _id: InfoId,
+        _id: InfoId<Recipe>,
     },
     /// This id, or combination of id and type is not known
     UnknownObject {
-        _id: InfoId,
-        _type: &'static str,
+        _id: InfoIdDescription,
     },
     /// This id doesn't match with items or requirments
     UnexpectedRequirement {
-        _id: InfoId,
+        _id: InfoIdDescription,
     },
     /// This sprite numer is not known
     UnknownSpriteNumber {

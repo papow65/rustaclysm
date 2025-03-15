@@ -8,8 +8,8 @@ use cdda_json_files::{
     Alternative, Ammo, BionicItem, Book, CddaItem, CddaItemName, CharacterInfo, Clothing,
     Comestible, CommonItemInfo, Engine, FieldInfo, Flags, FurnitureInfo, GenericItem, Gun, Gunmod,
     InfoId, ItemGroup, ItemName, Magazine, Overmap, OvermapInfo, PetArmor, Quality, Recipe,
-    RequiredLinkedLater, Requirement, Submap, TerrainInfo, Tool, ToolClothing, Toolmod, Using,
-    UsingKind, VehiclePartInfo, Wheel,
+    RequiredLinkedLater, Requirement, Submap, TerrainInfo, Tool, ToolClothing, Toolmod,
+    UntypedInfoId, Using, UsingKind, VehiclePartInfo, VehiclePartMigration, Wheel,
 };
 use std::{sync::Arc, time::Instant};
 use units::{Mass, Volume};
@@ -124,10 +124,12 @@ impl Infos {
         let recipes = InfoMap::new(&mut enriched_json_infos, TypeId::RECIPE);
         recipes.link_recipes(&qualities, &common_item_infos);
 
-        let vehicle_part_migrations =
-            InfoMap::new(&mut enriched_json_infos, TypeId::VEHICLE_PART_MIGRATION);
+        let vehicle_part_migrations = InfoMap::<VehiclePartMigration>::new(
+            &mut enriched_json_infos,
+            TypeId::VEHICLE_PART_MIGRATION,
+        );
         let mut vehicle_parts = InfoMap::new(&mut enriched_json_infos, TypeId::VEHICLE_PART);
-        vehicle_parts.add_vehicle_part_migrations(&vehicle_part_migrations.map);
+        vehicle_parts.add_vehicle_part_migrations(vehicle_part_migrations.map.values());
 
         let mut this = Self {
             ammos,
@@ -172,48 +174,48 @@ impl Infos {
         this
     }
 
-    fn looks_like(&self, definition: &ObjectDefinition) -> Option<InfoId> {
+    fn looks_like(&self, definition: &ObjectDefinition) -> Option<UntypedInfoId> {
         match definition.category {
             ObjectCategory::Character => self
                 .characters
-                .get(&definition.id)
+                .get(&definition.id.clone().into())
                 .ok()
                 .and_then(|o| o.looks_like.clone()),
             ObjectCategory::Item => self
                 .common_item_infos
-                .get(&definition.id)
+                .get(&definition.id.clone().into())
                 .ok()
                 .and_then(|o| o.looks_like.clone()),
             ObjectCategory::Field => self
                 .fields
-                .get(&definition.id)
+                .get(&definition.id.clone().into())
                 .ok()
                 .and_then(|o| o.looks_like.clone()),
             ObjectCategory::Furniture => self
                 .furniture
-                .get(&definition.id)
+                .get(&definition.id.clone().into())
                 .ok()
                 .and_then(|o| o.looks_like.clone()),
             ObjectCategory::Terrain => self
                 .terrain
-                .get(&definition.id)
+                .get(&definition.id.clone().into())
                 .ok()
                 .and_then(|o| o.looks_like.clone()),
             ObjectCategory::VehiclePart => self
                 .vehicle_parts
-                .get(&definition.id)
+                .get(&definition.id.clone().into())
                 .ok()
                 .and_then(|o| o.looks_like.clone()),
             ObjectCategory::ZoneLevel => self
                 .zone_levels
-                .get(&definition.id)
+                .get(&definition.id.clone().into())
                 .ok()
                 .and_then(|o| o.looks_like.clone()),
             _ => unimplemented!("{:?}", definition),
         }
     }
 
-    pub(crate) fn variants(&self, definition: &ObjectDefinition) -> Vec<InfoId> {
+    pub(crate) fn variants(&self, definition: &ObjectDefinition) -> Vec<UntypedInfoId> {
         if definition.category == ObjectCategory::Meta {
             return vec![definition.id.clone()];
         }
@@ -366,7 +368,7 @@ fn default_human() -> CharacterInfo {
         id: InfoId::new("human"),
         name: ItemName::from(CddaItemName::Simple(Arc::from("Human"))),
         default_faction: Arc::from("human"),
-        looks_like: Some(InfoId::new("overlay_male_mutation_SKIN_TAN")),
+        looks_like: Some(UntypedInfoId::new("overlay_male_mutation_SKIN_TAN")),
         volume: Some(Volume::from("80 l")),
         mass: Some(Mass::from("80 kg")),
         hp: Some(100),

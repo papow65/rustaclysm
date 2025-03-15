@@ -1,4 +1,4 @@
-use crate::{CommonItemInfo, HashMap, InfoId, Quality, RequiredLinkedLater};
+use crate::{CommonItemInfo, HashMap, InfoId, Quality, RequiredLinkedLater, Requirement};
 use serde::Deserialize;
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
@@ -7,7 +7,7 @@ use units::Duration;
 // PartialEq, Eq, and Hash manually implemented below
 #[derive(Debug, Deserialize)]
 pub struct Recipe {
-    pub id: InfoId,
+    pub id: InfoId<Self>,
     pub result: RequiredLinkedLater<CommonItemInfo>,
 
     pub skill_used: Option<Arc<str>>,
@@ -55,7 +55,7 @@ impl Hash for Recipe {
 #[serde(untagged)]
 pub enum BookLearn {
     List(Vec<BookLearnItem>),
-    Map(HashMap<InfoId, serde_json::Value>),
+    Map(HashMap<InfoId<CommonItemInfo>, serde_json::Value>),
     Other(serde_json::Value),
 }
 
@@ -68,14 +68,14 @@ impl Default for BookLearn {
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
 pub enum BookLearnItem {
-    Simple(InfoId),
-    Wrapped((InfoId,)),
-    WithSkill(InfoId, u8),
+    Simple(InfoId<CommonItemInfo>),
+    Wrapped((InfoId<CommonItemInfo>,)),
+    WithSkill(InfoId<CommonItemInfo>, u8),
 }
 
 impl BookLearnItem {
     #[must_use]
-    pub fn id(&self) -> InfoId {
+    pub fn id(&self) -> InfoId<CommonItemInfo> {
         match self {
             Self::Simple(id) | Self::Wrapped((id,)) | Self::WithSkill(id, _) => id.clone(),
         }
@@ -129,8 +129,14 @@ pub struct RequiredQuality {
 #[derive(Clone, Debug, Deserialize)]
 #[serde(from = "CddaAlternative")]
 pub enum Alternative {
-    Item { item: InfoId, required: u32 },
-    Requirement { requirement: InfoId, factor: u32 },
+    Item {
+        item: InfoId<CommonItemInfo>,
+        required: u32,
+    },
+    Requirement {
+        requirement: InfoId<Requirement>,
+        factor: u32,
+    },
 }
 
 impl From<CddaAlternative> for Alternative {
@@ -148,14 +154,14 @@ impl From<CddaAlternative> for Alternative {
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
 pub enum CddaAlternative {
-    Item(InfoId, u32),
-    List(InfoId, u32, Arc<str>),
+    Item(InfoId<CommonItemInfo>, u32),
+    List(InfoId<Requirement>, u32, Arc<str>),
 }
 
 #[derive(Debug, Deserialize)]
 #[serde(from = "CddaUsing")]
 pub struct Using {
-    pub requirement: InfoId,
+    pub requirement: InfoId<Requirement>,
     pub factor: u32,
     pub kind: UsingKind,
 }
@@ -186,8 +192,8 @@ pub enum UsingKind {
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
 pub enum CddaUsing {
-    NonList(InfoId, u32),
-    List(InfoId, u32, Arc<str>),
+    NonList(InfoId<Requirement>, u32),
+    List(InfoId<Requirement>, u32, Arc<str>),
 }
 
 #[cfg(test)]

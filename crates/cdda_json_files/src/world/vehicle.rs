@@ -1,4 +1,4 @@
-use crate::{CddaItem, HashMap, InfoId, Repetition};
+use crate::{CddaItem, HashMap, InfoId, Repetition, UntypedInfoId, VehiclePartInfo};
 use serde::Deserialize;
 use std::sync::Arc;
 
@@ -7,7 +7,7 @@ use std::sync::Arc;
 #[serde(deny_unknown_fields)]
 pub struct CddaVehicle {
     #[serde(rename = "type")]
-    pub id: InfoId,
+    pub id: UntypedInfoId,
 
     /// u8 would suffice, but i32 requires less casting
     pub posx: i32,
@@ -95,7 +95,7 @@ pub struct CddaVehicle {
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct CddaVehiclePart {
-    pub id: InfoId,
+    pub id: InfoId<VehiclePartInfo>,
     pub variant: Option<Arc<str>>,
     pub base: Arc<CddaItem>,
 

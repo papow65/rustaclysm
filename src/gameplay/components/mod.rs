@@ -10,7 +10,7 @@ pub(crate) use self::vehicle::{Vehicle, VehiclePart};
 
 use crate::gameplay::{BaseSpeed, Damage, Evolution, Limited, ObjectCategory, Player, Visible};
 use bevy::prelude::{AlphaMode, Assets, Color, Component, MeshMaterial3d, Srgba, StandardMaterial};
-use cdda_json_files::{CommonItemInfo, InfoId, MoveCost, MoveCostIncrease, Recipe};
+use cdda_json_files::{CommonItemInfo, InfoId, MoveCost, MoveCostIncrease, Recipe, TerrainInfo, UntypedInfoId};
 use std::sync::Arc;
 use units::{Duration, Timestamp};
 
@@ -51,12 +51,12 @@ pub(crate) struct OpaqueFloor;
 #[derive(Clone, Debug, PartialEq, Component)]
 pub(crate) struct ObjectDefinition {
     pub(crate) category: ObjectCategory,
-    pub(crate) id: InfoId,
+    pub(crate) id: UntypedInfoId,
 }
 
 impl ObjectDefinition {
     pub(crate) fn alpha_mode(&self) -> AlphaMode {
-        if self.category == ObjectCategory::Terrain && self.id.is_ground() {
+        if self.category == ObjectCategory::Terrain && InfoId::<TerrainInfo>::from(self.id.clone()).is_ground() {
             AlphaMode::Opaque
         } else {
             AlphaMode::Blend

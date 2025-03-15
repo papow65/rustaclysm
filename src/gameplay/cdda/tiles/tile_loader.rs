@@ -4,13 +4,14 @@ use crate::util::{AssetPaths, AsyncNew};
 use bevy::prelude::{Resource, error, warn};
 use bevy::utils::{Entry, HashMap};
 use cdda_json_files::{
-    CddaTileConfig, CddaTileVariant, InfoId, MaybeFlatVec, SpriteNumber, SpriteNumbers, TileInfo,
+    CddaTileConfig, CddaTileVariant, MaybeFlatVec, SpriteNumber, SpriteNumbers, TileInfo,
+    UntypedInfoId,
 };
 use std::{fs::read_to_string, sync::Arc};
 
 #[derive(Resource)]
 pub(crate) struct TileLoader {
-    tiles: HashMap<InfoId, Arc<TileInfo>>,
+    tiles: HashMap<UntypedInfoId, Arc<TileInfo>>,
     textures: HashMap<SpriteNumber, TextureInfo>,
 }
 
@@ -73,7 +74,7 @@ impl TileLoader {
     pub(crate) fn get_models(
         &self,
         definition: &ObjectDefinition,
-        id_variants: &[InfoId],
+        id_variants: &[UntypedInfoId],
         tile_variant: Option<TileVariant>,
     ) -> Layers<Model> {
         let cdda_tile_variant: Option<CddaTileVariant> = tile_variant.map(Into::into);
@@ -84,7 +85,7 @@ impl TileLoader {
             .unwrap_or_else(|| {
                 //trace!("No variant found from {variants:?}. Falling back to default sprite"); // TODO
                 self.tiles
-                    .get(&InfoId::new("unknown"))
+                    .get(&UntypedInfoId::new("unknown"))
                     .expect("Tile should be found")
             })
             .sprite_numbers(&cdda_tile_variant);

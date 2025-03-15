@@ -3,7 +3,7 @@ use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
 pub struct ItemGroup {
-    pub subtype: Option<InfoId>,
+    pub subtype: Option<InfoId<Self>>,
 
     pub items: Option<Vec<BashItem>>,
     pub entries: Option<Vec<BashItem>>,

@@ -1,6 +1,6 @@
 use crate::gameplay::{MeshInfo, TextureInfo, Transform2d};
 use bevy::{prelude::Vec2, utils::HashMap};
-use cdda_json_files::{CddaAtlas, InfoId, SpriteNumber, TileInfo};
+use cdda_json_files::{CddaAtlas, SpriteNumber, TileInfo, UntypedInfoId};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -15,7 +15,7 @@ impl Atlas {
     pub(crate) fn new(
         tileset_path: &Path,
         cdda_atlas: CddaAtlas,
-        tiles: &mut HashMap<InfoId, Arc<TileInfo>>,
+        tiles: &mut HashMap<UntypedInfoId, Arc<TileInfo>>,
     ) -> Self {
         let filename = &*cdda_atlas.file;
         let image_path = tileset_path.join(filename);

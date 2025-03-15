@@ -371,20 +371,22 @@ fn find_nearby<'a>(
         .collect::<Vec<_>>()
 }
 
-fn nearby_manuals(nearby_items: &[NearbyItem]) -> HashMap<InfoId, Arc<str>> {
+fn nearby_manuals(nearby_items: &[NearbyItem]) -> HashMap<InfoId<CommonItemInfo>, Arc<str>> {
     nearby_items
         .iter()
-        .filter(|nearby| {
-            nearby.definition.category == ObjectCategory::Item
-                && nearby
-                    .common_item_info
-                    .filter(|item| item.category.as_ref().is_some_and(|s| &**s == "manuals"))
-                    .is_some()
+        .filter(|nearby| nearby.definition.category == ObjectCategory::Item)
+        .filter_map(|nearby| nearby.common_item_info)
+        .filter(|common_item_info| {
+            common_item_info
+                .category
+                .as_ref()
+                .is_some_and(|s| &**s == "manuals")
         })
-        .filter_map(|nearby| {
-            nearby
-                .common_item_info
-                .map(|item_info| (nearby.definition.id.clone(), item_info.name.single.clone()))
+        .map(|common_item_info| {
+            (
+                common_item_info.id.clone(),
+                common_item_info.name.single.clone(),
+            )
         })
         .collect::<HashMap<_, _>>()
 }
@@ -392,7 +394,7 @@ fn nearby_manuals(nearby_items: &[NearbyItem]) -> HashMap<InfoId, Arc<str>> {
 fn shown_recipes(
     infos: &Infos,
     sav: &Sav,
-    nearby_manuals: &HashMap<InfoId, Arc<str>>,
+    nearby_manuals: &HashMap<InfoId<CommonItemInfo>, Arc<str>>,
     nearby_qualities: &HashMap<Arc<Quality>, i8>,
     nearby_items: &[NearbyItem],
 ) -> Vec<RecipeSituation> {
@@ -466,7 +468,10 @@ fn autolearn_recipe(recipe: &Recipe, skills: &HashMap<Arc<str>, Skill>) -> bool 
     }
 }
 
-fn recipe_manuals(recipe: &Recipe, nearby_manuals: &HashMap<InfoId, Arc<str>>) -> Vec<Arc<str>> {
+fn recipe_manuals(
+    recipe: &Recipe,
+    nearby_manuals: &HashMap<InfoId<CommonItemInfo>, Arc<str>>,
+) -> Vec<Arc<str>> {
     // TODO check skill level
 
     let mut manuals = match &recipe.book_learn {
@@ -585,7 +590,7 @@ fn recipe_components(
                     .filter_map(|(item_id, required)| {
                         infos
                             .common_item_infos
-                            .get(item_id)
+                            .get(&item_id)
                             .inspect_err(|error| {
                                 error!(
                                     "Item {item_id:?} not found (maybe comestible?): {error:#?}"
@@ -597,7 +602,7 @@ fn recipe_components(
                     .map(|(item_id, item, required)| {
                         let (item_entities, amounts): (Vec<_>, Vec<&Amount>) = present
                             .iter()
-                            .filter(|nearby| nearby.definition.id == *item_id)
+                            .filter(|nearby| nearby.definition.id == *item_id.untyped())
                             .map(|nearby| (nearby.entity, nearby.amount))
                             .unzip();
                         AlternativeSituation {
@@ -619,23 +624,26 @@ fn recipe_components(
 fn expand_items<'a>(
     infos: &'a Infos,
     alternative: &'a Alternative,
-) -> Result<Vec<(&'a InfoId, u32)>, Error> {
+) -> Result<Vec<(InfoId<CommonItemInfo>, u32)>, Error> {
     match alternative {
-        Alternative::Item { item, required } => Ok(vec![(item, *required)]),
+        Alternative::Item { item, required } => Ok(vec![(item.clone(), *required)]),
         Alternative::Requirement {
             requirement,
             factor,
         } => {
             let requirement = match infos.requirements.get(requirement) {
                 Ok(requirement) => requirement,
-                Err(_req_error) => match infos.common_item_infos.get(requirement) {
-                    Ok(_) => return Ok(vec![(requirement, *factor)]),
-                    Err(_item_error) => {
-                        return Err(Error::UnexpectedRequirement {
-                            _id: requirement.clone(),
-                        });
+                Err(_req_error) => {
+                    let required_item = requirement.untyped().clone().into();
+                    match infos.common_item_infos.get(&required_item) {
+                        Ok(_) => return Ok(vec![(required_item, *factor)]),
+                        Err(_item_error) => {
+                            return Err(Error::UnexpectedRequirement {
+                                _id: requirement.clone().into(),
+                            });
+                        }
                     }
-                },
+                }
             };
 
             if requirement.components.len() != 1 {

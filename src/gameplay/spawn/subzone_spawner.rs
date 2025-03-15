@@ -9,7 +9,8 @@ use crate::here;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{Res, ResMut, StateScoped, Transform, Visibility, warn};
 use cdda_json_files::{
-    CddaAmount, FlatVec, InfoId, RepetitionBlock, RequiredLinkedLater, Submap, SubzoneOffset,
+    CddaAmount, FlatVec, InfoId, OvermapInfo, RepetitionBlock, RequiredLinkedLater, Submap,
+    SubzoneOffset,
 };
 use std::sync::OnceLock;
 
@@ -168,7 +169,10 @@ impl SubzoneSpawner<'_, '_> {
             .add(subzone_level, subzone_level_entity);
     }
 
-    fn fallback_submap(subzone_level: SubzoneLevel, zone_object_id: &InfoId) -> Submap {
+    fn fallback_submap(
+        subzone_level: SubzoneLevel,
+        zone_object_id: &InfoId<OvermapInfo>,
+    ) -> Submap {
         let terrain_id = InfoId::new(if zone_object_id == &InfoId::new("open_air") {
             "t_open_air"
         } else if zone_object_id == &InfoId::new("solid_earth") {

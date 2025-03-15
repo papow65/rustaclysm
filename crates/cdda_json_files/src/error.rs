@@ -1,10 +1,9 @@
-use crate::InfoId;
+use crate::InfoIdDescription;
 use std::{error::Error as StdError, fmt};
 
 #[derive(Debug)]
 pub enum Error {
-    /// This id, or combination of id and type is not known
-    LinkUnavailable { _id: InfoId, _type: &'static str },
+    LinkUnavailable { _id: InfoIdDescription },
 }
 
 // Requirement for StdError

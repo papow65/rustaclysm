@@ -2,7 +2,7 @@ use crate::gameplay::{TypeId, cdda::Error};
 use crate::util::AssetPaths;
 use bevy::prelude::{debug, error, warn};
 use bevy::utils::HashMap;
-use cdda_json_files::InfoId;
+use cdda_json_files::UntypedInfoId;
 use fastrand::alphabetic;
 use glob::glob;
 use std::path::Path;
@@ -10,8 +10,9 @@ use std::{fs::read_to_string, path::PathBuf};
 
 #[derive(Default)]
 pub(super) struct ParsedJson {
-    /// [`TypeId`] -> [`InfoId`] -> property name -> property value
-    objects_by_type: HashMap<TypeId, HashMap<InfoId, serde_json::Map<String, serde_json::Value>>>,
+    /// [`TypeId`] -> [`UntypedInfoId`] -> property name -> property value
+    objects_by_type:
+        HashMap<TypeId, HashMap<UntypedInfoId, serde_json::Map<String, serde_json::Value>>>,
 }
 
 impl ParsedJson {
@@ -120,9 +121,9 @@ impl ParsedJson {
         Ok(())
     }
 
-    /// [`TypeId`] -> [`InfoId`] -> property name -> property value
+    /// [`TypeId`] -> [`UntypedInfoId`] -> property name -> property value
     pub(super) fn enriched()
-    -> HashMap<TypeId, HashMap<InfoId, serde_json::Map<String, serde_json::Value>>> {
+    -> HashMap<TypeId, HashMap<UntypedInfoId, serde_json::Map<String, serde_json::Value>>> {
         let mut enriched_json_infos = HashMap::default();
         let objects_by_type = &Self::load().objects_by_type;
         for (type_id, literal_entry) in objects_by_type {
@@ -138,7 +139,7 @@ impl ParsedJson {
                 let mut ancestors = vec![object_id.clone()];
                 while let Some(copy_from) = enriched.remove("copy-from") {
                     //trace!("Copy from {:?}", &copy_from);
-                    let copy_from = InfoId::new(
+                    let copy_from = UntypedInfoId::new(
                         copy_from
                             .as_str()
                             .expect("'copy-from' should have a string value"),
@@ -186,7 +187,7 @@ impl ParsedJson {
 
 fn load_ids(
     content: &serde_json::Map<String, serde_json::Value>,
-    by_type: &mut HashMap<InfoId, serde_json::Map<String, serde_json::Value>>,
+    by_type: &mut HashMap<UntypedInfoId, serde_json::Map<String, serde_json::Value>>,
     type_: &TypeId,
     json_path: &Path,
 ) {
@@ -195,13 +196,13 @@ fn load_ids(
     let mut ids = Vec::new();
     match id_value(content, json_path) {
         serde_json::Value::String(id) => {
-            ids.push(InfoId::new_suffix(id, id_suffix));
+            ids.push(UntypedInfoId::new_suffix(id, id_suffix));
         }
         serde_json::Value::Array(ids_array) => {
             for id in ids_array {
                 match id {
                     serde_json::Value::String(id) => {
-                        ids.push(InfoId::new_suffix(id, id_suffix));
+                        ids.push(UntypedInfoId::new_suffix(id, id_suffix));
                     }
                     id => {
                         error!("Skipping non-string id in {json_path:?}: {id:?}");
@@ -240,19 +241,19 @@ fn load_ids(
 
 fn load_aliases(
     content: &serde_json::Map<String, serde_json::Value>,
-    by_type: &mut HashMap<InfoId, serde_json::Map<String, serde_json::Value>>,
+    by_type: &mut HashMap<UntypedInfoId, serde_json::Map<String, serde_json::Value>>,
     json_path: &Path,
 ) {
     let mut aliases = Vec::new();
     if let Some(alias) = content.get("alias") {
         match alias {
             serde_json::Value::String(id) => {
-                aliases.push(InfoId::new(id.as_str()));
+                aliases.push(UntypedInfoId::new(id.as_str()));
             }
             serde_json::Value::Array(a) => {
                 for id in a {
                     if let Some(id) = id.as_str() {
-                        aliases.push(InfoId::new(id));
+                        aliases.push(UntypedInfoId::new(id));
                     } else {
                         error!("Skipping unexpected alias in {json_path:?}: {alias:#?}");
                     }

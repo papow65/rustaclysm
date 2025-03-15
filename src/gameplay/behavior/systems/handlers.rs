@@ -13,7 +13,7 @@ use bevy::prelude::{
     Changed, Commands, DespawnRecursiveExt as _, Entity, EventReader, IntoSystemConfigs as _,
     NextState, ParamSet, Parent, Quat, Query, Res, ResMut, Transform, With, Without, on_event,
 };
-use cdda_json_files::{FurnitureInfo, InfoId, TerrainInfo};
+use cdda_json_files::{FurnitureInfo, InfoId, TerrainInfo, UntypedInfoId};
 use std::time::Instant;
 use units::Duration;
 
@@ -237,11 +237,11 @@ pub(in super::super) fn update_corpses(
 
             let definition = ObjectDefinition {
                 category: ObjectCategory::Character,
-                id: InfoId::new("mon_zombie"),
+                id: UntypedInfoId::new("mon_zombie"),
             };
             let character_info = infos
                 .characters
-                .get(&definition.id)
+                .get(&InfoId::from(definition.id.clone()))
                 .unwrap_or_else(|e| panic!("{definition:?} should be found: {e:#?}"));
             let object_name = ObjectName::new(character_info.name.clone(), Faction::Zombie.color());
             let health = Health(Limited::full(character_info.hp.unwrap_or(60) as u16));

@@ -1,11 +1,11 @@
-use crate::{HashMap, InfoId, ItemName};
+use crate::{HashMap, ItemName, UntypedInfoId};
 use serde::Deserialize;
 use std::sync::Arc;
 
 #[derive(Debug, Deserialize)]
 pub struct OvermapInfo {
     pub name: ItemName,
-    pub looks_like: Option<InfoId>,
+    pub looks_like: Option<UntypedInfoId>,
 
     #[expect(unused)]
     #[serde(flatten)]

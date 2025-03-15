@@ -1,14 +1,14 @@
-use crate::{Flags, HashMap, InfoId, ItemName};
+use crate::{Flags, HashMap, InfoId, ItemName, UntypedInfoId};
 use serde::Deserialize;
 use std::sync::Arc;
 use units::{Mass, Volume};
 
 #[derive(Debug, Deserialize)]
 pub struct CharacterInfo {
-    pub id: InfoId,
+    pub id: InfoId<Self>,
     pub name: ItemName,
     pub default_faction: Arc<str>,
-    pub looks_like: Option<InfoId>,
+    pub looks_like: Option<UntypedInfoId>,
     pub volume: Option<Volume>,
 
     #[serde(rename = "weight")]
