@@ -16,11 +16,11 @@ impl UntypedInfoId {
     }
 
     #[must_use]
-    pub fn new_suffix(value: &String, suffix: Option<&str>) -> Self {
+    pub fn new_suffix(value: &str, suffix: Option<&str>) -> Self {
         if let Some(suffix) = suffix {
-            Self::new(value.clone() + suffix)
+            Self::new(format!("{value}_{suffix}"))
         } else {
-            Self::new(value.as_str())
+            Self::new(value)
         }
     }
 

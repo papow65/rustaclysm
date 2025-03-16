@@ -328,14 +328,13 @@ fn set_recipe_id(enriched: &mut serde_json::Map<String, serde_json::Value>) {
         warn!("Recipe should not have an id: {recipe_id:?}");
     } else if let Some(result) = enriched.get("result").cloned() {
         if let Some(result_str) = result.as_str() {
-            let id = String::from(result_str)
-                + enriched
-                    .get("id_suffix")
-                    .and_then(|s| s.as_str())
-                    .unwrap_or("");
-            enriched
-                .entry("id")
-                .or_insert(serde_json::Value::String(id));
+            let id = UntypedInfoId::new_suffix(
+                result_str,
+                enriched.get("id_suffix").and_then(|s| s.as_str()),
+            )
+            .fallback_name();
+            let id = serde_json::Value::String(String::from(&*id));
+            enriched.entry("id").or_insert(id);
         } else {
             error!("Recipe result should be a string: {result:#?}");
         }
