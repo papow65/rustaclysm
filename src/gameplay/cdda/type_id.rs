@@ -147,7 +147,6 @@ impl TypeId {
         Self("talk_topic"),
         Self("technique"),
         Self("ter_furn_transform"),
-        Self("tool_quality"),
         Self("trait_group"),
         Self("TRAIT_MIGRATION"),
         Self("trap"),
