@@ -491,12 +491,12 @@ impl MovementPath {
                 duration: heuristic(&first),
                 destination,
             })
-            .inspect(|path| {
-                debug!(
-                    "MovementPath::improvize {from:?} by {:?} to {destination:?} @ {:?}",
-                    path.first, path.duration
-                );
-            })
+            //.inspect(|path| {
+            //    trace!(
+            //        "MovementPath::improvize {from:?} by {:?} to {destination:?} @ {:?}",
+            //        path.first, path.duration
+            //    );
+            //})
             .collect::<Vec<_>>();
 
         let shortest = paths
