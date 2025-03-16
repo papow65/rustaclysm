@@ -129,12 +129,8 @@ impl SubzoneSpawner<'_, '_> {
                         .spawn_vehicle(subzone_level_entity, vehicle_pos, vehicle);
 
                 for vehicle_part in &vehicle.parts {
-                    self.tile_spawner.spawn_vehicle_part(
-                        &self.infos,
-                        vehicle_entity,
-                        vehicle_pos,
-                        vehicle_part,
-                    );
+                    self.tile_spawner
+                        .spawn_vehicle_part(vehicle_entity, vehicle_pos, vehicle_part);
                 }
             }
 

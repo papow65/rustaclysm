@@ -74,7 +74,7 @@ pub(crate) struct Infos {
     #[expect(unused)]
     pub(crate) toolmods: InfoMap<Toolmod>,
 
-    pub(crate) vehicle_parts: InfoMap<VehiclePartInfo>,
+    pub(crate) vehicle_parts_info: InfoMap<VehiclePartInfo>,
 
     #[expect(unused)]
     pub(crate) wheels: InfoMap<Wheel>,
@@ -144,6 +144,7 @@ impl Infos {
             TypeId::VehiclePartMigration,
         );
         let mut vehicle_parts = InfoMap::new(&mut enriched_json_infos, TypeId::VehiclePart);
+        vehicle_parts.link_items(&common_item_infos);
         vehicle_parts.add_vehicle_part_migrations(vehicle_part_migrations.map.values());
 
         let mut this = Self {
@@ -170,7 +171,7 @@ impl Infos {
             tools,
             tool_clothings,
             toolmods,
-            vehicle_parts,
+            vehicle_parts_info: vehicle_parts,
             wheels,
             zone_levels: InfoMap::new(&mut enriched_json_infos, TypeId::OvermapTerrain),
         };
@@ -221,7 +222,7 @@ impl Infos {
                 .ok()
                 .and_then(|o| o.looks_like.clone()),
             ObjectCategory::VehiclePart => self
-                .vehicle_parts
+                .vehicle_parts_info
                 .get(&info_id.into())
                 .ok()
                 .and_then(|o| o.looks_like.clone()),
@@ -336,6 +337,14 @@ impl Infos {
 
         for character in &submap.spawns {
             self.link_character(&character.info, "submap spawn");
+        }
+
+        for vehicle in &submap.vehicles {
+            for vehicle_part in &vehicle.parts {
+                vehicle_part
+                    .info
+                    .finalize(&self.vehicle_parts_info.map, "submap vehicle");
+            }
         }
 
         for items_at in &submap.items.0 {

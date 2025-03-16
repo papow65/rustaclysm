@@ -1,11 +1,12 @@
-use crate::{CommonItemInfo, InfoId, UntypedInfoId};
+use crate::{CommonItemInfo, InfoId, RequiredLinkedLater, UntypedInfoId};
 use crate::{Flags, ItemName};
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
 pub struct VehiclePartInfo {
+    pub id: InfoId<Self>,
     pub name: Option<ItemName>,
-    pub item: InfoId<CommonItemInfo>,
+    pub item: RequiredLinkedLater<CommonItemInfo>,
     pub looks_like: Option<UntypedInfoId>,
     pub flags: Flags,
 }

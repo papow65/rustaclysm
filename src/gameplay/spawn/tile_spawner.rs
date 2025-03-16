@@ -434,38 +434,29 @@ impl<'w> TileSpawner<'w, '_> {
 
     pub(crate) fn spawn_vehicle_part(
         &mut self,
-        infos: &Infos,
         parent: Entity,
         parent_pos: Pos,
-        part: &CddaVehiclePart,
+        vehicle_part: &CddaVehiclePart,
     ) {
-        let part_info = match infos.vehicle_parts.get(&part.id) {
-            Ok(part_info) => part_info,
-            Err(error) => {
-                error!("While looking up vehicle part info: {:#?}", error);
-                return;
-            }
+        let Some(part_info) = vehicle_part.info.get_option(here!()) else {
+            return;
         };
-        let item_info = match infos.common_item_infos.get(&part_info.item) {
-            Ok(item_info) => item_info,
-            Err(error) => {
-                error!("While looking up a vehicle part item: {:#?}", error);
-                return;
-            }
+        let Some(item_info) = part_info.item.get_option(here!()) else {
+            return;
         };
 
         let name = part_info.name.as_ref().unwrap_or(&item_info.name);
-        let pos = parent_pos.horizontal_offset(part.mount_dx, part.mount_dy);
+        let pos = parent_pos.horizontal_offset(vehicle_part.mount_dx, vehicle_part.mount_dy);
         let object_name = ObjectName::new(name.clone(), HARD_TEXT_COLOR);
 
-        let variant = ItemIntegrity::from(part.base.damaged)
+        let variant = ItemIntegrity::from(vehicle_part.base.damaged)
             .broken()
             .then_some(TileVariant::Broken)
-            .or_else(|| part.open.then_some(TileVariant::Open));
+            .or_else(|| vehicle_part.open.then_some(TileVariant::Open));
         let entity = self.spawn_object(
             parent,
             Some(pos),
-            part.id.untyped(),
+            part_info.id.untyped(),
             ObjectCategory::VehiclePart,
             object_name,
             variant,
@@ -474,11 +465,11 @@ impl<'w> TileSpawner<'w, '_> {
             Shared::new(part_info.clone()),
             VehiclePart {
                 offset: PosOffset {
-                    x: part.mount_dx,
+                    x: vehicle_part.mount_dx,
                     level: LevelOffset::ZERO,
-                    z: part.mount_dy,
+                    z: vehicle_part.mount_dy,
                 },
-                item: part.base.clone(),
+                item: vehicle_part.base.clone(),
             },
         ));
 

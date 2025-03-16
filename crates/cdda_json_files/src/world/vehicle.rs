@@ -1,4 +1,4 @@
-use crate::{CddaItem, HashMap, InfoId, Repetition, UntypedInfoId, VehiclePartInfo};
+use crate::{CddaItem, HashMap, Repetition, RequiredLinkedLater, UntypedInfoId, VehiclePartInfo};
 use serde::Deserialize;
 use std::sync::Arc;
 
@@ -95,7 +95,9 @@ pub struct CddaVehicle {
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct CddaVehiclePart {
-    pub id: InfoId<VehiclePartInfo>,
+    #[serde(rename = "id")]
+    pub info: RequiredLinkedLater<VehiclePartInfo>,
+
     pub variant: Option<Arc<str>>,
     pub base: Arc<CddaItem>,
 
