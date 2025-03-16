@@ -212,6 +212,7 @@ fn load_ids(
         }
     }
 
+    let ids_len = ids.len();
     for mut id in ids {
         if let Some(previous) = by_type.get(&id) {
             if content == previous {
@@ -232,7 +233,15 @@ fn load_ids(
                 continue;
             }
         }
-        by_type.insert(id.clone(), content.clone());
+
+        let mut content = content.clone();
+        if 1 < ids_len && type_id != TypeId::Recipe {
+            content.insert(
+                String::from("id"),
+                serde_json::Value::String(String::from(&*id.fallback_name())),
+            );
+        }
+        by_type.insert(id.clone(), content);
     }
 }
 
