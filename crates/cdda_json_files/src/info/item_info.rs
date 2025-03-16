@@ -222,7 +222,7 @@ pub struct Gun {
     #[serde(default)]
     pub modes: Arc<[serde_json::Value]>,
 
-    pub ranged_damage: Option<HashMap<String, serde_json::Value>>,
+    pub ranged_damage: Option<serde_json::Value>,
     pub reload: Option<u16>,
     pub reload_noise: Option<Arc<str>>,
     pub reload_noise_volume: Option<u8>,
