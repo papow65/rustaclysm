@@ -1,9 +1,10 @@
-use crate::{HashMap, InfoId, ItemName};
+use crate::{HashMap, InfoId, ItemName, RequiredLinkedLater};
 use serde::Deserialize;
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 
 // PartialEq, Eq, and Hash manually implemented below
+/// Do not confuse with [`ItemQuality`]
 #[derive(Debug, Deserialize)]
 pub struct Quality {
     pub id: InfoId<Self>,
@@ -27,6 +28,18 @@ impl Eq for Quality {}
 impl Hash for Quality {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.id.hash(state);
+    }
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ItemQuality {
+    pub id: RequiredLinkedLater<Quality>,
+    pub level: i8,
+}
+
+impl ItemQuality {
+    pub fn as_tuple(&self, called_from: String) -> Option<(Arc<Quality>, i8)> {
+        self.id.get_option(called_from).map(|id| (id, self.level))
     }
 }
 

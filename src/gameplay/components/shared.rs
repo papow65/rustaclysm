@@ -10,8 +10,8 @@ impl<T> Shared<T> {
     }
 }
 
-impl<T> AsRef<T> for Shared<T> {
-    fn as_ref(&self) -> &T {
+impl<T> AsRef<Arc<T>> for Shared<T> {
+    fn as_ref(&self) -> &Arc<T> {
         &self.0
     }
 }

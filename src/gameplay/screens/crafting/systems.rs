@@ -490,17 +490,19 @@ fn nearby_qualities(nearby_items: &[NearbyItem]) -> HashMap<Arc<Quality>, i8> {
         .iter()
         .filter_map(|nearby| {
             if let Some(common_item_info) = nearby.common_item_info {
-                Some(common_item_info.qualities.get_all())
+                Some(common_item_info.as_ref().clone())
             } else if let Some(furniture_info) = nearby.furniture_info {
-                furniture_info
-                    .crafting_pseudo_item
-                    .get()
-                    .map(|item| item.qualities.get_all())
+                furniture_info.crafting_pseudo_item.get()
             } else {
                 unreachable!()
             }
         })
-        .flatten()
+        .flat_map(|item| {
+            item.qualities
+                .iter()
+                .filter_map(|item_quality| item_quality.as_tuple(here!()))
+                .collect::<Vec<_>>()
+        })
         .fold(
             HashMap::default(),
             |mut map: HashMap<Arc<Quality>, i8>, (quality, amount)| {

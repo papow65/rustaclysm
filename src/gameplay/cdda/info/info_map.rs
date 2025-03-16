@@ -33,14 +33,15 @@ impl<T: DeserializeOwned + 'static> InfoMap<T> {
                     map.insert(id.into(), Arc::new(info));
                 }
                 Err(error) => {
-                    error!("Failed loading json for {:?} {id:?}: {error:#?}", type_name::<T>());
-                    if let Some(cause) = object_properties
-                    .keys()
-                    .find(|key| {
+                    error!(
+                        "Failed loading json for {:?} {id:?}: {error:#?}",
+                        type_name::<T>()
+                    );
+                    if let Some(cause) = object_properties.keys().find(|key| {
                         let mut copy = object_properties.clone();
                         copy.remove(*key);
                         serde_json::from_value::<T>(serde_json::Value::Object(copy)).is_ok()
-                    }){
+                    }) {
                         warn!("Failure for {id:?} likely caused by the property '{cause}'");
                     }
                     debug!("Json for {id:?}: {object_properties:#?}");
@@ -65,9 +66,9 @@ impl<T: DeserializeOwned + 'static> InfoMap<T> {
 impl InfoMap<CommonItemInfo> {
     pub(super) fn link_common_items(&self, qualities: &InfoMap<Quality>) {
         for common_item_info in self.map.values() {
-            common_item_info
-                .qualities
-                .finalize(&qualities.map, "quality");
+            for quality in &common_item_info.qualities {
+                quality.id.finalize(&qualities.map, "quality");
+            }
         }
     }
 }

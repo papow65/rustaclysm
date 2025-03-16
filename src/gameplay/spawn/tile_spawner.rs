@@ -21,7 +21,7 @@ use cdda_json_files::{
     BashItem, BashItems, CddaAmount, CddaItem, CddaItemName, CddaVehicle, CddaVehiclePart,
     Character, CharacterInfo, CommonItemInfo, CountRange, Field, Flags, FlatVec, FurnitureInfo,
     InfoId, ItemGroup, ItemName, MoveCostMod, PocketType, Recipe, Repetition, RequiredLinkedLater,
-    TerrainInfo, UntypedInfoId, VecLinkedLater,
+    TerrainInfo, UntypedInfoId,
 };
 use either::Either;
 use std::sync::Arc;
@@ -684,7 +684,7 @@ impl<'w> TileSpawner<'w, '_> {
         &mut self,
         parent_entity: Entity,
         pos: Pos,
-        info: Either<&TerrainInfo, &FurnitureInfo>,
+        info: Either<&Arc<TerrainInfo>, &Arc<FurnitureInfo>>,
     ) {
         let Some(bash) = info.either(
             |terrain_info| terrain_info.bash.as_ref(),
@@ -768,7 +768,7 @@ impl<'w> TileSpawner<'w, '_> {
             explosion: None,
             flags: Flags::default(),
             faults: None,
-            qualities: VecLinkedLater::new_final_empty(),
+            qualities: Vec::new(),
             extend: None,
             delete: None,
             properties: None,

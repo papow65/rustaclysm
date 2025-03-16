@@ -28,7 +28,7 @@ pub use self::item_info::{
 };
 pub use self::migration::{ItemMigration, VehiclePartMigration};
 pub use self::overmap_info::OvermapTerrainInfo;
-pub use self::quality::Quality;
+pub use self::quality::{ItemQuality, Quality};
 pub use self::recipe::{
     Alternative, AutoLearn, BookLearn, BookLearnItem, Recipe, RequiredQualities, RequiredQuality,
     Using, UsingKind,

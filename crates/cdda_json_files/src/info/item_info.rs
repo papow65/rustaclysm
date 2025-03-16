@@ -1,5 +1,5 @@
-use crate::UntypedInfoId;
-use crate::{Flags, HashMap, InfoId, Quality, VecLinkedLater, structure::MaybeFlatVec};
+use crate::{Flags, HashMap, InfoId, structure::MaybeFlatVec};
+use crate::{ItemQuality, UntypedInfoId};
 use serde::Deserialize;
 use std::sync::Arc;
 use units::{Duration, Mass, Volume};
@@ -470,7 +470,7 @@ pub struct CommonItemInfo {
     pub faults: Option<serde_json::Value>,
 
     #[serde(default)]
-    pub qualities: VecLinkedLater<Quality, i8>,
+    pub qualities: Vec<ItemQuality>,
 
     // example: { "effects": [ "RECYCLED" ] }
     pub extend: Option<serde_json::Value>,
