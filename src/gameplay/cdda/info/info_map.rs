@@ -19,26 +19,24 @@ impl<T: DeserializeOwned + 'static> InfoMap<T> {
             TypeId,
             HashMap<UntypedInfoId, serde_json::Map<String, serde_json::Value>>,
         >,
-        type_ids: &[TypeId],
+        type_id: TypeId,
     ) -> Self {
         let mut map = HashMap::default();
-        for type_id in type_ids {
-            let objects = all
-                .remove(type_id)
-                .unwrap_or_else(|| panic!("Type {type_id:?} not found"));
-            for (id, object_properties) in objects {
-                //trace!("{:#?}", &object_properties);
-                match serde_json::from_value::<T>(serde_json::Value::Object(object_properties)) {
-                    Ok(info) => {
-                        map.insert(id.into(), Arc::new(info));
-                    }
-                    Err(error) => {
-                        error!(
-                            "Failed loading json for {:?} {:?}: {error:#?}",
-                            type_name::<T>(),
-                            &id
-                        );
-                    }
+        let objects = all
+            .remove(&type_id)
+            .unwrap_or_else(|| panic!("Type {type_id:?} not found"));
+        for (id, object_properties) in objects {
+            //trace!("{:#?}", &object_properties);
+            match serde_json::from_value::<T>(serde_json::Value::Object(object_properties)) {
+                Ok(info) => {
+                    map.insert(id.into(), Arc::new(info));
+                }
+                Err(error) => {
+                    error!(
+                        "Failed loading json for {:?} {:?}: {error:#?}",
+                        type_name::<T>(),
+                        &id
+                    );
                 }
             }
         }
@@ -184,11 +182,11 @@ pub(crate) struct ItemInfoMapLoader<'a> {
 }
 
 impl ItemInfoMapLoader<'_> {
-    pub(crate) fn item_extract<T>(&mut self, type_ids: &[TypeId]) -> InfoMap<T>
+    pub(crate) fn item_extract<T>(&mut self, type_id: TypeId) -> InfoMap<T>
     where
         T: DeserializeOwned + ItemWithCommonInfo + 'static,
     {
-        let mut items = InfoMap::<T>::new(self.enriched_json_infos, type_ids);
+        let mut items = InfoMap::<T>::new(self.enriched_json_infos, type_id);
 
         // TODO Make this recursive
         for (migration_from, migration) in &self.item_migrations {

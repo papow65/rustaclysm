@@ -27,6 +27,7 @@ pathfinding = { workspace = true }
 regex = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+strum = { version = "0.27", features = ["derive"] }
 thread_local = "1"
 units = { path = "crates/units" }
 

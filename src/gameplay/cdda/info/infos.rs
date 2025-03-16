@@ -97,9 +97,9 @@ impl Infos {
             }
         }
 
-        let qualities = InfoMap::new(&mut enriched_json_infos, TypeId::TOOL_QUALITY);
+        let qualities = InfoMap::new(&mut enriched_json_infos, TypeId::ToolQuality);
 
-        let item_migrations = InfoMap::new(&mut enriched_json_infos, TypeId::ITEM_MIGRATION).map;
+        let item_migrations = InfoMap::new(&mut enriched_json_infos, TypeId::ItemMigration).map;
         let mut common_item_infos = InfoMap {
             map: HashMap::default(),
         };
@@ -108,55 +108,55 @@ impl Infos {
             item_migrations,
             common_item_infos: &mut common_item_infos,
         };
-        let ammos = item_loader.item_extract(TypeId::AMMO);
-        let bionic_items = item_loader.item_extract(TypeId::BIONIC_ITEM);
-        let books = item_loader.item_extract(TypeId::BOOK);
-        let clothings = item_loader.item_extract(TypeId::CLOTHING);
-        let comestibles = item_loader.item_extract(TypeId::COMESTIBLE);
-        let engines = item_loader.item_extract(TypeId::ENGINE);
-        let genenric_items = item_loader.item_extract(TypeId::GENERIC_ITEM);
-        let guns = item_loader.item_extract(TypeId::GUN);
-        let gunmods = item_loader.item_extract(TypeId::GUNMOD);
-        let magazines = item_loader.item_extract(TypeId::MAGAZINE);
-        let pet_armors = item_loader.item_extract(TypeId::PET_ARMOR);
-        let tools = item_loader.item_extract(TypeId::TOOL);
-        let tool_clothings = item_loader.item_extract(TypeId::TOOL_CLOTHING);
-        let toolmods = item_loader.item_extract(TypeId::TOOLMOD);
-        let wheels = item_loader.item_extract(TypeId::WHEEL);
+        let ammos = item_loader.item_extract(TypeId::Ammo);
+        let bionic_items = item_loader.item_extract(TypeId::BionicItem);
+        let books = item_loader.item_extract(TypeId::Book);
+        let clothings = item_loader.item_extract(TypeId::Clothing);
+        let comestibles = item_loader.item_extract(TypeId::Comestible);
+        let engines = item_loader.item_extract(TypeId::Engine);
+        let genenric_items = item_loader.item_extract(TypeId::GenericItem);
+        let guns = item_loader.item_extract(TypeId::Gun);
+        let gunmods = item_loader.item_extract(TypeId::GunMod);
+        let magazines = item_loader.item_extract(TypeId::Magazine);
+        let pet_armors = item_loader.item_extract(TypeId::PetArmor);
+        let tools = item_loader.item_extract(TypeId::Tool);
+        let tool_clothings = item_loader.item_extract(TypeId::ToolClothing);
+        let toolmods = item_loader.item_extract(TypeId::ToolMod);
+        let wheels = item_loader.item_extract(TypeId::Wheel);
         // item_loader is dropped
         common_item_infos.link_common_items(&qualities);
 
-        let furniture = InfoMap::new(&mut enriched_json_infos, TypeId::FURNITURE);
+        let furniture = InfoMap::new(&mut enriched_json_infos, TypeId::Furniture);
         furniture.link_furniture(&common_item_infos);
-        let mut terrain = InfoMap::new(&mut enriched_json_infos, TypeId::TERRAIN);
+        let mut terrain = InfoMap::new(&mut enriched_json_infos, TypeId::Terrain);
         terrain.fix_and_link_terrain(&furniture, &common_item_infos);
-        let requirements = InfoMap::new(&mut enriched_json_infos, TypeId::REQUIREMENT);
+        let requirements = InfoMap::new(&mut enriched_json_infos, TypeId::Requirement);
         requirements.link_requirements(&qualities);
-        let recipes = InfoMap::new(&mut enriched_json_infos, TypeId::RECIPE);
+        let recipes = InfoMap::new(&mut enriched_json_infos, TypeId::Recipe);
         recipes.link_recipes(&qualities, &common_item_infos);
 
         let vehicle_part_migrations = InfoMap::<VehiclePartMigration>::new(
             &mut enriched_json_infos,
-            TypeId::VEHICLE_PART_MIGRATION,
+            TypeId::VehiclePartMigration,
         );
-        let mut vehicle_parts = InfoMap::new(&mut enriched_json_infos, TypeId::VEHICLE_PART);
+        let mut vehicle_parts = InfoMap::new(&mut enriched_json_infos, TypeId::VehiclePart);
         vehicle_parts.add_vehicle_part_migrations(vehicle_part_migrations.map.values());
 
         let mut this = Self {
             ammos,
             bionic_items,
             books,
-            characters: InfoMap::new(&mut enriched_json_infos, TypeId::CHARACTER),
+            characters: InfoMap::new(&mut enriched_json_infos, TypeId::Character),
             clothings,
             comestibles,
             common_item_infos,
             engines,
-            fields: InfoMap::new(&mut enriched_json_infos, TypeId::FIELD),
+            fields: InfoMap::new(&mut enriched_json_infos, TypeId::Field),
             furniture,
             genenric_items,
             guns,
             gunmods,
-            item_groups: InfoMap::new(&mut enriched_json_infos, TypeId::ITEM_GROUP),
+            item_groups: InfoMap::new(&mut enriched_json_infos, TypeId::ItemGroup),
             magazines,
             pet_armors,
             qualities,
@@ -168,7 +168,7 @@ impl Infos {
             toolmods,
             vehicle_parts,
             wheels,
-            zone_levels: InfoMap::new(&mut enriched_json_infos, TypeId::OVERMAP_TERRAIN),
+            zone_levels: InfoMap::new(&mut enriched_json_infos, TypeId::OvermapTerrain),
         };
 
         for type_id in enriched_json_infos.into_keys() {

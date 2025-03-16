@@ -5,8 +5,9 @@ use bevy::utils::HashMap;
 use cdda_json_files::UntypedInfoId;
 use fastrand::alphabetic;
 use glob::glob;
-use std::path::Path;
-use std::{fs::read_to_string, path::PathBuf};
+use std::fs::read_to_string;
+use std::path::{Path, PathBuf};
+use strum::VariantArray as _;
 
 #[derive(Default)]
 pub(super) struct ParsedJson {
@@ -30,12 +31,10 @@ impl ParsedJson {
 
     fn load() -> Self {
         let mut parsed_json = Self::default();
-        for type_ids in TypeId::all() {
-            for type_id in *type_ids {
-                parsed_json
-                    .objects_by_type
-                    .insert(type_id.clone(), HashMap::default());
-            }
+        for type_id in TypeId::VARIANTS {
+            parsed_json
+                .objects_by_type
+                .insert(*type_id, HashMap::default());
         }
 
         let mut parsed_file_count = 0;
@@ -89,32 +88,30 @@ impl ParsedJson {
                 *skipped_count += 1;
                 continue;
             }
-            let Some(type_) = content.get("type") else {
+            let Some(type_id) = content.get("type").cloned() else {
                 warn!("Skipping info without a 'type' in {json_path:?}: {content:#?}");
                 *skipped_count += 1;
                 continue;
             };
-            let Some(type_) = type_.as_str() else {
-                warn!(
-                    "Skipping info where 'type' is not a string ({type_:?}) in {json_path:?}: {content:#?}"
-                );
+            let Ok(type_id) =
+                serde_json::from_value::<TypeId>(type_id.clone()).inspect_err(|error| {
+                    error!("Could not convert {type_id:?} in {json_path:?}: {error:#?}");
+                })
+            else {
                 continue;
             };
-            let type_ = TypeId::get(type_);
 
-            if TypeId::UNUSED.contains(type_) || content.get("from_variant").is_some() {
+            if !type_id.in_use() || content.get("from_variant").is_some() {
                 *skipped_count += 1;
                 continue; // TODO
             }
 
             //trace!("Info abount {:?} > {:?}", &type_, &ids);
-            let Some(by_type) = self.objects_by_type.get_mut(type_) else {
-                return Err(Error::UnknownTypeId {
-                    _type: type_.clone(),
-                });
+            let Some(by_type) = self.objects_by_type.get_mut(&type_id) else {
+                return Err(Error::UnknownTypeId { _type: type_id });
             };
 
-            load_ids(&content, by_type, type_, json_path);
+            load_ids(&content, by_type, type_id, json_path);
             load_aliases(&content, by_type, json_path);
         }
 
@@ -126,9 +123,9 @@ impl ParsedJson {
     -> HashMap<TypeId, HashMap<UntypedInfoId, serde_json::Map<String, serde_json::Value>>> {
         let mut enriched_json_infos = HashMap::default();
         let objects_by_type = &Self::load().objects_by_type;
-        for (type_id, literal_entry) in objects_by_type {
+        for (&type_id, literal_entry) in objects_by_type {
             let enriched_of_type = enriched_json_infos
-                .entry(type_id.clone())
+                .entry(type_id)
                 .or_insert_with(HashMap::default);
             'enricheds: for (object_id, literal) in literal_entry {
                 if literal.contains_key("abstract") {
@@ -174,7 +171,7 @@ impl ParsedJson {
                 }
 
                 enriched.remove("copy-from");
-                if TypeId::RECIPE.contains(type_id) {
+                if type_id == TypeId::Recipe {
                     set_recipe_id(&mut enriched);
                 }
 
@@ -188,7 +185,7 @@ impl ParsedJson {
 fn load_ids(
     content: &serde_json::Map<String, serde_json::Value>,
     by_type: &mut HashMap<UntypedInfoId, serde_json::Map<String, serde_json::Value>>,
-    type_: &TypeId,
+    type_id: TypeId,
     json_path: &Path,
 ) {
     let id_suffix = content.get("id_suffix").and_then(|suffix| suffix.as_str());
@@ -220,7 +217,7 @@ fn load_ids(
             if content == previous {
                 //trace!("Ignoring exact duplicate info for {id:?}");
                 continue;
-            } else if TypeId::RECIPE.contains(type_) {
+            } else if type_id == TypeId::Recipe {
                 //trace!("Old: {:#?}", by_type.get(&id));
                 //trace!("New: {content:#?}");
                 let random_string: String = [(); 16]
