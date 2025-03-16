@@ -19,9 +19,9 @@ use bevy::render::view::RenderLayers;
 use bevy::utils::HashMap;
 use cdda_json_files::{
     BashItem, BashItems, CddaAmount, CddaItem, CddaItemName, CddaVehicle, CddaVehiclePart,
-    Character, CharacterInfo, CommonItemInfo, CountRange, Field, Flags, FlatVec, FurnitureInfo,
-    InfoId, ItemGroup, ItemName, MoveCostMod, PocketType, Recipe, Repetition, RequiredLinkedLater,
-    TerrainInfo, UntypedInfoId,
+    Character, CharacterInfo, CommonItemInfo, Field, Flags, FlatVec, FurnitureInfo, InfoId,
+    ItemGroup, ItemName, MoveCostMod, PocketType, Recipe, Repetition, RequiredLinkedLater,
+    SpawnItem, TerrainInfo, UntypedInfoId,
 };
 use either::Either;
 use std::sync::Arc;
@@ -270,32 +270,22 @@ impl<'w> TileSpawner<'w, '_> {
         Ok(entity)
     }
 
-    fn spawn_bashing_items(&mut self, parent_entity: Entity, pos: Pos, items: &Vec<BashItem>) {
-        for item in items {
-            match *item {
-                BashItem::Single(ref item) => {
-                    if match &item.prob {
-                        Some(probability) => probability.random(),
-                        None => true,
-                    } {
-                        if let Some(item_info) = item.item.get_option(here!()) {
-                            let amount = Amount(match &item.count {
-                                Some(count) => count.random(),
-                                None => 1,
-                            });
-                            let mut cdda_item = CddaItem::from(&item_info);
-                            cdda_item.charges = item.charges.as_ref().map(CountRange::random);
-                            if let Err(error) =
-                                self.spawn_item(parent_entity, Some(pos), &cdda_item, amount)
-                            {
-                                error!("While spawning a bashing item: {:#?}", error);
-                            }
-                        }
-                    }
-                }
-                BashItem::Group { ref group } => {
-                    self.spawn_item_collection(parent_entity, pos, group);
-                }
+    fn spawn_items(
+        &mut self,
+        parent_entity: Entity,
+        pos: Pos,
+        items: impl Iterator<Item = SpawnItem>,
+    ) {
+        for spawn_item in items {
+            let mut cdda_item = CddaItem::from(&spawn_item.item_info);
+            cdda_item.charges = spawn_item.charges;
+            if let Err(error) = self.spawn_item(
+                parent_entity,
+                Some(pos),
+                &cdda_item,
+                Amount(spawn_item.amount),
+            ) {
+                error!("While spawning a list item: {:#?}", error);
             }
         }
     }
@@ -309,12 +299,7 @@ impl<'w> TileSpawner<'w, '_> {
         let Some(item_group) = item_group.get_option(here!()) else {
             return;
         };
-        let items = item_group
-            .items
-            .as_ref()
-            .or(item_group.entries.as_ref())
-            .expect("items or entries");
-        self.spawn_bashing_items(parent_entity, pos, items);
+        self.spawn_items(parent_entity, pos, item_group.items());
     }
 
     fn spawn_furniture(&mut self, parent: Entity, pos: Pos, furniture_info: &Arc<FurnitureInfo>) {
@@ -705,7 +690,11 @@ impl<'w> TileSpawner<'w, '_> {
         if let Some(items) = &bash.items {
             match items {
                 BashItems::Explicit(item_vec) => {
-                    self.spawn_bashing_items(parent_entity, pos, item_vec);
+                    self.spawn_items(
+                        parent_entity,
+                        pos,
+                        item_vec.iter().flat_map(BashItem::items),
+                    );
                 }
                 BashItems::Collection(item_group) => {
                     self.spawn_item_collection(parent_entity, pos, item_group);

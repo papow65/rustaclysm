@@ -1,6 +1,6 @@
 use crate::{
-    CommonItemInfo, InfoId, ItemGroup, OptionalLinkedLater, RequiredLinkedLater, TerrainInfo,
-    UntypedInfoId,
+    CommonItemInfo, InfoId, ItemGroup, OptionalLinkedLater, RequiredLinkedLater, SpawnItem,
+    TerrainInfo, UntypedInfoId,
 };
 use crate::{Flags, HashMap, ItemName};
 use serde::Deserialize;
@@ -62,12 +62,42 @@ pub enum BashItem {
     },
 }
 
+impl BashItem {
+    pub fn items(&self) -> Vec<SpawnItem> {
+        match self {
+            Self::Single(occurrence) => occurrence.items().collect(),
+            Self::Group { group } => group
+                .get_option("item group from bashed item")
+                .into_iter()
+                .flat_map(|item_group| item_group.items().collect::<Vec<_>>())
+                .collect(),
+        }
+    }
+}
+
 #[derive(Debug, Deserialize)]
 pub struct ItemOccurrence {
     pub item: RequiredLinkedLater<CommonItemInfo>,
     pub charges: Option<CountRange>,
     pub count: Option<CountRange>,
     pub prob: Option<Probability>,
+}
+
+impl ItemOccurrence {
+    fn items(&self) -> impl Iterator<Item = SpawnItem> {
+        self.prob
+            .as_ref()
+            .map(|prob| prob.random())
+            .unwrap_or(true)
+            .then_some(self.item.get_option("item occurrence from bashed item"))
+            .flatten()
+            .into_iter()
+            .map(|item| SpawnItem {
+                item_info: item,
+                amount: self.count.as_ref().map(|count| count.random()).unwrap_or(1),
+                charges: self.charges.as_ref().map(|charges| charges.random()),
+            })
+    }
 }
 
 #[derive(Debug, Deserialize)]

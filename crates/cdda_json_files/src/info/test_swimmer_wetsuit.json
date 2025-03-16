@@ -1,0 +1,13 @@
+{
+  "type": "item_group",
+  "id": "swimmer_wetsuit",
+  "items": [
+    [ "wetsuit", 35 ],
+    [ "wetsuit_thick", 5 ],
+    [ "wetsuit_spring", 25 ],
+    [ "wetsuit_spring_sleeveless", 25 ],
+    [ "flag_swimsuit", 65 ],
+    { "item": "flag_swimsuit", "variant": "flag_swimsuit", "prob": 60, "event": "independence_day" },
+    { "item": "bodysuit_lycra", "variant": "flag_suit", "prob": 10, "event": "independence_day" }
+  ]
+}

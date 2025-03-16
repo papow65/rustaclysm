@@ -117,9 +117,9 @@ impl<T: fmt::Debug + 'static> RequiredLinkedLater<T> {
     }
 
     /// Logs the error that [`Self.get`] would give and converts the result to an option
-    pub fn get_option(&self, called_from: String) -> Option<Arc<T>> {
+    pub fn get_option<'a>(&'a self, called_from: impl AsRef<str>) -> Option<Arc<T>> {
         self.get()
-            .inspect_err(|error| warn!("{called_from} caused {error:#?}"))
+            .inspect_err(|error| warn!("{} caused {error:#?}", called_from.as_ref()))
             .ok()
     }
 

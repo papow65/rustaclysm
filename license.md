@@ -12,7 +12,8 @@ Use [cargo-license](https://lib.rs/crates/cargo-license) to show the licenses of
 
 See their [LICENSE.txt](https://raw.githubusercontent.com/CleverRaven/Cataclysm-DDA/master/LICENSE.txt)
 
-All files under `assets/screenshots/` contain Cataclysm: DDA art.
+- All files under `assets/screenshots/` contain Cataclysm: DDA art.
+- All test data in this repository is from or based on Cataclysm: DDA data.
 
 ## Fira fonts
 

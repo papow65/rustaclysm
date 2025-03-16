@@ -1,0 +1,6 @@
+{
+  "id": "lizard_sample_huge",
+  "type": "item_group",
+  "subtype": "collection",
+  "entries": [ { "item": "lizard_sample", "count-min": 10, "count-max": 20 } ]
+}
