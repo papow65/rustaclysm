@@ -3,6 +3,7 @@ use crate::{background::BackgroundPlugin, gameplay::GameplayPlugin, hud::HudPlug
 use crate::{keyboard::KeyboardPlugin, loading::LoadingIndicatorPlugin};
 use crate::{main_menu::MainMenuPlugin, manual::ManualPlugin};
 use crate::{pre_gameplay::PreGameplayPlugin, util::log_transition_plugin};
+use bevy::log::{DEFAULT_FILTER, Level, LogPlugin};
 use bevy::prelude::{
     App, AppExit, AppExtStates as _, AssetPlugin, DefaultPlugins, Fixed, ImagePlugin, Last,
     PluginGroup as _, Time, Window, WindowPlugin,
@@ -27,6 +28,12 @@ pub(crate) fn run_application() -> AppExit {
                 ..AssetPlugin::default()
             })
             .set(ImagePlugin::default_nearest())
+            .set(LogPlugin {
+                level: Level::DEBUG,
+                filter: String::from("info,rustaclysm=debug,cdda_json_files=debug,units=debug,")
+                    + DEFAULT_FILTER,
+                ..LogPlugin::default()
+            })
             .set(WindowPlugin {
                 primary_window: Some(window),
                 ..WindowPlugin::default()
