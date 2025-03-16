@@ -27,16 +27,23 @@ impl<T: DeserializeOwned + 'static> InfoMap<T> {
             .unwrap_or_else(|| panic!("Type {type_id:?} not found"));
         for (id, object_properties) in objects {
             //trace!("{:#?}", &object_properties);
-            match serde_json::from_value::<T>(serde_json::Value::Object(object_properties)) {
+            match serde_json::from_value::<T>(serde_json::Value::Object(object_properties.clone()))
+            {
                 Ok(info) => {
                     map.insert(id.into(), Arc::new(info));
                 }
                 Err(error) => {
-                    error!(
-                        "Failed loading json for {:?} {:?}: {error:#?}",
-                        type_name::<T>(),
-                        &id
-                    );
+                    error!("Failed loading json for {:?} {id:?}: {error:#?}", type_name::<T>());
+                    if let Some(cause) = object_properties
+                    .keys()
+                    .find(|key| {
+                        let mut copy = object_properties.clone();
+                        copy.remove(*key);
+                        serde_json::from_value::<T>(serde_json::Value::Object(copy)).is_ok()
+                    }){
+                        warn!("Failure for {id:?} likely caused by the property '{cause}'");
+                    }
+                    debug!("Json for {id:?}: {object_properties:#?}");
                 }
             }
         }
