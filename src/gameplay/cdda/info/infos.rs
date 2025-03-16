@@ -7,7 +7,7 @@ use bevy::utils::HashMap;
 use cdda_json_files::{
     Alternative, Ammo, BionicItem, Book, CddaItem, CddaItemName, CharacterInfo, Clothing,
     Comestible, CommonItemInfo, Engine, FieldInfo, Flags, FurnitureInfo, GenericItem, Gun, Gunmod,
-    InfoId, ItemGroup, ItemName, Magazine, Overmap, OvermapInfo, PetArmor, Quality, Recipe,
+    InfoId, ItemGroup, ItemName, Magazine, Overmap, OvermapTerrainInfo, PetArmor, Quality, Recipe,
     RequiredLinkedLater, Requirement, Submap, TerrainInfo, Tool, ToolClothing, Toolmod,
     UntypedInfoId, Using, UsingKind, VehiclePartInfo, VehiclePartMigration, Wheel,
 };
@@ -77,7 +77,7 @@ pub(crate) struct Infos {
     #[expect(unused)]
     pub(crate) wheels: InfoMap<Wheel>,
 
-    pub(crate) zone_levels: InfoMap<OvermapInfo>,
+    pub(crate) zone_levels: InfoMap<OvermapTerrainInfo>,
 }
 
 impl Infos {
@@ -168,7 +168,7 @@ impl Infos {
             toolmods,
             vehicle_parts,
             wheels,
-            zone_levels: InfoMap::new(&mut enriched_json_infos, TypeId::OVERMAP),
+            zone_levels: InfoMap::new(&mut enriched_json_infos, TypeId::OVERMAP_TERRAIN),
         };
 
         for type_id in enriched_json_infos.into_keys() {

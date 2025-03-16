@@ -9,7 +9,7 @@ use bevy::prelude::{
     BuildChildren as _, ChildBuild as _, Entity, Res, StateScoped, Transform, Vec3, Visibility,
 };
 use bevy::render::view::RenderLayers;
-use cdda_json_files::{CddaItemName, InfoId, ItemName, OvermapInfo};
+use cdda_json_files::{CddaItemName, InfoId, ItemName, OvermapTerrainInfo};
 
 #[derive(SystemParam)]
 pub(crate) struct ZoneSpawner<'w, 's> {
@@ -55,7 +55,7 @@ impl ZoneSpawner<'_, '_> {
         entity: Entity,
         zone_level: ZoneLevel,
         seen_from: SeenFrom,
-        info_id: &InfoId<OvermapInfo>,
+        info_id: &InfoId<OvermapTerrainInfo>,
         child_visibiltiy: &Visibility,
     ) {
         let name = ObjectName::new(

@@ -2,7 +2,7 @@ use serde::Deserialize;
 use std::hash::{Hash, Hasher};
 use std::{any::type_name, fmt, marker::PhantomData, sync::Arc};
 
-use crate::{OvermapInfo, TerrainInfo};
+use crate::{OvermapTerrainInfo, TerrainInfo};
 
 /// Use [`InfoId`] wherever possible.
 /// Note that different info types may use the same ids.
@@ -112,7 +112,7 @@ impl<T> InfoId<T> {
     }
 }
 
-impl InfoId<OvermapInfo> {
+impl InfoId<OvermapTerrainInfo> {
     #[must_use]
     pub fn is_moving_deep_water_zone(&self) -> bool {
         self.untyped.starts_with("river_")

@@ -3,7 +3,7 @@ use serde::Deserialize;
 use std::sync::Arc;
 
 #[derive(Debug, Deserialize)]
-pub struct OvermapInfo {
+pub struct OvermapTerrainInfo {
     pub name: ItemName,
     pub looks_like: Option<UntypedInfoId>,
 

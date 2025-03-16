@@ -2,16 +2,16 @@ use std::sync::OnceLock;
 
 use crate::gameplay::{Level, OvermapAsset, Overzone, RepetitionBlockExt as _, ZoneLevel};
 use bevy::{prelude::Resource, utils::HashMap};
-use cdda_json_files::{FlatVec, InfoId, Overmap, OvermapInfo, OvermapLevel};
+use cdda_json_files::{FlatVec, InfoId, Overmap, OvermapLevel, OvermapTerrainInfo};
 
 #[derive(Default, Resource)]
 pub(crate) struct ZoneLevelIds {
-    names: HashMap<ZoneLevel, InfoId<OvermapInfo>>,
+    names: HashMap<ZoneLevel, InfoId<OvermapTerrainInfo>>,
     loaded_overzones: Vec<Overzone>,
 }
 
 impl ZoneLevelIds {
-    pub(crate) fn get(&self, zone_level: ZoneLevel) -> Option<&InfoId<OvermapInfo>> {
+    pub(crate) fn get(&self, zone_level: ZoneLevel) -> Option<&InfoId<OvermapTerrainInfo>> {
         self.names.get(&zone_level)
     }
 

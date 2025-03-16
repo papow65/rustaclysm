@@ -30,15 +30,7 @@ impl TypeId {
     pub(crate) const FURNITURE: &'static [Self] = &[Self("furniture")];
     pub(crate) const ITEM_GROUP: &'static [Self] = &[Self("item_group")];
 
-    pub(crate) const OVERMAP: &'static [Self] = &[
-        Self("city_building"),
-        Self("map_extra"),
-        Self("overmap_connection"),
-        Self("overmap_land_use_code"),
-        Self("overmap_location"),
-        Self("overmap_special"),
-        Self("overmap_special_migration"),
-    ];
+    pub(crate) const OVERMAP_TERRAIN: &'static [Self] = &[Self("overmap_terrain")];
 
     pub(crate) const RECIPE: &'static [Self] = &[Self("recipe")];
     pub(crate) const REQUIREMENT: &'static [Self] = &[Self("requirement")];
@@ -67,6 +59,7 @@ impl TypeId {
         Self("character_mod"),
         Self("charge_migration_blacklist"),
         Self("charge_removal_blacklist"),
+        Self("city_building"), // typically span multiple overmap terrains
         Self("clothing_mod"),
         Self("conduct"),
         Self("connect_group"),
@@ -93,6 +86,7 @@ impl TypeId {
         Self("json_flag"),
         Self("limb_score"),
         Self("LOOT_ZONE"),
+        Self("map_extra"), // notes on the overmap
         Self("mapgen"),
         Self("martial_art"),
         Self("material"),
@@ -113,12 +107,11 @@ impl TypeId {
         Self("npc_class"),
         Self("obsolete_terrain"),
         Self("overlay_order"),
-        Self("overmap_connection"),
+        Self("overmap_connection"), // like roads
         Self("overmap_land_use_code"),
         Self("overmap_location"),
-        Self("overmap_special"),
+        Self("overmap_special"), // typically span multiple overmap terrains
         Self("overmap_special_migration"),
-        Self("overmap_terrain"),
         Self("palette"),
         Self("practice"),
         Self("profession"),
@@ -180,7 +173,7 @@ impl TypeId {
             Self::GUN,
             Self::GUNMOD,
             Self::MAGAZINE,
-            Self::OVERMAP,
+            Self::OVERMAP_TERRAIN,
             Self::PET_ARMOR,
             Self::RECIPE,
             Self::REQUIREMENT,
