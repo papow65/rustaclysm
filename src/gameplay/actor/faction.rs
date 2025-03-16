@@ -191,8 +191,7 @@ impl Faction {
         let safest_longtime_pos = graph
             .iter()
             .filter(|((_, ms), _)| min_time < *ms)
-            .min_by_key(|((_, ms), (_, danger))| danger.average(ms))
-            .expect("Non-empty graph")
+            .min_by_key(|((_, ms), (_, danger))| danger.average(ms))?
             .0;
         let to = build_path(safest_longtime_pos, &graph)
             .get(1)
