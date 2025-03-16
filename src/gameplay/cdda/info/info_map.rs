@@ -2,7 +2,7 @@ use crate::gameplay::{TypeId, cdda::Error};
 use bevy::prelude::{debug, error, warn};
 use bevy::utils::HashMap;
 use cdda_json_files::{
-    Bash, BashItem, BashItems, CommonItemInfo, FurnitureInfo, InfoId, InfoIdDescription,
+    Bash, BashItem, BashItems, CommonItemInfo, FurnitureInfo, InfoId, InfoIdDescription, ItemGroup,
     ItemMigration, ItemWithCommonInfo, Quality, Recipe, Requirement, TerrainInfo, UntypedInfoId,
     VehiclePartInfo, VehiclePartMigration,
 };
@@ -66,7 +66,11 @@ impl InfoMap<CommonItemInfo> {
 }
 
 impl InfoMap<FurnitureInfo> {
-    pub(crate) fn link_furniture(&self, common_item_infos: &InfoMap<CommonItemInfo>) {
+    pub(crate) fn link_furniture(
+        &self,
+        common_item_infos: &InfoMap<CommonItemInfo>,
+        item_groups: &InfoMap<ItemGroup>,
+    ) {
         for furniture in self.map.values() {
             furniture
                 .crafting_pseudo_item
@@ -77,7 +81,14 @@ impl InfoMap<FurnitureInfo> {
                     map: HashMap::default(),
                 };
 
-                link_bash(bash, &terrain, self, common_item_infos, "furniture");
+                link_bash(
+                    bash,
+                    &terrain,
+                    self,
+                    common_item_infos,
+                    item_groups,
+                    "furniture",
+                );
             }
         }
     }
@@ -118,6 +129,7 @@ impl InfoMap<TerrainInfo> {
         &mut self,
         furniture: &InfoMap<FurnitureInfo>,
         common_item_infos: &InfoMap<CommonItemInfo>,
+        item_groups: &InfoMap<ItemGroup>,
     ) {
         if self.map.remove(&InfoId::new("t_null")).is_some() {
             warn!("The terrain t_null was not expected to be present");
@@ -127,7 +139,14 @@ impl InfoMap<TerrainInfo> {
             terrain.open.finalize(&self.map, "open terrain");
             terrain.close.finalize(&self.map, "closed terrain");
             if let Some(bash) = &terrain.bash {
-                link_bash(bash, self, furniture, common_item_infos, "terrain");
+                link_bash(
+                    bash,
+                    self,
+                    furniture,
+                    common_item_infos,
+                    item_groups,
+                    "terrain",
+                );
             }
         }
     }
@@ -138,6 +157,7 @@ fn link_bash(
     terrain_info: &InfoMap<TerrainInfo>,
     furniture_info: &InfoMap<FurnitureInfo>,
     common_item_infos: &InfoMap<CommonItemInfo>,
+    item_groups: &InfoMap<ItemGroup>,
     name: &str,
 ) {
     bash.terrain.finalize(
@@ -148,14 +168,26 @@ fn link_bash(
         &furniture_info.map,
         format!("furniture for bashed {name}").as_str(),
     );
-    if let Some(BashItems::Explicit(bash_items)) = &bash.items {
-        for bash_item in bash_items {
-            if let BashItem::Single(item_occurrence) = bash_item {
-                item_occurrence.item.finalize(
-                    &common_item_infos.map,
-                    format!("items for bashed {name}").as_str(),
-                );
+    if let Some(bash_items) = &bash.items {
+        match bash_items {
+            BashItems::Explicit(explicit_bash_items) => {
+                for bash_item in explicit_bash_items {
+                    match bash_item {
+                        BashItem::Single(item_occurrence) => item_occurrence.item.finalize(
+                            &common_item_infos.map,
+                            format!("items for bashed {name}").as_str(),
+                        ),
+                        BashItem::Group { group } => group.finalize(
+                            &item_groups.map,
+                            format!("explicit item group for bashed {name}").as_str(),
+                        ),
+                    }
+                }
             }
+            BashItems::Collection(item_group) => item_group.finalize(
+                &item_groups.map,
+                format!("item collection for bashed {name}").as_str(),
+            ),
         }
     }
 }

@@ -50,14 +50,16 @@ pub struct Bash {
 #[serde(untagged)]
 pub enum BashItems {
     Explicit(Vec<BashItem>),
-    Collection(InfoId<ItemGroup>),
+    Collection(RequiredLinkedLater<ItemGroup>),
 }
 
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
 pub enum BashItem {
     Single(ItemOccurrence),
-    Group { group: InfoId<ItemGroup> },
+    Group {
+        group: RequiredLinkedLater<ItemGroup>,
+    },
 }
 
 #[derive(Debug, Deserialize)]

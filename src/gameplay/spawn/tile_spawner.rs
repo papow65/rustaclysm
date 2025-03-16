@@ -270,13 +270,7 @@ impl<'w> TileSpawner<'w, '_> {
         Ok(entity)
     }
 
-    fn spawn_bashing_items(
-        &mut self,
-        infos: &Infos,
-        parent_entity: Entity,
-        pos: Pos,
-        items: &Vec<BashItem>,
-    ) {
+    fn spawn_bashing_items(&mut self, parent_entity: Entity, pos: Pos, items: &Vec<BashItem>) {
         for item in items {
             match *item {
                 BashItem::Single(ref item) => {
@@ -300,7 +294,7 @@ impl<'w> TileSpawner<'w, '_> {
                     }
                 }
                 BashItem::Group { ref group } => {
-                    self.spawn_item_collection(infos, parent_entity, pos, group);
+                    self.spawn_item_collection(parent_entity, pos, group);
                 }
             }
         }
@@ -308,24 +302,19 @@ impl<'w> TileSpawner<'w, '_> {
 
     fn spawn_item_collection(
         &mut self,
-        infos: &Infos,
         parent_entity: Entity,
         pos: Pos,
-        id: &InfoId<ItemGroup>,
+        item_group: &RequiredLinkedLater<ItemGroup>,
     ) {
-        let item_group = match infos.item_groups.get(id) {
-            Ok(item_group) => item_group,
-            Err(error) => {
-                error!("While spawning an items collection: {:#?}", error);
-                return;
-            }
+        let Some(item_group) = item_group.get_option(here!()) else {
+            return;
         };
         let items = item_group
             .items
             .as_ref()
             .or(item_group.entries.as_ref())
             .expect("items or entries");
-        self.spawn_bashing_items(infos, parent_entity, pos, items);
+        self.spawn_bashing_items(parent_entity, pos, items);
     }
 
     fn spawn_furniture(&mut self, parent: Entity, pos: Pos, furniture_info: &Arc<FurnitureInfo>) {
@@ -702,7 +691,6 @@ impl<'w> TileSpawner<'w, '_> {
 
     pub(crate) fn spawn_smashed(
         &mut self,
-        infos: &Infos,
         parent_entity: Entity,
         pos: Pos,
         info: Either<&TerrainInfo, &FurnitureInfo>,
@@ -726,10 +714,10 @@ impl<'w> TileSpawner<'w, '_> {
         if let Some(items) = &bash.items {
             match items {
                 BashItems::Explicit(item_vec) => {
-                    self.spawn_bashing_items(infos, parent_entity, pos, item_vec);
+                    self.spawn_bashing_items(parent_entity, pos, item_vec);
                 }
-                BashItems::Collection(id) => {
-                    self.spawn_item_collection(infos, parent_entity, pos, id);
+                BashItems::Collection(item_group) => {
+                    self.spawn_item_collection(parent_entity, pos, item_group);
                 }
             }
         }

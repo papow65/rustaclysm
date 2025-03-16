@@ -50,7 +50,9 @@ pub(crate) struct Infos {
     #[expect(unused)]
     pub(crate) gunmods: InfoMap<Gunmod>,
 
+    #[expect(unused)]
     pub(crate) item_groups: InfoMap<ItemGroup>,
+
     pub(crate) magazines: InfoMap<Magazine>,
 
     #[expect(unused)]
@@ -126,10 +128,12 @@ impl Infos {
         // item_loader is dropped
         common_item_infos.link_common_items(&qualities);
 
+        let item_groups = InfoMap::new(&mut enriched_json_infos, TypeId::ItemGroup);
+
         let furniture = InfoMap::new(&mut enriched_json_infos, TypeId::Furniture);
-        furniture.link_furniture(&common_item_infos);
+        furniture.link_furniture(&common_item_infos, &item_groups);
         let mut terrain = InfoMap::new(&mut enriched_json_infos, TypeId::Terrain);
-        terrain.fix_and_link_terrain(&furniture, &common_item_infos);
+        terrain.fix_and_link_terrain(&furniture, &common_item_infos, &item_groups);
         let requirements = InfoMap::new(&mut enriched_json_infos, TypeId::Requirement);
         requirements.link_requirements(&qualities);
         let recipes = InfoMap::new(&mut enriched_json_infos, TypeId::Recipe);
@@ -156,7 +160,7 @@ impl Infos {
             genenric_items,
             guns,
             gunmods,
-            item_groups: InfoMap::new(&mut enriched_json_infos, TypeId::ItemGroup),
+            item_groups,
             magazines,
             pet_armors,
             qualities,

@@ -263,13 +263,11 @@ pub(in super::super) fn update_corpses(
 }
 
 /// For terrain and furniture
-#[expect(clippy::needless_pass_by_value)]
 pub(in super::super) fn update_damaged_terrain(
     mut commands: Commands,
     mut message_writer: MessageWriter,
     mut damage_reader: EventReader<TerrainEvent<Damage>>,
     mut spawner: TileSpawner,
-    infos: Res<Infos>,
     mut visualization_update: ResMut<VisualizationUpdate>,
     mut terrain: Query<(
         Entity,
@@ -296,7 +294,6 @@ pub(in super::super) fn update_damaged_terrain(
                 .send_warn();
             commands.entity(terrain).despawn_recursive();
             spawner.spawn_smashed(
-                &infos,
                 parent.get(),
                 pos,
                 terrain_info
