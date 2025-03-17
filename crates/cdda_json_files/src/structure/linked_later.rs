@@ -20,15 +20,11 @@ impl<T: fmt::Debug> OptionalLinkedLater<T> {
     }
 
     /// May only be called once
-    pub fn finalize<'a>(
-        &self,
-        map: &HashMap<InfoId<T>, Arc<T>>,
-        err_description: impl Into<&'a str>,
-    ) {
+    pub fn finalize(&self, map: &HashMap<InfoId<T>, Arc<T>>, err_description: impl AsRef<str>) {
         self.option.as_ref().map(|linked_later| {
             linked_later.finalize(
                 map.get(&linked_later.info_id).map(Arc::downgrade),
-                err_description.into(),
+                err_description.as_ref(),
             )
         });
     }
@@ -58,12 +54,8 @@ impl<T: fmt::Debug, U: Clone + fmt::Debug> VecLinkedLater<T, U> {
     }
 
     /// May only be called once
-    pub fn finalize<'a>(
-        &self,
-        map: &HashMap<InfoId<T>, Arc<T>>,
-        err_description: impl Into<&'a str>,
-    ) {
-        let err_description = err_description.into();
+    pub fn finalize<'a>(&self, map: &HashMap<InfoId<T>, Arc<T>>, err_description: impl AsRef<str>) {
+        let err_description = err_description.as_ref();
         for (linked_later, _assoc) in &self.vec {
             linked_later.finalize(
                 map.get(&linked_later.info_id).map(Arc::downgrade),
@@ -128,14 +120,10 @@ impl<T: fmt::Debug + 'static> RequiredLinkedLater<T> {
     }
 
     /// May only be called once
-    pub fn finalize<'a>(
-        &self,
-        map: &HashMap<InfoId<T>, Arc<T>>,
-        err_description: impl Into<&'a str>,
-    ) {
+    pub fn finalize<'a>(&self, map: &HashMap<InfoId<T>, Arc<T>>, err_description: impl AsRef<str>) {
         self.required.finalize(
             map.get(&self.required.info_id).map(Arc::downgrade),
-            err_description.into(),
+            err_description.as_ref(),
         );
     }
 }

@@ -8,7 +8,8 @@ use units::Duration;
 #[derive(Debug, Deserialize)]
 pub struct Recipe {
     pub id: InfoId<Self>,
-    pub result: RequiredLinkedLater<CommonItemInfo>,
+    pub result: RecipeResult,
+    pub category: Option<String>,
 
     pub skill_used: Option<Arc<str>>,
 
@@ -48,6 +49,46 @@ impl Eq for Recipe {}
 impl Hash for Recipe {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.id.hash(state);
+    }
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(tag = "category")]
+pub enum RecipeResult {
+    #[serde(rename = "CC_BUILDING")]
+    Camp,
+
+    #[serde(alias = "CC_*")]
+    #[serde(alias = "CC_AMMO")]
+    #[serde(alias = "CC_ANIMALS")]
+    #[serde(alias = "CC_APPLIANCE")]
+    #[serde(alias = "CC_ARMOR")]
+    #[serde(alias = "CC_CHEM")]
+    #[serde(alias = "CC_ELECTRONIC")]
+    #[serde(alias = "CC_FOOD")]
+    #[serde(alias = "CC_OTHER")]
+    #[serde(alias = "CC_WEAPON")]
+    #[serde(untagged)]
+    Item(RequiredLinkedLater<CommonItemInfo>),
+}
+
+impl RecipeResult {
+    pub fn finalize(
+        &self,
+        map: &HashMap<InfoId<CommonItemInfo>, Arc<CommonItemInfo>>,
+        err_description: impl AsRef<str>,
+    ) {
+        if let Self::Item(info) = self {
+            info.finalize(map, err_description)
+        }
+    }
+
+    pub fn item_info(&self, source: impl AsRef<str>) -> Option<Arc<CommonItemInfo>> {
+        if let Self::Item(info) = self {
+            info.get_option(source)
+        } else {
+            None
+        }
     }
 }
 

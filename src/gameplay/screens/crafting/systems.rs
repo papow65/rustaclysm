@@ -409,7 +409,7 @@ fn shown_recipes(
         .filter_map(|(recipe, autolearn, recipe_manuals)| {
             recipe
                 .result
-                .get_option(here!())
+                .item_info(here!())
                 .map(|item| RecipeSituation {
                     recipe: recipe.clone(),
                     name: uppercase_first(item.name.single.clone()),

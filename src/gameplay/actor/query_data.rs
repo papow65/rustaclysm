@@ -665,7 +665,7 @@ impl ActorItem<'_> {
             let pos = *item.pos.unwrap_or(self.pos);
             let amount = *item.amount;
             commands.entity(item.entity).despawn_recursive();
-            if let Some(result) = craft.recipe.result.get_option(here!()) {
+            if let Some(result) = craft.recipe.result.item_info(here!()) {
                 let cdda_item = CddaItem::from(&result);
                 if let Err(error) = spawner.spawn_item(parent, Some(pos), &cdda_item, amount) {
                     error!("Spawning crafted item failed: {error:#?}");
