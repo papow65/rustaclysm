@@ -1,8 +1,7 @@
 use crate::{
-    CommonItemInfo, InfoId, ItemGroup, OptionalLinkedLater, RequiredLinkedLater, SpawnItem,
-    TerrainInfo, UntypedInfoId,
+    CommonItemInfo, Flags, HashMap, InfoId, ItemGroup, ItemName, OptionalLinkedLater,
+    RequiredLinkedLater, SpawnItem, TerrainInfo, UntypedInfoId,
 };
-use crate::{Flags, HashMap, ItemName};
 use serde::Deserialize;
 use std::sync::Arc;
 
