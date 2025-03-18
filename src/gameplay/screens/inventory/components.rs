@@ -1,12 +1,19 @@
 use bevy::prelude::{Component, Entity};
 use std::fmt;
+use strum::VariantArray;
 
-#[derive(Clone, Debug)]
+use crate::keyboard::Key;
+
+#[derive(Clone, Copy, Debug, PartialEq, VariantArray)]
 pub(super) enum InventoryAction {
     Examine,
     Take,
+
+    /// Move and Drop have the same effect.
     Drop,
+    /// Move and Drop have the same effect.
     Move,
+
     Wield,
     Unwield,
 }
@@ -21,6 +28,19 @@ impl fmt::Display for InventoryAction {
             Self::Wield => write!(f, "Wield"),
             Self::Unwield => write!(f, "Unwield"),
         }
+    }
+}
+
+impl From<InventoryAction> for Key {
+    fn from(value: InventoryAction) -> Self {
+        Self::Character(match value {
+            InventoryAction::Examine => 'e',
+            InventoryAction::Take => 't',
+            InventoryAction::Drop => 'd',
+            InventoryAction::Move => 'm',
+            InventoryAction::Wield => 'w',
+            InventoryAction::Unwield => 'u',
+        })
     }
 }
 

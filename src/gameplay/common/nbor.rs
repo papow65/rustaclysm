@@ -1,4 +1,8 @@
+use bevy::input::keyboard::KeyCode;
+use strum::VariantArray;
+
 use crate::gameplay::PosOffset;
+use crate::keyboard::Key;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub(crate) enum CardinalDirection {
@@ -28,7 +32,7 @@ impl TryFrom<HorizontalDirection> for CardinalDirection {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, VariantArray)]
 pub(crate) enum HorizontalDirection {
     NorthWest,
     North,
@@ -133,6 +137,24 @@ impl Nbor {
                 }
             }
             Self::Down => NborDistance::Down,
+        }
+    }
+}
+
+impl From<Nbor> for Key {
+    fn from(nbor: Nbor) -> Self {
+        match nbor {
+            Nbor::Up => Self::Character('<'),
+            Nbor::Horizontal(HorizontalDirection::SouthWest) => Self::Code(KeyCode::Numpad1),
+            Nbor::Horizontal(HorizontalDirection::South) => Self::Code(KeyCode::Numpad2),
+            Nbor::Horizontal(HorizontalDirection::SouthEast) => Self::Code(KeyCode::Numpad3),
+            Nbor::Horizontal(HorizontalDirection::West) => Self::Code(KeyCode::Numpad4),
+            Nbor::HERE => Self::Code(KeyCode::Numpad5),
+            Nbor::Horizontal(HorizontalDirection::East) => Self::Code(KeyCode::Numpad6),
+            Nbor::Horizontal(HorizontalDirection::NorthWest) => Self::Code(KeyCode::Numpad7),
+            Nbor::Horizontal(HorizontalDirection::North) => Self::Code(KeyCode::Numpad8),
+            Nbor::Horizontal(HorizontalDirection::NorthEast) => Self::Code(KeyCode::Numpad9),
+            Nbor::Down => Self::Character('>'),
         }
     }
 }

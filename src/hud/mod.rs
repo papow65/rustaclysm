@@ -20,6 +20,6 @@ pub(crate) use self::fonts::Fonts;
 pub(crate) use self::panel_node::panel_node;
 pub(crate) use self::plugin::HudPlugin;
 pub(crate) use self::scroll_list::ScrollList;
-pub(crate) use self::selection_list::{SelectionList, StepDirection, StepSize};
+pub(crate) use self::selection_list::{SelectionList, SelectionListStep};
 pub(crate) use self::spacing::{LARGE_SPACING, MEDIUM_SPACING, SMALL_SPACING};
 pub(crate) use self::systems::{manage_button_input, trigger_button_action};

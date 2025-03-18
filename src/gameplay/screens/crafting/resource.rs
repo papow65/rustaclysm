@@ -1,6 +1,6 @@
 use crate::gameplay::screens::crafting::components::RecipeSituation;
-use crate::hud::SelectionList;
-use bevy::prelude::{Entity, KeyCode, Query, Resource, TextColor};
+use crate::hud::{SelectionList, SelectionListStep};
+use bevy::prelude::{Entity, Query, Resource, TextColor};
 use units::Timestamp;
 
 #[derive(Resource)]
@@ -15,10 +15,10 @@ impl CraftingScreen {
     pub(super) fn adjust_selection(
         &mut self,
         recipes: &mut Query<(&mut TextColor, &RecipeSituation)>,
-        key_code: &KeyCode,
+        step: SelectionListStep,
     ) {
         self.highlight_selected(recipes, false);
-        self.selection_list.adjust(key_code.into(), key_code.into());
+        self.selection_list.adjust(step);
         self.highlight_selected(recipes, true);
     }
 

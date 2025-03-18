@@ -32,31 +32,20 @@ pub(crate) struct KeyBindingsBuilder<'w, S: States, C: CtrlState, H: HeldState> 
 }
 
 impl<S: States, C: CtrlState, H: HeldState> KeyBindingsBuilder<'_, S, C, H> {
-    pub(crate) fn add<
-        I: SystemInput + 'static,
-        K: Into<Key>,
-        M,
-        T: IntoSystem<I, (), M> + 'static,
-    >(
+    pub(crate) fn add<I: SystemInput + 'static, M>(
         &mut self,
-        key: K,
-        system: T,
+        key: impl Into<Key>,
+        system: impl IntoSystem<I, (), M> + 'static,
     ) where
         SystemId<I, ()>: Into<KeyBindingSystem>,
     {
         self.add_multi(once(key), system);
     }
 
-    pub(crate) fn add_multi<
-        I: SystemInput + 'static,
-        K: Into<Key>,
-        M,
-        T: IntoSystem<I, (), M> + 'static,
-        V: IntoIterator<Item = K>,
-    >(
+    pub(crate) fn add_multi<I: SystemInput + 'static, M>(
         &mut self,
-        keys: V,
-        system: T,
+        keys: impl IntoIterator<Item = impl Into<Key>>,
+        system: impl IntoSystem<I, (), M> + 'static,
     ) where
         SystemId<I, ()>: Into<KeyBindingSystem>,
     {

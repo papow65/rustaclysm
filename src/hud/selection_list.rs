@@ -1,41 +1,38 @@
+use crate::keyboard::Key;
 use bevy::ecs::entity::EntityHashMap;
 use bevy::prelude::{Component, Entity, KeyCode};
+use strum::VariantArray;
 
-#[derive(Clone, Copy)]
-pub(crate) enum StepSize {
-    Single,
-    Many,
+#[derive(Clone, Copy, VariantArray)]
+pub(crate) enum SelectionListStep {
+    ManyUp,
+    SingleUp,
+    SingleDown,
+    ManyDown,
 }
 
-impl StepSize {
+impl SelectionListStep {
     const fn amount(&self) -> u8 {
-        if matches!(self, Self::Many) { 10 } else { 1 }
+        if matches!(self, Self::ManyUp | Self::ManyDown) {
+            10
+        } else {
+            1
+        }
+    }
+
+    const fn is_backwards(&self) -> bool {
+        matches!(self, Self::ManyUp | Self::SingleUp)
     }
 }
 
-impl From<&KeyCode> for StepSize {
-    fn from(key: &KeyCode) -> Self {
-        match key {
-            KeyCode::ArrowUp | KeyCode::ArrowDown => Self::Single,
-            KeyCode::PageUp | KeyCode::PageDown => Self::Many,
-            _ => panic!("Unsupported conversion to StepSize for {key:?}"),
-        }
-    }
-}
-
-#[derive(Clone, Copy, PartialEq)]
-pub(crate) enum StepDirection {
-    Up,
-    Down,
-}
-
-impl From<&KeyCode> for StepDirection {
-    fn from(key: &KeyCode) -> Self {
-        match key {
-            KeyCode::ArrowUp | KeyCode::PageUp => Self::Up,
-            KeyCode::ArrowDown | KeyCode::PageDown => Self::Down,
-            _ => panic!("Unsupported conversion to StepDirection for {key:?}"),
-        }
+impl From<SelectionListStep> for Key {
+    fn from(step: SelectionListStep) -> Self {
+        Self::Code(match step {
+            SelectionListStep::ManyUp => KeyCode::PageUp,
+            SelectionListStep::SingleUp => KeyCode::ArrowUp,
+            SelectionListStep::SingleDown => KeyCode::ArrowDown,
+            SelectionListStep::ManyDown => KeyCode::PageDown,
+        })
     }
 }
 
@@ -80,10 +77,10 @@ impl SelectionList {
         self.selected = None;
     }
 
-    pub(crate) fn adjust(&mut self, size: StepSize, direction: StepDirection) -> bool {
-        for _ in 0..size.amount() {
+    pub(crate) fn adjust(&mut self, step: SelectionListStep) -> bool {
+        for _ in 0..step.amount() {
             if let Some(selected) = self.selected {
-                let sequence = if direction == StepDirection::Up {
+                let sequence = if step.is_backwards() {
                     &self.previous_items
                 } else {
                     &self.next_items

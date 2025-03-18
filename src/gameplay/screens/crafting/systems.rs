@@ -9,7 +9,7 @@ use crate::gameplay::{
 use crate::here;
 use crate::hud::{
     BAD_TEXT_COLOR, ButtonBuilder, Fonts, GOOD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, ScrollList,
-    SelectionList, WARN_TEXT_COLOR,
+    SelectionList, SelectionListStep, WARN_TEXT_COLOR,
 };
 use crate::keyboard::{Held, Key, KeyBindings};
 use crate::manual::ManualSection;
@@ -18,7 +18,7 @@ use bevy::prelude::{
     AlignItems, BuildChildren as _, ChildBuild as _, Children, Commands, ComputedNode,
     DespawnRecursiveExt as _, Display, Entity, FlexDirection, In, IntoSystem as _, JustifyContent,
     KeyCode, Local, NextState, Node, Overflow, Parent, Query, Res, ResMut, StateScoped, Text,
-    TextColor, Transform, UiRect, Val, With, Without, World, debug, error, warn,
+    TextColor, Transform, UiRect, Val, With, Without, World, debug, error,
 };
 use bevy::utils::hashbrown::hash_map::Entry;
 use bevy::{ecs::query::QueryData, ecs::system::SystemId, utils::HashMap};
@@ -27,6 +27,7 @@ use cdda_json_files::{
     Quality, Recipe, RequiredQuality, Sav, Skill, Using,
 };
 use std::{ops::RangeInclusive, sync::Arc, time::Instant};
+use strum::VariantArray as _;
 use units::Timestamp;
 
 const MAX_FIND_DISTANCE: i32 = 7;
@@ -50,11 +51,11 @@ pub(super) fn create_start_craft_system(world: &mut World) -> StartCraftSystem {
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(super) fn create_start_craft_system_with_key(
-    In(key): In<Key>,
+pub(super) fn create_start_craft_system_with_step(
+    In(step): In<SelectionListStep>,
     world: &mut World,
-) -> (Key, StartCraftSystem) {
-    (key, create_start_craft_system(world))
+) -> (SelectionListStep, StartCraftSystem) {
+    (step, create_start_craft_system(world))
 }
 
 pub(super) fn spawn_crafting_screen(mut commands: Commands) {
@@ -140,15 +141,14 @@ pub(super) fn create_crafting_key_bindings(
         world,
         GameplayScreenState::Crafting,
         |bindings| {
-            bindings.add_multi(
-                [
-                    KeyCode::ArrowUp,
-                    KeyCode::ArrowDown,
-                    KeyCode::PageUp,
-                    KeyCode::PageDown,
-                ],
-                create_start_craft_system_with_key.pipe(move_crafting_selection),
-            );
+            for &step in SelectionListStep::VARIANTS {
+                bindings.add(
+                    step,
+                    (move || step)
+                        .pipe(create_start_craft_system_with_step)
+                        .pipe(move_crafting_selection),
+                );
+            }
         },
         ManualSection::new(
             &[
@@ -185,7 +185,7 @@ fn exit_crafting(mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>
 
 #[expect(clippy::needless_pass_by_value)]
 pub(super) fn move_crafting_selection(
-    In((key, start_craft_system)): In<(Key, StartCraftSystem)>,
+    In((step, start_craft_system)): In<(SelectionListStep, StartCraftSystem)>,
     mut commands: Commands,
     fonts: Res<Fonts>,
     mut crafting_screen: ResMut<CraftingScreen>,
@@ -195,12 +195,7 @@ pub(super) fn move_crafting_selection(
 ) {
     let start = Instant::now();
 
-    let Key::Code(key_code) = key else {
-        warn!("Unexpected key {key:?} while moving crafting selection");
-        return;
-    };
-
-    crafting_screen.adjust_selection(&mut recipes.transmute_lens().query(), &key_code);
+    crafting_screen.adjust_selection(&mut recipes.transmute_lens().query(), step);
     adapt_to_selected(
         &mut commands,
         &fonts,

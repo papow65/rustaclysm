@@ -111,9 +111,6 @@ impl Keys {
                     KeyBindingSystem::Simple(system) => {
                         commands.run_system(system);
                     }
-                    KeyBindingSystem::Key(system) => {
-                        commands.run_system_with_input(system, key_change.key);
-                    }
                     KeyBindingSystem::Entity(system) => {
                         commands.run_system_with_input(system, entity);
                     }

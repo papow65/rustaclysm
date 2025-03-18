@@ -5,11 +5,11 @@ use crate::gameplay::screens::inventory::section::InventorySection;
 use crate::gameplay::{
     BodyContainers, Clock, DebugTextShown, Envir, ExamineItem, GameplayScreenState,
     HorizontalDirection, InstructionQueue, ItemHierarchy, ItemItem, MoveItem, Nbor, Phrase, Pickup,
-    Player, PlayerDirection, Pos, QueuedInstruction, Unwield, Wield,
+    Player, Pos, QueuedInstruction, Unwield, Wield,
 };
 use crate::hud::{
     Fonts, HARD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, SOFT_TEXT_COLOR, ScrollList, SelectionList,
-    StepDirection, StepSize,
+    SelectionListStep,
 };
 use crate::keyboard::{Held, Key, KeyBindings};
 use crate::manual::ManualSection;
@@ -17,12 +17,13 @@ use crate::util::log_if_slow;
 use bevy::ecs::{entity::EntityHashMap, system::SystemId};
 use bevy::prelude::{
     AlignItems, BackgroundColor, BuildChildren as _, Button, ChildBuild as _, Children, Commands,
-    ComputedNode, Display, Entity, FlexDirection, In, JustifyContent, KeyCode, Local, NextState,
-    Node, Overflow, Parent, Query, Res, ResMut, StateScoped, Text, TextColor, TextSpan, Transform,
-    UiRect, Val, With, Without, World, debug, error, warn,
+    ComputedNode, Display, Entity, FlexDirection, In, IntoSystem as _, JustifyContent, KeyCode,
+    Local, NextState, Node, Overflow, Parent, Query, Res, ResMut, StateScoped, Text, TextColor,
+    TextSpan, Transform, UiRect, Val, With, Without, World, debug, error,
 };
 use cdda_json_files::HashMap;
 use std::time::Instant;
+use strum::VariantArray as _;
 use units::Timestamp;
 
 #[derive(Clone, Debug)]
@@ -101,15 +102,9 @@ pub(super) fn create_inventory_key_bindings(
         world,
         GameplayScreenState::Inventory,
         |bindings| {
-            bindings.add_multi(
-                [
-                    KeyCode::ArrowUp,
-                    KeyCode::ArrowDown,
-                    KeyCode::PageUp,
-                    KeyCode::PageDown,
-                ],
-                move_inventory_selection,
-            );
+            for &step in SelectionListStep::VARIANTS {
+                bindings.add(step, (move || step).pipe(move_inventory_selection));
+            }
         },
         ManualSection::new(
             &[
@@ -124,22 +119,18 @@ pub(super) fn create_inventory_key_bindings(
         world,
         GameplayScreenState::Inventory,
         |bindings| {
-            bindings.add_multi(
-                [
-                    KeyCode::Numpad1,
-                    KeyCode::Numpad2,
-                    KeyCode::Numpad3,
-                    KeyCode::Numpad4,
-                    KeyCode::Numpad5,
-                    KeyCode::Numpad6,
-                    KeyCode::Numpad7,
-                    KeyCode::Numpad8,
-                    KeyCode::Numpad9,
-                ],
-                set_inventory_drop_direction,
-            );
-            bindings.add_multi(['d', 't', 'u', 'w'], handle_selected_item);
-            bindings.add('e', examine_selected_item);
+            for &horizontal_direction in HorizontalDirection::VARIANTS {
+                bindings.add(
+                    Nbor::Horizontal(horizontal_direction),
+                    (move || horizontal_direction).pipe(set_inventory_drop_direction),
+                );
+            }
+            for &inventory_action in InventoryAction::VARIANTS {
+                bindings.add(
+                    inventory_action,
+                    (move || inventory_action).pipe(handle_selected_item),
+                );
+            }
             bindings.add_multi(
                 [Key::Code(KeyCode::Escape), Key::Character('i')],
                 exit_inventory,
@@ -164,7 +155,7 @@ pub(super) fn create_inventory_key_bindings(
 
 #[expect(clippy::needless_pass_by_value)]
 fn move_inventory_selection(
-    In(key): In<Key>,
+    In(step): In<SelectionListStep>,
     mut inventory: ResMut<InventoryScreen>,
     mut item_rows: Query<(&InventoryItemRow, &mut BackgroundColor, &Children)>,
     item_buttons: Query<&Children, With<Button>>,
@@ -173,12 +164,7 @@ fn move_inventory_selection(
     mut scroll_lists: Query<(&mut ScrollList, &mut Node, &ComputedNode, &Parent)>,
     scrolling_parents: Query<(&Node, &ComputedNode), Without<ScrollList>>,
 ) {
-    let Key::Code(key_code) = key else {
-        warn!("Unexpected key {key:?} while moving inventory selection");
-        return;
-    };
-
-    inventory.adjust_selection(&mut item_rows, &item_buttons, &mut text_styles, &key_code);
+    inventory.adjust_selection(&mut item_rows, &item_buttons, &mut text_styles, step);
     follow_selected(
         &inventory,
         &item_layouts,
@@ -187,17 +173,10 @@ fn move_inventory_selection(
     );
 }
 
-fn set_inventory_drop_direction(In(key): In<Key>, mut inventory: ResMut<InventoryScreen>) {
-    let Ok(player_direction) = PlayerDirection::try_from(key) else {
-        warn!("Unexpected key {key:?} while setting inventory drop direction");
-        return;
-    };
-
-    let Nbor::Horizontal(horizontal_direction) = player_direction.to_nbor() else {
-        error!("Unexpected direction {player_direction:?} while setting inventory drop direction");
-        return;
-    };
-
+fn set_inventory_drop_direction(
+    In(horizontal_direction): In<HorizontalDirection>,
+    mut inventory: ResMut<InventoryScreen>,
+) {
     inventory.drop_direction = horizontal_direction;
     inventory.last_time = Timestamp::ZERO;
 }
@@ -365,19 +344,17 @@ fn follow_selected(
 
 #[expect(clippy::needless_pass_by_value)]
 fn handle_selected_item(
-    In(key): In<Key>,
+    In(action): In<InventoryAction>,
     mut instruction_queue: ResMut<InstructionQueue>,
     mut inventory: ResMut<InventoryScreen>,
     item_rows: Query<&InventoryItemRow>,
 ) {
-    let Key::Character(char) = key else {
-        warn!("Unexpected key {key:?} while handling selected item");
-        return;
-    };
-
     if let Some(selected_item) = inventory.selected_item(&item_rows) {
-        instruction_queue.add(match char {
-            'd' => {
+        instruction_queue.add(match action {
+            InventoryAction::Examine => QueuedInstruction::ExamineItem(ExamineItem {
+                item_entity: selected_item,
+            }),
+            InventoryAction::Drop | InventoryAction::Move => {
                 let Some(item_section) = inventory.section_by_item.get(&selected_item) else {
                     error!("Section of item {selected_item:?} not found");
                     return;
@@ -391,32 +368,22 @@ fn handle_selected_item(
                     to: Nbor::Horizontal(inventory.drop_direction),
                 })
             }
-            't' => QueuedInstruction::Pickup(Pickup {
+            InventoryAction::Take => QueuedInstruction::Pickup(Pickup {
                 item_entity: selected_item,
             }),
-            'u' => QueuedInstruction::Unwield(Unwield {
+            InventoryAction::Unwield => QueuedInstruction::Unwield(Unwield {
                 item_entity: selected_item,
             }),
-            'w' => QueuedInstruction::Wield(Wield {
+            InventoryAction::Wield => QueuedInstruction::Wield(Wield {
                 item_entity: selected_item,
             }),
-            _ => panic!("Unexpected key {char:?}"),
         });
-        inventory
-            .selection_list
-            .adjust(StepSize::Single, StepDirection::Down);
-    }
-}
 
-/// Special case, because we don't want to select another item after the action.
-#[expect(clippy::needless_pass_by_value)]
-fn examine_selected_item(
-    mut instruction_queue: ResMut<InstructionQueue>,
-    inventory: Res<InventoryScreen>,
-    item_rows: Query<&InventoryItemRow>,
-) {
-    if let Some(item_entity) = inventory.selected_item(&item_rows) {
-        instruction_queue.add(QueuedInstruction::ExamineItem(ExamineItem { item_entity }));
+        if action != InventoryAction::Examine {
+            inventory
+                .selection_list
+                .adjust(SelectionListStep::SingleDown);
+        }
     }
 }
 

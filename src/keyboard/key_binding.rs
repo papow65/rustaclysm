@@ -6,19 +6,12 @@ use std::marker::PhantomData;
 #[derive(Clone, Debug)]
 pub(crate) enum KeyBindingSystem {
     Simple(SystemId<(), ()>),
-    Key(SystemId<In<Key>, ()>),
     Entity(SystemId<In<Entity>, ()>),
 }
 
 impl From<SystemId<(), ()>> for KeyBindingSystem {
     fn from(system: SystemId<(), ()>) -> Self {
         Self::Simple(system)
-    }
-}
-
-impl From<SystemId<In<Key>, ()>> for KeyBindingSystem {
-    fn from(system: SystemId<In<Key>, ()>) -> Self {
-        Self::Key(system)
     }
 }
 

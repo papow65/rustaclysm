@@ -4,12 +4,13 @@ use crate::gameplay::{
     QueuedInstruction, VisualizationUpdate, ZoomDirection, ZoomDistance,
 };
 use crate::hud::ScrollList;
-use crate::keyboard::{Held, Key, KeyBindings};
+use crate::keyboard::{Held, KeyBindings};
 use crate::manual::ManualSection;
 use crate::util::log_if_slow;
 use bevy::input::mouse::{MouseMotion, MouseWheel};
 use bevy::{prelude::*, render::view::RenderLayers};
 use std::time::Instant;
+use strum::VariantArray as _;
 
 #[expect(clippy::needless_pass_by_value)]
 fn examine_pos(focus: Focus, mut next_focus_state: ResMut<NextState<FocusState>>) {
@@ -46,20 +47,11 @@ fn open_inventory(mut next_gameplay_state: ResMut<NextState<GameplayScreenState>
 }
 
 fn toggle_map(
-    In(key): In<Key>,
+    In(zoom_distance): In<ZoomDistance>,
     mut camera_offset: ResMut<CameraOffset>,
     mut camera_layers: Query<&mut RenderLayers, With<Camera3d>>,
 ) {
     let start = Instant::now();
-
-    let zoom_distance = match key {
-        Key::Character('m') => ZoomDistance::Close,
-        Key::Character('M') => ZoomDistance::Far,
-        _ => {
-            warn!("Key {key:?} not recognized when toggling the map");
-            return;
-        }
-    };
 
     let mut camera_layers = camera_layers.single_mut();
     *camera_layers = if showing_map(&camera_layers) {
@@ -220,21 +212,13 @@ pub(super) fn create_base_key_bindings(
         world,
         GameplayScreenState::Base,
         |builder| {
-            builder.add_multi(
-                [
-                    KeyCode::Numpad1,
-                    KeyCode::Numpad2,
-                    KeyCode::Numpad3,
-                    KeyCode::Numpad4,
-                    KeyCode::Numpad5,
-                    KeyCode::Numpad6,
-                    KeyCode::Numpad7,
-                    KeyCode::Numpad8,
-                    KeyCode::Numpad9,
-                ],
-                to_offset.pipe(manage_queued_instruction),
-            );
-            builder.add_multi(['<', '>'], to_offset.pipe(manage_queued_instruction));
+            for &player_direction in PlayerDirection::VARIANTS {
+                builder.add(
+                    player_direction.to_nbor(),
+                    (move || QueuedInstruction::Offset(player_direction))
+                        .pipe(manage_queued_instruction),
+                );
+            }
         },
         ManualSection::new(&[("move", "numpad"), ("move up/down", "</>")], 100),
     );
@@ -243,19 +227,21 @@ pub(super) fn create_base_key_bindings(
         world,
         GameplayScreenState::Base,
         |builder| {
-            builder.add_multi(['m', 'M'], toggle_map);
+            builder.add('m', (|| ZoomDistance::Close).pipe(toggle_map));
+            builder.add('m', (|| ZoomDistance::Far).pipe(toggle_map));
             builder.add('x', examine_pos);
             builder.add('X', examine_zone_level);
             builder.add('&', open_crafting_screen);
             builder.add('i', open_inventory);
-            builder.add_multi(['z', 'Z'], manage_zoom);
+            builder.add('z', (|| ZoomDirection::In).pipe(manage_zoom));
+            builder.add('Z', (|| ZoomDirection::Out).pipe(manage_zoom));
             builder.add('h', toggle_elevation);
             builder.add('0', reset_camera_angle);
 
             {
                 use QueuedInstruction::{
-                    Attack, Close, Drag, Pulp, Sleep, Smash, ToggleAutoDefend, ToggleAutoTravel,
-                    Wait,
+                    Attack, Close, Drag, Peek, Pulp, Sleep, Smash, ToggleAutoDefend,
+                    ToggleAutoTravel, Wait,
                 };
                 builder.add('|', (|| Wait).pipe(manage_queued_instruction));
                 builder.add('$', (|| Sleep).pipe(manage_queued_instruction));
@@ -266,7 +252,9 @@ pub(super) fn create_base_key_bindings(
                 builder.add('\\', (|| Drag).pipe(manage_queued_instruction));
                 builder.add('G', (|| ToggleAutoTravel).pipe(manage_queued_instruction));
                 builder.add('A', (|| ToggleAutoDefend).pipe(manage_queued_instruction));
+                builder.add(KeyCode::Tab, (|| Peek).pipe(manage_queued_instruction));
             }
+
             builder.add(
                 '+',
                 (|| QueuedInstruction::ChangePace(ChangePace::Next))
@@ -277,10 +265,6 @@ pub(super) fn create_base_key_bindings(
                 (|| QueuedInstruction::ChangePace(ChangePace::Previous))
                     .pipe(manage_queued_instruction),
             );
-
-            let peek_system =
-                (|_: In<Key>| QueuedInstruction::Peek).pipe(manage_queued_instruction);
-            builder.add(KeyCode::Tab, peek_system);
 
             builder.add(KeyCode::Escape, handle_cancelation);
         },
@@ -313,15 +297,8 @@ pub(super) fn create_base_key_bindings(
     log_if_slow("create_crafting_key_bindings", start);
 }
 
-fn to_offset(In(key): In<Key>) -> QueuedInstruction {
-    QueuedInstruction::Offset(
-        PlayerDirection::try_from(key).expect("Conversion failed for held instruction"),
-    )
-}
-
 #[expect(clippy::needless_pass_by_value)]
 fn handle_cancelation(
-    In(_esc): In<Key>,
     mut message_writer: MessageWriter,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
     player_action_state: Res<State<PlayerActionState>>,
@@ -349,22 +326,13 @@ fn handle_cancelation(
 }
 
 fn manage_zoom(
-    In(key): In<Key>,
+    In(zoom_direction): In<ZoomDirection>,
     mut camera_offset: ResMut<CameraOffset>,
     mut camera_layers: Query<&mut RenderLayers, With<Camera3d>>,
 ) {
     let start = Instant::now();
 
-    let direction = match key {
-        Key::Character('z') => ZoomDirection::In,
-        Key::Character('Z') => ZoomDirection::Out,
-        _ => {
-            warn!("Key {key:?} not recognized when zooming");
-            return;
-        }
-    };
-
-    zoom(&mut camera_offset, &mut camera_layers, direction);
+    zoom(&mut camera_offset, &mut camera_layers, zoom_direction);
 
     log_if_slow("manage_zoom", start);
 }

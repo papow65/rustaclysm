@@ -1,11 +1,11 @@
 use crate::gameplay::HorizontalDirection;
 use crate::gameplay::screens::inventory::components::InventoryItemRow;
 use crate::gameplay::screens::inventory::section::InventorySection;
-use crate::hud::{GOOD_TEXT_COLOR, HARD_TEXT_COLOR, HOVERED_BUTTON_COLOR, SelectionList};
-use bevy::ecs::entity::EntityHashMap;
-use bevy::prelude::{
-    BackgroundColor, Button, Children, Entity, KeyCode, Query, Resource, TextColor, With,
+use crate::hud::{
+    GOOD_TEXT_COLOR, HARD_TEXT_COLOR, HOVERED_BUTTON_COLOR, SelectionList, SelectionListStep,
 };
+use bevy::ecs::entity::EntityHashMap;
+use bevy::prelude::{BackgroundColor, Button, Children, Entity, Query, Resource, TextColor, With};
 use units::Timestamp;
 
 pub(super) const ITEM_TEXT_COLOR: TextColor = HARD_TEXT_COLOR;
@@ -26,10 +26,10 @@ impl InventoryScreen {
         item_rows: &mut Query<(&InventoryItemRow, &mut BackgroundColor, &Children)>,
         item_buttons: &Query<&Children, With<Button>>,
         text_styles: &mut Query<&mut TextColor>,
-        key_code: &KeyCode,
+        step: SelectionListStep,
     ) {
         self.highlight_selected(item_rows, item_buttons, text_styles, false);
-        self.selection_list.adjust(key_code.into(), key_code.into());
+        self.selection_list.adjust(step);
         self.highlight_selected(item_rows, item_buttons, text_styles, true);
     }
 

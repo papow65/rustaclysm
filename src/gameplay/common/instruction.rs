@@ -2,8 +2,7 @@ use crate::gameplay::{
     ChangePace, ExamineItem, Fragment, HorizontalDirection, MoveItem, Nbor, Pickup,
     RecipeSituation, Unwield, Wield,
 };
-use crate::keyboard::Key;
-use bevy::input::keyboard::KeyCode;
+use strum::VariantArray;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum CancelHandling {
@@ -11,7 +10,7 @@ pub(crate) enum CancelHandling {
     Menu,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, VariantArray)]
 pub(crate) enum PlayerDirection {
     Above,
     AwayLeft,
@@ -41,29 +40,6 @@ impl PlayerDirection {
             Self::CloserRight => Nbor::Horizontal(HorizontalDirection::SouthEast),
             Self::Below => Nbor::Down,
         }
-    }
-}
-
-impl TryFrom<Key> for PlayerDirection {
-    type Error = ();
-
-    fn try_from(key: Key) -> Result<Self, ()> {
-        Ok(match key {
-            Key::Code(KeyCode::Numpad1) => Self::CloserLeft,
-            Key::Code(KeyCode::Numpad2) => Self::Closer,
-            Key::Code(KeyCode::Numpad3) => Self::CloserRight,
-            Key::Code(KeyCode::Numpad4) => Self::Left,
-            Key::Code(KeyCode::Numpad5) => Self::Here,
-            Key::Code(KeyCode::Numpad6) => Self::Right,
-            Key::Code(KeyCode::Numpad7) => Self::AwayLeft,
-            Key::Code(KeyCode::Numpad8) => Self::Away,
-            Key::Code(KeyCode::Numpad9) => Self::AwayRight,
-            Key::Character('<') => Self::Above,
-            Key::Character('>') => Self::Below,
-            _ => {
-                return Err(());
-            }
-        })
     }
 }
 
