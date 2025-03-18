@@ -40,10 +40,6 @@ impl ParsedJson {
         let mut parsed_file_count = 0;
         let mut skipped_count = 0;
         for json_path in Self::json_infos_paths() {
-            if json_path.ends_with(PathBuf::from("obsolete.json")) {
-                continue;
-            }
-
             match parsed_json.parse_json_info_file(&json_path, &mut skipped_count) {
                 Ok(()) => {
                     parsed_file_count += 1;
