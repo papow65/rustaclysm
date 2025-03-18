@@ -11,7 +11,7 @@ use crate::hud::{
     Fonts, HARD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, SOFT_TEXT_COLOR, ScrollList, SelectionList,
     SelectionListStep,
 };
-use crate::keyboard::{Held, Key, KeyBindings};
+use crate::keyboard::{Held, KeyBindings};
 use crate::manual::ManualSection;
 use crate::util::log_if_slow;
 use bevy::ecs::{entity::EntityHashMap, system::SystemId};
@@ -131,10 +131,8 @@ pub(super) fn create_inventory_key_bindings(
                     (move || inventory_action).pipe(handle_selected_item),
                 );
             }
-            bindings.add_multi(
-                [Key::Code(KeyCode::Escape), Key::Character('i')],
-                exit_inventory,
-            );
+            bindings.add(KeyCode::Escape, exit_inventory);
+            bindings.add('i', exit_inventory);
         },
         ManualSection::new(
             &[

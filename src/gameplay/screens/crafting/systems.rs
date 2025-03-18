@@ -11,7 +11,7 @@ use crate::hud::{
     BAD_TEXT_COLOR, ButtonBuilder, Fonts, GOOD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, ScrollList,
     SelectionList, SelectionListStep, WARN_TEXT_COLOR,
 };
-use crate::keyboard::{Held, Key, KeyBindings};
+use crate::keyboard::{Held, KeyBindings};
 use crate::manual::ManualSection;
 use crate::util::{log_if_slow, uppercase_first};
 use bevy::prelude::{
@@ -164,10 +164,8 @@ pub(super) fn create_crafting_key_bindings(
         GameplayScreenState::Crafting,
         |bindings| {
             bindings.add('c', start_craft);
-            bindings.add_multi(
-                [Key::Code(KeyCode::Escape), Key::Character('&')],
-                exit_crafting,
-            );
+            bindings.add(KeyCode::Escape, exit_crafting);
+            bindings.add('&', exit_crafting);
         },
         ManualSection::new(&[("craft", "c"), ("close crafting", "esc/&")], 100),
     );

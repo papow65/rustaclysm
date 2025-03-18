@@ -81,8 +81,8 @@ where
         key_binding_system: SystemId<In<Entity>, ()>,
     ) -> Self {
         self.key_binding = key
-            .map(Into::into)
-            .map(|key| (key, KeyBinding::new(vec![key], key_binding_system.into())));
+            .map(K::into)
+            .map(|key| (key, KeyBinding::new(key, key_binding_system.into())));
         self
     }
 

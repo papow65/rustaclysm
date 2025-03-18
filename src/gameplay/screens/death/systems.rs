@@ -88,10 +88,9 @@ pub(super) fn create_death_screen_key_bindings(
         world,
         GameplayScreenState::Death,
         |bindings| {
-            bindings.add_multi(
-                [KeyCode::Escape, KeyCode::Enter, KeyCode::Space],
-                to_main_menu,
-            );
+            bindings.add(KeyCode::Escape, to_main_menu);
+            bindings.add(KeyCode::Enter, to_main_menu);
+            bindings.add(KeyCode::Space, to_main_menu);
         },
         ManualSection::new(&[("to main menu", "esc/enter/space")], 100),
     );

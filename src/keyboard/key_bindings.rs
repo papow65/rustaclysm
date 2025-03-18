@@ -5,7 +5,7 @@ use bevy::ecs::system::SystemId;
 use bevy::prelude::{
     Commands, ComputedStates, IntoSystem, StateScoped, States, SystemInput, World,
 };
-use std::{cell::OnceCell, iter::once};
+use std::cell::OnceCell;
 
 #[derive(Clone, Debug)]
 struct KeyBindingsStorage<S: States, C: CtrlState, H: HeldState> {
@@ -39,18 +39,8 @@ impl<S: States, C: CtrlState, H: HeldState> KeyBindingsBuilder<'_, S, C, H> {
     ) where
         SystemId<I, ()>: Into<KeyBindingSystem>,
     {
-        self.add_multi(once(key), system);
-    }
-
-    pub(crate) fn add_multi<I: SystemInput + 'static, M>(
-        &mut self,
-        keys: impl IntoIterator<Item = impl Into<Key>>,
-        system: impl IntoSystem<I, (), M> + 'static,
-    ) where
-        SystemId<I, ()>: Into<KeyBindingSystem>,
-    {
         self.storage.bindings.push(KeyBinding::new(
-            keys.into_iter().map(Into::into).collect(),
+            key.into(),
             self.world.register_system(system).into(),
         ));
     }

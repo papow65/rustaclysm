@@ -18,14 +18,10 @@ pub(super) fn create_global_key_bindings(world: &mut World) {
         |bindings| {
             bindings.add('+', (|| ZoomUiDirection::In).pipe(zoom_ui));
             bindings.add('-', (|| ZoomUiDirection::Out).pipe(zoom_ui));
-            bindings.add_multi(
-                if cfg!(windows) {
-                    ['q', 'q']
-                } else {
-                    ['c', 'q']
-                },
-                quit,
-            );
+            bindings.add('q', quit);
+            if !cfg!(windows) {
+                bindings.add('c', quit);
+            }
         },
         ManualSection::new(
             &[

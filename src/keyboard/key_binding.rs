@@ -23,25 +23,21 @@ impl From<SystemId<In<Entity>, ()>> for KeyBindingSystem {
 
 #[derive(Clone, Debug, Component)]
 pub(crate) struct KeyBinding<C: CtrlState, H: HeldState> {
-    keys: Vec<Key>,
+    key: Key,
     system: KeyBindingSystem,
     _phantom: PhantomData<(C, H)>,
 }
 
 impl<C: CtrlState, H: HeldState> KeyBinding<C, H> {
-    pub(crate) const fn new(keys: Vec<Key>, system: KeyBindingSystem) -> Self {
+    pub(crate) const fn new(key: Key, system: KeyBindingSystem) -> Self {
         Self {
-            keys,
+            key,
             system,
             _phantom: PhantomData,
         }
     }
 
     pub(super) fn matching_system(&self, key: Key) -> Option<&KeyBindingSystem> {
-        self.keys
-            .iter()
-            .copied()
-            .any(|k| k == key)
-            .then_some(&self.system)
+        (self.key == key).then_some(&self.system)
     }
 }
