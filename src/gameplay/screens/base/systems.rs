@@ -8,7 +8,6 @@ use crate::keyboard::{Held, Key, KeyBindings};
 use crate::manual::ManualSection;
 use crate::util::log_if_slow;
 use bevy::input::mouse::{MouseMotion, MouseWheel};
-use bevy::utils::HashMap;
 use bevy::{prelude::*, render::view::RenderLayers};
 use std::time::Instant;
 
@@ -253,25 +252,31 @@ pub(super) fn create_base_key_bindings(
             builder.add('h', toggle_elevation);
             builder.add('0', reset_camera_angle);
 
-            let mut char_to_queued_instruction = HashMap::default();
-            char_to_queued_instruction.insert('|', QueuedInstruction::Wait);
-            char_to_queued_instruction.insert('$', QueuedInstruction::Sleep);
-            char_to_queued_instruction.insert('a', QueuedInstruction::Attack);
-            char_to_queued_instruction.insert('s', QueuedInstruction::Smash);
-            char_to_queued_instruction.insert('p', QueuedInstruction::Pulp);
-            char_to_queued_instruction.insert('c', QueuedInstruction::Close);
-            char_to_queued_instruction.insert('\\', QueuedInstruction::Drag);
-            char_to_queued_instruction.insert('G', QueuedInstruction::ToggleAutoTravel);
-            char_to_queued_instruction.insert('A', QueuedInstruction::ToggleAutoDefend);
-            char_to_queued_instruction.insert('+', QueuedInstruction::ChangePace(ChangePace::Next));
-            char_to_queued_instruction
-                .insert('-', QueuedInstruction::ChangePace(ChangePace::Previous));
-
-            for (char, instruction) in char_to_queued_instruction {
-                let system =
-                    (move |_: In<Key>| instruction.clone()).pipe(manage_queued_instruction);
-                builder.add(char, system);
+            {
+                use QueuedInstruction::{
+                    Attack, Close, Drag, Pulp, Sleep, Smash, ToggleAutoDefend, ToggleAutoTravel,
+                    Wait,
+                };
+                builder.add('|', (|| Wait).pipe(manage_queued_instruction));
+                builder.add('$', (|| Sleep).pipe(manage_queued_instruction));
+                builder.add('a', (|| Attack).pipe(manage_queued_instruction));
+                builder.add('s', (|| Smash).pipe(manage_queued_instruction));
+                builder.add('p', (|| Pulp).pipe(manage_queued_instruction));
+                builder.add('c', (|| Close).pipe(manage_queued_instruction));
+                builder.add('\\', (|| Drag).pipe(manage_queued_instruction));
+                builder.add('G', (|| ToggleAutoTravel).pipe(manage_queued_instruction));
+                builder.add('A', (|| ToggleAutoDefend).pipe(manage_queued_instruction));
             }
+            builder.add(
+                '+',
+                (|| QueuedInstruction::ChangePace(ChangePace::Next))
+                    .pipe(manage_queued_instruction),
+            );
+            builder.add(
+                '-',
+                (|| QueuedInstruction::ChangePace(ChangePace::Previous))
+                    .pipe(manage_queued_instruction),
+            );
 
             let peek_system =
                 (|_: In<Key>| QueuedInstruction::Peek).pipe(manage_queued_instruction);
