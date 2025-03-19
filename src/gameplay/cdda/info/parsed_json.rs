@@ -70,10 +70,23 @@ impl ParsedJson {
     ) -> Result<(), Error> {
         //trace!("Parsing {json_path:?}...");
         let file_contents = read_to_string(json_path)?;
-        // TODO Correct the incorrect assumption that all files contain a list.
-        let contents = serde_json::from_str::<Vec<serde_json::Map<String, serde_json::Value>>>(
+
+        let contents = match serde_json::from_str::<Vec<serde_json::Map<String, serde_json::Value>>>(
             file_contents.as_str(),
-        )?;
+        ) {
+            Ok(contents) => contents,
+            Err(error) => {
+                // Maybe is one of the few of non-list files?
+                let Ok(content) = serde_json::from_str::<serde_json::Map<String, serde_json::Value>>(
+                    file_contents.as_str(),
+                ) else {
+                    // The first match attempt was the most likely to succeed, so its error is most relevant.
+                    return Err(error.into());
+                };
+
+                vec![content]
+            }
+        };
 
         for content in contents {
             if content
