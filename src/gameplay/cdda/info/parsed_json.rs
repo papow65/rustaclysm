@@ -157,6 +157,7 @@ impl ParsedJson {
                     } else {
                         let mut other_types = objects_by_type
                             .into_iter()
+                            .filter(|(type_, _)| **type_ != TypeId::Recipe)
                             .filter_map(|(_, literal_entry)| literal_entry.get(&copy_from));
                         let Some(single) = other_types.next() else {
                             error!(
