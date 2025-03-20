@@ -251,12 +251,12 @@ impl ItemInfoMapLoader<'_> {
                 .insert(id.untyped().clone().into(), item_info.common());
         }
 
-        debug!(
-            "{}x {}, and {}x common items",
-            items.map.len(),
-            std::any::type_name::<T>(),
-            self.common_item_infos.map.len()
-        );
+        //trace!(
+        //    "{}x {}, and {}x common items",
+        //    items.map.len(),
+        //    std::any::type_name::<T>(),
+        //    self.common_item_infos.map.len()
+        //);
 
         items
     }

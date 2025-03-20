@@ -92,9 +92,7 @@ impl Infos {
             enriched_json_infos.len()
         );
         for (type_id, values) in &enriched_json_infos {
-            if values.is_empty() {
-                error!("Collected no {type_id:?} entries");
-            } else {
+            if !values.is_empty() {
                 debug!("Collected {} {type_id:?} entries", values.len());
             }
         }
@@ -126,6 +124,8 @@ impl Infos {
         let toolmods = item_loader.item_extract(TypeId::ToolMod);
         let wheels = item_loader.item_extract(TypeId::Wheel);
         // item_loader is dropped
+
+        debug!("Collected {} common items", common_item_infos.map.len());
         common_item_infos.link_common_items(&qualities);
 
         let item_groups = InfoMap::new(&mut enriched_json_infos, TypeId::ItemGroup);
@@ -176,8 +176,10 @@ impl Infos {
             zone_levels: InfoMap::new(&mut enriched_json_infos, TypeId::OvermapTerrain),
         };
 
-        for type_id in enriched_json_infos.into_keys() {
-            debug!("Unprocessed type: {type_id:?}");
+        let mut missing_types = enriched_json_infos.into_keys().map(|type_id| format!("{type_id:?}", )).collect::<Vec<_>>();
+        if !missing_types.is_empty() {
+            missing_types.sort();
+            error!("{} unprocessed types: {}", missing_types.len(), missing_types.join(", "));
         }
 
         this.characters
