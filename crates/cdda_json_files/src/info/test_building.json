@@ -1,0 +1,15 @@
+{
+  "id": "recipe",
+  "type": "recipe",
+  "result": "faction_base_modular_shelter_1_bed_makeshift_E1",
+  "description": "Let's furnish the eastern bedroom with a makeshift bed.",
+  "category": "CC_BUILDING",
+  "subcategory": "CSC_BUILDING_BASES",
+  "autolearn": false,
+  "never_learn": true,
+  "construction_blueprint": "fbmc_shelter_2_bed_makeshift_E1",
+  "blueprint_name": "furnish the E bedroom",
+  "blueprint_requires": [ { "id": "fbmc_shelter_2_bedroom7" } ],
+  "blueprint_provides": [ { "id": "fbmc_shelter_2_bed_e1" } ],
+  "blueprint_excludes": [ { "id": "fbmc_shelter_2_bed_e1" } ]
+}

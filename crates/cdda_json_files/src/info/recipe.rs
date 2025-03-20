@@ -1,4 +1,6 @@
-use crate::{CommonItemInfo, HashMap, InfoId, Quality, RequiredLinkedLater, Requirement};
+use crate::{
+    CommonItemInfo, HashMap, InfoId, Quality, RequiredLinkedLater, Requirement, UntypedInfoId,
+};
 use serde::Deserialize;
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
@@ -8,8 +10,9 @@ use units::Duration;
 #[derive(Debug, Deserialize)]
 pub struct Recipe {
     pub id: InfoId<Self>,
+
+    #[serde(flatten)]
     pub result: RecipeResult,
-    pub category: Option<String>,
 
     pub skill_used: Option<Arc<str>>,
 
@@ -53,10 +56,10 @@ impl Hash for Recipe {
 }
 
 #[derive(Debug, Deserialize)]
-#[serde(tag = "category")]
+#[serde(tag = "category", content = "result")]
 pub enum RecipeResult {
-    #[serde(rename = "CC_BUILDING")]
-    Camp,
+    #[serde(alias = "CC_BUILDING")]
+    Camp(UntypedInfoId),
 
     #[serde(alias = "CC_*")]
     #[serde(alias = "CC_AMMO")]
@@ -68,8 +71,10 @@ pub enum RecipeResult {
     #[serde(alias = "CC_FOOD")]
     #[serde(alias = "CC_OTHER")]
     #[serde(alias = "CC_WEAPON")]
-    #[serde(untagged)]
     Item(RequiredLinkedLater<CommonItemInfo>),
+
+    #[serde(untagged)]
+    Unknown(UntypedInfoId),
 }
 
 impl RecipeResult {
@@ -240,10 +245,28 @@ pub enum CddaUsing {
 #[cfg(test)]
 mod recipe_tests {
     use super::*;
+
     #[test]
-    fn it_works() {
+    fn hammer_works() {
         let json = include_str!("test_hammer.json");
-        let result = serde_json::from_str::<Recipe>(json);
-        assert!(result.is_ok(), "{result:?}");
+        let recipe = serde_json::from_str::<Recipe>(json);
+        let recipe = recipe.as_ref();
+        assert!(
+            recipe.is_ok_and(|recipe| matches!(recipe.result, RecipeResult::Item(_))),
+            "{:?}",
+            recipe.map(|recipe| &recipe.result)
+        );
+    }
+
+    #[test]
+    fn building_works() {
+        let json = include_str!("test_building.json");
+        let recipe = serde_json::from_str::<Recipe>(json);
+        let recipe = recipe.as_ref();
+        assert!(
+            recipe.is_ok_and(|recipe| matches!(recipe.result, RecipeResult::Camp(_))),
+            "{:?}",
+            recipe.map(|recipe| &recipe.result)
+        );
     }
 }
