@@ -528,7 +528,8 @@ pub enum CddaItemName {
 
         ctxt: Option<Arc<str>>,
 
-        #[serde(rename(deserialize = "//~"))]
+        #[serde(alias = "//NOLINT(cata-text-style)")]
+        #[serde(alias = "//~")]
         comment: Option<Arc<str>>,
     },
 }
