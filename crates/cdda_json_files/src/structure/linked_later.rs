@@ -43,57 +43,6 @@ impl<T: fmt::Debug> From<Option<InfoId<T>>> for OptionalLinkedLater<T> {
 }
 
 #[derive(Debug, Deserialize)]
-#[serde(from = "Vec<(InfoId<T>, U)>")]
-pub struct VecLinkedLater<T: fmt::Debug, U: Clone + fmt::Debug> {
-    vec: Vec<(LinkedLater<T>, U)>,
-}
-
-impl<T: fmt::Debug, U: Clone + fmt::Debug> VecLinkedLater<T, U> {
-    pub fn new_final_empty() -> Self {
-        Self { vec: Vec::new() }
-    }
-
-    /// May only be called once
-    pub fn finalize<'a>(&self, map: &HashMap<InfoId<T>, Arc<T>>, err_description: impl AsRef<str>) {
-        let err_description = err_description.as_ref();
-        for (linked_later, _assoc) in &self.vec {
-            linked_later.finalize(
-                map.get(&linked_later.info_id).map(Arc::downgrade),
-                err_description,
-            );
-        }
-    }
-
-    pub fn get_all(&self) -> Vec<(Arc<T>, U)> {
-        self.vec
-            .iter()
-            .filter_map(|(linked_later, assoc)| {
-                linked_later.get().map(|item| (item.clone(), assoc.clone()))
-            })
-            .collect()
-    }
-}
-
-impl<T: fmt::Debug, U: Clone + fmt::Debug> Default for VecLinkedLater<T, U> {
-    fn default() -> Self {
-        Self {
-            vec: Vec::default(),
-        }
-    }
-}
-
-impl<T: fmt::Debug, U: Clone + fmt::Debug> From<Vec<(InfoId<T>, U)>> for VecLinkedLater<T, U> {
-    fn from(vec: Vec<(InfoId<T>, U)>) -> Self {
-        Self {
-            vec: vec
-                .into_iter()
-                .map(|(info_id, assoc)| (LinkedLater::new(info_id), assoc))
-                .collect(),
-        }
-    }
-}
-
-#[derive(Debug, Deserialize)]
 #[serde(from = "InfoId<T>")]
 pub struct RequiredLinkedLater<T: fmt::Debug> {
     required: LinkedLater<T>,
