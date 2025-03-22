@@ -163,16 +163,16 @@ pub struct RequiredQuality {
     pub level: u8,
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Debug, Deserialize)]
 #[serde(from = "CddaAlternative")]
 pub enum Alternative {
     Item {
-        item: InfoId<CommonItemInfo>,
+        item: RequiredLinkedLater<CommonItemInfo>,
         required: u32,
         recoverable: bool,
     },
     Requirement {
-        requirement: InfoId<Requirement>,
+        requirement: RequiredLinkedLater<Requirement>,
         factor: u32,
     },
 }
@@ -181,24 +181,26 @@ impl From<CddaAlternative> for Alternative {
     fn from(source: CddaAlternative) -> Self {
         match source {
             CddaAlternative::Item(item, required) => Self::Item {
-                item,
+                item: RequiredLinkedLater::from(item),
                 required,
                 recoverable: true,
             },
             CddaAlternative::Dynamic(requirement, factor, note) => match &*note {
                 "LIST" => Self::Requirement {
-                    requirement: requirement.into(),
+                    requirement: RequiredLinkedLater::from(this::<Requirement>(requirement.into())),
                     factor,
                 },
                 "NO_RECOVER" => Self::Item {
-                    item: requirement.into(),
+                    item: RequiredLinkedLater::from(this::<CommonItemInfo>(requirement.into())),
                     required: factor,
                     recoverable: false,
                 },
                 unexpected => {
                     error!("Unexpected alternative tag {unexpected}");
                     Self::Requirement {
-                        requirement: requirement.into(),
+                        requirement: RequiredLinkedLater::from(this::<Requirement>(
+                            requirement.into(),
+                        )),
                         factor,
                     }
                 }
@@ -223,32 +225,52 @@ pub struct Using {
 }
 
 impl Using {
-    pub fn to_components(&self, called_from: impl AsRef<str>) -> Option<Vec<Vec<Alternative>>> {
-        let requirement = self.requirement.get_option(called_from)?;
+    pub fn to_components(
+        &self,
+        called_from: impl AsRef<str> + Clone,
+    ) -> Option<Vec<Vec<Alternative>>> {
+        let requirement = self.requirement.get_option(called_from.clone())?;
 
         Some(if self.kind == UsingKind::Components {
             requirement
                 .components
-                .clone()
-                .into_iter()
+                .iter()
                 .map(|component| {
                     component
-                        .into_iter()
-                        .map(|mut alternative| {
-                            *match alternative {
-                                Alternative::Item {
-                                    ref mut required, ..
-                                } => required,
-                                Alternative::Requirement { ref mut factor, .. } => factor,
-                            } *= self.factor;
-                            alternative
+                        .iter()
+                        .filter_map(|alternative| match alternative {
+                            Alternative::Item {
+                                item,
+                                required,
+                                recoverable,
+                            } => {
+                                let item = item.get_option(called_from.clone())?;
+                                Some(Alternative::Item {
+                                    item: RequiredLinkedLater::new_final(item.id.clone(), &item),
+                                    required: required * self.factor,
+                                    recoverable: *recoverable,
+                                })
+                            }
+                            Alternative::Requirement {
+                                requirement,
+                                factor,
+                            } => {
+                                let requirement = requirement.get_option(called_from.clone())?;
+                                Some(Alternative::Requirement {
+                                    requirement: RequiredLinkedLater::new_final(
+                                        requirement.id.clone(),
+                                        &requirement,
+                                    ),
+                                    factor: factor * self.factor,
+                                })
+                            }
                         })
                         .collect()
                 })
                 .collect()
         } else {
             vec![vec![Alternative::Requirement {
-                requirement: requirement.id.clone(),
+                requirement: RequiredLinkedLater::new_final(requirement.id.clone(), &requirement),
                 factor: self.factor,
             }]]
         })
@@ -318,4 +340,8 @@ mod recipe_tests {
             recipe.map(|recipe| &recipe.result)
         );
     }
+}
+
+fn this<T>(info_id: InfoId<T>) -> InfoId<T> {
+    info_id
 }

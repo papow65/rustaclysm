@@ -416,12 +416,7 @@ fn shown_recipes(
                         &recipe.using,
                         nearby_qualities,
                     ),
-                    components: recipe_components(
-                        infos,
-                        &recipe.components,
-                        &recipe.using,
-                        nearby_items,
-                    ),
+                    components: recipe_components(&recipe.components, &recipe.using, nearby_items),
                 })
         })
         .collect::<Vec<_>>();
@@ -549,7 +544,6 @@ fn recipe_qualities(
 }
 
 fn recipe_components(
-    infos: &Infos,
     required: &[Vec<Alternative>],
     using: &[Using],
     present: &[NearbyItem],
@@ -568,39 +562,27 @@ fn recipe_components(
                 let mut alternatives = component
                     .iter()
                     .filter_map(|alternative| {
-                        expand_items(infos, alternative)
+                        expand_items(alternative)
                             .inspect_err(|error| {
                                 error!("Could not process alternative {alternative:?}: {error:#?}");
                             })
                             .ok()
                     })
                     .flatten()
-                    .filter_map(|(item_id, required)| {
-                        infos
-                            .common_item_infos
-                            .get(&item_id)
-                            .inspect_err(|error| {
-                                error!(
-                                    "Item {item_id:?} not found (maybe comestible?): {error:#?}"
-                                );
-                            })
-                            .ok()
-                            .map(|item| (item_id, item, required))
-                    })
-                    .map(|(item_id, item, required)| {
+                    .map(|(item_info, required)| {
                         let (item_entities, amounts): (Vec<_>, Vec<&Amount>) = present
                             .iter()
                             .filter(|nearby| {
                                 nearby
                                     .common_item_info
-                                    .map(|common_item_info| common_item_info.id == item_id)
+                                    .map(|nearby_item_info| nearby_item_info.id == item_info.id)
                                     == Some(true)
                             })
                             .map(|nearby| (nearby.entity, nearby.amount))
                             .unzip();
                         AlternativeSituation {
-                            id: item_id.clone(),
-                            name: item.name.amount(required).clone(),
+                            id: item_info.id.clone(),
+                            name: item_info.name.amount(required).clone(),
                             required,
                             present: amounts.iter().map(|amount| amount.0).sum(),
                             item_entities,
@@ -614,17 +596,14 @@ fn recipe_components(
         .collect::<Vec<_>>()
 }
 
-fn expand_items<'a>(
-    infos: &'a Infos,
-    alternative: &'a Alternative,
-) -> Result<Vec<(InfoId<CommonItemInfo>, u32)>, Error> {
+fn expand_items(alternative: &Alternative) -> Result<Vec<(Arc<CommonItemInfo>, u32)>, Error> {
     match alternative {
-        Alternative::Item { item, required, .. } => Ok(vec![(item.clone(), *required)]),
+        Alternative::Item { item, required, .. } => Ok(vec![(item.get()?, *required)]),
         Alternative::Requirement {
             requirement,
             factor,
         } => {
-            let requirement = infos.requirements.get(requirement)?;
+            let requirement = requirement.get()?;
             if requirement.components.len() != 1 {
                 error!(
                     "Unexpected components ({:?}) in {requirement:#?}",
@@ -637,7 +616,7 @@ fn expand_items<'a>(
                 .iter()
                 .flatten()
                 .flat_map(|alternative| {
-                    expand_items(infos, alternative)
+                    expand_items(alternative)
                         .inspect_err(|error| error!("Could not expand: {error:#?}"))
                 })
                 .flat_map(|expanded| {

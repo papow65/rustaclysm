@@ -4,11 +4,11 @@ use crate::gameplay::{ObjectCategory, TypeId};
 use crate::util::AsyncNew;
 use bevy::prelude::{Resource, debug, error, info};
 use cdda_json_files::{
-    Ammo, BionicItem, Book, CddaItem, CharacterInfo, Clothing, Comestible,
-    CommonItemInfo, Engine, FieldInfo, FurnitureInfo, GenericItem, Gun, Gunmod, ItemGroup,
-    Link as _, Magazine, Overmap, OvermapTerrainInfo, PetArmor, Quality, Recipe,
-    RequiredLinkedLater, Requirement, Submap, TerrainInfo, Tool, ToolClothing, Toolmod,
-    UntypedInfoId, VehiclePartInfo, VehiclePartMigration, Wheel,
+    Ammo, BionicItem, Book, CddaItem, CharacterInfo, Clothing, Comestible, CommonItemInfo, Engine,
+    FieldInfo, FurnitureInfo, GenericItem, Gun, Gunmod, ItemGroup, Link as _, Magazine, Overmap,
+    OvermapTerrainInfo, PetArmor, Quality, Recipe, RequiredLinkedLater, Requirement, Submap,
+    TerrainInfo, Tool, ToolClothing, Toolmod, UntypedInfoId, VehiclePartInfo, VehiclePartMigration,
+    Wheel,
 };
 use std::time::Instant;
 
@@ -60,7 +60,10 @@ pub(crate) struct Infos {
     pub(crate) qualities: InfoMap<Quality>,
 
     pub(crate) recipes: InfoMap<Recipe>,
+
+    #[expect(unused)]
     pub(crate) requirements: InfoMap<Requirement>,
+
     pub(crate) terrain: InfoMap<TerrainInfo>,
 
     #[expect(unused)]
@@ -131,7 +134,7 @@ impl Infos {
         let mut terrain = InfoMap::new(&mut enriched_json_infos, TypeId::Terrain);
         terrain.fix_and_link_terrain(&furniture, &common_item_infos, &item_groups);
         let requirements = InfoMap::new(&mut enriched_json_infos, TypeId::Requirement);
-        requirements.link_requirements(&qualities);
+        requirements.link_requirements(&qualities, &common_item_infos);
         let recipes = InfoMap::new(&mut enriched_json_infos, TypeId::Recipe);
         recipes.link_recipes(&qualities, &requirements, &common_item_infos);
 

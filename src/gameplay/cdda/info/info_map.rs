@@ -2,10 +2,10 @@ use crate::gameplay::{TypeId, cdda::Error};
 use bevy::prelude::{debug, error, warn};
 use bevy::utils::HashMap;
 use cdda_json_files::{
-    Bash, BashItem, BashItems, CddaItemName, CharacterInfo, CommonItemInfo, Flags, FurnitureInfo,
-    InfoId, InfoIdDescription, ItemGroup, ItemMigration, ItemName, ItemWithCommonInfo, Link as _,
-    LinkProvider, Quality, Recipe, RecipeResult, Requirement, TerrainInfo, UntypedInfoId,
-    VehiclePartInfo, VehiclePartMigration,
+    Alternative, Bash, BashItem, BashItems, CddaItemName, CharacterInfo, CommonItemInfo, Flags,
+    FurnitureInfo, InfoId, InfoIdDescription, ItemGroup, ItemMigration, ItemName,
+    ItemWithCommonInfo, Link as _, LinkProvider, Quality, Recipe, RecipeResult, Requirement,
+    TerrainInfo, UntypedInfoId, VehiclePartInfo, VehiclePartMigration,
 };
 use serde::de::DeserializeOwned;
 use std::{any::type_name, fmt, sync::Arc};
@@ -139,6 +139,19 @@ impl InfoMap<Recipe> {
                 required_quality.quality.finalize(qualities, "recipe");
             }
 
+            for alternatives in &recipe.components {
+                for alternative in alternatives {
+                    match alternative {
+                        Alternative::Item { item, .. } => {
+                            item.finalize(common_item_infos, "recipe item alternative");
+                        }
+                        Alternative::Requirement { requirement, .. } => {
+                            requirement.finalize(requirements, "recipe requirement alternative");
+                        }
+                    }
+                }
+            }
+
             for using in &recipe.using {
                 using.requirement.finalize(requirements, "recipe");
             }
@@ -151,12 +164,29 @@ impl InfoMap<Recipe> {
 }
 
 impl InfoMap<Requirement> {
-    pub(super) fn link_requirements(&self, qualities: &InfoMap<Quality>) {
+    pub(super) fn link_requirements(
+        &self,
+        qualities: &InfoMap<Quality>,
+        common_item_infos: &InfoMap<CommonItemInfo>,
+    ) {
         for requirement in self.map.values() {
             for required_quality in &requirement.qualities.0 {
                 required_quality
                     .quality
                     .finalize(qualities, "required quality for requirement");
+            }
+
+            for alternatives in &requirement.components {
+                for alternative in alternatives {
+                    match alternative {
+                        Alternative::Item { item, .. } => {
+                            item.finalize(common_item_infos, "requirement item alternative");
+                        }
+                        Alternative::Requirement { requirement, .. } => {
+                            requirement.finalize(self, "nested requirement alternative");
+                        }
+                    }
+                }
             }
         }
     }
