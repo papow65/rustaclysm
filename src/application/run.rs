@@ -6,9 +6,10 @@ use crate::{pre_gameplay::PreGameplayPlugin, util::log_transition_plugin};
 use bevy::log::{DEFAULT_FILTER, Level, LogPlugin};
 use bevy::prelude::{
     App, AppExit, AppExtStates as _, AssetPlugin, DefaultPlugins, Fixed, ImagePlugin, Last,
-    PluginGroup as _, Time, Window, WindowPlugin,
+    PluginGroup as _, Time, Window, WindowPlugin, info,
 };
 use bevy::window::PresentMode;
+use git_version::git_version;
 use std::time::Duration;
 
 pub(crate) fn run_application() -> AppExit {
@@ -39,6 +40,9 @@ pub(crate) fn run_application() -> AppExit {
                 ..WindowPlugin::default()
             }),
     );
+
+    // Now that the log plugin is created, we can log
+    info!("Started Rustaclysm, version {}", git_version!());
 
     app.insert_resource(Time::<Fixed>::from_duration(Duration::from_millis(250)));
 
