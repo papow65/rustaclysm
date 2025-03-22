@@ -82,6 +82,7 @@ impl<T> RepetitionBlock<T> {
 }
 
 impl RepetitionBlock<RequiredLinkedLater<TerrainInfo>> {
+    #[must_use]
     pub fn is_significant(&self) -> bool {
         1 < self.0.len() || self.0.first().expect("Non-empty list").is_significant()
     }

@@ -313,6 +313,10 @@ pub enum CddaUsing {
     List(RequiredLinkedLater<Requirement>, u32, Arc<str>),
 }
 
+const fn this<T>(info_id: InfoId<T>) -> InfoId<T> {
+    info_id
+}
+
 #[cfg(test)]
 mod recipe_tests {
     use super::*;
@@ -340,8 +344,4 @@ mod recipe_tests {
             recipe.map(|recipe| &recipe.result)
         );
     }
-}
-
-fn this<T>(info_id: InfoId<T>) -> InfoId<T> {
-    info_id
 }

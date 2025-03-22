@@ -10,6 +10,8 @@ pub trait LinkProvider<T> {
 
 pub trait Link<T> {
     /// Panics when called a second time
+    /// # Errors
+    /// When the link could not be established
     fn connect(&self, provider: &impl LinkProvider<T>) -> Result<(), Error>;
 
     /// Calls [`Self::connect`], and logs the error
@@ -28,6 +30,7 @@ pub struct OptionalLinkedLater<T: fmt::Debug> {
 }
 
 impl<T: fmt::Debug> OptionalLinkedLater<T> {
+    #[must_use]
     pub const fn new_final_none() -> Self {
         Self { option: None }
     }
@@ -51,16 +54,13 @@ impl<T: fmt::Debug> From<Option<InfoId<T>>> for OptionalLinkedLater<T> {
 
 impl<T: fmt::Debug> Link<T> for OptionalLinkedLater<T> {
     fn connect(&self, provider: &impl LinkProvider<T>) -> Result<(), Error> {
-        self.option
-            .as_ref()
-            .map(|linked_later| {
-                linked_later.finalize(
-                    provider
-                        .get_option(&linked_later.info_id)
-                        .map(Arc::downgrade),
-                )
-            })
-            .unwrap_or_else(|| Ok(()))
+        self.option.as_ref().map_or(Ok(()), |linked_later| {
+            linked_later.finalize(
+                provider
+                    .get_option(&linked_later.info_id)
+                    .map(Arc::downgrade),
+            )
+        })
     }
 }
 
@@ -77,6 +77,8 @@ impl<T: fmt::Debug + 'static> RequiredLinkedLater<T> {
         }
     }
 
+    /// # Errors
+    /// When the link is unavailable
     pub fn get(&self) -> Result<Arc<T>, Error> {
         self.required.get().ok_or_else(|| Error::LinkUnavailable {
             _id: InfoIdDescription::from(self.required.info_id.clone()),
@@ -84,7 +86,7 @@ impl<T: fmt::Debug + 'static> RequiredLinkedLater<T> {
     }
 
     /// Logs the error that [`Self.get`] would give and converts the result to an option
-    pub fn get_option<'a>(&'a self, called_from: impl AsRef<str>) -> Option<Arc<T>> {
+    pub fn get_option(&self, called_from: impl AsRef<str>) -> Option<Arc<T>> {
         self.get()
             .inspect_err(|error| warn!("{} caused {error:#?}", called_from.as_ref()))
             .ok()
@@ -145,7 +147,7 @@ impl<T: fmt::Debug> LinkedLater<T> {
     fn get(&self) -> Option<Arc<T>> {
         self.lock
             .get()
-            .expect(format!("{:?} should have been finalized before usage", self.info_id).as_str())
+            .unwrap_or_else(|| panic!("{:?} should have been finalized before usage", self.info_id))
             .as_ref()
             .map(|weak| {
                 weak.upgrade()

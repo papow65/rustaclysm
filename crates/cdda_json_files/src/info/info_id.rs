@@ -1,3 +1,4 @@
+use bevy_log::warn;
 use serde::Deserialize;
 use std::hash::{Hash, Hasher};
 use std::{any::type_name, fmt, marker::PhantomData, sync::Arc};
@@ -25,7 +26,9 @@ impl UntypedInfoId {
     }
 
     pub fn add_suffix(&mut self, suffix: &str) {
-        assert!(!suffix.is_empty());
+        if suffix.is_empty() {
+            warn!("Empty InfoId suffix for {self:?}");
+        }
         self.0 = (String::from(&*self.0) + suffix).into();
     }
 
@@ -93,7 +96,7 @@ impl<T> InfoId<T> {
     }
 
     #[must_use]
-    pub fn new_suffix(value: &String, suffix: Option<&str>) -> Self {
+    pub fn new_suffix(value: &str, suffix: Option<&str>) -> Self {
         Self::from(UntypedInfoId::new_suffix(value, suffix))
     }
 
@@ -150,7 +153,7 @@ impl<T> Clone for InfoId<T> {
 impl<T> fmt::Debug for InfoId<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let full_type_name = type_name::<T>();
-        let type_short = full_type_name.split("::").last().unwrap_or(&full_type_name);
+        let type_short = full_type_name.split("::").last().unwrap_or(full_type_name);
         write!(f, "{type_short} {}", self.untyped.0)
     }
 }
@@ -159,7 +162,7 @@ impl<T> From<UntypedInfoId> for InfoId<T> {
     fn from(untyped: UntypedInfoId) -> Self {
         Self {
             untyped,
-            _phantom: PhantomData::default(),
+            _phantom: PhantomData,
         }
     }
 }

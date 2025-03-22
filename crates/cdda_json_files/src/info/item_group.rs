@@ -14,7 +14,7 @@ pub struct ItemGroup {
 
 impl ItemGroup {
     pub fn items(&self) -> impl Iterator<Item = SpawnItem> + use<'_> {
-        self.details.iter().flat_map(|details| details.items())
+        self.details.iter().flat_map(ItemGroupDetails::items)
     }
 }
 
@@ -36,11 +36,11 @@ impl ItemGroupDetails {
     pub fn items(&self) -> impl Iterator<Item = SpawnItem> + use<'_> {
         match self {
             Self::Collection { entries } => {
-                let left = entries.iter().flat_map(|entry| entry.items());
+                let left = entries.iter().flat_map(ItemCollectionEntry::items);
                 Either::Left(left)
             }
             Self::Distribution { entries } => {
-                let right = entries.iter().flat_map(|entry| entry.items());
+                let right = entries.iter().flat_map(Probability::items);
                 Either::Right(right)
             }
         }
@@ -191,7 +191,7 @@ pub struct ProbabilityPercent(u8);
 
 impl ProbabilityPercent {
     fn random(&self, tries: u32) -> u32 {
-        let dice = choose_multiple(0..100u8, tries as usize);
+        let dice = choose_multiple(0..100_u8, tries as usize);
         dice.into_iter().filter(|roll| *roll <= self.0).count() as u32
     }
 }

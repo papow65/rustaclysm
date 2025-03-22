@@ -86,15 +86,14 @@ impl ItemOccurrence {
     fn items(&self) -> impl Iterator<Item = SpawnItem> {
         self.prob
             .as_ref()
-            .map(|prob| prob.random())
-            .unwrap_or(true)
+            .is_none_or(Probability::random)
             .then_some(self.item.get_option("item occurrence from bashed item"))
             .flatten()
             .into_iter()
             .map(|item| SpawnItem {
                 item_info: item,
-                amount: self.count.as_ref().map(|count| count.random()).unwrap_or(1),
-                charges: self.charges.as_ref().map(|charges| charges.random()),
+                amount: self.count.as_ref().map_or(1, CountRange::random),
+                charges: self.charges.as_ref().map(CountRange::random),
             })
     }
 }
