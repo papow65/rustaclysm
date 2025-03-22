@@ -79,7 +79,7 @@ impl TileLoader {
         id_variants: &[UntypedInfoId],
         tile_variant: Option<TileVariant>,
     ) -> Layers<Model> {
-        let cdda_tile_variant: Option<CddaTileVariant> = tile_variant.map(Into::into);
+        let cdda_tile_variant: Option<CddaTileVariant> = tile_variant.map(CddaTileVariant::from);
 
         let (multitile, foregrounds, backgrounds) = id_variants
             .iter()

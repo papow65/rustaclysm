@@ -143,7 +143,7 @@ impl TileInfo {
                     );
                 }
             } else {
-                warn!("No variants found for multitile {:?}", &self.ids);
+                warn!("No variant specified for multitile {:?}", &self.ids);
             }
         }
 

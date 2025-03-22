@@ -310,7 +310,7 @@ impl<'w> TileSpawner<'w, '_> {
             furniture_info.id.untyped(),
             ObjectCategory::Furniture,
             object_name,
-            None,
+            Some(TileVariant::Center),
         );
         let mut entity = self.commands.entity(entity);
         entity.insert(Shared::new(furniture_info.clone()));
@@ -437,14 +437,15 @@ impl<'w> TileSpawner<'w, '_> {
         let variant = ItemIntegrity::from(vehicle_part.base.damaged)
             .broken()
             .then_some(TileVariant::Broken)
-            .or_else(|| vehicle_part.open.then_some(TileVariant::Open));
+            .or_else(|| vehicle_part.open.then_some(TileVariant::Open))
+            .unwrap_or(TileVariant::Center);
         let entity = self.spawn_object(
             parent,
             Some(pos),
             part_info.id.untyped(),
             ObjectCategory::VehiclePart,
             object_name,
-            variant,
+            Some(variant),
         );
         self.commands.entity(entity).insert((
             Shared::new(part_info.clone()),
