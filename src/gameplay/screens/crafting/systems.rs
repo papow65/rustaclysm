@@ -403,6 +403,9 @@ fn shown_recipes(
             recipe
                 .result
                 .item_info(here!())
+                //.inspect(|info| {
+                //    trace!("{:?}", &info.id);
+                //})
                 .map(|item| RecipeSituation {
                     recipe: recipe.clone(),
                     name: uppercase_first(item.name.single.clone()),
@@ -625,26 +628,12 @@ fn expand_items<'a>(
     alternative: &'a Alternative,
 ) -> Result<Vec<(InfoId<CommonItemInfo>, u32)>, Error> {
     match alternative {
-        Alternative::Item { item, required } => Ok(vec![(item.clone(), *required)]),
+        Alternative::Item { item, required, .. } => Ok(vec![(item.clone(), *required)]),
         Alternative::Requirement {
             requirement,
             factor,
         } => {
-            let requirement = match infos.requirements.get(requirement) {
-                Ok(requirement) => requirement,
-                Err(_req_error) => {
-                    let required_item = requirement.untyped().clone().into();
-                    match infos.common_item_infos.get(&required_item) {
-                        Ok(_) => return Ok(vec![(required_item, *factor)]),
-                        Err(_item_error) => {
-                            return Err(Error::UnexpectedRequirement {
-                                _id: requirement.clone().into(),
-                            });
-                        }
-                    }
-                }
-            };
-
+            let requirement = infos.requirements.get(requirement)?;
             if requirement.components.len() != 1 {
                 error!(
                     "Unexpected components ({:?}) in {requirement:#?}",

@@ -1,6 +1,7 @@
 use crate::{
     CommonItemInfo, HashMap, InfoId, Quality, RequiredLinkedLater, Requirement, UntypedInfoId,
 };
+use bevy_log::error;
 use serde::Deserialize;
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
@@ -168,6 +169,7 @@ pub enum Alternative {
     Item {
         item: InfoId<CommonItemInfo>,
         required: u32,
+        recoverable: bool,
     },
     Requirement {
         requirement: InfoId<Requirement>,
@@ -178,10 +180,28 @@ pub enum Alternative {
 impl From<CddaAlternative> for Alternative {
     fn from(source: CddaAlternative) -> Self {
         match source {
-            CddaAlternative::Item(item, required) => Self::Item { item, required },
-            CddaAlternative::List(requirement, factor, _) => Self::Requirement {
-                requirement,
-                factor,
+            CddaAlternative::Item(item, required) => Self::Item {
+                item,
+                required,
+                recoverable: true,
+            },
+            CddaAlternative::Dynamic(requirement, factor, note) => match &*note {
+                "LIST" => Self::Requirement {
+                    requirement: requirement.into(),
+                    factor,
+                },
+                "NO_RECOVER" => Self::Item {
+                    item: requirement.into(),
+                    required: factor,
+                    recoverable: false,
+                },
+                unexpected => {
+                    error!("Unexpected alternative tag {unexpected}");
+                    Self::Requirement {
+                        requirement: requirement.into(),
+                        factor,
+                    }
+                }
             },
         }
     }
@@ -191,7 +211,7 @@ impl From<CddaAlternative> for Alternative {
 #[serde(untagged)]
 pub enum CddaAlternative {
     Item(InfoId<CommonItemInfo>, u32),
-    List(InfoId<Requirement>, u32, Arc<str>),
+    Dynamic(UntypedInfoId, u32, Arc<str>),
 }
 
 #[derive(Debug, Deserialize)]

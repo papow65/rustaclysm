@@ -12,10 +12,6 @@ pub(crate) enum Error {
     UnknownObject {
         _id: InfoIdDescription,
     },
-    /// This id doesn't match with items or requirments
-    UnexpectedRequirement {
-        _id: InfoIdDescription,
-    },
     /// This sprite numer is not known
     UnknownSpriteNumber {
         _number: SpriteNumber,
