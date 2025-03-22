@@ -1,14 +1,14 @@
 use crate::gameplay::cdda::info::info_map::{InfoMap, ItemInfoMapLoader};
 use crate::gameplay::cdda::info::parsed_json::ParsedJson;
-use crate::gameplay::{ObjectCategory, TypeId, cdda::Error};
+use crate::gameplay::{ObjectCategory, TypeId};
 use crate::util::AsyncNew;
 use bevy::prelude::{Resource, debug, error, info};
 use cdda_json_files::{
-    Alternative, Ammo, BionicItem, Book, CddaItem, CharacterInfo, Clothing, Comestible,
+    Ammo, BionicItem, Book, CddaItem, CharacterInfo, Clothing, Comestible,
     CommonItemInfo, Engine, FieldInfo, FurnitureInfo, GenericItem, Gun, Gunmod, ItemGroup,
     Link as _, Magazine, Overmap, OvermapTerrainInfo, PetArmor, Quality, Recipe,
     RequiredLinkedLater, Requirement, Submap, TerrainInfo, Tool, ToolClothing, Toolmod,
-    UntypedInfoId, Using, UsingKind, VehiclePartInfo, VehiclePartMigration, Wheel,
+    UntypedInfoId, VehiclePartInfo, VehiclePartMigration, Wheel,
 };
 use std::time::Instant;
 
@@ -133,7 +133,7 @@ impl Infos {
         let requirements = InfoMap::new(&mut enriched_json_infos, TypeId::Requirement);
         requirements.link_requirements(&qualities);
         let recipes = InfoMap::new(&mut enriched_json_infos, TypeId::Recipe);
-        recipes.link_recipes(&qualities, &common_item_infos);
+        recipes.link_recipes(&qualities, &requirements, &common_item_infos);
 
         let vehicle_part_migrations = InfoMap::<VehiclePartMigration>::new(
             &mut enriched_json_infos,
@@ -271,36 +271,6 @@ impl Infos {
             current_id = other.clone();
         }
         variants
-    }
-
-    pub(crate) fn to_components(&self, using: &Using) -> Result<Vec<Vec<Alternative>>, Error> {
-        Ok(if using.kind == UsingKind::Components {
-            self.requirements
-                .get(&using.requirement)?
-                .components
-                .clone()
-                .into_iter()
-                .map(|component| {
-                    component
-                        .into_iter()
-                        .map(|mut alternative| {
-                            *match alternative {
-                                Alternative::Item {
-                                    ref mut required, ..
-                                } => required,
-                                Alternative::Requirement { ref mut factor, .. } => factor,
-                            } *= using.factor;
-                            alternative
-                        })
-                        .collect()
-                })
-                .collect()
-        } else {
-            vec![vec![Alternative::Requirement {
-                requirement: using.requirement.clone(),
-                factor: using.factor,
-            }]]
-        })
     }
 
     pub(crate) fn link_overmap(&self, overmap: &Overmap) {

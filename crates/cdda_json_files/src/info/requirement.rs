@@ -1,9 +1,11 @@
-use crate::{Alternative, HashMap, RequiredQualities};
+use crate::{Alternative, HashMap, InfoId, RequiredQualities};
 use serde::Deserialize;
 use std::sync::Arc;
 
 #[derive(Debug, Deserialize)]
 pub struct Requirement {
+    pub id: InfoId<Requirement>,
+
     #[serde(default)]
     pub qualities: RequiredQualities,
 

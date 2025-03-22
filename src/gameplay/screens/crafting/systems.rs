@@ -412,7 +412,6 @@ fn shown_recipes(
                     autolearn,
                     manuals: recipe_manuals,
                     qualities: recipe_qualities(
-                        infos,
                         &recipe.qualities.0,
                         &recipe.using,
                         nearby_qualities,
@@ -516,24 +515,21 @@ fn nearby_qualities(nearby_items: &[NearbyItem]) -> HashMap<Arc<Quality>, i8> {
 }
 
 fn recipe_qualities(
-    infos: &Infos,
     required: &[RequiredQuality],
     using: &[Using],
     present: &HashMap<Arc<Quality>, i8>,
 ) -> Vec<QualitySituation> {
+    let using_qualities = using
+        .iter()
+        .filter_map(|using| using.requirement.get_option(here!()))
+        //.inspect(|using| trace!("Using qualities from {using:?}"))
+        .collect::<Vec<_>>();
+
     let mut qualities = required
         .iter()
         .chain(
-            using
+            using_qualities
                 .iter()
-                .filter_map(|using| {
-                    infos
-                        .requirements
-                        .get(&using.requirement)
-                        .inspect_err(|error| error!("Requirement not found: {error:#?}"))
-                        .ok()
-                })
-                //.inspect(|using| trace!("Using qualities from {using:?}"))
                 .flat_map(|requirement| &requirement.qualities.0),
         )
         .filter_map(|required_quality| {
@@ -560,12 +556,7 @@ fn recipe_components(
 ) -> Vec<ComponentSituation> {
     let using = using
         .iter()
-        .filter_map(|using| {
-            infos
-                .to_components(using)
-                .inspect_err(|error| error!("Using not found: {error:#?}"))
-                .ok()
-        })
+        .filter_map(|using| using.to_components(here!()))
         .flatten()
         .collect::<Vec<_>>();
 

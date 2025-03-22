@@ -217,9 +217,42 @@ pub enum CddaAlternative {
 #[derive(Debug, Deserialize)]
 #[serde(from = "CddaUsing")]
 pub struct Using {
-    pub requirement: InfoId<Requirement>,
+    pub requirement: RequiredLinkedLater<Requirement>,
     pub factor: u32,
     pub kind: UsingKind,
+}
+
+impl Using {
+    pub fn to_components(&self, called_from: impl AsRef<str>) -> Option<Vec<Vec<Alternative>>> {
+        let requirement = self.requirement.get_option(called_from)?;
+
+        Some(if self.kind == UsingKind::Components {
+            requirement
+                .components
+                .clone()
+                .into_iter()
+                .map(|component| {
+                    component
+                        .into_iter()
+                        .map(|mut alternative| {
+                            *match alternative {
+                                Alternative::Item {
+                                    ref mut required, ..
+                                } => required,
+                                Alternative::Requirement { ref mut factor, .. } => factor,
+                            } *= self.factor;
+                            alternative
+                        })
+                        .collect()
+                })
+                .collect()
+        } else {
+            vec![vec![Alternative::Requirement {
+                requirement: requirement.id.clone(),
+                factor: self.factor,
+            }]]
+        })
+    }
 }
 
 impl From<CddaUsing> for Using {
@@ -254,8 +287,8 @@ pub enum UsingKind {
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
 pub enum CddaUsing {
-    NonList(InfoId<Requirement>, u32),
-    List(InfoId<Requirement>, u32, Arc<str>),
+    NonList(RequiredLinkedLater<Requirement>, u32),
+    List(RequiredLinkedLater<Requirement>, u32, Arc<str>),
 }
 
 #[cfg(test)]

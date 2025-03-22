@@ -131,13 +131,16 @@ impl InfoMap<Recipe> {
     pub(super) fn link_recipes(
         &self,
         qualities: &InfoMap<Quality>,
+        requirements: &InfoMap<Requirement>,
         common_item_infos: &InfoMap<CommonItemInfo>,
     ) {
         for recipe in self.map.values() {
             for required_quality in &recipe.qualities.0 {
-                required_quality
-                    .quality
-                    .finalize(qualities, "required quality for recipe");
+                required_quality.quality.finalize(qualities, "recipe");
+            }
+
+            for using in &recipe.using {
+                using.requirement.finalize(requirements, "recipe");
             }
 
             if let RecipeResult::Item(item_info_link) = &recipe.result {
