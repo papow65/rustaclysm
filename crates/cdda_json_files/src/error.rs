@@ -3,6 +3,7 @@ use std::{error::Error as StdError, fmt};
 
 #[derive(Debug)]
 pub enum Error {
+    UnknownInfoId { _id: InfoIdDescription },
     LinkUnavailable { _id: InfoIdDescription },
 }
 

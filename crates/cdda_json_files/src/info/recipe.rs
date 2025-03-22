@@ -78,16 +78,6 @@ pub enum RecipeResult {
 }
 
 impl RecipeResult {
-    pub fn finalize(
-        &self,
-        map: &HashMap<InfoId<CommonItemInfo>, Arc<CommonItemInfo>>,
-        err_description: impl AsRef<str>,
-    ) {
-        if let Self::Item(info) = self {
-            info.finalize(map, err_description)
-        }
-    }
-
     pub fn item_info(&self, source: impl AsRef<str>) -> Option<Arc<CommonItemInfo>> {
         if let Self::Item(info) = self {
             info.get_option(source)

@@ -1,8 +1,25 @@
-use crate::{Error, HashMap, InfoId, InfoIdDescription, TerrainInfo};
+use crate::{Error, InfoId, InfoIdDescription, TerrainInfo};
 use bevy_log::{error, warn};
 use serde::Deserialize;
 use std::fmt;
 use std::sync::{Arc, OnceLock, Weak};
+
+pub trait LinkProvider<T> {
+    fn get_option(&self, info_id: &InfoId<T>) -> Option<&Arc<T>>;
+}
+
+pub trait Link<T> {
+    /// Panics when called a second time
+    fn connect(&self, provider: &impl LinkProvider<T>) -> Result<(), Error>;
+
+    /// Calls [`Self::connect`], and logs the error
+    fn finalize(&self, provider: &impl LinkProvider<T>, err_description: impl AsRef<str>) {
+        if let Err(error) = self.connect(provider) {
+            let err_description = err_description.as_ref();
+            error!("Linking {err_description} failed: {error:?}");
+        }
+    }
+}
 
 #[derive(Debug, Deserialize)]
 #[serde(from = "Option<InfoId<T>>")]
@@ -11,22 +28,12 @@ pub struct OptionalLinkedLater<T: fmt::Debug> {
 }
 
 impl<T: fmt::Debug> OptionalLinkedLater<T> {
-    pub fn new_final_none() -> Self {
+    pub const fn new_final_none() -> Self {
         Self { option: None }
     }
 
     pub fn get(&self) -> Option<Arc<T>> {
         self.option.as_ref().and_then(LinkedLater::get)
-    }
-
-    /// May only be called once
-    pub fn finalize(&self, map: &HashMap<InfoId<T>, Arc<T>>, err_description: impl AsRef<str>) {
-        self.option.as_ref().map(|linked_later| {
-            linked_later.finalize(
-                map.get(&linked_later.info_id).map(Arc::downgrade),
-                err_description.as_ref(),
-            )
-        });
     }
 }
 
@@ -39,6 +46,21 @@ impl<T: fmt::Debug> From<Option<InfoId<T>>> for OptionalLinkedLater<T> {
         Self {
             option: info_id.map(LinkedLater::new),
         }
+    }
+}
+
+impl<T: fmt::Debug> Link<T> for OptionalLinkedLater<T> {
+    fn connect(&self, provider: &impl LinkProvider<T>) -> Result<(), Error> {
+        self.option
+            .as_ref()
+            .map(|linked_later| {
+                linked_later.finalize(
+                    provider
+                        .get_option(&linked_later.info_id)
+                        .map(Arc::downgrade),
+                )
+            })
+            .unwrap_or_else(|| Ok(()))
     }
 }
 
@@ -67,14 +89,6 @@ impl<T: fmt::Debug + 'static> RequiredLinkedLater<T> {
             .inspect_err(|error| warn!("{} caused {error:#?}", called_from.as_ref()))
             .ok()
     }
-
-    /// May only be called once
-    pub fn finalize<'a>(&self, map: &HashMap<InfoId<T>, Arc<T>>, err_description: impl AsRef<str>) {
-        self.required.finalize(
-            map.get(&self.required.info_id).map(Arc::downgrade),
-            err_description.as_ref(),
-        );
-    }
 }
 
 impl RequiredLinkedLater<TerrainInfo> {
@@ -93,6 +107,16 @@ impl<T: fmt::Debug> From<InfoId<T>> for RequiredLinkedLater<T> {
         Self {
             required: LinkedLater::new(info_id),
         }
+    }
+}
+
+impl<T: fmt::Debug> Link<T> for RequiredLinkedLater<T> {
+    fn connect(&self, provider: &impl LinkProvider<T>) -> Result<(), Error> {
+        self.required.finalize(
+            provider
+                .get_option(&self.required.info_id)
+                .map(Arc::downgrade),
+        )
     }
 }
 
@@ -121,7 +145,7 @@ impl<T: fmt::Debug> LinkedLater<T> {
     fn get(&self) -> Option<Arc<T>> {
         self.lock
             .get()
-            .expect("This link should have been finalized before usage")
+            .expect(format!("{:?} should have been finalized before usage", self.info_id).as_str())
             .as_ref()
             .map(|weak| {
                 weak.upgrade()
@@ -129,10 +153,17 @@ impl<T: fmt::Debug> LinkedLater<T> {
             })
     }
 
-    fn finalize(&self, found: Option<Weak<T>>, err_description: &str) {
-        if found.is_none() {
-            error!("Could not find {err_description}: {:?}", &self.info_id);
-        }
+    /// This may only be called once.
+    fn finalize(&self, found: Option<Weak<T>>) -> Result<(), Error> {
+        // This should not happen, even with malformed data. So we use 'expect()' instead of returning an error.
         self.lock.set(found).expect("{self:?} is already finalized");
+
+        if self.lock.get().is_none() {
+            return Err(Error::UnknownInfoId {
+                _id: self.info_id.clone().into(),
+            });
+        }
+
+        Ok(())
     }
 }

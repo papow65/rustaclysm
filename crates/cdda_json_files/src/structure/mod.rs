@@ -6,6 +6,6 @@ mod repitition;
 
 pub use self::at::{At, AtVec};
 pub use self::flat_vec::FlatVec;
-pub use self::linked_later::{OptionalLinkedLater, RequiredLinkedLater};
+pub use self::linked_later::{Link, LinkProvider, OptionalLinkedLater, RequiredLinkedLater};
 pub use self::maybe_flat::MaybeFlatVec;
 pub use self::repitition::{CddaAmount, Repetition, RepetitionBlock};

@@ -3,16 +3,14 @@ use crate::gameplay::cdda::info::parsed_json::ParsedJson;
 use crate::gameplay::{ObjectCategory, TypeId, cdda::Error};
 use crate::util::AsyncNew;
 use bevy::prelude::{Resource, debug, error, info};
-use bevy::utils::HashMap;
 use cdda_json_files::{
-    Alternative, Ammo, BionicItem, Book, CddaItem, CddaItemName, CharacterInfo, Clothing,
-    Comestible, CommonItemInfo, Engine, FieldInfo, Flags, FurnitureInfo, GenericItem, Gun, Gunmod,
-    InfoId, ItemGroup, ItemName, Magazine, Overmap, OvermapTerrainInfo, PetArmor, Quality, Recipe,
+    Alternative, Ammo, BionicItem, Book, CddaItem, CharacterInfo, Clothing, Comestible,
+    CommonItemInfo, Engine, FieldInfo, FurnitureInfo, GenericItem, Gun, Gunmod, ItemGroup,
+    Link as _, Magazine, Overmap, OvermapTerrainInfo, PetArmor, Quality, Recipe,
     RequiredLinkedLater, Requirement, Submap, TerrainInfo, Tool, ToolClothing, Toolmod,
     UntypedInfoId, Using, UsingKind, VehiclePartInfo, VehiclePartMigration, Wheel,
 };
-use std::{sync::Arc, time::Instant};
-use units::{Mass, Volume};
+use std::time::Instant;
 
 #[derive(Resource)]
 pub(crate) struct Infos {
@@ -99,10 +97,8 @@ impl Infos {
 
         let qualities = InfoMap::new(&mut enriched_json_infos, TypeId::ToolQuality);
 
-        let item_migrations = InfoMap::new(&mut enriched_json_infos, TypeId::ItemMigration).map;
-        let mut common_item_infos = InfoMap {
-            map: HashMap::default(),
-        };
+        let item_migrations = InfoMap::new(&mut enriched_json_infos, TypeId::ItemMigration);
+        let mut common_item_infos = InfoMap::default();
         let mut item_loader = ItemInfoMapLoader {
             enriched_json_infos: &mut enriched_json_infos,
             item_migrations,
@@ -125,7 +121,7 @@ impl Infos {
         let wheels = item_loader.item_extract(TypeId::Wheel);
         // item_loader is dropped
 
-        debug!("Collected {} common items", common_item_infos.map.len());
+        //debug!("Collected {} common items", common_item_infos.len());
         common_item_infos.link_common_items(&qualities);
 
         let item_groups = InfoMap::new(&mut enriched_json_infos, TypeId::ItemGroup);
@@ -145,7 +141,7 @@ impl Infos {
         );
         let mut vehicle_parts = InfoMap::new(&mut enriched_json_infos, TypeId::VehiclePart);
         vehicle_parts.link_items(&common_item_infos);
-        vehicle_parts.add_vehicle_part_migrations(vehicle_part_migrations.map.values());
+        vehicle_parts.add_vehicle_part_migrations(vehicle_part_migrations.values());
 
         let mut this = Self {
             ammos,
@@ -176,15 +172,20 @@ impl Infos {
             zone_levels: InfoMap::new(&mut enriched_json_infos, TypeId::OvermapTerrain),
         };
 
-        let mut missing_types = enriched_json_infos.into_keys().map(|type_id| format!("{type_id:?}", )).collect::<Vec<_>>();
+        let mut missing_types = enriched_json_infos
+            .into_keys()
+            .map(|type_id| format!("{type_id:?}",))
+            .collect::<Vec<_>>();
         if !missing_types.is_empty() {
             missing_types.sort();
-            error!("{} unprocessed types: {}", missing_types.len(), missing_types.join(", "));
+            error!(
+                "{} unprocessed types: {}",
+                missing_types.len(),
+                missing_types.join(", ")
+            );
         }
 
-        this.characters
-            .map
-            .insert(InfoId::new("human"), Arc::new(default_human()));
+        this.characters.add_default_human();
 
         let duration = start.elapsed();
         info!("The creation of Infos took {duration:?}");
@@ -308,9 +309,7 @@ impl Infos {
         }
 
         for (_, monster) in &overmap.monster_map.0 {
-            monster
-                .info
-                .finalize(&self.characters.map, "overmap monster");
+            monster.info.finalize(&self.characters, "overmap monster");
         }
     }
 
@@ -323,17 +322,17 @@ impl Infos {
             terrain_repetition
                 .as_amount()
                 .obj
-                .finalize(&self.terrain.map, "submap terrain");
+                .finalize(&self.terrain, "submap terrain");
         }
         for furniture_at in &submap.furniture {
             furniture_at
                 .obj
-                .finalize(&self.furniture.map, "submap furniture");
+                .finalize(&self.furniture, "submap furniture");
         }
 
         for fields_at in &submap.fields.0 {
             for field in &fields_at.obj.0 {
-                field.field_info.finalize(&self.fields.map, "submap field");
+                field.field_info.finalize(&self.fields, "submap field");
             }
         }
 
@@ -345,7 +344,7 @@ impl Infos {
             for vehicle_part in &vehicle.parts {
                 vehicle_part
                     .info
-                    .finalize(&self.vehicle_parts_info.map, "submap vehicle");
+                    .finalize(&self.vehicle_parts_info, "submap vehicle");
             }
         }
 
@@ -358,9 +357,8 @@ impl Infos {
 
     fn link_item(&self, item: &CddaItem) {
         item.item_info
-            .finalize(&self.common_item_infos.map, "submap item");
-        item.corpse
-            .finalize(&self.characters.map, "submap item corpse");
+            .finalize(&self.common_item_infos, "submap item");
+        item.corpse.finalize(&self.characters, "submap item corpse");
 
         if let Some(contents) = &item.contents {
             for pocket in &contents.contents {
@@ -376,29 +374,12 @@ impl Infos {
         character: &RequiredLinkedLater<CharacterInfo>,
         err_description: &str,
     ) {
-        character.finalize(&self.characters.map, err_description);
+        character.finalize(&self.characters, err_description);
     }
 }
 
 impl AsyncNew<Self> for Infos {
     async fn async_new() -> Self {
         Self::load()
-    }
-}
-
-fn default_human() -> CharacterInfo {
-    CharacterInfo {
-        id: InfoId::new("human"),
-        name: ItemName::from(CddaItemName::Simple(Arc::from("Human"))),
-        default_faction: Arc::from("human"),
-        looks_like: Some(UntypedInfoId::new("overlay_male_mutation_SKIN_TAN")),
-        volume: Some(Volume::from("80 l")),
-        mass: Some(Mass::from("80 kg")),
-        hp: Some(100),
-        speed: 100,
-        melee_dice: 2,
-        melee_dice_sides: 4,
-        flags: Flags::default(),
-        extra: HashMap::default(),
     }
 }

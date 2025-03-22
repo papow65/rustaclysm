@@ -2,18 +2,21 @@ use crate::gameplay::{TypeId, cdda::Error};
 use bevy::prelude::{debug, error, warn};
 use bevy::utils::HashMap;
 use cdda_json_files::{
-    Bash, BashItem, BashItems, CommonItemInfo, FurnitureInfo, InfoId, InfoIdDescription, ItemGroup,
-    ItemMigration, ItemWithCommonInfo, Quality, Recipe, Requirement, TerrainInfo, UntypedInfoId,
+    Bash, BashItem, BashItems, CddaItemName, CharacterInfo, CommonItemInfo, Flags, FurnitureInfo,
+    InfoId, InfoIdDescription, ItemGroup, ItemMigration, ItemName, ItemWithCommonInfo, Link as _,
+    LinkProvider, Quality, Recipe, RecipeResult, Requirement, TerrainInfo, UntypedInfoId,
     VehiclePartInfo, VehiclePartMigration,
 };
 use serde::de::DeserializeOwned;
-use std::{any::type_name, sync::Arc};
+use std::{any::type_name, fmt, sync::Arc};
+use units::{Mass, Volume};
 
 pub(crate) struct InfoMap<T> {
-    pub(crate) map: HashMap<InfoId<T>, Arc<T>>,
+    map: HashMap<InfoId<T>, Arc<T>>,
+    aliases: HashMap<InfoId<T>, Arc<T>>,
 }
 
-impl<T: DeserializeOwned + 'static> InfoMap<T> {
+impl<T: fmt::Debug + DeserializeOwned + 'static> InfoMap<T> {
     pub(super) fn new(
         all: &mut HashMap<
             TypeId,
@@ -49,13 +52,19 @@ impl<T: DeserializeOwned + 'static> InfoMap<T> {
             }
         }
 
-        Self { map }
+        Self {
+            map,
+            aliases: HashMap::default(),
+        }
     }
 
     pub(crate) fn get(&self, id: &InfoId<T>) -> Result<&Arc<T>, Error> {
-        self.map.get(id).ok_or_else(|| Error::UnknownObject {
-            _id: InfoIdDescription::from(id.clone()),
-        })
+        self.map
+            .get(id)
+            .or_else(|| self.aliases.get(id))
+            .ok_or_else(|| Error::UnknownObject {
+                _id: InfoIdDescription::from(id.clone()),
+            })
     }
 
     pub(crate) fn values(&self) -> impl Iterator<Item = &Arc<T>> {
@@ -63,11 +72,32 @@ impl<T: DeserializeOwned + 'static> InfoMap<T> {
     }
 }
 
+impl InfoMap<CharacterInfo> {
+    pub(super) fn add_default_human(&mut self) {
+        let default_human = CharacterInfo {
+            id: InfoId::new("human"),
+            name: ItemName::from(CddaItemName::Simple(Arc::from("Human"))),
+            default_faction: Arc::from("human"),
+            looks_like: Some(UntypedInfoId::new("overlay_male_mutation_SKIN_TAN")),
+            volume: Some(Volume::from("80 l")),
+            mass: Some(Mass::from("80 kg")),
+            hp: Some(100),
+            speed: 100,
+            melee_dice: 2,
+            melee_dice_sides: 4,
+            flags: Flags::default(),
+            extra: HashMap::default(),
+        };
+        self.map
+            .insert(InfoId::new("human"), Arc::new(default_human));
+    }
+}
+
 impl InfoMap<CommonItemInfo> {
     pub(super) fn link_common_items(&self, qualities: &InfoMap<Quality>) {
         for common_item_info in self.map.values() {
             for quality in &common_item_info.qualities {
-                quality.id.finalize(&qualities.map, "quality");
+                quality.id.finalize(qualities, "quality");
             }
         }
     }
@@ -82,16 +112,11 @@ impl InfoMap<FurnitureInfo> {
         for furniture in self.map.values() {
             furniture
                 .crafting_pseudo_item
-                .finalize(&common_item_infos.map, "pseudo item");
+                .finalize(common_item_infos, "pseudo item");
             if let Some(bash) = &furniture.bash {
-                // Not expected to occur
-                let terrain = InfoMap {
-                    map: HashMap::default(),
-                };
-
                 link_bash(
                     bash,
-                    &terrain,
+                    &InfoMap::default(), // No terrain expected
                     self,
                     common_item_infos,
                     item_groups,
@@ -112,10 +137,12 @@ impl InfoMap<Recipe> {
             for required_quality in &recipe.qualities.0 {
                 required_quality
                     .quality
-                    .finalize(&qualities.map, "required quality for recipe");
+                    .finalize(qualities, "required quality for recipe");
             }
 
-            recipe.result.finalize(&common_item_infos.map, "recipe");
+            if let RecipeResult::Item(item_info_link) = &recipe.result {
+                item_info_link.finalize(common_item_infos, "recipe");
+            }
         }
     }
 }
@@ -126,7 +153,7 @@ impl InfoMap<Requirement> {
             for required_quality in &requirement.qualities.0 {
                 required_quality
                     .quality
-                    .finalize(&qualities.map, "required quality for requirement");
+                    .finalize(qualities, "required quality for requirement");
             }
         }
     }
@@ -144,8 +171,8 @@ impl InfoMap<TerrainInfo> {
         }
 
         for terrain in self.map.values() {
-            terrain.open.finalize(&self.map, "open terrain");
-            terrain.close.finalize(&self.map, "closed terrain");
+            terrain.open.finalize(self, "open terrain");
+            terrain.close.finalize(self, "closed terrain");
             if let Some(bash) = &terrain.bash {
                 link_bash(
                     bash,
@@ -168,34 +195,28 @@ pub(super) fn link_bash(
     item_groups: &InfoMap<ItemGroup>,
     name: &str,
 ) {
-    bash.terrain.finalize(
-        &terrain_info.map,
-        format!("terrain for bashed {name}").as_str(),
-    );
-    bash.furniture.finalize(
-        &furniture_info.map,
-        format!("furniture for bashed {name}").as_str(),
-    );
+    bash.terrain
+        .finalize(terrain_info, format!("terrain for bashed {name}"));
+    bash.furniture
+        .finalize(furniture_info, format!("furniture for bashed {name}"));
     if let Some(bash_items) = &bash.items {
         match bash_items {
             BashItems::Explicit(explicit_bash_items) => {
                 for bash_item in explicit_bash_items {
                     match bash_item {
-                        BashItem::Single(item_occurrence) => item_occurrence.item.finalize(
-                            &common_item_infos.map,
-                            format!("items for bashed {name}").as_str(),
-                        ),
+                        BashItem::Single(item_occurrence) => item_occurrence
+                            .item
+                            .finalize(common_item_infos, format!("items for bashed {name}")),
                         BashItem::Group { group } => group.finalize(
-                            &item_groups.map,
-                            format!("explicit item group for bashed {name}").as_str(),
+                            item_groups,
+                            format!("explicit item group for bashed {name}"),
                         ),
                     }
                 }
             }
-            BashItems::Collection(item_group) => item_group.finalize(
-                &item_groups.map,
-                format!("item collection for bashed {name}").as_str(),
-            ),
+            BashItems::Collection(item_group) => {
+                item_group.finalize(item_groups, format!("item collection for bashed {name}"));
+            }
         }
     }
 }
@@ -217,38 +238,76 @@ impl InfoMap<VehiclePartInfo> {
         for part_info in self.map.values() {
             part_info
                 .item
-                .finalize(&common_item_infos.map, "vehicle part item");
+                .finalize(common_item_infos, "vehicle part item");
         }
+    }
+}
+
+impl<T: DeserializeOwned + 'static> Default for InfoMap<T> {
+    fn default() -> Self {
+        Self {
+            map: HashMap::default(),
+            aliases: HashMap::default(),
+        }
+    }
+}
+
+impl<T: fmt::Debug + DeserializeOwned + 'static> LinkProvider<T> for InfoMap<T> {
+    fn get_option(&self, info_id: &InfoId<T>) -> Option<&Arc<T>> {
+        self.get(info_id).ok()
     }
 }
 
 pub(super) struct ItemInfoMapLoader<'a> {
     pub(super) enriched_json_infos:
         &'a mut HashMap<TypeId, HashMap<UntypedInfoId, serde_json::Map<String, serde_json::Value>>>,
-    pub(super) item_migrations: HashMap<InfoId<ItemMigration>, Arc<ItemMigration>>,
+    pub(super) item_migrations: InfoMap<ItemMigration>,
     pub(super) common_item_infos: &'a mut InfoMap<CommonItemInfo>,
 }
 
 impl ItemInfoMapLoader<'_> {
     pub(super) fn item_extract<T>(&mut self, type_id: TypeId) -> InfoMap<T>
     where
-        T: DeserializeOwned + ItemWithCommonInfo + 'static,
+        T: fmt::Debug + DeserializeOwned + ItemWithCommonInfo + 'static,
     {
         let mut items = InfoMap::<T>::new(self.enriched_json_infos, type_id);
 
         // TODO Make this recursive
-        for (migration_from, migration) in &self.item_migrations {
-            if let Ok(new) = items.get(&migration_from.untyped().clone().into()).cloned() {
+        for migration in self.item_migrations.values() {
+            if let Ok(new) = items
+                .get(&migration.replace.untyped().clone().into())
+                .cloned()
+            {
                 items
-                    .map
-                    .insert(migration.replace.untyped().clone().into(), new);
+                    .aliases
+                    .insert(migration.id.untyped().clone().into(), new);
             }
         }
 
         for (id, item_info) in &mut items.map {
-            self.common_item_infos
+            let previous = self
+                .common_item_infos
                 .map
                 .insert(id.untyped().clone().into(), item_info.common());
+            if let Some(previous) = previous {
+                warn!(
+                    "Item {id:?} replaced the existing common item {:?}",
+                    previous.id
+                );
+            }
+        }
+
+        for (alias, item_info) in &mut items.aliases {
+            let previous = self
+                .common_item_infos
+                .aliases
+                .insert(alias.untyped().clone().into(), item_info.common());
+            if let Some(previous) = previous {
+                warn!(
+                    "Item alias {alias:?} replaced the existing common item {:?}",
+                    previous.id
+                );
+            }
         }
 
         //trace!(

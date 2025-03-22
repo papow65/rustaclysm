@@ -30,8 +30,8 @@ pub use self::migration::{ItemMigration, VehiclePartMigration};
 pub use self::overmap_info::OvermapTerrainInfo;
 pub use self::quality::{ItemQuality, Quality};
 pub use self::recipe::{
-    Alternative, AutoLearn, BookLearn, BookLearnItem, Recipe, RequiredQualities, RequiredQuality,
-    Using, UsingKind,
+    Alternative, AutoLearn, BookLearn, BookLearnItem, Recipe, RecipeResult, RequiredQualities,
+    RequiredQuality, Using, UsingKind,
 };
 pub use self::requirement::Requirement;
 pub use self::terrain_info::{MoveCost, TerrainInfo};
