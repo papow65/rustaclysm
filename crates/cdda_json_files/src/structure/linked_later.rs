@@ -71,6 +71,14 @@ pub struct RequiredLinkedLater<T: fmt::Debug> {
 }
 
 impl<T: fmt::Debug + 'static> RequiredLinkedLater<T> {
+    #[must_use]
+    pub fn new(info_id: InfoId<T>) -> Self {
+        Self {
+            required: LinkedLater::new(info_id),
+        }
+    }
+
+    #[must_use]
     pub fn new_final(info_id: InfoId<T>, value: &Arc<T>) -> Self {
         Self {
             required: LinkedLater::new_final(info_id, value),

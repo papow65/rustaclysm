@@ -143,6 +143,7 @@ impl Infos {
             TypeId::VehiclePartMigration,
         );
         let mut vehicle_parts = InfoMap::new(&mut enriched_json_infos, TypeId::VehiclePart);
+        vehicle_parts.add_wiring();
         vehicle_parts.link_items(&common_item_infos);
         vehicle_parts.add_vehicle_part_migrations(vehicle_part_migrations.values());
 

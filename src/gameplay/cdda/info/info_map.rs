@@ -4,8 +4,9 @@ use bevy::utils::HashMap;
 use cdda_json_files::{
     Alternative, Bash, BashItem, BashItems, CddaItemName, CharacterInfo, CommonItemInfo, Flags,
     FurnitureInfo, InfoId, InfoIdDescription, ItemGroup, ItemMigration, ItemName,
-    ItemWithCommonInfo, Link as _, LinkProvider, Quality, Recipe, RecipeResult, Requirement,
-    TerrainInfo, UntypedInfoId, VehiclePartInfo, VehiclePartMigration,
+    ItemWithCommonInfo, Link as _, LinkProvider, Quality, Recipe, RecipeResult,
+    RequiredLinkedLater, Requirement, TerrainInfo, UntypedInfoId, VehiclePartInfo,
+    VehiclePartMigration,
 };
 use serde::de::DeserializeOwned;
 use std::{any::type_name, fmt, sync::Arc};
@@ -255,6 +256,19 @@ pub(super) fn link_bash(
 }
 
 impl InfoMap<VehiclePartInfo> {
+    pub(crate) fn add_wiring(&mut self) {
+        let id = InfoId::new("wiring");
+        self.map.entry(id.clone()).or_insert_with(|| {
+            Arc::new(VehiclePartInfo {
+                id,
+                name: Some(CddaItemName::Simple(Arc::from("Wiring")).into()),
+                item: RequiredLinkedLater::new(InfoId::new("wire")),
+                looks_like: None,
+                flags: None.into(),
+            })
+        });
+    }
+
     pub(super) fn add_vehicle_part_migrations<'a>(
         &mut self,
         vehicle_part_migrations: impl Iterator<Item = &'a Arc<VehiclePartMigration>>,
