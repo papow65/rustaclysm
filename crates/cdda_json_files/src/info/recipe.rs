@@ -230,11 +230,17 @@ impl From<CddaUsing> for Using {
                 factor,
                 kind: UsingKind::Components,
             },
-            CddaUsing::List(requirement, factor, _) => Self {
-                requirement,
-                factor,
-                kind: UsingKind::Alternatives,
-            },
+            CddaUsing::List(requirement, factor, kind) => {
+                if &*kind != "LIST" {
+                    error!("Unexpected value for using kind: {kind:?}");
+                }
+
+                Self {
+                    requirement,
+                    factor,
+                    kind: UsingKind::Alternatives,
+                }
+            }
         }
     }
 }
