@@ -15,70 +15,70 @@ use std::time::Instant;
 #[derive(Resource)]
 pub(crate) struct Infos {
     #[expect(unused)]
-    pub(crate) ammos: InfoMap<Ammo>,
+    ammos: InfoMap<Ammo>,
 
     #[expect(unused)]
-    pub(crate) bionic_items: InfoMap<BionicItem>,
+    bionic_items: InfoMap<BionicItem>,
 
     #[expect(unused)]
-    pub(crate) books: InfoMap<Book>,
+    books: InfoMap<Book>,
 
     pub(crate) characters: InfoMap<CharacterInfo>,
 
     #[expect(unused)]
-    pub(crate) clothings: InfoMap<Clothing>,
+    clothings: InfoMap<Clothing>,
 
     #[expect(unused)]
-    pub(crate) comestibles: InfoMap<Comestible>,
+    comestibles: InfoMap<Comestible>,
 
-    pub(crate) common_item_infos: InfoMap<CommonItemInfo>,
-
-    #[expect(unused)]
-    pub(crate) engines: InfoMap<Engine>,
-
-    pub(crate) fields: InfoMap<FieldInfo>,
-    pub(crate) furniture: InfoMap<FurnitureInfo>,
+    common_item_infos: InfoMap<CommonItemInfo>,
 
     #[expect(unused)]
-    pub(crate) genenric_items: InfoMap<GenericItem>,
+    engines: InfoMap<Engine>,
+
+    fields: InfoMap<FieldInfo>,
+    furniture: InfoMap<FurnitureInfo>,
 
     #[expect(unused)]
-    pub(crate) guns: InfoMap<Gun>,
+    genenric_items: InfoMap<GenericItem>,
 
     #[expect(unused)]
-    pub(crate) gunmods: InfoMap<Gunmod>,
+    guns: InfoMap<Gun>,
 
     #[expect(unused)]
-    pub(crate) item_groups: InfoMap<ItemGroup>,
+    gunmods: InfoMap<Gunmod>,
+
+    #[expect(unused)]
+    item_groups: InfoMap<ItemGroup>,
 
     pub(crate) magazines: InfoMap<Magazine>,
 
     #[expect(unused)]
-    pub(crate) pet_armors: InfoMap<PetArmor>,
+    pet_armors: InfoMap<PetArmor>,
 
     #[expect(unused)]
-    pub(crate) qualities: InfoMap<Quality>,
+    qualities: InfoMap<Quality>,
 
     pub(crate) recipes: InfoMap<Recipe>,
 
     #[expect(unused)]
-    pub(crate) requirements: InfoMap<Requirement>,
+    requirements: InfoMap<Requirement>,
 
-    pub(crate) terrain: InfoMap<TerrainInfo>,
-
-    #[expect(unused)]
-    pub(crate) tools: InfoMap<Tool>,
+    terrain: InfoMap<TerrainInfo>,
 
     #[expect(unused)]
-    pub(crate) tool_clothings: InfoMap<ToolClothing>,
+    tools: InfoMap<Tool>,
 
     #[expect(unused)]
-    pub(crate) toolmods: InfoMap<Toolmod>,
-
-    pub(crate) vehicle_parts_info: InfoMap<VehiclePartInfo>,
+    tool_clothings: InfoMap<ToolClothing>,
 
     #[expect(unused)]
-    pub(crate) wheels: InfoMap<Wheel>,
+    toolmods: InfoMap<Toolmod>,
+
+    vehicle_parts_info: InfoMap<VehiclePartInfo>,
+
+    #[expect(unused)]
+    wheels: InfoMap<Wheel>,
 
     pub(crate) zone_levels: InfoMap<OvermapTerrainInfo>,
 }
