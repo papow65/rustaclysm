@@ -136,11 +136,11 @@ impl TileInfo {
             if let Some(tile_variant) = tile_variant {
                 if let Some(variant) = self.variants.get(tile_variant) {
                     return (true, &variant.foreground, &variant.background);
-                } else {
-                    warn!(
-                        "Variant {tile_variant:?} could not be found for tile {:?}",
-                        &self.ids
-                    );
+                    //} else {
+                    //    trace!(
+                    //        "Variant {tile_variant:?} could not be found for tile {:?}",
+                    //        &self.ids
+                    //    );
                 }
             } else {
                 warn!("No variant specified for multitile {:?}", &self.ids);
