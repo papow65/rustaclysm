@@ -5,10 +5,10 @@ use crate::util::AsyncNew;
 use bevy::prelude::{Resource, debug, error, info};
 use cdda_json_files::{
     Ammo, BionicItem, Book, CddaItem, CharacterInfo, Clothing, Comestible, CommonItemInfo, Engine,
-    FieldInfo, FurnitureInfo, GenericItem, Gun, Gunmod, ItemGroup, Link as _, Magazine, Overmap,
-    OvermapTerrainInfo, PetArmor, Quality, Recipe, RequiredLinkedLater, Requirement, Submap,
-    TerrainInfo, Tool, ToolClothing, Toolmod, UntypedInfoId, VehiclePartInfo, VehiclePartMigration,
-    Wheel,
+    FieldInfo, FurnitureInfo, GenericItem, Gun, Gunmod, ItemAction, ItemGroup, Link as _, Magazine,
+    Overmap, OvermapTerrainInfo, PetArmor, Quality, Recipe, RequiredLinkedLater, Requirement,
+    Submap, TerrainInfo, Tool, ToolClothing, Toolmod, UntypedInfoId, VehiclePartInfo,
+    VehiclePartMigration, Wheel,
 };
 use std::time::Instant;
 
@@ -48,6 +48,8 @@ pub(crate) struct Infos {
     #[expect(unused)]
     gunmods: InfoMap<Gunmod>,
 
+    pub(crate) item_actions: InfoMap<ItemAction>,
+
     #[expect(unused)]
     item_groups: InfoMap<ItemGroup>,
 
@@ -56,7 +58,6 @@ pub(crate) struct Infos {
     #[expect(unused)]
     pet_armors: InfoMap<PetArmor>,
 
-    #[expect(unused)]
     qualities: InfoMap<Quality>,
 
     pub(crate) recipes: InfoMap<Recipe>,
@@ -161,6 +162,7 @@ impl Infos {
             genenric_items,
             guns,
             gunmods,
+            item_actions: InfoMap::new(&mut enriched_json_infos, TypeId::ItemAction),
             item_groups,
             magazines,
             pet_armors,
@@ -175,6 +177,8 @@ impl Infos {
             wheels,
             zone_levels: InfoMap::new(&mut enriched_json_infos, TypeId::OvermapTerrain),
         };
+
+        this.qualities.link_qualities(&this.item_actions);
 
         let mut missing_types = enriched_json_infos
             .into_keys()

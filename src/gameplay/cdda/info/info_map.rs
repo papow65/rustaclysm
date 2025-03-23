@@ -3,7 +3,7 @@ use bevy::prelude::{debug, error, warn};
 use bevy::utils::HashMap;
 use cdda_json_files::{
     Alternative, Bash, BashItem, BashItems, CddaItemName, CharacterInfo, CommonItemInfo, Flags,
-    FurnitureInfo, InfoId, InfoIdDescription, ItemGroup, ItemMigration, ItemName,
+    FurnitureInfo, InfoId, InfoIdDescription, ItemAction, ItemGroup, ItemMigration, ItemName,
     ItemWithCommonInfo, Link as _, LinkProvider, Quality, Recipe, RecipeResult,
     RequiredLinkedLater, Requirement, TerrainInfo, UntypedInfoId, VehiclePartInfo,
     VehiclePartMigration,
@@ -123,6 +123,18 @@ impl InfoMap<FurnitureInfo> {
                     item_groups,
                     "furniture",
                 );
+            }
+        }
+    }
+}
+
+impl InfoMap<Quality> {
+    pub(crate) fn link_qualities(&self, item_actions: &InfoMap<ItemAction>) {
+        for quality in self.map.values() {
+            for (_, item_action_links) in &quality.usages {
+                for item_action_link in item_action_links {
+                    item_action_link.finalize(item_actions, "quality");
+                }
             }
         }
     }

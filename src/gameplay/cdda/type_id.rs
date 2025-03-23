@@ -55,6 +55,8 @@ pub(crate) enum TypeId {
     Wheel,
 
     // Abstract types
+    #[serde(rename = "item_action")]
+    ItemAction,
     #[serde(rename = "item_group")]
     ItemGroup,
     #[serde(rename = "recipe")]
@@ -151,8 +153,6 @@ pub(crate) enum TypeId {
     HarvestDropType,
     #[serde(rename = "hit_range")]
     HitRange,
-    #[serde(rename = "item_action")]
-    ItemAction,
     #[serde(rename = "ITEM_CATEGORY")]
     ItemCategory,
     #[serde(rename = "json_flag")]

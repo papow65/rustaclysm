@@ -1,4 +1,4 @@
-use crate::{HashMap, InfoId, ItemName, RequiredLinkedLater};
+use crate::{HashMap, InfoId, ItemAction, ItemName, RequiredLinkedLater};
 use serde::Deserialize;
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
@@ -11,7 +11,7 @@ pub struct Quality {
     pub name: ItemName,
 
     #[serde(default)]
-    pub usages: Vec<(u8, Vec<Arc<str>>)>,
+    pub usages: Vec<(u8, Vec<RequiredLinkedLater<ItemAction>>)>,
 
     #[serde(flatten)]
     pub extra: HashMap<Arc<str>, serde_json::Value>,

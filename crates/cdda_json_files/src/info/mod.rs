@@ -3,6 +3,7 @@ mod field_info;
 mod flags;
 mod furniture_info;
 mod info_id;
+mod item_action;
 mod item_group;
 mod item_info;
 mod migration;
@@ -20,6 +21,7 @@ pub use self::furniture_info::{
     Bash, BashItem, BashItems, CountRange, FurnitureInfo, MoveCostIncrease, MoveCostMod,
 };
 pub use self::info_id::{InfoId, InfoIdDescription, UntypedInfoId};
+pub use self::item_action::ItemAction;
 pub use self::item_group::{ItemGroup, SpawnItem};
 pub use self::item_info::{
     Ammo, BionicItem, Book, CddaItemName, Clothing, Comestible, CommonItemInfo, Description,
