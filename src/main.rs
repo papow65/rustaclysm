@@ -5,7 +5,6 @@ mod background;
 mod gameplay;
 mod loading;
 mod main_menu;
-mod manual;
 mod pre_gameplay;
 
 use crate::application::run_application;

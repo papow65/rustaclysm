@@ -2776,6 +2776,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "manual"
+version = "0.0.0"
+dependencies = [
+ "bevy",
+ "hud",
+ "keyboard",
+ "util",
+]
+
+[[package]]
 name = "matchers"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3830,6 +3840,7 @@ dependencies = [
  "glob",
  "hud",
  "keyboard",
+ "manual",
  "pathfinding",
  "regex",
  "serde",

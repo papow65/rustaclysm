@@ -1,4 +1,3 @@
-use crate::manual::ManualSection;
 use crate::{application::ApplicationState, gameplay::GameplayScreenState};
 use bevy::ecs::system::SystemId;
 use bevy::prelude::{
@@ -7,6 +6,7 @@ use bevy::prelude::{
 };
 use hud::{BAD_TEXT_COLOR, ButtonBuilder, Fonts, PANEL_COLOR, SMALL_SPACING, WARN_TEXT_COLOR};
 use keyboard::KeyBindings;
+use manual::ManualSection;
 use std::time::Instant;
 use util::log_if_slow;
 

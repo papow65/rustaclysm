@@ -3,11 +3,11 @@ use crate::gameplay::{
     GameplayScreenState, InstructionQueue, MessageWriter, PlayerActionState, PlayerDirection,
     QueuedInstruction, VisualizationUpdate, ZoomDirection, ZoomDistance,
 };
-use crate::manual::ManualSection;
 use bevy::input::mouse::{MouseMotion, MouseWheel};
 use bevy::{prelude::*, render::view::RenderLayers};
 use hud::ScrollList;
 use keyboard::{Held, KeyBindings};
+use manual::ManualSection;
 use std::time::Instant;
 use strum::VariantArray as _;
 use util::log_if_slow;

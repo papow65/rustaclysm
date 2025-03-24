@@ -1,4 +1,4 @@
-use crate::manual::{ManualSection, components::ManualDisplay};
+use crate::{ManualSection, components::ManualDisplay};
 use bevy::prelude::{KeyCode, Query, Visibility, With, World};
 use keyboard::KeyBindings;
 use std::time::Instant;

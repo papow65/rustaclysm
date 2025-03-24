@@ -5,5 +5,5 @@ mod input;
 mod plugin;
 mod systems;
 
-pub(crate) use self::components::ManualSection;
-pub(crate) use self::plugin::ManualPlugin;
+pub use self::components::{LargeNode, ManualSection};
+pub use self::plugin::ManualPlugin;

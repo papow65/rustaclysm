@@ -1,7 +1,7 @@
+use crate::application::ApplicationState;
 use crate::gameplay::{ActiveSav, GameplayLocal};
 use crate::main_menu::components::{LoadButtonArea, MessageField, MessageWrapper};
 use crate::main_menu::load_error::LoadError;
-use crate::{application::ApplicationState, manual::ManualSection};
 use base64::{Engine as _, engine::general_purpose::STANDARD as base64};
 use bevy::prelude::{
     AlignContent, AlignItems, BuildChildren as _, Camera2d, ChildBuild as _, ChildBuilder,
@@ -15,6 +15,7 @@ use hud::{
     BAD_TEXT_COLOR, ButtonBuilder, Fonts, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, LARGE_SPACING,
     MEDIUM_SPACING, PANEL_COLOR, trigger_button_action,
 };
+use manual::ManualSection;
 use std::path::{Path, PathBuf};
 use std::{str::from_utf8, time::Instant};
 use util::{AssetPaths, log_if_slow};

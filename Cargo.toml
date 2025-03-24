@@ -11,6 +11,7 @@ edition = "2024"
 rust-version = "1.85" # should be latest stable
 
 [workspace]
+# List internal dependencies: cargo tree | rg rustaclysm
 members = [ "crates/*" ]
 
 [dependencies]
@@ -25,6 +26,7 @@ git-version = "0.3"
 glob = "0.3"
 hud = { path = "crates/hud" }
 keyboard = { path = "crates/keyboard" }
+manual = { path = "crates/manual" }
 pathfinding = { workspace = true }
 regex = { workspace = true }
 serde = { workspace = true }

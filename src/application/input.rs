@@ -1,7 +1,7 @@
-use crate::manual::ManualSection;
 use bevy::app::AppExit;
 use bevy::prelude::{Events, In, IntoSystem as _, ResMut, UiScale, World, debug};
 use keyboard::{Ctrl, KeyBindings};
+use manual::ManualSection;
 
 enum ZoomUiDirection {
     In,

@@ -1,7 +1,8 @@
+use crate::application::ApplicationState;
 use crate::gameplay::{Infos, Player, Pos, spawn::TileSpawner};
-use crate::{application::ApplicationState, manual::ManualSection};
 use bevy::prelude::{KeyCode, Local, NextState, Query, Res, ResMut, StateScoped, With, World};
 use keyboard::KeyBindings;
+use manual::ManualSection;
 use std::time::Instant;
 use util::log_if_slow;
 

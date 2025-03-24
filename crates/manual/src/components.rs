@@ -1,14 +1,19 @@
 use bevy::prelude::Component;
 use std::sync::Arc;
 
+/// When any entity exists with this component, the manual layout should adapt to it
+#[derive(Debug, Component)]
+pub struct LargeNode;
+
 #[derive(Clone, Debug, Component)]
-pub(crate) struct ManualSection {
+pub struct ManualSection {
     text: Arc<str>,
     sort_key: u8,
 }
 
 impl ManualSection {
-    pub(crate) fn new(text: &[(&'static str, &'static str)], sort_key: u8) -> Self {
+    #[must_use]
+    pub fn new(text: &[(&'static str, &'static str)], sort_key: u8) -> Self {
         Self {
             text: text
                 .iter()

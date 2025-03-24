@@ -6,7 +6,6 @@ use crate::gameplay::{
     LastSeen, Location, MessageWriter, Player, Pos, QueuedInstruction, Shared, cdda::Error,
     screens::crafting::resource::CraftingScreen,
 };
-use crate::manual::ManualSection;
 use bevy::prelude::{
     AlignItems, BuildChildren as _, ChildBuild as _, Children, Commands, ComputedNode,
     DespawnRecursiveExt as _, Display, Entity, FlexDirection, In, IntoSystem as _, JustifyContent,
@@ -24,11 +23,11 @@ use hud::{
     SelectionList, SelectionListStep, WARN_TEXT_COLOR,
 };
 use keyboard::{Held, KeyBindings};
+use manual::{LargeNode, ManualSection};
 use std::{ops::RangeInclusive, sync::Arc, time::Instant};
 use strum::VariantArray as _;
 use units::Timestamp;
-use util::here;
-use util::{log_if_slow, uppercase_first};
+use util::{here, log_if_slow, uppercase_first};
 
 const MAX_FIND_DISTANCE: i32 = 7;
 const FIND_RANGE: RangeInclusive<i32> = (-MAX_FIND_DISTANCE)..=MAX_FIND_DISTANCE;
@@ -104,6 +103,7 @@ pub(super) fn spawn_crafting_screen(mut commands: Commands) {
                         ..Node::default()
                     },
                     PANEL_COLOR,
+                    LargeNode,
                 ))
                 .with_children(|builder| {
                     builder

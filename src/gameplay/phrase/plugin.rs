@@ -1,10 +1,11 @@
+use crate::application::ApplicationState;
 use crate::gameplay::{DebugText, DebugTextShown};
-use crate::{application::ApplicationState, manual::ManualSection};
 use bevy::prelude::{
     App, Local, OnEnter, Plugin, Query, Res, ResMut, StateScoped, TextFont, With, World,
 };
 use hud::Fonts;
 use keyboard::KeyBindings;
+use manual::ManualSection;
 use std::time::Instant;
 use util::log_if_slow;
 

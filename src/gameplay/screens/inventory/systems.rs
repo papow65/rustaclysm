@@ -7,7 +7,6 @@ use crate::gameplay::{
     HorizontalDirection, InstructionQueue, ItemHierarchy, ItemItem, MoveItem, Nbor, Phrase, Pickup,
     Player, Pos, QueuedInstruction, Unwield, Wield,
 };
-use crate::manual::ManualSection;
 use bevy::ecs::{entity::EntityHashMap, system::SystemId};
 use bevy::prelude::{
     AlignItems, BackgroundColor, BuildChildren as _, Button, ChildBuild as _, Children, Commands,
@@ -21,6 +20,7 @@ use hud::{
     SelectionListStep,
 };
 use keyboard::{Held, KeyBindings};
+use manual::{LargeNode, ManualSection};
 use std::time::Instant;
 use strum::VariantArray as _;
 use units::Timestamp;
@@ -77,6 +77,7 @@ pub(super) fn spawn_inventory(mut commands: Commands) {
                         ..Node::default()
                     },
                     PANEL_COLOR,
+                    LargeNode,
                 ))
                 .add_child(panel);
         });

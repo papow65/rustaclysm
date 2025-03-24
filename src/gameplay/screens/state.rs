@@ -15,9 +15,3 @@ pub(crate) enum GameplayScreenState {
     //Saving, // TODO
     Death,
 }
-
-impl GameplayScreenState {
-    pub(crate) const fn large_node_bundle(&self) -> bool {
-        matches!(self, Self::Inventory | Self::Crafting)
-    }
-}

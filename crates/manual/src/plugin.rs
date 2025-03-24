@@ -1,8 +1,8 @@
-use crate::manual::input::create_manual_key_bindings;
-use crate::manual::systems::{spawn_manual, update_manual};
+use crate::input::create_manual_key_bindings;
+use crate::systems::{spawn_manual, update_manual};
 use bevy::prelude::{App, IntoSystemConfigs as _, Plugin, PostStartup, Update};
 
-pub(crate) struct ManualPlugin;
+pub struct ManualPlugin;
 
 impl Plugin for ManualPlugin {
     fn build(&self, app: &mut App) {

@@ -1,6 +1,5 @@
 use crate::application::ApplicationState;
 use crate::gameplay::GameplayScreenState;
-use crate::manual::ManualSection;
 use bevy::prelude::{
     AlignItems, BuildChildren as _, Commands, Events, FlexDirection, In, JustifyContent, KeyCode,
     Local, NextState, Node, Res, ResMut, StateScoped, Val, World,
@@ -8,6 +7,7 @@ use bevy::prelude::{
 use bevy::{app::AppExit, ecs::system::SystemId};
 use hud::{BAD_TEXT_COLOR, ButtonBuilder, Fonts, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, MEDIUM_SPACING};
 use keyboard::KeyBindings;
+use manual::ManualSection;
 use std::time::Instant;
 use util::log_if_slow;
 

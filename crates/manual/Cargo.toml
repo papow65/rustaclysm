@@ -1,0 +1,14 @@
+[package]
+name = "manual"
+description = "A library of to display a manual"
+license = "AGPL-3.0-or-later"
+edition = "2024"
+
+[dependencies]
+bevy = { workspace = true }
+hud = { path = "../hud" }
+keyboard = { path = "../keyboard" }
+util = { path = "../util" }
+
+[lints]
+workspace = true
