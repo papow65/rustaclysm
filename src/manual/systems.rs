@@ -1,11 +1,11 @@
 use crate::gameplay::GameplayScreenState;
-use crate::hud::{Fonts, PANEL_COLOR, SOFT_TEXT_COLOR, panel_node};
 use crate::manual::ManualSection;
 use crate::manual::components::{ManualDisplay, ManualText};
 use bevy::prelude::{
     Alpha as _, BackgroundColor, BuildChildren as _, Changed, ChildBuild as _, Children, Commands,
     GlobalZIndex, Node, Query, RemovedComponents, Res, State, Text, Val, With,
 };
+use hud::{Fonts, PANEL_COLOR, SOFT_TEXT_COLOR, panel_node};
 
 #[expect(clippy::needless_pass_by_value)]
 pub(super) fn spawn_manual(mut commands: Commands, fonts: Res<Fonts>) {

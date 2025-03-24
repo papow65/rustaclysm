@@ -1,5 +1,4 @@
 use crate::gameplay::{spawn::TileSpawner, *};
-use crate::util::log_if_slow;
 use bevy::ecs::{schedule::SystemConfigs, system::SystemId};
 use bevy::prelude::{
     Commands, Entity, EventWriter, In, IntoSystem as _, IntoSystemConfigs as _, Local, NextState,
@@ -7,6 +6,7 @@ use bevy::prelude::{
 };
 use std::{cell::OnceCell, time::Instant};
 use units::Duration;
+use util::log_if_slow;
 
 pub(in super::super) fn perform_egible_character_action() -> SystemConfigs {
     egible_character

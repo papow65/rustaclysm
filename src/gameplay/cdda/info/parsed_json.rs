@@ -1,5 +1,4 @@
 use crate::gameplay::{TypeId, cdda::Error};
-use crate::util::AssetPaths;
 use bevy::prelude::{debug, error, warn};
 use bevy::utils::HashMap;
 use cdda_json_files::UntypedInfoId;
@@ -8,6 +7,7 @@ use glob::glob;
 use std::fs::read_to_string;
 use std::path::{Path, PathBuf};
 use strum::VariantArray as _;
+use util::AssetPaths;
 
 #[derive(Default)]
 pub(super) struct ParsedJson {

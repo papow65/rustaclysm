@@ -1,10 +1,10 @@
-use crate::keyboard::Key;
 use bevy::ecs::entity::EntityHashMap;
 use bevy::prelude::{Component, Entity, KeyCode};
+use keyboard::Key;
 use strum::VariantArray;
 
 #[derive(Clone, Copy, VariantArray)]
-pub(crate) enum SelectionListStep {
+pub enum SelectionListStep {
     ManyUp,
     SingleUp,
     SingleDown,
@@ -37,8 +37,8 @@ impl From<SelectionListStep> for Key {
 }
 
 #[derive(Default, Component)]
-pub(crate) struct SelectionList {
-    pub(crate) selected: Option<Entity>,
+pub struct SelectionList {
+    pub selected: Option<Entity>,
     first: Option<Entity>,
     last: Option<Entity>,
     previous_items: EntityHashMap<Entity>,
@@ -46,7 +46,7 @@ pub(crate) struct SelectionList {
 }
 
 impl SelectionList {
-    pub(crate) fn append(&mut self, added: Entity) {
+    pub fn append(&mut self, added: Entity) {
         if self.first.is_none() {
             self.first = Some(added);
             if self.selected.is_none() {
@@ -69,7 +69,7 @@ impl SelectionList {
         self.last = Some(added);
     }
 
-    pub(crate) fn clear(&mut self) {
+    pub fn clear(&mut self) {
         self.previous_items.clear();
         self.next_items.clear();
         self.first = None;
@@ -77,7 +77,7 @@ impl SelectionList {
         self.selected = None;
     }
 
-    pub(crate) fn adjust(&mut self, step: SelectionListStep) -> bool {
+    pub fn adjust(&mut self, step: SelectionListStep) -> bool {
         for _ in 0..step.amount() {
             if let Some(selected) = self.selected {
                 let sequence = if step.is_backwards() {

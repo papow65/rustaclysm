@@ -3,14 +3,14 @@ use crate::gameplay::{
     GameplayScreenState, InstructionQueue, MessageWriter, PlayerActionState, PlayerDirection,
     QueuedInstruction, VisualizationUpdate, ZoomDirection, ZoomDistance,
 };
-use crate::hud::ScrollList;
-use crate::keyboard::{Held, KeyBindings};
 use crate::manual::ManualSection;
-use crate::util::log_if_slow;
 use bevy::input::mouse::{MouseMotion, MouseWheel};
 use bevy::{prelude::*, render::view::RenderLayers};
+use hud::ScrollList;
+use keyboard::{Held, KeyBindings};
 use std::time::Instant;
 use strum::VariantArray as _;
+use util::log_if_slow;
 
 #[expect(clippy::needless_pass_by_value)]
 fn examine_pos(focus: Focus, mut next_focus_state: ResMut<NextState<FocusState>>) {

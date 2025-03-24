@@ -1,10 +1,10 @@
 use crate::application::ApplicationState;
 use crate::gameplay::*;
-use crate::hud::{BAD_TEXT_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR, text_color_expect_full};
 use bevy::prelude::{
     Component, DetectChanges as _, Entity, NextState, ResMut, StateSet as _, SubStates, TextColor,
     debug,
 };
+use hud::{BAD_TEXT_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR, text_color_expect_full};
 use std::fmt;
 use units::{Duration, Timestamp};
 

@@ -1,11 +1,6 @@
 use crate::gameplay::{ActiveSav, GameplayLocal};
-use crate::hud::{
-    BAD_TEXT_COLOR, ButtonBuilder, Fonts, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, LARGE_SPACING,
-    MEDIUM_SPACING, PANEL_COLOR, trigger_button_action,
-};
 use crate::main_menu::components::{LoadButtonArea, MessageField, MessageWrapper};
 use crate::main_menu::load_error::LoadError;
-use crate::util::{AssetPaths, log_if_slow};
 use crate::{application::ApplicationState, manual::ManualSection};
 use base64::{Engine as _, engine::general_purpose::STANDARD as base64};
 use bevy::prelude::{
@@ -16,8 +11,13 @@ use bevy::prelude::{
 };
 use bevy::{app::AppExit, ecs::system::SystemId};
 use glob::glob;
+use hud::{
+    BAD_TEXT_COLOR, ButtonBuilder, Fonts, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, LARGE_SPACING,
+    MEDIUM_SPACING, PANEL_COLOR, trigger_button_action,
+};
 use std::path::{Path, PathBuf};
 use std::{str::from_utf8, time::Instant};
+use util::{AssetPaths, log_if_slow};
 
 pub(super) fn enter_main_menu(mut next_application_state: ResMut<NextState<ApplicationState>>) {
     next_application_state.set(ApplicationState::MainMenu);

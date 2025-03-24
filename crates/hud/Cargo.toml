@@ -1,0 +1,14 @@
+[package]
+name = "hud"
+description = "A library for HUD components"
+license = "AGPL-3.0-or-later"
+edition = "2024"
+
+[dependencies]
+bevy = { workspace = true }
+keyboard = { path = "../keyboard" }
+strum = { workspace = true }
+util = { path = "../util" }
+
+[lints]
+workspace = true

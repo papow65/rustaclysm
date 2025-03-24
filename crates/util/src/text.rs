@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
-pub(crate) fn uppercase_first(s: Arc<str>) -> Arc<str> {
+#[must_use]
+pub fn uppercase_first(s: Arc<str>) -> Arc<str> {
     let mut c = s.chars();
     match c.next() {
         None => s,

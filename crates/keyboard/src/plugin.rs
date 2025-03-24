@@ -1,8 +1,8 @@
-use crate::keyboard::systems::{manage_binded_keyboard_input, preprocess_keyboard_input};
+use crate::systems::{manage_binded_keyboard_input, preprocess_keyboard_input};
 use bevy::input::{InputSystem, keyboard::KeyboardInput};
 use bevy::prelude::{App, IntoSystem as _, IntoSystemConfigs as _, Plugin, PreUpdate, on_event};
 
-pub(crate) struct KeyboardPlugin;
+pub struct KeyboardPlugin;
 
 impl Plugin for KeyboardPlugin {
     fn build(&self, app: &mut App) {

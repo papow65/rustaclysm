@@ -7,9 +7,9 @@ use crate::gameplay::{
     SubzoneLevelEntities, UpdateZoneLevelVisibility, VisionDistance, VisualizationUpdate, Zone,
     ZoneLevel, ZoneLevelEntities, ZoneLevelIds, ZoneRegion,
 };
-use crate::util::log_if_slow;
 use bevy::{ecs::system::SystemState, prelude::*};
 use std::{cmp::Ordering, time::Instant};
+use util::log_if_slow;
 
 const MAX_EXPAND_DISTANCE: i32 = 10;
 

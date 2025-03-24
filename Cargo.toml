@@ -15,25 +15,28 @@ members = [ "crates/*" ]
 
 [dependencies]
 base64 = "0.22"
-bevy = { version = "0.15", default-features = false, features = [ "bevy_asset", "bevy_dev_tools", "bevy_pbr", "bevy_state", "bevy_text", "bevy_ui", "bevy_window", "multi_threaded", "png", "tonemapping_luts", "wayland" ] }
+bevy = { workspace = true }
 bresenham = "0.1"
 cdda_json_files = { path = "crates/cdda_json_files" }
 either = { workspace = true }
 fastrand = { workspace = true }
 float-ord = "0.3"
-futures-lite = "2"
 git-version = "0.3"
 glob = "0.3"
+hud = { path = "crates/hud" }
+keyboard = { path = "crates/keyboard" }
 pathfinding = { workspace = true }
 regex = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-strum = { version = "0.27", features = ["derive"] }
+strum = { workspace = true }
 thread_local = "1"
 units = { path = "crates/units" }
+util = { path = "crates/util" }
 
 [workspace.dependencies]
 # We limit this list to crates that are used in multiple crates.
+bevy = { version = "0.15", default-features = false, features = [ "bevy_asset", "bevy_dev_tools", "bevy_pbr", "bevy_state", "bevy_text", "bevy_ui", "bevy_window", "multi_threaded", "png", "tonemapping_luts", "wayland" ] }
 bevy_log = "0"
 either = "1"
 fastrand = "2"
@@ -41,6 +44,7 @@ pathfinding = "4"
 regex = "1"
 serde = { version = "1", features = ["derive", "rc" ] }
 serde_json = "1"
+strum = { version = "0.27", features = ["derive"] }
 
 [features]
 # We use --no-default-features for production builds. See .github/workflows/ci.yml

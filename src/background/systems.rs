@@ -1,9 +1,9 @@
 use crate::background::{component::Background, state::BackgroundState};
-use crate::util::AssetPaths;
 use bevy::prelude::{
     AssetServer, Commands, GlobalZIndex, ImageNode, Node, PositionType, Query, Res, StateScoped,
     Val, Window, With, warn,
 };
+use util::AssetPaths;
 
 const BACKGROUND_WIDTH: f32 = 1522.0;
 const BACKGROUND_HEIGHT: f32 = 1009.0;

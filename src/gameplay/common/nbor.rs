@@ -1,8 +1,7 @@
-use bevy::input::keyboard::KeyCode;
-use strum::VariantArray;
-
 use crate::gameplay::PosOffset;
-use crate::keyboard::Key;
+use bevy::input::keyboard::KeyCode;
+use keyboard::Key;
+use strum::VariantArray;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub(crate) enum CardinalDirection {

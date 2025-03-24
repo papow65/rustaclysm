@@ -4,7 +4,7 @@ use bevy::prelude::{Component, ComputedNode, Interaction, JustifyContent, Node, 
 
 // Manually deriving `Component`
 #[derive(Debug, Default)]
-pub(crate) struct ScrollList {
+pub struct ScrollList {
     /// Smaller than or equal to 0.0, this matches with `Style.top`.
     position: f32,
 }
@@ -12,7 +12,7 @@ pub(crate) struct ScrollList {
 impl ScrollList {
     /// Returns the new distance from the top
     #[must_use]
-    pub(crate) fn scroll(
+    pub fn scroll(
         &mut self,
         my_computed_node: &ComputedNode,
         parent_node: &Node,
@@ -28,7 +28,7 @@ impl ScrollList {
 
     /// Returns the new distance from the top
     #[must_use]
-    pub(crate) fn follow(
+    pub fn follow(
         &mut self,
         child_transform: &Transform,
         child_computed_node: &ComputedNode,
@@ -57,7 +57,7 @@ impl ScrollList {
 
     /// Returns the new distance from the top
     #[must_use]
-    pub(crate) fn resize(
+    pub fn resize(
         &mut self,
         my_computed_node: &ComputedNode,
         parent_node: &Node,

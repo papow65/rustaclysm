@@ -1,6 +1,6 @@
 use crate::gameplay::Phrase;
-use crate::hud::{BAD_TEXT_COLOR, GOOD_TEXT_COLOR, WARN_TEXT_COLOR};
 use bevy::prelude::{Event, TextColor};
+use hud::{BAD_TEXT_COLOR, GOOD_TEXT_COLOR, WARN_TEXT_COLOR};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) enum Severity {

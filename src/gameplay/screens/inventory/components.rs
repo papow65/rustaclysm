@@ -1,8 +1,7 @@
 use bevy::prelude::{Component, Entity};
+use keyboard::Key;
 use std::fmt;
 use strum::VariantArray;
-
-use crate::keyboard::Key;
 
 #[derive(Clone, Copy, Debug, PartialEq, VariantArray)]
 pub(super) enum InventoryAction {

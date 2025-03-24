@@ -3,8 +3,8 @@ use crate::gameplay::{
     InstructionQueue, Location, RelativeSegments, SubzoneLevelEntities, VisualizationUpdate,
     ZoneLevelEntities, ZoneLevelIds,
 };
-use crate::util::AsyncResourcePlugin;
 use bevy::prelude::{App, Plugin};
+use util::AsyncResourcePlugin;
 
 pub(crate) struct ResourcePlugin;
 

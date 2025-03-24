@@ -1,15 +1,15 @@
-use crate::hud::SOFT_TEXT_COLOR;
-use crate::keyboard::{Key, KeyBinding};
+use crate::SOFT_TEXT_COLOR;
 use bevy::ecs::system::SystemId;
 use bevy::prelude::{
     AlignItems, BuildChildren as _, Bundle, Button, ChildBuild as _, ChildBuilder, Commands,
     Component, Entity, In, JustifyContent, Node, PositionType, SystemInput, Text, TextColor,
     TextFont, Val,
 };
+use keyboard::{Key, KeyBinding};
 use std::fmt;
 
 #[derive(Debug, Component)]
-pub(crate) struct RunButton<I: SystemInput>
+pub struct RunButton<I: SystemInput>
 where
     <I as SystemInput>::Inner<'static>: fmt::Debug,
 {
@@ -26,7 +26,7 @@ where
     }
 }
 
-pub(crate) struct ButtonBuilder<D: fmt::Display, I: SystemInput> {
+pub struct ButtonBuilder<D: fmt::Display, I: SystemInput> {
     caption: D,
     text_color: TextColor,
     text_font: TextFont,
@@ -41,7 +41,7 @@ where
     (Button, Node, RunButton<I>): Bundle,
 {
     /// 70px wide, dynamic height
-    pub(crate) fn new(
+    pub fn new(
         caption: D,
         text_color: TextColor,
         text_font: TextFont,
@@ -64,18 +64,21 @@ where
     }
 
     /// 250px wide, 70px high
-    pub(crate) const fn large(mut self) -> Self {
+    #[must_use]
+    pub const fn large(mut self) -> Self {
         self.node.width = Val::Px(250.0);
         self.node.height = Val::Px(70.0);
         self
     }
 
-    pub(crate) fn with_node(mut self, node: Node) -> Self {
+    #[must_use]
+    pub fn with_node(mut self, node: Node) -> Self {
         self.node = node;
         self
     }
 
-    pub(crate) fn key_binding<K: Into<Key>>(
+    #[must_use]
+    pub fn key_binding<K: Into<Key>>(
         mut self,
         key: Option<K>,
         key_binding_system: SystemId<In<Entity>, ()>,
@@ -86,11 +89,7 @@ where
         self
     }
 
-    pub(crate) fn spawn(
-        self,
-        parent: &mut ChildBuilder,
-        context: <I as SystemInput>::Inner<'static>,
-    ) {
+    pub fn spawn(self, parent: &mut ChildBuilder, context: <I as SystemInput>::Inner<'static>) {
         let mut entity_commands = parent.spawn((
             Button,
             self.node,

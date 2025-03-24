@@ -1,8 +1,8 @@
-use crate::keyboard::KeyBindings;
 use crate::manual::{ManualSection, components::ManualDisplay};
-use crate::util::log_if_slow;
 use bevy::prelude::{KeyCode, Query, Visibility, With, World};
+use keyboard::KeyBindings;
 use std::time::Instant;
+use util::log_if_slow;
 
 pub(super) fn create_manual_key_bindings(world: &mut World) {
     KeyBindings::<_, (), ()>::spawn_global(world, |bindings| {

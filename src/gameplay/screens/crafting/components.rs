@@ -1,8 +1,8 @@
-use crate::hud::{
-    BAD_TEXT_COLOR, Fonts, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
-};
 use bevy::prelude::{Component, Entity, TextColor, TextFont, TextSpan};
 use cdda_json_files::{CommonItemInfo, InfoId, Recipe};
+use hud::{
+    BAD_TEXT_COLOR, Fonts, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
+};
 use std::{cmp::Ordering, sync::Arc};
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Component)]

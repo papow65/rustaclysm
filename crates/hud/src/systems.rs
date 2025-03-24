@@ -1,4 +1,4 @@
-use crate::hud::{DEFAULT_BUTTON_COLOR, Fonts, HOVERED_BUTTON_COLOR, RunButton, ScrollList};
+use crate::{DEFAULT_BUTTON_COLOR, Fonts, HOVERED_BUTTON_COLOR, RunButton, ScrollList};
 use bevy::input::mouse::MouseWheel;
 use bevy::prelude::{
     BackgroundColor, Button, Changed, Commands, ComputedNode, Entity, EventReader, In, Interaction,
@@ -28,7 +28,7 @@ pub(super) fn manage_button_color(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn manage_button_input<I: SystemInput + 'static>(
+pub fn manage_button_input<I: SystemInput + 'static>(
     mut commands: Commands,
     interactions: Query<(&Interaction, &RunButton<I>), (Changed<Interaction>, With<Button>)>,
 ) where
@@ -71,7 +71,7 @@ pub(super) fn manage_scroll_lists(
 }
 
 #[expect(clippy::needless_pass_by_value)]
-pub(crate) fn resize_scroll_lists(
+pub(super) fn resize_scroll_lists(
     mut scroll_lists: Query<(&mut ScrollList, &mut Node, &ComputedNode, &Parent)>,
     parent_nodes: Query<(&Node, &ComputedNode), Without<ScrollList>>,
 ) {
@@ -84,7 +84,7 @@ pub(crate) fn resize_scroll_lists(
 }
 
 #[expect(clippy::needless_pass_by_value)]
-pub(crate) fn trigger_button_action<I: SystemInput + 'static>(
+pub fn trigger_button_action<I: SystemInput + 'static>(
     In(entity): In<Entity>,
     mut commands: Commands,
     run_buttons: Query<&RunButton<I>>,

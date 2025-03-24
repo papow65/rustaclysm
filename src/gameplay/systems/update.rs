@@ -3,12 +3,12 @@ use crate::gameplay::{
     Accessible, Appearance, BaseSpeed, CurrentlyVisible, CurrentlyVisibleBuilder,
     ElevationVisibility, Focus, GameplayLocal, LastSeen, Player, Pos, SubzoneLevel,
 };
-use crate::util::log_if_slow;
 use bevy::prelude::{
     Camera, Changed, Children, Commands, EventWriter, GlobalTransform, ParallelCommands, Parent,
     Query, Res, Visibility, With, Without, debug, error,
 };
 use std::time::Instant;
+use util::log_if_slow;
 
 #[cfg(feature = "log_archetypes")]
 use bevy::utils::HashMap;

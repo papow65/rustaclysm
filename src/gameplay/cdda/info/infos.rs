@@ -1,7 +1,6 @@
 use crate::gameplay::cdda::info::info_map::{InfoMap, ItemInfoMapLoader};
 use crate::gameplay::cdda::info::parsed_json::ParsedJson;
 use crate::gameplay::{ObjectCategory, TypeId};
-use crate::util::AsyncNew;
 use bevy::prelude::{Resource, debug, error, info};
 use cdda_json_files::{
     Ammo, BionicItem, Book, CddaItem, CharacterInfo, Clothing, Comestible, CommonItemInfo, Engine,
@@ -11,6 +10,7 @@ use cdda_json_files::{
     VehiclePartMigration, Wheel,
 };
 use std::time::Instant;
+use util::AsyncNew;
 
 #[derive(Resource)]
 pub(crate) struct Infos {

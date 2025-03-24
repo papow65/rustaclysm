@@ -1,17 +1,15 @@
 use crate::application::ApplicationState;
 use crate::gameplay::GameplayScreenState;
-use crate::hud::{
-    BAD_TEXT_COLOR, ButtonBuilder, Fonts, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, MEDIUM_SPACING,
-};
-use crate::keyboard::KeyBindings;
 use crate::manual::ManualSection;
-use crate::util::log_if_slow;
 use bevy::prelude::{
     AlignItems, BuildChildren as _, Commands, Events, FlexDirection, In, JustifyContent, KeyCode,
     Local, NextState, Node, Res, ResMut, StateScoped, Val, World,
 };
 use bevy::{app::AppExit, ecs::system::SystemId};
+use hud::{BAD_TEXT_COLOR, ButtonBuilder, Fonts, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, MEDIUM_SPACING};
+use keyboard::KeyBindings;
 use std::time::Instant;
+use util::log_if_slow;
 
 #[derive(Debug)]
 pub(super) struct MenuButtonActions {

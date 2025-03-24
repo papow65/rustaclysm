@@ -7,13 +7,13 @@ use futures_lite::future::{block_on, poll_once};
 use regex::Regex;
 use std::{any::type_name, future::Future, marker::PhantomData, sync::LazyLock, time::Instant};
 
-/// Resources that take a while to load, are loaded in the background, independent of the current [`ApplicationState`](`crate::application::ApplicationState`)
-pub(crate) trait AsyncNew<T>: Resource {
+/// Resources that take a while to load, are loaded in the background, independent of the current `ApplicationState`
+pub trait AsyncNew<T>: Resource {
     fn async_new() -> impl Future<Output = T> + Send;
 }
 
 /// Load the [`AsyncNew`] resource in the background
-pub(crate) struct AsyncResourcePlugin<T: AsyncNew<T>>(PhantomData<T>);
+pub struct AsyncResourcePlugin<T: AsyncNew<T>>(PhantomData<T>);
 
 impl<T: AsyncNew<T>> Default for AsyncResourcePlugin<T> {
     fn default() -> Self {
@@ -33,8 +33,8 @@ impl<T: AsyncNew<T>> Plugin for AsyncResourcePlugin<T> {
 }
 
 #[derive(Debug, Resource)]
-pub(crate) struct AsyncResourceLoader<T: AsyncNew<T>> {
-    pub(crate) task: Task<T>,
+struct AsyncResourceLoader<T: AsyncNew<T>> {
+    task: Task<T>,
 }
 
 impl<T: AsyncNew<T> + Send + 'static> Default for AsyncResourceLoader<T> {

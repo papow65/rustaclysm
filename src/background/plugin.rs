@@ -1,11 +1,11 @@
 use crate::background::state::BackgroundState;
 use crate::background::systems::{resize_background, spawn_background};
-use crate::util::log_transition_plugin;
 use bevy::prelude::{
     App, AppExtStates as _, Condition as _, FixedUpdate, IntoSystemConfigs as _, OnEnter, Plugin,
     Update, on_event, state_exists,
 };
 use bevy::window::{RequestRedraw, WindowResized};
+use util::log_transition_plugin;
 
 pub(crate) struct BackgroundPlugin;
 

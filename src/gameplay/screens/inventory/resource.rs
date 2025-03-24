@@ -1,11 +1,11 @@
 use crate::gameplay::HorizontalDirection;
 use crate::gameplay::screens::inventory::components::InventoryItemRow;
 use crate::gameplay::screens::inventory::section::InventorySection;
-use crate::hud::{
-    GOOD_TEXT_COLOR, HARD_TEXT_COLOR, HOVERED_BUTTON_COLOR, SelectionList, SelectionListStep,
-};
 use bevy::ecs::entity::EntityHashMap;
 use bevy::prelude::{BackgroundColor, Button, Children, Entity, Query, Resource, TextColor, With};
+use hud::{
+    GOOD_TEXT_COLOR, HARD_TEXT_COLOR, HOVERED_BUTTON_COLOR, SelectionList, SelectionListStep,
+};
 use units::Timestamp;
 
 pub(super) const ITEM_TEXT_COLOR: TextColor = HARD_TEXT_COLOR;

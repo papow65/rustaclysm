@@ -1,5 +1,5 @@
-use crate::keyboard::key_binding::{KeyBinding, KeyBindingSystem};
-use crate::keyboard::{Ctrl, CtrlState, Held, HeldState, InputChange, Key, KeyChange};
+use crate::key_binding::{KeyBinding, KeyBindingSystem};
+use crate::{Ctrl, CtrlState, Held, HeldState, InputChange, Key, KeyChange};
 use bevy::input::ButtonState;
 use bevy::input::keyboard::{Key as LogicalKey, KeyboardInput};
 use bevy::prelude::{ButtonInput, Commands, Entity, EventReader, KeyCode, Query, error};

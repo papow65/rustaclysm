@@ -2,10 +2,10 @@ use crate::gameplay::{
     ActorItem, Attack, CurrentlyVisibleBuilder, Envir, Fragment, Health, Nbor, NborDistance,
     PlannedAction, Pos, Smash, Step, Visible, WalkingCost,
 };
-use crate::hud::{FILTHY_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR};
 use bevy::prelude::{Component, TextColor};
 use cdda_json_files::MoveCost;
 use float_ord::FloatOrd;
+use hud::{FILTHY_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR};
 use pathfinding::num_traits::Zero;
 use pathfinding::prelude::{build_path, dijkstra_all};
 use std::{mem::discriminant, ops::Add};

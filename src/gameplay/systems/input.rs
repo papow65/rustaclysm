@@ -1,8 +1,9 @@
-use crate::application::ApplicationState;
 use crate::gameplay::{Infos, Player, Pos, spawn::TileSpawner};
-use crate::{keyboard::KeyBindings, manual::ManualSection, util::log_if_slow};
+use crate::{application::ApplicationState, manual::ManualSection};
 use bevy::prelude::{KeyCode, Local, NextState, Query, Res, ResMut, StateScoped, With, World};
+use keyboard::KeyBindings;
 use std::time::Instant;
+use util::log_if_slow;
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn create_gameplay_key_bindings(

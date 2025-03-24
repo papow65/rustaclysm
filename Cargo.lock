@@ -2332,6 +2332,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6dbf3de79e51f3d586ab4cb9d5c3e2c14aa28ed23d180cf89b4df0454a69cc87"
 
 [[package]]
+name = "hud"
+version = "0.0.0"
+dependencies = [
+ "bevy",
+ "keyboard",
+ "strum",
+ "util",
+]
+
+[[package]]
 name = "hyper"
 version = "1.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2642,6 +2652,13 @@ checksum = "1cfaf33c695fc6e08064efbc1f72ec937429614f25eef83af942d0e227c3a28f"
 dependencies = [
  "once_cell",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "keyboard"
+version = "0.0.0"
+dependencies = [
+ "bevy",
 ]
 
 [[package]]
@@ -3809,9 +3826,10 @@ dependencies = [
  "either",
  "fastrand",
  "float-ord",
- "futures-lite",
  "git-version",
  "glob",
+ "hud",
+ "keyboard",
  "pathfinding",
  "regex",
  "serde",
@@ -3819,6 +3837,7 @@ dependencies = [
  "strum",
  "thread_local",
  "units",
+ "util",
 ]
 
 [[package]]
@@ -4799,6 +4818,15 @@ name = "utf8_iter"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b6c140620e7ffbb22c2dee59cafe6084a59b5ffc27a8859a5f0d494b5d52b6be"
+
+[[package]]
+name = "util"
+version = "0.0.0"
+dependencies = [
+ "bevy",
+ "futures-lite",
+ "regex",
+]
 
 [[package]]
 name = "uuid"

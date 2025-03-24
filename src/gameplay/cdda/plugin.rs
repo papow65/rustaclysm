@@ -1,7 +1,7 @@
 use crate::application::ApplicationState;
 use crate::gameplay::cdda::{ActiveSav, Infos, TileLoader, region_assets::RegionAssetsPlugin};
-use crate::util::AsyncResourcePlugin;
 use bevy::prelude::{App, Commands, OnExit, Plugin};
+use util::AsyncResourcePlugin;
 
 pub(crate) struct CddaPlugin;
 

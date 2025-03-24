@@ -7,7 +7,6 @@ use crate::gameplay::{
     ElevationVisibility, Focus, GameplayLocal, LastSeen, Player, PlayerActionState, Pos, Vehicle,
     VisualizationUpdate,
 };
-use crate::util::log_if_slow;
 use bevy::ecs::schedule::SystemConfigs;
 use bevy::prelude::{
     Camera, Changed, Children, EventWriter, GlobalTransform, IntoSystemConfigs as _, Local, Mesh3d,
@@ -17,6 +16,7 @@ use bevy::prelude::{
 use std::cell::RefCell;
 use std::{cell::OnceCell, time::Instant};
 use thread_local::ThreadLocal;
+use util::log_if_slow;
 
 pub(super) fn refresh_all() -> SystemConfigs {
     (

@@ -6,14 +6,7 @@ use crate::gameplay::{
     LastSeen, Location, MessageWriter, Player, Pos, QueuedInstruction, Shared, cdda::Error,
     screens::crafting::resource::CraftingScreen,
 };
-use crate::here;
-use crate::hud::{
-    BAD_TEXT_COLOR, ButtonBuilder, Fonts, GOOD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, ScrollList,
-    SelectionList, SelectionListStep, WARN_TEXT_COLOR,
-};
-use crate::keyboard::{Held, KeyBindings};
 use crate::manual::ManualSection;
-use crate::util::{log_if_slow, uppercase_first};
 use bevy::prelude::{
     AlignItems, BuildChildren as _, ChildBuild as _, Children, Commands, ComputedNode,
     DespawnRecursiveExt as _, Display, Entity, FlexDirection, In, IntoSystem as _, JustifyContent,
@@ -26,9 +19,16 @@ use cdda_json_files::{
     Alternative, AutoLearn, BookLearn, BookLearnItem, CommonItemInfo, FurnitureInfo, InfoId,
     Quality, Recipe, RequiredQuality, Sav, Skill, Using,
 };
+use hud::{
+    BAD_TEXT_COLOR, ButtonBuilder, Fonts, GOOD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, ScrollList,
+    SelectionList, SelectionListStep, WARN_TEXT_COLOR,
+};
+use keyboard::{Held, KeyBindings};
 use std::{ops::RangeInclusive, sync::Arc, time::Instant};
 use strum::VariantArray as _;
 use units::Timestamp;
+use util::here;
+use util::{log_if_slow, uppercase_first};
 
 const MAX_FIND_DISTANCE: i32 = 7;
 const FIND_RANGE: RangeInclusive<i32> = (-MAX_FIND_DISTANCE)..=MAX_FIND_DISTANCE;

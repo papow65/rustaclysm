@@ -1,4 +1,4 @@
-use crate::hud::systems::{
+use crate::systems::{
     load_fonts, manage_button_color, manage_button_input, manage_scroll_lists, resize_scroll_lists,
 };
 use bevy::prelude::{
@@ -8,7 +8,7 @@ use bevy::prelude::{
 use bevy::{input::mouse::MouseWheel, window::WindowResized};
 
 /// Plugin for the all generic HUD infrastructure
-pub(crate) struct HudPlugin;
+pub struct HudPlugin;
 
 impl Plugin for HudPlugin {
     fn build(&self, app: &mut App) {

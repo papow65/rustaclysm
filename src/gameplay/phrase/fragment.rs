@@ -1,8 +1,6 @@
 use crate::gameplay::{DebugText, Pos};
-use crate::hud::{
-    FILTHY_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
-};
 use bevy::prelude::{TextColor, TextSpan};
+use hud::{FILTHY_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, SOFT_TEXT_COLOR, WARN_TEXT_COLOR};
 use regex::Regex;
 use std::{cmp::Eq, fmt, sync::LazyLock};
 

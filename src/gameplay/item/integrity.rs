@@ -1,6 +1,6 @@
 use crate::gameplay::Fragment;
-use crate::hud::text_color_expect_full;
 use bevy::prelude::Component;
+use hud::text_color_expect_full;
 
 #[derive(Debug, Component)]
 pub(crate) struct ItemIntegrity {

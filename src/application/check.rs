@@ -1,6 +1,6 @@
-use crate::util::log_if_slow;
 use bevy::prelude::{Local, warn};
 use std::time::{Duration, Instant};
+use util::log_if_slow;
 
 pub(super) struct StdInstant(Instant);
 

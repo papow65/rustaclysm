@@ -3,11 +3,6 @@ use crate::gameplay::sidebar::components::{
     BreathText, DetailsText, EnemiesText, FpsText, HealthText, LogDisplay, PlayerActionStateText,
     SpeedTextSpan, StaminaText, TimeText, WalkingModeTextSpan, WieldedText,
 };
-use crate::hud::{
-    BAD_TEXT_COLOR, Fonts, HARD_TEXT_COLOR, PANEL_COLOR, SOFT_TEXT_COLOR, ScrollList,
-    WARN_TEXT_COLOR, panel_node, text_color_expect_half,
-};
-use crate::util::log_if_slow;
 use crate::{application::ApplicationState, gameplay::*};
 use bevy::diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin};
 use bevy::ecs::{schedule::SystemConfigs, system::EntityCommands};
@@ -19,7 +14,12 @@ use bevy::prelude::{
     Without, info, on_event, resource_exists, resource_exists_and_changed, warn,
 };
 use cdda_json_files::{CharacterInfo, MoveCost};
+use hud::{
+    BAD_TEXT_COLOR, Fonts, HARD_TEXT_COLOR, PANEL_COLOR, SOFT_TEXT_COLOR, ScrollList,
+    WARN_TEXT_COLOR, panel_node, text_color_expect_half,
+};
 use std::{num::Saturating, time::Instant};
+use util::log_if_slow;
 
 type DuplicateMessageCount = Saturating<u16>;
 

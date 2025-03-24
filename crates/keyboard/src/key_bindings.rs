@@ -1,5 +1,5 @@
-use crate::keyboard::key_binding::{KeyBinding, KeyBindingSystem};
-use crate::keyboard::{CtrlState, HeldState, Key};
+use crate::key_binding::{KeyBinding, KeyBindingSystem};
+use crate::{CtrlState, HeldState, Key};
 use bevy::ecs::system::SystemId;
 use bevy::prelude::{
     Commands, ComputedStates, IntoSystem, StateScoped, States, SystemInput, World,
@@ -22,13 +22,13 @@ impl<S: States, C: CtrlState, H: HeldState> KeyBindingsStorage<S, C, H> {
     }
 }
 
-pub(crate) struct KeyBindingsBuilder<'w, S: States, C: CtrlState, H: HeldState> {
+pub struct KeyBindingsBuilder<'w, S: States, C: CtrlState, H: HeldState> {
     storage: KeyBindingsStorage<S, C, H>,
     world: &'w mut World,
 }
 
 impl<S: States, C: CtrlState, H: HeldState> KeyBindingsBuilder<'_, S, C, H> {
-    pub(crate) fn add<I: SystemInput + 'static, M>(
+    pub fn add<I: SystemInput + 'static, M>(
         &mut self,
         key: impl Into<Key>,
         system: impl IntoSystem<I, (), M> + 'static,
@@ -43,12 +43,12 @@ impl<S: States, C: CtrlState, H: HeldState> KeyBindingsBuilder<'_, S, C, H> {
 }
 
 #[derive(Default)]
-pub(crate) struct KeyBindings<S: States, C: CtrlState, H: HeldState> {
+pub struct KeyBindings<S: States, C: CtrlState, H: HeldState> {
     once: OnceCell<KeyBindingsStorage<S, C, H>>,
 }
 
 impl<S: States, C: CtrlState, H: HeldState> KeyBindings<S, C, H> {
-    pub(crate) fn spawn<F>(&self, world: &mut World, state: S, init: F)
+    pub fn spawn<F>(&self, world: &mut World, state: S, init: F)
     where
         F: FnOnce(&mut KeyBindingsBuilder<S, C, H>),
     {
@@ -69,7 +69,7 @@ impl<S: States, C: CtrlState, H: HeldState> KeyBindings<S, C, H> {
 }
 
 #[derive(Clone, Default, PartialEq, Eq, Hash, Debug)]
-pub(crate) struct GlobalState;
+pub struct GlobalState;
 
 impl ComputedStates for GlobalState {
     type SourceStates = Self;
@@ -80,7 +80,7 @@ impl ComputedStates for GlobalState {
 }
 
 impl<C: CtrlState, H: HeldState> KeyBindings<GlobalState, C, H> {
-    pub(crate) fn spawn_global<F>(world: &mut World, init: F)
+    pub fn spawn_global<F>(world: &mut World, init: F)
     where
         F: FnOnce(&mut KeyBindingsBuilder<GlobalState, C, H>),
     {

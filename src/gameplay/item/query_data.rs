@@ -1,10 +1,10 @@
 use crate::gameplay::{
     Amount, Containable, Filthy, Fragment, ItemIntegrity, ObjectName, Pos, Positioning, Shared,
 };
-use crate::hud::text_color_expect_half;
 use bevy::ecs::query::QueryData;
 use bevy::prelude::{Entity, Parent, ops::atan2};
 use cdda_json_files::{CommonItemInfo, InfoId};
+use hud::text_color_expect_half;
 use std::f32::consts::FRAC_1_PI;
 
 #[derive(QueryData)]

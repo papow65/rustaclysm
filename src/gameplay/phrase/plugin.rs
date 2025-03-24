@@ -1,10 +1,12 @@
 use crate::gameplay::{DebugText, DebugTextShown};
-use crate::{application::ApplicationState, hud::Fonts};
-use crate::{keyboard::KeyBindings, manual::ManualSection, util::log_if_slow};
+use crate::{application::ApplicationState, manual::ManualSection};
 use bevy::prelude::{
     App, Local, OnEnter, Plugin, Query, Res, ResMut, StateScoped, TextFont, With, World,
 };
+use hud::Fonts;
+use keyboard::KeyBindings;
 use std::time::Instant;
+use util::log_if_slow;
 
 pub(crate) struct PhrasePlugin;
 

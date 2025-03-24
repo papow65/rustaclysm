@@ -1,12 +1,12 @@
 use crate::gameplay::{
     MapAsset, MapMemoryAsset, OvermapAsset, OvermapBufferAsset, Pos, SubzoneLevel, ZoneLevel,
 };
-use crate::util::log_if_slow;
 use bevy::asset::UntypedAssetLoadFailedEvent;
 use bevy::prelude::{
     Assets, EventReader, Font, Local, Mesh, Query, Res, StandardMaterial, With, debug, error,
 };
 use std::time::Instant;
+use util::log_if_slow;
 
 pub(crate) fn count_assets(
     font_assets: Option<Res<Assets<Font>>>,

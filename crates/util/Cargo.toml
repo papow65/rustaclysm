@@ -1,0 +1,13 @@
+[package]
+name = "util"
+description = "A library of small utils"
+license = "AGPL-3.0-or-later"
+edition = "2024"
+
+[dependencies]
+bevy = { workspace = true }
+futures-lite = "2"
+regex = { workspace = true }
+
+[lints]
+workspace = true

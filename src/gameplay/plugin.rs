@@ -20,12 +20,12 @@ use crate::gameplay::{models::ModelPlugin, sidebar::SidebarPlugin, time::TimePlu
 use crate::gameplay::{
     resources::ResourcePlugin, scope::GameplayLocalPlugin, screens::ScreensPlugin,
 };
-use crate::util::log_transition_plugin;
 use bevy::prelude::{
     App, AppExtStates as _, AssetEvent, FixedUpdate, IntoSystemConfigs as _, Last, OnEnter, Plugin,
     Update, in_state, on_event, resource_exists, resource_exists_and_changed,
 };
 use bevy::{diagnostic::FrameTimeDiagnosticsPlugin, ecs::schedule::SystemConfigs};
+use util::log_transition_plugin;
 
 pub(crate) struct GameplayPlugin;
 

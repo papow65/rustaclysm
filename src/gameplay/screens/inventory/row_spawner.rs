@@ -3,15 +3,15 @@ use crate::gameplay::screens::inventory::resource::{ITEM_TEXT_COLOR, SELECTED_IT
 use crate::gameplay::screens::inventory::section::InventorySection;
 use crate::gameplay::screens::inventory::systems::{InventoryButton, InventorySystem};
 use crate::gameplay::{DebugTextShown, Fragment, ItemHandler, ItemItem, Phrase};
-use crate::hud::{
-    ButtonBuilder, Fonts, HOVERED_BUTTON_COLOR, SMALL_SPACING, SOFT_TEXT_COLOR, SelectionList,
-};
 use bevy::ecs::entity::EntityHashMap;
 use bevy::prelude::{
     AlignItems, BackgroundColor, BuildChildren as _, ChildBuild as _, ChildBuilder, Entity,
     JustifyContent, Node, Overflow, Text, TextColor, Val, debug,
 };
 use cdda_json_files::CommonItemInfo;
+use hud::{
+    ButtonBuilder, Fonts, HOVERED_BUTTON_COLOR, SMALL_SPACING, SOFT_TEXT_COLOR, SelectionList,
+};
 
 struct SectionData<'r> {
     fonts: &'r Fonts,

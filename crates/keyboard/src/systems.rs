@@ -1,4 +1,4 @@
-use crate::keyboard::{Ctrl, Held, key_binding::KeyBinding, keys::Keys};
+use crate::{Ctrl, Held, key_binding::KeyBinding, keys::Keys};
 use bevy::input::keyboard::KeyboardInput;
 use bevy::prelude::{ButtonInput, Commands, Entity, EventReader, In, KeyCode, Query, Res};
 

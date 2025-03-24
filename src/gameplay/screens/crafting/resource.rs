@@ -1,6 +1,6 @@
 use crate::gameplay::screens::crafting::components::RecipeSituation;
-use crate::hud::{SelectionList, SelectionListStep};
 use bevy::prelude::{Entity, Query, Resource, TextColor};
+use hud::{SelectionList, SelectionListStep};
 use units::Timestamp;
 
 #[derive(Resource)]

@@ -1,7 +1,6 @@
 use crate::gameplay::cdda::ObjectCategory;
 use crate::gameplay::cdda::{Atlas, TextureInfo, error::Error};
 use crate::gameplay::{Layers, Model, SpriteLayer, TileVariant};
-use crate::util::{AssetPaths, AsyncNew};
 use bevy::prelude::{Resource, error, warn};
 use bevy::utils::{Entry, HashMap};
 use cdda_json_files::{
@@ -9,6 +8,7 @@ use cdda_json_files::{
     UntypedInfoId,
 };
 use std::{fs::read_to_string, sync::Arc};
+use util::{AssetPaths, AsyncNew};
 
 #[derive(Resource)]
 pub(crate) struct TileLoader {

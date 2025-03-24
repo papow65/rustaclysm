@@ -1,5 +1,5 @@
-use crate::hud::text_color_expect_full;
 use bevy::prelude::TextColor;
+use hud::text_color_expect_full;
 
 #[derive(Clone, Debug)]
 pub(crate) struct Evolution {

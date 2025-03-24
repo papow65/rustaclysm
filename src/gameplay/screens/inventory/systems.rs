@@ -7,13 +7,7 @@ use crate::gameplay::{
     HorizontalDirection, InstructionQueue, ItemHierarchy, ItemItem, MoveItem, Nbor, Phrase, Pickup,
     Player, Pos, QueuedInstruction, Unwield, Wield,
 };
-use crate::hud::{
-    Fonts, HARD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, SOFT_TEXT_COLOR, ScrollList, SelectionList,
-    SelectionListStep,
-};
-use crate::keyboard::{Held, KeyBindings};
 use crate::manual::ManualSection;
-use crate::util::log_if_slow;
 use bevy::ecs::{entity::EntityHashMap, system::SystemId};
 use bevy::prelude::{
     AlignItems, BackgroundColor, BuildChildren as _, Button, ChildBuild as _, Children, Commands,
@@ -22,9 +16,15 @@ use bevy::prelude::{
     TextSpan, Transform, UiRect, Val, With, Without, World, debug, error,
 };
 use cdda_json_files::HashMap;
+use hud::{
+    Fonts, HARD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, SOFT_TEXT_COLOR, ScrollList, SelectionList,
+    SelectionListStep,
+};
+use keyboard::{Held, KeyBindings};
 use std::time::Instant;
 use strum::VariantArray as _;
 use units::Timestamp;
+use util::log_if_slow;
 
 #[derive(Clone, Debug)]
 pub(super) struct InventoryButton {

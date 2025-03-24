@@ -7,7 +7,6 @@ use crate::gameplay::{
     Stamina, StandardIntegrity, Subject, TerrainEvent, Toggle, VisualizationUpdate, WalkingMode,
     spawn::TileSpawner,
 };
-use crate::util::log_if_slow;
 use bevy::ecs::schedule::SystemConfigs;
 use bevy::prelude::{
     Changed, Commands, DespawnRecursiveExt as _, Entity, EventReader, IntoSystemConfigs as _,
@@ -17,6 +16,7 @@ use cdda_json_files::{FurnitureInfo, InfoId, TerrainInfo};
 use either::Either;
 use std::time::Instant;
 use units::Duration;
+use util::log_if_slow;
 
 pub(in super::super) fn handle_action_effects() -> SystemConfigs {
     (

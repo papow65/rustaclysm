@@ -3,13 +3,13 @@ use crate::gameplay::{
     Infos, LastSeen, Level, MissingAsset, ObjectCategory, ObjectName, SeenFrom, ZoneLevel,
     ZoneLevelIds, spawn::TileSpawner,
 };
-use crate::hud::HARD_TEXT_COLOR;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{
     BuildChildren as _, ChildBuild as _, Entity, Res, StateScoped, Transform, Vec3, Visibility,
 };
 use bevy::render::view::RenderLayers;
 use cdda_json_files::{CddaItemName, InfoId, ItemName, OvermapTerrainInfo};
+use hud::HARD_TEXT_COLOR;
 
 #[derive(SystemParam)]
 pub(crate) struct ZoneSpawner<'w, 's> {
