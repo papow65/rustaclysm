@@ -98,14 +98,13 @@ pub(super) fn create_inventory_key_bindings(
 ) {
     let start = Instant::now();
 
-    held_bindings.spawn(
-        world,
-        GameplayScreenState::Inventory,
-        |bindings| {
-            for &step in SelectionListStep::VARIANTS {
-                bindings.add(step, (move || step).pipe(move_inventory_selection));
-            }
-        },
+    held_bindings.spawn(world, GameplayScreenState::Inventory, |bindings| {
+        for &step in SelectionListStep::VARIANTS {
+            bindings.add(step, (move || step).pipe(move_inventory_selection));
+        }
+    });
+
+    world.spawn((
         ManualSection::new(
             &[
                 ("select item", "arrow up/down"),
@@ -113,27 +112,27 @@ pub(super) fn create_inventory_key_bindings(
             ],
             100,
         ),
-    );
+        StateScoped(GameplayScreenState::Inventory),
+    ));
 
-    fresh_bindings.spawn(
-        world,
-        GameplayScreenState::Inventory,
-        |bindings| {
-            for &horizontal_direction in HorizontalDirection::VARIANTS {
-                bindings.add(
-                    Nbor::Horizontal(horizontal_direction),
-                    (move || horizontal_direction).pipe(set_inventory_drop_direction),
-                );
-            }
-            for &inventory_action in InventoryAction::VARIANTS {
-                bindings.add(
-                    inventory_action,
-                    (move || inventory_action).pipe(handle_selected_item),
-                );
-            }
-            bindings.add(KeyCode::Escape, exit_inventory);
-            bindings.add('i', exit_inventory);
-        },
+    fresh_bindings.spawn(world, GameplayScreenState::Inventory, |bindings| {
+        for &horizontal_direction in HorizontalDirection::VARIANTS {
+            bindings.add(
+                Nbor::Horizontal(horizontal_direction),
+                (move || horizontal_direction).pipe(set_inventory_drop_direction),
+            );
+        }
+        for &inventory_action in InventoryAction::VARIANTS {
+            bindings.add(
+                inventory_action,
+                (move || inventory_action).pipe(handle_selected_item),
+            );
+        }
+        bindings.add(KeyCode::Escape, exit_inventory);
+        bindings.add('i', exit_inventory);
+    });
+
+    world.spawn((
         ManualSection::new(
             &[
                 ("set drop spot", "numpad"),
@@ -146,7 +145,8 @@ pub(super) fn create_inventory_key_bindings(
             ],
             101,
         ),
-    );
+        StateScoped(GameplayScreenState::Inventory),
+    ));
 
     log_if_slow("create_inventory_key_bindings", start);
 }

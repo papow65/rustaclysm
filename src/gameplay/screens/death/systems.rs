@@ -84,16 +84,16 @@ pub(super) fn create_death_screen_key_bindings(
 ) {
     let start = Instant::now();
 
-    bindings.spawn(
-        world,
-        GameplayScreenState::Death,
-        |bindings| {
-            bindings.add(KeyCode::Escape, to_main_menu);
-            bindings.add(KeyCode::Enter, to_main_menu);
-            bindings.add(KeyCode::Space, to_main_menu);
-        },
+    bindings.spawn(world, GameplayScreenState::Death, |bindings| {
+        bindings.add(KeyCode::Escape, to_main_menu);
+        bindings.add(KeyCode::Enter, to_main_menu);
+        bindings.add(KeyCode::Space, to_main_menu);
+    });
+
+    world.spawn((
         ManualSection::new(&[("to main menu", "esc/enter/space")], 100),
-    );
+        StateScoped(GameplayScreenState::Death),
+    ));
 
     log_if_slow("create_death_screen_key_bindings", start);
 }

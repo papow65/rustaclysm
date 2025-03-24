@@ -1,3 +1,4 @@
+use crate::application::input::create_global_key_bindings;
 use crate::application::{ApplicationState, check::check_delay};
 use crate::{background::BackgroundPlugin, gameplay::GameplayPlugin, hud::HudPlugin};
 use crate::{keyboard::KeyboardPlugin, loading::LoadingIndicatorPlugin};
@@ -6,7 +7,7 @@ use crate::{pre_gameplay::PreGameplayPlugin, util::log_transition_plugin};
 use bevy::log::{DEFAULT_FILTER, Level, LogPlugin};
 use bevy::prelude::{
     App, AppExit, AppExtStates as _, AssetPlugin, DefaultPlugins, Fixed, ImagePlugin, Last,
-    PluginGroup as _, Time, Window, WindowPlugin, info,
+    PluginGroup as _, Startup, Time, Window, WindowPlugin, info,
 };
 use bevy::window::PresentMode;
 use git_version::git_version;
@@ -60,6 +61,8 @@ pub(crate) fn run_application() -> AppExit {
 
     app.init_state::<ApplicationState>();
     app.enable_state_scoped_entities::<ApplicationState>();
+
+    app.add_systems(Startup, create_global_key_bindings);
 
     app.add_systems(Last, check_delay);
 

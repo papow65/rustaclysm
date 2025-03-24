@@ -1,4 +1,5 @@
 mod check;
+mod input;
 mod run;
 mod state;
 

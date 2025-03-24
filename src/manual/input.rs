@@ -5,13 +5,11 @@ use bevy::prelude::{KeyCode, Query, Visibility, With, World};
 use std::time::Instant;
 
 pub(super) fn create_manual_key_bindings(world: &mut World) {
-    KeyBindings::<_, (), ()>::spawn_global(
-        world,
-        |bindings| {
-            bindings.add(KeyCode::F1, toggle_manual);
-        },
-        ManualSection::new(&[("key bindings", "F1")], u8::MAX - 1),
-    );
+    KeyBindings::<_, (), ()>::spawn_global(world, |bindings| {
+        bindings.add(KeyCode::F1, toggle_manual);
+    });
+
+    world.spawn(ManualSection::new(&[("key bindings", "F1")], u8::MAX - 1));
 }
 
 fn toggle_manual(mut manual: Query<&mut Visibility, With<ManualDisplay>>) {

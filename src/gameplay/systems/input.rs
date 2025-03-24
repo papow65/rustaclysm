@@ -1,7 +1,7 @@
 use crate::application::ApplicationState;
 use crate::gameplay::{Infos, Player, Pos, spawn::TileSpawner};
 use crate::{keyboard::KeyBindings, manual::ManualSection, util::log_if_slow};
-use bevy::prelude::{KeyCode, Local, NextState, Query, Res, ResMut, With, World};
+use bevy::prelude::{KeyCode, Local, NextState, Query, Res, ResMut, StateScoped, With, World};
 use std::time::Instant;
 
 #[allow(clippy::needless_pass_by_value)]
@@ -11,18 +11,18 @@ pub(crate) fn create_gameplay_key_bindings(
 ) {
     let start = Instant::now();
 
-    bindings.spawn(
-        world,
-        ApplicationState::Gameplay,
-        |bindings| {
-            bindings.add('!', spawn_zombies);
-            bindings.add(KeyCode::F12, to_main_menu);
-        },
+    bindings.spawn(world, ApplicationState::Gameplay, |bindings| {
+        bindings.add('!', spawn_zombies);
+        bindings.add(KeyCode::F12, to_main_menu);
+    });
+
+    world.spawn((
         ManualSection::new(
             &[("add debug zeds", "!"), ("to main menu", "F12")],
             u8::MAX - 2,
         ),
-    );
+        StateScoped(ApplicationState::Gameplay),
+    ));
 
     log_if_slow("create_gameplay_key_bindings", start);
 }

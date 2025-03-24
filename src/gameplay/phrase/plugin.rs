@@ -1,7 +1,9 @@
 use crate::gameplay::{DebugText, DebugTextShown};
 use crate::{application::ApplicationState, hud::Fonts};
 use crate::{keyboard::KeyBindings, manual::ManualSection, util::log_if_slow};
-use bevy::prelude::{App, Local, OnEnter, Plugin, Query, Res, ResMut, TextFont, With, World};
+use bevy::prelude::{
+    App, Local, OnEnter, Plugin, Query, Res, ResMut, StateScoped, TextFont, With, World,
+};
 use std::time::Instant;
 
 pub(crate) struct PhrasePlugin;
@@ -24,14 +26,14 @@ fn create_phrase_key_bindings(
 ) {
     let start = Instant::now();
 
-    bindings.spawn(
-        world,
-        ApplicationState::Gameplay,
-        |bindings| {
-            bindings.add('D', toggle_debug_text);
-        },
+    bindings.spawn(world, ApplicationState::Gameplay, |bindings| {
+        bindings.add('D', toggle_debug_text);
+    });
+
+    world.spawn((
         ManualSection::new(&[("show cdda ids", "D")], 200),
-    );
+        StateScoped(ApplicationState::Gameplay),
+    ));
 
     log_if_slow("create_phrase_key_bindings", start);
 }

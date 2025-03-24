@@ -137,19 +137,18 @@ pub(super) fn create_crafting_key_bindings(
 ) {
     let start = Instant::now();
 
-    held_bindings.spawn(
-        world,
-        GameplayScreenState::Crafting,
-        |bindings| {
-            for &step in SelectionListStep::VARIANTS {
-                bindings.add(
-                    step,
-                    (move || step)
-                        .pipe(create_start_craft_system_with_step)
-                        .pipe(move_crafting_selection),
-                );
-            }
-        },
+    held_bindings.spawn(world, GameplayScreenState::Crafting, |bindings| {
+        for &step in SelectionListStep::VARIANTS {
+            bindings.add(
+                step,
+                (move || step)
+                    .pipe(create_start_craft_system_with_step)
+                    .pipe(move_crafting_selection),
+            );
+        }
+    });
+
+    world.spawn((
         ManualSection::new(
             &[
                 ("select craft", "arrow up/down"),
@@ -157,18 +156,19 @@ pub(super) fn create_crafting_key_bindings(
             ],
             100,
         ),
-    );
+        StateScoped(GameplayScreenState::Crafting),
+    ));
 
-    fresh_bindings.spawn(
-        world,
-        GameplayScreenState::Crafting,
-        |bindings| {
-            bindings.add('c', start_craft);
-            bindings.add(KeyCode::Escape, exit_crafting);
-            bindings.add('&', exit_crafting);
-        },
+    fresh_bindings.spawn(world, GameplayScreenState::Crafting, |bindings| {
+        bindings.add('c', start_craft);
+        bindings.add(KeyCode::Escape, exit_crafting);
+        bindings.add('&', exit_crafting);
+    });
+
+    world.spawn((
         ManualSection::new(&[("craft", "c"), ("close crafting", "esc/&")], 100),
-    );
+        StateScoped(GameplayScreenState::Crafting),
+    ));
 
     log_if_slow("create_crafting_key_bindings", start);
 }

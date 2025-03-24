@@ -78,14 +78,14 @@ pub(super) fn create_menu_key_bindings(
 ) {
     let start = Instant::now();
 
-    bindings.spawn(
-        world,
-        GameplayScreenState::Menu,
-        |bindings| {
-            bindings.add(KeyCode::Escape, close_menu);
-        },
+    bindings.spawn(world, GameplayScreenState::Menu, |bindings| {
+        bindings.add(KeyCode::Escape, close_menu);
+    });
+
+    world.spawn((
         ManualSection::new(&[("close menu", "esc")], 100),
-    );
+        StateScoped(GameplayScreenState::Menu),
+    ));
 
     log_if_slow("create_menu_key_bindings", start);
 }

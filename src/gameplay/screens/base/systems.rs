@@ -208,66 +208,64 @@ pub(super) fn create_base_key_bindings(
 ) {
     let start = Instant::now();
 
-    held_key_bindings.spawn(
-        world,
-        GameplayScreenState::Base,
-        |builder| {
-            for &player_direction in PlayerDirection::VARIANTS {
-                builder.add(
-                    player_direction.to_nbor(),
-                    (move || QueuedInstruction::Offset(player_direction))
-                        .pipe(manage_queued_instruction),
-                );
-            }
-        },
+    held_key_bindings.spawn(world, GameplayScreenState::Base, |builder| {
+        for &player_direction in PlayerDirection::VARIANTS {
+            builder.add(
+                player_direction.to_nbor(),
+                (move || QueuedInstruction::Offset(player_direction))
+                    .pipe(manage_queued_instruction),
+            );
+        }
+    });
+
+    world.spawn((
         ManualSection::new(&[("move", "numpad"), ("move up/down", "</>")], 100),
-    );
+        StateScoped(GameplayScreenState::Base),
+    ));
 
-    fresh_key_bindings.spawn(
-        world,
-        GameplayScreenState::Base,
-        |builder| {
-            builder.add('m', (|| ZoomDistance::Close).pipe(toggle_map));
-            builder.add('m', (|| ZoomDistance::Far).pipe(toggle_map));
-            builder.add('x', examine_pos);
-            builder.add('X', examine_zone_level);
-            builder.add('&', open_crafting_screen);
-            builder.add('i', open_inventory);
-            builder.add('z', (|| ZoomDirection::In).pipe(manage_zoom));
-            builder.add('Z', (|| ZoomDirection::Out).pipe(manage_zoom));
-            builder.add('h', toggle_elevation);
-            builder.add('0', reset_camera_angle);
+    fresh_key_bindings.spawn(world, GameplayScreenState::Base, |builder| {
+        builder.add('m', (|| ZoomDistance::Close).pipe(toggle_map));
+        builder.add('m', (|| ZoomDistance::Far).pipe(toggle_map));
+        builder.add('x', examine_pos);
+        builder.add('X', examine_zone_level);
+        builder.add('&', open_crafting_screen);
+        builder.add('i', open_inventory);
+        builder.add('z', (|| ZoomDirection::In).pipe(manage_zoom));
+        builder.add('Z', (|| ZoomDirection::Out).pipe(manage_zoom));
+        builder.add('h', toggle_elevation);
+        builder.add('0', reset_camera_angle);
 
-            {
-                use QueuedInstruction::{
-                    Attack, Close, Drag, Peek, Pulp, Sleep, Smash, ToggleAutoDefend,
-                    ToggleAutoTravel, Wait,
-                };
-                builder.add('|', (|| Wait).pipe(manage_queued_instruction));
-                builder.add('$', (|| Sleep).pipe(manage_queued_instruction));
-                builder.add('a', (|| Attack).pipe(manage_queued_instruction));
-                builder.add('s', (|| Smash).pipe(manage_queued_instruction));
-                builder.add('p', (|| Pulp).pipe(manage_queued_instruction));
-                builder.add('c', (|| Close).pipe(manage_queued_instruction));
-                builder.add('\\', (|| Drag).pipe(manage_queued_instruction));
-                builder.add('G', (|| ToggleAutoTravel).pipe(manage_queued_instruction));
-                builder.add('A', (|| ToggleAutoDefend).pipe(manage_queued_instruction));
-                builder.add(KeyCode::Tab, (|| Peek).pipe(manage_queued_instruction));
-            }
+        {
+            use QueuedInstruction::{
+                Attack, Close, Drag, Peek, Pulp, Sleep, Smash, ToggleAutoDefend, ToggleAutoTravel,
+                Wait,
+            };
+            builder.add('|', (|| Wait).pipe(manage_queued_instruction));
+            builder.add('$', (|| Sleep).pipe(manage_queued_instruction));
+            builder.add('a', (|| Attack).pipe(manage_queued_instruction));
+            builder.add('s', (|| Smash).pipe(manage_queued_instruction));
+            builder.add('p', (|| Pulp).pipe(manage_queued_instruction));
+            builder.add('c', (|| Close).pipe(manage_queued_instruction));
+            builder.add('\\', (|| Drag).pipe(manage_queued_instruction));
+            builder.add('G', (|| ToggleAutoTravel).pipe(manage_queued_instruction));
+            builder.add('A', (|| ToggleAutoDefend).pipe(manage_queued_instruction));
+            builder.add(KeyCode::Tab, (|| Peek).pipe(manage_queued_instruction));
+        }
 
-            builder.add(
-                '+',
-                (|| QueuedInstruction::ChangePace(ChangePace::Next))
-                    .pipe(manage_queued_instruction),
-            );
-            builder.add(
-                '-',
-                (|| QueuedInstruction::ChangePace(ChangePace::Previous))
-                    .pipe(manage_queued_instruction),
-            );
+        builder.add(
+            '+',
+            (|| QueuedInstruction::ChangePace(ChangePace::Next)).pipe(manage_queued_instruction),
+        );
+        builder.add(
+            '-',
+            (|| QueuedInstruction::ChangePace(ChangePace::Previous))
+                .pipe(manage_queued_instruction),
+        );
 
-            builder.add(KeyCode::Escape, handle_cancelation);
-        },
+        builder.add(KeyCode::Escape, handle_cancelation);
+    });
+
+    world.spawn((
         ManualSection::new(
             &[
                 ("attack npc", "a"),
@@ -292,7 +290,8 @@ pub(super) fn create_base_key_bindings(
             ],
             101,
         ),
-    );
+        StateScoped(GameplayScreenState::Base),
+    ));
 
     log_if_slow("create_crafting_key_bindings", start);
 }

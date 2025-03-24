@@ -3,7 +3,6 @@ use crate::hud::{
     BAD_TEXT_COLOR, ButtonBuilder, Fonts, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, LARGE_SPACING,
     MEDIUM_SPACING, PANEL_COLOR, trigger_button_action,
 };
-use crate::keyboard::KeyBindings;
 use crate::main_menu::components::{LoadButtonArea, MessageField, MessageWrapper};
 use crate::main_menu::load_error::LoadError;
 use crate::util::{AssetPaths, log_if_slow};
@@ -12,8 +11,8 @@ use base64::{Engine as _, engine::general_purpose::STANDARD as base64};
 use bevy::prelude::{
     AlignContent, AlignItems, BuildChildren as _, Camera2d, ChildBuild as _, ChildBuilder,
     Commands, DespawnRecursiveExt as _, Display, Entity, Events, FlexDirection, FlexWrap,
-    GlobalZIndex, In, JustifyContent, Local, NextState, Node, Query, Res, ResMut, StateScoped,
-    Text, UiRect, Val, With, Without, World, error,
+    GlobalZIndex, In, JustifyContent, NextState, Node, Query, Res, ResMut, StateScoped, Text,
+    UiRect, Val, With, Without, World, error,
 };
 use bevy::{app::AppExit, ecs::system::SystemId};
 use glob::glob;
@@ -82,18 +81,13 @@ pub(super) fn spawn_main_menu(
 }
 
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn create_main_menu_key_bindings(
-    world: &mut World,
-    bindings: Local<KeyBindings<ApplicationState, (), ()>>,
-) {
+pub(crate) fn create_main_menu_key_bindings(world: &mut World) {
     let start = Instant::now();
 
-    bindings.spawn(
-        world,
-        ApplicationState::MainMenu,
-        |_| {},
+    world.spawn((
         ManualSection::new(&[("load save", "a-z")], 100),
-    );
+        StateScoped(ApplicationState::MainMenu),
+    ));
 
     log_if_slow("create_main_menu_key_bindings", start);
 }
