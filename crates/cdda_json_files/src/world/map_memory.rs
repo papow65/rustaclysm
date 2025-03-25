@@ -1,11 +1,28 @@
+use bevy_log::error;
 use serde::de::{Deserialize, Deserializer, Error as _, SeqAccess, Visitor};
-use std::fmt;
-use std::sync::Arc;
+use std::{fmt, sync::Arc};
 
 /// A player's memory of terrain on 8x8 suzones or 4x4 zones. Corresponds to a map memory ('.mmr') file in CDDA.
 #[derive(Debug, serde::Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct MapMemory(pub Vec<SubmapMemory>);
+#[serde(untagged)]
+pub enum MapMemory {
+    List(Vec<SubmapMemory>),
+    Map {
+        version: u8,
+        data: Vec<SubmapMemory>,
+    },
+}
+
+impl MapMemory {
+    #[must_use]
+    pub fn list(&self) -> &[SubmapMemory] {
+        match self {
+            Self::List(list) => list,
+            Self::Map { data, .. } => data,
+        }
+    }
+}
 
 #[derive(Debug, serde::Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -20,9 +37,9 @@ impl SubmapMemory {
         let tile = z * 12 + x;
         let mut next_tile: u8 = 0;
         for tile_memory in &self.0 {
-            next_tile += tile_memory.amount;
+            next_tile += tile_memory.get_amount();
             if tile < next_tile {
-                return tile_memory.type_id.is_some();
+                return tile_memory.get_type_id().is_some();
             };
         }
         panic!("{tile} {next_tile}");
@@ -31,7 +48,7 @@ impl SubmapMemory {
 
 impl Default for SubmapMemory {
     fn default() -> Self {
-        Self(vec![TileMemory {
+        Self(vec![TileMemory::Old {
             type_id: None,
             subtile: 0,
             rotation: 0,
@@ -52,20 +69,47 @@ impl From<Option<Vec<TileMemory>>> for SubmapMemory {
 }
 
 #[derive(Debug)]
-pub struct TileMemory {
-    // Empty strings are translated to `None`.
-    pub type_id: Option<Arc<str>>,
+pub enum TileMemory {
+    Old {
+        // Empty strings are translated to `None`.
+        type_id: Option<Arc<str>>,
 
-    #[allow(unused)]
-    pub subtile: u8,
+        #[allow(unused)]
+        subtile: u8,
 
-    #[allow(unused)]
-    pub rotation: u16,
+        #[allow(unused)]
+        rotation: u16,
 
-    #[allow(unused)]
-    pub symbol: u8,
+        #[allow(unused)]
+        symbol: u8,
 
-    pub amount: u8,
+        amount: u8,
+    },
+    New {
+        amount: u8,
+        unknown_a: u8,
+        // Empty strings are translated to `None`.
+        type_id: Option<Arc<str>>,
+        unknown_b: u8,
+        unknown_c: u8,
+        unknown_d: Option<u8>,
+        unknown_e: Option<u8>,
+        unknown_f: Option<u8>,
+    },
+}
+
+impl TileMemory {
+    const fn get_amount(&self) -> u8 {
+        match self {
+            Self::New { amount, .. } | Self::Old { amount, .. } => *amount,
+        }
+    }
+
+    const fn get_type_id(&self) -> Option<&Arc<str>> {
+        match self {
+            Self::New { type_id, .. } | Self::Old { type_id, .. } => type_id.as_ref(),
+        }
+    }
 }
 
 impl<'de> Deserialize<'de> for TileMemory {
@@ -73,7 +117,11 @@ impl<'de> Deserialize<'de> for TileMemory {
     where
         D: Deserializer<'de>,
     {
-        deserializer.deserialize_seq(TileMemoryVisitor)
+        deserializer
+            .deserialize_seq(TileMemoryVisitor)
+            .inspect_err(|error| {
+                error!("{error:?}");
+            })
     }
 }
 
@@ -90,21 +138,48 @@ impl<'de> Visitor<'de> for TileMemoryVisitor {
     where
         A: SeqAccess<'de>,
     {
-        Ok(TileMemory {
-            type_id: seq
-                .next_element()?
-                .map(|s: Arc<str>| if s.is_empty() { None } else { Some(s) })
-                .ok_or_else(|| A::Error::custom("Missing type_id"))?,
-            subtile: seq
-                .next_element()?
-                .ok_or_else(|| A::Error::custom("Missing subtile"))?,
-            rotation: seq
-                .next_element()?
-                .ok_or_else(|| A::Error::custom("Missing rotation"))?,
-            symbol: seq
-                .next_element()?
-                .ok_or_else(|| A::Error::custom("Missing symbol"))?,
-            amount: seq.next_element()?.unwrap_or(1),
+        let first: Option<serde_json::Value> = seq.next_element()?;
+
+        Ok(match first {
+            Some(serde_json::Value::String(type_id)) => TileMemory::Old {
+                type_id: if type_id.is_empty() {
+                    None
+                } else {
+                    Some(type_id.into())
+                },
+                subtile: seq
+                    .next_element()?
+                    .ok_or_else(|| A::Error::custom("Missing subtile"))?,
+                rotation: seq
+                    .next_element()?
+                    .ok_or_else(|| A::Error::custom("Missing rotation"))?,
+                symbol: seq
+                    .next_element()?
+                    .ok_or_else(|| A::Error::custom("Missing symbol"))?,
+                amount: seq.next_element()?.unwrap_or(1),
+            },
+            Some(serde_json::Value::Number(amount)) => TileMemory::New {
+                amount: amount
+                    .as_u64()
+                    .ok_or_else(|| A::Error::custom("Weird amount"))? as u8,
+                unknown_a: seq
+                    .next_element()?
+                    .ok_or_else(|| A::Error::custom("Missing unknown field unknown_a"))?,
+                type_id: seq
+                    .next_element()?
+                    .map(|s: Arc<str>| if s.is_empty() { None } else { Some(s) })
+                    .ok_or_else(|| A::Error::custom("Missing type_id"))?,
+                unknown_b: seq
+                    .next_element()?
+                    .ok_or_else(|| A::Error::custom("Missing unknown field unknown_b"))?,
+                unknown_c: seq
+                    .next_element()?
+                    .ok_or_else(|| A::Error::custom("Missing unknown field unknown_c"))?,
+                unknown_d: seq.next_element()?,
+                unknown_e: seq.next_element()?,
+                unknown_f: seq.next_element()?,
+            },
+            _unexpected => Err(A::Error::custom("Unexpected: {_unexpected :?}"))?,
         })
     }
 }
@@ -120,21 +195,21 @@ mod container_tests {
             matches!(
                 &result,
                 &Ok([
-                    TileMemory {
+                    TileMemory::Old {
                         type_id: Some(ref x),
                         subtile: 0,
                         rotation: 0,
                         symbol: 0,
                         amount: 2
                     },
-                    TileMemory {
+                    TileMemory::Old {
                         type_id: Some(ref y),
                         subtile: 3,
                         rotation: 2,
                         symbol: 0,
                         amount: 1
                     },
-                    TileMemory {
+                    TileMemory::Old {
                         type_id: Some(ref z),
                         subtile: 5,
                         rotation: 0,

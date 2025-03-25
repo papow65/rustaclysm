@@ -115,6 +115,9 @@ pub struct CddaPocket {
 
     #[expect(unused)]
     favorite_settings: Option<serde_json::Value>,
+
+    #[expect(unused)]
+    no_rigid: Option<serde_json::Value>,
 }
 
 const fn return_true() -> bool {

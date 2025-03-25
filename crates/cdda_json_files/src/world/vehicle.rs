@@ -36,7 +36,7 @@ pub struct CddaVehicle {
     pub cruise_velocity: i16,
 
     pub vertical_velocity: u8,
-    pub cruise_on: bool,
+    pub cruise_on: Option<bool>,
     pub engine_on: bool,
     pub tracking_on: bool,
     pub skidding: bool,
@@ -90,6 +90,9 @@ pub struct CddaVehicle {
 
     #[serde(default)]
     pub vehicle_noise: Option<u8>,
+
+    pub in_deep_water: Option<serde_json::Value>,
+    pub precollision_on: Option<serde_json::Value>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -126,6 +129,11 @@ pub struct CddaVehiclePart {
     pub target_second_y: Option<i16>,
     pub target_second_z: Option<i16>,
     pub ammo_pref: Arc<str>,
+
+    pub tools: Option<serde_json::Value>,
+    pub salvageable: Option<serde_json::Value>,
+    pub locked: Option<serde_json::Value>,
+    pub last_disconnected: Option<serde_json::Value>,
 }
 
 #[cfg(test)]
