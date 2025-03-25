@@ -165,15 +165,19 @@ impl<T: fmt::Debug> LinkedLater<T> {
 
     /// This may only be called once.
     fn finalize(&self, found: Option<Weak<T>>) -> Result<(), Error> {
-        // This should not happen, even with malformed data. So we use 'expect()' instead of returning an error.
+        // By defining the result at this point, we only have to lock once.
+        // By returing the result at the end, the lock always gets set, as is expected.
+        let result = if found.is_some() {
+            Ok(())
+        } else {
+            Err(Error::UnknownInfoId {
+                _id: self.info_id.clone().into(),
+            })
+        };
+
+        // This should not fail, even with malformed data. So we use 'expect()' instead of returning an error.
         self.lock.set(found).expect("{self:?} is already finalized");
 
-        if self.lock.get().is_none() {
-            return Err(Error::UnknownInfoId {
-                _id: self.info_id.clone().into(),
-            });
-        }
-
-        Ok(())
+        result
     }
 }

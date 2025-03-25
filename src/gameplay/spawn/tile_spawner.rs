@@ -65,7 +65,7 @@ impl<'w> TileSpawner<'w, '_> {
                     item,
                     Amount(item.charges.unwrap_or(1) * amount),
                 ) {
-                    error!("While spawning an item: {error:#?}");
+                    error!("Spawning a tile item failed: {error:#?}");
                 }
             }
         }
@@ -260,7 +260,7 @@ impl<'w> TileSpawner<'w, '_> {
                     if let Err(error) =
                         self.spawn_item(pocket, None, content, Amount(content.charges.unwrap_or(1)))
                     {
-                        error!("While spawning a nested item: {:#?}", error);
+                        error!("Spawning a nested item failed: {:#?}", error);
                     }
                 }
             }
@@ -285,7 +285,7 @@ impl<'w> TileSpawner<'w, '_> {
                 &cdda_item,
                 Amount(spawn_item.amount),
             ) {
-                error!("While spawning a list item: {:#?}", error);
+                error!("Spawning an item from a collection failed: {:#?}", error);
             }
         }
     }
