@@ -1,14 +1,15 @@
 use crate::gameplay::{spawn::TileSpawner, *};
-use bevy::ecs::{schedule::SystemConfigs, system::SystemId};
+use bevy::ecs::schedule::{IntoScheduleConfigs as _, ScheduleConfigs};
+use bevy::ecs::system::{ScheduleSystem, SystemId};
 use bevy::prelude::{
-    Commands, Entity, EventWriter, In, IntoSystem as _, IntoSystemConfigs as _, Local, NextState,
-    Query, Res, ResMut, State, StateTransition, SystemInput, With, World, debug,
+    Commands, Entity, EventWriter, In, IntoSystem as _, Local, NextState, Query, Res, ResMut,
+    Single, State, StateTransition, SystemInput, With, World, debug,
 };
 use std::{cell::OnceCell, time::Instant};
 use units::Duration;
 use util::log_if_slow;
 
-pub(in super::super) fn perform_egible_character_action() -> SystemConfigs {
+pub(in super::super) fn perform_egible_character_action() -> ScheduleConfigs<ScheduleSystem> {
     egible_character
         .pipe(plan_action)
         .pipe(perform_action)
@@ -21,11 +22,11 @@ fn egible_character(
     envir: Envir,
     mut timeouts: ResMut<Timeouts>,
     actors: Query<Actor>,
-    players: Query<(), With<Player>>,
+    player: Single<Entity, With<Player>>,
 ) -> Entity {
     let egible_entities = actors
         .iter()
-        .filter(|a| envir.is_accessible(*a.pos) || players.get(a.entity).is_ok())
+        .filter(|a| envir.is_accessible(*a.pos) || *player == a.entity)
         .map(|a| a.entity)
         .collect::<Vec<Entity>>();
     timeouts
@@ -301,11 +302,10 @@ fn run_system<I: SystemInput + 'static, R: 'static>(
     in_: I::Inner<'_>,
 ) -> R {
     world
-        .run_system_with_input(system_id, in_)
+        .run_system_with(system_id, in_)
         .expect("Action should have succeeded")
 }
 
-#[expect(clippy::needless_pass_by_value)]
 fn perform_stay(In(stay): In<ActionIn<Stay>>, actors: Query<Actor>) -> ActorImpact {
     stay.actor(&actors).stay()
 }
@@ -329,7 +329,6 @@ fn perform_sleep(
     )
 }
 
-#[expect(clippy::needless_pass_by_value)]
 fn perform_step(
     In(step): In<ActionIn<Step>>,
     mut commands: Commands,
@@ -526,7 +525,6 @@ fn perform_start_craft(
     )
 }
 
-#[expect(clippy::needless_pass_by_value)]
 fn perform_continue_craft(
     In(continue_craft): In<ActionIn<ContinueCraft>>,
     mut commands: Commands,
@@ -546,7 +544,6 @@ fn perform_continue_craft(
     )
 }
 
-#[expect(clippy::needless_pass_by_value)]
 fn perform_examine_item(
     In(examine_item): In<ActionIn<ExamineItem>>,
     mut message_writer: MessageWriter,
@@ -558,7 +555,6 @@ fn perform_examine_item(
         .examine_item(&mut message_writer, &examine_item.action.item(&items))
 }
 
-#[expect(clippy::needless_pass_by_value)]
 fn perform_change_pace(
     In(change_pace): In<ActionIn<ChangePace>>,
     mut commands: Commands,
@@ -575,7 +571,7 @@ fn proces_impact(
     mut message_writer: MessageWriter,
     mut timeouts: ResMut<Timeouts>,
     mut staminas: Query<&mut Stamina>,
-    players: Query<Entity, With<Player>>,
+    player: Single<Entity, With<Player>>,
 ) {
     let start = Instant::now();
 
@@ -590,7 +586,7 @@ fn proces_impact(
         if let Ok(mut stamina) = staminas.get_mut(actor) {
             stamina.apply(&impact);
         }
-    } else if players.get(actor).is_err() {
+    } else if *player != actor {
         message_writer.str("NPC action failed").send_error();
         // To prevent the application hanging on failing NPC actions, we add a small timeout
         timeouts.add(actor, Duration::SECOND);

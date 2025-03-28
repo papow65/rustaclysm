@@ -1,7 +1,7 @@
 use crate::gameplay::cdda::region_assets::RegionAsset;
 use crate::gameplay::{AssetState, PathFor};
+use bevy::platform_support::collections::HashMap;
 use bevy::prelude::{AssetId, AssetServer, Assets, Handle, Resource};
-use bevy::utils::HashMap;
 
 #[derive(Resource)]
 pub(super) struct AssetStorage<A: RegionAsset> {
@@ -42,7 +42,7 @@ impl<A: RegionAsset> Default for AssetStorage<A> {
     fn default() -> Self {
         Self {
             live_handles: Vec::new(),
-            regions: HashMap::new(),
+            regions: HashMap::default(),
         }
     }
 }

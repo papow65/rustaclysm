@@ -49,7 +49,6 @@ pub(crate) fn count_assets(
     log_if_slow("count_assets", start);
 }
 
-#[expect(clippy::needless_pass_by_value)]
 pub(crate) fn count_pos(
     zone_levels: Query<(), With<ZoneLevel>>,
     subzone_levels: Query<(), With<SubzoneLevel>>,

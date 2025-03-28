@@ -3,10 +3,10 @@ use crate::gameplay::screens::inventory::resource::{ITEM_TEXT_COLOR, SELECTED_IT
 use crate::gameplay::screens::inventory::section::InventorySection;
 use crate::gameplay::screens::inventory::systems::{InventoryButton, InventorySystem};
 use crate::gameplay::{DebugTextShown, Fragment, ItemHandler, ItemItem, Phrase};
-use bevy::ecs::entity::EntityHashMap;
+use bevy::ecs::entity::hash_map::EntityHashMap;
 use bevy::prelude::{
-    AlignItems, BackgroundColor, BuildChildren as _, ChildBuild as _, ChildBuilder, Entity,
-    JustifyContent, Node, Overflow, Text, TextColor, Val, debug,
+    AlignItems, BackgroundColor, ChildSpawnerCommands, Entity, JustifyContent, Node, Overflow,
+    Text, TextColor, Val, debug,
 };
 use cdda_json_files::CommonItemInfo;
 use hud::{
@@ -23,7 +23,7 @@ struct SectionData<'r> {
 }
 
 impl SectionData<'_> {
-    fn add_expansion_button(&self, parent: &mut ChildBuilder, item_text_color: TextColor) {
+    fn add_expansion_button(&self, parent: &mut ChildSpawnerCommands, item_text_color: TextColor) {
         parent.spawn((
             Text::default(),
             item_text_color,
@@ -36,7 +36,7 @@ impl SectionData<'_> {
         ));
     }
 
-    fn add_item_name(&self, parent: &mut ChildBuilder, item_phrase: &Phrase) {
+    fn add_item_name(&self, parent: &mut ChildSpawnerCommands, item_phrase: &Phrase) {
         parent
             .spawn((
                 Text::default(),
@@ -59,7 +59,7 @@ impl SectionData<'_> {
             });
     }
 
-    fn add_item_properties(&self, parent: &mut ChildBuilder, item_info: &CommonItemInfo) {
+    fn add_item_properties(&self, parent: &mut ChildSpawnerCommands, item_info: &CommonItemInfo) {
         let property_node = Node {
             width: Val::Px(60.0),
             overflow: Overflow::clip(),
@@ -92,7 +92,7 @@ impl SectionData<'_> {
 
     fn add_item_action_buttons(
         &self,
-        parent: &mut ChildBuilder<'_>,
+        parent: &mut ChildSpawnerCommands<'_>,
         item_entity: Entity,
         item_text_color: TextColor,
     ) {
@@ -133,7 +133,7 @@ impl SectionData<'_> {
 struct InventoryBuilder<'r, 'c> {
     selection_list: &'r mut SelectionList,
     section_by_item: &'r mut EntityHashMap<InventorySection>,
-    panel: &'r mut ChildBuilder<'c>,
+    panel: &'r mut ChildSpawnerCommands<'c>,
 }
 
 impl InventoryBuilder<'_, '_> {
@@ -220,7 +220,7 @@ where
         inventory_system: &'r InventorySystem,
         selection_list: &'r mut SelectionList,
         section_by_item: &'r mut EntityHashMap<InventorySection>,
-        inventory_panel: &'r mut ChildBuilder<'c>,
+        inventory_panel: &'r mut ChildSpawnerCommands<'c>,
         previous_selected_item: Option<Entity>,
         section: InventorySection,
         drop_section: bool,

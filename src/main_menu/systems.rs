@@ -4,10 +4,9 @@ use crate::main_menu::components::{LoadButtonArea, MessageField, MessageWrapper}
 use crate::main_menu::load_error::LoadError;
 use base64::{Engine as _, engine::general_purpose::STANDARD as base64};
 use bevy::prelude::{
-    AlignContent, AlignItems, BuildChildren as _, Camera2d, ChildBuild as _, ChildBuilder,
-    Commands, DespawnRecursiveExt as _, Display, Entity, Events, FlexDirection, FlexWrap,
-    GlobalZIndex, In, JustifyContent, NextState, Node, Query, Res, ResMut, StateScoped, Text,
-    UiRect, Val, With, Without, World, error,
+    AlignContent, AlignItems, Camera2d, ChildSpawnerCommands, Children, Commands, Display, Entity,
+    Events, FlexDirection, FlexWrap, GlobalZIndex, In, JustifyContent, NextState, Node, Res,
+    ResMut, Single, StateScoped, Text, UiRect, Val, With, Without, World, error,
 };
 use bevy::{app::AppExit, ecs::system::SystemId};
 use glob::glob;
@@ -93,11 +92,11 @@ pub(crate) fn create_main_menu_key_bindings(world: &mut World) {
     log_if_slow("create_main_menu_key_bindings", start);
 }
 
-fn add_title(parent: &mut ChildBuilder, fonts: &Fonts) {
+fn add_title(parent: &mut ChildSpawnerCommands, fonts: &Fonts) {
     parent.spawn((Text::from("Rustaclysm"), HARD_TEXT_COLOR, fonts.huge()));
 }
 
-fn add_tagline(parent: &mut ChildBuilder, fonts: &Fonts) {
+fn add_tagline(parent: &mut ChildSpawnerCommands, fonts: &Fonts) {
     parent.spawn((
         Text::from("A 3D reimplementation of Cataclysm: Dark Days Ahead"),
         HARD_TEXT_COLOR,
@@ -112,7 +111,7 @@ fn add_tagline(parent: &mut ChildBuilder, fonts: &Fonts) {
     ));
 }
 
-fn add_load_button_area(parent: &mut ChildBuilder) {
+fn add_load_button_area(parent: &mut ChildSpawnerCommands) {
     parent.spawn((
         Node {
             flex_direction: FlexDirection::Column,
@@ -128,7 +127,7 @@ fn add_load_button_area(parent: &mut ChildBuilder) {
     ));
 }
 
-fn add_notification_area(parent: &mut ChildBuilder, fonts: &Fonts) {
+fn add_notification_area(parent: &mut ChildSpawnerCommands, fonts: &Fonts) {
     parent
         .spawn((
             Node {
@@ -164,7 +163,7 @@ fn add_notification_area(parent: &mut ChildBuilder, fonts: &Fonts) {
         });
 }
 
-fn add_quit_button(parent: &mut ChildBuilder, quit_system: &QuitSystem, fonts: &Fonts) {
+fn add_quit_button(parent: &mut ChildSpawnerCommands, quit_system: &QuitSystem, fonts: &Fonts) {
     ButtonBuilder::new("Quit", BAD_TEXT_COLOR, fonts.large(), quit_system.0)
         .large()
         .spawn(parent, ());
@@ -176,15 +175,14 @@ pub(super) fn update_sav_files(
     mut commands: Commands,
     fonts: Res<Fonts>,
     mut last_list_saves_result: GameplayLocal<Option<Result<Vec<PathBuf>, LoadError>>>,
-    mut load_button_areas: Query<
+    mut load_button_areas: Single<
         (Entity, &mut Node),
         (With<LoadButtonArea>, Without<MessageWrapper>),
     >,
-    mut message_wrappers: Query<&mut Node, (With<MessageWrapper>, Without<LoadButtonArea>)>,
-    mut message_fields: Query<&mut Text, With<MessageField>>,
+    mut message_wrapper: Single<&mut Node, (With<MessageWrapper>, Without<LoadButtonArea>)>,
+    mut message_field: Single<&mut Text, With<MessageField>>,
 ) {
-    let mut message_wrapper_style = message_wrappers.single_mut();
-    let (load_button_area, mut load_button_area_style) = load_button_areas.single_mut();
+    let &mut (load_button_area, ref mut load_button_area_style) = &mut *load_button_areas;
 
     let list_saves_result = list_saves();
 
@@ -193,12 +191,14 @@ pub(super) fn update_sav_files(
     }
     *last_list_saves_result.get() = Some(list_saves_result.clone());
 
-    commands.entity(load_button_area).despawn_descendants();
+    commands
+        .entity(load_button_area)
+        .despawn_related::<Children>();
 
     match list_saves_result {
         Ok(list) => {
             load_button_area_style.display = Display::Flex;
-            message_wrapper_style.display = Display::None;
+            message_wrapper.display = Display::None;
 
             for (index, path) in list.iter().enumerate() {
                 commands.entity(load_button_area).with_children(|parent| {
@@ -216,10 +216,9 @@ pub(super) fn update_sav_files(
             error!("{}", &err);
 
             load_button_area_style.display = Display::None;
-            message_wrapper_style.display = Display::Flex;
+            message_wrapper.display = Display::Flex;
 
-            let mut message_text = message_fields.single_mut();
-            message_text.0 = err.to_string();
+            message_field.0 = err.to_string();
         }
     }
 }
@@ -302,7 +301,7 @@ fn check_directory_structure() -> Result<(), LoadError> {
 fn add_load_button(
     fonts: &Fonts,
     load_systems: &LoadSystems,
-    parent: &mut ChildBuilder,
+    parent: &mut ChildSpawnerCommands,
     path: &Path,
     index: Option<u32>,
 ) {

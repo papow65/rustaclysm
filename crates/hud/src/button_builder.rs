@@ -1,9 +1,8 @@
 use crate::SOFT_TEXT_COLOR;
 use bevy::ecs::system::SystemId;
 use bevy::prelude::{
-    AlignItems, BuildChildren as _, Bundle, Button, ChildBuild as _, ChildBuilder, Commands,
-    Component, Entity, In, JustifyContent, Node, PositionType, SystemInput, Text, TextColor,
-    TextFont, Val,
+    AlignItems, Bundle, Button, ChildSpawnerCommands, Commands, Component, Entity, In,
+    JustifyContent, Node, PositionType, SystemInput, Text, TextColor, TextFont, Val,
 };
 use keyboard::{Key, KeyBinding};
 use std::fmt;
@@ -22,7 +21,7 @@ where
     <I as SystemInput>::Inner<'static>: Clone + fmt::Debug + Send + 'static,
 {
     pub(super) fn run(&self, commands: &mut Commands) {
-        commands.run_system_with_input(self.system, self.context.clone());
+        commands.run_system_with(self.system, self.context.clone());
     }
 }
 
@@ -89,7 +88,11 @@ where
         self
     }
 
-    pub fn spawn(self, parent: &mut ChildBuilder, context: <I as SystemInput>::Inner<'static>) {
+    pub fn spawn(
+        self,
+        parent: &mut ChildSpawnerCommands,
+        context: <I as SystemInput>::Inner<'static>,
+    ) {
         let mut entity_commands = parent.spawn((
             Button,
             self.node,

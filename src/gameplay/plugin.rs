@@ -20,11 +20,12 @@ use crate::gameplay::{models::ModelPlugin, sidebar::SidebarPlugin, time::TimePlu
 use crate::gameplay::{
     resources::ResourcePlugin, scope::GameplayLocalPlugin, screens::ScreensPlugin,
 };
+use bevy::ecs::system::ScheduleSystem;
 use bevy::prelude::{
-    App, AppExtStates as _, AssetEvent, FixedUpdate, IntoSystemConfigs as _, Last, OnEnter, Plugin,
-    Update, in_state, on_event, resource_exists, resource_exists_and_changed,
+    App, AppExtStates as _, AssetEvent, FixedUpdate, IntoScheduleConfigs as _, Last, OnEnter,
+    Plugin, Update, in_state, on_event, resource_exists, resource_exists_and_changed,
 };
-use bevy::{diagnostic::FrameTimeDiagnosticsPlugin, ecs::schedule::SystemConfigs};
+use bevy::{diagnostic::FrameTimeDiagnosticsPlugin, ecs::schedule::ScheduleConfigs};
 use util::log_transition_plugin;
 
 pub(crate) struct GameplayPlugin;
@@ -47,7 +48,7 @@ impl Plugin for GameplayPlugin {
             GameplayLocalPlugin,
             ScreensPlugin,
             TimePlugin,
-            FrameTimeDiagnosticsPlugin,
+            FrameTimeDiagnosticsPlugin::default(),
             log_transition_plugin::<GameplayScreenState>,
         ));
 
@@ -58,11 +59,11 @@ impl Plugin for GameplayPlugin {
     }
 }
 
-fn startup_systems() -> SystemConfigs {
+fn startup_systems() -> ScheduleConfigs<ScheduleSystem> {
     (spawn_initial_entities, create_gameplay_key_bindings).into_configs()
 }
 
-fn update_systems() -> SystemConfigs {
+fn update_systems() -> ScheduleConfigs<ScheduleSystem> {
     (
         (
             (
@@ -102,7 +103,7 @@ fn update_systems() -> SystemConfigs {
         .run_if(in_state(ApplicationState::Gameplay))
 }
 
-fn fixed_update_systems() -> SystemConfigs {
+fn fixed_update_systems() -> ScheduleConfigs<ScheduleSystem> {
     (
         (count_assets, count_pos, check_failed_asset_loading),
         #[cfg(feature = "log_archetypes")]
@@ -112,7 +113,7 @@ fn fixed_update_systems() -> SystemConfigs {
 }
 
 /// This should run last, to prevent Bevy crashing on despawned entities being modified.
-fn despawn_systems() -> SystemConfigs {
+fn despawn_systems() -> ScheduleConfigs<ScheduleSystem> {
     (
         despawn_subzone_levels.run_if(on_event::<DespawnSubzoneLevel>),
         despawn_zone_level.run_if(on_event::<DespawnZoneLevel>),

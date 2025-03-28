@@ -114,7 +114,7 @@ impl MessageBuilder<'_, '_, Phrase> {
     }
 
     pub(crate) fn send(self, severity: Severity, transient: bool) {
-        self.message_writer.event_writer.send(Message {
+        self.message_writer.event_writer.write(Message {
             phrase: self.phrase,
             severity,
             transient,

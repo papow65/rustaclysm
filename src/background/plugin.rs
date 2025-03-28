@@ -1,7 +1,7 @@
 use crate::background::state::BackgroundState;
 use crate::background::systems::{resize_background, spawn_background};
 use bevy::prelude::{
-    App, AppExtStates as _, Condition as _, FixedUpdate, IntoSystemConfigs as _, OnEnter, Plugin,
+    App, AppExtStates as _, Condition as _, FixedUpdate, IntoScheduleConfigs as _, OnEnter, Plugin,
     Update, on_event, state_exists,
 };
 use bevy::window::{RequestRedraw, WindowResized};

@@ -1,8 +1,7 @@
-use std::sync::OnceLock;
-
 use crate::gameplay::{Level, OvermapAsset, Overzone, RepetitionBlockExt as _, ZoneLevel};
-use bevy::{prelude::Resource, utils::HashMap};
+use bevy::{platform_support::collections::HashMap, prelude::Resource};
 use cdda_json_files::{FlatVec, InfoId, Overmap, OvermapLevel, OvermapTerrainInfo};
+use std::sync::OnceLock;
 
 #[derive(Default, Resource)]
 pub(crate) struct ZoneLevelIds {

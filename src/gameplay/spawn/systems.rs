@@ -21,14 +21,14 @@ pub(crate) fn spawn_subzones_for_camera(
     subzone_level_entities: Res<SubzoneLevelEntities>,
     mut previous_camera_global_transform: GameplayLocal<GlobalTransform>,
     mut expanded: ResMut<Expanded>,
-    cameras: Query<(&Camera, &GlobalTransform)>,
+    camera: Single<(&Camera, &GlobalTransform)>,
     subzone_levels: Query<&SubzoneLevel>,
 ) {
     let start = Instant::now();
 
     // TODO fix respawning expanded subzones after loading a save game twice, because the Local resources might not change
 
-    let (camera, &global_transform) = cameras.single();
+    let (camera, &global_transform) = *camera;
     if global_transform == *previous_camera_global_transform.get() {
         return;
     }
@@ -134,7 +134,7 @@ fn spawn_expanded_subzone_levels(
         for subzone_level in zone_level.subzone_levels() {
             let missing = subzone_level_entities.get(subzone_level).is_none();
             if missing {
-                spawn_subzone_level_writer.send(SpawnSubzoneLevel { subzone_level });
+                spawn_subzone_level_writer.write(SpawnSubzoneLevel { subzone_level });
             }
         }
     }
@@ -153,7 +153,7 @@ fn despawn_expanded_subzone_levels(
         })
         .copied()
         .for_each(|subzone_level| {
-            despawn_subzone_level_writer.send(DespawnSubzoneLevel { subzone_level });
+            despawn_subzone_level_writer.write(DespawnSubzoneLevel { subzone_level });
         });
 }
 
@@ -208,7 +208,7 @@ pub(crate) fn despawn_subzone_levels(
 
     for despawn_event in despawn_subzone_level_reader.read() {
         if let Some(entity) = subzone_level_entities.remove(despawn_event.subzone_level) {
-            commands.entity(entity).despawn_recursive();
+            commands.entity(entity).despawn();
         }
     }
 
@@ -226,7 +226,7 @@ pub(crate) fn update_zone_levels(
     zone_level_entities: Res<ZoneLevelEntities>,
     mut previous_camera_global_transform: GameplayLocal<GlobalTransform>,
     mut previous_visible_region: GameplayLocal<Region>,
-    cameras: Query<(&Camera, &GlobalTransform)>,
+    camera: Single<(&Camera, &GlobalTransform)>,
     zone_levels: Query<(Entity, &ZoneLevel, &Children), With<Visibility>>,
     new_subzone_levels: Query<(), Added<SubzoneLevel>>,
 ) {
@@ -241,7 +241,7 @@ pub(crate) fn update_zone_levels(
     //    new_subzone_levels.is_empty()
     //);
 
-    let (camera, &global_transform) = cameras.single();
+    let (camera, &global_transform) = *camera;
     if global_transform == *previous_camera_global_transform.get() && new_subzone_levels.is_empty()
     {
         return;
@@ -268,18 +268,18 @@ pub(crate) fn update_zone_levels(
         .filter(|zone_level| zone_level.level == shown_level)
     {
         if zone_level_entities.get(zone_level).is_none() {
-            spawn_zone_level_writer.send(SpawnZoneLevel { zone_level });
+            spawn_zone_level_writer.write(SpawnZoneLevel { zone_level });
         }
     }
 
     for (entity, &zone_level, children) in zone_levels.iter() {
         if visible_region.contains_zone_level(zone_level) {
-            update_zone_level_visibility_writer.send(UpdateZoneLevelVisibility {
+            update_zone_level_visibility_writer.write(UpdateZoneLevelVisibility {
                 zone_level,
-                children: children.iter().copied().collect(),
+                children: children.iter().collect(),
             });
         } else {
-            despawn_zone_level_writer.send(DespawnZoneLevel { entity });
+            despawn_zone_level_writer.write(DespawnZoneLevel { entity });
         }
     }
 
@@ -294,13 +294,13 @@ pub(crate) fn spawn_zone_levels(
     mut spawn_zone_level_reader: EventReader<SpawnZoneLevel>,
     focus: Focus,
     mut zone_spawner: ZoneSpawner,
-    cameras: Query<(&Camera, &GlobalTransform)>,
+    camera: Single<(&Camera, &GlobalTransform)>,
 ) {
     let start = Instant::now();
 
     debug!("Spawning {} zone levels", spawn_zone_level_reader.len());
 
-    let (camera, &global_transform) = cameras.single();
+    let (camera, &global_transform) = *camera;
     let visible_region = visible_region(camera, &global_transform).ground_only();
 
     for spawn_event in spawn_zone_level_reader.read() {
@@ -322,7 +322,7 @@ pub(crate) fn update_zone_level_visibility(
     mut update_zone_level_visibility_reader: EventReader<UpdateZoneLevelVisibility>,
     focus: Focus,
     explored: Res<Explored>,
-    cameras: Query<(&Camera, &GlobalTransform)>,
+    camera: Single<(&Camera, &GlobalTransform)>,
 ) {
     let start = Instant::now();
 
@@ -331,7 +331,7 @@ pub(crate) fn update_zone_level_visibility(
         update_zone_level_visibility_reader.len()
     );
 
-    let (camera, &global_transform) = cameras.single();
+    let (camera, &global_transform) = *camera;
     let visible_region = visible_region(camera, &global_transform).ground_only();
 
     for update_zone_level_visibility_event in update_zone_level_visibility_reader.read() {
@@ -360,7 +360,7 @@ pub(crate) fn despawn_zone_level(
 
     for despawn_zone_level_event in despawn_zone_level_reader.read() {
         let entity = despawn_zone_level_event.entity;
-        commands.entity(entity).despawn_recursive();
+        commands.entity(entity).despawn();
     }
 
     log_if_slow("despawn_zone_level", start);
@@ -392,7 +392,7 @@ pub(crate) fn handle_map_events(
 ) {
     let start = Instant::now();
 
-    spawn_subzone_level_writer.send_batch(
+    spawn_subzone_level_writer.write_batch(
         map_manager
             .read_loaded_assets()
             .flat_map(|zone_level| zone_level.subzone_levels())
@@ -412,7 +412,7 @@ pub(crate) fn handle_map_memory_events(
 ) {
     let start = Instant::now();
 
-    explorations.send_batch(map_memory_manager.read_seen_pos());
+    explorations.write_batch(map_memory_manager.read_seen_pos());
 
     spawn_expanded_subzone_levels(
         &mut spawn_subzone_level_writer,
@@ -429,7 +429,7 @@ pub(crate) fn handle_overmap_buffer_events(
 ) {
     let start = Instant::now();
 
-    explorations.send_batch(overmap_buffer_manager.read_seen_zone_levels());
+    explorations.write_batch(overmap_buffer_manager.read_seen_zone_levels());
 
     log_if_slow("handle_overmap_buffer_events", start);
 }
@@ -464,7 +464,7 @@ pub(crate) fn update_zone_levels_with_missing_assets(
     focus: Focus,
     mut zone_spawner: ZoneSpawner,
     zone_levels: Query<(Entity, &ZoneLevel), With<MissingAsset>>,
-    cameras: Query<(&Camera, &GlobalTransform)>,
+    camera: Single<(&Camera, &GlobalTransform)>,
 ) {
     let start = Instant::now();
 
@@ -472,7 +472,7 @@ pub(crate) fn update_zone_levels_with_missing_assets(
         return;
     }
 
-    let (camera, &global_transform) = cameras.single();
+    let (camera, &global_transform) = *camera;
     let visible_region = visible_region(camera, &global_transform).ground_only();
 
     for (entity, &zone_level) in &zone_levels {

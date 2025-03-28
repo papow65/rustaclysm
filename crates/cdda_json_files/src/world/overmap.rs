@@ -1,7 +1,8 @@
 use crate::{
-    CddaAmount, CharacterInfo, FlatVec, HashMap, InfoId, OvermapTerrainInfo, RepetitionBlock,
+    CddaAmount, CharacterInfo, FlatVec, InfoId, OvermapTerrainInfo, RepetitionBlock,
     RequiredLinkedLater,
 };
+use bevy_platform_support::collections::HashMap;
 use serde::Deserialize;
 use std::sync::{Arc, OnceLock};
 

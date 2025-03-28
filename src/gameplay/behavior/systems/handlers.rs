@@ -7,10 +7,11 @@ use crate::gameplay::{
     Stamina, StandardIntegrity, Subject, TerrainEvent, Toggle, VisualizationUpdate, WalkingMode,
     spawn::TileSpawner,
 };
-use bevy::ecs::schedule::SystemConfigs;
+use bevy::ecs::schedule::{IntoScheduleConfigs as _, ScheduleConfigs};
+use bevy::ecs::system::ScheduleSystem;
 use bevy::prelude::{
-    Changed, Commands, DespawnRecursiveExt as _, Entity, EventReader, IntoSystemConfigs as _,
-    NextState, ParamSet, Parent, Quat, Query, Res, ResMut, Transform, With, Without, on_event,
+    Changed, ChildOf, Commands, Entity, EventReader, NextState, ParamSet, Quat, Query, Res, ResMut,
+    Transform, With, Without, on_event,
 };
 use cdda_json_files::{FurnitureInfo, InfoId, TerrainInfo};
 use either::Either;
@@ -18,7 +19,7 @@ use std::time::Instant;
 use units::Duration;
 use util::log_if_slow;
 
-pub(in super::super) fn handle_action_effects() -> SystemConfigs {
+pub(in super::super) fn handle_action_effects() -> ScheduleConfigs<ScheduleSystem> {
     (
         (
             // actor events
@@ -47,22 +48,21 @@ pub(in super::super) fn handle_action_effects() -> SystemConfigs {
         .into_configs()
 }
 
-#[expect(clippy::needless_pass_by_value)]
 pub(in super::super) fn toggle_doors(
     mut commands: Commands,
     mut toggle_reader: EventReader<TerrainEvent<Toggle>>,
     mut spawner: TileSpawner,
     mut visualization_update: ResMut<VisualizationUpdate>,
-    terrain: Query<(&Pos, &Shared<TerrainInfo>, &Parent)>,
+    terrain: Query<(&Pos, &Shared<TerrainInfo>, &ChildOf)>,
 ) {
     let start = Instant::now();
 
     for toggle in toggle_reader.read() {
-        let (&pos, terrain_info, parent) = terrain
+        let (&pos, terrain_info, child_of) = terrain
             .get(toggle.terrain_entity)
             .expect("Terrain should be found");
 
-        commands.entity(toggle.terrain_entity).despawn_recursive();
+        commands.entity(toggle.terrain_entity).despawn();
 
         let toggled = match toggle.change {
             Toggle::Open => terrain_info.open.get().expect("Terrain should be openable"),
@@ -72,7 +72,7 @@ pub(in super::super) fn toggle_doors(
                 .expect("Terrain should be closeable"),
         };
         let local_terrain = LocalTerrain::unconnected(toggled.clone());
-        spawner.spawn_terrain(parent.get(), pos, &local_terrain);
+        spawner.spawn_terrain(child_of.parent, pos, &local_terrain);
         *visualization_update = VisualizationUpdate::Forced;
     }
 
@@ -276,13 +276,13 @@ pub(in super::super) fn update_damaged_terrain(
         &mut StandardIntegrity,
         Option<&Shared<TerrainInfo>>,
         Option<&Shared<FurnitureInfo>>,
-        &Parent,
+        &ChildOf,
     )>,
 ) {
     let start = Instant::now();
 
     for damage in damage_reader.read() {
-        let (terrain, &pos, name, mut integrity, terrain_info, furniture_info, parent) = terrain
+        let (terrain, &pos, name, mut integrity, terrain_info, furniture_info, child_of) = terrain
             .get_mut(damage.terrain_entity)
             .expect("Terrain or furniture found");
         let evolution = integrity.lower(&damage.change);
@@ -292,9 +292,9 @@ pub(in super::super) fn update_damaged_terrain(
                 .verb("break", "s")
                 .push(name.single(pos))
                 .send_warn();
-            commands.entity(terrain).despawn_recursive();
+            commands.entity(terrain).despawn();
             spawner.spawn_smashed(
-                parent.get(),
+                child_of.parent,
                 pos,
                 terrain_info
                     .map(Shared::as_ref)
@@ -327,7 +327,7 @@ pub(in super::super) fn update_damaged_terrain(
 pub(in super::super) fn combine_items(
     mut commands: Commands,
     hierarchy: ItemHierarchy,
-    moved_items: Query<Item, (Changed<Parent>, Without<ContainerLimits>)>,
+    moved_items: Query<Item, (Changed<ChildOf>, Without<ContainerLimits>)>,
 ) {
     let start = Instant::now();
 
@@ -341,7 +341,7 @@ pub(in super::super) fn combine_items(
             let mut merges = vec![];
             let mut total_amount = &Amount(0) + moved.amount;
 
-            for sibling in hierarchy.items_in(moved.parent.get()) {
+            for sibling in hierarchy.items_in(moved.child_of.parent) {
                 // Note that the positions may differ when the parents are the same.
                 if sibling.entity != moved.entity
                     && sibling.common_info.id == moved.common_info.id
@@ -366,7 +366,7 @@ pub(in super::super) fn combine_items(
                 commands.entity(moved.entity).insert(total_amount);
 
                 for merge in merges {
-                    commands.entity(merge).despawn_recursive();
+                    commands.entity(merge).despawn();
                 }
             }
         }

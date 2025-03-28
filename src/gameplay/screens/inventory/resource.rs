@@ -1,7 +1,7 @@
 use crate::gameplay::HorizontalDirection;
 use crate::gameplay::screens::inventory::components::InventoryItemRow;
 use crate::gameplay::screens::inventory::section::InventorySection;
-use bevy::ecs::entity::EntityHashMap;
+use bevy::ecs::entity::hash_map::EntityHashMap;
 use bevy::prelude::{BackgroundColor, Button, Children, Entity, Query, Resource, TextColor, With};
 use hud::{
     GOOD_TEXT_COLOR, HARD_TEXT_COLOR, HOVERED_BUTTON_COLOR, SelectionList, SelectionListStep,

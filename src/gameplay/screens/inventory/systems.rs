@@ -7,14 +7,14 @@ use crate::gameplay::{
     HorizontalDirection, InstructionQueue, ItemHierarchy, ItemItem, MoveItem, Nbor, Phrase, Pickup,
     Player, Pos, QueuedInstruction, Unwield, Wield,
 };
-use bevy::ecs::{entity::EntityHashMap, system::SystemId};
+use bevy::ecs::{entity::hash_map::EntityHashMap, system::SystemId};
+use bevy::platform_support::collections::HashMap;
 use bevy::prelude::{
-    AlignItems, BackgroundColor, BuildChildren as _, Button, ChildBuild as _, Children, Commands,
-    ComputedNode, Display, Entity, FlexDirection, In, IntoSystem as _, JustifyContent, KeyCode,
-    Local, NextState, Node, Overflow, Parent, Query, Res, ResMut, StateScoped, Text, TextColor,
-    TextSpan, Transform, UiRect, Val, With, Without, World, debug, error,
+    AlignItems, BackgroundColor, Button, ChildOf, Children, Commands, ComputedNode, Display,
+    Entity, FlexDirection, In, IntoSystem as _, JustifyContent, KeyCode, Local, NextState, Node,
+    Overflow, Query, Res, ResMut, Single, StateScoped, Text, TextColor, TextSpan, Transform,
+    UiRect, Val, With, Without, World, debug, error,
 };
-use cdda_json_files::HashMap;
 use hud::{
     Fonts, HARD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, SOFT_TEXT_COLOR, ScrollList, SelectionList,
     SelectionListStep,
@@ -152,7 +152,6 @@ pub(super) fn create_inventory_key_bindings(
     log_if_slow("create_inventory_key_bindings", start);
 }
 
-#[expect(clippy::needless_pass_by_value)]
 fn move_inventory_selection(
     In(step): In<SelectionListStep>,
     mut inventory: ResMut<InventoryScreen>,
@@ -160,7 +159,7 @@ fn move_inventory_selection(
     item_buttons: Query<&Children, With<Button>>,
     mut text_styles: Query<&mut TextColor>,
     item_layouts: Query<(&Transform, &ComputedNode)>,
-    mut scroll_lists: Query<(&mut ScrollList, &mut Node, &ComputedNode, &Parent)>,
+    mut scroll_lists: Query<(&mut ScrollList, &mut Node, &ComputedNode, &ChildOf)>,
     scrolling_parents: Query<(&Node, &ComputedNode), Without<ScrollList>>,
 ) {
     inventory.adjust_selection(&mut item_rows, &item_buttons, &mut text_styles, step);
@@ -217,7 +216,7 @@ pub(super) fn refresh_inventory(
     debug_text_shown: Res<DebugTextShown>,
     item_hierarchy: ItemHierarchy,
     mut inventory: ResMut<InventoryScreen>,
-    players: Query<(&Pos, &BodyContainers), With<Player>>,
+    player: Single<(&Pos, &BodyContainers), With<Player>>,
     previous_item_rows: Query<&InventoryItemRow>,
 ) {
     let Some(inventory_system) = inventory_system else {
@@ -234,7 +233,7 @@ pub(super) fn refresh_inventory(
     debug!("Refresh inventory, with previous selected {previous_selected_item:?}");
     inventory.selection_list.clear();
 
-    let (&player_pos, body_containers) = players.single();
+    let (&player_pos, body_containers) = *player;
     let items_by_section = items_by_section(&envir, &item_hierarchy, player_pos, body_containers);
     let mut items_by_section = items_by_section.into_iter().collect::<Vec<_>>();
     items_by_section.sort_by_key(|(section, _)| *section);
@@ -315,7 +314,7 @@ fn items_by_section<'i>(
 fn follow_selected(
     inventory: &InventoryScreen,
     items: &Query<(&Transform, &ComputedNode)>,
-    scroll_lists: &mut Query<(&mut ScrollList, &mut Node, &ComputedNode, &Parent)>,
+    scroll_lists: &mut Query<(&mut ScrollList, &mut Node, &ComputedNode, &ChildOf)>,
     scrolling_parents: &Query<(&Node, &ComputedNode), Without<ScrollList>>,
 ) {
     let Some(selected_row) = inventory.selection_list.selected else {
@@ -326,12 +325,12 @@ fn follow_selected(
         .get(selected_row)
         .expect("Selected item should be found");
 
-    let (mut scroll_list, mut style, list_computed_node, parent) = scroll_lists
+    let (mut scroll_list, mut style, list_computed_node, child_of) = scroll_lists
         .get_mut(inventory.panel)
         .expect("The inventory panel should be a scrolling list");
     let (parent_node, parent_computed_node) = scrolling_parents
-        .get(parent.get())
-        .expect("Parent node should be found");
+        .get(child_of.parent)
+        .expect("ChildOf node should be found");
     style.top = scroll_list.follow(
         item_transform,
         item_computed_node,
@@ -341,7 +340,6 @@ fn follow_selected(
     );
 }
 
-#[expect(clippy::needless_pass_by_value)]
 fn handle_selected_item(
     In(action): In<InventoryAction>,
     mut instruction_queue: ResMut<InstructionQueue>,

@@ -8,7 +8,7 @@ edition = "2024"
 ahash = { version = "0.8", default-features = false, features = ["runtime-rng"] }
 bevy_log = { workspace = true }
 either = { workspace = true }
-hashbrown = { version = "0.14", features = ["serde"] }
+bevy_platform_support = { workspace = true }
 fastrand = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

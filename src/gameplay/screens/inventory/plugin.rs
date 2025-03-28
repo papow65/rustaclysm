@@ -4,7 +4,7 @@ use crate::gameplay::screens::inventory::systems::{
     refresh_inventory, remove_inventory_resource, spawn_inventory,
 };
 use bevy::prelude::{
-    App, In, IntoSystem as _, IntoSystemConfigs as _, OnEnter, OnExit, Plugin, Update, in_state,
+    App, In, IntoScheduleConfigs as _, IntoSystem as _, OnEnter, OnExit, Plugin, Update, in_state,
 };
 use hud::manage_button_input;
 

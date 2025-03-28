@@ -1,5 +1,5 @@
 use crate::gameplay::{Level, Overzone, Pos, SubzoneLevel, ZoneLevel};
-use bevy::utils::HashMap;
+use bevy::platform_support::collections::HashMap;
 use cdda_json_files::{CddaAmount, RepetitionBlock};
 use std::hash::Hash;
 
@@ -40,7 +40,7 @@ impl<T> RepetitionBlockExt<'_, T> for RepetitionBlock<T> {
     where
         F: Fn(i32, i32) -> X,
     {
-        let mut result = HashMap::new();
+        let mut result = HashMap::default();
         let mut i: i32 = 0;
         for repetition in &self.0 {
             let CddaAmount { obj, amount } = repetition.as_amount();

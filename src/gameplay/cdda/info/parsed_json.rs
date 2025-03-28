@@ -1,6 +1,6 @@
 use crate::gameplay::{TypeId, cdda::Error};
+use bevy::platform_support::collections::HashMap;
 use bevy::prelude::{debug, error, warn};
-use bevy::utils::HashMap;
 use cdda_json_files::UntypedInfoId;
 use fastrand::alphabetic;
 use glob::glob;

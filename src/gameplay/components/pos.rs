@@ -1,7 +1,7 @@
 use crate::gameplay::{
     HorizontalDirection, LevelOffset, Location, Nbor, PosOffset, VisionDistance, ZoneLevelEntities,
 };
-use bevy::ecs::component::{ComponentHooks, StorageType};
+use bevy::ecs::component::{ComponentHooks, Immutable, Mutable, StorageType};
 use bevy::prelude::{Component, Vec3};
 use cdda_json_files::{Overmap, SubzoneOffset};
 use std::{cmp::Ordering, fmt, iter::once, ops::Sub};
@@ -236,6 +236,8 @@ impl Sub<Self> for Pos {
 }
 
 impl Component for Pos {
+    type Mutability = Mutable;
+
     const STORAGE_TYPE: StorageType = StorageType::Table;
 
     fn register_component_hooks(hooks: &mut ComponentHooks) {
@@ -439,6 +441,8 @@ impl From<SubzoneLevel> for ZoneLevel {
 }
 
 impl Component for ZoneLevel {
+    type Mutability = Immutable;
+
     const STORAGE_TYPE: StorageType = StorageType::Table;
 
     fn register_component_hooks(hooks: &mut ComponentHooks) {

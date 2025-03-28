@@ -1,6 +1,5 @@
-use crate::{
-    Bash, Flags, HashMap, InfoId, ItemName, MoveCostIncrease, OptionalLinkedLater, UntypedInfoId,
-};
+use crate::{Bash, Flags, InfoId, ItemName, MoveCostIncrease, OptionalLinkedLater, UntypedInfoId};
+use bevy_platform_support::collections::HashMap;
 use serde::Deserialize;
 use std::sync::{Arc, LazyLock};
 

@@ -3,8 +3,8 @@ use crate::gameplay::{
     phrase::Phrase,
 };
 use bevy::prelude::{
-    App, Changed, Children, Entity, FixedUpdate, IntoSystemConfigs as _, Or, Parent, Plugin, Query,
-    With, resource_exists, warn,
+    App, Changed, ChildOf, Children, Entity, FixedUpdate, IntoScheduleConfigs as _, Or, Plugin,
+    Query, With, resource_exists, warn,
 };
 use cdda_json_files::PocketType;
 use std::fmt::Write as _;
@@ -24,10 +24,9 @@ impl Plugin for ItemChecksPlugin {
     }
 }
 
-#[expect(clippy::needless_pass_by_value)]
 fn check_item_parents(
     checked_item: Query<
-        (Entity, Option<&Pocket>, Option<&Parent>),
+        (Entity, Option<&Pocket>, Option<&ChildOf>),
         Or<(With<Amount>, With<Containable>)>,
     >,
     pos: Query<(), With<Pos>>,
@@ -39,10 +38,10 @@ fn check_item_parents(
             "Items should not be pockets"
         );
         assert!(
-            checked_item.iter().all(|(entity, _, parent)| parent
-                .inspect(|parent| {
+            checked_item.iter().all(|(entity, _, child_of)| child_of
+                .inspect(|child_of| {
                     let pos = pos.contains(entity);
-                    let pocket = pockets.contains(parent.get());
+                    let pocket = pockets.contains(child_of.parent);
                     assert_eq!(
                         pos, !pocket,
                         "Items should either have a pos ({pos:?}), xor a parent pocket ({pocket:?})"
@@ -107,7 +106,6 @@ fn check_single_item(
     }
 }
 
-#[expect(clippy::needless_pass_by_value)]
 fn check_integrities(integrities: Query<(&ItemIntegrity, &StandardIntegrity)>) {
     assert!(
         !cfg!(debug_assertions) || integrities.is_empty(),

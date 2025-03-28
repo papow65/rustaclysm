@@ -5,13 +5,13 @@ use crate::gameplay::sidebar::components::{
 };
 use crate::{application::ApplicationState, gameplay::*};
 use bevy::diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin};
-use bevy::ecs::{schedule::SystemConfigs, system::EntityCommands};
+use bevy::ecs::{hierarchy::Children, schedule::ScheduleConfigs, system::ScheduleSystem};
 use bevy::prelude::{
-    AlignItems, BuildChildren as _, Changed, ChildBuild as _, Commands, Condition as _,
-    DespawnRecursiveExt as _, DetectChanges as _, Entity, EventReader, FlexDirection, FlexWrap,
-    IntoSystemConfigs as _, JustifyContent, Local, Node, Or, Overflow, ParamSet, PositionType,
-    Query, Res, State, StateScoped, Text, TextColor, TextSpan, UiRect, Val, Visibility, With,
-    Without, info, on_event, resource_exists, resource_exists_and_changed, warn,
+    AlignItems, Changed, Commands, Condition as _, DetectChanges as _, Entity, EntityCommands,
+    EventReader, FlexDirection, FlexWrap, IntoScheduleConfigs as _, JustifyContent, Local, Node,
+    Or, Overflow, ParamSet, PositionType, Query, Res, Single, State, StateScoped, Text, TextColor,
+    TextSpan, UiRect, Val, Visibility, With, Without, info, on_event, resource_exists,
+    resource_exists_and_changed, warn,
 };
 use cdda_json_files::{CharacterInfo, MoveCost};
 use hud::{
@@ -169,7 +169,7 @@ fn spawn_log_display(fonts: &Fonts, parent: &mut EntityCommands) {
     });
 }
 
-pub(super) fn update_sidebar_systems() -> SystemConfigs {
+pub(super) fn update_sidebar_systems() -> ScheduleConfigs<ScheduleSystem> {
     (
         // sidebar components, in order:
         // (fps is handled elsewhere)
@@ -199,7 +199,7 @@ fn update_log(
     currently_visible_builder: CurrentlyVisibleBuilder,
     fonts: Res<Fonts>,
     debug_text_shown: Res<DebugTextShown>,
-    logs: Query<Entity, With<LogDisplay>>,
+    log: Single<Entity, With<LogDisplay>>,
     mut previous_sections: GameplayLocal<Vec<(TextSpan, TextColor, Option<DebugText>)>>,
     mut last_message: GameplayLocal<Option<(Message, DuplicateMessageCount)>>,
     mut transient_message: Local<Vec<(TextSpan, TextColor, Option<DebugText>)>>,
@@ -246,9 +246,9 @@ fn update_log(
     }
 
     let debug_font = debug_text_shown.text_font(fonts.regular());
-    let mut logs = commands.entity(logs.single());
-    logs.despawn_descendants();
-    logs.with_children(|parent| {
+    let mut log = commands.entity(*log);
+    log.despawn_related::<Children>();
+    log.with_children(|parent| {
         for (span, color, debug) in previous_sections.get().clone() {
             let mut entity = parent.spawn((span, color, fonts.regular()));
             if let Some(debug) = debug {
@@ -327,14 +327,13 @@ fn percieve(
 #[expect(clippy::needless_pass_by_value)]
 pub(super) fn update_status_fps(
     diagnostics: Res<DiagnosticsStore>,
-    mut text: Query<&mut Text, With<FpsText>>,
+    mut text: Single<&mut Text, With<FpsText>>,
 ) {
     let start = Instant::now();
 
     if diagnostics.is_changed() {
         if let Some(fps) = diagnostics.get(&FrameTimeDiagnosticsPlugin::FPS) {
             if let Some(fps) = fps.smoothed() {
-                let mut text = text.single_mut();
                 // Precision of 0.1s
                 // Padding to 6 characters, aligned right
                 text.0 = format!("{fps:05.1} fps\n");
@@ -346,10 +345,8 @@ pub(super) fn update_status_fps(
 }
 
 #[expect(clippy::needless_pass_by_value)]
-fn update_status_time(clock: Clock, mut text: Query<&mut Text, With<TimeText>>) {
+fn update_status_time(clock: Clock, mut text: Single<&mut Text, With<TimeText>>) {
     let start = Instant::now();
-
-    let mut text = text.single_mut();
 
     let now = clock.time();
     let sunlight = 100.0 * clock.sunlight_percentage();
@@ -358,15 +355,14 @@ fn update_status_time(clock: Clock, mut text: Query<&mut Text, With<TimeText>>) 
     log_if_slow("update_status_time", start);
 }
 
-#[expect(clippy::needless_pass_by_value)]
 fn update_status_health(
-    health: Query<&Health, (With<Player>, Changed<Health>)>,
-    mut text: Query<(&mut Text, &mut TextColor), With<HealthText>>,
+    health: Option<Single<&Health, (With<Player>, Changed<Health>)>>,
+    text: Single<(&mut Text, &mut TextColor), With<HealthText>>,
 ) {
     let start = Instant::now();
 
-    if let Ok(health) = health.get_single() {
-        let (mut text, mut color) = text.single_mut();
+    if let Some(health) = health {
+        let (mut text, mut color) = text.into_inner();
 
         text.0 = format!("{:3}", health.0.current());
         *color = health.0.color();
@@ -377,15 +373,18 @@ fn update_status_health(
     log_if_slow("update_status_health", start);
 }
 
-#[expect(clippy::needless_pass_by_value)]
 fn update_status_stamina(
-    player_staminas: Query<&Stamina, (With<Player>, Changed<Stamina>)>,
-    mut text: Query<(&mut Text, &mut TextColor), With<StaminaText>>,
+    player_staminas: Option<Single<&Stamina, (With<Player>, Changed<Stamina>)>>,
+    text: Single<(&mut Text, &mut TextColor), With<StaminaText>>,
 ) {
     let start = Instant::now();
 
-    if let Ok(Stamina::Limited(player_stamina)) = player_staminas.get_single() {
-        let (mut text, mut color) = text.single_mut();
+    if let Some(player_stamina) = player_staminas {
+        let Stamina::Limited(player_stamina) = *player_stamina else {
+            panic!("{:?}", *player_stamina);
+        };
+
+        let (mut text, mut color) = text.into_inner();
 
         text.0 = format!("{:3.0}", 100.0 * player_stamina.relative());
         *color = player_stamina.color();
@@ -396,49 +395,52 @@ fn update_status_stamina(
     log_if_slow("update_status_stamina", start);
 }
 
-#[expect(clippy::needless_pass_by_value)]
 fn update_status_speed(
-    player_actors: Query<
-        Actor,
-        (
-            With<Player>,
-            Or<(Changed<BaseSpeed>, Changed<Stamina>, Changed<WalkingMode>)>,
-        ),
+    player_actor: Option<
+        Single<
+            Actor,
+            (
+                With<Player>,
+                Or<(Changed<BaseSpeed>, Changed<Stamina>, Changed<WalkingMode>)>,
+            ),
+        >,
     >,
     mut text_parts: ParamSet<(
-        Query<(&mut Text, &mut TextColor), With<BreathText>>,
-        Query<(&mut TextSpan, &mut TextColor), With<WalkingModeTextSpan>>,
-        Query<(&mut TextSpan, &mut TextColor), With<SpeedTextSpan>>,
+        Single<(&mut Text, &mut TextColor), With<BreathText>>,
+        Single<(&mut TextSpan, &mut TextColor), With<WalkingModeTextSpan>>,
+        Single<(&mut TextSpan, &mut TextColor), With<SpeedTextSpan>>,
     )>,
 ) {
     let start = Instant::now();
 
-    if let Ok(player_actor) = player_actors.get_single() {
-        let walking_mode = player_actor.walking_mode;
+    let Some(player_actor) = player_actor else {
+        return;
+    };
 
-        let mut breath_text = text_parts.p0();
-        let (mut text, mut color) = breath_text.single_mut();
-        (text.0, *color) = match player_actor.stamina.breath() {
-            Breath::Normal => (String::new(), HARD_TEXT_COLOR),
-            Breath::AlmostWinded => (String::from("Almost winded "), WARN_TEXT_COLOR),
-            Breath::Winded => (String::from("Winded "), BAD_TEXT_COLOR),
-        };
+    let walking_mode = player_actor.walking_mode;
 
-        let mut walking_mode_text_span = text_parts.p1();
-        let (mut text_span, mut color) = walking_mode_text_span.single_mut();
-        text_span.0 = String::from(walking_mode.as_str());
-        *color = walking_mode.breath_color();
+    let breath_text = text_parts.p0();
+    let (mut text, mut color) = breath_text.into_inner();
+    (text.0, *color) = match player_actor.stamina.breath() {
+        Breath::Normal => (String::new(), HARD_TEXT_COLOR),
+        Breath::AlmostWinded => (String::from("Almost winded "), WARN_TEXT_COLOR),
+        Breath::Winded => (String::from("Winded "), BAD_TEXT_COLOR),
+    };
 
-        let mut speed_text_span = text_parts.p2();
-        let (mut text_span, mut color) = speed_text_span.single_mut();
-        let kmph = player_actor.speed().as_kmph();
-        text_span.0 = if kmph < 9.95 {
-            format!("{kmph:.1}")
-        } else {
-            format!("{kmph:.0}")
-        };
-        *color = text_color_expect_half(kmph / 15.0);
-    }
+    let walking_mode_text_span = text_parts.p1();
+    let (mut text_span, mut color) = walking_mode_text_span.into_inner();
+    text_span.0 = String::from(walking_mode.as_str());
+    *color = walking_mode.breath_color();
+
+    let speed_text_span = text_parts.p2();
+    let (mut text_span, mut color) = speed_text_span.into_inner();
+    let kmph = player_actor.speed().as_kmph();
+    text_span.0 = if kmph < 9.95 {
+        format!("{kmph:.1}")
+    } else {
+        format!("{kmph:.0}")
+    };
+    *color = text_color_expect_half(kmph / 15.0);
 
     log_if_slow("update_status_speed", start);
 }
@@ -446,11 +448,11 @@ fn update_status_speed(
 #[expect(clippy::needless_pass_by_value)]
 fn update_status_player_action_state(
     player_action_state: Res<State<PlayerActionState>>,
-    mut text: Query<(&mut Text, &mut TextColor), With<PlayerActionStateText>>,
+    text: Single<(&mut Text, &mut TextColor), With<PlayerActionStateText>>,
 ) {
     let start = Instant::now();
 
-    let (mut text, mut color) = text.single_mut();
+    let (mut text, mut color) = text.into_inner();
     text.0 = format!("{}\n", **player_action_state);
     *color = player_action_state.color_in_progress();
 
@@ -462,17 +464,16 @@ fn update_status_player_wielded(
     mut commands: Commands,
     fonts: Res<Fonts>,
     debug_text_shown: Res<DebugTextShown>,
-    player_weapon: Query<Item, With<PlayerWielded>>,
-    text: Query<Entity, With<WieldedText>>,
+    player_weapon: Option<Single<Item, With<PlayerWielded>>>,
+    text: Single<Entity, With<WieldedText>>,
 ) {
     let start = Instant::now();
 
-    let entity = text.single();
     commands
-        .entity(entity)
-        .despawn_descendants()
+        .entity(*text)
+        .despawn_related::<Children>()
         .with_children(|parent| {
-            if let Ok(weapon) = player_weapon.get_single() {
+            if let Some(weapon) = player_weapon {
                 let phrase = Phrase::from_fragments(weapon.fragments().collect());
                 for (span, color, debug) in phrase.as_text_sections() {
                     let mut entity = parent.spawn((span, color, fonts.regular()));
@@ -494,56 +495,52 @@ fn update_status_enemies(
     fonts: Res<Fonts>,
     debug_text_shown: Res<DebugTextShown>,
     currently_visible_builder: CurrentlyVisibleBuilder,
-    player_actors: Query<Actor, With<Player>>,
+    player_actor: Single<Actor, With<Player>>,
     factions: Query<(&Pos, &Faction), With<Life>>,
-    text: Query<Entity, With<EnemiesText>>,
+    text: Single<Entity, With<EnemiesText>>,
 ) {
     let start = Instant::now();
 
     let factions = factions.iter().map(|(p, f)| (*p, f)).collect::<Vec<_>>();
-    if let Ok(player_actor) = player_actors.get_single() {
-        let mut enemies =
-            Faction::Human.enemies(&currently_visible_builder, &factions, &player_actor);
-        enemies.sort_by_key(|&pos| pos.vision_distance(*player_actor.pos).as_tiles());
+    let mut enemies = Faction::Human.enemies(&currently_visible_builder, &factions, &player_actor);
+    enemies.sort_by_key(|&pos| pos.vision_distance(*player_actor.pos).as_tiles());
 
-        let phrase = Phrase::new("Enemies:")
-            .extend(if enemies.is_empty() {
-                vec![Fragment::soft("(none)")]
-            } else {
-                enemies
-                    .iter()
-                    .map(|&pos| {
-                        (
-                            pos,
-                            currently_visible_builder
-                                .envir
-                                .find_character(pos)
-                                .expect("Enemy should be present"),
-                        )
-                    })
-                    .map(|(pos, (_, name))| {
-                        Phrase::from_fragment(name.single(pos))
-                            .hard((pos - *player_actor.pos).player_hint())
-                            .fragments
-                    })
-                    .collect::<Vec<_>>()
-                    .join(&Fragment::soft(","))
-            })
-            .soft("\n");
+    let phrase = Phrase::new("Enemies:")
+        .extend(if enemies.is_empty() {
+            vec![Fragment::soft("(none)")]
+        } else {
+            enemies
+                .iter()
+                .map(|&pos| {
+                    (
+                        pos,
+                        currently_visible_builder
+                            .envir
+                            .find_character(pos)
+                            .expect("Enemy should be present"),
+                    )
+                })
+                .map(|(pos, (_, name))| {
+                    Phrase::from_fragment(name.single(pos))
+                        .hard((pos - *player_actor.pos).player_hint())
+                        .fragments
+                })
+                .collect::<Vec<_>>()
+                .join(&Fragment::soft(","))
+        })
+        .soft("\n");
 
-        let entity = text.single();
-        commands
-            .entity(entity)
-            .despawn_descendants()
-            .with_children(|parent| {
-                for (span, color, debug) in phrase.as_text_sections() {
-                    let mut entity = parent.spawn((span, color, fonts.regular()));
-                    if let Some(debug) = debug {
-                        entity.insert((debug, debug_text_shown.text_font(fonts.regular())));
-                    }
+    commands
+        .entity(*text)
+        .despawn_related::<Children>()
+        .with_children(|parent| {
+            for (span, color, debug) in phrase.as_text_sections() {
+                let mut entity = parent.spawn((span, color, fonts.regular()));
+                if let Some(debug) = debug {
+                    entity.insert((debug, debug_text_shown.text_font(fonts.regular())));
                 }
-            });
-    }
+            }
+        });
 
     log_if_slow("update_status_enemies", start);
 }
@@ -582,7 +579,7 @@ fn update_status_detais(
         (Without<Health>, Without<Amount>),
     >,
     items: Query<Item>,
-    text: Query<Entity, With<DetailsText>>,
+    text: Single<Entity, With<DetailsText>>,
 ) {
     let start = Instant::now();
 
@@ -628,10 +625,9 @@ fn update_status_detais(
     })
     .as_text_sections();
 
-    let entity = text.single();
     commands
-        .entity(entity)
-        .despawn_descendants()
+        .entity(*text)
+        .despawn_related::<Children>()
         .with_children(|parent| {
             for (span, color, debug) in text_sections {
                 let mut entity = parent.spawn((span, color, fonts.regular()));

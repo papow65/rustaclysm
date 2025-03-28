@@ -1,5 +1,5 @@
 use crate::{ManualSection, components::ManualDisplay};
-use bevy::prelude::{KeyCode, Query, Visibility, With, World};
+use bevy::prelude::{KeyCode, Query, Visibility, With, World, error};
 use keyboard::KeyBindings;
 use std::time::Instant;
 use util::log_if_slow;
@@ -15,7 +15,9 @@ pub(super) fn create_manual_key_bindings(world: &mut World) {
 fn toggle_manual(mut manual: Query<&mut Visibility, With<ManualDisplay>>) {
     let start = Instant::now();
 
-    let mut visibility = manual.single_mut();
+    let Ok(mut visibility) = manual.single_mut().inspect_err(|error| error!("{error:?}")) else {
+        return;
+    };
     *visibility = if *visibility == Visibility::Hidden {
         Visibility::Inherited
     } else {

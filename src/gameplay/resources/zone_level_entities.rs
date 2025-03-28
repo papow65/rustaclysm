@@ -1,7 +1,7 @@
 use crate::gameplay::ZoneLevel;
 use bevy::ecs::component::ComponentHooks;
+use bevy::platform_support::collections::{HashMap, hash_map::Entry};
 use bevy::prelude::{Entity, Resource, error};
-use bevy::utils::{HashMap, hashbrown::hash_map::Entry};
 
 #[derive(Default, Resource)]
 pub(crate) struct ZoneLevelEntities {
@@ -10,24 +10,25 @@ pub(crate) struct ZoneLevelEntities {
 
 impl ZoneLevelEntities {
     pub(crate) fn register_hooks(hooks: &mut ComponentHooks) {
-        hooks.on_add(|mut world, entity, _component_id| {
+        hooks.on_add(|mut world, context| {
             let zone_level = *world
-                .entity(entity)
+                .entity(context.entity)
                 .get::<ZoneLevel>()
                 .expect("ZoneLevel should be present because it was just added");
             if let Some(mut this) = world.get_resource_mut::<Self>() {
                 let entry = this.zone_levels.entry(zone_level);
                 assert!(
                     matches!(entry, Entry::Vacant(..)),
-                    "Duplicate for {entry:?} - new: {entity:?}"
+                    "Duplicate for {entry:?} - new: {:?}",
+                    context.entity
                 );
-                entry.insert(entity);
+                entry.insert(context.entity);
             }
         });
 
-        hooks.on_remove(|mut world, entity, _component_id| {
+        hooks.on_remove(|mut world, context| {
             let removed_zone_level = *world
-                .entity(entity)
+                .entity(context.entity)
                 .get::<ZoneLevel>()
                 .expect("ZoneLevel should be present because it is being removed");
             if let Some(mut this) = world.get_resource_mut::<Self>() {

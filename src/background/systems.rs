@@ -1,6 +1,6 @@
 use crate::background::{component::Background, state::BackgroundState};
 use bevy::prelude::{
-    AssetServer, Commands, GlobalZIndex, ImageNode, Node, PositionType, Query, Res, StateScoped,
+    AssetServer, Commands, GlobalZIndex, ImageNode, Node, PositionType, Res, Single, StateScoped,
     Val, Window, With, warn,
 };
 use util::AssetPaths;
@@ -13,9 +13,9 @@ const BACKGROUND_NAME: &str = "on_the_run.png";
 pub(super) fn spawn_background(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    windows: Query<&Window>,
+    window: Option<Single<&Window>>,
 ) {
-    let background_scale = background_scale(windows.get_single().ok());
+    let background_scale = background_scale(window.map(|w| *w));
     let background_image = asset_server.load(AssetPaths::backgrounds().join(BACKGROUND_NAME));
     commands.spawn((
         ImageNode {
@@ -34,13 +34,13 @@ pub(super) fn spawn_background(
     ));
 }
 
-#[expect(clippy::needless_pass_by_value)]
 pub(super) fn resize_background(
-    windows: Query<&Window>,
-    mut backgrounds: Query<&mut Node, With<Background>>,
+    window: Option<Single<&Window>>,
+    background: Option<Single<&mut Node, With<Background>>>,
 ) {
-    if let Ok(mut style) = backgrounds.get_single_mut() {
-        (style.width, style.height) = background_scale(windows.get_single().ok());
+    if let Some(mut background) = background {
+        let &mut ref mut style = &mut *background;
+        (style.width, style.height) = background_scale(window.map(|w| *w));
     }
 }
 

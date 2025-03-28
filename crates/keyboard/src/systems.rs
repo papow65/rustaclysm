@@ -10,7 +10,6 @@ pub(super) fn preprocess_keyboard_input(
     Keys::new(&mut keyboard_inputs, &key_states)
 }
 
-#[expect(clippy::needless_pass_by_value)]
 pub(super) fn manage_binded_keyboard_input(
     In(keys): In<Keys>,
     mut commands: Commands,

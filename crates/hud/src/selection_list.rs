@@ -1,4 +1,4 @@
-use bevy::ecs::entity::EntityHashMap;
+use bevy::ecs::entity::hash_map::EntityHashMap;
 use bevy::prelude::{Component, Entity, KeyCode};
 use keyboard::Key;
 use strum::VariantArray;

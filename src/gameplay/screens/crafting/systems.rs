@@ -6,14 +6,14 @@ use crate::gameplay::{
     LastSeen, Location, MessageWriter, Player, Pos, QueuedInstruction, Shared, cdda::Error,
     screens::crafting::resource::CraftingScreen,
 };
+use bevy::platform_support::collections::{HashMap, hash_map::Entry};
 use bevy::prelude::{
-    AlignItems, BuildChildren as _, ChildBuild as _, Children, Commands, ComputedNode,
-    DespawnRecursiveExt as _, Display, Entity, FlexDirection, In, IntoSystem as _, JustifyContent,
-    KeyCode, Local, NextState, Node, Overflow, Parent, Query, Res, ResMut, StateScoped, Text,
-    TextColor, Transform, UiRect, Val, With, Without, World, debug, error,
+    AlignItems, ChildOf, Children, Commands, ComputedNode, Display, Entity, FlexDirection, In,
+    IntoSystem as _, JustifyContent, KeyCode, Local, NextState, Node, Overflow, Query, Res, ResMut,
+    Single, StateScoped, Text, TextColor, Transform, UiRect, Val, With, Without, World, debug,
+    error,
 };
-use bevy::utils::hashbrown::hash_map::Entry;
-use bevy::{ecs::query::QueryData, ecs::system::SystemId, utils::HashMap};
+use bevy::{ecs::query::QueryData, ecs::system::SystemId};
 use cdda_json_files::{
     Alternative, AutoLearn, BookLearn, BookLearnItem, CommonItemInfo, FurnitureInfo, InfoId,
     Quality, Recipe, RequiredQuality, Sav, Skill, Using,
@@ -188,7 +188,7 @@ pub(super) fn move_crafting_selection(
     fonts: Res<Fonts>,
     mut crafting_screen: ResMut<CraftingScreen>,
     mut recipes: Query<(&mut TextColor, &Transform, &ComputedNode, &RecipeSituation)>,
-    mut scroll_lists: Query<(&mut ScrollList, &mut Node, &ComputedNode, &Parent)>,
+    mut scroll_lists: Query<(&mut ScrollList, &mut Node, &ComputedNode, &ChildOf)>,
     scrolling_parents: Query<(&Node, &ComputedNode), Without<ScrollList>>,
 ) {
     let start = Instant::now();
@@ -241,14 +241,14 @@ pub(super) fn refresh_crafting_screen(
     infos: Res<Infos>,
     active_sav: Res<ActiveSav>,
     mut crafting_screen: ResMut<CraftingScreen>,
-    players: Query<(&Pos, &BodyContainers), With<Player>>,
-    items_and_furniture: Query<(Nearby, &LastSeen, Option<&Parent>)>,
+    player: Single<(&Pos, &BodyContainers), With<Player>>,
+    items_and_furniture: Query<(Nearby, &LastSeen, Option<&ChildOf>)>,
 ) {
     let Some(start_craft_system) = start_craft_system else {
         return;
     };
 
-    let (&player_pos, body_containers) = players.single();
+    let (&player_pos, body_containers) = *player;
 
     let nearby_items = find_nearby(&location, &items_and_furniture, player_pos, body_containers);
     let nearby_manuals = nearby_manuals(&nearby_items);
@@ -340,7 +340,7 @@ pub(super) fn refresh_crafting_screen(
 
 fn find_nearby<'a>(
     location: &'a Location,
-    items_and_furniture: &'a Query<(Nearby, &LastSeen, Option<&Parent>)>,
+    items_and_furniture: &'a Query<(Nearby, &LastSeen, Option<&ChildOf>)>,
     player_pos: Pos,
     body_containers: &'a BodyContainers,
 ) -> Vec<NearbyItem<'a>> {
@@ -354,8 +354,8 @@ fn find_nearby<'a>(
             })
         })
         .chain(items_and_furniture.iter().filter(|(.., parent)| {
-            parent.is_some_and(|p| {
-                p.get() == body_containers.hands || p.get() == body_containers.clothing
+            parent.is_some_and(|child_of| {
+                [body_containers.hands, body_containers.clothing].contains(&child_of.parent)
             })
         }))
         .map(|(nearby, ..)| nearby)
@@ -634,7 +634,7 @@ fn adapt_to_selected(
     fonts: &Res<Fonts>,
     crafting_screen: &CraftingScreen,
     recipes: &Query<(&Transform, &ComputedNode, &RecipeSituation)>,
-    scroll_lists: &mut Query<(&mut ScrollList, &mut Node, &ComputedNode, &Parent)>,
+    scroll_lists: &mut Query<(&mut ScrollList, &mut Node, &ComputedNode, &ChildOf)>,
     scrolling_parents: &Query<(&Node, &ComputedNode), Without<ScrollList>>,
     start_craft_system: &StartCraftSystem,
 ) {
@@ -644,12 +644,12 @@ fn adapt_to_selected(
             .expect("Selected recipe should be found");
 
         {
-            let (mut scroll_list, mut style, list_computed_node, parent) = scroll_lists
+            let (mut scroll_list, mut style, list_computed_node, child_of) = scroll_lists
                 .get_mut(crafting_screen.recipe_list)
                 .expect("The recipe list should be a scrolling list");
             let (parent_node, parent_computed_node) = scrolling_parents
-                .get(parent.get())
-                .expect("Parent node should be found");
+                .get(child_of.parent)
+                .expect("ChildOf node should be found");
             style.top = scroll_list.follow(
                 recipe_transform,
                 recipe_computed_node,
@@ -678,7 +678,7 @@ fn show_recipe(
 ) {
     commands
         .entity(crafting_screen.recipe_details)
-        .despawn_descendants()
+        .despawn_related::<Children>()
         .with_children(|parent| {
             ButtonBuilder::new(
                 "Craft",

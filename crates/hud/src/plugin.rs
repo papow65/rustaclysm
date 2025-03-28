@@ -2,7 +2,7 @@ use crate::systems::{
     load_fonts, manage_button_color, manage_button_input, manage_scroll_lists, resize_scroll_lists,
 };
 use bevy::prelude::{
-    App, Condition as _, IntoSystemConfigs as _, Plugin, Startup, UiScale, Update, on_event,
+    App, Condition as _, IntoScheduleConfigs as _, Plugin, Startup, UiScale, Update, on_event,
     resource_exists_and_changed,
 };
 use bevy::{input::mouse::MouseWheel, window::WindowResized};

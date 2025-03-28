@@ -1,7 +1,6 @@
 use crate::gameplay::{Exploration, Level, Overzone, Pos, SubzoneLevel, Zone, ZoneLevel};
+use bevy::platform_support::collections::{HashMap, HashSet, hash_map::Entry};
 use bevy::prelude::Resource;
-use bevy::utils::hashbrown::hash_map::Entry;
-use bevy::utils::{HashMap, HashSet};
 
 /// Ever seen by the player character
 #[derive(Copy, Clone, Debug, PartialEq)]

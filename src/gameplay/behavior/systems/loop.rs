@@ -3,12 +3,13 @@ use crate::gameplay::behavior::systems::refresh::refresh_all;
 use crate::gameplay::{
     InstructionQueue, PlayerActionState, RefreshAfterBehavior, RelativeSegments,
 };
-use bevy::ecs::{schedule::SystemConfigs, system::SystemState};
-use bevy::prelude::{IntoSystemConfigs as _, Res, State, World, debug, on_event, resource_exists};
+use bevy::ecs::schedule::{IntoScheduleConfigs as _, ScheduleConfigs};
+use bevy::ecs::system::{ScheduleSystem, SystemState};
+use bevy::prelude::{Res, State, World, debug, on_event, resource_exists};
 use std::time::{Duration, Instant};
 use util::log_if_slow;
 
-pub(in super::super) fn loop_behavior_and_refresh() -> SystemConfigs {
+pub(in super::super) fn loop_behavior_and_refresh() -> ScheduleConfigs<ScheduleSystem> {
     (
         loop_behavior,
         refresh_all().run_if(on_event::<RefreshAfterBehavior>),

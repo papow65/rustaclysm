@@ -8,13 +8,13 @@ use crate::gameplay::{
     WalkingMode, cdda::Error, item::Pocket, spawn::log_spawn_result,
 };
 use bevy::ecs::system::SystemParam;
+use bevy::platform_support::collections::HashMap;
 use bevy::prelude::{
-    BuildChildren as _, Camera3d, ChildBuild as _, Commands, DirectionalLight, Entity, EulerRot,
-    Mat4, Res, StateScoped, TextColor, Transform, Vec3, Visibility, debug, error,
+    Camera3d, ChildOf, Commands, DirectionalLight, Entity, EulerRot, Mat4, Res, StateScoped,
+    TextColor, Transform, Vec3, Visibility, debug, error,
 };
 use bevy::render::camera::{PerspectiveProjection, Projection};
 use bevy::render::view::RenderLayers;
-use bevy::utils::HashMap;
 use cdda_json_files::{
     BashItem, BashItems, CddaAmount, CddaItem, CddaItemName, CddaVehicle, CddaVehiclePart,
     Character, CharacterInfo, CommonItemInfo, Field, Flags, FlatVec, FurnitureInfo, InfoId,
@@ -147,8 +147,8 @@ impl<'w> TileSpawner<'w, '_> {
                         type_: PocketType::Container,
                         sealed: false,
                     },
+                    ChildOf { parent: entity },
                 ))
-                .set_parent(entity)
                 .id();
             let clothing = self
                 .commands
@@ -160,8 +160,8 @@ impl<'w> TileSpawner<'w, '_> {
                         type_: PocketType::Container,
                         sealed: false,
                     },
+                    ChildOf { parent: entity },
                 ))
-                .set_parent(entity)
                 .id();
             self.commands
                 .entity(entity)
@@ -252,8 +252,8 @@ impl<'w> TileSpawner<'w, '_> {
                         Pocket::from(cdda_pocket),
                         Visibility::Hidden,
                         Transform::IDENTITY,
+                        ChildOf { parent: entity },
                     ))
-                    .set_parent(entity)
                     .id();
                 //trace!("Pocket {pocket:?} with parent {entity:?}");
                 for content in &cdda_pocket.contents {
@@ -510,13 +510,15 @@ impl<'w> TileSpawner<'w, '_> {
             )
         };
 
-        let mut entity_commands =
-            self.commands
-                .spawn((object_name, Visibility::Hidden, Transform::IDENTITY));
+        let mut entity_commands = self.commands.spawn((
+            object_name,
+            Visibility::Hidden,
+            Transform::IDENTITY,
+            ChildOf { parent },
+        ));
         if let Some(pos) = pos {
             entity_commands.insert((Transform::from_translation(pos.vec3()), pos));
         }
-        entity_commands.set_parent(parent);
         if let Some(layers) = layers {
             entity_commands.with_children(|child_builder| {
                 child_builder.spawn(layers.base);

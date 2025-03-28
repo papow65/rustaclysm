@@ -1,6 +1,6 @@
 use crate::gameplay::Appearance;
+use bevy::platform_support::collections::HashMap;
 use bevy::prelude::{Mesh3d, Resource};
-use bevy::utils::HashMap;
 use cdda_json_files::SpriteNumber;
 use std::path::PathBuf;
 

@@ -112,7 +112,7 @@ impl Keys {
                         commands.run_system(system);
                     }
                     KeyBindingSystem::Entity(system) => {
-                        commands.run_system_with_input(system, entity);
+                        commands.run_system_with(system, entity);
                     }
                 }
             } else {

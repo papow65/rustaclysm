@@ -1,9 +1,7 @@
 use crate::gameplay::SubzoneLevel;
-use bevy::{
-    ecs::entity::EntityHashMap,
-    prelude::{Entity, Resource},
-    utils::{HashMap, hashbrown::hash_map::Entry},
-};
+use bevy::ecs::entity::hash_map::EntityHashMap;
+use bevy::platform_support::collections::{HashMap, hash_map::Entry};
+use bevy::prelude::{Entity, Resource};
 
 #[derive(Default, Resource)]
 pub(crate) struct SubzoneLevelEntities {

@@ -1,5 +1,5 @@
 use crate::gameplay::{CardinalDirection, Pos, TileVariant, common::HorizontalDirection};
-use bevy::utils::HashMap;
+use bevy::platform_support::collections::HashMap;
 use cdda_json_files::{RequiredLinkedLater, TerrainInfo};
 use std::sync::Arc;
 use util::here;

@@ -1,5 +1,6 @@
-use crate::{HashMap, MaybeFlatVec, SpriteNumber, UntypedInfoId};
+use crate::{MaybeFlatVec, SpriteNumber, UntypedInfoId};
 use bevy_log::warn;
+use bevy_platform_support::collections::HashMap;
 use either::Either;
 use serde::Deserialize;
 
@@ -165,7 +166,7 @@ impl TileInfo {
 
 impl From<CddaTileInfo> for TileInfo {
     fn from(cdda_tile: CddaTileInfo) -> Self {
-        let mut variants = HashMap::new();
+        let mut variants = HashMap::default();
         for tile_variant in cdda_tile.additional_tiles {
             for variant_id in &tile_variant.ids.0 {
                 variants.insert(

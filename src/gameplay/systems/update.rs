@@ -4,19 +4,19 @@ use crate::gameplay::{
     ElevationVisibility, Focus, GameplayLocal, LastSeen, Player, Pos, SubzoneLevel,
 };
 use bevy::prelude::{
-    Camera, Changed, Children, Commands, EventWriter, GlobalTransform, ParallelCommands, Parent,
-    Query, Res, Visibility, With, Without, debug, error,
+    Camera, Changed, ChildOf, Children, Commands, EventWriter, GlobalTransform, ParallelCommands,
+    Query, Res, Single, Visibility, With, Without, debug, error,
 };
 use std::time::Instant;
 use util::log_if_slow;
 
 #[cfg(feature = "log_archetypes")]
-use bevy::utils::HashMap;
+use bevy::platform_support::collections::HashMap;
 
 fn update_material(
     commands: &mut Commands,
     children: &Children,
-    child_items: &Query<&Appearance, (With<Parent>, Without<Pos>)>,
+    child_items: &Query<&Appearance, (With<ChildOf>, Without<Pos>)>,
     last_seen: &LastSeen,
 ) {
     for &child in children {
@@ -40,7 +40,7 @@ pub(crate) fn update_visualization(
     accessible: Option<&Accessible>,
     speed: Option<&BaseSpeed>,
     children: &Children,
-    child_items: &Query<&Appearance, (With<Parent>, Without<Pos>)>,
+    child_items: &Query<&Appearance, (With<ChildOf>, Without<Pos>)>,
 ) -> Option<Exploration> {
     let mut exploration = None;
 
@@ -108,11 +108,11 @@ pub(crate) fn update_visibility(
         &mut LastSeen,
         Option<&BaseSpeed>,
     )>,
-    cameras: Query<&GlobalTransform, With<Camera>>,
+    camera: Single<&GlobalTransform, With<Camera>>,
 ) {
     let start = Instant::now();
 
-    let &camera_global_transform = cameras.single();
+    let &camera_global_transform = *camera;
     if focus.is_changed()
         || camera_global_transform != *previous_camera_global_transform.get()
         || *elevation_visibility != *last_elevation_visibility.get()
@@ -157,7 +157,7 @@ pub(crate) fn update_visualization_on_item_move(
         ),
         Changed<Pos>,
     >,
-    child_items: Query<&Appearance, (With<Parent>, Without<Pos>)>,
+    child_items: Query<&Appearance, (With<ChildOf>, Without<Pos>)>,
 ) {
     let start = Instant::now();
 
@@ -183,7 +183,7 @@ pub(crate) fn update_visualization_on_item_move(
             });
 
             if let Some(exploration) = exploration {
-                explorations.send(exploration);
+                explorations.write(exploration);
             }
         }
     }

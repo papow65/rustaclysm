@@ -1,8 +1,16 @@
-use crate::gameplay::{spawn::TileSpawner, *};
+use crate::gameplay::{
+    ActorEvent, ActorImpact, AlternativeSituation, Amount, Aquatic, Attack, BaseSpeed,
+    BodyContainers, Breath, ChangePace, Clock, Close, Collision, Container, CorpseEvent, Craft,
+    Damage, Envir, Faction, Filthy, Fragment, Healing, HealingDuration, Health,
+    HorizontalDirection, Item, ItemHierarchy, ItemItem, LastEnemy, LastSeen, LevelOffset, Life,
+    Location, Melee, MessageWriter, Nbor, ObjectName, Peek, Phrase, Player, PlayerActionState,
+    PlayerWielded, Pos, Pulp, Severity, Smash, Stamina, StaminaCost, StartCraft, Step, Subject,
+    SubzoneLevel, SubzoneLevelEntities, TerrainEvent, Toggle, WalkingMode, spawn::TileSpawner,
+};
 use bevy::ecs::query::QueryData;
 use bevy::prelude::{
-    BuildChildren as _, Commands, DespawnRecursiveExt as _, Entity, Event, EventWriter, NextState,
-    Query, Transform, Visibility, error, warn,
+    ChildOf, Commands, Entity, Event, EventWriter, NextState, Query, Transform, Visibility, error,
+    warn,
 };
 use cdda_json_files::{CddaItem, Description};
 use hud::text_color_expect_full;
@@ -111,7 +119,7 @@ impl ActorItem<'_> {
             .expect("Actor entity should be found");
 
         let healing_amount = healing_duration.heal(SLEEP_DURATION);
-        healing_writer.send(ActorEvent::new(
+        healing_writer.write(ActorEvent::new(
             self.entity,
             Healing {
                 amount: healing_amount as u16,
@@ -178,7 +186,7 @@ impl ActorItem<'_> {
                 self.no_impact()
             }
             Collision::Opened(door) => {
-                toggle_writer.send(TerrainEvent {
+                toggle_writer.write(TerrainEvent {
                     terrain_entity: door,
                     change: Toggle::Open,
                 });
@@ -209,7 +217,7 @@ impl ActorItem<'_> {
             attacker: self.subject(),
             amount: self.melee.damage(melee_weapon),
         };
-        damage_writer.send(new(damaged, damage));
+        damage_writer.write(new(damaged, damage));
 
         self.impact_from_duration(Duration::SECOND, StaminaCost::HEAVY)
     }
@@ -386,7 +394,7 @@ impl ActorItem<'_> {
                     .send_warn();
                 self.no_impact()
             } else {
-                toggle_writer.send(TerrainEvent {
+                toggle_writer.write(TerrainEvent {
                     terrain_entity: closeable,
                     change: Toggle::Close,
                 });
@@ -509,8 +517,10 @@ impl ActorItem<'_> {
                 LastSeen::Currently,
                 Transform::default(),
                 Visibility::default(),
+                ChildOf {
+                    parent: taken.child_of.parent,
+                },
             ))
-            .set_parent(taken.parent.get())
             .id();
         if taken.filthy.is_some() {
             commands.entity(left_over_entity).insert(Filthy);
@@ -521,9 +531,13 @@ impl ActorItem<'_> {
 
         commands
             .entity(taken.entity)
-            .insert(allowed_amount)
-            .remove::<Pos>()
-            .set_parent(container_entity);
+            .insert((
+                allowed_amount,
+                ChildOf {
+                    parent: container_entity,
+                },
+            ))
+            .remove::<Pos>();
     }
 
     fn take_all(commands: &mut Commands, container_entity: Entity, taken_entity: Entity) {
@@ -551,9 +565,9 @@ impl ActorItem<'_> {
                 return self.no_impact();
             }
         }
-        let dump = moved.parent.get()
+        let dump = moved.child_of.parent
             == self.body_containers.expect("Body containers present").hands
-            || moved.parent.get()
+            || moved.child_of.parent
                 == self
                     .body_containers
                     .expect("Body containers present")
@@ -574,10 +588,11 @@ impl ActorItem<'_> {
                 .send_error();
             return self.no_impact();
         };
-        commands
-            .entity(moved.entity)
-            .insert((Visibility::default(), to))
-            .set_parent(new_parent);
+        commands.entity(moved.entity).insert((
+            Visibility::default(),
+            to,
+            ChildOf { parent: new_parent },
+        ));
         location.move_(moved.entity, to);
         self.impact_from_duration(Duration::SECOND, StaminaCost::NEUTRAL)
     }
@@ -614,7 +629,7 @@ impl ActorItem<'_> {
                     .expect("Consumed component items should be found");
                 if item_amount.0 <= missing {
                     //trace!(" - Consume {item_entity} fully ({:?}x)", item_amount.0);
-                    commands.entity(item_entity).despawn_recursive();
+                    commands.entity(item_entity).despawn();
                     missing -= item_amount.0;
                     if missing == 0 {
                         break;
@@ -661,10 +676,10 @@ impl ActorItem<'_> {
                 PlayerActionState::Crafting { item: craft_entity }.severity_finishing(),
                 false,
             );
-            let parent = item.parent.get();
+            let parent = item.child_of.parent;
             let pos = *item.pos.unwrap_or(self.pos);
             let amount = *item.amount;
-            commands.entity(item.entity).despawn_recursive();
+            commands.entity(item.entity).despawn();
             if let Some(result) = craft.recipe.result.item_info(here!()) {
                 let cdda_item = CddaItem::from(&result);
                 if let Err(error) = spawner.spawn_item(parent, Some(pos), &cdda_item, amount) {

@@ -1,8 +1,8 @@
 use crate::{application::ApplicationState, gameplay::GameplayScreenState};
 use bevy::ecs::system::SystemId;
 use bevy::prelude::{
-    AlignItems, BuildChildren as _, ChildBuild as _, Commands, FlexDirection, In, JustifyContent,
-    KeyCode, Local, NextState, Node, Res, ResMut, StateScoped, Text, UiRect, Val, World,
+    AlignItems, Commands, FlexDirection, In, JustifyContent, KeyCode, Local, NextState, Node, Res,
+    ResMut, StateScoped, Text, UiRect, Val, World,
 };
 use hud::{BAD_TEXT_COLOR, ButtonBuilder, Fonts, PANEL_COLOR, SMALL_SPACING, WARN_TEXT_COLOR};
 use keyboard::KeyBindings;

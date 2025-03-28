@@ -1,5 +1,5 @@
 use bevy::prelude::{
-    App, Commands, IntoSystemConfigs as _, Plugin, ResMut, Resource, Update, debug, not,
+    App, Commands, IntoScheduleConfigs as _, Plugin, ResMut, Resource, Update, debug, not,
     resource_exists,
 };
 use bevy::tasks::{AsyncComputeTaskPool, Task};

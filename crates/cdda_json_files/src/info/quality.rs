@@ -1,4 +1,5 @@
-use crate::{HashMap, InfoId, ItemAction, ItemName, RequiredLinkedLater};
+use crate::{InfoId, ItemAction, ItemName, RequiredLinkedLater};
+use bevy_platform_support::collections::HashMap;
 use serde::Deserialize;
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;

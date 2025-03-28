@@ -2,8 +2,8 @@ use crate::gameplay::{
     Accessible, Clock, Envir, Level, LevelOffset, Player, PlayerActionState, Pos, PosOffset,
     RelativeSegment, RelativeSegments, SubzoneLevel, Visible, VisionDistance,
 };
-use bevy::prelude::{Query, Res, State, With};
-use bevy::{ecs::system::SystemParam, utils::HashMap};
+use bevy::prelude::{Res, Single, State, With};
+use bevy::{ecs::system::SystemParam, platform_support::collections::HashMap};
 
 const WIDTH: usize = 2 * VisionDistance::MAX_VISION_TILES as usize + 1;
 
@@ -58,7 +58,7 @@ pub(crate) struct CurrentlyVisibleBuilder<'w, 's> {
     relative_segments: Res<'w, RelativeSegments>,
     clock: Clock<'w>,
     player_action_state: Res<'w, State<PlayerActionState>>,
-    players: Query<'w, 's, &'static Pos, With<Player>>,
+    player: Single<'w, &'static Pos, With<Player>>,
 }
 
 impl CurrentlyVisibleBuilder<'_, '_> {
@@ -152,7 +152,7 @@ impl CurrentlyVisibleBuilder<'_, '_> {
     }
 
     pub(crate) fn player_pos(&self) -> Pos {
-        *self.players.single()
+        **self.player
     }
 }
 

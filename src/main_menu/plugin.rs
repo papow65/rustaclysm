@@ -4,7 +4,7 @@ use crate::main_menu::systems::{
     enter_main_menu, spawn_main_menu, update_sav_files,
 };
 use bevy::prelude::{
-    App, FixedUpdate, In, IntoSystem as _, IntoSystemConfigs as _, OnEnter, Plugin, Startup,
+    App, FixedUpdate, In, IntoScheduleConfigs as _, IntoSystem as _, OnEnter, Plugin, Startup,
     Update, in_state,
 };
 use hud::manage_button_input;

@@ -1,4 +1,4 @@
-use bevy::ecs::component::{ComponentHooks, StorageType};
+use bevy::ecs::component::{ComponentHooks, Mutable, StorageType};
 use bevy::input::mouse::{MouseScrollUnit, MouseWheel};
 use bevy::prelude::{Component, ComputedNode, Interaction, JustifyContent, Node, Transform, Val};
 
@@ -92,11 +92,15 @@ impl ScrollList {
 }
 
 impl Component for ScrollList {
+    type Mutability = Mutable;
     const STORAGE_TYPE: StorageType = StorageType::Table;
 
     fn register_component_hooks(hooks: &mut ComponentHooks) {
-        hooks.on_add(|mut world, entity, _component_id| {
-            world.commands().entity(entity).insert(Interaction::None);
+        hooks.on_add(|mut world, context| {
+            world
+                .commands()
+                .entity(context.entity)
+                .insert(Interaction::None);
         });
     }
 }

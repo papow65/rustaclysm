@@ -1,8 +1,8 @@
 use crate::ManualSection;
 use crate::components::{LargeNode, ManualDisplay, ManualText};
 use bevy::prelude::{
-    Alpha as _, BackgroundColor, BuildChildren as _, Changed, ChildBuild as _, Children, Commands,
-    GlobalZIndex, Node, Query, RemovedComponents, Res, Text, Val, With,
+    Alpha as _, BackgroundColor, Changed, Commands, GlobalZIndex, Node, Query, RemovedComponents,
+    Res, Text, Val, With, error,
 };
 use hud::{Fonts, PANEL_COLOR, SOFT_TEXT_COLOR, panel_node};
 
@@ -32,7 +32,7 @@ pub(super) fn spawn_manual(mut commands: Commands, fonts: Res<Fonts>) {
 #[expect(clippy::needless_pass_by_value)]
 pub(super) fn update_manual(
     large_nodes: Query<(), With<LargeNode>>,
-    mut manual: Query<(&mut BackgroundColor, &mut Children), With<ManualDisplay>>,
+    mut manual_background: Query<&mut BackgroundColor, With<ManualDisplay>>,
     mut manual_text: Query<&mut Text, With<ManualText>>,
     sections: Query<&ManualSection>,
     changed: Query<(), Changed<ManualSection>>,
@@ -42,10 +42,14 @@ pub(super) fn update_manual(
         return;
     }
 
-    let mut manual = manual.single_mut();
+    let Ok(mut background_color) = manual_background
+        .single_mut()
+        .inspect_err(|error| error!("{error:?}"))
+    else {
+        return;
+    };
 
-    let background_color = &mut manual.0.0;
-    background_color.set_alpha(if large_nodes.is_empty() {
+    background_color.0.set_alpha(if large_nodes.is_empty() {
         PANEL_COLOR.0.alpha()
     } else {
         1.0
@@ -53,7 +57,13 @@ pub(super) fn update_manual(
 
     let mut sections = sections.iter().collect::<Vec<_>>();
     sections.sort_by_key(|section| section.sort_key());
-    manual_text.single_mut().0.replace_range(
+    let Ok(mut manual_text) = manual_text
+        .single_mut()
+        .inspect_err(|error| error!("{error:?}"))
+    else {
+        return;
+    };
+    manual_text.0.replace_range(
         ..,
         sections
             .iter()

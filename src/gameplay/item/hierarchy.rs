@@ -1,8 +1,9 @@
 use crate::gameplay::{ContainerLimits, Fragment, Infos, Item, ItemItem, Phrase, item::Pocket};
 use bevy::ecs::system::SystemParam;
-use bevy::prelude::{Children, Entity, HierarchyQueryExt as _, Query, Res, error};
+use bevy::prelude::{Children, Entity, Query, Res, error};
 use cdda_json_files::{PocketType, UntypedInfoId};
 use std::{iter::once, num::NonZeroUsize};
+use util::here;
 
 #[derive(Clone, Copy, Debug)]
 pub(crate) struct InPocket {
@@ -32,9 +33,11 @@ impl<'w> ItemHierarchy<'w, '_> {
 
     pub(crate) fn items_in(&self, container: Entity) -> impl Iterator<Item = ItemItem> + use<'_> {
         self.children
-            .children(container)
-            .iter()
-            .flat_map(|&item| self.items.get(item))
+            .get(container)
+            .inspect_err(|error| error!("{} {error:?}", here!()))
+            .into_iter()
+            .flat_map(IntoIterator::into_iter)
+            .flat_map(|item| self.items.get(*item)) // Filtering out the models
     }
 
     pub(crate) fn pockets_in(
@@ -42,9 +45,11 @@ impl<'w> ItemHierarchy<'w, '_> {
         container: Entity,
     ) -> impl Iterator<Item = (Entity, &Pocket)> + use<'_> {
         self.children
-            .children(container)
-            .iter()
-            .flat_map(|&pocket| self.pockets.get(pocket))
+            .get(container)
+            .inspect_err(|error| error!("{} {error:?}", here!()))
+            .into_iter()
+            .flat_map(IntoIterator::into_iter)
+            .flat_map(|&pocket| self.pockets.get(pocket)) // Filtering out the models
     }
 
     pub(crate) fn container(&self, container_entity: Entity) -> &ContainerLimits {

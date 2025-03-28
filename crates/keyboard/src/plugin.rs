@@ -1,6 +1,6 @@
 use crate::systems::{manage_binded_keyboard_input, preprocess_keyboard_input};
 use bevy::input::{InputSystem, keyboard::KeyboardInput};
-use bevy::prelude::{App, IntoSystem as _, IntoSystemConfigs as _, Plugin, PreUpdate, on_event};
+use bevy::prelude::{App, IntoScheduleConfigs as _, IntoSystem as _, Plugin, PreUpdate, on_event};
 
 pub struct KeyboardPlugin;
 

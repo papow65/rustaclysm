@@ -2,7 +2,7 @@ use crate::application::ApplicationState;
 use crate::gameplay::scope::gameplay_counter::GameplayCounter;
 use crate::gameplay::spawn::spawn_initial_entities;
 use bevy::prelude::{
-    App, Commands, IntoSystemConfigs as _, OnEnter, OnExit, Plugin, ResMut, Resource,
+    App, Commands, IntoScheduleConfigs as _, OnEnter, OnExit, Plugin, ResMut, Resource,
 };
 use std::marker::PhantomData;
 

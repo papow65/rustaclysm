@@ -4,7 +4,7 @@ use crate::gameplay::screens::crafting::systems::{
     refresh_crafting_screen, remove_crafting_resource, spawn_crafting_screen,
 };
 use bevy::prelude::{
-    App, IntoSystem as _, IntoSystemConfigs as _, OnEnter, OnExit, Plugin, Update, in_state,
+    App, IntoScheduleConfigs as _, IntoSystem as _, OnEnter, OnExit, Plugin, Update, in_state,
 };
 
 pub(crate) struct CraftingScreenPlugin;

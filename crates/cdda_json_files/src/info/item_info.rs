@@ -1,5 +1,6 @@
-use crate::{Flags, HashMap, InfoId, structure::MaybeFlatVec};
+use crate::{Flags, InfoId, structure::MaybeFlatVec};
 use crate::{ItemQuality, UntypedInfoId};
+use bevy_platform_support::collections::HashMap;
 use serde::Deserialize;
 use std::sync::Arc;
 use units::{Duration, Mass, Volume};

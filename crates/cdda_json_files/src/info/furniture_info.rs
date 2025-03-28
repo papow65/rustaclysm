@@ -1,7 +1,8 @@
 use crate::{
-    CommonItemInfo, Flags, HashMap, InfoId, ItemGroup, ItemName, OptionalLinkedLater,
-    RequiredLinkedLater, SpawnItem, TerrainInfo, UntypedInfoId,
+    CommonItemInfo, Flags, InfoId, ItemGroup, ItemName, OptionalLinkedLater, RequiredLinkedLater,
+    SpawnItem, TerrainInfo, UntypedInfoId,
 };
+use bevy_platform_support::collections::HashMap;
 use serde::Deserialize;
 use std::sync::Arc;
 

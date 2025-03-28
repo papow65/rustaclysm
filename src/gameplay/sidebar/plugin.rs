@@ -1,6 +1,8 @@
 use crate::application::ApplicationState;
 use crate::gameplay::sidebar::systems::{spawn_sidebar, update_sidebar_systems, update_status_fps};
-use bevy::prelude::{App, FixedUpdate, IntoSystemConfigs as _, OnEnter, Plugin, Update, in_state};
+use bevy::prelude::{
+    App, FixedUpdate, IntoScheduleConfigs as _, OnEnter, Plugin, Update, in_state,
+};
 
 pub(crate) struct SidebarPlugin;
 

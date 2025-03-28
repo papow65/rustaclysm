@@ -7,10 +7,11 @@ use crate::gameplay::{
     ElevationVisibility, Focus, GameplayLocal, LastSeen, Player, PlayerActionState, Pos, Vehicle,
     VisualizationUpdate,
 };
-use bevy::ecs::schedule::SystemConfigs;
+use bevy::ecs::schedule::{IntoScheduleConfigs as _, ScheduleConfigs};
+use bevy::ecs::system::ScheduleSystem;
 use bevy::prelude::{
-    Camera, Changed, Children, EventWriter, GlobalTransform, IntoSystemConfigs as _, Local, Mesh3d,
-    ParallelCommands, Parent, Query, RemovedComponents, Res, ResMut, State, Transform, Vec3,
+    Camera, Changed, ChildOf, Children, EventWriter, GlobalTransform, Local, Mesh3d,
+    ParallelCommands, Query, RemovedComponents, Res, ResMut, Single, State, Transform, Vec3,
     Visibility, With, Without, debug, resource_exists_and_changed,
 };
 use std::cell::RefCell;
@@ -18,7 +19,7 @@ use std::{cell::OnceCell, time::Instant};
 use thread_local::ThreadLocal;
 use util::log_if_slow;
 
-pub(super) fn refresh_all() -> SystemConfigs {
+pub(super) fn refresh_all() -> ScheduleConfigs<ScheduleSystem> {
     (
         update_transforms,
         update_peeking_transforms.run_if(resource_exists_and_changed::<State<PlayerActionState>>),
@@ -52,7 +53,7 @@ fn update_transforms(
 #[expect(clippy::needless_pass_by_value)]
 fn update_peeking_transforms(
     player_action_state: Res<State<PlayerActionState>>,
-    players: Query<&Children, With<Player>>,
+    player_children: Single<&Children, With<Player>>,
     mut mesh_transforms: Query<&mut Transform, With<Mesh3d>>,
     initial_offset: Local<OnceCell<Vec3>>,
 ) {
@@ -64,8 +65,7 @@ fn update_peeking_transforms(
         Vec3::ZERO
     };
 
-    let children = players.single();
-    for child in children {
+    for child in *player_children {
         if let Ok(mut transform) = mesh_transforms.get_mut(*child) {
             transform.translation =
                 state_offset + *initial_offset.get_or_init(|| transform.translation);
@@ -110,13 +110,12 @@ fn update_visualization_on_player_move(
         Option<&BaseSpeed>,
         &Children,
     )>,
-    child_items: Query<&Appearance, (With<Parent>, Without<Pos>)>,
-    cameras: Query<&GlobalTransform, With<Camera>>,
+    child_items: Query<&Appearance, (With<ChildOf>, Without<Pos>)>,
+    camera_global_transform: Single<&GlobalTransform, With<Camera>>,
 ) {
     let start = Instant::now();
 
-    let &camera_global_transform = cameras.single();
-    let camera_moved = camera_global_transform != *previous_camera_global_transform.get();
+    let camera_moved = **camera_global_transform != *previous_camera_global_transform.get();
 
     if focus.is_changed() || camera_moved || visualization_update.forced() {
         let currently_visible = ThreadLocal::new();
@@ -156,12 +155,12 @@ fn update_visualization_on_player_move(
         );
 
         for ref_cell in new_explorations {
-            explorations.send_batch(ref_cell.into_inner());
+            explorations.write_batch(ref_cell.into_inner());
         }
 
         debug!("{}x visualization updated", items.iter().len());
 
-        *previous_camera_global_transform.get() = camera_global_transform;
+        *previous_camera_global_transform.get() = **camera_global_transform;
         (*visualization_update).reset();
     }
 
@@ -174,15 +173,12 @@ fn update_visualization_on_weather_change(
     player_action_state: Res<State<PlayerActionState>>,
     mut visualization_update: ResMut<VisualizationUpdate>,
     mut last_viewing_disttance: GameplayLocal<Option<u8>>,
-    players: Query<&Pos, With<Player>>,
+    player_pos: Single<&Pos, With<Player>>,
 ) {
     let start = Instant::now();
 
-    let viewing_distance = CurrentlyVisible::viewing_distance(
-        &clock,
-        Some(&*player_action_state),
-        players.single().level,
-    );
+    let viewing_distance =
+        CurrentlyVisible::viewing_distance(&clock, Some(&*player_action_state), player_pos.level);
     if *last_viewing_disttance.get() != viewing_distance {
         *last_viewing_disttance.get() = viewing_distance;
 

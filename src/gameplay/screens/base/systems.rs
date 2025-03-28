@@ -49,17 +49,16 @@ fn open_inventory(mut next_gameplay_state: ResMut<NextState<GameplayScreenState>
 fn toggle_map(
     In(zoom_distance): In<ZoomDistance>,
     mut camera_offset: ResMut<CameraOffset>,
-    mut camera_layers: Query<&mut RenderLayers, With<Camera3d>>,
+    mut camera_layers: Single<&mut RenderLayers, With<Camera3d>>,
 ) {
     let start = Instant::now();
 
-    let mut camera_layers = camera_layers.single_mut();
-    *camera_layers = if showing_map(&camera_layers) {
+    **camera_layers = if showing_map(&camera_layers) {
         camera_offset.zoom_to_tiles(zoom_distance);
-        camera_layers.clone().with(1).without(2)
+        (*camera_layers).clone().with(1).without(2)
     } else {
         camera_offset.zoom_to_map(zoom_distance);
-        camera_layers.clone().without(1).with(2)
+        (*camera_layers).clone().without(1).with(2)
     };
 
     log_if_slow("toggle_map", start);
@@ -67,18 +66,17 @@ fn toggle_map(
 
 fn zoom(
     camera_offset: &mut CameraOffset,
-    camera_layers: &mut Query<&mut RenderLayers, With<Camera3d>>,
+    camera_layers: &mut Single<&mut RenderLayers, With<Camera3d>>,
     direction: ZoomDirection,
 ) {
     camera_offset.zoom(direction);
 
-    let mut camera_layers = camera_layers.single_mut();
-    if showing_map(&camera_layers) {
+    if showing_map(camera_layers) {
         if camera_offset.zoom_tiles_only() {
-            *camera_layers = camera_layers.clone().with(1).without(2);
+            ***camera_layers = camera_layers.clone().with(1).without(2);
         }
     } else if camera_offset.zoom_map_only() {
-        *camera_layers = camera_layers.clone().without(1).with(2);
+        ***camera_layers = camera_layers.clone().without(1).with(2);
     }
 }
 
@@ -109,11 +107,10 @@ fn toggle_elevation(
     log_if_slow("toggle_elevation", start);
 }
 
-#[expect(clippy::needless_pass_by_value)]
 pub(super) fn manage_mouse_scroll_input(
     mut mouse_wheel_events: EventReader<MouseWheel>,
     mut camera_offset: ResMut<CameraOffset>,
-    mut camera_layers: Query<&mut RenderLayers, With<Camera3d>>,
+    mut camera_layers: Single<&mut RenderLayers, With<Camera3d>>,
     scroll_lists: Query<&Interaction, With<ScrollList>>,
 ) {
     let start = Instant::now();
@@ -327,7 +324,7 @@ fn handle_cancelation(
 fn manage_zoom(
     In(zoom_direction): In<ZoomDirection>,
     mut camera_offset: ResMut<CameraOffset>,
-    mut camera_layers: Query<&mut RenderLayers, With<Camera3d>>,
+    mut camera_layers: Single<&mut RenderLayers, With<Camera3d>>,
 ) {
     let start = Instant::now();
 
@@ -363,13 +360,12 @@ fn manage_queued_instruction(
 #[expect(clippy::needless_pass_by_value)]
 pub(crate) fn update_camera_offset(
     camera_offset: Res<CameraOffset>,
-    mut cameras: Query<&mut Transform, With<Camera3d>>,
+    mut camera_transform: Single<&mut Transform, With<Camera3d>>,
 ) {
     let start = Instant::now();
 
-    let mut transform = cameras.single_mut();
-    transform.translation = camera_offset.offset();
-    transform.look_at(Vec3::ZERO, Vec3::Y);
+    camera_transform.translation = camera_offset.offset();
+    camera_transform.look_at(Vec3::ZERO, Vec3::Y);
 
     log_if_slow("update_camera", start);
 }

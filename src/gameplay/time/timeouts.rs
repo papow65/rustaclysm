@@ -1,4 +1,4 @@
-use bevy::ecs::entity::EntityHashMap;
+use bevy::ecs::entity::hash_map::EntityHashMap;
 use bevy::prelude::{Entity, Resource};
 use units::{Duration, Timestamp};
 
