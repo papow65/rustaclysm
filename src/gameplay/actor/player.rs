@@ -9,6 +9,7 @@ use std::fmt;
 use units::{Duration, Timestamp};
 
 #[derive(Debug, Component)]
+#[component(immutable)]
 pub(crate) struct Player;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]

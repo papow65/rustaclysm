@@ -245,7 +245,8 @@ impl Component for Pos {
     }
 }
 
-#[derive(Component, Copy, Clone, PartialEq, Eq, Hash)]
+#[derive(Copy, Clone, PartialEq, Eq, Hash, Component)]
+#[component(immutable)]
 pub(crate) struct SubzoneLevel {
     pub(crate) x: i32,
     pub(crate) level: Level,

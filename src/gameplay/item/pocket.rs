@@ -2,6 +2,7 @@ use bevy::prelude::Component;
 use cdda_json_files::{CddaPocket, PocketType};
 
 #[derive(Debug, Component)]
+#[component(immutable)]
 pub(crate) struct Pocket {
     pub(crate) type_: PocketType,
     pub(crate) sealed: bool,

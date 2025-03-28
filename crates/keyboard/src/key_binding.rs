@@ -22,6 +22,7 @@ impl From<SystemId<In<Entity>, ()>> for KeyBindingSystem {
 }
 
 #[derive(Clone, Debug, Component)]
+#[component(immutable)]
 pub struct KeyBinding<C: CtrlState, H: HeldState> {
     key: Key,
     system: KeyBindingSystem,

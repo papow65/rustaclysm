@@ -8,6 +8,7 @@ use keyboard::{Key, KeyBinding};
 use std::fmt;
 
 #[derive(Debug, Component)]
+#[component(immutable)]
 pub struct RunButton<I: SystemInput>
 where
     <I as SystemInput>::Inner<'static>: fmt::Debug,

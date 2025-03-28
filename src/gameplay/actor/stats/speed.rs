@@ -4,6 +4,7 @@ use hud::{BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR};
 use units::Speed;
 
 #[derive(Debug, Clone, Copy, Component)]
+#[component(immutable)]
 pub(crate) struct BaseSpeed(Speed);
 
 impl BaseSpeed {
@@ -23,6 +24,7 @@ impl BaseSpeed {
 }
 
 #[derive(Debug, Component)]
+#[component(immutable)]
 pub(crate) enum WalkingMode {
     Crouching,
     Walking,

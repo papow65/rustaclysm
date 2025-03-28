@@ -3,9 +3,11 @@ use std::sync::Arc;
 
 /// When any entity exists with this component, the manual layout should adapt to it
 #[derive(Debug, Component)]
+#[component(immutable)]
 pub struct LargeNode;
 
 #[derive(Clone, Debug, Component)]
+#[component(immutable)]
 pub struct ManualSection {
     text: Arc<str>,
     sort_key: u8,
@@ -42,7 +44,9 @@ impl ManualSection {
 }
 
 #[derive(Debug, Component)]
+#[component(immutable)]
 pub(super) struct ManualDisplay;
 
 #[derive(Debug, Component)]
+#[component(immutable)]
 pub(super) struct ManualText;

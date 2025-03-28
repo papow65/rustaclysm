@@ -16,39 +16,49 @@ use units::{Duration, Timestamp};
 
 /// Terrain that can be accessed, like a floor
 #[derive(Component)]
+#[component(immutable)]
 pub(crate) struct Accessible {
     pub(crate) water: bool,
     pub(crate) move_cost: MoveCost,
 }
 
 #[derive(Component)]
+#[component(immutable)]
 pub(crate) struct StairsUp;
 
 #[derive(Component)]
+#[component(immutable)]
 pub(crate) struct StairsDown;
 
 /// Not accessible for any movement
 #[derive(Component)]
+#[component(immutable)]
 pub(crate) struct Obstacle;
 
 #[derive(Component)]
+#[component(immutable)]
 pub(crate) struct Openable;
 
 #[derive(Component)]
+#[component(immutable)]
 pub(crate) struct Closeable;
 
 #[derive(Component)]
+#[component(immutable)]
 pub(crate) struct Hurdle(pub(crate) MoveCostIncrease);
 
 /// Blocks vision (horizontally)
 #[derive(Component)]
+#[component(immutable)]
 pub(crate) struct Opaque;
 
 /// Blocks vision to and from the level below
 #[derive(Component)]
+#[component(immutable)]
 pub(crate) struct OpaqueFloor;
 
-#[derive(PartialEq, Component)]
+/// Mutable component
+#[derive(Debug, PartialEq, Component)]
 pub(crate) struct StandardIntegrity(pub(crate) Limited);
 
 impl StandardIntegrity {
@@ -59,25 +69,32 @@ impl StandardIntegrity {
 }
 
 #[derive(Debug, Component)]
+#[component(immutable)]
 pub(crate) struct Life;
 
 #[derive(Component)]
+#[component(immutable)]
 pub(crate) struct Corpse;
 
 #[derive(Component)]
+#[component(immutable)]
 pub(crate) struct CorpseRaise {
     pub(crate) at: Timestamp,
 }
 
 #[derive(Component)]
+#[component(immutable)]
 pub(crate) struct PlayerWielded;
 
 #[derive(Component)]
+#[component(immutable)]
 pub(crate) struct CameraBase;
 
 #[derive(Component)]
+#[component(immutable)]
 pub(crate) struct ExamineCursor;
 
+/// Mutable component
 #[derive(Debug, Component)]
 pub(crate) struct HealingDuration(Duration);
 
@@ -95,6 +112,7 @@ impl HealingDuration {
     }
 }
 
+/// Mutable component
 #[derive(Debug, Component)]
 pub(crate) struct Craft {
     pub(crate) recipe: Arc<Recipe>,
@@ -129,6 +147,7 @@ impl Craft {
 }
 
 #[derive(Debug, Component)]
+#[component(immutable)]
 pub(crate) struct Melee {
     /// Can be 0
     pub(crate) dices: u16,
@@ -150,10 +169,11 @@ impl Melee {
     }
 }
 
-#[derive(Component, Clone, PartialEq, Eq, Debug)]
+/// Mutable component
+#[derive(Clone, PartialEq, Eq, Debug, Component)]
 pub(crate) enum LastSeen {
     Currently,
-    Previously, // TODO add timestamp
+    Previously, // TODO consider adding a timestamp
     Never,
 }
 
@@ -174,7 +194,8 @@ impl LastSeen {
     }
 }
 
-#[derive(Component, Clone)]
+#[derive(Clone, Debug, Component)]
+#[component(immutable)]
 pub(crate) struct Appearance {
     seen: MeshMaterial3d<StandardMaterial>,
     remembered: MeshMaterial3d<StandardMaterial>,
@@ -223,4 +244,5 @@ impl Appearance {
 }
 
 #[derive(Component)]
+#[component(immutable)]
 pub(crate) struct MissingAsset;

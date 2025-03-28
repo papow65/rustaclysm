@@ -37,6 +37,7 @@ impl From<SelectionListStep> for Key {
 }
 
 #[derive(Default, Component)]
+#[component(immutable)]
 pub struct SelectionList {
     pub selected: Option<Entity>,
     first: Option<Entity>,

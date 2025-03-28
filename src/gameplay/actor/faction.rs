@@ -36,7 +36,8 @@ impl Intent {
     const ALL: [Self; 4] = [Self::Attack, Self::Flee, Self::Wander, Self::Wait];
 }
 
-#[derive(Clone, Component, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Component)]
+#[component(immutable)]
 pub(crate) enum Faction {
     Human,
     Zombie,
@@ -371,5 +372,6 @@ impl Zero for Danger {
     }
 }
 
-#[derive(Component, Debug)]
+#[derive(Debug, Component)]
+#[component(immutable)]
 pub(crate) struct LastEnemy(Pos);

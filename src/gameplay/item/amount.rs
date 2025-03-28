@@ -2,7 +2,8 @@ use crate::gameplay::Fragment;
 use bevy::prelude::Component;
 use std::ops::{Add, Sub};
 
-#[derive(Component, Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+/// Mutable component
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Component)]
 pub(crate) struct Amount(pub(crate) u32);
 
 impl Amount {

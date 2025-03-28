@@ -3,6 +3,7 @@ use bevy::prelude::Component;
 use hud::text_color_expect_full;
 
 #[derive(Debug, Component)]
+#[component(immutable)]
 pub(crate) struct ItemIntegrity {
     damage: i64,
 }

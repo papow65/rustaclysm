@@ -6,6 +6,7 @@ use hud::{
 use std::{cmp::Ordering, sync::Arc};
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Component)]
+#[component(immutable)]
 pub(crate) struct RecipeSituation {
     pub(super) recipe: Arc<Recipe>,
     pub(super) name: Arc<str>,

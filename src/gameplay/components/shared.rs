@@ -2,6 +2,7 @@ use bevy::prelude::Component;
 use std::{ops::Deref, sync::Arc};
 
 #[derive(Debug, Component)]
+#[component(immutable)]
 pub(crate) struct Shared<T>(Arc<T>);
 
 impl<T> Shared<T> {

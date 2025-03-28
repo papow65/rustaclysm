@@ -6,7 +6,8 @@ use cdda_json_files::{CddaItemName, ItemName};
 use hud::BAD_TEXT_COLOR;
 
 #[must_use]
-#[derive(Clone, Component, Debug)]
+#[derive(Clone, Debug, Component)]
+#[component(immutable)]
 pub(crate) struct ObjectName {
     name: ItemName,
     color: TextColor,

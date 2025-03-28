@@ -3,7 +3,7 @@ use crate::gameplay::{Breath, Limited, Nbor, NborDistance};
 use bevy::prelude::Component;
 use units::{Distance, Duration};
 
-/// Short term
+/// Short term breath - Mutable component
 #[derive(Debug, Component)]
 pub(crate) enum Stamina {
     Unlimited,

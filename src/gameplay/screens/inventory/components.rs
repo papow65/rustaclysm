@@ -44,6 +44,7 @@ impl From<InventoryAction> for Key {
 }
 
 #[derive(Debug, Component)]
+#[component(immutable)]
 pub(super) struct InventoryItemRow {
     pub(super) item: Entity,
 }

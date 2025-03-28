@@ -12,4 +12,5 @@ use bevy::prelude::Component;
 
 /// For some animals
 #[derive(Debug, Component)]
+#[component(immutable)]
 pub(crate) struct Aquatic;

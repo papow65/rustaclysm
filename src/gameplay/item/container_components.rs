@@ -3,12 +3,14 @@ use bevy::prelude::{Component, Entity};
 use units::{Mass, Volume};
 
 #[derive(Clone, Debug, Component)]
+#[component(immutable)]
 pub(crate) struct Containable {
     pub(crate) volume: Volume,
     pub(crate) mass: Mass,
 }
 
 #[derive(Component)]
+#[component(immutable)]
 pub(crate) struct ContainerLimits {
     pub(crate) max_volume: Volume,
     pub(crate) max_mass: Mass,
@@ -16,6 +18,7 @@ pub(crate) struct ContainerLimits {
 }
 
 #[derive(Debug, Component)]
+#[component(immutable)]
 pub(crate) struct BodyContainers {
     pub(crate) hands: Entity,
     pub(crate) clothing: Entity,

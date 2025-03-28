@@ -1,6 +1,7 @@
 use crate::gameplay::{Damage, Evolution, Healing, Limited};
 use bevy::prelude::Component;
 
+/// Mutable component
 #[derive(Debug, Component)]
 pub(crate) struct Health(pub(crate) Limited);
 

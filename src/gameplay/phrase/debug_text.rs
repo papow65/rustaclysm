@@ -1,6 +1,7 @@
 use bevy::prelude::{Component, Resource, TextFont};
 
 #[derive(Clone, Copy, Debug, Component)]
+#[component(immutable)]
 pub(crate) struct DebugText;
 
 #[derive(Clone, Copy, Debug, Default, Resource)]
