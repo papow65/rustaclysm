@@ -30,7 +30,7 @@ use util::here;
 #[derive(SystemParam)]
 pub(crate) struct TileSpawner<'w, 's> {
     pub(crate) commands: Commands<'w, 's>,
-    pub(crate) explored: Res<'w, Explored>,
+    explored: Res<'w, Explored>,
     active_sav: Res<'w, ActiveSav>,
     model_factory: ModelFactory<'w>,
 }

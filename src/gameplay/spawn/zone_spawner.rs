@@ -1,27 +1,43 @@
 use crate::application::ApplicationState;
 use crate::gameplay::{
-    Infos, LastSeen, Level, MissingAsset, ObjectCategory, ObjectName, SeenFrom, ZoneLevel,
-    ZoneLevelIds, spawn::TileSpawner,
+    Focus, Infos, LastSeen, Level, MissingAsset, ObjectCategory, ObjectName, SeenFrom,
+    SpawnZoneLevel, ZoneLevel, ZoneLevelIds, common::Region, resources::Explored,
+    spawn::TileSpawner,
 };
 use bevy::ecs::system::SystemParam;
-use bevy::prelude::{Entity, Res, StateScoped, Transform, Vec3, Visibility};
+use bevy::prelude::{Entity, EventReader, Res, StateScoped, Transform, Vec3, Visibility, debug};
 use bevy::render::view::RenderLayers;
 use cdda_json_files::{CddaItemName, InfoId, ItemName, OvermapTerrainInfo};
 use hud::HARD_TEXT_COLOR;
 
 #[derive(SystemParam)]
 pub(crate) struct ZoneSpawner<'w, 's> {
+    focus: Focus<'w>,
     infos: Res<'w, Infos>,
-    pub(crate) zone_level_ids: Res<'w, ZoneLevelIds>,
-    pub(crate) tile_spawner: TileSpawner<'w, 's>,
+    explored: Res<'w, Explored>,
+    zone_level_ids: Res<'w, ZoneLevelIds>,
+    tile_spawner: TileSpawner<'w, 's>,
 }
 
 impl ZoneSpawner<'_, '_> {
-    pub(crate) fn spawn_zone_level(
+    pub(super) fn spawn_zone_levels(
         &mut self,
-        zone_level: ZoneLevel,
-        child_visibiltiy: &Visibility,
+        spawn_zone_level_reader: &mut EventReader<SpawnZoneLevel>,
+        visible_region: &Region,
     ) {
+        debug!("Spawning {} zone levels", spawn_zone_level_reader.len());
+
+        for spawn_event in spawn_zone_level_reader.read() {
+            let visibility = self.explored.zone_level_visibility(
+                &self.focus,
+                spawn_event.zone_level,
+                visible_region,
+            );
+            self.spawn_zone_level(spawn_event.zone_level, &visibility);
+        }
+    }
+
+    fn spawn_zone_level(&mut self, zone_level: ZoneLevel, child_visibiltiy: &Visibility) {
         //trace!("zone_level: {zone_level:?} {:?}", &definition);
         assert!(
             zone_level.level <= Level::ZERO,
@@ -30,11 +46,7 @@ impl ZoneSpawner<'_, '_> {
 
         let mut entity = self.tile_spawner.commands.spawn(zone_level);
 
-        let Some(seen_from) = self
-            .tile_spawner
-            .explored
-            .has_zone_level_been_seen(zone_level)
-        else {
+        let Some(seen_from) = self.explored.has_zone_level_been_seen(zone_level) else {
             entity.insert(MissingAsset);
             return;
         };
@@ -48,7 +60,7 @@ impl ZoneSpawner<'_, '_> {
         self.complete_zone_level(entity, zone_level, seen_from, &info_id, child_visibiltiy);
     }
 
-    pub(crate) fn complete_zone_level(
+    fn complete_zone_level(
         &mut self,
         entity: Entity,
         zone_level: ZoneLevel,
@@ -97,11 +109,40 @@ impl ZoneSpawner<'_, '_> {
                 seen_from,
                 StateScoped(ApplicationState::Gameplay),
             ))
+            .remove::<MissingAsset>() // May be present
             .with_children(|child_builder| {
                 child_builder.spawn(pbr_bundles.base);
                 if let Some(overlay_pbr_bundle) = pbr_bundles.overlay {
                     child_builder.spawn(overlay_pbr_bundle);
                 }
             });
+    }
+
+    pub(super) fn complete_missing_assets<'a>(
+        &mut self,
+        zone_levels: impl IntoIterator<Item = (Entity, &'a ZoneLevel)>,
+        visible_region: &Region,
+    ) {
+        for (entity, &zone_level) in zone_levels {
+            let Some(seen_from) = self.explored.has_zone_level_been_seen(zone_level) else {
+                continue;
+            };
+
+            let Some(overmap_info_id) = self.zone_level_ids.get(zone_level).cloned() else {
+                continue;
+            };
+
+            let child_visibility =
+                self.explored
+                    .zone_level_visibility(&self.focus, zone_level, visible_region);
+
+            self.complete_zone_level(
+                entity,
+                zone_level,
+                seen_from,
+                &overmap_info_id,
+                &child_visibility,
+            );
+        }
     }
 }

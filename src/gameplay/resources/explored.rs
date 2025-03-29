@@ -1,6 +1,8 @@
-use crate::gameplay::{Exploration, Level, Overzone, Pos, SubzoneLevel, Zone, ZoneLevel};
+use crate::gameplay::{
+    Exploration, Focus, Level, Overzone, Pos, Region, SubzoneLevel, Zone, ZoneLevel,
+};
 use bevy::platform_support::collections::{HashMap, HashSet, hash_map::Entry};
-use bevy::prelude::Resource;
+use bevy::prelude::{Resource, Visibility};
 
 /// Ever seen by the player character
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -78,5 +80,25 @@ impl Explored {
 
     pub(crate) fn loaded(&self) -> bool {
         !self.zone_levels.is_empty()
+    }
+
+    pub(crate) fn zone_level_visibility(
+        &self,
+        focus: &Focus,
+        zone_level: ZoneLevel,
+        visible_region: &Region,
+    ) -> Visibility {
+        if zone_level.level == Level::from(focus).min(Level::ZERO)
+            && zone_level.subzone_levels().iter().all(|subzone_level| {
+                visible_region.contains_zone_level(ZoneLevel::from(*subzone_level))
+                    && self
+                        .has_zone_level_been_seen(zone_level)
+                        .is_some_and(|seen_from| seen_from != SeenFrom::Never)
+            })
+        {
+            Visibility::Inherited
+        } else {
+            Visibility::Hidden
+        }
     }
 }

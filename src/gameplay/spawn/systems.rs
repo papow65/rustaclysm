@@ -3,7 +3,7 @@ use crate::gameplay::spawn::{SubzoneSpawner, TileSpawner, ZoneSpawner};
 use crate::gameplay::{
     ActiveSav, DespawnSubzoneLevel, DespawnZoneLevel, Expanded, Explored, Focus, GameplayLocal,
     Infos, Level, MapManager, MapMemoryManager, MissingAsset, OvermapAsset, OvermapBufferManager,
-    OvermapManager, Pos, Region, SeenFrom, SpawnSubzoneLevel, SpawnZoneLevel, SubzoneLevel,
+    OvermapManager, Pos, Region, SpawnSubzoneLevel, SpawnZoneLevel, SubzoneLevel,
     SubzoneLevelEntities, UpdateZoneLevelVisibility, VisionDistance, VisualizationUpdate, Zone,
     ZoneLevel, ZoneLevelEntities, ZoneLevelIds, ZoneRegion,
 };
@@ -292,26 +292,15 @@ pub(crate) fn update_zone_levels(
 #[expect(clippy::needless_pass_by_value)]
 pub(crate) fn spawn_zone_levels(
     mut spawn_zone_level_reader: EventReader<SpawnZoneLevel>,
-    focus: Focus,
     mut zone_spawner: ZoneSpawner,
     camera: Single<(&Camera, &GlobalTransform)>,
 ) {
     let start = Instant::now();
 
-    debug!("Spawning {} zone levels", spawn_zone_level_reader.len());
-
     let (camera, &global_transform) = *camera;
     let visible_region = visible_region(camera, &global_transform).ground_only();
 
-    for spawn_event in spawn_zone_level_reader.read() {
-        let visibility = zone_level_visibility(
-            &zone_spawner.tile_spawner.explored,
-            spawn_event.zone_level,
-            &visible_region,
-            &focus,
-        );
-        zone_spawner.spawn_zone_level(spawn_event.zone_level, &visibility);
-    }
+    zone_spawner.spawn_zone_levels(&mut spawn_zone_level_reader, &visible_region);
 
     log_if_slow("spawn_zone_levels", start);
 }
@@ -335,11 +324,10 @@ pub(crate) fn update_zone_level_visibility(
     let visible_region = visible_region(camera, &global_transform).ground_only();
 
     for update_zone_level_visibility_event in update_zone_level_visibility_reader.read() {
-        let visibility = zone_level_visibility(
-            &explored,
+        let visibility = explored.zone_level_visibility(
+            &focus,
             update_zone_level_visibility_event.zone_level,
             &visible_region,
-            &focus,
         );
         for &entity in &update_zone_level_visibility_event.children {
             // Removing 'Visibility' and 'ComputedVisibility' is not more performant in Bevy 0.9
@@ -364,26 +352,6 @@ pub(crate) fn despawn_zone_level(
     }
 
     log_if_slow("despawn_zone_level", start);
-}
-
-fn zone_level_visibility(
-    explored: &Explored,
-    zone_level: ZoneLevel,
-    visible_region: &Region,
-    focus: &Focus,
-) -> Visibility {
-    if zone_level.level == Level::from(focus).min(Level::ZERO)
-        && zone_level.subzone_levels().iter().all(|subzone_level| {
-            visible_region.contains_zone_level(ZoneLevel::from(*subzone_level))
-                && explored
-                    .has_zone_level_been_seen(zone_level)
-                    .is_some_and(|seen_from| seen_from != SeenFrom::Never)
-        })
-    {
-        Visibility::Inherited
-    } else {
-        Visibility::Hidden
-    }
 }
 
 pub(crate) fn handle_map_events(
@@ -461,7 +429,6 @@ pub(crate) fn handle_overmap_events(
 
 #[expect(clippy::needless_pass_by_value)]
 pub(crate) fn update_zone_levels_with_missing_assets(
-    focus: Focus,
     mut zone_spawner: ZoneSpawner,
     zone_levels: Query<(Entity, &ZoneLevel), With<MissingAsset>>,
     camera: Single<(&Camera, &GlobalTransform)>,
@@ -475,39 +442,7 @@ pub(crate) fn update_zone_levels_with_missing_assets(
     let (camera, &global_transform) = *camera;
     let visible_region = visible_region(camera, &global_transform).ground_only();
 
-    for (entity, &zone_level) in &zone_levels {
-        let Some(seen_from) = zone_spawner
-            .tile_spawner
-            .explored
-            .has_zone_level_been_seen(zone_level)
-        else {
-            continue;
-        };
-
-        let Some(overmap_info_id) = zone_spawner.zone_level_ids.get(zone_level).cloned() else {
-            continue;
-        };
-
-        let child_visibility = zone_level_visibility(
-            &zone_spawner.tile_spawner.explored,
-            zone_level,
-            &visible_region,
-            &focus,
-        );
-
-        zone_spawner.complete_zone_level(
-            entity,
-            zone_level,
-            seen_from,
-            &overmap_info_id,
-            &child_visibility,
-        );
-        zone_spawner
-            .tile_spawner
-            .commands
-            .entity(entity)
-            .remove::<MissingAsset>();
-    }
+    zone_spawner.complete_missing_assets(zone_levels, &visible_region);
 
     log_if_slow("update_zone_levels_with_missing_assets", start);
 }
