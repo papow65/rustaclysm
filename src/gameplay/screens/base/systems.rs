@@ -299,18 +299,18 @@ fn handle_cancelation(
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
     player_action_state: Res<State<PlayerActionState>>,
     mut next_player_action_state: ResMut<NextState<PlayerActionState>>,
-    focus: Focus,
+    focus_state: Res<State<FocusState>>,
     mut next_focus_state: ResMut<NextState<FocusState>>,
     mut instruction_queue: ResMut<InstructionQueue>,
 ) {
     let start = Instant::now();
 
-    if focus.state.cancel_handling(&player_action_state) == CancelHandling::Menu {
+    if focus_state.cancel_handling(&player_action_state) == CancelHandling::Menu {
         next_gameplay_state.set(GameplayScreenState::Menu);
     } else {
         handle_queued_instruction(
             &mut message_writer,
-            &focus.state,
+            &focus_state,
             &mut next_focus_state,
             &mut next_player_action_state,
             &mut instruction_queue,
@@ -337,7 +337,7 @@ fn manage_zoom(
 fn manage_queued_instruction(
     In(instruction): In<QueuedInstruction>,
     mut message_writer: MessageWriter,
-    focus: Focus,
+    focus_state: Res<State<FocusState>>,
     mut next_focus_state: ResMut<NextState<FocusState>>,
     mut next_player_action_state: ResMut<NextState<PlayerActionState>>,
     mut instruction_queue: ResMut<InstructionQueue>,
@@ -347,7 +347,7 @@ fn manage_queued_instruction(
     debug!("Player instruction: {:?}", &instruction);
     handle_queued_instruction(
         &mut message_writer,
-        &focus.state,
+        &focus_state,
         &mut next_focus_state,
         &mut next_player_action_state,
         &mut instruction_queue,

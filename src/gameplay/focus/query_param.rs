@@ -5,7 +5,7 @@ use std::cmp::Ordering;
 
 #[derive(SystemParam)]
 pub(crate) struct Focus<'w> {
-    pub(crate) state: Res<'w, State<FocusState>>,
+    state: Res<'w, State<FocusState>>,
     player_pos: Single<'w, Ref<'static, Pos>, With<Player>>,
 }
 
