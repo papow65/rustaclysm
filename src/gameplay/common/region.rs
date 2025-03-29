@@ -55,17 +55,6 @@ impl Region {
         }
     }
 
-    pub(crate) fn ground_only(&self) -> Self {
-        let mut i = 0;
-        Self {
-            zone_regions: self.zone_regions.clone().map(|zone_region| {
-                let zone_region = zone_region.filter(|_| i <= Level::ZERO.index());
-                i += 1; // for next level
-                zone_region
-            }),
-        }
-    }
-
     pub(crate) fn clamp(&self, inner: &Self, outer: &Self) -> Self {
         let mut i = 0;
         Self {

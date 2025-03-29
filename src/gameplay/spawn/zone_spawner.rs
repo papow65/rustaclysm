@@ -1,8 +1,8 @@
 use crate::application::ApplicationState;
+use crate::gameplay::spawn::{TileSpawner, VisibleRegion};
 use crate::gameplay::{
     Focus, Infos, LastSeen, Level, MissingAsset, ObjectCategory, ObjectName, SeenFrom,
-    SpawnZoneLevel, ZoneLevel, ZoneLevelIds, common::Region, resources::Explored,
-    spawn::TileSpawner,
+    SpawnZoneLevel, ZoneLevel, ZoneLevelIds, resources::Explored,
 };
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{Entity, EventReader, Res, StateScoped, Transform, Vec3, Visibility, debug};
@@ -13,25 +13,27 @@ use hud::HARD_TEXT_COLOR;
 #[derive(SystemParam)]
 pub(crate) struct ZoneSpawner<'w, 's> {
     focus: Focus<'w>,
+    tile_spawner: TileSpawner<'w, 's>,
+    visible_region: VisibleRegion<'w>,
     infos: Res<'w, Infos>,
     explored: Res<'w, Explored>,
     zone_level_ids: Res<'w, ZoneLevelIds>,
-    tile_spawner: TileSpawner<'w, 's>,
 }
 
 impl ZoneSpawner<'_, '_> {
     pub(super) fn spawn_zone_levels(
         &mut self,
         spawn_zone_level_reader: &mut EventReader<SpawnZoneLevel>,
-        visible_region: &Region,
     ) {
         debug!("Spawning {} zone levels", spawn_zone_level_reader.len());
+
+        let visible_region = self.visible_region.calculate_ground();
 
         for spawn_event in spawn_zone_level_reader.read() {
             let visibility = self.explored.zone_level_visibility(
                 &self.focus,
                 spawn_event.zone_level,
-                visible_region,
+                &visible_region,
             );
             self.spawn_zone_level(spawn_event.zone_level, &visibility);
         }
@@ -121,8 +123,9 @@ impl ZoneSpawner<'_, '_> {
     pub(super) fn complete_missing_assets<'a>(
         &mut self,
         zone_levels: impl IntoIterator<Item = (Entity, &'a ZoneLevel)>,
-        visible_region: &Region,
     ) {
+        let visible_region = self.visible_region.calculate_ground();
+
         for (entity, &zone_level) in zone_levels {
             let Some(seen_from) = self.explored.has_zone_level_been_seen(zone_level) else {
                 continue;
@@ -134,7 +137,7 @@ impl ZoneSpawner<'_, '_> {
 
             let child_visibility =
                 self.explored
-                    .zone_level_visibility(&self.focus, zone_level, visible_region);
+                    .zone_level_visibility(&self.focus, zone_level, &visible_region);
 
             self.complete_zone_level(
                 entity,
