@@ -5,8 +5,8 @@ use bevy::prelude::{Resource, debug, error, info};
 use cdda_json_files::{
     Ammo, BionicItem, Book, CddaItem, CharacterInfo, Clothing, Comestible, CommonItemInfo, Engine,
     FieldInfo, FurnitureInfo, GenericItem, Gun, Gunmod, ItemAction, ItemGroup, Link as _, Magazine,
-    Overmap, OvermapTerrainInfo, PetArmor, Quality, Recipe, RequiredLinkedLater, Requirement,
-    Submap, TerrainInfo, Tool, ToolClothing, Toolmod, UntypedInfoId, VehiclePartInfo,
+    Overmap, OvermapTerrainInfo, PetArmor, Practice, Quality, Recipe, RequiredLinkedLater,
+    Requirement, Submap, TerrainInfo, Tool, ToolClothing, Toolmod, UntypedInfoId, VehiclePartInfo,
     VehiclePartMigration, Wheel,
 };
 use std::time::Instant;
@@ -57,6 +57,9 @@ pub(crate) struct Infos {
 
     #[expect(unused)]
     pet_armors: InfoMap<PetArmor>,
+
+    #[expect(unused)]
+    practices: InfoMap<Practice>,
 
     qualities: InfoMap<Quality>,
 
@@ -166,6 +169,7 @@ impl Infos {
             item_groups,
             magazines,
             pet_armors,
+            practices: InfoMap::new(&mut enriched_json_infos, TypeId::Practice),
             qualities,
             recipes,
             requirements,

@@ -8,6 +8,7 @@ mod item_group;
 mod item_info;
 mod migration;
 mod overmap_info;
+mod practice;
 mod quality;
 mod recipe;
 mod requirement;
@@ -30,6 +31,7 @@ pub use self::item_info::{
 };
 pub use self::migration::{ItemMigration, VehiclePartMigration};
 pub use self::overmap_info::OvermapTerrainInfo;
+pub use self::practice::Practice;
 pub use self::quality::{ItemQuality, Quality};
 pub use self::recipe::{
     Alternative, AutoLearn, BookLearn, BookLearnItem, Recipe, RecipeResult, RequiredQualities,
