@@ -52,7 +52,6 @@ strum = { version = "0.27", features = ["derive"] }
 [features]
 # We use --no-default-features for production builds. See .github/workflows/ci.yml
 default = ["bevy/dynamic_linking"]
-log_archetypes = [] # print archetypes in use
 
 [profile.dev-opt] # Used in development, with performance similar to release
 inherits = "dev"

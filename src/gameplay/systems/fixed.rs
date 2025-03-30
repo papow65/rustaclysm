@@ -1,15 +1,12 @@
 use crate::gameplay::{
     MapAsset, MapMemoryAsset, OvermapAsset, OvermapBufferAsset, Pos, SubzoneLevel, ZoneLevel,
 };
-use bevy::asset::UntypedAssetLoadFailedEvent;
 use bevy::prelude::{
-    Assets, EventReader, Font, Local, Mesh, Query, Res, StandardMaterial, With, debug, error,
+    Assets, EventReader, Font, Local, Mesh, Query, Res, StandardMaterial, With, World, debug, error,
 };
-use std::time::Instant;
+use bevy::{asset::UntypedAssetLoadFailedEvent, platform_support::collections::HashMap};
+use std::{env, sync::LazyLock, time::Instant};
 use util::log_if_slow;
-
-#[cfg(feature = "log_archetypes")]
-use bevy::{platform_support::collections::HashMap, prelude::World};
 
 pub(crate) fn count_assets(
     font_assets: Option<Res<Assets<Font>>>,
@@ -89,8 +86,13 @@ pub(crate) fn check_failed_asset_loading(mut fails: EventReader<UntypedAssetLoad
     log_if_slow("check_failed_asset_loading", start);
 }
 
-#[cfg(feature = "log_archetypes")]
 pub(crate) fn log_archetypes(world: &mut World) {
+    static ENABLED: LazyLock<bool> =
+        LazyLock::new(|| env::var("LOG_ARCHETYPES") == Ok(String::from("1")));
+    if !*ENABLED {
+        return;
+    }
+
     let component_names = world
         .components()
         .iter_registered()

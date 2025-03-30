@@ -5,7 +5,7 @@ use crate::gameplay::spawn::{
 };
 use crate::gameplay::systems::{
     check_failed_asset_loading, count_assets, count_pos, create_gameplay_key_bindings,
-    update_visibility, update_visualization_on_item_move,
+    log_archetypes, update_visibility, update_visualization_on_item_move,
 };
 use crate::gameplay::{
     ActorPlugin, CameraOffset, CddaPlugin, Exploration, GameplayScreenState, PhrasePlugin,
@@ -21,9 +21,6 @@ use bevy::prelude::{
 };
 use bevy::{diagnostic::FrameTimeDiagnosticsPlugin, ecs::schedule::ScheduleConfigs};
 use util::log_transition_plugin;
-
-#[cfg(feature = "log_archetypes")]
-use crate::gameplay::systems::log_archetypes;
 
 pub(crate) struct GameplayPlugin;
 
@@ -85,8 +82,9 @@ fn update_systems() -> ScheduleConfigs<ScheduleSystem> {
 
 fn fixed_update_systems() -> ScheduleConfigs<ScheduleSystem> {
     (
-        (count_assets, count_pos, check_failed_asset_loading),
-        #[cfg(feature = "log_archetypes")]
+        count_assets,
+        count_pos,
+        check_failed_asset_loading,
         log_archetypes,
     )
         .into_configs()
