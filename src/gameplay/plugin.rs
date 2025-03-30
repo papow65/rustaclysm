@@ -1,29 +1,23 @@
 use crate::application::ApplicationState;
 use crate::gameplay::spawn::{
-    despawn_subzone_levels, despawn_zone_level, handle_map_events, handle_map_memory_events,
-    handle_overmap_buffer_events, handle_overmap_events, spawn_initial_entities,
-    spawn_subzone_levels, spawn_subzones_for_camera, spawn_zone_levels, update_explored,
-    update_zone_level_visibility, update_zone_levels, update_zone_levels_with_missing_assets,
+    despawn_systems, handle_region_asset_events, handle_zone_levels, spawn_initial_entities,
+    spawn_subzone_levels, spawn_subzones_for_camera, update_explored,
 };
 use crate::gameplay::systems::{
     check_failed_asset_loading, count_assets, count_pos, create_gameplay_key_bindings,
     update_visibility, update_visualization_on_item_move,
 };
 use crate::gameplay::{
-    ActorPlugin, CameraOffset, CddaPlugin, DespawnSubzoneLevel, DespawnZoneLevel, Exploration,
-    GameplayScreenState, MapAsset, MapMemoryAsset, OvermapAsset, OvermapBufferAsset, PhrasePlugin,
-    RelativeSegments, SpawnSubzoneLevel, SpawnZoneLevel, UpdateZoneLevelVisibility,
-    VisualizationUpdate, update_camera_offset,
-};
-use crate::gameplay::{events::EventsPlugin, focus::FocusPlugin, item::ItemChecksPlugin};
-use crate::gameplay::{models::ModelPlugin, sidebar::SidebarPlugin, time::TimePlugin};
-use crate::gameplay::{
-    resources::ResourcePlugin, scope::GameplayLocalPlugin, screens::ScreensPlugin,
+    ActorPlugin, CameraOffset, CddaPlugin, Exploration, GameplayScreenState, PhrasePlugin,
+    RelativeSegments, SpawnSubzoneLevel, VisualizationUpdate, events::EventsPlugin,
+    focus::FocusPlugin, item::ItemChecksPlugin, models::ModelPlugin, resources::ResourcePlugin,
+    scope::GameplayLocalPlugin, screens::ScreensPlugin, sidebar::SidebarPlugin, time::TimePlugin,
+    update_camera_offset,
 };
 use bevy::ecs::system::ScheduleSystem;
 use bevy::prelude::{
-    App, AppExtStates as _, AssetEvent, FixedUpdate, IntoScheduleConfigs as _, Last, OnEnter,
-    Plugin, Update, in_state, on_event, resource_exists, resource_exists_and_changed,
+    App, AppExtStates as _, FixedUpdate, IntoScheduleConfigs as _, Last, OnEnter, Plugin, Update,
+    in_state, on_event, resource_exists, resource_exists_and_changed,
 };
 use bevy::{diagnostic::FrameTimeDiagnosticsPlugin, ecs::schedule::ScheduleConfigs};
 use util::log_transition_plugin;
@@ -65,17 +59,7 @@ fn startup_systems() -> ScheduleConfigs<ScheduleSystem> {
 
 fn update_systems() -> ScheduleConfigs<ScheduleSystem> {
     (
-        (
-            (
-                handle_overmap_buffer_events.run_if(on_event::<AssetEvent<OvermapBufferAsset>>),
-                handle_overmap_events.run_if(on_event::<AssetEvent<OvermapAsset>>),
-            ),
-            update_zone_levels_with_missing_assets
-                .run_if(on_event::<AssetEvent<OvermapBufferAsset>>),
-        )
-            .chain(),
-        handle_map_events.run_if(on_event::<AssetEvent<MapAsset>>),
-        handle_map_memory_events.run_if(on_event::<AssetEvent<MapMemoryAsset>>),
+        handle_region_asset_events(),
         (
             (
                 update_explored.run_if(on_event::<Exploration>),
@@ -91,14 +75,7 @@ fn update_systems() -> ScheduleConfigs<ScheduleSystem> {
             update_visibility.run_if(resource_exists_and_changed::<VisualizationUpdate>),
         )
             .chain(),
-        (
-            update_zone_levels,
-            (
-                spawn_zone_levels.run_if(on_event::<SpawnZoneLevel>),
-                update_zone_level_visibility.run_if(on_event::<UpdateZoneLevelVisibility>),
-            ),
-        )
-            .chain(),
+        handle_zone_levels(),
     )
         .run_if(in_state(ApplicationState::Gameplay))
 }
@@ -110,13 +87,4 @@ fn fixed_update_systems() -> ScheduleConfigs<ScheduleSystem> {
         list_archetypes,
     )
         .into_configs()
-}
-
-/// This should run last, to prevent Bevy crashing on despawned entities being modified.
-fn despawn_systems() -> ScheduleConfigs<ScheduleSystem> {
-    (
-        despawn_subzone_levels.run_if(on_event::<DespawnSubzoneLevel>),
-        despawn_zone_level.run_if(on_event::<DespawnZoneLevel>),
-    )
-        .run_if(in_state(ApplicationState::Gameplay))
 }

@@ -2,21 +2,51 @@ use crate::gameplay::events::Exploration;
 use crate::gameplay::spawn::{SubzoneSpawner, TileSpawner, VisibleRegion, ZoneSpawner};
 use crate::gameplay::{
     ActiveSav, DespawnSubzoneLevel, DespawnZoneLevel, Expanded, Explored, Focus, GameplayLocal,
-    Infos, Level, MapManager, MapMemoryManager, MissingAsset, OvermapAsset, OvermapBufferManager,
-    OvermapManager, Pos, Region, SpawnSubzoneLevel, SpawnZoneLevel, SubzoneLevel,
-    SubzoneLevelEntities, UpdateZoneLevelVisibility, VisionDistance, VisualizationUpdate, Zone,
-    ZoneLevel, ZoneLevelEntities, ZoneLevelIds, ZoneRegion,
+    Infos, Level, MapAsset, MapManager, MapMemoryAsset, MapMemoryManager, MissingAsset,
+    OvermapAsset, OvermapBufferAsset, OvermapBufferManager, OvermapManager, Pos, Region,
+    SpawnSubzoneLevel, SpawnZoneLevel, SubzoneLevel, SubzoneLevelEntities,
+    UpdateZoneLevelVisibility, VisionDistance, VisualizationUpdate, Zone, ZoneLevel,
+    ZoneLevelEntities, ZoneLevelIds, ZoneRegion,
 };
-use bevy::ecs::system::SystemState;
+use bevy::ecs::{schedule::ScheduleConfigs, system::ScheduleSystem};
 use bevy::prelude::{
     Added, AssetEvent, Assets, Children, Commands, Entity, EventReader, EventWriter,
-    GlobalTransform, Query, RelationshipTarget as _, Res, ResMut, Visibility, With, World, debug,
-    warn,
+    GlobalTransform, IntoScheduleConfigs as _, Query, RelationshipTarget as _, Res, ResMut,
+    Visibility, With, debug, on_event, warn,
 };
 use std::{cmp::Ordering, time::Instant};
 use util::log_if_slow;
 
 const MAX_EXPAND_DISTANCE: i32 = 10;
+
+pub(crate) fn handle_region_asset_events() -> ScheduleConfigs<ScheduleSystem> {
+    (
+        (
+            (
+                handle_overmap_buffer_events.run_if(on_event::<AssetEvent<OvermapBufferAsset>>),
+                handle_overmap_events.run_if(on_event::<AssetEvent<OvermapAsset>>),
+            ),
+            update_zone_levels_with_missing_assets
+                .run_if(on_event::<AssetEvent<OvermapBufferAsset>>),
+        )
+            .chain(),
+        handle_map_events.run_if(on_event::<AssetEvent<MapAsset>>),
+        handle_map_memory_events.run_if(on_event::<AssetEvent<MapMemoryAsset>>),
+    )
+        .into_configs()
+}
+
+pub(crate) fn handle_zone_levels() -> ScheduleConfigs<ScheduleSystem> {
+    (
+        update_zone_levels,
+        (
+            spawn_zone_levels.run_if(on_event::<SpawnZoneLevel>),
+            update_zone_level_visibility.run_if(on_event::<UpdateZoneLevelVisibility>),
+        ),
+    )
+        .chain()
+        .into_configs()
+}
 
 #[expect(clippy::needless_pass_by_value)]
 pub(crate) fn spawn_subzones_for_camera(
@@ -145,39 +175,8 @@ pub(crate) fn spawn_subzone_levels(
     log_if_slow("spawn_subzone_levels", start);
 }
 
-/// This is an intentionally exclusive system to prevent an occasional panic.
-/// See <https://bevyengine.org/learn/errors/b0003/>
-pub(crate) fn despawn_subzone_levels(
-    world: &mut World,
-    sytem_state: &mut SystemState<(
-        Commands,
-        EventReader<DespawnSubzoneLevel>,
-        ResMut<SubzoneLevelEntities>,
-    )>,
-) {
-    let start = Instant::now();
-
-    let (mut commands, mut despawn_subzone_level_reader, mut subzone_level_entities) =
-        sytem_state.get_mut(world);
-
-    debug!(
-        "Despawning {} subzone levels",
-        despawn_subzone_level_reader.len()
-    );
-
-    for despawn_event in despawn_subzone_level_reader.read() {
-        if let Some(entity) = subzone_level_entities.remove(despawn_event.subzone_level) {
-            commands.entity(entity).despawn();
-        }
-    }
-
-    sytem_state.apply(world);
-
-    log_if_slow("despawn_subzone_levels", start);
-}
-
 #[expect(clippy::needless_pass_by_value)]
-pub(crate) fn update_zone_levels(
+fn update_zone_levels(
     mut spawn_zone_level_writer: EventWriter<SpawnZoneLevel>,
     mut update_zone_level_visibility_writer: EventWriter<UpdateZoneLevelVisibility>,
     mut despawn_zone_level_writer: EventWriter<DespawnZoneLevel>,
@@ -248,7 +247,7 @@ pub(crate) fn update_zone_levels(
     log_if_slow("update_zone_levels", start);
 }
 
-pub(crate) fn spawn_zone_levels(
+fn spawn_zone_levels(
     mut spawn_zone_level_reader: EventReader<SpawnZoneLevel>,
     mut zone_spawner: ZoneSpawner,
 ) {
@@ -260,7 +259,7 @@ pub(crate) fn spawn_zone_levels(
 }
 
 #[expect(clippy::needless_pass_by_value)]
-pub(crate) fn update_zone_level_visibility(
+fn update_zone_level_visibility(
     mut commands: Commands,
     mut update_zone_level_visibility_reader: EventReader<UpdateZoneLevelVisibility>,
     focus: Focus,
@@ -291,23 +290,7 @@ pub(crate) fn update_zone_level_visibility(
     log_if_slow("update_zone_level_visibility", start);
 }
 
-pub(crate) fn despawn_zone_level(
-    mut commands: Commands,
-    mut despawn_zone_level_reader: EventReader<DespawnZoneLevel>,
-) {
-    let start = Instant::now();
-
-    debug!("Despawning {} zone levels", despawn_zone_level_reader.len());
-
-    for despawn_zone_level_event in despawn_zone_level_reader.read() {
-        let entity = despawn_zone_level_event.entity;
-        commands.entity(entity).despawn();
-    }
-
-    log_if_slow("despawn_zone_level", start);
-}
-
-pub(crate) fn handle_map_events(
+fn handle_map_events(
     mut spawn_subzone_level_writer: EventWriter<SpawnSubzoneLevel>,
     mut map_manager: MapManager,
 ) {
@@ -324,7 +307,7 @@ pub(crate) fn handle_map_events(
 }
 
 #[expect(clippy::needless_pass_by_value)]
-pub(crate) fn handle_map_memory_events(
+fn handle_map_memory_events(
     mut explorations: EventWriter<Exploration>,
     mut spawn_subzone_level_writer: EventWriter<SpawnSubzoneLevel>,
     subzone_level_entities: Res<SubzoneLevelEntities>,
@@ -344,7 +327,7 @@ pub(crate) fn handle_map_memory_events(
     log_if_slow("handle_map_memory_events", start);
 }
 
-pub(crate) fn handle_overmap_buffer_events(
+fn handle_overmap_buffer_events(
     mut explorations: EventWriter<Exploration>,
     mut overmap_buffer_manager: OvermapBufferManager,
 ) {
@@ -356,7 +339,7 @@ pub(crate) fn handle_overmap_buffer_events(
 }
 
 #[expect(clippy::needless_pass_by_value)]
-pub(crate) fn handle_overmap_events(
+fn handle_overmap_events(
     mut overmap_events: EventReader<AssetEvent<OvermapAsset>>,
     overmap_assets: Res<Assets<OvermapAsset>>,
     mut zone_level_ids: ResMut<ZoneLevelIds>,
@@ -380,7 +363,7 @@ pub(crate) fn handle_overmap_events(
     log_if_slow("handle_overmap_events", start);
 }
 
-pub(crate) fn update_zone_levels_with_missing_assets(
+fn update_zone_levels_with_missing_assets(
     mut zone_spawner: ZoneSpawner,
     zone_levels: Query<(Entity, &ZoneLevel), With<MissingAsset>>,
 ) {
