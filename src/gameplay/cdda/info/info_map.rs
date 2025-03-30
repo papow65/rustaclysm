@@ -29,6 +29,7 @@ impl<T: fmt::Debug + DeserializeOwned + 'static> InfoMap<T> {
         let objects = all
             .remove(&type_id)
             .unwrap_or_else(|| panic!("Type {type_id:?} not found"));
+        let objects_len = objects.len();
         for (id, object_properties) in objects {
             //trace!("{:#?}", &object_properties);
             match serde_json::from_value::<T>(serde_json::Value::Object(object_properties.clone()))
@@ -53,6 +54,10 @@ impl<T: fmt::Debug + DeserializeOwned + 'static> InfoMap<T> {
             }
         }
 
+        debug!(
+            "Processed {objects_len} -> {} {type_id:?} entries",
+            map.len()
+        );
         Self {
             map,
             aliases: HashMap::default(),

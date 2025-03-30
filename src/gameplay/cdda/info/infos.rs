@@ -94,11 +94,6 @@ impl Infos {
             "Collected {} enriched categories",
             enriched_json_infos.len()
         );
-        for (type_id, values) in &enriched_json_infos {
-            if !values.is_empty() {
-                debug!("Collected {} {type_id:?} entries", values.len());
-            }
-        }
 
         let item_migrations = InfoMap::new(&mut enriched_json_infos, TypeId::ItemMigration);
         let mut common_item_infos = InfoMap::default();

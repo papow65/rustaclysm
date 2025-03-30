@@ -59,6 +59,8 @@ pub(crate) enum TypeId {
     ItemAction,
     #[serde(rename = "item_group")]
     ItemGroup,
+    #[serde(rename = "practice")]
+    Practice,
     #[serde(rename = "recipe")]
     Recipe,
     #[serde(rename = "requirement")]
@@ -224,8 +226,6 @@ pub(crate) enum TypeId {
     OvermapSpecialMigration,
     #[serde(rename = "palette")]
     Palette,
-    #[serde(rename = "practice")]
-    Practice,
     #[serde(rename = "profession")]
     Profession,
     #[serde(rename = "profession_item_substitutions")]
