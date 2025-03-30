@@ -9,7 +9,7 @@ use cdda_json_files::{
     Requirement, Submap, TerrainInfo, Tool, ToolClothing, Toolmod, UntypedInfoId, VehiclePartInfo,
     VehiclePartMigration, Wheel,
 };
-use std::time::Instant;
+use std::{env, process::exit, time::Instant};
 use util::AsyncNew;
 
 #[derive(Resource)]
@@ -50,7 +50,6 @@ pub(crate) struct Infos {
 
     pub(crate) item_actions: InfoMap<ItemAction>,
 
-    #[expect(unused)]
     item_groups: InfoMap<ItemGroup>,
 
     pub(crate) magazines: InfoMap<Magazine>,
@@ -65,7 +64,6 @@ pub(crate) struct Infos {
 
     pub(crate) recipes: InfoMap<Recipe>,
 
-    #[expect(unused)]
     requirements: InfoMap<Requirement>,
 
     terrain: InfoMap<TerrainInfo>,
@@ -79,7 +77,7 @@ pub(crate) struct Infos {
     #[expect(unused)]
     toolmods: InfoMap<Toolmod>,
 
-    vehicle_parts_info: InfoMap<VehiclePartInfo>,
+    vehicle_parts: InfoMap<VehiclePartInfo>,
 
     #[expect(unused)]
     wheels: InfoMap<Wheel>,
@@ -101,8 +99,6 @@ impl Infos {
                 debug!("Collected {} {type_id:?} entries", values.len());
             }
         }
-
-        let qualities = InfoMap::new(&mut enriched_json_infos, TypeId::ToolQuality);
 
         let item_migrations = InfoMap::new(&mut enriched_json_infos, TypeId::ItemMigration);
         let mut common_item_infos = InfoMap::default();
@@ -127,29 +123,12 @@ impl Infos {
         let toolmods = item_loader.item_extract(TypeId::ToolMod);
         let wheels = item_loader.item_extract(TypeId::Wheel);
         // item_loader is dropped
-
         //debug!("Collected {} common items", common_item_infos.len());
-        common_item_infos.link_common_items(&qualities);
-
-        let item_groups = InfoMap::new(&mut enriched_json_infos, TypeId::ItemGroup);
-
-        let furniture = InfoMap::new(&mut enriched_json_infos, TypeId::Furniture);
-        furniture.link_furniture(&common_item_infos, &item_groups);
-        let mut terrain = InfoMap::new(&mut enriched_json_infos, TypeId::Terrain);
-        terrain.fix_and_link_terrain(&furniture, &common_item_infos, &item_groups);
-        let requirements = InfoMap::new(&mut enriched_json_infos, TypeId::Requirement);
-        requirements.link_requirements(&qualities, &common_item_infos);
-        let recipes = InfoMap::new(&mut enriched_json_infos, TypeId::Recipe);
-        recipes.link_recipes(&qualities, &requirements, &common_item_infos);
 
         let vehicle_part_migrations = InfoMap::<VehiclePartMigration>::new(
             &mut enriched_json_infos,
             TypeId::VehiclePartMigration,
         );
-        let mut vehicle_parts = InfoMap::new(&mut enriched_json_infos, TypeId::VehiclePart);
-        vehicle_parts.add_wiring();
-        vehicle_parts.link_items(&common_item_infos);
-        vehicle_parts.add_vehicle_part_migrations(vehicle_part_migrations.values());
 
         let mut this = Self {
             ammos,
@@ -161,28 +140,27 @@ impl Infos {
             common_item_infos,
             engines,
             fields: InfoMap::new(&mut enriched_json_infos, TypeId::Field),
-            furniture,
+            furniture: InfoMap::new(&mut enriched_json_infos, TypeId::Furniture),
             genenric_items,
             guns,
             gunmods,
             item_actions: InfoMap::new(&mut enriched_json_infos, TypeId::ItemAction),
-            item_groups,
+            item_groups: InfoMap::new(&mut enriched_json_infos, TypeId::ItemGroup),
             magazines,
             pet_armors,
             practices: InfoMap::new(&mut enriched_json_infos, TypeId::Practice),
-            qualities,
-            recipes,
-            requirements,
-            terrain,
+            qualities: InfoMap::new(&mut enriched_json_infos, TypeId::ToolQuality),
+            recipes: InfoMap::new(&mut enriched_json_infos, TypeId::Recipe),
+            requirements: InfoMap::new(&mut enriched_json_infos, TypeId::Requirement),
+            terrain: InfoMap::new(&mut enriched_json_infos, TypeId::Terrain),
             tools,
             tool_clothings,
             toolmods,
-            vehicle_parts_info: vehicle_parts,
+            vehicle_parts: InfoMap::new(&mut enriched_json_infos, TypeId::VehiclePart),
             wheels,
             zone_levels: InfoMap::new(&mut enriched_json_infos, TypeId::OvermapTerrain),
-        };
-
-        this.qualities.link_qualities(&this.item_actions);
+        }
+        .link_all(&vehicle_part_migrations);
 
         let mut missing_types = enriched_json_infos
             .into_keys()
@@ -202,7 +180,33 @@ impl Infos {
         let duration = start.elapsed();
         info!("The creation of Infos took {duration:?}");
 
+        if env::var("EXIT_AFTER_INFOS") == Ok(String::from("1")) {
+            exit(0);
+        }
+
         this
+    }
+
+    fn link_all(mut self, vehicle_part_migrations: &InfoMap<VehiclePartMigration>) -> Self {
+        self.common_item_infos.link_common_items(&self.qualities);
+        self.furniture
+            .link_furniture(&self.common_item_infos, &self.item_groups);
+        self.qualities.link_qualities(&self.item_actions);
+        self.requirements
+            .link_requirements(&self.qualities, &self.common_item_infos);
+        self.recipes
+            .link_recipes(&self.qualities, &self.requirements, &self.common_item_infos);
+        self.terrain.fix_and_link_terrain(
+            &self.furniture,
+            &self.common_item_infos,
+            &self.item_groups,
+        );
+        self.vehicle_parts.add_wiring();
+        self.vehicle_parts.link_items(&self.common_item_infos);
+        self.vehicle_parts
+            .add_vehicle_part_migrations(vehicle_part_migrations.values());
+
+        self
     }
 
     fn looks_like(
@@ -237,7 +241,7 @@ impl Infos {
                 .ok()
                 .and_then(|o| o.looks_like.clone()),
             ObjectCategory::VehiclePart => self
-                .vehicle_parts_info
+                .vehicle_parts
                 .get(&info_id.into())
                 .ok()
                 .and_then(|o| o.looks_like.clone()),
@@ -326,7 +330,7 @@ impl Infos {
             for vehicle_part in &vehicle.parts {
                 vehicle_part
                     .info
-                    .finalize(&self.vehicle_parts_info, "submap vehicle");
+                    .finalize(&self.vehicle_parts, "submap vehicle");
             }
         }
 
