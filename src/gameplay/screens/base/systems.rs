@@ -222,7 +222,7 @@ pub(super) fn create_base_key_bindings(
 
     fresh_key_bindings.spawn(world, GameplayScreenState::Base, |builder| {
         builder.add('m', (|| ZoomDistance::Close).pipe(toggle_map));
-        builder.add('m', (|| ZoomDistance::Far).pipe(toggle_map));
+        builder.add('M', (|| ZoomDistance::Far).pipe(toggle_map));
         builder.add('x', examine_pos);
         builder.add('X', examine_zone_level);
         builder.add('&', open_crafting_screen);
