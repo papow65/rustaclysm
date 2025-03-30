@@ -22,6 +22,9 @@ use bevy::prelude::{
 use bevy::{diagnostic::FrameTimeDiagnosticsPlugin, ecs::schedule::ScheduleConfigs};
 use util::log_transition_plugin;
 
+#[cfg(feature = "log_archetypes")]
+use crate::gameplay::systems::log_archetypes;
+
 pub(crate) struct GameplayPlugin;
 
 impl Plugin for GameplayPlugin {
@@ -84,7 +87,7 @@ fn fixed_update_systems() -> ScheduleConfigs<ScheduleSystem> {
     (
         (count_assets, count_pos, check_failed_asset_loading),
         #[cfg(feature = "log_archetypes")]
-        list_archetypes,
+        log_archetypes,
     )
         .into_configs()
 }

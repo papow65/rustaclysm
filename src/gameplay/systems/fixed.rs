@@ -8,6 +8,9 @@ use bevy::prelude::{
 use std::time::Instant;
 use util::log_if_slow;
 
+#[cfg(feature = "log_archetypes")]
+use bevy::{platform_support::collections::HashMap, prelude::World};
+
 pub(crate) fn count_assets(
     font_assets: Option<Res<Assets<Font>>>,
     map_assets: Option<Res<Assets<MapAsset>>>,
@@ -87,11 +90,10 @@ pub(crate) fn check_failed_asset_loading(mut fails: EventReader<UntypedAssetLoad
 }
 
 #[cfg(feature = "log_archetypes")]
-#[expect(clippy::needless_pass_by_value)]
 pub(crate) fn log_archetypes(world: &mut World) {
     let component_names = world
         .components()
-        .iter()
+        .iter_registered()
         .map(|component| {
             (component.id(), {
                 let name = component.name();
@@ -113,7 +115,7 @@ pub(crate) fn log_archetypes(world: &mut World) {
                     .map(|component| component_names
                         .get(&component)
                         .cloned()
-                        .unwrap_or(String::from("[???]")))
+                        .unwrap_or_else(|| String::from("[???]")))
                     .collect::<Vec<_>>()
                     .join(", ")
             );

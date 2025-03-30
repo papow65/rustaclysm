@@ -10,9 +10,6 @@ use bevy::prelude::{
 use std::time::Instant;
 use util::log_if_slow;
 
-#[cfg(feature = "log_archetypes")]
-use bevy::platform_support::collections::HashMap;
-
 fn update_material(
     commands: &mut Commands,
     children: &Children,
