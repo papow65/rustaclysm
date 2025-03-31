@@ -1,6 +1,6 @@
 use crate::{
-    CommonItemInfo, Flags, InfoId, ItemGroup, ItemName, OptionalLinkedLater, RequiredLinkedLater,
-    SpawnItem, TerrainInfo, UntypedInfoId,
+    CommonItemInfo, Flags, Ignored, InfoId, ItemGroup, ItemName, OptionalLinkedLater,
+    RequiredLinkedLater, SpawnItem, TerrainInfo, UntypedInfoId,
 };
 use bevy_platform_support::collections::HashMap;
 use serde::Deserialize;
@@ -16,9 +16,8 @@ pub struct FurnitureInfo {
     pub bash: Option<Bash>,
     pub crafting_pseudo_item: OptionalLinkedLater<CommonItemInfo>,
 
-    #[expect(unused)]
     #[serde(flatten)]
-    extra: HashMap<Arc<str>, serde_json::Value>,
+    _ignored: Ignored<Self>,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, PartialOrd)]

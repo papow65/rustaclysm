@@ -1,7 +1,8 @@
-use crate::{Bash, Flags, InfoId, ItemName, MoveCostIncrease, OptionalLinkedLater, UntypedInfoId};
-use bevy_platform_support::collections::HashMap;
+use crate::{
+    Bash, Flags, Ignored, InfoId, ItemName, MoveCostIncrease, OptionalLinkedLater, UntypedInfoId,
+};
 use serde::Deserialize;
-use std::sync::{Arc, LazyLock};
+use std::sync::LazyLock;
 
 #[derive(Debug, Deserialize)]
 pub struct TerrainInfo {
@@ -16,9 +17,8 @@ pub struct TerrainInfo {
     pub flags: Flags,
     pub bash: Option<Bash>,
 
-    #[expect(unused)]
     #[serde(flatten)]
-    extra: HashMap<Arc<str>, serde_json::Value>,
+    _ignored: Ignored<Self>,
 }
 
 impl TerrainInfo {

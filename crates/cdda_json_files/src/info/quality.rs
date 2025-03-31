@@ -1,5 +1,4 @@
-use crate::{InfoId, ItemAction, ItemName, RequiredLinkedLater};
-use bevy_platform_support::collections::HashMap;
+use crate::{Ignored, InfoId, ItemAction, ItemName, RequiredLinkedLater};
 use serde::Deserialize;
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
@@ -15,7 +14,7 @@ pub struct Quality {
     pub usages: Vec<(u8, Vec<RequiredLinkedLater<ItemAction>>)>,
 
     #[serde(flatten)]
-    pub extra: HashMap<Arc<str>, serde_json::Value>,
+    _ignored: Ignored<Self>,
 }
 
 impl PartialEq for Quality {

@@ -1,4 +1,4 @@
-use crate::{InfoId, ItemName, UntypedInfoId};
+use crate::{Ignored, InfoId, ItemName, UntypedInfoId};
 use bevy_platform_support::collections::HashMap;
 use serde::Deserialize;
 use std::sync::Arc;
@@ -10,9 +10,8 @@ pub struct FieldInfo {
     pub intensity_levels: Vec<IntensityLevel>,
     pub looks_like: Option<UntypedInfoId>,
 
-    #[expect(unused)]
     #[serde(flatten)]
-    extra: HashMap<Arc<str>, serde_json::Value>,
+    _ignored: Ignored<Self>,
 }
 
 impl FieldInfo {

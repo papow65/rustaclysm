@@ -1,7 +1,5 @@
-use crate::{Alternative, InfoId, RequiredQualities};
-use bevy_platform_support::collections::HashMap;
+use crate::{Alternative, Ignored, InfoId, RequiredQualities};
 use serde::Deserialize;
-use std::sync::Arc;
 
 #[derive(Debug, Deserialize)]
 pub struct Requirement {
@@ -13,7 +11,6 @@ pub struct Requirement {
     #[serde(default)]
     pub components: Vec<Vec<Alternative>>,
 
-    #[expect(unused)]
     #[serde(flatten)]
-    extra: HashMap<Arc<str>, serde_json::Value>,
+    _ignored: Ignored<Self>,
 }

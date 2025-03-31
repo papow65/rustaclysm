@@ -212,7 +212,9 @@ impl ParsedJson {
                     }
                 }
 
+                enriched.remove("abstract");
                 enriched.remove("copy-from");
+                enriched.remove("id_suffix");
 
                 enriched_of_type.insert(
                     object_id.clone(),
@@ -314,37 +316,39 @@ fn id_values(
             })
             .ok()
     });
+    if type_id != TypeId::Recipe && id_suffix.is_some() {
+        warn!("Unexpected combination of id_suffix for {type_id:?} in {json_path:?}: {content:#?}");
+    }
 
-    let id = if type_id == TypeId::Recipe {
-        match (
-            content.get("result"),
-            content.get("abstract"),
-            content.get("copy-from"),
-        ) {
-            (Some(id), None, _) | (None, Some(id), _) | (None, None, Some(id)) => id,
-            _ => {
-                error!("Could not determine id for recipe in {json_path:?}: {content:#?}");
-                return Vec::new();
+    let id = match type_id {
+        TypeId::Recipe => {
+            match (
+                content.get("result"),
+                content.get("abstract"),
+                content.get("copy-from"),
+            ) {
+                (Some(id), None, _) | (None, Some(id), _) | (None, None, Some(id)) => id,
+                _ => {
+                    error!("Could not determine id for {type_id:?} in {json_path:?}: {content:#?}");
+                    return Vec::new();
+                }
             }
         }
-    } else {
-        if id_suffix.is_some() {
-            warn!(
-                "Unexpected combination of id_suffix for {type_id:?} in {json_path:?}: {content:#?}"
-            );
-        }
-
-        match (
-            content.get("id"),
-            content.get("abstract"),
-            content.get("from"),
-        ) {
-            (Some(id), None, None) | (None, Some(id), None) | (None, None, Some(id)) => id,
-            _ => {
+        TypeId::VehiclePartMigration => {
+            if let Some(from) = content.get("from") {
+                from
+            } else {
                 error!("Could not determine id for {type_id:?} in {json_path:?}: {content:#?}");
                 return Vec::new();
             }
         }
+        _ => match (content.get("id"), content.get("abstract")) {
+            (Some(id), None) | (None, Some(id)) => id,
+            _ => {
+                error!("Could not determine id for {type_id:?} in {json_path:?}: {content:#?}");
+                return Vec::new();
+            }
+        },
     };
 
     match id {

@@ -1,5 +1,5 @@
 use crate::{Flags, InfoId, structure::MaybeFlatVec};
-use crate::{ItemQuality, UntypedInfoId};
+use crate::{Ignored, ItemQuality, UntypedInfoId};
 use bevy_platform_support::collections::HashMap;
 use serde::Deserialize;
 use std::sync::Arc;
@@ -500,7 +500,7 @@ pub struct CommonItemInfo {
 
     // Plenty of fields already availalble
     #[serde(flatten)]
-    pub extra: HashMap<Arc<str>, serde_json::Value>,
+    pub ignored: Ignored<Self>,
 }
 
 impl CommonItemInfo {

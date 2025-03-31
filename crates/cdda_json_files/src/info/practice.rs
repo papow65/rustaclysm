@@ -1,8 +1,7 @@
 use crate::{
-    Alternative, AutoLearn, BookLearn, CommonItemInfo, InfoId, RequiredQualities, UntypedInfoId,
-    Using,
+    Alternative, AutoLearn, BookLearn, CommonItemInfo, Ignored, InfoId, RequiredQualities,
+    UntypedInfoId, Using,
 };
-use bevy_platform_support::collections::HashMap;
 use serde::Deserialize;
 use std::sync::Arc;
 use units::Duration;
@@ -51,9 +50,8 @@ pub struct Practice {
     #[serde(default)]
     pub proficiencies: Vec<RequiredProficiency>,
 
-    #[expect(unused)]
     #[serde(flatten)]
-    extra: HashMap<Arc<str>, serde_json::Value>,
+    _ignored: Ignored<Self>,
 }
 
 #[derive(Debug, Deserialize)]

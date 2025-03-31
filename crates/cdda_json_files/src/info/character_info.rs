@@ -1,5 +1,4 @@
-use crate::{Flags, InfoId, ItemName, UntypedInfoId};
-use bevy_platform_support::collections::HashMap;
+use crate::{Flags, Ignored, InfoId, ItemName, UntypedInfoId};
 use serde::Deserialize;
 use std::sync::Arc;
 use units::{Mass, Volume};
@@ -30,7 +29,7 @@ pub struct CharacterInfo {
     pub flags: Flags,
 
     #[serde(flatten)]
-    pub extra: HashMap<Arc<str>, serde_json::Value>,
+    pub ignored: Ignored<Self>,
 }
 
 #[cfg(test)]

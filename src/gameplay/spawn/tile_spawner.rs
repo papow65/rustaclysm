@@ -8,7 +8,6 @@ use crate::gameplay::{
     WalkingMode, cdda::Error, item::Pocket, spawn::log_spawn_result,
 };
 use bevy::ecs::system::SystemParam;
-use bevy::platform_support::collections::HashMap;
 use bevy::prelude::{
     Camera3d, ChildOf, Commands, DirectionalLight, Entity, EulerRot, Mat4, Res, StateScoped,
     TextColor, Transform, Vec3, Visibility, debug, error,
@@ -17,8 +16,8 @@ use bevy::render::camera::{PerspectiveProjection, Projection};
 use bevy::render::view::RenderLayers;
 use cdda_json_files::{
     BashItem, BashItems, CddaAmount, CddaItem, CddaItemName, CddaVehicle, CddaVehiclePart,
-    Character, CharacterInfo, CommonItemInfo, Field, Flags, FlatVec, FurnitureInfo, InfoId,
-    ItemGroup, ItemName, MoveCostMod, PocketType, Recipe, Repetition, RequiredLinkedLater,
+    Character, CharacterInfo, CommonItemInfo, Field, Flags, FlatVec, FurnitureInfo, Ignored,
+    InfoId, ItemGroup, ItemName, MoveCostMod, PocketType, Recipe, Repetition, RequiredLinkedLater,
     SpawnItem, TerrainInfo, UntypedInfoId,
 };
 use either::Either;
@@ -784,7 +783,7 @@ impl<'w> TileSpawner<'w, '_> {
             pocket_data: None,
             armor: None,
             snippet_category: None,
-            extra: HashMap::default(),
+            ignored: Ignored::default(),
         };
         let entity = self.spawn_item(
             parent_entity,

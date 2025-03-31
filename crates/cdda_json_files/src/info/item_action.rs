@@ -1,4 +1,4 @@
-use crate::InfoId;
+use crate::{Ignored, InfoId};
 use serde::Deserialize;
 use std::sync::Arc;
 
@@ -8,9 +8,8 @@ pub struct ItemAction {
     pub id: InfoId<Self>,
     pub name: ItemActionName,
 
-    #[expect(unused)]
-    #[serde(rename = "//")]
-    comment: Option<Arc<str>>,
+    #[serde(flatten)]
+    _ignored: Ignored<Self>,
 }
 
 #[derive(Debug, Deserialize)]

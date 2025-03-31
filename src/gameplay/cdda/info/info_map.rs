@@ -4,8 +4,8 @@ use bevy::platform_support::collections::HashMap;
 use bevy::prelude::{debug, error, warn};
 use cdda_json_files::{
     Alternative, Bash, BashItem, BashItems, CddaItemName, CharacterInfo, CommonItemInfo, Flags,
-    FurnitureInfo, InfoId, InfoIdDescription, ItemAction, ItemGroup, ItemMigration, ItemName,
-    ItemWithCommonInfo, Link as _, LinkProvider, Quality, Recipe, RecipeResult,
+    FurnitureInfo, Ignored, InfoId, InfoIdDescription, ItemAction, ItemGroup, ItemMigration,
+    ItemName, ItemWithCommonInfo, Link as _, LinkProvider, Quality, Recipe, RecipeResult,
     RequiredLinkedLater, Requirement, TerrainInfo, UntypedInfoId, VehiclePartInfo,
     VehiclePartMigration,
 };
@@ -92,7 +92,7 @@ impl InfoMap<CharacterInfo> {
             melee_dice: 2,
             melee_dice_sides: 4,
             flags: Flags::default(),
-            extra: HashMap::default(),
+            ignored: Ignored::default(),
         };
         self.map
             .insert(InfoId::new("human"), Arc::new(default_human));
@@ -282,6 +282,7 @@ impl InfoMap<VehiclePartInfo> {
                 item: RequiredLinkedLater::new(InfoId::new("wire")),
                 looks_like: None,
                 flags: None.into(),
+                ignored: Ignored::default(),
             })
         });
     }

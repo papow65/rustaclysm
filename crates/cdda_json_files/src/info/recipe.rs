@@ -1,4 +1,6 @@
-use crate::{CommonItemInfo, InfoId, Quality, RequiredLinkedLater, Requirement, UntypedInfoId};
+use crate::{
+    CommonItemInfo, Ignored, InfoId, Quality, RequiredLinkedLater, Requirement, UntypedInfoId,
+};
 use bevy_log::error;
 use bevy_platform_support::collections::HashMap;
 use serde::Deserialize;
@@ -36,9 +38,8 @@ pub struct Recipe {
     #[serde(default)]
     pub using: Vec<Using>,
 
-    #[expect(unused)]
     #[serde(flatten)]
-    extra: HashMap<Arc<str>, serde_json::Value>,
+    _ignored: Ignored<Self>,
 }
 
 impl PartialEq for Recipe {
