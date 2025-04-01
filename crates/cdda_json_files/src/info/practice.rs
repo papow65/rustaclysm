@@ -1,5 +1,6 @@
 use crate::{
-    Alternative, AutoLearn, BookLearn, CommonItemInfo, InfoId, RequiredQualities, UntypedInfoId, Using,
+    Alternative, AutoLearn, BookLearn, CommonItemInfo, InfoId, RequiredQualities, UntypedInfoId,
+    Using,
 };
 use bevy_platform_support::collections::HashMap;
 use serde::Deserialize;

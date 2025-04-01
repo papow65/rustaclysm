@@ -193,33 +193,7 @@ fn load_ids(
     type_id: TypeId,
     json_path: &Path,
 ) {
-    let id_suffix = content.get("id_suffix").and_then(|suffix| suffix.as_str());
-
-    let mut ids = Vec::new();
-    match id_value(content) {
-        Some(serde_json::Value::String(id)) => {
-            ids.push(UntypedInfoId::new_suffix(id, id_suffix));
-        }
-        Some(serde_json::Value::Array(ids_array)) => {
-            for id in ids_array {
-                match id {
-                    serde_json::Value::String(id) => {
-                        ids.push(UntypedInfoId::new_suffix(id, id_suffix));
-                    }
-                    id => {
-                        error!("Skipping non-string id in {json_path:?}: {id:?}");
-                    }
-                }
-            }
-        }
-        Some(id) => {
-            error!("Unexpected id structure in {json_path:?}: {id:?}");
-        }
-        None => {
-            error!("Could not determine id for {content:#?} from {json_path:?}");
-        }
-    }
-
+    let ids = id_values(content, type_id, json_path);
     let ids_len = ids.len();
     for mut id in ids {
         if let Some(previous) = by_type.get(&id) {
@@ -287,20 +261,71 @@ fn load_aliases(
     }
 }
 
-fn id_value(content: &serde_json::Map<String, serde_json::Value>) -> Option<&serde_json::Value> {
-    match (
-        content.get("id"),
-        content.get("result"),
-        content.get("abstract"),
-        content.get("from"),
-        content.get("copy-from"),
-    ) {
-        (Some(id), None, None, None, _)
-        | (None, Some(id), None, None, _)
-        | (None, None, Some(id), None, _)
-        | (None, None, None, Some(id), _)
-        | (None, None, None, None, Some(id)) => Some(id),
-        _ => None,
+fn id_values(
+    content: &serde_json::Map<String, serde_json::Value>,
+    type_id: TypeId,
+    json_path: &Path,
+) -> Vec<UntypedInfoId> {
+    let id_suffix = content.get("id_suffix").and_then(|suffix| {
+        suffix
+            .as_str()
+            .ok_or(())
+            .inspect_err(|()| {
+                error!("Unexpected if_suffix format for {type_id:?} in {json_path:?}: {suffix:?}");
+            })
+            .ok()
+    });
+
+    let id = if type_id == TypeId::Recipe {
+        match (
+            content.get("result"),
+            content.get("abstract"),
+            content.get("copy-from"),
+        ) {
+            (Some(id), None, _) | (None, Some(id), _) | (None, None, Some(id)) => id,
+            _ => {
+                error!("Could not determine id for recipe in {json_path:?}: {content:#?}");
+                return Vec::new();
+            }
+        }
+    } else {
+        if id_suffix.is_some() {
+            warn!(
+                "Unexpected combination of id_suffix for {type_id:?} in {json_path:?}: {content:#?}"
+            );
+        }
+
+        match (
+            content.get("id"),
+            content.get("abstract"),
+            content.get("from"),
+        ) {
+            (Some(id), None, None) | (None, Some(id), None) | (None, None, Some(id)) => id,
+            _ => {
+                error!("Could not determine id for {type_id:?} in {json_path:?}: {content:#?}");
+                return Vec::new();
+            }
+        }
+    };
+
+    match id {
+        serde_json::Value::String(id) => {
+            vec![UntypedInfoId::new_suffix(id, id_suffix)]
+        }
+        serde_json::Value::Array(ids_array) if !ids_array.is_empty() => ids_array
+            .iter()
+            .filter_map(|id| match id {
+                serde_json::Value::String(id) => Some(UntypedInfoId::new_suffix(id, id_suffix)),
+                id => {
+                    error!("Skipping non-string id for {type_id:?} in {json_path:?}: {id:?}");
+                    None
+                }
+            })
+            .collect(),
+        _ => {
+            error!("Unexpected id structure for {type_id:?} in {json_path:?}: {id:?}");
+            Vec::new()
+        }
     }
 }
 
