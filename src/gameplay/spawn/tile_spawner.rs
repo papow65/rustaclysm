@@ -746,7 +746,6 @@ impl<'w> TileSpawner<'w, '_> {
             repairs_like: None,
             weapon_category: None,
             degradation_multiplier: None,
-            type_: String::from("craft type").into(),
             name: ItemName::from(CddaItemName::Simple(String::from("Craft").into())),
             description: None,
             symbol: None,

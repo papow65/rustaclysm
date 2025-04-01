@@ -453,9 +453,6 @@ pub struct CommonItemInfo {
     pub weapon_category: Option<serde_json::Value>,
     pub degradation_multiplier: Option<serde_json::Value>,
 
-    #[serde(rename(deserialize = "type"))]
-    pub type_: Arc<str>,
-
     pub name: ItemName,
     pub description: Option<Description>,
     pub symbol: Option<char>,

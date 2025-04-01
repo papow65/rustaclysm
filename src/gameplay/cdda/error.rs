@@ -1,4 +1,3 @@
-use crate::gameplay::cdda::TypeId;
 use cdda_json_files::{Error as CddaJsonError, InfoId, InfoIdDescription, Recipe, SpriteNumber};
 use std::{error::Error as StdError, fmt, io, path::PathBuf, sync::Arc};
 
@@ -15,10 +14,6 @@ pub(crate) enum Error {
     /// This sprite numer is not known
     UnknownSpriteNumber {
         _number: SpriteNumber,
-    },
-    /// This [`TypeId`] is not known
-    UnknownTypeId {
-        _type: TypeId,
     },
 
     // Workspace error wrappers

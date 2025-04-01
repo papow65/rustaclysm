@@ -4,10 +4,20 @@ use bevy::prelude::{debug, error, warn};
 use cdda_json_files::UntypedInfoId;
 use fastrand::alphabetic;
 use glob::glob;
+use serde::Deserialize;
 use std::fs::read_to_string;
 use std::path::{Path, PathBuf};
 use strum::VariantArray as _;
 use util::AssetPaths;
+
+#[derive(Debug, Deserialize)]
+struct Typed {
+    #[serde(rename = "type")]
+    type_id: TypeId,
+
+    #[serde(flatten)]
+    fields: serde_json::Map<String, serde_json::Value>,
+}
 
 #[derive(Default)]
 pub(super) struct ParsedJson {
@@ -71,15 +81,11 @@ impl ParsedJson {
         //trace!("Parsing {json_path:?}...");
         let file_contents = read_to_string(json_path)?;
 
-        let contents = match serde_json::from_str::<Vec<serde_json::Map<String, serde_json::Value>>>(
-            file_contents.as_str(),
-        ) {
+        let contents = match serde_json::from_str::<Vec<Typed>>(file_contents.as_str()) {
             Ok(contents) => contents,
             Err(error) => {
                 // Maybe is one of the few of non-list files?
-                let Ok(content) = serde_json::from_str::<serde_json::Map<String, serde_json::Value>>(
-                    file_contents.as_str(),
-                ) else {
+                let Ok(content) = serde_json::from_str::<Typed>(file_contents.as_str()) else {
                     // The first match attempt was the most likely to succeed, so its error is most relevant.
                     return Err(error.into());
                 };
@@ -90,6 +96,7 @@ impl ParsedJson {
 
         for content in contents {
             if content
+                .fields
                 .get("obsolete")
                 .is_some_and(|value| value.as_bool().unwrap_or(false))
             {
@@ -97,31 +104,19 @@ impl ParsedJson {
                 *skipped_count += 1;
                 continue;
             }
-            let Some(type_id) = content.get("type").cloned() else {
-                warn!("Skipping info without a 'type' in {json_path:?}: {content:#?}");
-                *skipped_count += 1;
-                continue;
-            };
-            let Ok(type_id) =
-                serde_json::from_value::<TypeId>(type_id.clone()).inspect_err(|error| {
-                    error!("Could not convert {type_id:?} in {json_path:?}: {error:#?}");
-                })
-            else {
-                continue;
-            };
-
-            if !type_id.in_use() || content.get("from_variant").is_some() {
+            if !content.type_id.in_use() || content.fields.get("from_variant").is_some() {
                 *skipped_count += 1;
                 continue; // TODO
             }
 
             //trace!("Info abount {:?} > {:?}", &type_, &ids);
-            let Some(by_type) = self.objects_by_type.get_mut(&type_id) else {
-                return Err(Error::UnknownTypeId { _type: type_id });
-            };
+            let by_type = self
+                .objects_by_type
+                .get_mut(&content.type_id)
+                .expect("All TypeId variants should be present");
 
-            load_ids(&content, by_type, type_id, json_path);
-            load_aliases(&content, by_type, json_path);
+            load_ids(&content.fields, by_type, content.type_id, json_path);
+            load_aliases(&content.fields, by_type, json_path);
         }
 
         Ok(())
@@ -201,11 +196,11 @@ fn load_ids(
     let id_suffix = content.get("id_suffix").and_then(|suffix| suffix.as_str());
 
     let mut ids = Vec::new();
-    match id_value(content, json_path) {
-        serde_json::Value::String(id) => {
+    match id_value(content) {
+        Some(serde_json::Value::String(id)) => {
             ids.push(UntypedInfoId::new_suffix(id, id_suffix));
         }
-        serde_json::Value::Array(ids_array) => {
+        Some(serde_json::Value::Array(ids_array)) => {
             for id in ids_array {
                 match id {
                     serde_json::Value::String(id) => {
@@ -217,8 +212,11 @@ fn load_ids(
                 }
             }
         }
-        id => {
-            error!("Skipping unexpected id structure in {json_path:?}: {id:?}");
+        Some(id) => {
+            error!("Unexpected id structure in {json_path:?}: {id:?}");
+        }
+        None => {
+            error!("Could not determine id for {content:#?} from {json_path:?}");
         }
     }
 
@@ -289,48 +287,21 @@ fn load_aliases(
     }
 }
 
-fn id_value<'a>(
-    content: &'a serde_json::Map<String, serde_json::Value>,
-    json_path: &'a Path,
-) -> &'a serde_json::Value {
-    if content
-        .get("type")
-        .is_some_and(|v| v.as_str() == Some("recipe"))
-    {
-        assert_eq!(content.get("id"), None, "No 'id' field allowed");
-        assert_eq!(content.get("from"), None, "No 'from' field allowed");
-
-        return content
-            .get("abstract")
-            .or_else(|| content.get("result"))
-            .or_else(|| content.get("copy-from"))
-            .unwrap_or_else(|| {
-                panic!("A recipe should have an 'abstract' field, a 'result' field, or a 'copy-from' field: {content:#?}")
-            });
+fn id_value(content: &serde_json::Map<String, serde_json::Value>) -> Option<&serde_json::Value> {
+    match (
+        content.get("id"),
+        content.get("result"),
+        content.get("abstract"),
+        content.get("from"),
+        content.get("copy-from"),
+    ) {
+        (Some(id), None, None, None, _)
+        | (None, Some(id), None, None, _)
+        | (None, None, Some(id), None, _)
+        | (None, None, None, Some(id), _)
+        | (None, None, None, None, Some(id)) => Some(id),
+        _ => None,
     }
-
-    let mut count = 0;
-    if content.get("id").is_some() {
-        count += 1;
-    }
-    if content.get("abstract").is_some() {
-        count += 1;
-    }
-    if content.get("from").is_some() {
-        count += 1;
-    }
-    assert_eq!(
-        count,
-        1,
-        "Not one of id, abstract, or from for json with type {:?} and keys  ({:?}) from {json_path:?}",
-        content.get("type"),
-        content.keys().collect::<Vec<_>>()
-    );
-    content
-        .get("id")
-        .or_else(|| content.get("abstract"))
-        .or_else(|| content.get("from"))
-        .expect("id, abstract, or from")
 }
 
 fn set_recipe_id(enriched: &mut serde_json::Map<String, serde_json::Value>) {

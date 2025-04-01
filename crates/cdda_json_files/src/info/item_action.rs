@@ -9,10 +9,6 @@ pub struct ItemAction {
     pub name: ItemActionName,
 
     #[expect(unused)]
-    #[serde(rename = "type")]
-    type_: Arc<str>,
-
-    #[expect(unused)]
     #[serde(rename = "//")]
     comment: Option<Arc<str>>,
 }
