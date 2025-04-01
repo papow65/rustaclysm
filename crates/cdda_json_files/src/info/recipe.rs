@@ -1,3 +1,4 @@
+use crate::info::practice::ActivityLevel;
 use crate::{
     CommonItemInfo, Ignored, InfoId, Quality, RequiredLinkedLater, Requirement, UntypedInfoId,
 };
@@ -22,6 +23,7 @@ pub struct Recipe {
     pub difficulty: u8,
 
     pub time: Option<Duration>,
+    pub activity_level: Option<ActivityLevel>,
 
     #[serde(default)]
     pub book_learn: BookLearn,
@@ -37,6 +39,33 @@ pub struct Recipe {
 
     #[serde(default)]
     pub using: Vec<Using>,
+
+    pub batch_time_factors: Option<Vec<serde_json::Value>>,
+    pub blueprint_excludes: Option<Vec<serde_json::Value>>,
+    pub blueprint_name: Option<Arc<str>>,
+    pub blueprint_needs: Option<serde_json::Value>,
+    pub blueprint_provides: Option<Vec<serde_json::Value>>,
+    pub blueprint_requires: Option<Vec<serde_json::Value>>,
+    pub blueprint_resources: Option<Vec<serde_json::Value>>,
+    pub byproduct_group: Option<Vec<serde_json::Value>>,
+    pub byproducts: Option<Vec<serde_json::Value>>,
+    pub charges: Option<u16>,
+    pub check_blueprint_needs: Option<bool>,
+    pub construction_blueprint: Option<Arc<str>>,
+    pub contained: Option<bool>,
+    pub container: Option<Arc<str>>,
+    pub decomp_learn: Option<u8>,
+    pub delete_flags: Option<Vec<serde_json::Value>>,
+    pub description: Option<Arc<str>>,
+    pub extend: Option<serde_json::Value>,
+    pub flags: Option<Vec<serde_json::Value>>,
+    pub never_learn: Option<bool>,
+    pub proficiencies: Option<Vec<serde_json::Value>>,
+    pub result_mult: Option<u8>,
+    pub reversible: Option<serde_json::Value>,
+    pub skills_required: Option<Vec<serde_json::Value>>,
+    pub subcategory: Option<Arc<str>>,
+    pub tools: Option<Vec<serde_json::Value>>,
 
     #[serde(flatten)]
     _ignored: Ignored<Self>,

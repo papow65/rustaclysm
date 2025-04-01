@@ -3,7 +3,6 @@ use serde::Deserialize;
 use std::sync::Arc;
 
 #[derive(Debug, Deserialize)]
-#[serde(deny_unknown_fields)]
 pub struct ItemAction {
     pub id: InfoId<Self>,
     pub name: ItemActionName,

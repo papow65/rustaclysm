@@ -30,6 +30,10 @@ pub struct Ammo {
 
     pub show_stats: Option<bool>,
 
+    pub charges: Option<u8>,
+    pub comestible_type: Option<Arc<str>>,
+    pub primary_material: Option<Arc<str>>,
+
     #[serde(flatten)]
     pub common: Arc<CommonItemInfo>,
 }
@@ -71,6 +75,9 @@ pub struct Book {
     pub chapters: Option<u8>,
     pub time: Duration,
 
+    #[serde(default)]
+    pub fun: i8,
+
     // map or list of tuples
     pub proficiencies: Option<serde_json::Value>,
 
@@ -90,6 +97,16 @@ impl ItemWithCommonInfo for Book {
 #[derive(Debug, Deserialize)]
 pub struct Clothing {
     pub non_functional: Option<Arc<str>>,
+    pub environmental_protection: Option<u8>,
+    pub warmth: Option<u8>,
+    pub sided: Option<bool>,
+    pub power_armor: Option<bool>,
+
+    #[serde(default)]
+    pub covers: Vec<serde_json::Value>,
+
+    #[serde(default)]
+    pub valid_mods: Vec<serde_json::Value>,
 
     #[serde(flatten)]
     pub common: Arc<CommonItemInfo>,
@@ -136,6 +153,7 @@ pub struct Comestible {
     #[serde(default)]
     pub healthy: i8,
 
+    pub quench: Option<i8>,
     pub parasites: Option<u8>,
 
     pub petfood: Option<serde_json::Value>,
@@ -185,6 +203,11 @@ pub struct GenericItem {
     pub stackable: Option<bool>,
     pub template_requirements: Option<Arc<str>>,
 
+    pub calories: Option<u16>,
+    pub comestible_type: Option<Arc<str>>,
+    pub vitamins: Option<Arc<[(String, u16)]>>,
+    pub fun: Option<i8>,
+
     #[serde(flatten)]
     pub common: Arc<CommonItemInfo>,
 }
@@ -230,6 +253,12 @@ pub struct Gun {
     pub ups_charges: Option<u8>,
 
     #[serde(default)]
+    pub ammo_effects: Vec<Arc<str>>,
+
+    pub sight_dispersion: Option<u16>,
+    pub skill: Arc<str>,
+
+    #[serde(default)]
     pub valid_mod_locations: Arc<[serde_json::Value]>,
 
     #[serde(flatten)]
@@ -256,6 +285,8 @@ pub struct Gunmod {
 
     #[serde(default)]
     pub dispersion_modifier: i16,
+
+    pub sight_dispersion: Option<u16>,
 
     /// In degrees
     pub field_of_view: Option<u16>,
@@ -288,6 +319,15 @@ pub struct Gunmod {
     pub shot_spread_multiplier_modifier: Option<f32>,
     pub ups_charges_multiplier: Option<f32>,
     pub weight_multiplier: Option<f32>,
+
+    #[serde(default)]
+    pub ammo_effects: Vec<serde_json::Value>,
+
+    #[serde(default)]
+    pub acceptable_ammo: Vec<serde_json::Value>,
+
+    #[serde(default)]
+    pub magazine_adaptor: Vec<serde_json::Value>,
 
     #[serde(flatten)]
     pub common: Arc<CommonItemInfo>,
@@ -322,6 +362,7 @@ pub struct PetArmor {
     pub max_pet_vol: Volume,
     pub min_pet_vol: Volume,
     pub pet_bodytype: Arc<str>,
+    pub environmental_protection: Option<u8>,
 
     #[serde(flatten)]
     pub common: Arc<CommonItemInfo>,
@@ -344,8 +385,12 @@ pub struct Tool {
     #[serde(default)]
     pub initial_charges: u16,
 
+    pub charges_per_use: Option<u16>,
+    pub turns_per_charge: Option<u16>,
     pub max_charges: Option<u16>,
     pub rand_charges: Option<Arc<[u32]>>,
+    pub power_draw: Option<Arc<str>>,
+    pub revert_to: Option<Arc<str>>,
     pub revert_msg: Option<Arc<str>>,
     pub sub: Option<UntypedInfoId>,
     pub variables: Option<HashMap<String, serde_json::Value>>,
@@ -364,8 +409,13 @@ impl ItemWithCommonInfo for Tool {
 /// 'TOOL_ARMOR' in CDDA
 #[derive(Debug, Deserialize)]
 pub struct ToolClothing {
+    pub ammo: Option<MaybeFlatVec<UntypedInfoId>>,
     pub environmental_protection_with_filter: Option<u8>,
     pub weight_capacity_bonus: Option<Mass>,
+    pub charges_per_use: Option<u16>,
+    pub turns_per_charge: Option<u16>,
+    pub power_draw: Option<Arc<str>>,
+    pub revert_to: Option<Arc<str>>,
 
     #[serde(flatten)]
     pub clothing: Clothing,
@@ -380,6 +430,12 @@ impl ItemWithCommonInfo for ToolClothing {
 #[derive(Debug, Deserialize)]
 pub struct Toolmod {
     pub pocket_mods: Option<Arc<[HashMap<String, serde_json::Value>]>>,
+
+    #[serde(default)]
+    pub acceptable_ammo: Vec<serde_json::Value>,
+
+    #[serde(default)]
+    pub magazine_adaptor: Vec<serde_json::Value>,
 
     #[serde(flatten)]
     pub common: Arc<CommonItemInfo>,
@@ -469,6 +525,9 @@ pub struct CommonItemInfo {
 
     #[serde(default)]
     pub qualities: Vec<ItemQuality>,
+
+    #[serde(default)]
+    pub repairs_with: Vec<serde_json::Value>,
 
     // example: { "effects": [ "RECYCLED" ] }
     pub extend: Option<serde_json::Value>,

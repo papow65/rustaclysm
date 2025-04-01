@@ -11,6 +11,9 @@ pub struct Requirement {
     #[serde(default)]
     pub components: Vec<Vec<Alternative>>,
 
+    #[serde(default)]
+    pub tools: Vec<serde_json::Value>,
+
     #[serde(flatten)]
     _ignored: Ignored<Self>,
 }

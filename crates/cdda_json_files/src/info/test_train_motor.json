@@ -8,7 +8,7 @@
   "description": "An enormous and heavy electric traction motor, powerful enough to pull a train.",
   "item": "motor_train1300",
   "durability": 500,
-  "power": "1000000 W",
+  "power": 1000000,
   "energy_consumption": "1050 kW",
   "damage_modifier": 80,
   "//": "50 cm weld per quadrant of damage",

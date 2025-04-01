@@ -3,7 +3,6 @@ use serde::Deserialize;
 use std::sync::Arc;
 
 #[derive(Debug, Deserialize)]
-//#[serde(deny_unknown_fields)] // can't be used with '#[serde(flatten)]' (at the bottom)
 pub struct CddaPlayer {
     pub str_max: i16,
     pub str_bonus: i16,

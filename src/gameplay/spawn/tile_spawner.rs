@@ -760,6 +760,7 @@ impl<'w> TileSpawner<'w, '_> {
             flags: Flags::default(),
             faults: None,
             qualities: Vec::new(),
+            repairs_with: Vec::new(),
             extend: None,
             delete: None,
             properties: None,

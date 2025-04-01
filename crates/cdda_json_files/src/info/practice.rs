@@ -39,6 +39,7 @@ pub struct Practice {
     #[serde(default)]
     pub using: Vec<Using>,
 
+    #[serde(alias = "byproducts")]
     #[serde(default)]
     pub byproduct_group: Vec<Byproduct>,
 
@@ -64,6 +65,9 @@ pub enum ActivityLevel {
 
     #[serde(rename = "MODERATE_EXERCISE")]
     Moderate,
+
+    #[serde(rename = "ACTIVE_EXERCISE")]
+    Active,
 
     #[serde(rename = "BRISK_EXERCISE")]
     Brisk,
