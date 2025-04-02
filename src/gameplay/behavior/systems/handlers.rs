@@ -72,7 +72,7 @@ pub(in super::super) fn toggle_doors(
                 .expect("Terrain should be closeable"),
         };
         let local_terrain = LocalTerrain::unconnected(toggled.clone());
-        spawner.spawn_terrain(child_of.parent, pos, &local_terrain);
+        spawner.spawn_terrain(child_of.parent(), pos, &local_terrain);
         *visualization_update = VisualizationUpdate::Forced;
     }
 
@@ -294,7 +294,7 @@ pub(in super::super) fn update_damaged_terrain(
                 .send_warn();
             commands.entity(terrain).despawn();
             spawner.spawn_smashed(
-                child_of.parent,
+                child_of.parent(),
                 pos,
                 terrain_info
                     .map(Shared::as_ref)
@@ -341,7 +341,7 @@ pub(in super::super) fn combine_items(
             let mut merges = vec![];
             let mut total_amount = &Amount(0) + moved.amount;
 
-            for sibling in hierarchy.items_in(moved.child_of.parent) {
+            for sibling in hierarchy.items_in(moved.child_of.parent()) {
                 // Note that the positions may differ when the parents are the same.
                 if sibling.entity != moved.entity
                     && sibling.common_info.id == moved.common_info.id

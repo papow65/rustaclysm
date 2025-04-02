@@ -41,7 +41,7 @@ fn check_item_parents(
             checked_item.iter().all(|(entity, _, child_of)| child_of
                 .inspect(|child_of| {
                     let pos = pos.contains(entity);
-                    let pocket = pockets.contains(child_of.parent);
+                    let pocket = pockets.contains(child_of.parent());
                     assert_eq!(
                         pos, !pocket,
                         "Items should either have a pos ({pos:?}), xor a parent pocket ({pocket:?})"

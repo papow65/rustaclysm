@@ -329,7 +329,7 @@ fn follow_selected(
         .get_mut(inventory.panel)
         .expect("The inventory panel should be a scrolling list");
     let (parent_node, parent_computed_node) = scrolling_parents
-        .get(child_of.parent)
+        .get(child_of.parent())
         .expect("ChildOf node should be found");
     style.top = scroll_list.follow(
         item_transform,

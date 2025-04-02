@@ -517,9 +517,7 @@ impl ActorItem<'_> {
                 LastSeen::Currently,
                 Transform::default(),
                 Visibility::default(),
-                ChildOf {
-                    parent: taken.child_of.parent,
-                },
+                ChildOf(taken.child_of.parent()),
             ))
             .id();
         if taken.filthy.is_some() {
@@ -531,12 +529,7 @@ impl ActorItem<'_> {
 
         commands
             .entity(taken.entity)
-            .insert((
-                allowed_amount,
-                ChildOf {
-                    parent: container_entity,
-                },
-            ))
+            .insert((allowed_amount, ChildOf(container_entity)))
             .remove::<Pos>();
     }
 
@@ -565,9 +558,9 @@ impl ActorItem<'_> {
                 return self.no_impact();
             }
         }
-        let dump = moved.child_of.parent
+        let dump = moved.child_of.parent()
             == self.body_containers.expect("Body containers present").hands
-            || moved.child_of.parent
+            || moved.child_of.parent()
                 == self
                     .body_containers
                     .expect("Body containers present")
@@ -588,11 +581,9 @@ impl ActorItem<'_> {
                 .send_error();
             return self.no_impact();
         };
-        commands.entity(moved.entity).insert((
-            Visibility::default(),
-            to,
-            ChildOf { parent: new_parent },
-        ));
+        commands
+            .entity(moved.entity)
+            .insert((Visibility::default(), to, ChildOf(new_parent)));
         location.move_(moved.entity, to);
         self.impact_from_duration(Duration::SECOND, StaminaCost::NEUTRAL)
     }
@@ -676,7 +667,7 @@ impl ActorItem<'_> {
                 PlayerActionState::Crafting { item: craft_entity }.severity_finishing(),
                 false,
             );
-            let parent = item.child_of.parent;
+            let parent = item.child_of.parent();
             let pos = *item.pos.unwrap_or(self.pos);
             let amount = *item.amount;
             commands.entity(item.entity).despawn();

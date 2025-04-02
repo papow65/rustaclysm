@@ -56,7 +56,7 @@ pub(super) fn manage_scroll_lists(
         for (mut scroll_list, mut node, computed_node, child_of, interaction) in &mut scroll_lists {
             if interaction != &Interaction::None {
                 let (parent_node, parent_computed_node) = parent_nodes
-                    .get(child_of.parent)
+                    .get(child_of.parent())
                     .expect("ChildOf node should be found");
                 node.top = scroll_list.scroll(
                     computed_node,
@@ -75,7 +75,7 @@ pub(super) fn resize_scroll_lists(
 ) {
     for (mut scroll_list, mut style, computed_node, child_of) in &mut scroll_lists {
         let (parent_node, parent_computed_node) = parent_nodes
-            .get(child_of.parent)
+            .get(child_of.parent())
             .expect("ChildOf node should be found");
         style.top = scroll_list.resize(computed_node, parent_node, parent_computed_node);
     }

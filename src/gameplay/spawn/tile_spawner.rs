@@ -147,7 +147,7 @@ impl<'w> TileSpawner<'w, '_> {
                         type_: PocketType::Container,
                         sealed: false,
                     },
-                    ChildOf { parent: entity },
+                    ChildOf(entity),
                 ))
                 .id();
             let clothing = self
@@ -160,7 +160,7 @@ impl<'w> TileSpawner<'w, '_> {
                         type_: PocketType::Container,
                         sealed: false,
                     },
-                    ChildOf { parent: entity },
+                    ChildOf(entity),
                 ))
                 .id();
             self.commands
@@ -252,7 +252,7 @@ impl<'w> TileSpawner<'w, '_> {
                         Pocket::from(cdda_pocket),
                         Visibility::Hidden,
                         Transform::IDENTITY,
-                        ChildOf { parent: entity },
+                        ChildOf(entity),
                     ))
                     .id();
                 //trace!("Pocket {pocket:?} with parent {entity:?}");
@@ -514,7 +514,7 @@ impl<'w> TileSpawner<'w, '_> {
             object_name,
             Visibility::Hidden,
             Transform::IDENTITY,
-            ChildOf { parent },
+            ChildOf(parent),
         ));
         if let Some(pos) = pos {
             entity_commands.insert((Transform::from_translation(pos.vec3()), pos));

@@ -355,7 +355,7 @@ fn find_nearby<'a>(
         })
         .chain(items_and_furniture.iter().filter(|(.., parent)| {
             parent.is_some_and(|child_of| {
-                [body_containers.hands, body_containers.clothing].contains(&child_of.parent)
+                [body_containers.hands, body_containers.clothing].contains(&child_of.parent())
             })
         }))
         .map(|(nearby, ..)| nearby)
@@ -648,7 +648,7 @@ fn adapt_to_selected(
                 .get_mut(crafting_screen.recipe_list)
                 .expect("The recipe list should be a scrolling list");
             let (parent_node, parent_computed_node) = scrolling_parents
-                .get(child_of.parent)
+                .get(child_of.parent())
                 .expect("ChildOf node should be found");
             style.top = scroll_list.follow(
                 recipe_transform,

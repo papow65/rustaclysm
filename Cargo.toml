@@ -38,9 +38,9 @@ util = { path = "crates/util" }
 
 [workspace.dependencies]
 # We limit this list to crates that are used in multiple crates.
-bevy = { version = "0.16.0-rc.2", default-features = false, features = [ "async_executor", "bevy_asset", "bevy_dev_tools", "bevy_log", "bevy_pbr", "bevy_state", "bevy_text", "bevy_ui", "bevy_window", "multi_threaded", "png", "std", "tonemapping_luts", "wayland" ] }
-bevy_log = "0.16.0-rc.2"
-bevy_platform_support = "0.16.0-rc.2"
+bevy = { git = "https://github.com/bevyengine/bevy.git", rev = "e02c3662fb6b2c801118f21e3caa89fe5371a4a6", default-features = false, features = [ "async_executor", "bevy_asset", "bevy_dev_tools", "bevy_log", "bevy_pbr", "bevy_state", "bevy_text", "bevy_ui", "bevy_window", "multi_threaded", "png", "std", "tonemapping_luts", "wayland" ] }
+bevy_log = { git = "https://github.com/bevyengine/bevy.git", rev = "e02c3662fb6b2c801118f21e3caa89fe5371a4a6" }
+bevy_platform_support = { git = "https://github.com/bevyengine/bevy.git", rev = "e02c3662fb6b2c801118f21e3caa89fe5371a4a6" }
 either = "1"
 fastrand = "2"
 pathfinding = "4"
