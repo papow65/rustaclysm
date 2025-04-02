@@ -71,6 +71,9 @@ pub enum ActivityLevel {
 
     #[serde(rename = "EXTRA_EXERCISE")]
     Extra,
+
+    #[serde(rename = "fake")]
+    Fake,
 }
 
 #[derive(Debug, Deserialize)]
