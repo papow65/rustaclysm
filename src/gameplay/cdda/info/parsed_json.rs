@@ -5,8 +5,8 @@ use cdda_json_files::UntypedInfoId;
 use fastrand::alphabetic;
 use glob::glob;
 use serde::Deserialize;
-use std::fs::read_to_string;
 use std::path::{Path, PathBuf};
+use std::{fs::read_to_string, sync::Arc};
 use strum::VariantArray as _;
 use util::AssetPaths;
 
@@ -19,11 +19,35 @@ struct Typed {
     fields: serde_json::Map<String, serde_json::Value>,
 }
 
+#[derive(Debug)]
+enum Proto {
+    Primary {
+        fields: Arc<serde_json::Map<String, serde_json::Value>>,
+        alias_ids: Vec<UntypedInfoId>,
+    },
+    Alias {
+        fields: Arc<serde_json::Map<String, serde_json::Value>>,
+    },
+}
+
+impl Proto {
+    const fn fields(&self) -> &Arc<serde_json::Map<String, serde_json::Value>> {
+        match self {
+            Self::Primary { fields, .. } | Self::Alias { fields } => fields,
+        }
+    }
+}
+
+#[derive(Debug)]
+pub(super) struct Enriched {
+    pub(super) fields: serde_json::Map<String, serde_json::Value>,
+    pub(super) alias_ids: Vec<UntypedInfoId>,
+}
+
 #[derive(Default)]
 pub(super) struct ParsedJson {
     /// [`TypeId`] -> [`UntypedInfoId`] -> property name -> property value
-    objects_by_type:
-        HashMap<TypeId, HashMap<UntypedInfoId, serde_json::Map<String, serde_json::Value>>>,
+    objects_by_type: HashMap<TypeId, HashMap<UntypedInfoId, Proto>>,
 }
 
 impl ParsedJson {
@@ -115,16 +139,14 @@ impl ParsedJson {
                 .get_mut(&content.type_id)
                 .expect("All TypeId variants should be present");
 
-            load_ids(&content.fields, by_type, content.type_id, json_path);
-            load_aliases(&content.fields, by_type, json_path);
+            load_ids(content.fields, by_type, content.type_id, json_path);
         }
 
         Ok(())
     }
 
     /// [`TypeId`] -> [`UntypedInfoId`] -> property name -> property value
-    pub(super) fn enriched()
-    -> HashMap<TypeId, HashMap<UntypedInfoId, serde_json::Map<String, serde_json::Value>>> {
+    pub(super) fn enriched() -> HashMap<TypeId, HashMap<UntypedInfoId, Enriched>> {
         let mut enriched_json_infos = HashMap::default();
         let objects_by_type = &Self::load().objects_by_type;
         for (&type_id, literal_entry) in objects_by_type {
@@ -132,11 +154,14 @@ impl ParsedJson {
                 .entry(type_id)
                 .or_insert_with(HashMap::default);
             'enricheds: for (object_id, literal) in literal_entry {
-                if literal.contains_key("abstract") {
+                let Proto::Primary { fields, alias_ids } = literal else {
+                    continue;
+                };
+                if fields.contains_key("abstract") {
                     continue;
                 }
                 //trace!("{:?}", &object_id);
-                let mut enriched = literal.clone();
+                let mut enriched = (**fields).clone();
                 let mut ancestors = vec![object_id.clone()];
                 while let Some(copy_from) = enriched.remove("copy-from") {
                     //trace!("Copy from {:?}", &copy_from);
@@ -170,17 +195,20 @@ impl ParsedJson {
                         }
                         single
                     };
-                    for (key, value) in copy_from {
+                    for (key, value) in &**copy_from.fields() {
                         enriched.entry(key.clone()).or_insert(value.clone());
                     }
                 }
 
                 enriched.remove("copy-from");
-                if type_id == TypeId::Recipe {
-                    set_recipe_id(&mut enriched);
-                }
 
-                enriched_of_type.insert(object_id.clone(), enriched);
+                enriched_of_type.insert(
+                    object_id.clone(),
+                    Enriched {
+                        fields: enriched,
+                        alias_ids: alias_ids.clone(),
+                    },
+                );
             }
         }
         enriched_json_infos
@@ -188,77 +216,73 @@ impl ParsedJson {
 }
 
 fn load_ids(
-    content: &serde_json::Map<String, serde_json::Value>,
-    by_type: &mut HashMap<UntypedInfoId, serde_json::Map<String, serde_json::Value>>,
+    mut content: serde_json::Map<String, serde_json::Value>,
+    by_type: &mut HashMap<UntypedInfoId, Proto>,
     type_id: TypeId,
     json_path: &Path,
 ) {
-    let ids = id_values(content, type_id, json_path);
-    let ids_len = ids.len();
-    for mut id in ids {
+    let mut ids = id_values(&content, type_id, json_path);
+    if ids.is_empty() {
+        error!("No ids found");
+        return;
+    }
+
+    ids.append(&mut alias_values(&content, type_id, json_path));
+
+    let mut ids = ids.into_iter().filter_map(|mut id| {
         if let Some(previous) = by_type.get(&id) {
-            if content == previous {
+            if content == **previous.fields() {
                 //trace!("Ignoring exact duplicate info for {id:?}");
-                continue;
+                None
             } else if type_id == TypeId::Recipe {
                 //trace!("Old: {:#?}", by_type.get(&id));
                 //trace!("New: {content:#?}");
                 let random_string: String = [(); 16]
-                    .map(|()| alphabetic().to_ascii_lowercase())
-                    .iter()
-                    .collect();
+                .map(|()| alphabetic().to_ascii_lowercase())
+                .iter()
+                .collect();
                 id.add_suffix(random_string.as_str());
+                Some(id)
             } else {
                 error!(
                     "Duplicate usage of id {id:?} in {json_path:?} detected. One will be ignored.",
                 );
-                continue;
+                None
             }
+        } else {
+            Some(id)
         }
+    }).collect::<Vec<_>>();
 
-        let mut content = content.clone();
-        if 1 < ids_len && type_id != TypeId::Recipe {
-            content.insert(
-                String::from("id"),
-                serde_json::Value::String(String::from(&*id.fallback_name())),
-            );
-        }
-        by_type.insert(id.clone(), content);
+    if ids.is_empty() {
+        //trace!("No ids left");
+        return;
     }
-}
 
-fn load_aliases(
-    content: &serde_json::Map<String, serde_json::Value>,
-    by_type: &mut HashMap<UntypedInfoId, serde_json::Map<String, serde_json::Value>>,
-    json_path: &Path,
-) {
-    let mut aliases = Vec::new();
-    if let Some(alias) = content.get("alias") {
-        match alias {
-            serde_json::Value::String(id) => {
-                aliases.push(UntypedInfoId::new(id.as_str()));
-            }
-            serde_json::Value::Array(a) => {
-                for id in a {
-                    if let Some(id) = id.as_str() {
-                        aliases.push(UntypedInfoId::new(id));
-                    } else {
-                        error!("Skipping unexpected alias in {json_path:?}: {alias:#?}");
-                    }
-                }
-            }
-            _ => {
-                error!("Skipping unexpected alias structure in {json_path:?}: {alias:#?}",);
-            }
-        }
+    let first_id = ids.swap_remove(0);
+    let alias_ids = ids;
+
+    content.insert(
+        String::from("id"),
+        serde_json::Value::String(String::from(&*first_id.fallback_name())),
+    );
+    let content = Arc::new(content);
+
+    for alias_id in &alias_ids {
+        by_type.insert(
+            alias_id.clone(),
+            Proto::Alias {
+                fields: content.clone(),
+            },
+        );
     }
-    //trace!("Info abount {:?} > aliases {:?}", &type_, &aliases);
-    for alias in aliases {
-        // Duplicates possible
-        if by_type.get(&alias).is_none() {
-            by_type.insert(alias.clone(), content.clone());
-        }
-    }
+    by_type.insert(
+        first_id,
+        Proto::Primary {
+            fields: content,
+            alias_ids,
+        },
+    );
 }
 
 fn id_values(
@@ -316,8 +340,10 @@ fn id_values(
             .iter()
             .filter_map(|id| match id {
                 serde_json::Value::String(id) => Some(UntypedInfoId::new_suffix(id, id_suffix)),
-                id => {
-                    error!("Skipping non-string id for {type_id:?} in {json_path:?}: {id:?}");
+                unexpected => {
+                    error!(
+                        "Skipping non-string id for {type_id:?} in {json_path:?}: {unexpected:?}"
+                    );
                     None
                 }
             })
@@ -329,22 +355,31 @@ fn id_values(
     }
 }
 
-fn set_recipe_id(enriched: &mut serde_json::Map<String, serde_json::Value>) {
-    if let Some(recipe_id) = enriched.get("id") {
-        warn!("Recipe should not have an id: {recipe_id:?}");
-    } else if let Some(result) = enriched.get("result").cloned() {
-        if let Some(result_str) = result.as_str() {
-            let id = UntypedInfoId::new_suffix(
-                result_str,
-                enriched.get("id_suffix").and_then(|s| s.as_str()),
-            )
-            .fallback_name();
-            let id = serde_json::Value::String(String::from(&*id));
-            enriched.entry("id").or_insert(id);
-        } else {
-            error!("Recipe result should be a string: {result:#?}");
+fn alias_values(
+    content: &serde_json::Map<String, serde_json::Value>,
+    type_id: TypeId,
+    json_path: &Path,
+) -> Vec<UntypedInfoId> {
+    match content.get("alias") {
+        Some(serde_json::Value::String(alias)) => {
+            vec![UntypedInfoId::new(alias.as_str())]
         }
-    } else {
-        error!("Recipe should have a result: {enriched:#?}");
+        Some(serde_json::Value::Array(aliases)) if !aliases.is_empty() => aliases
+            .iter()
+            .filter_map(|alias| match alias {
+                serde_json::Value::String(alias) => Some(UntypedInfoId::new(alias.as_str())),
+                unexpected => {
+                    error!(
+                        "Skipping non-string alias for {type_id:?} in {json_path:?}: {unexpected:?}"
+                    );
+                    None
+                }
+            })
+            .collect(),
+        Some(unexpected) => {
+            error!("Skipping unexpected alias structure in {json_path:?}: {unexpected:#?}",);
+            Vec::new()
+        }
+        None => Vec::new(),
     }
 }

@@ -1,3 +1,4 @@
+use crate::gameplay::cdda::info::parsed_json::Enriched;
 use crate::gameplay::{TypeId, cdda::Error};
 use bevy::platform_support::collections::HashMap;
 use bevy::prelude::{debug, error, warn};
@@ -19,37 +20,39 @@ pub(crate) struct InfoMap<T> {
 
 impl<T: fmt::Debug + DeserializeOwned + 'static> InfoMap<T> {
     pub(super) fn new(
-        all: &mut HashMap<
-            TypeId,
-            HashMap<UntypedInfoId, serde_json::Map<String, serde_json::Value>>,
-        >,
+        all: &mut HashMap<TypeId, HashMap<UntypedInfoId, Enriched>>,
         type_id: TypeId,
     ) -> Self {
         let mut map = HashMap::default();
+        let mut aliases = HashMap::default();
+
         let objects = all
             .remove(&type_id)
             .unwrap_or_else(|| panic!("Type {type_id:?} not found"));
         let objects_len = objects.len();
-        for (id, object_properties) in objects {
+        for (id, enriched) in objects {
             //trace!("{:#?}", &object_properties);
-            match serde_json::from_value::<T>(serde_json::Value::Object(object_properties.clone()))
-            {
+            match serde_json::from_value::<T>(serde_json::Value::Object(enriched.fields.clone())) {
                 Ok(info) => {
-                    map.insert(id.into(), Arc::new(info));
+                    let info = Arc::new(info);
+                    for alias_id in enriched.alias_ids {
+                        aliases.insert(alias_id.into(), info.clone());
+                    }
+                    map.insert(id.into(), info);
                 }
                 Err(error) => {
                     error!(
                         "Failed loading json for {:?} {id:?}: {error:#?}",
                         type_name::<T>()
                     );
-                    if let Some(cause) = object_properties.keys().find(|key| {
-                        let mut copy = object_properties.clone();
+                    if let Some(cause) = enriched.fields.keys().find(|key| {
+                        let mut copy = enriched.fields.clone();
                         copy.remove(*key);
                         serde_json::from_value::<T>(serde_json::Value::Object(copy)).is_ok()
                     }) {
                         warn!("Failure for {id:?} likely caused by the property '{cause}'");
                     }
-                    debug!("Json for {id:?}: {object_properties:#?}");
+                    debug!("Json for {id:?}: {:#?}", &enriched.fields);
                 }
             }
         }
@@ -58,10 +61,7 @@ impl<T: fmt::Debug + DeserializeOwned + 'static> InfoMap<T> {
             "Processed {objects_len} -> {} {type_id:?} entries",
             map.len()
         );
-        Self {
-            map,
-            aliases: HashMap::default(),
-        }
+        Self { map, aliases }
     }
 
     pub(crate) fn get(&self, id: &InfoId<T>) -> Result<&Arc<T>, Error> {
@@ -323,8 +323,7 @@ impl<T: fmt::Debug + DeserializeOwned + 'static> LinkProvider<T> for InfoMap<T> 
 }
 
 pub(super) struct ItemInfoMapLoader<'a> {
-    pub(super) enriched_json_infos:
-        &'a mut HashMap<TypeId, HashMap<UntypedInfoId, serde_json::Map<String, serde_json::Value>>>,
+    pub(super) enriched_json_infos: &'a mut HashMap<TypeId, HashMap<UntypedInfoId, Enriched>>,
     pub(super) item_migrations: InfoMap<ItemMigration>,
     pub(super) common_item_infos: &'a mut InfoMap<CommonItemInfo>,
 }
