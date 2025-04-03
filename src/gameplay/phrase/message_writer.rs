@@ -9,7 +9,10 @@ pub(crate) struct MessageWriter<'w> {
 
 impl<'w> MessageWriter<'w> {
     #[must_use]
-    pub(crate) fn subject<'r>(&'r mut self, subject: Subject) -> MessageBuilder<'r, 'w, Subject>
+    pub(crate) const fn subject<'r>(
+        &'r mut self,
+        subject: Subject,
+    ) -> MessageBuilder<'r, 'w, Subject>
     where
         'w: 'r,
     {

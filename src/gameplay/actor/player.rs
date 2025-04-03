@@ -677,7 +677,7 @@ impl fmt::Display for PlayerActionState {
         let picking_nbor_string;
         f.write_str(match self {
             Self::Normal => "",
-            Self::PickingNbor(PickingNbor::Dragging { .. }) | Self::Dragging { .. } => "Dragging",
+            Self::PickingNbor(PickingNbor::Dragging) | Self::Dragging { .. } => "Dragging",
             Self::PickingNbor(picking_nbor) => {
                 picking_nbor_string = String::from(match picking_nbor {
                     PickingNbor::Attacking => "Attacking",

@@ -42,10 +42,10 @@ impl GameplayReadiness<'_> {
             },
         );
 
-        0 < self.overmap_assets.len()
-            && 0 < self.overmap_buffer_assets.len()
-            && 0 < self.map_assets.len()
-            && 0 < self.map_memory_assets.len()
+        !self.overmap_assets.is_empty()
+            && !self.overmap_buffer_assets.is_empty()
+            && !self.map_assets.is_empty()
+            && !self.map_memory_assets.is_empty()
             && self.explored.as_deref().is_some_and(Explored::loaded)
             && self
                 .subzone_level_entities

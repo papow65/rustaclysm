@@ -214,7 +214,7 @@ impl<'r, 'c> RowSpawner<'r, 'c>
 where
     'c: 'r,
 {
-    pub(super) fn new(
+    pub(super) const fn new(
         fonts: &'r Fonts,
         debug_text_shown: &'r DebugTextShown,
         inventory_system: &'r InventorySystem,

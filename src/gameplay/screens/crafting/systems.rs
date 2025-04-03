@@ -503,7 +503,7 @@ fn nearby_qualities(nearby_items: &[NearbyItem]) -> HashMap<Arc<Quality>, i8> {
                     Entry::Vacant(vac) => {
                         vac.insert(amount);
                     }
-                };
+                }
                 map
             },
         )

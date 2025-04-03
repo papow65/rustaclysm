@@ -726,7 +726,7 @@ fn entity_info(
             accessible_str = format!("hurlde (x{factor:.1})");
             flags.push(accessible_str.as_str());
         }
-    };
+    }
     if stairs_up.is_some() {
         flags.push("stairs up");
     }

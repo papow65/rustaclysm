@@ -8,7 +8,7 @@ repository = "https://github.com/papow65/rustaclysm"
 authors = [ "papow65 <papow65@protonmail.com>" ]
 exclude = [ "/screenshots/" ]
 edition = "2024"
-rust-version = "1.85" # should be latest stable
+rust-version = "1.86" # should be latest stable
 
 [workspace]
 # List internal dependencies: cargo tree | rg rustaclysm
@@ -77,7 +77,6 @@ ambiguous_associated_items = "forbid"
 anonymous_parameters = "forbid"
 array_into_iter = "forbid"
 bare_trait_objects = "forbid"
-cenum_impl_drop_cast = "forbid"
 coherence_leak_check = "forbid"
 conflicting_repr_hints = "forbid"
 const_evaluatable_unchecked = "forbid"
@@ -149,7 +148,6 @@ iter_with_drain = "deny"
 join_absolute_paths = "deny"
 large_stack_frames = "deny"
 missing_assert_message = "deny"
-missing_const_for_fn = "deny"
 mixed_read_write_in_expression = "deny"
 modulo_arithmetic = "deny"
 mutex_integer = "deny"
@@ -186,6 +184,8 @@ unused_trait_names = "deny"
 useless_let_if_seq = "deny"
 verbose_file_reads = "deny"
 while_float = "deny"
+# Exceptions because of false positives in rust 1.86
+missing_const_for_fn = "allow" # https://github.com/rust-lang/rust-clippy/issues/14532
 # Exceptions for allowed lints from denied categories
 cast_possible_truncation = { level = "allow", priority = 1 }
 cast_precision_loss = { level = "allow", priority = 1 }

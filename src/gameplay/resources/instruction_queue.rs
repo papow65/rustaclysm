@@ -44,7 +44,7 @@ impl InstructionQueue {
         }
     }
 
-    pub(crate) fn stop_waiting(&mut self) {
+    pub(crate) const fn stop_waiting(&mut self) {
         self.waiting_for_user = false;
     }
 

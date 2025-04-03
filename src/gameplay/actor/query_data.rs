@@ -237,7 +237,7 @@ impl ActorItem<'_> {
                 .hard("too exhausted to attack")
                 .send_error();
             return self.no_impact();
-        };
+        }
 
         let target = envir.get_nbor(*self.pos, attack.target).expect("Valid pos");
 
@@ -268,7 +268,7 @@ impl ActorItem<'_> {
                 .hard("too exhausted to smash")
                 .send_error();
             return self.no_impact();
-        };
+        }
 
         let target = envir.get_nbor(*self.pos, smash.target).expect("Valid pos");
 
@@ -316,7 +316,7 @@ impl ActorItem<'_> {
                 .hard("too exhausted to pulp")
                 .send_warn();
             return self.no_impact();
-        };
+        }
 
         let target = self.pos.horizontal_nbor(pulp.target);
 

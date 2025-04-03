@@ -13,7 +13,7 @@ impl VisualizationUpdate {
         *self == Self::Forced
     }
 
-    pub(crate) fn reset(&mut self) {
+    pub(crate) const fn reset(&mut self) {
         *self = Self::Smart;
     }
 }

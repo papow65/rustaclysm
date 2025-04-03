@@ -40,7 +40,7 @@ impl SubmapMemory {
             next_tile += tile_memory.get_amount();
             if tile < next_tile {
                 return tile_memory.get_type_id().is_some();
-            };
+            }
         }
         panic!("{tile} {next_tile}");
     }
