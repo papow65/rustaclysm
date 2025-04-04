@@ -127,15 +127,11 @@ impl Faction {
                 let last_enemy = LastEnemy(path.destination);
                 let nbor = envir.to_nbor(*actor.pos, path.first).expect("Nbors");
                 if path.first == path.destination {
-                    if factions
+                    factions
                         .iter()
                         .filter(|(_, faction)| faction != &self)
                         .any(|(pos, _)| pos == &path.destination)
-                    {
-                        Some((PlannedAction::attack(nbor), last_enemy))
-                    } else {
-                        None
-                    }
+                        .then(|| (PlannedAction::attack(nbor), last_enemy))
                 } else if envir.find_obstacle(path.first).is_some() {
                     Some((
                         if factions.iter().any(|(pos, _)| *pos == path.first) {

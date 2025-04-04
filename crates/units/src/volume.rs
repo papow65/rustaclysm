@@ -5,8 +5,10 @@ use std::{
     ops::{Add, Div, Sub},
 };
 
+use crate::Error;
+
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Deserialize)]
-#[serde(from = "String")]
+#[serde(try_from = "String")]
 pub struct Volume {
     milliliter: u64,
 }
@@ -52,24 +54,35 @@ impl fmt::Display for Volume {
     }
 }
 
-impl<S: AsRef<str>> From<S> for Volume {
-    fn from(value: S) -> Self {
-        let value = value.as_ref();
+impl TryFrom<&str> for Volume {
+    type Error = Error;
+
+    fn try_from(value: &str) -> Result<Self, Error> {
         let quantity = value.trim_matches(char::is_alphabetic).trim();
         let unit: String = value.matches(char::is_alphabetic).collect();
         //trace!("{value} {} {}", &quantity, &unit);
 
-        let quantity = quantity
-            .parse::<f32>()
-            .unwrap_or_else(|err| panic!("{err:?} when parsing {quantity:?}"));
+        let quantity = quantity.parse::<f32>()?;
 
-        Self {
+        Ok(Self {
             milliliter: match unit.to_lowercase().as_str() {
                 "l" => 1_000.0 * quantity,
                 "ml" => quantity,
-                _ => panic!("{value} {quantity} {}", &unit),
+                _ => {
+                    return Err(Error::UnknowUnit {
+                        _value: String::from(value),
+                    });
+                }
             } as u64,
-        }
+        })
+    }
+}
+
+impl TryFrom<String> for Volume {
+    type Error = Error;
+
+    fn try_from(value: String) -> Result<Self, Error> {
+        Self::try_from(value.as_ref())
     }
 }
 
@@ -90,7 +103,7 @@ mod volume_tests {
 
     #[test]
     fn parsing_works() {
-        assert_eq!(Volume::from("21 ml"), Volume { milliliter: 21 });
-        assert_eq!(Volume::from("35.6L"), Volume { milliliter: 35_600 });
+        assert_eq!(Volume::try_from("21 ml"), Ok(Volume { milliliter: 21 }));
+        assert_eq!(Volume::try_from("35.6L"), Ok(Volume { milliliter: 35_600 }));
     }
 }

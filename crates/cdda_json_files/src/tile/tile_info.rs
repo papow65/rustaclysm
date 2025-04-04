@@ -57,9 +57,9 @@ impl Default for SpriteNumbers {
 
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
-struct CddaBasicTile {
+struct CddaBasicTile<T> {
     #[serde(rename = "id")]
-    ids: MaybeFlatVec<UntypedInfoId>,
+    ids: MaybeFlatVec<T>,
 
     #[serde(rename = "fg")]
     #[serde(default)]
@@ -84,10 +84,10 @@ struct CddaBasicTile {
 #[serde(deny_unknown_fields)]
 pub struct CddaTileInfo {
     #[serde(flatten)]
-    base: CddaBasicTile,
+    base: CddaBasicTile<UntypedInfoId>,
 
     #[serde(default)]
-    additional_tiles: Vec<CddaBasicTile>,
+    additional_tiles: Vec<CddaBasicTile<CddaTileVariant>>,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -103,8 +103,8 @@ struct BasicTile {
     animated: bool,
 }
 
-impl From<CddaBasicTile> for BasicTile {
-    fn from(cdda_base: CddaBasicTile) -> Self {
+impl<T> From<CddaBasicTile<T>> for BasicTile {
+    fn from(cdda_base: CddaBasicTile<T>) -> Self {
         Self {
             foreground: cdda_base.foreground,
             background: cdda_base.background,
@@ -169,10 +169,7 @@ impl From<CddaTileInfo> for TileInfo {
         let mut variants = HashMap::default();
         for tile_variant in cdda_tile.additional_tiles {
             for variant_id in &tile_variant.ids.0 {
-                variants.insert(
-                    CddaTileVariant::from(variant_id.clone()),
-                    BasicTile::from(tile_variant.clone()),
-                );
+                variants.insert(variant_id.clone(), BasicTile::from(tile_variant.clone()));
             }
         }
 
@@ -184,34 +181,34 @@ impl From<CddaTileInfo> for TileInfo {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Deserialize)]
 pub enum CddaTileVariant {
     // For vehicle parts:
+    #[serde(rename = "broken")]
     Broken,
-    Open,
-    // For tiles:
-    Center,
-    Corner,
-    TConnection,
-    Edge,
-    End,
-    Unconnected,
-}
 
-impl From<UntypedInfoId> for CddaTileVariant {
-    fn from(source: UntypedInfoId) -> Self {
-        match &*source.fallback_name() {
-            "broken" => Self::Broken,
-            "open" => Self::Open,
-            "center" => Self::Center,
-            "corner" => Self::Corner,
-            "t_connection" => Self::TConnection,
-            "edge" => Self::Edge,
-            "end" | "end_piece" => Self::End,
-            "unconnected" => Self::Unconnected,
-            unexpected => panic!("Unexpected tile variant: {unexpected:?}"),
-        }
-    }
+    #[serde(rename = "open")]
+    Open,
+
+    // For tiles:
+    #[serde(rename = "center")]
+    Center,
+
+    #[serde(rename = "corner")]
+    Corner,
+
+    #[serde(rename = "t_connection")]
+    TConnection,
+
+    #[serde(rename = "edge")]
+    Edge,
+
+    #[serde(alias = "end_piece")]
+    #[serde(alias = "end")]
+    End,
+
+    #[serde(rename = "unconnected")]
+    Unconnected,
 }
 
 #[cfg(test)]

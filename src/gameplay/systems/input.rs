@@ -6,7 +6,7 @@ use manual::ManualSection;
 use std::time::Instant;
 use util::log_if_slow;
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(crate) fn create_gameplay_key_bindings(
     world: &mut World,
     bindings: Local<KeyBindings<ApplicationState, (), ()>>,

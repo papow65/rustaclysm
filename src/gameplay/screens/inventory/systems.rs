@@ -35,7 +35,6 @@ pub(super) struct InventoryButton {
 #[derive(Debug)]
 pub(super) struct InventorySystem(pub(super) SystemId<In<InventoryButton>, ()>);
 
-#[allow(clippy::needless_pass_by_value)]
 pub(super) fn create_inventory_system(world: &mut World) -> InventorySystem {
     InventorySystem(world.register_system_cached(handle_inventory_action))
 }
@@ -91,7 +90,7 @@ pub(super) fn spawn_inventory(mut commands: Commands) {
     });
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(super) fn create_inventory_key_bindings(
     world: &mut World,
     held_bindings: Local<KeyBindings<GameplayScreenState, (), Held>>,

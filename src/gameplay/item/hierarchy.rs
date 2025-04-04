@@ -169,7 +169,7 @@ impl<'w> ItemHierarchy<'w, '_> {
                         })
                     })
                     .map(|magazine| {
-                        #[allow(clippy::iter_with_drain)] // don't drop 'magazine_output'
+                        #[expect(clippy::iter_with_drain)] // don't drop 'magazine_output'
                         magazine_output
                             .drain(..)
                             .flatten()

@@ -360,7 +360,7 @@ impl ItemWithCommonInfo for Tool {
     }
 }
 
-#[allow(clippy::doc_markdown)]
+#[expect(clippy::doc_markdown)]
 /// 'TOOL_ARMOR' in CDDA
 #[derive(Debug, Deserialize)]
 pub struct ToolClothing {

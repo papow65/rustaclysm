@@ -197,7 +197,7 @@ fn handle_queued_instruction(
     instruction_queue.log_if_long();
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(super) fn create_base_key_bindings(
     world: &mut World,
     held_key_bindings: Local<KeyBindings<GameplayScreenState, (), Held>>,

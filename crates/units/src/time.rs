@@ -10,8 +10,10 @@ use std::{
 };
 use time::OffsetDateTime;
 
+use crate::Error;
+
 #[derive(Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Deserialize)]
-#[serde(from = "String")]
+#[serde(try_from = "String")]
 pub struct Duration {
     milliseconds: u64,
 }
@@ -152,21 +154,19 @@ impl Div<u64> for Duration {
     }
 }
 
-impl<S: AsRef<str>> From<S> for Duration {
-    fn from(value: S) -> Self {
+impl TryFrom<&str> for Duration {
+    type Error = Error;
+
+    fn try_from(value: &str) -> Result<Self, Error> {
         static DURATION_PARSER: LazyLock<Regex> = LazyLock::new(|| {
             Regex::new("(?:([0-9]+) *([a-zA-Z]+))+").expect("Valid regex for duration")
         });
-
-        let value = value.as_ref();
 
         let mut milliseconds = 0;
         for capture in DURATION_PARSER.captures_iter(value) {
             let (_full, [quantity, unit]) = capture.extract();
 
-            let quantity = quantity
-                .parse::<u64>()
-                .unwrap_or_else(|err| panic!("{err:?} when parsing {quantity:?}"));
+            let quantity = quantity.parse::<u64>()?;
             let unit = unit.to_lowercase();
             //trace!("{capture:?} {_full:?} {&quantity} {&unit}");
 
@@ -176,12 +176,24 @@ impl<S: AsRef<str>> From<S> for Duration {
                 "m" | "minute" | "minutes" => Self::MINUTE.milliseconds,
                 "h" | "hour" | "hours" => Self::HOUR.milliseconds,
                 "d" | "day" | "days" => Self::DAY.milliseconds,
-                _ => panic!("Could not parse {quantity} {unit} in {value}"),
-            } as u64;
+                _ => {
+                    return Err(Error::UnknowUnit {
+                        _value: String::from(value),
+                    });
+                }
+            };
             milliseconds += quantity * unit_factor;
         }
 
-        Self { milliseconds }
+        Ok(Self { milliseconds })
+    }
+}
+
+impl TryFrom<String> for Duration {
+    type Error = Error;
+
+    fn try_from(value: String) -> Result<Self, Error> {
+        Self::try_from(value.as_ref())
     }
 }
 
@@ -339,22 +351,22 @@ mod time_tests {
     #[test]
     fn parsing_works() {
         assert_eq!(
-            Duration::from("21 s"),
-            Duration {
+            Duration::try_from("21 s"),
+            Ok(Duration {
                 milliseconds: 21 * 1000
-            }
+            })
         );
         assert_eq!(
-            Duration::from("35m"),
-            Duration {
+            Duration::try_from("35m"),
+            Ok(Duration {
                 milliseconds: 35 * 60 * 1000
-            }
+            })
         );
         assert_eq!(
-            Duration::from("31 h 40 m"),
-            Duration {
+            Duration::try_from("31 h 40 m"),
+            Ok(Duration {
                 milliseconds: 31 * 60 * 60 * 1000 + 40 * 60 * 1000
-            }
+            })
         );
     }
 

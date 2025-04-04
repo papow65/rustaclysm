@@ -13,7 +13,6 @@ use util::log_if_slow;
 #[derive(Debug)]
 pub(super) struct MainMenuSystem(SystemId<(), ()>);
 
-#[allow(clippy::needless_pass_by_value)]
 pub(super) fn create_main_menu_system(world: &mut World) -> MainMenuSystem {
     MainMenuSystem(world.register_system_cached(to_main_menu))
 }
@@ -75,7 +74,7 @@ pub(super) fn spawn_death_screen(
         });
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(super) fn create_death_screen_key_bindings(
     world: &mut World,
     bindings: Local<KeyBindings<GameplayScreenState, (), ()>>,

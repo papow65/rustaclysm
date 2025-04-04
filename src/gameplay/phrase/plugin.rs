@@ -22,7 +22,7 @@ impl Plugin for PhrasePlugin {
     }
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 fn create_phrase_key_bindings(
     world: &mut World,
     bindings: Local<KeyBindings<ApplicationState, (), ()>>,
@@ -41,7 +41,7 @@ fn create_phrase_key_bindings(
     log_if_slow("create_phrase_key_bindings", start);
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 fn toggle_debug_text(
     fonts: Res<Fonts>,
     mut shown: ResMut<DebugTextShown>,

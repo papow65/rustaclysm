@@ -74,15 +74,9 @@ pub enum TileMemory {
         // Empty strings are translated to `None`.
         type_id: Option<Arc<str>>,
 
-        #[allow(unused)]
         subtile: u8,
-
-        #[allow(unused)]
         rotation: u16,
-
-        #[allow(unused)]
         symbol: u8,
-
         amount: u8,
     },
     New {

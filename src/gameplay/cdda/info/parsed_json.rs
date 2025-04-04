@@ -262,10 +262,13 @@ fn load_ids(
     let first_id = ids.swap_remove(0);
     let alias_ids = ids;
 
-    content.insert(
-        String::from("id"),
-        serde_json::Value::String(String::from(&*first_id.fallback_name())),
-    );
+    if type_id != TypeId::VehiclePartMigration {
+        content.insert(
+            String::from("id"),
+            serde_json::Value::String(String::from(&*first_id.fallback_name())),
+        );
+    }
+    content.remove("alias");
     let content = Arc::new(content);
 
     for alias_id in &alias_ids {

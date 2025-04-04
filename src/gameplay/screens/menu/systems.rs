@@ -18,7 +18,6 @@ pub(super) struct MenuButtonActions {
     quit: SystemId<(), ()>,
 }
 
-#[allow(clippy::needless_pass_by_value)]
 pub(super) fn create_menu_button_actions(world: &mut World) -> MenuButtonActions {
     MenuButtonActions {
         return_: world.register_system_cached(return_),
@@ -69,7 +68,7 @@ pub(super) fn spawn_menu(
         });
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(super) fn create_menu_key_bindings(
     world: &mut World,
     bindings: Local<KeyBindings<GameplayScreenState, (), ()>>,

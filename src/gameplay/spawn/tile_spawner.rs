@@ -231,8 +231,9 @@ impl<'w> TileSpawner<'w, '_> {
             amount,
             Containable {
                 // Based on cataclysm-ddasrc/mtype.cpp lines 47-48
-                volume: volume.unwrap_or_else(|| Volume::from("62499 ml")),
-                mass: mass.unwrap_or_else(|| Mass::from("81499 g")),
+                volume: volume
+                    .unwrap_or_else(|| Volume::try_from("62499 ml").expect("Well formatted")),
+                mass: mass.unwrap_or_else(|| Mass::try_from("81499 g").expect("Well formatted")),
             },
             ItemIntegrity::from(item.damaged),
         ));

@@ -4,8 +4,10 @@ use std::{
     ops::{Add, Div, Sub},
 };
 
+use crate::Error;
+
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Deserialize)]
-#[serde(from = "String")]
+#[serde(try_from = "String")]
 pub struct Mass {
     milligram: u64,
 }
@@ -53,25 +55,36 @@ impl fmt::Display for Mass {
     }
 }
 
-impl<S: AsRef<str>> From<S> for Mass {
-    fn from(value: S) -> Self {
-        let value = value.as_ref();
+impl TryFrom<&str> for Mass {
+    type Error = Error;
+
+    fn try_from(value: &str) -> Result<Self, Error> {
         let quantity = value.trim_matches(char::is_alphabetic).trim();
         let unit: String = value.matches(char::is_alphabetic).collect();
         //trace!("{value} {} {}", &quantity, &unit);
 
-        let quantity = quantity
-            .parse::<f32>()
-            .unwrap_or_else(|err| panic!("{err:?} when parsing {quantity:?}"));
+        let quantity = quantity.parse::<f32>()?;
 
-        Self {
+        Ok(Self {
             milligram: match unit.to_lowercase().as_str() {
                 "mg" => quantity,
                 "g" => 1_000.0 * quantity,
                 "kg" => 1_000_000.0 * quantity,
-                _ => panic!("{value} {quantity} {}", &unit),
+                _ => {
+                    return Err(Error::UnknowUnit {
+                        _value: String::from(value),
+                    });
+                }
             } as u64,
-        }
+        })
+    }
+}
+
+impl TryFrom<String> for Mass {
+    type Error = Error;
+
+    fn try_from(value: String) -> Result<Self, Error> {
+        Self::try_from(value.as_ref())
     }
 }
 
@@ -81,12 +94,12 @@ mod mass_tests {
 
     #[test]
     fn parsing_works() {
-        assert_eq!(Mass::from(String::from("21mg")), Mass { milligram: 21 });
+        assert_eq!(Mass::try_from("21mg"), Ok(Mass { milligram: 21 }));
         assert_eq!(
-            Mass::from(String::from("35.6 Kg")),
-            Mass {
+            Mass::try_from("35.6 Kg"),
+            Ok(Mass {
                 milligram: 35_600_000
-            }
+            })
         );
     }
 }

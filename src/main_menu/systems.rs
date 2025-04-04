@@ -34,7 +34,6 @@ pub(super) struct LoadSystems {
     key: SystemId<In<Entity>, ()>,
 }
 
-#[allow(clippy::needless_pass_by_value)]
 pub(super) fn create_load_systems(world: &mut World) -> LoadSystems {
     LoadSystems {
         button: world.register_system_cached(load),
@@ -45,7 +44,6 @@ pub(super) fn create_load_systems(world: &mut World) -> LoadSystems {
 #[derive(Debug)]
 pub(super) struct QuitSystem(SystemId<(), ()>);
 
-#[allow(clippy::needless_pass_by_value)]
 pub(super) fn create_quit_system(world: &mut World) -> QuitSystem {
     QuitSystem(world.register_system_cached(quit))
 }
@@ -80,7 +78,6 @@ pub(super) fn spawn_main_menu(
         });
 }
 
-#[allow(clippy::needless_pass_by_value)]
 pub(crate) fn create_main_menu_key_bindings(world: &mut World) {
     let start = Instant::now();
 

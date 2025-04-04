@@ -27,7 +27,6 @@ pub(super) fn manage_button_color(
     }
 }
 
-#[allow(clippy::needless_pass_by_value)]
 pub fn manage_button_input<I: SystemInput + 'static>(
     mut commands: Commands,
     interactions: Query<(&Interaction, &RunButton<I>), (Changed<Interaction>, With<Button>)>,

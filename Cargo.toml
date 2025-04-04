@@ -68,9 +68,9 @@ workspace = true
 [workspace.lints.rust]
 # Forbidden groups
 rust-2021-compatibility = { level = "forbid", priority = -1 }
+rust-2024-compatibility = { level = "forbid", priority = -1 }
 # Denied groups
 rust-2018-idioms = { level = "deny", priority = -1 }
-rust-2024-compatibility = { level = "deny", priority = -1 }
 # Forbidden lints
 absolute_paths_not_starting_with_crate = "forbid"
 ambiguous_associated_items = "forbid"
@@ -127,76 +127,55 @@ if_let_rescope = "allow"
 # Denied categories
 complexity = { level = "deny", priority = -1 }
 correctness = { level = "deny", priority = -1 }
+nursery = { level = "deny", priority = -1 }
 pedantic = { level = "deny", priority = -1 }
 perf = { level = "deny", priority = -1 }
 style = { level = "deny", priority = -1 }
 suspicious = { level = "deny", priority = -1 }
 # Denied lints from allowed categories
+allow_attributes = "deny"
+as_underscore = "deny"
 assertions_on_result_states = "deny"
-cognitive_complexity = "deny"
-collection_is_never_read = "deny"
-debug_assert_with_mut_call = "deny"
+dbg_macro = "deny"
+deref_by_slicing = "deny"
 disallowed_script_idents = "deny"
-empty_line_after_doc_comments = "deny"
-empty_line_after_outer_attr = "deny"
-equatable_if_let = "deny"
-future_not_send = "deny"
+if_then_some_else_none = "deny"
 infinite_loop = "deny"
-iter_on_empty_collections = "deny"
-iter_on_single_items = "deny"
-iter_with_drain = "deny"
-join_absolute_paths = "deny"
-large_stack_frames = "deny"
 missing_assert_message = "deny"
 mixed_read_write_in_expression = "deny"
 modulo_arithmetic = "deny"
 mutex_integer = "deny"
-needless_collect = "deny"
-needless_pass_by_ref_mut = "deny"
-nonstandard_macro_braces = "deny"
 non_zero_suggestions = "deny"
-option_map_or_err_ok = "deny"
-or_fun_call = "deny"
-path_buf_push_overwrite = "deny"
 pathbuf_init_then_push = "deny"
-read_zero_byte_vec = "deny"
-redundant_clone = "deny"
-repeat_vec_with_capacity = "deny"
 semicolon_inside_block = "deny"
 str_to_string = "deny"
 string_lit_chars_any = "deny"
 string_slice = "deny"
 string_to_string = "deny"
-suspicious_operation_groupings = "deny"
-test_attr_in_doctest = "deny"
 tests_outside_test_module = "deny"
-too_long_first_doc_paragraph = "deny"
-trait_duplication_in_bounds = "deny"
-tuple_array_conversions = "deny"
-type_repetition_in_bounds = "deny"
 unwrap_used = "deny"
-use_self = "deny"
-uninhabited_references = "deny"
 unneeded_field_pattern = "deny"
 unseparated_literal_suffix = "deny"
 unused_result_ok = "deny"
 unused_trait_names = "deny"
-useless_let_if_seq = "deny"
 verbose_file_reads = "deny"
-while_float = "deny"
-# Exceptions because of false positives in rust 1.86
-missing_const_for_fn = "allow" # https://github.com/rust-lang/rust-clippy/issues/14532
 # Exceptions for allowed lints from denied categories
 cast_possible_truncation = { level = "allow", priority = 1 }
 cast_precision_loss = { level = "allow", priority = 1 }
 cast_possible_wrap = { level = "allow", priority = 1 }
 cast_sign_loss = { level = "allow", priority = 1 }
+derive_partial_eq_without_eq = { level = "allow", priority = 1 } # Not needed
 match_wildcard_for_single_variants = { level = "allow", priority = 1 }
+missing_const_for_fn = { level = "allow", priority = 1 } # False positives in rust 1.86
 missing_panics_doc = { level = "allow", priority = 1 }
 module_name_repetitions = { level = "allow", priority = 1 }
+option_if_let_else = { level = "allow", priority = 1 } # Often bad for readability
 redundant_else = { level = "allow", priority = 1 }
+redundant_pub_crate = { level = "allow", priority = 1 } # Less clear
+significant_drop_tightening = { level = "allow", priority = 1 } # False positives
 similar_names = { level = "allow", priority = 1 }
-struct_field_names = { level = "allow", priority = 1 } # doens't work well with CDDA data
-too_many_arguments = { level = "allow", priority = 1 } # doesn't work well with bevy
+struct_field_names = { level = "allow", priority = 1 } # Doens't work well with CDDA data
+suboptimal_flops = { level = "allow", priority = 1 } # Less clear
+too_many_arguments = { level = "allow", priority = 1 } # Doesn't work well with bevy
 trivially_copy_pass_by_ref = { level = "allow", priority = 1 }
-type_complexity = { level = "allow", priority = 1 } # doesn't work well with bevy
+type_complexity = { level = "allow", priority = 1 } # Doesn't work well with bevy

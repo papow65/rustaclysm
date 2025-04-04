@@ -27,16 +27,16 @@ pub(crate) struct BodyContainers {
 impl BodyContainers {
     pub(crate) fn default_hands_container_limits() -> ContainerLimits {
         ContainerLimits {
-            max_volume: Volume::from("100 L"),
-            max_mass: Mass::from("50 kg"),
+            max_volume: Volume::try_from("100 L").expect("Well formatted"),
+            max_mass: Mass::try_from("50 kg").expect("Well formatted"),
             max_amount: Some(Amount::SINGLE),
         }
     }
 
     pub(crate) fn default_clothing_container_limits() -> ContainerLimits {
         ContainerLimits {
-            max_volume: Volume::from("100 L"),
-            max_mass: Mass::from("50 kg"),
+            max_volume: Volume::try_from("100 L").expect("Well formatted"),
+            max_mass: Mass::try_from("50 kg").expect("Well formatted"),
             max_amount: None,
         }
     }

@@ -44,12 +44,10 @@ pub(super) struct Nearby {
 #[derive(Debug)]
 pub(super) struct StartCraftSystem(SystemId<(), ()>);
 
-#[allow(clippy::needless_pass_by_value)]
 pub(super) fn create_start_craft_system(world: &mut World) -> StartCraftSystem {
     StartCraftSystem(world.register_system_cached(start_craft))
 }
 
-#[allow(clippy::needless_pass_by_value)]
 pub(super) fn create_start_craft_system_with_step(
     In(step): In<SelectionListStep>,
     world: &mut World,
@@ -129,7 +127,7 @@ pub(super) fn spawn_crafting_screen(mut commands: Commands) {
     });
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(super) fn create_crafting_key_bindings(
     world: &mut World,
     held_bindings: Local<KeyBindings<GameplayScreenState, (), Held>>,
