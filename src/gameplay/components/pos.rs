@@ -72,21 +72,21 @@ impl Level {
         Self { h: level }
     }
 
-    fn in_bounds(&self) -> bool {
-        &Self::LOWEST <= self && self <= &Self::HIGHEST
+    fn in_bounds(self) -> bool {
+        Self::LOWEST <= self && self <= Self::HIGHEST
     }
 
-    pub(crate) fn up(&self) -> Option<Self> {
+    pub(crate) fn up(self) -> Option<Self> {
         let up = Self { h: self.h + 1 };
         up.in_bounds().then_some(up)
     }
 
-    pub(crate) fn down(&self) -> Option<Self> {
+    pub(crate) fn down(self) -> Option<Self> {
         let down = Self { h: self.h - 1 };
         down.in_bounds().then_some(down)
     }
 
-    pub(crate) fn offset(&self, offset: LevelOffset) -> Option<Self> {
+    pub(crate) fn offset(self, offset: LevelOffset) -> Option<Self> {
         let sum = Self {
             h: self.h + offset.h,
         };
@@ -97,11 +97,11 @@ impl Level {
         self.h.abs_diff(to.h)
     }
 
-    pub(crate) const fn index(&self) -> usize {
+    pub(crate) const fn index(self) -> usize {
         (self.h + 10) as usize
     }
 
-    pub(crate) const fn compare_to_ground(&self) -> Ordering {
+    pub(crate) const fn compare_to_ground(self) -> Ordering {
         if self.h == 0 {
             Ordering::Equal
         } else if self.h < 0 {
@@ -112,8 +112,8 @@ impl Level {
     }
 
     #[inline]
-    pub(crate) fn f32(&self) -> f32 {
-        (*self - Self::ZERO).f32()
+    pub(crate) fn f32(self) -> f32 {
+        (self - Self::ZERO).f32()
     }
 }
 
@@ -184,7 +184,9 @@ impl Pos {
                 level,
                 z: self.z,
             }),
-            horizontal => Some(self.horizontal_nbor(horizontal.horizontal_projection())),
+            Nbor::Horizontal(horizontal_direction) => {
+                Some(self.horizontal_nbor(horizontal_direction))
+            }
         }
     }
 
@@ -310,11 +312,11 @@ pub(crate) struct Zone {
 impl Zone {
     pub(crate) const SIZE: i32 = 2 * SubzoneLevel::SIZE;
 
-    pub(crate) const fn zone_level(&self, level: Level) -> ZoneLevel {
-        ZoneLevel { zone: *self, level }
+    pub(crate) const fn zone_level(self, level: Level) -> ZoneLevel {
+        ZoneLevel { zone: self, level }
     }
 
-    pub(crate) const fn offset(&self, x: i32, z: i32) -> Self {
+    pub(crate) const fn offset(self, x: i32, z: i32) -> Self {
         Self {
             x: self.x + x,
             z: self.z + z,
@@ -362,8 +364,8 @@ impl ZoneLevel {
                 zone: self.zone,
                 level,
             }),
-            horizontal => {
-                let (x, z) = horizontal.horizontal_projection().offset();
+            Nbor::Horizontal(horizontal_direction) => {
+                let (x, z) = horizontal_direction.offset();
                 Some(Self {
                     zone: self.zone.offset(x, z),
                     level: self.level,
@@ -458,7 +460,7 @@ pub(crate) struct Overzone {
 }
 
 impl Overzone {
-    pub(crate) const fn base_zone(&self) -> Zone {
+    pub(crate) const fn base_zone(self) -> Zone {
         Zone {
             x: 180 * self.x,
             z: 180 * self.z,

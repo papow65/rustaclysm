@@ -20,7 +20,7 @@ pub(crate) enum TileVariant {
 }
 
 impl TileVariant {
-    pub(crate) const fn expected_length(&self) -> Option<usize> {
+    pub(crate) const fn expected_length(self) -> Option<usize> {
         Some(match self {
             Self::NorthSouthEdge | Self::EastWestEdge => 2,
             Self::NorthEastCorner
@@ -35,7 +35,7 @@ impl TileVariant {
         })
     }
 
-    pub(crate) const fn index(&self) -> Option<usize> {
+    pub(crate) const fn index(self) -> Option<usize> {
         Some(match self {
             Self::NorthSouthEdge
             | Self::SouthhEastCorner

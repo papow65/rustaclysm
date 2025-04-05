@@ -12,7 +12,7 @@ pub enum SelectionListStep {
 }
 
 impl SelectionListStep {
-    const fn amount(&self) -> u8 {
+    const fn amount(self) -> u8 {
         if matches!(self, Self::ManyUp | Self::ManyDown) {
             10
         } else {
@@ -20,7 +20,7 @@ impl SelectionListStep {
         }
     }
 
-    const fn is_backwards(&self) -> bool {
+    const fn is_backwards(self) -> bool {
         matches!(self, Self::ManyUp | Self::SingleUp)
     }
 }

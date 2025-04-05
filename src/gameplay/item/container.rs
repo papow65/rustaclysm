@@ -17,7 +17,7 @@ impl<'a> Container<'a> {
         message_writer: &mut MessageWriter,
         container_subject: Subject,
         added: &Containable,
-        added_amount: &Amount,
+        added_amount: Amount,
     ) -> Result<Amount, ()> {
         // TODO check that the added item is not already part of the current contents or the full ancestry of the container
 
@@ -38,20 +38,20 @@ impl<'a> Container<'a> {
         let max_amount_by_volume = if Volume::ZERO < added.volume {
             Amount(free_volume / added.volume)
         } else {
-            *added_amount
+            added_amount
         };
 
         let free_mass = limits.max_mass - current_mass;
         let max_amount_by_mass = if Mass::ZERO < added.mass {
             Amount(free_mass / added.mass)
         } else {
-            *added_amount
+            added_amount
         };
 
         let max_amount_by_amount = if let Some(max_amount) = limits.max_amount {
             &max_amount - &curent_amount
         } else {
-            *added_amount
+            added_amount
         };
 
         let allowed_amount = max_amount_by_volume

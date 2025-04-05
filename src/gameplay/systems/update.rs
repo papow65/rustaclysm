@@ -46,7 +46,7 @@ pub(crate) fn update_visualization(
 
         let visible = currently_visible.can_see(pos, accessible);
         // TODO check if there is enough light
-        last_seen.update(&visible);
+        last_seen.update(visible);
 
         let ever_seen = *last_seen != LastSeen::Never;
         if ever_seen {

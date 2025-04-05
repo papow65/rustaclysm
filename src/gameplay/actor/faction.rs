@@ -177,7 +177,7 @@ impl Faction {
                     } else {
                         Some((
                             (nbor_pos, total_ms),
-                            Danger::estimated(&ms, nbor_pos, enemies),
+                            Danger::estimated(ms, nbor_pos, enemies),
                         ))
                     }
                 })
@@ -188,7 +188,7 @@ impl Faction {
         let safest_longtime_pos = graph
             .iter()
             .filter(|((_, ms), _)| min_time < *ms)
-            .min_by_key(|((_, ms), (_, danger))| danger.average(ms))?
+            .min_by_key(|((_, ms), (_, danger))| danger.average(*ms))?
             .0;
         let to = build_path(safest_longtime_pos, &graph)
             .get(1)
@@ -335,7 +335,7 @@ impl Faction {
 pub(crate) struct Danger(FloatOrd<f32>);
 
 impl Danger {
-    pub(crate) fn estimated(duration: &Duration, pos: Pos, froms: &[Pos]) -> Self {
+    pub(crate) fn estimated(duration: Duration, pos: Pos, froms: &[Pos]) -> Self {
         Self(FloatOrd({
             duration.milliseconds() as f32
                 * froms
@@ -345,7 +345,7 @@ impl Danger {
         }))
     }
 
-    pub(crate) fn average(&self, duration: &Duration) -> Self {
+    pub(crate) fn average(self, duration: Duration) -> Self {
         Self(FloatOrd(self.0.0 / (duration.milliseconds() as f32)))
     }
 }

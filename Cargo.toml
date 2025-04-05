@@ -67,14 +67,16 @@ workspace = true
 
 [workspace.lints.rust]
 # Forbidden groups
+keyword-idents = { level = "forbid", priority = -1 }
+let-underscore = { level = "forbid", priority = -1 }
+rust-2018-compatibility = { level = "forbid", priority = -1 }
 rust-2021-compatibility = { level = "forbid", priority = -1 }
 rust-2024-compatibility = { level = "forbid", priority = -1 }
 # Denied groups
+nonstandard-style = { level = "deny", priority = -1 }
 rust-2018-idioms = { level = "deny", priority = -1 }
 # Forbidden lints
-absolute_paths_not_starting_with_crate = "forbid"
 ambiguous_associated_items = "forbid"
-anonymous_parameters = "forbid"
 array_into_iter = "forbid"
 bare_trait_objects = "forbid"
 coherence_leak_check = "forbid"
@@ -87,13 +89,11 @@ forbidden_lint_groups = "forbid"
 ill_formed_attribute_input = "forbid"
 invalid_doc_attributes = "forbid"
 invalid_type_param_default = "forbid"
-keyword_idents_2018 = "forbid"
 late_bound_lifetime_arguments = "forbid"
 legacy_derive_helpers = "forbid"
 macro_expanded_macro_exports_accessed_by_absolute_paths = "forbid"
 missing_fragment_specifier = "forbid"
 non_fmt_panics = "forbid"
-non_snake_case = "forbid"
 order_dependent_trait_objects = "forbid"
 patterns_in_fns_without_body = "forbid"
 private_interfaces = "forbid"
@@ -106,7 +106,6 @@ rust_2021_prefixes_incompatible_syntax = "forbid"
 rust_2021_prelude_collisions = "forbid"
 semicolon_in_expressions_from_macros = "forbid"
 soft_unstable = "forbid"
-tyvar_behind_raw_pointer = "forbid"
 uninhabited_static = "forbid"
 unsafe_code = "forbid"
 unstable_name_collisions = "forbid"
@@ -121,61 +120,66 @@ unused_macros = "deny"
 dead_code = "warn"
 # Allow
 elided_lifetimes_in_paths = "allow" # See https://github.com/rust-lang/rust/issues/91639
-if_let_rescope = "allow"
 
 [workspace.lints.clippy]
-# Denied categories
+# Categories
+#   Exceptions in each category
+cargo = { level = "deny", priority = -1 }
+    cargo_common_metadata = "allow"
+    multiple_crate_versions = "allow"
 complexity = { level = "deny", priority = -1 }
+    too_many_arguments = "allow" # Doesn't work well with bevy
+    type_complexity = "allow" # Doesn't work well with bevy
 correctness = { level = "deny", priority = -1 }
 nursery = { level = "deny", priority = -1 }
+    derive_partial_eq_without_eq = "allow" # Not needed
+    missing_const_for_fn = "allow" # False positives in rust 1.86
+    missing_panics_doc = "allow"
+    option_if_let_else = "allow" # Often bad for readability
+    redundant_pub_crate = "allow" # Less clear
+    significant_drop_tightening = "allow" # False positives
+    suboptimal_flops = "allow" # Less clear
 pedantic = { level = "deny", priority = -1 }
-perf = { level = "deny", priority = -1 }
-style = { level = "deny", priority = -1 }
-suspicious = { level = "deny", priority = -1 }
-# Denied lints from allowed categories
-allow_attributes = "deny"
-as_underscore = "deny"
-assertions_on_result_states = "deny"
-dbg_macro = "deny"
-deref_by_slicing = "deny"
-disallowed_script_idents = "deny"
-if_then_some_else_none = "deny"
-infinite_loop = "deny"
-missing_assert_message = "deny"
-mixed_read_write_in_expression = "deny"
-modulo_arithmetic = "deny"
-mutex_integer = "deny"
-non_zero_suggestions = "deny"
-pathbuf_init_then_push = "deny"
-semicolon_inside_block = "deny"
-str_to_string = "deny"
-string_lit_chars_any = "deny"
-string_slice = "deny"
-string_to_string = "deny"
-tests_outside_test_module = "deny"
-unwrap_used = "deny"
-unneeded_field_pattern = "deny"
-unseparated_literal_suffix = "deny"
-unused_result_ok = "deny"
-unused_trait_names = "deny"
-verbose_file_reads = "deny"
-# Exceptions for allowed lints from denied categories
-cast_possible_truncation = { level = "allow", priority = 1 }
-cast_precision_loss = { level = "allow", priority = 1 }
-cast_possible_wrap = { level = "allow", priority = 1 }
-cast_sign_loss = { level = "allow", priority = 1 }
-derive_partial_eq_without_eq = { level = "allow", priority = 1 } # Not needed
-match_wildcard_for_single_variants = { level = "allow", priority = 1 }
-missing_const_for_fn = { level = "allow", priority = 1 } # False positives in rust 1.86
-missing_panics_doc = { level = "allow", priority = 1 }
-module_name_repetitions = { level = "allow", priority = 1 }
-option_if_let_else = { level = "allow", priority = 1 } # Often bad for readability
-redundant_else = { level = "allow", priority = 1 }
-redundant_pub_crate = { level = "allow", priority = 1 } # Less clear
-significant_drop_tightening = { level = "allow", priority = 1 } # False positives
-similar_names = { level = "allow", priority = 1 }
-struct_field_names = { level = "allow", priority = 1 } # Doens't work well with CDDA data
-suboptimal_flops = { level = "allow", priority = 1 } # Less clear
-too_many_arguments = { level = "allow", priority = 1 } # Doesn't work well with bevy
-trivially_copy_pass_by_ref = { level = "allow", priority = 1 }
-type_complexity = { level = "allow", priority = 1 } # Doesn't work well with bevy
+    cast_possible_truncation = "allow"
+    cast_precision_loss = "allow"
+    cast_possible_wrap = "allow"
+    cast_sign_loss = "allow"
+    redundant_else = "allow"
+    similar_names = "allow"
+    struct_field_names = "allow" # Doens't work well with CDDA data
+perf = { level = "forbid", priority = -1 }
+restriction = { level = "allow", priority = -1 }
+    allow_attributes = "forbid"
+    as_underscore = "forbid"
+    assertions_on_result_states = "forbid"
+    dbg_macro = "warn"
+    deref_by_slicing = "forbid"
+    disallowed_script_idents = "forbid"
+    if_then_some_else_none = "forbid"
+    infinite_loop = "forbid"
+    missing_assert_message = "forbid"
+    mixed_read_write_in_expression = "forbid"
+    modulo_arithmetic = "forbid"
+    mutex_atomic = "forbid"
+    mutex_integer = "forbid"
+    needless_raw_strings = "forbid"
+    non_zero_suggestions = "forbid"
+    pathbuf_init_then_push = "forbid"
+    print_stderr = "warn"
+    print_stdout = "warn"
+    pub_without_shorthand = "forbid"
+    same_name_method = "forbid"
+    semicolon_inside_block = "forbid"
+    str_to_string = "forbid"
+    string_lit_chars_any = "forbid"
+    string_slice = "forbid"
+    string_to_string = "forbid"
+    tests_outside_test_module = "forbid"
+    unwrap_used = "forbid"
+    unneeded_field_pattern = "forbid"
+    unseparated_literal_suffix = "forbid"
+    unused_result_ok = "forbid"
+    unused_trait_names = "forbid"
+    verbose_file_reads = "forbid"
+style = { level = "forbid", priority = -1 }
+suspicious = { level = "forbid", priority = -1 }

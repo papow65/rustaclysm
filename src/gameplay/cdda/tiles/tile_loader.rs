@@ -90,7 +90,7 @@ impl TileLoader {
                     .get(&UntypedInfoId::new("unknown"))
                     .expect("Tile should be found")
             })
-            .sprite_numbers(&cdda_tile_variant);
+            .sprite_numbers(cdda_tile_variant.as_ref());
         //if tile_name.0.as_str() != "t_dirt" && !tile_name.0.starts_with("t_grass") {
         //    trace!("{tile_name:?} {foreground:?} {background:?}");
         //}

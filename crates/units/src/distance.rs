@@ -18,12 +18,12 @@ impl Distance {
     }
 
     #[must_use]
-    pub const fn millimeter(&self) -> u64 {
+    pub const fn millimeter(self) -> u64 {
         self.millimeter
     }
 
     #[must_use]
-    pub const fn meter_f32(&self) -> f32 {
+    pub const fn meter_f32(self) -> f32 {
         0.001 * self.millimeter as f32
     }
 }

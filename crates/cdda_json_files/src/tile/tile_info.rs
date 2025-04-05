@@ -131,7 +131,7 @@ impl TileInfo {
     #[must_use]
     pub fn sprite_numbers(
         &self,
-        tile_variant: &Option<CddaTileVariant>,
+        tile_variant: Option<&CddaTileVariant>,
     ) -> (bool, &SpriteNumbers, &SpriteNumbers) {
         if self.base.multitile {
             if let Some(tile_variant) = tile_variant {

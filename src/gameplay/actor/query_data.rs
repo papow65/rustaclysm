@@ -478,7 +478,7 @@ impl ActorItem<'_> {
             message_writer,
             self.subject(),
             taken.containable,
-            taken.amount,
+            *taken.amount,
         ) {
             message_writer
                 .subject(self.subject())

@@ -46,7 +46,7 @@ pub(crate) enum HorizontalDirection {
 
 impl HorizontalDirection {
     /// (x: \[-1, 0, or 1\], z: \[-1, 0, or 1\])
-    pub(crate) const fn offset(&self) -> (i32, i32) {
+    pub(crate) const fn offset(self) -> (i32, i32) {
         (
             match self {
                 Self::NorthWest | Self::West | Self::SouthWest => -1,
@@ -116,14 +116,14 @@ impl Nbor {
         Self::Down,
     ];
 
-    pub(crate) const fn horizontal_projection(&self) -> HorizontalDirection {
+    pub(crate) const fn horizontal_projection(self) -> HorizontalDirection {
         match self {
-            Self::Horizontal(horizontal) => *horizontal,
+            Self::Horizontal(horizontal) => horizontal,
             _ => HorizontalDirection::Here,
         }
     }
 
-    pub(crate) fn distance(&self) -> NborDistance {
+    pub(crate) fn distance(self) -> NborDistance {
         match &self {
             Self::Up => NborDistance::Up,
             Self::Horizontal(horizontal) => {

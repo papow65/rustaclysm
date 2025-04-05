@@ -35,7 +35,7 @@ impl Duration {
     };
 
     #[must_use]
-    pub const fn milliseconds(&self) -> u64 {
+    pub const fn milliseconds(self) -> u64 {
         self.milliseconds
     }
 
@@ -47,7 +47,7 @@ impl Duration {
     }
 
     #[must_use]
-    pub fn short_format(&self) -> String {
+    pub fn short_format(self) -> String {
         format!("{self:1}")
     }
 }

@@ -50,7 +50,7 @@ pub(crate) enum StaminaImpact {
 }
 
 impl StaminaImpact {
-    fn as_i16(&self, duration: Duration) -> i16 {
+    fn as_i16(self, duration: Duration) -> i16 {
         (match self {
             Self::Duration { cost_per_second } => {
                 i64::from(cost_per_second.0) * duration.milliseconds() as i64 / 1000

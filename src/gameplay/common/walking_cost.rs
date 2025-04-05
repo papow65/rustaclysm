@@ -29,7 +29,7 @@ impl WalkingCost {
         new
     }
 
-    pub(crate) fn duration(&self, speed: Speed) -> Duration {
+    pub(crate) fn duration(self, speed: Speed) -> Duration {
         self.equivalent_distance / speed
     }
 }

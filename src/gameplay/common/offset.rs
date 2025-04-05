@@ -12,7 +12,7 @@ impl LevelOffset {
     pub(crate) const UP: Self = Self { h: 1 };
     pub(crate) const DOWN: Self = Self { h: -1 };
 
-    pub(crate) fn f32(&self) -> f32 {
+    pub(crate) fn f32(self) -> f32 {
         f32::from(self.h) * Distance::VERTICAL.meter_f32()
     }
 }

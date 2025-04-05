@@ -1,1 +1,2 @@
 allowed-wildcard-imports = [ "gameplay" ]
+avoid-breaking-exported-api = false

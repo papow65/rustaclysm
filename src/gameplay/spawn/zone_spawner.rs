@@ -35,11 +35,11 @@ impl ZoneSpawner<'_, '_> {
                 spawn_event.zone_level,
                 &visible_region,
             );
-            self.spawn_zone_level(spawn_event.zone_level, &visibility);
+            self.spawn_zone_level(spawn_event.zone_level, visibility);
         }
     }
 
-    fn spawn_zone_level(&mut self, zone_level: ZoneLevel, child_visibiltiy: &Visibility) {
+    fn spawn_zone_level(&mut self, zone_level: ZoneLevel, child_visibiltiy: Visibility) {
         //trace!("zone_level: {zone_level:?} {:?}", &definition);
         assert!(
             zone_level.level <= Level::ZERO,
@@ -68,7 +68,7 @@ impl ZoneSpawner<'_, '_> {
         zone_level: ZoneLevel,
         seen_from: SeenFrom,
         info_id: &InfoId<OvermapTerrainInfo>,
-        child_visibiltiy: &Visibility,
+        child_visibiltiy: Visibility,
     ) {
         let name = ObjectName::new(
             self.infos.zone_levels.get(info_id).ok().map_or_else(
@@ -92,7 +92,7 @@ impl ZoneSpawner<'_, '_> {
                     mesh,
                     transform,
                     appearance.fixed_material(),
-                    *child_visibiltiy,
+                    child_visibiltiy,
                     RenderLayers::layer(2),
                 )
             });
@@ -144,7 +144,7 @@ impl ZoneSpawner<'_, '_> {
                 zone_level,
                 seen_from,
                 &overmap_info_id,
-                &child_visibility,
+                child_visibility,
             );
         }
     }

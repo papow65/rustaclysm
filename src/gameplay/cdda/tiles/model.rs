@@ -38,7 +38,7 @@ impl Transform2d {
     fn to_transform(
         &self,
         orientation: SpriteOrientation,
-        layer: &SpriteLayer,
+        layer: SpriteLayer,
         vertical_offset: f32,
     ) -> Transform {
         Transform {
@@ -51,7 +51,7 @@ impl Transform2d {
     fn to_translation(
         &self,
         orientation: SpriteOrientation,
-        layer: &SpriteLayer,
+        layer: SpriteLayer,
         vertical_offset: f32,
     ) -> Vec3 {
         match orientation {
@@ -204,14 +204,14 @@ impl ModelShape {
         }
     }
 
-    fn to_transform(&self, layer: &SpriteLayer, vertical_offset: f32) -> Transform {
+    fn to_transform(&self, layer: SpriteLayer, vertical_offset: f32) -> Transform {
         match self {
             Self::Plane {
                 orientation,
                 transform2d,
             } => transform2d.to_transform(*orientation, layer, vertical_offset),
             Self::Cuboid { height } => Transform {
-                scale: match *layer {
+                scale: match layer {
                     SpriteLayer::Front => 1.0,
                     SpriteLayer::Back => 0.98,
                 } * Vec3::new(
@@ -219,7 +219,7 @@ impl ModelShape {
                     *height,
                     Distance::ADJACENT.meter_f32(),
                 ),
-                translation: match *layer {
+                translation: match layer {
                     SpriteLayer::Front => Vec3::ZERO,
                     SpriteLayer::Back => Vec3::new(0.0, 0.0, -0.01),
                 },
@@ -262,7 +262,7 @@ impl Model {
             sprite_number,
             mesh_info: texture_info.mesh_info,
             texture_path: texture_info.image_path.clone(),
-            vertical_offset: category.vertical_offset(&layer),
+            vertical_offset: category.vertical_offset(layer),
             alpha_mode,
         }
     }
@@ -275,6 +275,6 @@ impl Model {
     }
 
     pub(crate) fn to_transform(&self) -> Transform {
-        self.shape.to_transform(&self.layer, self.vertical_offset)
+        self.shape.to_transform(self.layer, self.vertical_offset)
     }
 }

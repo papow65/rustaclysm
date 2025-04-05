@@ -42,7 +42,7 @@ impl<T: AsyncNew<T> + Send + 'static> Default for AsyncResourceLoader<T> {
         let thread_pool = AsyncComputeTaskPool::get();
         let task = thread_pool.spawn(async {
             static MODULE_PREFIX: LazyLock<Regex> =
-                LazyLock::new(|| Regex::new(r"[^:<>]+::").expect("Valid regex for module prefix"));
+                LazyLock::new(|| Regex::new("[^:<>]+::").expect("Valid regex for module prefix"));
 
             let start = Instant::now();
             let type_name = MODULE_PREFIX.replace_all(type_name::<T>(), "");

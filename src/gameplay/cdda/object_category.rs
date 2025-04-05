@@ -16,11 +16,11 @@ pub(crate) enum ObjectCategory {
 }
 
 impl ObjectCategory {
-    pub(crate) const fn shading_applied(&self) -> bool {
+    pub(crate) const fn shading_applied(self) -> bool {
         !matches!(self, Self::ZoneLevel | Self::Meta)
     }
 
-    pub(crate) const fn vertical_offset(&self, layer: &SpriteLayer) -> f32 {
+    pub(crate) const fn vertical_offset(self, layer: SpriteLayer) -> f32 {
         let level = 2 * match self {
             Self::ZoneLevel => -1,
             Self::Terrain => 0,

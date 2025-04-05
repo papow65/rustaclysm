@@ -16,7 +16,7 @@ impl BaseSpeed {
         Self(Speed::from_kmph(s))
     }
 
-    pub(crate) const fn speed(&self, walking_mode: &WalkingMode, breath: Breath) -> Speed {
+    pub(crate) const fn speed(self, walking_mode: &WalkingMode, breath: Breath) -> Speed {
         let average_speed = WalkingMode::Walking.standard_speed(Breath::Normal);
         self.0
             .combine(walking_mode.standard_speed(breath), average_speed)

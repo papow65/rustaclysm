@@ -4,8 +4,8 @@ use std::{error::Error as StdError, fmt};
 #[derive(Debug, PartialEq)]
 pub enum Error {
     UnknowUnit { _value: String },
-    UnknowFloat { _wrapped: ParseFloatError },
-    UnknowInteger { _wrapped: ParseIntError },
+    ExpectedFloat { _wrapped: ParseFloatError },
+    ExpectedInteger { _wrapped: ParseIntError },
 }
 
 // Requirement for StdError
@@ -17,13 +17,13 @@ impl fmt::Display for Error {
 
 impl From<ParseFloatError> for Error {
     fn from(value: ParseFloatError) -> Self {
-        Self::UnknowFloat { _wrapped: value }
+        Self::ExpectedFloat { _wrapped: value }
     }
 }
 
 impl From<ParseIntError> for Error {
     fn from(value: ParseIntError) -> Self {
-        Self::UnknowInteger { _wrapped: value }
+        Self::ExpectedInteger { _wrapped: value }
     }
 }
 

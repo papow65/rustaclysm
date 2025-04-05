@@ -178,8 +178,8 @@ pub(crate) enum LastSeen {
 }
 
 impl LastSeen {
-    pub(crate) fn update(&mut self, visible: &Visible) {
-        if visible == &Visible::Seen {
+    pub(crate) fn update(&mut self, visible: Visible) {
+        if visible == Visible::Seen {
             *self = Self::Currently;
         } else if self == &Self::Currently {
             *self = Self::Previously;
