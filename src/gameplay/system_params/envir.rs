@@ -271,12 +271,15 @@ impl<'w, 's> Envir<'w, 's> {
         .map(move |(nbor, npos, walking_cost)| (nbor, npos, walking_cost.duration(speed)))
     }
 
-    pub(crate) fn nbors_for_item_handling(
+    pub(crate) fn directions_for_item_handling(
         &'s self,
         pos: Pos,
-    ) -> impl Iterator<Item = (Nbor, Pos)> + use<'s> {
-        self.nbors_if(pos, move |nbor| pos.level == nbor.level)
-            .map(move |(nbor, npos, _)| (nbor, npos))
+    ) -> impl Iterator<Item = (HorizontalDirection, Pos)> + use<'s> {
+        self.nbors(pos).filter_map(|(nbor, npos, _)| {
+            HorizontalDirection::try_from(nbor)
+                .ok()
+                .map(|direction| (direction, npos))
+        })
     }
 
     pub(crate) fn nbors_for_exploring(

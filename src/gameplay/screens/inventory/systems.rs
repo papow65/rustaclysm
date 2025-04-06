@@ -284,9 +284,9 @@ fn items_by_section<'i>(
     body_containers: &'i BodyContainers,
 ) -> HashMap<InventorySection, Vec<ItemItem<'i>>> {
     let mut items_by_section = HashMap::default();
-    for (nbor, nbor_pos) in envir.nbors_for_item_handling(player_pos) {
+    for (direction, nbor_pos) in envir.directions_for_item_handling(player_pos) {
         items_by_section.insert(
-            InventorySection::Nbor(nbor.horizontal_projection()),
+            InventorySection::Nbor(direction),
             envir.all_items(nbor_pos).collect::<Vec<_>>(),
         );
     }

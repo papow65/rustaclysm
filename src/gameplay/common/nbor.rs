@@ -116,13 +116,6 @@ impl Nbor {
         Self::Down,
     ];
 
-    pub(crate) const fn horizontal_projection(self) -> HorizontalDirection {
-        match self {
-            Self::Horizontal(horizontal) => horizontal,
-            _ => HorizontalDirection::Here,
-        }
-    }
-
     pub(crate) fn distance(self) -> NborDistance {
         match &self {
             Self::Up => NborDistance::Up,
@@ -154,6 +147,17 @@ impl From<Nbor> for Key {
             Nbor::Horizontal(HorizontalDirection::North) => Self::Code(KeyCode::Numpad8),
             Nbor::Horizontal(HorizontalDirection::NorthEast) => Self::Code(KeyCode::Numpad9),
             Nbor::Down => Self::Character('>'),
+        }
+    }
+}
+
+impl TryFrom<Nbor> for HorizontalDirection {
+    type Error = ();
+
+    fn try_from(value: Nbor) -> Result<Self, Self::Error> {
+        match value {
+            Nbor::Horizontal(horizontal) => Ok(horizontal),
+            _ => Err(()),
         }
     }
 }
