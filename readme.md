@@ -40,6 +40,16 @@ Currently, these features are (partially) supported:
 7. Launch it by running the command `cargo run --profile dev-opt` on the command line.
 8. Follow the instructions to set up the necessary symlinks or directories in the `assets` directory.
 
+### Configuration
+
+These environment variables can be set for development purposes:
+
+| Variable           | Set to         | Description                                           |
+|--------------------|----------------|-------------------------------------------------------|
+| `DUMP_ENRICHED`    | Directory path | Dump the enriched CDDA data to the given directory.   |
+| `EXIT_AFTER_INFOS` | `1`            | Exit the application when all CDDA data is processed. |
+| `LOG_ARCHETYPES`   | `1`            | Log the Bevy archetypes used within the application.  |
+
 ## License
 
 See [license.md](license.md)
