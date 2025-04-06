@@ -6,10 +6,11 @@ use cdda_json_files::UntypedInfoId;
 use fastrand::alphabetic;
 use glob::glob;
 use serde::Deserialize;
+use std::fs::{File, read_to_string};
 use std::path::{Path, PathBuf};
-use std::sync::Mutex;
 use std::sync::atomic::{AtomicUsize, Ordering};
-use std::{fs::read_to_string, sync::Arc};
+use std::sync::{Arc, Mutex};
+use std::{env, io::Write as _};
 use util::AssetPaths;
 
 #[derive(Debug, Deserialize)]
@@ -225,6 +226,23 @@ impl ParsedJson {
                 );
             }
         }
+
+        if let Ok(directory_name) = env::var("DUMP_ENRICHED") {
+            for (type_id, info_map) in &enriched_json_infos {
+                let json_string = serde_json::to_string_pretty(
+                    &info_map
+                        .values()
+                        .map(|enriched| &enriched.fields)
+                        .collect::<Vec<_>>(),
+                )
+                .expect("Serialization should succeed");
+                File::create(format!("{directory_name}/enriched_{type_id:?}.json").to_lowercase())
+                    .expect("File creation should succeed")
+                    .write_all(json_string.as_bytes())
+                    .expect("Writing should succeed");
+            }
+        }
+
         enriched_json_infos
     }
 }
