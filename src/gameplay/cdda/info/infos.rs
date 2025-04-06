@@ -1,7 +1,7 @@
 use crate::gameplay::cdda::info::info_map::{InfoMap, ItemInfoMapLoader};
 use crate::gameplay::cdda::info::parsed_json::ParsedJson;
 use crate::gameplay::{ObjectCategory, TypeId};
-use bevy::prelude::{Resource, debug, error, info};
+use bevy::prelude::{Resource, debug, error, info, warn};
 use cdda_json_files::{
     Ammo, BionicItem, Book, CddaItem, CharacterInfo, Clothing, Comestible, CommonItemInfo, Engine,
     FieldInfo, FurnitureInfo, GenericItem, Gun, Gunmod, ItemAction, ItemGroup, Link as _, Magazine,
@@ -10,6 +10,7 @@ use cdda_json_files::{
     VehiclePartMigration, Wheel,
 };
 use std::{env, process::exit, time::Instant};
+use strum::VariantArray as _;
 use util::AsyncNew;
 
 #[derive(Resource)]
@@ -91,9 +92,23 @@ impl Infos {
 
         let mut enriched_json_infos = ParsedJson::enriched();
         debug!(
-            "Collected {} enriched categories",
-            enriched_json_infos.len()
+            "Collected {} enriched info types in {duration:?}",
+            enriched_json_infos.len(),
+            duration = start.elapsed()
         );
+        let mut missing_types = TypeId::VARIANTS
+            .iter()
+            .filter(|type_id| !enriched_json_infos.contains_key(*type_id))
+            .map(|type_id| format!("{type_id:?}",))
+            .collect::<Vec<_>>();
+        if !missing_types.is_empty() {
+            missing_types.sort();
+            error!(
+                "{} unused info types: {}",
+                missing_types.len(),
+                missing_types.join(", ")
+            );
+        }
 
         let item_migrations = InfoMap::new(&mut enriched_json_infos, TypeId::ItemMigration);
         let mut common_item_infos = InfoMap::default();
@@ -156,26 +171,20 @@ impl Infos {
             zone_levels: InfoMap::new(&mut enriched_json_infos, TypeId::OvermapTerrain),
         }
         .link_all(&vehicle_part_migrations);
-
-        let mut missing_types = enriched_json_infos
-            .into_keys()
-            .map(|type_id| format!("{type_id:?}",))
-            .collect::<Vec<_>>();
-        if !missing_types.is_empty() {
-            missing_types.sort();
-            error!(
-                "{} unprocessed types: {}",
-                missing_types.len(),
-                missing_types.join(", ")
-            );
-        }
-
         this.characters.add_default_human();
 
-        let duration = start.elapsed();
-        info!("The creation of Infos took {duration:?}");
+        assert!(
+            enriched_json_infos.is_empty(),
+            "All json info should be processed"
+        );
+
+        info!(
+            "The creation of Infos took {duration:?}",
+            duration = start.elapsed()
+        );
 
         if env::var("EXIT_AFTER_INFOS") == Ok(String::from("1")) {
+            warn!("Exiting, because EXIT_AFTER_INFOS is set to '1'");
             exit(0);
         }
 

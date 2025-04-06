@@ -1,13 +1,15 @@
 use crate::gameplay::{TypeId, cdda::Error};
 use bevy::platform_support::collections::HashMap;
 use bevy::prelude::{debug, error, warn};
+use bevy::tasks::IoTaskPool;
 use cdda_json_files::UntypedInfoId;
 use fastrand::alphabetic;
 use glob::glob;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
+use std::sync::Mutex;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::{fs::read_to_string, sync::Arc};
-use strum::VariantArray as _;
 use util::AssetPaths;
 
 #[derive(Debug, Deserialize)]
@@ -46,8 +48,8 @@ pub(super) struct Enriched {
 
 #[derive(Default)]
 pub(super) struct ParsedJson {
-    /// [`TypeId`] -> [`UntypedInfoId`] -> property name -> property value
-    objects_by_type: HashMap<TypeId, HashMap<UntypedInfoId, Proto>>,
+    /// [`TypeId`] -> [`UntypedInfoId`] -> prototype info
+    objects_by_type: Mutex<HashMap<TypeId, HashMap<UntypedInfoId, Proto>>>,
 }
 
 impl ParsedJson {
@@ -63,44 +65,52 @@ impl ParsedJson {
             .map(|json_path_result| json_path_result.expect("JSON path should be valid"))
     }
 
-    fn load() -> Self {
-        let mut parsed_json = Self::default();
-        for type_id in TypeId::VARIANTS {
-            parsed_json
-                .objects_by_type
-                .insert(*type_id, HashMap::default());
-        }
+    fn load() -> HashMap<TypeId, HashMap<UntypedInfoId, Proto>> {
+        let this = Self::default();
+        let parsed_file_count = AtomicUsize::new(0);
+        let skipped_file_count = AtomicUsize::new(0);
+        let skipped_id_count = AtomicUsize::new(0);
 
-        let mut parsed_file_count = 0;
-        let mut skipped_count = 0;
-        for json_path in Self::json_infos_paths() {
-            match parsed_json.parse_json_info_file(&json_path, &mut skipped_count) {
-                Ok(()) => {
-                    parsed_file_count += 1;
-                }
-                Err(error) => {
-                    error!("Error while processing {json_path:?}: {error:#?}");
-                }
+        IoTaskPool::get().scope(|s| {
+            let this = &this;
+            let parsed_file_count = &parsed_file_count;
+            let skipped_file_count = &skipped_file_count;
+            let skipped_id_count = &skipped_id_count;
+            for json_path in Self::json_infos_paths() {
+                s.spawn(async move {
+                    match this.parse_json_info_file(&json_path, skipped_id_count) {
+                        Ok(()) => {
+                            parsed_file_count.fetch_add(1, Ordering::Relaxed);
+                        }
+                        Err(error) => {
+                            error!("Error while processing {json_path:?}: {error:#?}");
+                            skipped_file_count.fetch_add(1, Ordering::Relaxed);
+                        }
+                    }
+                });
             }
-        }
+        });
 
-        let id_count = parsed_json
+        let objects_by_type = this
             .objects_by_type
-            .values()
-            .map(HashMap::len)
-            .sum::<usize>();
-        debug!("Found {id_count} ids ({skipped_count} skipped) in {parsed_file_count} info files");
+            .into_inner()
+            .expect("Mutex should be unpoisoned");
+
+        let id_count = objects_by_type.values().map(HashMap::len).sum::<usize>();
+        debug!(
+            "Found {id_count} ids ({skipped_id_count:?} skipped ids) in {parsed_file_count:?} info files ({skipped_file_count:?} skipped files)"
+        );
         assert!(
-            !parsed_json.objects_by_type.is_empty(),
+            !objects_by_type.is_empty(),
             "Some info should have been found"
         );
-        parsed_json
+        objects_by_type
     }
 
     fn parse_json_info_file(
-        &mut self,
+        &self,
         json_path: &Path,
-        skipped_count: &mut usize,
+        skipped_count: &AtomicUsize,
     ) -> Result<(), Error> {
         //trace!("Parsing {json_path:?}...");
         let file_contents = read_to_string(json_path)?;
@@ -125,20 +135,22 @@ impl ParsedJson {
                 .is_some_and(|value| value.as_bool().unwrap_or(false))
             {
                 //trace!("Skipping obsolete info in {json_path:?}");
-                *skipped_count += 1;
+                skipped_count.fetch_add(1, Ordering::Relaxed);
                 continue;
             }
             if !content.type_id.in_use() || content.fields.get("from_variant").is_some() {
-                *skipped_count += 1;
+                skipped_count.fetch_add(1, Ordering::Relaxed);
                 continue; // TODO
             }
 
             //trace!("Info abount {:?} > {:?}", &type_, &ids);
-            let by_type = self
+            let mut hash_map = self
                 .objects_by_type
-                .get_mut(&content.type_id)
-                .expect("All TypeId variants should be present");
-
+                .lock()
+                .expect("Mutex should be unpoisoned");
+            let by_type = hash_map
+                .entry(content.type_id)
+                .or_insert_with(HashMap::default);
             load_ids(content.fields, by_type, content.type_id, json_path);
         }
 
@@ -148,7 +160,7 @@ impl ParsedJson {
     /// [`TypeId`] -> [`UntypedInfoId`] -> property name -> property value
     pub(super) fn enriched() -> HashMap<TypeId, HashMap<UntypedInfoId, Enriched>> {
         let mut enriched_json_infos = HashMap::default();
-        let objects_by_type = &Self::load().objects_by_type;
+        let objects_by_type = &Self::load();
         for (&type_id, literal_entry) in objects_by_type {
             let enriched_of_type = enriched_json_infos
                 .entry(type_id)
