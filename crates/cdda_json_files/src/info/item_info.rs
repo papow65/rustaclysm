@@ -11,7 +11,8 @@ pub trait ItemWithCommonInfo {
 
 #[derive(Debug, Deserialize)]
 pub struct Ammo {
-    pub ammo_type: Option<MaybeFlatVec<UntypedInfoId>>,
+    pub ammo_type: MaybeFlatVec<UntypedInfoId>,
+
     pub casing: Option<UntypedInfoId>,
     pub critical_multiplier: Option<u8>,
 
@@ -47,8 +48,9 @@ impl ItemWithCommonInfo for Ammo {
 #[derive(Debug, Deserialize)]
 pub struct BionicItem {
     pub difficulty: u8,
-    pub installation_data: Option<Arc<str>>,
     pub is_upgrade: bool,
+
+    pub installation_data: Option<Arc<str>>,
 
     #[serde(flatten)]
     pub common: Arc<CommonItemInfo>,
@@ -62,8 +64,13 @@ impl ItemWithCommonInfo for BionicItem {
 
 #[derive(Debug, Deserialize)]
 pub struct Book {
+    pub time: Duration,
+
     #[serde(default)]
     pub intelligence: u8,
+
+    #[serde(default)]
+    pub fun: i8,
 
     pub skill: Option<Arc<str>>,
     /// Refers to skill
@@ -73,10 +80,6 @@ pub struct Book {
     pub max_level: Option<u8>,
 
     pub chapters: Option<u8>,
-    pub time: Duration,
-
-    #[serde(default)]
-    pub fun: i8,
 
     // map or list of tuples
     pub proficiencies: Option<serde_json::Value>,
@@ -120,6 +123,17 @@ impl ItemWithCommonInfo for Clothing {
 
 #[derive(Debug, Deserialize)]
 pub struct Comestible {
+    pub comestible_type: Arc<str>,
+
+    #[serde(default)]
+    pub calories: u16,
+
+    #[serde(default)]
+    pub fun: i8,
+
+    #[serde(default)]
+    pub healthy: i8,
+
     pub addiction_potential: Option<u8>,
     pub addiction_type: Option<Arc<str>>,
 
@@ -128,11 +142,7 @@ pub struct Comestible {
 
     pub brewable: Option<HashMap<String, serde_json::Value>>,
 
-    #[serde(default)]
-    pub calories: u16,
-
     pub charges: Option<u16>,
-    pub comestible_type: Arc<str>,
 
     // example: [ { "disease": "bad_food", "probability": 5 } ]
     pub contamination: Option<Arc<[HashMap<String, serde_json::Value>]>>,
@@ -146,12 +156,6 @@ pub struct Comestible {
     pub fatigue_mod: i8,
 
     pub freezing_point: Option<f32>,
-
-    #[serde(default)]
-    pub fun: i8,
-
-    #[serde(default)]
-    pub healthy: i8,
 
     pub quench: Option<i8>,
     pub parasites: Option<u8>,
@@ -220,6 +224,8 @@ impl ItemWithCommonInfo for GenericItem {
 
 #[derive(Debug, Deserialize)]
 pub struct Gun {
+    pub skill: Arc<str>,
+
     pub ammo: Option<MaybeFlatVec<UntypedInfoId>>,
     pub ammo_to_fire: Option<u8>,
     pub barrel_volume: Option<Volume>,
@@ -256,7 +262,6 @@ pub struct Gun {
     pub ammo_effects: Vec<Arc<str>>,
 
     pub sight_dispersion: Option<u16>,
-    pub skill: Arc<str>,
 
     #[serde(default)]
     pub valid_mod_locations: Arc<[serde_json::Value]>,
@@ -273,18 +278,31 @@ impl ItemWithCommonInfo for Gun {
 
 #[derive(Debug, Deserialize)]
 pub struct Gunmod {
+    pub location: Arc<str>,
+    pub mod_targets: Arc<[String]>,
+    pub install_time: Duration,
+
     pub add_mod: Option<Arc<[serde_json::Value]>>,
 
     #[serde(default)]
     pub aim_speed_modifier: i8,
 
+    #[serde(default)]
+    pub dispersion_modifier: i16,
+
+    #[serde(default)]
+    pub handling_modifier: i8,
+
+    #[serde(default)]
+    pub loudness_modifier: i8,
+
+    #[serde(default)]
+    pub range_modifier: i8,
+
     pub ammo_modifier: Option<Arc<[String]>>,
     pub consume_chance: Option<u16>,
     pub consume_divisor: Option<u16>,
     pub damage_modifier: Option<serde_json::Value>,
-
-    #[serde(default)]
-    pub dispersion_modifier: i16,
 
     pub sight_dispersion: Option<u16>,
 
@@ -294,26 +312,12 @@ pub struct Gunmod {
     pub gun_data: Option<HashMap<String, serde_json::Value>>,
 
     #[serde(default)]
-    pub handling_modifier: i8,
-
-    pub install_time: Duration,
-
-    #[serde(default)]
     pub integral_volume: Volume,
     #[serde(default)]
     pub integral_weight: Mass,
 
-    pub location: Arc<str>,
-
-    #[serde(default)]
-    pub loudness_modifier: i8,
-
-    pub mod_targets: Arc<[String]>,
     pub mode_modifier: Option<Arc<[serde_json::Value]>>,
     pub overwrite_min_cycle_recoil: Option<u16>,
-
-    #[serde(default)]
-    pub range_modifier: i8,
 
     pub range_multiplier: Option<f32>,
     pub shot_spread_multiplier_modifier: Option<f32>,
@@ -341,7 +345,7 @@ impl ItemWithCommonInfo for Gunmod {
 
 #[derive(Debug, Deserialize)]
 pub struct Magazine {
-    pub ammo_type: Option<MaybeFlatVec<UntypedInfoId>>,
+    pub ammo_type: MaybeFlatVec<UntypedInfoId>,
     pub capacity: Option<u32>,
     pub default_ammo: Option<UntypedInfoId>,
     pub linkage: Option<UntypedInfoId>,
@@ -359,9 +363,10 @@ impl ItemWithCommonInfo for Magazine {
 
 #[derive(Debug, Deserialize)]
 pub struct PetArmor {
+    pub pet_bodytype: Arc<str>,
     pub max_pet_vol: Volume,
     pub min_pet_vol: Volume,
-    pub pet_bodytype: Arc<str>,
+
     pub environmental_protection: Option<u8>,
 
     #[serde(flatten)]
@@ -465,6 +470,10 @@ impl ItemWithCommonInfo for Wheel {
 #[derive(Debug, Deserialize)]
 pub struct CommonItemInfo {
     pub id: InfoId<Self>,
+    pub name: ItemName,
+    pub symbol: char,
+    pub description: Description,
+
     pub category: Option<Arc<str>>,
 
     // example: { "price": 0.7, "damage": { "damage_type": "bullet", "amount": 0.9 }, "dispersion": 1.1 }
@@ -480,19 +489,21 @@ pub struct CommonItemInfo {
     pub recoil: Option<u16>,
     pub loudness: Option<u16>,
 
-    // The fields below are listed in load_basic_info as item_factory.cpp:3932
+    pub volume: Option<Volume>,
+    pub integral_volume: Option<serde_json::Value>,
+
     #[serde(rename = "weight")]
     pub mass: Option<Mass>,
 
     #[serde(rename = "integral_weight")]
     pub integral_mass: Option<serde_json::Value>,
 
-    pub volume: Option<Volume>,
     pub longest_side: Option<Arc<str>>,
+    pub integral_longest_side: Option<serde_json::Value>,
+
     pub price: Option<Price>,
     pub price_postapoc: Option<Price>,
-    pub integral_volume: Option<serde_json::Value>,
-    pub integral_longest_side: Option<serde_json::Value>,
+
     pub bashing: Option<u16>,
     pub cutting: Option<u16>,
     pub to_hit: Option<ToHit>,
@@ -509,9 +520,6 @@ pub struct CommonItemInfo {
     pub weapon_category: Option<serde_json::Value>,
     pub degradation_multiplier: Option<serde_json::Value>,
 
-    pub name: ItemName,
-    pub description: Option<Description>,
-    pub symbol: Option<char>,
     pub color: Option<Arc<str>>,
     pub material: Option<MaybeFlatVec<Material>>,
     pub material_thickness: Option<f32>,

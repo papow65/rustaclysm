@@ -5,6 +5,7 @@
   "name": {
     "str": "1,300 HP electric train engine"
   },
+  "categories": [],
   "description": "An enormous and heavy electric traction motor, powerful enough to pull a train.",
   "item": "motor_train1300",
   "durability": 500,

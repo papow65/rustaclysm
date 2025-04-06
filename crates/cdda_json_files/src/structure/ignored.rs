@@ -28,7 +28,7 @@ impl<'de, T: 'static> Deserialize<'de> for Ignored<T> {
             .filter(|(key, _)| {
                 !key.starts_with("//")
                     && (TypeId::of::<T>() != TypeId::of::<Recipe>()
-                        || !["result", "category"].contains(&&***key))
+                        || !["result", "category", "description"].contains(&&***key))
             })
             .map(|(key, value)| format!("{key} ({})", variant_name(value)))
             .filter(|field| {

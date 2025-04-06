@@ -1,6 +1,7 @@
 use crate::info::practice::ActivityLevel;
 use crate::{
-    CommonItemInfo, Ignored, InfoId, Quality, RequiredLinkedLater, Requirement, UntypedInfoId,
+    CommonItemInfo, Flags, Ignored, InfoId, Quality, RequiredLinkedLater, Requirement,
+    UntypedInfoId,
 };
 use bevy_log::error;
 use bevy_platform_support::collections::HashMap;
@@ -16,6 +17,8 @@ pub struct Recipe {
 
     #[serde(flatten)]
     pub result: RecipeResult,
+
+    pub subcategory: Arc<str>,
 
     pub skill_used: Option<Arc<str>>,
 
@@ -56,15 +59,13 @@ pub struct Recipe {
     pub container: Option<Arc<str>>,
     pub decomp_learn: Option<u8>,
     pub delete_flags: Option<Vec<serde_json::Value>>,
-    pub description: Option<Arc<str>>,
     pub extend: Option<serde_json::Value>,
-    pub flags: Option<Vec<serde_json::Value>>,
+    pub flags: Flags,
     pub never_learn: Option<bool>,
     pub proficiencies: Option<Vec<serde_json::Value>>,
     pub result_mult: Option<u8>,
     pub reversible: Option<serde_json::Value>,
     pub skills_required: Option<Vec<serde_json::Value>>,
-    pub subcategory: Option<Arc<str>>,
     pub tools: Option<Vec<serde_json::Value>>,
 
     #[serde(flatten)]
@@ -86,10 +87,13 @@ impl Hash for Recipe {
 }
 
 #[derive(Debug, Deserialize)]
-#[serde(tag = "category", content = "result")]
+#[serde(tag = "category")]
 pub enum RecipeResult {
     #[serde(alias = "CC_BUILDING")]
-    Camp(UntypedInfoId),
+    Camp {
+        result: UntypedInfoId,
+        description: Arc<str>,
+    },
 
     #[serde(alias = "CC_*")]
     #[serde(alias = "CC_AMMO")]
@@ -101,16 +105,19 @@ pub enum RecipeResult {
     #[serde(alias = "CC_FOOD")]
     #[serde(alias = "CC_OTHER")]
     #[serde(alias = "CC_WEAPON")]
-    Item(RequiredLinkedLater<CommonItemInfo>),
+    Item {
+        #[serde(rename = "result")]
+        item_info: RequiredLinkedLater<CommonItemInfo>,
+    },
 
     #[serde(untagged)]
-    Unknown(UntypedInfoId),
+    Unknown { result: UntypedInfoId },
 }
 
 impl RecipeResult {
     pub fn item_info(&self, source: impl AsRef<str>) -> Option<Arc<CommonItemInfo>> {
-        if let Self::Item(info) = self {
-            info.get_option(source)
+        if let Self::Item { item_info } = self {
+            item_info.get_option(source)
         } else {
             None
         }
@@ -356,7 +363,7 @@ mod recipe_tests {
         let recipe = serde_json::from_str::<Recipe>(json);
         let recipe = recipe.as_ref();
         assert!(
-            recipe.is_ok_and(|recipe| matches!(recipe.result, RecipeResult::Item(_))),
+            recipe.is_ok_and(|recipe| matches!(recipe.result, RecipeResult::Item { .. })),
             "{:?}",
             recipe.map(|recipe| &recipe.result)
         );
@@ -368,7 +375,7 @@ mod recipe_tests {
         let recipe = serde_json::from_str::<Recipe>(json);
         let recipe = recipe.as_ref();
         assert!(
-            recipe.is_ok_and(|recipe| matches!(recipe.result, RecipeResult::Camp(_))),
+            recipe.is_ok_and(|recipe| matches!(recipe.result, RecipeResult::Camp { .. })),
             "{:?}",
             recipe.map(|recipe| &recipe.result)
         );

@@ -242,7 +242,7 @@ pub(in super::super) fn update_corpses(
                 .get(&info_id)
                 .unwrap_or_else(|e| panic!("{info_id:?} should be found: {e:#?}"));
             let object_name = ObjectName::new(character_info.name.clone(), Faction::Zombie.color());
-            let health = Health(Limited::full(character_info.hp.unwrap_or(60) as u16));
+            let health = Health(Limited::full(character_info.hp as u16));
 
             commands
                 .entity(corpse)

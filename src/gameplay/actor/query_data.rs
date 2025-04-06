@@ -10,7 +10,6 @@ use crate::gameplay::{
 use bevy::ecs::query::QueryData;
 use bevy::prelude::{
     ChildOf, Commands, Entity, Event, EventWriter, NextState, Query, Transform, Visibility, error,
-    warn,
 };
 use cdda_json_files::{CddaItem, Description};
 use hud::text_color_expect_full;
@@ -699,16 +698,13 @@ impl ActorItem<'_> {
         message_writer: &mut MessageWriter,
         item: &ItemItem,
     ) -> ActorImpact {
-        if let Some(description) = &item.common_info.description {
-            message_writer
-                .str(&**match description {
-                    Description::Simple(simple) => simple,
-                    Description::Complex(complex) => complex.get("str").expect("'str' key"),
-                })
-                .send_info();
-        } else {
-            warn!("No description");
-        }
+        message_writer
+            .str(&**match &item.common_info.description {
+                Description::Simple(simple) => simple,
+                Description::Complex(complex) => complex.get("str").expect("'str' key"),
+            })
+            .send_info();
+
         self.no_impact()
     }
 

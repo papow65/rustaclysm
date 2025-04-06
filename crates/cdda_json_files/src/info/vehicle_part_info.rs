@@ -8,6 +8,9 @@ pub struct VehiclePartInfo {
     pub id: InfoId<Self>,
     pub name: Option<ItemName>,
     pub item: RequiredLinkedLater<CommonItemInfo>,
+    pub categories: Vec<serde_json::Value>,
+    pub durability: u16,
+
     pub looks_like: Option<UntypedInfoId>,
     pub flags: Flags,
 
@@ -17,7 +20,6 @@ pub struct VehiclePartInfo {
     pub breaks_into: Option<serde_json::Value>,
     pub broken_color: Option<Arc<str>>,
     pub broken_symbol: Option<Arc<str>>,
-    pub categories: Option<Vec<serde_json::Value>>,
     pub color: Option<Arc<str>>,
     pub comfort: Option<u8>,
     pub contact_area: Option<u16>,
@@ -26,7 +28,6 @@ pub struct VehiclePartInfo {
     pub damaged_power_factor: Option<f32>,
     pub delete: Option<serde_json::Value>,
     pub description: Option<Arc<str>>,
-    pub durability: Option<u16>,
     pub emissions: Option<Vec<serde_json::Value>>,
     pub energy_consumption: Option<Arc<str>>,
     pub epower: Option<i32>,

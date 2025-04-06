@@ -7,14 +7,16 @@ use units::{Mass, Volume};
 pub struct CharacterInfo {
     pub id: InfoId<Self>,
     pub name: ItemName,
+    pub symbol: char,
+    pub hp: u32,
     pub default_faction: Arc<str>,
+    pub description: Arc<str>,
+
     pub looks_like: Option<UntypedInfoId>,
     pub volume: Option<Volume>,
 
     #[serde(rename = "weight")]
     pub mass: Option<Mass>,
-
-    pub hp: Option<u32>,
 
     #[serde(default)]
     pub speed: u64,
@@ -47,7 +49,7 @@ pub struct CharacterInfo {
     pub attack_cost: Option<u16>,
 
     pub attack_effs: Option<Vec<serde_json::Value>>,
-    pub baby_flags: Option<Vec<serde_json::Value>>,
+    pub baby_flags: Flags,
     pub biosignature: Option<serde_json::Value>,
     pub bleed_rate: Option<u8>,
     pub bodytype: Option<Arc<str>>,
@@ -58,7 +60,6 @@ pub struct CharacterInfo {
     pub death_drops: Option<serde_json::Value>,
     pub death_function: Option<serde_json::Value>,
     pub delete: Option<serde_json::Value>,
-    pub description: Option<Arc<str>>,
     pub diff: Option<u8>,
     pub dissect: Option<Arc<str>>,
     pub dodge: Option<u8>,
@@ -98,7 +99,6 @@ pub struct CharacterInfo {
     pub species: Option<Vec<serde_json::Value>>,
     pub split_move_cost: Option<u8>,
     pub starting_ammo: Option<serde_json::Value>,
-    pub symbol: Option<Arc<str>>,
     pub tracking_distance: Option<u8>,
     pub upgrades: Option<serde_json::Value>,
     pub vision_day: Option<u8>,

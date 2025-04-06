@@ -16,9 +16,9 @@ use bevy::render::camera::{PerspectiveProjection, Projection};
 use bevy::render::view::RenderLayers;
 use cdda_json_files::{
     BashItem, BashItems, CddaAmount, CddaItem, CddaItemName, CddaVehicle, CddaVehiclePart,
-    Character, CharacterInfo, CommonItemInfo, Field, Flags, FlatVec, FurnitureInfo, Ignored,
-    InfoId, ItemGroup, ItemName, MoveCostMod, PocketType, Recipe, Repetition, RequiredLinkedLater,
-    SpawnItem, TerrainInfo, UntypedInfoId,
+    Character, CharacterInfo, CommonItemInfo, Description, Field, Flags, FlatVec, FurnitureInfo,
+    Ignored, InfoId, ItemGroup, ItemName, MoveCostMod, PocketType, Recipe, Repetition,
+    RequiredLinkedLater, SpawnItem, TerrainInfo, UntypedInfoId,
 };
 use either::Either;
 use hud::{BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR};
@@ -110,7 +110,7 @@ impl<'w> TileSpawner<'w, '_> {
             Shared::new(character_info.clone()),
             Life,
             Obstacle,
-            Health(Limited::full(character_info.hp.unwrap_or(60) as u16)),
+            Health(Limited::full(character_info.hp as u16)),
             Stamina::Unlimited,
             WalkingMode::Perpetual,
             faction.clone(),
@@ -325,11 +325,10 @@ impl<'w> TileSpawner<'w, '_> {
         }
 
         match furniture_info.move_cost_mod {
-            None => {}
-            Some(MoveCostMod::Impossible(_)) => {
+            MoveCostMod::Impossible(_) => {
                 entity.insert(Obstacle);
             }
-            Some(MoveCostMod::Slower(increase)) => {
+            MoveCostMod::Slower(increase) => {
                 entity.insert(Hurdle(increase));
             }
         }
@@ -747,8 +746,8 @@ impl<'w> TileSpawner<'w, '_> {
             weapon_category: None,
             degradation_multiplier: None,
             name: ItemName::from(CddaItemName::Simple(String::from("Craft").into())),
-            description: None,
-            symbol: None,
+            description: Description::Simple(String::new().into()),
+            symbol: 'C',
             color: None,
             material: None,
             material_thickness: None,

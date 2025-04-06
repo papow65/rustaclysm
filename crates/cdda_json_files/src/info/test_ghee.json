@@ -2,6 +2,8 @@
     "type": "COMESTIBLE",
     "id": "ghee",
     "name": { "str_sp": "ghee" },
+    "color": "yellow",
+    "symbol": "G",
     "copy-from": "butter",
     "weight": "13500 mg",
     "spoils_in": "90 days",

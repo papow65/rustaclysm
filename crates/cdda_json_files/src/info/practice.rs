@@ -1,5 +1,5 @@
 use crate::{
-    Alternative, AutoLearn, BookLearn, CommonItemInfo, Ignored, InfoId, RequiredQualities,
+    Alternative, AutoLearn, BookLearn, CommonItemInfo, Flags, Ignored, InfoId, RequiredQualities,
     UntypedInfoId, Using,
 };
 use serde::Deserialize;
@@ -9,14 +9,14 @@ use units::Duration;
 #[derive(Debug, Deserialize)]
 pub struct Practice {
     pub id: InfoId<Self>,
-
-    pub activity_level: ActivityLevel,
+    pub name: Arc<str>,
     pub category: Arc<str>,
     pub subcategory: Arc<str>,
-    pub name: Arc<str>,
-    pub description: Arc<str>,
-    pub skill_used: Arc<str>,
+    pub activity_level: ActivityLevel,
     pub time: Duration,
+    pub skill_used: Arc<str>,
+    pub practice_data: PracticeData,
+    pub description: Arc<str>,
 
     #[serde(default)]
     pub tools: Vec<serde_json::Value>,
@@ -31,7 +31,7 @@ pub struct Practice {
     pub book_learn: BookLearn,
 
     #[serde(default)]
-    pub flags: Vec<Arc<str>>,
+    pub flags: Flags,
 
     #[serde(default)]
     pub skills_required: Vec<(Arc<str>, u8)>,
@@ -45,8 +45,6 @@ pub struct Practice {
 
     #[serde(default)]
     pub qualities: RequiredQualities,
-
-    pub practice_data: PracticeData,
 
     #[serde(default)]
     pub proficiencies: Vec<RequiredProficiency>,

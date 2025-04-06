@@ -87,7 +87,7 @@ impl InfoMap<CharacterInfo> {
             looks_like: Some(UntypedInfoId::new("overlay_male_mutation_SKIN_TAN")),
             volume: Some(Volume::try_from("80 l").expect("Well formatted")),
             mass: Some(Mass::try_from("80 kg").expect("Well formatted")),
-            hp: Some(100),
+            hp: 100,
             speed: 100,
             melee_dice: 2,
             melee_dice_sides: 4,
@@ -108,7 +108,7 @@ impl InfoMap<CharacterInfo> {
             armor_stab: None,
             attack_cost: None,
             attack_effs: None,
-            baby_flags: None,
+            baby_flags: None.into(),
             biosignature: None,
             bleed_rate: None,
             bodytype: None,
@@ -119,7 +119,7 @@ impl InfoMap<CharacterInfo> {
             death_drops: None,
             death_function: None,
             delete: None,
-            description: None,
+            description: Arc::from(String::new()),
             diff: None,
             dissect: None,
             dodge: None,
@@ -159,7 +159,7 @@ impl InfoMap<CharacterInfo> {
             species: None,
             split_move_cost: None,
             starting_ammo: None,
-            symbol: None,
+            symbol: 'H',
             tracking_distance: None,
             upgrades: None,
             vision_day: None,
@@ -249,8 +249,8 @@ impl InfoMap<Recipe> {
                 using.requirement.finalize(requirements, "recipe");
             }
 
-            if let RecipeResult::Item(item_info_link) = &recipe.result {
-                item_info_link.finalize(common_item_infos, "recipe");
+            if let RecipeResult::Item { item_info } = &recipe.result {
+                item_info.finalize(common_item_infos, "recipe");
             }
         }
     }
@@ -364,7 +364,7 @@ impl InfoMap<VehiclePartInfo> {
                 breaks_into: None,
                 broken_color: None,
                 broken_symbol: None,
-                categories: None,
+                categories: Vec::new(),
                 color: None,
                 comfort: None,
                 contact_area: None,
@@ -373,7 +373,7 @@ impl InfoMap<VehiclePartInfo> {
                 damaged_power_factor: None,
                 delete: None,
                 description: None,
-                durability: None,
+                durability: 0,
                 emissions: None,
                 energy_consumption: None,
                 epower: None,

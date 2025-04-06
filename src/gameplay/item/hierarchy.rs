@@ -164,9 +164,10 @@ impl<'w> ItemHierarchy<'w, '_> {
                     .inspect_err(|error| error!("Magazine not found: {error:?}"))
                     .ok()
                     .filter(|magazine| {
-                        magazine.ammo_type.as_ref().is_some_and(|ammo_type| {
-                            ammo_type.0.contains(&UntypedInfoId::new("battery"))
-                        })
+                        magazine
+                            .ammo_type
+                            .0
+                            .contains(&UntypedInfoId::new("battery"))
                     })
                     .map(|magazine| {
                         #[expect(clippy::iter_with_drain)] // don't drop 'magazine_output'

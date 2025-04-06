@@ -10,7 +10,10 @@ use std::sync::Arc;
 pub struct FurnitureInfo {
     pub id: InfoId<Self>,
     pub name: ItemName,
-    pub move_cost_mod: Option<MoveCostMod>,
+    pub move_cost_mod: MoveCostMod,
+    pub description: Arc<str>,
+    pub required_str: i8,
+
     pub looks_like: Option<UntypedInfoId>,
     pub flags: Flags,
     pub bash: Option<Bash>,
@@ -25,7 +28,6 @@ pub struct FurnitureInfo {
     pub coverage: Option<u8>,
     pub deconstruct: Option<serde_json::Value>,
     pub deployed_item: Option<Arc<str>>,
-    pub description: Option<Arc<str>>,
     pub emissions: Option<Vec<serde_json::Value>>,
     pub examine_action: Option<serde_json::Value>,
     pub floor_bedding_warmth: Option<i16>,
@@ -40,7 +42,6 @@ pub struct FurnitureInfo {
     pub oxytorch: Option<serde_json::Value>,
     pub plant_data: Option<serde_json::Value>,
     pub prying: Option<serde_json::Value>,
-    pub required_str: Option<i8>,
     pub rotates_to: Option<Arc<str>>,
     pub shoot: Option<serde_json::Value>,
     pub surgery_skill_multiplier: Option<f32>,
