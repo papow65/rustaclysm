@@ -9,10 +9,10 @@ pub struct Requirement {
     pub qualities: RequiredQualities,
 
     #[serde(default)]
-    pub components: Vec<Vec<Alternative>>,
+    pub components: Vec<Vec<Alternative<u32>>>,
 
     #[serde(default)]
-    pub tools: Vec<serde_json::Value>,
+    pub tools: Vec<Vec<Alternative<i32>>>,
 
     #[serde(flatten)]
     _ignored: Ignored<Self>,

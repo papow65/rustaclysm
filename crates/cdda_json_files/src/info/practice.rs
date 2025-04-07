@@ -22,7 +22,7 @@ pub struct Practice {
     pub tools: Vec<serde_json::Value>,
 
     #[serde(default)]
-    pub components: Vec<Vec<Alternative>>,
+    pub components: Vec<Vec<Alternative<u32>>>,
 
     #[serde(default)]
     pub autolearn: AutoLearn,

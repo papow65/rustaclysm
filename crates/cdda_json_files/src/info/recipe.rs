@@ -38,7 +38,7 @@ pub struct Recipe {
     pub qualities: RequiredQualities,
 
     #[serde(default)]
-    pub components: Vec<Vec<Alternative>>,
+    pub components: Vec<Vec<Alternative<u32>>>,
 
     #[serde(default)]
     pub using: Vec<Using>,
@@ -200,21 +200,21 @@ pub struct RequiredQuality {
 }
 
 #[derive(Debug, Deserialize)]
-#[serde(from = "CddaAlternative")]
-pub enum Alternative {
+#[serde(from = "CddaAlternative<I>")]
+pub enum Alternative<I> {
     Item {
         item: RequiredLinkedLater<CommonItemInfo>,
-        required: u32,
+        required: I,
         recoverable: bool,
     },
     Requirement {
         requirement: RequiredLinkedLater<Requirement>,
-        factor: u32,
+        factor: I,
     },
 }
 
-impl From<CddaAlternative> for Alternative {
-    fn from(source: CddaAlternative) -> Self {
+impl<I> From<CddaAlternative<I>> for Alternative<I> {
+    fn from(source: CddaAlternative<I>) -> Self {
         match source {
             CddaAlternative::Item(item, required) => Self::Item {
                 item: RequiredLinkedLater::from(item),
@@ -247,9 +247,9 @@ impl From<CddaAlternative> for Alternative {
 
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
-pub enum CddaAlternative {
-    Item(InfoId<CommonItemInfo>, u32),
-    Dynamic(UntypedInfoId, u32, Arc<str>),
+pub enum CddaAlternative<I> {
+    Item(InfoId<CommonItemInfo>, I),
+    Dynamic(UntypedInfoId, I, Arc<str>),
 }
 
 #[derive(Debug, Deserialize)]
@@ -264,7 +264,7 @@ impl Using {
     pub fn to_components(
         &self,
         called_from: impl AsRef<str> + Clone,
-    ) -> Option<Vec<Vec<Alternative>>> {
+    ) -> Option<Vec<Vec<Alternative<u32>>>> {
         let requirement = self.requirement.get_option(called_from.clone())?;
 
         Some(if self.kind == UsingKind::Components {

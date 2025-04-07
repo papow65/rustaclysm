@@ -542,7 +542,7 @@ fn recipe_qualities(
 }
 
 fn recipe_components(
-    required: &[Vec<Alternative>],
+    required: &[Vec<Alternative<u32>>],
     using: &[Using],
     present: &[NearbyItem],
 ) -> Vec<ComponentSituation> {
@@ -594,7 +594,7 @@ fn recipe_components(
         .collect::<Vec<_>>()
 }
 
-fn expand_items(alternative: &Alternative) -> Result<Vec<(Arc<CommonItemInfo>, u32)>, Error> {
+fn expand_items(alternative: &Alternative<u32>) -> Result<Vec<(Arc<CommonItemInfo>, u32)>, Error> {
     match alternative {
         Alternative::Item { item, required, .. } => Ok(vec![(item.get()?, *required)]),
         Alternative::Requirement {
