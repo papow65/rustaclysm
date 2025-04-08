@@ -1,7 +1,7 @@
 # Rustaclysm
 
 [![GitHub issues](https://img.shields.io/github/issues/papow65/rustaclysm)](https://github.com/papow65/rustaclysm/issues)
-[![Code license](https://img.shields.io/badge/license-AGPL-blue.svg)](license.md)
+[![Code license](https://img.shields.io/badge/license-AGPL(code)-blue.svg)](license.md)
 [![Rust version](https://img.shields.io/badge/Rust-latest-orange.svg)](https://www.rust-lang.org/)
 [![Bevy engine version](https://img.shields.io/badge/Bevy-0.16-purple.svg)](https://bevyengine.org/)
 
@@ -18,6 +18,8 @@ Whether you're a seasoned Rust developer, a Bevy enthusiast, a C:DDA veteran, or
 *   **Documentation:** Helping us create clear and comprehensive documentation for the project. 💖
 *   **Advice:** Suggesting new features or improvements. 💡
 *   **UI/UX:** Creating a user-friendly and intuitive interface. 👌
+
+See [contributing.md](contributing.md) for more details
 
 ## Goals
 
@@ -85,3 +87,7 @@ See [license.md](license.md)
 [<img src="screenshots/field.png" alt="Field" width="600"/>](screenshots/field.png)
 
 [<img src="screenshots/tower.png" alt="Tower" width="600"/>](screenshots/tower.png)
+
+## Code of conduct
+
+Please follow the [code of conduct](code_of_conduct.md)
