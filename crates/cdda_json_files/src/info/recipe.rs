@@ -66,7 +66,9 @@ pub struct Recipe {
     pub result_mult: Option<u8>,
     pub reversible: Option<serde_json::Value>,
     pub skills_required: Option<Vec<serde_json::Value>>,
-    pub tools: Option<Vec<serde_json::Value>>,
+
+    #[serde(default)]
+    pub tools: Vec<Vec<Alternative<i32>>>,
 
     #[serde(flatten)]
     _ignored: Ignored<Self>,
@@ -201,7 +203,10 @@ pub struct RequiredQuality {
 
 #[derive(Debug, Deserialize)]
 #[serde(from = "CddaAlternative<I>")]
-pub enum Alternative<I> {
+pub enum Alternative<I>
+where
+    I: From<u8>,
+{
     Item {
         item: RequiredLinkedLater<CommonItemInfo>,
         required: I,
@@ -213,10 +218,18 @@ pub enum Alternative<I> {
     },
 }
 
-impl<I> From<CddaAlternative<I>> for Alternative<I> {
+impl<I> From<CddaAlternative<I>> for Alternative<I>
+where
+    I: From<u8>,
+{
     fn from(source: CddaAlternative<I>) -> Self {
         match source {
-            CddaAlternative::Item(item, required) => Self::Item {
+            CddaAlternative::Item(item) => Self::Item {
+                item: RequiredLinkedLater::from(item),
+                required: I::from(1),
+                recoverable: true,
+            },
+            CddaAlternative::ItemAmount(item, required) => Self::Item {
                 item: RequiredLinkedLater::from(item),
                 required,
                 recoverable: true,
@@ -248,7 +261,8 @@ impl<I> From<CddaAlternative<I>> for Alternative<I> {
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
 pub enum CddaAlternative<I> {
-    Item(InfoId<CommonItemInfo>, I),
+    Item(InfoId<CommonItemInfo>),
+    ItemAmount(InfoId<CommonItemInfo>, I),
     Dynamic(UntypedInfoId, I, Arc<str>),
 }
 
