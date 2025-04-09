@@ -1,6 +1,6 @@
 use crate::gameplay::HorizontalDirection;
 use crate::gameplay::screens::inventory::components::InventoryItemRow;
-use crate::gameplay::screens::inventory::section::InventorySection;
+use crate::gameplay::screens::inventory::{section::InventorySection, systems::InventorySystem};
 use bevy::ecs::entity::hash_map::EntityHashMap;
 use bevy::prelude::{BackgroundColor, Button, Children, Entity, Query, Resource, TextColor, With};
 use hud::{
@@ -18,9 +18,28 @@ pub(super) struct InventoryScreen {
     pub(super) drop_direction: HorizontalDirection,
     pub(super) section_by_item: EntityHashMap<InventorySection>,
     pub(super) last_time: Timestamp,
+    pub(super) inventory_system: InventorySystem,
 }
 
 impl InventoryScreen {
+    pub(crate) fn new(
+        panel: Entity,
+        selection_list: SelectionList,
+        drop_direction: HorizontalDirection,
+        section_by_item: EntityHashMap<InventorySection>,
+        last_time: Timestamp,
+        inventory_system: InventorySystem,
+    ) -> Self {
+        Self {
+            panel,
+            selection_list,
+            drop_direction,
+            section_by_item,
+            last_time,
+            inventory_system,
+        }
+    }
+
     pub(super) fn adjust_selection(
         &mut self,
         item_rows: &mut Query<(&InventoryItemRow, &mut BackgroundColor, &Children)>,

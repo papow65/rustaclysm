@@ -14,13 +14,16 @@ impl Plugin for InventoryScreenPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             OnEnter(GameplayScreenState::Inventory),
-            (spawn_inventory, create_inventory_key_bindings),
+            (
+                create_inventory_system.pipe(spawn_inventory),
+                create_inventory_key_bindings,
+            ),
         );
 
         app.add_systems(
             Update,
             (
-                create_inventory_system.pipe(clear_inventory.pipe(refresh_inventory)),
+                clear_inventory.pipe(refresh_inventory),
                 manage_button_input::<In<InventoryButton>>,
             )
                 .run_if(in_state(GameplayScreenState::Inventory)),

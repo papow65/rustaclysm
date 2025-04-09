@@ -48,14 +48,10 @@ pub(super) fn create_start_craft_system(world: &mut World) -> StartCraftSystem {
     StartCraftSystem(world.register_system_cached(start_craft))
 }
 
-pub(super) fn create_start_craft_system_with_step(
-    In(step): In<SelectionListStep>,
-    world: &mut World,
-) -> (SelectionListStep, StartCraftSystem) {
-    (step, create_start_craft_system(world))
-}
-
-pub(super) fn spawn_crafting_screen(mut commands: Commands) {
+pub(super) fn spawn_crafting_screen(
+    In(start_craft_system): In<StartCraftSystem>,
+    mut commands: Commands,
+) {
     let recipe_list = commands
         .spawn((
             Node {
@@ -119,12 +115,13 @@ pub(super) fn spawn_crafting_screen(mut commands: Commands) {
                 });
         });
 
-    commands.insert_resource(CraftingScreen {
+    commands.insert_resource(CraftingScreen::new(
         recipe_list,
-        selection_list: SelectionList::default(),
+        SelectionList::default(),
         recipe_details,
-        last_time: Timestamp::ZERO,
-    });
+        Timestamp::ZERO,
+        start_craft_system,
+    ));
 }
 
 #[expect(clippy::needless_pass_by_value)]
@@ -137,12 +134,7 @@ pub(super) fn create_crafting_key_bindings(
 
     held_bindings.spawn(world, GameplayScreenState::Crafting, |bindings| {
         for &step in SelectionListStep::VARIANTS {
-            bindings.add(
-                step,
-                (move || step)
-                    .pipe(create_start_craft_system_with_step)
-                    .pipe(move_crafting_selection),
-            );
+            bindings.add(step, (move || step).pipe(move_crafting_selection));
         }
     });
 
@@ -181,7 +173,7 @@ fn exit_crafting(mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>
 
 #[expect(clippy::needless_pass_by_value)]
 pub(super) fn move_crafting_selection(
-    In((step, start_craft_system)): In<(SelectionListStep, StartCraftSystem)>,
+    In(step): In<SelectionListStep>,
     mut commands: Commands,
     fonts: Res<Fonts>,
     mut crafting_screen: ResMut<CraftingScreen>,
@@ -199,7 +191,6 @@ pub(super) fn move_crafting_selection(
         &recipes.transmute_lens().query(),
         &mut scroll_lists,
         &scrolling_parents,
-        &start_craft_system,
     );
 
     log_if_slow("move_crafting_selection", start);
@@ -207,14 +198,13 @@ pub(super) fn move_crafting_selection(
 
 #[expect(clippy::needless_pass_by_value)]
 pub(super) fn clear_crafting_screen(
-    In(start_craft_system): In<StartCraftSystem>,
     clock: Clock,
     mut crafting_screen: ResMut<CraftingScreen>,
     children: Query<&Children>,
     mut styles: Query<&mut Node>,
-) -> Option<StartCraftSystem> {
+) -> bool {
     if crafting_screen.last_time == clock.time() {
-        return None;
+        return false;
     }
     crafting_screen.last_time = clock.time();
     crafting_screen.selection_list.clear();
@@ -227,12 +217,12 @@ pub(super) fn clear_crafting_screen(
         }
     }
 
-    Some(start_craft_system)
+    true
 }
 
 #[expect(clippy::needless_pass_by_value)]
 pub(super) fn refresh_crafting_screen(
-    In(start_craft_system): In<Option<StartCraftSystem>>,
+    In(run): In<bool>,
     mut commands: Commands,
     location: Res<Location>,
     fonts: Res<Fonts>,
@@ -242,9 +232,9 @@ pub(super) fn refresh_crafting_screen(
     player: Single<(&Pos, &BodyContainers), With<Player>>,
     items_and_furniture: Query<(Nearby, &LastSeen, Option<&ChildOf>)>,
 ) {
-    let Some(start_craft_system) = start_craft_system else {
+    if !run {
         return;
-    };
+    }
 
     let (&player_pos, body_containers) = *player;
 
@@ -316,13 +306,7 @@ pub(super) fn refresh_crafting_screen(
         });
 
     if let Some(first_recipe) = first_recipe {
-        show_recipe(
-            &mut commands,
-            &fonts,
-            &crafting_screen,
-            &first_recipe,
-            &start_craft_system,
-        );
+        show_recipe(&mut commands, &fonts, &crafting_screen, &first_recipe);
     } else {
         commands
             .entity(crafting_screen.recipe_details)
@@ -634,7 +618,6 @@ fn adapt_to_selected(
     recipes: &Query<(&Transform, &ComputedNode, &RecipeSituation)>,
     scroll_lists: &mut Query<(&mut ScrollList, &mut Node, &ComputedNode, &ChildOf)>,
     scrolling_parents: &Query<(&Node, &ComputedNode), Without<ScrollList>>,
-    start_craft_system: &StartCraftSystem,
 ) {
     if let Some(selected) = crafting_screen.selection_list.selected {
         let (recipe_transform, recipe_computed_node, recipe_sitation) = recipes
@@ -657,13 +640,7 @@ fn adapt_to_selected(
             );
         }
 
-        show_recipe(
-            commands,
-            fonts,
-            crafting_screen,
-            recipe_sitation,
-            start_craft_system,
-        );
+        show_recipe(commands, fonts, crafting_screen, recipe_sitation);
     }
 }
 
@@ -672,7 +649,6 @@ fn show_recipe(
     fonts: &Fonts,
     crafting_screen: &CraftingScreen,
     recipe_sitation: &RecipeSituation,
-    start_craft_system: &StartCraftSystem,
 ) {
     commands
         .entity(crafting_screen.recipe_details)
@@ -682,7 +658,7 @@ fn show_recipe(
                 "Craft",
                 recipe_sitation.color(true),
                 fonts.regular(),
-                start_craft_system.0,
+                crafting_screen.start_craft_system().0,
             )
             .spawn(parent, ());
             parent

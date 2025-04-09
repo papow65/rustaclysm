@@ -39,7 +39,7 @@ pub(super) fn create_inventory_system(world: &mut World) -> InventorySystem {
     InventorySystem(world.register_system_cached(handle_inventory_action))
 }
 
-pub(super) fn spawn_inventory(mut commands: Commands) {
+pub(super) fn spawn_inventory(In(inventory_system): In<InventorySystem>, mut commands: Commands) {
     let panel = commands
         .spawn((
             Node {
@@ -81,13 +81,14 @@ pub(super) fn spawn_inventory(mut commands: Commands) {
                 .add_child(panel);
         });
 
-    commands.insert_resource(InventoryScreen {
+    commands.insert_resource(InventoryScreen::new(
         panel,
-        selection_list: SelectionList::default(),
-        drop_direction: HorizontalDirection::Here,
-        section_by_item: EntityHashMap::default(),
-        last_time: Timestamp::ZERO,
-    });
+        SelectionList::default(),
+        HorizontalDirection::Here,
+        EntityHashMap::default(),
+        Timestamp::ZERO,
+        inventory_system,
+    ));
 }
 
 #[expect(clippy::needless_pass_by_value)]
@@ -184,14 +185,13 @@ fn exit_inventory(mut next_gameplay_state: ResMut<NextState<GameplayScreenState>
 
 #[expect(clippy::needless_pass_by_value)]
 pub(super) fn clear_inventory(
-    In(inventory_system): In<InventorySystem>,
     clock: Clock,
     mut inventory: ResMut<InventoryScreen>,
     children: Query<&Children>,
     mut styles: Query<&mut Node>,
-) -> Option<InventorySystem> {
+) -> bool {
     if inventory.last_time == clock.time() {
-        return None;
+        return false;
     }
     inventory.last_time = clock.time();
 
@@ -203,12 +203,12 @@ pub(super) fn clear_inventory(
         }
     }
 
-    Some(inventory_system)
+    true
 }
 
 #[expect(clippy::needless_pass_by_value)]
 pub(super) fn refresh_inventory(
-    In(inventory_system): In<Option<InventorySystem>>,
+    In(run): In<bool>,
     mut commands: Commands,
     fonts: Res<Fonts>,
     envir: Envir,
@@ -218,9 +218,9 @@ pub(super) fn refresh_inventory(
     player: Single<(&Pos, &BodyContainers), With<Player>>,
     previous_item_rows: Query<&InventoryItemRow>,
 ) {
-    let Some(inventory_system) = inventory_system else {
+    if !run {
         return;
-    };
+    }
 
     let inventory = &mut *inventory;
     let previous_selected_item = inventory
@@ -261,7 +261,7 @@ pub(super) fn refresh_inventory(
             let mut row_spawner = RowSpawner::new(
                 &fonts,
                 &debug_text_shown,
-                &inventory_system,
+                &inventory.inventory_system,
                 &mut inventory.selection_list,
                 &mut inventory.section_by_item,
                 parent,

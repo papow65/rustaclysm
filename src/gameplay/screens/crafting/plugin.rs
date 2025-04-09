@@ -13,13 +13,16 @@ impl Plugin for CraftingScreenPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             OnEnter(GameplayScreenState::Crafting),
-            (spawn_crafting_screen, create_crafting_key_bindings),
+            (
+                create_start_craft_system.pipe(spawn_crafting_screen),
+                create_crafting_key_bindings,
+            ),
         );
 
         app.add_systems(
             Update,
-            create_start_craft_system
-                .pipe(clear_crafting_screen.pipe(refresh_crafting_screen))
+            clear_crafting_screen
+                .pipe(refresh_crafting_screen)
                 .run_if(in_state(GameplayScreenState::Crafting)),
         );
 
