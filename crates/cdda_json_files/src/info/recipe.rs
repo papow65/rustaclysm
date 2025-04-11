@@ -1,7 +1,7 @@
 use crate::info::practice::ActivityLevel;
 use crate::{
-    CommonItemInfo, Flags, Ignored, InfoId, Quality, RequiredLinkedLater, Requirement,
-    UntypedInfoId,
+    CommonItemInfo, ComponentPresence, Flags, Ignored, InfoId, Quality, RequiredLinkedLater,
+    RequiredPresence, Requirement, ToolPresence, UntypedInfoId,
 };
 use bevy_log::error;
 use bevy_platform_support::collections::HashMap;
@@ -38,7 +38,7 @@ pub struct Recipe {
     pub qualities: RequiredQualities,
 
     #[serde(default)]
-    pub components: Vec<Vec<Alternative<u32>>>,
+    pub components: Vec<Vec<Alternative<ComponentPresence>>>,
 
     #[serde(default)]
     pub using: Vec<Using>,
@@ -68,7 +68,7 @@ pub struct Recipe {
     pub skills_required: Option<Vec<serde_json::Value>>,
 
     #[serde(default)]
-    pub tools: Vec<Vec<Alternative<i32>>>,
+    pub tools: Vec<Vec<Alternative<ToolPresence>>>,
 
     #[serde(flatten)]
     _ignored: Ignored<Self>,
@@ -202,31 +202,25 @@ pub struct RequiredQuality {
 }
 
 #[derive(Debug, Deserialize)]
-#[serde(from = "CddaAlternative<I>")]
-pub enum Alternative<I>
-where
-    I: From<u8>,
-{
+#[serde(from = "CddaAlternative<R>")]
+pub enum Alternative<R: RequiredPresence> {
     Item {
         item: RequiredLinkedLater<CommonItemInfo>,
-        required: I,
+        required: R,
         recoverable: bool,
     },
     Requirement {
         requirement: RequiredLinkedLater<Requirement>,
-        factor: I,
+        factor: R,
     },
 }
 
-impl<I> From<CddaAlternative<I>> for Alternative<I>
-where
-    I: From<u8>,
-{
-    fn from(source: CddaAlternative<I>) -> Self {
+impl<R: RequiredPresence> From<CddaAlternative<R>> for Alternative<R> {
+    fn from(source: CddaAlternative<R>) -> Self {
         match source {
             CddaAlternative::Item(item) => Self::Item {
                 item: RequiredLinkedLater::from(item),
-                required: I::from(1),
+                required: R::present(),
                 recoverable: true,
             },
             CddaAlternative::ItemAmount(item, required) => Self::Item {
@@ -260,10 +254,10 @@ where
 
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
-pub enum CddaAlternative<I> {
+pub enum CddaAlternative<R> {
     Item(InfoId<CommonItemInfo>),
-    ItemAmount(InfoId<CommonItemInfo>, I),
-    Dynamic(UntypedInfoId, I, Arc<str>),
+    ItemAmount(InfoId<CommonItemInfo>, R),
+    Dynamic(UntypedInfoId, R, Arc<str>),
 }
 
 #[derive(Debug, Deserialize)]
@@ -278,7 +272,7 @@ impl Using {
     pub fn to_components(
         &self,
         called_from: impl AsRef<str> + Clone,
-    ) -> Option<Vec<Vec<Alternative<u32>>>> {
+    ) -> Option<Vec<Vec<Alternative<ComponentPresence>>>> {
         let requirement = self.requirement.get_option(called_from.clone())?;
 
         Some(if self.kind == UsingKind::Components {
@@ -297,7 +291,7 @@ impl Using {
                                 let item = item.get_option(called_from.clone())?;
                                 Some(Alternative::Item {
                                     item: RequiredLinkedLater::new_final(item.id.clone(), &item),
-                                    required: required * self.factor,
+                                    required: *required * ComponentPresence::from(self.factor),
                                     recoverable: *recoverable,
                                 })
                             }
@@ -311,7 +305,7 @@ impl Using {
                                         requirement.id.clone(),
                                         &requirement,
                                     ),
-                                    factor: factor * self.factor,
+                                    factor: *factor * ComponentPresence::from(self.factor),
                                 })
                             }
                         })
@@ -321,7 +315,7 @@ impl Using {
         } else {
             vec![vec![Alternative::Requirement {
                 requirement: RequiredLinkedLater::new_final(requirement.id.clone(), &requirement),
-                factor: self.factor,
+                factor: ComponentPresence::from(self.factor),
             }]]
         })
     }

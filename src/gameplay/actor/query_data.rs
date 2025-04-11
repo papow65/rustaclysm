@@ -11,7 +11,7 @@ use bevy::ecs::query::QueryData;
 use bevy::prelude::{
     ChildOf, Commands, Entity, Event, EventWriter, NextState, Query, Transform, Visibility, error,
 };
-use cdda_json_files::{CddaItem, Description};
+use cdda_json_files::{CddaItem, Description, ToolPresence};
 use hud::text_color_expect_full;
 use units::{Distance, Duration, Speed};
 use util::here;
@@ -606,13 +606,43 @@ impl ActorItem<'_> {
         };
 
         for AlternativeSituation {
-            item_entities,
+            consumed: consumed_entities,
+            required,
+            ..
+        } in start_craft.recipe_situation.consumed_tool_charges()
+        {
+            //trace!("Consume {required} from {consumed_entities:?}:");
+            let ToolPresence::Present { charges } = required else {
+                continue;
+            };
+            let mut missing = *charges;
+            for &consumed_entity in consumed_entities {
+                let mut item_amount = item_amounts
+                    .get_mut(consumed_entity)
+                    .expect("Consumed tool charges should be found");
+                if item_amount.0 <= missing {
+                    //trace!(" - Consume {consumed_entity} fully ({:?}x)", item_amount.0);
+                    commands.entity(consumed_entity).despawn();
+                    missing -= item_amount.0;
+                    if missing == 0 {
+                        break;
+                    }
+                } else {
+                    //trace!(" - Consume {consumed_entity:?} partially ({}/{})",missing, item_amount.0);
+                    item_amount.0 -= missing;
+                    break;
+                }
+            }
+        }
+
+        for AlternativeSituation {
+            consumed: item_entities,
             required,
             ..
         } in start_craft.recipe_situation.consumed_components()
         {
             //trace!("Consume {required} from {item_entities:?}:");
-            let mut missing = *required;
+            let mut missing = required.amount;
             for &item_entity in item_entities {
                 let mut item_amount = item_amounts
                     .get_mut(item_entity)

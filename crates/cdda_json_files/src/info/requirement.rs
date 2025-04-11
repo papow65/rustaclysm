@@ -1,4 +1,4 @@
-use crate::{Alternative, Ignored, InfoId, RequiredQualities};
+use crate::{Alternative, ComponentPresence, Ignored, InfoId, RequiredQualities, ToolPresence};
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
@@ -9,10 +9,10 @@ pub struct Requirement {
     pub qualities: RequiredQualities,
 
     #[serde(default)]
-    pub components: Vec<Vec<Alternative<u32>>>,
+    pub components: Vec<Vec<Alternative<ComponentPresence>>>,
 
     #[serde(default)]
-    pub tools: Vec<Vec<Alternative<i32>>>,
+    pub tools: Vec<Vec<Alternative<ToolPresence>>>,
 
     #[serde(flatten)]
     _ignored: Ignored<Self>,

@@ -239,7 +239,22 @@ impl InfoMap<Recipe> {
                             item.finalize(common_item_infos, "recipe item alternative");
                         }
                         Alternative::Requirement { requirement, .. } => {
-                            requirement.finalize(requirements, "recipe requirement alternative");
+                            requirement
+                                .finalize(requirements, "recipe requirement item alternative");
+                        }
+                    }
+                }
+            }
+
+            for alternatives in &recipe.tools {
+                for alternative in alternatives {
+                    match alternative {
+                        Alternative::Item { item, .. } => {
+                            item.finalize(common_item_infos, "recipe tool alternative");
+                        }
+                        Alternative::Requirement { requirement, .. } => {
+                            requirement
+                                .finalize(requirements, "recipe requirement tool alternative");
                         }
                     }
                 }
@@ -276,7 +291,20 @@ impl InfoMap<Requirement> {
                             item.finalize(common_item_infos, "requirement item alternative");
                         }
                         Alternative::Requirement { requirement, .. } => {
-                            requirement.finalize(self, "nested requirement alternative");
+                            requirement.finalize(self, "nested requirement item alternative");
+                        }
+                    }
+                }
+            }
+
+            for alternatives in &requirement.tools {
+                for alternative in alternatives {
+                    match alternative {
+                        Alternative::Item { item, .. } => {
+                            item.finalize(common_item_infos, "requirement tool alternative");
+                        }
+                        Alternative::Requirement { requirement, .. } => {
+                            requirement.finalize(self, "nested requirement tool alternative");
                         }
                     }
                 }

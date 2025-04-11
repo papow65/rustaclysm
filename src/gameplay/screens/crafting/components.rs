@@ -1,5 +1,7 @@
 use bevy::prelude::{Component, Entity, TextColor, TextFont, TextSpan};
-use cdda_json_files::{CommonItemInfo, InfoId, Recipe};
+use cdda_json_files::{
+    CommonItemInfo, ComponentPresence, InfoId, Recipe, RequiredPresence, ToolPresence,
+};
 use hud::{
     BAD_TEXT_COLOR, Fonts, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
 };
@@ -13,6 +15,7 @@ pub(crate) struct RecipeSituation {
     pub(super) autolearn: bool,
     pub(super) manuals: Vec<Arc<str>>,
     pub(super) qualities: Vec<QualitySituation>,
+    pub(super) tools: Vec<ToolSituation>,
     pub(super) components: Vec<ComponentSituation>,
 }
 
@@ -21,7 +24,20 @@ impl RecipeSituation {
         &self.recipe
     }
 
-    pub(crate) fn consumed_components(&self) -> impl Iterator<Item = &AlternativeSituation> {
+    pub(crate) fn consumed_tool_charges(
+        &self,
+    ) -> impl Iterator<Item = &AlternativeSituation<ToolPresence>> {
+        self.tools.iter().map(|tool| {
+            tool.alternatives
+                .iter()
+                .find(|alternative| alternative.is_present())
+                .expect("Crafting components should be present")
+        })
+    }
+
+    pub(crate) fn consumed_components(
+        &self,
+    ) -> impl Iterator<Item = &AlternativeSituation<ComponentPresence>> {
         self.components.iter().map(|component| {
             component
                 .alternatives
@@ -47,6 +63,7 @@ impl RecipeSituation {
 
     pub(super) fn craftable(&self) -> bool {
         self.qualities.iter().all(QualitySituation::is_present)
+            && self.tools.iter().all(ToolSituation::is_present)
             && self.components.iter().all(ComponentSituation::is_present)
     }
 
@@ -102,11 +119,14 @@ impl RecipeSituation {
                 fonts.regular(),
             ));
         }
-        if !self.qualities.is_empty() {
+        if !self.qualities.is_empty() || !self.tools.is_empty() {
             text_sections.push((TextSpan::new("\n\nTools"), SOFT_TEXT_COLOR, fonts.regular()));
         }
         for quality in &self.qualities {
             text_sections.extend_from_slice(&quality.text_sections(fonts));
+        }
+        for tool in &self.tools {
+            text_sections.extend_from_slice(&tool.text_sections(fonts));
         }
         if !self.components.is_empty() {
             text_sections.push((
@@ -224,8 +244,38 @@ impl QualitySituation {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub(super) struct ToolSituation {
+    pub(super) alternatives: Vec<AlternativeSituation<ToolPresence>>,
+}
+
+impl ToolSituation {
+    pub(super) fn is_present(&self) -> bool {
+        self.alternatives
+            .iter()
+            .any(AlternativeSituation::is_present)
+    }
+
+    fn text_sections(&self, fonts: &Fonts) -> Vec<(TextSpan, TextColor, TextFont)> {
+        let mut text_sections = Vec::new();
+
+        for (index, alternative) in self.alternatives.iter().enumerate() {
+            let divider = if index == 0 {
+                "\n- "
+            } else if index < self.alternatives.len() - 1 {
+                ", "
+            } else {
+                ", or "
+            };
+            text_sections.push((TextSpan::new(divider), SOFT_TEXT_COLOR, fonts.regular()));
+            text_sections.extend_from_slice(&alternative.text_sections(fonts));
+        }
+
+        text_sections
+    }
+}
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub(super) struct ComponentSituation {
-    pub(super) alternatives: Vec<AlternativeSituation>,
+    pub(super) alternatives: Vec<AlternativeSituation<ComponentPresence>>,
 }
 
 impl ComponentSituation {
@@ -255,41 +305,42 @@ impl ComponentSituation {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub(crate) struct AlternativeSituation {
+pub(crate) struct AlternativeSituation<R: RequiredPresence> {
     pub(super) id: InfoId<CommonItemInfo>,
     pub(super) name: Arc<str>,
-    pub(crate) required: u32,
-    pub(super) present: u32,
-    pub(crate) item_entities: Vec<Entity>,
+    pub(crate) required: R,
+    pub(super) present: R,
+    pub(crate) consumed: Vec<Entity>,
 }
 
-impl AlternativeSituation {
-    pub(super) const fn is_present(&self) -> bool {
+impl<R: RequiredPresence> AlternativeSituation<R> {
+    pub(super) fn is_present(&self) -> bool {
         self.required <= self.present
     }
 
-    fn text_sections(&self, fonts: &Fonts) -> Vec<(TextSpan, TextColor, TextFont)> {
-        let checked_style = if self.is_present() {
+    fn presence_color(&self) -> TextColor {
+        if self.is_present() {
             GOOD_TEXT_COLOR
         } else {
             BAD_TEXT_COLOR
-        };
+        }
+    }
 
+    fn text_sections(&self, fonts: &Fonts) -> Vec<(TextSpan, TextColor, TextFont)> {
         let mut text_sections = vec![(
-            TextSpan::new(format!("{} {}", self.required, &self.name)),
-            checked_style,
+            TextSpan::new(self.required.format(&self.name)),
+            self.presence_color(),
             fonts.regular(),
         )];
 
-        if 0 < self.present {
+        if let Some(present) = self.present.quantity_present() {
             let only = if self.present < self.required {
                 "only "
             } else {
                 ""
             };
-
             text_sections.push((
-                TextSpan::new(format!(" ({only}{} present)", self.present)),
+                TextSpan::new(format!(" ({only}{present} present)")),
                 SOFT_TEXT_COLOR,
                 fonts.regular(),
             ));
