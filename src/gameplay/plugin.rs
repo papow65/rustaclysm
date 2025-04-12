@@ -16,8 +16,8 @@ use crate::gameplay::{
 };
 use bevy::ecs::system::ScheduleSystem;
 use bevy::prelude::{
-    App, AppExtStates as _, FixedUpdate, IntoScheduleConfigs as _, Last, OnEnter, Plugin, Update,
-    in_state, on_event, resource_exists, resource_exists_and_changed,
+    App, AppExtStates as _, FixedUpdate, IntoScheduleConfigs as _, OnEnter, Plugin, PostUpdate,
+    Update, in_state, on_event, resource_exists, resource_exists_and_changed,
 };
 use bevy::{diagnostic::FrameTimeDiagnosticsPlugin, ecs::schedule::ScheduleConfigs};
 use util::log_transition_plugin;
@@ -49,7 +49,7 @@ impl Plugin for GameplayPlugin {
         app.add_systems(OnEnter(ApplicationState::Gameplay), startup_systems());
         app.add_systems(Update, update_systems());
         app.add_systems(FixedUpdate, fixed_update_systems());
-        app.add_systems(Last, despawn_systems());
+        app.add_systems(PostUpdate, despawn_systems());
     }
 }
 

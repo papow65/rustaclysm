@@ -149,9 +149,7 @@ impl ParsedJson {
                 .objects_by_type
                 .lock()
                 .expect("Mutex should be unpoisoned");
-            let by_type = hash_map
-                .entry(content.type_id)
-                .or_insert_with(HashMap::default);
+            let by_type = hash_map.entry(content.type_id).or_default();
             load_ids(content.fields, by_type, content.type_id, json_path);
         }
 
