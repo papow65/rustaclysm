@@ -53,6 +53,9 @@ strum = { version = "0.27", features = ["derive"] }
 # We use --no-default-features for production builds. See .github/workflows/ci.yml
 default = ["bevy/dynamic_linking"]
 
+[profile.dev.package."*"]
+opt-level = 3 # copied by https://bevy-cheatbook.github.io/pitfalls/performance.html
+
 [profile.dev-opt] # Used in development, with performance similar to release
 inherits = "dev"
 opt-level = 3 # inspired by https://bevy-cheatbook.github.io/pitfalls/performance.html
