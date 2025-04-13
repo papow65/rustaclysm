@@ -16,9 +16,9 @@ use bevy::prelude::{
 };
 use bevy::{ecs::query::QueryData, ecs::system::SystemId};
 use cdda_json_files::{
-    Alternative, AutoLearn, BookLearn, BookLearnItem, CommonItemInfo, ComponentPresence,
-    FurnitureInfo, InfoId, PocketType, Quality, Recipe, RequiredPresence, RequiredQuality,
-    Requirement, Sav, Skill, ToolPresence, Using,
+    Alternative, AutoLearn, BookLearn, BookLearnItem, CalculatedRequirement, CommonItemInfo,
+    ComponentPresence, FurnitureInfo, InfoId, PocketType, Quality, Recipe, RequiredPresence,
+    RequiredQuality, Requirement, Sav, Skill, ToolPresence,
 };
 use hud::{
     BAD_TEXT_COLOR, ButtonBuilder, Fonts, GOOD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, ScrollList,
@@ -388,25 +388,30 @@ fn shown_recipes(
         })
         .filter(|(.., autolearn, recipe_manuals)| *autolearn || !recipe_manuals.is_empty())
         .filter_map(|(recipe, autolearn, recipe_manuals)| {
-            recipe
-                .result
-                .item_info(here!())
-                //.inspect(|info| {
-                //    trace!("{:?}", &info.id);
-                //})
-                .map(|item| RecipeSituation {
-                    recipe: recipe.clone(),
-                    name: uppercase_first(item.name.single.clone()),
-                    autolearn,
-                    manuals: recipe_manuals,
-                    qualities: recipe_qualities(
-                        &recipe.qualities.0,
-                        &recipe.using,
-                        nearby_qualities,
-                    ),
-                    tools: recipe_tools(hierarchy, &recipe.tools, nearby_items),
-                    components: recipe_components(&recipe.components, &recipe.using, nearby_items),
-                })
+            recipe.result.item_info(here!()).and_then(|result| {
+                CalculatedRequirement::try_from(&**recipe)
+                    .inspect_err(|error| error!("{error:?}"))
+                    .ok()
+                    .map(|calculated_requirements| RecipeSituation {
+                        recipe: recipe.clone(),
+                        name: uppercase_first(result.name.single.clone()),
+                        autolearn,
+                        manuals: recipe_manuals,
+                        qualities: recipe_qualities(
+                            &calculated_requirements.qualities.0,
+                            nearby_qualities,
+                        ),
+                        tools: recipe_tools(
+                            hierarchy,
+                            &calculated_requirements.tools,
+                            nearby_items,
+                        ),
+                        components: recipe_components(
+                            &calculated_requirements.components,
+                            nearby_items,
+                        ),
+                    })
+            })
         })
         .collect::<Vec<_>>();
 
@@ -500,22 +505,10 @@ fn nearby_qualities(nearby_items: &[NearbyItem]) -> HashMap<Arc<Quality>, i8> {
 
 fn recipe_qualities(
     required: &[RequiredQuality],
-    using: &[Using],
     present: &HashMap<Arc<Quality>, i8>,
 ) -> Vec<QualitySituation> {
-    let using_qualities = using
-        .iter()
-        .filter_map(|using| using.requirement.get_option(here!()))
-        //.inspect(|using| trace!("Using qualities from {using:?}"))
-        .collect::<Vec<_>>();
-
     let mut qualities = required
         .iter()
-        .chain(
-            using_qualities
-                .iter()
-                .flat_map(|requirement| &requirement.qualities.0),
-        )
         .filter_map(|required_quality| {
             required_quality
                 .quality
@@ -592,18 +585,10 @@ fn recipe_tools(
 
 fn recipe_components(
     required: &[Vec<Alternative<ComponentPresence>>],
-    using: &[Using],
     present: &[NearbyItem],
 ) -> Vec<ComponentSituation> {
-    let using = using
-        .iter()
-        .filter_map(|using| using.to_components(here!()))
-        .flatten()
-        .collect::<Vec<_>>();
-
     required
         .iter()
-        .chain(using.iter())
         .map(|component| ComponentSituation {
             alternatives: expand_alternatives::<ComponentPresence, _, _>(
                 component,

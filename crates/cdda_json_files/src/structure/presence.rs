@@ -99,9 +99,6 @@ pub struct ComponentPresence {
 
 impl From<u32> for ComponentPresence {
     fn from(amount: u32) -> Self {
-        if amount == 0 {
-            warn!("{amount} is not an expected value for ComponentPresence");
-        }
         Self { amount }
     }
 }

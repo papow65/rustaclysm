@@ -37,6 +37,6 @@ pub use self::recipe::{
     Alternative, AutoLearn, BookLearn, BookLearnItem, Recipe, RecipeResult, RequiredQualities,
     RequiredQuality, Using, UsingKind,
 };
-pub use self::requirement::Requirement;
+pub use self::requirement::{CalculatedRequirement, Requirement};
 pub use self::terrain_info::{MoveCost, TerrainInfo};
 pub use self::vehicle_part_info::VehiclePartInfo;

@@ -7,7 +7,7 @@ use bevy_log::error;
 use bevy_platform_support::collections::HashMap;
 use serde::Deserialize;
 use std::hash::{Hash, Hasher};
-use std::sync::Arc;
+use std::{ops::Mul, sync::Arc};
 use units::Duration;
 
 // PartialEq, Eq, and Hash manually implemented below
@@ -170,7 +170,7 @@ impl Default for AutoLearn {
     }
 }
 
-#[derive(Debug, Default, Deserialize)]
+#[derive(Clone, Debug, Default, Deserialize)]
 #[serde(from = "Vec<Wrap<RequiredQuality>>")]
 pub struct RequiredQualities(pub Vec<RequiredQuality>);
 
@@ -194,7 +194,7 @@ pub enum Wrap<T> {
     List(Vec<T>),
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 pub struct RequiredQuality {
     #[serde(rename = "id")]
     pub quality: RequiredLinkedLater<Quality>,
@@ -213,6 +213,31 @@ pub enum Alternative<R: RequiredPresence> {
         requirement: RequiredLinkedLater<Requirement>,
         factor: R,
     },
+}
+
+impl<R: RequiredPresence> Mul<R> for &Alternative<R> {
+    type Output = Alternative<R>;
+
+    fn mul(self, rhs: R) -> Self::Output {
+        match self {
+            Alternative::Item {
+                item,
+                required,
+                recoverable,
+            } => Alternative::Item {
+                item: item.clone(),
+                required: *required * rhs,
+                recoverable: *recoverable,
+            },
+            Alternative::Requirement {
+                requirement,
+                factor,
+            } => Alternative::Requirement {
+                requirement: requirement.clone(),
+                factor: *factor * rhs,
+            },
+        }
+    }
 }
 
 impl<R: RequiredPresence> From<CddaAlternative<R>> for Alternative<R> {
@@ -265,60 +290,9 @@ pub enum CddaAlternative<R> {
 pub struct Using {
     pub requirement: RequiredLinkedLater<Requirement>,
     pub factor: u32,
+
+    // Barely used
     pub kind: UsingKind,
-}
-
-impl Using {
-    pub fn to_components(
-        &self,
-        called_from: impl AsRef<str> + Clone,
-    ) -> Option<Vec<Vec<Alternative<ComponentPresence>>>> {
-        let requirement = self.requirement.get_option(called_from.clone())?;
-
-        Some(if self.kind == UsingKind::Components {
-            requirement
-                .components
-                .iter()
-                .map(|component| {
-                    component
-                        .iter()
-                        .filter_map(|alternative| match alternative {
-                            Alternative::Item {
-                                item,
-                                required,
-                                recoverable,
-                            } => {
-                                let item = item.get_option(called_from.clone())?;
-                                Some(Alternative::Item {
-                                    item: RequiredLinkedLater::new_final(item.id.clone(), &item),
-                                    required: *required * ComponentPresence::from(self.factor),
-                                    recoverable: *recoverable,
-                                })
-                            }
-                            Alternative::Requirement {
-                                requirement,
-                                factor,
-                            } => {
-                                let requirement = requirement.get_option(called_from.clone())?;
-                                Some(Alternative::Requirement {
-                                    requirement: RequiredLinkedLater::new_final(
-                                        requirement.id.clone(),
-                                        &requirement,
-                                    ),
-                                    factor: *factor * ComponentPresence::from(self.factor),
-                                })
-                            }
-                        })
-                        .collect()
-                })
-                .collect()
-        } else {
-            vec![vec![Alternative::Requirement {
-                requirement: RequiredLinkedLater::new_final(requirement.id.clone(), &requirement),
-                factor: ComponentPresence::from(self.factor),
-            }]]
-        })
-    }
 }
 
 impl From<CddaUsing> for Using {

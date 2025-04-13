@@ -112,6 +112,17 @@ impl RequiredLinkedLater<TerrainInfo> {
     }
 }
 
+impl<T: fmt::Debug> Clone for RequiredLinkedLater<T> {
+    fn clone(&self) -> Self {
+        Self {
+            required: LinkedLater {
+                info_id: self.required.info_id.clone(),
+                lock: self.required.lock.clone(),
+            },
+        }
+    }
+}
+
 impl<T: fmt::Debug> From<InfoId<T>> for RequiredLinkedLater<T> {
     fn from(info_id: InfoId<T>) -> Self {
         Self {
