@@ -1,5 +1,6 @@
 use crate::{
-    Bash, Flags, Ignored, InfoId, ItemName, MoveCostIncrease, OptionalLinkedLater, UntypedInfoId,
+    Bash, ExamineActionOption, Flags, Ignored, InfoId, ItemName, MoveCostIncrease,
+    OptionalLinkedLater, UntypedInfoId,
 };
 use serde::Deserialize;
 use std::sync::{Arc, LazyLock};
@@ -29,7 +30,7 @@ pub struct TerrainInfo {
     pub curtain_transform: Option<Arc<str>>,
     pub deconstruct: Option<serde_json::Value>,
     pub emissions: Option<Vec<serde_json::Value>>,
-    pub examine_action: Option<serde_json::Value>,
+    pub examine_action: ExamineActionOption,
     pub floor_bedding_warmth: Option<u16>,
     pub hacksaw: Option<serde_json::Value>,
     pub harvest_by_season: Option<Vec<serde_json::Value>>,

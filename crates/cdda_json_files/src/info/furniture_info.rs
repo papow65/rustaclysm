@@ -1,6 +1,6 @@
 use crate::{
-    CommonItemInfo, Flags, Ignored, InfoId, ItemGroup, ItemName, OptionalLinkedLater,
-    RequiredLinkedLater, SpawnItem, TerrainInfo, UntypedInfoId,
+    CommonItemInfo, ExamineActionOption, Flags, Ignored, InfoId, ItemGroup, ItemName,
+    OptionalLinkedLater, RequiredLinkedLater, SpawnItem, TerrainInfo, UntypedInfoId,
 };
 use bevy_platform_support::collections::HashMap;
 use serde::Deserialize;
@@ -29,7 +29,7 @@ pub struct FurnitureInfo {
     pub deconstruct: Option<serde_json::Value>,
     pub deployed_item: Option<Arc<str>>,
     pub emissions: Option<Vec<serde_json::Value>>,
-    pub examine_action: Option<serde_json::Value>,
+    pub examine_action: ExamineActionOption,
     pub floor_bedding_warmth: Option<i16>,
     pub hacksaw: Option<serde_json::Value>,
     pub harvest_by_season: Option<Vec<serde_json::Value>>,

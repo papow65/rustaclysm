@@ -4,6 +4,7 @@ use std::{error::Error as StdError, fmt};
 #[derive(Debug)]
 pub enum Error {
     UnknownInfoId { _id: InfoIdDescription },
+    UnknownExamineAction { _str: String },
     LinkUnavailable { _id: InfoIdDescription },
 }
 
