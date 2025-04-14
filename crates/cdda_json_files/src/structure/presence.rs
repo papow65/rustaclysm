@@ -74,13 +74,17 @@ impl RequiredPresence for ToolPresence {
 
 impl From<i32> for ToolPresence {
     fn from(value: i32) -> Self {
-        if let Ok(charges) = u32::try_from(value) {
-            Self::from(charges)
-        } else {
-            if value != -1 {
-                warn!("{value} is not an expected value for ToolPresence");
-            }
+        // TODO Validate that there is no more nuanced meaing behind the apparently inconsistent usage of signs.
+
+        if value == 0 {
+            warn!("0 is not expected value for ToolPresence");
             Self::Present { charges: 0 }
+        } else if value == -1 {
+            Self::Present { charges: 0 }
+        } else {
+            Self::Present {
+                charges: value.unsigned_abs(),
+            }
         }
     }
 }
