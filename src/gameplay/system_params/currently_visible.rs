@@ -3,7 +3,7 @@ use crate::gameplay::{
     RelativeSegment, RelativeSegments, SubzoneLevel, Visible, VisionDistance,
 };
 use bevy::prelude::{Res, Single, State, With};
-use bevy::{ecs::system::SystemParam, platform_support::collections::HashMap};
+use bevy::{ecs::system::SystemParam, platform::collections::HashMap};
 
 const WIDTH: usize = 2 * VisionDistance::MAX_VISION_TILES as usize + 1;
 

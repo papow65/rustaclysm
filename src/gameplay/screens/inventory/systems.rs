@@ -8,7 +8,7 @@ use crate::gameplay::{
     Player, Pos, QueuedInstruction, Unwield, Wield,
 };
 use bevy::ecs::{entity::hash_map::EntityHashMap, system::SystemId};
-use bevy::platform_support::collections::HashMap;
+use bevy::platform::collections::HashMap;
 use bevy::prelude::{
     AlignItems, BackgroundColor, Button, ChildOf, Children, Commands, ComputedNode, Display,
     Entity, FlexDirection, In, IntoSystem as _, JustifyContent, KeyCode, Local, NextState, Node,

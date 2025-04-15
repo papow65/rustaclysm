@@ -1,7 +1,7 @@
 use crate::gameplay::{Pos, StairsDown, StairsUp};
 use bevy::ecs::query::{QueryData, QueryFilter, ROQueryItem};
 use bevy::ecs::{component::ComponentHooks, entity::hash_map::EntityHashMap};
-use bevy::platform_support::collections::HashMap;
+use bevy::platform::collections::HashMap;
 use bevy::prelude::{Entity, Query, Resource, With, error};
 
 const NOT_FOUND: &Vec<Entity> = &Vec::new();

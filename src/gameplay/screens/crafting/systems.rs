@@ -7,8 +7,8 @@ use crate::gameplay::{
     ItemHierarchy, LastSeen, Location, MessageWriter, Player, Pos, QueuedInstruction, Shared,
     cdda::Error, screens::crafting::resource::CraftingScreen,
 };
-use bevy::platform_support::collections::HashSet;
-use bevy::platform_support::collections::{HashMap, hash_map::Entry};
+use bevy::platform::collections::HashSet;
+use bevy::platform::collections::{HashMap, hash_map::Entry};
 use bevy::prelude::{
     AlignItems, AnyOf, ChildOf, Children, Commands, ComputedNode, Display, Entity, FlexDirection,
     In, IntoSystem as _, JustifyContent, KeyCode, Local, NextState, Node, Overflow, Query, Res,

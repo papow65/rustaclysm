@@ -1,6 +1,6 @@
 use crate::{Flags, InfoId, structure::MaybeFlatVec};
 use crate::{Ignored, ItemQuality, UntypedInfoId};
-use bevy_platform_support::collections::HashMap;
+use bevy_platform::collections::HashMap;
 use serde::Deserialize;
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;

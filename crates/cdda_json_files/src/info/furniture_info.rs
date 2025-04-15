@@ -2,7 +2,7 @@ use crate::{
     CommonItemInfo, ExamineActionOption, Flags, Ignored, InfoId, ItemGroup, ItemName,
     OptionalLinkedLater, RequiredLinkedLater, SpawnItem, TerrainInfo, UntypedInfoId,
 };
-use bevy_platform_support::collections::HashMap;
+use bevy_platform::collections::HashMap;
 use serde::Deserialize;
 use std::sync::Arc;
 

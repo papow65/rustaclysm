@@ -1,5 +1,5 @@
 use crate::gameplay::{Level, OvermapAsset, Overzone, RepetitionBlockExt as _, ZoneLevel};
-use bevy::{platform_support::collections::HashMap, prelude::Resource};
+use bevy::{platform::collections::HashMap, prelude::Resource};
 use cdda_json_files::{FlatVec, InfoId, Overmap, OvermapLevel, OvermapTerrainInfo};
 use std::sync::OnceLock;
 

@@ -1,5 +1,5 @@
 use crate::gameplay::{TypeId, cdda::Error};
-use bevy::platform_support::collections::HashMap;
+use bevy::platform::collections::HashMap;
 use bevy::prelude::{debug, error, warn};
 use bevy::tasks::IoTaskPool;
 use cdda_json_files::UntypedInfoId;

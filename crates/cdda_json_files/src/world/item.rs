@@ -1,7 +1,7 @@
 use crate::{
     CharacterInfo, CommonItemInfo, OptionalLinkedLater, RequiredLinkedLater, UntypedInfoId,
 };
-use bevy_platform_support::collections::HashMap;
+use bevy_platform::collections::HashMap;
 use serde::Deserialize;
 use serde_repr::Deserialize_repr;
 use std::sync::Arc;

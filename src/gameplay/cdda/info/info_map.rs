@@ -1,6 +1,6 @@
 use crate::gameplay::cdda::info::parsed_json::Enriched;
 use crate::gameplay::{TypeId, cdda::Error};
-use bevy::platform_support::collections::HashMap;
+use bevy::platform::collections::HashMap;
 use bevy::prelude::{debug, error, warn};
 use cdda_json_files::{
     Alternative, Bash, BashItem, BashItems, CddaItemName, CharacterInfo, CommonItemInfo, Flags,

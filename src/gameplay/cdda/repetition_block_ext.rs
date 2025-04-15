@@ -1,5 +1,5 @@
 use crate::gameplay::{Level, Overzone, Pos, SubzoneLevel, ZoneLevel};
-use bevy::platform_support::collections::HashMap;
+use bevy::platform::collections::HashMap;
 use cdda_json_files::{CddaAmount, RepetitionBlock};
 use std::hash::Hash;
 

@@ -1,7 +1,7 @@
 use crate::gameplay::cdda::ObjectCategory;
 use crate::gameplay::cdda::{Atlas, TextureInfo, error::Error};
 use crate::gameplay::{Layers, Model, SpriteLayer, TileVariant};
-use bevy::platform_support::collections::{HashMap, hash_map::Entry};
+use bevy::platform::collections::{HashMap, hash_map::Entry};
 use bevy::prelude::{Resource, error, warn};
 use cdda_json_files::{
     CddaTileConfig, CddaTileVariant, MaybeFlatVec, SpriteNumber, SpriteNumbers, TileInfo,

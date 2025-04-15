@@ -1,6 +1,6 @@
 use crate::{MaybeFlatVec, SpriteNumber, UntypedInfoId};
 use bevy_log::warn;
-use bevy_platform_support::collections::HashMap;
+use bevy_platform::collections::HashMap;
 use either::Either;
 use serde::Deserialize;
 

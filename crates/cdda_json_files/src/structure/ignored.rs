@@ -1,6 +1,6 @@
 use crate::Recipe;
 use bevy_log::error;
-use bevy_platform_support::collections::HashMap;
+use bevy_platform::collections::HashMap;
 use serde::{Deserialize, Deserializer};
 use std::any::{TypeId, type_name};
 use std::sync::{Arc, Mutex, OnceLock};

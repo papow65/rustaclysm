@@ -1,7 +1,7 @@
 use crate::gameplay::{
     Exploration, Focus, Level, Overzone, Pos, Region, SubzoneLevel, Zone, ZoneLevel,
 };
-use bevy::platform_support::collections::{HashMap, HashSet, hash_map::Entry};
+use bevy::platform::collections::{HashMap, HashSet, hash_map::Entry};
 use bevy::prelude::{Resource, Visibility};
 
 /// Ever seen by the player character

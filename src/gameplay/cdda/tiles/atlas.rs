@@ -1,5 +1,5 @@
 use crate::gameplay::{MeshInfo, TextureInfo, Transform2d};
-use bevy::{platform_support::collections::HashMap, prelude::Vec2};
+use bevy::{platform::collections::HashMap, prelude::Vec2};
 use cdda_json_files::{CddaAtlas, SpriteNumber, TileInfo, UntypedInfoId};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;

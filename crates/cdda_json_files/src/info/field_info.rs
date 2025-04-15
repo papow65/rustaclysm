@@ -1,5 +1,5 @@
 use crate::{Ignored, InfoId, ItemName, UntypedInfoId};
-use bevy_platform_support::collections::HashMap;
+use bevy_platform::collections::HashMap;
 use serde::Deserialize;
 use std::sync::Arc;
 

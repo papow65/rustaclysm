@@ -1,6 +1,6 @@
 use crate::gameplay::ZoneLevel;
 use bevy::ecs::component::ComponentHooks;
-use bevy::platform_support::collections::{HashMap, hash_map::Entry};
+use bevy::platform::collections::{HashMap, hash_map::Entry};
 use bevy::prelude::{Entity, Resource, error};
 
 #[derive(Default, Resource)]

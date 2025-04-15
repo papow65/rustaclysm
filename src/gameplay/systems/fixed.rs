@@ -4,7 +4,7 @@ use crate::gameplay::{
 use bevy::prelude::{
     Assets, EventReader, Font, Local, Mesh, Query, Res, StandardMaterial, With, World, debug, error,
 };
-use bevy::{asset::UntypedAssetLoadFailedEvent, platform_support::collections::HashMap};
+use bevy::{asset::UntypedAssetLoadFailedEvent, platform::collections::HashMap};
 use std::{env, sync::LazyLock, time::Instant};
 use util::log_if_slow;
 

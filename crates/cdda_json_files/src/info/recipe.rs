@@ -4,7 +4,7 @@ use crate::{
     RequiredPart, RequiredTool, Requirement, UntypedInfoId,
 };
 use bevy_log::error;
-use bevy_platform_support::collections::HashMap;
+use bevy_platform::collections::HashMap;
 use serde::Deserialize;
 use std::hash::{Hash, Hasher};
 use std::{num::NonZeroU32, ops::Mul, sync::Arc};
