@@ -1,6 +1,6 @@
 use crate::{
-    Alternative, AutoLearn, BookLearn, CommonItemInfo, ComponentPresence, Flags, Ignored, InfoId,
-    RequiredQualities, ToolPresence, UntypedInfoId, Using,
+    Alternative, AutoLearn, BookLearn, CommonItemInfo, Flags, Ignored, InfoId, RequiredComponent,
+    RequiredQualities, RequiredTool, UntypedInfoId, Using,
 };
 use serde::Deserialize;
 use std::sync::Arc;
@@ -19,10 +19,10 @@ pub struct Practice {
     pub description: Arc<str>,
 
     #[serde(default)]
-    pub tools: Vec<Vec<Alternative<ToolPresence>>>,
+    pub tools: Vec<Vec<Alternative<RequiredTool>>>,
 
     #[serde(default)]
-    pub components: Vec<Vec<Alternative<ComponentPresence>>>,
+    pub components: Vec<Vec<Alternative<RequiredComponent>>>,
 
     #[serde(default)]
     pub autolearn: AutoLearn,

@@ -34,7 +34,6 @@ impl<'w> ItemHierarchy<'w, '_> {
     pub(crate) fn items_in(&self, container: Entity) -> impl Iterator<Item = ItemItem> + use<'_> {
         self.children
             .get(container)
-            .inspect_err(|error| error!("{} {error:?}", here!()))
             .into_iter()
             .flat_map(IntoIterator::into_iter)
             .flat_map(|item| self.items.get(*item)) // Filtering out the models

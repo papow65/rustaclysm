@@ -70,6 +70,6 @@ use self::resources::{
     ZoneLevelEntities, ZoneLevelIds,
 };
 use self::scope::GameplayResourcePlugin;
-use self::screens::{AlternativeSituation, RecipeSituation, update_camera_offset};
+use self::screens::{Consumed, RecipeSituation, update_camera_offset};
 use self::system_params::{Collision, CurrentlyVisible, CurrentlyVisibleBuilder, Envir};
 use self::time::{Clock, Timeouts};

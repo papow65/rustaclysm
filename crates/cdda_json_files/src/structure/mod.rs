@@ -11,5 +11,5 @@ pub use self::flat_vec::FlatVec;
 pub use self::ignored::Ignored;
 pub use self::linked_later::{Link, LinkProvider, OptionalLinkedLater, RequiredLinkedLater};
 pub use self::maybe_flat::MaybeFlatVec;
-pub use self::presence::{ComponentPresence, RequiredPresence, ToolPresence};
+pub use self::presence::{RequiredComponent, RequiredPart, RequiredTool};
 pub use self::repitition::{CddaAmount, Repetition, RepetitionBlock};

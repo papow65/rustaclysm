@@ -17,7 +17,7 @@ mod terrain_info;
 mod vehicle_part_info;
 
 pub use self::character_info::CharacterInfo;
-pub use self::examine_action::{ExamineAction, ExamineActionOption};
+pub use self::examine_action::{ExamineAction, ExamineActionOption, SimpleExamineAction};
 pub use self::field_info::FieldInfo;
 pub use self::flags::Flags;
 pub use self::furniture_info::{

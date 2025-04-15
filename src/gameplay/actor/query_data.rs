@@ -1,17 +1,17 @@
 use crate::gameplay::{
-    ActorEvent, ActorImpact, AlternativeSituation, Amount, Aquatic, Attack, BaseSpeed,
-    BodyContainers, Breath, ChangePace, Clock, Close, Collision, Container, CorpseEvent, Craft,
-    Damage, Envir, Faction, Filthy, Fragment, Healing, HealingDuration, Health,
-    HorizontalDirection, Item, ItemHierarchy, ItemItem, LastEnemy, LastSeen, LevelOffset, Life,
-    Location, Melee, MessageWriter, Nbor, ObjectName, Peek, Phrase, Player, PlayerActionState,
-    PlayerWielded, Pos, Pulp, Severity, Smash, Stamina, StaminaCost, StartCraft, Step, Subject,
-    SubzoneLevel, SubzoneLevelEntities, TerrainEvent, Toggle, WalkingMode, spawn::TileSpawner,
+    ActorEvent, ActorImpact, Amount, Aquatic, Attack, BaseSpeed, BodyContainers, Breath,
+    ChangePace, Clock, Close, Collision, Consumed, Container, CorpseEvent, Craft, Damage, Envir,
+    Faction, Filthy, Fragment, Healing, HealingDuration, Health, HorizontalDirection, Item,
+    ItemHierarchy, ItemItem, LastEnemy, LastSeen, LevelOffset, Life, Location, Melee,
+    MessageWriter, Nbor, ObjectName, Peek, Phrase, Player, PlayerActionState, PlayerWielded, Pos,
+    Pulp, Severity, Smash, Stamina, StaminaCost, StartCraft, Step, Subject, SubzoneLevel,
+    SubzoneLevelEntities, TerrainEvent, Toggle, WalkingMode, spawn::TileSpawner,
 };
 use bevy::ecs::query::QueryData;
 use bevy::prelude::{
     ChildOf, Commands, Entity, Event, EventWriter, NextState, Query, Transform, Visibility, error,
 };
-use cdda_json_files::{CddaItem, Description, ToolPresence};
+use cdda_json_files::{CddaItem, Description};
 use hud::text_color_expect_full;
 use units::{Distance, Duration, Speed};
 use util::here;
@@ -605,18 +605,14 @@ impl ActorItem<'_> {
             return self.no_impact();
         };
 
-        for AlternativeSituation {
-            consumed: consumed_entities,
-            required,
-            ..
+        for Consumed {
+            amount,
+            from_entities,
         } in start_craft.recipe_situation.consumed_tool_charges()
         {
-            //trace!("Consume {required} from {consumed_entities:?}:");
-            let ToolPresence::Present { charges } = required else {
-                continue;
-            };
-            let mut missing = *charges;
-            for &consumed_entity in consumed_entities {
+            //trace!("Consume {required} from {from_entities:?}:");
+            let mut missing = amount.get();
+            for &consumed_entity in from_entities {
                 let mut item_amount = item_amounts
                     .get_mut(consumed_entity)
                     .expect("Consumed tool charges should be found");
@@ -635,15 +631,14 @@ impl ActorItem<'_> {
             }
         }
 
-        for AlternativeSituation {
-            consumed: item_entities,
-            required,
-            ..
+        for Consumed {
+            amount,
+            from_entities,
         } in start_craft.recipe_situation.consumed_components()
         {
             //trace!("Consume {required} from {item_entities:?}:");
-            let mut missing = required.amount;
-            for &item_entity in item_entities {
+            let mut missing = amount.get();
+            for &item_entity in from_entities {
                 let mut item_amount = item_amounts
                     .get_mut(item_entity)
                     .expect("Consumed component items should be found");

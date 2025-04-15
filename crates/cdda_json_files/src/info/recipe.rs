@@ -1,13 +1,13 @@
 use crate::info::practice::ActivityLevel;
 use crate::{
-    CommonItemInfo, ComponentPresence, Flags, Ignored, InfoId, Quality, RequiredLinkedLater,
-    RequiredPresence, Requirement, ToolPresence, UntypedInfoId,
+    CommonItemInfo, Flags, Ignored, InfoId, Quality, RequiredComponent, RequiredLinkedLater,
+    RequiredPart, RequiredTool, Requirement, UntypedInfoId,
 };
 use bevy_log::error;
 use bevy_platform_support::collections::HashMap;
 use serde::Deserialize;
 use std::hash::{Hash, Hasher};
-use std::{ops::Mul, sync::Arc};
+use std::{num::NonZeroU32, ops::Mul, sync::Arc};
 use units::Duration;
 
 // PartialEq, Eq, and Hash manually implemented below
@@ -38,7 +38,7 @@ pub struct Recipe {
     pub qualities: RequiredQualities,
 
     #[serde(default)]
-    pub components: Vec<Vec<Alternative<ComponentPresence>>>,
+    pub components: Vec<Vec<Alternative<RequiredComponent>>>,
 
     #[serde(default)]
     pub using: Vec<Using>,
@@ -68,7 +68,7 @@ pub struct Recipe {
     pub skills_required: Option<Vec<serde_json::Value>>,
 
     #[serde(default)]
-    pub tools: Vec<Vec<Alternative<ToolPresence>>>,
+    pub tools: Vec<Vec<Alternative<RequiredTool>>>,
 
     #[serde(flatten)]
     _ignored: Ignored<Self>,
@@ -203,7 +203,7 @@ pub struct RequiredQuality {
 
 #[derive(Debug, Deserialize)]
 #[serde(from = "CddaAlternative<R>")]
-pub enum Alternative<R: RequiredPresence> {
+pub enum Alternative<R: RequiredPart> {
     Item {
         item: RequiredLinkedLater<CommonItemInfo>,
         required: R,
@@ -215,7 +215,7 @@ pub enum Alternative<R: RequiredPresence> {
     },
 }
 
-impl<R: RequiredPresence> Mul<R> for &Alternative<R> {
+impl<R: RequiredPart> Mul<R> for &Alternative<R> {
     type Output = Alternative<R>;
 
     fn mul(self, rhs: R) -> Self::Output {
@@ -240,7 +240,7 @@ impl<R: RequiredPresence> Mul<R> for &Alternative<R> {
     }
 }
 
-impl<R: RequiredPresence> From<CddaAlternative<R>> for Alternative<R> {
+impl<R: RequiredPart> From<CddaAlternative<R>> for Alternative<R> {
     fn from(source: CddaAlternative<R>) -> Self {
         match source {
             CddaAlternative::Item(item) => Self::Item {
@@ -289,7 +289,7 @@ pub enum CddaAlternative<R> {
 #[serde(from = "CddaUsing")]
 pub struct Using {
     pub requirement: RequiredLinkedLater<Requirement>,
-    pub factor: u32,
+    pub factor: NonZeroU32,
 
     // Barely used
     pub kind: UsingKind,
@@ -327,8 +327,8 @@ pub enum UsingKind {
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
 pub enum CddaUsing {
-    NonList(RequiredLinkedLater<Requirement>, u32),
-    List(RequiredLinkedLater<Requirement>, u32, Arc<str>),
+    NonList(RequiredLinkedLater<Requirement>, NonZeroU32),
+    List(RequiredLinkedLater<Requirement>, NonZeroU32, Arc<str>),
 }
 
 const fn this<T>(info_id: InfoId<T>) -> InfoId<T> {

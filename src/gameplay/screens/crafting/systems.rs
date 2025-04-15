@@ -1,12 +1,13 @@
-use crate::gameplay::item::ItemHierarchy;
-use crate::gameplay::screens::crafting::components::{
-    AlternativeSituation, ComponentSituation, QualitySituation, RecipeSituation, ToolSituation,
+use crate::gameplay::screens::crafting::{
+    AlternativeSituation, ComponentSituation, DetectedQuantity, QualitySituation, RecipeSituation,
+    ToolSituation,
 };
 use crate::gameplay::{
     ActiveSav, Amount, BodyContainers, Clock, GameplayScreenState, Infos, InstructionQueue,
-    LastSeen, Location, MessageWriter, Player, Pos, QueuedInstruction, Shared, cdda::Error,
-    screens::crafting::resource::CraftingScreen,
+    ItemHierarchy, LastSeen, Location, MessageWriter, Player, Pos, QueuedInstruction, Shared,
+    cdda::Error, screens::crafting::resource::CraftingScreen,
 };
+use bevy::platform_support::collections::HashSet;
 use bevy::platform_support::collections::{HashMap, hash_map::Entry};
 use bevy::prelude::{
     AlignItems, ChildOf, Children, Commands, ComputedNode, Display, Entity, FlexDirection, In,
@@ -17,8 +18,9 @@ use bevy::prelude::{
 use bevy::{ecs::query::QueryData, ecs::system::SystemId};
 use cdda_json_files::{
     Alternative, AutoLearn, BookLearn, BookLearnItem, CalculatedRequirement, CommonItemInfo,
-    ComponentPresence, FurnitureInfo, InfoId, PocketType, Quality, Recipe, RequiredPresence,
-    RequiredQuality, Requirement, Sav, Skill, ToolPresence,
+    ExamineAction, FurnitureInfo, InfoId, PocketType, Quality, Recipe, RequiredComponent,
+    RequiredPart, RequiredQuality, RequiredTool, Requirement, Sav, SimpleExamineAction, Skill,
+    TerrainInfo,
 };
 use hud::{
     BAD_TEXT_COLOR, ButtonBuilder, Fonts, GOOD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, ScrollList,
@@ -26,6 +28,7 @@ use hud::{
 };
 use keyboard::{Held, KeyBindings};
 use manual::{LargeNode, ManualSection};
+use std::num::NonZeroU32;
 use std::{ops::RangeInclusive, sync::Arc, time::Instant};
 use strum::VariantArray as _;
 use units::Timestamp;
@@ -41,6 +44,7 @@ pub(super) struct Nearby {
     amount: &'static Amount,
     common_item_info: Option<&'static Shared<CommonItemInfo>>,
     furniture_info: Option<&'static Shared<FurnitureInfo>>,
+    terrain_info: Option<&'static Shared<TerrainInfo>>,
     children: Option<&'static Children>,
 }
 
@@ -243,6 +247,7 @@ pub(super) fn refresh_crafting_screen(
     let (&player_pos, body_containers) = *player;
 
     let nearby_items = find_nearby(&location, &items_and_furniture, player_pos, body_containers);
+    let nearby_sources = find_sources(&location, &items_and_furniture, player_pos);
     let nearby_manuals = nearby_manuals(&nearby_items);
     let nearby_qualities = nearby_qualities(&nearby_items);
     //trace!("{:?}", &nearby_manuals);
@@ -254,6 +259,7 @@ pub(super) fn refresh_crafting_screen(
         &nearby_manuals,
         &nearby_qualities,
         &nearby_items,
+        &nearby_sources,
     );
 
     let mut shown_qualities = nearby_qualities
@@ -349,6 +355,40 @@ fn find_nearby<'a>(
         .collect::<Vec<_>>()
 }
 
+fn find_sources(
+    location: &Location,
+    items_and_furniture: &Query<(Nearby, &LastSeen, Option<&ChildOf>)>,
+    player_pos: Pos,
+) -> HashSet<InfoId<CommonItemInfo>> {
+    FIND_RANGE
+        .flat_map(move |dz| {
+            FIND_RANGE.flat_map(move |dx| {
+                location
+                    .all(player_pos.horizontal_offset(dx, dz))
+                    .filter_map(|entity| items_and_furniture.get(*entity).ok())
+                    .filter(|(.., last_seen, _)| **last_seen != LastSeen::Never)
+            })
+        })
+        .filter_map(|(nearby, ..)| {
+            nearby
+                .furniture_info
+                .and_then(|furniture_info| furniture_info.examine_action.0.as_ref())
+                .or_else(|| {
+                    nearby
+                        .terrain_info
+                        .and_then(|terrain_info| terrain_info.examine_action.0.as_ref())
+                })
+        })
+        .filter_map(|examine_action| {
+            matches!(
+                examine_action,
+                ExamineAction::Simple(SimpleExamineAction::WaterSource)
+            )
+            .then_some(InfoId::new("water"))
+        })
+        .collect()
+}
+
 fn nearby_manuals(nearby_items: &[NearbyItem]) -> HashMap<InfoId<CommonItemInfo>, Arc<str>> {
     nearby_items
         .iter()
@@ -375,6 +415,7 @@ fn shown_recipes(
     nearby_manuals: &HashMap<InfoId<CommonItemInfo>, Arc<str>>,
     nearby_qualities: &HashMap<Arc<Quality>, i8>,
     nearby_items: &[NearbyItem],
+    nearby_sources: &HashSet<InfoId<CommonItemInfo>>,
 ) -> Vec<RecipeSituation> {
     let mut shown_recipes = infos
         .recipes
@@ -405,10 +446,12 @@ fn shown_recipes(
                             hierarchy,
                             &calculated_requirements.tools,
                             nearby_items,
+                            nearby_sources,
                         ),
                         components: recipe_components(
                             &calculated_requirements.components,
                             nearby_items,
+                            nearby_sources,
                         ),
                     })
             })
@@ -527,30 +570,32 @@ fn recipe_qualities(
 
 fn recipe_tools(
     hierarchy: &ItemHierarchy,
-    required: &[Vec<Alternative<ToolPresence>>],
+    required: &[Vec<Alternative<RequiredTool>>],
     present: &[NearbyItem],
+    sources: &HashSet<InfoId<CommonItemInfo>>,
 ) -> Vec<ToolSituation> {
     required
         .iter()
         .map(|tool| ToolSituation {
-            alternatives: expand_alternatives::<ToolPresence, _, _>(
+            alternatives: expand_alternatives::<RequiredTool, _, _>(
                 tool,
                 |requirement| &requirement.tools,
                 |item_info| {
+                    let source = sources.contains(&item_info.id);
+
                     let mut found = present
                         .iter()
                         .filter(|nearby| {
                             nearby
                                 .common_item_info
-                                .map(|nearby_item_info| nearby_item_info.id == item_info.id)
-                                == Some(true)
+                                .is_some_and(|common_item_info| common_item_info.id == item_info.id)
                         })
                         .peekable();
-                    if found.peek().is_none() {
-                        return (ToolPresence::Missing, Vec::new());
+                    if !source && found.peek().is_none() {
+                        return DetectedQuantity::Missing;
                     }
 
-                    let (item_entities, amounts): (Vec<_>, Vec<_>) = found
+                    let (from_entities, amounts): (Vec<_>, Vec<_>) = found
                         .flat_map(|nearby| {
                             hierarchy.pockets_in(nearby.entity).filter_map(
                                 |(pocket_entity, pocket)| match pocket.type_ {
@@ -573,10 +618,19 @@ fn recipe_tools(
                         .flat_map(|pocket_entity| hierarchy.items_in(pocket_entity))
                         .map(|magazine_item| (magazine_item.entity, magazine_item.amount.0))
                         .unzip();
-                    (
-                        ToolPresence::from(amounts.into_iter().sum::<u32>()),
-                        item_entities,
-                    )
+
+                    let total = amounts.into_iter().sum::<u32>();
+                    if let Ok(present) = NonZeroU32::try_from(total) {
+                        DetectedQuantity::Limited {
+                            present: RequiredTool::from(present),
+                            from_entities,
+                        }
+                    } else {
+                        DetectedQuantity::Limited {
+                            present: RequiredTool::present(),
+                            from_entities,
+                        }
+                    }
                 },
             ),
         })
@@ -584,17 +638,22 @@ fn recipe_tools(
 }
 
 fn recipe_components(
-    required: &[Vec<Alternative<ComponentPresence>>],
+    required: &[Vec<Alternative<RequiredComponent>>],
     present: &[NearbyItem],
+    sources: &HashSet<InfoId<CommonItemInfo>>,
 ) -> Vec<ComponentSituation> {
     required
         .iter()
         .map(|component| ComponentSituation {
-            alternatives: expand_alternatives::<ComponentPresence, _, _>(
+            alternatives: expand_alternatives::<RequiredComponent, _, _>(
                 component,
                 |requirement| &requirement.components,
                 |item_info| {
-                    let (item_entities, amounts): (Vec<_>, Vec<_>) = present
+                    if sources.contains(&item_info.id) {
+                        return DetectedQuantity::Infinite;
+                    }
+
+                    let (from_entities, amounts): (Vec<_>, Vec<_>) = present
                         .iter()
                         .filter(|nearby| {
                             nearby
@@ -604,10 +663,16 @@ fn recipe_components(
                         })
                         .map(|nearby| (nearby.entity, nearby.amount.0))
                         .unzip();
-                    (
-                        ComponentPresence::from(amounts.into_iter().sum::<u32>()),
-                        item_entities,
-                    )
+
+                    let total = amounts.into_iter().sum::<u32>();
+                    if let Ok(amount) = NonZeroU32::try_from(total) {
+                        DetectedQuantity::Limited {
+                            present: RequiredComponent { amount },
+                            from_entities,
+                        }
+                    } else {
+                        DetectedQuantity::Missing
+                    }
                 },
             ),
         })
@@ -615,9 +680,9 @@ fn recipe_components(
 }
 
 fn expand_alternatives<
-    R: RequiredPresence<Output = R>,
+    R: RequiredPart<Output = R>,
     S: Clone + Copy + Fn(&Requirement) -> &Vec<Vec<Alternative<R>>>,
-    T: Clone + Copy + Fn(&Arc<CommonItemInfo>) -> (R, Vec<Entity>),
+    T: Clone + Copy + Fn(&Arc<CommonItemInfo>) -> DetectedQuantity<R>,
 >(
     alternatives: &[Alternative<R>],
     details: S,
@@ -633,15 +698,11 @@ fn expand_alternatives<
                 .ok()
         })
         .flatten()
-        .map(|(item_info, required)| {
-            let (present, item_entities) = present(&item_info);
-            AlternativeSituation {
-                id: item_info.id.clone(),
-                name: item_info.name.amount(required.item_amount()).clone(),
-                required,
-                present,
-                consumed: item_entities,
-            }
+        .map(|(item_info, required)| AlternativeSituation {
+            id: item_info.id.clone(),
+            name: item_info.name.amount(required.item_amount()).clone(),
+            required,
+            detected: present(&item_info),
         })
         .collect::<Vec<_>>();
     alternatives.sort_by_key(|alternative| !alternative.is_present());
@@ -649,7 +710,7 @@ fn expand_alternatives<
 }
 
 fn expand_items<
-    R: RequiredPresence,
+    R: RequiredPart,
     P: Clone + Copy + Fn(&Requirement) -> &Vec<Vec<Alternative<R>>>,
 >(
     alternative: &Alternative<R>,

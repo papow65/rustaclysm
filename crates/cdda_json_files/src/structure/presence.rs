@@ -1,12 +1,12 @@
-use bevy_log::warn;
 use serde::Deserialize;
-use std::{fmt, hash::Hash, num::NonZeroU32, ops::Mul};
+use std::num::{NonZeroI32, NonZeroU8, NonZeroU32};
+use std::{fmt, hash::Hash, ops::Mul};
 
-pub trait RequiredPresence:
+pub trait RequiredPart:
     Clone
     + Copy
     + fmt::Debug
-    + From<u32>
+    + From<NonZeroU32>
     + Mul<Self, Output = Self>
     + PartialEq
     + Eq
@@ -15,49 +15,46 @@ pub trait RequiredPresence:
 {
     fn present() -> Self;
 
-    fn quantity_present(self) -> Option<NonZeroU32>;
+    fn needs_quantity(self) -> bool;
 
     fn format(self, string: &str) -> String;
 
     fn item_amount(self) -> u32;
+    fn used_amount(self) -> u32;
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Deserialize)]
-#[serde(from = "i32")]
-pub enum ToolPresence {
-    Missing,
-    Present { charges: u32 },
+#[serde(from = "NonZeroI32")]
+pub enum RequiredTool {
+    Uncharged,
+    Charged { charges: NonZeroU32 },
 }
 
-impl Mul<Self> for ToolPresence {
+impl Mul<Self> for RequiredTool {
     type Output = Self;
 
     fn mul(self, factor: Self) -> Self {
-        let (Self::Present { charges }, Self::Present { charges: factor }) = (self, factor) else {
-            unreachable!("{:?} {:?}", self, factor)
+        let (Self::Charged { charges }, Self::Charged { charges: factor }) = (self, factor) else {
+            return Self::Uncharged;
         };
 
-        Self::Present {
-            charges: factor * charges,
+        Self::Charged {
+            charges: factor.saturating_mul(charges),
         }
     }
 }
 
-impl RequiredPresence for ToolPresence {
+impl RequiredPart for RequiredTool {
     fn present() -> Self {
-        Self::Present { charges: 0 }
+        Self::Uncharged
     }
 
-    fn quantity_present(self) -> Option<NonZeroU32> {
-        if let Self::Present { charges } = self {
-            charges.try_into().ok()
-        } else {
-            None
-        }
+    fn needs_quantity(self) -> bool {
+        matches!(self, Self::Charged { .. })
     }
 
     fn format(self, string: &str) -> String {
-        if let Some(charges) = self.quantity_present() {
+        if let Self::Charged { charges } = self {
             format!(
                 "{string} with {charges} charge{}",
                 if charges.get() == 1 { "" } else { "s" }
@@ -70,60 +67,66 @@ impl RequiredPresence for ToolPresence {
     fn item_amount(self) -> u32 {
         1 // One tool
     }
-}
 
-impl From<i32> for ToolPresence {
-    fn from(value: i32) -> Self {
-        // TODO Validate that there is no more nuanced meaing behind the apparently inconsistent usage of signs.
-
-        if value == 0 {
-            warn!("0 is not expected value for ToolPresence");
-            Self::Present { charges: 0 }
-        } else if value == -1 {
-            Self::Present { charges: 0 }
+    fn used_amount(self) -> u32 {
+        if let Self::Charged { charges } = self {
+            charges.get()
         } else {
-            Self::Present {
-                charges: value.unsigned_abs(),
-            }
+            0
         }
     }
 }
 
-impl From<u32> for ToolPresence {
-    fn from(charges: u32) -> Self {
-        Self::Present { charges }
+impl From<NonZeroI32> for RequiredTool {
+    fn from(value: NonZeroI32) -> Self {
+        // TODO Validate that there is no more nuanced meaing behind the apparently inconsistent usage of signs.
+
+        let minus_one = -NonZeroI32::from(NonZeroU8::MIN);
+        if value == minus_one {
+            Self::Uncharged
+        } else {
+            Self::from(value.unsigned_abs())
+        }
+    }
+}
+
+impl From<NonZeroU32> for RequiredTool {
+    fn from(charges: NonZeroU32) -> Self {
+        Self::Charged { charges }
     }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Deserialize)]
-#[serde(from = "u32")]
-pub struct ComponentPresence {
-    pub amount: u32,
+#[serde(from = "NonZeroU32")]
+pub struct RequiredComponent {
+    pub amount: NonZeroU32,
 }
 
-impl From<u32> for ComponentPresence {
-    fn from(amount: u32) -> Self {
+impl From<NonZeroU32> for RequiredComponent {
+    fn from(amount: NonZeroU32) -> Self {
         Self { amount }
     }
 }
 
-impl Mul<Self> for ComponentPresence {
+impl Mul<Self> for RequiredComponent {
     type Output = Self;
 
     fn mul(self, factor: Self) -> Self {
         Self {
-            amount: factor.amount * self.amount,
+            amount: self.amount.saturating_mul(factor.amount),
         }
     }
 }
 
-impl RequiredPresence for ComponentPresence {
+impl RequiredPart for RequiredComponent {
     fn present() -> Self {
-        Self { amount: 1 }
+        Self {
+            amount: NonZeroU32::MIN,
+        }
     }
 
-    fn quantity_present(self) -> Option<NonZeroU32> {
-        self.amount.try_into().ok()
+    fn needs_quantity(self) -> bool {
+        true
     }
 
     fn format(self, string: &str) -> String {
@@ -131,22 +134,32 @@ impl RequiredPresence for ComponentPresence {
     }
 
     fn item_amount(self) -> u32 {
-        self.amount
+        self.amount.get()
+    }
+
+    fn used_amount(self) -> u32 {
+        self.amount.get()
     }
 }
 
 #[cfg(test)]
 mod recipe_tests {
     use super::*;
+    use std::num::TryFromIntError;
 
     #[test]
-    fn tool_sorting() {
-        assert!(ToolPresence::Missing < ToolPresence::Present { charges: 0 });
-        assert!(ToolPresence::Present { charges: 0 } < ToolPresence::Present { charges: 3 });
-        assert!(ToolPresence::Missing < ToolPresence::Present { charges: 3 });
+    fn tool_sorting() -> Result<(), TryFromIntError> {
+        let one_charge = RequiredTool::Charged {
+            charges: 1.try_into()?,
+        };
+        let three_charges = RequiredTool::Charged {
+            charges: 3.try_into()?,
+        };
 
-        assert!(ToolPresence::Present { charges: 0 } > ToolPresence::Missing);
-        assert!(ToolPresence::Present { charges: 3 } > ToolPresence::Present { charges: 0 });
-        assert!(ToolPresence::Present { charges: 3 } > ToolPresence::Missing);
+        assert!(RequiredTool::Uncharged < one_charge);
+        assert!(RequiredTool::Uncharged < three_charges);
+        assert!(one_charge < three_charges);
+
+        Ok(())
     }
 }

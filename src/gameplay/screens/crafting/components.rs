@@ -1,11 +1,11 @@
 use bevy::prelude::{Component, Entity, TextColor, TextFont, TextSpan};
 use cdda_json_files::{
-    CommonItemInfo, ComponentPresence, InfoId, Recipe, RequiredPresence, ToolPresence,
+    CommonItemInfo, InfoId, Recipe, RequiredComponent, RequiredPart, RequiredTool,
 };
 use hud::{
     BAD_TEXT_COLOR, Fonts, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
 };
-use std::{cmp::Ordering, sync::Arc};
+use std::{cmp::Ordering, num::NonZeroU32, sync::Arc};
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Component)]
 #[component(immutable)]
@@ -24,26 +24,46 @@ impl RecipeSituation {
         &self.recipe
     }
 
-    pub(crate) fn consumed_tool_charges(
-        &self,
-    ) -> impl Iterator<Item = &AlternativeSituation<ToolPresence>> {
-        self.tools.iter().map(|tool| {
-            tool.alternatives
-                .iter()
-                .find(|alternative| alternative.is_present())
-                .expect("Crafting components should be present")
-        })
+    /// Assumes being craftable
+    pub(crate) fn consumed_tool_charges(&self) -> impl Iterator<Item = Consumed> {
+        self.tools
+            .iter()
+            .filter_map(|tool| Self::consumed(&tool.alternatives))
     }
 
-    pub(crate) fn consumed_components(
-        &self,
-    ) -> impl Iterator<Item = &AlternativeSituation<ComponentPresence>> {
-        self.components.iter().map(|component| {
-            component
-                .alternatives
-                .iter()
-                .find(|alternative| alternative.is_present())
-                .expect("Crafting components should be present")
+    /// Assumes being craftable
+    pub(crate) fn consumed_components(&self) -> impl Iterator<Item = Consumed> {
+        self.components
+            .iter()
+            .filter_map(|component| Self::consumed(&component.alternatives))
+    }
+
+    /// Assumes being craftable
+    fn consumed<R: RequiredPart>(
+        alternative_situations: &[AlternativeSituation<R>],
+    ) -> Option<Consumed> {
+        if alternative_situations
+            .iter()
+            .any(|alternative| match alternative.detected {
+                DetectedQuantity::Missing => false,
+                DetectedQuantity::Limited { .. } => !alternative.required.needs_quantity(),
+                DetectedQuantity::Infinite => true,
+            })
+        {
+            return None;
+        }
+
+        alternative_situations.iter().find_map(|alternative| {
+            if let DetectedQuantity::Limited { from_entities, .. } = &alternative.detected {
+                NonZeroU32::try_from(alternative.required.used_amount())
+                    .ok()
+                    .map(|amount| Consumed {
+                        amount,
+                        from_entities,
+                    })
+            } else {
+                None
+            }
         })
     }
 
@@ -245,7 +265,7 @@ impl QualitySituation {
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub(super) struct ToolSituation {
-    pub(super) alternatives: Vec<AlternativeSituation<ToolPresence>>,
+    pub(super) alternatives: Vec<AlternativeSituation<RequiredTool>>,
 }
 
 impl ToolSituation {
@@ -275,7 +295,7 @@ impl ToolSituation {
 }
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub(super) struct ComponentSituation {
-    pub(super) alternatives: Vec<AlternativeSituation<ComponentPresence>>,
+    pub(super) alternatives: Vec<AlternativeSituation<RequiredComponent>>,
 }
 
 impl ComponentSituation {
@@ -305,17 +325,20 @@ impl ComponentSituation {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub(crate) struct AlternativeSituation<R: RequiredPresence> {
+pub(super) struct AlternativeSituation<R: RequiredPart> {
     pub(super) id: InfoId<CommonItemInfo>,
     pub(super) name: Arc<str>,
-    pub(crate) required: R,
-    pub(super) present: R,
-    pub(crate) consumed: Vec<Entity>,
+    pub(super) required: R,
+    pub(super) detected: DetectedQuantity<R>,
 }
 
-impl<R: RequiredPresence> AlternativeSituation<R> {
+impl<R: RequiredPart> AlternativeSituation<R> {
     pub(super) fn is_present(&self) -> bool {
-        self.required <= self.present
+        match self.detected {
+            DetectedQuantity::Missing => false,
+            DetectedQuantity::Limited { present, .. } => self.required <= present,
+            DetectedQuantity::Infinite => true,
+        }
     }
 
     fn presence_color(&self) -> TextColor {
@@ -333,19 +356,40 @@ impl<R: RequiredPresence> AlternativeSituation<R> {
             fonts.regular(),
         )];
 
-        if let Some(present) = self.present.quantity_present() {
-            let only = if self.present < self.required {
-                "only "
-            } else {
-                ""
-            };
-            text_sections.push((
-                TextSpan::new(format!(" ({only}{present} present)")),
-                SOFT_TEXT_COLOR,
-                fonts.regular(),
-            ));
+        if self.required.needs_quantity() {
+            text_sections.extend(
+                (match self.detected {
+                    DetectedQuantity::Missing => None,
+                    DetectedQuantity::Limited { present, .. } => {
+                        let only = if present < self.required { "only " } else { "" };
+                        Some(format!(" ({only}{} present)", present.used_amount()))
+                    }
+                    DetectedQuantity::Infinite => Some(String::from(" (infinite)")),
+                })
+                .map(|details| (TextSpan::new(details), SOFT_TEXT_COLOR, fonts.regular())),
+            );
         }
 
         text_sections
     }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub(crate) enum DetectedQuantity<R: RequiredPart> {
+    Missing,
+
+    // Note: `Consumed` should not be used here, because the purposes of present and amount differ.
+    Limited {
+        // We use `R` here, because for tools this can also be `RequiredTool::Uncharged`
+        present: R,
+        from_entities: Vec<Entity>,
+    },
+
+    Infinite,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub(crate) struct Consumed<'a> {
+    pub(crate) amount: NonZeroU32,
+    pub(crate) from_entities: &'a [Entity],
 }

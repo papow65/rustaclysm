@@ -10,7 +10,7 @@ mod state;
 
 pub(crate) use self::base::{BaseScreenPlugin, update_camera_offset};
 pub(crate) use self::character::CharacterScreenPlugin;
-pub(crate) use self::crafting::{AlternativeSituation, CraftingScreenPlugin, RecipeSituation};
+pub(crate) use self::crafting::{Consumed, CraftingScreenPlugin, RecipeSituation};
 pub(crate) use self::death::DeathScreenPlugin;
 pub(crate) use self::inventory::InventoryScreenPlugin;
 pub(crate) use self::loading::LoadingScreenPlugin;

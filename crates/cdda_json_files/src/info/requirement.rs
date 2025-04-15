@@ -1,9 +1,11 @@
 use crate::{
-    Alternative, ComponentPresence, Error, Ignored, InfoId, Recipe, RequiredPresence,
-    RequiredQualities, ToolPresence, Using,
+    Alternative, Error, Ignored, InfoId, Recipe, RequiredComponent, RequiredPart,
+    RequiredQualities, RequiredTool, Using,
 };
 use serde::Deserialize;
-use std::iter::once;
+use std::{iter::once, num::NonZeroU32};
+
+const ONE: NonZeroU32 = NonZeroU32::MIN;
 
 #[derive(Debug, Deserialize)]
 pub struct Requirement {
@@ -13,10 +15,10 @@ pub struct Requirement {
     pub qualities: RequiredQualities,
 
     #[serde(default)]
-    pub components: Vec<Vec<Alternative<ComponentPresence>>>,
+    pub components: Vec<Vec<Alternative<RequiredComponent>>>,
 
     #[serde(default)]
-    pub tools: Vec<Vec<Alternative<ToolPresence>>>,
+    pub tools: Vec<Vec<Alternative<RequiredTool>>>,
 
     #[serde(flatten)]
     _ignored: Ignored<Self>,
@@ -25,8 +27,8 @@ pub struct Requirement {
 #[derive(Debug)]
 pub struct CalculatedRequirement {
     pub qualities: RequiredQualities,
-    pub components: Vec<Vec<Alternative<ComponentPresence>>>,
-    pub tools: Vec<Vec<Alternative<ToolPresence>>>,
+    pub components: Vec<Vec<Alternative<RequiredComponent>>>,
+    pub tools: Vec<Vec<Alternative<RequiredTool>>>,
 }
 
 impl CalculatedRequirement {
@@ -60,8 +62,8 @@ impl From<&Requirement> for CalculatedRequirement {
     fn from(requirement: &Requirement) -> Self {
         Self {
             qualities: requirement.qualities.clone(),
-            components: clone(&requirement.components, 1),
-            tools: clone(&requirement.tools, 1),
+            components: clone(&requirement.components, ONE),
+            tools: clone(&requirement.tools, ONE),
         }
     }
 }
@@ -83,8 +85,8 @@ impl TryFrom<&Recipe> for CalculatedRequirement {
     fn try_from(recipe: &Recipe) -> Result<Self, Error> {
         Ok(Self {
             qualities: recipe.qualities.clone(),
-            components: clone(&recipe.components, 1),
-            tools: clone(&recipe.tools, 1),
+            components: clone(&recipe.components, ONE),
+            tools: clone(&recipe.tools, ONE),
         }
         .combine(
             recipe
@@ -96,9 +98,9 @@ impl TryFrom<&Recipe> for CalculatedRequirement {
     }
 }
 
-fn clone<R: RequiredPresence>(
+fn clone<R: RequiredPart>(
     alternatives: &[Vec<Alternative<R>>],
-    factor: u32,
+    factor: NonZeroU32,
 ) -> Vec<Vec<Alternative<R>>> {
     alternatives
         .iter()
