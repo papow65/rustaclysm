@@ -2,6 +2,7 @@ use crate::{Flags, InfoId, structure::MaybeFlatVec};
 use crate::{Ignored, ItemQuality, UntypedInfoId};
 use bevy_platform_support::collections::HashMap;
 use serde::Deserialize;
+use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 use units::{Duration, Mass, Volume};
 
@@ -574,6 +575,20 @@ impl CommonItemInfo {
     #[must_use]
     pub fn melee_damage(&self) -> u16 {
         self.bashing.unwrap_or(0).max(self.cutting.unwrap_or(0))
+    }
+}
+
+impl PartialEq for CommonItemInfo {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
+}
+
+impl Eq for CommonItemInfo {}
+
+impl Hash for CommonItemInfo {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.id.hash(state);
     }
 }
 

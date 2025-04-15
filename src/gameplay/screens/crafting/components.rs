@@ -361,8 +361,10 @@ impl<R: RequiredPart> AlternativeSituation<R> {
                 (match self.detected {
                     DetectedQuantity::Missing => None,
                     DetectedQuantity::Limited { present, .. } => {
-                        let only = if present < self.required { "only " } else { "" };
-                        Some(format!(" ({only}{} present)", present.used_amount()))
+                        (0 < present.used_amount()).then(|| {
+                            let only = if present < self.required { "only " } else { "" };
+                            format!(" ({only}{} present)", present.used_amount())
+                        })
                     }
                     DetectedQuantity::Infinite => Some(String::from(" (infinite)")),
                 })
