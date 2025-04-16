@@ -1,17 +1,15 @@
-use crate::gameplay::cdda::info::parsed_json::Enriched;
-use crate::gameplay::{TypeId, cdda::Error};
+use crate::gameplay::cdda::info::fixed::{human, wiring};
+use crate::gameplay::cdda::{TypeId, Error, info::parsed_json::Enriched};
 use bevy::platform::collections::HashMap;
 use bevy::prelude::{debug, error, warn};
 use cdda_json_files::{
-    Alternative, Bash, BashItem, BashItems, CddaItemName, CharacterInfo, CommonItemInfo, Flags,
-    FurnitureInfo, Ignored, InfoId, InfoIdDescription, ItemAction, ItemGroup, ItemMigration,
-    ItemName, ItemWithCommonInfo, Link as _, LinkProvider, Quality, Recipe, RecipeResult,
-    RequiredLinkedLater, Requirement, TerrainInfo, UntypedInfoId, VehiclePartInfo,
-    VehiclePartMigration,
+    Alternative, Bash, BashItem, BashItems, CharacterInfo, CommonItemInfo, FurnitureInfo, InfoId,
+    InfoIdDescription, ItemAction, ItemGroup, ItemMigration, ItemWithCommonInfo, Link as _,
+    LinkProvider, Quality, Recipe, RecipeResult, Requirement, TerrainInfo, UntypedInfoId,
+    VehiclePartInfo, VehiclePartMigration,
 };
 use serde::de::DeserializeOwned;
 use std::{any::type_name, fmt, sync::Arc};
-use units::{Mass, Volume};
 
 pub(crate) struct InfoMap<T> {
     map: HashMap<InfoId<T>, Arc<T>>,
@@ -80,95 +78,7 @@ impl<T: fmt::Debug + DeserializeOwned + 'static> InfoMap<T> {
 
 impl InfoMap<CharacterInfo> {
     pub(super) fn add_default_human(&mut self) {
-        let default_human = CharacterInfo {
-            id: InfoId::new("human"),
-            name: ItemName::from(CddaItemName::Simple(Arc::from("Human"))),
-            default_faction: Arc::from("human"),
-            looks_like: Some(UntypedInfoId::new("overlay_male_mutation_SKIN_TAN")),
-            volume: Some(Volume::try_from("80 l").expect("Well formatted")),
-            mass: Some(Mass::try_from("80 kg").expect("Well formatted")),
-            hp: 100,
-            speed: 100,
-            melee_dice: 2,
-            melee_dice_sides: 4,
-            flags: Flags::default(),
-            absorb_ml_per_hp: None,
-            absorb_move_cost_max: None,
-            absorb_move_cost_per_ml: None,
-            aggression: None,
-            aggro_character: None,
-            anger_triggers: None,
-            armor_acid: None,
-            armor_bash: None,
-            armor_bullet: None,
-            armor_cold: None,
-            armor_cut: None,
-            armor_elec: None,
-            armor_fire: None,
-            armor_stab: None,
-            attack_cost: None,
-            attack_effs: None,
-            baby_flags: None.into(),
-            biosignature: None,
-            bleed_rate: None,
-            bodytype: None,
-            burn_into: None,
-            categories: None,
-            color: None,
-            colour: None,
-            death_drops: None,
-            death_function: None,
-            delete: None,
-            description: Arc::from(String::new()),
-            diff: None,
-            dissect: None,
-            dodge: None,
-            emit_fields: None,
-            extend: None,
-            families: None,
-            fear_triggers: None,
-            fungalize_into: None,
-            grab_strength: None,
-            harvest: None,
-            luminance: None,
-            material: None,
-            mech_battery: None,
-            mech_str_bonus: None,
-            mech_weapon: None,
-            melee_damage: None,
-            melee_skill: None,
-            melee_training_cap: None,
-            morale: None,
-            mountable_weight_ratio: None,
-            path_settings: None,
-            petfood: None,
-            phase: None,
-            placate_triggers: None,
-            proportional: None,
-            regen_morale: None,
-            regenerates: None,
-            regenerates_in_dark: None,
-            regeneration_modifiers: None,
-            relative: None,
-            reproduction: None,
-            revert_to_itype: None,
-            scents_ignored: None,
-            shearing: None,
-            special_attacks: None,
-            special_when_hit: None,
-            species: None,
-            split_move_cost: None,
-            starting_ammo: None,
-            symbol: 'H',
-            tracking_distance: None,
-            upgrades: None,
-            vision_day: None,
-            vision_night: None,
-            weakpoint_sets: None,
-            weakpoints: None,
-            zombify_into: None,
-            ignored: Ignored::default(),
-        };
+        let default_human = human();
         self.map
             .insert(InfoId::new("human"), Arc::new(default_human));
     }
@@ -377,64 +287,10 @@ pub(super) fn link_bash(
 
 impl InfoMap<VehiclePartInfo> {
     pub(crate) fn add_wiring(&mut self) {
-        let id = InfoId::new("wiring");
-        self.map.entry(id.clone()).or_insert_with(|| {
-            Arc::new(VehiclePartInfo {
-                id,
-                name: Some(CddaItemName::Simple(Arc::from("Wiring")).into()),
-                item: RequiredLinkedLater::new(InfoId::new("wire")),
-                looks_like: None,
-                flags: None.into(),
-                ignored: Ignored::default(),
-                backfire_freq: None,
-                backfire_threshold: None,
-                bonus: None,
-                breaks_into: None,
-                broken_color: None,
-                broken_symbol: None,
-                categories: Vec::new(),
-                color: None,
-                comfort: None,
-                contact_area: None,
-                damage_modifier: None,
-                damage_reduction: None,
-                damaged_power_factor: None,
-                delete: None,
-                description: None,
-                durability: 0,
-                emissions: None,
-                energy_consumption: None,
-                epower: None,
-                exclusions: None,
-                exhaust: None,
-                extend: None,
-                floor_bedding_warmth: None,
-                folded_volume: None,
-                folding_time: None,
-                fuel_options: None,
-                fuel_type: None,
-                location: None,
-                m2c: None,
-                muscle_power_factor: None,
-                noise_factor: None,
-                power: None,
-                proportional: None,
-                pseudo_tools: None,
-                qualities: None,
-                requirements: None,
-                rolling_resistance: None,
-                rotor_diameter: None,
-                size: None,
-                standard_symbols: None,
-                symbol: None,
-                symbols: None,
-                transform_terrain: None,
-                unfolding_time: None,
-                unfolding_tools: None,
-                wheel_type: None,
-                workbench: None,
-            })
-        });
+        let wiring = wiring();
+        self.map
+            .entry(wiring.id.clone())
+            .or_insert_with(|| Arc::new(wiring));
     }
 
     pub(super) fn add_vehicle_part_migrations<'a>(
