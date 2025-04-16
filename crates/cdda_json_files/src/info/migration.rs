@@ -7,12 +7,14 @@ pub struct ItemMigration {
     pub id: InfoId<CommonItemInfo>,
     pub replace: InfoId<CommonItemInfo>,
 
+    pub from_variant: Option<Arc<str>>,
+    pub variant: Option<Arc<str>>,
+
     pub charges: Option<u16>,
     pub contents: Option<Vec<serde_json::Value>>,
     pub flags: Flags,
     pub reset_item_vars: Option<bool>,
     pub sealed: Option<bool>,
-    pub variant: Option<Arc<str>>,
 
     #[serde(flatten)]
     _ignored: Ignored<Self>,

@@ -1,13 +1,16 @@
 use crate::gameplay::cdda::info::info_map::{InfoMap, ItemInfoMapLoader};
+use crate::gameplay::cdda::info::migration_provider::{
+    ItemMigrationProvider, VehiclePartMigrationProvider,
+};
 use crate::gameplay::cdda::info::parsed_json::ParsedJson;
 use crate::gameplay::{ObjectCategory, TypeId};
 use bevy::prelude::{Resource, debug, error, info, warn};
 use cdda_json_files::{
     Ammo, BionicItem, Book, CddaItem, CharacterInfo, Clothing, Comestible, CommonItemInfo, Engine,
-    FieldInfo, FurnitureInfo, GenericItem, Gun, Gunmod, ItemAction, ItemGroup, Link as _, Magazine,
-    Overmap, OvermapTerrainInfo, PetArmor, Practice, Quality, Recipe, RequiredLinkedLater,
-    Requirement, Submap, TerrainInfo, Tool, ToolClothing, Toolmod, UntypedInfoId, VehiclePartInfo,
-    VehiclePartMigration, Wheel,
+    FieldInfo, FurnitureInfo, GenericItem, Gun, Gunmod, ItemAction, ItemGroup, ItemMigration,
+    Link as _, Magazine, Overmap, OvermapTerrainInfo, PetArmor, Practice, Quality, Recipe,
+    RequiredLinkedLater, Requirement, Submap, TerrainInfo, Tool, ToolClothing, Toolmod,
+    UntypedInfoId, VehiclePartInfo, VehiclePartMigration, Wheel,
 };
 use std::{env, process::exit, time::Instant};
 use strum::VariantArray as _;
@@ -52,6 +55,7 @@ pub(crate) struct Infos {
     pub(crate) item_actions: InfoMap<ItemAction>,
 
     item_groups: InfoMap<ItemGroup>,
+    item_migrations: InfoMap<ItemMigration>,
 
     pub(crate) magazines: InfoMap<Magazine>,
 
@@ -79,6 +83,7 @@ pub(crate) struct Infos {
     toolmods: InfoMap<Toolmod>,
 
     vehicle_parts: InfoMap<VehiclePartInfo>,
+    vehicle_part_migrations: InfoMap<VehiclePartMigration>,
 
     #[expect(unused)]
     wheels: InfoMap<Wheel>,
@@ -114,7 +119,7 @@ impl Infos {
         let mut common_item_infos = InfoMap::default();
         let mut item_loader = ItemInfoMapLoader {
             enriched_json_infos: &mut enriched_json_infos,
-            item_migrations,
+            item_migrations: &item_migrations,
             common_item_infos: &mut common_item_infos,
         };
         let ammos = item_loader.item_extract(TypeId::Ammo);
@@ -156,6 +161,7 @@ impl Infos {
             gunmods,
             item_actions: InfoMap::new(&mut enriched_json_infos, TypeId::ItemAction),
             item_groups: InfoMap::new(&mut enriched_json_infos, TypeId::ItemGroup),
+            item_migrations,
             magazines,
             pet_armors,
             practices: InfoMap::new(&mut enriched_json_infos, TypeId::Practice),
@@ -167,10 +173,11 @@ impl Infos {
             tool_clothings,
             toolmods,
             vehicle_parts: InfoMap::new(&mut enriched_json_infos, TypeId::VehiclePart),
+            vehicle_part_migrations,
             wheels,
             zone_levels: InfoMap::new(&mut enriched_json_infos, TypeId::OvermapTerrain),
         }
-        .link_all(&vehicle_part_migrations);
+        .link_all();
         this.characters.add_default_human();
 
         assert!(
@@ -191,7 +198,7 @@ impl Infos {
         this
     }
 
-    fn link_all(mut self, vehicle_part_migrations: &InfoMap<VehiclePartMigration>) -> Self {
+    fn link_all(mut self) -> Self {
         self.common_item_infos.link_common_items(&self.qualities);
         self.furniture
             .link_furniture(&self.common_item_infos, &self.item_groups);
@@ -208,7 +215,7 @@ impl Infos {
         self.vehicle_parts.add_wiring();
         self.vehicle_parts.link_items(&self.common_item_infos);
         self.vehicle_parts
-            .add_vehicle_part_migrations(vehicle_part_migrations.values());
+            .add_vehicle_part_migrations(self.vehicle_part_migrations.values());
 
         self
     }
@@ -332,9 +339,13 @@ impl Infos {
 
         for vehicle in &submap.vehicles {
             for vehicle_part in &vehicle.parts {
-                vehicle_part
-                    .info
-                    .finalize(&self.vehicle_parts, "submap vehicle");
+                vehicle_part.info.finalize(
+                    &VehiclePartMigrationProvider {
+                        info_map: &self.vehicle_parts,
+                        migrations: &self.vehicle_part_migrations,
+                    },
+                    "submap vehicle",
+                );
             }
         }
 
@@ -346,8 +357,14 @@ impl Infos {
     }
 
     fn link_item(&self, item: &CddaItem) {
-        item.item_info
-            .finalize(&self.common_item_infos, "submap item");
+        item.item_info.finalize(
+            &ItemMigrationProvider {
+                info_map: &self.common_item_infos,
+                migrations: &self.item_migrations,
+                variant: &item.variant,
+            },
+            "submap item",
+        );
         item.corpse.finalize(&self.characters, "submap item corpse");
 
         if let Some(contents) = &item.contents {

@@ -4,13 +4,16 @@ use crate::{
 use bevy_platform::collections::HashMap;
 use serde::Deserialize;
 use serde_repr::Deserialize_repr;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct CddaItem {
     #[serde(rename = "typeid")]
     pub item_info: RequiredLinkedLater<CommonItemInfo>,
+
+    /// Can change after a migration
+    pub variant: Mutex<Option<Arc<str>>>,
 
     pub snip_id: Option<Arc<str>>,
     pub charges: Option<u32>,
@@ -45,7 +48,6 @@ pub struct CddaItem {
     pub rot: Option<i64>,
     pub curammo: Option<Arc<str>>,
     pub item_counter: Option<u8>,
-    pub variant: Option<Arc<str>>,
     pub recipe_charges: Option<u8>,
     pub poison: Option<u8>,
     pub burnt: Option<serde_json::Value>,
@@ -80,7 +82,7 @@ impl From<&Arc<CommonItemInfo>> for CddaItem {
             rot: None,
             curammo: None,
             item_counter: None,
-            variant: None,
+            variant: None.into(),
             recipe_charges: None,
             poison: None,
             burnt: None,

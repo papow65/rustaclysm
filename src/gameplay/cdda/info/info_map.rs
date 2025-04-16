@@ -1,5 +1,5 @@
 use crate::gameplay::cdda::info::fixed::{human, wiring};
-use crate::gameplay::cdda::{TypeId, Error, info::parsed_json::Enriched};
+use crate::gameplay::cdda::{Error, TypeId, info::parsed_json::Enriched};
 use bevy::platform::collections::HashMap;
 use bevy::prelude::{debug, error, warn};
 use cdda_json_files::{
@@ -331,7 +331,7 @@ impl<T: fmt::Debug + DeserializeOwned + 'static> LinkProvider<T> for InfoMap<T> 
 
 pub(super) struct ItemInfoMapLoader<'a> {
     pub(super) enriched_json_infos: &'a mut HashMap<TypeId, HashMap<UntypedInfoId, Enriched>>,
-    pub(super) item_migrations: InfoMap<ItemMigration>,
+    pub(super) item_migrations: &'a InfoMap<ItemMigration>,
     pub(super) common_item_infos: &'a mut InfoMap<CommonItemInfo>,
 }
 
