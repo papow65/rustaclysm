@@ -139,7 +139,7 @@ impl ParsedJson {
                 skipped_count.fetch_add(1, Ordering::Relaxed);
                 continue;
             }
-            if !content.type_id.in_use() || content.fields.get("from_variant").is_some() {
+            if !content.type_id.in_use() {
                 skipped_count.fetch_add(1, Ordering::Relaxed);
                 continue; // TODO
             }
@@ -336,6 +336,22 @@ fn id_values(
         warn!("Unexpected combination of id_suffix for {type_id:?} in {json_path:?}: {content:#?}");
     }
 
+    let from_variant =
+        content.get("from_variant").and_then(|suffix| {
+            suffix
+        .as_str()
+        .ok_or(())
+        .inspect_err(|()| {
+            error!("Unexpected from_variant format for {type_id:?} in {json_path:?}: {suffix:?}");
+        })
+        .ok()
+        });
+    if type_id != TypeId::ItemMigration && from_variant.is_some() {
+        warn!(
+            "Unexpected combination of from_variant for {type_id:?} in {json_path:?}: {content:#?}"
+        );
+    }
+
     let id = match type_id {
         TypeId::Recipe => {
             match (
@@ -369,7 +385,7 @@ fn id_values(
 
     match id {
         serde_json::Value::String(id) => {
-            vec![UntypedInfoId::new_suffix(id, id_suffix)]
+            vec![UntypedInfoId::new_suffix(id, id_suffix.or(from_variant))]
         }
         serde_json::Value::Array(ids_array) if !ids_array.is_empty() => ids_array
             .iter()
