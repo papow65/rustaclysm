@@ -1,0 +1,11 @@
+[package]
+name = "application_state"
+description = "The state of the application"
+license = "AGPL-3.0-or-later"
+edition = "2024"
+
+[dependencies]
+bevy = { workspace = true }
+
+[lints]
+workspace = true

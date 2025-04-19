@@ -157,6 +157,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "application_state"
+version = "0.0.0"
+dependencies = [
+ "bevy",
+]
+
+[[package]]
 name = "approx"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2085,6 +2092,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "gameplay"
+version = "0.0.0"
+dependencies = [
+ "application_state",
+ "bevy",
+ "bresenham",
+ "cdda_json_files",
+ "either",
+ "fastrand",
+ "float-ord",
+ "glob",
+ "hud",
+ "keyboard",
+ "manual",
+ "pathfinding",
+ "regex",
+ "serde",
+ "serde_json",
+ "strum 0.27.1",
+ "thread_local",
+ "units",
+ "util",
+]
+
+[[package]]
 name = "getrandom"
 version = "0.2.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3871,25 +3903,16 @@ checksum = "6c20b6793b5c2fa6553b250154b78d6d0db37e72700ae35fad9387a46f487c97"
 name = "rustaclysm"
 version = "0.1.0"
 dependencies = [
+ "application_state",
  "base64 0.22.1",
  "bevy",
- "bresenham",
- "cdda_json_files",
- "either",
- "fastrand",
- "float-ord",
+ "gameplay",
  "git-version",
  "glob",
  "hud",
  "keyboard",
  "manual",
- "pathfinding",
- "regex",
- "serde",
- "serde_json",
  "strum 0.27.1",
- "thread_local",
- "units",
  "util",
 ]
 

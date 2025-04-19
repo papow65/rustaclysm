@@ -1,4 +1,5 @@
-use crate::{application::ApplicationState, loading::LoadingIndicatorState};
+use crate::loading::LoadingIndicatorState;
+use application_state::ApplicationState;
 use bevy::prelude::ComputedStates;
 
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]

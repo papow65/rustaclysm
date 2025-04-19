@@ -2,7 +2,6 @@
 
 mod application;
 mod background;
-mod gameplay;
 mod loading;
 mod main_menu;
 mod pre_gameplay;

@@ -1,6 +1,6 @@
-use crate::application::ApplicationState;
-use crate::gameplay::{GameplayReadiness, GameplayScreenState};
+use application_state::ApplicationState;
 use bevy::prelude::{Camera2d, Commands, NextState, ResMut, StateScoped};
+use gameplay::{GameplayReadiness, GameplayScreenState};
 
 pub(super) fn spawn_pre_gameplay_camera(mut commands: Commands) {
     commands.spawn((Camera2d, StateScoped(ApplicationState::PreGameplay)));

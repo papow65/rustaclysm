@@ -1,12 +1,14 @@
-use crate::application::{ApplicationState, check::check_delay, input::create_global_key_bindings};
-use crate::{background::BackgroundPlugin, gameplay::GameplayPlugin, main_menu::MainMenuPlugin};
+use crate::application::{check::check_delay, input::create_global_key_bindings};
+use crate::{background::BackgroundPlugin, main_menu::MainMenuPlugin};
 use crate::{loading::LoadingIndicatorPlugin, pre_gameplay::PreGameplayPlugin};
+use application_state::ApplicationState;
 use bevy::log::{DEFAULT_FILTER, Level, LogPlugin};
 use bevy::prelude::{
     App, AppExit, AppExtStates as _, AssetPlugin, DefaultPlugins, Fixed, ImagePlugin, Last,
     PluginGroup as _, Startup, Time, Window, WindowPlugin, info,
 };
 use bevy::window::PresentMode;
+use gameplay::GameplayPlugin;
 use git_version::git_version;
 use hud::HudPlugin;
 use keyboard::KeyboardPlugin;

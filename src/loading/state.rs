@@ -1,5 +1,6 @@
-use crate::{application::ApplicationState, gameplay::GameplayScreenState};
+use application_state::ApplicationState;
 use bevy::prelude::ComputedStates;
+use gameplay::GameplayScreenState;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 pub(crate) struct LoadingIndicatorState;

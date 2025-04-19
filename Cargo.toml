@@ -15,26 +15,17 @@ rust-version = "1.86" # should be latest stable
 members = [ "crates/*" ]
 
 [dependencies]
+application_state = { path = "crates/application_state" }
 base64 = "0.22"
 bevy = { workspace = true }
-bresenham = "0.1"
-cdda_json_files = { path = "crates/cdda_json_files" }
-either = { workspace = true }
-fastrand = { workspace = true }
-float-ord = "0.3"
+gameplay = { path = "crates/gameplay" }
 git-version = "0.3"
-glob = "0.3"
+glob = { workspace = true }
 hud = { path = "crates/hud" }
 keyboard = { path = "crates/keyboard" }
 manual = { path = "crates/manual" }
-pathfinding = { workspace = true }
-regex = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true }
 strum = { workspace = true }
-thread_local = "1"
-units = { path = "crates/units" }
-util = { path = "crates/util" }
+util = { workspace = true }
 
 [workspace.dependencies]
 # We limit this list to crates that are used in multiple crates.
@@ -44,10 +35,12 @@ bevy_platform = "0.16.0-rc.5"
 either = "1"
 fastrand = "2"
 pathfinding = "4"
+glob = "0.3"
 regex = "1"
 serde = { version = "1", features = ["derive", "rc" ] }
 serde_json = "1"
 strum = { version = "0.27", features = ["derive"] }
+util = { path = "crates/util" }
 
 [features]
 # We use --no-default-features for production builds. See .github/workflows/ci.yml
