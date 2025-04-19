@@ -13,7 +13,7 @@ use git_version::git_version;
 use hud::HudPlugin;
 use keyboard::KeyboardPlugin;
 use manual::ManualPlugin;
-use std::time::Duration;
+use std::{fmt::Write as _, time::Duration};
 use util::log_transition_plugin;
 
 pub(crate) fn run_application() -> AppExit {
@@ -35,8 +35,7 @@ pub(crate) fn run_application() -> AppExit {
             .set(ImagePlugin::default_nearest())
             .set(LogPlugin {
                 level: Level::DEBUG,
-                filter: String::from("info,rustaclysm=debug,cdda_json_files=debug,units=debug,")
-                    + DEFAULT_FILTER,
+                filter: log_filter(),
                 ..LogPlugin::default()
             })
             .set(WindowPlugin {
@@ -70,4 +69,23 @@ pub(crate) fn run_application() -> AppExit {
     app.add_systems(Last, check_delay);
 
     app.run()
+}
+
+fn log_filter() -> String {
+    [
+        "rustaclysm",
+        "application_state",
+        "cdda_json_files",
+        "gameplay",
+        "hud",
+        "keyboard",
+        "manual",
+        "units",
+        "util",
+    ]
+    .into_iter()
+    .fold(format!("info,{DEFAULT_FILTER}"), |mut acc, package| {
+        write!(acc, ",{package}=debug").expect("Writing should work");
+        acc
+    })
 }
