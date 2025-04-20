@@ -12,7 +12,6 @@ use cdda_json_files::{
     SubzoneOffset,
 };
 use std::sync::OnceLock;
-use util::here;
 
 #[derive(SystemParam)]
 pub(crate) struct SubzoneSpawner<'w, 's> {
@@ -102,7 +101,7 @@ impl SubzoneSpawner<'_, '_> {
                         .furniture
                         .iter()
                         .filter_map(|at| pos_offset.get(at))
-                        .filter_map(|required| required.get_option(here!()));
+                        .filter_map(|required| required.get_option());
                     let item_repetitions =
                         submap.items.0.iter().filter_map(|at| pos_offset.get(at));
                     let spawns = submap

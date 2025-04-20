@@ -24,7 +24,6 @@ use either::Either;
 use hud::{BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR};
 use std::sync::Arc;
 use units::{Mass, Volume};
-use util::here;
 
 #[derive(SystemParam)]
 pub(crate) struct TileSpawner<'w, 's> {
@@ -172,7 +171,7 @@ impl<'w> TileSpawner<'w, '_> {
     }
 
     fn spawn_field(&mut self, parent: Entity, pos: Pos, field: &Field) {
-        let Some(field_info) = field.field_info.get_option(here!()) else {
+        let Some(field_info) = field.field_info.get_option() else {
             return;
         };
 
@@ -296,7 +295,7 @@ impl<'w> TileSpawner<'w, '_> {
         pos: Pos,
         item_group: &RequiredLinkedLater<ItemGroup>,
     ) {
-        let Some(item_group) = item_group.get_option(here!()) else {
+        let Some(item_group) = item_group.get_option() else {
             return;
         };
         self.spawn_items(parent_entity, pos, item_group.items());
@@ -422,10 +421,10 @@ impl<'w> TileSpawner<'w, '_> {
         parent_pos: Pos,
         vehicle_part: &CddaVehiclePart,
     ) {
-        let Some(part_info) = vehicle_part.info.get_option(here!()) else {
+        let Some(part_info) = vehicle_part.info.get_option() else {
             return;
         };
-        let Some(item_info) = part_info.item.get_option(here!()) else {
+        let Some(item_info) = part_info.item.get_option() else {
             return;
         };
 

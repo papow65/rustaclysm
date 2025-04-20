@@ -14,7 +14,6 @@ use bevy::prelude::{
 use cdda_json_files::{CddaItem, Description};
 use hud::text_color_expect_full;
 use units::{Distance, Duration, Speed};
-use util::here;
 
 #[derive(QueryData)]
 #[query_data(derive(Debug))]
@@ -695,7 +694,7 @@ impl ActorItem<'_> {
             let pos = *item.pos.unwrap_or(self.pos);
             let amount = *item.amount;
             commands.entity(item.entity).despawn();
-            if let Some(result) = craft.recipe.result.item_info(here!()) {
+            if let Some(result) = craft.recipe.result.item_info() {
                 let cdda_item = CddaItem::from(&result);
                 if let Err(error) = spawner.spawn_item(parent, Some(pos), &cdda_item, amount) {
                     error!("Spawning crafted item failed: {error:#?}");

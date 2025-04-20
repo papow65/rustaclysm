@@ -32,7 +32,7 @@ use std::num::NonZeroU32;
 use std::{ops::RangeInclusive, sync::Arc, time::Instant};
 use strum::VariantArray as _;
 use units::Timestamp;
-use util::{here, log_if_slow, uppercase_first};
+use util::{log_if_slow, uppercase_first};
 
 const MAX_FIND_DISTANCE: i32 = 7;
 const FIND_RANGE: RangeInclusive<i32> = (-MAX_FIND_DISTANCE)..=MAX_FIND_DISTANCE;
@@ -460,7 +460,7 @@ fn shown_recipes(
         })
         .filter(|(.., autolearn, recipe_manuals)| *autolearn || !recipe_manuals.is_empty())
         .filter_map(|(recipe, autolearn, recipe_manuals)| {
-            recipe.result.item_info(here!()).and_then(|result| {
+            recipe.result.item_info().and_then(|result| {
                 CalculatedRequirement::try_from(&**recipe)
                     .inspect_err(|error| error!("{error:?}"))
                     .ok()
@@ -555,7 +555,7 @@ fn nearby_qualities(
         .flat_map(|item| {
             item.qualities
                 .iter()
-                .filter_map(|item_quality| item_quality.as_tuple(here!()))
+                .filter_map(|item_quality| item_quality.as_tuple())
                 .collect::<Vec<_>>()
         })
         .fold(
@@ -583,7 +583,7 @@ fn recipe_qualities(
         .filter_map(|required_quality| {
             required_quality
                 .quality
-                .get_option(here!())
+                .get_option()
                 .map(|quality| QualitySituation {
                     name: uppercase_first(quality.name.single.clone()),
                     present: present.get(&quality).copied(),

@@ -2,8 +2,8 @@ use crate::{ContainerLimits, Fragment, Infos, Item, ItemItem, Phrase, item::Pock
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{Children, Entity, Query, Res, error};
 use cdda_json_files::{PocketType, UntypedInfoId};
+use std::panic::Location;
 use std::{iter::once, num::NonZeroUsize};
-use util::here;
 
 #[derive(Clone, Copy, Debug)]
 pub(crate) struct InPocket {
@@ -45,7 +45,7 @@ impl<'w> ItemHierarchy<'w, '_> {
     ) -> impl Iterator<Item = (Entity, &Pocket)> + use<'_> {
         self.children
             .get(container)
-            .inspect_err(|error| error!("{} {error:?}", here!()))
+            .inspect_err(|error| error!("{} {error:?}", Location::caller()))
             .into_iter()
             .flat_map(IntoIterator::into_iter)
             .flat_map(|&pocket| self.pockets.get(pocket)) // Filtering out the models

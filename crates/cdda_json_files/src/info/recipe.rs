@@ -117,9 +117,10 @@ pub enum RecipeResult {
 }
 
 impl RecipeResult {
-    pub fn item_info(&self, source: impl AsRef<str>) -> Option<Arc<CommonItemInfo>> {
+    #[track_caller]
+    pub fn item_info(&self) -> Option<Arc<CommonItemInfo>> {
         if let Self::Item { item_info } = self {
-            item_info.get_option(source)
+            item_info.get_option()
         } else {
             None
         }

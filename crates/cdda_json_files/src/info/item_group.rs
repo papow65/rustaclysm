@@ -131,7 +131,7 @@ impl ItemOrGroup {
     pub fn items(&self) -> Vec<SpawnItem> {
         match self {
             Self::Item { item, .. } => item
-                .get_option("item from item group")
+                .get_option()
                 .into_iter()
                 .map(|item_info| SpawnItem {
                     item_info,
@@ -140,7 +140,7 @@ impl ItemOrGroup {
                 })
                 .collect(),
             Self::Group { group } => group
-                .get_option("nested group of item group")
+                .get_option()
                 .into_iter()
                 .flat_map(|group| group.items().collect::<Vec<_>>())
                 .collect(),
@@ -173,7 +173,7 @@ impl Probability {
                 .filter(|spawn_item| 0 < spawn_item.amount)
                 .collect(),
             Self::Array(item, prob) => item
-                .get_option("probable item from item group")
+                .get_option()
                 .into_iter()
                 .map(|item_info| SpawnItem {
                     item_info,

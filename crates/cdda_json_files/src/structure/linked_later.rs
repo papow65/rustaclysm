@@ -2,6 +2,7 @@ use crate::{Error, InfoId, InfoIdDescription, TerrainInfo};
 use bevy_log::{error, warn};
 use serde::Deserialize;
 use std::fmt;
+use std::panic::Location;
 use std::sync::{Arc, OnceLock, Weak};
 
 pub trait LinkProvider<T> {
@@ -94,9 +95,10 @@ impl<T: fmt::Debug + 'static> RequiredLinkedLater<T> {
     }
 
     /// Logs the error that [`Self.get`] would give and converts the result to an option
-    pub fn get_option(&self, called_from: impl AsRef<str>) -> Option<Arc<T>> {
+    #[track_caller]
+    pub fn get_option(&self) -> Option<Arc<T>> {
         self.get()
-            .inspect_err(|error| warn!("{} caused {error:#?}", called_from.as_ref()))
+            .inspect_err(|error| warn!("{} caused {error:#?}", Location::caller()))
             .ok()
     }
 }

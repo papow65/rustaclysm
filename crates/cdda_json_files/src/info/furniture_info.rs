@@ -98,7 +98,7 @@ impl BashItem {
         match self {
             Self::Single(occurrence) => occurrence.items().collect(),
             Self::Group { group } => group
-                .get_option("item group from bashed item")
+                .get_option()
                 .into_iter()
                 .flat_map(|item_group| item_group.items().collect::<Vec<_>>())
                 .collect(),
@@ -119,7 +119,7 @@ impl ItemOccurrence {
         self.prob
             .as_ref()
             .is_none_or(Probability::random)
-            .then_some(self.item.get_option("item occurrence from bashed item"))
+            .then_some(self.item.get_option())
             .flatten()
             .into_iter()
             .map(|item| SpawnItem {

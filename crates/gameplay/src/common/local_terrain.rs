@@ -2,7 +2,6 @@ use crate::{CardinalDirection, Pos, TileVariant, common::HorizontalDirection};
 use bevy::platform::collections::HashMap;
 use cdda_json_files::{RequiredLinkedLater, TerrainInfo};
 use std::sync::Arc;
-use util::here;
 
 pub(crate) struct LocalTerrain {
     pub(crate) info: Arc<TerrainInfo>,
@@ -63,9 +62,10 @@ fn similar(
     at(terrain, pos.horizontal_nbor(direction)).is_none_or(|nbor| nbor.is_similar(like))
 }
 
+#[track_caller]
 fn at(
     terrain: &HashMap<Pos, &RequiredLinkedLater<TerrainInfo>>,
     pos: Pos,
 ) -> Option<Arc<TerrainInfo>> {
-    terrain.get(&pos)?.get_option(here!())
+    terrain.get(&pos)?.get_option()
 }

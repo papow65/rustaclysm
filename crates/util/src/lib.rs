@@ -1,6 +1,5 @@
 mod asset_paths;
 mod async_resource_plugin;
-mod here;
 mod log_transition;
 mod slow;
 mod text;

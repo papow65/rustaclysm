@@ -38,8 +38,9 @@ pub struct ItemQuality {
 }
 
 impl ItemQuality {
-    pub fn as_tuple(&self, called_from: impl AsRef<str>) -> Option<(Arc<Quality>, i8)> {
-        self.id.get_option(called_from).map(|id| (id, self.level))
+    #[track_caller]
+    pub fn as_tuple(&self) -> Option<(Arc<Quality>, i8)> {
+        self.id.get_option().map(|id| (id, self.level))
     }
 }
 
