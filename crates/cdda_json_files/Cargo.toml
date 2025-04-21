@@ -5,7 +5,6 @@ license = "AGPL-3.0-or-later"
 edition = "2024"
 
 [dependencies]
-ahash = { version = "0.8", default-features = false, features = ["runtime-rng"] }
 bevy_log = { workspace = true }
 either = { workspace = true }
 bevy_platform = { workspace = true }

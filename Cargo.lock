@@ -1449,7 +1449,6 @@ dependencies = [
 name = "cdda_json_files"
 version = "0.0.0"
 dependencies = [
- "ahash",
  "bevy_log",
  "bevy_platform",
  "either",
