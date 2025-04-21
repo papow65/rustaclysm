@@ -1,6 +1,6 @@
-use crate::loading::LoadingIndicatorState;
 use application_state::ApplicationState;
 use bevy::prelude::ComputedStates;
+use loading::LoadingIndicatorState;
 
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub(super) struct BackgroundState;

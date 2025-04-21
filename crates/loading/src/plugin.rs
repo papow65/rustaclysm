@@ -1,4 +1,4 @@
-use crate::loading::LoadingIndicatorState;
+use crate::LoadingIndicatorState;
 use bevy::prelude::{
     AlignItems, App, AppExtStates as _, Commands, GlobalZIndex, JustifyContent, Node, OnEnter,
     Plugin, PositionType, Res, StateScoped, Text, Val,
@@ -6,7 +6,7 @@ use bevy::prelude::{
 use hud::{DEFAULT_BUTTON_COLOR, Fonts, HARD_TEXT_COLOR};
 use util::log_transition_plugin;
 
-pub(crate) struct LoadingIndicatorPlugin;
+pub struct LoadingIndicatorPlugin;
 
 impl Plugin for LoadingIndicatorPlugin {
     fn build(&self, app: &mut App) {

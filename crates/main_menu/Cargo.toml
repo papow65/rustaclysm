@@ -1,0 +1,18 @@
+[package]
+name = "main_menu"
+description = "The main menu"
+license = "AGPL-3.0-or-later"
+edition = "2024"
+
+[dependencies]
+application_state = { path = "../application_state" }
+base64 = "0.22"
+bevy = { workspace = true }
+gameplay = { path = "../gameplay" }
+glob = { workspace = true }
+hud = { path = "../hud" }
+manual = { path = "../manual" }
+util = { path = "../util" }
+
+[lints]
+workspace = true

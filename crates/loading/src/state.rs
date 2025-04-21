@@ -3,7 +3,7 @@ use bevy::prelude::ComputedStates;
 use gameplay::GameplayScreenState;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
-pub(crate) struct LoadingIndicatorState;
+pub struct LoadingIndicatorState;
 
 impl ComputedStates for LoadingIndicatorState {
     type SourceStates = (ApplicationState, Option<GameplayScreenState>);

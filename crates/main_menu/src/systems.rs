@@ -1,5 +1,5 @@
-use crate::main_menu::components::{LoadButtonArea, MessageField, MessageWrapper};
-use crate::main_menu::load_error::LoadError;
+use crate::components::{LoadButtonArea, MessageField, MessageWrapper};
+use crate::load_error::LoadError;
 use application_state::ApplicationState;
 use base64::{Engine as _, engine::general_purpose::STANDARD as base64};
 use bevy::prelude::{

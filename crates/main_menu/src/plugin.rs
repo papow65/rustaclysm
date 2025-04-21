@@ -1,4 +1,4 @@
-use crate::main_menu::systems::{
+use crate::systems::{
     FoundSav, create_load_systems, create_main_menu_key_bindings, create_quit_system,
     enter_main_menu, spawn_main_menu, update_sav_files,
 };
@@ -9,7 +9,7 @@ use bevy::prelude::{
 };
 use hud::manage_button_input;
 
-pub(crate) struct MainMenuPlugin;
+pub struct MainMenuPlugin;
 
 impl Plugin for MainMenuPlugin {
     fn build(&self, app: &mut App) {

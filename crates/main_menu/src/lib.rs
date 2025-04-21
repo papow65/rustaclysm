@@ -3,4 +3,4 @@ mod load_error;
 mod plugin;
 mod systems;
 
-pub(crate) use self::plugin::MainMenuPlugin;
+pub use self::plugin::MainMenuPlugin;

@@ -3,4 +3,4 @@ mod plugin;
 mod state;
 mod systems;
 
-pub(crate) use self::plugin::BackgroundPlugin;
+pub use self::plugin::BackgroundPlugin;

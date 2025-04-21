@@ -1,0 +1,14 @@
+[package]
+name = "background"
+description = "The background when not in gameplay"
+license = "AGPL-3.0-or-later"
+edition = "2024"
+
+[dependencies]
+application_state = { path = "../application_state" }
+bevy = { workspace = true }
+loading = { path = "../loading" }
+util = { path = "../util" }
+
+[lints]
+workspace = true

@@ -1,4 +1,4 @@
-use crate::background::{component::Background, state::BackgroundState};
+use crate::{component::Background, state::BackgroundState};
 use bevy::prelude::{
     AssetServer, Commands, GlobalZIndex, ImageNode, Node, PositionType, Res, Single, StateScoped,
     Val, Window, With, warn,

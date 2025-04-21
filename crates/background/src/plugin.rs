@@ -1,5 +1,5 @@
-use crate::background::state::BackgroundState;
-use crate::background::systems::{resize_background, spawn_background};
+use crate::state::BackgroundState;
+use crate::systems::{resize_background, spawn_background};
 use bevy::prelude::{
     App, AppExtStates as _, Condition as _, FixedUpdate, IntoScheduleConfigs as _, OnEnter, Plugin,
     Update, on_event, state_exists,
@@ -7,7 +7,7 @@ use bevy::prelude::{
 use bevy::window::{RequestRedraw, WindowResized};
 use util::log_transition_plugin;
 
-pub(crate) struct BackgroundPlugin;
+pub struct BackgroundPlugin;
 
 impl Plugin for BackgroundPlugin {
     fn build(&self, app: &mut App) {

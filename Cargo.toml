@@ -15,31 +15,44 @@ rust-version = "1.86" # should be latest stable
 members = [ "crates/*" ]
 
 [dependencies]
-application_state = { path = "crates/application_state" }
-base64 = "0.22"
+application_state = { workspace = true }
+background = { workspace = true }
 bevy = { workspace = true }
-gameplay = { path = "crates/gameplay" }
+gameplay = { workspace = true }
 git-version = "0.3"
-glob = { workspace = true }
-hud = { path = "crates/hud" }
-keyboard = { path = "crates/keyboard" }
-manual = { path = "crates/manual" }
+hud = { workspace = true }
+keyboard = { workspace = true }
+loading = { workspace = true }
+main_menu = { workspace = true }
+manual = { workspace = true }
+pre_gameplay = { workspace = true }
 strum = { workspace = true }
 util = { workspace = true }
 
 [workspace.dependencies]
 # We limit this list to crates that are used in multiple crates.
+application_state = { path = "crates/application_state" }
+background = { path = "crates/background" }
 bevy = { version = "0.16.0-rc.5", default-features = false, features = [ "async_executor", "bevy_asset", "bevy_dev_tools", "bevy_pbr", "bevy_log", "bevy_state", "bevy_text", "bevy_ui", "bevy_window", "multi_threaded", "png", "std", "tonemapping_luts", "wayland" ] }
 bevy_log = "0.16.0-rc.5"
 bevy_platform = "0.16.0-rc.5"
+cdda_json_files = { path = "crates/cdda_json_files" }
 either = "1"
 fastrand = "2"
+gameplay = { path = "crates/gameplay" }
+hud = { path = "crates/hud" }
+keyboard = { path = "crates/keyboard" }
+loading = { path = "crates/loading" }
+main_menu = { path = "crates/main_menu" }
+manual = { path = "crates/manual" }
 pathfinding = "4"
 glob = "0.3"
+pre_gameplay = { path = "crates/pre_gameplay" }
 regex = "1"
 serde = { version = "1", features = ["derive", "rc" ] }
 serde_json = "1"
 strum = { version = "0.27", features = ["derive"] }
+units = { path = "crates/units" }
 util = { path = "crates/util" }
 
 [features]

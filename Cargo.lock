@@ -298,6 +298,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ace50bade8e6234aa140d9a2f552bbee1db4d353f69b8217bc503490fc1a9f26"
 
 [[package]]
+name = "background"
+version = "0.0.0"
+dependencies = [
+ "application_state",
+ "bevy",
+ "loading",
+ "util",
+]
+
+[[package]]
 name = "backtrace"
 version = "0.3.74"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2845,6 +2855,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b4ce301924b7887e9d637144fdade93f9dfff9b60981d4ac161db09720d39aa5"
 
 [[package]]
+name = "loading"
+version = "0.0.0"
+dependencies = [
+ "application_state",
+ "bevy",
+ "gameplay",
+ "hud",
+ "util",
+]
+
+[[package]]
 name = "lock_api"
 version = "0.4.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2859,6 +2880,20 @@ name = "log"
 version = "0.4.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "13dc2df351e3202783a1fe0d44375f7295ffb4049267b0f3018346dc122a1d94"
+
+[[package]]
+name = "main_menu"
+version = "0.0.0"
+dependencies = [
+ "application_state",
+ "base64 0.22.1",
+ "bevy",
+ "gameplay",
+ "glob",
+ "hud",
+ "manual",
+ "util",
+]
 
 [[package]]
 name = "malloc_buf"
@@ -3611,6 +3646,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "pre_gameplay"
+version = "0.0.0"
+dependencies = [
+ "application_state",
+ "bevy",
+ "gameplay",
+]
+
+[[package]]
 name = "presser"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3904,14 +3948,16 @@ name = "rustaclysm"
 version = "0.1.0"
 dependencies = [
  "application_state",
- "base64 0.22.1",
+ "background",
  "bevy",
  "gameplay",
  "git-version",
- "glob",
  "hud",
  "keyboard",
+ "loading",
+ "main_menu",
  "manual",
+ "pre_gameplay",
  "strum 0.27.1",
  "util",
 ]

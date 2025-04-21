@@ -1,0 +1,13 @@
+[package]
+name = "pre_gameplay"
+description = "Preparation the gameplay"
+license = "AGPL-3.0-or-later"
+edition = "2024"
+
+[dependencies]
+application_state = { path = "../application_state" }
+bevy = { workspace = true }
+gameplay = { path = "../gameplay" }
+
+[lints]
+workspace = true
