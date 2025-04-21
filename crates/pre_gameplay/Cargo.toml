@@ -5,9 +5,9 @@ license = "AGPL-3.0-or-later"
 edition = "2024"
 
 [dependencies]
-application_state = { path = "../application_state" }
+application_state = { workspace = true }
 bevy = { workspace = true }
-gameplay = { path = "../gameplay" }
+gameplay = { workspace = true }
 
 [lints]
 workspace = true

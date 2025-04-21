@@ -3958,7 +3958,6 @@ dependencies = [
  "main_menu",
  "manual",
  "pre_gameplay",
- "strum 0.27.1",
  "util",
 ]
 

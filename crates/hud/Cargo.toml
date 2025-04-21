@@ -6,9 +6,9 @@ edition = "2024"
 
 [dependencies]
 bevy = { workspace = true }
-keyboard = { path = "../keyboard" }
+keyboard = { workspace = true }
 strum = { workspace = true }
-util = { path = "../util" }
+util = { workspace = true }
 
 [lints]
 workspace = true

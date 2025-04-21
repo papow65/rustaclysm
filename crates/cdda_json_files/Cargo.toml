@@ -13,7 +13,7 @@ fastrand = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 serde_repr = "0.1"
-units = { path = "../units" }
+units = { workspace = true }
 
 [dev-dependencies]
 reqwest = { version = "0.12", features = ["blocking", "json"] }

@@ -26,7 +26,6 @@ loading = { workspace = true }
 main_menu = { workspace = true }
 manual = { workspace = true }
 pre_gameplay = { workspace = true }
-strum = { workspace = true }
 util = { workspace = true }
 
 [workspace.dependencies]
