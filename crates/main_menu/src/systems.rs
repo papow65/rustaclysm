@@ -2,12 +2,13 @@ use crate::components::{LoadButtonArea, MessageField, MessageWrapper};
 use crate::load_error::LoadError;
 use application_state::ApplicationState;
 use base64::{Engine as _, engine::general_purpose::STANDARD as base64};
+use bevy::ecs::{spawn::SpawnIter, system::SystemId};
 use bevy::prelude::{
-    AlignContent, AlignItems, Camera2d, ChildSpawnerCommands, Children, Commands, Display, Entity,
+    AlignContent, AlignItems, AppExit, Bundle, Camera2d, Children, Commands, Display, Entity,
     Events, FlexDirection, FlexWrap, GlobalZIndex, In, JustifyContent, NextState, Node, Res,
-    ResMut, Single, StateScoped, Text, UiRect, Val, With, Without, World, error,
+    ResMut, Single, SpawnRelated as _, StateScoped, Text, TextFont, UiRect, Val, With, Without,
+    World, children, error,
 };
-use bevy::{app::AppExit, ecs::system::SystemId};
 use gameplay::{ActiveSav, GameplayLocal};
 use glob::glob;
 use hud::{
@@ -56,26 +57,25 @@ pub(super) fn spawn_main_menu(
 ) {
     commands.spawn((Camera2d, StateScoped(ApplicationState::MainMenu)));
 
-    commands
-        .spawn((
-            Node {
-                flex_direction: FlexDirection::Column,
-                width: Val::Percent(100.0),
-                height: Val::Percent(100.0),
-                align_items: AlignItems::Center,
-                justify_content: JustifyContent::Center,
-                ..Node::default()
-            },
-            GlobalZIndex(3),
-            StateScoped(ApplicationState::MainMenu),
-        ))
-        .with_children(|parent| {
-            add_title(parent, &fonts);
-            add_tagline(parent, &fonts);
-            add_load_button_area(parent);
-            add_notification_area(parent, &fonts);
-            add_quit_button(parent, &quit_system, &fonts);
-        });
+    commands.spawn((
+        Node {
+            flex_direction: FlexDirection::Column,
+            width: Val::Percent(100.0),
+            height: Val::Percent(100.0),
+            align_items: AlignItems::Center,
+            justify_content: JustifyContent::Center,
+            ..Node::default()
+        },
+        GlobalZIndex(3),
+        StateScoped(ApplicationState::MainMenu),
+        children![
+            title(&fonts),
+            tagline(&fonts),
+            load_button_area(),
+            notification_area(&fonts),
+            quit_button(&quit_system, &fonts),
+        ],
+    ));
 }
 
 pub(crate) fn create_main_menu_key_bindings(world: &mut World) {
@@ -89,12 +89,12 @@ pub(crate) fn create_main_menu_key_bindings(world: &mut World) {
     log_if_slow("create_main_menu_key_bindings", start);
 }
 
-fn add_title(parent: &mut ChildSpawnerCommands, fonts: &Fonts) {
-    parent.spawn((Text::from("Rustaclysm"), HARD_TEXT_COLOR, fonts.huge()));
+fn title(fonts: &Fonts) -> impl Bundle {
+    (Text::from("Rustaclysm"), HARD_TEXT_COLOR, fonts.huge())
 }
 
-fn add_tagline(parent: &mut ChildSpawnerCommands, fonts: &Fonts) {
-    parent.spawn((
+fn tagline(fonts: &Fonts) -> impl Bundle {
+    (
         Text::from("A 3D reimplementation of Cataclysm: Dark Days Ahead"),
         HARD_TEXT_COLOR,
         fonts.largish(),
@@ -105,11 +105,11 @@ fn add_tagline(parent: &mut ChildSpawnerCommands, fonts: &Fonts) {
             },
             ..Node::default()
         },
-    ));
+    )
 }
 
-fn add_load_button_area(parent: &mut ChildSpawnerCommands) {
-    parent.spawn((
+fn load_button_area() -> impl Bundle {
+    (
         Node {
             flex_direction: FlexDirection::Column,
             width: Val::Percent(100.0),
@@ -121,49 +121,46 @@ fn add_load_button_area(parent: &mut ChildSpawnerCommands) {
             ..Node::default()
         },
         LoadButtonArea,
-    ));
+    )
 }
 
-fn add_notification_area(parent: &mut ChildSpawnerCommands, fonts: &Fonts) {
-    parent
-        .spawn((
+fn notification_area(fonts: &Fonts) -> impl Bundle {
+    (
+        Node {
+            width: Val::Px(FULL_WIDTH),
+            height: MEDIUM_SPACING * 10.0,
+            align_items: AlignItems::FlexStart,
+            justify_content: JustifyContent::FlexStart,
+            flex_direction: FlexDirection::Column,
+            padding: UiRect::all(MEDIUM_SPACING),
+            margin: UiRect {
+                bottom: MEDIUM_SPACING,
+                ..UiRect::default()
+            },
+            display: Display::None,
+            ..Node::default()
+        },
+        PANEL_COLOR,
+        MessageWrapper,
+        children![(
+            Text::default(),
+            HARD_TEXT_COLOR,
+            fonts.largish(),
             Node {
                 width: Val::Px(FULL_WIDTH),
-                height: MEDIUM_SPACING * 10.0,
-                align_items: AlignItems::FlexStart,
-                justify_content: JustifyContent::FlexStart,
-                flex_direction: FlexDirection::Column,
-                padding: UiRect::all(MEDIUM_SPACING),
-                margin: UiRect {
-                    bottom: MEDIUM_SPACING,
-                    ..UiRect::default()
-                },
-                display: Display::None,
+                padding: UiRect::horizontal(MEDIUM_SPACING),
+                flex_wrap: FlexWrap::Wrap,
                 ..Node::default()
             },
-            PANEL_COLOR,
-            MessageWrapper,
-        ))
-        .with_children(|parent| {
-            parent.spawn((
-                Text::default(),
-                HARD_TEXT_COLOR,
-                fonts.largish(),
-                Node {
-                    width: Val::Px(FULL_WIDTH),
-                    padding: UiRect::horizontal(MEDIUM_SPACING),
-                    flex_wrap: FlexWrap::Wrap,
-                    ..Node::default()
-                },
-                MessageField,
-            ));
-        });
+            MessageField,
+        )],
+    )
 }
 
-fn add_quit_button(parent: &mut ChildSpawnerCommands, quit_system: &QuitSystem, fonts: &Fonts) {
-    ButtonBuilder::new("Quit", BAD_TEXT_COLOR, fonts.large(), quit_system.0)
+fn quit_button(quit_system: &QuitSystem, fonts: &Fonts) -> impl Bundle {
+    ButtonBuilder::new("Quit", BAD_TEXT_COLOR, fonts.large(), quit_system.0, ())
         .large()
-        .spawn(parent, ());
+        .bundle()
 }
 
 #[expect(clippy::needless_pass_by_value)]
@@ -197,17 +194,20 @@ pub(super) fn update_sav_files(
             load_button_area_style.display = Display::Flex;
             message_wrapper.display = Display::None;
 
-            for (index, path) in list.iter().enumerate() {
-                commands.entity(load_button_area).with_children(|parent| {
-                    add_load_button(
-                        &fonts,
-                        &load_systems,
-                        parent,
-                        path,
-                        u32::try_from(index).ok(),
-                    );
-                });
-            }
+            let largish = fonts.largish();
+
+            commands
+                .entity(load_button_area)
+                .insert(Children::spawn((SpawnIter(
+                    list.into_iter().enumerate().map(move |(index, path)| {
+                        load_button(
+                            largish.clone(),
+                            &load_systems,
+                            &path,
+                            u32::try_from(index).ok(),
+                        )
+                    }),
+                ),)));
         }
         Err(err) => {
             error!("{}", &err);
@@ -295,13 +295,12 @@ fn check_directory_structure() -> Result<(), LoadError> {
     Ok(())
 }
 
-fn add_load_button(
-    fonts: &Fonts,
+fn load_button(
+    largish: TextFont,
     load_systems: &LoadSystems,
-    parent: &mut ChildSpawnerCommands,
     path: &Path,
     index: Option<u32>,
-) {
+) -> impl Bundle + use<> {
     let world_path = path.parent().expect("World required");
     let encoded_character = path
         .file_name()
@@ -328,8 +327,9 @@ fn add_load_button(
     ButtonBuilder::new(
         format!("Load {character} in {}", world_path.display()),
         GOOD_TEXT_COLOR,
-        fonts.largish(),
+        largish,
         load_systems.button,
+        FoundSav(path.to_path_buf()),
     )
     .with_node(Node {
         width: Val::Px(400.0),
@@ -348,7 +348,7 @@ fn add_load_button(
         ..Node::default()
     })
     .key_binding(key_binding, load_systems.key)
-    .spawn(parent, FoundSav(path.to_path_buf()));
+    .bundle()
 }
 
 pub(super) fn load(

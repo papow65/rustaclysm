@@ -4,9 +4,10 @@ use crate::screens::inventory::section::InventorySection;
 use crate::screens::inventory::systems::{InventoryButton, InventorySystem};
 use crate::{DebugTextShown, Fragment, ItemHandler, ItemItem, Phrase};
 use bevy::ecs::entity::hash_map::EntityHashMap;
+use bevy::ecs::spawn::{SpawnIter, SpawnWith};
 use bevy::prelude::{
-    AlignItems, BackgroundColor, ChildSpawnerCommands, Entity, JustifyContent, Node, Overflow,
-    Text, TextColor, Val, debug,
+    AlignItems, BackgroundColor, Bundle, ChildSpawner, ChildSpawnerCommands, Children, Entity,
+    JustifyContent, Node, Overflow, Spawn, SpawnRelated as _, Text, TextColor, Val, debug,
 };
 use cdda_json_files::CommonItemInfo;
 use hud::{
@@ -23,8 +24,8 @@ struct SectionData<'r> {
 }
 
 impl SectionData<'_> {
-    fn add_expansion_button(&self, parent: &mut ChildSpawnerCommands, item_text_color: TextColor) {
-        parent.spawn((
+    fn expansion_button(&self, item_text_color: TextColor) -> impl Bundle {
+        (
             Text::default(),
             item_text_color,
             self.fonts.regular(),
@@ -33,33 +34,35 @@ impl SectionData<'_> {
                 overflow: Overflow::clip(),
                 ..Node::default()
             },
-        ));
+        )
     }
 
-    fn add_item_name(&self, parent: &mut ChildSpawnerCommands, item_phrase: &Phrase) {
-        parent
-            .spawn((
-                Text::default(),
-                SOFT_TEXT_COLOR,
-                self.fonts.regular(),
-                Node {
-                    width: Val::Px(500.0),
-                    overflow: Overflow::clip(),
-                    ..Node::default()
-                },
-            ))
-            .with_children(|parent| {
-                for (span, color, debug) in item_phrase.as_text_sections() {
-                    let mut entity = parent.spawn((span, color, self.fonts.regular()));
+    fn item_name(&self, item_phrase: &Phrase) -> impl Bundle {
+        let text_sections = item_phrase.as_text_sections();
+        let regular = self.fonts.regular();
+        let debug_regular = self.debug_text_shown.text_font(self.fonts.regular());
+
+        (
+            Text::default(),
+            SOFT_TEXT_COLOR,
+            self.fonts.regular(),
+            Node {
+                width: Val::Px(500.0),
+                overflow: Overflow::clip(),
+                ..Node::default()
+            },
+            Children::spawn((SpawnWith(move |parent: &mut ChildSpawner| {
+                for (span, color, debug) in text_sections {
+                    let mut entity = parent.spawn((span, color, regular.clone()));
                     if let Some(debug) = debug {
-                        entity
-                            .insert((debug, self.debug_text_shown.text_font(self.fonts.regular())));
+                        entity.insert((debug, debug_regular.clone()));
                     }
                 }
-            });
+            }),)),
+        )
     }
 
-    fn add_item_properties(&self, parent: &mut ChildSpawnerCommands, item_info: &CommonItemInfo) {
+    fn item_properties(&self, item_info: &CommonItemInfo) -> [impl Bundle; 2] {
         let property_node = Node {
             width: Val::Px(60.0),
             overflow: Overflow::clip(),
@@ -67,35 +70,35 @@ impl SectionData<'_> {
             ..Node::default()
         };
 
-        parent.spawn((
-            Text::from(if let Some(ref volume) = item_info.volume {
-                format!("{volume}")
-            } else {
-                String::new()
-            }),
-            SOFT_TEXT_COLOR,
-            self.fonts.regular(),
-            property_node.clone(),
-        ));
-
-        parent.spawn((
-            Text::from(if let Some(ref mass) = item_info.mass {
-                format!("{mass}")
-            } else {
-                String::new()
-            }),
-            SOFT_TEXT_COLOR,
-            self.fonts.regular(),
-            property_node,
-        ));
+        [
+            (
+                Text::from(if let Some(ref volume) = item_info.volume {
+                    format!("{volume}")
+                } else {
+                    String::new()
+                }),
+                SOFT_TEXT_COLOR,
+                self.fonts.regular(),
+                property_node.clone(),
+            ),
+            (
+                Text::from(if let Some(ref mass) = item_info.mass {
+                    format!("{mass}")
+                } else {
+                    String::new()
+                }),
+                SOFT_TEXT_COLOR,
+                self.fonts.regular(),
+                property_node,
+            ),
+        ]
     }
 
-    fn add_item_action_buttons(
+    fn item_action_buttons(
         &self,
-        parent: &mut ChildSpawnerCommands<'_>,
         item_entity: Entity,
         item_text_color: TextColor,
-    ) {
+    ) -> Vec<impl Bundle> {
         let mut actions = vec![InventoryAction::Examine];
         if matches!(self.section, InventorySection::Nbor(_)) {
             actions.push(InventoryAction::Take);
@@ -111,22 +114,22 @@ impl SectionData<'_> {
             actions.push(InventoryAction::Wield);
         }
 
-        for action in actions {
-            let caption = format!("{}", &action);
-            ButtonBuilder::new(
-                caption,
-                item_text_color,
-                self.fonts.regular(),
-                self.inventory_system.0,
-            )
-            .spawn(
-                parent,
-                InventoryButton {
-                    item: item_entity,
-                    action,
-                },
-            );
-        }
+        actions
+            .into_iter()
+            .map(move |action| {
+                ButtonBuilder::new(
+                    format!("{}", &action),
+                    item_text_color,
+                    self.fonts.regular(),
+                    self.inventory_system.0,
+                    InventoryButton {
+                        item: item_entity,
+                        action,
+                    },
+                )
+                .bundle()
+            })
+            .collect()
     }
 }
 
@@ -186,13 +189,17 @@ impl InventoryBuilder<'_, '_> {
                 },
                 InventoryItemRow { item: item_entity },
                 background_color,
+                Children::spawn((
+                    Spawn(section_data.expansion_button(item_text_color)),
+                    Spawn(section_data.item_name(item_phrase)),
+                    SpawnIter(section_data.item_properties(item_info).into_iter()),
+                    SpawnIter(
+                        section_data
+                            .item_action_buttons(item_entity, item_text_color)
+                            .into_iter(),
+                    ),
+                )),
             ))
-            .with_children(|parent| {
-                section_data.add_expansion_button(parent, item_text_color);
-                section_data.add_item_name(parent, item_phrase);
-                section_data.add_item_properties(parent, item_info);
-                section_data.add_item_action_buttons(parent, item_entity, item_text_color);
-            })
             .id();
 
         self.selection_list.append(row_entity);

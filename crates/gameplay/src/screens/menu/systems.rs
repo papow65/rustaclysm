@@ -2,7 +2,7 @@ use crate::GameplayScreenState;
 use application_state::ApplicationState;
 use bevy::prelude::{
     AlignItems, Commands, Events, FlexDirection, In, JustifyContent, KeyCode, Local, NextState,
-    Node, Res, ResMut, StateScoped, Val, World,
+    Node, Res, ResMut, SpawnRelated as _, StateScoped, Val, World, children,
 };
 use bevy::{app::AppExit, ecs::system::SystemId};
 use hud::{BAD_TEXT_COLOR, ButtonBuilder, Fonts, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, MEDIUM_SPACING};
@@ -32,40 +32,47 @@ pub(super) fn spawn_menu(
     mut commands: Commands,
     fonts: Res<Fonts>,
 ) {
-    commands
-        .spawn((
-            Node {
-                width: Val::Percent(100.0),
-                height: Val::Percent(100.0),
-                flex_direction: FlexDirection::Column,
-                align_items: AlignItems::Center,
-                justify_content: JustifyContent::Center,
-                row_gap: MEDIUM_SPACING,
-                ..Node::default()
-            },
-            StateScoped(GameplayScreenState::Menu),
-        ))
-        .with_children(|parent| {
+    commands.spawn((
+        Node {
+            width: Val::Percent(100.0),
+            height: Val::Percent(100.0),
+            flex_direction: FlexDirection::Column,
+            align_items: AlignItems::Center,
+            justify_content: JustifyContent::Center,
+            row_gap: MEDIUM_SPACING,
+            ..Node::default()
+        },
+        StateScoped(GameplayScreenState::Menu),
+        children![
             ButtonBuilder::new(
                 "Return",
                 GOOD_TEXT_COLOR,
                 fonts.large(),
                 button_actions.return_,
+                (),
             )
             .large()
-            .spawn(parent, ());
+            .bundle(),
             ButtonBuilder::new(
                 "Main Menu",
                 HARD_TEXT_COLOR,
                 fonts.large(),
                 button_actions.main_menu,
+                (),
             )
             .large()
-            .spawn(parent, ());
-            ButtonBuilder::new("Quit", BAD_TEXT_COLOR, fonts.large(), button_actions.quit)
-                .large()
-                .spawn(parent, ());
-        });
+            .bundle(),
+            ButtonBuilder::new(
+                "Quit",
+                BAD_TEXT_COLOR,
+                fonts.large(),
+                button_actions.quit,
+                (),
+            )
+            .large()
+            .bundle(),
+        ],
+    ));
 }
 
 #[expect(clippy::needless_pass_by_value)]

@@ -1,23 +1,24 @@
 use crate::SOFT_TEXT_COLOR;
-use bevy::ecs::system::SystemId;
+use bevy::ecs::{spawn::SpawnWith, system::SystemId};
 use bevy::prelude::{
-    AlignItems, Bundle, Button, ChildSpawnerCommands, Commands, Component, Entity, In,
-    JustifyContent, Node, PositionType, SystemInput, Text, TextColor, TextFont, Val,
+    AlignItems, Bundle, Button, ChildSpawner, Children, Commands, Component, Entity, In,
+    JustifyContent, Node, PositionType, Spawn, SpawnRelated as _, SystemInput, Text, TextColor,
+    TextFont, Val, children,
 };
 use keyboard::{Key, KeyBinding};
 use std::fmt;
 
 #[derive(Debug, Component)]
 #[component(immutable)]
-pub struct RunButton<I: SystemInput>
+pub struct RunButton<I: fmt::Debug + SystemInput>
 where
-    <I as SystemInput>::Inner<'static>: fmt::Debug,
+    <I as SystemInput>::Inner<'static>: Clone + fmt::Debug,
 {
     system: SystemId<I, ()>,
     context: <I as SystemInput>::Inner<'static>,
 }
 
-impl<I: SystemInput + 'static> RunButton<I>
+impl<I: fmt::Debug + SystemInput + 'static> RunButton<I>
 where
     <I as SystemInput>::Inner<'static>: Clone + fmt::Debug + Send + 'static,
 {
@@ -26,29 +27,29 @@ where
     }
 }
 
-pub struct ButtonBuilder<D: fmt::Display, I: SystemInput> {
-    caption: D,
+pub struct ButtonBuilder<I: fmt::Debug + SystemInput<Inner<'static>: Clone + fmt::Debug>> {
+    text: Text,
     text_color: TextColor,
     text_font: TextFont,
     node: Node,
-    system: SystemId<I, ()>,
+    run_button: RunButton<I>,
     key_binding: Option<(Key, KeyBinding<(), ()>)>,
 }
 
-impl<D: fmt::Display, I: SystemInput> ButtonBuilder<D, I>
+impl<I: fmt::Debug + SystemInput + 'static> ButtonBuilder<I>
 where
-    <I as SystemInput>::Inner<'static>: fmt::Debug,
-    (Button, Node, RunButton<I>): Bundle,
+    <I as SystemInput>::Inner<'static>: Clone + fmt::Debug + Send + Sync,
 {
     /// 70px wide, dynamic height
-    pub fn new(
-        caption: D,
+    pub fn new<S: Into<String>>(
+        caption: S,
         text_color: TextColor,
         text_font: TextFont,
         system: SystemId<I, ()>,
+        context: <I as SystemInput>::Inner<'static>,
     ) -> Self {
         Self {
-            caption,
+            text: Text(caption.into()),
             text_color,
             text_font,
             node: Node {
@@ -58,7 +59,7 @@ where
                 align_items: AlignItems::Center,
                 ..Node::default()
             },
-            system,
+            run_button: RunButton { system, context },
             key_binding: None,
         }
     }
@@ -89,52 +90,43 @@ where
         self
     }
 
-    pub fn spawn(
-        self,
-        parent: &mut ChildSpawnerCommands,
-        context: <I as SystemInput>::Inner<'static>,
-    ) {
-        let mut entity_commands = parent.spawn((
+    pub fn bundle(self) -> impl Bundle {
+        (
             Button,
             self.node,
+            // If we didn't need 'self.run_button' below, we'd use it here.
             RunButton {
-                system: self.system,
-                context,
+                context: self.run_button.context.clone(),
+                system: self.run_button.system,
             },
-        ));
+            Children::spawn((
+                Spawn((self.text, self.text_color, self.text_font.clone())),
+                SpawnWith(|parent: &mut ChildSpawner| {
+                    if let Some((key, key_binding)) = self.key_binding {
+                        // Conditionally adding key_binding to the parent bundle is not possible because Bundle is not dyn compatible. So we add it here.
+                        parent.spawn((key_binding, self.run_button));
 
-        entity_commands.with_children(|parent| {
-            parent.spawn((
-                Text(format!("{}", self.caption)),
-                self.text_color,
-                self.text_font.clone(),
-            ));
-        });
-
-        if let Some((key, key_binding)) = self.key_binding {
-            entity_commands.insert(key_binding);
-
-            entity_commands.with_children(|parent| {
-                parent
-                    .spawn(Node {
-                        position_type: PositionType::Absolute,
-                        width: Val::Percent(100.0),
-                        height: Val::Percent(100.0),
-                        justify_content: JustifyContent::End,
-                        align_items: AlignItems::Center,
-                        ..Node::default()
-                    })
-                    .with_children(|parent| {
                         parent.spawn((
-                            Text(match key {
-                                Key::Character(c) => format!("[{c}] "),
-                                Key::Code(c) => format!("[{c:?}] "),
-                            }),
-                            SOFT_TEXT_COLOR,
-                            self.text_font,
+                            Node {
+                                position_type: PositionType::Absolute,
+                                width: Val::Percent(100.0),
+                                height: Val::Percent(100.0),
+                                justify_content: JustifyContent::End,
+                                align_items: AlignItems::Center,
+                                ..Node::default()
+                            },
+                            children![(
+                                Text(match key {
+                                    Key::Character(c) => format!("[{c}] "),
+                                    Key::Code(c) => format!("[{c:?}] "),
+                                }),
+                                SOFT_TEXT_COLOR,
+                                self.text_font,
+                            )],
                         ));
-                    });
-            });
-        }
+                    }
+                }),
+            )),
+        )
     }
 }

@@ -1,21 +1,20 @@
 use crate::screens::crafting::{
     AlternativeSituation, ComponentSituation, DetectedQuantity, QualitySituation, RecipeSituation,
-    ToolSituation,
+    ToolSituation, resource::CraftingScreen,
 };
 use crate::{
     ActiveSav, Amount, BodyContainers, Clock, GameplayScreenState, Infos, InstructionQueue,
     ItemHierarchy, LastSeen, Location, MessageWriter, Player, Pos, QueuedInstruction, Shared,
-    cdda::Error, screens::crafting::resource::CraftingScreen,
+    cdda::Error,
 };
-use bevy::platform::collections::HashSet;
-use bevy::platform::collections::{HashMap, hash_map::Entry};
+use bevy::ecs::{query::QueryData, spawn::SpawnIter, system::SystemId};
+use bevy::platform::collections::{HashMap, HashSet, hash_map::Entry};
 use bevy::prelude::{
     AlignItems, AnyOf, ChildOf, Children, Commands, ComputedNode, Display, Entity, FlexDirection,
     In, IntoSystem as _, JustifyContent, KeyCode, Local, NextState, Node, Overflow, Query, Res,
-    ResMut, Single, StateScoped, Text, TextColor, Transform, UiRect, Val, With, Without, World,
-    debug, error,
+    ResMut, Single, SpawnRelated as _, StateScoped, Text, TextColor, Transform, UiRect, Val, With,
+    Without, World, children, debug, error,
 };
-use bevy::{ecs::query::QueryData, ecs::system::SystemId};
 use cdda_json_files::{
     Alternative, AutoLearn, BookLearn, BookLearnItem, CalculatedRequirement, CommonItemInfo,
     ExamineAction, FurnitureInfo, InfoId, PocketType, Quality, Recipe, RequiredComponent,
@@ -811,22 +810,25 @@ fn show_recipe(
     commands
         .entity(crafting_screen.recipe_details)
         .despawn_related::<Children>()
-        .with_children(|parent| {
+        .insert(children![
             ButtonBuilder::new(
                 "Craft",
                 recipe_sitation.color(true),
                 fonts.regular(),
                 crafting_screen.start_craft_system().0,
+                (),
             )
-            .spawn(parent, ());
-            parent
-                .spawn((Text::default(), fonts.regular()))
-                .with_children(|parent| {
-                    for section in recipe_sitation.text_sections(fonts, &recipe_sitation.recipe) {
-                        parent.spawn(section);
-                    }
-                });
-        });
+            .bundle(),
+            (
+                Text::default(),
+                fonts.regular(),
+                Children::spawn((SpawnIter(
+                    recipe_sitation
+                        .text_sections(fonts, &recipe_sitation.recipe)
+                        .into_iter()
+                ),)),
+            ),
+        ]);
 }
 
 #[expect(clippy::needless_pass_by_value)]

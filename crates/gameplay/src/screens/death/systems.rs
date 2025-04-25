@@ -3,7 +3,7 @@ use application_state::ApplicationState;
 use bevy::ecs::system::SystemId;
 use bevy::prelude::{
     AlignItems, Commands, FlexDirection, In, JustifyContent, KeyCode, Local, NextState, Node, Res,
-    ResMut, StateScoped, Text, UiRect, Val, World,
+    ResMut, SpawnRelated as _, StateScoped, Text, UiRect, Val, World, children,
 };
 use hud::{BAD_TEXT_COLOR, ButtonBuilder, Fonts, PANEL_COLOR, SMALL_SPACING, WARN_TEXT_COLOR};
 use keyboard::KeyBindings;
@@ -24,55 +24,50 @@ pub(super) fn spawn_death_screen(
     mut commands: Commands,
     fonts: Res<Fonts>,
 ) {
-    commands
-        .spawn((
+    commands.spawn((
+        Node {
+            width: Val::Percent(100.0),
+            height: Val::Percent(100.0),
+            flex_direction: FlexDirection::Column,
+            align_items: AlignItems::Center,
+            justify_content: JustifyContent::Center,
+            ..Node::default()
+        },
+        StateScoped(GameplayScreenState::Death),
+        children![(
             Node {
-                width: Val::Percent(100.0),
-                height: Val::Percent(100.0),
+                width: Val::Px(300.0),
+                height: Val::Px(200.0),
                 flex_direction: FlexDirection::Column,
                 align_items: AlignItems::Center,
                 justify_content: JustifyContent::Center,
+                padding: UiRect::all(SMALL_SPACING),
                 ..Node::default()
             },
-            StateScoped(GameplayScreenState::Death),
-        ))
-        .with_children(|parent| {
-            parent
-                .spawn((
+            PANEL_COLOR,
+            children![
+                (
                     Node {
-                        width: Val::Px(300.0),
-                        height: Val::Px(200.0),
-                        flex_direction: FlexDirection::Column,
-                        align_items: AlignItems::Center,
+                        width: Val::Px(250.0),
+                        height: Val::Px(70.0),
                         justify_content: JustifyContent::Center,
-                        padding: UiRect::all(SMALL_SPACING),
+                        align_items: AlignItems::Center,
                         ..Node::default()
                     },
-                    PANEL_COLOR,
-                ))
-                .with_children(|parent| {
-                    parent
-                        .spawn(Node {
-                            width: Val::Px(250.0),
-                            height: Val::Px(70.0),
-                            justify_content: JustifyContent::Center,
-                            align_items: AlignItems::Center,
-                            ..Node::default()
-                        })
-                        .with_children(|parent| {
-                            parent.spawn((Text::from("You died"), BAD_TEXT_COLOR, fonts.largish()));
-                        });
-
-                    ButtonBuilder::new(
-                        "Main menu",
-                        WARN_TEXT_COLOR,
-                        fonts.regular(),
-                        main_menu_system.0,
-                    )
-                    .large()
-                    .spawn(parent, ());
-                });
-        });
+                    children![(Text::from("You died"), BAD_TEXT_COLOR, fonts.largish())],
+                ),
+                ButtonBuilder::new(
+                    "Main menu",
+                    WARN_TEXT_COLOR,
+                    fonts.regular(),
+                    main_menu_system.0,
+                    (),
+                )
+                .large()
+                .bundle(),
+            ],
+        )],
+    ));
 }
 
 #[expect(clippy::needless_pass_by_value)]

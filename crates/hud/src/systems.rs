@@ -27,7 +27,7 @@ pub(super) fn manage_button_color(
     }
 }
 
-pub fn manage_button_input<I: SystemInput + 'static>(
+pub fn manage_button_input<I: fmt::Debug + SystemInput + 'static>(
     mut commands: Commands,
     interactions: Query<(&Interaction, &RunButton<I>), (Changed<Interaction>, With<Button>)>,
 ) where
@@ -80,7 +80,7 @@ pub(super) fn resize_scroll_lists(
     }
 }
 
-pub fn trigger_button_action<I: SystemInput + 'static>(
+pub fn trigger_button_action<I: fmt::Debug + SystemInput + 'static>(
     In(entity): In<Entity>,
     mut commands: Commands,
     run_buttons: Query<&RunButton<I>>,
