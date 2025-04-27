@@ -7,6 +7,7 @@ use bevy::prelude::{
 };
 use keyboard::{Key, KeyBinding};
 use std::fmt;
+use util::Maybe;
 
 #[derive(Debug, Component)]
 #[component(immutable)]
@@ -91,21 +92,21 @@ where
     }
 
     pub fn bundle(self) -> impl Bundle {
+        let (key, key_binding) = self
+            .key_binding
+            .map_or((None, Maybe::NONE), |(key, key_binding)| {
+                (Some(key), Maybe::new(key_binding))
+            });
+
         (
             Button,
             self.node,
-            // If we didn't need 'self.run_button' below, we'd use it here.
-            RunButton {
-                context: self.run_button.context.clone(),
-                system: self.run_button.system,
-            },
+            self.run_button,
+            key_binding,
             Children::spawn((
                 Spawn((self.text, self.text_color, self.text_font.clone())),
-                SpawnWith(|parent: &mut ChildSpawner| {
-                    if let Some((key, key_binding)) = self.key_binding {
-                        // Conditionally adding key_binding to the parent bundle is not possible because Bundle is not dyn compatible. So we add it here.
-                        parent.spawn((key_binding, self.run_button));
-
+                SpawnWith(move |parent: &mut ChildSpawner| {
+                    if let Some(key) = key {
                         parent.spawn((
                             Node {
                                 position_type: PositionType::Absolute,
