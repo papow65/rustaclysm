@@ -1,9 +1,8 @@
-use crate::GameplayScreenState;
-use application_state::ApplicationState;
+use crate::{GameplayScreenState, systems::to_main_menu};
 use bevy::ecs::system::SystemId;
 use bevy::prelude::{
-    AlignItems, Commands, FlexDirection, In, JustifyContent, KeyCode, Local, NextState, Node, Res,
-    ResMut, SpawnRelated as _, StateScoped, Text, UiRect, Val, World, children,
+    AlignItems, Commands, FlexDirection, In, JustifyContent, KeyCode, Local, Node, Res,
+    SpawnRelated as _, StateScoped, Text, UiRect, Val, World, children,
 };
 use hud::{BAD_TEXT_COLOR, ButtonBuilder, Fonts, PANEL_COLOR, SMALL_SPACING, WARN_TEXT_COLOR};
 use keyboard::KeyBindings;
@@ -89,8 +88,4 @@ pub(super) fn create_death_screen_key_bindings(
     ));
 
     log_if_slow("create_death_screen_key_bindings", start);
-}
-
-fn to_main_menu(mut next_application_state: ResMut<NextState<ApplicationState>>) {
-    next_application_state.set(ApplicationState::MainMenu);
 }

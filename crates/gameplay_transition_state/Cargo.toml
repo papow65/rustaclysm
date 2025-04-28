@@ -1,11 +1,12 @@
 [package]
-name = "application_state"
-description = "The state of the application"
+name = "gameplay_transition_state"
+description = "The gameplay transition state"
 license = "AGPL-3.0-or-later"
 edition = "2024"
 
 [dependencies]
 bevy = { workspace = true }
+application_state = { workspace = true }
 util = { workspace = true }
 
 [lints]

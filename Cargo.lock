@@ -161,6 +161,7 @@ name = "application_state"
 version = "0.0.0"
 dependencies = [
  "bevy",
+ "util",
 ]
 
 [[package]]
@@ -2111,6 +2112,7 @@ dependencies = [
  "either",
  "fastrand",
  "float-ord",
+ "gameplay_transition_state",
  "glob",
  "hud",
  "keyboard",
@@ -2122,6 +2124,15 @@ dependencies = [
  "strum 0.27.1",
  "thread_local",
  "units",
+ "util",
+]
+
+[[package]]
+name = "gameplay_transition_state"
+version = "0.0.0"
+dependencies = [
+ "application_state",
+ "bevy",
  "util",
 ]
 
@@ -2859,7 +2870,7 @@ version = "0.0.0"
 dependencies = [
  "application_state",
  "bevy",
- "gameplay",
+ "gameplay_transition_state",
  "hud",
  "util",
 ]
@@ -3651,6 +3662,7 @@ dependencies = [
  "application_state",
  "bevy",
  "gameplay",
+ "gameplay_transition_state",
 ]
 
 [[package]]

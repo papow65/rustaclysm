@@ -1,7 +1,7 @@
 use crate::{component::Background, handle::BackgroundHandle, state::BackgroundState};
 use bevy::prelude::{
     AssetServer, Camera2d, Commands, GlobalZIndex, ImageNode, Node, PositionType, Res, Single,
-    StateScoped, Val, Window, With, warn,
+    StateScoped, Val, Window, With, debug, warn,
 };
 use util::AssetPaths;
 
@@ -13,6 +13,7 @@ const BACKGROUND_NAME: &str = "on_the_run.png";
 pub(super) fn load_background(mut commands: Commands, asset_server: Res<AssetServer>) {
     let handle = asset_server.load(AssetPaths::backgrounds().join(BACKGROUND_NAME));
     commands.insert_resource(BackgroundHandle(handle));
+    debug!("Background handle created");
 }
 
 pub(super) fn spawn_background_camera(mut commands: Commands) {

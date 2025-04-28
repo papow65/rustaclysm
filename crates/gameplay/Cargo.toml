@@ -12,6 +12,7 @@ cdda_json_files = { workspace = true }
 either = { workspace = true }
 fastrand = { workspace = true }
 float-ord = "0.3"
+gameplay_transition_state = { workspace = true }
 glob = { workspace = true }
 hud = { workspace = true }
 keyboard = { workspace = true }

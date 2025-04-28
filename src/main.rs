@@ -2,12 +2,12 @@ mod check;
 mod input;
 
 use crate::{check::check_delay, input::create_global_key_bindings};
-use application_state::ApplicationState;
+use application_state::ApplicationStatePlugin;
 use background::BackgroundPlugin;
 use bevy::log::{DEFAULT_FILTER, Level, LogPlugin};
 use bevy::prelude::{
-    App, AppExit, AppExtStates as _, AssetPlugin, DefaultPlugins, Fixed, ImagePlugin, Last,
-    PluginGroup as _, Startup, Time, Window, WindowPlugin, info,
+    App, AppExit, AssetPlugin, DefaultPlugins, Fixed, ImagePlugin, Last, PluginGroup as _, Startup,
+    Time, Window, WindowPlugin, info,
 };
 use bevy::window::PresentMode;
 use gameplay::GameplayPlugin;
@@ -19,7 +19,6 @@ use main_menu::MainMenuPlugin;
 use manual::ManualPlugin;
 use pre_gameplay::PreGameplayPlugin;
 use std::{fmt::Write as _, time::Duration};
-use util::log_transition_plugin;
 
 fn main() -> AppExit {
     let mut app = App::new();
@@ -55,6 +54,7 @@ fn main() -> AppExit {
     app.insert_resource(Time::<Fixed>::from_duration(Duration::from_millis(250)));
 
     app.add_plugins((
+        ApplicationStatePlugin,
         HudPlugin,
         KeyboardPlugin,
         MainMenuPlugin,
@@ -63,11 +63,7 @@ fn main() -> AppExit {
         GameplayPlugin,
         LoadingIndicatorPlugin,
         PreGameplayPlugin,
-        log_transition_plugin::<ApplicationState>,
     ));
-
-    app.init_state::<ApplicationState>();
-    app.enable_state_scoped_entities::<ApplicationState>();
 
     app.add_systems(Startup, create_global_key_bindings);
 
@@ -83,6 +79,7 @@ fn log_filter() -> String {
         "background",
         "cdda_json_files",
         "gameplay",
+        "gameplay_transition_state",
         "hud",
         "keyboard",
         "loading",

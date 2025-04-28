@@ -7,7 +7,7 @@ edition = "2024"
 [dependencies]
 application_state = { workspace = true }
 bevy = { workspace = true }
-gameplay = { workspace = true }
+gameplay_transition_state = { workspace = true }
 hud = { workspace = true }
 util = { workspace = true }
 

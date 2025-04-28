@@ -39,6 +39,7 @@ cdda_json_files = { path = "crates/cdda_json_files" }
 either = "1"
 fastrand = "2"
 gameplay = { path = "crates/gameplay" }
+gameplay_transition_state = { path = "crates/gameplay_transition_state" }
 hud = { path = "crates/hud" }
 keyboard = { path = "crates/keyboard" }
 loading = { path = "crates/loading" }

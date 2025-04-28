@@ -1,10 +1,5 @@
-use bevy::prelude::States;
+mod plugin;
+mod state;
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, States)]
-pub enum ApplicationState {
-    #[default]
-    Startup,
-    MainMenu,
-    PreGameplay,
-    Gameplay,
-}
+pub use self::plugin::ApplicationStatePlugin;
+pub use self::state::ApplicationState;

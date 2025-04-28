@@ -3,6 +3,7 @@ use application_state::ApplicationState;
 use bevy::prelude::{
     KeyCode, Local, NextState, Res, ResMut, Single, StateScoped, With, World, debug,
 };
+use gameplay_transition_state::GameplayTransitionState;
 use keyboard::KeyBindings;
 use manual::ManualSection;
 use std::time::Instant;
@@ -42,7 +43,11 @@ fn spawn_zombies(
     }
 }
 
-fn to_main_menu(mut next_application_state: ResMut<NextState<GameplayScreenState>>) {
+pub(crate) fn to_main_menu(
+    mut next_gameplay_screen_state: ResMut<NextState<GameplayScreenState>>,
+    mut next_gameplay_transition_state: ResMut<NextState<GameplayTransitionState>>,
+) {
     debug!("Unloading");
-    next_application_state.set(GameplayScreenState::Unloading);
+    next_gameplay_screen_state.set(GameplayScreenState::Transitioning);
+    next_gameplay_transition_state.set(GameplayTransitionState::Unloading);
 }

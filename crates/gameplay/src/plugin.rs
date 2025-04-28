@@ -8,10 +8,10 @@ use crate::systems::{
 };
 use crate::{
     ActorPlugin, CameraOffset, CddaPlugin, Exploration, GameplayScreenState, PhrasePlugin,
-    RelativeSegments, SpawnSubzoneLevel, VisualizationUpdate, events::EventsPlugin,
-    focus::FocusPlugin, item::ItemChecksPlugin, models::ModelPlugin, resources::ResourcePlugin,
-    scope::GameplayLocalPlugin, screens::ScreensPlugin, sidebar::SidebarPlugin, time::TimePlugin,
-    update_camera_offset,
+    RelativeSegments, SpawnSubzoneLevel, TimePlugin, TransitionPlugin, VisualizationUpdate,
+    events::EventsPlugin, focus::FocusPlugin, item::ItemChecksPlugin, models::ModelPlugin,
+    resources::ResourcePlugin, scope::GameplayLocalPlugin, screens::ScreensPlugin,
+    sidebar::SidebarPlugin, update_camera_offset,
 };
 use application_state::ApplicationState;
 use bevy::ecs::system::ScheduleSystem;
@@ -40,6 +40,7 @@ impl Plugin for GameplayPlugin {
             PhrasePlugin,
             ResourcePlugin,
             GameplayLocalPlugin,
+            TransitionPlugin,
             ScreensPlugin,
             TimePlugin,
             FrameTimeDiagnosticsPlugin::default(),
