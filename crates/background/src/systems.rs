@@ -1,4 +1,4 @@
-use crate::{component::Background, state::BackgroundState};
+use crate::{component::Background, handle::BackgroundHandle, state::BackgroundState};
 use bevy::prelude::{
     AssetServer, Camera2d, Commands, GlobalZIndex, ImageNode, Node, PositionType, Res, Single,
     StateScoped, Val, Window, With, warn,
@@ -9,6 +9,12 @@ const BACKGROUND_WIDTH: f32 = 1522.0;
 const BACKGROUND_HEIGHT: f32 = 1009.0;
 const BACKGROUND_NAME: &str = "on_the_run.png";
 
+#[expect(clippy::needless_pass_by_value)]
+pub(super) fn load_background(mut commands: Commands, asset_server: Res<AssetServer>) {
+    let handle = asset_server.load(AssetPaths::backgrounds().join(BACKGROUND_NAME));
+    commands.insert_resource(BackgroundHandle(handle));
+}
+
 pub(super) fn spawn_background_camera(mut commands: Commands) {
     commands.spawn((Camera2d, StateScoped(BackgroundState)));
 }
@@ -16,14 +22,13 @@ pub(super) fn spawn_background_camera(mut commands: Commands) {
 #[expect(clippy::needless_pass_by_value)]
 pub(super) fn spawn_background(
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
+    background_handle: Res<BackgroundHandle>,
     window: Option<Single<&Window>>,
 ) {
     let background_scale = background_scale(window.map(|w| *w));
-    let background_image = asset_server.load(AssetPaths::backgrounds().join(BACKGROUND_NAME));
     commands.spawn((
         ImageNode {
-            image: background_image,
+            image: background_handle.0.clone(),
             ..ImageNode::default()
         },
         Node {
