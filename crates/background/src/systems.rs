@@ -1,13 +1,17 @@
 use crate::{component::Background, state::BackgroundState};
 use bevy::prelude::{
-    AssetServer, Commands, GlobalZIndex, ImageNode, Node, PositionType, Res, Single, StateScoped,
-    Val, Window, With, warn,
+    AssetServer, Camera2d, Commands, GlobalZIndex, ImageNode, Node, PositionType, Res, Single,
+    StateScoped, Val, Window, With, warn,
 };
 use util::AssetPaths;
 
 const BACKGROUND_WIDTH: f32 = 1522.0;
 const BACKGROUND_HEIGHT: f32 = 1009.0;
 const BACKGROUND_NAME: &str = "on_the_run.png";
+
+pub(super) fn spawn_background_camera(mut commands: Commands) {
+    commands.spawn((Camera2d, StateScoped(BackgroundState)));
+}
 
 #[expect(clippy::needless_pass_by_value)]
 pub(super) fn spawn_background(

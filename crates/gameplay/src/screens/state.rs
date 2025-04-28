@@ -14,4 +14,5 @@ pub enum GameplayScreenState {
     Menu,
     //Saving, // TODO
     Death,
+    Unloading,
 }

@@ -10,7 +10,8 @@ impl ComputedStates for LoadingIndicatorState {
 
     fn compute((application_state, gameplay_screen_state): Self::SourceStates) -> Option<Self> {
         (application_state == ApplicationState::PreGameplay
-            || gameplay_screen_state == Some(GameplayScreenState::Loading))
+            || gameplay_screen_state == Some(GameplayScreenState::Loading)
+            || gameplay_screen_state == Some(GameplayScreenState::Unloading))
         .then_some(Self)
     }
 }

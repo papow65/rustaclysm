@@ -1,6 +1,8 @@
-use crate::{Infos, Player, Pos, spawn::TileSpawner};
+use crate::{GameplayScreenState, Infos, Player, Pos, spawn::TileSpawner};
 use application_state::ApplicationState;
-use bevy::prelude::{KeyCode, Local, NextState, Res, ResMut, Single, StateScoped, With, World};
+use bevy::prelude::{
+    KeyCode, Local, NextState, Res, ResMut, Single, StateScoped, With, World, debug,
+};
 use keyboard::KeyBindings;
 use manual::ManualSection;
 use std::time::Instant;
@@ -40,6 +42,7 @@ fn spawn_zombies(
     }
 }
 
-fn to_main_menu(mut next_application_state: ResMut<NextState<ApplicationState>>) {
-    next_application_state.set(ApplicationState::MainMenu);
+fn to_main_menu(mut next_application_state: ResMut<NextState<GameplayScreenState>>) {
+    debug!("Unloading");
+    next_application_state.set(GameplayScreenState::Unloading);
 }

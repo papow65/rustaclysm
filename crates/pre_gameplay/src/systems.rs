@@ -1,10 +1,6 @@
 use application_state::ApplicationState;
-use bevy::prelude::{Camera2d, Commands, NextState, ResMut, StateScoped};
+use bevy::prelude::{NextState, ResMut};
 use gameplay::{GameplayReadiness, GameplayScreenState};
-
-pub(super) fn spawn_pre_gameplay_camera(mut commands: Commands) {
-    commands.spawn((Camera2d, StateScoped(ApplicationState::PreGameplay)));
-}
 
 #[expect(clippy::needless_pass_by_value)]
 pub(super) fn start_gameplay(

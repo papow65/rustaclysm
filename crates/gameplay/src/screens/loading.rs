@@ -15,7 +15,7 @@ impl Plugin for LoadingScreenPlugin {
 }
 
 #[expect(clippy::needless_pass_by_value)]
-pub(crate) fn finish_loading(
+fn finish_loading(
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
     gameplay_readiness: GameplayReadiness,
 ) {

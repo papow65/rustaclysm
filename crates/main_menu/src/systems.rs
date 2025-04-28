@@ -4,10 +4,10 @@ use application_state::ApplicationState;
 use base64::{Engine as _, engine::general_purpose::STANDARD as base64};
 use bevy::ecs::{spawn::SpawnIter, system::SystemId};
 use bevy::prelude::{
-    AlignContent, AlignItems, AppExit, Bundle, Camera2d, Children, Commands, Display, Entity,
-    Events, FlexDirection, FlexWrap, GlobalZIndex, In, JustifyContent, NextState, Node, Res,
-    ResMut, Single, SpawnRelated as _, StateScoped, Text, TextFont, UiRect, Val, With, Without,
-    World, children, error,
+    AlignContent, AlignItems, AppExit, Bundle, Children, Commands, Display, Entity, Events,
+    FlexDirection, FlexWrap, GlobalZIndex, In, JustifyContent, NextState, Node, Res, ResMut,
+    Single, SpawnRelated as _, StateScoped, Text, TextFont, UiRect, Val, With, Without, World,
+    children, error,
 };
 use gameplay::{ActiveSav, GameplayLocal};
 use glob::glob;
@@ -55,8 +55,6 @@ pub(super) fn spawn_main_menu(
     mut commands: Commands,
     fonts: Res<Fonts>,
 ) {
-    commands.spawn((Camera2d, StateScoped(ApplicationState::MainMenu)));
-
     commands.spawn((
         Node {
             flex_direction: FlexDirection::Column,

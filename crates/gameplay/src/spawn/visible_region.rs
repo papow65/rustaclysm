@@ -1,11 +1,11 @@
 use crate::{Level, Pos, Region, ZoneLevel};
 use bevy::ecs::system::SystemParam;
-use bevy::prelude::{Camera, GlobalTransform, Rect, Single, Vec2};
+use bevy::prelude::{Camera, Camera3d, GlobalTransform, Rect, Single, Vec2, With};
 
 /// Region visible on the camera
 #[derive(SystemParam)]
 pub(crate) struct VisibleRegion<'w> {
-    camera: Single<'w, (&'static Camera, &'static GlobalTransform)>,
+    camera: Single<'w, (&'static Camera, &'static GlobalTransform), With<Camera3d>>,
 }
 
 impl VisibleRegion<'_> {
