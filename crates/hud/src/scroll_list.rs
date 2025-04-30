@@ -36,17 +36,15 @@ impl ScrollList {
         parent_node: &Node,
         parent_computed_node: &ComputedNode,
     ) -> Val {
-        let child_top = my_computed_node.size().y / 2.0 + child_transform.translation.y
-            - child_computed_node.size().y / 2.0;
+        let child_top = (my_computed_node.size().y - child_computed_node.size().y) / 2.0
+            + child_transform.translation.y;
 
         //let first_viewed_top = self.position;
         //let last_viewed_top = self.position + parent_node.size().y - child_node.size().y;
         //trace!("{first_viewed_top:?} <= {child_top:?} <= {last_viewed_top:?}");
 
-        self.position = self.position.clamp(
-            -child_top,
-            (parent_computed_node.size().y - child_computed_node.size().y) - child_top,
-        );
+        self.position =
+            (parent_computed_node.size().y - child_computed_node.size().y) / 2.0 - child_top;
 
         //let first_viewed_top = self.position;
         //let last_viewed_top = self.position + parent_node.size().y - child_node.size().y;
@@ -57,7 +55,7 @@ impl ScrollList {
 
     /// Returns the new distance from the top
     #[must_use]
-    pub fn resize(
+    pub(crate) fn resize(
         &mut self,
         my_computed_node: &ComputedNode,
         parent_node: &Node,
