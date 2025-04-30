@@ -775,12 +775,12 @@ fn adapt_to_selected(
     ui_scale: &UiScale,
     fonts: &Fonts,
     crafting_screen: &CraftingScreen,
-    recipes: &Query<(&Transform, &ComputedNode, &RecipeSituation)>,
+    recipes: &Query<(&Transform, &RecipeSituation)>,
     scroll_lists: &mut Query<(&mut ScrollList, &mut Node, &ComputedNode, &ChildOf)>,
     scrolling_parents: &Query<(&Node, &ComputedNode), Without<ScrollList>>,
 ) {
     if let Some(selected) = crafting_screen.selection_list.selected {
-        let (recipe_transform, recipe_computed_node, recipe_sitation) = recipes
+        let (recipe_transform, recipe_sitation) = recipes
             .get(selected)
             .expect("Selected recipe should be found");
 
@@ -794,7 +794,6 @@ fn adapt_to_selected(
             style.top = scroll_list.follow(
                 ui_scale,
                 recipe_transform,
-                recipe_computed_node,
                 list_computed_node,
                 parent_node,
                 parent_computed_node,

@@ -40,24 +40,12 @@ impl ScrollList {
         &mut self,
         ui_scale: &UiScale,
         child_transform: &Transform,
-        child_computed_node: &ComputedNode,
         my_computed_node: &ComputedNode,
         parent_node: &Node,
         parent_computed_node: &ComputedNode,
     ) -> Val {
-        let child_top = (my_computed_node.size().y - child_computed_node.size().y) / 2.0
-            + child_transform.translation.y;
-
-        //let first_viewed_top = self.position;
-        //let last_viewed_top = self.position + parent_node.size().y - child_node.size().y;
-        //trace!("{first_viewed_top:?} <= {child_top:?} <= {last_viewed_top:?}");
-
-        self.position =
-            (parent_computed_node.size().y - child_computed_node.size().y) / 2.0 - child_top;
-
-        //let first_viewed_top = self.position;
-        //let last_viewed_top = self.position + parent_node.size().y - child_node.size().y;
-        //trace!("-> {first_viewed_top:?} <= {child_top:?} <= {last_viewed_top:?}");
+        self.position = (parent_computed_node.size().y - my_computed_node.size().y) / 2.0
+            - child_transform.translation.y;
 
         self.resize(
             ui_scale,

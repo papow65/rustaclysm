@@ -160,7 +160,7 @@ fn move_inventory_selection(
     mut item_rows: Query<(&InventoryItemRow, &mut BackgroundColor, &Children)>,
     item_buttons: Query<&Children, With<Button>>,
     mut text_styles: Query<&mut TextColor>,
-    item_layouts: Query<(&Transform, &ComputedNode)>,
+    item_layouts: Query<&Transform>,
     mut scroll_lists: Query<(&mut ScrollList, &mut Node, &ComputedNode, &ChildOf)>,
     scrolling_parents: Query<(&Node, &ComputedNode), Without<ScrollList>>,
 ) {
@@ -316,7 +316,7 @@ fn items_by_section<'i>(
 fn follow_selected(
     ui_scale: &UiScale,
     inventory: &InventoryScreen,
-    items: &Query<(&Transform, &ComputedNode)>,
+    items: &Query<&Transform>,
     scroll_lists: &mut Query<(&mut ScrollList, &mut Node, &ComputedNode, &ChildOf)>,
     scrolling_parents: &Query<(&Node, &ComputedNode), Without<ScrollList>>,
 ) {
@@ -324,7 +324,7 @@ fn follow_selected(
         return;
     };
 
-    let (item_transform, item_computed_node) = items
+    let item_transform = items
         .get(selected_row)
         .expect("Selected item should be found");
 
@@ -337,7 +337,6 @@ fn follow_selected(
     style.top = scroll_list.follow(
         ui_scale,
         item_transform,
-        item_computed_node,
         list_computed_node,
         parent_node,
         parent_computed_node,
