@@ -2,7 +2,7 @@ use crate::{DEFAULT_BUTTON_COLOR, Fonts, HOVERED_BUTTON_COLOR, RunButton, Scroll
 use bevy::input::mouse::MouseWheel;
 use bevy::prelude::{
     BackgroundColor, Button, Changed, ChildOf, Commands, ComputedNode, Entity, EventReader, In,
-    Interaction, Node, Query, SystemInput, With, Without, World,
+    Interaction, Node, Query, Res, SystemInput, UiScale, With, Without, World,
 };
 use std::fmt;
 
@@ -40,8 +40,10 @@ pub fn manage_button_input<I: fmt::Debug + SystemInput + 'static>(
     }
 }
 
+#[expect(clippy::needless_pass_by_value)]
 pub(super) fn manage_scroll_lists(
     mut mouse_wheel_events: EventReader<MouseWheel>,
+    ui_scale: Res<UiScale>,
     mut scroll_lists: Query<(
         &mut ScrollList,
         &mut Node,
@@ -58,6 +60,7 @@ pub(super) fn manage_scroll_lists(
                     .get(child_of.parent())
                     .expect("ChildOf node should be found");
                 node.top = scroll_list.scroll(
+                    &ui_scale,
                     computed_node,
                     parent_node,
                     parent_computed_node,
@@ -68,7 +71,9 @@ pub(super) fn manage_scroll_lists(
     }
 }
 
+#[expect(clippy::needless_pass_by_value)]
 pub(super) fn resize_scroll_lists(
+    ui_scale: Res<UiScale>,
     mut scroll_lists: Query<(&mut ScrollList, &mut Node, &ComputedNode, &ChildOf)>,
     parent_nodes: Query<(&Node, &ComputedNode), Without<ScrollList>>,
 ) {
@@ -76,7 +81,7 @@ pub(super) fn resize_scroll_lists(
         let (parent_node, parent_computed_node) = parent_nodes
             .get(child_of.parent())
             .expect("ChildOf node should be found");
-        style.top = scroll_list.resize(computed_node, parent_node, parent_computed_node);
+        style.top = scroll_list.resize(&ui_scale, computed_node, parent_node, parent_computed_node);
     }
 }
 

@@ -1,6 +1,8 @@
 use bevy::ecs::component::{ComponentHooks, Mutable, StorageType};
 use bevy::input::mouse::{MouseScrollUnit, MouseWheel};
-use bevy::prelude::{Component, ComputedNode, Interaction, JustifyContent, Node, Transform, Val};
+use bevy::prelude::{
+    Component, ComputedNode, Interaction, JustifyContent, Node, Transform, UiScale, Val,
+};
 
 // Manually deriving `Component`
 #[derive(Debug, Default)]
@@ -14,6 +16,7 @@ impl ScrollList {
     #[must_use]
     pub fn scroll(
         &mut self,
+        ui_scale: &UiScale,
         my_computed_node: &ComputedNode,
         parent_node: &Node,
         parent_computed_node: &ComputedNode,
@@ -23,13 +26,19 @@ impl ScrollList {
             MouseScrollUnit::Line => mouse_wheel_event.y * 20.0,
             MouseScrollUnit::Pixel => mouse_wheel_event.y,
         };
-        self.resize(my_computed_node, parent_node, parent_computed_node)
+        self.resize(
+            ui_scale,
+            my_computed_node,
+            parent_node,
+            parent_computed_node,
+        )
     }
 
     /// Returns the new distance from the top
     #[must_use]
     pub fn follow(
         &mut self,
+        ui_scale: &UiScale,
         child_transform: &Transform,
         child_computed_node: &ComputedNode,
         my_computed_node: &ComputedNode,
@@ -50,13 +59,19 @@ impl ScrollList {
         //let last_viewed_top = self.position + parent_node.size().y - child_node.size().y;
         //trace!("-> {first_viewed_top:?} <= {child_top:?} <= {last_viewed_top:?}");
 
-        self.resize(my_computed_node, parent_node, parent_computed_node)
+        self.resize(
+            ui_scale,
+            my_computed_node,
+            parent_node,
+            parent_computed_node,
+        )
     }
 
     /// Returns the new distance from the top
     #[must_use]
     pub(crate) fn resize(
         &mut self,
+        ui_scale: &UiScale,
         my_computed_node: &ComputedNode,
         parent_node: &Node,
         parent_computed_node: &ComputedNode,
@@ -64,7 +79,7 @@ impl ScrollList {
         let padding_top = Self::to_px(parent_node.padding.top);
         let padding_bottom = Self::to_px(parent_node.padding.bottom);
 
-        let items_height = my_computed_node.size().y + padding_top + padding_bottom;
+        let items_height = my_computed_node.size().y + (padding_top + padding_bottom) * ui_scale.0;
         let parent_height = parent_computed_node.size().y;
         let max_scroll = (items_height - parent_height).max(0.0);
 
@@ -76,7 +91,7 @@ impl ScrollList {
             missing => todo!("{missing:?}"),
         };
         //trace!("=> {:?}", self.position);
-        Val::Px(self.position)
+        Val::Px(self.position / ui_scale.0)
     }
 
     /// This assumes [`Val::Auto`] is used vertically

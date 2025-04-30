@@ -13,7 +13,7 @@ use bevy::prelude::{
     AlignItems, BackgroundColor, Button, ChildOf, Children, Commands, ComputedNode, Display,
     Entity, FlexDirection, In, IntoSystem as _, JustifyContent, KeyCode, Local, NextState, Node,
     Overflow, Query, Res, ResMut, Single, StateScoped, Text, TextColor, TextSpan, Transform,
-    UiRect, Val, With, Without, World, debug, error,
+    UiRect, UiScale, Val, With, Without, World, debug, error,
 };
 use hud::{
     Fonts, HARD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, SOFT_TEXT_COLOR, ScrollList, SelectionList,
@@ -152,8 +152,10 @@ pub(super) fn create_inventory_key_bindings(
     log_if_slow("create_inventory_key_bindings", start);
 }
 
+#[expect(clippy::needless_pass_by_value)]
 fn move_inventory_selection(
     In(step): In<SelectionListStep>,
+    ui_scale: Res<UiScale>,
     mut inventory: ResMut<InventoryScreen>,
     mut item_rows: Query<(&InventoryItemRow, &mut BackgroundColor, &Children)>,
     item_buttons: Query<&Children, With<Button>>,
@@ -164,6 +166,7 @@ fn move_inventory_selection(
 ) {
     inventory.adjust_selection(&mut item_rows, &item_buttons, &mut text_styles, step);
     follow_selected(
+        &ui_scale,
         &inventory,
         &item_layouts,
         &mut scroll_lists,
@@ -311,6 +314,7 @@ fn items_by_section<'i>(
 }
 
 fn follow_selected(
+    ui_scale: &UiScale,
     inventory: &InventoryScreen,
     items: &Query<(&Transform, &ComputedNode)>,
     scroll_lists: &mut Query<(&mut ScrollList, &mut Node, &ComputedNode, &ChildOf)>,
@@ -331,6 +335,7 @@ fn follow_selected(
         .get(child_of.parent())
         .expect("ChildOf node should be found");
     style.top = scroll_list.follow(
+        ui_scale,
         item_transform,
         item_computed_node,
         list_computed_node,

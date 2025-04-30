@@ -12,8 +12,8 @@ use bevy::platform::collections::{HashMap, HashSet, hash_map::Entry};
 use bevy::prelude::{
     AlignItems, AnyOf, ChildOf, Children, Commands, ComputedNode, Display, Entity, FlexDirection,
     In, IntoSystem as _, JustifyContent, KeyCode, Local, NextState, Node, Overflow, Query, Res,
-    ResMut, Single, SpawnRelated as _, StateScoped, Text, TextColor, Transform, UiRect, Val, With,
-    Without, World, children, debug, error,
+    ResMut, Single, SpawnRelated as _, StateScoped, Text, TextColor, Transform, UiRect, UiScale,
+    Val, With, Without, World, children, debug, error,
 };
 use cdda_json_files::{
     Alternative, AutoLearn, BookLearn, BookLearnItem, CalculatedRequirement, CommonItemInfo,
@@ -179,6 +179,7 @@ fn exit_crafting(mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>
 pub(super) fn move_crafting_selection(
     In(step): In<SelectionListStep>,
     mut commands: Commands,
+    ui_scale: Res<UiScale>,
     fonts: Res<Fonts>,
     mut crafting_screen: ResMut<CraftingScreen>,
     mut recipes: Query<(&mut TextColor, &Transform, &ComputedNode, &RecipeSituation)>,
@@ -190,6 +191,7 @@ pub(super) fn move_crafting_selection(
     crafting_screen.adjust_selection(&mut recipes.transmute_lens().query(), step);
     adapt_to_selected(
         &mut commands,
+        &ui_scale,
         &fonts,
         &crafting_screen,
         &recipes.transmute_lens().query(),
@@ -770,7 +772,8 @@ fn expand_items<
 
 fn adapt_to_selected(
     commands: &mut Commands,
-    fonts: &Res<Fonts>,
+    ui_scale: &UiScale,
+    fonts: &Fonts,
     crafting_screen: &CraftingScreen,
     recipes: &Query<(&Transform, &ComputedNode, &RecipeSituation)>,
     scroll_lists: &mut Query<(&mut ScrollList, &mut Node, &ComputedNode, &ChildOf)>,
@@ -789,6 +792,7 @@ fn adapt_to_selected(
                 .get(child_of.parent())
                 .expect("ChildOf node should be found");
             style.top = scroll_list.follow(
+                ui_scale,
                 recipe_transform,
                 recipe_computed_node,
                 list_computed_node,
