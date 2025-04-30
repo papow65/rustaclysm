@@ -7,7 +7,7 @@ use bevy::prelude::{
     AlignContent, AlignItems, AppExit, Bundle, Children, Commands, Display, Entity, Events,
     FlexDirection, FlexWrap, GlobalZIndex, In, JustifyContent, NextState, Node, Res, ResMut,
     Single, SpawnRelated as _, StateScoped, Text, TextFont, UiRect, Val, With, Without, World,
-    children, error,
+    children, debug, error,
 };
 use gameplay::{ActiveSav, GameplayLocal};
 use glob::glob;
@@ -174,6 +174,8 @@ pub(super) fn update_sav_files(
     mut message_wrapper: Single<&mut Node, (With<MessageWrapper>, Without<LoadButtonArea>)>,
     mut message_field: Single<&mut Text, With<MessageField>>,
 ) {
+    let start = Instant::now();
+
     let &mut (load_button_area, ref mut load_button_area_style) = &mut *load_button_areas;
 
     let list_saves_result = list_saves();
@@ -216,6 +218,8 @@ pub(super) fn update_sav_files(
             message_field.0 = err.to_string();
         }
     }
+
+    debug!("Updated main menu sav files in {:?}", start.elapsed());
 }
 
 fn list_saves() -> Result<Vec<PathBuf>, LoadError> {

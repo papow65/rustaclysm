@@ -5,7 +5,8 @@ use bevy::prelude::{
 use bevy::tasks::{AsyncComputeTaskPool, Task};
 use futures_lite::future::{block_on, poll_once};
 use regex::Regex;
-use std::{any::type_name, future::Future, marker::PhantomData, sync::LazyLock, time::Instant};
+use std::time::{Duration, Instant};
+use std::{any::type_name, future::Future, marker::PhantomData, sync::LazyLock, thread::sleep};
 
 /// Resources that take a while to load, are loaded in the background, independent of the current `ApplicationState`
 pub trait AsyncNew<T>: Resource {
@@ -43,6 +44,9 @@ impl<T: AsyncNew<T> + Send + 'static> Default for AsyncResourceLoader<T> {
         let task = thread_pool.spawn(async {
             static MODULE_PREFIX: LazyLock<Regex> =
                 LazyLock::new(|| Regex::new("[^:<>]+::").expect("Valid regex for module prefix"));
+
+            // Pausing briefly allows the main menu and background to load, ensuring responsiveness
+            sleep(Duration::from_millis(50));
 
             let start = Instant::now();
             let type_name = MODULE_PREFIX.replace_all(type_name::<T>(), "");
