@@ -30,20 +30,15 @@ fn examine_zone_level(focus: Focus, mut next_focus_state: ResMut<NextState<Focus
     log_if_slow("examine_zone_level", start);
 }
 
-fn open_crafting_screen(mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>) {
+fn open_screen(
+    In(screen): In<GameplayScreenState>,
+    mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
+) {
     let start = Instant::now();
 
-    next_gameplay_state.set(GameplayScreenState::Crafting);
+    next_gameplay_state.set(screen);
 
-    log_if_slow("open_crafting_screen", start);
-}
-
-fn open_inventory(mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>) {
-    let start = Instant::now();
-
-    next_gameplay_state.set(GameplayScreenState::Inventory);
-
-    log_if_slow("open_inventory", start);
+    log_if_slow("open_screen", start);
 }
 
 fn toggle_map(
@@ -225,8 +220,9 @@ pub(super) fn create_base_key_bindings(
         builder.add('M', (|| ZoomDistance::Far).pipe(toggle_map));
         builder.add('x', examine_pos);
         builder.add('X', examine_zone_level);
-        builder.add('&', open_crafting_screen);
-        builder.add('i', open_inventory);
+        builder.add('&', (|| GameplayScreenState::Crafting).pipe(open_screen));
+        builder.add('i', (|| GameplayScreenState::Inventory).pipe(open_screen));
+        builder.add('q', (|| GameplayScreenState::Quality).pipe(open_screen));
         builder.add('z', (|| ZoomDirection::In).pipe(manage_zoom));
         builder.add('Z', (|| ZoomDirection::Out).pipe(manage_zoom));
         builder.add('h', toggle_elevation);
@@ -279,6 +275,7 @@ pub(super) fn create_base_key_bindings(
                 ("auto travel", "G"),
                 ("inventory", "i"),
                 ("crafting", "&"),
+                ("qualities", "q"),
                 ("toggle map", "m/M"),
                 ("camera angle", "middle mouse button"),
                 ("reset angle", "0"),

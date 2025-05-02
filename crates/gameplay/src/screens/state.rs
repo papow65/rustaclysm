@@ -15,6 +15,8 @@ pub(crate) enum GameplayScreenState {
 
     Crafting,
 
+    Quality,
+
     /// Different from the main menu
     Menu,
 
