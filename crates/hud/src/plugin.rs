@@ -1,11 +1,7 @@
 use crate::systems::{
-    load_fonts, manage_button_color, manage_button_input, manage_scroll_lists, resize_scroll_lists,
+    load_fonts, manage_button_color, manage_button_input, update_scroll_position,
 };
-use bevy::prelude::{
-    App, Condition as _, IntoScheduleConfigs as _, Plugin, Startup, UiScale, Update, on_event,
-    resource_exists_and_changed,
-};
-use bevy::{input::mouse::MouseWheel, window::WindowResized};
+use bevy::prelude::{App, Plugin, Startup, Update};
 
 /// Plugin for the all generic HUD infrastructure
 pub struct HudPlugin;
@@ -17,11 +13,9 @@ impl Plugin for HudPlugin {
         app.add_systems(
             Update,
             (
+                update_scroll_position,
                 manage_button_color,
                 manage_button_input::<()>,
-                manage_scroll_lists.run_if(on_event::<MouseWheel>),
-                resize_scroll_lists
-                    .run_if(on_event::<WindowResized>.or(resource_exists_and_changed::<UiScale>)),
             ),
         );
     }

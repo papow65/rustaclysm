@@ -1,5 +1,6 @@
 use crate::SOFT_TEXT_COLOR;
 use bevy::ecs::{spawn::SpawnWith, system::SystemId};
+use bevy::picking::Pickable;
 use bevy::prelude::{
     AlignItems, Bundle, Button, ChildSpawner, Children, Commands, Component, Entity, In,
     JustifyContent, Node, PositionType, Spawn, SpawnRelated as _, SystemInput, Text, TextColor,
@@ -103,6 +104,7 @@ where
             self.node,
             self.run_button,
             key_binding,
+            Pickable::IGNORE,
             Children::spawn((
                 Spawn((self.text, self.text_color, self.text_font.clone())),
                 SpawnWith(move |parent: &mut ChildSpawner| {
@@ -116,6 +118,7 @@ where
                                 align_items: AlignItems::Center,
                                 ..Node::default()
                             },
+                            Pickable::IGNORE,
                             children![(
                                 Text(match key {
                                     Key::Character(c) => format!("[{c}] "),
@@ -123,6 +126,7 @@ where
                                 }),
                                 SOFT_TEXT_COLOR,
                                 self.text_font,
+                                Pickable::IGNORE,
                             )],
                         ));
                     }

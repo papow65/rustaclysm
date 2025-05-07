@@ -5,7 +5,6 @@ mod colors;
 mod fonts;
 mod panel_node;
 mod plugin;
-mod scroll_list;
 mod selection_list;
 mod spacing;
 mod systems;
@@ -19,7 +18,6 @@ pub use self::colors::{
 pub use self::fonts::Fonts;
 pub use self::panel_node::panel_node;
 pub use self::plugin::HudPlugin;
-pub use self::scroll_list::ScrollList;
 pub use self::selection_list::{SelectionList, SelectionListStep};
 pub use self::spacing::{LARGE_SPACING, MEDIUM_SPACING, SMALL_SPACING};
-pub use self::systems::{manage_button_input, trigger_button_action};
+pub use self::systems::{manage_button_input, scroll_to_selection, trigger_button_action};

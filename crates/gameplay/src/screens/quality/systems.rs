@@ -1,11 +1,12 @@
 use crate::screens::{Nearby, find_nearby, find_nearby_pseudo, nearby_qualities};
 use crate::{BodyContainers, GameplayScreenState, LastSeen, Location, Player, Pos, Shared};
+use bevy::picking::Pickable;
 use bevy::prelude::{
     AlignItems, AnyOf, ChildOf, Commands, FlexDirection, JustifyContent, KeyCode, Local, NextState,
     Node, Overflow, Query, Res, ResMut, Single, StateScoped, Text, UiRect, Val, With, World,
 };
 use cdda_json_files::{FurnitureInfo, TerrainInfo};
-use hud::{Fonts, GOOD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, ScrollList, WARN_TEXT_COLOR};
+use hud::{Fonts, GOOD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, WARN_TEXT_COLOR};
 use keyboard::KeyBindings;
 use manual::{LargeNode, ManualSection};
 use std::time::Instant;
@@ -27,12 +28,14 @@ pub(super) fn spawn_crafting_screen(
         .spawn((
             Node {
                 width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
                 flex_direction: FlexDirection::Column,
                 align_items: AlignItems::Start,
                 justify_content: JustifyContent::Start,
+                overflow: Overflow::scroll_y(),
                 ..Node::default()
             },
-            ScrollList::default(),
+            Pickable::default(),
         ))
         .id();
     commands
@@ -43,6 +46,7 @@ pub(super) fn spawn_crafting_screen(
                 ..Node::default()
             },
             StateScoped(GameplayScreenState::Quality),
+            Pickable::IGNORE,
         ))
         .with_children(|builder| {
             builder
@@ -60,18 +64,22 @@ pub(super) fn spawn_crafting_screen(
                     },
                     PANEL_COLOR,
                     LargeNode,
+                    Pickable::IGNORE,
                 ))
                 .with_children(|builder| {
                     builder
-                        .spawn(Node {
-                            width: Val::Percent(100.0),
-                            height: Val::Percent(100.0),
-                            flex_direction: FlexDirection::Row,
-                            align_items: AlignItems::Start,
-                            justify_content: JustifyContent::Start,
-                            overflow: Overflow::clip_y(),
-                            ..Node::default()
-                        })
+                        .spawn((
+                            Node {
+                                width: Val::Percent(100.0),
+                                height: Val::Percent(100.0),
+                                flex_direction: FlexDirection::Row,
+                                align_items: AlignItems::Start,
+                                justify_content: JustifyContent::Start,
+                                overflow: Overflow::clip_y(),
+                                ..Node::default()
+                            },
+                            Pickable::IGNORE,
+                        ))
                         .add_child(qualitiy_list);
                 });
         });
@@ -94,6 +102,7 @@ pub(super) fn spawn_crafting_screen(
             Text::from("Nearby qualities:"),
             WARN_TEXT_COLOR,
             fonts.regular(),
+            Pickable::IGNORE,
         ));
 
         for (amount, name) in shown_qualities {
@@ -101,6 +110,7 @@ pub(super) fn spawn_crafting_screen(
                 Text::from(format!("{amount} {name}")),
                 GOOD_TEXT_COLOR,
                 fonts.regular(),
+                Pickable::IGNORE,
             ));
         }
     });

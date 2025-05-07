@@ -37,9 +37,9 @@ impl From<SelectionListStep> for Key {
 }
 
 #[derive(Default, Component)]
-#[component(immutable)]
 pub struct SelectionList {
     pub selected: Option<Entity>,
+    pub previous_selected: Option<Entity>,
     first: Option<Entity>,
     last: Option<Entity>,
     previous_items: EntityHashMap<Entity>,
@@ -76,9 +76,11 @@ impl SelectionList {
         self.first = None;
         self.last = None;
         self.selected = None;
+        self.previous_selected = None;
     }
 
     pub fn adjust(&mut self, step: SelectionListStep) -> bool {
+        self.previous_selected = self.selected;
         for _ in 0..step.amount() {
             if let Some(selected) = self.selected {
                 let sequence = if step.is_backwards() {

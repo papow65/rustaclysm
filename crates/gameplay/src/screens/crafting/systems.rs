@@ -12,10 +12,10 @@ use crate::{
 use bevy::ecs::{spawn::SpawnIter, system::SystemId};
 use bevy::platform::collections::{HashMap, HashSet};
 use bevy::prelude::{
-    AlignItems, AnyOf, ChildOf, Children, Commands, ComputedNode, Display, FlexDirection, In,
-    IntoSystem as _, JustifyContent, KeyCode, Local, NextState, Node, Overflow, Query, Res, ResMut,
-    Single, SpawnRelated as _, StateScoped, Text, TextColor, Transform, UiRect, UiScale, Val, With,
-    Without, World, children, debug, error,
+    AlignItems, AnyOf, ChildOf, Children, Commands, Display, Entity, FlexDirection, In,
+    IntoSystem as _, JustifyContent, KeyCode, Local, NextState, Node, Overflow, Pickable, Query,
+    Res, ResMut, Single, SpawnRelated as _, StateScoped, Text, TextColor, UiRect, Val, With, World,
+    children, debug, error,
 };
 use cdda_json_files::{
     Alternative, AutoLearn, BookLearn, BookLearnItem, CalculatedRequirement, CommonItemInfo,
@@ -23,8 +23,8 @@ use cdda_json_files::{
     RequiredQuality, RequiredTool, Requirement, Sav, Skill, TerrainInfo,
 };
 use hud::{
-    BAD_TEXT_COLOR, ButtonBuilder, Fonts, PANEL_COLOR, SMALL_SPACING, ScrollList, SelectionList,
-    SelectionListStep, WARN_TEXT_COLOR,
+    BAD_TEXT_COLOR, ButtonBuilder, Fonts, PANEL_COLOR, SMALL_SPACING, SelectionList,
+    SelectionListStep, WARN_TEXT_COLOR, scroll_to_selection,
 };
 use keyboard::{Held, KeyBindings};
 use manual::{LargeNode, ManualSection};
@@ -49,20 +49,25 @@ pub(super) fn spawn_crafting_screen(
         .spawn((
             Node {
                 width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
                 flex_direction: FlexDirection::Column,
                 align_items: AlignItems::Start,
                 justify_content: JustifyContent::Start,
+                overflow: Overflow::scroll_y(),
                 ..Node::default()
             },
-            ScrollList::default(),
+            SelectionList::default(),
+            Pickable::default(),
         ))
         .id();
     let recipe_details = commands
         .spawn(Node {
             width: Val::Percent(100.0),
+            height: Val::Percent(100.0),
             flex_direction: FlexDirection::Column,
             align_items: AlignItems::Start,
             justify_content: JustifyContent::Start,
+            overflow: Overflow::scroll_y(),
             ..Node::default()
         })
         .id();
@@ -74,6 +79,7 @@ pub(super) fn spawn_crafting_screen(
                 ..Node::default()
             },
             StateScoped(GameplayScreenState::Crafting),
+            Pickable::IGNORE,
         ))
         .with_children(|builder| {
             builder
@@ -86,23 +92,25 @@ pub(super) fn spawn_crafting_screen(
                         justify_content: JustifyContent::Start,
                         margin: UiRect::px(10.0, 365.0, 10.0, 10.0),
                         padding: UiRect::all(SMALL_SPACING),
-                        overflow: Overflow::clip_y(),
                         ..Node::default()
                     },
                     PANEL_COLOR,
                     LargeNode,
+                    Pickable::IGNORE,
                 ))
                 .with_children(|builder| {
                     builder
-                        .spawn(Node {
-                            width: Val::Percent(100.0),
-                            height: Val::Percent(100.0),
-                            flex_direction: FlexDirection::Row,
-                            align_items: AlignItems::Start,
-                            justify_content: JustifyContent::Start,
-                            overflow: Overflow::clip_y(),
-                            ..Node::default()
-                        })
+                        .spawn((
+                            Node {
+                                width: Val::Percent(100.0),
+                                height: Val::Percent(100.0),
+                                flex_direction: FlexDirection::Row,
+                                align_items: AlignItems::Start,
+                                justify_content: JustifyContent::Start,
+                                ..Node::default()
+                            },
+                            Pickable::IGNORE,
+                        ))
                         .add_child(recipe_list)
                         .add_child(recipe_details);
                 });
@@ -110,7 +118,6 @@ pub(super) fn spawn_crafting_screen(
 
     commands.insert_resource(CraftingScreen::new(
         recipe_list,
-        SelectionList::default(),
         recipe_details,
         Timestamp::ZERO,
         start_craft_system,
@@ -127,7 +134,12 @@ pub(super) fn create_crafting_key_bindings(
 
     held_bindings.spawn(world, GameplayScreenState::Crafting, |bindings| {
         for &step in SelectionListStep::VARIANTS {
-            bindings.add(step, (move || step).pipe(move_crafting_selection));
+            bindings.add(
+                step,
+                (move || step)
+                    .pipe(move_crafting_selection)
+                    .pipe(scroll_to_selection),
+            );
         }
     });
 
@@ -168,41 +180,58 @@ fn exit_crafting(mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>
 pub(super) fn move_crafting_selection(
     In(step): In<SelectionListStep>,
     mut commands: Commands,
-    ui_scale: Res<UiScale>,
     fonts: Res<Fonts>,
-    mut crafting_screen: ResMut<CraftingScreen>,
-    mut recipes: Query<(&mut TextColor, &Transform, &ComputedNode, &RecipeSituation)>,
-    mut scroll_lists: Query<(&mut ScrollList, &mut Node, &ComputedNode, &ChildOf)>,
-    scrolling_parents: Query<(&Node, &ComputedNode), Without<ScrollList>>,
-) {
+    crafting_screen: Res<CraftingScreen>,
+    mut recipes: Query<(&mut TextColor, &RecipeSituation)>,
+    mut selection_lists: Query<&mut SelectionList>,
+) -> Entity {
     let start = Instant::now();
 
-    crafting_screen.adjust_selection(&mut recipes.transmute_lens().query(), step);
-    adapt_to_selected(
-        &mut commands,
-        &ui_scale,
-        &fonts,
-        &crafting_screen,
-        &recipes.transmute_lens().query(),
-        &mut scroll_lists,
-        &scrolling_parents,
-    );
+    let mut selection_list = selection_lists
+        .get_mut(crafting_screen.recipe_list)
+        .expect("Recipe selection list should be found");
+
+    selection_list.adjust(step);
+
+    if let Some(previous) = selection_list.previous_selected {
+        let (text_color, recipe) = &mut recipes
+            .get_mut(previous)
+            .expect("Previous highlighted recipe should ba found");
+        **text_color = recipe.color(false);
+    }
+
+    if let Some(selected) = selection_list.selected {
+        let (text_color, recipe) = &mut recipes
+            .get_mut(selected)
+            .expect("Highlighted recipe should ba found");
+        **text_color = recipe.color(true);
+
+        show_recipe(&mut commands, &fonts, &crafting_screen, recipe);
+    }
 
     log_if_slow("move_crafting_selection", start);
+
+    crafting_screen.recipe_list
 }
 
 #[expect(clippy::needless_pass_by_value)]
 pub(super) fn clear_crafting_screen(
     clock: Clock,
     mut crafting_screen: ResMut<CraftingScreen>,
+    mut selection_lists: Query<&mut SelectionList>,
     children: Query<&Children>,
     mut styles: Query<&mut Node>,
 ) -> bool {
     if crafting_screen.last_time == clock.time() {
         return false;
     }
+
+    let mut selection_list = selection_lists
+        .get_mut(crafting_screen.recipe_list)
+        .expect("Recipe selection list should be found");
+
     crafting_screen.last_time = clock.time();
-    crafting_screen.selection_list.clear();
+    selection_list.clear();
 
     if let Ok(children) = children.get(crafting_screen.recipe_list) {
         for &child in children {
@@ -223,7 +252,8 @@ pub(super) fn refresh_crafting_screen(
     fonts: Res<Fonts>,
     infos: Res<Infos>,
     active_sav: Res<ActiveSav>,
-    mut crafting_screen: ResMut<CraftingScreen>,
+    crafting_screen: Res<CraftingScreen>,
+    mut selection_lists: Query<&mut SelectionList>,
     hierarchy: ItemHierarchy,
     player: Single<(&Pos, &BodyContainers), With<Player>>,
     items: Query<(Nearby, &LastSeen, Option<&ChildOf>)>,
@@ -256,6 +286,10 @@ pub(super) fn refresh_crafting_screen(
         &nearby_sources,
     );
 
+    let mut selection_list = selection_lists
+        .get_mut(crafting_screen.recipe_list)
+        .expect("Recipe selection list should be found");
+
     let mut first_recipe = None;
     commands
         .entity(crafting_screen.recipe_list)
@@ -267,7 +301,7 @@ pub(super) fn refresh_crafting_screen(
             ));
 
             for recipe in shown_recipes {
-                let first = crafting_screen.selection_list.selected.is_none();
+                let first = selection_list.selected.is_none();
                 if first {
                     first_recipe = Some(recipe.clone());
                 }
@@ -278,9 +312,10 @@ pub(super) fn refresh_crafting_screen(
                         recipe.color(first),
                         fonts.regular(),
                         recipe,
+                        Pickable::IGNORE,
                     ))
                     .id();
-                crafting_screen.selection_list.append(entity);
+                selection_list.append(entity);
             }
         });
 
@@ -619,40 +654,6 @@ fn expand_items<
     }
 }
 
-fn adapt_to_selected(
-    commands: &mut Commands,
-    ui_scale: &UiScale,
-    fonts: &Fonts,
-    crafting_screen: &CraftingScreen,
-    recipes: &Query<(&Transform, &RecipeSituation)>,
-    scroll_lists: &mut Query<(&mut ScrollList, &mut Node, &ComputedNode, &ChildOf)>,
-    scrolling_parents: &Query<(&Node, &ComputedNode), Without<ScrollList>>,
-) {
-    if let Some(selected) = crafting_screen.selection_list.selected {
-        let (recipe_transform, recipe_sitation) = recipes
-            .get(selected)
-            .expect("Selected recipe should be found");
-
-        {
-            let (mut scroll_list, mut style, list_computed_node, child_of) = scroll_lists
-                .get_mut(crafting_screen.recipe_list)
-                .expect("The recipe list should be a scrolling list");
-            let (parent_node, parent_computed_node) = scrolling_parents
-                .get(child_of.parent())
-                .expect("ChildOf node should be found");
-            style.top = scroll_list.follow(
-                ui_scale,
-                recipe_transform,
-                list_computed_node,
-                parent_node,
-                parent_computed_node,
-            );
-        }
-
-        show_recipe(commands, fonts, crafting_screen, recipe_sitation);
-    }
-}
-
 fn show_recipe(
     commands: &mut Commands,
     fonts: &Fonts,
@@ -689,12 +690,15 @@ fn start_craft(
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
     mut instruction_queue: ResMut<InstructionQueue>,
     crafting_screen: Res<CraftingScreen>,
+    selection_lists: Query<&SelectionList>,
     recipes: Query<&RecipeSituation>,
 ) {
     let start = Instant::now();
 
-    let selected_craft = crafting_screen
-        .selection_list
+    let selection_list = selection_lists
+        .get(crafting_screen.recipe_list)
+        .expect("Recipe selection list should be found");
+    let selected_craft = selection_list
         .selected
         .expect("There should be a selected craft");
     let recipe = recipes

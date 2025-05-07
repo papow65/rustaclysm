@@ -5,6 +5,7 @@ use crate::screens::inventory::systems::{InventoryButton, InventorySystem};
 use crate::{DebugTextShown, Fragment, ItemHandler, ItemItem, Phrase};
 use bevy::ecs::entity::hash_map::EntityHashMap;
 use bevy::ecs::spawn::{SpawnIter, SpawnWith};
+use bevy::picking::Pickable;
 use bevy::prelude::{
     AlignItems, BackgroundColor, Bundle, ChildSpawner, ChildSpawnerCommands, Children, Entity,
     JustifyContent, Node, Overflow, Spawn, SpawnRelated as _, Text, TextColor, Val, debug,
@@ -34,6 +35,7 @@ impl SectionData<'_> {
                 overflow: Overflow::clip(),
                 ..Node::default()
             },
+            Pickable::IGNORE,
         )
     }
 
@@ -59,6 +61,7 @@ impl SectionData<'_> {
                     }
                 }
             }),)),
+            Pickable::IGNORE,
         )
     }
 
@@ -79,6 +82,7 @@ impl SectionData<'_> {
                 }),
                 SOFT_TEXT_COLOR,
                 self.fonts.regular(),
+                Pickable::IGNORE,
                 property_node.clone(),
             ),
             (
@@ -89,6 +93,7 @@ impl SectionData<'_> {
                 }),
                 SOFT_TEXT_COLOR,
                 self.fonts.regular(),
+                Pickable::IGNORE,
                 property_node,
             ),
         ]
@@ -189,6 +194,7 @@ impl InventoryBuilder<'_, '_> {
                 },
                 InventoryItemRow { item: item_entity },
                 background_color,
+                Pickable::IGNORE,
                 Children::spawn((
                     Spawn(section_data.expansion_button(item_text_color)),
                     Spawn(section_data.item_name(item_phrase)),

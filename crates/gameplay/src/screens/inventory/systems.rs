@@ -8,16 +8,16 @@ use crate::{
     Player, Pos, QueuedInstruction, Unwield, Wield,
 };
 use bevy::ecs::{entity::hash_map::EntityHashMap, system::SystemId};
+use bevy::picking::Pickable;
 use bevy::platform::collections::HashMap;
 use bevy::prelude::{
-    AlignItems, BackgroundColor, Button, ChildOf, Children, Commands, ComputedNode, Display,
-    Entity, FlexDirection, In, IntoSystem as _, JustifyContent, KeyCode, Local, NextState, Node,
-    Overflow, Query, Res, ResMut, Single, StateScoped, Text, TextColor, TextSpan, Transform,
-    UiRect, UiScale, Val, With, Without, World, debug, error,
+    AlignItems, BackgroundColor, Button, Children, Commands, Display, Entity, FlexDirection, In,
+    IntoSystem as _, JustifyContent, KeyCode, Local, NextState, Node, Overflow, Query, Res, ResMut,
+    Single, StateScoped, Text, TextColor, TextSpan, UiRect, Val, With, World, debug, error,
 };
 use hud::{
-    Fonts, HARD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, SOFT_TEXT_COLOR, ScrollList, SelectionList,
-    SelectionListStep,
+    Fonts, HARD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, SOFT_TEXT_COLOR, SelectionList,
+    SelectionListStep, scroll_to_selection,
 };
 use keyboard::{Held, KeyBindings};
 use manual::{LargeNode, ManualSection};
@@ -44,12 +44,15 @@ pub(super) fn spawn_inventory(In(inventory_system): In<InventorySystem>, mut com
         .spawn((
             Node {
                 width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
                 flex_direction: FlexDirection::Column,
                 align_items: AlignItems::Start,
                 justify_content: JustifyContent::Start,
+                overflow: Overflow::scroll_y(),
                 ..Node::default()
             },
-            ScrollList::default(),
+            SelectionList::default(),
+            Pickable::default(),
         ))
         .id();
     commands
@@ -60,6 +63,7 @@ pub(super) fn spawn_inventory(In(inventory_system): In<InventorySystem>, mut com
                 ..Node::default()
             },
             StateScoped(GameplayScreenState::Inventory),
+            Pickable::IGNORE,
         ))
         .with_children(|builder| {
             builder
@@ -77,13 +81,13 @@ pub(super) fn spawn_inventory(In(inventory_system): In<InventorySystem>, mut com
                     },
                     PANEL_COLOR,
                     LargeNode,
+                    Pickable::IGNORE,
                 ))
                 .add_child(panel);
         });
 
     commands.insert_resource(InventoryScreen::new(
         panel,
-        SelectionList::default(),
         HorizontalDirection::Here,
         EntityHashMap::default(),
         Timestamp::ZERO,
@@ -101,7 +105,12 @@ pub(super) fn create_inventory_key_bindings(
 
     held_bindings.spawn(world, GameplayScreenState::Inventory, |bindings| {
         for &step in SelectionListStep::VARIANTS {
-            bindings.add(step, (move || step).pipe(move_inventory_selection));
+            bindings.add(
+                step,
+                (move || step)
+                    .pipe(move_inventory_selection)
+                    .pipe(scroll_to_selection),
+            );
         }
     });
 
@@ -155,23 +164,43 @@ pub(super) fn create_inventory_key_bindings(
 #[expect(clippy::needless_pass_by_value)]
 fn move_inventory_selection(
     In(step): In<SelectionListStep>,
-    ui_scale: Res<UiScale>,
-    mut inventory: ResMut<InventoryScreen>,
+    inventory: Res<InventoryScreen>,
+    mut selection_lists: Query<&mut SelectionList>,
     mut item_rows: Query<(&InventoryItemRow, &mut BackgroundColor, &Children)>,
     item_buttons: Query<&Children, With<Button>>,
     mut text_styles: Query<&mut TextColor>,
-    item_layouts: Query<&Transform>,
-    mut scroll_lists: Query<(&mut ScrollList, &mut Node, &ComputedNode, &ChildOf)>,
-    scrolling_parents: Query<(&Node, &ComputedNode), Without<ScrollList>>,
-) {
-    inventory.adjust_selection(&mut item_rows, &item_buttons, &mut text_styles, step);
-    follow_selected(
-        &ui_scale,
-        &inventory,
-        &item_layouts,
-        &mut scroll_lists,
-        &scrolling_parents,
-    );
+) -> Entity {
+    let start = Instant::now();
+
+    let mut selection_list = selection_lists
+        .get_mut(inventory.panel)
+        .expect("Inventory selection list should be found");
+
+    selection_list.adjust(step);
+
+    if let Some(previous) = selection_list.previous_selected {
+        InventoryScreen::highlight_selected(
+            previous,
+            &mut item_rows,
+            &item_buttons,
+            &mut text_styles,
+            false,
+        );
+    }
+
+    if let Some(selected) = selection_list.selected {
+        InventoryScreen::highlight_selected(
+            selected,
+            &mut item_rows,
+            &item_buttons,
+            &mut text_styles,
+            true,
+        );
+    }
+
+    log_if_slow("move_crafting_selection", start);
+
+    inventory.panel
 }
 
 fn set_inventory_drop_direction(
@@ -219,27 +248,31 @@ pub(super) fn refresh_inventory(
     item_hierarchy: ItemHierarchy,
     mut inventory: ResMut<InventoryScreen>,
     player: Single<(&Pos, &BodyContainers), With<Player>>,
+    mut selection_lists: Query<&mut SelectionList>,
     previous_item_rows: Query<&InventoryItemRow>,
 ) {
     if !run {
         return;
     }
 
-    let inventory = &mut *inventory;
-    let previous_selected_item = inventory
-        .selection_list
+    let mut selection_list = selection_lists
+        .get_mut(inventory.panel)
+        .expect("Inventory selection list should be found");
+
+    let previous_selected_item = selection_list
         .selected
         .and_then(|row| previous_item_rows.get(row).ok())
         .map(|row| row.item)
         .filter(|item| item_hierarchy.exists(*item));
     debug!("Refresh inventory, with previous selected {previous_selected_item:?}");
-    inventory.selection_list.clear();
+    selection_list.clear();
 
     let (&player_pos, body_containers) = *player;
     let items_by_section = items_by_section(&envir, &item_hierarchy, player_pos, body_containers);
     let mut items_by_section = items_by_section.into_iter().collect::<Vec<_>>();
     items_by_section.sort_by_key(|(section, _)| *section);
 
+    let inventory = &mut *inventory;
     let drop_direction = inventory.drop_direction;
     commands.entity(inventory.panel).with_children(|parent| {
         for (section, items) in items_by_section {
@@ -265,7 +298,7 @@ pub(super) fn refresh_inventory(
                 &fonts,
                 &debug_text_shown,
                 &inventory.inventory_system,
-                &mut inventory.selection_list,
+                &mut selection_list,
                 &mut inventory.section_by_item,
                 parent,
                 previous_selected_item,
@@ -313,77 +346,57 @@ fn items_by_section<'i>(
     items_by_section
 }
 
-fn follow_selected(
-    ui_scale: &UiScale,
-    inventory: &InventoryScreen,
-    items: &Query<&Transform>,
-    scroll_lists: &mut Query<(&mut ScrollList, &mut Node, &ComputedNode, &ChildOf)>,
-    scrolling_parents: &Query<(&Node, &ComputedNode), Without<ScrollList>>,
-) {
-    let Some(selected_row) = inventory.selection_list.selected else {
-        return;
-    };
-
-    let item_transform = items
-        .get(selected_row)
-        .expect("Selected item should be found");
-
-    let (mut scroll_list, mut style, list_computed_node, child_of) = scroll_lists
-        .get_mut(inventory.panel)
-        .expect("The inventory panel should be a scrolling list");
-    let (parent_node, parent_computed_node) = scrolling_parents
-        .get(child_of.parent())
-        .expect("ChildOf node should be found");
-    style.top = scroll_list.follow(
-        ui_scale,
-        item_transform,
-        list_computed_node,
-        parent_node,
-        parent_computed_node,
-    );
-}
-
+#[expect(clippy::needless_pass_by_value)]
 fn handle_selected_item(
     In(action): In<InventoryAction>,
     mut instruction_queue: ResMut<InstructionQueue>,
-    mut inventory: ResMut<InventoryScreen>,
+    inventory: Res<InventoryScreen>,
+    mut selection_lists: Query<&mut SelectionList>,
     item_rows: Query<&InventoryItemRow>,
 ) {
-    if let Some(selected_item) = inventory.selected_item(&item_rows) {
-        instruction_queue.add(match action {
-            InventoryAction::Examine => QueuedInstruction::ExamineItem(ExamineItem {
-                item_entity: selected_item,
-            }),
-            InventoryAction::Drop | InventoryAction::Move => {
-                let Some(item_section) = inventory.section_by_item.get(&selected_item) else {
-                    error!("Section of item {selected_item:?} not found");
-                    return;
-                };
-                if &InventorySection::Nbor(inventory.drop_direction) == item_section {
-                    // Prevent moving an item to its current position.
-                    return;
-                }
-                QueuedInstruction::MoveItem(MoveItem {
-                    item_entity: selected_item,
-                    to: Nbor::Horizontal(inventory.drop_direction),
-                })
-            }
-            InventoryAction::Take => QueuedInstruction::Pickup(Pickup {
-                item_entity: selected_item,
-            }),
-            InventoryAction::Unwield => QueuedInstruction::Unwield(Unwield {
-                item_entity: selected_item,
-            }),
-            InventoryAction::Wield => QueuedInstruction::Wield(Wield {
-                item_entity: selected_item,
-            }),
-        });
+    let mut selection_list = selection_lists
+        .get_mut(inventory.panel)
+        .expect("Inventory selection list should be found");
 
-        if action != InventoryAction::Examine {
-            inventory
-                .selection_list
-                .adjust(SelectionListStep::SingleDown);
+    let Some(selected_row) = selection_list.selected else {
+        return;
+    };
+    let selected_row = item_rows
+        .get(selected_row)
+        .expect("Selected item row should be found");
+    let selected_item = selected_row.item;
+
+    instruction_queue.add(match action {
+        InventoryAction::Examine => QueuedInstruction::ExamineItem(ExamineItem {
+            item_entity: selected_item,
+        }),
+        InventoryAction::Drop | InventoryAction::Move => {
+            let Some(item_section) = inventory.section_by_item.get(&selected_item) else {
+                error!("Section of item {selected_item:?} not found");
+                return;
+            };
+            if &InventorySection::Nbor(inventory.drop_direction) == item_section {
+                // Prevent moving an item to its current position.
+                return;
+            }
+            QueuedInstruction::MoveItem(MoveItem {
+                item_entity: selected_item,
+                to: Nbor::Horizontal(inventory.drop_direction),
+            })
         }
+        InventoryAction::Take => QueuedInstruction::Pickup(Pickup {
+            item_entity: selected_item,
+        }),
+        InventoryAction::Unwield => QueuedInstruction::Unwield(Unwield {
+            item_entity: selected_item,
+        }),
+        InventoryAction::Wield => QueuedInstruction::Wield(Wield {
+            item_entity: selected_item,
+        }),
+    });
+
+    if action != InventoryAction::Examine {
+        selection_list.adjust(SelectionListStep::SingleDown);
     }
 }
 

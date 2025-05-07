@@ -4,8 +4,12 @@ use crate::{
     QueuedInstruction, VisualizationUpdate, ZoomDirection, ZoomDistance,
 };
 use bevy::input::mouse::{MouseMotion, MouseWheel};
-use bevy::{prelude::*, render::view::RenderLayers};
-use hud::ScrollList;
+use bevy::prelude::{
+    ButtonInput, Camera3d, EventReader, In, IntoSystem as _, KeyCode, Local, MouseButton,
+    NextState, Node, Query, Res, ResMut, Single, State, StateScoped, Transform, Vec3, With, World,
+    debug, warn,
+};
+use bevy::{picking::hover::HoverMap, render::view::RenderLayers};
 use keyboard::{Held, KeyBindings};
 use manual::ManualSection;
 use std::time::Instant;
@@ -102,26 +106,34 @@ fn toggle_elevation(
     log_if_slow("toggle_elevation", start);
 }
 
+#[expect(clippy::needless_pass_by_value)]
 pub(super) fn manage_mouse_scroll_input(
     mut mouse_wheel_events: EventReader<MouseWheel>,
+    hover_map: Res<HoverMap>,
     mut camera_offset: ResMut<CameraOffset>,
     mut camera_layers: Single<&mut RenderLayers, With<Camera3d>>,
-    scroll_lists: Query<&Interaction, With<ScrollList>>,
+    ui_nodes: Query<(), With<Node>>,
 ) {
     let start = Instant::now();
 
-    if scroll_lists.iter().all(|i| i == &Interaction::None) {
-        for scroll_event in &mut mouse_wheel_events.read() {
-            zoom(
-                &mut camera_offset,
-                &mut camera_layers,
-                if 0.0 < scroll_event.y {
-                    ZoomDirection::In
-                } else {
-                    ZoomDirection::Out
-                },
-            );
-        }
+    let hovered_ui_node = hover_map
+        .values()
+        .flat_map(|hit_data| hit_data.keys())
+        .find(|entity| ui_nodes.contains(**entity));
+    if hovered_ui_node.is_some() {
+        return;
+    }
+
+    for scroll_event in &mut mouse_wheel_events.read() {
+        zoom(
+            &mut camera_offset,
+            &mut camera_layers,
+            if 0.0 < scroll_event.y {
+                ZoomDirection::In
+            } else {
+                ZoomDirection::Out
+            },
+        );
     }
 
     log_if_slow("manage_mouse_scroll_input", start);

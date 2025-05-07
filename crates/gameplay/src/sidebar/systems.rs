@@ -14,17 +14,19 @@ use crate::{
 use application_state::ApplicationState;
 use bevy::diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin};
 use bevy::ecs::{hierarchy::Children, schedule::ScheduleConfigs, system::ScheduleSystem};
+use bevy::picking::Pickable;
 use bevy::prelude::{
-    AlignItems, Changed, Commands, Condition as _, DetectChanges as _, Entity, EntityCommands,
-    EventReader, FlexDirection, FlexWrap, IntoScheduleConfigs as _, JustifyContent, Local, Node,
-    Or, Overflow, ParamSet, PositionType, Query, Res, Single, State, StateScoped, Text, TextColor,
-    TextSpan, UiRect, Val, Visibility, With, Without, info, on_event, resource_exists,
+    AlignItems, Changed, ChildOf, Commands, ComputedNode, Condition as _, DetectChanges as _,
+    Entity, EntityCommands, EventReader, FlexDirection, FlexWrap, IntoScheduleConfigs as _,
+    JustifyContent, Local, Node, Or, Overflow, ParamSet, PositionType, Query, Res, ScrollPosition,
+    Single, SpawnRelated as _, State, StateScoped, Text, TextColor, TextSpan, UiRect, Val,
+    Visibility, With, Without, children, info, on_event, resource_exists,
     resource_exists_and_changed, warn,
 };
 use cdda_json_files::{CharacterInfo, MoveCost};
 use hud::{
-    BAD_TEXT_COLOR, Fonts, HARD_TEXT_COLOR, PANEL_COLOR, SOFT_TEXT_COLOR, ScrollList,
-    WARN_TEXT_COLOR, panel_node, text_color_expect_half,
+    BAD_TEXT_COLOR, Fonts, HARD_TEXT_COLOR, PANEL_COLOR, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
+    panel_node, text_color_expect_half,
 };
 use std::{num::Saturating, time::Instant};
 use util::log_if_slow;
@@ -45,6 +47,7 @@ pub(super) fn spawn_sidebar(mut commands: Commands, fonts: Res<Fonts>) {
         },
         PANEL_COLOR,
         StateScoped(ApplicationState::Gameplay),
+        Pickable::IGNORE,
     ));
 
     spawn_status_display(&fonts, &mut parent);
@@ -146,34 +149,51 @@ fn spawn_status_display(fonts: &Fonts, parent: &mut EntityCommands) {
 
 fn spawn_log_display(fonts: &Fonts, parent: &mut EntityCommands) {
     // TODO properly use flex layout
-
     parent.with_children(|child_builder| {
-        child_builder
-            .spawn(Node {
+        child_builder.spawn((
+            Node {
                 position_type: PositionType::Absolute,
                 bottom: Val::Px(0.0),
                 left: Val::Px(0.0),
                 width: Val::Px(TEXT_WIDTH),
                 height: Val::Px(20.0 * 16.0),
                 margin: UiRect::all(Val::Px(5.0)),
-                flex_direction: FlexDirection::Column,
-                justify_content: JustifyContent::End,
-                overflow: Overflow::clip(),
                 ..Node::default()
-            })
-            .with_children(|child_builder| {
-                child_builder.spawn((
-                    Text::default(),
-                    fonts.regular(),
+            },
+            Pickable::IGNORE,
+            //bevy::prelude::BackgroundColor(bevy::prelude::Srgba::RED.with_alpha(0.4).into()),
+            children![(
+                Node {
+                    width: Val::Percent(100.0),
+                    height: Val::Percent(100.0),
+                    overflow: Overflow::scroll_y(),
+                    // align_items: AlignItems::End, // TODO This looks better, but it breaks scrolling.
+                    ..Node::default()
+                },
+                Pickable::default(),
+                //bevy::prelude::BackgroundColor(bevy::prelude::Srgba::GREEN.with_alpha(0.4).into()),
+                children![(
                     Node {
-                        width: Val::Px(TEXT_WIDTH),
-                        flex_wrap: FlexWrap::Wrap,
+                        width: Val::Percent(100.0),
+                        height: Val::Percent(100.0),
                         ..Node::default()
                     },
-                    ScrollList::default(),
-                    LogDisplay,
-                ));
-            });
+                    Pickable::IGNORE,
+                    //bevy::prelude::BackgroundColor(bevy::prelude::Srgba::RED.with_alpha(0.4).into()),
+                    children![(
+                        Text::default(),
+                        fonts.regular(),
+                        Node {
+                            flex_wrap: FlexWrap::Wrap,
+                            ..Node::default()
+                        },
+                        //bevy::prelude::BackgroundColor(bevy::prelude::Srgba::BLUE.with_alpha(0.4).into()),
+                        Pickable::IGNORE,
+                        LogDisplay,
+                    )]
+                ),],
+            ),],
+        ));
     });
 }
 
@@ -196,6 +216,7 @@ pub(super) fn update_sidebar_systems() -> ScheduleConfigs<ScheduleSystem> {
                 .or(resource_exists_and_changed::<State<FocusState>>),
         ),
         update_log.run_if(on_event::<Message>),
+        manage_log_wrapper,
     )
         .into_configs()
 }
@@ -258,21 +279,21 @@ fn update_log(
     log.despawn_related::<Children>();
     log.with_children(|parent| {
         for (span, color, debug) in previous_sections.get().clone() {
-            let mut entity = parent.spawn((span, color, fonts.regular()));
+            let mut entity = parent.spawn((span, color, fonts.regular(), Pickable::IGNORE));
             if let Some(debug) = debug {
                 entity.insert((debug, debug_font.clone()));
             }
         }
         if let Some((message, count)) = last_message.get() {
             for (span, color, debug) in to_text_sections(message, *count) {
-                let mut entity = parent.spawn((span, color, fonts.regular()));
+                let mut entity = parent.spawn((span, color, fonts.regular(), Pickable::IGNORE));
                 if let Some(debug) = debug {
                     entity.insert((debug, debug_font.clone()));
                 }
             }
         }
         for (span, color, debug) in transient_message.clone() {
-            let mut entity = parent.spawn((span, color, fonts.regular()));
+            let mut entity = parent.spawn((span, color, fonts.regular(), Pickable::IGNORE));
             if let Some(debug) = debug {
                 entity.insert((debug, debug_font.clone()));
             }
@@ -280,6 +301,37 @@ fn update_log(
     });
 
     log_if_slow("update_log", start);
+}
+
+/// Adapt the log wrapper to the log after its layout has been updated
+fn manage_log_wrapper(
+    mut commands: Commands,
+    log: Option<Single<(&ComputedNode, &ChildOf), (With<LogDisplay>, Changed<ComputedNode>)>>,
+    parents: Query<&ChildOf>,
+) {
+    let Some(log) = log else {
+        return;
+    };
+
+    let (computed_node, log_parent) = *log;
+    let log_height = computed_node.content_size.y;
+
+    let log_wrapper = log_parent.parent();
+    commands.entity(log_wrapper).insert((Node {
+        width: Val::Percent(100.0),
+        height: Val::Px(log_height),
+        align_items: AlignItems::End,
+        ..Node::default()
+    },));
+
+    let log_scroll = parents
+        .get(log_wrapper)
+        .expect("Log wrapper should have a parent")
+        .parent();
+    commands.entity(log_scroll).insert((ScrollPosition {
+        offset_x: 0.0,
+        offset_y: log_height,
+    },));
 }
 
 fn to_text_sections(
