@@ -86,7 +86,10 @@ pub(crate) fn check_failed_asset_loading(mut fails: EventReader<UntypedAssetLoad
     log_if_slow("check_failed_asset_loading", start);
 }
 
-pub(crate) fn log_archetypes(world: &mut World) {
+#[derive(Default)]
+pub(crate) struct ArchetypesOutput(Vec<String>);
+
+pub(crate) fn log_archetypes(world: &mut World, mut last: Local<ArchetypesOutput>) {
     static ENABLED: LazyLock<bool> =
         LazyLock::new(|| env::var("LOG_ARCHETYPES") == Ok(String::from("1")));
     if !*ENABLED {
@@ -106,9 +109,12 @@ pub(crate) fn log_archetypes(world: &mut World) {
         })
         .collect::<HashMap<_, _>>();
 
-    for archetype in world.archetypes().iter() {
-        if !archetype.is_empty() {
-            debug!(
+    let output = world
+        .archetypes()
+        .iter()
+        .filter(|archetype| !archetype.is_empty())
+        .map(|archetype| {
+            format!(
                 "{:?} {:?} {:?}",
                 archetype.id(),
                 archetype.len(),
@@ -120,7 +126,15 @@ pub(crate) fn log_archetypes(world: &mut World) {
                         .unwrap_or_else(|| String::from("[???]")))
                     .collect::<Vec<_>>()
                     .join(", ")
-            );
+            )
+        })
+        .collect::<Vec<_>>();
+
+    if output != last.0 {
+        for line in &output {
+            debug!(line);
         }
+
+        last.0 = output;
     }
 }
