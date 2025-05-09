@@ -41,9 +41,11 @@ pub(super) fn create_start_craft_system(world: &mut World) -> StartCraftSystem {
     StartCraftSystem(world.register_system_cached(start_craft))
 }
 
+#[expect(clippy::needless_pass_by_value)]
 pub(super) fn spawn_crafting_screen(
     In(start_craft_system): In<StartCraftSystem>,
     mut commands: Commands,
+    fonts: Res<Fonts>,
 ) {
     let recipe_list = commands
         .spawn((
@@ -73,6 +75,7 @@ pub(super) fn spawn_crafting_screen(
         .id();
     commands
         .spawn((
+            // Entire screen
             Node {
                 width: Val::Percent(100.0),
                 height: Val::Percent(100.0),
@@ -84,9 +87,9 @@ pub(super) fn spawn_crafting_screen(
         .with_children(|builder| {
             builder
                 .spawn((
+                    // Panel
                     Node {
                         width: Val::Percent(100.0),
-                        height: Val::Auto,
                         flex_direction: FlexDirection::Column,
                         align_items: AlignItems::Start,
                         justify_content: JustifyContent::Start,
@@ -100,18 +103,43 @@ pub(super) fn spawn_crafting_screen(
                 ))
                 .with_children(|builder| {
                     builder
-                        .spawn((
-                            Node {
-                                width: Val::Percent(100.0),
-                                height: Val::Percent(100.0),
-                                flex_direction: FlexDirection::Row,
-                                align_items: AlignItems::Start,
-                                justify_content: JustifyContent::Start,
-                                ..Node::default()
-                            },
-                            Pickable::IGNORE,
-                        ))
-                        .add_child(recipe_list)
+                        .spawn(
+                            // Panel contents
+                            (
+                                Node {
+                                    width: Val::Percent(100.0),
+                                    height: Val::Percent(100.0),
+                                    flex_direction: FlexDirection::Row,
+                                    align_items: AlignItems::Start,
+                                    justify_content: JustifyContent::Start,
+                                    overflow: Overflow::clip_y(),
+                                    ..Node::default()
+                                },
+                                Pickable::IGNORE,
+                            ),
+                        )
+                        .with_children(|parent| {
+                            parent
+                                .spawn((
+                                    // Left column
+                                    Node {
+                                        width: Val::Percent(100.0),
+                                        height: Val::Percent(100.0),
+                                        flex_direction: FlexDirection::Column,
+                                        align_items: AlignItems::Start,
+                                        justify_content: JustifyContent::Start,
+                                        overflow: Overflow::clip_y(),
+                                        ..Node::default()
+                                    },
+                                    Pickable::IGNORE,
+                                    children![(
+                                        Text::from("Known recipies:"),
+                                        WARN_TEXT_COLOR,
+                                        fonts.regular(),
+                                    )],
+                                ))
+                                .add_child(recipe_list);
+                        })
                         .add_child(recipe_details);
                 });
         });
@@ -294,12 +322,6 @@ pub(super) fn refresh_crafting_screen(
     commands
         .entity(crafting_screen.recipe_list)
         .with_children(|parent| {
-            parent.spawn((
-                Text::from("Known recipies:"),
-                WARN_TEXT_COLOR,
-                fonts.regular(),
-            ));
-
             for recipe in shown_recipes {
                 let first = selection_list.selected.is_none();
                 if first {
