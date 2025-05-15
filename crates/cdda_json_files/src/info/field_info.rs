@@ -71,6 +71,6 @@ pub struct IntensityLevel {
     extra: HashMap<Arc<str>, serde_json::Value>,
 }
 
-fn get_true() -> bool {
+const fn get_true() -> bool {
     true
 }

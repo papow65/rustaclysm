@@ -115,8 +115,10 @@ impl TileLoader {
         .or_else(|| foregrounds.random());
         let background = backgrounds.random();
 
-        let foreground_model = self.to_model(foreground, info_id, category, SpriteLayer::Front);
-        let background_model = self.to_model(background, info_id, category, SpriteLayer::Back);
+        let foreground_model = foreground
+            .map(|foreground| self.to_model(foreground, info_id, category, SpriteLayer::Front));
+        let background_model = background
+            .map(|background| self.to_model(background, info_id, category, SpriteLayer::Back));
 
         match (foreground_model, background_model) {
             (foreground_model, Some(background_model)) => Layers {
@@ -137,20 +139,18 @@ impl TileLoader {
 
     fn to_model(
         &self,
-        sprite_number: Option<SpriteNumber>,
+        sprite_number: SpriteNumber,
         info_id: &UntypedInfoId,
         category: ObjectCategory,
         layer: SpriteLayer,
-    ) -> Option<Model> {
-        sprite_number.map(|sprite_number| {
-            Model::new(
-                info_id,
-                category,
-                layer,
-                sprite_number,
-                &self.textures[&sprite_number],
-            )
-        })
+    ) -> Model {
+        Model::new(
+            info_id,
+            category,
+            layer,
+            sprite_number,
+            &self.textures[&sprite_number],
+        )
     }
 }
 

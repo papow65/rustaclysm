@@ -19,7 +19,7 @@ pub(super) struct InventoryScreen {
 }
 
 impl InventoryScreen {
-    pub(crate) fn new(
+    pub(crate) const fn new(
         panel: Entity,
         drop_direction: HorizontalDirection,
         section_by_item: EntityHashMap<InventorySection>,

@@ -34,7 +34,7 @@ pub(crate) struct TileSpawner<'w, 's> {
 }
 
 impl<'w> TileSpawner<'w, '_> {
-    pub(crate) fn model_factory(&mut self) -> &mut ModelFactory<'w> {
+    pub(crate) const fn model_factory(&mut self) -> &mut ModelFactory<'w> {
         &mut self.model_factory
     }
 

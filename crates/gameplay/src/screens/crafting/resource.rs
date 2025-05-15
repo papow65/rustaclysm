@@ -11,7 +11,7 @@ pub(super) struct CraftingScreen {
 }
 
 impl CraftingScreen {
-    pub(crate) fn new(
+    pub(crate) const fn new(
         recipe_list: Entity,
         recipe_details: Entity,
         last_time: Timestamp,
@@ -25,7 +25,7 @@ impl CraftingScreen {
         }
     }
 
-    pub(super) fn start_craft_system(&self) -> &StartCraftSystem {
+    pub(super) const fn start_craft_system(&self) -> &StartCraftSystem {
         &self.start_craft_system
     }
 }
