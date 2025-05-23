@@ -525,7 +525,10 @@ pub struct CommonItemInfo {
     pub material: Option<MaybeFlatVec<Material>>,
     pub material_thickness: Option<f32>,
     pub chat_topics: Option<serde_json::Value>,
-    pub phase: Option<Arc<str>>,
+
+    #[serde(default)]
+    pub phase: CddaPhase,
+
     pub magazines: Option<serde_json::Value>,
     pub min_skills: Option<serde_json::Value>,
     pub explosion: Option<serde_json::Value>,
@@ -688,6 +691,15 @@ pub enum ToHit {
 pub enum Description {
     Simple(Arc<str>),
     Complex(HashMap<Arc<str>, Arc<str>>),
+}
+
+#[derive(Debug, Default, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum CddaPhase {
+    #[default]
+    Solid,
+    Liquid,
+    Gas,
 }
 
 #[cfg(test)]

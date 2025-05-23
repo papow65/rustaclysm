@@ -15,10 +15,10 @@ use bevy::prelude::{
 use bevy::render::camera::{PerspectiveProjection, Projection};
 use bevy::render::view::RenderLayers;
 use cdda_json_files::{
-    BashItem, BashItems, CddaAmount, CddaItem, CddaItemName, CddaVehicle, CddaVehiclePart,
-    Character, CharacterInfo, CommonItemInfo, Description, Field, Flags, FlatVec, FurnitureInfo,
-    Ignored, InfoId, ItemGroup, ItemName, MoveCostMod, PocketType, Recipe, Repetition,
-    RequiredLinkedLater, SpawnItem, TerrainInfo, UntypedInfoId,
+    BashItem, BashItems, CddaAmount, CddaItem, CddaItemName, CddaPhase, CddaVehicle,
+    CddaVehiclePart, Character, CharacterInfo, CommonItemInfo, Description, Field, Flags, FlatVec,
+    FurnitureInfo, Ignored, InfoId, ItemGroup, ItemName, MoveCostMod, PocketType, Recipe,
+    Repetition, RequiredLinkedLater, SpawnItem, TerrainInfo, UntypedInfoId,
 };
 use either::Either;
 use hud::{BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR};
@@ -751,7 +751,7 @@ impl<'w> TileSpawner<'w, '_> {
             material: None,
             material_thickness: None,
             chat_topics: None,
-            phase: None,
+            phase: CddaPhase::Solid,
             magazines: None,
             min_skills: None,
             explosion: None,

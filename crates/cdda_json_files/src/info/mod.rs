@@ -27,9 +27,9 @@ pub use self::info_id::{InfoId, InfoIdDescription, UntypedInfoId};
 pub use self::item_action::ItemAction;
 pub use self::item_group::{ItemGroup, SpawnItem};
 pub use self::item_info::{
-    Ammo, BionicItem, Book, CddaItemName, Clothing, Comestible, CommonItemInfo, Description,
-    Engine, GenericItem, Gun, Gunmod, ItemName, ItemWithCommonInfo, Magazine, PetArmor, Tool,
-    ToolClothing, Toolmod, Wheel,
+    Ammo, BionicItem, Book, CddaItemName, CddaPhase, Clothing, Comestible, CommonItemInfo,
+    Description, Engine, GenericItem, Gun, Gunmod, ItemName, ItemWithCommonInfo, Magazine,
+    PetArmor, Tool, ToolClothing, Toolmod, Wheel,
 };
 pub use self::migration::{ItemMigration, VehiclePartMigration};
 pub use self::overmap_info::OvermapTerrainInfo;
