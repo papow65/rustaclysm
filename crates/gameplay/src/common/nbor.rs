@@ -60,6 +60,25 @@ impl HorizontalDirection {
             },
         )
     }
+
+    pub(crate) const fn numpad(self) -> u8 {
+        let (x, y) = self.offset();
+        (x + 2) as u8 + 3 * (y + 1) as u8
+    }
+
+    pub(crate) const fn succinct(self) -> &'static str {
+        match self {
+            Self::NorthWest => "NW",
+            Self::North => "N",
+            Self::NorthEast => "NE",
+            Self::West => "W",
+            Self::Here => "Here",
+            Self::East => "E",
+            Self::SouthWest => "SW",
+            Self::South => "S",
+            Self::SouthEast => "SE",
+        }
+    }
 }
 
 impl From<CardinalDirection> for HorizontalDirection {

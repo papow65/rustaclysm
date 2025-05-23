@@ -280,7 +280,7 @@ pub(super) fn refresh_inventory(
 
             parent
                 .spawn((
-                    Text::new(format!("[{section}]")),
+                    Text::new(format!("{section}")),
                     SOFT_TEXT_COLOR,
                     fonts.regular(),
                 ))

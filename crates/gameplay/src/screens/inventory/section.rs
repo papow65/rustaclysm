@@ -12,21 +12,16 @@ impl fmt::Display for InventorySection {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
-            "{}",
+            "[{} ({})]",
             match self {
-                Self::Nbor(n) => match n {
-                    HorizontalDirection::NorthWest => "NW (7)",
-                    HorizontalDirection::West => "W (4)",
-                    HorizontalDirection::SouthWest => "SW (1)",
-                    HorizontalDirection::North => "N (8)",
-                    HorizontalDirection::Here => "Here (5)",
-                    HorizontalDirection::South => "S (2)",
-                    HorizontalDirection::NorthEast => "NE (9)",
-                    HorizontalDirection::East => "E (6)",
-                    HorizontalDirection::SouthEast => "SE (3)",
-                },
-                Self::Hands => "Hands (H)",
-                Self::Clothing => "Clothing (C)",
+                Self::Nbor(direction) => direction.succinct(),
+                Self::Hands => "Hands",
+                Self::Clothing => "Clothing",
+            },
+            match self {
+                Self::Nbor(direction) => (48 + direction.numpad()) as char,
+                Self::Hands => 'H',
+                Self::Clothing => 'C',
             }
         )
     }
