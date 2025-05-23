@@ -12,7 +12,11 @@ impl fmt::Display for InventorySection {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
-            "[{} ({})]",
+            "{}[{} ({})]",
+            match self {
+                Self::Nbor(direction) => " ".repeat(50 * (direction.offset().0 + 1) as usize),
+                Self::Hands | Self::Clothing => String::new(),
+            },
             match self {
                 Self::Nbor(direction) => direction.succinct(),
                 Self::Hands => "Hands",
