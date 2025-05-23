@@ -1,5 +1,6 @@
 use crate::{
-    Amount, Containable, Filthy, Fragment, ItemIntegrity, ObjectName, Pos, Positioning, Shared,
+    Amount, Containable, Filthy, Fragment, ItemIntegrity, ObjectName, Phase, Pos, Positioning,
+    Shared,
 };
 use bevy::ecs::query::QueryData;
 use bevy::prelude::{ChildOf, Entity, ops::atan2};
@@ -16,6 +17,7 @@ pub(crate) struct Item {
     pub(crate) amount: &'static Amount,
     pub(crate) filthy: Option<&'static Filthy>,
     pub(crate) integrity: &'static ItemIntegrity,
+    pub(crate) phase: &'static Phase,
     pub(crate) containable: &'static Containable,
     pub(crate) child_of: &'static ChildOf,
     pub(crate) common_info: &'static Shared<CommonItemInfo>,

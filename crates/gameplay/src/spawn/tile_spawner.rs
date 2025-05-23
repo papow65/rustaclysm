@@ -1,3 +1,4 @@
+use crate::Phase;
 use crate::{
     Accessible, ActiveSav, Amount, Aquatic, BaseSpeed, BodyContainers, CameraBase, Closeable,
     Containable, Craft, ExamineCursor, Explored, Faction, Filthy, HealingDuration, Health, Hurdle,
@@ -197,6 +198,8 @@ impl<'w> TileSpawner<'w, '_> {
     ) -> Result<Entity, Error> {
         let item_info = &item.item_info.get()?;
 
+        let phase = Phase::from(&item_info.phase);
+
         //trace!("{:?} {:?} {:?} {:?}", &parent, pos, &id, &amount);
         let object_name = ObjectName::new(
             item_info.name.clone(),
@@ -228,12 +231,13 @@ impl<'w> TileSpawner<'w, '_> {
             Shared::new(item_info.clone()),
             amount,
             Containable {
-                // Based on cataclysm-ddasrc/mtype.cpp lines 47-48
+                // Based on cataclysm-dda src/mtype.cpp lines 47-48
                 volume: volume
                     .unwrap_or_else(|| Volume::try_from("62499 ml").expect("Well formatted")),
                 mass: mass.unwrap_or_else(|| Mass::try_from("81499 g").expect("Well formatted")),
             },
             ItemIntegrity::from(item.damaged),
+            phase,
         ));
 
         if item.item_tags.contains(&Arc::from("FILTHY")) {

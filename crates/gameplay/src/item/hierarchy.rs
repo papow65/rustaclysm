@@ -201,7 +201,8 @@ impl<'w> ItemHierarchy<'w, '_> {
                 (true, true, false) => "(empty)",
                 (true, false, true) => "(sealed)",
                 _ => "",
-            });
+            })
+            .extend(item.phase.suffix());
 
         if !is_container || is_empty {
             phrase

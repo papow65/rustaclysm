@@ -20,6 +20,9 @@ pub const BAD_TEXT_COLOR: TextColor = TextColor(Color::srgb(1.0, 0.31, 0.31));
 /// For zombies and stuff they touched
 pub const FILTHY_COLOR: TextColor = TextColor(Color::srgb(0.73, 0.4, 1.0));
 
+/// For liquids
+pub const BLUE_TEXT_COLOR: TextColor = TextColor(Color::srgb(0.25, 0.75, 1.0));
+
 // Button colors
 
 pub const DEFAULT_BUTTON_COLOR: BackgroundColor = BackgroundColor(Color::srgb(0.2, 0.2, 0.2));
