@@ -37,7 +37,7 @@ pub fn text_color_expect_full(zero_to_one: f32) -> TextColor {
     text_color_over(zero_to_one, WARN_TEXT_COLOR.0)
 }
 
-/// Varying from `BAD_TEXT_COLOR` (0.0) over `WARN_TEXT_COLOR` (0.5) to `GOOD_TEXT_COLOR` (1.0)
+/// Varying from `BAD_TEXT_COLOR` (0.0) over `HARD_TEXT_COLOR` (0.5) to `GOOD_TEXT_COLOR` (1.0)
 ///
 /// Suited where 0.5 is more common than 0.0, or 1.0
 #[must_use]
