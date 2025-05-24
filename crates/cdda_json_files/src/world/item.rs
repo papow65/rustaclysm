@@ -1,16 +1,20 @@
 use crate::{
-    CharacterInfo, CommonItemInfo, OptionalLinkedLater, RequiredLinkedLater, UntypedInfoId,
+    CharacterInfo, CommonItemInfo, Magazine, OptionalLinkedLater, RequiredLinkedLater,
+    UntypedInfoId,
 };
 use bevy_platform::collections::HashMap;
 use serde::Deserialize;
 use serde_repr::Deserialize_repr;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, OnceLock};
 
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct CddaItem {
     #[serde(rename = "typeid")]
     pub item_info: RequiredLinkedLater<CommonItemInfo>,
+
+    #[serde(skip)]
+    pub magazine_info: OnceLock<OptionalLinkedLater<Magazine>>,
 
     /// Can change after a migration
     pub variant: Mutex<Option<Arc<str>>>,
@@ -60,6 +64,7 @@ impl From<&Arc<CommonItemInfo>> for CddaItem {
     fn from(item_info: &Arc<CommonItemInfo>) -> Self {
         Self {
             item_info: RequiredLinkedLater::new_final(item_info.id.clone(), item_info),
+            magazine_info: OnceLock::new(),
             snip_id: None,
             charges: None,
             active: None,

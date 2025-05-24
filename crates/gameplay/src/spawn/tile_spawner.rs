@@ -240,6 +240,15 @@ impl<'w> TileSpawner<'w, '_> {
             phase,
         ));
 
+        if let Some(magazine_info) = item
+            .magazine_info
+            .get()
+            .expect("magazine_info should have been set (even when not present)")
+            .get()
+        {
+            entity.insert(Shared::new(magazine_info));
+        }
+
         if item.item_tags.contains(&Arc::from("FILTHY")) {
             entity.insert(Filthy);
         }

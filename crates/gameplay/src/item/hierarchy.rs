@@ -1,6 +1,6 @@
-use crate::{ContainerLimits, Fragment, Infos, Item, ItemItem, Phrase, Pocket, PocketSealing};
+use crate::{ContainerLimits, Fragment, Item, ItemItem, Phrase, Pocket, PocketSealing};
 use bevy::ecs::system::SystemParam;
-use bevy::prelude::{Children, Entity, Query, Res, error};
+use bevy::prelude::{Children, Entity, Query, error};
 use cdda_json_files::{PocketType, UntypedInfoId};
 use std::panic::Location;
 use std::{iter::once, num::NonZeroUsize};
@@ -24,7 +24,6 @@ struct ContainerData<'a> {
 
 #[derive(SystemParam)]
 pub(crate) struct ItemHierarchy<'w, 's> {
-    infos: Res<'w, Infos>,
     limits: Query<'w, 's, &'static ContainerLimits>,
     children: Query<'w, 's, &'static Children>,
     items: Query<'w, 's, Item>,
@@ -163,7 +162,7 @@ impl<'w> ItemHierarchy<'w, '_> {
         let phrase = Phrase::from_fragments(prefix.into_iter().collect())
             .extend(item.fragments())
             .debug(format!("[{}]", item.common_info.id.fallback_name()))
-            .extend(self.battery_charge_fragments(item, &mut magazine_output))
+            .extend(Self::battery_charge_fragments(item, &mut magazine_output))
             .extend(self.magazine_fragments(magazine_wells, &magazine_output))
             .extend(Self::item_tag_fragments(item, &container_data));
 
@@ -190,16 +189,11 @@ impl<'w> ItemHierarchy<'w, '_> {
         .fragments
     }
 
-    fn battery_charge_fragments<'a>(
-        &'a self,
+    fn battery_charge_fragments(
         item: &ItemItem<'_>,
-        magazine_output: &'a mut Vec<Vec<Fragment>>,
+        magazine_output: &mut Vec<Vec<Fragment>>,
     ) -> impl Iterator<Item = Fragment> {
-        self.infos
-            .magazines
-            .get(&item.common_info.id.untyped().clone().into())
-            .inspect_err(|error| error!("Magazine not found: {error:?}"))
-            .ok()
+        item.magazine_info
             .filter(|magazine| {
                 magazine
                     .ammo_type

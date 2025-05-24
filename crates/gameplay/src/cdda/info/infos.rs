@@ -5,10 +5,10 @@ use crate::{ObjectCategory, TypeId};
 use bevy::prelude::{Resource, debug, error, info, warn};
 use cdda_json_files::{
     Ammo, BionicItem, Book, CddaItem, CharacterInfo, Clothing, Comestible, CommonItemInfo, Engine,
-    FieldInfo, FurnitureInfo, GenericItem, Gun, Gunmod, ItemAction, ItemGroup, ItemMigration,
-    Link as _, Magazine, Overmap, OvermapTerrainInfo, PetArmor, Practice, Quality, Recipe,
-    RequiredLinkedLater, Requirement, Submap, TerrainInfo, Tool, ToolClothing, Toolmod,
-    UntypedInfoId, VehiclePartInfo, VehiclePartMigration, Wheel,
+    FieldInfo, FurnitureInfo, GenericItem, Gun, Gunmod, InfoId, ItemAction, ItemGroup,
+    ItemMigration, Link as _, Magazine, OptionalLinkedLater, Overmap, OvermapTerrainInfo, PetArmor,
+    Practice, Quality, Recipe, RequiredLinkedLater, Requirement, Submap, TerrainInfo, Tool,
+    ToolClothing, Toolmod, UntypedInfoId, VehiclePartInfo, VehiclePartMigration, Wheel,
 };
 use std::{env, process::exit, time::Instant};
 use strum::VariantArray as _;
@@ -363,6 +363,16 @@ impl Infos {
             },
             "submap item",
         );
+        let _either_response_is_fine = item.magazine_info.set({
+            let magazine_id: Option<InfoId<Magazine>> = item
+                .item_info
+                .get()
+                .ok()
+                .map(|info| info.id.untyped().clone().into());
+            let link = OptionalLinkedLater::from(magazine_id);
+            link.finalize(&self.magazines, "submap item magazine");
+            link
+        });
         item.corpse.finalize(&self.characters, "submap item corpse");
 
         if let Some(contents) = &item.contents {
