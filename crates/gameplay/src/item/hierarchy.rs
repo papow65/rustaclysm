@@ -264,25 +264,19 @@ impl<'w> ItemHierarchy<'w, '_> {
         let mut tags = Vec::new();
         if let Some(ref container_data) = *container_data {
             if container_data.contents.is_empty() {
-                tags.push(Fragment::soft("empty"));
+                tags.push([Fragment::soft("empty")]);
             }
-            tags.extend(container_data.sealing.suffix());
+            tags.extend(container_data.sealing.suffix().map(|tag| [tag]));
         }
-        tags.extend(item.phase.suffix());
+        tags.extend(item.phase.suffix().map(|tag| [tag]));
+
         if tags.is_empty() {
             Vec::new()
         } else {
-            let mut fragments = tags.into_iter().fold(Vec::new(), |mut fragments, tag| {
-                fragments.push(Fragment::soft(if fragments.is_empty() {
-                    "("
-                } else {
-                    ", "
-                }));
-                fragments.push(tag);
-                fragments
-            });
-            fragments.push(Fragment::soft(")"));
-            fragments
+            once(Fragment::soft("("))
+                .chain(tags.join(&Fragment::soft(",")))
+                .chain(once(Fragment::soft(")")))
+                .collect()
         }
     }
 
