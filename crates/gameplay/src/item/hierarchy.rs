@@ -161,72 +161,11 @@ impl<'w> ItemHierarchy<'w, '_> {
             .collect::<Vec<_>>();
 
         let phrase = Phrase::from_fragments(prefix.into_iter().collect())
-            .extend({
-                self.infos
-                    .magazines
-                    .get(&item.common_info.id.untyped().clone().into())
-                    .inspect_err(|error| error!("Magazine not found: {error:?}"))
-                    .ok()
-                    .filter(|magazine| {
-                        magazine
-                            .ammo_type
-                            .0
-                            .contains(&UntypedInfoId::new("battery"))
-                    })
-                    .map(|magazine| {
-                        #[expect(clippy::iter_with_drain)] // don't drop 'magazine_output'
-                        magazine_output
-                            .drain(..)
-                            .flatten()
-                            .chain(once(Fragment::soft(
-                                magazine
-                                    .capacity
-                                    .map_or_else(String::new, |capacity| format!("/{capacity}")),
-                            )))
-                    })
-                    .into_iter()
-                    .flatten()
-            })
+            .extend(self.battery_charge_fragments(item, &mut magazine_output))
             .extend(item.fragments())
             .debug(format!("[{}]", item.common_info.id.fallback_name()))
-            .extend(magazine_output.join(&Fragment::soft(", ")))
-            .extend(magazine_wells.flat_map(|info| {
-                if info.items.is_empty() {
-                    vec![Fragment::soft("not loaded")]
-                } else {
-                    info.items
-                        .iter()
-                        .map(|subitem| self.inline_item_fragments(subitem))
-                        .collect::<Vec<_>>()
-                        .join(&Fragment::soft(", "))
-                }
-            }))
-            .extend({
-                let mut tags = Vec::new();
-                if let Some(ref container_data) = container_data {
-                    if container_data.contents.is_empty() {
-                        tags.push(Fragment::soft("empty"));
-                    }
-                    tags.extend(container_data.sealing.suffix());
-                }
-                tags.extend(item.phase.suffix());
-
-                if tags.is_empty() {
-                    Vec::new()
-                } else {
-                    let mut fragments = tags.into_iter().fold(Vec::new(), |mut fragments, tag| {
-                        fragments.push(Fragment::soft(if fragments.is_empty() {
-                            "("
-                        } else {
-                            ", "
-                        }));
-                        fragments.push(tag);
-                        fragments
-                    });
-                    fragments.push(Fragment::soft(")"));
-                    fragments
-                }
-            });
+            .extend(self.magazine_fragments(magazine_wells, &magazine_output))
+            .extend(Self::item_tag_fragments(item, &container_data));
 
         if let Some(container_data) = container_data {
             if container_data.contents.is_empty() {
@@ -249,6 +188,99 @@ impl<'w> ItemHierarchy<'w, '_> {
         }
         .extend(suffix)
         .fragments
+    }
+
+    fn battery_charge_fragments<'a>(
+        &'a self,
+        item: &ItemItem<'_>,
+        magazine_output: &'a mut Vec<Vec<Fragment>>,
+    ) -> impl Iterator<Item = Fragment> {
+        self.infos
+            .magazines
+            .get(&item.common_info.id.untyped().clone().into())
+            .inspect_err(|error| error!("Magazine not found: {error:?}"))
+            .ok()
+            .filter(|magazine| {
+                magazine
+                    .ammo_type
+                    .0
+                    .contains(&UntypedInfoId::new("battery"))
+            })
+            .map(|magazine| {
+                magazine_output
+                    .drain(..)
+                    .flatten()
+                    .chain(once(Fragment::soft(
+                        magazine
+                            .capacity
+                            .map_or_else(String::new, |capacity| format!("/{capacity}")),
+                    )))
+            })
+            .into_iter()
+            .flatten()
+    }
+
+    fn magazine_fragments<'a>(
+        &self,
+        magazine_wells: impl Iterator<Item = Subitems<'a>>,
+        magazine_output: &[Vec<Fragment>],
+    ) -> Vec<Fragment> {
+        let magazine_framents = magazine_output.join(&Fragment::soft(", "));
+        let well_fragments = magazine_wells
+            .flat_map(|info| {
+                if info.items.is_empty() {
+                    vec![Fragment::soft("not loaded")]
+                } else {
+                    info.items
+                        .iter()
+                        .map(|subitem| self.inline_item_fragments(subitem))
+                        .collect::<Vec<_>>()
+                        .join(&Fragment::soft(", "))
+                }
+            })
+            .collect::<Vec<_>>();
+
+        if magazine_framents.is_empty() && well_fragments.is_empty() {
+            Vec::new()
+        } else {
+            let both_used = !magazine_framents.is_empty() && !well_fragments.is_empty();
+            let mut result = vec![Fragment::soft("with")];
+            result.extend(magazine_framents);
+            if both_used {
+                result.push(Fragment::soft(", "));
+            }
+            result.extend(well_fragments);
+            result
+        }
+    }
+
+    fn item_tag_fragments(
+        item: &ItemItem<'_>,
+        container_data: &Option<&mut ContainerData<'_>>,
+    ) -> Vec<Fragment> {
+        let mut tags = Vec::new();
+        if let Some(ref container_data) = *container_data {
+            if container_data.contents.is_empty() {
+                tags.push(Fragment::soft("empty"));
+            }
+            tags.extend(container_data.sealing.suffix());
+        }
+        tags.extend(item.phase.suffix());
+        if tags.is_empty() {
+            Vec::new()
+        } else {
+            let mut fragments = tags.into_iter().fold(Vec::new(), |mut fragments, tag| {
+                fragments.push(Fragment::soft(if fragments.is_empty() {
+                    "("
+                } else {
+                    ", "
+                }));
+                fragments.push(tag);
+                fragments
+            });
+            fragments.push(Fragment::soft(")"));
+            fragments
+        }
     }
 
     fn inline_item_fragments(&self, item: &ItemItem<'_>) -> Vec<Fragment> {
