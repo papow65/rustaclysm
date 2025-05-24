@@ -1,6 +1,9 @@
 use crate::{DebugText, Pos};
 use bevy::prelude::{TextColor, TextSpan};
-use hud::{FILTHY_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, SOFT_TEXT_COLOR, WARN_TEXT_COLOR};
+use hud::{
+    BAD_TEXT_COLOR, FILTHY_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, SOFT_TEXT_COLOR,
+    WARN_TEXT_COLOR,
+};
 use regex::Regex;
 use std::{cmp::Eq, fmt, sync::LazyLock};
 
@@ -50,6 +53,13 @@ impl Fragment {
         S: Into<String>,
     {
         Self::colorized(text, GOOD_TEXT_COLOR)
+    }
+
+    pub(crate) fn bad<S>(text: S) -> Self
+    where
+        S: Into<String>,
+    {
+        Self::colorized(text, BAD_TEXT_COLOR)
     }
 
     pub(crate) fn filthy<S>(text: S) -> Self

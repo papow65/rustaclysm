@@ -161,9 +161,9 @@ impl<'w> ItemHierarchy<'w, '_> {
             .collect::<Vec<_>>();
 
         let phrase = Phrase::from_fragments(prefix.into_iter().collect())
-            .extend(self.battery_charge_fragments(item, &mut magazine_output))
             .extend(item.fragments())
             .debug(format!("[{}]", item.common_info.id.fallback_name()))
+            .extend(self.battery_charge_fragments(item, &mut magazine_output))
             .extend(self.magazine_fragments(magazine_wells, &magazine_output))
             .extend(Self::item_tag_fragments(item, &container_data));
 
@@ -207,14 +207,23 @@ impl<'w> ItemHierarchy<'w, '_> {
                     .contains(&UntypedInfoId::new("battery"))
             })
             .map(|magazine| {
-                magazine_output
-                    .drain(..)
-                    .flatten()
-                    .chain(once(Fragment::soft(
-                        magazine
-                            .capacity
-                            .map_or_else(String::new, |capacity| format!("/{capacity}")),
-                    )))
+                let mut charges = magazine_output.drain(..).flatten().peekable();
+                if charges.peek().is_some() {
+                    once(Fragment::soft("at"))
+                        .chain(charges)
+                        .chain(once(Fragment::soft(
+                            magazine
+                                .capacity
+                                .map_or_else(String::new, |capacity| format!("/{capacity}")),
+                        )))
+                        .collect::<Vec<_>>()
+                } else {
+                    vec![
+                        Fragment::soft("("),
+                        Fragment::bad("drained"),
+                        Fragment::soft(")"),
+                    ]
+                }
             })
             .into_iter()
             .flatten()
