@@ -15,8 +15,8 @@ impl Phase {
     pub(crate) fn suffix(self) -> Option<Fragment> {
         match self {
             Self::Solid => None,
-            Self::Liquid => Some(Fragment::colorized("(liquid)", BLUE_TEXT_COLOR)),
-            Self::Gas => Some(Fragment::colorized("(gas)", WARN_TEXT_COLOR)),
+            Self::Liquid => Some(Fragment::colorized("liquid", BLUE_TEXT_COLOR)),
+            Self::Gas => Some(Fragment::colorized("gas", WARN_TEXT_COLOR)),
         }
     }
 }

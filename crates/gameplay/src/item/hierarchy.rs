@@ -196,13 +196,34 @@ impl<'w> ItemHierarchy<'w, '_> {
                         .join(&Fragment::soft(", "))
                 }
             }))
-            .soft(match (is_container, is_empty, is_sealed) {
-                (true, true, true) => "(empty, sealed)",
-                (true, true, false) => "(empty)",
-                (true, false, true) => "(sealed)",
-                _ => "",
-            })
-            .extend(item.phase.suffix());
+            .extend({
+                let mut tags = Vec::new();
+                if is_container {
+                    if is_empty {
+                        tags.push(Fragment::soft("empty"));
+                    }
+                    if is_sealed {
+                        tags.push(Fragment::good("sealed"));
+                    }
+                }
+                tags.extend(item.phase.suffix());
+
+                if tags.is_empty() {
+                    Vec::new()
+                } else {
+                    let mut fragments = tags.into_iter().fold(Vec::new(), |mut fragments, tag| {
+                        fragments.push(Fragment::soft(if fragments.is_empty() {
+                            "("
+                        } else {
+                            ", "
+                        }));
+                        fragments.push(tag);
+                        fragments
+                    });
+                    fragments.push(Fragment::soft(")"));
+                    fragments
+                }
+            });
 
         if !is_container || is_empty {
             phrase
