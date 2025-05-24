@@ -1,4 +1,3 @@
-use crate::Phase;
 use crate::{
     Accessible, ActiveSav, Amount, Aquatic, BaseSpeed, BodyContainers, CameraBase, Closeable,
     Containable, Craft, ExamineCursor, Explored, Faction, Filthy, HealingDuration, Health, Hurdle,
@@ -7,6 +6,7 @@ use crate::{
     Shared, StairsDown, StairsUp, Stamina, StandardIntegrity, TileVariant, Vehicle, VehiclePart,
     WalkingMode, cdda::Error, item::Pocket, spawn::log_spawn_result,
 };
+use crate::{Phase, PocketSealing};
 use application_state::ApplicationState;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{
@@ -144,7 +144,7 @@ impl<'w> TileSpawner<'w, '_> {
                     Visibility::Hidden,
                     Pocket {
                         type_: PocketType::Container,
-                        sealed: false,
+                        sealing: PocketSealing::Unsealed,
                     },
                     ChildOf(entity),
                 ))
@@ -157,7 +157,7 @@ impl<'w> TileSpawner<'w, '_> {
                     Visibility::Hidden,
                     Pocket {
                         type_: PocketType::Container,
-                        sealed: false,
+                        sealing: PocketSealing::Unsealed,
                     },
                     ChildOf(entity),
                 ))

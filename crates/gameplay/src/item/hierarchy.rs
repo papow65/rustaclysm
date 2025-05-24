@@ -1,4 +1,4 @@
-use crate::{ContainerLimits, Fragment, Infos, Item, ItemItem, Phrase, item::Pocket};
+use crate::{ContainerLimits, Fragment, Infos, Item, ItemItem, Phrase, Pocket, PocketSealing};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{Children, Entity, Query, Res, error};
 use cdda_json_files::{PocketType, UntypedInfoId};
@@ -15,6 +15,11 @@ pub(crate) struct InPocket {
 pub(crate) struct Subitems<'p> {
     pocket: &'p Pocket,
     items: Vec<ItemItem<'p>>,
+}
+
+struct ContainerData<'a> {
+    sealing: PocketSealing,
+    contents: Vec<ItemItem<'a>>,
 }
 
 #[derive(SystemParam)]
@@ -82,19 +87,20 @@ impl<'w> ItemHierarchy<'w, '_> {
             |ip| suffix(ip.type_, ip.single_in_type),
         );
 
-        let (is_container, is_sealed, mut contents) = self.container_contents(item);
-        let item_fragments =
-            self.item_fragments(prefix, suffix, item, is_container, is_sealed, &mut contents);
+        let mut container_data = self.container_data(item);
+        let item_fragments = self.item_fragments(prefix, suffix, item, container_data.as_mut());
         handler.handle_item(item, item_fragments);
 
-        if !contents.is_empty() {
-            let in_pocket = Some(InPocket {
-                type_: PocketType::Container,
-                single_in_type: contents.len() == 1,
-                depth,
-            });
-            for subitem in contents {
-                self.walk_item(handler, in_pocket, &subitem);
+        if let Some(container_data) = container_data {
+            if !container_data.contents.is_empty() {
+                let in_pocket = Some(InPocket {
+                    type_: PocketType::Container,
+                    single_in_type: container_data.contents.len() == 1,
+                    depth,
+                });
+                for subitem in container_data.contents {
+                    self.walk_item(handler, in_pocket, &subitem);
+                }
             }
         }
 
@@ -123,17 +129,20 @@ impl<'w> ItemHierarchy<'w, '_> {
         }
     }
 
-    fn container_contents(&self, item: &ItemItem<'_>) -> (bool, bool, Vec<ItemItem<'_>>) {
+    fn container_data(&self, item: &ItemItem<'_>) -> Option<ContainerData> {
         let contents = self
             .pockets(item.entity, PocketType::Container)
             .collect::<Vec<_>>();
-        let is_container = 0 < contents.iter().len();
-        let is_sealed = contents.iter().all(|info| info.pocket.sealed);
-        let contents = contents
-            .into_iter()
-            .flat_map(|subitems| subitems.items)
-            .collect::<Vec<_>>();
-        (is_container, is_sealed, contents)
+        let first_pocket_sealing = contents
+            .first()
+            .map(|first_subitems| first_subitems.pocket.sealing);
+        first_pocket_sealing.map(|sealing| ContainerData {
+            sealing,
+            contents: contents
+                .into_iter()
+                .flat_map(|subitems| subitems.items)
+                .collect::<Vec<_>>(),
+        })
     }
 
     fn item_fragments(
@@ -141,12 +150,8 @@ impl<'w> ItemHierarchy<'w, '_> {
         prefix: Option<Fragment>,
         suffix: Option<Fragment>,
         item: &ItemItem<'_>,
-        is_container: bool,
-        is_sealed: bool,
-        contents: &mut Vec<ItemItem<'_>>,
+        container_data: Option<&mut ContainerData>,
     ) -> Vec<Fragment> {
-        let is_empty = contents.is_empty();
-
         let magazine_wells = self.pockets(item.entity, PocketType::MagazineWell);
 
         let mut magazine_output = self
@@ -198,13 +203,11 @@ impl<'w> ItemHierarchy<'w, '_> {
             }))
             .extend({
                 let mut tags = Vec::new();
-                if is_container {
-                    if is_empty {
+                if let Some(ref container_data) = container_data {
+                    if container_data.contents.is_empty() {
                         tags.push(Fragment::soft("empty"));
                     }
-                    if is_sealed {
-                        tags.push(Fragment::good("sealed"));
-                    }
+                    tags.extend(container_data.sealing.suffix());
                 }
                 tags.extend(item.phase.suffix());
 
@@ -225,29 +228,39 @@ impl<'w> ItemHierarchy<'w, '_> {
                 }
             });
 
-        if !is_container || is_empty {
-            phrase
-        } else if self.is_single_hierarchy(contents) {
-            phrase.push(Fragment::good(">")).extend(
-                contents
-                    .drain(0..=0)
-                    .flat_map(|subitem| self.inline_item_fragments(&subitem)),
-            )
+        if let Some(container_data) = container_data {
+            if container_data.contents.is_empty() {
+                phrase
+            } else if self.is_single_hierarchy(&container_data.contents) {
+                phrase.push(Fragment::good(">")).extend(
+                    container_data
+                        .contents
+                        .drain(0..=0)
+                        .flat_map(|subitem| self.inline_item_fragments(&subitem)),
+                )
+            } else {
+                phrase.push(Fragment::good(format!(
+                    "> {}+",
+                    container_data.contents.len()
+                )))
+            }
         } else {
-            phrase.push(Fragment::good(format!("> {}+", contents.len())))
+            phrase
         }
         .extend(suffix)
         .fragments
     }
 
     fn inline_item_fragments(&self, item: &ItemItem<'_>) -> Vec<Fragment> {
-        let (is_container, is_sealed, mut contents) = self.container_contents(item);
-        assert!(
-            contents.len() <= 1,
-            "Too many (>1) contents to inline for {item:?}: {:?}",
-            &contents
-        );
-        self.item_fragments(None, None, item, is_container, is_sealed, &mut contents)
+        let mut container_data = self.container_data(item);
+        if let Some(ref container_data) = container_data {
+            assert!(
+                container_data.contents.len() <= 1,
+                "Too many (>1) contents to inline for {item:?}: {:?}",
+                &container_data.contents
+            );
+        }
+        self.item_fragments(None, None, item, container_data.as_mut())
     }
 
     /// At most one subitem, with at most one subitem, with at most one subitem, ...

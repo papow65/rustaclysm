@@ -17,5 +17,5 @@ pub(crate) use self::filthy::Filthy;
 pub(crate) use self::hierarchy::{ItemHandler, ItemHierarchy};
 pub(crate) use self::integrity::ItemIntegrity;
 pub(crate) use self::phase::Phase;
-pub(crate) use self::pocket::Pocket;
+pub(crate) use self::pocket::{Pocket, PocketSealing};
 pub(crate) use self::query_data::{Item, ItemItem};
