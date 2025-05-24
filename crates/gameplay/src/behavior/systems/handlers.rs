@@ -334,10 +334,16 @@ pub(in super::super) fn combine_items(
     let mut all_merged = Vec::new();
 
     for moved in &moved_items {
-        if !all_merged.contains(&moved.entity)
-            && hierarchy.items_in(moved.entity).next().is_none()
-            && hierarchy.pockets_in(moved.entity).next().is_none()
-        {
+        assert!(
+            hierarchy.items_in(moved.entity).next().is_none(),
+            "Items may not have direct subitems"
+        );
+
+        let has_subitems = hierarchy
+            .pockets_in(moved.entity)
+            .any(|(pocket_entity, _)| hierarchy.items_in(pocket_entity).next().is_some());
+
+        if !all_merged.contains(&moved.entity) && !has_subitems {
             let mut merges = vec![];
             let mut total_amount = &Amount(0) + moved.amount;
 
@@ -347,8 +353,6 @@ pub(in super::super) fn combine_items(
                     && sibling.common_info.id == moved.common_info.id
                     && sibling.pos == moved.pos
                     && sibling.filthy == moved.filthy
-                    && hierarchy.items_in(sibling.entity).next().is_none()
-                    && hierarchy.pockets_in(sibling.entity).next().is_none()
                     && !all_merged.contains(&sibling.entity)
                 {
                     merges.push(sibling.entity);
