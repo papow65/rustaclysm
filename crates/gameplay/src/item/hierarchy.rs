@@ -1,4 +1,4 @@
-use crate::{ContainerLimits, Fragment, Item, ItemItem, Phrase, Pocket, PocketSealing};
+use crate::{Amount, ContainerLimits, Fragment, Item, ItemItem, Phrase, Pocket, PocketSealing};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{Children, Entity, Query, error};
 use cdda_json_files::{PocketType, UntypedInfoId};
@@ -153,17 +153,15 @@ impl<'w> ItemHierarchy<'w, '_> {
     ) -> Vec<Fragment> {
         let magazine_wells = self.pockets(item.entity, PocketType::MagazineWell);
 
-        let mut magazine_output = self
+        let mut magazine_pockets = self
             .pockets(item.entity, PocketType::Magazine)
-            .flat_map(|subitems| subitems.items)
-            .map(|subitem| self.inline_item_fragments(&subitem))
             .collect::<Vec<_>>();
 
         let phrase = Phrase::from_fragments(prefix.into_iter().collect())
             .extend(item.fragments())
             .debug(format!("[{}]", item.common_info.id.fallback_name()))
-            .extend(Self::battery_charge_fragments(item, &mut magazine_output))
-            .extend(self.magazine_fragments(magazine_wells, &magazine_output))
+            .extend(Self::battery_charge_fragments(item, &mut magazine_pockets))
+            .extend(self.magazine_fragments(magazine_wells, magazine_pockets))
             .extend(Self::item_tag_fragments(item, &container_data));
 
         if let Some(container_data) = container_data {
@@ -191,7 +189,7 @@ impl<'w> ItemHierarchy<'w, '_> {
 
     fn battery_charge_fragments(
         item: &ItemItem<'_>,
-        magazine_output: &mut Vec<Vec<Fragment>>,
+        magazine_pockets: &mut Vec<Subitems>,
     ) -> impl Iterator<Item = Fragment> {
         item.magazine_info
             .filter(|magazine| {
@@ -200,24 +198,27 @@ impl<'w> ItemHierarchy<'w, '_> {
                     .0
                     .contains(&UntypedInfoId::new("battery"))
             })
-            .map(|magazine| {
-                let mut charges = magazine_output.drain(..).flatten().peekable();
-                if charges.peek().is_some() {
-                    once(Fragment::soft("at"))
-                        .chain(charges)
-                        .chain(once(Fragment::soft(
-                            magazine
-                                .capacity
-                                .map_or_else(String::new, |capacity| format!("/{capacity}")),
-                        )))
-                        .collect::<Vec<_>>()
-                } else {
-                    vec![
-                        Fragment::soft("("),
-                        Fragment::bad("drained"),
-                        Fragment::soft(")"),
-                    ]
-                }
+            .and_then(|magazine| magazine.capacity)
+            .map(|capacity| {
+                let mut battery_amounts = magazine_pockets
+                    .drain(..)
+                    .flat_map(|subitems| subitems.items)
+                    .map(|item| item.amount)
+                    .collect::<Vec<_>>();
+
+                assert!(
+                    battery_amounts.len() <= 1,
+                    "Too many battery charges: {battery_amounts:?}"
+                );
+
+                [
+                    Fragment::soft("at"),
+                    battery_amounts
+                        .pop()
+                        .unwrap_or(&Amount::ZERO)
+                        .fragment_in_range(capacity),
+                    Fragment::soft(format!("/{capacity}")),
+                ]
             })
             .into_iter()
             .flatten()
@@ -226,9 +227,8 @@ impl<'w> ItemHierarchy<'w, '_> {
     fn magazine_fragments<'a>(
         &self,
         magazine_wells: impl Iterator<Item = Subitems<'a>>,
-        magazine_output: &[Vec<Fragment>],
+        magazine_pockets: Vec<Subitems>,
     ) -> Vec<Fragment> {
-        let magazine_framents = magazine_output.join(&Fragment::soft(", "));
         let well_fragments = magazine_wells
             .flat_map(|info| {
                 if info.items.is_empty() {
@@ -242,6 +242,13 @@ impl<'w> ItemHierarchy<'w, '_> {
                 }
             })
             .collect::<Vec<_>>();
+
+        let magazine_framents = magazine_pockets
+            .into_iter()
+            .flat_map(|subitems| subitems.items)
+            .map(|subitem| self.inline_item_fragments(&subitem))
+            .collect::<Vec<_>>()
+            .join(&Fragment::soft(", "));
 
         if magazine_framents.is_empty() && well_fragments.is_empty() {
             Vec::new()

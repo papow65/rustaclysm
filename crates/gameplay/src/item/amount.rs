@@ -1,5 +1,6 @@
 use crate::Fragment;
 use bevy::prelude::Component;
+use hud::text_color_expect_full;
 use std::ops::{Add, Sub};
 
 /// Mutable component
@@ -12,6 +13,13 @@ impl Amount {
 
     pub(crate) fn fragment(self) -> Option<Fragment> {
         (Self::SINGLE != self).then_some(Fragment::hard(format!("{}", self.0)))
+    }
+
+    pub(crate) fn fragment_in_range(self, max: u32) -> Fragment {
+        Fragment::colorized(
+            format!("{}", self.0),
+            text_color_expect_full(self.0 as f32 / max as f32),
+        )
     }
 }
 
