@@ -33,6 +33,11 @@ impl Flags {
     }
 
     #[must_use]
+    pub fn pockets(&self) -> bool {
+        self.contains("POCKETS")
+    }
+
+    #[must_use]
     pub fn transparent(&self) -> bool {
         self.contains("TRANSPARENT")
     }
