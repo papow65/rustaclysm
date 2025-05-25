@@ -1,9 +1,9 @@
-use crate::screens::{Nearby, find_nearby, find_nearby_pseudo, nearby_qualities};
-use crate::{BodyContainers, GameplayScreenState, LastSeen, Location, Player, Pos, Shared};
+use crate::screens::{find_nearby, find_nearby_pseudo, nearby_qualities};
+use crate::{BodyContainers, GameplayScreenState, Item, LastSeen, Location, Player, Pos, Shared};
 use bevy::picking::Pickable;
 use bevy::prelude::{
-    AlignItems, AnyOf, ChildOf, Commands, FlexDirection, JustifyContent, KeyCode, Local, NextState,
-    Node, Overflow, Query, Res, ResMut, Single, StateScoped, Text, UiRect, Val, With, World,
+    AlignItems, AnyOf, Commands, FlexDirection, JustifyContent, KeyCode, Local, NextState, Node,
+    Overflow, Query, Res, ResMut, Single, StateScoped, Text, UiRect, Val, With, World,
 };
 use cdda_json_files::{FurnitureInfo, TerrainInfo};
 use hud::{Fonts, GOOD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, WARN_TEXT_COLOR};
@@ -18,7 +18,7 @@ pub(super) fn spawn_crafting_screen(
     location: Res<Location>,
     fonts: Res<Fonts>,
     player: Single<(&Pos, &BodyContainers), With<Player>>,
-    items: Query<(Nearby, &LastSeen, Option<&ChildOf>)>,
+    items: Query<(Item, &LastSeen)>,
     infrastructure: Query<(
         AnyOf<(&Shared<FurnitureInfo>, &Shared<TerrainInfo>)>,
         &LastSeen,

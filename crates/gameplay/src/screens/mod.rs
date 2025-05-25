@@ -20,7 +20,5 @@ use self::crafting::CraftingScreenPlugin;
 use self::death::DeathScreenPlugin;
 use self::inventory::InventoryScreenPlugin;
 use self::menu::MenuScreenPlugin;
-use self::nearby::{
-    Nearby, NearbyItem, find_nearby, find_nearby_pseudo, find_sources, nearby_qualities,
-};
+use self::nearby::{find_nearby, find_nearby_pseudo, find_sources, nearby_qualities};
 use self::quality::QualityScreenPlugin;

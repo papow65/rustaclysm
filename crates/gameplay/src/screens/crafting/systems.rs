@@ -2,20 +2,19 @@ use crate::screens::crafting::{
     AlternativeSituation, ComponentSituation, DetectedQuantity, QualitySituation, RecipeSituation,
     ToolSituation, resource::CraftingScreen,
 };
-use crate::screens::{
-    Nearby, NearbyItem, find_nearby, find_nearby_pseudo, find_sources, nearby_qualities,
-};
+use crate::screens::{find_nearby, find_nearby_pseudo, find_sources, nearby_qualities};
 use crate::{
-    ActiveSav, BodyContainers, Clock, GameplayScreenState, Infos, InstructionQueue, ItemHierarchy,
-    LastSeen, Location, MessageWriter, Player, Pos, QueuedInstruction, Shared, cdda::Error,
+    ActiveSav, BodyContainers, Clock, GameplayScreenState, Infos, InstructionQueue, Item,
+    ItemHierarchy, ItemItem, LastSeen, Location, MessageWriter, Player, Pos, QueuedInstruction,
+    Shared, cdda::Error,
 };
 use bevy::ecs::{spawn::SpawnIter, system::SystemId};
 use bevy::platform::collections::{HashMap, HashSet};
 use bevy::prelude::{
-    AlignItems, AnyOf, ChildOf, Children, Commands, Display, Entity, FlexDirection, In,
-    IntoSystem as _, JustifyContent, KeyCode, Local, NextState, Node, Overflow, Pickable, Query,
-    Res, ResMut, Single, SpawnRelated as _, StateScoped, Text, TextColor, UiRect, Val, With, World,
-    children, debug, error,
+    AlignItems, AnyOf, Children, Commands, Display, Entity, FlexDirection, In, IntoSystem as _,
+    JustifyContent, KeyCode, Local, NextState, Node, Overflow, Pickable, Query, Res, ResMut,
+    Single, SpawnRelated as _, StateScoped, Text, TextColor, UiRect, Val, With, World, children,
+    debug, error,
 };
 use cdda_json_files::{
     Alternative, AutoLearn, BookLearn, BookLearnItem, CalculatedRequirement, CommonItemInfo,
@@ -284,7 +283,7 @@ pub(super) fn refresh_crafting_screen(
     mut selection_lists: Query<&mut SelectionList>,
     hierarchy: ItemHierarchy,
     player: Single<(&Pos, &BodyContainers), With<Player>>,
-    items: Query<(Nearby, &LastSeen, Option<&ChildOf>)>,
+    items: Query<(Item, &LastSeen)>,
     infrastructure: Query<(
         AnyOf<(&Shared<FurnitureInfo>, &Shared<TerrainInfo>)>,
         &LastSeen,
@@ -356,20 +355,20 @@ pub(super) fn refresh_crafting_screen(
     }
 }
 
-fn nearby_manuals(nearby_items: &[NearbyItem]) -> HashMap<InfoId<CommonItemInfo>, Arc<str>> {
+fn nearby_manuals(nearby_items: &[ItemItem]) -> HashMap<InfoId<CommonItemInfo>, Arc<str>> {
     nearby_items
         .iter()
         .filter(|nearby| {
             nearby
-                .common_item_info
+                .common_info
                 .category
                 .as_ref()
                 .is_some_and(|s| &**s == "manuals")
         })
         .map(|nearby| {
             (
-                nearby.common_item_info.id.clone(),
-                nearby.common_item_info.name.single.clone(),
+                nearby.common_info.id.clone(),
+                nearby.common_info.name.single.clone(),
             )
         })
         .collect::<HashMap<_, _>>()
@@ -381,7 +380,7 @@ fn shown_recipes(
     hierarchy: &ItemHierarchy,
     nearby_manuals: &HashMap<InfoId<CommonItemInfo>, Arc<str>>,
     nearby_qualities: &HashMap<Arc<Quality>, i8>,
-    nearby_items: &[NearbyItem],
+    nearby_items: &[ItemItem],
     nearby_pseudo: &HashSet<Arc<CommonItemInfo>>,
     nearby_sources: &HashSet<InfoId<CommonItemInfo>>,
 ) -> Vec<RecipeSituation> {
@@ -506,7 +505,7 @@ fn recipe_qualities(
 fn recipe_tools(
     hierarchy: &ItemHierarchy,
     required: &[Vec<Alternative<RequiredTool>>],
-    present: &[NearbyItem],
+    present: &[ItemItem],
     nearby_pseudo: &HashSet<Arc<CommonItemInfo>>,
     sources: &HashSet<InfoId<CommonItemInfo>>,
 ) -> Vec<ToolSituation> {
@@ -523,7 +522,7 @@ fn recipe_tools(
 
                     let mut found = present
                         .iter()
-                        .filter(|nearby| nearby.common_item_info.id == item_info.id)
+                        .filter(|nearby| nearby.common_info.id == item_info.id)
                         .peekable();
                     if !source && !pseudo && found.peek().is_none() {
                         return DetectedQuantity::Missing;
@@ -531,13 +530,14 @@ fn recipe_tools(
 
                     let (from_entities, amounts): (Vec<_>, Vec<_>) = found
                         .flat_map(|nearby| {
-                            hierarchy.pockets_in(nearby.entity).filter_map(
-                                |(pocket_entity, pocket)| match pocket.type_ {
+                            hierarchy
+                                .pockets_in(nearby)
+                                .filter_map(|(pocket_entity, pocket)| match pocket.type_ {
                                     PocketType::Magazine => Some(pocket_entity),
                                     PocketType::MagazineWell => hierarchy
                                         .items_in(pocket_entity)
                                         .flat_map(|magazine| {
-                                            hierarchy.pockets_in(magazine.entity).filter_map(
+                                            hierarchy.pockets_in(&magazine).filter_map(
                                                 |(pocket_entity, pocket)| match pocket.type_ {
                                                     PocketType::Magazine => Some(pocket_entity),
                                                     _ => None,
@@ -546,8 +546,7 @@ fn recipe_tools(
                                         })
                                         .next(),
                                     _ => None,
-                                },
-                            )
+                                })
                         })
                         .flat_map(|pocket_entity| hierarchy.items_in(pocket_entity))
                         .map(|magazine_item| (magazine_item.entity, magazine_item.amount.0))
@@ -573,7 +572,7 @@ fn recipe_tools(
 
 fn recipe_components(
     required: &[Vec<Alternative<RequiredComponent>>],
-    present: &[NearbyItem],
+    present: &[ItemItem],
     sources: &HashSet<InfoId<CommonItemInfo>>,
 ) -> Vec<ComponentSituation> {
     required
@@ -589,7 +588,7 @@ fn recipe_components(
 
                     let (from_entities, amounts): (Vec<_>, Vec<_>) = present
                         .iter()
-                        .filter(|nearby| nearby.common_item_info.id == item_info.id)
+                        .filter(|nearby| nearby.common_info.id == item_info.id)
                         .map(|nearby| (nearby.entity, nearby.amount.0))
                         .unzip();
 

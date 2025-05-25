@@ -340,7 +340,7 @@ pub(in super::super) fn combine_items(
         );
 
         let has_subitems = hierarchy
-            .pockets_in(moved.entity)
+            .pockets_in(&moved)
             .any(|(pocket_entity, _)| hierarchy.items_in(pocket_entity).next().is_some());
 
         if !all_merged.contains(&moved.entity) && !has_subitems {

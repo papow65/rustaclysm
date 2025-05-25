@@ -1,7 +1,6 @@
-use crate::{Amount, BodyContainers, LastSeen, Location, Pos, Shared};
-use bevy::ecs::query::QueryData;
+use crate::{BodyContainers, Item, ItemItem, LastSeen, Location, Pos, Shared};
 use bevy::platform::collections::{HashMap, HashSet, hash_map::Entry};
-use bevy::prelude::{AnyOf, ChildOf, Children, Entity, Query};
+use bevy::prelude::{AnyOf, Query};
 use cdda_json_files::{
     CommonItemInfo, ExamineAction, FurnitureInfo, InfoId, Quality, SimpleExamineAction, TerrainInfo,
 };
@@ -10,34 +9,23 @@ use std::{ops::RangeInclusive, sync::Arc};
 const MAX_FIND_DISTANCE: i32 = 7;
 const FIND_RANGE: RangeInclusive<i32> = (-MAX_FIND_DISTANCE)..=MAX_FIND_DISTANCE;
 
-#[derive(QueryData)]
-#[query_data(derive(Debug))]
-pub(super) struct Nearby {
-    pub(super) entity: Entity,
-    pub(super) amount: &'static Amount,
-    pub(super) common_item_info: &'static Shared<CommonItemInfo>,
-    pub(super) children: Option<&'static Children>,
-}
-
 pub(super) fn find_nearby<'a>(
     location: &'a Location,
-    items: &'a Query<(Nearby, &LastSeen, Option<&ChildOf>)>,
+    items: &'a Query<(Item, &LastSeen)>,
     player_pos: Pos,
     body_containers: &'a BodyContainers,
-) -> Vec<NearbyItem<'a>> {
+) -> Vec<ItemItem<'a>> {
     FIND_RANGE
         .flat_map(move |dz| {
             FIND_RANGE.flat_map(move |dx| {
                 location
                     .all(player_pos.horizontal_offset(dx, dz))
                     .filter_map(|entity| items.get(*entity).ok())
-                    .filter(|(.., last_seen, _)| **last_seen != LastSeen::Never)
+                    .filter(|(_, last_seen)| **last_seen != LastSeen::Never)
             })
         })
-        .chain(items.iter().filter(|(.., parent)| {
-            parent.is_some_and(|child_of| {
-                [body_containers.hands, body_containers.clothing].contains(&child_of.parent())
-            })
+        .chain(items.iter().filter(|(item, _)| {
+            [body_containers.hands, body_containers.clothing].contains(&item.child_of.parent())
         }))
         .map(|(nearby, ..)| nearby)
         .collect()
@@ -104,12 +92,12 @@ pub(super) fn find_sources(
 }
 
 pub(super) fn nearby_qualities(
-    nearby_items: &[NearbyItem],
+    nearby_items: &[ItemItem],
     pseudo_items: &HashSet<Arc<CommonItemInfo>>,
 ) -> HashMap<Arc<Quality>, i8> {
     nearby_items
         .iter()
-        .map(|nearby| nearby.common_item_info.as_ref().clone())
+        .map(|nearby| nearby.common_info.as_ref().clone())
         .chain(pseudo_items.iter().cloned())
         .flat_map(|item| {
             item.qualities

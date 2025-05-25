@@ -1,8 +1,7 @@
 use crate::{Amount, ContainerLimits, Fragment, Item, ItemItem, Phrase, Pocket, PocketSealing};
 use bevy::ecs::system::SystemParam;
-use bevy::prelude::{Children, Entity, Query, error};
+use bevy::prelude::{Children, Entity, Query};
 use cdda_json_files::{PocketType, UntypedInfoId};
-use std::panic::Location;
 use std::{iter::once, num::NonZeroUsize};
 
 #[derive(Clone, Copy, Debug)]
@@ -25,7 +24,7 @@ struct ContainerData<'a> {
 #[derive(SystemParam)]
 pub(crate) struct ItemHierarchy<'w, 's> {
     limits: Query<'w, 's, &'static ContainerLimits>,
-    children: Query<'w, 's, &'static Children>,
+    parents: Query<'w, 's, &'static Children>,
     items: Query<'w, 's, Item>,
     pockets: Query<'w, 's, (Entity, &'static Pocket)>,
 }
@@ -36,7 +35,7 @@ impl<'w> ItemHierarchy<'w, '_> {
     }
 
     pub(crate) fn items_in(&self, container: Entity) -> impl Iterator<Item = ItemItem> + use<'_> {
-        self.children
+        self.parents
             .get(container)
             .into_iter()
             .flat_map(IntoIterator::into_iter)
@@ -45,14 +44,16 @@ impl<'w> ItemHierarchy<'w, '_> {
 
     pub(crate) fn pockets_in(
         &self,
-        container: Entity,
+        container: &ItemItem,
     ) -> impl Iterator<Item = (Entity, &Pocket)> + use<'_> {
-        self.children
-            .get(container)
-            .inspect_err(|error| error!("{} {error:?}", Location::caller()))
+        container
+            .children
             .into_iter()
             .flat_map(IntoIterator::into_iter)
-            .flat_map(|&pocket| self.pockets.get(pocket)) // Filtering out the models
+            .copied()
+            .flat_map(|pocket| self.pockets.get(pocket)) // Filtering out the models
+            .collect::<Vec<_>>() // Fix for lifetime error
+            .into_iter()
     }
 
     pub(crate) fn container(&self, container_entity: Entity) -> &ContainerLimits {
@@ -113,7 +114,7 @@ impl<'w> ItemHierarchy<'w, '_> {
                 PocketType::Last,
             ] {
                 let items = self
-                    .pockets(item.entity, pocket_type)
+                    .pockets(item, pocket_type)
                     .flat_map(|subitems| subitems.items)
                     .collect::<Vec<_>>();
                 let in_pocket = Some(InPocket {
@@ -130,7 +131,7 @@ impl<'w> ItemHierarchy<'w, '_> {
 
     fn container_data(&self, item: &ItemItem<'_>) -> Option<ContainerData> {
         let contents = self
-            .pockets(item.entity, PocketType::Container)
+            .pockets(item, PocketType::Container)
             .collect::<Vec<_>>();
         let first_pocket_sealing = contents
             .first()
@@ -151,11 +152,9 @@ impl<'w> ItemHierarchy<'w, '_> {
         item: &ItemItem<'_>,
         container_data: Option<&mut ContainerData>,
     ) -> Vec<Fragment> {
-        let magazine_wells = self.pockets(item.entity, PocketType::MagazineWell);
+        let magazine_wells = self.pockets(item, PocketType::MagazineWell);
 
-        let mut magazine_pockets = self
-            .pockets(item.entity, PocketType::Magazine)
-            .collect::<Vec<_>>();
+        let mut magazine_pockets = self.pockets(item, PocketType::Magazine).collect::<Vec<_>>();
 
         let phrase = Phrase::from_fragments(prefix.into_iter().collect())
             .extend(item.fragments())
@@ -305,7 +304,7 @@ impl<'w> ItemHierarchy<'w, '_> {
             [] => true,
             [item] => {
                 let subitems = self
-                    .pockets(item.entity, PocketType::Container)
+                    .pockets(item, PocketType::Container)
                     .flat_map(|pocket| pocket.items)
                     .collect::<Vec<_>>();
                 self.is_single_hierarchy(&subitems)
@@ -314,12 +313,8 @@ impl<'w> ItemHierarchy<'w, '_> {
         }
     }
 
-    fn pockets(
-        &self,
-        item_entity: Entity,
-        pocket_type: PocketType,
-    ) -> impl Iterator<Item = Subitems> + use<'_> {
-        self.pockets_in(item_entity)
+    fn pockets(&self, item: &ItemItem, pocket_type: PocketType) -> impl Iterator<Item = Subitems> {
+        self.pockets_in(item)
             .filter(move |(_, pocket)| pocket_type == pocket.type_)
             .map(move |(pocket_entity, pocket)| Subitems {
                 pocket,
