@@ -525,11 +525,13 @@ fn perform_start_craft(
     )
 }
 
+#[expect(clippy::needless_pass_by_value)]
 fn perform_continue_craft(
     In(continue_craft): In<ActionIn<ContinueCraft>>,
     mut commands: Commands,
     mut message_writer: MessageWriter,
     mut next_player_action_state: ResMut<NextState<PlayerActionState>>,
+    infos: Res<Infos>,
     mut spawner: TileSpawner,
     actors: Query<Actor>,
     mut items: Query<(Item, &mut Craft)>,
@@ -538,6 +540,7 @@ fn perform_continue_craft(
         &mut commands,
         &mut message_writer,
         &mut next_player_action_state,
+        &infos,
         &mut spawner,
         &mut items,
         continue_craft.action.item_entity,

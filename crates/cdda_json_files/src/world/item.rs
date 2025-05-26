@@ -60,11 +60,19 @@ pub struct CddaItem {
     pub degradation: Option<u32>,
 }
 
-impl From<&Arc<CommonItemInfo>> for CddaItem {
-    fn from(item_info: &Arc<CommonItemInfo>) -> Self {
+impl CddaItem {
+    #[must_use]
+    pub fn new(item_info: &Arc<CommonItemInfo>, magazine: Option<&Arc<Magazine>>) -> Self {
+        let magazine_link = if let Some(magazine) = magazine {
+            let magazine_id = magazine.common.id.untyped().clone().into();
+            OptionalLinkedLater::new_final_some(magazine_id, magazine)
+        } else {
+            OptionalLinkedLater::new_final_none()
+        };
+
         Self {
             item_info: RequiredLinkedLater::new_final(item_info.id.clone(), item_info),
-            magazine_info: OnceLock::new(),
+            magazine_info: magazine_link.into(),
             snip_id: None,
             charges: None,
             active: None,

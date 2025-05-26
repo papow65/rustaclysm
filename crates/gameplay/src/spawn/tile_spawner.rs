@@ -29,6 +29,7 @@ use units::{Mass, Volume};
 #[derive(SystemParam)]
 pub(crate) struct TileSpawner<'w, 's> {
     pub(crate) commands: Commands<'w, 's>,
+    infos: Res<'w, Infos>,
     explored: Res<'w, Explored>,
     active_sav: Res<'w, ActiveSav>,
     model_factory: ModelFactory<'w>,
@@ -289,7 +290,10 @@ impl<'w> TileSpawner<'w, '_> {
         items: impl Iterator<Item = SpawnItem>,
     ) {
         for spawn_item in items {
-            let mut cdda_item = CddaItem::from(&spawn_item.item_info);
+            let mut cdda_item = CddaItem::new(
+                &spawn_item.item_info,
+                self.infos.magazine(&spawn_item.item_info.id),
+            );
             cdda_item.charges = spawn_item.charges;
             if let Err(error) = self.spawn_item(
                 parent_entity,
@@ -594,7 +598,7 @@ impl<'w> TileSpawner<'w, '_> {
         ));
     }
 
-    pub(crate) fn spawn_characters(&mut self, infos: &Infos, spawn_pos: Pos) {
+    pub(crate) fn spawn_characters(&mut self, spawn_pos: Pos) {
         let root = self
             .commands
             .spawn((
@@ -605,7 +609,7 @@ impl<'w> TileSpawner<'w, '_> {
             .id();
 
         let human = RequiredLinkedLater::from(InfoId::new("human"));
-        infos.link_character(&human, "player");
+        self.infos.link_character(&human, "player");
 
         let sav = self.active_sav.sav();
         let player = self
@@ -624,7 +628,7 @@ impl<'w> TileSpawner<'w, '_> {
         self.configure_player(player);
     }
 
-    pub(crate) fn spawn_zombies(&mut self, infos: &Infos, around_pos: Pos) {
+    pub(crate) fn spawn_zombies(&mut self, around_pos: Pos) {
         let root = self
             .commands
             .spawn((
@@ -635,7 +639,7 @@ impl<'w> TileSpawner<'w, '_> {
             .id();
 
         let human = RequiredLinkedLater::from(InfoId::new("human"));
-        infos.link_character(&human, "survivor");
+        self.infos.link_character(&human, "survivor");
 
         log_spawn_result(self.spawn_character(
             root,
@@ -645,7 +649,7 @@ impl<'w> TileSpawner<'w, '_> {
         ));
 
         let zombie = RequiredLinkedLater::from(InfoId::new("mon_zombie"));
-        infos.link_character(&zombie, "zombie");
+        self.infos.link_character(&zombie, "zombie");
 
         log_spawn_result(self.spawn_character(
             root,
@@ -800,7 +804,7 @@ impl<'w> TileSpawner<'w, '_> {
         let entity = self.spawn_item(
             parent_entity,
             Some(pos),
-            &CddaItem::from(&Arc::new(craft_item_info)),
+            &CddaItem::new(&Arc::new(craft_item_info), None),
             Amount::SINGLE,
         )?;
         let crafting_time = recipe.time.ok_or_else(|| Error::RecipeWithoutTime {

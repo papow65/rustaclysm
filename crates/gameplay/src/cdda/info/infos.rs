@@ -10,7 +10,7 @@ use cdda_json_files::{
     Practice, Quality, Recipe, RequiredLinkedLater, Requirement, Submap, TerrainInfo, Tool,
     ToolClothing, Toolmod, UntypedInfoId, VehiclePartInfo, VehiclePartMigration, Wheel,
 };
-use std::{env, process::exit, time::Instant};
+use std::{env, process::exit, sync::Arc, time::Instant};
 use strum::VariantArray as _;
 use util::AsyncNew;
 
@@ -55,7 +55,7 @@ pub(crate) struct Infos {
     item_groups: InfoMap<ItemGroup>,
     item_migrations: InfoMap<ItemMigration>,
 
-    pub(crate) magazines: InfoMap<Magazine>,
+    magazines: InfoMap<Magazine>,
 
     #[expect(unused)]
     pet_armors: InfoMap<PetArmor>,
@@ -390,6 +390,15 @@ impl Infos {
         err_description: &str,
     ) {
         character.finalize(&self.characters, err_description);
+    }
+
+    pub(crate) fn magazine(
+        &self,
+        common_item_info: &InfoId<CommonItemInfo>,
+    ) -> Option<&Arc<Magazine>> {
+        self.magazines
+            .get(&common_item_info.untyped().clone().into())
+            .ok()
     }
 }
 

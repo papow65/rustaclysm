@@ -1,8 +1,6 @@
-use crate::{GameplayScreenState, Infos, Player, Pos, spawn::TileSpawner};
+use crate::{GameplayScreenState, Player, Pos, spawn::TileSpawner};
 use application_state::ApplicationState;
-use bevy::prelude::{
-    KeyCode, Local, NextState, Res, ResMut, Single, StateScoped, With, World, debug,
-};
+use bevy::prelude::{KeyCode, Local, NextState, ResMut, Single, StateScoped, With, World, debug};
 use gameplay_transition_state::GameplayTransitionState;
 use keyboard::KeyBindings;
 use manual::ManualSection;
@@ -32,14 +30,9 @@ pub(crate) fn create_gameplay_key_bindings(
     log_if_slow("create_gameplay_key_bindings", start);
 }
 
-#[expect(clippy::needless_pass_by_value)]
-fn spawn_zombies(
-    mut tile_spawner: TileSpawner,
-    infos: Res<Infos>,
-    player: Option<Single<&Pos, With<Player>>>,
-) {
+fn spawn_zombies(mut tile_spawner: TileSpawner, player: Option<Single<&Pos, With<Player>>>) {
     if let Some(player_pos) = player {
-        tile_spawner.spawn_zombies(&infos, **player_pos);
+        tile_spawner.spawn_zombies(**player_pos);
     }
 }
 

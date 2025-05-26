@@ -2,11 +2,10 @@ use crate::events::Exploration;
 use crate::spawn::{SubzoneSpawner, TileSpawner, VisibleRegion, ZoneSpawner};
 use crate::{
     ActiveSav, DespawnSubzoneLevel, DespawnZoneLevel, Expanded, Explored, Focus, GameplayLocal,
-    Infos, Level, MapAsset, MapManager, MapMemoryAsset, MapMemoryManager, MissingAsset,
-    OvermapAsset, OvermapBufferAsset, OvermapBufferManager, OvermapManager, Pos, Region,
-    SpawnSubzoneLevel, SpawnZoneLevel, SubzoneLevel, SubzoneLevelEntities,
-    UpdateZoneLevelVisibility, VisionDistance, VisualizationUpdate, Zone, ZoneLevel,
-    ZoneLevelEntities, ZoneLevelIds, ZoneRegion,
+    Level, MapAsset, MapManager, MapMemoryAsset, MapMemoryManager, MissingAsset, OvermapAsset,
+    OvermapBufferAsset, OvermapBufferManager, OvermapManager, Pos, Region, SpawnSubzoneLevel,
+    SpawnZoneLevel, SubzoneLevel, SubzoneLevelEntities, UpdateZoneLevelVisibility, VisionDistance,
+    VisualizationUpdate, Zone, ZoneLevel, ZoneLevelEntities, ZoneLevelIds, ZoneRegion,
 };
 use bevy::ecs::{schedule::ScheduleConfigs, system::ScheduleSystem};
 use bevy::prelude::{
@@ -379,11 +378,7 @@ fn update_zone_levels_with_missing_assets(
 }
 
 #[expect(clippy::needless_pass_by_value)]
-pub(crate) fn spawn_initial_entities(
-    infos: Res<Infos>,
-    active_sav: Res<ActiveSav>,
-    mut spawner: TileSpawner,
-) {
+pub(crate) fn spawn_initial_entities(active_sav: Res<ActiveSav>, mut spawner: TileSpawner) {
     spawner.spawn_light();
 
     let sav = active_sav.sav();
@@ -397,7 +392,7 @@ pub(crate) fn spawn_initial_entities(
         12 * i32::from(sav.levx % 2) + 24,
         12 * i32::from(sav.levy % 2) + 24,
     );
-    spawner.spawn_characters(&infos, spawn_pos);
+    spawner.spawn_characters(spawn_pos);
 }
 
 pub(crate) fn update_explored(

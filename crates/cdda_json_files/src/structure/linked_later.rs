@@ -36,6 +36,13 @@ impl<T: fmt::Debug> OptionalLinkedLater<T> {
         Self { option: None }
     }
 
+    #[must_use]
+    pub fn new_final_some(info_id: InfoId<T>, value: &Arc<T>) -> Self {
+        Self {
+            option: Some(LinkedLater::new_final(info_id, value)),
+        }
+    }
+
     pub fn get(&self) -> Option<Arc<T>> {
         self.option.as_ref().and_then(LinkedLater::get)
     }
