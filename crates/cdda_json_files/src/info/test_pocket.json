@@ -1,0 +1,11 @@
+{
+    "flag_restriction": [
+        "MAG_COMPACT"
+    ],
+    "max_contains_volume": "500 ml",
+    "max_contains_weight": "2 kg",
+    "max_item_length": "240 mm",
+    "moves": 40,
+    "pocket_type": "CONTAINER",
+    "volume_encumber_modifier": 0.3
+}

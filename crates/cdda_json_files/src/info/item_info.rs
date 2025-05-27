@@ -4,7 +4,7 @@ use bevy_platform::collections::HashMap;
 use serde::Deserialize;
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
-use units::{Duration, Mass, Volume};
+use units::{Distance, Duration, Mass, Volume};
 
 pub trait ItemWithCommonInfo {
     fn common(&self) -> Arc<CommonItemInfo>;
@@ -565,7 +565,7 @@ pub struct CommonItemInfo {
     pub relic_data: Option<serde_json::Value>,
     pub milling: Option<serde_json::Value>,
     pub gunmod_data: Option<serde_json::Value>,
-    pub pocket_data: Option<Vec<serde_json::Value>>,
+    pub pocket_data: Option<Vec<PocketInfo>>,
     pub armor: Option<Vec<serde_json::Value>>,
     pub snippet_category: Option<serde_json::Value>,
 
@@ -702,6 +702,86 @@ pub enum CddaPhase {
     Gas,
 }
 
+#[expect(clippy::struct_excessive_bools)]
+#[derive(Debug, Deserialize)]
+pub struct PocketInfo {
+    #[serde(default = "container")]
+    pub pocket_type: Arc<str>,
+
+    #[serde(default)]
+    pub ablative: bool,
+
+    #[serde(default)]
+    pub airtight: bool,
+
+    #[serde(default)]
+    pub forbidden: bool,
+
+    #[serde(default)]
+    pub inherits_flags: bool,
+
+    #[serde(default)]
+    pub holster: bool,
+
+    #[serde(default)]
+    pub open_container: bool,
+
+    #[serde(default)]
+    pub rigid: bool,
+
+    #[serde(default)]
+    pub transparent: bool,
+
+    #[serde(default)]
+    pub watertight: bool,
+
+    pub description: Option<Arc<str>>,
+
+    pub min_contains_volume: Option<Volume>,
+    pub max_contains_volume: Option<Volume>,
+    pub max_contains_weight: Option<Mass>,
+    pub min_item_length: Option<Distance>,
+    pub max_item_length: Option<Distance>,
+    pub min_item_volume: Option<Volume>,
+    pub max_item_volume: Option<Volume>,
+    pub magazine_well: Option<Volume>,
+
+    #[serde(default)]
+    pub flag_restriction: Vec<Arc<str>>,
+
+    #[serde(default)]
+    pub item_restriction: Vec<InfoId<CommonItemInfo>>,
+
+    pub activity_noise: Option<serde_json::Value>,
+    pub allowed_speedloaders: Option<serde_json::Value>,
+    pub ammo_restriction: Option<serde_json::Value>,
+    pub default_magazine: Option<Arc<str>>,
+    pub extra_encumbrance: Option<u8>,
+    pub material_restriction: Option<serde_json::Value>,
+    pub moves: Option<u16>,
+    pub ripoff: Option<u8>,
+    pub sealed_data: Option<SealedData>,
+    pub spoil_multiplier: Option<f32>,
+    pub volume_encumber_modifier: Option<f32>,
+    pub volume_multiplier: Option<f32>,
+    pub weight_multiplier: Option<f32>,
+
+    #[serde(flatten)]
+    pub ignored: Ignored<Self>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct SealedData {
+    pub spoil_multiplier: f32,
+
+    #[serde(flatten)]
+    pub ignored: Ignored<Self>,
+}
+
+fn container() -> Arc<str> {
+    "CONTAINER".into()
+}
+
 #[cfg(test)]
 mod item_tests {
     use super::*;
@@ -716,6 +796,13 @@ mod item_tests {
     fn mc_jian_works() {
         let json = include_str!("test_mc_jian.json");
         let result = serde_json::from_str::<CommonItemInfo>(json);
+        assert!(result.is_ok(), "{result:?}");
+    }
+
+    #[test]
+    fn pocket_works() {
+        let json = include_str!("test_pocket.json");
+        let result = serde_json::from_str::<PocketInfo>(json);
         assert!(result.is_ok(), "{result:?}");
     }
 }
