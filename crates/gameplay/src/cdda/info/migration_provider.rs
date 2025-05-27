@@ -18,7 +18,7 @@ impl LinkProvider<CommonItemInfo> for ItemMigrationProvider<'_> {
             let migration_id = if variant.is_some() {
                 UntypedInfoId::new_suffix(&info_id.fallback_name(), variant.as_deref()).into()
             } else {
-                info_id.untyped().clone().into()
+                info_id.clone().into()
             };
             self.migrations
                 .get(&migration_id)
@@ -42,7 +42,7 @@ impl LinkProvider<VehiclePartInfo> for VehiclePartMigrationProvider<'_> {
     fn get_option(&self, info_id: &InfoId<VehiclePartInfo>) -> Option<&Arc<VehiclePartInfo>> {
         self.info_map.get(info_id).ok().or_else(|| {
             self.migrations
-                .get(&info_id.untyped().clone().into())
+                .get(&info_id.clone().into())
                 .ok()
                 .and_then(|migration| self.info_map.get(&migration.to).ok())
         })

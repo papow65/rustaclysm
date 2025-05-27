@@ -3,7 +3,10 @@ use serde::Deserialize;
 use std::hash::{Hash, Hasher};
 use std::{any::type_name, fmt, marker::PhantomData, sync::Arc};
 
-use crate::{OvermapTerrainInfo, TerrainInfo};
+use crate::{
+    CommonItemInfo, ItemMigration, ItemWithCommonInfo, OvermapTerrainInfo, TerrainInfo,
+    VehiclePartInfo, VehiclePartMigration,
+};
 
 /// Use [`InfoId`] wherever possible.
 /// Note that different info types may use the same ids.
@@ -180,6 +183,30 @@ impl<T> PartialEq for InfoId<T> {
 }
 
 impl<T> Eq for InfoId<T> {}
+
+impl<T: ItemWithCommonInfo> From<InfoId<CommonItemInfo>> for InfoId<T> {
+    fn from(info_id: InfoId<CommonItemInfo>) -> Self {
+        Self::from(info_id.untyped)
+    }
+}
+
+impl<T: ItemWithCommonInfo> From<InfoId<T>> for InfoId<CommonItemInfo> {
+    fn from(info_id: InfoId<T>) -> Self {
+        Self::from(info_id.untyped)
+    }
+}
+
+impl From<InfoId<CommonItemInfo>> for InfoId<ItemMigration> {
+    fn from(info_id: InfoId<CommonItemInfo>) -> Self {
+        Self::from(info_id.untyped)
+    }
+}
+
+impl From<InfoId<VehiclePartInfo>> for InfoId<VehiclePartMigration> {
+    fn from(info_id: InfoId<VehiclePartInfo>) -> Self {
+        Self::from(info_id.untyped)
+    }
+}
 
 /// Usefull for debugging
 #[derive(Deserialize)]

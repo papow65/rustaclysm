@@ -711,6 +711,7 @@ mod item_tests {
         let result = serde_json::from_str::<CommonItemInfo>(json);
         assert!(result.is_ok(), "{result:?}");
     }
+
     #[test]
     fn mc_jian_works() {
         let json = include_str!("test_mc_jian.json");

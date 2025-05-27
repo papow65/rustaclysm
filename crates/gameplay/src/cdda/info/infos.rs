@@ -364,11 +364,8 @@ impl Infos {
             "submap item",
         );
         let _either_response_is_fine = item.magazine_info.set({
-            let magazine_id: Option<InfoId<Magazine>> = item
-                .item_info
-                .get()
-                .ok()
-                .map(|info| info.id.untyped().clone().into());
+            let magazine_id: Option<InfoId<Magazine>> =
+                item.item_info.get().ok().map(|info| info.id.clone().into());
             let link = OptionalLinkedLater::from(magazine_id);
             link.finalize(&self.magazines, "submap item magazine");
             link
@@ -392,13 +389,8 @@ impl Infos {
         character.finalize(&self.characters, err_description);
     }
 
-    pub(crate) fn magazine(
-        &self,
-        common_item_info: &InfoId<CommonItemInfo>,
-    ) -> Option<&Arc<Magazine>> {
-        self.magazines
-            .get(&common_item_info.untyped().clone().into())
-            .ok()
+    pub(crate) fn magazine(&self, info_id: &InfoId<CommonItemInfo>) -> Option<&Arc<Magazine>> {
+        self.magazines.get(&info_id.clone().into()).ok()
     }
 }
 

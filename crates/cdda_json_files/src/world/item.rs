@@ -1,5 +1,5 @@
 use crate::{
-    CharacterInfo, CommonItemInfo, Magazine, OptionalLinkedLater, RequiredLinkedLater,
+    CharacterInfo, CommonItemInfo, InfoId, Magazine, OptionalLinkedLater, RequiredLinkedLater,
     UntypedInfoId,
 };
 use bevy_platform::collections::HashMap;
@@ -64,7 +64,7 @@ impl CddaItem {
     #[must_use]
     pub fn new(item_info: &Arc<CommonItemInfo>, magazine: Option<&Arc<Magazine>>) -> Self {
         let magazine_link = if let Some(magazine) = magazine {
-            let magazine_id = magazine.common.id.untyped().clone().into();
+            let magazine_id: InfoId<Magazine> = magazine.common.id.clone().into();
             OptionalLinkedLater::new_final_some(magazine_id, magazine)
         } else {
             OptionalLinkedLater::new_final_none()

@@ -344,13 +344,8 @@ impl ItemInfoMapLoader<'_> {
 
         // TODO Make this recursive
         for migration in self.item_migrations.values() {
-            if let Ok(new) = items
-                .get(&migration.replace.untyped().clone().into())
-                .cloned()
-            {
-                items
-                    .aliases
-                    .insert(migration.id.untyped().clone().into(), new);
+            if let Ok(new) = items.get(&migration.replace.clone().into()).cloned() {
+                items.aliases.insert(migration.id.clone().into(), new);
             }
         }
 
@@ -358,7 +353,7 @@ impl ItemInfoMapLoader<'_> {
             let previous = self
                 .common_item_infos
                 .map
-                .insert(id.untyped().clone().into(), item_info.common());
+                .insert(id.clone().into(), item_info.common());
             if let Some(previous) = previous {
                 warn!(
                     "Item {id:?} replaced the existing common item {:?}",
@@ -371,7 +366,7 @@ impl ItemInfoMapLoader<'_> {
             let previous = self
                 .common_item_infos
                 .aliases
-                .insert(alias.untyped().clone().into(), item_info.common());
+                .insert(alias.clone().into(), item_info.common());
             if let Some(previous) = previous {
                 warn!(
                     "Item alias {alias:?} replaced the existing common item {:?}",
