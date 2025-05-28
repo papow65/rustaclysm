@@ -4,6 +4,7 @@ use bevy_platform::collections::HashMap;
 use serde::Deserialize;
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
+use strum::VariantArray;
 use units::{Distance, Duration, Mass, Volume};
 
 pub trait ItemWithCommonInfo {
@@ -511,7 +512,10 @@ pub struct CommonItemInfo {
     pub variant_type: Option<serde_json::Value>,
     pub variants: Option<serde_json::Value>,
     pub container: Option<Arc<str>>,
-    pub sealed: Option<bool>,
+
+    #[serde(default)]
+    pub sealed: bool,
+
     pub emits: Option<serde_json::Value>,
     pub explode_in_fire: Option<bool>,
     pub solar_efficiency: Option<serde_json::Value>,
@@ -705,8 +709,8 @@ pub enum CddaPhase {
 #[expect(clippy::struct_excessive_bools)]
 #[derive(Debug, Deserialize)]
 pub struct PocketInfo {
-    #[serde(default = "container")]
-    pub pocket_type: Arc<str>,
+    #[serde(default)]
+    pub pocket_type: PocketType,
 
     #[serde(default)]
     pub ablative: bool,
@@ -770,16 +774,35 @@ pub struct PocketInfo {
     pub ignored: Ignored<Self>,
 }
 
+#[derive(
+    Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Deserialize, VariantArray,
+)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum PocketType {
+    // Based on item_pocket.h:40-48
+    // Order-dependant!
+    #[default]
+    Container,
+    Magazine,
+    /// Holds magazines
+    MagazineWell,
+    /// Gunmods or toolmods
+    Mod,
+    /// Bionics embedded in a corpse
+    Corpse,
+    Software,
+    Ebook,
+    /// Allows items to load contents that are too big, in order to spill them later.
+    Migration,
+    Last,
+}
+
 #[derive(Debug, Deserialize)]
 pub struct SealedData {
     pub spoil_multiplier: f32,
 
     #[serde(flatten)]
     pub ignored: Ignored<Self>,
-}
-
-fn container() -> Arc<str> {
-    "CONTAINER".into()
 }
 
 #[cfg(test)]

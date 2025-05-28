@@ -29,7 +29,7 @@ pub use self::item_group::{ItemGroup, SpawnItem};
 pub use self::item_info::{
     Ammo, BionicItem, Book, CddaItemName, CddaPhase, Clothing, Comestible, CommonItemInfo,
     Description, Engine, GenericItem, Gun, Gunmod, ItemName, ItemWithCommonInfo, Magazine,
-    PetArmor, Tool, ToolClothing, Toolmod, Wheel,
+    PetArmor, PocketInfo, PocketType, SealedData, Tool, ToolClothing, Toolmod, Wheel,
 };
 pub use self::migration::{ItemMigration, VehiclePartMigration};
 pub use self::overmap_info::OvermapTerrainInfo;

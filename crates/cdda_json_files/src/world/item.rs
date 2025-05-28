@@ -1,11 +1,12 @@
 use crate::{
-    CharacterInfo, CommonItemInfo, InfoId, Magazine, OptionalLinkedLater, RequiredLinkedLater,
-    UntypedInfoId,
+    CharacterInfo, CommonItemInfo, InfoId, Magazine, OptionalLinkedLater, PocketType,
+    RequiredLinkedLater, UntypedInfoId,
 };
 use bevy_platform::collections::HashMap;
-use serde::Deserialize;
-use serde_repr::Deserialize_repr;
+use serde::de::Error;
+use serde::{Deserialize, Deserializer};
 use std::sync::{Arc, Mutex, OnceLock};
+use strum::VariantArray as _;
 
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -119,14 +120,16 @@ pub struct CddaContainer {
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct CddaPocket {
+    #[serde(deserialize_with = "pocket_type_from_index")]
     pub pocket_type: PocketType,
+
     pub contents: Vec<CddaItem>,
 
     #[serde(rename = "_sealed")]
     pub sealed: bool,
 
     /// TODO Related to stealing? Also set on (some?) corpses
-    #[serde(default = "return_true")]
+    #[serde(default = "always_true")]
     pub allowed: bool,
 
     #[expect(unused)]
@@ -136,29 +139,16 @@ pub struct CddaPocket {
     no_rigid: Option<serde_json::Value>,
 }
 
-const fn return_true() -> bool {
-    true
+fn pocket_type_from_index<'de, D: Deserializer<'de>>(
+    deserializer: D,
+) -> Result<PocketType, D::Error> {
+    Ok(*PocketType::VARIANTS
+        .get(usize::deserialize(deserializer)?)
+        .ok_or_else(|| Error::custom("Pocket type index out of range"))?)
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Deserialize_repr)]
-#[serde(from = "u8")]
-#[repr(u8)]
-pub enum PocketType {
-    // Order-dependant!
-    // Based on item_pocket.h:40-48
-    Container,
-    Magazine,
-    /// Holds magazines
-    MagazineWell,
-    /// Gunmods or toolmods
-    Mod,
-    /// Bionics embedded in a corpse
-    Corpse,
-    Software,
-    Ebook,
-    /// Allows items to load contents that are too big, in order to spill them later.
-    Migration,
-    Last,
+const fn always_true() -> bool {
+    true
 }
 
 #[derive(Clone, Debug, Deserialize)]

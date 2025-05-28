@@ -752,7 +752,7 @@ impl<'w> TileSpawner<'w, '_> {
             variant_type: None,
             variants: None,
             container: None,
-            sealed: None,
+            sealed: false,
             emits: None,
             explode_in_fire: None,
             solar_efficiency: None,
