@@ -366,9 +366,16 @@ impl Infos {
         let _either_response_is_fine = item.magazine_info.set({
             let magazine_id: Option<InfoId<Magazine>> =
                 item.item_info.get().ok().map(|info| info.id.clone().into());
-            let link = OptionalLinkedLater::from(magazine_id);
-            link.finalize(&self.magazines, "submap item magazine");
-            link
+            if magazine_id
+                .as_ref()
+                .is_some_and(|magazine_id| self.magazines.get(magazine_id).is_ok())
+            {
+                let link = OptionalLinkedLater::from(magazine_id);
+                link.finalize(&self.magazines, "submap item magazine");
+                link
+            } else {
+                OptionalLinkedLater::new_final_none()
+            }
         });
         item.corpse.finalize(&self.characters, "submap item corpse");
 

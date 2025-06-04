@@ -14,6 +14,7 @@ pub struct CddaItem {
     #[serde(rename = "typeid")]
     pub item_info: RequiredLinkedLater<CommonItemInfo>,
 
+    /// Only set for magazines
     #[serde(skip)]
     pub magazine_info: OnceLock<OptionalLinkedLater<Magazine>>,
 
