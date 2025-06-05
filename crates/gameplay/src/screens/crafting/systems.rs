@@ -532,19 +532,26 @@ fn recipe_tools(
                         .flat_map(|nearby| {
                             hierarchy
                                 .pockets_in(nearby)
-                                .filter_map(|(pocket_entity, pocket)| match pocket.type_ {
-                                    PocketType::Magazine => Some(pocket_entity),
-                                    PocketType::MagazineWell => hierarchy
-                                        .items_in(pocket_entity)
-                                        .flat_map(|magazine| {
-                                            hierarchy.pockets_in(&magazine).filter_map(
-                                                |(pocket_entity, pocket)| match pocket.type_ {
-                                                    PocketType::Magazine => Some(pocket_entity),
-                                                    _ => None,
-                                                },
-                                            )
+                                .into_iter()
+                                .filter_map(|pocket_wrapper| match &pocket_wrapper.pocket_type() {
+                                    PocketType::Magazine => pocket_wrapper.entity(),
+                                    PocketType::MagazineWell => {
+                                        pocket_wrapper.entity().and_then(|pocket_entity| {
+                                            hierarchy
+                                                .items_in(pocket_entity)
+                                                .flat_map(|magazine| {
+                                                    hierarchy
+                                                        .pockets_in(&magazine)
+                                                        .into_iter()
+                                                        .filter_map(|subpocket_wrapper| {
+                                                            (subpocket_wrapper.pocket_type()
+                                                                == PocketType::Magazine)
+                                                                .then_some(pocket_entity)
+                                                        })
+                                                })
+                                                .next()
                                         })
-                                        .next(),
+                                    }
                                     _ => None,
                                 })
                         })

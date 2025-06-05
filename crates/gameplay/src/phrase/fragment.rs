@@ -55,7 +55,6 @@ impl Fragment {
         Self::colorized(text, GOOD_TEXT_COLOR)
     }
 
-    #[expect(unused)]
     pub(crate) fn bad<S>(text: S) -> Self
     where
         S: Into<String>,

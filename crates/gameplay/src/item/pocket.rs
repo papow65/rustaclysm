@@ -1,38 +1,38 @@
-use crate::Fragment;
-use bevy::prelude::Component;
-use cdda_json_files::{CddaPocket, PocketType};
+use crate::{Fragment, Shared};
+use bevy::ecs::query::QueryData;
+use bevy::prelude::{Children, Component, Entity};
+use cdda_json_files::{CddaPocket, PocketInfo, SealedData};
 
-#[derive(Copy, Clone, Debug)]
-pub(crate) enum PocketSealing {
-    Unsealed,
-    Sealed,
-}
-
-impl PocketSealing {
-    pub(crate) fn suffix(self) -> Option<Fragment> {
-        match self {
-            Self::Unsealed => None,
-            Self::Sealed => Some(Fragment::good("sealed")),
-        }
-    }
-}
-
-#[derive(Debug, Component)]
+#[derive(Copy, Clone, Debug, Component)]
 #[component(immutable)]
-pub(crate) struct Pocket {
-    pub(crate) type_: PocketType,
-    pub(crate) sealing: PocketSealing,
+pub(crate) struct SealedPocket;
+
+impl SealedPocket {
+    #[expect(clippy::unused_self)]
+    pub(crate) fn suffix(self) -> Fragment {
+        Fragment::good("sealed")
+    }
 }
 
-impl From<&CddaPocket> for Pocket {
-    fn from(source: &CddaPocket) -> Self {
-        Self {
-            type_: source.pocket_type,
-            sealing: if source.sealed {
-                PocketSealing::Sealed
-            } else {
-                PocketSealing::Unsealed
-            },
-        }
+impl TryFrom<&CddaPocket> for SealedPocket {
+    type Error = ();
+
+    fn try_from(pocket: &CddaPocket) -> Result<Self, ()> {
+        pocket.sealed.then_some(Self).ok_or(())
     }
+}
+
+impl From<&SealedData> for SealedPocket {
+    fn from(_: &SealedData) -> Self {
+        Self
+    }
+}
+
+#[derive(QueryData)]
+#[query_data(derive(Debug))]
+pub(crate) struct Pocket {
+    pub(crate) entity: Entity,
+    pub(crate) sealed: Option<&'static SealedPocket>,
+    pub(crate) info: &'static Shared<PocketInfo>,
+    pub(crate) items: Option<&'static Children>,
 }

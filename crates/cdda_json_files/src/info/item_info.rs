@@ -569,7 +569,7 @@ pub struct CommonItemInfo {
     pub relic_data: Option<serde_json::Value>,
     pub milling: Option<serde_json::Value>,
     pub gunmod_data: Option<serde_json::Value>,
-    pub pocket_data: Option<Vec<PocketInfo>>,
+    pub pocket_data: Option<Vec<Arc<PocketInfo>>>,
     pub armor: Option<Vec<serde_json::Value>>,
     pub snippet_category: Option<serde_json::Value>,
 

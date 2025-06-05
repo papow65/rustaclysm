@@ -2,11 +2,10 @@ use crate::{
     Accessible, ActiveSav, Amount, Aquatic, BaseSpeed, BodyContainers, CameraBase, Closeable,
     Containable, Craft, ExamineCursor, Explored, Faction, Filthy, HealingDuration, Health, Hurdle,
     Infos, ItemIntegrity, LastSeen, LevelOffset, Life, Limited, LocalTerrain, Melee, ModelFactory,
-    ObjectCategory, ObjectName, Obstacle, Opaque, OpaqueFloor, Openable, Player, Pos, PosOffset,
-    Shared, StairsDown, StairsUp, Stamina, StandardIntegrity, TileVariant, Vehicle, VehiclePart,
-    WalkingMode, cdda::Error, item::Pocket, spawn::log_spawn_result,
+    ObjectCategory, ObjectName, Obstacle, Opaque, OpaqueFloor, Openable, Phase, Player, Pos,
+    PosOffset, SealedPocket, Shared, StairsDown, StairsUp, Stamina, StandardIntegrity, TileVariant,
+    Vehicle, VehiclePart, WalkingMode, cdda::Error, spawn::log_spawn_result,
 };
-use crate::{Phase, PocketSealing};
 use application_state::ApplicationState;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{
@@ -16,14 +15,14 @@ use bevy::prelude::{
 use bevy::render::camera::{PerspectiveProjection, Projection};
 use bevy::render::view::RenderLayers;
 use cdda_json_files::{
-    BashItem, BashItems, CddaAmount, CddaItem, CddaItemName, CddaPhase, CddaVehicle,
+    BashItem, BashItems, CddaAmount, CddaItem, CddaItemName, CddaPhase, CddaPocket, CddaVehicle,
     CddaVehiclePart, Character, CharacterInfo, CommonItemInfo, Description, Field, Flags, FlatVec,
-    FurnitureInfo, Ignored, InfoId, ItemGroup, ItemName, MoveCostMod, PocketType, Recipe,
-    Repetition, RequiredLinkedLater, SpawnItem, TerrainInfo, UntypedInfoId,
+    FurnitureInfo, Ignored, InfoId, ItemGroup, ItemName, MoveCostMod, PocketInfo, PocketType,
+    Recipe, Repetition, RequiredLinkedLater, SpawnItem, TerrainInfo, UntypedInfoId,
 };
 use either::Either;
 use hud::{BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR};
-use std::sync::Arc;
+use std::sync::{Arc, LazyLock};
 use units::{Mass, Volume};
 
 #[derive(SystemParam)]
@@ -143,10 +142,7 @@ impl<'w> TileSpawner<'w, '_> {
                     BodyContainers::default_hands_container_limits(),
                     Transform::default(),
                     Visibility::Hidden,
-                    Pocket {
-                        type_: PocketType::Container,
-                        sealing: PocketSealing::Unsealed,
-                    },
+                    body_pocket_info(),
                     ChildOf(entity),
                 ))
                 .id();
@@ -156,10 +152,7 @@ impl<'w> TileSpawner<'w, '_> {
                     BodyContainers::default_clothing_container_limits(),
                     Transform::default(),
                     Visibility::Hidden,
-                    Pocket {
-                        type_: PocketType::Container,
-                        sealing: PocketSealing::Unsealed,
-                    },
+                    body_pocket_info(),
                     ChildOf(entity),
                 ))
                 .id();
@@ -257,17 +250,25 @@ impl<'w> TileSpawner<'w, '_> {
         let entity = entity.id();
         //trace!("Item {entity:?} with parent {parent:?}");
         if let Some(container) = &item.contents {
-            for cdda_pocket in &container.contents {
+            for (index, cdda_pocket) in container.contents.iter().enumerate() {
+                let Some(pocket_info) = pocket_info(item_info, index, cdda_pocket) else {
+                    continue;
+                };
+
                 //trace!("Pocket of {:?}: {:?}", &item.typeid, cdda_pocket);
                 let pocket = self
                     .commands
                     .spawn((
-                        Pocket::from(cdda_pocket),
                         Visibility::Hidden,
                         Transform::IDENTITY,
+                        Shared::new(pocket_info),
                         ChildOf(entity),
                     ))
                     .id();
+                if let Ok(sealed) = SealedPocket::try_from(cdda_pocket) {
+                    self.commands.entity(pocket).insert(sealed);
+                }
+
                 //trace!("Pocket {pocket:?} with parent {entity:?}");
                 for content in &cdda_pocket.contents {
                     if let Err(error) =
@@ -815,6 +816,92 @@ impl<'w> TileSpawner<'w, '_> {
 
         Ok(entity)
     }
+}
+
+fn pocket_info(
+    item_info: &Arc<CommonItemInfo>,
+    pocket_index: usize,
+    cdda_pocket: &CddaPocket,
+) -> Option<Arc<PocketInfo>> {
+    if cdda_pocket.pocket_type == PocketType::Mod
+        || cdda_pocket.pocket_type == PocketType::Migration
+    {
+        return None; // TODO Add support for these pocket types.
+        // These pocket types do not have matching pocket_data.
+    }
+
+    let Some(pocket_data) = item_info.pocket_data.as_ref() else {
+        error!(
+            "No pocket data found for ({:?}) pocket {pocket_index} of {:?}",
+            cdda_pocket.pocket_type,
+            item_info.id.fallback_name()
+        );
+        return None; // TODO Can this be handled better?
+    };
+
+    let Some(pocket_info) = pocket_data.get(pocket_index) else {
+        error!(
+            "Missing pocket for ({:?}) pocket {pocket_index} of {:?}",
+            cdda_pocket.pocket_type,
+            item_info.id.fallback_name()
+        );
+        return None; // TODO Can this be handled better?
+    };
+
+    if pocket_info.pocket_type == cdda_pocket.pocket_type {
+        Some(pocket_info.clone())
+    } else {
+        error!(
+            "Mismatched pocket types for ({:?}) pocket {pocket_index} of {:?}: {pocket_info:?}",
+            cdda_pocket.pocket_type,
+            item_info.id.fallback_name(),
+        );
+        None // TODO Can this be handled better?
+    }
+}
+
+fn body_pocket_info() -> Shared<PocketInfo> {
+    static INFO: LazyLock<Arc<PocketInfo>> = LazyLock::new(|| {
+        Arc::new(PocketInfo {
+            pocket_type: PocketType::Container,
+            ablative: false,
+            airtight: false,
+            forbidden: false,
+            inherits_flags: false,
+            holster: false,
+            open_container: false,
+            rigid: false,
+            transparent: false,
+            watertight: false,
+            description: None,
+            min_contains_volume: None,
+            max_contains_volume: None,
+            max_contains_weight: None,
+            min_item_length: None,
+            max_item_length: None,
+            min_item_volume: None,
+            max_item_volume: None,
+            magazine_well: None,
+            flag_restriction: Vec::new(),
+            item_restriction: Vec::new(),
+            activity_noise: None,
+            allowed_speedloaders: None,
+            ammo_restriction: None,
+            default_magazine: None,
+            extra_encumbrance: None,
+            material_restriction: None,
+            moves: None,
+            ripoff: None,
+            sealed_data: None,
+            spoil_multiplier: None,
+            volume_encumber_modifier: None,
+            volume_multiplier: None,
+            weight_multiplier: None,
+            ignored: Ignored::default(),
+        })
+    });
+
+    Shared::new(INFO.clone())
 }
 
 fn item_category_text_color(from: Option<&Arc<str>>) -> TextColor {

@@ -58,7 +58,7 @@ use self::events::{
 use self::focus::{Focus, FocusState};
 use self::item::{
     Amount, BodyContainers, Containable, Container, ContainerLimits, Filthy, Item, ItemHandler,
-    ItemHierarchy, ItemIntegrity, ItemItem, Phase, Pocket, PocketSealing,
+    ItemHierarchy, ItemIntegrity, ItemItem, Phase, Pocket, PocketItem, SealedPocket,
 };
 use self::models::ModelFactory;
 use self::phrase::{

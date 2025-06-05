@@ -341,7 +341,12 @@ pub(in super::super) fn combine_items(
 
         let has_subitems = hierarchy
             .pockets_in(&moved)
-            .any(|(pocket_entity, _)| hierarchy.items_in(pocket_entity).next().is_some());
+            .into_iter()
+            .any(|pocket_wrapper| {
+                pocket_wrapper
+                    .entity()
+                    .is_some_and(|pocket_entity| hierarchy.items_in(pocket_entity).next().is_some())
+            });
 
         if !all_merged.contains(&moved.entity) && !has_subitems {
             let mut merges = vec![];

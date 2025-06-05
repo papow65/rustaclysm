@@ -1,8 +1,48 @@
-use crate::{Amount, ContainerLimits, Fragment, Item, ItemItem, Phrase, Pocket, PocketSealing};
+use crate::{
+    Amount, ContainerLimits, Fragment, Item, ItemItem, Phrase, Pocket, PocketItem, SealedPocket,
+};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{Children, Entity, Query};
-use cdda_json_files::{PocketType, UntypedInfoId};
-use std::{iter::once, num::NonZeroUsize};
+use cdda_json_files::{PocketInfo, PocketType, UntypedInfoId};
+use std::{iter::once, num::NonZeroUsize, sync::Arc};
+
+pub(crate) enum PocketWrapper<'i> {
+    Concrete(PocketItem<'i>),
+    Lazy(Arc<PocketInfo>),
+}
+
+impl PocketWrapper<'_> {
+    pub(crate) const fn entity(&self) -> Option<Entity> {
+        match self {
+            Self::Concrete(pocket) => Some(pocket.entity),
+            Self::Lazy(_) => None,
+        }
+    }
+
+    pub(crate) fn pocket_type(&self) -> PocketType {
+        match self {
+            Self::Concrete(pocket) => pocket.info.pocket_type,
+            Self::Lazy(info) => info.pocket_type,
+        }
+    }
+
+    pub(crate) fn sealed(&self) -> Option<SealedPocket> {
+        match self {
+            Self::Concrete(pocket) => pocket.sealed.copied(),
+            Self::Lazy(info) => info.sealed_data.as_ref().map(SealedPocket::from),
+        }
+    }
+}
+
+pub(crate) struct Subitems<'i> {
+    pocket_wrapper: PocketWrapper<'i>,
+    items: Vec<ItemItem<'i>>,
+}
+
+pub(crate) struct ShownContents<'i> {
+    sealed: Option<SealedPocket>,
+    contents: Vec<ItemItem<'i>>,
+}
 
 #[derive(Clone, Copy, Debug)]
 pub(crate) struct InPocket {
@@ -11,22 +51,12 @@ pub(crate) struct InPocket {
     pub(crate) depth: NonZeroUsize,
 }
 
-pub(crate) struct Subitems<'p> {
-    pocket: &'p Pocket,
-    items: Vec<ItemItem<'p>>,
-}
-
-struct ContainerData<'a> {
-    sealing: PocketSealing,
-    contents: Vec<ItemItem<'a>>,
-}
-
 #[derive(SystemParam)]
 pub(crate) struct ItemHierarchy<'w, 's> {
     limits: Query<'w, 's, &'static ContainerLimits>,
     parents: Query<'w, 's, &'static Children>,
     items: Query<'w, 's, Item>,
-    pockets: Query<'w, 's, (Entity, &'static Pocket)>,
+    pockets: Query<'w, 's, Pocket>,
 }
 
 impl<'w> ItemHierarchy<'w, '_> {
@@ -42,18 +72,27 @@ impl<'w> ItemHierarchy<'w, '_> {
             .flat_map(|item| self.items.get(*item)) // Filtering out the models
     }
 
-    pub(crate) fn pockets_in(
-        &self,
-        container: &ItemItem,
-    ) -> impl Iterator<Item = (Entity, &Pocket)> + use<'_> {
-        container
+    pub(crate) fn pockets_in(&self, container: &ItemItem) -> Vec<PocketWrapper> {
+        let concrete_pockets = container
             .children
             .into_iter()
             .flat_map(IntoIterator::into_iter)
             .copied()
             .flat_map(|pocket| self.pockets.get(pocket)) // Filtering out the models
-            .collect::<Vec<_>>() // Fix for lifetime error
+            .map(PocketWrapper::Concrete)
+            .collect::<Vec<_>>();
+
+        if !concrete_pockets.is_empty() {
+            return concrete_pockets;
+        }
+
+        container
+            .common_info
+            .pocket_data
+            .clone()
             .into_iter()
+            .flat_map(move |pocket_infos| pocket_infos.into_iter().map(PocketWrapper::Lazy))
+            .collect()
     }
 
     pub(crate) fn container(&self, container_entity: Entity) -> &ContainerLimits {
@@ -87,18 +126,18 @@ impl<'w> ItemHierarchy<'w, '_> {
             |ip| suffix(ip.type_, ip.single_in_type),
         );
 
-        let mut container_data = self.container_data(item);
-        let item_fragments = self.item_fragments(prefix, suffix, item, container_data.as_mut());
+        let mut shown_contents = self.shown_contents(item);
+        let item_fragments = self.item_fragments(prefix, suffix, item, shown_contents.as_mut());
         handler.handle_item(item, item_fragments);
 
-        if let Some(container_data) = container_data {
-            if !container_data.contents.is_empty() {
+        if let Some(shown_contents) = shown_contents {
+            if !shown_contents.contents.is_empty() {
                 let in_pocket = Some(InPocket {
                     type_: PocketType::Container,
-                    single_in_type: container_data.contents.len() == 1,
+                    single_in_type: shown_contents.contents.len() == 1,
                     depth,
                 });
-                for subitem in container_data.contents {
+                for subitem in shown_contents.contents {
                     self.walk_item(handler, in_pocket, &subitem);
                 }
             }
@@ -129,15 +168,15 @@ impl<'w> ItemHierarchy<'w, '_> {
         }
     }
 
-    fn container_data(&self, item: &ItemItem<'_>) -> Option<ContainerData> {
+    fn shown_contents(&self, item: &ItemItem) -> Option<ShownContents> {
         let contents = self
             .pockets(item, PocketType::Container)
             .collect::<Vec<_>>();
         let first_pocket_sealing = contents
             .first()
-            .map(|first_subitems| first_subitems.pocket.sealing);
-        first_pocket_sealing.map(|sealing| ContainerData {
-            sealing,
+            .map(|first_subitems| first_subitems.pocket_wrapper.sealed());
+        first_pocket_sealing.map(move |sealed| ShownContents {
+            sealed,
             contents: contents
                 .into_iter()
                 .flat_map(|subitems| subitems.items)
@@ -149,8 +188,8 @@ impl<'w> ItemHierarchy<'w, '_> {
         &self,
         prefix: Option<Fragment>,
         suffix: Option<Fragment>,
-        item: &ItemItem<'_>,
-        container_data: Option<&mut ContainerData>,
+        item: &ItemItem,
+        shown_contents: Option<&mut ShownContents>,
     ) -> Vec<Fragment> {
         let magazine_wells = self.pockets(item, PocketType::MagazineWell);
 
@@ -161,14 +200,14 @@ impl<'w> ItemHierarchy<'w, '_> {
             .debug(format!("[{}]", item.common_info.id.fallback_name()))
             .extend(Self::battery_charge_fragments(item, &mut magazine_pockets))
             .extend(self.magazine_fragments(magazine_wells, magazine_pockets))
-            .extend(Self::item_tag_fragments(item, &container_data));
+            .extend(Self::item_tag_fragments(item, &shown_contents));
 
-        if let Some(container_data) = container_data {
-            if container_data.contents.is_empty() {
+        if let Some(shown_contents) = shown_contents {
+            if shown_contents.contents.is_empty() {
                 phrase
-            } else if self.is_single_hierarchy(&container_data.contents) {
+            } else if self.is_single_hierarchy(&shown_contents.contents) {
                 phrase.push(Fragment::good(">")).extend(
-                    container_data
+                    shown_contents
                         .contents
                         .drain(0..=0)
                         .flat_map(|subitem| self.inline_item_fragments(&subitem)),
@@ -176,7 +215,7 @@ impl<'w> ItemHierarchy<'w, '_> {
             } else {
                 phrase.push(Fragment::good(format!(
                     "> {}+",
-                    container_data.contents.len()
+                    shown_contents.contents.len()
                 )))
             }
         } else {
@@ -189,7 +228,7 @@ impl<'w> ItemHierarchy<'w, '_> {
     fn battery_charge_fragments(
         item: &ItemItem<'_>,
         magazine_pockets: &mut Vec<Subitems>,
-    ) -> impl Iterator<Item = Fragment> {
+    ) -> impl Iterator<Item = Fragment> + use<> {
         item.magazine_info
             .filter(|magazine| {
                 magazine
@@ -226,53 +265,51 @@ impl<'w> ItemHierarchy<'w, '_> {
     fn magazine_fragments<'a>(
         &self,
         magazine_wells: impl Iterator<Item = Subitems<'a>>,
-        magazine_pockets: Vec<Subitems>,
+        magazine_pockets: Vec<Subitems<'a>>,
     ) -> Vec<Fragment> {
-        let well_fragments = magazine_wells
-            .flat_map(|info| {
-                if info.items.is_empty() {
-                    vec![Fragment::soft("not loaded")]
-                } else {
-                    info.items
-                        .iter()
-                        .map(|subitem| self.inline_item_fragments(subitem))
-                        .collect::<Vec<_>>()
-                        .join(&Fragment::soft(", "))
-                }
-            })
-            .collect::<Vec<_>>();
+        let mut magazine_wells = magazine_wells.peekable();
+        let unloaded = magazine_wells
+            .peek()
+            .is_some_and(|info| info.items.is_empty());
+        let mut fragments = if unloaded {
+            vec![
+                Fragment::soft("("),
+                Fragment::bad("not loaded"),
+                Fragment::soft(")"),
+            ]
+        } else {
+            Vec::new()
+        };
 
-        let magazine_framents = magazine_pockets
-            .into_iter()
+        let loaded_fragments = magazine_wells
+            .chain(magazine_pockets)
             .flat_map(|subitems| subitems.items)
             .map(|subitem| self.inline_item_fragments(&subitem))
             .collect::<Vec<_>>()
             .join(&Fragment::soft(", "));
-
-        if magazine_framents.is_empty() && well_fragments.is_empty() {
-            Vec::new()
-        } else {
-            let both_used = !magazine_framents.is_empty() && !well_fragments.is_empty();
-            let mut result = vec![Fragment::soft("with")];
-            result.extend(magazine_framents);
-            if both_used {
-                result.push(Fragment::soft(", "));
-            }
-            result.extend(well_fragments);
-            result
+        if !loaded_fragments.is_empty() {
+            fragments.push(Fragment::soft("with"));
+            fragments.extend(loaded_fragments);
         }
+
+        fragments
     }
 
     fn item_tag_fragments(
         item: &ItemItem<'_>,
-        container_data: &Option<&mut ContainerData<'_>>,
+        shown_contents: &Option<&mut ShownContents<'_>>,
     ) -> Vec<Fragment> {
         let mut tags = Vec::new();
-        if let Some(ref container_data) = *container_data {
-            if container_data.contents.is_empty() {
+        if let Some(ref shown_contents) = *shown_contents {
+            if shown_contents.contents.is_empty() {
                 tags.push([Fragment::soft("empty")]);
             }
-            tags.extend(container_data.sealing.suffix().map(|tag| [tag]));
+            tags.extend(
+                shown_contents
+                    .sealed
+                    .map(SealedPocket::suffix)
+                    .map(|tag| [tag]),
+            );
         }
         tags.extend(item.phase.suffix().map(|tag| [tag]));
 
@@ -286,8 +323,8 @@ impl<'w> ItemHierarchy<'w, '_> {
         }
     }
 
-    fn inline_item_fragments(&self, item: &ItemItem<'_>) -> Vec<Fragment> {
-        let mut container_data = self.container_data(item);
+    fn inline_item_fragments(&self, item: &ItemItem) -> Vec<Fragment> {
+        let mut container_data = self.shown_contents(item);
         if let Some(ref container_data) = container_data {
             assert!(
                 container_data.contents.len() <= 1,
@@ -313,12 +350,26 @@ impl<'w> ItemHierarchy<'w, '_> {
         }
     }
 
-    fn pockets(&self, item: &ItemItem, pocket_type: PocketType) -> impl Iterator<Item = Subitems> {
+    fn pockets(
+        &self,
+        item: &ItemItem,
+        pocket_type: PocketType,
+    ) -> impl Iterator<Item = Subitems<'_>> + use<'_> {
         self.pockets_in(item)
-            .filter(move |(_, pocket)| pocket_type == pocket.type_)
-            .map(move |(pocket_entity, pocket)| Subitems {
-                pocket,
-                items: self.items_in(pocket_entity).collect::<Vec<_>>(),
+            .into_iter()
+            .filter(move |pocket_wrapper| pocket_wrapper.pocket_type() == pocket_type)
+            .map(move |pocket_wrapper| {
+                // TODO Use default contents when None
+                let items = pocket_wrapper
+                    .entity()
+                    .into_iter()
+                    .flat_map(|entity| self.items_in(entity))
+                    .collect::<Vec<_>>();
+
+                Subitems {
+                    pocket_wrapper,
+                    items,
+                }
             })
     }
 }
