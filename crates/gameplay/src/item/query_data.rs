@@ -4,7 +4,7 @@ use crate::{
 };
 use bevy::ecs::query::QueryData;
 use bevy::prelude::{ChildOf, Children, Entity, ops::atan2};
-use cdda_json_files::{CommonItemInfo, InfoId, Magazine};
+use cdda_json_files::{CommonItemInfo, InfoId};
 use hud::text_color_expect_half;
 use std::f32::consts::FRAC_1_PI;
 
@@ -22,7 +22,6 @@ pub(crate) struct Item {
     pub(crate) child_of: &'static ChildOf,
     pub(crate) children: Option<&'static Children>,
     pub(crate) common_info: &'static Shared<CommonItemInfo>,
-    pub(crate) magazine_info: Option<&'static Shared<Magazine>>,
 }
 
 impl<'a> ItemItem<'a> {

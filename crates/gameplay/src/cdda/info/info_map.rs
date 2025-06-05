@@ -4,9 +4,9 @@ use bevy::platform::collections::HashMap;
 use bevy::prelude::{debug, error, warn};
 use cdda_json_files::{
     Alternative, Bash, BashItem, BashItems, CharacterInfo, CommonItemInfo, FurnitureInfo, InfoId,
-    InfoIdDescription, ItemAction, ItemGroup, ItemMigration, ItemWithCommonInfo, Link as _,
-    LinkProvider, Quality, Recipe, RecipeResult, Requirement, TerrainInfo, UntypedInfoId,
-    VehiclePartInfo, VehiclePartMigration,
+    InfoIdDescription, ItemAction, ItemGroup, ItemMigration, ItemTypeDetails, ItemWithCommonInfo,
+    Link as _, LinkProvider, Quality, Recipe, RecipeResult, Requirement, TerrainInfo,
+    UntypedInfoId, VehiclePartInfo, VehiclePartMigration,
 };
 use serde::de::DeserializeOwned;
 use std::{any::type_name, fmt, sync::Arc};
@@ -339,6 +339,7 @@ impl ItemInfoMapLoader<'_> {
     pub(super) fn item_extract<T>(&mut self, type_id: TypeId) -> InfoMap<T>
     where
         T: fmt::Debug + DeserializeOwned + ItemWithCommonInfo + 'static,
+        ItemTypeDetails: From<Arc<T>>,
     {
         let mut items = InfoMap::<T>::new(self.enriched_json_infos, type_id);
 
@@ -350,10 +351,15 @@ impl ItemInfoMapLoader<'_> {
         }
 
         for (id, item_info) in &mut items.map {
+            let common_info = item_info.common();
+            common_info
+                .type_details
+                .set(item_info.clone().into())
+                .expect("Type details should not yet have been set");
             let previous = self
                 .common_item_infos
                 .map
-                .insert(id.clone().into(), item_info.common());
+                .insert(id.clone().into(), common_info);
             if let Some(previous) = previous {
                 warn!(
                     "Item {id:?} replaced the existing common item {:?}",

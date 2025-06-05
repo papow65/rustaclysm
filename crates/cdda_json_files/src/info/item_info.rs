@@ -2,8 +2,9 @@ use crate::{Flags, InfoId, structure::MaybeFlatVec};
 use crate::{Ignored, ItemQuality, UntypedInfoId};
 use bevy_platform::collections::HashMap;
 use serde::Deserialize;
+use std::fmt;
 use std::hash::{Hash, Hasher};
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 use strum::VariantArray;
 use units::{Distance, Duration, Mass, Volume};
 
@@ -469,9 +470,159 @@ impl ItemWithCommonInfo for Wheel {
     }
 }
 
+pub enum ItemTypeDetails {
+    Ammo(Arc<Ammo>),
+    BionicItem(Arc<BionicItem>),
+    Book(Arc<Book>),
+    Clothing(Arc<Clothing>),
+    Comestible(Arc<Comestible>),
+    Engine(Arc<Engine>),
+    GenericItem(Arc<GenericItem>),
+    Gun(Arc<Gun>),
+    Gunmod(Arc<Gunmod>),
+    Magazine(Arc<Magazine>),
+    PetArmor(Arc<PetArmor>),
+    Tool(Arc<Tool>),
+    ToolClothing(Arc<ToolClothing>),
+    Toolmod(Arc<Toolmod>),
+    Wheel(Arc<Wheel>),
+    Craft,
+}
+
+// Using #[derive(Debug)] would cause a stack overflow, because of the bidirectional Arc usage
+impl fmt::Debug for ItemTypeDetails {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            Self::Ammo(_) => "Ammo",
+            Self::BionicItem(_) => "BionicItem",
+            Self::Book(_) => "Book",
+            Self::Clothing(_) => "Clothing",
+            Self::Comestible(_) => "Comestible",
+            Self::Engine(_) => "Engine",
+            Self::GenericItem(_) => "GenericItem",
+            Self::Gun(_) => "Gun",
+            Self::Gunmod(_) => "Gunmod",
+            Self::Magazine(_) => "Magazine",
+            Self::PetArmor(_) => "PetArmor",
+            Self::Tool(_) => "Tool",
+            Self::ToolClothing(_) => "ToolClothing",
+            Self::Toolmod(_) => "Toolmod",
+            Self::Wheel(_) => "Wheel",
+            Self::Craft => "Craft",
+        })
+    }
+}
+
+impl ItemTypeDetails {
+    #[must_use]
+    pub fn ammo_type(&self) -> Option<&MaybeFlatVec<UntypedInfoId>> {
+        match self {
+            Self::Ammo(ammo) => Some(&ammo.ammo_type),
+            Self::Magazine(magazine) => Some(&magazine.ammo_type),
+            Self::ToolClothing(tool_clothing) => tool_clothing.ammo.as_ref(),
+            Self::Tool(tool) => tool.ammo.as_ref(),
+            _ => None,
+        }
+    }
+}
+
+impl From<Arc<Ammo>> for ItemTypeDetails {
+    fn from(arc: Arc<Ammo>) -> Self {
+        Self::Ammo(arc)
+    }
+}
+
+impl From<Arc<BionicItem>> for ItemTypeDetails {
+    fn from(arc: Arc<BionicItem>) -> Self {
+        Self::BionicItem(arc)
+    }
+}
+
+impl From<Arc<Book>> for ItemTypeDetails {
+    fn from(arc: Arc<Book>) -> Self {
+        Self::Book(arc)
+    }
+}
+
+impl From<Arc<Clothing>> for ItemTypeDetails {
+    fn from(arc: Arc<Clothing>) -> Self {
+        Self::Clothing(arc)
+    }
+}
+
+impl From<Arc<Comestible>> for ItemTypeDetails {
+    fn from(arc: Arc<Comestible>) -> Self {
+        Self::Comestible(arc)
+    }
+}
+
+impl From<Arc<Engine>> for ItemTypeDetails {
+    fn from(arc: Arc<Engine>) -> Self {
+        Self::Engine(arc)
+    }
+}
+
+impl From<Arc<GenericItem>> for ItemTypeDetails {
+    fn from(arc: Arc<GenericItem>) -> Self {
+        Self::GenericItem(arc)
+    }
+}
+
+impl From<Arc<Gun>> for ItemTypeDetails {
+    fn from(arc: Arc<Gun>) -> Self {
+        Self::Gun(arc)
+    }
+}
+
+impl From<Arc<Gunmod>> for ItemTypeDetails {
+    fn from(arc: Arc<Gunmod>) -> Self {
+        Self::Gunmod(arc)
+    }
+}
+
+impl From<Arc<Magazine>> for ItemTypeDetails {
+    fn from(arc: Arc<Magazine>) -> Self {
+        Self::Magazine(arc)
+    }
+}
+
+impl From<Arc<PetArmor>> for ItemTypeDetails {
+    fn from(arc: Arc<PetArmor>) -> Self {
+        Self::PetArmor(arc)
+    }
+}
+
+impl From<Arc<Tool>> for ItemTypeDetails {
+    fn from(arc: Arc<Tool>) -> Self {
+        Self::Tool(arc)
+    }
+}
+
+impl From<Arc<ToolClothing>> for ItemTypeDetails {
+    fn from(arc: Arc<ToolClothing>) -> Self {
+        Self::ToolClothing(arc)
+    }
+}
+
+impl From<Arc<Toolmod>> for ItemTypeDetails {
+    fn from(arc: Arc<Toolmod>) -> Self {
+        Self::Toolmod(arc)
+    }
+}
+
+impl From<Arc<Wheel>> for ItemTypeDetails {
+    fn from(arc: Arc<Wheel>) -> Self {
+        Self::Wheel(arc)
+    }
+}
+
 #[derive(Debug, Deserialize)]
 pub struct CommonItemInfo {
     pub id: InfoId<Self>,
+
+    #[serde(skip)]
+    pub type_details: OnceLock<ItemTypeDetails>,
+
     pub name: ItemName,
     pub symbol: char,
     pub description: Description,
@@ -758,7 +909,7 @@ pub struct PocketInfo {
 
     pub activity_noise: Option<serde_json::Value>,
     pub allowed_speedloaders: Option<serde_json::Value>,
-    pub ammo_restriction: Option<serde_json::Value>,
+    pub ammo_restriction: Option<HashMap<Arc<str>, u32>>,
     pub default_magazine: Option<Arc<str>>,
     pub extra_encumbrance: Option<u8>,
     pub material_restriction: Option<serde_json::Value>,

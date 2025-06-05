@@ -1,4 +1,3 @@
-use crate::Infos;
 use crate::{
     ActorEvent, ActorImpact, Amount, Aquatic, Attack, BaseSpeed, BodyContainers, Breath,
     ChangePace, Clock, Close, Collision, Consumed, Container, CorpseEvent, Craft, Damage, Envir,
@@ -677,7 +676,6 @@ impl ActorItem<'_> {
         commands: &mut Commands,
         message_writer: &mut MessageWriter,
         next_player_action_state: &mut NextState<PlayerActionState>,
-        infos: &Infos,
         spawner: &mut TileSpawner,
         crafts: &mut Query<(Item, &mut Craft)>,
         craft_entity: Entity,
@@ -697,7 +695,7 @@ impl ActorItem<'_> {
             let amount = *item.amount;
             commands.entity(item.entity).despawn();
             if let Some(result) = craft.recipe.result.item_info() {
-                let cdda_item = CddaItem::new(&result, infos.magazine(&result.id));
+                let cdda_item = CddaItem::new(&result);
                 if let Err(error) = spawner.spawn_item(parent, Some(pos), &cdda_item, amount) {
                     error!("Spawning crafted item failed: {error:#?}");
                 }

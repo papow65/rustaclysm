@@ -2,8 +2,8 @@ use crate::{
     Amount, ContainerLimits, Fragment, Item, ItemItem, Phrase, Pocket, PocketItem, SealedPocket,
 };
 use bevy::ecs::system::SystemParam;
-use bevy::prelude::{Children, Entity, Query};
-use cdda_json_files::{PocketInfo, PocketType, UntypedInfoId};
+use bevy::prelude::{Children, Entity, Query, warn};
+use cdda_json_files::{ItemTypeDetails, PocketInfo, PocketType, UntypedInfoId};
 use std::{iter::once, num::NonZeroUsize, sync::Arc};
 
 pub(crate) enum PocketWrapper<'i> {
@@ -19,11 +19,15 @@ impl PocketWrapper<'_> {
         }
     }
 
-    pub(crate) fn pocket_type(&self) -> PocketType {
+    pub(crate) fn info(&self) -> &Arc<PocketInfo> {
         match self {
-            Self::Concrete(pocket) => pocket.info.pocket_type,
-            Self::Lazy(info) => info.pocket_type,
+            Self::Concrete(pocket) => pocket.info.as_ref(),
+            Self::Lazy(info) => info,
         }
+    }
+
+    pub(crate) fn pocket_type(&self) -> PocketType {
+        self.info().pocket_type
     }
 
     pub(crate) fn sealed(&self) -> Option<SealedPocket> {
@@ -229,32 +233,58 @@ impl<'w> ItemHierarchy<'w, '_> {
         item: &ItemItem<'_>,
         magazine_pockets: &mut Vec<Subitems>,
     ) -> impl Iterator<Item = Fragment> + use<> {
-        item.magazine_info
-            .filter(|magazine| {
-                magazine
-                    .ammo_type
-                    .0
-                    .contains(&UntypedInfoId::new("battery"))
-            })
-            .and_then(|magazine| magazine.capacity)
-            .map(|capacity| {
-                let mut battery_amounts = magazine_pockets
-                    .drain(..)
-                    .flat_map(|subitems| subitems.items)
-                    .map(|item| item.amount)
-                    .collect::<Vec<_>>();
+        let item_type_details = item
+            .common_info
+            .type_details
+            .get()
+            .expect("Item type details should have been set");
+        let is_battery = item_type_details
+            .ammo_type()
+            .is_some_and(|ammo_types| ammo_types.0.contains(&UntypedInfoId::new("battery")));
 
-                assert!(
-                    battery_amounts.len() <= 1,
-                    "Too many battery charges: {battery_amounts:?}"
-                );
+        is_battery
+            .then(|| {
+                if 1 < magazine_pockets.len() {
+                    warn!(
+                        "{} magazines found in {:?} instead of 0 or 1",
+                        magazine_pockets.len(),
+                          item.common_info.id
+                    );
+                }
+                magazine_pockets.pop()
+            }).flatten()
+            .map(|subitems| {
+                if 1 < subitems.items.len() {
+                    warn!(
+                        "{} magazine items found in {:?}: ignoring any magazine items after the first one",
+                        subitems.items.len(),
+                            item.common_info.id
+                    );
+                }
+
+                let charges_present = subitems.items.first().map(|item| item.amount).copied().unwrap_or(Amount::ZERO);
+
+                let restriction = subitems.pocket_wrapper.info().ammo_restriction.as_ref().and_then(|ammo_restriction| ammo_restriction.get("battery")).copied();
+                let capacity = restriction.or_else(|| {
+                    if let ItemTypeDetails::Magazine(magazine) = item_type_details {
+                        magazine.capacity
+                    } else {
+                        None
+                    }
+                });
+                let capacity = capacity.unwrap_or_else(|| {
+                    warn!(
+                        "No capacity found for magazine in {:?}",
+                        item.common_info.id
+                    );
+
+                    charges_present.0.max(1)
+                });
 
                 [
                     Fragment::soft("at"),
-                    battery_amounts
-                        .pop()
-                        .unwrap_or(&Amount::ZERO)
-                        .fragment_in_range(capacity),
+                    charges_present
+        .fragment_in_range(capacity),
                     Fragment::soft(format!("/{capacity}")),
                 ]
             })

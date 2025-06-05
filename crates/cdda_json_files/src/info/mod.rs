@@ -28,8 +28,8 @@ pub use self::item_action::ItemAction;
 pub use self::item_group::{ItemGroup, SpawnItem};
 pub use self::item_info::{
     Ammo, BionicItem, Book, CddaItemName, CddaPhase, Clothing, Comestible, CommonItemInfo,
-    Description, Engine, GenericItem, Gun, Gunmod, ItemName, ItemWithCommonInfo, Magazine,
-    PetArmor, PocketInfo, PocketType, SealedData, Tool, ToolClothing, Toolmod, Wheel,
+    Description, Engine, GenericItem, Gun, Gunmod, ItemName, ItemTypeDetails, ItemWithCommonInfo,
+    Magazine, PetArmor, PocketInfo, PocketType, SealedData, Tool, ToolClothing, Toolmod, Wheel,
 };
 pub use self::migration::{ItemMigration, VehiclePartMigration};
 pub use self::overmap_info::OvermapTerrainInfo;

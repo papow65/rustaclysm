@@ -1,11 +1,11 @@
 use crate::{
-    CharacterInfo, CommonItemInfo, InfoId, Magazine, OptionalLinkedLater, PocketType,
-    RequiredLinkedLater, UntypedInfoId,
+    CharacterInfo, CommonItemInfo, OptionalLinkedLater, PocketType, RequiredLinkedLater,
+    UntypedInfoId,
 };
 use bevy_platform::collections::HashMap;
 use serde::de::Error;
 use serde::{Deserialize, Deserializer};
-use std::sync::{Arc, Mutex, OnceLock};
+use std::sync::{Arc, Mutex};
 use strum::VariantArray as _;
 
 #[derive(Debug, Deserialize)]
@@ -13,10 +13,6 @@ use strum::VariantArray as _;
 pub struct CddaItem {
     #[serde(rename = "typeid")]
     pub item_info: RequiredLinkedLater<CommonItemInfo>,
-
-    /// Only set for magazines
-    #[serde(skip)]
-    pub magazine_info: OnceLock<OptionalLinkedLater<Magazine>>,
 
     /// Can change after a migration
     pub variant: Mutex<Option<Arc<str>>>,
@@ -64,17 +60,9 @@ pub struct CddaItem {
 
 impl CddaItem {
     #[must_use]
-    pub fn new(item_info: &Arc<CommonItemInfo>, magazine: Option<&Arc<Magazine>>) -> Self {
-        let magazine_link = if let Some(magazine) = magazine {
-            let magazine_id: InfoId<Magazine> = magazine.common.id.clone().into();
-            OptionalLinkedLater::new_final_some(magazine_id, magazine)
-        } else {
-            OptionalLinkedLater::new_final_none()
-        };
-
+    pub fn new(item_info: &Arc<CommonItemInfo>) -> Self {
         Self {
             item_info: RequiredLinkedLater::new_final(item_info.id.clone(), item_info),
-            magazine_info: magazine_link.into(),
             snip_id: None,
             charges: None,
             active: None,

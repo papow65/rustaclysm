@@ -5,12 +5,12 @@ use crate::{ObjectCategory, TypeId};
 use bevy::prelude::{Resource, debug, error, info, warn};
 use cdda_json_files::{
     Ammo, BionicItem, Book, CddaItem, CharacterInfo, Clothing, Comestible, CommonItemInfo, Engine,
-    FieldInfo, FurnitureInfo, GenericItem, Gun, Gunmod, InfoId, ItemAction, ItemGroup,
-    ItemMigration, Link as _, Magazine, OptionalLinkedLater, Overmap, OvermapTerrainInfo, PetArmor,
-    Practice, Quality, Recipe, RequiredLinkedLater, Requirement, Submap, TerrainInfo, Tool,
-    ToolClothing, Toolmod, UntypedInfoId, VehiclePartInfo, VehiclePartMigration, Wheel,
+    FieldInfo, FurnitureInfo, GenericItem, Gun, Gunmod, ItemAction, ItemGroup, ItemMigration,
+    Link as _, Magazine, Overmap, OvermapTerrainInfo, PetArmor, Practice, Quality, Recipe,
+    RequiredLinkedLater, Requirement, Submap, TerrainInfo, Tool, ToolClothing, Toolmod,
+    UntypedInfoId, VehiclePartInfo, VehiclePartMigration, Wheel,
 };
-use std::{env, process::exit, sync::Arc, time::Instant};
+use std::{env, process::exit, time::Instant};
 use strum::VariantArray as _;
 use util::AsyncNew;
 
@@ -55,6 +55,7 @@ pub(crate) struct Infos {
     item_groups: InfoMap<ItemGroup>,
     item_migrations: InfoMap<ItemMigration>,
 
+    #[expect(unused)]
     magazines: InfoMap<Magazine>,
 
     #[expect(unused)]
@@ -363,20 +364,6 @@ impl Infos {
             },
             "submap item",
         );
-        let _either_response_is_fine = item.magazine_info.set({
-            let magazine_id: Option<InfoId<Magazine>> =
-                item.item_info.get().ok().map(|info| info.id.clone().into());
-            if magazine_id
-                .as_ref()
-                .is_some_and(|magazine_id| self.magazines.get(magazine_id).is_ok())
-            {
-                let link = OptionalLinkedLater::from(magazine_id);
-                link.finalize(&self.magazines, "submap item magazine");
-                link
-            } else {
-                OptionalLinkedLater::new_final_none()
-            }
-        });
         item.corpse.finalize(&self.characters, "submap item corpse");
 
         if let Some(contents) = &item.contents {
@@ -394,10 +381,6 @@ impl Infos {
         err_description: &str,
     ) {
         character.finalize(&self.characters, err_description);
-    }
-
-    pub(crate) fn magazine(&self, info_id: &InfoId<CommonItemInfo>) -> Option<&Arc<Magazine>> {
-        self.magazines.get(&info_id.clone().into()).ok()
     }
 }
 

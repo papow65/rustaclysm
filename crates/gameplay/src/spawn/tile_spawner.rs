@@ -17,8 +17,8 @@ use bevy::render::view::RenderLayers;
 use cdda_json_files::{
     BashItem, BashItems, CddaAmount, CddaItem, CddaItemName, CddaPhase, CddaPocket, CddaVehicle,
     CddaVehiclePart, Character, CharacterInfo, CommonItemInfo, Description, Field, Flags, FlatVec,
-    FurnitureInfo, Ignored, InfoId, ItemGroup, ItemName, MoveCostMod, PocketInfo, PocketType,
-    Recipe, Repetition, RequiredLinkedLater, SpawnItem, TerrainInfo, UntypedInfoId,
+    FurnitureInfo, Ignored, InfoId, ItemGroup, ItemName, ItemTypeDetails, MoveCostMod, PocketInfo,
+    PocketType, Recipe, Repetition, RequiredLinkedLater, SpawnItem, TerrainInfo, UntypedInfoId,
 };
 use either::Either;
 use hud::{BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR};
@@ -234,15 +234,6 @@ impl<'w> TileSpawner<'w, '_> {
             phase,
         ));
 
-        if let Some(magazine_info) = item
-            .magazine_info
-            .get()
-            .expect("magazine_info should have been set (even when not present)")
-            .get()
-        {
-            entity.insert(Shared::new(magazine_info));
-        }
-
         if item.item_tags.contains(&Arc::from("FILTHY")) {
             entity.insert(Filthy);
         }
@@ -291,10 +282,7 @@ impl<'w> TileSpawner<'w, '_> {
         items: impl Iterator<Item = SpawnItem>,
     ) {
         for spawn_item in items {
-            let mut cdda_item = CddaItem::new(
-                &spawn_item.item_info,
-                self.infos.magazine(&spawn_item.item_info.id),
-            );
+            let mut cdda_item = CddaItem::new(&spawn_item.item_info);
             cdda_item.charges = spawn_item.charges;
             if let Err(error) = self.spawn_item(
                 parent_entity,
@@ -730,6 +718,7 @@ impl<'w> TileSpawner<'w, '_> {
     ) -> Result<Entity, Error> {
         let craft_item_info = CommonItemInfo {
             id: InfoId::new("craft"),
+            type_details: ItemTypeDetails::Craft.into(),
             category: None,
             proportional: None,
             relative: None,
@@ -805,7 +794,7 @@ impl<'w> TileSpawner<'w, '_> {
         let entity = self.spawn_item(
             parent_entity,
             Some(pos),
-            &CddaItem::new(&Arc::new(craft_item_info), None),
+            &CddaItem::new(&Arc::new(craft_item_info)),
             Amount::SINGLE,
         )?;
         let crafting_time = recipe.time.ok_or_else(|| Error::RecipeWithoutTime {
