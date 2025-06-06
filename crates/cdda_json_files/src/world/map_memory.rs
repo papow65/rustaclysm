@@ -86,9 +86,9 @@ pub enum TileMemory {
         type_id: Option<Arc<str>>,
         unknown_b: u8,
         unknown_c: u8,
+        furniture_id: Option<Arc<str>>,
         unknown_d: Option<u8>,
         unknown_e: Option<u8>,
-        unknown_f: Option<u8>,
     },
 }
 
@@ -169,9 +169,9 @@ impl<'de> Visitor<'de> for TileMemoryVisitor {
                 unknown_c: seq
                     .next_element()?
                     .ok_or_else(|| A::Error::custom("Missing unknown field unknown_c"))?,
+                furniture_id: seq.next_element()?,
                 unknown_d: seq.next_element()?,
                 unknown_e: seq.next_element()?,
-                unknown_f: seq.next_element()?,
             },
             _unexpected => Err(A::Error::custom("Unexpected: {_unexpected :?}"))?,
         })

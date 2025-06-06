@@ -36,8 +36,8 @@ pub struct CddaItem {
 
     pub contents: Option<CddaContainer>,
 
-    #[serde(default)]
-    pub components: Vec<CddaItem>,
+    // Sometilmes Vec<CddaItem>, sometimes HashMap<String, CddaItem>
+    pub components: Option<serde_json::Value>,
 
     pub is_favorite: Option<bool>,
     pub relic_data: Option<serde_json::Value>,
@@ -56,6 +56,8 @@ pub struct CddaItem {
     pub craft_data: Option<serde_json::Value>,
     pub dropped_from: Option<Arc<str>>,
     pub degradation: Option<u32>,
+    pub link_data: Option<HashMap<Arc<str>, serde_json::Value>>,
+    pub invlet: Option<u8>,
 }
 
 impl CddaItem {
@@ -76,7 +78,7 @@ impl CddaItem {
             item_vars: None,
             item_tags: Vec::new(),
             contents: None,
-            components: Vec::new(),
+            components: None,
             is_favorite: None,
             relic_data: None,
             damaged: None,
@@ -92,6 +94,8 @@ impl CddaItem {
             craft_data: None,
             dropped_from: None,
             degradation: None,
+            link_data: None,
+            invlet: None,
         }
     }
 }
