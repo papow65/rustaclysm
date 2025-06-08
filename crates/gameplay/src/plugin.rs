@@ -21,6 +21,7 @@ use bevy::prelude::{
 use bevy::{diagnostic::FrameTimeDiagnosticsPlugin, ecs::schedule::ScheduleConfigs};
 use gameplay_cdda::{CddaPlugin, Exploration};
 use gameplay_local::GameplayLocalPlugin;
+use gameplay_location::LocationPlugin;
 use gameplay_resource::GampelayResourceSet;
 use util::log_transition_plugin;
 
@@ -32,19 +33,22 @@ impl Plugin for GameplayPlugin {
         app.enable_state_scoped_entities::<GameplayScreenState>();
 
         app.add_plugins((
-            ActorPlugin,
-            FocusPlugin,
-            SidebarPlugin,
-            CddaPlugin,
-            EventsPlugin,
-            ItemChecksPlugin,
-            ModelPlugin,
-            PhrasePlugin,
-            ResourcePlugin,
-            GameplayLocalPlugin,
-            TransitionPlugin,
-            ScreensPlugin,
-            TimePlugin,
+            (
+                ActorPlugin,
+                FocusPlugin,
+                SidebarPlugin,
+                CddaPlugin,
+                EventsPlugin,
+                ItemChecksPlugin,
+                ModelPlugin,
+                PhrasePlugin,
+                ResourcePlugin,
+                GameplayLocalPlugin,
+                LocationPlugin,
+                TransitionPlugin,
+                ScreensPlugin,
+                TimePlugin,
+            ),
             FrameTimeDiagnosticsPlugin::default(),
             log_transition_plugin::<GameplayScreenState>,
         ));

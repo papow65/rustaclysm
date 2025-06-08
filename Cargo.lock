@@ -2165,6 +2165,7 @@ dependencies = [
  "bevy",
  "bresenham",
  "cdda_json_files",
+ "gameplay_resource",
  "keyboard",
  "strum 0.27.1",
  "units",

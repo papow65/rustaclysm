@@ -3,7 +3,6 @@ use crate::{
     VisualizationUpdate, ZoneLevelIds,
 };
 use bevy::prelude::{App, Plugin};
-use gameplay_location::{LocationCache, SubzoneLevelCache, ZoneLevelCache};
 use gameplay_resource::GameplayResourcePlugin;
 use util::AsyncResourcePlugin;
 
@@ -17,10 +16,7 @@ impl Plugin for ResourcePlugin {
             GameplayResourcePlugin::<Expanded>::default(),
             GameplayResourcePlugin::<Explored>::default(),
             GameplayResourcePlugin::<InstructionQueue>::default(),
-            GameplayResourcePlugin::<LocationCache>::default(),
-            GameplayResourcePlugin::<SubzoneLevelCache>::default(),
             GameplayResourcePlugin::<VisualizationUpdate>::default(),
-            GameplayResourcePlugin::<ZoneLevelCache>::default(),
             GameplayResourcePlugin::<ZoneLevelIds>::default(),
         ));
 
