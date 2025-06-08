@@ -1,14 +1,14 @@
 use crate::{
-    ActorItem, Breath, CardinalDirection, ContinueCraft, CurrentlyVisibleBuilder, Envir, Explored,
-    Faction, Fragment, HorizontalDirection, InstructionQueue, Intelligence, Interruption,
-    MessageWriter, MoveItem, Nbor, PlannedAction, PlayerDirection, Pos, Pulp, QueuedInstruction,
-    RecipeSituation, Severity, StartCraft, VisionDistance,
+    ActorItem, Breath, ContinueCraft, CurrentlyVisibleBuilder, Envir, Explored, Faction, Fragment,
+    InstructionQueue, Intelligence, Interruption, MessageWriter, MoveItem, PlannedAction,
+    PlayerDirection, Pulp, QueuedInstruction, RecipeSituation, Severity, StartCraft,
 };
 use application_state::ApplicationState;
 use bevy::prelude::{
     Component, DetectChanges as _, Entity, NextState, ResMut, StateSet as _, SubStates, TextColor,
     debug,
 };
+use gameplay_location::{CardinalDirection, HorizontalDirection, Nbor, Pos, VisionDistance};
 use hud::{BAD_TEXT_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR, text_color_expect_full};
 use std::fmt;
 use units::{Duration, Timestamp};

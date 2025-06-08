@@ -4,9 +4,8 @@ use crate::screens::crafting::{
 };
 use crate::screens::{find_nearby, find_nearby_pseudo, find_sources, nearby_qualities};
 use crate::{
-    ActiveSav, BodyContainers, Clock, GameplayScreenState, Infos, InstructionQueue, Item,
-    ItemHierarchy, ItemItem, LastSeen, Location, MessageWriter, Player, Pos, QueuedInstruction,
-    Shared, cdda::Error,
+    BodyContainers, Clock, GameplayScreenState, InstructionQueue, Item, ItemHierarchy, ItemItem,
+    LastSeen, MessageWriter, Player, QueuedInstruction, Shared,
 };
 use bevy::ecs::{spawn::SpawnIter, system::SystemId};
 use bevy::platform::collections::{HashMap, HashSet};
@@ -21,6 +20,8 @@ use cdda_json_files::{
     FurnitureInfo, InfoId, PocketType, Quality, Recipe, RequiredComponent, RequiredPart,
     RequiredQuality, RequiredTool, Requirement, Sav, Skill, TerrainInfo,
 };
+use gameplay_cdda::{ActiveSav, Error, Infos};
+use gameplay_location::{LocationCache, Pos};
 use hud::{
     BAD_TEXT_COLOR, ButtonBuilder, Fonts, PANEL_COLOR, SMALL_SPACING, SelectionList,
     SelectionListStep, WARN_TEXT_COLOR, scroll_to_selection,
@@ -275,7 +276,7 @@ pub(super) fn clear_crafting_screen(
 pub(super) fn refresh_crafting_screen(
     In(run): In<bool>,
     mut commands: Commands,
-    location: Res<Location>,
+    location: Res<LocationCache>,
     fonts: Res<Fonts>,
     infos: Res<Infos>,
     active_sav: Res<ActiveSav>,

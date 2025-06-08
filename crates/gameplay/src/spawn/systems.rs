@@ -1,17 +1,22 @@
-use crate::events::Exploration;
 use crate::spawn::{SubzoneSpawner, TileSpawner, VisibleRegion, ZoneSpawner};
 use crate::{
-    ActiveSav, DespawnSubzoneLevel, DespawnZoneLevel, Expanded, Explored, Focus, GameplayLocal,
-    Level, MapAsset, MapManager, MapMemoryAsset, MapMemoryManager, MissingAsset, OvermapAsset,
-    OvermapBufferAsset, OvermapBufferManager, OvermapManager, Pos, Region, SpawnSubzoneLevel,
-    SpawnZoneLevel, SubzoneLevel, SubzoneLevelEntities, UpdateZoneLevelVisibility, VisionDistance,
-    VisualizationUpdate, Zone, ZoneLevel, ZoneLevelEntities, ZoneLevelIds, ZoneRegion,
+    DespawnSubzoneLevel, DespawnZoneLevel, Expanded, Explored, Focus, MissingAsset, Region,
+    SpawnSubzoneLevel, SpawnZoneLevel, SubzoneLevelEntities, UpdateZoneLevelVisibility,
+    VisualizationUpdate, ZoneLevelIds, ZoneRegion,
 };
 use bevy::ecs::{schedule::ScheduleConfigs, system::ScheduleSystem};
 use bevy::prelude::{
     Added, AssetEvent, Assets, Children, Commands, Entity, EventReader, EventWriter,
     GlobalTransform, IntoScheduleConfigs as _, Query, RelationshipTarget as _, Res, ResMut,
     Visibility, With, debug, on_event, warn,
+};
+use gameplay_cdda::{
+    ActiveSav, Exploration, MapAsset, MapManager, MapMemoryAsset, MapMemoryManager, OvermapAsset,
+    OvermapBufferAsset, OvermapBufferManager, OvermapManager,
+};
+use gameplay_local::GameplayLocal;
+use gameplay_location::{
+    Level, Pos, SubzoneLevel, VisionDistance, Zone, ZoneLevel, ZoneLevelCache,
 };
 use std::{cmp::Ordering, time::Instant};
 use util::log_if_slow;
@@ -181,7 +186,7 @@ fn update_zone_levels(
     mut despawn_zone_level_writer: EventWriter<DespawnZoneLevel>,
     focus: Focus,
     visible_region: VisibleRegion,
-    zone_level_entities: Res<ZoneLevelEntities>,
+    zone_level_entities: Res<ZoneLevelCache>,
     mut previous_camera_global_transform: GameplayLocal<GlobalTransform>,
     mut previous_visible_region: GameplayLocal<Region>,
     zone_levels: Query<(Entity, &ZoneLevel, &Children), With<Visibility>>,

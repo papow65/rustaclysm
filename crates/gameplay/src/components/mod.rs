@@ -1,10 +1,8 @@
 mod object_name;
-mod pos;
 mod shared;
 mod vehicle;
 
 pub(crate) use self::object_name::ObjectName;
-pub(crate) use self::pos::{Level, Overzone, Pos, SubzoneLevel, Zone, ZoneLevel};
 pub(crate) use self::shared::Shared;
 pub(crate) use self::vehicle::{Vehicle, VehiclePart};
 
@@ -21,14 +19,6 @@ pub(crate) struct Accessible {
     pub(crate) water: bool,
     pub(crate) move_cost: MoveCost,
 }
-
-#[derive(Component)]
-#[component(immutable)]
-pub(crate) struct StairsUp;
-
-#[derive(Component)]
-#[component(immutable)]
-pub(crate) struct StairsDown;
 
 /// Not accessible for any movement
 #[derive(Component)]

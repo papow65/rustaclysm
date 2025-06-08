@@ -1,6 +1,7 @@
-use crate::{Level, OvermapAsset, Overzone, RepetitionBlockExt as _, ZoneLevel};
 use bevy::{platform::collections::HashMap, prelude::Resource};
 use cdda_json_files::{FlatVec, InfoId, Overmap, OvermapLevel, OvermapTerrainInfo};
+use gameplay_cdda::{OvermapAsset, RepetitionBlockExt as _};
+use gameplay_location::{Level, Overzone, ZoneLevel};
 use std::sync::OnceLock;
 
 #[derive(Default, Resource)]

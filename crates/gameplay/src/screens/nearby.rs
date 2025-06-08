@@ -1,16 +1,17 @@
-use crate::{BodyContainers, Item, ItemItem, LastSeen, Location, Pos, Shared};
+use crate::{BodyContainers, Item, ItemItem, LastSeen, Shared};
 use bevy::platform::collections::{HashMap, HashSet, hash_map::Entry};
 use bevy::prelude::{AnyOf, Query};
 use cdda_json_files::{
     CommonItemInfo, ExamineAction, FurnitureInfo, InfoId, Quality, SimpleExamineAction, TerrainInfo,
 };
+use gameplay_location::{LocationCache, Pos};
 use std::{ops::RangeInclusive, sync::Arc};
 
 const MAX_FIND_DISTANCE: i32 = 7;
 const FIND_RANGE: RangeInclusive<i32> = (-MAX_FIND_DISTANCE)..=MAX_FIND_DISTANCE;
 
 pub(super) fn find_nearby<'a>(
-    location: &'a Location,
+    location: &'a LocationCache,
     items: &'a Query<(Item, &LastSeen)>,
     player_pos: Pos,
     body_containers: &'a BodyContainers,
@@ -32,7 +33,7 @@ pub(super) fn find_nearby<'a>(
 }
 
 pub(super) fn find_nearby_pseudo(
-    location: &Location,
+    location: &LocationCache,
     infrastructure: &Query<(
         AnyOf<(&Shared<FurnitureInfo>, &Shared<TerrainInfo>)>,
         &LastSeen,
@@ -55,7 +56,7 @@ pub(super) fn find_nearby_pseudo(
 }
 
 pub(super) fn find_sources(
-    location: &Location,
+    location: &LocationCache,
     infrastructure: &Query<(
         AnyOf<(&Shared<FurnitureInfo>, &Shared<TerrainInfo>)>,
         &LastSeen,

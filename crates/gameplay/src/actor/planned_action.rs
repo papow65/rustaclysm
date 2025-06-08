@@ -1,7 +1,8 @@
 use crate::{
-    Attack, CardinalDirection, ChangePace, Close, ContinueCraft, ExamineItem, HorizontalDirection,
-    MoveItem, Nbor, Peek, Pickup, Pulp, Smash, StartCraft, Step, Unwield, Wield,
+    Attack, ChangePace, Close, ContinueCraft, ExamineItem, MoveItem, Peek, Pickup, Pulp, Smash,
+    StartCraft, Step, Unwield, Wield,
 };
+use gameplay_location::{CardinalDirection, HorizontalDirection, Nbor};
 
 #[derive(Debug)]
 pub(crate) enum PlannedAction {

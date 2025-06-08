@@ -5,11 +5,11 @@ use crate::sidebar::components::{
 };
 use crate::{
     Accessible, Actor, Amount, BaseSpeed, Breath, Clock, Corpse, CurrentlyVisibleBuilder,
-    DebugTextShown, Envir, Explored, Faction, FocusState, Fragment, GameplayLocal, Health, Hurdle,
-    Item, ItemHandler, ItemHierarchy, ItemItem, LastSeen, Life, Message, ObjectName, Obstacle,
-    Opaque, OpaqueFloor, Phrase, Player, PlayerActionState, PlayerWielded, Pos, Positioning,
-    RefreshAfterBehavior, RelativeSegments, SeenFrom, Severity, Shared, StairsDown, StairsUp,
-    Stamina, StandardIntegrity, Timeouts, Visible, WalkingMode, ZoneLevelIds,
+    DebugTextShown, Envir, Explored, Faction, FocusState, Fragment, Health, Hurdle, Item,
+    ItemHandler, ItemHierarchy, ItemItem, LastSeen, Life, Message, ObjectName, Obstacle, Opaque,
+    OpaqueFloor, Phrase, Player, PlayerActionState, PlayerWielded, Positioning,
+    RefreshAfterBehavior, RelativeSegments, SeenFrom, Severity, Shared, Stamina, StandardIntegrity,
+    Timeouts, Visible, WalkingMode, ZoneLevelIds,
 };
 use application_state::ApplicationState;
 use bevy::diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin};
@@ -24,6 +24,8 @@ use bevy::prelude::{
     resource_exists_and_changed, warn,
 };
 use cdda_json_files::{CharacterInfo, MoveCost};
+use gameplay_local::GameplayLocal;
+use gameplay_location::{Pos, StairsDown, StairsUp};
 use hud::{
     BAD_TEXT_COLOR, Fonts, HARD_TEXT_COLOR, PANEL_COLOR, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
     panel_node, text_color_expect_half,

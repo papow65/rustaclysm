@@ -1,6 +1,8 @@
-use crate::{CardinalDirection, Pos, TileVariant, common::HorizontalDirection};
 use bevy::platform::collections::HashMap;
 use cdda_json_files::{RequiredLinkedLater, TerrainInfo};
+use gameplay_cdda::TileVariant;
+use gameplay_location::Pos;
+use gameplay_location::{CardinalDirection, HorizontalDirection};
 use std::sync::Arc;
 
 pub(crate) struct LocalTerrain {

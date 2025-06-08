@@ -1,7 +1,6 @@
-use crate::{
-    Actor, ActorItem, CardinalDirection, HorizontalDirection, Item, ItemItem, Nbor, RecipeSituation,
-};
+use crate::{Actor, ActorItem, Item, ItemItem, RecipeSituation};
 use bevy::prelude::{Entity, Query};
+use gameplay_location::{CardinalDirection, HorizontalDirection, Nbor};
 
 /// An action that an actor can perform
 pub(crate) trait Action: Clone + Send + Sync + 'static {}

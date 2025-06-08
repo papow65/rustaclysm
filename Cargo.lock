@@ -2110,24 +2110,72 @@ version = "0.0.0"
 dependencies = [
  "application_state",
  "bevy",
- "bresenham",
  "cdda_json_files",
  "either",
  "fastrand",
  "float-ord",
+ "gameplay_cdda",
+ "gameplay_local",
+ "gameplay_location",
+ "gameplay_resource",
  "gameplay_transition_state",
- "glob",
  "hud",
  "keyboard",
  "manual",
  "pathfinding",
  "regex",
- "serde",
  "serde_json",
  "strum 0.27.1",
  "thread_local",
  "units",
  "util",
+]
+
+[[package]]
+name = "gameplay_cdda"
+version = "0.0.0"
+dependencies = [
+ "application_state",
+ "bevy",
+ "cdda_json_files",
+ "either",
+ "fastrand",
+ "gameplay_location",
+ "gameplay_resource",
+ "glob",
+ "serde",
+ "serde_json",
+ "strum 0.27.1",
+ "units",
+ "util",
+]
+
+[[package]]
+name = "gameplay_local"
+version = "0.0.0"
+dependencies = [
+ "application_state",
+ "bevy",
+]
+
+[[package]]
+name = "gameplay_location"
+version = "0.0.0"
+dependencies = [
+ "bevy",
+ "bresenham",
+ "cdda_json_files",
+ "keyboard",
+ "strum 0.27.1",
+ "units",
+]
+
+[[package]]
+name = "gameplay_resource"
+version = "0.0.0"
+dependencies = [
+ "application_state",
+ "bevy",
 ]
 
 [[package]]
@@ -2884,7 +2932,8 @@ dependencies = [
  "application_state",
  "base64 0.22.1",
  "bevy",
- "gameplay",
+ "gameplay_cdda",
+ "gameplay_local",
  "glob",
  "hud",
  "manual",

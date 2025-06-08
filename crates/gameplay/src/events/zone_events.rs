@@ -1,5 +1,5 @@
-use crate::{SubzoneLevel, ZoneLevel};
 use bevy::prelude::{Entity, Event};
+use gameplay_location::{SubzoneLevel, ZoneLevel};
 
 #[derive(Debug, Event)]
 pub(crate) struct SpawnSubzoneLevel {

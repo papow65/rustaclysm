@@ -1,17 +1,18 @@
 use crate::{
     ActorEvent, ActorImpact, Amount, Aquatic, Attack, BaseSpeed, BodyContainers, Breath,
     ChangePace, Clock, Close, Collision, Consumed, Container, CorpseEvent, Craft, Damage, Envir,
-    Faction, Filthy, Fragment, Healing, HealingDuration, Health, HorizontalDirection, Item,
-    ItemHierarchy, ItemItem, LastEnemy, LastSeen, LevelOffset, Life, Location, Melee,
-    MessageWriter, Nbor, ObjectName, Peek, Phrase, Player, PlayerActionState, PlayerWielded, Pos,
-    Pulp, Severity, Smash, Stamina, StaminaCost, StartCraft, Step, Subject, SubzoneLevel,
-    SubzoneLevelEntities, TerrainEvent, Toggle, WalkingMode, spawn::TileSpawner,
+    Faction, Filthy, Fragment, Healing, HealingDuration, Health, Item, ItemHierarchy, ItemItem,
+    LastEnemy, LastSeen, Life, Melee, MessageWriter, ObjectName, Peek, Phrase, Player,
+    PlayerActionState, PlayerWielded, Pulp, Severity, Smash, Stamina, StaminaCost, StartCraft,
+    Step, Subject, SubzoneLevelEntities, TerrainEvent, Toggle, WalkingMode, spawn::TileSpawner,
 };
 use bevy::ecs::query::QueryData;
 use bevy::prelude::{
     ChildOf, Commands, Entity, Event, EventWriter, NextState, Query, Transform, Visibility, error,
 };
 use cdda_json_files::{CddaItem, Description};
+use gameplay_location::LocationCache;
+use gameplay_location::{HorizontalDirection, LevelOffset, Nbor, Pos, SubzoneLevel};
 use hud::text_color_expect_full;
 use units::{Distance, Duration, Speed};
 
@@ -543,7 +544,7 @@ impl ActorItem<'_> {
         commands: &mut Commands,
         message_writer: &mut MessageWriter,
         subzone_level_entities: &SubzoneLevelEntities,
-        location: &mut Location,
+        location: &mut LocationCache,
         moved: &ItemItem,
         to: Nbor,
     ) -> ActorImpact {

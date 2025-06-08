@@ -1,5 +1,5 @@
-use crate::{Level, LevelOffset, Nbor, Pos, PosOffset, VisionDistance};
 use bevy::{platform::collections::HashMap, prelude::Resource};
+use gameplay_location::{Level, LevelOffset, Nbor, Pos, PosOffset, VisionDistance};
 use std::{array, iter::once};
 use util::AsyncNew;
 
@@ -85,7 +85,7 @@ impl RelativeSegments {
         let mut segments = array::from_fn(|_| HashMap::<PosOffset, RelativeSegment>::default());
         for (&pos_offset, relativeray) in &rays {
             let segment = relativeray.to_segment(&rays);
-            let distance = VisionDistance::from(pos_offset).as_tiles();
+            let distance = VisionDistance::from_offset(pos_offset).as_tiles();
             for index in distance..=(VisionDistance::MAX_VISION_TILES as usize) {
                 segments
                     .get_mut(index)
@@ -107,7 +107,8 @@ impl RelativeSegments {
                         level: level - Level::ZERO,
                         z,
                     };
-                    if VisionDistance::from(to).in_range(VisionDistance::MAX_VISION_TILES as usize)
+                    if VisionDistance::from_offset(to)
+                        .in_range(VisionDistance::MAX_VISION_TILES as usize)
                     {
                         rays.insert(
                             to,

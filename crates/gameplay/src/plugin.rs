@@ -7,11 +7,10 @@ use crate::systems::{
     log_archetypes, update_visibility, update_visualization_on_item_move,
 };
 use crate::{
-    ActorPlugin, CameraOffset, CddaPlugin, Exploration, GameplayScreenState, PhrasePlugin,
-    RelativeSegments, SpawnSubzoneLevel, TimePlugin, TransitionPlugin, VisualizationUpdate,
-    events::EventsPlugin, focus::FocusPlugin, item::ItemChecksPlugin, models::ModelPlugin,
-    resources::ResourcePlugin, scope::GameplayLocalPlugin, screens::ScreensPlugin,
-    sidebar::SidebarPlugin, update_camera_offset,
+    ActorPlugin, CameraOffset, GameplayScreenState, PhrasePlugin, RelativeSegments,
+    SpawnSubzoneLevel, TimePlugin, TransitionPlugin, VisualizationUpdate, events::EventsPlugin,
+    focus::FocusPlugin, item::ItemChecksPlugin, models::ModelPlugin, resources::ResourcePlugin,
+    screens::ScreensPlugin, sidebar::SidebarPlugin, update_camera_offset,
 };
 use application_state::ApplicationState;
 use bevy::ecs::system::ScheduleSystem;
@@ -20,6 +19,9 @@ use bevy::prelude::{
     Update, in_state, on_event, resource_exists, resource_exists_and_changed,
 };
 use bevy::{diagnostic::FrameTimeDiagnosticsPlugin, ecs::schedule::ScheduleConfigs};
+use gameplay_cdda::{CddaPlugin, Exploration};
+use gameplay_local::GameplayLocalPlugin;
+use gameplay_resource::GampelayResourceSet;
 use util::log_transition_plugin;
 
 pub struct GameplayPlugin;
@@ -55,7 +57,11 @@ impl Plugin for GameplayPlugin {
 }
 
 fn startup_systems() -> ScheduleConfigs<ScheduleSystem> {
-    (spawn_initial_entities, create_gameplay_key_bindings).into_configs()
+    (
+        spawn_initial_entities.after(GampelayResourceSet),
+        create_gameplay_key_bindings,
+    )
+        .into_configs()
 }
 
 fn update_systems() -> ScheduleConfigs<ScheduleSystem> {

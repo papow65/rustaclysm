@@ -1,6 +1,7 @@
-use crate::{ElevationVisibility, FocusState, Level, Player, Pos, ZoneLevel};
+use crate::{ElevationVisibility, FocusState, Player};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{DetectChanges as _, NextState, Ref, Res, Single, State, Vec3, With};
+use gameplay_location::{Level, Pos, ZoneLevel};
 use std::cmp::Ordering;
 
 #[derive(SystemParam)]

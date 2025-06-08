@@ -2,9 +2,9 @@
 
 use crate::{
     Actor, ActorEvent, Amount, Clock, ContainerLimits, Corpse, CorpseEvent, CorpseRaise, Damage,
-    Faction, Fragment, GameplayScreenState, Healing, Health, Infos, Item, ItemHierarchy, Life,
-    Limited, LocalTerrain, MessageWriter, ObjectName, Obstacle, Phrase, Player, Pos, Shared,
-    Stamina, StandardIntegrity, Subject, TerrainEvent, Toggle, VisualizationUpdate, WalkingMode,
+    Faction, Fragment, GameplayScreenState, Healing, Health, Item, ItemHierarchy, Life, Limited,
+    LocalTerrain, MessageWriter, ObjectName, Obstacle, Phrase, Player, Shared, Stamina,
+    StandardIntegrity, Subject, TerrainEvent, Toggle, VisualizationUpdate, WalkingMode,
     spawn::TileSpawner,
 };
 use bevy::ecs::schedule::{IntoScheduleConfigs as _, ScheduleConfigs};
@@ -15,6 +15,8 @@ use bevy::prelude::{
 };
 use cdda_json_files::{FurnitureInfo, InfoId, TerrainInfo};
 use either::Either;
+use gameplay_cdda::Infos;
+use gameplay_location::Pos;
 use std::time::Instant;
 use units::Duration;
 use util::log_if_slow;

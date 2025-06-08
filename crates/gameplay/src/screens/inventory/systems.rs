@@ -4,8 +4,8 @@ use crate::screens::inventory::row_spawner::RowSpawner;
 use crate::screens::inventory::section::InventorySection;
 use crate::{
     BodyContainers, Clock, DebugTextShown, Envir, ExamineItem, GameplayScreenState,
-    HorizontalDirection, InstructionQueue, ItemHierarchy, ItemItem, MoveItem, Nbor, Phrase, Pickup,
-    Player, Pos, QueuedInstruction, Unwield, Wield,
+    InstructionQueue, ItemHierarchy, ItemItem, MoveItem, Phrase, Pickup, Player, QueuedInstruction,
+    Unwield, Wield,
 };
 use bevy::ecs::{entity::hash_map::EntityHashMap, system::SystemId};
 use bevy::picking::Pickable;
@@ -15,6 +15,7 @@ use bevy::prelude::{
     IntoSystem as _, JustifyContent, KeyCode, Local, NextState, Node, Overflow, Query, Res, ResMut,
     Single, StateScoped, Text, TextColor, TextSpan, UiRect, Val, With, World, debug, error,
 };
+use gameplay_location::{HorizontalDirection, Nbor, Pos};
 use hud::{
     Fonts, HARD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, SOFT_TEXT_COLOR, SelectionList,
     SelectionListStep, scroll_to_selection,

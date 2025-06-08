@@ -1,5 +1,6 @@
-use crate::{Nbor, StaminaCost, StaminaImpact};
+use crate::{StaminaCost, StaminaImpact};
 use bevy::prelude::Entity;
+use gameplay_location::Nbor;
 use units::Duration;
 
 #[must_use]

@@ -1,6 +1,8 @@
-use crate::{Exploration, Focus, Level, Overzone, Pos, Region, SubzoneLevel, Zone, ZoneLevel};
+use crate::{Focus, Region};
 use bevy::platform::collections::{HashMap, HashSet, hash_map::Entry};
 use bevy::prelude::{Resource, Visibility};
+use gameplay_cdda::Exploration;
+use gameplay_location::{Level, Overzone, Pos, SubzoneLevel, Zone, ZoneLevel};
 
 /// Ever seen by the player character
 #[derive(Copy, Clone, Debug, PartialEq)]

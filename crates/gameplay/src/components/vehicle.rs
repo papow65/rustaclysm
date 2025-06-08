@@ -1,6 +1,6 @@
-use crate::PosOffset;
 use bevy::prelude::Component;
 use cdda_json_files::CddaItem;
+use gameplay_location::PosOffset;
 use std::sync::Arc;
 
 #[derive(Component)]

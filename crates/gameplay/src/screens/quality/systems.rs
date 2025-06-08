@@ -1,11 +1,12 @@
 use crate::screens::{find_nearby, find_nearby_pseudo, nearby_qualities};
-use crate::{BodyContainers, GameplayScreenState, Item, LastSeen, Location, Player, Pos, Shared};
+use crate::{BodyContainers, GameplayScreenState, Item, LastSeen, Player, Shared};
 use bevy::picking::Pickable;
 use bevy::prelude::{
     AlignItems, AnyOf, Commands, FlexDirection, JustifyContent, KeyCode, Local, NextState, Node,
     Overflow, Query, Res, ResMut, Single, StateScoped, Text, UiRect, Val, With, World,
 };
 use cdda_json_files::{FurnitureInfo, TerrainInfo};
+use gameplay_location::{LocationCache, Pos};
 use hud::{Fonts, GOOD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, WARN_TEXT_COLOR};
 use keyboard::KeyBindings;
 use manual::{LargeNode, ManualSection};
@@ -15,7 +16,7 @@ use util::{log_if_slow, uppercase_first};
 #[expect(clippy::needless_pass_by_value)]
 pub(super) fn spawn_crafting_screen(
     mut commands: Commands,
-    location: Res<Location>,
+    location: Res<LocationCache>,
     fonts: Res<Fonts>,
     player: Single<(&Pos, &BodyContainers), With<Player>>,
     items: Query<(Item, &LastSeen)>,

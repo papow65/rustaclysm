@@ -39,6 +39,10 @@ cdda_json_files = { path = "crates/cdda_json_files" }
 either = "1"
 fastrand = "2"
 gameplay = { path = "crates/gameplay" }
+gameplay_cdda = { path = "crates/gameplay_cdda" }
+gameplay_local = { path = "crates/gameplay_local" }
+gameplay_location = { path = "crates/gameplay_location" }
+gameplay_resource = { path = "crates/gameplay_resource" }
 gameplay_transition_state = { path = "crates/gameplay_transition_state" }
 hud = { path = "crates/hud" }
 keyboard = { path = "crates/keyboard" }
@@ -190,3 +194,6 @@ restriction = { level = "allow", priority = -1 }
     verbose_file_reads = "forbid"
 style = { level = "forbid", priority = -1 }
 suspicious = { level = "forbid", priority = -1 }
+
+[workspace.lints.rustdoc]
+private_intra_doc_links = "allow"

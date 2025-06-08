@@ -1,11 +1,9 @@
 //! These systems run at most once at the end of [`loop_behavior_and_refresh`](`crate::behavior::systems::loop::loop_behavior_and_refresh`).
 
-use crate::events::Exploration;
 use crate::systems::{update_visualization, update_visualization_on_item_move};
 use crate::{
     Accessible, Appearance, BaseSpeed, Clock, CurrentlyVisible, CurrentlyVisibleBuilder,
-    ElevationVisibility, Focus, GameplayLocal, LastSeen, Player, PlayerActionState, Pos, Vehicle,
-    VisualizationUpdate,
+    ElevationVisibility, Focus, LastSeen, Player, PlayerActionState, Vehicle, VisualizationUpdate,
 };
 use bevy::ecs::schedule::{IntoScheduleConfigs as _, ScheduleConfigs};
 use bevy::ecs::system::ScheduleSystem;
@@ -14,6 +12,9 @@ use bevy::prelude::{
     ParallelCommands, Query, RemovedComponents, Res, ResMut, Single, State, Transform, Vec3,
     Visibility, With, Without, debug, resource_exists_and_changed,
 };
+use gameplay_cdda::Exploration;
+use gameplay_local::GameplayLocal;
+use gameplay_location::Pos;
 use std::cell::RefCell;
 use std::{cell::OnceCell, time::Instant};
 use thread_local::ThreadLocal;

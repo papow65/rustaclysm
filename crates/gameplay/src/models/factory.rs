@@ -1,14 +1,14 @@
+use crate::Appearance;
 use crate::models::resources::{AppearanceCache, MeshCaches};
-use crate::{
-    Appearance, Infos, Layers, Model, ModelShape, ObjectCategory, SpriteOrientation, TileLoader,
-    TileVariant,
-};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{
     AssetServer, Assets, Mesh, Mesh3d, MeshMaterial3d, Res, ResMut, StandardMaterial, Transform,
     Vec3,
 };
 use cdda_json_files::UntypedInfoId;
+use gameplay_cdda::{
+    Infos, Layers, Model, ModelShape, ObjectCategory, SpriteOrientation, TileLoader, TileVariant,
+};
 
 #[derive(SystemParam)]
 pub(crate) struct ModelFactory<'w> {

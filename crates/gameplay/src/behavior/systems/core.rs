@@ -1,10 +1,18 @@
-use crate::{spawn::TileSpawner, *};
+use crate::{
+    Action, ActionIn, Actor, ActorEvent, ActorImpact, Amount, Attack, ChangePace, Clock, Close,
+    ContinueCraft, CorpseEvent, Craft, CurrentlyVisibleBuilder, Damage, Envir, ExamineItem,
+    Explored, Faction, Healing, HealingDuration, InstructionQueue, Item, ItemAction as _,
+    ItemHierarchy, Life, MessageWriter, MoveItem, Peek, Pickup, PlannedAction, Player,
+    PlayerActionState, Pulp, Sleep, Smash, Stamina, StartCraft, Stay, Step, SubzoneLevelEntities,
+    TerrainEvent, Timeouts, Toggle, Unwield, Wield, spawn::TileSpawner,
+};
 use bevy::ecs::schedule::{IntoScheduleConfigs as _, ScheduleConfigs};
 use bevy::ecs::system::{ScheduleSystem, SystemId};
 use bevy::prelude::{
     Commands, Entity, EventWriter, In, IntoSystem as _, Local, NextState, Query, Res, ResMut,
     Single, State, StateTransition, SystemInput, With, World, debug,
 };
+use gameplay_location::{LocationCache, Pos};
 use std::{cell::OnceCell, time::Instant};
 use units::Duration;
 use util::log_if_slow;
@@ -489,7 +497,7 @@ fn perform_move_item(
     mut commands: Commands,
     mut message_writer: MessageWriter,
     subzone_level_entities: Res<SubzoneLevelEntities>,
-    mut location: ResMut<Location>,
+    mut location: ResMut<LocationCache>,
     actors: Query<Actor>,
     items: Query<Item>,
 ) -> ActorImpact {

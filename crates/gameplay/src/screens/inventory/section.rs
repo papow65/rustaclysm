@@ -1,4 +1,4 @@
-use crate::HorizontalDirection;
+use gameplay_location::HorizontalDirection;
 use std::{cmp::Ordering, fmt};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]

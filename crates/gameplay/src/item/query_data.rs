@@ -1,10 +1,10 @@
 use crate::{
-    Amount, Containable, Filthy, Fragment, ItemIntegrity, ObjectName, Phase, Pos, Positioning,
-    Shared,
+    Amount, Containable, Filthy, Fragment, ItemIntegrity, ObjectName, Phase, Positioning, Shared,
 };
 use bevy::ecs::query::QueryData;
 use bevy::prelude::{ChildOf, Children, Entity, ops::atan2};
 use cdda_json_files::{CommonItemInfo, InfoId};
+use gameplay_location::Pos;
 use hud::text_color_expect_half;
 use std::f32::consts::FRAC_1_PI;
 

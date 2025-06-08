@@ -1,5 +1,4 @@
-use crate::components::{LoadButtonArea, MessageField, MessageWrapper};
-use crate::load_error::LoadError;
+use crate::{LoadButtonArea, LoadError, MessageField, MessageWrapper};
 use application_state::ApplicationState;
 use base64::{Engine as _, engine::general_purpose::STANDARD as base64};
 use bevy::ecs::{spawn::SpawnIter, system::SystemId};
@@ -9,7 +8,8 @@ use bevy::prelude::{
     Single, SpawnRelated as _, StateScoped, Text, TextFont, UiRect, Val, With, Without, World,
     children, debug, error,
 };
-use gameplay::{ActiveSav, GameplayLocal};
+use gameplay_cdda::ActiveSav;
+use gameplay_local::GameplayLocal;
 use glob::glob;
 use hud::{
     BAD_TEXT_COLOR, ButtonBuilder, Fonts, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, LARGE_SPACING,

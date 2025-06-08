@@ -1,9 +1,5 @@
-use crate::{
-    AssetState, Infos, LevelOffset, LocalTerrain, MapManager, MapMemoryManager,
-    OvermapBufferManager, OvermapManager, Overzone, PosOffset, RepetitionBlockExt as _,
-    SubzoneLevel, SubzoneLevelEntities, ZoneLevel, ZoneLevelIds, spawn::TileSpawner,
-    spawn::log_spawn_result,
-};
+use crate::spawn::{TileSpawner, log_spawn_result};
+use crate::{LocalTerrain, SubzoneLevelEntities, ZoneLevelIds};
 use application_state::ApplicationState;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{Res, ResMut, StateScoped, Transform, Visibility, warn};
@@ -11,6 +7,11 @@ use cdda_json_files::{
     CddaAmount, FlatVec, InfoId, OvermapTerrainInfo, RepetitionBlock, RequiredLinkedLater, Submap,
     SubzoneOffset,
 };
+use gameplay_cdda::{
+    AssetState, Infos, MapManager, MapMemoryManager, OvermapBufferManager, OvermapManager,
+    RepetitionBlockExt as _,
+};
+use gameplay_location::{LevelOffset, Overzone, PosOffset, SubzoneLevel, ZoneLevel};
 use std::sync::OnceLock;
 
 #[derive(SystemParam)]
@@ -41,7 +42,7 @@ impl SubzoneSpawner<'_, '_> {
         if matches!(asset_state, AssetState::Nonexistent) {
             self.zone_level_ids.create_missing(overzone);
         }
-        overmap_buffer_manager.load(overzone);
+        _ = overmap_buffer_manager.load(overzone);
 
         match map_manager.submap(subzone_level) {
             AssetState::Available { asset: submap } => {

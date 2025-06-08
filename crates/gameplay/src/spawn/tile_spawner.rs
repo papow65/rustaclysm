@@ -1,10 +1,9 @@
 use crate::{
-    Accessible, ActiveSav, Amount, Aquatic, BaseSpeed, BodyContainers, CameraBase, Closeable,
-    Containable, Craft, ExamineCursor, Explored, Faction, Filthy, HealingDuration, Health, Hurdle,
-    Infos, ItemIntegrity, LastSeen, LevelOffset, Life, Limited, LocalTerrain, Melee, ModelFactory,
-    ObjectCategory, ObjectName, Obstacle, Opaque, OpaqueFloor, Openable, Phase, Player, Pos,
-    PosOffset, SealedPocket, Shared, StairsDown, StairsUp, Stamina, StandardIntegrity, TileVariant,
-    Vehicle, VehiclePart, WalkingMode, cdda::Error, spawn::log_spawn_result,
+    Accessible, Amount, Aquatic, BaseSpeed, BodyContainers, CameraBase, Closeable, Containable,
+    Craft, ExamineCursor, Explored, Faction, Filthy, HealingDuration, Health, Hurdle,
+    ItemIntegrity, LastSeen, Life, Limited, LocalTerrain, Melee, ModelFactory, ObjectName,
+    Obstacle, Opaque, OpaqueFloor, Openable, Phase, Player, SealedPocket, Shared, Stamina,
+    StandardIntegrity, Vehicle, VehiclePart, WalkingMode, spawn::log_spawn_result,
 };
 use application_state::ApplicationState;
 use bevy::ecs::system::SystemParam;
@@ -21,6 +20,8 @@ use cdda_json_files::{
     PocketType, Recipe, Repetition, RequiredLinkedLater, SpawnItem, TerrainInfo, UntypedInfoId,
 };
 use either::Either;
+use gameplay_cdda::{ActiveSav, Error, Infos, ObjectCategory, TileVariant};
+use gameplay_location::{LevelOffset, Pos, PosOffset, StairsDown, StairsUp};
 use hud::{BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR};
 use std::sync::{Arc, LazyLock};
 use units::{Mass, Volume};

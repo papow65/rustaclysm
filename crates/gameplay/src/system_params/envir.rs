@@ -1,12 +1,15 @@
 use crate::{
-    Accessible, Amount, Closeable, Corpse, Health, HorizontalDirection, Hurdle, Intelligence, Item,
-    ItemItem, Level, LevelOffset, Life, Location, Nbor, NborDistance, ObjectName, Obstacle, Opaque,
-    OpaqueFloor, Openable, Pos, PosOffset, QueuedInstruction, StairsDown, StairsUp,
-    StandardIntegrity, WalkingCost, Zone, ZoneLevel,
+    Accessible, Amount, Closeable, Corpse, Health, Hurdle, Intelligence, Item, ItemItem, Life,
+    ObjectName, Obstacle, Opaque, OpaqueFloor, Openable, QueuedInstruction, StandardIntegrity,
+    WalkingCost,
 };
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{Entity, Query, ResMut, With, Without, debug, warn};
 use cdda_json_files::MoveCost;
+use gameplay_location::{
+    HorizontalDirection, Level, LevelOffset, LocationCache, Nbor, NborDistance, Pos, PosOffset,
+    StairsDown, StairsUp, Zone, ZoneLevel,
+};
 use pathfinding::prelude::astar;
 use std::cmp::Ordering;
 use units::{Duration, Speed};
@@ -21,7 +24,7 @@ pub(crate) enum Collision<'a> {
 
 #[derive(SystemParam)]
 pub(crate) struct Envir<'w, 's> {
-    pub(crate) location: ResMut<'w, Location>,
+    pub(crate) location: ResMut<'w, LocationCache>,
     accessibles: Query<'w, 's, &'static Accessible>,
     hurdles: Query<'w, 's, &'static Hurdle>,
     openables: Query<'w, 's, (Entity, &'static ObjectName), With<Openable>>,

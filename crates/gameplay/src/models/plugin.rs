@@ -1,6 +1,6 @@
-use crate::GameplayResourcePlugin;
 use crate::models::resources::{AppearanceCache, MeshCaches};
 use bevy::prelude::{App, Plugin};
+use gameplay_resource::GameplayResourcePlugin;
 
 pub(crate) struct ModelPlugin;
 

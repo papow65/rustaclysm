@@ -1,6 +1,7 @@
-use crate::{CancelHandling, PlayerActionState, Pos, ZoneLevel};
+use crate::{CancelHandling, PlayerActionState};
 use application_state::ApplicationState;
 use bevy::prelude::{StateSet as _, SubStates};
+use gameplay_location::{Pos, ZoneLevel};
 use std::fmt;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, SubStates)]

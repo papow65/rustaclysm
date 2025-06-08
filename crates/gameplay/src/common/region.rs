@@ -1,4 +1,4 @@
-use crate::{Level, Zone, ZoneLevel};
+use gameplay_location::{Level, Zone, ZoneLevel};
 use std::{fmt, ops::RangeInclusive};
 
 #[derive(Clone, Debug, PartialEq)]

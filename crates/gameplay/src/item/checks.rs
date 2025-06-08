@@ -1,12 +1,12 @@
-use crate::{
-    Amount, Containable, Infos, ItemHierarchy, ItemIntegrity, Phrase, Pos, StandardIntegrity,
-};
+use crate::{Amount, Containable, ItemHierarchy, ItemIntegrity, Phrase, StandardIntegrity};
 use crate::{SealedPocket, Shared};
 use bevy::prelude::{
     App, Changed, ChildOf, Children, Entity, FixedUpdate, IntoScheduleConfigs as _, Or, Plugin,
     Query, With, resource_exists, warn,
 };
 use cdda_json_files::{PocketInfo, PocketType};
+use gameplay_cdda::Infos;
+use gameplay_location::Pos;
 use std::fmt::Write as _;
 
 pub(crate) struct ItemChecksPlugin;

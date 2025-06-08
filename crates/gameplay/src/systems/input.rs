@@ -1,6 +1,7 @@
-use crate::{GameplayScreenState, Player, Pos, spawn::TileSpawner};
+use crate::{GameplayScreenState, Player, spawn::TileSpawner};
 use application_state::ApplicationState;
 use bevy::prelude::{KeyCode, Local, NextState, ResMut, Single, StateScoped, With, World, debug};
+use gameplay_location::Pos;
 use gameplay_transition_state::GameplayTransitionState;
 use keyboard::KeyBindings;
 use manual::ManualSection;

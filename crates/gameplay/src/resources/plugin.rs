@@ -1,9 +1,10 @@
 use crate::{
-    CameraOffset, ElevationVisibility, Expanded, Explored, GameplayResourcePlugin,
-    InstructionQueue, Location, RelativeSegments, SubzoneLevelEntities, VisualizationUpdate,
-    ZoneLevelEntities, ZoneLevelIds,
+    CameraOffset, ElevationVisibility, Expanded, Explored, InstructionQueue, RelativeSegments,
+    SubzoneLevelEntities, VisualizationUpdate, ZoneLevelIds,
 };
 use bevy::prelude::{App, Plugin};
+use gameplay_location::{LocationCache, ZoneLevelCache};
+use gameplay_resource::GameplayResourcePlugin;
 use util::AsyncResourcePlugin;
 
 pub(crate) struct ResourcePlugin;
@@ -16,10 +17,10 @@ impl Plugin for ResourcePlugin {
             GameplayResourcePlugin::<Expanded>::default(),
             GameplayResourcePlugin::<Explored>::default(),
             GameplayResourcePlugin::<InstructionQueue>::default(),
-            GameplayResourcePlugin::<Location>::default(),
+            GameplayResourcePlugin::<LocationCache>::default(),
             GameplayResourcePlugin::<SubzoneLevelEntities>::default(),
             GameplayResourcePlugin::<VisualizationUpdate>::default(),
-            GameplayResourcePlugin::<ZoneLevelEntities>::default(),
+            GameplayResourcePlugin::<ZoneLevelCache>::default(),
             GameplayResourcePlugin::<ZoneLevelIds>::default(),
         ));
 

@@ -1,9 +1,9 @@
-use crate::{
-    Explored, Infos, MapAsset, MapMemoryAsset, OvermapAsset, OvermapBufferAsset, RelativeSegments,
-    SubzoneLevelEntities, TileLoader,
-};
+use crate::{Explored, RelativeSegments, SubzoneLevelEntities};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{Assets, Res, debug};
+use gameplay_cdda::{
+    Infos, MapAsset, MapMemoryAsset, OvermapAsset, OvermapBufferAsset, TileLoader,
+};
 
 #[derive(SystemParam)]
 pub struct GameplayReadiness<'w> {

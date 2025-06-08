@@ -1,7 +1,5 @@
-use crate::{
-    ChangePace, ExamineItem, Fragment, HorizontalDirection, MoveItem, Nbor, Pickup,
-    RecipeSituation, Unwield, Wield,
-};
+use crate::{ChangePace, ExamineItem, Fragment, MoveItem, Pickup, RecipeSituation, Unwield, Wield};
+use gameplay_location::{HorizontalDirection, Nbor};
 use strum::VariantArray;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

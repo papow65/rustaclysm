@@ -1,10 +1,9 @@
-use crate::{
-    MapAsset, MapMemoryAsset, OvermapAsset, OvermapBufferAsset, Pos, SubzoneLevel, ZoneLevel,
-};
 use bevy::prelude::{
     Assets, EventReader, Font, Local, Mesh, Query, Res, StandardMaterial, With, World, debug, error,
 };
 use bevy::{asset::UntypedAssetLoadFailedEvent, platform::collections::HashMap};
+use gameplay_cdda::{MapAsset, MapMemoryAsset, OvermapAsset, OvermapBufferAsset};
+use gameplay_location::{Pos, SubzoneLevel, ZoneLevel};
 use std::{env, sync::LazyLock, time::Instant};
 use util::log_if_slow;
 

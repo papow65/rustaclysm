@@ -1,6 +1,7 @@
 use crate::actor::impact::Impact;
-use crate::{Breath, Limited, Nbor, NborDistance};
+use crate::{Breath, Limited};
 use bevy::prelude::Component;
+use gameplay_location::{Nbor, NborDistance};
 use units::{Distance, Duration};
 
 /// Short term breath - Mutable component

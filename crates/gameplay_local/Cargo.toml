@@ -1,0 +1,12 @@
+[package]
+name = "gameplay_local"
+description = "Plugin for a gameplay-scoped local query param"
+license = "AGPL-3.0-or-later"
+edition = "2024"
+
+[dependencies]
+application_state = { workspace = true }
+bevy = { workspace = true }
+
+[lints]
+workspace = true
