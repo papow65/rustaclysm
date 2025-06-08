@@ -15,7 +15,7 @@ strum = { workspace = true }
 units = { workspace = true }
 
 [dev-dependencies]
-reqwest = { version = "0.12", features = ["blocking", "json"] }
+reqwest = { version = "0.12", features = ["blocking", "default-tls", "json"], default-features = false }
 
 [lints]
 workspace = true
