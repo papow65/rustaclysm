@@ -1,9 +1,10 @@
-use crate::{Explored, RelativeSegments, SubzoneLevelEntities};
+use crate::{Explored, RelativeSegments};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{Assets, Res, debug};
 use gameplay_cdda::{
     Infos, MapAsset, MapMemoryAsset, OvermapAsset, OvermapBufferAsset, TileLoader,
 };
+use gameplay_location::SubzoneLevelCache;
 
 #[derive(SystemParam)]
 pub struct GameplayReadiness<'w> {
@@ -15,7 +16,7 @@ pub struct GameplayReadiness<'w> {
     map_assets: Res<'w, Assets<MapAsset>>,
     map_memory_assets: Res<'w, Assets<MapMemoryAsset>>,
     explored: Option<Res<'w, Explored>>,
-    subzone_level_entities: Option<Res<'w, SubzoneLevelEntities>>,
+    subzone_level_cache: Option<Res<'w, SubzoneLevelCache>>,
 }
 
 impl GameplayReadiness<'_> {
@@ -36,9 +37,9 @@ impl GameplayReadiness<'_> {
                 Some(explored) if explored.loaded() => "loaded",
                 Some(_) => "loading",
             },
-            match &self.subzone_level_entities {
+            match &self.subzone_level_cache {
                 None => "missing",
-                Some(subzone_level_entities) if subzone_level_entities.loaded() => "loaded",
+                Some(subzone_level_cache) if subzone_level_cache.loaded() => "loaded",
                 Some(_) => "loading",
             },
         );
@@ -49,8 +50,8 @@ impl GameplayReadiness<'_> {
             && !self.map_memory_assets.is_empty()
             && self.explored.as_deref().is_some_and(Explored::loaded)
             && self
-                .subzone_level_entities
+                .subzone_level_cache
                 .as_deref()
-                .is_some_and(SubzoneLevelEntities::loaded)
+                .is_some_and(SubzoneLevelCache::loaded)
     }
 }

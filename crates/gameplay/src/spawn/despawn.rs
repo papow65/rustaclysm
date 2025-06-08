@@ -1,10 +1,11 @@
-use crate::{DespawnSubzoneLevel, DespawnZoneLevel, SubzoneLevelEntities};
+use crate::{DespawnSubzoneLevel, DespawnZoneLevel};
 use application_state::ApplicationState;
 use bevy::ecs::schedule::ScheduleConfigs;
 use bevy::ecs::system::{ScheduleSystem, SystemState};
 use bevy::prelude::{
     Commands, EventReader, IntoScheduleConfigs as _, ResMut, World, debug, in_state, on_event,
 };
+use gameplay_location::SubzoneLevelCache;
 use std::time::Instant;
 use util::log_if_slow;
 
@@ -24,12 +25,12 @@ fn despawn_subzone_levels(
     sytem_state: &mut SystemState<(
         Commands,
         EventReader<DespawnSubzoneLevel>,
-        ResMut<SubzoneLevelEntities>,
+        ResMut<SubzoneLevelCache>,
     )>,
 ) {
     let start = Instant::now();
 
-    let (mut commands, mut despawn_subzone_level_reader, mut subzone_level_entities) =
+    let (mut commands, mut despawn_subzone_level_reader, subzone_level_cache) =
         sytem_state.get_mut(world);
 
     debug!(
@@ -38,7 +39,7 @@ fn despawn_subzone_levels(
     );
 
     for despawn_event in despawn_subzone_level_reader.read() {
-        if let Some(entity) = subzone_level_entities.remove(despawn_event.subzone_level) {
+        if let Some(entity) = subzone_level_cache.get(despawn_event.subzone_level) {
             commands.entity(entity).despawn();
         }
     }

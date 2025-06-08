@@ -1,8 +1,8 @@
 use crate::spawn::{SubzoneSpawner, VisibleRegion, ZoneSpawner};
 use crate::{
     DespawnSubzoneLevel, DespawnZoneLevel, Expanded, Explored, Focus, MissingAsset, Region,
-    SpawnSubzoneLevel, SpawnZoneLevel, SubzoneLevelEntities, TileSpawner,
-    UpdateZoneLevelVisibility, VisualizationUpdate, ZoneLevelIds, ZoneRegion,
+    SpawnSubzoneLevel, SpawnZoneLevel, TileSpawner, UpdateZoneLevelVisibility, VisualizationUpdate,
+    ZoneLevelIds, ZoneRegion,
 };
 use bevy::ecs::{schedule::ScheduleConfigs, system::ScheduleSystem};
 use bevy::prelude::{
@@ -16,7 +16,7 @@ use gameplay_cdda::{
 };
 use gameplay_local::GameplayLocal;
 use gameplay_location::{
-    Level, Pos, SubzoneLevel, VisionDistance, Zone, ZoneLevel, ZoneLevelCache,
+    Level, Pos, SubzoneLevel, SubzoneLevelCache, VisionDistance, Zone, ZoneLevel, ZoneLevelCache,
 };
 use std::{cmp::Ordering, time::Instant};
 use util::log_if_slow;
@@ -58,7 +58,7 @@ pub(crate) fn spawn_subzones_for_camera(
     mut despawn_subzone_level_writer: EventWriter<DespawnSubzoneLevel>,
     focus: Focus,
     visible_region: VisibleRegion,
-    subzone_level_entities: Res<SubzoneLevelEntities>,
+    subzone_level_cache: Res<SubzoneLevelCache>,
     mut previous_camera_global_transform: GameplayLocal<GlobalTransform>,
     mut expanded: ResMut<Expanded>,
     subzone_levels: Query<&SubzoneLevel>,
@@ -82,7 +82,7 @@ pub(crate) fn spawn_subzones_for_camera(
 
     spawn_expanded_subzone_levels(
         &mut spawn_subzone_level_writer,
-        &subzone_level_entities,
+        &subzone_level_cache,
         &expanded.region,
     );
     despawn_expanded_subzone_levels(
@@ -120,12 +120,12 @@ fn maximal_expanded_zones(player_zone: Zone) -> Region {
 
 fn spawn_expanded_subzone_levels(
     spawn_subzone_level_writer: &mut EventWriter<SpawnSubzoneLevel>,
-    subzone_level_entities: &SubzoneLevelEntities,
+    subzone_level_cache: &SubzoneLevelCache,
     expanded_region: &Region,
 ) {
     for zone_level in expanded_region.zone_levels() {
         for subzone_level in zone_level.subzone_levels() {
-            let missing = subzone_level_entities.get(subzone_level).is_none();
+            let missing = subzone_level_cache.get(subzone_level).is_none();
             if missing {
                 spawn_subzone_level_writer.write(SpawnSubzoneLevel { subzone_level });
             }
@@ -165,16 +165,18 @@ pub(crate) fn spawn_subzone_levels(
         spawn_subzone_level_reader.len()
     );
 
-    for spawn_event in spawn_subzone_level_reader.read() {
-        subzone_spawner.spawn_subzone_level(
-            &mut map_manager,
-            &mut map_memory_manager,
-            &mut overmap_buffer_manager,
-            spawn_event.subzone_level,
-        );
+    let mut spawn_events = spawn_subzone_level_reader.read().peekable();
 
+    if spawn_events.peek().is_some() {
         *vizualization_update = VisualizationUpdate::Forced;
     }
+
+    subzone_spawner.spawn_subzone_levels(
+        &mut map_manager,
+        &mut map_memory_manager,
+        &mut overmap_buffer_manager,
+        spawn_events.map(|spawn_event| spawn_event.subzone_level),
+    );
 
     log_if_slow("spawn_subzone_levels", start);
 }
@@ -314,7 +316,7 @@ fn handle_map_events(
 fn handle_map_memory_events(
     mut explorations: EventWriter<Exploration>,
     mut spawn_subzone_level_writer: EventWriter<SpawnSubzoneLevel>,
-    subzone_level_entities: Res<SubzoneLevelEntities>,
+    subzone_level_cache: Res<SubzoneLevelCache>,
     expanded: Res<Expanded>,
     mut map_memory_manager: MapMemoryManager,
 ) {
@@ -324,7 +326,7 @@ fn handle_map_memory_events(
 
     spawn_expanded_subzone_levels(
         &mut spawn_subzone_level_writer,
-        &subzone_level_entities,
+        &subzone_level_cache,
         &expanded.region,
     );
 

@@ -5,7 +5,6 @@ mod explored;
 mod instruction_queue;
 mod plugin;
 mod relative_segments;
-mod subzone_level_entities;
 mod visualization_update;
 mod zone_level_ids;
 
@@ -16,6 +15,5 @@ pub(crate) use self::explored::{Explored, SeenFrom};
 pub(crate) use self::instruction_queue::InstructionQueue;
 pub(crate) use self::plugin::ResourcePlugin;
 pub(crate) use self::relative_segments::{RelativeSegment, RelativeSegments};
-pub(crate) use self::subzone_level_entities::SubzoneLevelEntities;
 pub(crate) use self::visualization_update::VisualizationUpdate;
 pub(crate) use self::zone_level_ids::ZoneLevelIds;

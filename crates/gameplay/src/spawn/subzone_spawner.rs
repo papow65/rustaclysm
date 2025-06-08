@@ -1,9 +1,8 @@
-use crate::{
-    LocalTerrain, SubzoneLevelEntities, TileSpawner, ZoneLevelIds, spawn::log_spawn_result,
-};
+use crate::{LocalTerrain, TileSpawner, ZoneLevelIds, spawn::log_spawn_result};
 use application_state::ApplicationState;
 use bevy::ecs::system::SystemParam;
-use bevy::prelude::{Res, ResMut, StateScoped, Transform, Visibility, warn};
+use bevy::platform::collections::HashSet;
+use bevy::prelude::{Res, ResMut, StateScoped, Transform, Visibility};
 use cdda_json_files::{
     CddaAmount, FlatVec, InfoId, OvermapTerrainInfo, RepetitionBlock, RequiredLinkedLater, Submap,
     SubzoneOffset,
@@ -12,31 +11,52 @@ use gameplay_cdda::{
     AssetState, Infos, MapManager, MapMemoryManager, OvermapBufferManager, OvermapManager,
     RepetitionBlockExt as _,
 };
-use gameplay_location::{LevelOffset, Overzone, PosOffset, SubzoneLevel, ZoneLevel};
+use gameplay_location::{
+    LevelOffset, Overzone, PosOffset, SubzoneLevel, SubzoneLevelCache, ZoneLevel,
+};
 use std::sync::OnceLock;
 
 #[derive(SystemParam)]
 pub(crate) struct SubzoneSpawner<'w, 's> {
     infos: Res<'w, Infos>,
     zone_level_ids: ResMut<'w, ZoneLevelIds>,
-    subzone_level_entities: ResMut<'w, SubzoneLevelEntities>,
+    subzone_level_cache: ResMut<'w, SubzoneLevelCache>,
     overmap_manager: OvermapManager<'w>,
     tile_spawner: TileSpawner<'w, 's>,
 }
 
 impl SubzoneSpawner<'_, '_> {
-    pub(crate) fn spawn_subzone_level(
+    pub(crate) fn spawn_subzone_levels(
+        &mut self,
+        map_manager: &mut MapManager,
+        map_memory_manager: &mut MapMemoryManager,
+        overmap_buffer_manager: &mut OvermapBufferManager,
+        subzone_levels: impl Iterator<Item = SubzoneLevel>,
+    ) {
+        // subzone levels/maps may be spawned repeatedly, but this should be ignored.
+        // So we ignore all subzone levels that already exist.
+        // And we deduplicate the subzone levels, to prevent creating multiple commands that would create the same subzone map.
+        let subzone_levels = subzone_levels
+            .filter(|subzone_level| self.subzone_level_cache.get(*subzone_level).is_none())
+            .collect::<HashSet<_>>();
+
+        for subzone_level in subzone_levels {
+            self.spawn_subzone_level(
+                map_manager,
+                map_memory_manager,
+                overmap_buffer_manager,
+                subzone_level,
+            );
+        }
+    }
+
+    fn spawn_subzone_level(
         &mut self,
         map_manager: &mut MapManager,
         map_memory_manager: &mut MapMemoryManager,
         overmap_buffer_manager: &mut OvermapBufferManager,
         subzone_level: SubzoneLevel,
     ) {
-        if self.subzone_level_entities.get(subzone_level).is_some() {
-            warn!("{subzone_level:?} already exists");
-            return;
-        }
-
         // Ensure all required assets
         let overzone = Overzone::from(ZoneLevel::from(subzone_level).zone);
         let asset_state = self.overmap_manager.load(overzone);
@@ -161,9 +181,6 @@ impl SubzoneSpawner<'_, '_> {
 
             //trace!("{:?} done", subzone_level);
         }
-
-        self.subzone_level_entities
-            .add(subzone_level, subzone_level_entity);
     }
 
     fn fallback_submap(

@@ -52,7 +52,7 @@ use self::phrase::{
 };
 use self::resources::{
     CameraOffset, ElevationVisibility, Expanded, Explored, InstructionQueue, RelativeSegment,
-    RelativeSegments, SeenFrom, SubzoneLevelEntities, VisualizationUpdate, ZoneLevelIds,
+    RelativeSegments, SeenFrom, VisualizationUpdate, ZoneLevelIds,
 };
 use self::screens::{Consumed, GameplayScreenState, RecipeSituation, update_camera_offset};
 use self::spawn::TileSpawner;

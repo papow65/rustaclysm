@@ -10,7 +10,7 @@ mod vision_distance;
 mod zone;
 mod zone_level;
 
-pub use cache::{LocationCache, ZoneLevelCache};
+pub use cache::{LocationCache, SubzoneLevelCache, ZoneLevelCache};
 pub use components::{StairsDown, StairsUp};
 pub use direction::{CardinalDirection, HorizontalDirection};
 pub use level::{Level, LevelOffset};

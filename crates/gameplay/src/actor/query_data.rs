@@ -4,15 +4,16 @@ use crate::{
     Faction, Filthy, Fragment, Healing, HealingDuration, Health, Item, ItemHierarchy, ItemItem,
     LastEnemy, LastSeen, Life, Melee, MessageWriter, ObjectName, Peek, Phrase, Player,
     PlayerActionState, PlayerWielded, Pulp, Severity, Smash, Stamina, StaminaCost, StartCraft,
-    Step, Subject, SubzoneLevelEntities, TerrainEvent, TileSpawner, Toggle, WalkingMode,
+    Step, Subject, TerrainEvent, TileSpawner, Toggle, WalkingMode,
 };
 use bevy::ecs::query::QueryData;
 use bevy::prelude::{
     ChildOf, Commands, Entity, Event, EventWriter, NextState, Query, Transform, Visibility, error,
 };
 use cdda_json_files::{CddaItem, Description};
-use gameplay_location::LocationCache;
-use gameplay_location::{HorizontalDirection, LevelOffset, Nbor, Pos, SubzoneLevel};
+use gameplay_location::{
+    HorizontalDirection, LevelOffset, LocationCache, Nbor, Pos, SubzoneLevel, SubzoneLevelCache,
+};
 use hud::text_color_expect_full;
 use units::{Distance, Duration, Speed};
 
@@ -543,7 +544,7 @@ impl ActorItem<'_> {
         &self,
         commands: &mut Commands,
         message_writer: &mut MessageWriter,
-        subzone_level_entities: &SubzoneLevelEntities,
+        subzone_level_cache: &SubzoneLevelCache,
         location: &mut LocationCache,
         moved: &ItemItem,
         to: Nbor,
@@ -574,7 +575,7 @@ impl ActorItem<'_> {
             .extend(moved.fragments())
             .send_info();
 
-        let Some(new_parent) = subzone_level_entities.get(SubzoneLevel::from(to)) else {
+        let Some(new_parent) = subzone_level_cache.get(SubzoneLevel::from(to)) else {
             message_writer
                 .str("Subzone not found when moving an item")
                 .send_error();
@@ -593,12 +594,12 @@ impl ActorItem<'_> {
         message_writer: &mut MessageWriter,
         next_player_action_state: &mut NextState<PlayerActionState>,
         spawner: &mut TileSpawner,
-        subzone_level_entities: &SubzoneLevelEntities,
+        subzone_level_cache: &SubzoneLevelCache,
         item_amounts: &mut Query<&mut Amount>,
         start_craft: &StartCraft,
     ) -> ActorImpact {
         let pos = self.pos.horizontal_nbor(start_craft.target);
-        let Some(parent_entity) = subzone_level_entities.get(SubzoneLevel::from(pos)) else {
+        let Some(parent_entity) = subzone_level_cache.get(SubzoneLevel::from(pos)) else {
             message_writer
                 .str("Subzone not found when starting to craft")
                 .send_error();
