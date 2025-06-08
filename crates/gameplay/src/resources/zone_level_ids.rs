@@ -2,6 +2,7 @@ use bevy::{platform::collections::HashMap, prelude::Resource};
 use cdda_json_files::{FlatVec, InfoId, Overmap, OvermapLevel, OvermapTerrainInfo};
 use gameplay_cdda::{OvermapAsset, RepetitionBlockExt as _};
 use gameplay_location::{Level, Overzone, ZoneLevel};
+use serde_json::Value as JsonValue;
 use std::sync::OnceLock;
 
 #[derive(Default, Resource)]
@@ -55,17 +56,17 @@ impl ZoneLevelIds {
                 OvermapLevel::all(InfoId::new("open_air")),
                 OvermapLevel::all(InfoId::new("open_air")),
             ],
-            region_id: serde_json::Value::Null,
-            monster_groups: serde_json::Value::Null,
-            cities: serde_json::Value::Null,
-            connections_out: serde_json::Value::Null,
-            radios: serde_json::Value::Null,
+            region_id: JsonValue::Null,
+            monster_groups: JsonValue::Null,
+            cities: JsonValue::Null,
+            connections_out: JsonValue::Null,
+            radios: JsonValue::Null,
             monster_map: FlatVec(Vec::new()),
-            tracked_vehicles: serde_json::Value::Null,
-            scent_traces: serde_json::Value::Null,
-            npcs: serde_json::Value::Null,
-            camps: serde_json::Value::Null,
-            overmap_special_placements: serde_json::Value::Null,
+            tracked_vehicles: JsonValue::Null,
+            scent_traces: JsonValue::Null,
+            npcs: JsonValue::Null,
+            camps: JsonValue::Null,
+            overmap_special_placements: JsonValue::Null,
             mapgen_arg_storage: None,
             mapgen_arg_index: None,
             joins_used: None,

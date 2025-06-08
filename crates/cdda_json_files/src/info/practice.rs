@@ -3,6 +3,7 @@ use crate::{
     RequiredQualities, RequiredTool, UntypedInfoId, Using,
 };
 use serde::Deserialize;
+use serde_json::Value as JsonValue;
 use std::sync::Arc;
 use units::Duration;
 
@@ -80,7 +81,7 @@ pub enum ActivityLevel {
 #[derive(Debug, Deserialize)]
 pub struct Byproduct {
     pub item: InfoId<CommonItemInfo>,
-    pub charges: serde_json::Value,
+    pub charges: JsonValue,
 }
 
 #[derive(Debug, Deserialize)]

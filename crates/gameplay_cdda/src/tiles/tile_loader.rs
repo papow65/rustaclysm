@@ -7,6 +7,7 @@ use cdda_json_files::{
     CddaTileConfig, CddaTileVariant, MaybeFlatVec, SpriteNumber, SpriteNumbers, TileInfo,
     UntypedInfoId,
 };
+use serde_json::from_str as from_json_str;
 use std::{fs::read_to_string, sync::Arc};
 use util::{AssetPaths, AsyncNew};
 
@@ -21,11 +22,13 @@ impl TileLoader {
         let tileset_path = AssetPaths::gfx().join("UltimateCataclysm");
         let file_path = tileset_path.join("tile_config.json");
         let file_contents = read_to_string(&file_path)?;
-        let cdda_tile_config = serde_json::from_str::<CddaTileConfig>(file_contents.as_str())
-            .map_err(|e| Error::JsonWithContext {
-                _wrapped: e,
-                _file_path: file_path,
-                _contents: Arc::from(file_contents.as_str()),
+        let cdda_tile_config =
+            from_json_str::<CddaTileConfig>(file_contents.as_str()).map_err(|e| {
+                Error::JsonWithContext {
+                    _wrapped: e,
+                    _file_path: file_path,
+                    _contents: Arc::from(file_contents.as_str()),
+                }
             })?;
 
         let mut tiles = HashMap::default();

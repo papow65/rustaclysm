@@ -2,18 +2,19 @@ use crate::{CommonItemInfo, Flags, RequiredLinkedLater};
 use bevy_log::error;
 use bevy_platform::collections::HashMap;
 use serde::Deserialize;
+use serde_json::{Value as JsonValue, from_value as from_json_value};
 
 #[derive(Debug, Deserialize)]
-#[serde(from = "Option<serde_json::Value>")]
+#[serde(from = "Option<JsonValue>")]
 pub struct ExamineActionOption(pub Option<ExamineAction>);
 
-impl From<Option<serde_json::Value>> for ExamineActionOption {
-    fn from(source: Option<serde_json::Value>) -> Self {
+impl From<Option<JsonValue>> for ExamineActionOption {
+    fn from(source: Option<JsonValue>) -> Self {
         Self(source.and_then(|source| {
             (if source.is_string() {
-                serde_json::from_value::<SimpleExamineAction>(source).map(ExamineAction::Simple)
+                from_json_value::<SimpleExamineAction>(source).map(ExamineAction::Simple)
             } else {
-                serde_json::from_value::<ExamineAction>(source)
+                from_json_value::<ExamineAction>(source)
             })
             .inspect_err(|error| error!("Failed parsing ExamineAction: {error}"))
             .ok()
@@ -43,7 +44,7 @@ pub enum ExamineAction {
         terrain_changes: HashMap<String, String>,
     },
     EffectOnCondition {
-        effect_on_conditions: serde_json::Value,
+        effect_on_conditions: JsonValue,
     },
     Simple(SimpleExamineAction),
 }

@@ -2,6 +2,7 @@ use crate::{Flags, InfoId, structure::MaybeFlatVec};
 use crate::{Ignored, ItemQuality, UntypedInfoId};
 use bevy_platform::collections::HashMap;
 use serde::Deserialize;
+use serde_json::Value as JsonValue;
 use std::fmt;
 use std::hash::{Hash, Hasher};
 use std::sync::{Arc, OnceLock};
@@ -20,14 +21,14 @@ pub struct Ammo {
     pub critical_multiplier: Option<u8>,
 
     // example: { "damage_type": "bullet", "amount": 28, "armor_penetration": 4 }
-    pub damage: Option<serde_json::Value>,
+    pub damage: Option<JsonValue>,
 
     pub drop: Option<Arc<str>>,
     pub effects: Option<Vec<Arc<str>>>,
     pub projectile_count: Option<u32>,
 
     // example: { "damage_type": "bullet", "amount": 28, "armor_penetration": 4 }
-    pub shot_damage: Option<serde_json::Value>,
+    pub shot_damage: Option<JsonValue>,
 
     // example: { "damage_type": "bullet", "amount": 28, "armor_penetration": 4 }
     pub shot_spread: Option<u16>,
@@ -85,7 +86,7 @@ pub struct Book {
     pub chapters: Option<u8>,
 
     // map or list of tuples
-    pub proficiencies: Option<serde_json::Value>,
+    pub proficiencies: Option<JsonValue>,
 
     pub martial_art: Option<Arc<str>>,
 
@@ -109,10 +110,10 @@ pub struct Clothing {
     pub power_armor: Option<bool>,
 
     #[serde(default)]
-    pub covers: Vec<serde_json::Value>,
+    pub covers: Vec<JsonValue>,
 
     #[serde(default)]
-    pub valid_mods: Vec<serde_json::Value>,
+    pub valid_mods: Vec<JsonValue>,
 
     #[serde(flatten)]
     pub common: Arc<CommonItemInfo>,
@@ -143,17 +144,17 @@ pub struct Comestible {
     // example: { "ammo_type": "water" }
     pub ammo_data: Option<HashMap<String, String>>,
 
-    pub brewable: Option<HashMap<String, serde_json::Value>>,
+    pub brewable: Option<HashMap<String, JsonValue>>,
 
     pub charges: Option<u16>,
 
     // example: [ { "disease": "bad_food", "probability": 5 } ]
-    pub contamination: Option<Arc<[HashMap<String, serde_json::Value>]>>,
+    pub contamination: Option<Arc<[HashMap<String, JsonValue>]>>,
 
     pub cooks_like: Option<Arc<str>>,
 
     // example: { "type": "emit_actor", "emits": [ "emit_acid_drop" ], "scale_qty": true }
-    pub drop_action: Option<HashMap<String, serde_json::Value>>,
+    pub drop_action: Option<HashMap<String, JsonValue>>,
 
     #[serde(default)]
     pub fatigue_mod: i8,
@@ -163,14 +164,14 @@ pub struct Comestible {
     pub quench: Option<i8>,
     pub parasites: Option<u8>,
 
-    pub petfood: Option<serde_json::Value>,
+    pub petfood: Option<JsonValue>,
     pub primary_material: Option<Arc<str>>,
     pub rot_spawn: Option<UntypedInfoId>,
     pub rot_spawn_chance: Option<u8>,
     pub smoking_result: Option<UntypedInfoId>,
 
     // Duration as String or u16
-    pub spoils_in: Option<serde_json::Value>,
+    pub spoils_in: Option<JsonValue>,
 
     #[serde(default)]
     pub stim: i8,
@@ -245,7 +246,7 @@ pub struct Gun {
     pub handling: Option<u8>,
 
     #[serde(default)]
-    pub magazines: Arc<[serde_json::Value]>,
+    pub magazines: Arc<[JsonValue]>,
 
     pub min_cycle_recoil: Option<u16>,
 
@@ -253,9 +254,9 @@ pub struct Gun {
     pub min_strength: u8,
 
     #[serde(default)]
-    pub modes: Arc<[serde_json::Value]>,
+    pub modes: Arc<[JsonValue]>,
 
-    pub ranged_damage: Option<serde_json::Value>,
+    pub ranged_damage: Option<JsonValue>,
     pub reload: Option<u16>,
     pub reload_noise: Option<Arc<str>>,
     pub reload_noise_volume: Option<u8>,
@@ -267,7 +268,7 @@ pub struct Gun {
     pub sight_dispersion: Option<u16>,
 
     #[serde(default)]
-    pub valid_mod_locations: Arc<[serde_json::Value]>,
+    pub valid_mod_locations: Arc<[JsonValue]>,
 
     #[serde(flatten)]
     pub common: Arc<CommonItemInfo>,
@@ -285,7 +286,7 @@ pub struct Gunmod {
     pub mod_targets: Arc<[String]>,
     pub install_time: Duration,
 
-    pub add_mod: Option<Arc<[serde_json::Value]>>,
+    pub add_mod: Option<Arc<[JsonValue]>>,
 
     #[serde(default)]
     pub aim_speed_modifier: i8,
@@ -305,21 +306,21 @@ pub struct Gunmod {
     pub ammo_modifier: Option<Arc<[String]>>,
     pub consume_chance: Option<u16>,
     pub consume_divisor: Option<u16>,
-    pub damage_modifier: Option<serde_json::Value>,
+    pub damage_modifier: Option<JsonValue>,
 
     pub sight_dispersion: Option<u16>,
 
     /// In degrees
     pub field_of_view: Option<u16>,
 
-    pub gun_data: Option<HashMap<String, serde_json::Value>>,
+    pub gun_data: Option<HashMap<String, JsonValue>>,
 
     #[serde(default)]
     pub integral_volume: Volume,
     #[serde(default)]
     pub integral_weight: Mass,
 
-    pub mode_modifier: Option<Arc<[serde_json::Value]>>,
+    pub mode_modifier: Option<Arc<[JsonValue]>>,
     pub overwrite_min_cycle_recoil: Option<u16>,
 
     pub range_multiplier: Option<f32>,
@@ -328,13 +329,13 @@ pub struct Gunmod {
     pub weight_multiplier: Option<f32>,
 
     #[serde(default)]
-    pub ammo_effects: Vec<serde_json::Value>,
+    pub ammo_effects: Vec<JsonValue>,
 
     #[serde(default)]
-    pub acceptable_ammo: Vec<serde_json::Value>,
+    pub acceptable_ammo: Vec<JsonValue>,
 
     #[serde(default)]
-    pub magazine_adaptor: Vec<serde_json::Value>,
+    pub magazine_adaptor: Vec<JsonValue>,
 
     #[serde(flatten)]
     pub common: Arc<CommonItemInfo>,
@@ -388,7 +389,7 @@ pub struct Tool {
     pub charge_factor: Option<u8>,
 
     #[serde(default)]
-    pub charged_qualities: Arc<[serde_json::Value]>,
+    pub charged_qualities: Arc<[JsonValue]>,
 
     #[serde(default)]
     pub initial_charges: u16,
@@ -401,7 +402,7 @@ pub struct Tool {
     pub revert_to: Option<Arc<str>>,
     pub revert_msg: Option<Arc<str>>,
     pub sub: Option<UntypedInfoId>,
-    pub variables: Option<HashMap<String, serde_json::Value>>,
+    pub variables: Option<HashMap<String, JsonValue>>,
 
     #[serde(flatten)]
     pub common: Arc<CommonItemInfo>,
@@ -437,13 +438,13 @@ impl ItemWithCommonInfo for ToolClothing {
 
 #[derive(Debug, Deserialize)]
 pub struct Toolmod {
-    pub pocket_mods: Option<Arc<[HashMap<String, serde_json::Value>]>>,
+    pub pocket_mods: Option<Arc<[HashMap<String, JsonValue>]>>,
 
     #[serde(default)]
-    pub acceptable_ammo: Vec<serde_json::Value>,
+    pub acceptable_ammo: Vec<JsonValue>,
 
     #[serde(default)]
-    pub magazine_adaptor: Vec<serde_json::Value>,
+    pub magazine_adaptor: Vec<JsonValue>,
 
     #[serde(flatten)]
     pub common: Arc<CommonItemInfo>,
@@ -630,10 +631,10 @@ pub struct CommonItemInfo {
     pub category: Option<Arc<str>>,
 
     // example: { "price": 0.7, "damage": { "damage_type": "bullet", "amount": 0.9 }, "dispersion": 1.1 }
-    pub proportional: Option<serde_json::Value>,
+    pub proportional: Option<JsonValue>,
 
     // example: { "damage": { "damage_type": "bullet", "amount": -1, "armor_penetration": 2 } }
-    pub relative: Option<serde_json::Value>,
+    pub relative: Option<JsonValue>,
 
     pub count: Option<u32>,
     pub stack_size: Option<u8>,
@@ -643,16 +644,16 @@ pub struct CommonItemInfo {
     pub loudness: Option<u16>,
 
     pub volume: Option<Volume>,
-    pub integral_volume: Option<serde_json::Value>,
+    pub integral_volume: Option<JsonValue>,
 
     #[serde(rename = "weight")]
     pub mass: Option<Mass>,
 
     #[serde(rename = "integral_weight")]
-    pub integral_mass: Option<serde_json::Value>,
+    pub integral_mass: Option<JsonValue>,
 
     pub longest_side: Option<Arc<str>>,
-    pub integral_longest_side: Option<serde_json::Value>,
+    pub integral_longest_side: Option<JsonValue>,
 
     pub price: Option<Price>,
     pub price_postapoc: Option<Price>,
@@ -660,69 +661,69 @@ pub struct CommonItemInfo {
     pub bashing: Option<u16>,
     pub cutting: Option<u16>,
     pub to_hit: Option<ToHit>,
-    pub variant_type: Option<serde_json::Value>,
-    pub variants: Option<serde_json::Value>,
+    pub variant_type: Option<JsonValue>,
+    pub variants: Option<JsonValue>,
     pub container: Option<Arc<str>>,
 
     #[serde(default)]
     pub sealed: bool,
 
-    pub emits: Option<serde_json::Value>,
+    pub emits: Option<JsonValue>,
     pub explode_in_fire: Option<bool>,
-    pub solar_efficiency: Option<serde_json::Value>,
-    pub ascii_picture: Option<serde_json::Value>,
-    pub thrown_damage: Option<serde_json::Value>,
-    pub repairs_like: Option<serde_json::Value>,
-    pub weapon_category: Option<serde_json::Value>,
-    pub degradation_multiplier: Option<serde_json::Value>,
+    pub solar_efficiency: Option<JsonValue>,
+    pub ascii_picture: Option<JsonValue>,
+    pub thrown_damage: Option<JsonValue>,
+    pub repairs_like: Option<JsonValue>,
+    pub weapon_category: Option<JsonValue>,
+    pub degradation_multiplier: Option<JsonValue>,
 
     pub color: Option<Arc<str>>,
     pub material: Option<MaybeFlatVec<Material>>,
     pub material_thickness: Option<f32>,
-    pub chat_topics: Option<serde_json::Value>,
+    pub chat_topics: Option<JsonValue>,
 
     #[serde(default)]
     pub phase: CddaPhase,
 
-    pub magazines: Option<serde_json::Value>,
-    pub min_skills: Option<serde_json::Value>,
-    pub explosion: Option<serde_json::Value>,
+    pub magazines: Option<JsonValue>,
+    pub min_skills: Option<JsonValue>,
+    pub explosion: Option<JsonValue>,
     pub flags: Flags,
-    pub faults: Option<serde_json::Value>,
+    pub faults: Option<JsonValue>,
 
     #[serde(default)]
     pub qualities: Vec<ItemQuality>,
 
     #[serde(default)]
-    pub repairs_with: Vec<serde_json::Value>,
+    pub repairs_with: Vec<JsonValue>,
 
     // example: { "effects": [ "RECYCLED" ] }
-    pub extend: Option<serde_json::Value>,
+    pub extend: Option<JsonValue>,
 
     // example: { "effects": [ "NEVER_MISFIRES" ], "flags": [ "IRREPLACEABLE_CONSUMABLE" ] }
-    pub delete: Option<serde_json::Value>,
+    pub delete: Option<JsonValue>,
 
-    pub properties: Option<serde_json::Value>,
-    pub techniques: Option<serde_json::Value>,
+    pub properties: Option<JsonValue>,
+    pub techniques: Option<JsonValue>,
     pub max_charges: Option<u16>,
     pub initial_charges: Option<u16>,
-    pub use_action: Option<serde_json::Value>,
-    pub countdown_interval: Option<serde_json::Value>,
-    pub countdown_destroy: Option<serde_json::Value>,
-    pub countdown_action: Option<serde_json::Value>,
+    pub use_action: Option<JsonValue>,
+    pub countdown_interval: Option<JsonValue>,
+    pub countdown_destroy: Option<JsonValue>,
+    pub countdown_action: Option<JsonValue>,
     pub looks_like: Option<UntypedInfoId>,
-    pub conditional_names: Option<serde_json::Value>,
-    pub armor_data: Option<serde_json::Value>,
-    pub pet_armor_data: Option<serde_json::Value>,
-    pub gun_data: Option<serde_json::Value>,
-    pub bionic_data: Option<serde_json::Value>,
-    pub seed_data: Option<serde_json::Value>,
-    pub relic_data: Option<serde_json::Value>,
-    pub milling: Option<serde_json::Value>,
-    pub gunmod_data: Option<serde_json::Value>,
+    pub conditional_names: Option<JsonValue>,
+    pub armor_data: Option<JsonValue>,
+    pub pet_armor_data: Option<JsonValue>,
+    pub gun_data: Option<JsonValue>,
+    pub bionic_data: Option<JsonValue>,
+    pub seed_data: Option<JsonValue>,
+    pub relic_data: Option<JsonValue>,
+    pub milling: Option<JsonValue>,
+    pub gunmod_data: Option<JsonValue>,
     pub pocket_data: Option<Vec<Arc<PocketInfo>>>,
-    pub armor: Option<Vec<serde_json::Value>>,
-    pub snippet_category: Option<serde_json::Value>,
+    pub armor: Option<Vec<JsonValue>>,
+    pub snippet_category: Option<JsonValue>,
 
     // Plenty of fields already availalble
     #[serde(flatten)]
@@ -907,12 +908,12 @@ pub struct PocketInfo {
     #[serde(default)]
     pub item_restriction: Vec<InfoId<CommonItemInfo>>,
 
-    pub activity_noise: Option<serde_json::Value>,
-    pub allowed_speedloaders: Option<serde_json::Value>,
+    pub activity_noise: Option<JsonValue>,
+    pub allowed_speedloaders: Option<JsonValue>,
     pub ammo_restriction: Option<HashMap<Arc<str>, u32>>,
     pub default_magazine: Option<Arc<str>>,
     pub extra_encumbrance: Option<u8>,
-    pub material_restriction: Option<serde_json::Value>,
+    pub material_restriction: Option<JsonValue>,
     pub moves: Option<u16>,
     pub ripoff: Option<u8>,
     pub sealed_data: Option<SealedData>,
@@ -959,24 +960,26 @@ pub struct SealedData {
 #[cfg(test)]
 mod item_tests {
     use super::*;
+    use serde_json::from_str as from_json_str;
+
     #[test]
     fn ghee_works() {
         let json = include_str!("test_ghee.json");
-        let result = serde_json::from_str::<CommonItemInfo>(json);
+        let result = from_json_str::<CommonItemInfo>(json);
         assert!(result.is_ok(), "{result:?}");
     }
 
     #[test]
     fn mc_jian_works() {
         let json = include_str!("test_mc_jian.json");
-        let result = serde_json::from_str::<CommonItemInfo>(json);
+        let result = from_json_str::<CommonItemInfo>(json);
         assert!(result.is_ok(), "{result:?}");
     }
 
     #[test]
     fn pocket_works() {
         let json = include_str!("test_pocket.json");
-        let result = serde_json::from_str::<PocketInfo>(json);
+        let result = from_json_str::<PocketInfo>(json);
         assert!(result.is_ok(), "{result:?}");
     }
 }

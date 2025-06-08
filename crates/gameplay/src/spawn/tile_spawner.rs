@@ -23,6 +23,7 @@ use either::Either;
 use gameplay_cdda::{ActiveSav, Error, Infos, ObjectCategory, TileVariant};
 use gameplay_location::{LevelOffset, Pos, PosOffset, StairsDown, StairsUp};
 use hud::{BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR};
+use std::f32::consts::{FRAC_PI_4, TAU};
 use std::sync::{Arc, LazyLock};
 use units::{Mass, Volume};
 
@@ -573,8 +574,8 @@ impl<'w> TileSpawner<'w, '_> {
         let light_transform = Transform::from_matrix(Mat4::from_euler(
             EulerRot::ZYX,
             0.0,
-            -0.18 * std::f32::consts::TAU,
-            -std::f32::consts::FRAC_PI_4,
+            -0.18 * TAU,
+            -FRAC_PI_4,
         ));
         //trace!("{:?}", (&light_transform);
         self.commands.spawn((

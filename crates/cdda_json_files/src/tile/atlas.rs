@@ -1,5 +1,6 @@
 use crate::tile::tile_info::TileInfo;
 use serde::Deserialize;
+use serde_json::Value as JsonValue;
 use std::sync::Arc;
 
 #[derive(Debug, Deserialize)]
@@ -12,7 +13,7 @@ pub struct CddaAtlas {
     pub sprite_offset_y: Option<i8>,
     pub tiles: Vec<TileInfo>,
 
-    pub ascii: Option<serde_json::Value>,
+    pub ascii: Option<JsonValue>,
 
     #[serde(rename = "//")]
     pub comment: Option<Arc<str>>,

@@ -2,6 +2,7 @@ use crate::MapMemoryAsset;
 use bevy::asset::{AssetLoader, LoadContext, io::Reader};
 use bevy::prelude::error;
 use either::Either;
+use serde_json::from_slice as from_json_slice;
 use std::str::from_utf8;
 
 #[derive(Default)]
@@ -27,7 +28,7 @@ impl AssetLoader for MapMemoryLoader {
             })
             .map_err(Either::Left)?;
 
-        let map_memory = serde_json::from_slice::<MapMemoryAsset>(&bytes)
+        let map_memory = from_json_slice::<MapMemoryAsset>(&bytes)
             .map_err(|e| {
                 error!(
                     "Map memory json loading error: {:?} {:?} {e:?}",

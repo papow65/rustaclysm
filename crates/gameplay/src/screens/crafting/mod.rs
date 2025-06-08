@@ -9,3 +9,4 @@ pub(crate) use self::plugin::CraftingScreenPlugin;
 use self::components::{
     AlternativeSituation, ComponentSituation, DetectedQuantity, QualitySituation, ToolSituation,
 };
+use self::resource::CraftingScreen;

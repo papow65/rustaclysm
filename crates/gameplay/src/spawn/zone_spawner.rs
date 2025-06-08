@@ -1,6 +1,6 @@
-use crate::spawn::{TileSpawner, VisibleRegion};
 use crate::{
-    Explored, Focus, LastSeen, MissingAsset, ObjectName, SeenFrom, SpawnZoneLevel, ZoneLevelIds,
+    Explored, Focus, LastSeen, MissingAsset, ObjectName, SeenFrom, SpawnZoneLevel, TileSpawner,
+    ZoneLevelIds, spawn::VisibleRegion,
 };
 use application_state::ApplicationState;
 use bevy::ecs::system::SystemParam;

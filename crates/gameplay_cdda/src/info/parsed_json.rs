@@ -6,6 +6,10 @@ use cdda_json_files::UntypedInfoId;
 use fastrand::alphabetic;
 use glob::glob;
 use serde::Deserialize;
+use serde_json::{
+    Map as JsonMap, Value as JsonValue, from_str as from_json_str,
+    to_string_pretty as to_string_pretty_json,
+};
 use std::fs::{File, read_to_string};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -19,22 +23,22 @@ struct Typed {
     type_id: TypeId,
 
     #[serde(flatten)]
-    fields: serde_json::Map<String, serde_json::Value>,
+    fields: JsonMap<String, JsonValue>,
 }
 
 #[derive(Debug)]
 enum Proto {
     Primary {
-        fields: Arc<serde_json::Map<String, serde_json::Value>>,
+        fields: Arc<JsonMap<String, JsonValue>>,
         alias_ids: Vec<UntypedInfoId>,
     },
     Alias {
-        fields: Arc<serde_json::Map<String, serde_json::Value>>,
+        fields: Arc<JsonMap<String, JsonValue>>,
     },
 }
 
 impl Proto {
-    const fn fields(&self) -> &Arc<serde_json::Map<String, serde_json::Value>> {
+    const fn fields(&self) -> &Arc<JsonMap<String, JsonValue>> {
         match self {
             Self::Primary { fields, .. } | Self::Alias { fields } => fields,
         }
@@ -43,7 +47,7 @@ impl Proto {
 
 #[derive(Debug)]
 pub(super) struct Enriched {
-    pub(super) fields: serde_json::Map<String, serde_json::Value>,
+    pub(super) fields: JsonMap<String, JsonValue>,
     pub(super) alias_ids: Vec<UntypedInfoId>,
 }
 
@@ -116,11 +120,11 @@ impl ParsedJson {
         //trace!("Parsing {json_path:?}...");
         let file_contents = read_to_string(json_path)?;
 
-        let contents = match serde_json::from_str::<Vec<Typed>>(file_contents.as_str()) {
+        let contents = match from_json_str::<Vec<Typed>>(file_contents.as_str()) {
             Ok(contents) => contents,
             Err(error) => {
                 // Maybe is one of the few of non-list files?
-                let Ok(content) = serde_json::from_str::<Typed>(file_contents.as_str()) else {
+                let Ok(content) = from_json_str::<Typed>(file_contents.as_str()) else {
                     // The first match attempt was the most likely to succeed, so its error is most relevant.
                     return Err(error.into());
                 };
@@ -227,7 +231,7 @@ impl ParsedJson {
 
         if let Ok(directory_name) = env::var("DUMP_ENRICHED") {
             for (type_id, info_map) in &enriched_json_infos {
-                let json_string = serde_json::to_string_pretty(
+                let json_string = to_string_pretty_json(
                     &info_map
                         .values()
                         .map(|enriched| &enriched.fields)
@@ -246,7 +250,7 @@ impl ParsedJson {
 }
 
 fn load_ids(
-    mut content: serde_json::Map<String, serde_json::Value>,
+    mut content: JsonMap<String, JsonValue>,
     by_type: &mut HashMap<UntypedInfoId, Proto>,
     type_id: TypeId,
     json_path: &Path,
@@ -295,7 +299,7 @@ fn load_ids(
     if type_id != TypeId::VehiclePartMigration {
         content.insert(
             String::from("id"),
-            serde_json::Value::String(String::from(&*first_id.fallback_name())),
+            JsonValue::String(String::from(&*first_id.fallback_name())),
         );
     }
     content.remove("alias");
@@ -319,7 +323,7 @@ fn load_ids(
 }
 
 fn id_values(
-    content: &serde_json::Map<String, serde_json::Value>,
+    content: &JsonMap<String, JsonValue>,
     type_id: TypeId,
     json_path: &Path,
 ) -> Vec<UntypedInfoId> {
@@ -384,13 +388,13 @@ fn id_values(
     };
 
     match id {
-        serde_json::Value::String(id) => {
+        JsonValue::String(id) => {
             vec![UntypedInfoId::new_suffix(id, id_suffix.or(from_variant))]
         }
-        serde_json::Value::Array(ids_array) if !ids_array.is_empty() => ids_array
+        JsonValue::Array(ids_array) if !ids_array.is_empty() => ids_array
             .iter()
             .filter_map(|id| match id {
-                serde_json::Value::String(id) => Some(UntypedInfoId::new_suffix(id, id_suffix)),
+                JsonValue::String(id) => Some(UntypedInfoId::new_suffix(id, id_suffix)),
                 unexpected => {
                     error!(
                         "Skipping non-string id for {type_id:?} in {json_path:?}: {unexpected:?}"
@@ -407,18 +411,18 @@ fn id_values(
 }
 
 fn alias_values(
-    content: &serde_json::Map<String, serde_json::Value>,
+    content: &JsonMap<String, JsonValue>,
     type_id: TypeId,
     json_path: &Path,
 ) -> Vec<UntypedInfoId> {
     match content.get("alias") {
-        Some(serde_json::Value::String(alias)) => {
+        Some(JsonValue::String(alias)) => {
             vec![UntypedInfoId::new(alias.as_str())]
         }
-        Some(serde_json::Value::Array(aliases)) if !aliases.is_empty() => aliases
+        Some(JsonValue::Array(aliases)) if !aliases.is_empty() => aliases
             .iter()
             .filter_map(|alias| match alias {
-                serde_json::Value::String(alias) => Some(UntypedInfoId::new(alias.as_str())),
+                JsonValue::String(alias) => Some(UntypedInfoId::new(alias.as_str())),
                 unexpected => {
                     error!(
                         "Skipping non-string alias for {type_id:?} in {json_path:?}: {unexpected:?}"

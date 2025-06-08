@@ -5,6 +5,7 @@ use crate::{
 use bevy_platform::collections::HashMap;
 use serde::de::Error;
 use serde::{Deserialize, Deserializer};
+use serde_json::Value as JsonValue;
 use std::sync::{Arc, Mutex};
 use strum::VariantArray as _;
 
@@ -37,10 +38,10 @@ pub struct CddaItem {
     pub contents: Option<CddaContainer>,
 
     // Sometilmes Vec<CddaItem>, sometimes HashMap<String, CddaItem>
-    pub components: Option<serde_json::Value>,
+    pub components: Option<JsonValue>,
 
     pub is_favorite: Option<bool>,
-    pub relic_data: Option<serde_json::Value>,
+    pub relic_data: Option<JsonValue>,
     pub damaged: Option<i64>,
     pub current_phase: Option<u8>,
 
@@ -52,11 +53,11 @@ pub struct CddaItem {
     pub item_counter: Option<u8>,
     pub recipe_charges: Option<u8>,
     pub poison: Option<u8>,
-    pub burnt: Option<serde_json::Value>,
-    pub craft_data: Option<serde_json::Value>,
+    pub burnt: Option<JsonValue>,
+    pub craft_data: Option<JsonValue>,
     pub dropped_from: Option<Arc<str>>,
     pub degradation: Option<u32>,
-    pub link_data: Option<HashMap<Arc<str>, serde_json::Value>>,
+    pub link_data: Option<HashMap<Arc<str>, JsonValue>>,
     pub invlet: Option<u8>,
 }
 
@@ -126,10 +127,10 @@ pub struct CddaPocket {
     pub allowed: bool,
 
     #[expect(unused)]
-    favorite_settings: Option<serde_json::Value>,
+    favorite_settings: Option<JsonValue>,
 
     #[expect(unused)]
-    no_rigid: Option<serde_json::Value>,
+    no_rigid: Option<JsonValue>,
 }
 
 fn pocket_type_from_index<'de, D: Deserializer<'de>>(
@@ -163,10 +164,12 @@ pub enum Number {
 #[cfg(test)]
 mod container_tests {
     use super::*;
+    use serde_json::from_str as from_json_str;
+
     #[test]
     fn it_works() {
         let json = include_str!("test_container.json");
-        let result = serde_json::from_str::<CddaContainer>(json);
+        let result = from_json_str::<CddaContainer>(json);
         assert!(result.is_ok(), "{result:?}");
     }
 }

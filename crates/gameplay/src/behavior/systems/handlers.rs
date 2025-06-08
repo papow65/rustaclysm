@@ -4,8 +4,8 @@ use crate::{
     Actor, ActorEvent, Amount, Clock, ContainerLimits, Corpse, CorpseEvent, CorpseRaise, Damage,
     Faction, Fragment, GameplayScreenState, Healing, Health, Item, ItemHierarchy, Life, Limited,
     LocalTerrain, MessageWriter, ObjectName, Obstacle, Phrase, Player, Shared, Stamina,
-    StandardIntegrity, Subject, TerrainEvent, Toggle, VisualizationUpdate, WalkingMode,
-    spawn::TileSpawner,
+    StandardIntegrity, Subject, TerrainEvent, TileSpawner, Toggle, VisualizationUpdate,
+    WalkingMode,
 };
 use bevy::ecs::schedule::{IntoScheduleConfigs as _, ScheduleConfigs};
 use bevy::ecs::system::ScheduleSystem;
@@ -17,6 +17,7 @@ use cdda_json_files::{FurnitureInfo, InfoId, TerrainInfo};
 use either::Either;
 use gameplay_cdda::Infos;
 use gameplay_location::Pos;
+use std::f32::consts::FRAC_PI_2;
 use std::time::Instant;
 use units::Duration;
 use util::log_if_slow;
@@ -118,8 +119,8 @@ pub(in super::super) fn update_damaged_characters(
                 .push(victim)
                 .send_warn();
 
-            transform.rotation = Quat::from_rotation_y(std::f32::consts::FRAC_PI_2)
-                * Quat::from_rotation_x(-std::f32::consts::FRAC_PI_2);
+            transform.rotation =
+                Quat::from_rotation_y(FRAC_PI_2) * Quat::from_rotation_x(-FRAC_PI_2);
             commands
                 .entity(damage.actor_entity)
                 .insert((

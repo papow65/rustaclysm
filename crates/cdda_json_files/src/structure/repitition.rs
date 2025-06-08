@@ -2,6 +2,7 @@ use crate::{RequiredLinkedLater, TerrainInfo};
 use bevy_log::error;
 use serde::Deserialize;
 use serde::de::{Deserializer, Error as _};
+use serde_json::Value as JsonValue;
 
 #[derive(Debug, Deserialize)]
 pub struct CddaAmount<T> {
@@ -57,7 +58,7 @@ where
     T: Deserialize<'de>,
 {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let value = serde_json::Value::deserialize(deserializer)?;
+        let value = JsonValue::deserialize(deserializer)?;
         match Single::deserialize(value.clone()) {
             Ok(single) => Ok(Self::Single(single)),
             Err(single_error) => match CddaAmount::deserialize(value) {

@@ -1,6 +1,7 @@
 use crate::{CddaItem, Repetition, RequiredLinkedLater, UntypedInfoId, VehiclePartInfo};
 use bevy_platform::collections::HashMap;
 use serde::Deserialize;
+use serde_json::Value as JsonValue;
 use std::sync::Arc;
 
 #[expect(clippy::struct_excessive_bools)]
@@ -45,21 +46,21 @@ pub struct CddaVehicle {
     pub name: Arc<str>,
     pub owner: Arc<str>,
     pub old_owner: Arc<str>,
-    pub theft_time: Option<serde_json::Value>,
+    pub theft_time: Option<JsonValue>,
     pub parts: Vec<CddaVehiclePart>,
 
     /// May contain "APPLICANCE"
     pub tags: Vec<String>,
 
-    pub fuel_remainder: Option<serde_json::Value>,
-    pub fuel_used_last_turn: Option<serde_json::Value>,
-    pub labels: Vec<serde_json::Value>,
+    pub fuel_remainder: Option<JsonValue>,
+    pub fuel_used_last_turn: Option<JsonValue>,
+    pub labels: Vec<JsonValue>,
 
     // TODO for example:
     // {"point": [1,-1],"zone": {"name": "Loot: P.Food","type": "LOOT_PFOOD","faction": "your_followers",
     // "invert": false,"enabled": false,"is_vehicle": true,"is_personal":false,"cached_shift":[0,0,0],
     // "start":[-7803,2390,0],"end":[-7803,2390,0]}}
-    pub zones: Vec<HashMap<String, serde_json::Value>>,
+    pub zones: Vec<HashMap<String, JsonValue>>,
 
     pub other_tow_point: (u8, u8, u8),
     pub is_locked: bool,
@@ -92,8 +93,8 @@ pub struct CddaVehicle {
     #[serde(default)]
     pub vehicle_noise: Option<u8>,
 
-    pub in_deep_water: Option<serde_json::Value>,
-    pub precollision_on: Option<serde_json::Value>,
+    pub in_deep_water: Option<JsonValue>,
+    pub precollision_on: Option<JsonValue>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -131,19 +132,21 @@ pub struct CddaVehiclePart {
     pub target_second_z: Option<i16>,
     pub ammo_pref: Arc<str>,
 
-    pub tools: Option<serde_json::Value>,
-    pub salvageable: Option<serde_json::Value>,
-    pub locked: Option<serde_json::Value>,
-    pub last_disconnected: Option<serde_json::Value>,
+    pub tools: Option<JsonValue>,
+    pub salvageable: Option<JsonValue>,
+    pub locked: Option<JsonValue>,
+    pub last_disconnected: Option<JsonValue>,
 }
 
 #[cfg(test)]
 mod vehicle_tests {
     use super::*;
+    use serde_json::from_str as from_json_str;
+
     #[test]
     fn it_works() {
         let json = include_str!("test_vehicle.json");
-        let result = serde_json::from_str::<CddaVehicle>(json);
+        let result = from_json_str::<CddaVehicle>(json);
         assert!(result.is_ok(), "{result:?}");
     }
 }

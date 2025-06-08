@@ -47,10 +47,12 @@ impl ItemQuality {
 #[cfg(test)]
 mod quality_tests {
     use super::*;
+    use serde_json::from_str as from_json_str;
+
     #[test]
     fn it_works() {
         let json = include_str!("test_lockpick.json");
-        let result = serde_json::from_str::<Quality>(json);
+        let result = from_json_str::<Quality>(json);
         assert!(result.is_ok(), "{result:?}");
     }
 }

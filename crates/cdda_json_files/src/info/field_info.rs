@@ -1,6 +1,7 @@
 use crate::{Ignored, InfoId, ItemName, UntypedInfoId};
 use bevy_platform::collections::HashMap;
 use serde::Deserialize;
+use serde_json::Value as JsonValue;
 use std::sync::Arc;
 
 #[derive(Debug, Deserialize)]
@@ -28,7 +29,7 @@ pub struct FieldInfo {
     pub has_elec: Option<bool>,
     pub has_fire: Option<bool>,
     pub has_fume: Option<bool>,
-    pub immunity_data: Option<serde_json::Value>,
+    pub immunity_data: Option<JsonValue>,
 
     #[serde(default)]
     pub is_splattering: bool,
@@ -36,7 +37,7 @@ pub struct FieldInfo {
     pub legacy_enum_id: Option<u8>,
     pub legacy_make_rubble: Option<bool>,
     pub mopsafe: Option<bool>,
-    pub npc_complain: Option<serde_json::Value>,
+    pub npc_complain: Option<JsonValue>,
     pub outdoor_age_speedup: Option<Arc<str>>,
     pub percent_spread: Option<u8>,
     pub phase: Option<Arc<str>>,
@@ -44,9 +45,9 @@ pub struct FieldInfo {
     pub underwater_age_speedup: Option<Arc<str>>,
     pub wandering_field: Option<Arc<str>>,
 
-    pub bash: Option<serde_json::Value>,
+    pub bash: Option<JsonValue>,
     pub decrease_intensity_on_contact: Option<bool>,
-    pub immune_mtypes: Option<Vec<serde_json::Value>>,
+    pub immune_mtypes: Option<Vec<JsonValue>>,
 
     #[serde(flatten)]
     _ignored: Ignored<Self>,
@@ -68,7 +69,7 @@ pub struct IntensityLevel {
 
     #[expect(unused)]
     #[serde(flatten)]
-    extra: HashMap<Arc<str>, serde_json::Value>,
+    extra: HashMap<Arc<str>, JsonValue>,
 }
 
 const fn get_true() -> bool {

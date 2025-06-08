@@ -1,5 +1,6 @@
 use bevy_log::error;
 use serde::de::{Deserialize, Deserializer, Error as _, SeqAccess, Visitor};
+use serde_json::Value as JsonValue;
 use std::{fmt, sync::Arc};
 
 /// A player's memory of terrain on 8x8 suzones or 4x4 zones. Corresponds to a map memory ('.mmr') file in CDDA.
@@ -132,10 +133,10 @@ impl<'de> Visitor<'de> for TileMemoryVisitor {
     where
         A: SeqAccess<'de>,
     {
-        let first: Option<serde_json::Value> = seq.next_element()?;
+        let first: Option<JsonValue> = seq.next_element()?;
 
         Ok(match first {
-            Some(serde_json::Value::String(type_id)) => TileMemory::Old {
+            Some(JsonValue::String(type_id)) => TileMemory::Old {
                 type_id: if type_id.is_empty() {
                     None
                 } else {
@@ -152,7 +153,7 @@ impl<'de> Visitor<'de> for TileMemoryVisitor {
                     .ok_or_else(|| A::Error::custom("Missing symbol"))?,
                 amount: seq.next_element()?.unwrap_or(1),
             },
-            Some(serde_json::Value::Number(amount)) => TileMemory::New {
+            Some(JsonValue::Number(amount)) => TileMemory::New {
                 amount: amount
                     .as_u64()
                     .ok_or_else(|| A::Error::custom("Weird amount"))? as u8,
@@ -181,10 +182,12 @@ impl<'de> Visitor<'de> for TileMemoryVisitor {
 #[cfg(test)]
 mod container_tests {
     use super::*;
+    use serde_json::from_str as from_json_str;
+
     #[test]
     fn it_works() {
         let json = include_str!("test_tile_memory.json");
-        let result = serde_json::from_str::<[TileMemory; 3]>(json);
+        let result = from_json_str::<[TileMemory; 3]>(json);
         assert!(
             matches!(
                 &result,

@@ -2,13 +2,14 @@ use crate::Recipe;
 use bevy_log::error;
 use bevy_platform::collections::HashMap;
 use serde::{Deserialize, Deserializer};
+use serde_json::Value as JsonValue;
 use std::any::{TypeId, type_name};
 use std::sync::{Arc, Mutex, OnceLock};
 use std::{collections::BTreeSet, marker::PhantomData};
 
 #[derive(Debug)]
 pub struct Ignored<T> {
-    _fields: HashMap<Arc<str>, serde_json::Value>,
+    _fields: HashMap<Arc<str>, JsonValue>,
     _phantom: PhantomData<T>,
 }
 
@@ -21,8 +22,7 @@ impl<'de, T: 'static> Deserialize<'de> for Ignored<T> {
             OnceLock::new();
         let all_unused_fields = ALL_UNUSED_FIELDS.get_or_init(|| Mutex::new(HashMap::default()));
 
-        let unused_fields: HashMap<Arc<str>, serde_json::Value> =
-            Deserialize::deserialize(deserializer)?;
+        let unused_fields: HashMap<Arc<str>, JsonValue> = Deserialize::deserialize(deserializer)?;
         let new_ignored_fields = unused_fields
             .iter()
             .filter(|(key, _)| {
@@ -70,13 +70,13 @@ impl<T> Default for Ignored<T> {
     }
 }
 
-const fn variant_name(value: &serde_json::Value) -> &'static str {
+const fn variant_name(value: &JsonValue) -> &'static str {
     match value {
-        serde_json::Value::Null => "null",
-        serde_json::Value::Bool(_) => "bool",
-        serde_json::Value::Number(_) => "number",
-        serde_json::Value::String(_) => "string",
-        serde_json::Value::Array(_) => "array",
-        serde_json::Value::Object(_) => "object",
+        JsonValue::Null => "null",
+        JsonValue::Bool(_) => "bool",
+        JsonValue::Number(_) => "number",
+        JsonValue::String(_) => "string",
+        JsonValue::Array(_) => "array",
+        JsonValue::Object(_) => "object",
     }
 }

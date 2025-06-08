@@ -1,5 +1,6 @@
 use crate::{CommonItemInfo, Flags, Ignored, InfoId, VehiclePartInfo};
 use serde::Deserialize;
+use serde_json::Value as JsonValue;
 use std::sync::Arc;
 
 #[derive(Debug, Deserialize)]
@@ -11,7 +12,7 @@ pub struct ItemMigration {
     pub variant: Option<Arc<str>>,
 
     pub charges: Option<u16>,
-    pub contents: Option<Vec<serde_json::Value>>,
+    pub contents: Option<Vec<JsonValue>>,
     pub flags: Flags,
     pub reset_item_vars: Option<bool>,
     pub sealed: Option<bool>,

@@ -4,7 +4,7 @@ use crate::{
     Explored, Faction, Healing, HealingDuration, InstructionQueue, Item, ItemAction as _,
     ItemHierarchy, Life, MessageWriter, MoveItem, Peek, Pickup, PlannedAction, Player,
     PlayerActionState, Pulp, Sleep, Smash, Stamina, StartCraft, Stay, Step, SubzoneLevelEntities,
-    TerrainEvent, Timeouts, Toggle, Unwield, Wield, spawn::TileSpawner,
+    TerrainEvent, TileSpawner, Timeouts, Toggle, Unwield, Wield,
 };
 use bevy::ecs::schedule::{IntoScheduleConfigs as _, ScheduleConfigs};
 use bevy::ecs::system::{ScheduleSystem, SystemId};

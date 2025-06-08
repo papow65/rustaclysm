@@ -1,6 +1,7 @@
 use crate::{SavPath, WorldPath};
 use bevy::prelude::{Resource, debug};
 use cdda_json_files::Sav;
+use serde_json::from_str as from_json_str;
 use std::{fs::read_to_string, path::PathBuf};
 use util::AssetPaths;
 
@@ -25,7 +26,7 @@ impl ActiveSav {
                 debug!("Loading {}...", sav_path.display());
             })
             .map(|s| String::from(s.split_at(s.find('\n').expect("Non-JSON first line")).1))
-            .map(|s| serde_json::from_str::<Sav>(s.as_str()))
+            .map(|s| from_json_str::<Sav>(s.as_str()))
             .expect(".sav file could not be read")
             .expect("Loading sav file failed");
         Self { sav_path, sav }

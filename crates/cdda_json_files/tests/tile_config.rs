@@ -2,10 +2,11 @@
 
 use cdda_json_files::CddaTileConfig;
 use reqwest::blocking::get as get_request;
+use serde_json::from_slice as from_json_slice;
 use std::fs::read;
 
 fn load(bytes: &[u8]) {
-    let result = serde_json::from_slice::<CddaTileConfig>(bytes);
+    let result = from_json_slice::<CddaTileConfig>(bytes);
     assert!(result.is_ok(), "{result:?}");
 }
 

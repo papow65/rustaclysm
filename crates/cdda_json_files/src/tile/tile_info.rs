@@ -2,7 +2,9 @@ use crate::{MaybeFlatVec, SpriteNumber, UntypedInfoId};
 use bevy_log::warn;
 use bevy_platform::collections::HashMap;
 use either::Either;
+use fastrand::choice as rand_choice;
 use serde::Deserialize;
+use serde_json::Value as JsonValue;
 
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -33,7 +35,7 @@ impl SpriteNumbers {
     #[must_use]
     pub fn random(&self) -> Option<SpriteNumber> {
         match self {
-            Self::MaybeFlat(m) => fastrand::choice(m.0.iter()).copied(),
+            Self::MaybeFlat(m) => rand_choice(m.0.iter()).copied(),
             Self::Weighted(w) => {
                 let mut choices = Vec::new();
                 for numbers in w {
@@ -43,7 +45,7 @@ impl SpriteNumbers {
                         }
                     }
                 }
-                fastrand::choice(choices.iter()).copied()
+                rand_choice(choices.iter()).copied()
             }
         }
     }
@@ -77,7 +79,7 @@ struct CddaBasicTile<T> {
 
     #[expect(unused)]
     #[serde(rename = "//")]
-    comment: Option<serde_json::Value>,
+    comment: Option<JsonValue>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -214,10 +216,12 @@ pub enum CddaTileVariant {
 #[cfg(test)]
 mod tile_info_tests {
     use super::*;
+    use serde_json::from_str as from_json_str;
+
     #[test]
     fn it_works() {
         let json = include_str!("test_water_underground.json");
-        let result = serde_json::from_str::<TileInfo>(json);
+        let result = from_json_str::<TileInfo>(json);
         assert!(result.is_ok(), "{result:?}");
     }
 }

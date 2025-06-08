@@ -6,6 +6,7 @@ use crate::{
 use bevy_log::error;
 use bevy_platform::collections::HashMap;
 use serde::Deserialize;
+use serde_json::Value as JsonValue;
 use std::hash::{Hash, Hasher};
 use std::{num::NonZeroU32, ops::Mul, sync::Arc};
 use units::Duration;
@@ -43,29 +44,29 @@ pub struct Recipe {
     #[serde(default)]
     pub using: Vec<Using>,
 
-    pub batch_time_factors: Option<Vec<serde_json::Value>>,
-    pub blueprint_excludes: Option<Vec<serde_json::Value>>,
+    pub batch_time_factors: Option<Vec<JsonValue>>,
+    pub blueprint_excludes: Option<Vec<JsonValue>>,
     pub blueprint_name: Option<Arc<str>>,
-    pub blueprint_needs: Option<serde_json::Value>,
-    pub blueprint_provides: Option<Vec<serde_json::Value>>,
-    pub blueprint_requires: Option<Vec<serde_json::Value>>,
-    pub blueprint_resources: Option<Vec<serde_json::Value>>,
-    pub byproduct_group: Option<Vec<serde_json::Value>>,
-    pub byproducts: Option<Vec<serde_json::Value>>,
+    pub blueprint_needs: Option<JsonValue>,
+    pub blueprint_provides: Option<Vec<JsonValue>>,
+    pub blueprint_requires: Option<Vec<JsonValue>>,
+    pub blueprint_resources: Option<Vec<JsonValue>>,
+    pub byproduct_group: Option<Vec<JsonValue>>,
+    pub byproducts: Option<Vec<JsonValue>>,
     pub charges: Option<u16>,
     pub check_blueprint_needs: Option<bool>,
     pub construction_blueprint: Option<Arc<str>>,
     pub contained: Option<bool>,
     pub container: Option<Arc<str>>,
     pub decomp_learn: Option<u8>,
-    pub delete_flags: Option<Vec<serde_json::Value>>,
-    pub extend: Option<serde_json::Value>,
+    pub delete_flags: Option<Vec<JsonValue>>,
+    pub extend: Option<JsonValue>,
     pub flags: Flags,
     pub never_learn: Option<bool>,
-    pub proficiencies: Option<Vec<serde_json::Value>>,
+    pub proficiencies: Option<Vec<JsonValue>>,
     pub result_mult: Option<u8>,
-    pub reversible: Option<serde_json::Value>,
-    pub skills_required: Option<Vec<serde_json::Value>>,
+    pub reversible: Option<JsonValue>,
+    pub skills_required: Option<Vec<JsonValue>>,
 
     #[serde(default)]
     pub tools: Vec<Vec<Alternative<RequiredTool>>>,
@@ -131,8 +132,8 @@ impl RecipeResult {
 #[serde(untagged)]
 pub enum BookLearn {
     List(Vec<BookLearnItem>),
-    Map(HashMap<InfoId<CommonItemInfo>, serde_json::Value>),
-    Other(serde_json::Value),
+    Map(HashMap<InfoId<CommonItemInfo>, JsonValue>),
+    Other(JsonValue),
 }
 
 impl Default for BookLearn {
@@ -339,11 +340,12 @@ const fn this<T>(info_id: InfoId<T>) -> InfoId<T> {
 #[cfg(test)]
 mod recipe_tests {
     use super::*;
+    use serde_json::from_str as from_json_str;
 
     #[test]
     fn hammer_works() {
         let json = include_str!("test_hammer.json");
-        let recipe = serde_json::from_str::<Recipe>(json);
+        let recipe = from_json_str::<Recipe>(json);
         let recipe = recipe.as_ref();
         assert!(
             recipe.is_ok_and(|recipe| matches!(recipe.result, RecipeResult::Item { .. })),
@@ -355,7 +357,7 @@ mod recipe_tests {
     #[test]
     fn building_works() {
         let json = include_str!("test_building.json");
-        let recipe = serde_json::from_str::<Recipe>(json);
+        let recipe = from_json_str::<Recipe>(json);
         let recipe = recipe.as_ref();
         assert!(
             recipe.is_ok_and(|recipe| matches!(recipe.result, RecipeResult::Camp { .. })),

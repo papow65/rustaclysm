@@ -9,6 +9,7 @@ use cdda_json_files::{
     UntypedInfoId, VehiclePartInfo, VehiclePartMigration,
 };
 use serde::de::DeserializeOwned;
+use serde_json::{Value as JsonValue, from_value as from_json_value};
 use std::{any::type_name, fmt, sync::Arc};
 
 pub struct InfoMap<T> {
@@ -30,7 +31,7 @@ impl<T: fmt::Debug + DeserializeOwned + 'static> InfoMap<T> {
         let objects_len = objects.len();
         for (id, enriched) in objects {
             //trace!("{:#?}", &object_properties);
-            match serde_json::from_value::<T>(serde_json::Value::Object(enriched.fields.clone())) {
+            match from_json_value::<T>(JsonValue::Object(enriched.fields.clone())) {
                 Ok(info) => {
                     let info = Arc::new(info);
                     for alias_id in enriched.alias_ids {
@@ -46,7 +47,7 @@ impl<T: fmt::Debug + DeserializeOwned + 'static> InfoMap<T> {
                     if let Some(cause) = enriched.fields.keys().find(|key| {
                         let mut copy = enriched.fields.clone();
                         copy.remove(*key);
-                        serde_json::from_value::<T>(serde_json::Value::Object(copy)).is_ok()
+                        from_json_value::<T>(JsonValue::Object(copy)).is_ok()
                     }) {
                         warn!("Failure for {id:?} likely caused by the property '{cause}'");
                     }

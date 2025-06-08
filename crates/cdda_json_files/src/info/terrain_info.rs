@@ -3,6 +3,7 @@ use crate::{
     OptionalLinkedLater, UntypedInfoId,
 };
 use serde::Deserialize;
+use serde_json::Value as JsonValue;
 use std::sync::{Arc, LazyLock};
 
 #[derive(Debug, Deserialize)]
@@ -11,7 +12,7 @@ pub struct TerrainInfo {
     pub name: ItemName,
     pub flags: Flags,
     pub move_cost: MoveCost,
-    pub color: serde_json::Value,
+    pub color: JsonValue,
     pub symbol: Arc<str>,
     pub description: Arc<str>,
 
@@ -21,29 +22,29 @@ pub struct TerrainInfo {
     pub bash: Option<Bash>,
     pub looks_like: Option<UntypedInfoId>,
 
-    pub allowed_template_ids: Option<Vec<serde_json::Value>>,
-    pub boltcut: Option<serde_json::Value>,
+    pub allowed_template_ids: Option<Vec<JsonValue>>,
+    pub boltcut: Option<JsonValue>,
     pub comfort: Option<u8>,
-    pub connect_groups: Option<serde_json::Value>,
+    pub connect_groups: Option<JsonValue>,
     pub connects_to: Option<Arc<str>>,
     pub coverage: Option<u8>,
     pub curtain_transform: Option<Arc<str>>,
-    pub deconstruct: Option<serde_json::Value>,
-    pub emissions: Option<Vec<serde_json::Value>>,
+    pub deconstruct: Option<JsonValue>,
+    pub emissions: Option<Vec<JsonValue>>,
     pub examine_action: ExamineActionOption,
     pub floor_bedding_warmth: Option<u16>,
-    pub hacksaw: Option<serde_json::Value>,
-    pub harvest_by_season: Option<Vec<serde_json::Value>>,
+    pub hacksaw: Option<JsonValue>,
+    pub harvest_by_season: Option<Vec<JsonValue>>,
     pub heat_radiation: Option<u8>,
     pub light_emitted: Option<u8>,
     pub lockpick_message: Option<Arc<str>>,
     pub lockpick_result: Option<Arc<str>>,
     pub max_volume: Option<Arc<str>>,
-    pub oxytorch: Option<serde_json::Value>,
-    pub prying: Option<serde_json::Value>,
+    pub oxytorch: Option<JsonValue>,
+    pub prying: Option<JsonValue>,
     pub roof: Option<Arc<str>>,
     pub rotates_to: Option<Arc<str>>,
-    pub shoot: Option<serde_json::Value>,
+    pub shoot: Option<JsonValue>,
     pub transforms_into: Option<Arc<str>>,
     pub trap: Option<Arc<str>>,
 

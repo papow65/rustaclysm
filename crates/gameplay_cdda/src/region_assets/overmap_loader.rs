@@ -2,6 +2,7 @@ use bevy::asset::{Asset, AssetLoader, LoadContext, io::Reader};
 use bevy::prelude::error;
 use either::Either;
 use serde::Deserialize;
+use serde_json::from_slice as from_json_slice;
 use std::{marker::PhantomData, str::from_utf8};
 
 pub(super) struct OvermapLoader<T>(PhantomData<T>)
@@ -44,7 +45,7 @@ where
             .to_str()
             .expect("Unicode filename");
 
-        serde_json::from_slice::<T>(after_first_line)
+        from_json_slice::<T>(after_first_line)
             .inspect_err(|e| {
                 error!(
                     "Overmap (buffer?) loading error: {file_name:?} {:?} {e:?}",

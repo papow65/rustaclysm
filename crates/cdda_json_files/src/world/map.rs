@@ -3,6 +3,7 @@ use crate::{
     RepetitionBlock, RequiredLinkedLater, TerrainInfo, UntypedInfoId,
 };
 use serde::Deserialize;
+use serde_json::Value as JsonValue;
 use std::sync::{Arc, OnceLock};
 
 // Reference: https://github.com/CleverRaven/Cataclysm-DDA/blob/master/src/savegame_json.cpp
@@ -28,10 +29,10 @@ pub struct Submap {
     pub cosmetics: Vec<(u8, u8, Arc<str>, Arc<str>)>,
     pub spawns: Vec<Character>,
     pub vehicles: Vec<CddaVehicle>,
-    pub partial_constructions: Vec<serde_json::Value>,
+    pub partial_constructions: Vec<JsonValue>,
 
     #[serde(default)]
-    pub computers: Vec<serde_json::Value>,
+    pub computers: Vec<JsonValue>,
 
     /// Marker to remember the state of the links
     #[serde(skip)]

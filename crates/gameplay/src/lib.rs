@@ -55,6 +55,7 @@ use self::resources::{
     RelativeSegments, SeenFrom, SubzoneLevelEntities, VisualizationUpdate, ZoneLevelIds,
 };
 use self::screens::{Consumed, GameplayScreenState, RecipeSituation, update_camera_offset};
+use self::spawn::TileSpawner;
 use self::system_params::{Collision, CurrentlyVisible, CurrentlyVisibleBuilder, Envir};
 use self::time::{Clock, TimePlugin, Timeouts};
 use self::transition::TransitionPlugin;

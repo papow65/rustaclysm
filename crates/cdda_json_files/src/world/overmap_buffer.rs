@@ -1,5 +1,6 @@
 use crate::{Overmap, RepetitionBlock};
 use serde::Deserialize;
+use serde_json::Value as JsonValue;
 
 /// Corresponds to an 'overmapbuffer' in CDDA. It defines the save-specific information of an `OverZone`.
 #[derive(Debug, Deserialize)]
@@ -11,6 +12,6 @@ pub struct OvermapBuffer {
     /// Marked as 'Exmplored' on the overmap
     pub explored: [RepetitionBlock<bool>; Overmap::LEVEL_AMOUNT],
 
-    pub notes: Vec<serde_json::Value>,
-    pub extras: Vec<serde_json::Value>,
+    pub notes: Vec<JsonValue>,
+    pub extras: Vec<JsonValue>,
 }

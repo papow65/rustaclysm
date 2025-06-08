@@ -4,7 +4,7 @@ use crate::{
     Faction, Filthy, Fragment, Healing, HealingDuration, Health, Item, ItemHierarchy, ItemItem,
     LastEnemy, LastSeen, Life, Melee, MessageWriter, ObjectName, Peek, Phrase, Player,
     PlayerActionState, PlayerWielded, Pulp, Severity, Smash, Stamina, StaminaCost, StartCraft,
-    Step, Subject, SubzoneLevelEntities, TerrainEvent, Toggle, WalkingMode, spawn::TileSpawner,
+    Step, Subject, SubzoneLevelEntities, TerrainEvent, TileSpawner, Toggle, WalkingMode,
 };
 use bevy::ecs::query::QueryData;
 use bevy::prelude::{

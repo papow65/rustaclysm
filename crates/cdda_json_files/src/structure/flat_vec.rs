@@ -1,4 +1,5 @@
 use serde::de::{Deserialize, DeserializeOwned, Deserializer, Error as _, SeqAccess, Visitor};
+use serde_json::{Value as JsonValue, from_value as from_json_value};
 use std::{fmt, marker::PhantomData};
 
 #[derive(Debug, Default)]
@@ -35,22 +36,20 @@ where
         A: SeqAccess<'de>,
     {
         let mut result: Vec<T> = Vec::new();
-        while let Some(element) = seq.next_element::<serde_json::Value>()? {
-            let mut fields = [(); N].map(|()| serde_json::Value::default());
+        while let Some(element) = seq.next_element::<JsonValue>()? {
+            let mut fields = [(); N].map(|()| JsonValue::default());
             fields[0] = element;
             for field in fields.iter_mut().take(N).skip(1) {
-                *field = seq.next_element::<serde_json::Value>()?.ok_or_else(|| {
+                *field = seq.next_element::<JsonValue>()?.ok_or_else(|| {
                     A::Error::custom(String::from("Missing value(s) at the end of the sequence"))
                 })?;
             }
             result.push(
-                serde_json::from_value(serde_json::Value::Array(Vec::from(fields))).map_err(
-                    |e| {
-                        A::Error::custom(format!(
-                            "FlatSeqVisitor(N={N}) - DeserializeOwned error: {e}"
-                        ))
-                    },
-                )?,
+                from_json_value(JsonValue::Array(Vec::from(fields))).map_err(|e| {
+                    A::Error::custom(format!(
+                        "FlatSeqVisitor(N={N}) - DeserializeOwned error: {e}"
+                    ))
+                })?,
             );
         }
         Ok(result)

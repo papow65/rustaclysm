@@ -1,6 +1,6 @@
 use crate::{CommonItemInfo, InfoId, RequiredLinkedLater};
 use either::Either;
-use fastrand::choose_multiple;
+use fastrand::{choose_multiple, u32 as rand_u32};
 use serde::Deserialize;
 use std::sync::Arc;
 
@@ -97,7 +97,7 @@ impl ItemCollectionEntryCount {
             Self::Range {
                 count_min,
                 count_max,
-            } => fastrand::u32(count_min..=count_max),
+            } => rand_u32(count_min..=count_max),
             Self::Charged { .. } => 1,
         }
     }
@@ -108,7 +108,7 @@ impl ItemCollectionEntryCount {
             charges_max,
         } = *self
         {
-            Some(fastrand::u32(charges_min..=charges_max))
+            Some(rand_u32(charges_min..=charges_max))
         } else {
             None
         }
@@ -206,25 +206,26 @@ pub struct SpawnItem {
 #[cfg(test)]
 mod quality_tests {
     use super::*;
+    use serde_json::from_str as from_json_str;
 
     #[test]
     fn lizard_sample_huge_works() {
         let json = include_str!("test_lizard_sample_huge.json");
-        let result = serde_json::from_str::<ItemGroup>(json);
+        let result = from_json_str::<ItemGroup>(json);
         assert!(result.is_ok(), "{result:?}");
     }
 
     #[test]
     fn molebot_works() {
         let json = include_str!("test_molebot.json");
-        let result = serde_json::from_str::<ItemGroup>(json);
+        let result = from_json_str::<ItemGroup>(json);
         assert!(result.is_ok(), "{result:?}");
     }
 
     #[test]
     fn swimmer_wetsuit_works() {
         let json = include_str!("test_swimmer_wetsuit.json");
-        let result = serde_json::from_str::<ItemGroup>(json);
+        let result = from_json_str::<ItemGroup>(json);
         assert!(result.is_ok(), "{result:?}");
     }
 }

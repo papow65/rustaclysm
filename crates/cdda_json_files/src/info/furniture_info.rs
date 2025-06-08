@@ -3,7 +3,9 @@ use crate::{
     OptionalLinkedLater, RequiredLinkedLater, SpawnItem, TerrainInfo, UntypedInfoId,
 };
 use bevy_platform::collections::HashMap;
+use fastrand::u32 as rand_u32;
 use serde::Deserialize;
+use serde_json::Value as JsonValue;
 use std::sync::Arc;
 
 #[derive(Debug, Deserialize)]
@@ -18,35 +20,35 @@ pub struct FurnitureInfo {
     pub flags: Flags,
     pub bash: Option<Bash>,
     pub crafting_pseudo_item: OptionalLinkedLater<CommonItemInfo>,
-    pub bgcolor: Option<serde_json::Value>,
+    pub bgcolor: Option<JsonValue>,
     pub bonus_fire_warmth_feet: Option<u16>,
     pub close: Option<Arc<str>>,
-    pub color: Option<serde_json::Value>,
+    pub color: Option<JsonValue>,
     pub comfort: Option<u8>,
     pub connect_groups: Option<Arc<str>>,
     pub connects_to: Option<Arc<str>>,
     pub coverage: Option<u8>,
-    pub deconstruct: Option<serde_json::Value>,
+    pub deconstruct: Option<JsonValue>,
     pub deployed_item: Option<Arc<str>>,
-    pub emissions: Option<Vec<serde_json::Value>>,
+    pub emissions: Option<Vec<JsonValue>>,
     pub examine_action: ExamineActionOption,
     pub floor_bedding_warmth: Option<i16>,
-    pub hacksaw: Option<serde_json::Value>,
-    pub harvest_by_season: Option<Vec<serde_json::Value>>,
+    pub hacksaw: Option<JsonValue>,
+    pub harvest_by_season: Option<Vec<JsonValue>>,
     pub keg_capacity: Option<u16>,
     pub light_emitted: Option<u8>,
     pub lockpick_message: Option<Arc<str>>,
     pub lockpick_result: Option<Arc<str>>,
     pub max_volume: Option<Arc<str>>,
     pub open: Option<Arc<str>>,
-    pub oxytorch: Option<serde_json::Value>,
-    pub plant_data: Option<serde_json::Value>,
-    pub prying: Option<serde_json::Value>,
+    pub oxytorch: Option<JsonValue>,
+    pub plant_data: Option<JsonValue>,
+    pub prying: Option<JsonValue>,
     pub rotates_to: Option<Arc<str>>,
-    pub shoot: Option<serde_json::Value>,
+    pub shoot: Option<JsonValue>,
     pub surgery_skill_multiplier: Option<f32>,
     pub symbol: Option<Arc<str>>,
-    pub workbench: Option<serde_json::Value>,
+    pub workbench: Option<JsonValue>,
 
     #[serde(flatten)]
     _ignored: Ignored<Self>,
@@ -74,7 +76,7 @@ pub struct Bash {
 
     #[expect(unused)]
     #[serde(flatten)]
-    extra: HashMap<Arc<str>, serde_json::Value>,
+    extra: HashMap<Arc<str>, JsonValue>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -142,7 +144,7 @@ impl CountRange {
     pub fn random(&self) -> u32 {
         match self {
             Self::Fixed(fixed) => *fixed,
-            Self::FromTo(from, to) => fastrand::u32(*from..=*to),
+            Self::FromTo(from, to) => rand_u32(*from..=*to),
         }
     }
 }
@@ -159,10 +161,12 @@ impl Probability {
 #[cfg(test)]
 mod furniture_tests {
     use super::*;
+    use serde_json::from_str as from_json_str;
+
     #[test]
     fn it_works() {
         let json = include_str!("test_bash.json");
-        let result = serde_json::from_str::<Bash>(json);
+        let result = from_json_str::<Bash>(json);
         assert!(result.is_ok(), "{result:?}");
     }
 }

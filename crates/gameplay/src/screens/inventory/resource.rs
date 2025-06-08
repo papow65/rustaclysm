@@ -1,6 +1,4 @@
-use crate::screens::inventory::{
-    components::InventoryItemRow, section::InventorySection, systems::InventorySystem,
-};
+use crate::screens::inventory::{InventoryItemRow, InventorySection, InventorySystem};
 use bevy::ecs::entity::hash_map::EntityHashMap;
 use bevy::prelude::{BackgroundColor, Button, Children, Entity, Query, Resource, TextColor, With};
 use gameplay_location::HorizontalDirection;

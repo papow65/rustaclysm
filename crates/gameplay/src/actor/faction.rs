@@ -4,6 +4,7 @@ use crate::{
 };
 use bevy::prelude::{Component, TextColor};
 use cdda_json_files::MoveCost;
+use fastrand::{choice as rand_choice, u8 as rand_u8};
 use float_ord::FloatOrd;
 use gameplay_location::{Nbor, NborDistance, Pos};
 use hud::{FILTHY_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR};
@@ -209,14 +210,14 @@ impl Faction {
         factions: &[(Pos, &Self)],
         actor: &ActorItem,
     ) -> Option<PlannedAction> {
-        if fastrand::u8(0..10) < 3 {
+        if rand_u8(0..10) < 3 {
             let wander_options = envir
                 .nbors_for_moving(*actor.pos, None, self.intelligence(), actor.speed())
                 .filter(|(_, pos, _)| factions.iter().all(|(other_pos, _)| pos != other_pos))
                 .map(|(_, pos, _)| pos)
                 .collect::<Vec<Pos>>();
 
-            fastrand::choice(wander_options).map(|pos| {
+            rand_choice(wander_options).map(|pos| {
                 let nbor = envir.to_nbor(*actor.pos, pos).expect("Nbors");
                 if envir.find_character(pos).is_some() {
                     PlannedAction::attack(nbor)
