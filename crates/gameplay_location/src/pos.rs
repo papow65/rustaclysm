@@ -1,5 +1,5 @@
 use crate::{HorizontalDirection, Level, LevelOffset, LocationCache, Nbor, VisionDistance};
-use bevy::ecs::component::{ComponentHooks, Mutable, StorageType};
+use bevy::ecs::component::{ComponentHooks, Immutable, StorageType};
 use bevy::prelude::{Component, Vec3};
 use bresenham::Bresenham;
 use cdda_json_files::At;
@@ -130,7 +130,7 @@ impl Sub<Self> for Pos {
 }
 
 impl Component for Pos {
-    type Mutability = Mutable;
+    type Mutability = Immutable;
 
     const STORAGE_TYPE: StorageType = StorageType::Table;
 
