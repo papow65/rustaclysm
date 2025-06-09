@@ -1,5 +1,5 @@
-use crate::Amount;
-use bevy::prelude::{Component, Entity};
+use crate::{Amount, InPocket};
+use bevy::prelude::Component;
 use units::{Mass, Volume};
 
 #[derive(Clone, Debug, Component)]
@@ -20,11 +20,15 @@ pub(crate) struct ContainerLimits {
 #[derive(Debug, Component)]
 #[component(immutable)]
 pub(crate) struct BodyContainers {
-    pub(crate) hands: Entity,
-    pub(crate) clothing: Entity,
+    pub(crate) hands: InPocket,
+    pub(crate) clothing: InPocket,
 }
 
 impl BodyContainers {
+    pub(crate) const fn all(&self) -> [InPocket; 2] {
+        [self.hands, self.clothing]
+    }
+
     pub(crate) fn default_hands_container_limits() -> ContainerLimits {
         ContainerLimits {
             max_volume: Volume::try_from("100 L").expect("Well formatted"),

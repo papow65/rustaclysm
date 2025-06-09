@@ -535,11 +535,11 @@ fn recipe_tools(
                                 .pockets_in(nearby)
                                 .into_iter()
                                 .filter_map(|pocket_wrapper| match &pocket_wrapper.pocket_type() {
-                                    PocketType::Magazine => pocket_wrapper.entity(),
+                                    PocketType::Magazine => pocket_wrapper.in_pocket(),
                                     PocketType::MagazineWell => {
-                                        pocket_wrapper.entity().and_then(|pocket_entity| {
+                                        pocket_wrapper.in_pocket().and_then(|in_pocket| {
                                             hierarchy
-                                                .items_in(pocket_entity)
+                                                .items_in_pocket(in_pocket)
                                                 .flat_map(|magazine| {
                                                     hierarchy
                                                         .pockets_in(&magazine)
@@ -547,7 +547,7 @@ fn recipe_tools(
                                                         .filter_map(|subpocket_wrapper| {
                                                             (subpocket_wrapper.pocket_type()
                                                                 == PocketType::Magazine)
-                                                                .then_some(pocket_entity)
+                                                                .then_some(in_pocket)
                                                         })
                                                 })
                                                 .next()
@@ -556,7 +556,7 @@ fn recipe_tools(
                                     _ => None,
                                 })
                         })
-                        .flat_map(|pocket_entity| hierarchy.items_in(pocket_entity))
+                        .flat_map(|in_pocket| hierarchy.items_in_pocket(in_pocket))
                         .map(|magazine_item| (magazine_item.entity, magazine_item.amount.0))
                         .unzip();
 

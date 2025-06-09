@@ -1,6 +1,6 @@
-use crate::{Fragment, Shared};
+use crate::{Fragment, PocketContents, PocketOf, Shared};
 use bevy::ecs::query::QueryData;
-use bevy::prelude::{Children, Component, Entity};
+use bevy::prelude::{Component, Entity};
 use cdda_json_files::{CddaPocket, PocketInfo, SealedData};
 
 #[derive(Copy, Clone, Debug, Component)]
@@ -34,5 +34,6 @@ pub(crate) struct Pocket {
     pub(crate) entity: Entity,
     pub(crate) sealed: Option<&'static SealedPocket>,
     pub(crate) info: &'static Shared<PocketInfo>,
-    pub(crate) items: Option<&'static Children>,
+    pub(crate) pocket_of: Option<&'static PocketOf>, // TODO
+    pub(crate) contents: Option<&'static PocketContents>,
 }

@@ -1,15 +1,17 @@
-use crate::{Amount, Containable, ItemHierarchy, MessageWriter, Subject};
-use bevy::prelude::Entity;
+use crate::{Amount, Containable, InPocket, ItemHierarchy, MessageWriter, Subject};
 use units::{Mass, Volume};
 
 pub(crate) struct Container<'a> {
-    pub(crate) entity: Entity,
+    pub(crate) in_pocket: InPocket,
     hierarchy: &'a ItemHierarchy<'a, 'a>,
 }
 
 impl<'a> Container<'a> {
-    pub(crate) const fn new(entity: Entity, hierarchy: &'a ItemHierarchy) -> Self {
-        Self { entity, hierarchy }
+    pub(crate) const fn new(in_pocket: InPocket, hierarchy: &'a ItemHierarchy) -> Self {
+        Self {
+            in_pocket,
+            hierarchy,
+        }
     }
 
     pub(crate) fn check_add(
@@ -21,11 +23,11 @@ impl<'a> Container<'a> {
     ) -> Result<Amount, ()> {
         // TODO check that the added item is not already part of the current contents or the full ancestry of the container
 
-        let limits = self.hierarchy.container(self.entity);
+        let limits = self.hierarchy.container(self.in_pocket);
 
         let (current_volume, current_mass, curent_amount) = self
             .hierarchy
-            .items_in(self.entity)
+            .items_in_pocket(self.in_pocket)
             .fold((Volume::ZERO, Mass::ZERO, Amount::ZERO), |acc, item| {
                 (
                     acc.0 + item.containable.volume,

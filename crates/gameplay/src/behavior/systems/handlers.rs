@@ -75,7 +75,7 @@ pub(in super::super) fn toggle_doors(
                 .expect("Terrain should be closeable"),
         };
         let local_terrain = LocalTerrain::unconnected(toggled.clone());
-        spawner.spawn_terrain(child_of.parent(), pos, &local_terrain);
+        spawner.spawn_terrain(child_of.clone(), pos, &local_terrain);
         *visualization_update = VisualizationUpdate::Forced;
     }
 
@@ -297,7 +297,7 @@ pub(in super::super) fn update_damaged_terrain(
                 .send_warn();
             commands.entity(terrain).despawn();
             spawner.spawn_smashed(
-                child_of.parent(),
+                child_of,
                 pos,
                 terrain_info
                     .map(Shared::as_ref)
@@ -337,25 +337,24 @@ pub(in super::super) fn combine_items(
     let mut all_merged = Vec::new();
 
     for moved in &moved_items {
-        assert!(
-            hierarchy.items_in(moved.entity).next().is_none(),
-            "Items may not have direct subitems"
-        );
-
         let has_subitems = hierarchy
             .pockets_in(&moved)
             .into_iter()
             .any(|pocket_wrapper| {
                 pocket_wrapper
-                    .entity()
-                    .is_some_and(|pocket_entity| hierarchy.items_in(pocket_entity).next().is_some())
+                    .in_pocket()
+                    .is_some_and(|in_pocket| hierarchy.items_in_pocket(in_pocket).next().is_some())
             });
 
         if !all_merged.contains(&moved.entity) && !has_subitems {
             let mut merges = vec![];
             let mut total_amount = &Amount(0) + moved.amount;
 
-            for sibling in hierarchy.items_in(moved.child_of.parent()) {
+            let siblings = match moved.parentage() {
+                Either::Left(in_area) => Either::Left(hierarchy.items_in_area(in_area)),
+                Either::Right(in_pocket) => Either::Right(hierarchy.items_in_pocket(*in_pocket)),
+            };
+            for sibling in siblings {
                 // Note that the positions may differ when the parents are the same.
                 if sibling.entity != moved.entity
                     && sibling.common_info.id == moved.common_info.id

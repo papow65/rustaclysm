@@ -8,6 +8,7 @@ mod integrity;
 mod phase;
 mod pocket;
 mod query_data;
+mod relations;
 
 pub(crate) use self::amount::Amount;
 pub(crate) use self::checks::ItemChecksPlugin;
@@ -19,3 +20,4 @@ pub(crate) use self::integrity::ItemIntegrity;
 pub(crate) use self::phase::Phase;
 pub(crate) use self::pocket::{Pocket, PocketItem, SealedPocket};
 pub(crate) use self::query_data::{Item, ItemItem};
+pub(crate) use self::relations::{InPocket, PocketContents, PocketOf, Pockets};

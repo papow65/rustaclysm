@@ -1,4 +1,6 @@
-use crate::{Amount, Containable, ItemHierarchy, ItemIntegrity, Phrase, StandardIntegrity};
+use crate::{
+    Amount, Containable, InPocket, ItemHierarchy, ItemIntegrity, Phrase, StandardIntegrity,
+};
 use crate::{SealedPocket, Shared};
 use bevy::prelude::{
     App, Changed, ChildOf, Children, Entity, FixedUpdate, IntoScheduleConfigs as _, Or, Plugin,
@@ -31,6 +33,7 @@ fn check_item_parents(
             Option<&Shared<PocketInfo>>,
             Option<&SealedPocket>,
             Option<&ChildOf>,
+            Option<&InPocket>,
         ),
         Or<(With<Amount>, With<Containable>)>,
     >,
@@ -47,22 +50,49 @@ fn check_item_parents(
         assert!(
             checked_item
                 .iter()
-                .all(|(.., sealed_pocket, _)| sealed_pocket.is_none()),
+                .all(|(.., sealed_pocket, _, _)| sealed_pocket.is_none()),
             "Items should not sealed"
         );
-        assert!(
-            checked_item.iter().all(|(entity, .., child_of)| child_of
-                .inspect(|child_of| {
-                    let pos = pos.contains(entity);
-                    let pocket = pockets.contains(child_of.parent());
-                    assert_eq!(
-                        pos, !pocket,
-                        "Items should either have a pos ({pos:?}), xor a parent pocket ({pocket:?})"
-                    );
-                })
-                .is_some()),
-            "All items should have a parent"
-        );
+
+        for (entity, .., child_of, in_pocket) in &checked_item {
+            let has_pos = pos.contains(entity);
+            let is_in_area = child_of.is_some();
+            let is_in_pocket = in_pocket.is_some();
+            let area_found_as_pocket =
+                child_of.is_some_and(|child_of| pockets.contains(child_of.parent()));
+            let pocket_found_as_pocket =
+                in_pocket.is_some_and(|in_pocket| pockets.contains(in_pocket.pocket_entity));
+
+            if has_pos {
+                assert!(
+                    is_in_area,
+                    "Items with a pos ({pos:?}) should be in an area ({child_of:?}, {in_pocket:?}, {area_found_as_pocket:?}, {pocket_found_as_pocket:?})"
+                );
+                assert!(
+                    !is_in_pocket,
+                    "Items with a pos ({pos:?}) should not be in a pocket ({child_of:?}, {in_pocket:?}, {area_found_as_pocket:?}, {pocket_found_as_pocket:?})"
+                );
+
+                assert!(
+                    !area_found_as_pocket,
+                    "The area of an items should not be a pocket ({child_of:?}, {in_pocket:?}, {area_found_as_pocket:?}, {pocket_found_as_pocket:?})"
+                );
+            } else {
+                assert!(
+                    !is_in_area,
+                    "Items without a pos ({pos:?}) should not be in an area ({child_of:?}, {in_pocket:?}, {area_found_as_pocket:?}, {pocket_found_as_pocket:?})"
+                );
+                assert!(
+                    is_in_pocket,
+                    "Items without a pos ({pos:?}) should be in a pocket ({child_of:?}, {in_pocket:?}, {area_found_as_pocket:?}, {pocket_found_as_pocket:?})"
+                );
+
+                assert!(
+                    pocket_found_as_pocket,
+                    "The pocket of an items should be a pocket ({child_of:?}, {in_pocket:?}, {area_found_as_pocket:?}, {pocket_found_as_pocket:?})"
+                );
+            }
+        }
     }
 }
 
@@ -72,14 +102,15 @@ fn check_single_item(
     pockets: Query<(Entity, &Shared<PocketInfo>), Changed<Children>>,
 ) {
     if cfg!(debug_assertions) {
-        for (entity, pocket_info) in pockets.iter() {
-            let count = item_hierarchy.items_in(entity).count();
+        for (pocket_entity, pocket_info) in pockets.iter() {
+            let in_pocket = InPocket { pocket_entity };
+            let count = item_hierarchy.items_in_pocket(in_pocket).count();
             match pocket_info.pocket_type {
                 PocketType::MagazineWell => {
                     if 1 < count {
                         warn!(
-                            "At most one item expected in {pocket_info:?} ({entity:?}) instead of {count}: {}",
-                            item_hierarchy.items_in(entity).fold(
+                            "At most one item expected in {pocket_info:?} ({in_pocket:?}) instead of {count}: {}",
+                            item_hierarchy.items_in_pocket(in_pocket).fold(
                                 String::new(),
                                 |mut output, item| {
                                     write!(
@@ -97,8 +128,8 @@ fn check_single_item(
                 PocketType::Magazine => {
                     if count != 1 {
                         warn!(
-                            "Exactly one item expected in {pocket_info:?} ({entity:?}) instead of {count}: {}",
-                            item_hierarchy.items_in(entity).fold(
+                            "Exactly one item expected in {pocket_info:?} ({in_pocket:?}) instead of {count}: {}",
+                            item_hierarchy.items_in_pocket(in_pocket).fold(
                                 String::new(),
                                 |mut output, item| {
                                     write!(

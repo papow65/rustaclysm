@@ -1,9 +1,11 @@
 use crate::{
-    Amount, Containable, Filthy, Fragment, ItemIntegrity, ObjectName, Phase, Positioning, Shared,
+    Amount, Containable, Filthy, Fragment, InPocket, ItemIntegrity, ObjectName, Phase, Pockets,
+    Positioning, Shared,
 };
 use bevy::ecs::query::QueryData;
 use bevy::prelude::{ChildOf, Children, Entity, ops::atan2};
 use cdda_json_files::{CommonItemInfo, InfoId};
+use either::Either;
 use gameplay_location::Pos;
 use hud::text_color_expect_half;
 use std::f32::consts::FRAC_1_PI;
@@ -19,12 +21,31 @@ pub(crate) struct Item {
     pub(crate) integrity: &'static ItemIntegrity,
     pub(crate) phase: &'static Phase,
     pub(crate) containable: &'static Containable,
-    pub(crate) child_of: &'static ChildOf,
-    pub(crate) children: Option<&'static Children>,
+    pub(crate) in_area: Option<&'static ChildOf>,
+    pub(crate) in_pocket: Option<&'static InPocket>,
+    pub(crate) pockets: Option<&'static Pockets>,
+    pub(crate) models: Option<&'static Children>,
     pub(crate) common_info: &'static Shared<CommonItemInfo>,
 }
 
 impl<'a> ItemItem<'a> {
+    pub(crate) fn parentage(&self) -> Either<&ChildOf, &InPocket> {
+        match (self.in_area, self.in_pocket) {
+            (None, None) => panic!(
+                "No area or pocket for item {:?} at {:?}",
+                self.name, self.pos
+            ),
+            (None, Some(in_pocket)) => Either::Right(in_pocket),
+            (Some(in_area), None) => Either::Left(in_area),
+            (Some(in_area), Some(in_pocket)) => {
+                panic!(
+                    "Both an area ({in_area:?}) and a pocket ({in_pocket:?}) for item {:?} at {:?}",
+                    self.name, self.pos
+                )
+            }
+        }
+    }
+
     pub(crate) fn fragments(&self) -> impl Iterator<Item = Fragment> + use<'_, 'a> {
         let fragments = if self.common_info.id == InfoId::new("money") {
             let cents = self.amount.0 as f32;

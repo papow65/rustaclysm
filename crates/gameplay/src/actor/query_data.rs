@@ -1,8 +1,8 @@
 use crate::{
     ActorEvent, ActorImpact, Amount, Aquatic, Attack, BaseSpeed, BodyContainers, Breath,
     ChangePace, Clock, Close, Collision, Consumed, Container, CorpseEvent, Craft, Damage, Envir,
-    Faction, Filthy, Fragment, Healing, HealingDuration, Health, Item, ItemHierarchy, ItemItem,
-    LastEnemy, LastSeen, Life, Melee, MessageWriter, ObjectName, Peek, Phrase, Player,
+    Faction, Filthy, Fragment, Healing, HealingDuration, Health, InPocket, Item, ItemHierarchy,
+    ItemItem, LastEnemy, LastSeen, Life, Melee, MessageWriter, ObjectName, Peek, Phrase, Player,
     PlayerActionState, PlayerWielded, Pulp, Severity, Smash, Stamina, StaminaCost, StartCraft,
     Step, Subject, TerrainEvent, TileSpawner, Toggle, WalkingMode,
 };
@@ -11,11 +11,13 @@ use bevy::prelude::{
     ChildOf, Commands, Entity, Event, EventWriter, NextState, Query, Transform, Visibility, error,
 };
 use cdda_json_files::{CddaItem, Description};
+use either::Either;
 use gameplay_location::{
     HorizontalDirection, LevelOffset, LocationCache, Nbor, Pos, SubzoneLevel, SubzoneLevelCache,
 };
 use hud::text_color_expect_full;
 use units::{Distance, Duration, Speed};
+use util::Maybe;
 
 #[derive(QueryData)]
 #[query_data(derive(Debug))]
@@ -207,7 +209,7 @@ impl ActorItem<'_> {
     {
         let mut melee_weapon = None;
         if let Some(body_containers) = self.body_containers {
-            let mut hands_children = hierarchy.items_in(body_containers.hands);
+            let mut hands_children = hierarchy.items_in_pocket(body_containers.hands);
             if let Some(weapon) = hands_children.next() {
                 melee_weapon = Some(weapon.common_info);
             }
@@ -488,9 +490,9 @@ impl ActorItem<'_> {
                 .send_info();
 
             if &allowed_amount < taken.amount {
-                Self::take_some(commands, target.entity, allowed_amount, taken);
+                Self::take_some(commands, target.in_pocket, allowed_amount, taken);
             } else {
-                Self::take_all(commands, target.entity, taken.entity);
+                Self::take_all(commands, target.in_pocket, taken.entity);
             }
             self.impact_from_duration(Duration::SECOND, StaminaCost::NEUTRAL)
         } else {
@@ -500,7 +502,7 @@ impl ActorItem<'_> {
 
     fn take_some(
         commands: &mut Commands,
-        container_entity: Entity,
+        to_in_pocket: InPocket,
         allowed_amount: Amount,
         taken: &ItemItem,
     ) {
@@ -517,7 +519,8 @@ impl ActorItem<'_> {
                 LastSeen::Currently,
                 Transform::default(),
                 Visibility::default(),
-                ChildOf(taken.child_of.parent()),
+                Maybe(taken.in_area.cloned()),
+                Maybe(taken.in_pocket.copied()),
             ))
             .id();
         if taken.filthy.is_some() {
@@ -529,15 +532,19 @@ impl ActorItem<'_> {
 
         commands
             .entity(taken.entity)
-            .insert((allowed_amount, ChildOf(container_entity)))
-            .remove::<Pos>();
+            .insert((allowed_amount, to_in_pocket))
+            .remove::<Pos>()
+            .remove::<ChildOf>();
     }
 
-    fn take_all(commands: &mut Commands, container_entity: Entity, taken_entity: Entity) {
+    fn take_all(commands: &mut Commands, to_in_pocket: InPocket, taken_entity: Entity) {
         commands
-            .entity(container_entity)
-            .add_children(&[taken_entity]);
-        commands.entity(taken_entity).remove::<Pos>();
+            .entity(to_in_pocket.pocket_entity)
+            .add_related::<InPocket>(&[taken_entity]);
+        commands
+            .entity(taken_entity)
+            .remove::<Pos>()
+            .remove::<ChildOf>();
     }
 
     pub(crate) fn move_item(
@@ -558,13 +565,11 @@ impl ActorItem<'_> {
                 return self.no_impact();
             }
         }
-        let dump = moved.child_of.parent()
-            == self.body_containers.expect("Body containers present").hands
-            || moved.child_of.parent()
-                == self
-                    .body_containers
-                    .expect("Body containers present")
-                    .clothing;
+
+        let body_containers = self.body_containers.expect("Body containers present");
+        let dump = moved
+            .in_pocket
+            .is_some_and(|in_pocket| body_containers.all().contains(in_pocket));
 
         // TODO Check for obstacles
         let to = self.pos.raw_nbor(to).expect("Valid position");
@@ -583,7 +588,8 @@ impl ActorItem<'_> {
         };
         commands
             .entity(moved.entity)
-            .insert((Visibility::default(), to, ChildOf(new_parent)));
+            .insert((Visibility::default(), to, ChildOf(new_parent)))
+            .remove::<InPocket>();
         location.move_(moved.entity, to);
         self.impact_from_duration(Duration::SECOND, StaminaCost::NEUTRAL)
     }
@@ -659,7 +665,7 @@ impl ActorItem<'_> {
         }
 
         let item = spawner.spawn_craft(
-            parent_entity,
+            ChildOf(parent_entity),
             pos,
             start_craft.recipe_situation.recipe().clone(),
         );
@@ -692,13 +698,19 @@ impl ActorItem<'_> {
                 PlayerActionState::Crafting { item: craft_entity }.severity_finishing(),
                 false,
             );
-            let parent = item.child_of.parent();
             let pos = *item.pos.unwrap_or(self.pos);
             let amount = *item.amount;
             commands.entity(item.entity).despawn();
             if let Some(result) = craft.recipe.result.item_info() {
                 let cdda_item = CddaItem::new(&result);
-                if let Err(error) = spawner.spawn_item(parent, Some(pos), &cdda_item, amount) {
+                if let Err(error) = match item.parentage().cloned() {
+                    Either::Left(child_of) => {
+                        spawner.spawn_item(child_of, Some(pos), &cdda_item, amount)
+                    }
+                    Either::Right(in_pocket) => {
+                        spawner.spawn_item(in_pocket, Some(pos), &cdda_item, amount)
+                    }
+                } {
                     error!("Spawning crafted item failed: {error:#?}");
                 }
             }

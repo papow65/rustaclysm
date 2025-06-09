@@ -1,8 +1,9 @@
 use crate::{
-    Amount, ContainerLimits, Fragment, Item, ItemItem, Phrase, Pocket, PocketItem, SealedPocket,
+    Amount, ContainerLimits, Fragment, InPocket, Item, ItemItem, Phrase, Pocket, PocketContents,
+    PocketItem, Pockets, SealedPocket,
 };
 use bevy::ecs::system::SystemParam;
-use bevy::prelude::{Children, Entity, Query, warn};
+use bevy::prelude::{ChildOf, Children, Entity, Query, error, warn};
 use cdda_json_files::{ItemTypeDetails, PocketInfo, PocketType, UntypedInfoId};
 use std::{iter::once, num::NonZeroUsize, sync::Arc};
 
@@ -12,9 +13,11 @@ pub(crate) enum PocketWrapper<'i> {
 }
 
 impl PocketWrapper<'_> {
-    pub(crate) const fn entity(&self) -> Option<Entity> {
+    pub(crate) const fn in_pocket(&self) -> Option<InPocket> {
         match self {
-            Self::Concrete(pocket) => Some(pocket.entity),
+            Self::Concrete(pocket) => Some(InPocket {
+                pocket_entity: pocket.entity,
+            }),
             Self::Lazy(_) => None,
         }
     }
@@ -49,7 +52,7 @@ pub(crate) struct ShownContents<'i> {
 }
 
 #[derive(Clone, Copy, Debug)]
-pub(crate) struct InPocket {
+pub(crate) struct InPocketContext {
     pub(crate) type_: PocketType,
     pub(crate) single_in_type: bool,
     pub(crate) depth: NonZeroUsize,
@@ -58,7 +61,7 @@ pub(crate) struct InPocket {
 #[derive(SystemParam)]
 pub(crate) struct ItemHierarchy<'w, 's> {
     limits: Query<'w, 's, &'static ContainerLimits>,
-    parents: Query<'w, 's, &'static Children>,
+    areas: Query<'w, 's, &'static Children>,
     items: Query<'w, 's, Item>,
     pockets: Query<'w, 's, Pocket>,
 }
@@ -68,21 +71,38 @@ impl<'w> ItemHierarchy<'w, '_> {
         self.items.get(item).is_ok()
     }
 
-    pub(crate) fn items_in(&self, container: Entity) -> impl Iterator<Item = ItemItem> + use<'_> {
-        self.parents
-            .get(container)
+    pub(crate) fn items_in_area(
+        &self,
+        in_area: &ChildOf,
+    ) -> impl Iterator<Item = ItemItem> + use<'_> {
+        self.areas
+            .get(in_area.parent())
+            .inspect_err(|error| error!("Error while looking up area: {error:#?}"))
             .into_iter()
             .flat_map(IntoIterator::into_iter)
             .flat_map(|item| self.items.get(*item)) // Filtering out the models
     }
 
+    pub(crate) fn items_in_pocket(
+        &self,
+        in_pocket: InPocket,
+    ) -> impl Iterator<Item = ItemItem> + use<'_> {
+        self.pockets
+            .get(in_pocket.pocket_entity)
+            .inspect_err(|error| panic!("Error while looking up pocket: {error:#?}"))
+            .into_iter()
+            .filter_map(|pocket| pocket.contents)
+            .flat_map(PocketContents::item_entities)
+            .flat_map(|item| self.items.get(*item))
+    }
+
     pub(crate) fn pockets_in(&self, container: &ItemItem) -> Vec<PocketWrapper> {
         let concrete_pockets = container
-            .children
+            .pockets
             .into_iter()
-            .flat_map(IntoIterator::into_iter)
+            .flat_map(Pockets::pocket_entities)
             .copied()
-            .flat_map(|pocket| self.pockets.get(pocket)) // Filtering out the models
+            .flat_map(|pocket| self.pockets.get(pocket))
             .map(PocketWrapper::Concrete)
             .collect::<Vec<_>>();
 
@@ -99,9 +119,9 @@ impl<'w> ItemHierarchy<'w, '_> {
             .collect()
     }
 
-    pub(crate) fn container(&self, container_entity: Entity) -> &ContainerLimits {
+    pub(crate) fn container(&self, in_pocket: InPocket) -> &ContainerLimits {
         self.limits
-            .get(container_entity)
+            .get(in_pocket.pocket_entity)
             .expect("An existing container")
     }
 
@@ -118,7 +138,7 @@ impl<'w> ItemHierarchy<'w, '_> {
     fn walk_item(
         &self,
         handler: &mut impl ItemHandler,
-        in_pocket: Option<InPocket>,
+        in_pocket: Option<InPocketContext>,
         item: &ItemItem,
     ) {
         // TODO make sure all pockets are present on containers
@@ -136,7 +156,7 @@ impl<'w> ItemHierarchy<'w, '_> {
 
         if let Some(shown_contents) = shown_contents {
             if !shown_contents.contents.is_empty() {
-                let in_pocket = Some(InPocket {
+                let in_pocket = Some(InPocketContext {
                     type_: PocketType::Container,
                     single_in_type: shown_contents.contents.len() == 1,
                     depth,
@@ -160,7 +180,7 @@ impl<'w> ItemHierarchy<'w, '_> {
                     .pockets(item, pocket_type)
                     .flat_map(|subitems| subitems.items)
                     .collect::<Vec<_>>();
-                let in_pocket = Some(InPocket {
+                let in_pocket = Some(InPocketContext {
                     type_: pocket_type,
                     single_in_type: items.len() == 1,
                     depth,
@@ -391,9 +411,9 @@ impl<'w> ItemHierarchy<'w, '_> {
             .map(move |pocket_wrapper| {
                 // TODO Use default contents when None
                 let items = pocket_wrapper
-                    .entity()
+                    .in_pocket()
                     .into_iter()
-                    .flat_map(|entity| self.items_in(entity))
+                    .flat_map(|in_pocket| self.items_in_pocket(in_pocket))
                     .collect::<Vec<_>>();
 
                 Subitems {

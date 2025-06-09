@@ -330,13 +330,13 @@ fn items_by_section<'i>(
     items_by_section.insert(
         InventorySection::Hands,
         item_hierarchy
-            .items_in(body_containers.hands)
+            .items_in_pocket(body_containers.hands)
             .collect::<Vec<_>>(),
     );
     items_by_section.insert(
         InventorySection::Clothing,
         item_hierarchy
-            .items_in(body_containers.clothing)
+            .items_in_pocket(body_containers.clothing)
             .collect::<Vec<_>>(),
     );
 

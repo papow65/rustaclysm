@@ -26,7 +26,8 @@ pub(super) fn find_nearby<'a>(
             })
         })
         .chain(items.iter().filter(|(item, _)| {
-            [body_containers.hands, body_containers.clothing].contains(&item.child_of.parent())
+            item.in_pocket
+                .is_some_and(|in_pocket| body_containers.all().contains(in_pocket))
         }))
         .map(|(nearby, ..)| nearby)
         .collect()

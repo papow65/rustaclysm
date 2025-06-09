@@ -2,7 +2,7 @@ use crate::{LocalTerrain, TileSpawner, ZoneLevelIds, spawn::log_spawn_result};
 use application_state::ApplicationState;
 use bevy::ecs::system::SystemParam;
 use bevy::platform::collections::HashSet;
-use bevy::prelude::{Res, ResMut, StateScoped, Transform, Visibility};
+use bevy::prelude::{ChildOf, Res, ResMut, StateScoped, Transform, Visibility};
 use cdda_json_files::{
     CddaAmount, FlatVec, InfoId, OvermapTerrainInfo, RepetitionBlock, RequiredLinkedLater, Submap,
     SubzoneOffset,
@@ -132,7 +132,7 @@ impl SubzoneSpawner<'_, '_> {
                         .filter(|spawn| spawn.x == pos_offset.x && spawn.z == pos_offset.z);
                     let fields = submap.fields.0.iter().filter_map(|at| pos_offset.get(at));
                     self.tile_spawner.spawn_tile(
-                        subzone_level_entity,
+                        &ChildOf(subzone_level_entity),
                         pos,
                         &local_terrain,
                         furniture_ids,
@@ -145,13 +145,18 @@ impl SubzoneSpawner<'_, '_> {
 
             for vehicle in &submap.vehicles {
                 let vehicle_pos = base_pos.horizontal_offset(vehicle.posx, vehicle.posy);
-                let vehicle_entity =
-                    self.tile_spawner
-                        .spawn_vehicle(subzone_level_entity, vehicle_pos, vehicle);
+                let vehicle_entity = self.tile_spawner.spawn_vehicle(
+                    ChildOf(subzone_level_entity),
+                    vehicle_pos,
+                    vehicle,
+                );
 
                 for vehicle_part in &vehicle.parts {
-                    self.tile_spawner
-                        .spawn_vehicle_part(vehicle_entity, vehicle_pos, vehicle_part);
+                    self.tile_spawner.spawn_vehicle_part(
+                        ChildOf(vehicle_entity),
+                        vehicle_pos,
+                        vehicle_part,
+                    );
                 }
             }
 
@@ -171,7 +176,7 @@ impl SubzoneSpawner<'_, '_> {
                     .map(|(_, monster)| monster)
                 {
                     log_spawn_result(self.tile_spawner.spawn_character(
-                        subzone_level_entity,
+                        ChildOf(subzone_level_entity),
                         base_pos,
                         &monster.info,
                         None,
