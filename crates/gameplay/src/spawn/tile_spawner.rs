@@ -5,12 +5,12 @@ use crate::{
     Obstacle, Opaque, OpaqueFloor, Openable, Phase, Player, SealedPocket, Shared, Stamina,
     StandardIntegrity, Vehicle, VehiclePart, WalkingMode, spawn::log_spawn_result,
 };
-use crate::{InPocket, PocketOf};
+use crate::{InPocket, ObjectIn, PocketOf, VehiclePartOf};
 use application_state::ApplicationState;
 use bevy::ecs::{relationship::Relationship, system::SystemParam};
 use bevy::prelude::{
-    Camera3d, ChildOf, Commands, DirectionalLight, Entity, EulerRot, Mat4, Res, StateScoped,
-    TextColor, Transform, Vec3, Visibility, debug, error,
+    Camera3d, Commands, DirectionalLight, Entity, EulerRot, Mat4, Res, StateScoped, TextColor,
+    Transform, Vec3, Visibility, debug, error,
 };
 use bevy::render::camera::{PerspectiveProjection, Projection};
 use bevy::render::view::RenderLayers;
@@ -45,7 +45,7 @@ impl<'w> TileSpawner<'w, '_> {
 
     pub(crate) fn spawn_tile<'a>(
         &mut self,
-        child_of: &ChildOf,
+        object_in: ObjectIn,
         pos: Pos,
         local_terrain: &LocalTerrain,
         furniture_infos: impl Iterator<Item = Arc<FurnitureInfo>>,
@@ -53,17 +53,17 @@ impl<'w> TileSpawner<'w, '_> {
         spawns: impl Iterator<Item = &'a Character>,
         fields: impl Iterator<Item = &'a FlatVec<Field, 3>>,
     ) {
-        self.spawn_terrain(child_of.clone(), pos, local_terrain);
+        self.spawn_terrain(object_in, pos, local_terrain);
 
         for furniture_info in furniture_infos {
-            self.spawn_furniture(child_of.clone(), pos, &furniture_info);
+            self.spawn_furniture(object_in, pos, &furniture_info);
         }
 
         for repetitions in item_repetitions {
             for repetition in repetitions {
                 let CddaAmount { obj: item, amount } = repetition.as_amount();
                 if let Err(error) = self.spawn_item(
-                    child_of.clone(),
+                    object_in,
                     Some(pos),
                     item,
                     Amount(item.charges.unwrap_or(1) * amount),
@@ -75,20 +75,20 @@ impl<'w> TileSpawner<'w, '_> {
 
         for spawn in spawns {
             //trace!("{:?}", (&spawn.id);
-            log_spawn_result(self.spawn_character(child_of.clone(), pos, &spawn.info, None));
+            log_spawn_result(self.spawn_character(object_in, pos, &spawn.info, None));
         }
 
         for fields in fields {
             //trace!("{:?}", (&fields);
             for field in &fields.0 {
-                self.spawn_field(child_of.clone(), pos, field);
+                self.spawn_field(object_in, pos, field);
             }
         }
     }
 
     pub(crate) fn spawn_character(
         &mut self,
-        child_of: ChildOf,
+        object_in: ObjectIn,
         pos: Pos,
         character_info: &RequiredLinkedLater<CharacterInfo>,
         name: Option<ObjectName>,
@@ -102,7 +102,7 @@ impl<'w> TileSpawner<'w, '_> {
         let object_name = ObjectName::new(character_info.name.clone(), faction.color());
 
         let entity = self.spawn_object(
-            child_of,
+            object_in,
             Some(pos),
             character_info.id.untyped(),
             ObjectCategory::Character,
@@ -177,7 +177,7 @@ impl<'w> TileSpawner<'w, '_> {
         Ok(pocket_of_character.item_entity)
     }
 
-    fn spawn_field(&mut self, child_of: ChildOf, pos: Pos, field: &Field) {
+    fn spawn_field(&mut self, object_in: ObjectIn, pos: Pos, field: &Field) {
         let Some(field_info) = field.field_info.get_option() else {
             return;
         };
@@ -185,7 +185,7 @@ impl<'w> TileSpawner<'w, '_> {
         let object_name = ObjectName::new(field_info.name().clone(), BAD_TEXT_COLOR);
 
         let entity = self.spawn_object(
-            child_of,
+            object_in,
             Some(pos),
             field_info.id.untyped(),
             ObjectCategory::Field,
@@ -296,19 +296,16 @@ impl<'w> TileSpawner<'w, '_> {
 
     fn spawn_items(
         &mut self,
-        child_of: &ChildOf,
+        object_in: ObjectIn,
         pos: Pos,
         items: impl Iterator<Item = SpawnItem>,
     ) {
         for spawn_item in items {
             let mut cdda_item = CddaItem::new(&spawn_item.item_info);
             cdda_item.charges = spawn_item.charges;
-            if let Err(error) = self.spawn_item(
-                child_of.clone(),
-                Some(pos),
-                &cdda_item,
-                Amount(spawn_item.amount),
-            ) {
+            if let Err(error) =
+                self.spawn_item(object_in, Some(pos), &cdda_item, Amount(spawn_item.amount))
+            {
                 error!("Spawning an item from a collection failed: {error:#?}");
             }
         }
@@ -316,25 +313,25 @@ impl<'w> TileSpawner<'w, '_> {
 
     fn spawn_item_collection(
         &mut self,
-        child_of: &ChildOf,
+        object_in: ObjectIn,
         pos: Pos,
         item_group: &RequiredLinkedLater<ItemGroup>,
     ) {
         let Some(item_group) = item_group.get_option() else {
             return;
         };
-        self.spawn_items(child_of, pos, item_group.items());
+        self.spawn_items(object_in, pos, item_group.items());
     }
 
     fn spawn_furniture(
         &mut self,
-        child_of: ChildOf,
+        object_in: ObjectIn,
         pos: Pos,
         furniture_info: &Arc<FurnitureInfo>,
     ) {
         let object_name = ObjectName::new(furniture_info.name.clone(), HARD_TEXT_COLOR);
         let entity = self.spawn_object(
-            child_of,
+            object_in,
             Some(pos),
             furniture_info.id.untyped(),
             ObjectCategory::Furniture,
@@ -365,7 +362,7 @@ impl<'w> TileSpawner<'w, '_> {
 
     pub(crate) fn spawn_terrain(
         &mut self,
-        child_of: ChildOf,
+        object_in: ObjectIn,
         pos: Pos,
         local_terrain: &LocalTerrain,
     ) {
@@ -378,7 +375,7 @@ impl<'w> TileSpawner<'w, '_> {
 
         let object_name = ObjectName::new(local_terrain.info.name.clone(), HARD_TEXT_COLOR);
         let entity = self.spawn_object(
-            child_of,
+            object_in,
             Some(pos),
             local_terrain.info.id.untyped(),
             ObjectCategory::Terrain,
@@ -425,14 +422,14 @@ impl<'w> TileSpawner<'w, '_> {
 
     pub(crate) fn spawn_vehicle(
         &mut self,
-        child_of: ChildOf,
+        object_in: ObjectIn,
         pos: Pos,
         vehicle: &CddaVehicle,
     ) -> Entity {
         let object_name = ObjectName::from_str(&vehicle.name, HARD_TEXT_COLOR);
 
         let entity = self.spawn_object(
-            child_of,
+            object_in,
             Some(pos),
             &vehicle.id,
             ObjectCategory::Vehicle,
@@ -452,7 +449,8 @@ impl<'w> TileSpawner<'w, '_> {
 
     pub(crate) fn spawn_vehicle_part(
         &mut self,
-        child_of: ChildOf,
+        object_in: ObjectIn,
+        vehicle_part_of: VehiclePartOf,
         parent_pos: Pos,
         vehicle_part: &CddaVehiclePart,
     ) {
@@ -473,7 +471,7 @@ impl<'w> TileSpawner<'w, '_> {
             .or_else(|| vehicle_part.open.then_some(TileVariant::Open))
             .unwrap_or(TileVariant::Unconnected);
         let entity = self.spawn_object(
-            child_of,
+            object_in,
             Some(pos),
             part_info.id.untyped(),
             ObjectCategory::VehiclePart,
@@ -490,6 +488,7 @@ impl<'w> TileSpawner<'w, '_> {
                 },
                 item: vehicle_part.base.clone(),
             },
+            vehicle_part_of,
         ));
 
         if part_info.flags.obstacle() {
@@ -614,7 +613,7 @@ impl<'w> TileSpawner<'w, '_> {
     }
 
     pub(crate) fn spawn_characters(&mut self, spawn_pos: Pos) {
-        let root = self
+        let dummy_root = self
             .commands
             .spawn((
                 Transform::default(),
@@ -622,6 +621,9 @@ impl<'w> TileSpawner<'w, '_> {
                 StateScoped(ApplicationState::Gameplay),
             ))
             .id();
+        let dummy_root = ObjectIn {
+            subzone_level_entity: dummy_root,
+        };
 
         let human = RequiredLinkedLater::from(InfoId::new("human"));
         self.infos.link_character(&human, "player");
@@ -629,7 +631,7 @@ impl<'w> TileSpawner<'w, '_> {
         let sav = self.active_sav.sav();
         let player = self
             .spawn_character(
-                ChildOf(root),
+                dummy_root,
                 spawn_pos.horizontal_offset(36, 56),
                 &human,
                 Some(ObjectName::from_str(&sav.player.name, GOOD_TEXT_COLOR)),
@@ -644,7 +646,7 @@ impl<'w> TileSpawner<'w, '_> {
     }
 
     pub(crate) fn spawn_zombies(&mut self, around_pos: Pos) {
-        let root = self
+        let dummy_root = self
             .commands
             .spawn((
                 Transform::default(),
@@ -652,13 +654,15 @@ impl<'w> TileSpawner<'w, '_> {
                 StateScoped(ApplicationState::Gameplay),
             ))
             .id();
-        let root = ChildOf(root);
+        let dummy_root = ObjectIn {
+            subzone_level_entity: dummy_root,
+        };
 
         let human = RequiredLinkedLater::from(InfoId::new("human"));
         self.infos.link_character(&human, "survivor");
 
         log_spawn_result(self.spawn_character(
-            root.clone(),
+            dummy_root,
             around_pos.horizontal_offset(-26, -36),
             &human,
             Some(ObjectName::from_str("Survivor", HARD_TEXT_COLOR)),
@@ -668,31 +672,31 @@ impl<'w> TileSpawner<'w, '_> {
         self.infos.link_character(&zombie, "zombie");
 
         log_spawn_result(self.spawn_character(
-            root.clone(),
+            dummy_root,
             around_pos.horizontal_offset(-24, -30),
             &zombie,
             None,
         ));
         log_spawn_result(self.spawn_character(
-            root.clone(),
+            dummy_root,
             around_pos.horizontal_offset(4, -26),
             &zombie,
             None,
         ));
         log_spawn_result(self.spawn_character(
-            root.clone(),
+            dummy_root,
             around_pos.horizontal_offset(2, -27),
             &zombie,
             None,
         ));
         log_spawn_result(self.spawn_character(
-            root.clone(),
+            dummy_root,
             around_pos.horizontal_offset(1, -29),
             &zombie,
             None,
         ));
         log_spawn_result(self.spawn_character(
-            root,
+            dummy_root,
             around_pos.horizontal_offset(-2, -42),
             &zombie,
             None,
@@ -701,7 +705,7 @@ impl<'w> TileSpawner<'w, '_> {
 
     pub(crate) fn spawn_smashed(
         &mut self,
-        child_of: &ChildOf,
+        object_in: ObjectIn,
         pos: Pos,
         info: Either<&Arc<TerrainInfo>, &Arc<FurnitureInfo>>,
     ) {
@@ -714,20 +718,20 @@ impl<'w> TileSpawner<'w, '_> {
 
         if let Some(new_terrain) = &bash.terrain.get() {
             let local_terrain = LocalTerrain::unconnected(new_terrain.clone());
-            self.spawn_terrain(child_of.clone(), pos, &local_terrain);
+            self.spawn_terrain(object_in, pos, &local_terrain);
         }
 
         if let Some(furniture_id) = &bash.furniture.get() {
-            self.spawn_furniture(child_of.clone(), pos, furniture_id);
+            self.spawn_furniture(object_in, pos, furniture_id);
         }
 
         if let Some(items) = &bash.items {
             match items {
                 BashItems::Explicit(item_vec) => {
-                    self.spawn_items(child_of, pos, item_vec.iter().flat_map(BashItem::items));
+                    self.spawn_items(object_in, pos, item_vec.iter().flat_map(BashItem::items));
                 }
                 BashItems::Collection(item_group) => {
-                    self.spawn_item_collection(child_of, pos, item_group);
+                    self.spawn_item_collection(object_in, pos, item_group);
                 }
             }
         }
@@ -735,7 +739,7 @@ impl<'w> TileSpawner<'w, '_> {
 
     pub(crate) fn spawn_craft(
         &mut self,
-        child_of: ChildOf,
+        object_in: ObjectIn,
         pos: Pos,
         recipe: Arc<Recipe>,
     ) -> Result<Entity, Error> {
@@ -815,7 +819,7 @@ impl<'w> TileSpawner<'w, '_> {
             ignored: Ignored::default(),
         };
         let entity = self.spawn_item(
-            child_of,
+            object_in,
             Some(pos),
             &CddaItem::new(&Arc::new(craft_item_info)),
             Amount::SINGLE,

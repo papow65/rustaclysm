@@ -1,5 +1,6 @@
 use crate::{
-    Amount, Containable, InPocket, ItemHierarchy, ItemIntegrity, Phrase, StandardIntegrity,
+    Amount, Containable, InPocket, ItemHierarchy, ItemIntegrity, ObjectIn, Phrase,
+    StandardIntegrity,
 };
 use crate::{SealedPocket, Shared};
 use bevy::prelude::{
@@ -33,6 +34,7 @@ fn check_item_parents(
             Option<&Shared<PocketInfo>>,
             Option<&SealedPocket>,
             Option<&ChildOf>,
+            Option<&ObjectIn>,
             Option<&InPocket>,
         ),
         Or<(With<Amount>, With<Containable>)>,
@@ -54,42 +56,48 @@ fn check_item_parents(
             "Items should not sealed"
         );
 
-        for (entity, .., child_of, in_pocket) in &checked_item {
+        for (entity, .., child_of, object_in, in_pocket) in &checked_item {
             let has_pos = pos.contains(entity);
-            let is_in_area = child_of.is_some();
+            let has_parent = child_of.is_some();
+            let is_in_area = object_in.is_some();
             let is_in_pocket = in_pocket.is_some();
-            let area_found_as_pocket =
-                child_of.is_some_and(|child_of| pockets.contains(child_of.parent()));
-            let pocket_found_as_pocket =
+            let area_is_pocket =
+                object_in.is_some_and(|object_in| pockets.contains(object_in.subzone_level_entity));
+            let pocket_is_pocket =
                 in_pocket.is_some_and(|in_pocket| pockets.contains(in_pocket.pocket_entity));
+
+            assert!(
+                !has_parent,
+                "Items with or without a pos ({pos:?}) should not have in a parent ({child_of:?}, {object_in:?}, {in_pocket:?}, {area_is_pocket:?}, {pocket_is_pocket:?})"
+            );
 
             if has_pos {
                 assert!(
                     is_in_area,
-                    "Items with a pos ({pos:?}) should be in an area ({child_of:?}, {in_pocket:?}, {area_found_as_pocket:?}, {pocket_found_as_pocket:?})"
+                    "Items with a pos ({pos:?}) should be in an area ({child_of:?}, {object_in:?}, {in_pocket:?}, {area_is_pocket:?}, {pocket_is_pocket:?})"
                 );
                 assert!(
                     !is_in_pocket,
-                    "Items with a pos ({pos:?}) should not be in a pocket ({child_of:?}, {in_pocket:?}, {area_found_as_pocket:?}, {pocket_found_as_pocket:?})"
+                    "Items with a pos ({pos:?}) should not be in a pocket ({child_of:?}, {object_in:?}, {in_pocket:?}, {area_is_pocket:?}, {pocket_is_pocket:?})"
                 );
 
                 assert!(
-                    !area_found_as_pocket,
-                    "The area of an items should not be a pocket ({child_of:?}, {in_pocket:?}, {area_found_as_pocket:?}, {pocket_found_as_pocket:?})"
+                    !area_is_pocket,
+                    "The area of an items should not be a pocket ({child_of:?}, {object_in:?}, {in_pocket:?}, {area_is_pocket:?}, {pocket_is_pocket:?})"
                 );
             } else {
                 assert!(
                     !is_in_area,
-                    "Items without a pos ({pos:?}) should not be in an area ({child_of:?}, {in_pocket:?}, {area_found_as_pocket:?}, {pocket_found_as_pocket:?})"
+                    "Items without a pos ({pos:?}) should not be in an area ({child_of:?}, {object_in:?}, {in_pocket:?}, {area_is_pocket:?}, {pocket_is_pocket:?})"
                 );
                 assert!(
                     is_in_pocket,
-                    "Items without a pos ({pos:?}) should be in a pocket ({child_of:?}, {in_pocket:?}, {area_found_as_pocket:?}, {pocket_found_as_pocket:?})"
+                    "Items without a pos ({pos:?}) should be in a pocket ({child_of:?}, {object_in:?}, {in_pocket:?}, {area_is_pocket:?}, {pocket_is_pocket:?})"
                 );
 
                 assert!(
-                    pocket_found_as_pocket,
-                    "The pocket of an items should be a pocket ({child_of:?}, {in_pocket:?}, {area_found_as_pocket:?}, {pocket_found_as_pocket:?})"
+                    pocket_is_pocket,
+                    "The pocket of an items should be a pocket ({child_of:?}, {object_in:?}, {in_pocket:?}, {area_is_pocket:?}, {pocket_is_pocket:?})"
                 );
             }
         }

@@ -2,13 +2,13 @@ use crate::{
     ActorEvent, ActorImpact, Amount, Aquatic, Attack, BaseSpeed, BodyContainers, Breath,
     ChangePace, Clock, Close, Collision, Consumed, Container, CorpseEvent, Craft, Damage, Envir,
     Faction, Filthy, Fragment, Healing, HealingDuration, Health, InPocket, Item, ItemHierarchy,
-    ItemItem, LastEnemy, LastSeen, Life, Melee, MessageWriter, ObjectName, Peek, Phrase, Player,
-    PlayerActionState, PlayerWielded, Pulp, Severity, Smash, Stamina, StaminaCost, StartCraft,
-    Step, Subject, TerrainEvent, TileSpawner, Toggle, WalkingMode,
+    ItemItem, LastEnemy, LastSeen, Life, Melee, MessageWriter, ObjectIn, ObjectName, Peek, Phrase,
+    Player, PlayerActionState, PlayerWielded, Pulp, Severity, Smash, Stamina, StaminaCost,
+    StartCraft, Step, Subject, TerrainEvent, TileSpawner, Toggle, WalkingMode,
 };
 use bevy::ecs::query::QueryData;
 use bevy::prelude::{
-    ChildOf, Commands, Entity, Event, EventWriter, NextState, Query, Transform, Visibility, error,
+    Commands, Entity, Event, EventWriter, NextState, Query, Transform, Visibility, error,
 };
 use cdda_json_files::{CddaItem, Description};
 use either::Either;
@@ -534,7 +534,7 @@ impl ActorItem<'_> {
             .entity(taken.entity)
             .insert((allowed_amount, to_in_pocket))
             .remove::<Pos>()
-            .remove::<ChildOf>();
+            .remove::<ObjectIn>();
     }
 
     fn take_all(commands: &mut Commands, to_in_pocket: InPocket, taken_entity: Entity) {
@@ -544,7 +544,7 @@ impl ActorItem<'_> {
         commands
             .entity(taken_entity)
             .remove::<Pos>()
-            .remove::<ChildOf>();
+            .remove::<ObjectIn>();
     }
 
     pub(crate) fn move_item(
@@ -580,7 +580,7 @@ impl ActorItem<'_> {
             .extend(moved.fragments())
             .send_info();
 
-        let Some(new_parent) = subzone_level_cache.get(SubzoneLevel::from(to)) else {
+        let Some(subzone_level_entity) = subzone_level_cache.get(SubzoneLevel::from(to)) else {
             message_writer
                 .str("Subzone not found when moving an item")
                 .send_error();
@@ -588,7 +588,13 @@ impl ActorItem<'_> {
         };
         commands
             .entity(moved.entity)
-            .insert((Visibility::default(), to, ChildOf(new_parent)))
+            .insert((
+                Visibility::default(),
+                to,
+                ObjectIn {
+                    subzone_level_entity,
+                },
+            ))
             .remove::<InPocket>();
         location.move_(moved.entity, to);
         self.impact_from_duration(Duration::SECOND, StaminaCost::NEUTRAL)
@@ -605,7 +611,7 @@ impl ActorItem<'_> {
         start_craft: &StartCraft,
     ) -> ActorImpact {
         let pos = self.pos.horizontal_nbor(start_craft.target);
-        let Some(parent_entity) = subzone_level_cache.get(SubzoneLevel::from(pos)) else {
+        let Some(subzone_level_entity) = subzone_level_cache.get(SubzoneLevel::from(pos)) else {
             message_writer
                 .str("Subzone not found when starting to craft")
                 .send_error();
@@ -665,7 +671,9 @@ impl ActorItem<'_> {
         }
 
         let item = spawner.spawn_craft(
-            ChildOf(parent_entity),
+            ObjectIn {
+                subzone_level_entity,
+            },
             pos,
             start_craft.recipe_situation.recipe().clone(),
         );

@@ -3,7 +3,7 @@
 use crate::{
     Actor, ActorEvent, Amount, Clock, ContainerLimits, Corpse, CorpseEvent, CorpseRaise, Damage,
     Faction, Fragment, GameplayScreenState, Healing, Health, Item, ItemHierarchy, Life, Limited,
-    LocalTerrain, MessageWriter, ObjectName, Obstacle, Phrase, Player, Shared, Stamina,
+    LocalTerrain, MessageWriter, ObjectIn, ObjectName, Obstacle, Phrase, Player, Shared, Stamina,
     StandardIntegrity, Subject, TerrainEvent, TileSpawner, Toggle, VisualizationUpdate,
     WalkingMode,
 };
@@ -56,12 +56,12 @@ pub(in super::super) fn toggle_doors(
     mut toggle_reader: EventReader<TerrainEvent<Toggle>>,
     mut spawner: TileSpawner,
     mut visualization_update: ResMut<VisualizationUpdate>,
-    terrain: Query<(&Pos, &Shared<TerrainInfo>, &ChildOf)>,
+    terrain: Query<(&Pos, &Shared<TerrainInfo>, &ObjectIn)>,
 ) {
     let start = Instant::now();
 
     for toggle in toggle_reader.read() {
-        let (&pos, terrain_info, child_of) = terrain
+        let (&pos, terrain_info, &object_in) = terrain
             .get(toggle.terrain_entity)
             .expect("Terrain should be found");
 
@@ -75,7 +75,7 @@ pub(in super::super) fn toggle_doors(
                 .expect("Terrain should be closeable"),
         };
         let local_terrain = LocalTerrain::unconnected(toggled.clone());
-        spawner.spawn_terrain(child_of.clone(), pos, &local_terrain);
+        spawner.spawn_terrain(object_in, pos, &local_terrain);
         *visualization_update = VisualizationUpdate::Forced;
     }
 
@@ -279,15 +279,16 @@ pub(in super::super) fn update_damaged_terrain(
         &mut StandardIntegrity,
         Option<&Shared<TerrainInfo>>,
         Option<&Shared<FurnitureInfo>>,
-        &ChildOf,
+        &ObjectIn,
     )>,
 ) {
     let start = Instant::now();
 
     for damage in damage_reader.read() {
-        let (terrain, &pos, name, mut integrity, terrain_info, furniture_info, child_of) = terrain
-            .get_mut(damage.terrain_entity)
-            .expect("Terrain or furniture found");
+        let (terrain, &pos, name, mut integrity, terrain_info, furniture_info, &object_in) =
+            terrain
+                .get_mut(damage.terrain_entity)
+                .expect("Terrain or furniture found");
         let evolution = integrity.lower(&damage.change);
         if integrity.0.is_zero() {
             message_writer
@@ -297,7 +298,7 @@ pub(in super::super) fn update_damaged_terrain(
                 .send_warn();
             commands.entity(terrain).despawn();
             spawner.spawn_smashed(
-                child_of,
+                object_in,
                 pos,
                 terrain_info
                     .map(Shared::as_ref)

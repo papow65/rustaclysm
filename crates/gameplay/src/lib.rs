@@ -8,6 +8,7 @@ mod item;
 mod models;
 mod phrase;
 mod plugin;
+mod relations;
 mod resources;
 mod screens;
 mod sidebar;
@@ -51,6 +52,7 @@ use self::models::ModelFactory;
 use self::phrase::{
     DebugText, DebugTextShown, Fragment, MessageWriter, Phrase, PhrasePlugin, Positioning,
 };
+use self::relations::{ObjectIn, VehiclePartOf};
 use self::resources::{
     CameraOffset, ElevationVisibility, Expanded, Explored, InstructionQueue, RelativeSegment,
     RelativeSegments, SeenFrom, VisualizationUpdate, ZoneLevelIds,
