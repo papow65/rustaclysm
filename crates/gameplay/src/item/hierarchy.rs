@@ -1,9 +1,9 @@
 use crate::{
-    Amount, ContainerLimits, Fragment, InPocket, Item, ItemItem, Phrase, Pocket, PocketContents,
-    PocketItem, Pockets, SealedPocket,
+    Amount, ContainerLimits, Fragment, InPocket, Item, ItemItem, ObjectOn, Objects, Phrase, Pocket,
+    PocketContents, PocketItem, Pockets, SealedPocket,
 };
 use bevy::ecs::system::SystemParam;
-use bevy::prelude::{ChildOf, Children, Entity, Query, error, warn};
+use bevy::prelude::{Entity, Query, error, warn};
 use cdda_json_files::{ItemTypeDetails, PocketInfo, PocketType, UntypedInfoId};
 use std::{iter::once, num::NonZeroUsize, sync::Arc};
 
@@ -61,7 +61,7 @@ pub(crate) struct InPocketContext {
 #[derive(SystemParam)]
 pub(crate) struct ItemHierarchy<'w, 's> {
     limits: Query<'w, 's, &'static ContainerLimits>,
-    areas: Query<'w, 's, &'static Children>,
+    tiles: Query<'w, 's, &'static Objects>,
     items: Query<'w, 's, Item>,
     pockets: Query<'w, 's, Pocket>,
 }
@@ -71,16 +71,16 @@ impl<'w> ItemHierarchy<'w, '_> {
         self.items.get(item).is_ok()
     }
 
-    pub(crate) fn items_in_area(
+    pub(crate) fn items_on_tile(
         &self,
-        in_area: &ChildOf,
+        object_on: ObjectOn,
     ) -> impl Iterator<Item = ItemItem> + use<'_> {
-        self.areas
-            .get(in_area.parent())
+        self.tiles
+            .get(object_on.tile_entity)
             .inspect_err(|error| error!("Error while looking up area: {error:#?}"))
             .into_iter()
-            .flat_map(IntoIterator::into_iter)
-            .flat_map(|item| self.items.get(*item)) // Filtering out the models
+            .flat_map(Objects::object_entities)
+            .flat_map(|item| self.items.get(*item)) // Filtering out non-items
     }
 
     pub(crate) fn items_in_pocket(

@@ -1,5 +1,7 @@
-use crate::VehiclePartOf;
-use crate::{LocalTerrain, ObjectIn, TileSpawner, ZoneLevelIds, spawn::log_spawn_result};
+use crate::ObjectOn;
+use crate::{
+    LocalTerrain, TileIn, TileSpawner, VehiclePartOf, ZoneLevelIds, spawn::log_spawn_result,
+};
 use application_state::ApplicationState;
 use bevy::ecs::system::SystemParam;
 use bevy::platform::collections::HashSet;
@@ -96,7 +98,7 @@ impl SubzoneSpawner<'_, '_> {
             .commands
             .spawn((subzone_level, StateScoped(ApplicationState::Gameplay)))
             .id();
-        let object_in = ObjectIn {
+        let tile_in = TileIn {
             subzone_level_entity,
         };
 
@@ -115,9 +117,7 @@ impl SubzoneSpawner<'_, '_> {
                     };
                     let pos = base_pos.horizontal_offset(x, z);
                     //trace!("{:?}", ("{pos:?}");
-                    let Some(local_terrain) = LocalTerrain::at(&terrain, pos) else {
-                        return;
-                    };
+                    let local_terrain = LocalTerrain::at(&terrain, pos);
                     let furniture_ids = submap
                         .furniture
                         .iter()
@@ -131,9 +131,9 @@ impl SubzoneSpawner<'_, '_> {
                         .filter(|spawn| spawn.x == pos_offset.x && spawn.z == pos_offset.z);
                     let fields = submap.fields.0.iter().filter_map(|at| pos_offset.get(at));
                     self.tile_spawner.spawn_tile(
-                        object_in,
+                        tile_in,
                         pos,
-                        &local_terrain,
+                        local_terrain.as_ref(),
                         furniture_ids,
                         item_repetitions,
                         spawns,
@@ -144,13 +144,17 @@ impl SubzoneSpawner<'_, '_> {
 
             for vehicle in &submap.vehicles {
                 let vehicle_pos = base_pos.horizontal_offset(vehicle.posx, vehicle.posy);
-                let vehicle_entity =
-                    self.tile_spawner
-                        .spawn_vehicle(object_in, vehicle_pos, vehicle);
+                let vehicle_entity = self
+                    .tile_spawner
+                    .spawn_vehicle(tile_in, vehicle_pos, vehicle);
 
+                // Vehicle parts may go beyond the subzone level borders, so we use a dummy onbject_on.
+                let object_on = ObjectOn {
+                    tile_entity: vehicle_entity,
+                };
                 for vehicle_part in &vehicle.parts {
                     self.tile_spawner.spawn_vehicle_part(
-                        object_in,
+                        object_on,
                         VehiclePartOf { vehicle_entity },
                         vehicle_pos,
                         vehicle_part,
@@ -174,9 +178,7 @@ impl SubzoneSpawner<'_, '_> {
                     .map(|(_, monster)| monster)
                 {
                     log_spawn_result(self.tile_spawner.spawn_character(
-                        ObjectIn {
-                            subzone_level_entity,
-                        },
+                        tile_in,
                         base_pos,
                         &monster.info,
                         None,

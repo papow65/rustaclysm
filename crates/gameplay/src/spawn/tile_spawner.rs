@@ -5,12 +5,12 @@ use crate::{
     Obstacle, Opaque, OpaqueFloor, Openable, Phase, Player, SealedPocket, Shared, Stamina,
     StandardIntegrity, Vehicle, VehiclePart, WalkingMode, spawn::log_spawn_result,
 };
-use crate::{InPocket, ObjectIn, PocketOf, VehiclePartOf};
+use crate::{InPocket, ObjectOn, PocketOf, Tile, TileIn, VehiclePartOf};
 use application_state::ApplicationState;
 use bevy::ecs::{relationship::Relationship, system::SystemParam};
 use bevy::prelude::{
-    Camera3d, Commands, DirectionalLight, Entity, EulerRot, Mat4, Res, StateScoped, TextColor,
-    Transform, Vec3, Visibility, debug, error,
+    Camera3d, Commands, DirectionalLight, Entity, EulerRot, Mat4, Query, Res, StateScoped,
+    TextColor, Transform, Vec3, Visibility, With, debug, error,
 };
 use bevy::render::camera::{PerspectiveProjection, Projection};
 use bevy::render::view::RenderLayers;
@@ -22,7 +22,7 @@ use cdda_json_files::{
 };
 use either::Either;
 use gameplay_cdda::{ActiveSav, Error, Infos, ObjectCategory, TileVariant};
-use gameplay_location::{LevelOffset, Pos, PosOffset, StairsDown, StairsUp};
+use gameplay_location::{LevelOffset, LocationCache, Pos, PosOffset, StairsDown, StairsUp};
 use hud::{BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR};
 use std::f32::consts::{FRAC_PI_4, TAU};
 use std::sync::{Arc, LazyLock};
@@ -33,9 +33,11 @@ use util::Maybe;
 pub(crate) struct TileSpawner<'w, 's> {
     pub(crate) commands: Commands<'w, 's>,
     infos: Res<'w, Infos>,
-    explored: Res<'w, Explored>,
     active_sav: Res<'w, ActiveSav>,
+    explored: Res<'w, Explored>,
+    location_cache: Res<'w, LocationCache>,
     model_factory: ModelFactory<'w>,
+    tiles: Query<'w, 's, Entity, With<Tile>>,
 }
 
 impl<'w> TileSpawner<'w, '_> {
@@ -45,15 +47,21 @@ impl<'w> TileSpawner<'w, '_> {
 
     pub(crate) fn spawn_tile<'a>(
         &mut self,
-        object_in: ObjectIn,
+        tile_in: TileIn,
         pos: Pos,
-        local_terrain: &LocalTerrain,
+        local_terrain: Option<&LocalTerrain>,
         furniture_infos: impl Iterator<Item = Arc<FurnitureInfo>>,
         item_repetitions: impl Iterator<Item = &'a Vec<Repetition<CddaItem>>>,
         spawns: impl Iterator<Item = &'a Character>,
         fields: impl Iterator<Item = &'a FlatVec<Field, 3>>,
     ) {
-        self.spawn_terrain(object_in, pos, local_terrain);
+        let object_in = ObjectOn {
+            tile_entity: self.commands.spawn((pos, Tile, tile_in)).id(),
+        };
+
+        if let Some(local_terrain) = local_terrain {
+            self.spawn_terrain(object_in, pos, local_terrain);
+        }
 
         for furniture_info in furniture_infos {
             self.spawn_furniture(object_in, pos, &furniture_info);
@@ -75,7 +83,7 @@ impl<'w> TileSpawner<'w, '_> {
 
         for spawn in spawns {
             //trace!("{:?}", (&spawn.id);
-            log_spawn_result(self.spawn_character(object_in, pos, &spawn.info, None));
+            log_spawn_result(self.spawn_character(tile_in, pos, &spawn.info, None));
         }
 
         for fields in fields {
@@ -88,7 +96,7 @@ impl<'w> TileSpawner<'w, '_> {
 
     pub(crate) fn spawn_character(
         &mut self,
-        object_in: ObjectIn,
+        tile_in: TileIn,
         pos: Pos,
         character_info: &RequiredLinkedLater<CharacterInfo>,
         name: Option<ObjectName>,
@@ -102,7 +110,7 @@ impl<'w> TileSpawner<'w, '_> {
         let object_name = ObjectName::new(character_info.name.clone(), faction.color());
 
         let entity = self.spawn_object(
-            object_in,
+            tile_in,
             Some(pos),
             character_info.id.untyped(),
             ObjectCategory::Character,
@@ -177,7 +185,7 @@ impl<'w> TileSpawner<'w, '_> {
         Ok(pocket_of_character.item_entity)
     }
 
-    fn spawn_field(&mut self, object_in: ObjectIn, pos: Pos, field: &Field) {
+    fn spawn_field(&mut self, object_in: ObjectOn, pos: Pos, field: &Field) {
         let Some(field_info) = field.field_info.get_option() else {
             return;
         };
@@ -296,7 +304,7 @@ impl<'w> TileSpawner<'w, '_> {
 
     fn spawn_items(
         &mut self,
-        object_in: ObjectIn,
+        object_in: ObjectOn,
         pos: Pos,
         items: impl Iterator<Item = SpawnItem>,
     ) {
@@ -313,7 +321,7 @@ impl<'w> TileSpawner<'w, '_> {
 
     fn spawn_item_collection(
         &mut self,
-        object_in: ObjectIn,
+        object_in: ObjectOn,
         pos: Pos,
         item_group: &RequiredLinkedLater<ItemGroup>,
     ) {
@@ -325,7 +333,7 @@ impl<'w> TileSpawner<'w, '_> {
 
     fn spawn_furniture(
         &mut self,
-        object_in: ObjectIn,
+        object_in: ObjectOn,
         pos: Pos,
         furniture_info: &Arc<FurnitureInfo>,
     ) {
@@ -362,7 +370,7 @@ impl<'w> TileSpawner<'w, '_> {
 
     pub(crate) fn spawn_terrain(
         &mut self,
-        object_in: ObjectIn,
+        object_in: ObjectOn,
         pos: Pos,
         local_terrain: &LocalTerrain,
     ) {
@@ -422,14 +430,14 @@ impl<'w> TileSpawner<'w, '_> {
 
     pub(crate) fn spawn_vehicle(
         &mut self,
-        object_in: ObjectIn,
+        tile_in: TileIn,
         pos: Pos,
         vehicle: &CddaVehicle,
     ) -> Entity {
         let object_name = ObjectName::from_str(&vehicle.name, HARD_TEXT_COLOR);
 
         let entity = self.spawn_object(
-            object_in,
+            tile_in,
             Some(pos),
             &vehicle.id,
             ObjectCategory::Vehicle,
@@ -449,7 +457,7 @@ impl<'w> TileSpawner<'w, '_> {
 
     pub(crate) fn spawn_vehicle_part(
         &mut self,
-        object_in: ObjectIn,
+        object_on: ObjectOn,
         vehicle_part_of: VehiclePartOf,
         parent_pos: Pos,
         vehicle_part: &CddaVehiclePart,
@@ -462,7 +470,12 @@ impl<'w> TileSpawner<'w, '_> {
         };
 
         let name = part_info.name.as_ref().unwrap_or(&item_info.name);
-        let pos = parent_pos.horizontal_offset(vehicle_part.mount_dx, vehicle_part.mount_dy);
+        let pos_offset = PosOffset {
+            x: vehicle_part.mount_dx,
+            level: LevelOffset::ZERO,
+            z: vehicle_part.mount_dy,
+        };
+        let pos = parent_pos.horizontal_offset(pos_offset.x, pos_offset.z);
         let object_name = ObjectName::new(name.clone(), HARD_TEXT_COLOR);
 
         let variant = ItemIntegrity::from(vehicle_part.base.damaged)
@@ -471,7 +484,7 @@ impl<'w> TileSpawner<'w, '_> {
             .or_else(|| vehicle_part.open.then_some(TileVariant::Open))
             .unwrap_or(TileVariant::Unconnected);
         let entity = self.spawn_object(
-            object_in,
+            object_on,
             Some(pos),
             part_info.id.untyped(),
             ObjectCategory::VehiclePart,
@@ -621,7 +634,7 @@ impl<'w> TileSpawner<'w, '_> {
                 StateScoped(ApplicationState::Gameplay),
             ))
             .id();
-        let dummy_root = ObjectIn {
+        let dummy_root = TileIn {
             subzone_level_entity: dummy_root,
         };
 
@@ -654,7 +667,7 @@ impl<'w> TileSpawner<'w, '_> {
                 StateScoped(ApplicationState::Gameplay),
             ))
             .id();
-        let dummy_root = ObjectIn {
+        let dummy_root = TileIn {
             subzone_level_entity: dummy_root,
         };
 
@@ -705,7 +718,7 @@ impl<'w> TileSpawner<'w, '_> {
 
     pub(crate) fn spawn_smashed(
         &mut self,
-        object_in: ObjectIn,
+        object_in: ObjectOn,
         pos: Pos,
         info: Either<&Arc<TerrainInfo>, &Arc<FurnitureInfo>>,
     ) {
@@ -737,12 +750,14 @@ impl<'w> TileSpawner<'w, '_> {
         }
     }
 
-    pub(crate) fn spawn_craft(
-        &mut self,
-        object_in: ObjectIn,
-        pos: Pos,
-        recipe: Arc<Recipe>,
-    ) -> Result<Entity, Error> {
+    pub(crate) fn spawn_craft(&mut self, pos: Pos, recipe: Arc<Recipe>) -> Result<Entity, Error> {
+        let object_in = ObjectOn {
+            tile_entity: self
+                .location_cache
+                .get_first(pos, &self.tiles)
+                .expect("Tile of craft should be found"),
+        };
+
         let craft_item_info = CommonItemInfo {
             id: InfoId::new("craft"),
             type_details: ItemTypeDetails::Craft.into(),

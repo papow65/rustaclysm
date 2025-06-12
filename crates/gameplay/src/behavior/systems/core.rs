@@ -3,7 +3,7 @@ use crate::{
     ContinueCraft, CorpseEvent, Craft, CurrentlyVisibleBuilder, Damage, Envir, ExamineItem,
     Explored, Faction, Healing, HealingDuration, InstructionQueue, Item, ItemAction as _,
     ItemHierarchy, Life, MessageWriter, MoveItem, Peek, Pickup, PlannedAction, Player,
-    PlayerActionState, Pulp, Sleep, Smash, Stamina, StartCraft, Stay, Step, TerrainEvent,
+    PlayerActionState, Pulp, Sleep, Smash, Stamina, StartCraft, Stay, Step, TerrainEvent, Tile,
     TileSpawner, Timeouts, Toggle, Unwield, Wield,
 };
 use bevy::ecs::schedule::{IntoScheduleConfigs as _, ScheduleConfigs};
@@ -12,7 +12,7 @@ use bevy::prelude::{
     Commands, Entity, EventWriter, In, IntoSystem as _, Local, NextState, Query, Res, ResMut,
     Single, State, StateTransition, SystemInput, With, World, debug,
 };
-use gameplay_location::{LocationCache, Pos, SubzoneLevelCache};
+use gameplay_location::{LocationCache, Pos};
 use std::{cell::OnceCell, time::Instant};
 use units::Duration;
 use util::log_if_slow;
@@ -491,43 +491,37 @@ fn perform_pickup(
     )
 }
 
-#[expect(clippy::needless_pass_by_value)]
 fn perform_move_item(
     In(move_item): In<ActionIn<MoveItem>>,
     mut commands: Commands,
     mut message_writer: MessageWriter,
-    subzone_level_cache: Res<SubzoneLevelCache>,
     mut location: ResMut<LocationCache>,
     actors: Query<Actor>,
     items: Query<Item>,
+    tiles: Query<Entity, With<Tile>>,
 ) -> ActorImpact {
     move_item.actor(&actors).move_item(
         &mut commands,
         &mut message_writer,
-        &subzone_level_cache,
         &mut location,
         &move_item.action.item(&items),
         move_item.action.to,
+        &tiles,
     )
 }
 
-#[expect(clippy::needless_pass_by_value)]
 fn perform_start_craft(
     In(start_craft): In<ActionIn<StartCraft>>,
     mut commands: Commands,
-    mut message_writer: MessageWriter,
     mut next_player_action_state: ResMut<NextState<PlayerActionState>>,
     mut spawner: TileSpawner,
-    subzone_level_cache: Res<SubzoneLevelCache>,
     actors: Query<Actor>,
     mut amounts: Query<&mut Amount>,
 ) -> ActorImpact {
     start_craft.actor(&actors).start_craft(
         &mut commands,
-        &mut message_writer,
         &mut next_player_action_state,
         &mut spawner,
-        &subzone_level_cache,
         &mut amounts,
         &start_craft.action,
     )

@@ -2,19 +2,17 @@ use crate::{
     ActorEvent, ActorImpact, Amount, Aquatic, Attack, BaseSpeed, BodyContainers, Breath,
     ChangePace, Clock, Close, Collision, Consumed, Container, CorpseEvent, Craft, Damage, Envir,
     Faction, Filthy, Fragment, Healing, HealingDuration, Health, InPocket, Item, ItemHierarchy,
-    ItemItem, LastEnemy, LastSeen, Life, Melee, MessageWriter, ObjectIn, ObjectName, Peek, Phrase,
+    ItemItem, LastEnemy, LastSeen, Life, Melee, MessageWriter, ObjectName, ObjectOn, Peek, Phrase,
     Player, PlayerActionState, PlayerWielded, Pulp, Severity, Smash, Stamina, StaminaCost,
-    StartCraft, Step, Subject, TerrainEvent, TileSpawner, Toggle, WalkingMode,
+    StartCraft, Step, Subject, TerrainEvent, Tile, TileSpawner, Toggle, WalkingMode,
 };
-use bevy::ecs::query::QueryData;
+use bevy::ecs::query::{QueryData, With};
 use bevy::prelude::{
     Commands, Entity, Event, EventWriter, NextState, Query, Transform, Visibility, error,
 };
 use cdda_json_files::{CddaItem, Description};
 use either::Either;
-use gameplay_location::{
-    HorizontalDirection, LevelOffset, LocationCache, Nbor, Pos, SubzoneLevel, SubzoneLevelCache,
-};
+use gameplay_location::{HorizontalDirection, LevelOffset, LocationCache, Nbor, Pos};
 use hud::text_color_expect_full;
 use units::{Distance, Duration, Speed};
 use util::Maybe;
@@ -519,7 +517,7 @@ impl ActorItem<'_> {
                 LastSeen::Currently,
                 Transform::default(),
                 Visibility::default(),
-                Maybe(taken.in_area.cloned()),
+                Maybe(taken.on_tile.copied()),
                 Maybe(taken.in_pocket.copied()),
             ))
             .id();
@@ -534,7 +532,7 @@ impl ActorItem<'_> {
             .entity(taken.entity)
             .insert((allowed_amount, to_in_pocket))
             .remove::<Pos>()
-            .remove::<ObjectIn>();
+            .remove::<ObjectOn>();
     }
 
     fn take_all(commands: &mut Commands, to_in_pocket: InPocket, taken_entity: Entity) {
@@ -544,17 +542,17 @@ impl ActorItem<'_> {
         commands
             .entity(taken_entity)
             .remove::<Pos>()
-            .remove::<ObjectIn>();
+            .remove::<ObjectOn>();
     }
 
     pub(crate) fn move_item(
         &self,
         commands: &mut Commands,
         message_writer: &mut MessageWriter,
-        subzone_level_cache: &SubzoneLevelCache,
         location: &mut LocationCache,
         moved: &ItemItem,
         to: Nbor,
+        tiles: &Query<Entity, With<Tile>>,
     ) -> ActorImpact {
         if let Some(from) = moved.pos {
             let offset = *from - *self.pos;
@@ -580,7 +578,7 @@ impl ActorItem<'_> {
             .extend(moved.fragments())
             .send_info();
 
-        let Some(subzone_level_entity) = subzone_level_cache.get(SubzoneLevel::from(to)) else {
+        let Some(tile_entity) = location.get_first(to, tiles) else {
             message_writer
                 .str("Subzone not found when moving an item")
                 .send_error();
@@ -588,13 +586,7 @@ impl ActorItem<'_> {
         };
         commands
             .entity(moved.entity)
-            .insert((
-                Visibility::default(),
-                to,
-                ObjectIn {
-                    subzone_level_entity,
-                },
-            ))
+            .insert((Visibility::default(), to, ObjectOn { tile_entity }))
             .remove::<InPocket>();
         location.move_(moved.entity, to);
         self.impact_from_duration(Duration::SECOND, StaminaCost::NEUTRAL)
@@ -603,20 +595,12 @@ impl ActorItem<'_> {
     pub(crate) fn start_craft(
         &self,
         commands: &mut Commands,
-        message_writer: &mut MessageWriter,
         next_player_action_state: &mut NextState<PlayerActionState>,
         spawner: &mut TileSpawner,
-        subzone_level_cache: &SubzoneLevelCache,
         item_amounts: &mut Query<&mut Amount>,
         start_craft: &StartCraft,
     ) -> ActorImpact {
         let pos = self.pos.horizontal_nbor(start_craft.target);
-        let Some(subzone_level_entity) = subzone_level_cache.get(SubzoneLevel::from(pos)) else {
-            message_writer
-                .str("Subzone not found when starting to craft")
-                .send_error();
-            return self.no_impact();
-        };
 
         for Consumed {
             amount,
@@ -670,13 +654,7 @@ impl ActorItem<'_> {
             }
         }
 
-        let item = spawner.spawn_craft(
-            ObjectIn {
-                subzone_level_entity,
-            },
-            pos,
-            start_craft.recipe_situation.recipe().clone(),
-        );
+        let item = spawner.spawn_craft(pos, start_craft.recipe_situation.recipe().clone());
         match item {
             Ok(item) => {
                 next_player_action_state.set(PlayerActionState::Crafting { item });

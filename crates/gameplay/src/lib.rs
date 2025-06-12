@@ -35,7 +35,7 @@ use self::common::{
 use self::components::{
     Accessible, Appearance, CameraBase, Closeable, Corpse, CorpseRaise, Craft, ExamineCursor,
     HealingDuration, Hurdle, LastSeen, Life, Melee, MissingAsset, ObjectName, Obstacle, Opaque,
-    OpaqueFloor, Openable, PlayerWielded, Shared, StandardIntegrity, Vehicle, VehiclePart,
+    OpaqueFloor, Openable, PlayerWielded, Shared, StandardIntegrity, Tile, Vehicle, VehiclePart,
 };
 use self::events::{
     ActorChange, ActorEvent, CorpseChange, CorpseEvent, Damage, DespawnSubzoneLevel,
@@ -52,7 +52,7 @@ use self::models::ModelFactory;
 use self::phrase::{
     DebugText, DebugTextShown, Fragment, MessageWriter, Phrase, PhrasePlugin, Positioning,
 };
-use self::relations::{ObjectIn, VehiclePartOf};
+use self::relations::{ObjectOn, Objects, TileIn, VehiclePartOf};
 use self::resources::{
     CameraOffset, ElevationVisibility, Expanded, Explored, InstructionQueue, RelativeSegment,
     RelativeSegments, SeenFrom, VisualizationUpdate, ZoneLevelIds,

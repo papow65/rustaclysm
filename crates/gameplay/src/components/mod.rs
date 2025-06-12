@@ -236,3 +236,7 @@ impl Appearance {
 #[derive(Component)]
 #[component(immutable)]
 pub(crate) struct MissingAsset;
+
+#[derive(Component)]
+#[component(immutable)]
+pub(crate) struct Tile;

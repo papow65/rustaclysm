@@ -1,9 +1,9 @@
 use crate::{
-    Amount, Containable, Filthy, Fragment, InPocket, ItemIntegrity, ObjectName, Phase, Pockets,
-    Positioning, Shared,
+    Amount, Containable, Filthy, Fragment, InPocket, ItemIntegrity, ObjectName, ObjectOn, Phase,
+    Pockets, Positioning, Shared,
 };
 use bevy::ecs::query::QueryData;
-use bevy::prelude::{ChildOf, Children, Entity, ops::atan2};
+use bevy::prelude::{Children, Entity, ops::atan2};
 use cdda_json_files::{CommonItemInfo, InfoId};
 use either::Either;
 use gameplay_location::Pos;
@@ -21,7 +21,7 @@ pub(crate) struct Item {
     pub(crate) integrity: &'static ItemIntegrity,
     pub(crate) phase: &'static Phase,
     pub(crate) containable: &'static Containable,
-    pub(crate) in_area: Option<&'static ChildOf>,
+    pub(crate) on_tile: Option<&'static ObjectOn>,
     pub(crate) in_pocket: Option<&'static InPocket>,
     pub(crate) pockets: Option<&'static Pockets>,
     pub(crate) models: Option<&'static Children>,
@@ -29,17 +29,17 @@ pub(crate) struct Item {
 }
 
 impl<'a> ItemItem<'a> {
-    pub(crate) fn parentage(&self) -> Either<&ChildOf, &InPocket> {
-        match (self.in_area, self.in_pocket) {
+    pub(crate) fn parentage(&self) -> Either<&ObjectOn, &InPocket> {
+        match (self.on_tile, self.in_pocket) {
             (None, None) => panic!(
-                "No area or pocket for item {:?} at {:?}",
+                "No tile or pocket for item {:?} at {:?}",
                 self.name, self.pos
             ),
             (None, Some(in_pocket)) => Either::Right(in_pocket),
-            (Some(in_area), None) => Either::Left(in_area),
-            (Some(in_area), Some(in_pocket)) => {
+            (Some(on_tile), None) => Either::Left(on_tile),
+            (Some(on_tile), Some(in_pocket)) => {
                 panic!(
-                    "Both an area ({in_area:?}) and a pocket ({in_pocket:?}) for item {:?} at {:?}",
+                    "Both a tile ({on_tile:?}) and a pocket ({in_pocket:?}) for item {:?} at {:?}",
                     self.name, self.pos
                 )
             }

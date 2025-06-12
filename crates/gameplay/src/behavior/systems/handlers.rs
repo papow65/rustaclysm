@@ -3,7 +3,7 @@
 use crate::{
     Actor, ActorEvent, Amount, Clock, ContainerLimits, Corpse, CorpseEvent, CorpseRaise, Damage,
     Faction, Fragment, GameplayScreenState, Healing, Health, Item, ItemHierarchy, Life, Limited,
-    LocalTerrain, MessageWriter, ObjectIn, ObjectName, Obstacle, Phrase, Player, Shared, Stamina,
+    LocalTerrain, MessageWriter, ObjectName, ObjectOn, Obstacle, Phrase, Player, Shared, Stamina,
     StandardIntegrity, Subject, TerrainEvent, TileSpawner, Toggle, VisualizationUpdate,
     WalkingMode,
 };
@@ -56,7 +56,7 @@ pub(in super::super) fn toggle_doors(
     mut toggle_reader: EventReader<TerrainEvent<Toggle>>,
     mut spawner: TileSpawner,
     mut visualization_update: ResMut<VisualizationUpdate>,
-    terrain: Query<(&Pos, &Shared<TerrainInfo>, &ObjectIn)>,
+    terrain: Query<(&Pos, &Shared<TerrainInfo>, &ObjectOn)>,
 ) {
     let start = Instant::now();
 
@@ -279,7 +279,7 @@ pub(in super::super) fn update_damaged_terrain(
         &mut StandardIntegrity,
         Option<&Shared<TerrainInfo>>,
         Option<&Shared<FurnitureInfo>>,
-        &ObjectIn,
+        &ObjectOn,
     )>,
 ) {
     let start = Instant::now();
@@ -352,7 +352,7 @@ pub(in super::super) fn combine_items(
             let mut total_amount = &Amount(0) + moved.amount;
 
             let siblings = match moved.parentage() {
-                Either::Left(in_area) => Either::Left(hierarchy.items_in_area(in_area)),
+                Either::Left(on_tile) => Either::Left(hierarchy.items_on_tile(*on_tile)),
                 Either::Right(in_pocket) => Either::Right(hierarchy.items_in_pocket(*in_pocket)),
             };
             for sibling in siblings {

@@ -1,25 +1,49 @@
 use bevy::prelude::{Component, Entity, Vec};
 
-/// Used on an object, for the subzone level that contains the object.
+/// Used on a tile, for the subzone level that contains the tile.
+///
+/// Required
+#[derive(Clone, Copy, Debug, Component)]
+#[relationship(relationship_target = Tiles)]
+pub(crate) struct TileIn {
+    pub(crate) subzone_level_entity: Entity,
+}
+
+/// Used on a subzone level, for all tiles in that subzone level.
+///
+/// Required
+#[derive(Debug, Component)]
+#[relationship_target(relationship = TileIn, linked_spawn)]
+pub(crate) struct Tiles {
+    object_entities: Vec<Entity>,
+}
+
+impl Tiles {
+    #[expect(unused)]
+    pub(crate) fn object_entities(&self) -> &[Entity] {
+        &self.object_entities
+    }
+}
+
+/// Used on an object, for the tile that contains the object.
 ///
 /// Required
 #[derive(Clone, Copy, Debug, Component)]
 #[relationship(relationship_target = Objects)]
-pub(crate) struct ObjectIn {
-    pub(crate) subzone_level_entity: Entity,
+pub(crate) struct ObjectOn {
+    pub(crate) tile_entity: Entity,
 }
 
-/// Used on a subzone level, for all objects that the subzone level has.
+/// Used on a tile, for all objects on the tile.
 ///
 /// Required
 #[derive(Debug, Component)]
-#[relationship_target(relationship = ObjectIn, linked_spawn)]
+#[relationship_target(relationship = ObjectOn, linked_spawn)]
 pub(crate) struct Objects {
     object_entities: Vec<Entity>,
 }
 
 impl Objects {
-    #[expect(unused)]
     pub(crate) fn object_entities(&self) -> &[Entity] {
         &self.object_entities
     }
