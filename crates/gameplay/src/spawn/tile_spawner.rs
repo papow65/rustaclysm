@@ -1,7 +1,7 @@
 use crate::{
     Accessible, Amount, Aquatic, BaseSpeed, BodyContainers, CameraBase, Closeable, Containable,
     Craft, ExamineCursor, Explored, Faction, Filthy, HealingDuration, Health, Hurdle,
-    ItemIntegrity, LastSeen, Life, Limited, LocalTerrain, Melee, ModelFactory, ObjectName,
+    ItemIntegrity, LastSeen, Life, Limited, LocalTerrain, Melee, Mobile, ModelFactory, ObjectName,
     Obstacle, Opaque, OpaqueFloor, Openable, Phase, Player, SealedPocket, Shared, Stamina,
     StandardIntegrity, Vehicle, VehiclePart, WalkingMode, spawn::log_spawn_result,
 };
@@ -9,8 +9,8 @@ use crate::{InPocket, ObjectOn, PocketOf, Tile, TileIn, VehiclePartOf};
 use application_state::ApplicationState;
 use bevy::ecs::{relationship::Relationship, system::SystemParam};
 use bevy::prelude::{
-    Camera3d, Commands, DirectionalLight, Entity, EulerRot, Mat4, Query, Res, StateScoped,
-    TextColor, Transform, Vec3, Visibility, With, debug, error,
+    Camera3d, Commands, Component, DirectionalLight, Entity, EulerRot, Mat4, Query, Res,
+    StateScoped, TextColor, Transform, Vec3, Visibility, With, debug, error,
 };
 use bevy::render::camera::{PerspectiveProjection, Projection};
 use bevy::render::view::RenderLayers;
@@ -31,7 +31,7 @@ use util::Maybe;
 
 #[derive(SystemParam)]
 pub(crate) struct TileSpawner<'w, 's> {
-    pub(crate) commands: Commands<'w, 's>,
+    pub(super) commands: Commands<'w, 's>,
     infos: Res<'w, Infos>,
     active_sav: Res<'w, ActiveSav>,
     explored: Res<'w, Explored>,
@@ -83,7 +83,7 @@ impl<'w> TileSpawner<'w, '_> {
 
         for spawn in spawns {
             //trace!("{:?}", (&spawn.id);
-            log_spawn_result(self.spawn_character(tile_in, pos, &spawn.info, None));
+            log_spawn_result(self.spawn_character(pos, &spawn.info, None));
         }
 
         for fields in fields {
@@ -96,7 +96,6 @@ impl<'w> TileSpawner<'w, '_> {
 
     pub(crate) fn spawn_character(
         &mut self,
-        tile_in: TileIn,
         pos: Pos,
         character_info: &RequiredLinkedLater<CharacterInfo>,
         name: Option<ObjectName>,
@@ -110,7 +109,7 @@ impl<'w> TileSpawner<'w, '_> {
         let object_name = ObjectName::new(character_info.name.clone(), faction.color());
 
         let entity = self.spawn_object(
-            tile_in,
+            Mobile,
             Some(pos),
             character_info.id.untyped(),
             ObjectCategory::Character,
@@ -428,16 +427,11 @@ impl<'w> TileSpawner<'w, '_> {
         }
     }
 
-    pub(crate) fn spawn_vehicle(
-        &mut self,
-        tile_in: TileIn,
-        pos: Pos,
-        vehicle: &CddaVehicle,
-    ) -> Entity {
+    pub(crate) fn spawn_vehicle(&mut self, pos: Pos, vehicle: &CddaVehicle) -> Entity {
         let object_name = ObjectName::from_str(&vehicle.name, HARD_TEXT_COLOR);
 
         let entity = self.spawn_object(
-            tile_in,
+            Mobile,
             Some(pos),
             &vehicle.id,
             ObjectCategory::Vehicle,
@@ -457,7 +451,6 @@ impl<'w> TileSpawner<'w, '_> {
 
     pub(crate) fn spawn_vehicle_part(
         &mut self,
-        object_on: ObjectOn,
         vehicle_part_of: VehiclePartOf,
         parent_pos: Pos,
         vehicle_part: &CddaVehiclePart,
@@ -484,7 +477,7 @@ impl<'w> TileSpawner<'w, '_> {
             .or_else(|| vehicle_part.open.then_some(TileVariant::Open))
             .unwrap_or(TileVariant::Unconnected);
         let entity = self.spawn_object(
-            object_on,
+            Mobile,
             Some(pos),
             part_info.id.untyped(),
             ObjectCategory::VehiclePart,
@@ -509,9 +502,9 @@ impl<'w> TileSpawner<'w, '_> {
         }
     }
 
-    fn spawn_object<R: Relationship>(
+    fn spawn_object<R: Component>(
         &mut self,
-        parent: R,
+        parent_or_mobile: R,
         pos: Option<Pos>,
         info_id: &UntypedInfoId,
         category: ObjectCategory,
@@ -555,9 +548,12 @@ impl<'w> TileSpawner<'w, '_> {
             )
         };
 
-        let mut entity_commands =
-            self.commands
-                .spawn((object_name, Visibility::Hidden, Transform::IDENTITY, parent));
+        let mut entity_commands = self.commands.spawn((
+            object_name,
+            Visibility::Hidden,
+            Transform::IDENTITY,
+            parent_or_mobile,
+        ));
         if let Some(pos) = pos {
             entity_commands.insert((Transform::from_translation(pos.vec3()), pos));
         }
@@ -626,25 +622,12 @@ impl<'w> TileSpawner<'w, '_> {
     }
 
     pub(crate) fn spawn_characters(&mut self, spawn_pos: Pos) {
-        let dummy_root = self
-            .commands
-            .spawn((
-                Transform::default(),
-                Visibility::default(),
-                StateScoped(ApplicationState::Gameplay),
-            ))
-            .id();
-        let dummy_root = TileIn {
-            subzone_level_entity: dummy_root,
-        };
-
         let human = RequiredLinkedLater::from(InfoId::new("human"));
         self.infos.link_character(&human, "player");
 
         let sav = self.active_sav.sav();
         let player = self
             .spawn_character(
-                dummy_root,
                 spawn_pos.horizontal_offset(36, 56),
                 &human,
                 Some(ObjectName::from_str(&sav.player.name, GOOD_TEXT_COLOR)),
@@ -659,23 +642,10 @@ impl<'w> TileSpawner<'w, '_> {
     }
 
     pub(crate) fn spawn_zombies(&mut self, around_pos: Pos) {
-        let dummy_root = self
-            .commands
-            .spawn((
-                Transform::default(),
-                Visibility::default(),
-                StateScoped(ApplicationState::Gameplay),
-            ))
-            .id();
-        let dummy_root = TileIn {
-            subzone_level_entity: dummy_root,
-        };
-
         let human = RequiredLinkedLater::from(InfoId::new("human"));
         self.infos.link_character(&human, "survivor");
 
         log_spawn_result(self.spawn_character(
-            dummy_root,
             around_pos.horizontal_offset(-26, -36),
             &human,
             Some(ObjectName::from_str("Survivor", HARD_TEXT_COLOR)),
@@ -685,31 +655,14 @@ impl<'w> TileSpawner<'w, '_> {
         self.infos.link_character(&zombie, "zombie");
 
         log_spawn_result(self.spawn_character(
-            dummy_root,
             around_pos.horizontal_offset(-24, -30),
             &zombie,
             None,
         ));
+        log_spawn_result(self.spawn_character(around_pos.horizontal_offset(4, -26), &zombie, None));
+        log_spawn_result(self.spawn_character(around_pos.horizontal_offset(2, -27), &zombie, None));
+        log_spawn_result(self.spawn_character(around_pos.horizontal_offset(1, -29), &zombie, None));
         log_spawn_result(self.spawn_character(
-            dummy_root,
-            around_pos.horizontal_offset(4, -26),
-            &zombie,
-            None,
-        ));
-        log_spawn_result(self.spawn_character(
-            dummy_root,
-            around_pos.horizontal_offset(2, -27),
-            &zombie,
-            None,
-        ));
-        log_spawn_result(self.spawn_character(
-            dummy_root,
-            around_pos.horizontal_offset(1, -29),
-            &zombie,
-            None,
-        ));
-        log_spawn_result(self.spawn_character(
-            dummy_root,
             around_pos.horizontal_offset(-2, -42),
             &zombie,
             None,

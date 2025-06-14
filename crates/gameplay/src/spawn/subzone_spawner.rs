@@ -1,4 +1,3 @@
-use crate::ObjectOn;
 use crate::{
     LocalTerrain, TileIn, TileSpawner, VehiclePartOf, ZoneLevelIds, spawn::log_spawn_result,
 };
@@ -144,17 +143,10 @@ impl SubzoneSpawner<'_, '_> {
 
             for vehicle in &submap.vehicles {
                 let vehicle_pos = base_pos.horizontal_offset(vehicle.posx, vehicle.posy);
-                let vehicle_entity = self
-                    .tile_spawner
-                    .spawn_vehicle(tile_in, vehicle_pos, vehicle);
+                let vehicle_entity = self.tile_spawner.spawn_vehicle(vehicle_pos, vehicle);
 
-                // Vehicle parts may go beyond the subzone level borders, so we use a dummy onbject_on.
-                let object_on = ObjectOn {
-                    tile_entity: vehicle_entity,
-                };
                 for vehicle_part in &vehicle.parts {
                     self.tile_spawner.spawn_vehicle_part(
-                        object_on,
                         VehiclePartOf { vehicle_entity },
                         vehicle_pos,
                         vehicle_part,
@@ -178,7 +170,6 @@ impl SubzoneSpawner<'_, '_> {
                     .map(|(_, monster)| monster)
                 {
                     log_spawn_result(self.tile_spawner.spawn_character(
-                        tile_in,
                         base_pos,
                         &monster.info,
                         None,

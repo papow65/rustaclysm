@@ -1,5 +1,5 @@
 use crate::{
-    Amount, Containable, InPocket, ItemHierarchy, ItemIntegrity, ObjectOn, Phrase,
+    Amount, Containable, InPocket, ItemHierarchy, ItemIntegrity, Mobile, ObjectOn, Phrase,
     StandardIntegrity, TileIn,
 };
 use crate::{SealedPocket, Shared};
@@ -38,6 +38,7 @@ fn check_item_parents(
             Option<&TileIn>,
             Option<&ObjectOn>,
             Option<&InPocket>,
+            Option<&Mobile>,
         ),
         Or<(With<Amount>, With<Containable>)>,
     >,
@@ -57,7 +58,7 @@ fn check_item_parents(
             "Items should not sealed"
         );
 
-        for (_entity, pos, .., child_of, tile_in, object_on, in_pocket) in &checked_item {
+        for (_entity, pos, .., child_of, tile_in, object_on, in_pocket, mobile) in &checked_item {
             let has_pos = pos.is_some();
             let has_parent = child_of.is_some();
             let has_subzone_level = tile_in.is_some();
@@ -67,44 +68,50 @@ fn check_item_parents(
                 object_on.is_some_and(|object_on| pockets.contains(object_on.tile_entity));
             let pocket_is_pocket =
                 in_pocket.is_some_and(|in_pocket| pockets.contains(in_pocket.pocket_entity));
+            let is_mobile = mobile.is_some();
 
             assert!(
                 !has_parent,
-                "Items with or without a pos ({pos:?}) should not have in a parent ({child_of:?}, {tile_in:?}, {object_on:?}, {in_pocket:?})"
+                "Items with or without a pos ({pos:?}) should not have in a parent ({child_of:?}, {tile_in:?}, {object_on:?}, {in_pocket:?}, {mobile:?})"
             );
 
             assert!(
                 !has_subzone_level,
-                "Items with or without a pos ({pos:?}) should not have in a subzone level ({has_parent:?}, {tile_in:?}, {object_on:?}, {in_pocket:?})"
+                "Items with or without a pos ({pos:?}) should not have in a subzone level ({child_of:?}, {tile_in:?}, {object_on:?}, {in_pocket:?}, {mobile:?})"
+            );
+
+            assert!(
+                !is_mobile,
+                "Items with or without a pos ({pos:?}) should not be mobile ({child_of:?}, {tile_in:?}, {object_on:?}, {in_pocket:?}, {mobile:?})"
             );
 
             if has_pos {
                 assert!(
                     is_on_tile,
-                    "Items with a pos ({pos:?}) should be on a tile ({child_of:?}, {object_on:?}, {in_pocket:?}, {tile_is_pocket:?}, {pocket_is_pocket:?})"
+                    "Items with a pos ({pos:?}) should be on a tile ({object_on:?}, {in_pocket:?}, {tile_is_pocket:?}, {pocket_is_pocket:?})"
                 );
                 assert!(
                     !is_in_pocket,
-                    "Items with a pos ({pos:?}) should not be in a pocket ({child_of:?}, {object_on:?}, {in_pocket:?}, {tile_is_pocket:?}, {pocket_is_pocket:?})"
+                    "Items with a pos ({pos:?}) should not be in a pocket ({object_on:?}, {in_pocket:?}, {tile_is_pocket:?}, {pocket_is_pocket:?})"
                 );
 
                 assert!(
                     !tile_is_pocket,
-                    "The tile of an item should not be a pocket ({child_of:?}, {object_on:?}, {in_pocket:?}, {tile_is_pocket:?}, {pocket_is_pocket:?})"
+                    "The tile of an item should not be a pocket ({object_on:?}, {in_pocket:?}, {tile_is_pocket:?}, {pocket_is_pocket:?})"
                 );
             } else {
                 assert!(
                     !is_on_tile,
-                    "Items without a pos ({pos:?}) should not be on a tile ({child_of:?}, {object_on:?}, {in_pocket:?}, {tile_is_pocket:?}, {pocket_is_pocket:?})"
+                    "Items without a pos ({pos:?}) should not be on a tile ({object_on:?}, {in_pocket:?}, {tile_is_pocket:?}, {pocket_is_pocket:?})"
                 );
                 assert!(
                     is_in_pocket,
-                    "Items without a pos ({pos:?}) should be in a pocket ({child_of:?}, {object_on:?}, {in_pocket:?}, {tile_is_pocket:?}, {pocket_is_pocket:?})"
+                    "Items without a pos ({pos:?}) should be in a pocket ({object_on:?}, {in_pocket:?}, {tile_is_pocket:?}, {pocket_is_pocket:?})"
                 );
 
                 assert!(
                     pocket_is_pocket,
-                    "The pocket of an items should be a pocket ({child_of:?}, {object_on:?}, {in_pocket:?}, {tile_is_pocket:?}, {pocket_is_pocket:?})"
+                    "The pocket of an items should be a pocket ({object_on:?}, {in_pocket:?}, {tile_is_pocket:?}, {pocket_is_pocket:?})"
                 );
             }
         }

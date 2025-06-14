@@ -34,8 +34,9 @@ use self::common::{
 };
 use self::components::{
     Accessible, Appearance, CameraBase, Closeable, Corpse, CorpseRaise, Craft, ExamineCursor,
-    HealingDuration, Hurdle, LastSeen, Life, Melee, MissingAsset, ObjectName, Obstacle, Opaque,
-    OpaqueFloor, Openable, PlayerWielded, Shared, StandardIntegrity, Tile, Vehicle, VehiclePart,
+    HealingDuration, Hurdle, LastSeen, Life, Melee, MissingAsset, Mobile, ObjectName, Obstacle,
+    Opaque, OpaqueFloor, Openable, PlayerWielded, Shared, StandardIntegrity, Tile, Vehicle,
+    VehiclePart,
 };
 use self::events::{
     ActorChange, ActorEvent, CorpseChange, CorpseEvent, Damage, DespawnSubzoneLevel,

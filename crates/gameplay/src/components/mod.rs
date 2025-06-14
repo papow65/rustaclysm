@@ -233,10 +233,16 @@ impl Appearance {
     }
 }
 
-#[derive(Component)]
+#[derive(Debug, Component)]
 #[component(immutable)]
 pub(crate) struct MissingAsset;
 
-#[derive(Component)]
+/// Used for objects that can move, like characters and vehicles
+#[derive(Debug, Component)]
+#[component(immutable)]
+pub(crate) struct Mobile;
+
+/// Used to indicate a root for all non-mobile objects with the same position
+#[derive(Debug, Component)]
 #[component(immutable)]
 pub(crate) struct Tile;
