@@ -8,7 +8,7 @@ repository = "https://github.com/papow65/rustaclysm"
 authors = [ "papow65 <papow65@protonmail.com>" ]
 exclude = [ "/screenshots/" ]
 edition = "2024"
-rust-version = "1.87" # should be latest stable
+rust-version = "1.88" # should be latest stable
 
 [workspace]
 # List internal dependencies: cargo tree | rg rustaclysm

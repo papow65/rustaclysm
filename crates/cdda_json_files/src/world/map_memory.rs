@@ -174,7 +174,7 @@ impl<'de> Visitor<'de> for TileMemoryVisitor {
                 unknown_d: seq.next_element()?,
                 unknown_e: seq.next_element()?,
             },
-            _unexpected => Err(A::Error::custom("Unexpected: {_unexpected :?}"))?,
+            unexpected => Err(A::Error::custom(format!("Unexpected: {unexpected :?}")))?,
         })
     }
 }
