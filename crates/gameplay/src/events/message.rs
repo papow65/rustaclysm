@@ -1,6 +1,8 @@
-use crate::Phrase;
-use bevy::prelude::{Event, TextColor};
+use crate::phrase::{DebugText, Positioning};
+use crate::{CurrentlyVisibleBuilder, Phrase, PlayerActionState, Visible};
+use bevy::prelude::{Event, TextColor, TextSpan, info, warn};
 use hud::{BAD_TEXT_COLOR, GOOD_TEXT_COLOR, WARN_TEXT_COLOR};
+use std::fmt;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) enum Severity {
@@ -22,10 +24,107 @@ impl Severity {
     }
 }
 
+pub(crate) trait MessageTransience: Clone + fmt::Debug + Send + Sync + 'static {}
+
+#[derive(Clone, Debug)]
+pub(crate) struct Intransient;
+
+impl MessageTransience for Intransient {}
+
+impl MessageTransience for PlayerActionState {}
+
 /// Message shown to the player
 #[derive(Clone, Debug, PartialEq, Eq, Event)]
-pub(crate) struct Message {
-    pub(crate) phrase: Phrase,
-    pub(crate) severity: Severity,
-    pub(crate) transient: bool,
+pub(crate) struct Message<T: MessageTransience = Intransient> {
+    phrase: Phrase,
+    severity: Severity,
+    transient_state: T,
+}
+
+impl Message<Intransient> {
+    pub(crate) const fn new(phrase: Phrase, severity: Severity) -> Self {
+        Self {
+            phrase,
+            severity,
+            transient_state: Intransient,
+        }
+    }
+}
+
+impl Message<PlayerActionState> {
+    pub(crate) const fn new_transient(
+        phrase: Phrase,
+        severity: Severity,
+        transient_state: PlayerActionState,
+    ) -> Self {
+        Self {
+            phrase,
+            severity,
+            transient_state,
+        }
+    }
+
+    pub(crate) const fn transient_state(&self) -> &PlayerActionState {
+        &self.transient_state
+    }
+}
+
+impl<T: MessageTransience> Message<T> {
+    pub(crate) fn as_text_sections(&self) -> Vec<(TextSpan, TextColor, Option<DebugText>)> {
+        self.phrase
+            .clone()
+            .color_override(self.severity.color_override())
+            .as_text_sections()
+    }
+
+    fn log(&self, precieved: bool) {
+        let suffix = if precieved { "" } else { " (not perceived)" };
+        if self.severity == Severity::Error {
+            warn!("{}{suffix}", &self.phrase);
+        } else {
+            info!("{}{suffix}", &self.phrase);
+        }
+    }
+
+    pub(crate) fn percieved(
+        &self,
+        currently_visible_builder: &CurrentlyVisibleBuilder,
+    ) -> Option<Self> {
+        let mut seen = false;
+        let mut global = true;
+        let mut phrase = self.phrase.clone();
+
+        for fragment in &mut phrase.fragments {
+            match fragment.positioning {
+                Positioning::Pos(pos) => {
+                    if currently_visible_builder
+                        .for_player(true)
+                        .can_see(pos, None)
+                        == Visible::Seen
+                    {
+                        seen = true;
+                    } else {
+                        fragment.text = String::from("(unseen)");
+                    }
+                    global = false;
+                }
+                Positioning::Player => {
+                    seen = true;
+                    global = false;
+                }
+                Positioning::None => {
+                    // nothing to do
+                }
+            }
+        }
+
+        let percieved = seen || global;
+
+        self.log(percieved);
+
+        percieved.then_some(Self {
+            phrase,
+            ..self.clone()
+        })
+    }
 }

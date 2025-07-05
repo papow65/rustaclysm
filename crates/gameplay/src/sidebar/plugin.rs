@@ -1,4 +1,4 @@
-use crate::sidebar::systems::{spawn_sidebar, update_sidebar_systems, update_status_fps};
+use crate::sidebar::{spawn_sidebar, update_sidebar_systems, update_status_fps};
 use application_state::ApplicationState;
 use bevy::prelude::{
     App, FixedUpdate, IntoScheduleConfigs as _, OnEnter, Plugin, Update, in_state,

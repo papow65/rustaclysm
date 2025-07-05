@@ -321,7 +321,7 @@ fn perform_stay(In(stay): In<ActionIn<Stay>>, actors: Query<Actor>) -> ActorImpa
 #[expect(clippy::needless_pass_by_value)]
 fn perform_sleep(
     In(sleep): In<ActionIn<Sleep>>,
-    mut message_writer: MessageWriter,
+    mut transient_message_writer: MessageWriter<PlayerActionState>,
     mut healing_writer: EventWriter<ActorEvent<Healing>>,
     player_action_state: Res<State<PlayerActionState>>,
     clock: Clock,
@@ -329,7 +329,7 @@ fn perform_sleep(
     actors: Query<Actor>,
 ) -> ActorImpact {
     sleep.actor(&actors).sleep(
-        &mut message_writer,
+        &mut transient_message_writer,
         &mut healing_writer,
         player_action_state.get(),
         &clock,
@@ -527,10 +527,13 @@ fn perform_start_craft(
     )
 }
 
+#[expect(clippy::needless_pass_by_value)]
 fn perform_continue_craft(
     In(continue_craft): In<ActionIn<ContinueCraft>>,
     mut commands: Commands,
     mut message_writer: MessageWriter,
+    mut transient_message_writer: MessageWriter<PlayerActionState>,
+    player_action_state: Res<State<PlayerActionState>>,
     mut next_player_action_state: ResMut<NextState<PlayerActionState>>,
     mut spawner: TileSpawner,
     actors: Query<Actor>,
@@ -539,6 +542,8 @@ fn perform_continue_craft(
     continue_craft.actor(&actors).continue_craft(
         &mut commands,
         &mut message_writer,
+        &mut transient_message_writer,
+        &player_action_state,
         &mut next_player_action_state,
         &mut spawner,
         &mut items,

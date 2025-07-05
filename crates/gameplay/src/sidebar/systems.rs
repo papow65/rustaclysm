@@ -1,15 +1,15 @@
-use crate::DebugText;
-use crate::sidebar::components::{
-    BreathText, DetailsText, EnemiesText, FpsText, HealthText, LogDisplay, PlayerActionStateText,
-    SpeedTextSpan, StaminaText, TimeText, WalkingModeTextSpan, WieldedText,
+use crate::sidebar::{
+    BreathText, DetailsText, EnemiesText, FpsText, HealthText, LastMessage, LastMessageCount,
+    LogDisplay, PlayerActionStateText, SpeedTextSpan, StaminaText, TimeText, TransientMessage,
+    WalkingModeTextSpan, WieldedText,
 };
 use crate::{
     Accessible, Actor, Amount, BaseSpeed, Breath, Clock, Corpse, CurrentlyVisibleBuilder,
-    DebugTextShown, Envir, Explored, Faction, FocusState, Fragment, Health, Hurdle, Item,
-    ItemHandler, ItemHierarchy, ItemItem, LastSeen, Life, Message, ObjectName, Obstacle, Opaque,
-    OpaqueFloor, Phrase, Player, PlayerActionState, PlayerWielded, Positioning,
-    RefreshAfterBehavior, RelativeSegments, SeenFrom, Severity, Shared, Stamina, StandardIntegrity,
-    Timeouts, Visible, WalkingMode, ZoneLevelIds,
+    DebugText, DebugTextShown, Envir, Explored, Faction, FocusState, Fragment, Health, Hurdle,
+    Item, ItemHandler, ItemHierarchy, ItemItem, LastSeen, Life, Message, ObjectName, Obstacle,
+    Opaque, OpaqueFloor, Phrase, Player, PlayerActionState, PlayerWielded, RefreshAfterBehavior,
+    RelativeSegments, SeenFrom, Shared, Stamina, StandardIntegrity, Timeouts, WalkingMode,
+    ZoneLevelIds,
 };
 use application_state::ApplicationState;
 use bevy::diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin};
@@ -18,22 +18,18 @@ use bevy::picking::Pickable;
 use bevy::prelude::{
     AlignItems, Changed, ChildOf, Commands, ComputedNode, Condition as _, DetectChanges as _,
     Entity, EntityCommands, EventReader, FlexDirection, FlexWrap, IntoScheduleConfigs as _,
-    JustifyContent, Local, Node, Or, Overflow, ParamSet, PositionType, Query, Res, ScrollPosition,
-    Single, SpawnRelated as _, State, StateScoped, Text, TextColor, TextSpan, UiRect, Val,
-    Visibility, With, Without, children, info, on_event, resource_exists,
-    resource_exists_and_changed, warn,
+    JustifyContent, Node, Or, Overflow, ParamSet, PositionType, Query, Res, ScrollPosition, Single,
+    SpawnRelated as _, State, StateScoped, Text, TextColor, TextSpan, UiRect, Val, Visibility,
+    With, Without, children, on_event, resource_exists, resource_exists_and_changed,
 };
 use cdda_json_files::{CharacterInfo, MoveCost};
-use gameplay_local::GameplayLocal;
 use gameplay_location::{Pos, StairsDown, StairsUp};
 use hud::{
     BAD_TEXT_COLOR, Fonts, HARD_TEXT_COLOR, PANEL_COLOR, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
     panel_node, text_color_expect_half,
 };
-use std::{num::Saturating, time::Instant};
-use util::log_if_slow;
-
-type DuplicateMessageCount = Saturating<u16>;
+use std::{iter::once, time::Instant};
+use util::{Maybe, log_if_slow};
 
 const TEXT_WIDTH: f32 = 8.0 * 43.0; // 43 chars
 
@@ -217,92 +213,236 @@ pub(super) fn update_sidebar_systems() -> ScheduleConfigs<ScheduleSystem> {
             resource_exists_and_changed::<State<PlayerActionState>>
                 .or(resource_exists_and_changed::<State<FocusState>>),
         ),
+        clear_transient_message.run_if(resource_exists_and_changed::<State<PlayerActionState>>),
+        update_transient_log.run_if(on_event::<Message<PlayerActionState>>),
         update_log.run_if(on_event::<Message>),
         manage_log_wrapper,
     )
         .into_configs()
 }
 
+fn clear_transient_message(
+    mut commands: Commands,
+    transient_message_fragments: Query<Entity, With<TransientMessage>>,
+) {
+    for fragment_entity in &transient_message_fragments {
+        commands.entity(fragment_entity).despawn();
+    }
+}
+
+#[expect(clippy::needless_pass_by_value)]
+fn update_transient_log(
+    mut commands: Commands,
+    mut new_messages: EventReader<Message<PlayerActionState>>,
+    fonts: Res<Fonts>,
+    currently_visible_builder: CurrentlyVisibleBuilder,
+    player_action_state: Res<State<PlayerActionState>>,
+    log: Single<Entity, With<LogDisplay>>,
+    transient_message_fragments: Query<Entity, With<TransientMessage>>,
+) {
+    let start = Instant::now();
+
+    let Some(last_transient_message) = new_messages
+        .read()
+        .filter(
+            // The messages may arrive after the state has already transitioned.
+            |transient_message| transient_message.transient_state() == player_action_state.get(),
+        )
+        .filter_map(|transient_message| transient_message.percieved(&currently_visible_builder))
+        .last()
+    else {
+        return;
+    };
+
+    for fragment_entity in &transient_message_fragments {
+        commands.entity(fragment_entity).despawn();
+    }
+
+    let mut log = commands.entity(*log);
+    log.with_children(|parent| {
+        for (span, color, debug) in last_transient_message
+            .as_text_sections()
+            .into_iter()
+            .chain(once(newline()))
+        {
+            parent.spawn((
+                span,
+                color,
+                fonts.regular(),
+                Maybe(debug),
+                TransientMessage,
+                Pickable::IGNORE,
+            ));
+        }
+    });
+
+    log_if_slow("update_transient_log", start);
+}
+
 #[expect(clippy::needless_pass_by_value)]
 fn update_log(
     mut commands: Commands,
     mut new_messages: EventReader<Message>,
-    currently_visible_builder: CurrentlyVisibleBuilder,
     fonts: Res<Fonts>,
-    debug_text_shown: Res<DebugTextShown>,
+    currently_visible_builder: CurrentlyVisibleBuilder,
     log: Single<Entity, With<LogDisplay>>,
-    mut previous_sections: GameplayLocal<Vec<(TextSpan, TextColor, Option<DebugText>)>>,
-    mut last_message: GameplayLocal<Option<(Message, DuplicateMessageCount)>>,
-    mut transient_message: Local<Vec<(TextSpan, TextColor, Option<DebugText>)>>,
+    last_message_fragments: Query<
+        (Entity, &TextSpan, &TextColor, Option<&DebugText>),
+        With<LastMessage>,
+    >,
+    last_message_count: Option<Single<(Entity, &LastMessageCount)>>,
 ) {
-    const SINGLE: DuplicateMessageCount = Saturating(1);
-
     let start = Instant::now();
 
+    let mut last_message_fragments = last_message_fragments
+        .iter()
+        .map(|(entity, text, color, debug)| (entity, text.clone(), *color, debug.copied()))
+        .collect::<Vec<_>>();
+    let mut last_message_count = last_message_count
+        .map(|last_message_count| *last_message_count)
+        .map(|(entity, count)| (entity, count.clone()));
+
     for message in new_messages.read() {
-        let percieved_message = percieve(&currently_visible_builder, message.clone());
-        if message.phrase.to_string().trim() != "" {
-            let suffix = if percieved_message.is_some() {
-                ""
-            } else {
-                " (not perceived)"
-            };
-            if message.severity == Severity::Error {
-                warn!("{}{suffix}", &message.phrase);
-            } else {
-                info!("{}{suffix}", &message.phrase);
-            }
-        }
-        if let Some(message) = percieved_message {
-            transient_message.clear();
-            if message.transient {
-                transient_message.extend(to_text_sections(&message, SINGLE));
-            } else {
-                match last_message.get() {
-                    &mut Some((ref last, ref mut count)) if *last == message => {
-                        *count += 1;
-                    }
-                    _ => {
-                        if let Some((previous_last, previous_count)) =
-                            last_message.get().replace((message, SINGLE))
-                        {
-                            previous_sections
-                                .get()
-                                .extend(to_text_sections(&previous_last, previous_count));
-                        }
-                    }
-                }
-            }
-        }
+        log_message(
+            &mut commands,
+            &fonts,
+            &currently_visible_builder,
+            &log,
+            &mut last_message_fragments,
+            &mut last_message_count,
+            message,
+        );
     }
 
-    let debug_font = debug_text_shown.text_font(fonts.regular());
-    let mut log = commands.entity(*log);
-    log.despawn_related::<Children>();
-    log.with_children(|parent| {
-        for (span, color, debug) in previous_sections.get().clone() {
-            let mut entity = parent.spawn((span, color, fonts.regular(), Pickable::IGNORE));
-            if let Some(debug) = debug {
-                entity.insert((debug, debug_font.clone()));
-            }
-        }
-        if let Some((message, count)) = last_message.get() {
-            for (span, color, debug) in to_text_sections(message, *count) {
-                let mut entity = parent.spawn((span, color, fonts.regular(), Pickable::IGNORE));
-                if let Some(debug) = debug {
-                    entity.insert((debug, debug_font.clone()));
-                }
-            }
-        }
-        for (span, color, debug) in transient_message.clone() {
-            let mut entity = parent.spawn((span, color, fonts.regular(), Pickable::IGNORE));
-            if let Some(debug) = debug {
-                entity.insert((debug, debug_font.clone()));
-            }
-        }
-    });
-
     log_if_slow("update_log", start);
+}
+
+fn log_message(
+    commands: &mut Commands,
+    fonts: &Res<Fonts>,
+    currently_visible_builder: &CurrentlyVisibleBuilder,
+    log: &Single<Entity, With<LogDisplay>>,
+    last_message_fragments: &mut Vec<(Entity, TextSpan, TextColor, Option<DebugText>)>,
+    last_message_count: &mut Option<(Entity, LastMessageCount)>,
+    message: &Message,
+) {
+    let Some(message) = message.percieved(currently_visible_builder) else {
+        return;
+    };
+
+    if let Some((ref mut last_count_entity, ref mut last_count)) = *last_message_count {
+        let new_sections = message.as_text_sections();
+
+        let duplicate = new_sections.len() == last_message_fragments.iter().len()
+            && last_message_fragments.iter().zip(new_sections).all(
+                |((_, last_span, last_color, last_debug), (new_span, new_color, new_debug))| {
+                    new_span.0 == last_span.0
+                        && new_color == *last_color
+                        && new_debug.is_some() == last_debug.is_some()
+                },
+            );
+
+        if duplicate {
+            raise_last_count(commands, *last_count_entity, last_count);
+        } else {
+            // Remove the previous LastMessageFragment components
+            for (fragment_entity, ..) in &*last_message_fragments {
+                commands.entity(*fragment_entity).remove::<LastMessage>();
+            }
+
+            // Remove the previous LastMessageCountFragment component
+            let mut last_count_entity_commands = commands.entity(*last_count_entity);
+            if last_count.is_single() {
+                last_count_entity_commands.despawn();
+            } else {
+                last_count_entity_commands.remove::<LastMessageCount>();
+            }
+
+            add_log_message(
+                commands,
+                fonts,
+                log,
+                &message,
+                last_message_fragments,
+                last_count_entity,
+                last_count,
+            );
+        }
+    } else {
+        let mut last_count_entity = commands.spawn_empty().id();
+        let mut last_count = LastMessageCount::default();
+        add_log_message(
+            commands,
+            fonts,
+            log,
+            &message,
+            last_message_fragments,
+            &mut last_count_entity,
+            &mut last_count,
+        );
+        *last_message_count = Some((last_count_entity, last_count));
+    }
+}
+
+fn raise_last_count(
+    commands: &mut Commands,
+    last_count_entity: Entity,
+    last_count: &mut LastMessageCount,
+) {
+    last_count.raise();
+
+    commands
+        .entity(last_count_entity)
+        .insert((last_count.clone(), last_count.text()));
+}
+
+fn add_log_message(
+    commands: &mut Commands,
+    fonts: &Res<Fonts>,
+    log: &Single<Entity, With<LogDisplay>>,
+    message: &Message,
+    last_message_fragments: &mut Vec<(Entity, TextSpan, TextColor, Option<DebugText>)>,
+    last_count_entity: &mut Entity,
+    last_count: &mut LastMessageCount,
+) {
+    last_message_fragments.clear();
+
+    let mut log = commands.entity(**log);
+    log.with_children(|parent| {
+        for (span, color, debug) in message.as_text_sections() {
+            let entity = parent
+                .spawn((
+                    span.clone(),
+                    color,
+                    fonts.regular(),
+                    Maybe(debug),
+                    LastMessage,
+                    Pickable::IGNORE,
+                ))
+                .id();
+
+            last_message_fragments.push((entity, span, color, debug));
+        }
+
+        *last_count = LastMessageCount::default();
+        *last_count_entity = parent
+            .spawn((
+                TextSpan::default(),
+                SOFT_TEXT_COLOR,
+                fonts.regular(),
+                last_count.clone(),
+                Pickable::IGNORE,
+            ))
+            .id();
+
+        let (newline_text, newline_color, _) = newline();
+        parent.spawn((
+            newline_text,
+            newline_color,
+            fonts.regular(),
+            Pickable::IGNORE,
+        ));
+    });
 }
 
 /// Adapt the log wrapper to the log after its layout has been updated
@@ -336,54 +476,8 @@ fn manage_log_wrapper(
     },));
 }
 
-fn to_text_sections(
-    message: &Message,
-    count: DuplicateMessageCount,
-) -> Vec<(TextSpan, TextColor, Option<DebugText>)> {
-    let mut sections = message
-        .phrase
-        .clone()
-        .color_override(message.severity.color_override())
-        .as_text_sections();
-    if 1 < count.0 {
-        sections.push((TextSpan::new(format!(" ({count}x)")), SOFT_TEXT_COLOR, None));
-    }
-    sections.push((TextSpan::from("\n"), SOFT_TEXT_COLOR, None));
-    sections
-}
-
-fn percieve(
-    currently_visible_builder: &CurrentlyVisibleBuilder,
-    mut message: Message,
-) -> Option<Message> {
-    let mut seen = false;
-    let mut global = true;
-
-    for fragment in &mut message.phrase.fragments {
-        match fragment.positioning {
-            Positioning::Pos(pos) => {
-                if currently_visible_builder
-                    .for_player(true)
-                    .can_see(pos, None)
-                    == Visible::Seen
-                {
-                    seen = true;
-                } else {
-                    fragment.text = String::from("(unseen)");
-                }
-                global = false;
-            }
-            Positioning::Player => {
-                seen = true;
-                global = false;
-            }
-            Positioning::None => {
-                // nothing to do
-            }
-        }
-    }
-
-    (seen || global).then_some(message)
+fn newline() -> (TextSpan, TextColor, Option<DebugText>) {
+    (TextSpan::from("\n"), SOFT_TEXT_COLOR, None)
 }
 
 #[expect(clippy::needless_pass_by_value)]

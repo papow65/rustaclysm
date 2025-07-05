@@ -8,7 +8,7 @@ use crate::{
 };
 use bevy::ecs::query::{QueryData, With};
 use bevy::prelude::{
-    Commands, Entity, Event, EventWriter, NextState, Query, Transform, Visibility, error,
+    Commands, Entity, Event, EventWriter, NextState, Query, State, Transform, Visibility, error,
 };
 use cdda_json_files::{CddaItem, Description};
 use either::Either;
@@ -106,7 +106,7 @@ impl ActorItem<'_> {
 
     pub(crate) fn sleep(
         &self,
-        message_writer: &mut MessageWriter,
+        transient_message_writer: &mut MessageWriter<PlayerActionState>,
         healing_writer: &mut EventWriter<'_, ActorEvent<Healing>>,
         player_action_state: &PlayerActionState,
         clock: &Clock,
@@ -129,10 +129,10 @@ impl ActorItem<'_> {
         if let PlayerActionState::Sleeping { from } = player_action_state {
             let total_duration = clock.time() - *from;
             let color = text_color_expect_full(total_duration / (Duration::HOUR * 8));
-            message_writer
+            transient_message_writer
                 .you("sleep for")
                 .push(Fragment::colorized(total_duration.short_format(), color))
-                .send(Severity::Info, true);
+                .send_transient(Severity::Info, player_action_state.clone());
         } else {
             error!("Unexpected {player_action_state:?} while sleeping");
         }
@@ -669,6 +669,8 @@ impl ActorItem<'_> {
         &self,
         commands: &mut Commands,
         message_writer: &mut MessageWriter,
+        transient_message_writer: &mut MessageWriter<PlayerActionState>,
+        player_action_state: &State<PlayerActionState>,
         next_player_action_state: &mut NextState<PlayerActionState>,
         spawner: &mut TileSpawner,
         crafts: &mut Query<(Item, &mut Craft)>,
@@ -680,10 +682,10 @@ impl ActorItem<'_> {
 
         craft.work(crafting_progress);
         if craft.finished() {
-            message_writer.you("finish").hard("your craft").send(
-                PlayerActionState::Crafting { item: craft_entity }.severity_finishing(),
-                false,
-            );
+            message_writer
+                .you("finish")
+                .hard("your craft")
+                .send(PlayerActionState::Crafting { item: craft_entity }.severity_finishing());
             let pos = *item.pos.unwrap_or(self.pos);
             let amount = *item.amount;
             commands.entity(item.entity).despawn();
@@ -706,13 +708,13 @@ impl ActorItem<'_> {
             let color = text_color_expect_full(percent_progress / 100.0);
             let percent_progress = format!("{percent_progress:.1}");
             let time_left = craft.time_left().short_format();
-            message_writer
+            transient_message_writer
                 .str("Craft:")
                 .push(Fragment::colorized(percent_progress, color))
                 .hard("% progress -")
                 .push(Fragment::colorized(time_left, color))
                 .hard("left")
-                .send(Severity::Info, true);
+                .send_transient(Severity::Info, player_action_state.get().clone());
         }
         self.impact_from_duration(crafting_progress, StaminaCost::NEUTRAL)
     }

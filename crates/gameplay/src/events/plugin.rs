@@ -1,7 +1,7 @@
 use crate::{
     ActorEvent, CorpseEvent, Damage, DespawnSubzoneLevel, DespawnZoneLevel, Healing, Message,
-    RefreshAfterBehavior, SpawnSubzoneLevel, SpawnZoneLevel, TerrainEvent, Toggle,
-    UpdateZoneLevelVisibility,
+    PlayerActionState, RefreshAfterBehavior, SpawnSubzoneLevel, SpawnZoneLevel, TerrainEvent,
+    Toggle, UpdateZoneLevelVisibility,
 };
 use application_state::ApplicationState;
 use bevy::prelude::{App, Plugin, StateScopedEventsAppExt as _};
@@ -17,6 +17,7 @@ impl Plugin for EventsPlugin {
         app.add_state_scoped_event::<DespawnSubzoneLevel>(ApplicationState::Gameplay);
         app.add_state_scoped_event::<DespawnZoneLevel>(ApplicationState::Gameplay);
         app.add_state_scoped_event::<Message>(ApplicationState::Gameplay);
+        app.add_state_scoped_event::<Message<PlayerActionState>>(ApplicationState::Gameplay);
         app.add_state_scoped_event::<RefreshAfterBehavior>(ApplicationState::Gameplay);
         app.add_state_scoped_event::<SpawnSubzoneLevel>(ApplicationState::Gameplay);
         app.add_state_scoped_event::<SpawnZoneLevel>(ApplicationState::Gameplay);
