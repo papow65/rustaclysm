@@ -6,6 +6,7 @@ mod filthy;
 mod hierarchy;
 mod integrity;
 mod phase;
+mod phrases;
 mod pocket;
 mod query_data;
 mod relations;

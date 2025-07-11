@@ -11,10 +11,10 @@ pub const SOFT_TEXT_COLOR: TextColor = TextColor(Color::srgb(0.65, 0.65, 0.65));
 /// For playing the game
 pub const GOOD_TEXT_COLOR: TextColor = TextColor(Color::srgb(0.15, 0.8, 0.15));
 
-/// For aggression and failed user actions
+/// For aggression and nonsensical user input
 pub const WARN_TEXT_COLOR: TextColor = TextColor(Color::srgb(0.8, 0.8, 0.15));
 
-/// For erros and for quitting
+/// For errors and for quitting
 pub const BAD_TEXT_COLOR: TextColor = TextColor(Color::srgb(1.0, 0.31, 0.31));
 
 /// For zombies and stuff they touched

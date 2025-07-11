@@ -1,3 +1,9 @@
+use crate::actor::phrases::{
+    FirstExamineYourDestination, NoPlaceToCraftNearby, NoTargetsNearby, NothingToCloseNearby,
+    YouAreAlmostOutOfBreathAndStop, YouAreStillAsleep, YouAreStillDraggingItems, YouCant,
+    YouCantAttackYourself, YouFallAsleep, YouFinish, YouSpotAndStop, YouStartDefending, YouWait,
+    YouWakeUpAfterSleeping,
+};
 use crate::{
     ActorItem, Breath, ContinueCraft, CurrentlyVisibleBuilder, Envir, Explored, Faction, Fragment,
     InstructionQueue, Intelligence, Interruption, MessageWriter, MoveItem, PlannedAction,
@@ -9,7 +15,7 @@ use bevy::prelude::{
     debug,
 };
 use gameplay_location::{CardinalDirection, HorizontalDirection, Nbor, Pos, VisionDistance};
-use hud::{BAD_TEXT_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR, text_color_expect_full};
+use hud::{BAD_TEXT_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR};
 use std::fmt;
 use units::{Duration, Timestamp};
 
@@ -160,18 +166,15 @@ impl PlayerActionState {
         debug!("processing instruction: {instruction:?}");
         match (&self, instruction) {
             (Self::Sleeping { from }, QueuedInstruction::Interrupt(Interruption::Finished)) => {
-                let total_duration = now - *from;
-                let color = text_color_expect_full(total_duration / (Duration::HOUR * 8));
+                message_writer.send(YouWakeUpAfterSleeping {
+                    duration: now - *from,
+                });
                 next_state.set(Self::Normal);
-                message_writer
-                    .you("wake up after sleeping")
-                    .push(Fragment::colorized(total_duration.short_format(), color))
-                    .send_info();
                 None
             }
             (Self::Sleeping { .. }, _) => {
                 // Can not be interrupted
-                message_writer.you("are still asleep. Zzz...").send_error();
+                message_writer.send(YouAreStillAsleep);
                 None
             }
             (Self::Peeking { .. }, instruction) => Self::stop_peeking(
@@ -187,31 +190,29 @@ impl PlayerActionState {
                 QueuedInstruction::Offset(PlayerDirection::Here),
             ) => Some(PlannedAction::Stay),
             (Self::Normal, QueuedInstruction::Wait) => {
+                message_writer.send(YouWait);
                 next_state.set(Self::start_waiting(now));
-                message_writer.you("wait...").send_info();
                 None
             }
             (Self::Normal, QueuedInstruction::Sleep) => {
+                message_writer.send(YouFallAsleep);
                 next_state.set(Self::start_sleeping(now));
-                message_writer.you("fall asleep... Zzz...").send_info();
                 None
             }
             (Self::Normal, QueuedInstruction::ToggleAutoDefend) => {
                 next_state.set(Self::AutoDefend);
-                message_writer.you("start defending...").send_warn();
+                message_writer.send(YouStartDefending);
                 None
             }
             (_, QueuedInstruction::ToggleAutoTravel) => {
-                message_writer
-                    .str("First examine your destination")
-                    .send_error();
+                message_writer.send(FirstExamineYourDestination);
                 None
             }
             (
                 Self::PickingNbor(PickingNbor::Attacking),
                 QueuedInstruction::Offset(PlayerDirection::Here),
             ) => {
-                message_writer.you("can't attack yourself").send_error();
+                message_writer.send(YouCantAttackYourself);
                 None
             }
             (Self::PickingNbor(PickingNbor::Attacking), QueuedInstruction::Attack)
@@ -233,13 +234,14 @@ impl PlayerActionState {
                     QueuedInstruction::Interrupt(Interruption::Finished) => {
                         next_state.set(Self::PickingNbor(PickingNbor::Dragging));
                     }
-                    QueuedInstruction::Interrupt(_) => {
-                        message_writer
-                            .you("spot an enemy and stop dragging")
-                            .send_warn();
+                    QueuedInstruction::Interrupt(Interruption::Danger(danger)) => {
+                        message_writer.send(YouSpotAndStop {
+                            seen: danger,
+                            verb: "dragging",
+                        });
                         next_state.set(Self::Normal);
                     }
-                    _ => message_writer.you("are still dragging items").send_warn(),
+                    _ => message_writer.send(YouAreStillDraggingItems),
                 }
                 None
             }
@@ -313,37 +315,32 @@ impl PlayerActionState {
             QueuedInstruction::ChangePace(change_pace) => {
                 Some(PlannedAction::ChangePace(change_pace))
             }
-            QueuedInstruction::Interrupt(Interruption::Danger(fragments)) => {
+            QueuedInstruction::Interrupt(Interruption::Danger(fragment)) => {
+                message_writer.send(YouSpotAndStop {
+                    seen: fragment,
+                    verb: self.to_string().to_lowercase(),
+                });
                 next_state.set(Self::Normal);
-                message_writer
-                    .you("spot")
-                    .push(fragments)
-                    .soft("and")
-                    .hard("stop")
-                    .hard(self.to_string().to_lowercase())
-                    .send_warn();
                 None
             }
             QueuedInstruction::Interrupt(Interruption::LowStamina) => {
+                message_writer.send(YouAreAlmostOutOfBreathAndStop {
+                    verb: self.to_string().to_lowercase(),
+                });
                 next_state.set(Self::Normal);
-                message_writer
-                    .you("are almost out of breath")
-                    .soft("and")
-                    .hard("stop")
-                    .hard(self.to_string().to_lowercase())
-                    .send_warn();
                 None
             }
             QueuedInstruction::Interrupt(Interruption::Finished) => {
                 next_state.set(Self::Normal);
-                message_writer
-                    .you("finish")
-                    .hard(if let Self::Crafting { .. } = self {
-                        String::from("your craft")
-                    } else {
-                        self.to_string().to_lowercase()
-                    })
-                    .send(self.severity_finishing());
+                match self.severity_finishing() {
+                    Severity::Neutral => message_writer.send(YouFinish::<false> {
+                        action: self.clone(),
+                    }),
+                    Severity::Success => message_writer.send(YouFinish::<true> {
+                        action: self.clone(),
+                    }),
+                    other => unimplemented!("{other:?}"),
+                }
                 None
             }
         }
@@ -359,7 +356,7 @@ impl PlayerActionState {
     ) -> Option<PlannedAction> {
         if !matches!(*self, Self::Sleeping { .. }) {
             if let Err(failure) = envir.get_nbor(player_pos, raw_nbor) {
-                message_writer.str(failure).send_error();
+                message_writer.send(failure);
                 return None;
             }
         }
@@ -395,7 +392,10 @@ impl PlayerActionState {
                             //trace!("Activating pulping");
                             Some(PlannedAction::pulp(target))
                         } else {
-                            message_writer.you("can't pulp vertically").send_error();
+                            message_writer.send(YouCant {
+                                verb: "pulp",
+                                direction: "vertically",
+                            });
                             None
                         }
                     }
@@ -407,7 +407,10 @@ impl PlayerActionState {
                         if let Nbor::Horizontal(target) = raw_nbor {
                             Some(PlannedAction::close(target))
                         } else {
-                            message_writer.you("can't close vertically").send_error();
+                            message_writer.send(YouCant {
+                                verb: "close",
+                                direction: "vertically",
+                            });
                             None
                         }
                     }
@@ -423,7 +426,10 @@ impl PlayerActionState {
                                 target,
                             }))
                         } else {
-                            message_writer.you("can't craft vertically").send_error();
+                            message_writer.send(YouCant {
+                                verb: "craft",
+                                direction: "vertically",
+                            });
                             None
                         }
                     }
@@ -439,11 +445,17 @@ impl PlayerActionState {
     ) -> Option<PlannedAction> {
         match raw_nbor {
             Nbor::Up | Nbor::Down => {
-                message_writer.you("can't peek vertically").send_error();
+                message_writer.send(YouCant {
+                    verb: "peek",
+                    direction: "vertically",
+                });
                 None
             }
             Nbor::HERE => {
-                message_writer.you("can't peek here").send_error();
+                message_writer.send(YouCant {
+                    verb: "peek",
+                    direction: "here",
+                });
                 None
             }
             Nbor::Horizontal(
@@ -452,7 +464,10 @@ impl PlayerActionState {
                 | HorizontalDirection::NorthEast
                 | HorizontalDirection::SouthEast,
             ) => {
-                message_writer.you("can't peek diagonally").send_error();
+                message_writer.send(YouCant {
+                    verb: "peek",
+                    direction: "diagonally",
+                });
                 None
             }
             Nbor::Horizontal(
@@ -490,7 +505,7 @@ impl PlayerActionState {
 
         match craftable_nbors.len() {
             0 => {
-                message_writer.str("no place to craft nearby").send_error();
+                message_writer.send(NoPlaceToCraftNearby);
                 None
             }
             1 => {
@@ -503,7 +518,7 @@ impl PlayerActionState {
                         target: *horizontal_direction,
                     }))
                 } else {
-                    message_writer.str("no place to craft nearby").send_error();
+                    message_writer.send(NoPlaceToCraftNearby);
                     None
                 }
             }
@@ -525,7 +540,7 @@ impl PlayerActionState {
             .collect::<Vec<_>>();
         match attackable_nbors.len() {
             0 => {
-                message_writer.str("no targets nearby").send_error();
+                message_writer.send(NoTargetsNearby);
                 None
             }
             1 => Some(PlannedAction::attack(attackable_nbors[0])),
@@ -547,7 +562,7 @@ impl PlayerActionState {
             .collect::<Vec<_>>();
         match smashable_nbors.len() {
             0 => {
-                message_writer.str("no targets nearby").send_error();
+                message_writer.send(NoTargetsNearby);
                 None
             }
             1 => Some(PlannedAction::smash(smashable_nbors[0])),
@@ -577,7 +592,7 @@ impl PlayerActionState {
         //trace!("Pulping {} targets", pulpable_nbors.len());
         match pulpable_nbors.len() {
             0 => {
-                message_writer.str("no targets nearby").send_error();
+                message_writer.send(NoTargetsNearby);
                 None
             }
             1 => {
@@ -613,7 +628,7 @@ impl PlayerActionState {
             .collect::<Vec<_>>();
         match closable_nbors.len() {
             0 => {
-                message_writer.str("nothing to close nearby").send_error();
+                message_writer.send(NothingToCloseNearby);
                 None
             }
             1 => Some(PlannedAction::close(closable_nbors[0])),
@@ -644,7 +659,7 @@ impl PlayerActionState {
             Self::Pulping { .. }
             | Self::Crafting { .. }
             | Self::PickingNbor(PickingNbor::Crafting { .. }) => Severity::Success,
-            _ => Severity::Info,
+            _ => Severity::Neutral,
         }
     }
 

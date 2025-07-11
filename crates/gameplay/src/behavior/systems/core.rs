@@ -1,3 +1,4 @@
+use crate::behavior::systems::phrases::NpcActionFailed;
 use crate::{
     Action, ActionIn, Actor, ActorEvent, ActorImpact, Amount, Attack, ChangePace, Clock, Close,
     ContinueCraft, CorpseEvent, Craft, CurrentlyVisibleBuilder, Damage, Envir, ExamineItem,
@@ -594,7 +595,7 @@ fn proces_impact(
             stamina.apply(&impact);
         }
     } else if *player != actor {
-        message_writer.str("NPC action failed").send_error();
+        message_writer.send(NpcActionFailed);
         // To prevent the application hanging on failing NPC actions, we add a small timeout
         timeouts.add(actor, Duration::SECOND);
     }

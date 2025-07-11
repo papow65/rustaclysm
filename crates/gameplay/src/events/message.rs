@@ -1,14 +1,23 @@
-use crate::phrase::{DebugText, Positioning};
-use crate::{CurrentlyVisibleBuilder, Phrase, PlayerActionState, Visible};
+use crate::{CurrentlyVisibleBuilder, DebugText, Phrase, PlayerActionState, Positioning, Visible};
 use bevy::prelude::{Event, TextColor, TextSpan, info, warn};
 use hud::{BAD_TEXT_COLOR, GOOD_TEXT_COLOR, WARN_TEXT_COLOR};
 use std::fmt;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) enum Severity {
-    Info,
-    Warn,
+    /// For neutral informaion
+    Neutral,
+
+    /// For danger to the player character
+    Danger,
+
+    /// For actions that can't be performed as instructed
+    ImpossibleAction,
+
+    /// For errors caused by the game
     Error,
+
+    /// For positive outcomes for the player character
     Success,
 }
 
@@ -16,8 +25,8 @@ impl Severity {
     #[must_use]
     pub(crate) const fn color_override(&self) -> Option<TextColor> {
         match self {
-            Self::Info => None,
-            Self::Warn => Some(WARN_TEXT_COLOR),
+            Self::Neutral => None,
+            Self::Danger | Self::ImpossibleAction => Some(WARN_TEXT_COLOR),
             Self::Error => Some(BAD_TEXT_COLOR),
             Self::Success => Some(GOOD_TEXT_COLOR),
         }

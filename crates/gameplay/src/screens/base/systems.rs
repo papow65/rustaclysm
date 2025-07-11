@@ -1,3 +1,4 @@
+use crate::screens::base::phrases::YouStartTraveling;
 use crate::{
     CameraOffset, CancelHandling, ChangePace, ElevationVisibility, Focus, FocusState,
     GameplayScreenState, InstructionQueue, MessageWriter, PlayerActionState, PlayerDirection,
@@ -174,7 +175,7 @@ fn handle_queued_instruction(
             next_focus_state.set(FocusState::Normal);
             next_player_action_state.set(PlayerActionState::AutoTravel { target });
             instruction_queue.stop_waiting();
-            message_writer.you("start traveling...").send_info();
+            message_writer.send(YouStartTraveling);
         }
         (FocusState::ExaminingZoneLevel(zone_level), QueuedInstruction::ToggleAutoTravel) => {
             //trace!("Autotravel zone level");
@@ -183,7 +184,7 @@ fn handle_queued_instruction(
                 target: zone_level.center_pos(),
             });
             instruction_queue.stop_waiting();
-            message_writer.you("start traveling...").send_info();
+            message_writer.send(YouStartTraveling);
         }
         (FocusState::ExaminingPos(target), QueuedInstruction::Offset(offset)) => {
             if let Some(nbor_target) = target.raw_nbor(offset.to_nbor()) {

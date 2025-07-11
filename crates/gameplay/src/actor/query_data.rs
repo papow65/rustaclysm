@@ -1,19 +1,23 @@
+use crate::actor::phrases::{
+    AttackNothing, CantClose, CantCloseOn, CraftProgressLeft, CrashInto, Drop, HaltAtTheLedge,
+    IsTooExhaustedTo, Move, PickUp, PulpNothing, SmashInvalid, SubzoneNotFoundWhileMovingAnItem,
+    TooFarToMove, YouCant, YouFinish, YouSleepFor,
+};
 use crate::{
     ActorEvent, ActorImpact, Amount, Aquatic, Attack, BaseSpeed, BodyContainers, Breath,
     ChangePace, Clock, Close, Collision, Consumed, Container, CorpseEvent, Craft, Damage, Envir,
-    Faction, Filthy, Fragment, Healing, HealingDuration, Health, InPocket, Item, ItemHierarchy,
-    ItemItem, LastEnemy, LastSeen, Life, Melee, MessageWriter, ObjectName, ObjectOn, Peek, Phrase,
-    Player, PlayerActionState, PlayerWielded, Pulp, Severity, Smash, Stamina, StaminaCost,
-    StartCraft, Step, Subject, TerrainEvent, Tile, TileSpawner, Toggle, WalkingMode,
+    Faction, Filthy, Healing, HealingDuration, Health, InPocket, Item, ItemHierarchy, ItemItem,
+    LastEnemy, LastSeen, Life, Melee, MessageWriter, ObjectName, ObjectOn, Peek, Phrase, Player,
+    PlayerActionState, PlayerWielded, Pulp, Smash, Stamina, StaminaCost, StartCraft, Step, Subject,
+    TerrainEvent, Tile, TileSpawner, Toggle, WalkingMode,
 };
 use bevy::ecs::query::{QueryData, With};
 use bevy::prelude::{
-    Commands, Entity, Event, EventWriter, NextState, Query, State, Transform, Visibility, error,
+    Commands, Entity, Event, EventWriter, NextState, Query, Transform, Visibility, error,
 };
-use cdda_json_files::{CddaItem, Description};
+use cdda_json_files::CddaItem;
 use either::Either;
 use gameplay_location::{HorizontalDirection, LevelOffset, LocationCache, Nbor, Pos};
-use hud::text_color_expect_full;
 use units::{Distance, Duration, Speed};
 use util::Maybe;
 
@@ -127,12 +131,12 @@ impl ActorItem<'_> {
         ));
 
         if let PlayerActionState::Sleeping { from } = player_action_state {
-            let total_duration = clock.time() - *from;
-            let color = text_color_expect_full(total_duration / (Duration::HOUR * 8));
-            transient_message_writer
-                .you("sleep for")
-                .push(Fragment::colorized(total_duration.short_format(), color))
-                .send_transient(Severity::Info, player_action_state.clone());
+            transient_message_writer.send_transient(
+                YouSleepFor {
+                    total_duration: clock.time() - *from,
+                },
+                player_action_state.clone(),
+            );
         } else {
             error!("Unexpected {player_action_state:?} while sleeping");
         }
@@ -168,21 +172,17 @@ impl ActorItem<'_> {
             //    VERTICAL
             //}
             Collision::Blocked(obstacle) => {
-                message_writer
-                    .subject(self.subject())
-                    .verb("crash", "es")
-                    .soft("into")
-                    .push(obstacle.single(to))
-                    .send_warn();
+                message_writer.send(CrashInto {
+                    subject: self.subject(),
+                    obstacle,
+                    to,
+                });
                 self.no_impact()
             }
             Collision::Ledged => {
-                message_writer
-                    .subject(self.subject())
-                    .verb("halt", "s")
-                    .soft("at")
-                    .hard("the ledge")
-                    .send_warn();
+                message_writer.send(HaltAtTheLedge {
+                    subject: self.subject(),
+                });
                 self.no_impact()
             }
             Collision::Opened(door) => {
@@ -231,11 +231,10 @@ impl ActorItem<'_> {
         attack: &Attack,
     ) -> ActorImpact {
         if self.stamina.breath() == Breath::Winded {
-            message_writer
-                .subject(self.subject())
-                .is()
-                .hard("too exhausted to attack")
-                .send_error();
+            message_writer.send(IsTooExhaustedTo {
+                subject: self.subject(),
+                verb: "attack",
+            });
             return self.no_impact();
         }
 
@@ -244,11 +243,9 @@ impl ActorItem<'_> {
         if let Some((defender, _)) = envir.find_character(target) {
             self.damage(damage_writer, hierarchy, defender, ActorEvent::new)
         } else {
-            message_writer
-                .subject(self.subject())
-                .verb("attack", "s")
-                .hard("nothing")
-                .send_warn();
+            message_writer.send(AttackNothing {
+                subject: self.subject(),
+            });
             self.no_impact()
         }
     }
@@ -262,11 +259,10 @@ impl ActorItem<'_> {
         smash: &Smash,
     ) -> ActorImpact {
         if self.stamina.breath() == Breath::Winded {
-            message_writer
-                .subject(self.subject())
-                .is()
-                .hard("too exhausted to smash")
-                .send_error();
+            message_writer.send(IsTooExhaustedTo {
+                subject: self.subject(),
+                verb: "smash",
+            });
             return self.no_impact();
         }
 
@@ -274,29 +270,26 @@ impl ActorItem<'_> {
 
         let stair_pos = Pos::new(target.x, self.pos.level, target.z);
         if self.pos.level.up() == Some(target.level) && envir.stairs_up_to(stair_pos).is_none() {
-            message_writer
-                .subject(self.subject())
-                .verb("smash", "es")
-                .hard("the ceiling")
-                .send_warn();
+            message_writer.send(SmashInvalid {
+                subject: self.subject(),
+                object: "the ceiling",
+            });
             self.no_impact()
         } else if self.pos.level.down() == Some(target.level)
             && envir.stairs_down_to(stair_pos).is_none()
         {
-            message_writer
-                .subject(self.subject())
-                .verb("smash", "es")
-                .hard("the floor")
-                .send_warn();
+            message_writer.send(SmashInvalid {
+                subject: self.subject(),
+                object: "the floor",
+            });
             self.no_impact()
         } else if let Some(smashable) = envir.find_smashable(target) {
             self.damage(damage_writer, hierarchy, smashable, TerrainEvent::new)
         } else {
-            message_writer
-                .subject(self.subject())
-                .verb("smash", "es")
-                .hard("nothing")
-                .send_warn();
+            message_writer.send(SmashInvalid {
+                subject: self.subject(),
+                object: "nothing",
+            });
             self.no_impact()
         }
     }
@@ -310,11 +303,10 @@ impl ActorItem<'_> {
         pulp: &Pulp,
     ) -> ActorImpact {
         if self.stamina.breath() == Breath::Winded {
-            message_writer
-                .subject(self.subject())
-                .is()
-                .hard("too exhausted to pulp")
-                .send_warn();
+            message_writer.send(IsTooExhaustedTo {
+                subject: self.subject(),
+                verb: "pulp",
+            });
             return self.no_impact();
         }
 
@@ -328,11 +320,9 @@ impl ActorItem<'_> {
                 CorpseEvent::new,
             )
         } else {
-            message_writer
-                .subject(self.subject())
-                .verb("pulp", "s")
-                .hard("nothing")
-                .send_warn();
+            message_writer.send(PulpNothing {
+                subject: self.subject(),
+            });
             self.no_impact()
         }
     }
@@ -359,16 +349,18 @@ impl ActorItem<'_> {
                     self.impact_from_duration(Duration::SECOND, StaminaCost::NEUTRAL)
                 }
                 Breath::Winded => {
-                    message_writer
-                        .subject(self.subject())
-                        .is()
-                        .hard("too exhausted to peek")
-                        .send_warn();
+                    message_writer.send(IsTooExhaustedTo {
+                        subject: self.subject(),
+                        verb: "peek",
+                    });
                     self.no_impact()
                 }
             },
             _ => {
-                message_writer.you("can't peek there").send_warn();
+                message_writer.send(YouCant {
+                    verb: "peek",
+                    direction: "there",
+                });
                 self.no_impact()
             }
         }
@@ -385,13 +377,11 @@ impl ActorItem<'_> {
 
         if let Some((closeable, closeable_name)) = envir.find_closeable(target) {
             if let Some((_, character)) = envir.find_character(target) {
-                message_writer
-                    .subject(self.subject())
-                    .simple("can't close")
-                    .push(closeable_name.single(target))
-                    .soft("on")
-                    .push(character.single(target))
-                    .send_warn();
+                message_writer.send(CantCloseOn {
+                    subject: self.subject(),
+                    closeable: closeable_name.single(target),
+                    obstacle: character.single(target),
+                });
                 self.no_impact()
             } else {
                 toggle_writer.write(TerrainEvent {
@@ -403,11 +393,10 @@ impl ActorItem<'_> {
         } else {
             let missing = ObjectName::missing();
             let obstacle = envir.find_terrain(target).unwrap_or(&missing);
-            message_writer
-                .subject(self.subject())
-                .simple("can't close")
-                .push(obstacle.single(target))
-                .send_warn();
+            message_writer.send(CantClose {
+                subject: self.subject(),
+                uncloseable: obstacle.single(target),
+            });
             self.no_impact()
         }
     }
@@ -480,12 +469,10 @@ impl ActorItem<'_> {
             taken.containable,
             *taken.amount,
         ) {
-            message_writer
-                .subject(self.subject())
-                .verb("pick", "s")
-                .hard("up")
-                .extend(taken.fragments())
-                .send_info();
+            message_writer.send(PickUp {
+                subject: self.subject(),
+                taken: taken.fragments().collect(),
+            });
 
             if &allowed_amount < taken.amount {
                 Self::take_some(commands, target.in_pocket, allowed_amount, taken);
@@ -559,7 +546,7 @@ impl ActorItem<'_> {
             let potentially_valid = HorizontalDirection::try_from(offset).is_ok()
                 || matches!(offset.level, LevelOffset { h: -1 | 1 });
             if !potentially_valid {
-                message_writer.str("Too far to move").send_error();
+                message_writer.send(TooFarToMove);
                 return self.no_impact();
             }
         }
@@ -572,16 +559,20 @@ impl ActorItem<'_> {
         // TODO Check for obstacles
         let to = self.pos.raw_nbor(to).expect("Valid position");
 
-        message_writer
-            .subject(self.subject())
-            .verb(if dump { "drop" } else { "move" }, "s")
-            .extend(moved.fragments())
-            .send_info();
+        if dump {
+            message_writer.send(Drop {
+                subject: self.subject(),
+                item: moved.fragments().collect(),
+            });
+        } else {
+            message_writer.send(Move {
+                subject: self.subject(),
+                item: moved.fragments().collect(),
+            });
+        }
 
         let Some(tile_entity) = location.get_first(to, tiles) else {
-            message_writer
-                .str("Subzone not found when moving an item")
-                .send_error();
+            message_writer.send(SubzoneNotFoundWhileMovingAnItem);
             return self.no_impact();
         };
         commands
@@ -670,7 +661,7 @@ impl ActorItem<'_> {
         commands: &mut Commands,
         message_writer: &mut MessageWriter,
         transient_message_writer: &mut MessageWriter<PlayerActionState>,
-        player_action_state: &State<PlayerActionState>,
+        player_action_state: &PlayerActionState,
         next_player_action_state: &mut NextState<PlayerActionState>,
         spawner: &mut TileSpawner,
         crafts: &mut Query<(Item, &mut Craft)>,
@@ -682,10 +673,9 @@ impl ActorItem<'_> {
 
         craft.work(crafting_progress);
         if craft.finished() {
-            message_writer
-                .you("finish")
-                .hard("your craft")
-                .send(PlayerActionState::Crafting { item: craft_entity }.severity_finishing());
+            message_writer.send(YouFinish::<true> {
+                action: PlayerActionState::Crafting { item: craft_entity },
+            });
             let pos = *item.pos.unwrap_or(self.pos);
             let amount = *item.amount;
             commands.entity(item.entity).despawn();
@@ -704,17 +694,10 @@ impl ActorItem<'_> {
             }
             next_player_action_state.set(PlayerActionState::Normal);
         } else {
-            let percent_progress = craft.percent_progress();
-            let color = text_color_expect_full(percent_progress / 100.0);
-            let percent_progress = format!("{percent_progress:.1}");
-            let time_left = craft.time_left().short_format();
-            transient_message_writer
-                .str("Craft:")
-                .push(Fragment::colorized(percent_progress, color))
-                .hard("% progress -")
-                .push(Fragment::colorized(time_left, color))
-                .hard("left")
-                .send_transient(Severity::Info, player_action_state.get().clone());
+            transient_message_writer.send_transient(
+                CraftProgressLeft { craft: &craft },
+                player_action_state.clone(),
+            );
         }
         self.impact_from_duration(crafting_progress, StaminaCost::NEUTRAL)
     }
@@ -724,13 +707,7 @@ impl ActorItem<'_> {
         message_writer: &mut MessageWriter,
         item: &ItemItem,
     ) -> ActorImpact {
-        message_writer
-            .str(&**match &item.common_info.description {
-                Description::Simple(simple) => simple,
-                Description::Complex(complex) => complex.get("str").expect("'str' key"),
-            })
-            .send_info();
-
+        message_writer.send(&item.common_info.description);
         self.no_impact()
     }
 

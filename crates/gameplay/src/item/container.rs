@@ -1,3 +1,4 @@
+use crate::item::phrases::{CanBearButNeeded, CanHoldButNeeded, HasButNeeded};
 use crate::{Amount, Containable, InPocket, ItemHierarchy, MessageWriter, Subject};
 use units::{Mass, Volume};
 
@@ -64,43 +65,27 @@ impl<'a> Container<'a> {
             Ok(allowed_amount)
         } else {
             if max_amount_by_volume == Amount::ZERO {
-                let added_volume = added.volume;
-                if free_volume == Volume::ZERO {
-                    String::from("no space left")
-                } else {
-                    format!("only {free_volume} available")
-                };
-                message_writer
-                    .subject(container_subject.clone())
-                    .simple(format!("has {free_volume}, but {added_volume} needed").as_str())
-                    .send_warn();
+                message_writer.send(HasButNeeded {
+                    subject: container_subject.clone(),
+                    available: free_volume,
+                    added: added.volume,
+                });
             }
 
             if max_amount_by_mass == Amount::ZERO {
-                let added_mass = added.mass;
-                let free_mass = if free_mass == Mass::ZERO {
-                    String::from("no more weight")
-                } else {
-                    format!("only {free_mass} more")
-                };
-                message_writer
-                    .subject(container_subject.clone())
-                    .simple(format!("can bear {free_mass}, but {added_mass} needed").as_str())
-                    .send_warn();
+                message_writer.send(CanBearButNeeded {
+                    subject: container_subject.clone(),
+                    available: free_mass,
+                    added: added.mass,
+                });
             }
 
             if max_amount_by_amount == Amount::ZERO {
-                let free_amount = match max_amount_by_amount.0 {
-                    0 => String::from("no more items"),
-                    1 => String::from("only one more item"),
-                    _ => format!("only {} more items", max_amount_by_amount.0),
-                };
-                message_writer
-                    .subject(container_subject)
-                    .simple(
-                        format!("can hold {free_amount}, but {} needed", added_amount.0).as_str(),
-                    )
-                    .send_warn();
+                message_writer.send(CanHoldButNeeded {
+                    subject: container_subject,
+                    available: max_amount_by_amount.0,
+                    added: added_amount.0,
+                });
             }
 
             Err(())

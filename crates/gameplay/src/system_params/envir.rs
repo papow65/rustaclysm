@@ -1,7 +1,7 @@
 use crate::{
     Accessible, Amount, Closeable, Corpse, Health, Hurdle, Intelligence, Item, ItemItem, Life,
-    ObjectName, Obstacle, Opaque, OpaqueFloor, Openable, QueuedInstruction, StandardIntegrity,
-    WalkingCost,
+    NoStairs, ObjectName, Obstacle, Opaque, OpaqueFloor, Openable, QueuedInstruction,
+    StandardIntegrity, WalkingCost,
 };
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{Entity, Query, ResMut, With, Without, debug, warn};
@@ -193,10 +193,10 @@ impl<'w, 's> Envir<'w, 's> {
     }
 
     /// Follow stairs, even when they do not go staight up or down.
-    pub(crate) fn get_nbor(&self, from: Pos, nbor: Nbor) -> Result<Pos, &str> {
+    pub(crate) fn get_nbor(&self, from: Pos, nbor: Nbor) -> Result<Pos, NoStairs> {
         match nbor {
-            Nbor::Up => self.stairs_up_to(from).ok_or("No stairs up"),
-            Nbor::Down => self.stairs_down_to(from).ok_or("No stairs down"),
+            Nbor::Up => self.stairs_up_to(from).ok_or(NoStairs::Up),
+            Nbor::Down => self.stairs_down_to(from).ok_or(NoStairs::Down),
             Nbor::Horizontal(horizontal_direction) => {
                 // No stairs
                 Ok(from.horizontal_nbor(horizontal_direction))

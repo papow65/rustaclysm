@@ -1,11 +1,11 @@
 //! These systems are part of [`BehaviorSchedule`](`crate::behavior::schedule::BehaviorSchedule`).
 
+use crate::behavior::systems::phrases::{Break, Heal, Hit, IsThoroughlyPulped, Kill, Pulp};
 use crate::{
     Actor, ActorEvent, Amount, Clock, ContainerLimits, Corpse, CorpseEvent, CorpseRaise, Damage,
     Faction, Fragment, GameplayScreenState, Healing, Health, Item, ItemHierarchy, Life, Limited,
-    LocalTerrain, MessageWriter, ObjectName, ObjectOn, Obstacle, Phrase, Player, Shared, Stamina,
-    StandardIntegrity, Subject, TerrainEvent, TileSpawner, Toggle, VisualizationUpdate,
-    WalkingMode,
+    LocalTerrain, MessageWriter, ObjectName, ObjectOn, Obstacle, Player, Shared, Stamina,
+    StandardIntegrity, TerrainEvent, TileSpawner, Toggle, VisualizationUpdate, WalkingMode,
 };
 use bevy::ecs::schedule::{IntoScheduleConfigs as _, ScheduleConfigs};
 use bevy::ecs::system::ScheduleSystem;
@@ -113,11 +113,10 @@ pub(in super::super) fn update_damaged_characters(
             name.single(*pos)
         };
         if health.0.is_zero() {
-            message_writer
-                .subject(damage.action.attacker.clone())
-                .verb("kill", "s")
-                .push(victim)
-                .send_warn();
+            message_writer.send(Kill {
+                killer: damage.action.attacker.clone(),
+                killed: victim,
+            });
 
             transform.rotation =
                 Quat::from_rotation_y(FRAC_PI_2) * Quat::from_rotation_x(-FRAC_PI_2);
@@ -137,19 +136,11 @@ pub(in super::super) fn update_damaged_characters(
                 next_gameplay_state.set(GameplayScreenState::Death);
             }
         } else {
-            let mut builder = message_writer
-                .subject(damage.action.attacker.clone())
-                .verb("hit", "s")
-                .push(victim);
-            if evolution.changed() {
-                builder = builder
-                    .soft("for")
-                    .push(Fragment::warn(format!("{}", evolution.change_abs())))
-                    .soft(format!("({} -> {})", evolution.before, evolution.after));
-            } else {
-                builder = builder.soft("but it has").hard("no effect");
-            }
-            builder.send_warn();
+            message_writer.send(Hit {
+                attacker: damage.action.attacker.clone(),
+                object: victim,
+                evolution,
+            });
         }
     }
 
@@ -173,16 +164,10 @@ pub(in super::super) fn update_healed_characters(
         if evolution.changed() {
             let actors = actors.p1();
             let actor = actors.get(healing.actor_entity).expect("Actor found");
-            let mut builder = message_writer.subject(actor.subject()).verb("heal", "s");
-            if evolution.change_abs() == 1 {
-                builder = builder.push(Fragment::good("a bit"));
-            } else {
-                builder = builder
-                    .soft("for")
-                    .push(Fragment::good(format!("{}", evolution.change_abs())))
-                    .soft(format!("({} -> {})", evolution.before, evolution.after));
-            }
-            builder.send_info();
+            message_writer.send(Heal {
+                subject: actor.subject(),
+                evolution,
+            });
         }
     }
 
@@ -204,18 +189,15 @@ pub(in super::super) fn update_damaged_corpses(
             corpses.get_mut(damage.corpse_entity).expect("Corpse found");
         integrity.lower(&damage.change);
 
-        message_writer
-            .subject(damage.change.attacker.clone())
-            .verb("pulp", "s")
-            .push(name.single(*pos))
-            .send_info();
+        message_writer.send(Pulp {
+            pulper: damage.change.attacker.clone(),
+            corpse: name.single(*pos),
+        });
 
         if integrity.0.is_zero() {
-            message_writer
-                .subject(Subject::Other(Phrase::from_fragment(name.single(*pos))))
-                .is()
-                .hard("thoroughly pulped")
-                .send_info();
+            message_writer.send(IsThoroughlyPulped {
+                corpse: name.single(*pos),
+            });
 
             commands
                 .entity(damage.corpse_entity)
@@ -291,11 +273,10 @@ pub(in super::super) fn update_damaged_terrain(
                 .expect("Terrain or furniture found");
         let evolution = integrity.lower(&damage.change);
         if integrity.0.is_zero() {
-            message_writer
-                .subject(damage.change.attacker.clone())
-                .verb("break", "s")
-                .push(name.single(pos))
-                .send_warn();
+            message_writer.send(Break {
+                breaker: damage.change.attacker.clone(),
+                broken: name.single(pos),
+            });
             commands.entity(terrain).despawn();
             spawner.spawn_smashed(
                 object_in,
@@ -308,19 +289,11 @@ pub(in super::super) fn update_damaged_terrain(
             );
             *visualization_update = VisualizationUpdate::Forced;
         } else {
-            let mut builder = message_writer
-                .subject(damage.change.attacker.clone())
-                .verb("hit", "s")
-                .push(name.single(pos));
-            if evolution.changed() {
-                builder = builder
-                    .soft("for")
-                    .push(Fragment::warn(format!("{}", evolution.change_abs())))
-                    .soft(format!("({} -> {})", evolution.before, evolution.after));
-            } else {
-                builder = builder.soft("but it has").hard("no effect");
-            }
-            builder.send_warn();
+            message_writer.send(Hit {
+                attacker: damage.change.attacker.clone(),
+                object: name.single(pos),
+                evolution,
+            });
         }
     }
 

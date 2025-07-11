@@ -52,7 +52,7 @@ use self::item::{
 };
 use self::models::ModelFactory;
 use self::phrase::{
-    DebugText, DebugTextShown, Fragment, MessageWriter, Phrase, PhrasePlugin, Positioning,
+    DebugText, DebugTextShown, Fragment, Phrase, PhrasePlugin, Positioning, ProtoPhrase,
 };
 use self::relations::{ObjectOn, Objects, TileIn, VehiclePartOf};
 use self::resources::{
@@ -61,6 +61,8 @@ use self::resources::{
 };
 use self::screens::{Consumed, GameplayScreenState, RecipeSituation, update_camera_offset};
 use self::spawn::TileSpawner;
-use self::system_params::{Collision, CurrentlyVisible, CurrentlyVisibleBuilder, Envir};
+use self::system_params::{
+    Collision, CurrentlyVisible, CurrentlyVisibleBuilder, Envir, MessageWriter, NoStairs,
+};
 use self::time::{Clock, TimePlugin, Timeouts};
 use self::transition::TransitionPlugin;

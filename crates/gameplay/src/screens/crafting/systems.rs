@@ -1,6 +1,6 @@
 use crate::screens::crafting::{
     AlternativeSituation, ComponentSituation, CraftingScreen, DetectedQuantity, QualitySituation,
-    RecipeSituation, ToolSituation,
+    RecipeSituation, ToolSituation, phrases::YouLackTheMeansToCraft,
 };
 use crate::screens::{find_nearby, find_nearby_pseudo, find_sources, nearby_qualities};
 use crate::{
@@ -739,10 +739,9 @@ fn start_craft(
         // Close the crafting screen
         next_gameplay_state.set(GameplayScreenState::Base);
     } else {
-        message_writer
-            .you("lack the means to craft")
-            .hard(&*recipe.name)
-            .send_error();
+        message_writer.send(YouLackTheMeansToCraft {
+            recipe: recipe.name.clone(),
+        });
     }
 
     log_if_slow("start_craft", start);

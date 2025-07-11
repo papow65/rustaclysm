@@ -2,6 +2,7 @@ mod actions;
 mod breath;
 mod faction;
 mod impact;
+mod phrases;
 mod planned_action;
 mod player;
 mod plugin;
