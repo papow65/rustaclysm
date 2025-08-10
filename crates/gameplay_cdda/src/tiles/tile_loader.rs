@@ -101,13 +101,11 @@ impl TileLoader {
         let foreground = if let (true, Some(tile_variant), SpriteNumbers::MaybeFlat(MaybeFlatVec(vec))) =
             (multitile, tile_variant, foregrounds)
         {
-            if let Some(expected_legth) = tile_variant.expected_length() {
-                if vec.len() != expected_legth {
-                    warn!(
-                        "Expected {expected_legth} variants for {tile_variant:?} tiles of {category:?} {info_id:?}, but got {:?}",
-                        &vec
-                    );
-                }
+            if let Some(expected_legth) = tile_variant.expected_length() && vec.len() != expected_legth {
+                warn!(
+                    "Expected {expected_legth} variants for {tile_variant:?} tiles of {category:?} {info_id:?}, but got {:?}",
+                    &vec
+                );
             }
 
             tile_variant.index().and_then(|index| vec.get(index))

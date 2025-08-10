@@ -25,14 +25,14 @@ impl RecipeSituation {
     }
 
     /// Assumes being craftable
-    pub(crate) fn consumed_tool_charges(&self) -> impl Iterator<Item = Consumed> {
+    pub(crate) fn consumed_tool_charges(&self) -> impl Iterator<Item = Consumed<'_>> {
         self.tools
             .iter()
             .filter_map(|tool| Self::consumed(&tool.alternatives))
     }
 
     /// Assumes being craftable
-    pub(crate) fn consumed_components(&self) -> impl Iterator<Item = Consumed> {
+    pub(crate) fn consumed_components(&self) -> impl Iterator<Item = Consumed<'_>> {
         self.components
             .iter()
             .filter_map(|component| Self::consumed(&component.alternatives))
@@ -41,7 +41,7 @@ impl RecipeSituation {
     /// Assumes being craftable
     fn consumed<R: RequiredPart>(
         alternative_situations: &[AlternativeSituation<R>],
-    ) -> Option<Consumed> {
+    ) -> Option<Consumed<'_>> {
         if alternative_situations
             .iter()
             .any(|alternative| match alternative.detected {

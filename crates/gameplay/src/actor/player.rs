@@ -354,11 +354,11 @@ impl PlayerActionState {
         player_pos: Pos,
         raw_nbor: Nbor,
     ) -> Option<PlannedAction> {
-        if !matches!(*self, Self::Sleeping { .. }) {
-            if let Err(failure) = envir.get_nbor(player_pos, raw_nbor) {
-                message_writer.send(failure);
-                return None;
-            }
+        if !matches!(*self, Self::Sleeping { .. })
+            && let Err(failure) = envir.get_nbor(player_pos, raw_nbor)
+        {
+            message_writer.send(failure);
+            return None;
         }
 
         match &self {

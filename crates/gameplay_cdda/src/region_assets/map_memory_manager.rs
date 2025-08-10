@@ -15,7 +15,7 @@ pub struct MapMemoryManager<'w, 's> {
 }
 
 impl MapMemoryManager<'_, '_> {
-    pub fn submap(&mut self, subzone_level: SubzoneLevel) -> AssetState<SubmapMemory> {
+    pub fn submap(&mut self, subzone_level: SubzoneLevel) -> AssetState<'_, SubmapMemory> {
         let sav_path = self.active_sav.sav_path();
         let zone = ZoneLevel::from(subzone_level).zone;
         let base_zone_level = ZoneLevel {

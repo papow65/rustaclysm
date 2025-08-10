@@ -8,7 +8,7 @@ repository = "https://github.com/papow65/rustaclysm"
 authors = [ "papow65 <papow65@protonmail.com>" ]
 exclude = [ "/screenshots/" ]
 edition = "2024"
-rust-version = "1.88" # should be latest stable
+rust-version = "1.89" # should be latest stable
 
 [workspace]
 # List internal dependencies: cargo tree | rg rustaclysm
@@ -105,7 +105,6 @@ invalid_type_param_default = "forbid"
 late_bound_lifetime_arguments = "forbid"
 legacy_derive_helpers = "forbid"
 macro_expanded_macro_exports_accessed_by_absolute_paths = "forbid"
-missing_fragment_specifier = "forbid"
 non_fmt_panics = "forbid"
 patterns_in_fns_without_body = "forbid"
 private_interfaces = "forbid"

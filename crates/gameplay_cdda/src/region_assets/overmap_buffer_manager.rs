@@ -16,7 +16,7 @@ pub struct OvermapBufferManager<'w, 's> {
 }
 
 impl OvermapBufferManager<'_, '_> {
-    pub fn load(&mut self, overzone: Overzone) -> AssetState<OvermapBufferAsset> {
+    pub fn load(&mut self, overzone: Overzone) -> AssetState<'_, OvermapBufferAsset> {
         let path = OvermapBufferPath::new(&self.active_sav.sav_path(), overzone);
         self.storage
             .handle(&self.asset_server, &self.assets, overzone, path)

@@ -19,13 +19,13 @@ impl MapManager<'_, '_> {
         MapPath::new(&world_map, zone_level)
     }
 
-    fn map(&mut self, zone_level: ZoneLevel) -> AssetState<MapAsset> {
+    fn map(&mut self, zone_level: ZoneLevel) -> AssetState<'_, MapAsset> {
         let path = self.path(zone_level);
         self.storage
             .handle(&self.asset_server, &self.assets, zone_level, path)
     }
 
-    pub fn submap(&mut self, subzone_level: SubzoneLevel) -> AssetState<Submap> {
+    pub fn submap(&mut self, subzone_level: SubzoneLevel) -> AssetState<'_, Submap> {
         let zone_level = ZoneLevel::from(subzone_level);
         match self.map(zone_level) {
             AssetState::Available { asset: map } => AssetState::Available {

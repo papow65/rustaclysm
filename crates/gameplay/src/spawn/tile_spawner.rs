@@ -420,10 +420,10 @@ impl<'w> TileSpawner<'w, '_> {
             entity.insert(OpaqueFloor);
         }
 
-        if let Some(ref bash) = local_terrain.info.bash {
-            if let Some(_new_terrain) = bash.terrain.get() {
-                entity.insert(StandardIntegrity(Limited::full(10)));
-            }
+        if let Some(ref bash) = local_terrain.info.bash
+            && let Some(_new_terrain) = bash.terrain.get()
+        {
+            entity.insert(StandardIntegrity(Limited::full(10)));
         }
     }
 

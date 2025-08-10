@@ -165,11 +165,11 @@ impl<'w, 's> Envir<'w, 's> {
         self.location.get_first(pos, &self.pulpables)
     }
 
-    pub(crate) fn find_item(&self, pos: Pos) -> Option<ItemItem> {
+    pub(crate) fn find_item(&self, pos: Pos) -> Option<ItemItem<'_>> {
         self.location.get_first(pos, &self.items)
     }
 
-    pub(crate) fn all_items(&self, pos: Pos) -> impl Iterator<Item = ItemItem> + use<'_> {
+    pub(crate) fn all_items(&self, pos: Pos) -> impl Iterator<Item = ItemItem<'_>> {
         self.location
             .all(pos)
             .flat_map(|&entity| self.items.get(entity))
@@ -377,7 +377,7 @@ impl<'w, 's> Envir<'w, 's> {
         }
     }
 
-    pub(crate) fn collide(&self, from: Pos, to: Pos, controlled: bool) -> Collision {
+    pub(crate) fn collide(&self, from: Pos, to: Pos, controlled: bool) -> Collision<'_> {
         assert_ne!(from, to, "Collisions require movement");
         assert!(
             self.nbor(from, to).is_some(),

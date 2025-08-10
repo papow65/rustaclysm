@@ -487,14 +487,13 @@ pub(super) fn update_status_fps(
 ) {
     let start = Instant::now();
 
-    if diagnostics.is_changed() {
-        if let Some(fps) = diagnostics.get(&FrameTimeDiagnosticsPlugin::FPS) {
-            if let Some(fps) = fps.smoothed() {
-                // Precision of 0.1s
-                // Padding to 6 characters, aligned right
-                text.0 = format!("{fps:05.1} fps\n");
-            }
-        }
+    if diagnostics.is_changed()
+        && let Some(fps) = diagnostics.get(&FrameTimeDiagnosticsPlugin::FPS)
+        && let Some(fps) = fps.smoothed()
+    {
+        // Precision of 0.1s
+        // Padding to 6 characters, aligned right
+        text.0 = format!("{fps:05.1} fps\n");
     }
 
     log_if_slow("update_status_fps", start);

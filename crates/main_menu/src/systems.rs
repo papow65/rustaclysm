@@ -319,11 +319,11 @@ fn load_button(
     let character = from_utf8(&decoded_character).expect("Valid utf8 required");
 
     let mut key_binding = None;
-    if let Some(index) = index {
-        if index <= 26 {
-            key_binding =
-                Some(char::from_u32('a' as u32 + index).expect("Valid unicode character (a-z)"));
-        }
+    if let Some(index) = index
+        && index <= 26
+    {
+        key_binding =
+            Some(char::from_u32('a' as u32 + index).expect("Valid unicode character (a-z)"));
     }
 
     ButtonBuilder::new(

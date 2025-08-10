@@ -12,7 +12,7 @@ pub struct OvermapManager<'w> {
 }
 
 impl OvermapManager<'_> {
-    pub fn load(&mut self, overzone: Overzone) -> AssetState<OvermapAsset> {
+    pub fn load(&mut self, overzone: Overzone) -> AssetState<'_, OvermapAsset> {
         let path = OvermapPath::new(&self.active_sav.world_path(), overzone);
         self.storage
             .handle(&self.asset_server, &self.assets, overzone, path)

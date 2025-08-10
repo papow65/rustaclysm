@@ -71,10 +71,7 @@ impl<'w> ItemHierarchy<'w, '_> {
         self.items.get(item).is_ok()
     }
 
-    pub(crate) fn items_on_tile(
-        &self,
-        object_on: ObjectOn,
-    ) -> impl Iterator<Item = ItemItem> + use<'_> {
+    pub(crate) fn items_on_tile(&self, object_on: ObjectOn) -> impl Iterator<Item = ItemItem<'_>> {
         self.tiles
             .get(object_on.tile_entity)
             .inspect_err(|error| error!("Error while looking up area: {error:#?}"))
@@ -86,7 +83,7 @@ impl<'w> ItemHierarchy<'w, '_> {
     pub(crate) fn items_in_pocket(
         &self,
         in_pocket: InPocket,
-    ) -> impl Iterator<Item = ItemItem> + use<'_> {
+    ) -> impl Iterator<Item = ItemItem<'_>> {
         self.pockets
             .get(in_pocket.pocket_entity)
             .inspect_err(|error| panic!("Error while looking up pocket: {error:#?}"))
@@ -96,7 +93,7 @@ impl<'w> ItemHierarchy<'w, '_> {
             .flat_map(|item| self.items.get(*item))
     }
 
-    pub(crate) fn pockets_in(&self, container: &ItemItem) -> Vec<PocketWrapper> {
+    pub(crate) fn pockets_in(&self, container: &ItemItem) -> Vec<PocketWrapper<'_>> {
         let concrete_pockets = container
             .pockets
             .into_iter()
@@ -154,16 +151,16 @@ impl<'w> ItemHierarchy<'w, '_> {
         let item_fragments = self.item_fragments(prefix, suffix, item, shown_contents.as_mut());
         handler.handle_item(item, item_fragments);
 
-        if let Some(shown_contents) = shown_contents {
-            if !shown_contents.contents.is_empty() {
-                let in_pocket = Some(InPocketContext {
-                    type_: PocketType::Container,
-                    single_in_type: shown_contents.contents.len() == 1,
-                    depth,
-                });
-                for subitem in shown_contents.contents {
-                    self.walk_item(handler, in_pocket, &subitem);
-                }
+        if let Some(shown_contents) = shown_contents
+            && !shown_contents.contents.is_empty()
+        {
+            let in_pocket = Some(InPocketContext {
+                type_: PocketType::Container,
+                single_in_type: shown_contents.contents.len() == 1,
+                depth,
+            });
+            for subitem in shown_contents.contents {
+                self.walk_item(handler, in_pocket, &subitem);
             }
         }
 
@@ -192,7 +189,7 @@ impl<'w> ItemHierarchy<'w, '_> {
         }
     }
 
-    fn shown_contents(&self, item: &ItemItem) -> Option<ShownContents> {
+    fn shown_contents(&self, item: &ItemItem) -> Option<ShownContents<'_>> {
         let contents = self
             .pockets(item, PocketType::Container)
             .collect::<Vec<_>>();

@@ -62,12 +62,12 @@ pub(crate) struct CurrentlyVisibleBuilder<'w, 's> {
 }
 
 impl CurrentlyVisibleBuilder<'_, '_> {
-    pub(crate) fn for_npc(&self, pos: Pos) -> CurrentlyVisible {
+    pub(crate) fn for_npc(&self, pos: Pos) -> CurrentlyVisible<'_> {
         let viewing_distance = CurrentlyVisible::viewing_distance(&self.clock, None, pos.level);
         self.build(viewing_distance, pos, true)
     }
 
-    pub(crate) fn for_player(&self, only_nearby: bool) -> CurrentlyVisible {
+    pub(crate) fn for_player(&self, only_nearby: bool) -> CurrentlyVisible<'_> {
         let from_pos = if let PlayerActionState::Peeking { direction } = **self.player_action_state
         {
             self.player_pos().horizontal_nbor(direction.into())
@@ -87,7 +87,7 @@ impl CurrentlyVisibleBuilder<'_, '_> {
         viewing_distance: Option<u8>,
         from: Pos,
         only_nearby: bool,
-    ) -> CurrentlyVisible {
+    ) -> CurrentlyVisible<'_> {
         // segments are not used when viewing_distance is None, so then we pick any.
         let segments = self
             .relative_segments
@@ -111,10 +111,10 @@ impl CurrentlyVisibleBuilder<'_, '_> {
             if let Some(up) = self.envir.stairs_up_to(from) {
                 visible_cache.insert(up - from, Visible::Seen);
             }
-        } else if magic_stairs_down.contains(&PosOffset::HERE) {
-            if let Some(down) = self.envir.stairs_down_to(from) {
-                visible_cache.insert(down - from, Visible::Seen);
-            }
+        } else if magic_stairs_down.contains(&PosOffset::HERE)
+            && let Some(down) = self.envir.stairs_down_to(from)
+        {
+            visible_cache.insert(down - from, Visible::Seen);
         }
 
         let nearby_subzone_limits = only_nearby.then(|| {
