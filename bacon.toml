@@ -1,0 +1,61 @@
+# Documentation: https://dystroy.org/bacon/config/
+
+default_job = "fmt"
+
+[jobs.check]
+command = ["cargo", "check", "--profile", "dev-opt", "--all-targets", "--color", "always"]
+need_stdout = false
+
+[jobs.fmt]
+command = ["cargo", "fmt", "--", "--color", "always"]
+need_stdout = false
+on_success = "job:test"
+
+[jobs.test]
+command = [
+    "cargo", "nextest", "run", "--cargo-profile", "dev-opt", "--workspace", "--status-level", "slow",
+    "--hide-progress-bar", "--failure-output", "final", "--no-fail-fast", "--", "--include-ignored",
+]
+need_stdout = true
+analyzer = "nextest"
+on_success = "job:clippy"
+
+[jobs.clippy]
+command = ["cargo", "clippy", "--workspace", "--no-deps", "--all-targets", "--color", "always"]
+need_stdout = false
+on_success = "job:build"
+
+[jobs.build]
+command = ["cargo", "build", "--profile", "dev-opt", "--color", "always"]
+need_stdout = false
+on_success = "job:doc"
+
+[jobs.doc]
+command = ["cargo", "doc", "--profile", "dev-opt","--no-deps", "--workspace", "--color", "always", "--document-private-items"]
+need_stdout = false
+on_success = "job:wait"
+
+[jobs.doc-open]
+command = ["cargo", "doc", "--profile", "dev-opt","--no-deps", "--workspace", "--color", "always", "--document-private-items", "--open"]
+need_stdout = false
+on_success = "back" # so that we don't open the browser at each change
+
+[jobs.run]
+command = ["cargo", "run", "--profile", "dev-opt"]
+on_success = "back"
+on_failure = "back"
+
+[jobs.wait]
+command = ["inotifywait", "-e", "modify,create,delete,move", "--exclude", "/\\.", "-r", "src", "crates", "Cargo.lock", "Cargo.toml", "clippy.toml"]
+need_stdout = false
+on_success = "job:fmt"
+
+[keybindings]
+f = "job:fmt"
+t = "job:test"
+c = "job:clippy"
+b = "job:build"
+d = "job:doc"
+o = "job:doc-open"
+r = "job:run"
+w = "job:wait"
