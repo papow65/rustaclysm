@@ -358,7 +358,9 @@ pub(super) fn load(
     mut commands: Commands,
     mut next_application_state: ResMut<NextState<ApplicationState>>,
 ) {
-    commands.insert_resource(ActiveSav::new(&found_sav.0));
+    commands.insert_resource(
+        ActiveSav::new(&found_sav.0).expect("Loading sav file should not have failed"),
+    );
     next_application_state.set(ApplicationState::PreGameplay);
 }
 

@@ -1,4 +1,4 @@
-use crate::{SavPath, WorldPath};
+use crate::{Error, SavPath, WorldPath};
 use bevy::prelude::{Resource, debug};
 use cdda_json_files::Sav;
 use serde_json::from_str as from_json_str;
@@ -15,21 +15,36 @@ pub struct ActiveSav {
 }
 
 impl ActiveSav {
-    #[must_use]
-    pub fn new(path: &PathBuf) -> Self {
+    /// # Errors
+    /// - When the file could not be read
+    /// - When the first non-JSON line is missing
+    /// - When the rest of the file could not be parsed
+    pub fn new(path: &PathBuf) -> Result<Self, Error> {
         let sav_path = AssetPaths::save().join(path);
         //trace!("Loading {}...", sav_path.display());
 
         let sav = read_to_string(&sav_path)
-            .ok()
+            .map_err(|err| Error::Io { _wrapped: err })
             .inspect(|_| {
                 debug!("Loading {}...", sav_path.display());
             })
-            .map(|s| String::from(s.split_at(s.find('\n').expect("Non-JSON first line")).1))
-            .map(|s| from_json_str::<Sav>(s.as_str()))
-            .expect(".sav file could not be read")
-            .expect("Loading sav file failed");
-        Self { sav_path, sav }
+            .and_then(|s: String| {
+                Ok(String::from(
+                    s.split_at(s.find('\n').ok_or_else(|| Error::MissingFirstLine {
+                        _path: sav_path.clone(),
+                        _contents: s.as_str().into(),
+                    })?)
+                    .1,
+                ))
+            })
+            .and_then(|s| {
+                from_json_str::<Sav>(s.as_str()).map_err(|err| Error::JsonWithContext {
+                    _wrapped: err,
+                    _file_path: path.clone(),
+                    _contents: s.as_str().into(),
+                })
+            })?;
+        Ok(Self { sav_path, sav })
     }
 
     #[must_use]

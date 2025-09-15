@@ -3,6 +3,11 @@ use std::{error::Error as StdError, fmt, io, path::PathBuf, sync::Arc};
 
 #[derive(Debug)]
 pub enum Error {
+    /// This file lacks a non-JSON first line
+    MissingFirstLine {
+        _path: PathBuf,
+        _contents: Arc<str>,
+    },
     /// This recipe has no time set, where it is expected
     RecipeWithoutTime {
         _id: InfoId<Recipe>,
