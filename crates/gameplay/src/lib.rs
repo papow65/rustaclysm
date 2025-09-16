@@ -33,10 +33,9 @@ use self::common::{
     QueuedInstruction, Region, Visible, WalkingCost, ZoneRegion, ZoomDirection, ZoomDistance,
 };
 use self::components::{
-    Accessible, Appearance, CameraBase, Closeable, Corpse, CorpseRaise, Craft, ExamineCursor,
-    HealingDuration, Hurdle, LastSeen, Life, Melee, MissingAsset, Mobile, ObjectName, Obstacle,
-    Opaque, OpaqueFloor, Openable, PlayerWielded, Shared, StandardIntegrity, Tile, Vehicle,
-    VehiclePart,
+    Accessible, CameraBase, Closeable, Corpse, CorpseRaise, Craft, ExamineCursor, HealingDuration,
+    Hurdle, LastSeen, Life, Melee, MissingAsset, Mobile, ObjectName, Obstacle, Opaque, OpaqueFloor,
+    Openable, PlayerWielded, Shared, StandardIntegrity, Tile, Vehicle, VehiclePart,
 };
 use self::events::{
     ActorChange, ActorEvent, CorpseChange, CorpseEvent, Damage, DespawnSubzoneLevel,
@@ -50,7 +49,7 @@ use self::item::{
     ItemHandler, ItemHierarchy, ItemIntegrity, ItemItem, Phase, Pocket, PocketContents, PocketItem,
     PocketOf, Pockets, SealedPocket,
 };
-use self::models::ModelFactory;
+use self::models::{Appearance, ModelFactory};
 use self::phrase::{
     DebugText, DebugTextShown, Fragment, Phrase, PhrasePlugin, Positioning, ProtoPhrase,
 };
