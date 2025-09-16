@@ -20,7 +20,8 @@ use cdda_json_files::{
     FurnitureInfo, InfoId, PocketType, Quality, Recipe, RequiredComponent, RequiredPart,
     RequiredQuality, RequiredTool, Requirement, Sav, Skill, TerrainInfo,
 };
-use gameplay_cdda::{ActiveSav, Error, Infos};
+use gameplay_cdda::{Error, Infos};
+use gameplay_cdda_active_sav::ActiveSav;
 use gameplay_location::{LocationCache, Pos};
 use hud::{
     BAD_TEXT_COLOR, ButtonBuilder, Fonts, PANEL_COLOR, SMALL_SPACING, SelectionList,

@@ -1,9 +1,10 @@
 use crate::{
-    ActiveSav, AssetState, Exploration, OvermapBufferAsset, OvermapBufferPath,
+    ActiveSavExt as _, AssetState, Exploration, OvermapBufferAsset, OvermapBufferPath,
     RepetitionBlockExt as _, region_assets::AssetStorage,
 };
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{AssetEvent, AssetServer, Assets, EventReader, Res, ResMut};
+use gameplay_cdda_active_sav::ActiveSav;
 use gameplay_location::{Level, Overzone};
 
 #[derive(SystemParam)]

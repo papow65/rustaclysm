@@ -8,7 +8,7 @@ edition = "2024"
 application_state = { workspace = true }
 base64 = "0.22"
 bevy = { workspace = true }
-gameplay_cdda = { workspace = true }
+gameplay_cdda_active_sav = { workspace = true }
 gameplay_local = { workspace = true }
 glob = { workspace = true }
 hud = { workspace = true }

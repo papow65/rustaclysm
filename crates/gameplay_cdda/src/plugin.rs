@@ -1,6 +1,7 @@
-use crate::{ActiveSav, Exploration, Infos, TileLoader, region_assets::RegionAssetsPlugin};
+use crate::{Exploration, Infos, TileLoader, region_assets::RegionAssetsPlugin};
 use application_state::ApplicationState;
 use bevy::prelude::{App, Commands, OnExit, Plugin, StateScopedEventsAppExt as _};
+use gameplay_cdda_active_sav::ActiveSav;
 use util::AsyncResourcePlugin;
 
 pub struct CddaPlugin;

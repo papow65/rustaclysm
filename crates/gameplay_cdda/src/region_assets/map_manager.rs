@@ -1,7 +1,8 @@
-use crate::{ActiveSav, AssetState, MapAsset, MapPath, region_assets::AssetStorage};
+use crate::{ActiveSavExt as _, AssetState, MapAsset, MapPath, region_assets::AssetStorage};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{AssetEvent, AssetServer, Assets, EventReader, Res, ResMut, warn};
 use cdda_json_files::Submap;
+use gameplay_cdda_active_sav::ActiveSav;
 use gameplay_location::{SubzoneLevel, ZoneLevel};
 
 #[derive(SystemParam)]

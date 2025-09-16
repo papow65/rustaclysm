@@ -1,4 +1,4 @@
-use crate::{Error, SavPath, WorldPath};
+use crate::Error;
 use bevy::prelude::{Resource, debug};
 use cdda_json_files::Sav;
 use serde_json::from_str as from_json_str;
@@ -48,18 +48,8 @@ impl ActiveSav {
     }
 
     #[must_use]
-    pub(crate) fn sav_path(&self) -> SavPath {
-        SavPath::init(self.sav_path.clone())
-    }
-
-    #[must_use]
-    pub(crate) fn world_path(&self) -> WorldPath {
-        WorldPath::init(
-            self.sav_path
-                .parent()
-                .expect("Path to sav file should have a parent directory")
-                .to_path_buf(),
-        )
+    pub const fn path(&self) -> &PathBuf {
+        &self.sav_path
     }
 
     #[must_use]

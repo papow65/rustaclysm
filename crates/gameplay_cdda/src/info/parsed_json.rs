@@ -126,7 +126,11 @@ impl ParsedJson {
                 // Maybe is one of the few of non-list files?
                 let Ok(content) = from_json_str::<Typed>(file_contents.as_str()) else {
                     // The first match attempt was the most likely to succeed, so its error is most relevant.
-                    return Err(error.into());
+                    return Err(Error::JsonWithContext {
+                        _wrapped: error,
+                        _file_path: json_path.into(),
+                        _contents: file_contents.as_str().into(),
+                    });
                 };
 
                 vec![content]

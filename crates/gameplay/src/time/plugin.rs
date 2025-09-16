@@ -1,7 +1,7 @@
 use crate::Timeouts;
 use application_state::ApplicationState;
 use bevy::prelude::{App, Commands, OnEnter, OnExit, Plugin, Res};
-use gameplay_cdda::ActiveSav;
+use gameplay_cdda_active_sav::ActiveSav;
 use units::Timestamp;
 
 pub(crate) struct TimePlugin;

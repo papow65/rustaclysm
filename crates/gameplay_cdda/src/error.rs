@@ -3,11 +3,6 @@ use std::{error::Error as StdError, fmt, io, path::PathBuf, sync::Arc};
 
 #[derive(Debug)]
 pub enum Error {
-    /// This file lacks a non-JSON first line
-    MissingFirstLine {
-        _path: PathBuf,
-        _contents: Arc<str>,
-    },
     /// This recipe has no time set, where it is expected
     RecipeWithoutTime {
         _id: InfoId<Recipe>,
@@ -29,9 +24,6 @@ pub enum Error {
     // External error wrappers
     Io {
         _wrapped: io::Error,
-    },
-    Json {
-        _wrapped: serde_json::Error,
     },
     JsonWithContext {
         _wrapped: serde_json::Error,
@@ -56,12 +48,6 @@ impl From<CddaJsonError> for Error {
 impl From<io::Error> for Error {
     fn from(value: io::Error) -> Self {
         Self::Io { _wrapped: value }
-    }
-}
-
-impl From<serde_json::Error> for Error {
-    fn from(value: serde_json::Error) -> Self {
-        Self::Json { _wrapped: value }
     }
 }
 

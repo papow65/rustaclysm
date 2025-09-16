@@ -21,7 +21,8 @@ use cdda_json_files::{
     PocketType, Recipe, Repetition, RequiredLinkedLater, SpawnItem, TerrainInfo, UntypedInfoId,
 };
 use either::Either;
-use gameplay_cdda::{ActiveSav, Error, Infos, ObjectCategory, TileVariant};
+use gameplay_cdda::{Error, Infos, ObjectCategory, TileVariant};
+use gameplay_cdda_active_sav::ActiveSav;
 use gameplay_location::{LevelOffset, LocationCache, Pos, PosOffset, StairsDown, StairsUp};
 use hud::{BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR};
 use std::f32::consts::{FRAC_PI_4, TAU};

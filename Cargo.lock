@@ -2118,6 +2118,7 @@ dependencies = [
  "fastrand",
  "float-ord",
  "gameplay_cdda",
+ "gameplay_cdda_active_sav",
  "gameplay_local",
  "gameplay_location",
  "gameplay_resource",
@@ -2143,6 +2144,7 @@ dependencies = [
  "cdda_json_files",
  "either",
  "fastrand",
+ "gameplay_cdda_active_sav",
  "gameplay_location",
  "gameplay_resource",
  "glob",
@@ -2150,6 +2152,16 @@ dependencies = [
  "serde_json",
  "strum 0.27.2",
  "units",
+ "util",
+]
+
+[[package]]
+name = "gameplay_cdda_active_sav"
+version = "0.0.0"
+dependencies = [
+ "bevy",
+ "cdda_json_files",
+ "serde_json",
  "util",
 ]
 
@@ -2912,7 +2924,7 @@ dependencies = [
  "application_state",
  "base64 0.22.1",
  "bevy",
- "gameplay_cdda",
+ "gameplay_cdda_active_sav",
  "gameplay_local",
  "glob",
  "hud",

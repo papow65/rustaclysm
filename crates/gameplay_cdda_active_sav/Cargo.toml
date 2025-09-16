@@ -1,0 +1,14 @@
+[package]
+name = "gameplay_cdda_active_sav"
+description = "The active sav-file from Cataclysm:DDA of the in-game world"
+license = "AGPL-3.0-or-later"
+edition = "2024"
+
+[dependencies]
+bevy = { workspace = true }
+cdda_json_files = { workspace = true }
+serde_json = { workspace = true }
+util = { workspace = true }
+
+[lints]
+workspace = true

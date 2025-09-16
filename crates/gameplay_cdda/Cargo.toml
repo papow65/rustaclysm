@@ -10,6 +10,7 @@ bevy = { workspace = true }
 cdda_json_files = { workspace = true }
 either = { workspace = true }
 fastrand = { workspace = true }
+gameplay_cdda_active_sav = { workspace = true }
 gameplay_location = { workspace = true }
 gameplay_resource = { workspace = true }
 glob = { workspace = true }

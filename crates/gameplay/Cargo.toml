@@ -12,6 +12,7 @@ either = { workspace = true }
 fastrand = { workspace = true }
 float-ord = "0.3"
 gameplay_cdda = { workspace = true }
+gameplay_cdda_active_sav = { workspace = true }
 gameplay_local = { workspace = true }
 gameplay_location = { workspace = true }
 gameplay_resource = { workspace = true }

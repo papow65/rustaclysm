@@ -1,4 +1,4 @@
-mod active_sav;
+mod active_sav_ext;
 mod error;
 mod info;
 mod object_category;
@@ -9,7 +9,6 @@ mod repetition_block_ext;
 mod tiles;
 mod type_id;
 
-pub use self::active_sav::ActiveSav;
 pub use self::error::Error;
 pub use self::info::{InfoMap, Infos};
 pub use self::object_category::ObjectCategory;
@@ -23,6 +22,7 @@ pub use self::tiles::{
     Layers, MeshInfo, Model, ModelShape, SpriteOrientation, TileLoader, TileVariant, Transform2d,
 };
 
+use self::active_sav_ext::ActiveSavExt;
 use self::paths::{
     MapMemoryPath, MapPath, OvermapBufferPath, OvermapPath, PathFor, SavPath, WorldPath,
 };

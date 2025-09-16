@@ -8,7 +8,7 @@ use bevy::prelude::{
     Single, SpawnRelated as _, StateScoped, Text, TextFont, UiRect, Val, With, Without, World,
     children, debug, error,
 };
-use gameplay_cdda::ActiveSav;
+use gameplay_cdda_active_sav::ActiveSav;
 use gameplay_local::GameplayLocal;
 use glob::glob;
 use hud::{
