@@ -52,8 +52,7 @@ impl<'w, 's> Envir<'w, 's> {
     pub(crate) fn is_water(&self, pos: Pos) -> bool {
         self.location
             .get_first(pos, &self.accessibles)
-            .map(|floor| floor.water)
-            == Some(true)
+            .is_some_and(|floor| floor.water)
     }
 
     pub(crate) fn stairs_up_to(&self, from: Pos) -> Option<Pos> {

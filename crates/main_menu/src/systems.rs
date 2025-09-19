@@ -20,11 +20,11 @@ use std::path::{Path, PathBuf};
 use std::{str::from_utf8, time::Instant};
 use util::{AssetPaths, log_if_slow};
 
+const FULL_WIDTH: f32 = 720.0;
+
 pub(super) fn enter_main_menu(mut next_application_state: ResMut<NextState<ApplicationState>>) {
     next_application_state.set(ApplicationState::MainMenu);
 }
-
-const FULL_WIDTH: f32 = 720.0;
 
 #[derive(Clone, Debug)]
 pub(super) struct FoundSav(PathBuf);
@@ -303,6 +303,18 @@ fn load_button(
     path: &Path,
     index: Option<u32>,
 ) -> impl Bundle + use<> {
+    const ALPHABET: [char; 26] = {
+        let mut alphabet = ['\0'; 26];
+        let mut i = 0;
+        while i < alphabet.len() {
+            alphabet[i] = (b'a' + i as u8) as char;
+            i += 1;
+        }
+
+        alphabet
+    };
+    let key_binding = index.and_then(|index| ALPHABET.get(index as usize).copied());
+
     let world_path = path.parent().expect("World required");
     let encoded_character = path
         .file_name()
@@ -317,14 +329,6 @@ fn load_button(
         .decode(encoded_character)
         .expect("Valid base64 required");
     let character = from_utf8(&decoded_character).expect("Valid utf8 required");
-
-    let mut key_binding = None;
-    if let Some(index) = index
-        && index <= 26
-    {
-        key_binding =
-            Some(char::from_u32('a' as u32 + index).expect("Valid unicode character (a-z)"));
-    }
 
     ButtonBuilder::new(
         format!("Load {character} in {}", world_path.display()),

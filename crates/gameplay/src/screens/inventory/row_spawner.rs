@@ -152,22 +152,24 @@ impl InventoryBuilder<'_, '_> {
         item_phrase: &Phrase,
         item_info: &CommonItemInfo,
     ) {
-        let is_selected;
-        let is_selected_previous;
-        if let Some(previous_selected_item) = section_data.previous_selected_item {
-            is_selected = item_entity == previous_selected_item;
-            is_selected_previous = is_selected;
-        } else {
-            is_selected = self.selection_list.selected.is_none();
-            is_selected_previous = false;
+        #[derive(PartialEq)]
+        enum Selection {
+            FirstItem,
+            PreviousSelected,
         }
 
-        let background_color = if is_selected {
+        let selecttion = if let Some(previous_selected_item) = section_data.previous_selected_item {
+            (item_entity == previous_selected_item).then_some(Selection::PreviousSelected)
+        } else {
+            (self.selection_list.selected.is_none()).then_some(Selection::FirstItem)
+        };
+
+        let background_color = if selecttion.is_some() {
             HOVERED_BUTTON_COLOR
         } else {
             BackgroundColor::DEFAULT
         };
-        let item_text_color = if is_selected {
+        let item_text_color = if selecttion.is_some() {
             SELECTED_ITEM_TEXT_COLOR
         } else {
             ITEM_TEXT_COLOR
@@ -209,7 +211,7 @@ impl InventoryBuilder<'_, '_> {
             .id();
 
         self.selection_list.append(row_entity);
-        if is_selected_previous {
+        if selecttion == Some(Selection::PreviousSelected) {
             debug!("Previous selected found");
             self.selection_list.selected = Some(row_entity);
         }
