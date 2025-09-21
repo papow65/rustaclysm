@@ -1,5 +1,4 @@
-use crate::Appearance;
-use crate::models::resources::{AppearanceCache, MeshCaches};
+use crate::{Appearance, AppearanceCache, MeshCaches};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{
     AssetServer, Assets, Mesh, Mesh3d, MeshMaterial3d, Res, ResMut, StandardMaterial, Transform,
@@ -11,7 +10,7 @@ use gameplay_cdda::{
 };
 
 #[derive(SystemParam)]
-pub(crate) struct ModelFactory<'w> {
+pub struct ModelFactory<'w> {
     appearance_cache: ResMut<'w, AppearanceCache>,
     mesh_caches: ResMut<'w, MeshCaches>,
     material_assets: ResMut<'w, Assets<StandardMaterial>>,
@@ -54,7 +53,7 @@ impl ModelFactory<'_> {
             .clone()
     }
 
-    pub(crate) fn get_layers(
+    pub fn get_layers(
         &mut self,
         info_id: &UntypedInfoId,
         category: ObjectCategory,
@@ -75,7 +74,7 @@ impl ModelFactory<'_> {
         })
     }
 
-    pub(crate) fn get_cursor(&mut self) -> (Mesh3d, Transform, MeshMaterial3d<StandardMaterial>) {
+    pub fn get_cursor(&mut self) -> (Mesh3d, Transform, MeshMaterial3d<StandardMaterial>) {
         let info_id = UntypedInfoId::new("cursor");
         let models = self.loader.get_models(
             &info_id,

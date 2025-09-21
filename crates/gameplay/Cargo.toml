@@ -15,6 +15,7 @@ gameplay_cdda = { workspace = true }
 gameplay_cdda_active_sav = { workspace = true }
 gameplay_local = { workspace = true }
 gameplay_location = { workspace = true }
+gameplay_model = { workspace = true }
 gameplay_resource = { workspace = true }
 gameplay_transition_state = { workspace = true }
 hud = { workspace = true }

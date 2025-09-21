@@ -1,9 +1,9 @@
 use crate::{
     Accessible, Amount, Aquatic, BaseSpeed, BodyContainers, CameraBase, Closeable, Containable,
     Craft, ExamineCursor, Explored, Faction, Filthy, HealingDuration, Health, Hurdle,
-    ItemIntegrity, LastSeen, Life, Limited, LocalTerrain, Melee, Mobile, ModelFactory, ObjectName,
-    Obstacle, Opaque, OpaqueFloor, Openable, Phase, Player, SealedPocket, Shared, Stamina,
-    StandardIntegrity, Vehicle, VehiclePart, WalkingMode, spawn::log_spawn_result,
+    ItemIntegrity, Life, Limited, LocalTerrain, Melee, Mobile, ObjectName, Obstacle, Opaque,
+    OpaqueFloor, Openable, Phase, Player, SealedPocket, Shared, Stamina, StandardIntegrity,
+    Vehicle, VehiclePart, WalkingMode, spawn::log_spawn_result,
 };
 use crate::{InPocket, ObjectOn, PocketOf, Tile, TileIn, VehiclePartOf};
 use application_state::ApplicationState;
@@ -24,6 +24,7 @@ use either::Either;
 use gameplay_cdda::{Error, Infos, ObjectCategory, TileVariant};
 use gameplay_cdda_active_sav::ActiveSav;
 use gameplay_location::{LevelOffset, LocationCache, Pos, PosOffset, StairsDown, StairsUp};
+use gameplay_model::{LastSeen, ModelFactory};
 use hud::{BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR};
 use std::f32::consts::{FRAC_PI_4, TAU};
 use std::sync::{Arc, LazyLock};

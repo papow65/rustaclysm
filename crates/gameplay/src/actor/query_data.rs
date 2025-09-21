@@ -7,7 +7,7 @@ use crate::{
     ActorEvent, ActorImpact, Amount, Aquatic, Attack, BaseSpeed, BodyContainers, Breath,
     ChangePace, Clock, Close, Collision, Consumed, Container, CorpseEvent, Craft, Damage, Envir,
     Faction, Filthy, Healing, HealingDuration, Health, InPocket, Item, ItemHierarchy, ItemItem,
-    LastEnemy, LastSeen, Life, Melee, MessageWriter, ObjectName, ObjectOn, Peek, Phrase, Player,
+    LastEnemy, Life, Melee, MessageWriter, ObjectName, ObjectOn, Peek, Phrase, Player,
     PlayerActionState, PlayerWielded, Pulp, Smash, Stamina, StaminaCost, StartCraft, Step, Subject,
     TerrainEvent, Tile, TileSpawner, Toggle, WalkingMode,
 };
@@ -18,6 +18,7 @@ use bevy::prelude::{
 use cdda_json_files::CddaItem;
 use either::Either;
 use gameplay_location::{HorizontalDirection, LevelOffset, LocationCache, Nbor, Pos};
+use gameplay_model::LastSeen;
 use units::{Distance, Duration, Speed};
 use util::Maybe;
 

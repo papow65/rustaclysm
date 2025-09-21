@@ -1,0 +1,14 @@
+[package]
+name = "gameplay_model"
+description = "Meshes and textures"
+license = "AGPL-3.0-or-later"
+edition = "2024"
+
+[dependencies]
+bevy = { workspace = true }
+cdda_json_files = { workspace = true }
+gameplay_cdda = { workspace = true }
+gameplay_resource = { workspace = true }
+
+[lints]
+workspace = true

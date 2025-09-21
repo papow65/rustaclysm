@@ -1,10 +1,11 @@
-use crate::{BodyContainers, Item, ItemItem, LastSeen, Shared};
+use crate::{BodyContainers, Item, ItemItem, Shared};
 use bevy::platform::collections::{HashMap, HashSet, hash_map::Entry};
 use bevy::prelude::{AnyOf, Query};
 use cdda_json_files::{
     CommonItemInfo, ExamineAction, FurnitureInfo, InfoId, Quality, SimpleExamineAction, TerrainInfo,
 };
 use gameplay_location::{LocationCache, Pos};
+use gameplay_model::LastSeen;
 use std::{ops::RangeInclusive, sync::Arc};
 
 const MAX_FIND_DISTANCE: i32 = 7;

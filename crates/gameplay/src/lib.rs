@@ -5,7 +5,6 @@ mod components;
 mod events;
 mod focus;
 mod item;
-mod models;
 mod phrase;
 mod plugin;
 mod relations;
@@ -34,8 +33,8 @@ use self::common::{
 };
 use self::components::{
     Accessible, CameraBase, Closeable, Corpse, CorpseRaise, Craft, ExamineCursor, HealingDuration,
-    Hurdle, LastSeen, Life, Melee, MissingAsset, Mobile, ObjectName, Obstacle, Opaque, OpaqueFloor,
-    Openable, PlayerWielded, Shared, StandardIntegrity, Tile, Vehicle, VehiclePart,
+    Hurdle, LastSeenExt, Life, Melee, MissingAsset, Mobile, ObjectName, Obstacle, Opaque,
+    OpaqueFloor, Openable, PlayerWielded, Shared, StandardIntegrity, Tile, Vehicle, VehiclePart,
 };
 use self::events::{
     ActorChange, ActorEvent, CorpseChange, CorpseEvent, Damage, DespawnSubzoneLevel,
@@ -49,7 +48,6 @@ use self::item::{
     ItemHandler, ItemHierarchy, ItemIntegrity, ItemItem, Phase, Pocket, PocketContents, PocketItem,
     PocketOf, Pockets, SealedPocket,
 };
-use self::models::{Appearance, ModelFactory};
 use self::phrase::{
     DebugText, DebugTextShown, Fragment, Phrase, PhrasePlugin, Positioning, ProtoPhrase,
 };

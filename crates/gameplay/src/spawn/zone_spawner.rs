@@ -1,6 +1,6 @@
 use crate::{
-    Explored, Focus, LastSeen, MissingAsset, ObjectName, SeenFrom, SpawnZoneLevel, TileSpawner,
-    ZoneLevelIds, spawn::VisibleRegion,
+    Explored, Focus, MissingAsset, ObjectName, SeenFrom, SpawnZoneLevel, TileSpawner, ZoneLevelIds,
+    spawn::VisibleRegion,
 };
 use application_state::ApplicationState;
 use bevy::ecs::system::SystemParam;
@@ -9,6 +9,7 @@ use bevy::render::view::RenderLayers;
 use cdda_json_files::{CddaItemName, InfoId, ItemName, OvermapTerrainInfo};
 use gameplay_cdda::{Infos, ObjectCategory};
 use gameplay_location::{Level, ZoneLevel};
+use gameplay_model::LastSeen;
 use hud::HARD_TEXT_COLOR;
 
 #[derive(SystemParam)]

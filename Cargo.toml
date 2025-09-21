@@ -43,6 +43,7 @@ gameplay_cdda = { path = "crates/gameplay_cdda" }
 gameplay_cdda_active_sav = { path = "crates/gameplay_cdda_active_sav" }
 gameplay_local = { path = "crates/gameplay_local" }
 gameplay_location = { path = "crates/gameplay_location" }
+gameplay_model = { path = "crates/gameplay_model" }
 gameplay_resource = { path = "crates/gameplay_resource" }
 gameplay_transition_state = { path = "crates/gameplay_transition_state" }
 hud = { path = "crates/hud" }

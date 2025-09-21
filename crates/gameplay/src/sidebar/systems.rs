@@ -6,8 +6,8 @@ use crate::sidebar::{
 use crate::{
     Accessible, Actor, Amount, BaseSpeed, Breath, Clock, Corpse, CurrentlyVisibleBuilder,
     DebugText, DebugTextShown, Envir, Explored, Faction, FocusState, Fragment, Health, Hurdle,
-    Item, ItemHandler, ItemHierarchy, ItemItem, LastSeen, Life, Message, ObjectName, Obstacle,
-    Opaque, OpaqueFloor, Phrase, Player, PlayerActionState, PlayerWielded, RefreshAfterBehavior,
+    Item, ItemHandler, ItemHierarchy, ItemItem, Life, Message, ObjectName, Obstacle, Opaque,
+    OpaqueFloor, Phrase, Player, PlayerActionState, PlayerWielded, RefreshAfterBehavior,
     RelativeSegments, SeenFrom, Shared, Stamina, StandardIntegrity, Timeouts, WalkingMode,
     ZoneLevelIds,
 };
@@ -24,6 +24,7 @@ use bevy::prelude::{
 };
 use cdda_json_files::{CharacterInfo, MoveCost};
 use gameplay_location::{Pos, StairsDown, StairsUp};
+use gameplay_model::LastSeen;
 use hud::{
     BAD_TEXT_COLOR, Fonts, HARD_TEXT_COLOR, PANEL_COLOR, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
     panel_node, text_color_expect_half,

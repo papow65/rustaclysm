@@ -3,13 +3,14 @@ use bevy::prelude::{AlphaMode, Assets, Color, Component, MeshMaterial3d, Srgba, 
 
 #[derive(Clone, Debug, Component)]
 #[component(immutable)]
-pub(crate) struct Appearance {
+pub struct Appearance {
     seen: MeshMaterial3d<StandardMaterial>,
     remembered: MeshMaterial3d<StandardMaterial>,
 }
 
 impl Appearance {
-    pub(super) fn new<T>(materials: &mut Assets<StandardMaterial>, material: T) -> Self
+    #[must_use]
+    pub(crate) fn new<T>(materials: &mut Assets<StandardMaterial>, material: T) -> Self
     where
         T: Into<StandardMaterial>,
     {
@@ -27,11 +28,13 @@ impl Appearance {
         }
     }
 
-    pub(crate) fn fixed_material(&self) -> MeshMaterial3d<StandardMaterial> {
+    #[must_use]
+    pub fn fixed_material(&self) -> MeshMaterial3d<StandardMaterial> {
         self.material(&LastSeen::Currently)
     }
 
-    pub(crate) fn material(&self, last_seen: &LastSeen) -> MeshMaterial3d<StandardMaterial> {
+    #[must_use]
+    pub fn material(&self, last_seen: &LastSeen) -> MeshMaterial3d<StandardMaterial> {
         match last_seen {
             LastSeen::Currently => self.seen.clone(),
             LastSeen::Previously => self.remembered.clone(),
@@ -39,6 +42,7 @@ impl Appearance {
         }
     }
 
+    #[must_use]
     fn remembered(color: Color) -> Color {
         let srgba = Srgba::from(color);
         Color::srgba(

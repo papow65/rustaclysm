@@ -2121,6 +2121,7 @@ dependencies = [
  "gameplay_cdda_active_sav",
  "gameplay_local",
  "gameplay_location",
+ "gameplay_model",
  "gameplay_resource",
  "gameplay_transition_state",
  "hud",
@@ -2184,6 +2185,16 @@ dependencies = [
  "keyboard",
  "strum 0.27.2",
  "units",
+]
+
+[[package]]
+name = "gameplay_model"
+version = "0.0.0"
+dependencies = [
+ "bevy",
+ "cdda_json_files",
+ "gameplay_cdda",
+ "gameplay_resource",
 ]
 
 [[package]]

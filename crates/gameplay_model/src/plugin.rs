@@ -1,8 +1,8 @@
-use crate::models::resources::{AppearanceCache, MeshCaches};
+use crate::{AppearanceCache, MeshCaches};
 use bevy::prelude::{App, Plugin};
 use gameplay_resource::GameplayResourcePlugin;
 
-pub(crate) struct ModelPlugin;
+pub struct ModelPlugin;
 
 impl Plugin for ModelPlugin {
     fn build(&self, app: &mut App) {

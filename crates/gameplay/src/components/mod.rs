@@ -1,12 +1,14 @@
+mod last_seen_ext;
 mod object_name;
 mod shared;
 mod vehicle;
 
+pub(crate) use self::last_seen_ext::LastSeenExt;
 pub(crate) use self::object_name::ObjectName;
 pub(crate) use self::shared::Shared;
 pub(crate) use self::vehicle::{Vehicle, VehiclePart};
 
-use crate::{BaseSpeed, Damage, Evolution, Limited, Player, Visible};
+use crate::{Damage, Evolution, Limited};
 use bevy::prelude::Component;
 use cdda_json_files::{CommonItemInfo, MoveCost, MoveCostIncrease, Recipe};
 use std::sync::Arc;
@@ -156,31 +158,6 @@ impl Melee {
                 )
             })
             .sum()
-    }
-}
-
-/// Mutable component
-#[derive(Clone, PartialEq, Eq, Debug, Component)]
-pub(crate) enum LastSeen {
-    Currently,
-    Previously, // TODO consider adding a timestamp
-    Never,
-}
-
-impl LastSeen {
-    pub(crate) fn update(&mut self, visible: Visible) {
-        if visible == Visible::Seen {
-            *self = Self::Currently;
-        } else if self == &Self::Currently {
-            *self = Self::Previously;
-        }
-    }
-
-    pub(crate) fn shown(&self, player: Option<&Player>, speed: Option<&BaseSpeed>) -> bool {
-        // Things that can move, like NPCs, are hidden when out of sight.
-        self == &Self::Currently
-            || (self == &Self::Previously && speed.is_none())
-            || player.is_some()
     }
 }
 

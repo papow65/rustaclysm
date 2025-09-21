@@ -1,5 +1,5 @@
 use crate::screens::{find_nearby, find_nearby_pseudo, nearby_qualities};
-use crate::{BodyContainers, GameplayScreenState, Item, LastSeen, Player, Shared};
+use crate::{BodyContainers, GameplayScreenState, Item, Player, Shared};
 use bevy::picking::Pickable;
 use bevy::prelude::{
     AlignItems, AnyOf, Commands, FlexDirection, JustifyContent, KeyCode, Local, NextState, Node,
@@ -7,6 +7,7 @@ use bevy::prelude::{
 };
 use cdda_json_files::{FurnitureInfo, TerrainInfo};
 use gameplay_location::{LocationCache, Pos};
+use gameplay_model::LastSeen;
 use hud::{Fonts, GOOD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, WARN_TEXT_COLOR};
 use keyboard::KeyBindings;
 use manual::{LargeNode, ManualSection};

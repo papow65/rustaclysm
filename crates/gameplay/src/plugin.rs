@@ -9,8 +9,8 @@ use crate::systems::{
 use crate::{
     ActorPlugin, CameraOffset, GameplayScreenState, PhrasePlugin, RelativeSegments,
     SpawnSubzoneLevel, TimePlugin, TransitionPlugin, VisualizationUpdate, events::EventsPlugin,
-    focus::FocusPlugin, item::ItemChecksPlugin, models::ModelPlugin, resources::ResourcePlugin,
-    screens::ScreensPlugin, sidebar::SidebarPlugin, update_camera_offset,
+    focus::FocusPlugin, item::ItemChecksPlugin, resources::ResourcePlugin, screens::ScreensPlugin,
+    sidebar::SidebarPlugin, update_camera_offset,
 };
 use application_state::ApplicationState;
 use bevy::ecs::system::ScheduleSystem;
@@ -22,6 +22,7 @@ use bevy::{diagnostic::FrameTimeDiagnosticsPlugin, ecs::schedule::ScheduleConfig
 use gameplay_cdda::{CddaPlugin, Exploration};
 use gameplay_local::GameplayLocalPlugin;
 use gameplay_location::LocationPlugin;
+use gameplay_model::ModelPlugin;
 use gameplay_resource::GampelayResourceSet;
 use util::log_transition_plugin;
 
