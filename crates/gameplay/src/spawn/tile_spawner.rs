@@ -9,7 +9,7 @@ use crate::{InPocket, ObjectOn, PocketOf, Tile, TileIn, VehiclePartOf};
 use application_state::ApplicationState;
 use bevy::ecs::{relationship::Relationship, system::SystemParam};
 use bevy::prelude::{
-    Camera3d, Commands, Component, DirectionalLight, Entity, EulerRot, Mat4, Query, Res,
+    Camera, Camera3d, Commands, Component, DirectionalLight, Entity, EulerRot, Mat4, Query, Res,
     StateScoped, TextColor, Transform, Vec3, Visibility, With, debug, error,
 };
 use bevy::render::camera::{PerspectiveProjection, Projection};
@@ -592,6 +592,10 @@ impl<'w> TileSpawner<'w, '_> {
                             .with_children(|child_builder| {
                                 child_builder.spawn((
                                     Camera3d::default(),
+                                    Camera {
+                                        is_active: false,
+                                        ..Camera::default()
+                                    },
                                     Projection::Perspective(PerspectiveProjection {
                                         // more overview, less personal than the default
                                         fov: 0.3,
