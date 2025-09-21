@@ -3,8 +3,7 @@ use application_state::ApplicationState;
 use bevy::ecs::schedule::ScheduleConfigs;
 use bevy::ecs::system::{ScheduleSystem, SystemState};
 use bevy::prelude::{
-    Commands, EventReader, EventWriter, IntoScheduleConfigs as _, ResMut, World, debug, in_state,
-    on_event,
+    Commands, EventReader, IntoScheduleConfigs as _, ResMut, World, debug, in_state, on_event,
 };
 use gameplay_location::SubzoneLevelCache;
 use std::time::Instant;
@@ -28,42 +27,22 @@ fn despawn_subzone_levels(
         EventReader<DespawnSubzoneLevel>,
         ResMut<SubzoneLevelCache>,
     )>,
-    retry_sytem_state: &mut SystemState<EventWriter<DespawnSubzoneLevel>>,
 ) {
     let start = Instant::now();
 
     let (mut commands, mut despawn_subzone_level_reader, subzone_level_cache) =
         sytem_state.get_mut(world);
 
-    debug!(
-        "Despawning {} subzone levels",
-        despawn_subzone_level_reader.len()
-    );
+    let despawned_count = despawn_subzone_level_reader.len();
+    debug!("Despawning {despawned_count} subzone levels");
 
-    let mut i = 0;
-    let mut retry = None;
-    for despawn_event in despawn_subzone_level_reader.read() {
+    for despawn_event in despawn_subzone_level_reader.read().take(64) {
         if let Some(entity) = subzone_level_cache.get(despawn_event.subzone_level) {
-            if i < 64 {
-                commands.entity(entity).despawn();
-
-                i += 1;
-            } else {
-                retry = Some(despawn_event.subzone_level);
-
-                break;
-            }
+            commands.entity(entity).despawn();
         }
     }
 
     sytem_state.apply(world);
-
-    if let Some(subzone_level) = retry {
-        let mut despawn_subzone_level_writer = retry_sytem_state.get_mut(world);
-
-        // We retry the skipped despawn, and we re-trigger this system for the next frame.
-        despawn_subzone_level_writer.write(DespawnSubzoneLevel { subzone_level });
-    }
 
     log_if_slow("despawn_subzone_levels", start);
 }
