@@ -21,7 +21,9 @@ analyzer = "nextest"
 on_success = "job:clippy"
 
 [jobs.clippy]
-command = ["cargo", "clippy", "--workspace", "--no-deps", "--all-targets", "--color", "always"]
+command = [
+    "cargo", "clippy", "--profile", "dev-opt", "--workspace", "--no-deps", "--all-targets", "--color", "always"
+]
 need_stdout = false
 on_success = "job:build"
 
