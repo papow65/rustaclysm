@@ -52,6 +52,10 @@ command = ["inotifywait", "-e", "modify,create,delete,move", "--exclude", "/\\."
 need_stdout = false
 on_success = "job:fmt"
 
+[jobs.fix]
+command = ["cargo", "fix", "--profile", "dev-opt", "--workspace", "--allow-dirty"]
+on_success = "job:fmt"
+
 [keybindings]
 f = "job:fmt"
 t = "job:test"
@@ -61,3 +65,4 @@ d = "job:doc"
 o = "job:doc-open"
 r = "job:run"
 w = "job:wait"
+x = "job:fix"
