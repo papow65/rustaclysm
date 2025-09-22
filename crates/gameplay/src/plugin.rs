@@ -79,7 +79,7 @@ fn update_systems() -> ScheduleConfigs<ScheduleSystem> {
             ),
             spawn_subzones_for_camera,
             (
-                spawn_subzone_levels.run_if(on_event::<SpawnSubzoneLevel>),
+                spawn_subzone_levels,
                 update_visualization_on_item_move.run_if(resource_exists::<RelativeSegments>),
             )
                 .chain()
