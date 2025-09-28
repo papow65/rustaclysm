@@ -1,15 +1,15 @@
 use crate::{
     ActiveSavExt as _, AssetState, Exploration, OvermapBufferAsset, OvermapBufferPath,
-    RepetitionBlockExt as _, region_assets::AssetStorage,
+    RepetitionBlockExt as _, regions::AssetStorage,
 };
 use bevy::ecs::system::SystemParam;
-use bevy::prelude::{AssetEvent, AssetServer, Assets, EventReader, Res, ResMut};
+use bevy::prelude::{AssetEvent, AssetServer, Assets, MessageReader, Res, ResMut};
 use gameplay_cdda_active_sav::ActiveSav;
 use gameplay_location::{Level, Overzone};
 
 #[derive(SystemParam)]
 pub struct OvermapBufferManager<'w, 's> {
-    asset_events: EventReader<'w, 's, AssetEvent<OvermapBufferAsset>>,
+    asset_events: MessageReader<'w, 's, AssetEvent<OvermapBufferAsset>>,
     active_sav: Res<'w, ActiveSav>,
     storage: ResMut<'w, AssetStorage<OvermapBufferAsset>>,
     asset_server: Res<'w, AssetServer>,

@@ -9,7 +9,6 @@ impl Plugin for GameplayTransitionStatePlugin {
         app.add_plugins(log_transition_plugin::<GameplayTransitionState>);
 
         app.add_sub_state::<GameplayTransitionState>();
-        app.enable_state_scoped_entities::<GameplayTransitionState>();
 
         app.add_systems(OnEnter(GameplayTransitionState::Loaded), enable_3d_camera);
     }

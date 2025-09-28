@@ -1,9 +1,9 @@
-use bevy::prelude::{Entity, Event};
+use bevy::prelude::{Entity, Message};
 
 pub(crate) trait CorpseChange: Clone + Send + Sync + 'static {}
 
 #[must_use]
-#[derive(Clone, Debug, Event)]
+#[derive(Clone, Debug, Message)]
 pub(crate) struct CorpseEvent<C: CorpseChange> {
     pub(crate) corpse_entity: Entity,
     pub(crate) change: C,

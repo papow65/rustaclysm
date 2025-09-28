@@ -19,7 +19,7 @@ pub use self::map_memory_manager::MapMemoryManager;
 pub use self::overmap_buffer_manager::OvermapBufferManager;
 pub use self::overmap_manager::OvermapManager;
 
-pub(crate) use self::plugin::RegionAssetsPlugin;
+pub(crate) use self::plugin::RegionsPlugin;
 
 use self::asset_storage::AssetStorage;
 use self::assets::RegionAsset;

@@ -6,9 +6,9 @@ use crate::{
 };
 use bevy::ecs::{schedule::ScheduleConfigs, system::ScheduleSystem};
 use bevy::prelude::{
-    Added, AssetEvent, Assets, Children, Commands, Entity, EventReader, EventWriter,
-    GlobalTransform, IntoScheduleConfigs as _, Query, RelationshipTarget as _, Res, ResMut,
-    Visibility, With, debug, on_event, warn,
+    Added, AssetEvent, Assets, Children, Commands, Entity, GlobalTransform,
+    IntoScheduleConfigs as _, MessageReader, MessageWriter, Query, RelationshipTarget as _, Res,
+    ResMut, Visibility, With, debug, on_message, warn,
 };
 use gameplay_cdda::{
     Exploration, MapAsset, MapManager, MapMemoryAsset, MapMemoryManager, OvermapAsset,
@@ -28,15 +28,15 @@ pub(crate) fn handle_region_asset_events() -> ScheduleConfigs<ScheduleSystem> {
     (
         (
             (
-                handle_overmap_buffer_events.run_if(on_event::<AssetEvent<OvermapBufferAsset>>),
-                handle_overmap_events.run_if(on_event::<AssetEvent<OvermapAsset>>),
+                handle_overmap_buffer_events.run_if(on_message::<AssetEvent<OvermapBufferAsset>>),
+                handle_overmap_events.run_if(on_message::<AssetEvent<OvermapAsset>>),
             ),
             update_zone_levels_with_missing_assets
-                .run_if(on_event::<AssetEvent<OvermapBufferAsset>>),
+                .run_if(on_message::<AssetEvent<OvermapBufferAsset>>),
         )
             .chain(),
-        handle_map_events.run_if(on_event::<AssetEvent<MapAsset>>),
-        handle_map_memory_events.run_if(on_event::<AssetEvent<MapMemoryAsset>>),
+        handle_map_events.run_if(on_message::<AssetEvent<MapAsset>>),
+        handle_map_memory_events.run_if(on_message::<AssetEvent<MapMemoryAsset>>),
     )
         .into_configs()
 }
@@ -45,8 +45,8 @@ pub(crate) fn handle_zone_levels() -> ScheduleConfigs<ScheduleSystem> {
     (
         update_zone_levels,
         (
-            spawn_zone_levels.run_if(on_event::<SpawnZoneLevel>),
-            update_zone_level_visibility.run_if(on_event::<UpdateZoneLevelVisibility>),
+            spawn_zone_levels.run_if(on_message::<SpawnZoneLevel>),
+            update_zone_level_visibility.run_if(on_message::<UpdateZoneLevelVisibility>),
         ),
     )
         .chain()
@@ -55,8 +55,8 @@ pub(crate) fn handle_zone_levels() -> ScheduleConfigs<ScheduleSystem> {
 
 #[expect(clippy::needless_pass_by_value)]
 pub(crate) fn spawn_subzones_for_camera(
-    mut spawn_subzone_level_writer: EventWriter<SpawnSubzoneLevel>,
-    mut despawn_subzone_level_writer: EventWriter<DespawnSubzoneLevel>,
+    mut spawn_subzone_level_writer: MessageWriter<SpawnSubzoneLevel>,
+    mut despawn_subzone_level_writer: MessageWriter<DespawnSubzoneLevel>,
     focus: Focus,
     visible_region: VisibleRegion,
     subzone_level_cache: Res<SubzoneLevelCache>,
@@ -120,7 +120,7 @@ fn maximal_expanded_zones(player_zone: Zone) -> Region {
 }
 
 fn spawn_expanded_subzone_levels(
-    spawn_subzone_level_writer: &mut EventWriter<SpawnSubzoneLevel>,
+    spawn_subzone_level_writer: &mut MessageWriter<SpawnSubzoneLevel>,
     subzone_level_cache: &SubzoneLevelCache,
     expanded_region: &Region,
 ) {
@@ -135,7 +135,7 @@ fn spawn_expanded_subzone_levels(
 }
 
 fn despawn_expanded_subzone_levels(
-    despawn_subzone_level_writer: &mut EventWriter<DespawnSubzoneLevel>,
+    despawn_subzone_level_writer: &mut MessageWriter<DespawnSubzoneLevel>,
     subzone_levels: &Query<&SubzoneLevel>,
     expanded_region: &Region,
 ) {
@@ -152,7 +152,7 @@ fn despawn_expanded_subzone_levels(
 }
 
 pub(crate) fn spawn_subzone_levels(
-    mut spawn_subzone_level_reader: EventReader<SpawnSubzoneLevel>,
+    mut spawn_subzone_level_reader: MessageReader<SpawnSubzoneLevel>,
     mut subzone_spawner: SubzoneSpawner,
     mut map_manager: MapManager,
     mut map_memory_manager: MapMemoryManager,
@@ -184,9 +184,9 @@ pub(crate) fn spawn_subzone_levels(
 
 #[expect(clippy::needless_pass_by_value)]
 fn update_zone_levels(
-    mut spawn_zone_level_writer: EventWriter<SpawnZoneLevel>,
-    mut update_zone_level_visibility_writer: EventWriter<UpdateZoneLevelVisibility>,
-    mut despawn_zone_level_writer: EventWriter<DespawnZoneLevel>,
+    mut spawn_zone_level_writer: MessageWriter<SpawnZoneLevel>,
+    mut update_zone_level_visibility_writer: MessageWriter<UpdateZoneLevelVisibility>,
+    mut despawn_zone_level_writer: MessageWriter<DespawnZoneLevel>,
     focus: Focus,
     visible_region: VisibleRegion,
     zone_level_entities: Res<ZoneLevelCache>,
@@ -255,7 +255,7 @@ fn update_zone_levels(
 }
 
 fn spawn_zone_levels(
-    mut spawn_zone_level_reader: EventReader<SpawnZoneLevel>,
+    mut spawn_zone_level_reader: MessageReader<SpawnZoneLevel>,
     mut zone_spawner: ZoneSpawner,
 ) {
     let start = Instant::now();
@@ -268,7 +268,7 @@ fn spawn_zone_levels(
 #[expect(clippy::needless_pass_by_value)]
 fn update_zone_level_visibility(
     mut commands: Commands,
-    mut update_zone_level_visibility_reader: EventReader<UpdateZoneLevelVisibility>,
+    mut update_zone_level_visibility_reader: MessageReader<UpdateZoneLevelVisibility>,
     focus: Focus,
     visible_region: VisibleRegion,
     explored: Res<Explored>,
@@ -298,7 +298,7 @@ fn update_zone_level_visibility(
 }
 
 fn handle_map_events(
-    mut spawn_subzone_level_writer: EventWriter<SpawnSubzoneLevel>,
+    mut spawn_subzone_level_writer: MessageWriter<SpawnSubzoneLevel>,
     mut map_manager: MapManager,
 ) {
     let start = Instant::now();
@@ -315,8 +315,8 @@ fn handle_map_events(
 
 #[expect(clippy::needless_pass_by_value)]
 fn handle_map_memory_events(
-    mut explorations: EventWriter<Exploration>,
-    mut spawn_subzone_level_writer: EventWriter<SpawnSubzoneLevel>,
+    mut explorations: MessageWriter<Exploration>,
+    mut spawn_subzone_level_writer: MessageWriter<SpawnSubzoneLevel>,
     subzone_level_cache: Res<SubzoneLevelCache>,
     expanded: Res<Expanded>,
     mut map_memory_manager: MapMemoryManager,
@@ -335,7 +335,7 @@ fn handle_map_memory_events(
 }
 
 fn handle_overmap_buffer_events(
-    mut explorations: EventWriter<Exploration>,
+    mut explorations: MessageWriter<Exploration>,
     mut overmap_buffer_manager: OvermapBufferManager,
 ) {
     let start = Instant::now();
@@ -347,7 +347,7 @@ fn handle_overmap_buffer_events(
 
 #[expect(clippy::needless_pass_by_value)]
 fn handle_overmap_events(
-    mut overmap_events: EventReader<AssetEvent<OvermapAsset>>,
+    mut overmap_events: MessageReader<AssetEvent<OvermapAsset>>,
     overmap_assets: Res<Assets<OvermapAsset>>,
     mut zone_level_ids: ResMut<ZoneLevelIds>,
     overmap_manager: OvermapManager,
@@ -404,7 +404,7 @@ pub(crate) fn spawn_initial_entities(active_sav: Res<ActiveSav>, mut spawner: Ti
 }
 
 pub(crate) fn update_explored(
-    mut explorations: EventReader<Exploration>,
+    mut explorations: MessageReader<Exploration>,
     mut explored: ResMut<Explored>,
 ) {
     let start = Instant::now();

@@ -1,6 +1,8 @@
 use crate::systems::{manage_binded_keyboard_input, preprocess_keyboard_input};
-use bevy::input::{InputSystem, keyboard::KeyboardInput};
-use bevy::prelude::{App, IntoScheduleConfigs as _, IntoSystem as _, Plugin, PreUpdate, on_event};
+use bevy::input::{InputSystems, keyboard::KeyboardInput};
+use bevy::prelude::{
+    App, IntoScheduleConfigs as _, IntoSystem as _, Plugin, PreUpdate, on_message,
+};
 
 pub struct KeyboardPlugin;
 
@@ -10,8 +12,8 @@ impl Plugin for KeyboardPlugin {
             PreUpdate,
             preprocess_keyboard_input
                 .pipe(manage_binded_keyboard_input)
-                .after(InputSystem)
-                .run_if(on_event::<KeyboardInput>),
+                .after(InputSystems)
+                .run_if(on_message::<KeyboardInput>),
         );
     }
 }

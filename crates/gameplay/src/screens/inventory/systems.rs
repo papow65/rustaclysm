@@ -11,9 +11,9 @@ use bevy::ecs::{entity::hash_map::EntityHashMap, system::SystemId};
 use bevy::picking::Pickable;
 use bevy::platform::collections::HashMap;
 use bevy::prelude::{
-    AlignItems, BackgroundColor, Button, Children, Commands, Display, Entity, FlexDirection, In,
-    IntoSystem as _, JustifyContent, KeyCode, Local, NextState, Node, Overflow, Query, Res, ResMut,
-    Single, StateScoped, Text, TextColor, TextSpan, UiRect, Val, With, World, debug, error,
+    AlignItems, BackgroundColor, Button, Children, Commands, DespawnOnExit, Display, Entity,
+    FlexDirection, In, IntoSystem as _, JustifyContent, KeyCode, Local, NextState, Node, Overflow,
+    Query, Res, ResMut, Single, Text, TextColor, TextSpan, UiRect, Val, With, World, debug, error,
 };
 use gameplay_location::{HorizontalDirection, Nbor, Pos};
 use hud::{
@@ -63,7 +63,7 @@ pub(super) fn spawn_inventory(In(inventory_system): In<InventorySystem>, mut com
                 height: Val::Percent(100.0),
                 ..Node::default()
             },
-            StateScoped(GameplayScreenState::Inventory),
+            DespawnOnExit(GameplayScreenState::Inventory),
             Pickable::IGNORE,
         ))
         .with_children(|builder| {
@@ -123,7 +123,7 @@ pub(super) fn create_inventory_key_bindings(
             ],
             100,
         ),
-        StateScoped(GameplayScreenState::Inventory),
+        DespawnOnExit(GameplayScreenState::Inventory),
     ));
 
     fresh_bindings.spawn(world, GameplayScreenState::Inventory, |bindings| {
@@ -156,7 +156,7 @@ pub(super) fn create_inventory_key_bindings(
             ],
             101,
         ),
-        StateScoped(GameplayScreenState::Inventory),
+        DespawnOnExit(GameplayScreenState::Inventory),
     ));
 
     log_if_slow("create_inventory_key_bindings", start);
@@ -319,7 +319,7 @@ fn items_by_section<'i>(
     item_hierarchy: &'i ItemHierarchy,
     player_pos: Pos,
     body_containers: &'i BodyContainers,
-) -> HashMap<InventorySection, Vec<ItemItem<'i>>> {
+) -> HashMap<InventorySection, Vec<ItemItem<'i, 'i>>> {
     let mut items_by_section = HashMap::default();
     for (direction, nbor_pos) in envir.directions_for_item_handling(player_pos) {
         items_by_section.insert(

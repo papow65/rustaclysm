@@ -1,5 +1,5 @@
 use crate::item::phrases::{CanBearButNeeded, CanHoldButNeeded, HasButNeeded};
-use crate::{Amount, Containable, InPocket, ItemHierarchy, MessageWriter, Subject};
+use crate::{Amount, Containable, InPocket, ItemHierarchy, LogMessageWriter, Subject};
 use units::{Mass, Volume};
 
 pub(crate) struct Container<'a> {
@@ -17,7 +17,7 @@ impl<'a> Container<'a> {
 
     pub(crate) fn check_add(
         &self,
-        message_writer: &mut MessageWriter,
+        message_writer: &mut LogMessageWriter,
         container_subject: Subject,
         added: &Containable,
         added_amount: Amount,

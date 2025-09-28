@@ -20,7 +20,7 @@ impl<A: Action> ActionIn<A> {
         }
     }
 
-    pub(crate) fn actor<'a>(&self, actors: &'a Query<Actor>) -> ActorItem<'a> {
+    pub(crate) fn actor<'a>(&self, actors: &'a Query<Actor>) -> ActorItem<'a, 'a> {
         actors.get(self.actor_entity).expect("Actor entity")
     }
 }
@@ -80,7 +80,7 @@ impl Action for Close {}
 pub(crate) trait ItemAction: Action {
     fn item_entity(&self) -> Entity;
 
-    fn item<'a>(&self, items: &'a Query<Item>) -> ItemItem<'a> {
+    fn item<'a>(&self, items: &'a Query<Item>) -> ItemItem<'a, 'a> {
         items.get(self.item_entity()).expect("Item entity")
     }
 }

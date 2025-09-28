@@ -4,7 +4,7 @@ use crate::{
 use application_state::ApplicationState;
 use bevy::ecs::system::SystemParam;
 use bevy::platform::collections::HashSet;
-use bevy::prelude::{Res, ResMut, StateScoped};
+use bevy::prelude::{DespawnOnExit, Res, ResMut};
 use cdda_json_files::{
     CddaAmount, FlatVec, InfoId, OvermapTerrainInfo, RepetitionBlock, RequiredLinkedLater, Submap,
     SubzoneOffset,
@@ -95,7 +95,7 @@ impl SubzoneSpawner<'_, '_> {
         let subzone_level_entity = self
             .tile_spawner
             .commands
-            .spawn((subzone_level, StateScoped(ApplicationState::Gameplay)))
+            .spawn((subzone_level, DespawnOnExit(ApplicationState::Gameplay)))
             .id();
         let tile_in = TileIn {
             subzone_level_entity,

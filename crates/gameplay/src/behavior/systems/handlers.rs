@@ -4,14 +4,14 @@ use crate::behavior::systems::phrases::{Break, Heal, Hit, IsThoroughlyPulped, Ki
 use crate::{
     Actor, ActorEvent, Amount, Clock, ContainerLimits, Corpse, CorpseEvent, CorpseRaise, Damage,
     Faction, Fragment, GameplayScreenState, Healing, Health, Item, ItemHierarchy, Life, Limited,
-    LocalTerrain, MessageWriter, ObjectName, ObjectOn, Obstacle, Player, Shared, Stamina,
+    LocalTerrain, LogMessageWriter, ObjectName, ObjectOn, Obstacle, Player, Shared, Stamina,
     StandardIntegrity, TerrainEvent, TileSpawner, Toggle, VisualizationUpdate, WalkingMode,
 };
 use bevy::ecs::schedule::{IntoScheduleConfigs as _, ScheduleConfigs};
 use bevy::ecs::system::ScheduleSystem;
 use bevy::prelude::{
-    Changed, ChildOf, Commands, Entity, EventReader, NextState, ParamSet, Quat, Query, Res, ResMut,
-    Transform, With, Without, on_event,
+    Changed, ChildOf, Commands, Entity, MessageReader, NextState, ParamSet, Quat, Query, Res,
+    ResMut, Transform, With, Without, on_message,
 };
 use cdda_json_files::{FurnitureInfo, InfoId, TerrainInfo};
 use either::Either;
@@ -27,24 +27,24 @@ pub(in super::super) fn handle_action_effects() -> ScheduleConfigs<ScheduleSyste
         (
             // actor events
             // Make sure killed actors are handled early
-            update_damaged_characters.run_if(on_event::<ActorEvent<Damage>>),
+            update_damaged_characters.run_if(on_message::<ActorEvent<Damage>>),
             (
-                update_healed_characters.run_if(on_event::<ActorEvent<Healing>>),
+                update_healed_characters.run_if(on_message::<ActorEvent<Healing>>),
                 update_corpses,
             ),
         )
             .chain(),
         (
             // item events
-            update_damaged_corpses.run_if(on_event::<CorpseEvent<Damage>>),
+            update_damaged_corpses.run_if(on_message::<CorpseEvent<Damage>>),
             combine_items,
         )
             .chain(),
         (
             // terrain events
             // Make sure destoyed items are handled early
-            update_damaged_terrain.run_if(on_event::<TerrainEvent<Damage>>),
-            toggle_doors.run_if(on_event::<TerrainEvent<Toggle>>),
+            update_damaged_terrain.run_if(on_message::<TerrainEvent<Damage>>),
+            toggle_doors.run_if(on_message::<TerrainEvent<Toggle>>),
         )
             .chain(),
     )
@@ -53,7 +53,7 @@ pub(in super::super) fn handle_action_effects() -> ScheduleConfigs<ScheduleSyste
 
 pub(in super::super) fn toggle_doors(
     mut commands: Commands,
-    mut toggle_reader: EventReader<TerrainEvent<Toggle>>,
+    mut toggle_reader: MessageReader<TerrainEvent<Toggle>>,
     mut spawner: TileSpawner,
     mut visualization_update: ResMut<VisualizationUpdate>,
     terrain: Query<(&Pos, &Shared<TerrainInfo>, &ObjectOn)>,
@@ -85,8 +85,8 @@ pub(in super::super) fn toggle_doors(
 #[expect(clippy::needless_pass_by_value)]
 pub(in super::super) fn update_damaged_characters(
     mut commands: Commands,
-    mut message_writer: MessageWriter,
-    mut damage_reader: EventReader<ActorEvent<Damage>>,
+    mut message_writer: LogMessageWriter,
+    mut damage_reader: MessageReader<ActorEvent<Damage>>,
     clock: Clock,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
     mut characters: Query<
@@ -148,8 +148,8 @@ pub(in super::super) fn update_damaged_characters(
 }
 
 pub(in super::super) fn update_healed_characters(
-    mut message_writer: MessageWriter,
-    mut healing_reader: EventReader<ActorEvent<Healing>>,
+    mut message_writer: LogMessageWriter,
+    mut healing_reader: MessageReader<ActorEvent<Healing>>,
     mut actors: ParamSet<(
         Query<&mut Health, (With<Faction>, With<Life>)>,
         Query<Actor, (With<Faction>, With<Life>)>,
@@ -176,8 +176,8 @@ pub(in super::super) fn update_healed_characters(
 
 pub(in super::super) fn update_damaged_corpses(
     mut commands: Commands,
-    mut message_writer: MessageWriter,
-    mut damage_reader: EventReader<CorpseEvent<Damage>>,
+    mut message_writer: LogMessageWriter,
+    mut damage_reader: MessageReader<CorpseEvent<Damage>>,
     mut corpses: Query<(&ObjectName, &Pos, &mut StandardIntegrity), With<Corpse>>,
 ) {
     let start = Instant::now();
@@ -250,8 +250,8 @@ pub(in super::super) fn update_corpses(
 /// For terrain and furniture
 pub(in super::super) fn update_damaged_terrain(
     mut commands: Commands,
-    mut message_writer: MessageWriter,
-    mut damage_reader: EventReader<TerrainEvent<Damage>>,
+    mut message_writer: LogMessageWriter,
+    mut damage_reader: MessageReader<TerrainEvent<Damage>>,
     mut spawner: TileSpawner,
     mut visualization_update: ResMut<VisualizationUpdate>,
     mut terrain: Query<(

@@ -1,6 +1,6 @@
 use crate::{GameplayScreenState, Player, TileSpawner};
 use application_state::ApplicationState;
-use bevy::prelude::{KeyCode, Local, NextState, ResMut, Single, StateScoped, With, World, debug};
+use bevy::prelude::{DespawnOnExit, KeyCode, Local, NextState, ResMut, Single, With, World, debug};
 use gameplay_location::Pos;
 use gameplay_transition_state::GameplayTransitionState;
 use keyboard::KeyBindings;
@@ -25,7 +25,7 @@ pub(crate) fn create_gameplay_key_bindings(
             &[("add debug zeds", "!"), ("to main menu", "F12")],
             u8::MAX - 2,
         ),
-        StateScoped(ApplicationState::Gameplay),
+        DespawnOnExit(ApplicationState::Gameplay),
     ));
 
     log_if_slow("create_gameplay_key_bindings", start);

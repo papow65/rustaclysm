@@ -32,9 +32,9 @@ util = { workspace = true }
 # We limit this list to crates that are used in multiple crates.
 application_state = { path = "crates/application_state" }
 background = { path = "crates/background" }
-bevy = { version = "0.16", default-features = false, features = [ "async_executor", "bevy_asset", "bevy_dev_tools", "bevy_pbr", "bevy_log", "bevy_state", "bevy_text", "bevy_ui", "bevy_ui_picking_backend", "bevy_window", "multi_threaded", "png", "std", "tonemapping_luts", "wayland" ] }
-bevy_log = "0.16"
-bevy_platform = "0.16"
+bevy = { version = "0.17", default-features = false, features = [ "async_executor", "bevy_asset", "bevy_dev_tools", "bevy_pbr", "bevy_log", "bevy_state", "bevy_text", "bevy_ui", "bevy_ui_render", "bevy_ui_picking_backend", "bevy_window", "multi_threaded", "png", "std", "tonemapping_luts", "wayland", "zstd_rust" ] }
+bevy_log = "0.17"
+bevy_platform = "0.17"
 cdda_json_files = { path = "crates/cdda_json_files" }
 either = "1"
 fastrand = "2"
@@ -63,7 +63,7 @@ util = { path = "crates/util" }
 
 [features]
 # We use --no-default-features for production builds. See .github/workflows/ci.yml
-default = ["bevy/dynamic_linking"]
+default = ["bevy/debug", "bevy/dynamic_linking"]
 
 [profile.dev.package."*"]
 opt-level = 3 # copied by https://bevy-cheatbook.github.io/pitfalls/performance.html

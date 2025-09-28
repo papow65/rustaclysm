@@ -7,12 +7,12 @@ use bevy::prelude::{Entity, Query, error, warn};
 use cdda_json_files::{ItemTypeDetails, PocketInfo, PocketType, UntypedInfoId};
 use std::{iter::once, num::NonZeroUsize, sync::Arc};
 
-pub(crate) enum PocketWrapper<'i> {
-    Concrete(PocketItem<'i>),
+pub(crate) enum PocketWrapper<'w, 's> {
+    Concrete(PocketItem<'w, 's>),
     Lazy(Arc<PocketInfo>),
 }
 
-impl PocketWrapper<'_> {
+impl PocketWrapper<'_, '_> {
     pub(crate) const fn in_pocket(&self) -> Option<InPocket> {
         match self {
             Self::Concrete(pocket) => Some(InPocket {
@@ -41,14 +41,14 @@ impl PocketWrapper<'_> {
     }
 }
 
-pub(crate) struct Subitems<'i> {
-    pocket_wrapper: PocketWrapper<'i>,
-    items: Vec<ItemItem<'i>>,
+pub(crate) struct Subitems<'w, 's> {
+    pocket_wrapper: PocketWrapper<'w, 's>,
+    items: Vec<ItemItem<'w, 's>>,
 }
 
-pub(crate) struct ShownContents<'i> {
+pub(crate) struct ShownContents<'w, 's> {
     sealed: Option<SealedPocket>,
-    contents: Vec<ItemItem<'i>>,
+    contents: Vec<ItemItem<'w, 's>>,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -66,12 +66,15 @@ pub(crate) struct ItemHierarchy<'w, 's> {
     pockets: Query<'w, 's, Pocket>,
 }
 
-impl<'w> ItemHierarchy<'w, '_> {
+impl<'w, 's> ItemHierarchy<'w, 's> {
     pub(crate) fn exists(&self, item: Entity) -> bool {
         self.items.get(item).is_ok()
     }
 
-    pub(crate) fn items_on_tile(&self, object_on: ObjectOn) -> impl Iterator<Item = ItemItem<'_>> {
+    pub(crate) fn items_on_tile(
+        &self,
+        object_on: ObjectOn,
+    ) -> impl Iterator<Item = ItemItem<'_, '_>> {
         self.tiles
             .get(object_on.tile_entity)
             .inspect_err(|error| error!("Error while looking up area: {error:#?}"))
@@ -83,7 +86,7 @@ impl<'w> ItemHierarchy<'w, '_> {
     pub(crate) fn items_in_pocket(
         &self,
         in_pocket: InPocket,
-    ) -> impl Iterator<Item = ItemItem<'_>> {
+    ) -> impl Iterator<Item = ItemItem<'_, '_>> {
         self.pockets
             .get(in_pocket.pocket_entity)
             .inspect_err(|error| panic!("Error while looking up pocket: {error:#?}"))
@@ -93,7 +96,7 @@ impl<'w> ItemHierarchy<'w, '_> {
             .flat_map(|item| self.items.get(*item))
     }
 
-    pub(crate) fn pockets_in(&self, container: &ItemItem) -> Vec<PocketWrapper<'_>> {
+    pub(crate) fn pockets_in(&self, container: &ItemItem) -> Vec<PocketWrapper<'_, '_>> {
         let concrete_pockets = container
             .pockets
             .into_iter()
@@ -125,7 +128,7 @@ impl<'w> ItemHierarchy<'w, '_> {
     pub(crate) fn walk(
         &self,
         handler: &mut impl ItemHandler,
-        items: impl IntoIterator<Item = ItemItem<'w>>,
+        items: impl IntoIterator<Item = ItemItem<'w, 's>>,
     ) {
         for item in items {
             self.walk_item(handler, None, &item);
@@ -189,7 +192,7 @@ impl<'w> ItemHierarchy<'w, '_> {
         }
     }
 
-    fn shown_contents(&self, item: &ItemItem) -> Option<ShownContents<'_>> {
+    fn shown_contents(&self, item: &ItemItem) -> Option<ShownContents<'_, '_>> {
         let contents = self
             .pockets(item, PocketType::Container)
             .collect::<Vec<_>>();
@@ -247,7 +250,7 @@ impl<'w> ItemHierarchy<'w, '_> {
     }
 
     fn battery_charge_fragments(
-        item: &ItemItem<'_>,
+        item: &ItemItem<'_, '_>,
         magazine_pockets: &mut Vec<Subitems>,
     ) -> impl Iterator<Item = Fragment> + use<> {
         let item_type_details = item
@@ -311,8 +314,8 @@ impl<'w> ItemHierarchy<'w, '_> {
 
     fn magazine_fragments<'a>(
         &self,
-        magazine_wells: impl Iterator<Item = Subitems<'a>>,
-        magazine_pockets: Vec<Subitems<'a>>,
+        magazine_wells: impl Iterator<Item = Subitems<'a, 'a>>,
+        magazine_pockets: Vec<Subitems<'a, 'a>>,
     ) -> Vec<Fragment> {
         let mut magazine_wells = magazine_wells.peekable();
         let unloaded = magazine_wells
@@ -343,8 +346,8 @@ impl<'w> ItemHierarchy<'w, '_> {
     }
 
     fn item_tag_fragments(
-        item: &ItemItem<'_>,
-        shown_contents: &Option<&mut ShownContents<'_>>,
+        item: &ItemItem<'_, '_>,
+        shown_contents: &Option<&mut ShownContents<'_, '_>>,
     ) -> Vec<Fragment> {
         let mut tags = Vec::new();
         if let Some(ref shown_contents) = *shown_contents {
@@ -401,7 +404,7 @@ impl<'w> ItemHierarchy<'w, '_> {
         &self,
         item: &ItemItem,
         pocket_type: PocketType,
-    ) -> impl Iterator<Item = Subitems<'_>> + use<'_> {
+    ) -> impl Iterator<Item = Subitems<'_, '_>> + use<'_> {
         self.pockets_in(item)
             .into_iter()
             .filter(move |pocket_wrapper| pocket_wrapper.pocket_type() == pocket_type)

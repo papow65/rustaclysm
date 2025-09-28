@@ -1,5 +1,5 @@
 use crate::{CurrentlyVisibleBuilder, DebugText, Phrase, PlayerActionState, Positioning, Visible};
-use bevy::prelude::{Event, TextColor, TextSpan, info, warn};
+use bevy::prelude::{Message, TextColor, TextSpan, info, warn};
 use hud::{BAD_TEXT_COLOR, GOOD_TEXT_COLOR, WARN_TEXT_COLOR};
 use std::fmt;
 
@@ -33,24 +33,24 @@ impl Severity {
     }
 }
 
-pub(crate) trait MessageTransience: Clone + fmt::Debug + Send + Sync + 'static {}
+pub(crate) trait LogMessageTransience: Clone + fmt::Debug + Send + Sync + 'static {}
 
 #[derive(Clone, Debug)]
 pub(crate) struct Intransient;
 
-impl MessageTransience for Intransient {}
+impl LogMessageTransience for Intransient {}
 
-impl MessageTransience for PlayerActionState {}
+impl LogMessageTransience for PlayerActionState {}
 
-/// Message shown to the player
-#[derive(Clone, Debug, PartialEq, Eq, Event)]
-pub(crate) struct Message<T: MessageTransience = Intransient> {
+/// `LogMessage` shown to the player
+#[derive(Clone, Debug, PartialEq, Eq, Message)]
+pub(crate) struct LogMessage<T: LogMessageTransience = Intransient> {
     phrase: Phrase,
     severity: Severity,
     transient_state: T,
 }
 
-impl Message<Intransient> {
+impl LogMessage<Intransient> {
     pub(crate) const fn new(phrase: Phrase, severity: Severity) -> Self {
         Self {
             phrase,
@@ -60,7 +60,7 @@ impl Message<Intransient> {
     }
 }
 
-impl Message<PlayerActionState> {
+impl LogMessage<PlayerActionState> {
     pub(crate) const fn new_transient(
         phrase: Phrase,
         severity: Severity,
@@ -78,7 +78,7 @@ impl Message<PlayerActionState> {
     }
 }
 
-impl<T: MessageTransience> Message<T> {
+impl<T: LogMessageTransience> LogMessage<T> {
     pub(crate) fn as_text_sections(&self) -> Vec<(TextSpan, TextColor, Option<DebugText>)> {
         self.phrase
             .clone()

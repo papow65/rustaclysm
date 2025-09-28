@@ -3,14 +3,14 @@ use crate::behavior::systems::refresh::refresh_all;
 use crate::{InstructionQueue, PlayerActionState, RefreshAfterBehavior, RelativeSegments};
 use bevy::ecs::schedule::{IntoScheduleConfigs as _, ScheduleConfigs};
 use bevy::ecs::system::{ScheduleSystem, SystemState};
-use bevy::prelude::{Res, State, World, debug, on_event, resource_exists};
+use bevy::prelude::{Res, State, World, debug, on_message, resource_exists};
 use std::time::{Duration, Instant};
 use util::log_if_slow;
 
 pub(in super::super) fn loop_behavior_and_refresh() -> ScheduleConfigs<ScheduleSystem> {
     (
         loop_behavior,
-        refresh_all().run_if(on_event::<RefreshAfterBehavior>),
+        refresh_all().run_if(on_message::<RefreshAfterBehavior>),
     )
         .chain()
         .run_if(resource_exists::<RelativeSegments>)
@@ -42,7 +42,7 @@ fn loop_behavior(world: &mut World) {
     }
 
     if 0 < count {
-        world.send_event(RefreshAfterBehavior);
+        world.write_message(RefreshAfterBehavior);
     }
 
     log_if_slow("run_behavior_schedule", start);

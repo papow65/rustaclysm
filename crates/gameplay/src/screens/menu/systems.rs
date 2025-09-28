@@ -1,8 +1,8 @@
 use crate::GameplayScreenState;
 use application_state::ApplicationState;
 use bevy::prelude::{
-    AlignItems, Commands, Events, FlexDirection, In, JustifyContent, KeyCode, Local, NextState,
-    Node, Res, ResMut, SpawnRelated as _, StateScoped, Val, World, children,
+    AlignItems, Commands, DespawnOnExit, FlexDirection, In, JustifyContent, KeyCode, Local,
+    Messages, NextState, Node, Res, ResMut, SpawnRelated as _, Val, World, children,
 };
 use bevy::{app::AppExit, ecs::system::SystemId};
 use hud::{BAD_TEXT_COLOR, ButtonBuilder, Fonts, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, MEDIUM_SPACING};
@@ -42,7 +42,7 @@ pub(super) fn spawn_menu(
             row_gap: MEDIUM_SPACING,
             ..Node::default()
         },
-        StateScoped(GameplayScreenState::Menu),
+        DespawnOnExit(GameplayScreenState::Menu),
         children![
             ButtonBuilder::new(
                 "Return",
@@ -88,7 +88,7 @@ pub(super) fn create_menu_key_bindings(
 
     world.spawn((
         ManualSection::new(&[("close menu", "esc")], 100),
-        StateScoped(GameplayScreenState::Menu),
+        DespawnOnExit(GameplayScreenState::Menu),
     ));
 
     log_if_slow("create_menu_key_bindings", start);
@@ -106,6 +106,6 @@ pub(super) fn main_menu(mut next_application_state: ResMut<NextState<Application
     next_application_state.set(ApplicationState::MainMenu);
 }
 
-pub(super) fn quit(mut app_exit_events: ResMut<Events<AppExit>>) {
-    app_exit_events.send(AppExit::Success);
+pub(super) fn quit(mut app_exit_events: ResMut<Messages<AppExit>>) {
+    app_exit_events.write(AppExit::Success);
 }

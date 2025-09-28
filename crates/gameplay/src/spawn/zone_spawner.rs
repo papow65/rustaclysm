@@ -3,9 +3,10 @@ use crate::{
     spawn::VisibleRegion,
 };
 use application_state::ApplicationState;
-use bevy::ecs::system::SystemParam;
-use bevy::prelude::{Entity, EventReader, Res, StateScoped, Transform, Vec3, Visibility, debug};
-use bevy::render::view::RenderLayers;
+use bevy::prelude::{
+    DespawnOnExit, Entity, MessageReader, Res, Transform, Vec3, Visibility, debug,
+};
+use bevy::{camera::visibility::RenderLayers, ecs::system::SystemParam};
 use cdda_json_files::{CddaItemName, InfoId, ItemName, OvermapTerrainInfo};
 use gameplay_cdda::{Infos, ObjectCategory};
 use gameplay_location::{Level, ZoneLevel};
@@ -14,9 +15,9 @@ use hud::HARD_TEXT_COLOR;
 
 #[derive(SystemParam)]
 pub(crate) struct ZoneSpawner<'w, 's> {
-    focus: Focus<'w>,
+    focus: Focus<'w, 's>,
     tile_spawner: TileSpawner<'w, 's>,
-    visible_region: VisibleRegion<'w>,
+    visible_region: VisibleRegion<'w, 's>,
     infos: Res<'w, Infos>,
     explored: Res<'w, Explored>,
     zone_level_ids: Res<'w, ZoneLevelIds>,
@@ -25,7 +26,7 @@ pub(crate) struct ZoneSpawner<'w, 's> {
 impl ZoneSpawner<'_, '_> {
     pub(super) fn spawn_zone_levels(
         &mut self,
-        spawn_zone_level_reader: &mut EventReader<SpawnZoneLevel>,
+        spawn_zone_level_reader: &mut MessageReader<SpawnZoneLevel>,
     ) {
         debug!("Spawning {} zone levels", spawn_zone_level_reader.len());
 
@@ -111,7 +112,7 @@ impl ZoneSpawner<'_, '_> {
                 visibility,
                 name,
                 seen_from,
-                StateScoped(ApplicationState::Gameplay),
+                DespawnOnExit(ApplicationState::Gameplay),
             ))
             .remove::<MissingAsset>() // May be present
             .with_children(|child_builder| {

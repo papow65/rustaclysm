@@ -6,14 +6,14 @@ use crate::actor::phrases::{
 use crate::{
     ActorEvent, ActorImpact, Amount, Aquatic, Attack, BaseSpeed, BodyContainers, Breath,
     ChangePace, Clock, Close, Collision, Consumed, Container, CorpseEvent, Craft, Damage, Envir,
-    Faction, Filthy, Healing, HealingDuration, Health, InPocket, Item, ItemHierarchy, ItemItem,
-    LastEnemy, Life, Melee, MessageWriter, ObjectName, ObjectOn, Peek, Phrase, Player,
-    PlayerActionState, PlayerWielded, Pulp, Smash, Stamina, StaminaCost, StartCraft, Step, Subject,
-    TerrainEvent, Tile, TileSpawner, Toggle, WalkingMode,
+    Faction, Healing, HealingDuration, Health, InPocket, Item, ItemHierarchy, ItemItem, LastEnemy,
+    Life, LogMessageWriter, Melee, ObjectName, ObjectOn, Peek, Phrase, Player, PlayerActionState,
+    PlayerWielded, Pulp, Smash, Stamina, StaminaCost, StartCraft, Step, Subject, TerrainEvent,
+    Tile, TileSpawner, Toggle, WalkingMode,
 };
 use bevy::ecs::query::{QueryData, With};
 use bevy::prelude::{
-    Commands, Entity, Event, EventWriter, NextState, Query, Transform, Visibility, error,
+    Commands, Entity, Message, MessageWriter, NextState, Query, Transform, Visibility, error,
 };
 use cdda_json_files::CddaItem;
 use either::Either;
@@ -41,7 +41,7 @@ pub(crate) struct Actor {
     pub(crate) player: Option<&'static Player>,
 }
 
-impl ActorItem<'_> {
+impl ActorItem<'_, '_> {
     pub(crate) fn subject(&self) -> Subject {
         if self.player.is_some() {
             Subject::You
@@ -111,8 +111,8 @@ impl ActorItem<'_> {
 
     pub(crate) fn sleep(
         &self,
-        transient_message_writer: &mut MessageWriter<PlayerActionState>,
-        healing_writer: &mut EventWriter<'_, ActorEvent<Healing>>,
+        transient_message_writer: &mut LogMessageWriter<PlayerActionState>,
+        healing_writer: &mut MessageWriter<'_, ActorEvent<Healing>>,
         player_action_state: &PlayerActionState,
         clock: &Clock,
         healing_durations: &mut Query<&mut HealingDuration>,
@@ -148,8 +148,8 @@ impl ActorItem<'_> {
     pub(crate) fn step(
         &self,
         commands: &mut Commands,
-        message_writer: &mut MessageWriter,
-        toggle_writer: &mut EventWriter<TerrainEvent<Toggle>>,
+        message_writer: &mut LogMessageWriter,
+        toggle_writer: &mut MessageWriter<TerrainEvent<Toggle>>,
         envir: &mut Envir,
         step: &Step,
     ) -> ActorImpact {
@@ -196,9 +196,9 @@ impl ActorItem<'_> {
         }
     }
 
-    fn damage<E: Event, N>(
+    fn damage<E: Message, N>(
         &self,
-        damage_writer: &mut EventWriter<E>,
+        damage_writer: &mut MessageWriter<E>,
         hierarchy: &ItemHierarchy,
         damaged: Entity,
         new: N,
@@ -225,8 +225,8 @@ impl ActorItem<'_> {
 
     pub(crate) fn attack(
         &self,
-        message_writer: &mut MessageWriter,
-        damage_writer: &mut EventWriter<ActorEvent<Damage>>,
+        message_writer: &mut LogMessageWriter,
+        damage_writer: &mut MessageWriter<ActorEvent<Damage>>,
         envir: &Envir,
         hierarchy: &ItemHierarchy,
         attack: &Attack,
@@ -253,8 +253,8 @@ impl ActorItem<'_> {
 
     pub(crate) fn smash(
         &self,
-        message_writer: &mut MessageWriter,
-        damage_writer: &mut EventWriter<TerrainEvent<Damage>>,
+        message_writer: &mut LogMessageWriter,
+        damage_writer: &mut MessageWriter<TerrainEvent<Damage>>,
         envir: &Envir,
         hierarchy: &ItemHierarchy,
         smash: &Smash,
@@ -297,8 +297,8 @@ impl ActorItem<'_> {
 
     pub(crate) fn pulp(
         &self,
-        message_writer: &mut MessageWriter,
-        corpse_damage_writer: &mut EventWriter<CorpseEvent<Damage>>,
+        message_writer: &mut LogMessageWriter,
+        corpse_damage_writer: &mut MessageWriter<CorpseEvent<Damage>>,
         envir: &Envir,
         hierarchy: &ItemHierarchy,
         pulp: &Pulp,
@@ -330,7 +330,7 @@ impl ActorItem<'_> {
 
     pub(crate) fn peek(
         &self,
-        message_writer: &mut MessageWriter,
+        message_writer: &mut LogMessageWriter,
         player_action_state: &mut NextState<PlayerActionState>,
         envir: &Envir,
         peek: &Peek,
@@ -369,8 +369,8 @@ impl ActorItem<'_> {
 
     pub(crate) fn close(
         &self,
-        message_writer: &mut MessageWriter,
-        toggle_writer: &mut EventWriter<TerrainEvent<Toggle>>,
+        message_writer: &mut LogMessageWriter,
+        toggle_writer: &mut MessageWriter<TerrainEvent<Toggle>>,
         envir: &Envir,
         close: &Close,
     ) -> ActorImpact {
@@ -405,7 +405,7 @@ impl ActorItem<'_> {
     pub(crate) fn wield(
         &self,
         commands: &mut Commands,
-        message_writer: &mut MessageWriter,
+        message_writer: &mut LogMessageWriter,
         hierarchy: &ItemHierarchy,
         item: &ItemItem,
     ) -> ActorImpact {
@@ -419,7 +419,7 @@ impl ActorItem<'_> {
     pub(crate) fn unwield(
         &self,
         commands: &mut Commands,
-        message_writer: &mut MessageWriter,
+        message_writer: &mut LogMessageWriter,
         hierarchy: &ItemHierarchy,
         item: &ItemItem,
     ) -> ActorImpact {
@@ -433,7 +433,7 @@ impl ActorItem<'_> {
     pub(crate) fn pickup(
         &self,
         commands: &mut Commands,
-        message_writer: &mut MessageWriter,
+        message_writer: &mut LogMessageWriter,
         hierarchy: &ItemHierarchy,
         item: &ItemItem,
     ) -> ActorImpact {
@@ -443,7 +443,7 @@ impl ActorItem<'_> {
     fn take(
         &self,
         commands: &mut Commands,
-        message_writer: &mut MessageWriter,
+        message_writer: &mut LogMessageWriter,
         target: &Container,
         taken: &ItemItem,
     ) -> ActorImpact {
@@ -496,26 +496,23 @@ impl ActorItem<'_> {
         //trace!("{:?}", &split_amount);
         //trace!("{:?}", (&allowed_amount);
         //trace!("{:?}", (&left_over_amount);
-        let left_over_entity = commands
-            .spawn((
-                taken.common_info.clone(),
-                taken.name.clone(),
-                left_over_amount,
-                taken.containable.clone(),
-                LastSeen::Currently,
-                Transform::default(),
-                Visibility::default(),
-                Maybe(taken.on_tile.copied()),
-                Maybe(taken.in_pocket.copied()),
-            ))
-            .id();
-        if taken.filthy.is_some() {
-            commands.entity(left_over_entity).insert(Filthy);
-        }
-        if let Some(&taken_pos) = taken.pos {
-            commands.entity(left_over_entity).insert(taken_pos);
-        }
 
+        // The new entity, left where the old entity was
+        commands.spawn((
+            taken.common_info.clone(),
+            taken.name.clone(),
+            left_over_amount,
+            taken.containable.clone(),
+            LastSeen::Currently,
+            Transform::default(),
+            Visibility::default(),
+            Maybe(taken.on_tile.copied()),
+            Maybe(taken.in_pocket.copied()),
+            Maybe(taken.filthy.copied()),
+            Maybe(taken.pos.copied()),
+        ));
+
+        // The old entity, moved to the pocket
         commands
             .entity(taken.entity)
             .insert((allowed_amount, to_in_pocket))
@@ -536,7 +533,7 @@ impl ActorItem<'_> {
     pub(crate) fn move_item(
         &self,
         commands: &mut Commands,
-        message_writer: &mut MessageWriter,
+        message_writer: &mut LogMessageWriter,
         location: &mut LocationCache,
         moved: &ItemItem,
         to: Nbor,
@@ -660,8 +657,8 @@ impl ActorItem<'_> {
     pub(crate) fn continue_craft(
         &self,
         commands: &mut Commands,
-        message_writer: &mut MessageWriter,
-        transient_message_writer: &mut MessageWriter<PlayerActionState>,
+        message_writer: &mut LogMessageWriter,
+        transient_message_writer: &mut LogMessageWriter<PlayerActionState>,
         player_action_state: &PlayerActionState,
         next_player_action_state: &mut NextState<PlayerActionState>,
         spawner: &mut TileSpawner,
@@ -705,7 +702,7 @@ impl ActorItem<'_> {
 
     pub(crate) fn examine_item(
         &self,
-        message_writer: &mut MessageWriter,
+        message_writer: &mut LogMessageWriter,
         item: &ItemItem,
     ) -> ActorImpact {
         message_writer.send(&item.common_info.description);

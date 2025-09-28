@@ -16,7 +16,7 @@ use application_state::ApplicationState;
 use bevy::ecs::system::ScheduleSystem;
 use bevy::prelude::{
     App, AppExtStates as _, FixedUpdate, IntoScheduleConfigs as _, OnEnter, Plugin, PostUpdate,
-    Update, in_state, on_event, resource_exists, resource_exists_and_changed,
+    Update, in_state, on_message, resource_exists, resource_exists_and_changed,
 };
 use bevy::{diagnostic::FrameTimeDiagnosticsPlugin, ecs::schedule::ScheduleConfigs};
 use gameplay_cdda::{CddaPlugin, Exploration};
@@ -31,7 +31,6 @@ pub struct GameplayPlugin;
 impl Plugin for GameplayPlugin {
     fn build(&self, app: &mut App) {
         app.add_sub_state::<GameplayScreenState>();
-        app.enable_state_scoped_entities::<GameplayScreenState>();
 
         app.add_plugins((
             (
@@ -74,7 +73,7 @@ fn update_systems() -> ScheduleConfigs<ScheduleSystem> {
         handle_region_asset_events(),
         (
             (
-                update_explored.run_if(on_event::<Exploration>),
+                update_explored.run_if(on_message::<Exploration>),
                 update_camera_offset.run_if(resource_exists_and_changed::<CameraOffset>),
             ),
             spawn_subzones_for_camera,
@@ -83,7 +82,7 @@ fn update_systems() -> ScheduleConfigs<ScheduleSystem> {
                 update_visualization_on_item_move.run_if(resource_exists::<RelativeSegments>),
             )
                 .chain()
-                .run_if(on_event::<SpawnSubzoneLevel>),
+                .run_if(on_message::<SpawnSubzoneLevel>),
             update_visibility.run_if(resource_exists_and_changed::<VisualizationUpdate>),
         )
             .chain(),

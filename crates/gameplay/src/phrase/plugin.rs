@@ -1,7 +1,7 @@
 use crate::{DebugText, DebugTextShown};
 use application_state::ApplicationState;
 use bevy::prelude::{
-    App, Local, OnEnter, Plugin, Query, Res, ResMut, StateScoped, TextFont, With, World,
+    App, DespawnOnExit, Local, OnEnter, Plugin, Query, Res, ResMut, TextFont, With, World,
 };
 use hud::Fonts;
 use keyboard::KeyBindings;
@@ -35,7 +35,7 @@ fn create_phrase_key_bindings(
 
     world.spawn((
         ManualSection::new(&[("show cdda ids", "D")], 200),
-        StateScoped(ApplicationState::Gameplay),
+        DespawnOnExit(ApplicationState::Gameplay),
     ));
 
     log_if_slow("create_phrase_key_bindings", start);

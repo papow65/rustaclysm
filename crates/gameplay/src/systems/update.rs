@@ -3,7 +3,7 @@ use crate::{
     LastSeenExt as _, Player,
 };
 use bevy::prelude::{
-    Camera, Changed, ChildOf, Children, Commands, EventWriter, GlobalTransform, ParallelCommands,
+    Camera, Changed, ChildOf, Children, Commands, GlobalTransform, MessageWriter, ParallelCommands,
     Query, Res, Single, Visibility, With, Without, debug, error,
 };
 use gameplay_cdda::Exploration;
@@ -142,7 +142,7 @@ pub(crate) fn update_visibility(
 #[expect(clippy::needless_pass_by_value)]
 pub(crate) fn update_visualization_on_item_move(
     par_commands: ParallelCommands,
-    mut explorations: EventWriter<Exploration>,
+    mut explorations: MessageWriter<Exploration>,
     focus: Focus,
     currently_visible_builder: CurrentlyVisibleBuilder,
     elevation_visibility: Res<ElevationVisibility>,

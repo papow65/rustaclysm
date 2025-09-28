@@ -1,10 +1,10 @@
 use crate::{Ctrl, Held, key_binding::KeyBinding, keys::Keys};
 use bevy::input::keyboard::KeyboardInput;
-use bevy::prelude::{ButtonInput, Commands, Entity, EventReader, In, KeyCode, Query, Res};
+use bevy::prelude::{ButtonInput, Commands, Entity, In, KeyCode, MessageReader, Query, Res};
 
 #[expect(clippy::needless_pass_by_value)]
 pub(super) fn preprocess_keyboard_input(
-    mut keyboard_inputs: EventReader<KeyboardInput>,
+    mut keyboard_inputs: MessageReader<KeyboardInput>,
     key_states: Res<ButtonInput<KeyCode>>,
 ) -> Keys {
     Keys::new(&mut keyboard_inputs, &key_states)

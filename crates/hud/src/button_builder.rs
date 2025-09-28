@@ -93,17 +93,15 @@ where
     }
 
     pub fn bundle(self) -> impl Bundle {
-        let (key, key_binding) = self
-            .key_binding
-            .map_or((None, Maybe::NONE), |(key, key_binding)| {
-                (Some(key), Maybe::new(key_binding))
-            });
+        let (key, key_binding) = self.key_binding.map_or((None, None), |(key, key_binding)| {
+            (Some(key), Some(key_binding))
+        });
 
         (
             Button,
             self.node,
             self.run_button,
-            key_binding,
+            Maybe(key_binding),
             Pickable::IGNORE,
             Children::spawn((
                 Spawn((self.text, self.text_color, self.text_font.clone())),

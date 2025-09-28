@@ -1,16 +1,16 @@
 use crate::screens::base::phrases::YouStartTraveling;
 use crate::{
     CameraOffset, CancelHandling, ChangePace, ElevationVisibility, Focus, FocusState,
-    GameplayScreenState, InstructionQueue, MessageWriter, PlayerActionState, PlayerDirection,
+    GameplayScreenState, InstructionQueue, LogMessageWriter, PlayerActionState, PlayerDirection,
     QueuedInstruction, VisualizationUpdate, ZoomDirection, ZoomDistance,
 };
 use bevy::input::mouse::{MouseMotion, MouseWheel};
 use bevy::prelude::{
-    ButtonInput, Camera3d, EventReader, In, IntoSystem as _, KeyCode, Local, MouseButton,
-    NextState, Node, Query, Res, ResMut, Single, State, StateScoped, Transform, Vec3, With, World,
+    ButtonInput, Camera3d, DespawnOnExit, In, IntoSystem as _, KeyCode, Local, MessageReader,
+    MouseButton, NextState, Node, Query, Res, ResMut, Single, State, Transform, Vec3, With, World,
     debug, warn,
 };
-use bevy::{picking::hover::HoverMap, render::view::RenderLayers};
+use bevy::{camera::visibility::RenderLayers, picking::hover::HoverMap};
 use keyboard::{Held, KeyBindings};
 use manual::ManualSection;
 use std::time::Instant;
@@ -109,7 +109,7 @@ fn toggle_elevation(
 
 #[expect(clippy::needless_pass_by_value)]
 pub(super) fn manage_mouse_scroll_input(
-    mut mouse_wheel_events: EventReader<MouseWheel>,
+    mut mouse_wheel_events: MessageReader<MouseWheel>,
     hover_map: Res<HoverMap>,
     mut camera_offset: ResMut<CameraOffset>,
     mut camera_layers: Single<&mut RenderLayers, With<Camera3d>>,
@@ -142,16 +142,16 @@ pub(super) fn manage_mouse_scroll_input(
 
 #[expect(clippy::needless_pass_by_value)]
 pub(super) fn manage_mouse_button_input(
-    mut mouse_motion_events: EventReader<MouseMotion>,
+    mut mouse_motion_messages: MessageReader<MouseMotion>,
     mouse_buttons: Res<ButtonInput<MouseButton>>,
     mut camera_offset: ResMut<CameraOffset>,
 ) {
     let start = Instant::now();
 
     if mouse_buttons.pressed(MouseButton::Middle) {
-        let delta_sum = mouse_motion_events
+        let delta_sum = mouse_motion_messages
             .read()
-            .map(|motion_event| motion_event.delta)
+            .map(|motion_message| motion_message.delta)
             .sum();
         camera_offset.adjust_angle(delta_sum);
     }
@@ -160,7 +160,7 @@ pub(super) fn manage_mouse_button_input(
 }
 
 fn handle_queued_instruction(
-    message_writer: &mut MessageWriter,
+    message_writer: &mut LogMessageWriter,
     focus_state: &FocusState,
     next_focus_state: &mut ResMut<NextState<FocusState>>,
     next_player_action_state: &mut ResMut<NextState<PlayerActionState>>,
@@ -225,7 +225,7 @@ pub(super) fn create_base_key_bindings(
 
     world.spawn((
         ManualSection::new(&[("move", "numpad"), ("move up/down", "</>")], 100),
-        StateScoped(GameplayScreenState::Base),
+        DespawnOnExit(GameplayScreenState::Base),
     ));
 
     fresh_key_bindings.spawn(world, GameplayScreenState::Base, |builder| {
@@ -297,7 +297,7 @@ pub(super) fn create_base_key_bindings(
             ],
             101,
         ),
-        StateScoped(GameplayScreenState::Base),
+        DespawnOnExit(GameplayScreenState::Base),
     ));
 
     log_if_slow("create_crafting_key_bindings", start);
@@ -305,7 +305,7 @@ pub(super) fn create_base_key_bindings(
 
 #[expect(clippy::needless_pass_by_value)]
 fn handle_cancelation(
-    mut message_writer: MessageWriter,
+    mut message_writer: LogMessageWriter,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
     player_action_state: Res<State<PlayerActionState>>,
     mut next_player_action_state: ResMut<NextState<PlayerActionState>>,
@@ -346,7 +346,7 @@ fn manage_zoom(
 #[expect(clippy::needless_pass_by_value)]
 fn manage_queued_instruction(
     In(instruction): In<QueuedInstruction>,
-    mut message_writer: MessageWriter,
+    mut message_writer: LogMessageWriter,
     focus_state: Res<State<FocusState>>,
     mut next_focus_state: ResMut<NextState<FocusState>>,
     mut next_player_action_state: ResMut<NextState<PlayerActionState>>,

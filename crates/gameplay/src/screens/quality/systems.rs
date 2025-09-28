@@ -2,8 +2,8 @@ use crate::screens::{find_nearby, find_nearby_pseudo, nearby_qualities};
 use crate::{BodyContainers, GameplayScreenState, Item, Player, Shared};
 use bevy::picking::Pickable;
 use bevy::prelude::{
-    AlignItems, AnyOf, Commands, FlexDirection, JustifyContent, KeyCode, Local, NextState, Node,
-    Overflow, Query, Res, ResMut, Single, StateScoped, Text, UiRect, Val, With, World,
+    AlignItems, AnyOf, Commands, DespawnOnExit, FlexDirection, JustifyContent, KeyCode, Local,
+    NextState, Node, Overflow, Query, Res, ResMut, Single, Text, UiRect, Val, With, World,
 };
 use cdda_json_files::{FurnitureInfo, TerrainInfo};
 use gameplay_location::{LocationCache, Pos};
@@ -47,7 +47,7 @@ pub(super) fn spawn_crafting_screen(
                 height: Val::Percent(100.0),
                 ..Node::default()
             },
-            StateScoped(GameplayScreenState::Quality),
+            DespawnOnExit(GameplayScreenState::Quality),
             Pickable::IGNORE,
         ))
         .with_children(|builder| {
@@ -132,7 +132,7 @@ pub(super) fn create_crafting_key_bindings(
 
     world.spawn((
         ManualSection::new(&[("close qualities", "esc/&")], 100),
-        StateScoped(GameplayScreenState::Quality),
+        DespawnOnExit(GameplayScreenState::Quality),
     ));
 
     log_if_slow("create_crafting_key_bindings", start);

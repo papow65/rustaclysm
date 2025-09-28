@@ -1,7 +1,7 @@
-use bevy::prelude::Event;
+use bevy::prelude::Message;
 use gameplay_location::{Overzone, Pos, SubzoneLevel, ZoneLevel};
 
-#[derive(Event)]
+#[derive(Message)]
 pub enum Exploration {
     /// The player has seen the pos
     Pos(Pos),

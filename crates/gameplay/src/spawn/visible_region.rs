@@ -5,11 +5,11 @@ use gameplay_location::{Level, Pos, ZoneLevel};
 
 /// Region visible on the camera
 #[derive(SystemParam)]
-pub(crate) struct VisibleRegion<'w> {
-    camera: Single<'w, (&'static Camera, &'static GlobalTransform), With<Camera3d>>,
+pub(crate) struct VisibleRegion<'w, 's> {
+    camera: Single<'w, 's, (&'static Camera, &'static GlobalTransform), With<Camera3d>>,
 }
 
-impl VisibleRegion<'_> {
+impl VisibleRegion<'_, '_> {
     pub(super) fn global_transform(&self) -> GlobalTransform {
         *self.camera.1
     }

@@ -1,7 +1,7 @@
 use crate::Fragment;
 use bevy::prelude::Component;
 
-#[derive(PartialEq, Debug, Component)]
+#[derive(Clone, Copy, PartialEq, Debug, Component)]
 #[component(immutable)]
 pub(crate) struct Filthy;
 

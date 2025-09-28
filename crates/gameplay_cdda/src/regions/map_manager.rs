@@ -1,13 +1,13 @@
-use crate::{ActiveSavExt as _, AssetState, MapAsset, MapPath, region_assets::AssetStorage};
+use crate::{ActiveSavExt as _, AssetState, MapAsset, MapPath, regions::AssetStorage};
 use bevy::ecs::system::SystemParam;
-use bevy::prelude::{AssetEvent, AssetServer, Assets, EventReader, Res, ResMut, warn};
+use bevy::prelude::{AssetEvent, AssetServer, Assets, MessageReader, Res, ResMut, warn};
 use cdda_json_files::Submap;
 use gameplay_cdda_active_sav::ActiveSav;
 use gameplay_location::{SubzoneLevel, ZoneLevel};
 
 #[derive(SystemParam)]
 pub struct MapManager<'w, 's> {
-    asset_events: EventReader<'w, 's, AssetEvent<MapAsset>>,
+    asset_events: MessageReader<'w, 's, AssetEvent<MapAsset>>,
     active_sav: Res<'w, ActiveSav>,
     storage: ResMut<'w, AssetStorage<MapAsset>>,
     asset_server: Res<'w, AssetServer>,

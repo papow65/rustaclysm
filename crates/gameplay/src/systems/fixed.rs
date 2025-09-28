@@ -1,5 +1,6 @@
 use bevy::prelude::{
-    Assets, EventReader, Font, Local, Mesh, Query, Res, StandardMaterial, With, World, debug, error,
+    Assets, Font, Local, Mesh, MessageReader, Query, Res, StandardMaterial, With, World, debug,
+    error,
 };
 use bevy::{asset::UntypedAssetLoadFailedEvent, platform::collections::HashMap};
 use gameplay_cdda::{MapAsset, MapMemoryAsset, OvermapAsset, OvermapBufferAsset};
@@ -75,7 +76,7 @@ pub(crate) fn count_pos(
     log_if_slow("count_pos", start);
 }
 
-pub(crate) fn check_failed_asset_loading(mut fails: EventReader<UntypedAssetLoadFailedEvent>) {
+pub(crate) fn check_failed_asset_loading(mut fails: MessageReader<UntypedAssetLoadFailedEvent>) {
     let start = Instant::now();
 
     for fail in fails.read() {
@@ -99,9 +100,9 @@ pub(crate) fn log_archetypes(world: &mut World, mut last: Local<ArchetypesOutput
         .components()
         .iter_registered()
         .map(|component| {
-            (component.id(), {
+            (component.id().index(), {
                 let name = component.name();
-                let (base, brackets) = name.split_once('<').unwrap_or((name, ""));
+                let (base, brackets) = name.split_once('<').unwrap_or((&name, ""));
                 let short_base = base.rsplit_once(':').unwrap_or(("", base)).1;
                 String::from(short_base) + (if brackets.is_empty() { "" } else { "<" }) + brackets
             })
@@ -119,8 +120,9 @@ pub(crate) fn log_archetypes(world: &mut World, mut last: Local<ArchetypesOutput
                 archetype.len(),
                 archetype
                     .components()
+                    .iter()
                     .map(|component| component_names
-                        .get(&component)
+                        .get(&component.index())
                         .cloned()
                         .unwrap_or_else(|| String::from("[???]")))
                     .collect::<Vec<_>>()

@@ -2,8 +2,9 @@ use crate::{DEFAULT_BUTTON_COLOR, Fonts, HOVERED_BUTTON_COLOR, RunButton, Select
 use bevy::input::mouse::{MouseScrollUnit, MouseWheel};
 use bevy::picking::hover::HoverMap;
 use bevy::prelude::{
-    BackgroundColor, Button, ButtonInput, Changed, Commands, Entity, EventReader, In, Interaction,
-    KeyCode, Query, Res, ScrollPosition, SystemInput, Transform, UiScale, With, World,
+    BackgroundColor, Button, ButtonInput, Changed, Commands, Entity, In, Interaction, KeyCode,
+    MessageReader, Query, Res, ScrollPosition, SystemInput, UiScale, UiTransform, Val, With, World,
+    error,
 };
 use std::{fmt, mem::swap};
 
@@ -57,7 +58,7 @@ pub fn trigger_button_action<I: fmt::Debug + SystemInput + 'static>(
 /// Updates the scroll position of scrollable nodes in response to mouse input
 #[expect(clippy::needless_pass_by_value)]
 pub(crate) fn update_scroll_position(
-    mut mouse_wheel_events: EventReader<MouseWheel>,
+    mut mouse_wheel_events: MessageReader<MouseWheel>,
     hover_map: Res<HoverMap>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut scrolled_node_query: Query<&mut ScrollPosition>,
@@ -82,8 +83,8 @@ pub(crate) fn update_scroll_position(
         for hit_data in hover_map.values() {
             for entity in hit_data.keys() {
                 if let Ok(mut scroll_position) = scrolled_node_query.get_mut(*entity) {
-                    scroll_position.offset_x -= dx;
-                    scroll_position.offset_y -= dy;
+                    scroll_position.x -= dx;
+                    scroll_position.y -= dy;
                 }
             }
         }
@@ -95,7 +96,7 @@ pub fn scroll_to_selection(
     In(selection_list): In<Entity>,
     ui_scale: Res<UiScale>,
     mut scroll_lists: Query<(&SelectionList, &mut ScrollPosition)>,
-    transforms: Query<&Transform>,
+    transforms: Query<&UiTransform>,
 ) {
     let (selection_list, mut scroll_position) = scroll_lists
         .get_mut(selection_list)
@@ -106,7 +107,16 @@ pub fn scroll_to_selection(
             .get(selected)
             .expect("Selected item should be found");
 
+        let Val::Px(y_transation) = selected_transform.translation.y else {
+            error!(
+                "Expected pixel value for vertical translation, but got {:?}",
+                selected_transform.translation.y
+            );
+
+            return;
+        };
+
         // The translation is already offset by the scroll position, so we can use this:
-        scroll_position.offset_y += selected_transform.translation.y / ui_scale.0;
+        scroll_position.y += y_transation / ui_scale.0;
     }
 }

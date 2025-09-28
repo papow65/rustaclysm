@@ -1,9 +1,9 @@
-use bevy::prelude::{Entity, Event};
+use bevy::prelude::{Entity, Message};
 
 pub(crate) trait TerrainChange: Clone + Send + Sync + 'static {}
 
 #[must_use]
-#[derive(Clone, Debug, Event)]
+#[derive(Clone, Debug, Message)]
 pub(crate) struct TerrainEvent<C: TerrainChange> {
     /// Terrain or furniture
     pub(crate) terrain_entity: Entity,

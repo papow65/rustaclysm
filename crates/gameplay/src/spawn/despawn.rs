@@ -3,7 +3,7 @@ use application_state::ApplicationState;
 use bevy::ecs::schedule::ScheduleConfigs;
 use bevy::ecs::system::{ScheduleSystem, SystemState};
 use bevy::prelude::{
-    Commands, EventReader, IntoScheduleConfigs as _, ResMut, World, debug, in_state, on_event,
+    Commands, IntoScheduleConfigs as _, MessageReader, ResMut, World, debug, in_state, on_message,
 };
 use gameplay_location::SubzoneLevelCache;
 use std::time::Instant;
@@ -12,8 +12,8 @@ use util::log_if_slow;
 /// This should run last, to prevent Bevy crashing on despawned entities being modified.
 pub(crate) fn despawn_systems() -> ScheduleConfigs<ScheduleSystem> {
     (
-        despawn_subzone_levels.run_if(on_event::<DespawnSubzoneLevel>),
-        despawn_zone_level.run_if(on_event::<DespawnZoneLevel>),
+        despawn_subzone_levels.run_if(on_message::<DespawnSubzoneLevel>),
+        despawn_zone_level.run_if(on_message::<DespawnZoneLevel>),
     )
         .run_if(in_state(ApplicationState::Gameplay))
 }
@@ -24,7 +24,7 @@ fn despawn_subzone_levels(
     world: &mut World,
     sytem_state: &mut SystemState<(
         Commands,
-        EventReader<DespawnSubzoneLevel>,
+        MessageReader<DespawnSubzoneLevel>,
         ResMut<SubzoneLevelCache>,
     )>,
 ) {
@@ -49,7 +49,7 @@ fn despawn_subzone_levels(
 
 fn despawn_zone_level(
     mut commands: Commands,
-    mut despawn_zone_level_reader: EventReader<DespawnZoneLevel>,
+    mut despawn_zone_level_reader: MessageReader<DespawnZoneLevel>,
 ) {
     let start = Instant::now();
 

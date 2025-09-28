@@ -1,12 +1,12 @@
 use crate::sidebar::{
-    BreathText, DetailsText, EnemiesText, FpsText, HealthText, LastMessage, LastMessageCount,
-    LogDisplay, PlayerActionStateText, SpeedTextSpan, StaminaText, TimeText, TransientMessage,
+    BreathText, DetailsText, EnemiesText, FpsText, HealthText, LastLogMessage, LastLogMessageCount,
+    LogDisplay, PlayerActionStateText, SpeedTextSpan, StaminaText, TimeText, TransientLogMessage,
     WalkingModeTextSpan, WieldedText,
 };
 use crate::{
     Accessible, Actor, Amount, BaseSpeed, Breath, Clock, Corpse, CurrentlyVisibleBuilder,
     DebugText, DebugTextShown, Envir, Explored, Faction, FocusState, Fragment, Health, Hurdle,
-    Item, ItemHandler, ItemHierarchy, ItemItem, Life, Message, ObjectName, Obstacle, Opaque,
+    Item, ItemHandler, ItemHierarchy, ItemItem, Life, LogMessage, ObjectName, Obstacle, Opaque,
     OpaqueFloor, Phrase, Player, PlayerActionState, PlayerWielded, RefreshAfterBehavior,
     RelativeSegments, SeenFrom, Shared, Stamina, StandardIntegrity, Timeouts, WalkingMode,
     ZoneLevelIds,
@@ -16,11 +16,11 @@ use bevy::diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin};
 use bevy::ecs::{hierarchy::Children, schedule::ScheduleConfigs, system::ScheduleSystem};
 use bevy::picking::Pickable;
 use bevy::prelude::{
-    AlignItems, Changed, ChildOf, Commands, ComputedNode, Condition as _, DetectChanges as _,
-    Entity, EntityCommands, EventReader, FlexDirection, FlexWrap, IntoScheduleConfigs as _,
-    JustifyContent, Node, Or, Overflow, ParamSet, PositionType, Query, Res, ScrollPosition, Single,
-    SpawnRelated as _, State, StateScoped, Text, TextColor, TextSpan, UiRect, Val, Visibility,
-    With, Without, children, on_event, resource_exists, resource_exists_and_changed,
+    AlignItems, Changed, ChildOf, Commands, ComputedNode, DespawnOnExit, DetectChanges as _,
+    Entity, EntityCommands, FlexDirection, FlexWrap, IntoScheduleConfigs as _, JustifyContent,
+    MessageReader, Node, Or, Overflow, ParamSet, PositionType, Query, Res, ScrollPosition, Single,
+    SpawnRelated as _, State, SystemCondition as _, Text, TextColor, TextSpan, UiRect, Val, Vec2,
+    Visibility, With, Without, children, on_message, resource_exists, resource_exists_and_changed,
 };
 use cdda_json_files::{CharacterInfo, MoveCost};
 use gameplay_location::{Pos, StairsDown, StairsUp};
@@ -45,7 +45,7 @@ pub(super) fn spawn_sidebar(mut commands: Commands, fonts: Res<Fonts>) {
             ..panel_node()
         },
         PANEL_COLOR,
-        StateScoped(ApplicationState::Gameplay),
+        DespawnOnExit(ApplicationState::Gameplay),
         Pickable::IGNORE,
     ));
 
@@ -203,7 +203,7 @@ pub(super) fn update_sidebar_systems() -> ScheduleConfigs<ScheduleSystem> {
         update_status_time.run_if(resource_exists_and_changed::<Timeouts>),
         update_status_health.run_if(resource_exists_and_changed::<Timeouts>),
         update_status_stamina.run_if(resource_exists_and_changed::<Timeouts>),
-        update_status_speed.run_if(on_event::<RefreshAfterBehavior>),
+        update_status_speed.run_if(on_message::<RefreshAfterBehavior>),
         update_status_player_action_state
             .run_if(resource_exists_and_changed::<State<PlayerActionState>>),
         update_status_player_wielded.run_if(resource_exists_and_changed::<Timeouts>),
@@ -215,8 +215,8 @@ pub(super) fn update_sidebar_systems() -> ScheduleConfigs<ScheduleSystem> {
                 .or(resource_exists_and_changed::<State<FocusState>>),
         ),
         clear_transient_message.run_if(resource_exists_and_changed::<State<PlayerActionState>>),
-        update_transient_log.run_if(on_event::<Message<PlayerActionState>>),
-        update_log.run_if(on_event::<Message>),
+        update_transient_log.run_if(on_message::<LogMessage<PlayerActionState>>),
+        update_log.run_if(on_message::<LogMessage>),
         manage_log_wrapper,
     )
         .into_configs()
@@ -224,7 +224,7 @@ pub(super) fn update_sidebar_systems() -> ScheduleConfigs<ScheduleSystem> {
 
 fn clear_transient_message(
     mut commands: Commands,
-    transient_message_fragments: Query<Entity, With<TransientMessage>>,
+    transient_message_fragments: Query<Entity, With<TransientLogMessage>>,
 ) {
     for fragment_entity in &transient_message_fragments {
         commands.entity(fragment_entity).despawn();
@@ -234,12 +234,12 @@ fn clear_transient_message(
 #[expect(clippy::needless_pass_by_value)]
 fn update_transient_log(
     mut commands: Commands,
-    mut new_messages: EventReader<Message<PlayerActionState>>,
+    mut new_messages: MessageReader<LogMessage<PlayerActionState>>,
     fonts: Res<Fonts>,
     currently_visible_builder: CurrentlyVisibleBuilder,
     player_action_state: Res<State<PlayerActionState>>,
     log: Single<Entity, With<LogDisplay>>,
-    transient_message_fragments: Query<Entity, With<TransientMessage>>,
+    transient_message_fragments: Query<Entity, With<TransientLogMessage>>,
 ) {
     let start = Instant::now();
 
@@ -271,7 +271,7 @@ fn update_transient_log(
                 color,
                 fonts.regular(),
                 Maybe(debug),
-                TransientMessage,
+                TransientLogMessage,
                 Pickable::IGNORE,
             ));
         }
@@ -283,15 +283,15 @@ fn update_transient_log(
 #[expect(clippy::needless_pass_by_value)]
 fn update_log(
     mut commands: Commands,
-    mut new_messages: EventReader<Message>,
+    mut new_messages: MessageReader<LogMessage>,
     fonts: Res<Fonts>,
     currently_visible_builder: CurrentlyVisibleBuilder,
     log: Single<Entity, With<LogDisplay>>,
     last_message_fragments: Query<
         (Entity, &TextSpan, &TextColor, Option<&DebugText>),
-        With<LastMessage>,
+        With<LastLogMessage>,
     >,
-    last_message_count: Option<Single<(Entity, &LastMessageCount)>>,
+    last_message_count: Option<Single<(Entity, &LastLogMessageCount)>>,
 ) {
     let start = Instant::now();
 
@@ -324,8 +324,8 @@ fn log_message(
     currently_visible_builder: &CurrentlyVisibleBuilder,
     log: &Single<Entity, With<LogDisplay>>,
     last_message_fragments: &mut Vec<(Entity, TextSpan, TextColor, Option<DebugText>)>,
-    last_message_count: &mut Option<(Entity, LastMessageCount)>,
-    message: &Message,
+    last_message_count: &mut Option<(Entity, LastLogMessageCount)>,
+    message: &LogMessage,
 ) {
     let Some(message) = message.percieved(currently_visible_builder) else {
         return;
@@ -346,17 +346,17 @@ fn log_message(
         if duplicate {
             raise_last_count(commands, *last_count_entity, last_count);
         } else {
-            // Remove the previous LastMessageFragment components
+            // Remove the previous LastLogMessageFragment components
             for (fragment_entity, ..) in &*last_message_fragments {
-                commands.entity(*fragment_entity).remove::<LastMessage>();
+                commands.entity(*fragment_entity).remove::<LastLogMessage>();
             }
 
-            // Remove the previous LastMessageCountFragment component
+            // Remove the previous LastLogMessageCountFragment component
             let mut last_count_entity_commands = commands.entity(*last_count_entity);
             if last_count.is_single() {
                 last_count_entity_commands.despawn();
             } else {
-                last_count_entity_commands.remove::<LastMessageCount>();
+                last_count_entity_commands.remove::<LastLogMessageCount>();
             }
 
             add_log_message(
@@ -371,7 +371,7 @@ fn log_message(
         }
     } else {
         let mut last_count_entity = commands.spawn_empty().id();
-        let mut last_count = LastMessageCount::default();
+        let mut last_count = LastLogMessageCount::default();
         add_log_message(
             commands,
             fonts,
@@ -388,7 +388,7 @@ fn log_message(
 fn raise_last_count(
     commands: &mut Commands,
     last_count_entity: Entity,
-    last_count: &mut LastMessageCount,
+    last_count: &mut LastLogMessageCount,
 ) {
     last_count.raise();
 
@@ -401,10 +401,10 @@ fn add_log_message(
     commands: &mut Commands,
     fonts: &Res<Fonts>,
     log: &Single<Entity, With<LogDisplay>>,
-    message: &Message,
+    message: &LogMessage,
     last_message_fragments: &mut Vec<(Entity, TextSpan, TextColor, Option<DebugText>)>,
     last_count_entity: &mut Entity,
-    last_count: &mut LastMessageCount,
+    last_count: &mut LastLogMessageCount,
 ) {
     last_message_fragments.clear();
 
@@ -417,7 +417,7 @@ fn add_log_message(
                     color,
                     fonts.regular(),
                     Maybe(debug),
-                    LastMessage,
+                    LastLogMessage,
                     Pickable::IGNORE,
                 ))
                 .id();
@@ -425,7 +425,7 @@ fn add_log_message(
             last_message_fragments.push((entity, span, color, debug));
         }
 
-        *last_count = LastMessageCount::default();
+        *last_count = LastLogMessageCount::default();
         *last_count_entity = parent
             .spawn((
                 TextSpan::default(),
@@ -471,10 +471,9 @@ fn manage_log_wrapper(
         .get(log_wrapper)
         .expect("Log wrapper should have a parent")
         .parent();
-    commands.entity(log_scroll).insert((ScrollPosition {
-        offset_x: 0.0,
-        offset_y: log_height,
-    },));
+    commands
+        .entity(log_scroll)
+        .insert(ScrollPosition(Vec2::new(0.0, log_height)));
 }
 
 fn newline() -> (TextSpan, TextColor, Option<DebugText>) {

@@ -7,13 +7,12 @@ use crate::{
 };
 use crate::{InPocket, ObjectOn, PocketOf, Tile, TileIn, VehiclePartOf};
 use application_state::ApplicationState;
+use bevy::camera::{PerspectiveProjection, Projection, visibility::RenderLayers};
 use bevy::ecs::{relationship::Relationship, system::SystemParam};
 use bevy::prelude::{
-    Camera, Camera3d, Commands, Component, DirectionalLight, Entity, EulerRot, Mat4, Query, Res,
-    StateScoped, TextColor, Transform, Vec3, Visibility, With, debug, error,
+    Camera, Camera3d, Commands, Component, DespawnOnExit, DirectionalLight, Entity, EulerRot, Mat4,
+    Query, Res, TextColor, Transform, Vec3, Visibility, With, debug, error,
 };
-use bevy::render::camera::{PerspectiveProjection, Projection};
-use bevy::render::view::RenderLayers;
 use cdda_json_files::{
     BashItem, BashItems, CddaAmount, CddaItem, CddaItemName, CddaPhase, CddaPocket, CddaVehicle,
     CddaVehiclePart, Character, CharacterInfo, CommonItemInfo, Description, Field, Flags, FlatVec,
@@ -445,7 +444,7 @@ impl<'w> TileSpawner<'w, '_> {
             pos,
             Transform::IDENTITY,
             Visibility::Inherited,
-            StateScoped(ApplicationState::Gameplay),
+            DespawnOnExit(ApplicationState::Gameplay),
         ));
 
         entity
@@ -623,7 +622,7 @@ impl<'w> TileSpawner<'w, '_> {
                 ..DirectionalLight::default()
             },
             light_transform,
-            StateScoped(ApplicationState::Gameplay),
+            DespawnOnExit(ApplicationState::Gameplay),
         ));
     }
 

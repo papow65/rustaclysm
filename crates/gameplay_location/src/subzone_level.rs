@@ -1,11 +1,10 @@
 use crate::{Level, Pos, SubzoneLevelCache};
-use bevy::ecs::component::{ComponentHooks, Immutable, StorageType};
 use bevy::prelude::Component;
 use cdda_json_files::SubzoneOffset;
 use std::fmt;
 
-// Manually deriving `Component`
-#[derive(Copy, Clone, PartialEq, Eq, Hash)]
+#[derive(Copy, Clone, PartialEq, Eq, Hash, Component)]
+#[component(immutable, on_insert=SubzoneLevelCache::on_insert, on_replace=SubzoneLevelCache::on_replace)]
 pub struct SubzoneLevel {
     pub x: i32,
     pub level: Level,
@@ -60,15 +59,5 @@ impl From<SubzoneLevel> for SubzoneOffset {
             subzone_level.z.div_euclid(180) as u16,
             subzone_level.level.h,
         )
-    }
-}
-
-impl Component for SubzoneLevel {
-    type Mutability = Immutable;
-
-    const STORAGE_TYPE: StorageType = StorageType::Table;
-
-    fn register_component_hooks(hooks: &mut ComponentHooks) {
-        SubzoneLevelCache::register_hooks(hooks);
     }
 }

@@ -9,6 +9,5 @@ impl Plugin for ApplicationStatePlugin {
         app.add_plugins(log_transition_plugin::<ApplicationState>);
 
         app.init_state::<ApplicationState>();
-        app.enable_state_scoped_entities::<ApplicationState>();
     }
 }

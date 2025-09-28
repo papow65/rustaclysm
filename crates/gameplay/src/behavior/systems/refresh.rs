@@ -8,7 +8,7 @@ use crate::{
 use bevy::ecs::schedule::{IntoScheduleConfigs as _, ScheduleConfigs};
 use bevy::ecs::system::ScheduleSystem;
 use bevy::prelude::{
-    Camera, Changed, ChildOf, Children, EventWriter, GlobalTransform, Local, Mesh3d,
+    Camera, Changed, ChildOf, Children, GlobalTransform, Local, Mesh3d, MessageWriter,
     ParallelCommands, Query, RemovedComponents, Res, ResMut, Single, State, Transform, Vec3,
     Visibility, With, Without, debug, resource_exists_and_changed,
 };
@@ -99,7 +99,7 @@ fn update_visualization_on_player_move(
     par_commands: ParallelCommands,
     focus: Focus,
     currently_visible_builder: CurrentlyVisibleBuilder,
-    mut explorations: EventWriter<Exploration>,
+    mut explorations: MessageWriter<Exploration>,
     elevation_visibility: Res<ElevationVisibility>,
     mut visualization_update: ResMut<VisualizationUpdate>,
     mut previous_camera_global_transform: GameplayLocal<GlobalTransform>,

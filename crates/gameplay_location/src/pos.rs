@@ -1,5 +1,4 @@
 use crate::{HorizontalDirection, Level, LevelOffset, LocationCache, Nbor, VisionDistance};
-use bevy::ecs::component::{ComponentHooks, Immutable, StorageType};
 use bevy::prelude::{Component, Vec3};
 use bresenham::Bresenham;
 use cdda_json_files::At;
@@ -18,8 +17,8 @@ fn straight_2d(from: (i32, i32), to: (i32, i32)) -> impl Iterator<Item = (i32, i
 }
 
 /// The position of characters, items, terrain, furniture, ...
-// Manually deriving `Component`
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Component)]
+#[component(immutable, on_insert=LocationCache::on_insert, on_replace=LocationCache::on_replace)]
 pub struct Pos {
     pub x: i32,
     pub level: Level,
@@ -126,16 +125,6 @@ impl Sub<Self> for Pos {
             level: self.level - other.level,
             z: self.z - other.z,
         }
-    }
-}
-
-impl Component for Pos {
-    type Mutability = Immutable;
-
-    const STORAGE_TYPE: StorageType = StorageType::Table;
-
-    fn register_component_hooks(hooks: &mut ComponentHooks) {
-        LocationCache::register_hooks(hooks);
     }
 }
 

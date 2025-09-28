@@ -38,7 +38,7 @@ use self::components::{
 };
 use self::events::{
     ActorChange, ActorEvent, CorpseChange, CorpseEvent, Damage, DespawnSubzoneLevel,
-    DespawnZoneLevel, Healing, Intransient, Message, MessageTransience, RefreshAfterBehavior,
+    DespawnZoneLevel, Healing, Intransient, LogMessage, LogMessageTransience, RefreshAfterBehavior,
     Severity, SpawnSubzoneLevel, SpawnZoneLevel, TerrainChange, TerrainEvent, Toggle,
     UpdateZoneLevelVisibility,
 };
@@ -59,7 +59,7 @@ use self::resources::{
 use self::screens::{Consumed, GameplayScreenState, RecipeSituation, update_camera_offset};
 use self::spawn::TileSpawner;
 use self::system_params::{
-    Collision, CurrentlyVisible, CurrentlyVisibleBuilder, Envir, MessageWriter, NoStairs,
+    Collision, CurrentlyVisible, CurrentlyVisibleBuilder, Envir, LogMessageWriter, NoStairs,
 };
 use self::time::{Clock, TimePlugin, Timeouts};
 use self::transition::TransitionPlugin;

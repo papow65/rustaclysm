@@ -2,7 +2,7 @@ use crate::key_binding::{KeyBinding, KeyBindingSystem};
 use crate::{CtrlState, HeldState, Key};
 use bevy::ecs::system::SystemId;
 use bevy::prelude::{
-    Commands, ComputedStates, IntoSystem, StateScoped, States, SystemInput, World,
+    Commands, ComputedStates, DespawnOnExit, IntoSystem, States, SystemInput, World,
 };
 use std::cell::OnceCell;
 
@@ -17,7 +17,7 @@ impl<S: States, C: CtrlState, H: HeldState> KeyBindingsStorage<S, C, H> {
         commands.spawn_batch(
             self.bindings
                 .into_iter()
-                .map(move |binding| (binding, StateScoped(self.state.clone()))),
+                .map(move |binding| (binding, DespawnOnExit(self.state.clone()))),
         );
     }
 }

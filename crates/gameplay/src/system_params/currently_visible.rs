@@ -58,7 +58,7 @@ pub(crate) struct CurrentlyVisibleBuilder<'w, 's> {
     relative_segments: Res<'w, RelativeSegments>,
     clock: Clock<'w>,
     player_action_state: Res<'w, State<PlayerActionState>>,
-    player: Single<'w, &'static Pos, With<Player>>,
+    player: Single<'w, 's, &'static Pos, With<Player>>,
 }
 
 impl CurrentlyVisibleBuilder<'_, '_> {

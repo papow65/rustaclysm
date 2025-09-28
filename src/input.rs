@@ -1,5 +1,5 @@
 use bevy::app::AppExit;
-use bevy::prelude::{Events, In, IntoSystem as _, ResMut, UiScale, World, debug};
+use bevy::prelude::{In, IntoSystem as _, Messages, ResMut, UiScale, World, debug};
 use keyboard::{Ctrl, KeyBindings};
 use manual::ManualSection;
 
@@ -38,6 +38,6 @@ fn zoom_ui(In(direction): In<ZoomUiDirection>, mut ui_scale: ResMut<UiScale>) {
     debug!("UI scale: {ui_scale:?}");
 }
 
-fn quit(mut app_exit_events: ResMut<Events<AppExit>>) {
-    app_exit_events.send(AppExit::Success);
+fn quit(mut app_exit_events: ResMut<Messages<AppExit>>) {
+    app_exit_events.write(AppExit::Success);
 }

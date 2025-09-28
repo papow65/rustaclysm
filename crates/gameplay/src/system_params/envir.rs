@@ -164,11 +164,11 @@ impl<'w, 's> Envir<'w, 's> {
         self.location.get_first(pos, &self.pulpables)
     }
 
-    pub(crate) fn find_item(&self, pos: Pos) -> Option<ItemItem<'_>> {
+    pub(crate) fn find_item(&self, pos: Pos) -> Option<ItemItem<'_, '_>> {
         self.location.get_first(pos, &self.items)
     }
 
-    pub(crate) fn all_items(&self, pos: Pos) -> impl Iterator<Item = ItemItem<'_>> {
+    pub(crate) fn all_items(&self, pos: Pos) -> impl Iterator<Item = ItemItem<'_, '_>> {
         self.location
             .all(pos)
             .flat_map(|&entity| self.items.get(entity))

@@ -6,7 +6,7 @@ use crate::actor::phrases::{
 };
 use crate::{
     ActorItem, Breath, ContinueCraft, CurrentlyVisibleBuilder, Envir, Explored, Faction, Fragment,
-    InstructionQueue, Intelligence, Interruption, MessageWriter, MoveItem, PlannedAction,
+    InstructionQueue, Intelligence, Interruption, LogMessageWriter, MoveItem, PlannedAction,
     PlayerDirection, Pulp, QueuedInstruction, RecipeSituation, Severity, StartCraft,
 };
 use application_state::ApplicationState;
@@ -88,7 +88,7 @@ impl PlayerActionState {
     pub(crate) fn plan_manual_action(
         &self,
         next_state: &mut ResMut<NextState<Self>>,
-        message_writer: &mut MessageWriter,
+        message_writer: &mut LogMessageWriter,
         envir: &Envir,
         instruction_queue: &mut InstructionQueue,
         player: &ActorItem,
@@ -157,7 +157,7 @@ impl PlayerActionState {
     fn plan(
         &self,
         next_state: &mut ResMut<NextState<Self>>,
-        message_writer: &mut MessageWriter,
+        message_writer: &mut LogMessageWriter,
         envir: &Envir,
         player_pos: Pos,
         instruction: QueuedInstruction,
@@ -255,7 +255,7 @@ impl PlayerActionState {
     fn generic_plan(
         &self,
         next_state: &mut ResMut<NextState<Self>>,
-        message_writer: &mut MessageWriter,
+        message_writer: &mut LogMessageWriter,
         envir: &Envir,
         player_pos: Pos,
         instruction: QueuedInstruction,
@@ -349,7 +349,7 @@ impl PlayerActionState {
     fn handle_offset(
         &self,
         next_state: &mut ResMut<NextState<Self>>,
-        message_writer: &mut MessageWriter,
+        message_writer: &mut LogMessageWriter,
         envir: &Envir,
         player_pos: Pos,
         raw_nbor: Nbor,
@@ -440,7 +440,7 @@ impl PlayerActionState {
 
     fn handle_peeking_offset(
         next_state: &mut NextState<Self>,
-        message_writer: &mut MessageWriter,
+        message_writer: &mut LogMessageWriter,
         raw_nbor: Nbor,
     ) -> Option<PlannedAction> {
         match raw_nbor {
@@ -490,7 +490,7 @@ impl PlayerActionState {
 
     fn handle_start_craft(
         next_state: &mut ResMut<NextState<Self>>,
-        message_writer: &mut MessageWriter,
+        message_writer: &mut LogMessageWriter,
         envir: &Envir,
         pos: Pos,
         recipe_situation: RecipeSituation,
@@ -531,7 +531,7 @@ impl PlayerActionState {
 
     fn handle_attack(
         next_state: &mut ResMut<NextState<Self>>,
-        message_writer: &mut MessageWriter,
+        message_writer: &mut LogMessageWriter,
         envir: &Envir,
         pos: Pos,
     ) -> Option<PlannedAction> {
@@ -553,7 +553,7 @@ impl PlayerActionState {
 
     fn handle_smash(
         next_state: &mut ResMut<NextState<Self>>,
-        message_writer: &mut MessageWriter,
+        message_writer: &mut LogMessageWriter,
         envir: &Envir,
         pos: Pos,
     ) -> Option<PlannedAction> {
@@ -575,7 +575,7 @@ impl PlayerActionState {
 
     fn handle_pulp(
         next_state: &mut ResMut<NextState<Self>>,
-        message_writer: &mut MessageWriter,
+        message_writer: &mut LogMessageWriter,
         envir: &Envir,
         pos: Pos,
     ) -> Option<PlannedAction> {
@@ -612,7 +612,7 @@ impl PlayerActionState {
 
     fn handle_close(
         next_state: &mut ResMut<NextState<Self>>,
-        message_writer: &mut MessageWriter,
+        message_writer: &mut LogMessageWriter,
         envir: &Envir,
         pos: Pos,
     ) -> Option<PlannedAction> {
@@ -665,7 +665,7 @@ impl PlayerActionState {
 
     fn stop_peeking(
         next_state: &mut ResMut<NextState<Self>>,
-        message_writer: &mut MessageWriter,
+        message_writer: &mut LogMessageWriter,
         envir: &Envir,
         player_pos: Pos,
         instruction: QueuedInstruction,
@@ -759,7 +759,7 @@ fn plan_auto_travel(
     envir: &Envir<'_, '_>,
     instruction_queue: &mut InstructionQueue,
     explored: &Explored,
-    player: &ActorItem<'_>,
+    player: &ActorItem<'_, '_>,
     target: Pos,
     enemy_name: Option<Fragment>,
 ) -> Option<PlannedAction> {
@@ -805,7 +805,7 @@ fn plan_auto_travel(
 fn plan_auto_defend(
     envir: &Envir<'_, '_>,
     instruction_queue: &mut InstructionQueue,
-    player: &ActorItem<'_>,
+    player: &ActorItem<'_, '_>,
     enemies: &[Pos],
 ) -> Option<PlannedAction> {
     if enemies.is_empty() {
@@ -824,7 +824,7 @@ fn plan_auto_defend(
 fn plan_auto_pulp(
     envir: &Envir<'_, '_>,
     instruction_queue: &mut InstructionQueue,
-    player: &ActorItem<'_>,
+    player: &ActorItem<'_, '_>,
     target: HorizontalDirection,
     enemy_name: Option<Fragment>,
 ) -> Option<PlannedAction> {

@@ -4,7 +4,7 @@ mod info;
 mod object_category;
 mod paths;
 mod plugin;
-mod region_assets;
+mod regions;
 mod repetition_block_ext;
 mod tiles;
 mod type_id;
@@ -13,7 +13,7 @@ pub use self::error::Error;
 pub use self::info::{InfoMap, Infos};
 pub use self::object_category::ObjectCategory;
 pub use self::plugin::CddaPlugin;
-pub use self::region_assets::{
+pub use self::regions::{
     AssetState, Exploration, MapAsset, MapManager, MapMemoryAsset, MapMemoryManager, OvermapAsset,
     OvermapBufferAsset, OvermapBufferManager, OvermapManager,
 };

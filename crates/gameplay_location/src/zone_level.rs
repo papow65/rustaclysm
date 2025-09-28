@@ -1,10 +1,10 @@
 use crate::{Level, LevelOffset, Nbor, Pos, SubzoneLevel, Zone, ZoneLevelCache};
-use bevy::ecs::component::{ComponentHooks, Immutable, StorageType};
 use bevy::prelude::Component;
 use std::fmt;
 
 // Manually deriving `Component`
-#[derive(Copy, Clone, PartialEq, Eq, Hash)]
+#[derive(Copy, Clone, PartialEq, Eq, Hash, Component)]
+#[component(immutable, on_insert=ZoneLevelCache::on_insert, on_replace=ZoneLevelCache::on_replace)]
 pub struct ZoneLevel {
     pub zone: Zone,
     pub level: Level,
@@ -109,15 +109,5 @@ impl From<SubzoneLevel> for ZoneLevel {
             },
             level: subzone_level.level,
         }
-    }
-}
-
-impl Component for ZoneLevel {
-    type Mutability = Immutable;
-
-    const STORAGE_TYPE: StorageType = StorageType::Table;
-
-    fn register_component_hooks(hooks: &mut ComponentHooks) {
-        ZoneLevelCache::register_hooks(hooks);
     }
 }

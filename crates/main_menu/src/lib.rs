@@ -5,7 +5,7 @@ mod systems;
 
 pub use crate::plugin::MainMenuPlugin;
 
-use crate::components::{LoadButtonArea, MessageField, MessageWrapper};
+use crate::components::{LoadButtonArea, LogMessageField, LogMessageWrapper};
 use crate::load_error::LoadError;
 use crate::systems::{
     FoundSav, create_load_systems, create_main_menu_key_bindings, create_quit_system,

@@ -3,14 +3,14 @@ use crate::{
     Action, ActionIn, Actor, ActorEvent, ActorImpact, Amount, Attack, ChangePace, Clock, Close,
     ContinueCraft, CorpseEvent, Craft, CurrentlyVisibleBuilder, Damage, Envir, ExamineItem,
     Explored, Faction, Healing, HealingDuration, InstructionQueue, Item, ItemAction as _,
-    ItemHierarchy, Life, MessageWriter, MoveItem, Peek, Pickup, PlannedAction, Player,
+    ItemHierarchy, Life, LogMessageWriter, MoveItem, Peek, Pickup, PlannedAction, Player,
     PlayerActionState, Pulp, Sleep, Smash, Stamina, StartCraft, Stay, Step, TerrainEvent, Tile,
     TileSpawner, Timeouts, Toggle, Unwield, Wield,
 };
 use bevy::ecs::schedule::{IntoScheduleConfigs as _, ScheduleConfigs};
 use bevy::ecs::system::{ScheduleSystem, SystemId};
 use bevy::prelude::{
-    Commands, Entity, EventWriter, In, IntoSystem as _, Local, NextState, Query, Res, ResMut,
+    Commands, Entity, In, IntoSystem as _, Local, MessageWriter, NextState, Query, Res, ResMut,
     Single, State, StateTransition, SystemInput, With, World, debug,
 };
 use gameplay_location::{LocationCache, Pos};
@@ -98,7 +98,7 @@ fn plan_action(
 #[expect(clippy::needless_pass_by_value)]
 fn plan_manual_player_action(
     In(active_actor): In<Entity>,
-    mut message_writer: MessageWriter,
+    mut message_writer: LogMessageWriter,
     player_action_state: Res<State<PlayerActionState>>,
     mut next_player_action_state: ResMut<NextState<PlayerActionState>>,
     currently_visible_builder: CurrentlyVisibleBuilder,
@@ -322,8 +322,8 @@ fn perform_stay(In(stay): In<ActionIn<Stay>>, actors: Query<Actor>) -> ActorImpa
 #[expect(clippy::needless_pass_by_value)]
 fn perform_sleep(
     In(sleep): In<ActionIn<Sleep>>,
-    mut transient_message_writer: MessageWriter<PlayerActionState>,
-    mut healing_writer: EventWriter<ActorEvent<Healing>>,
+    mut transient_message_writer: LogMessageWriter<PlayerActionState>,
+    mut healing_writer: MessageWriter<ActorEvent<Healing>>,
     player_action_state: Res<State<PlayerActionState>>,
     clock: Clock,
     mut healing_durations: Query<&mut HealingDuration>,
@@ -341,8 +341,8 @@ fn perform_sleep(
 fn perform_step(
     In(step): In<ActionIn<Step>>,
     mut commands: Commands,
-    mut message_writer: MessageWriter,
-    mut toggle_writer: EventWriter<TerrainEvent<Toggle>>,
+    mut message_writer: LogMessageWriter,
+    mut toggle_writer: MessageWriter<TerrainEvent<Toggle>>,
     mut envir: Envir,
     actors: Query<Actor>,
 ) -> ActorImpact {
@@ -358,8 +358,8 @@ fn perform_step(
 #[expect(clippy::needless_pass_by_value)]
 fn perform_attack(
     In(attack): In<ActionIn<Attack>>,
-    mut message_writer: MessageWriter,
-    mut damage_writer: EventWriter<ActorEvent<Damage>>,
+    mut message_writer: LogMessageWriter,
+    mut damage_writer: MessageWriter<ActorEvent<Damage>>,
     envir: Envir,
     hierarchy: ItemHierarchy,
     actors: Query<Actor>,
@@ -376,8 +376,8 @@ fn perform_attack(
 #[expect(clippy::needless_pass_by_value)]
 fn perform_smash(
     In(smash): In<ActionIn<Smash>>,
-    mut message_writer: MessageWriter,
-    mut damage_writer: EventWriter<TerrainEvent<Damage>>,
+    mut message_writer: LogMessageWriter,
+    mut damage_writer: MessageWriter<TerrainEvent<Damage>>,
     envir: Envir,
     hierarchy: ItemHierarchy,
     actors: Query<Actor>,
@@ -394,8 +394,8 @@ fn perform_smash(
 #[expect(clippy::needless_pass_by_value)]
 fn perform_pulp(
     In(pulp): In<ActionIn<Pulp>>,
-    mut message_writer: MessageWriter,
-    mut corpse_damage_writer: EventWriter<CorpseEvent<Damage>>,
+    mut message_writer: LogMessageWriter,
+    mut corpse_damage_writer: MessageWriter<CorpseEvent<Damage>>,
     envir: Envir,
     hierarchy: ItemHierarchy,
     actors: Query<Actor>,
@@ -412,7 +412,7 @@ fn perform_pulp(
 #[expect(clippy::needless_pass_by_value)]
 fn perform_peek(
     In(peek): In<ActionIn<Peek>>,
-    mut message_writer: MessageWriter,
+    mut message_writer: LogMessageWriter,
     mut player_action_state: ResMut<NextState<PlayerActionState>>,
     envir: Envir,
     actors: Query<Actor>,
@@ -428,8 +428,8 @@ fn perform_peek(
 #[expect(clippy::needless_pass_by_value)]
 fn perform_close(
     In(close): In<ActionIn<Close>>,
-    mut message_writer: MessageWriter,
-    mut toggle_writer: EventWriter<TerrainEvent<Toggle>>,
+    mut message_writer: LogMessageWriter,
+    mut toggle_writer: MessageWriter<TerrainEvent<Toggle>>,
     envir: Envir,
     actors: Query<Actor>,
 ) -> ActorImpact {
@@ -445,7 +445,7 @@ fn perform_close(
 fn perform_wield(
     In(wield): In<ActionIn<Wield>>,
     mut commands: Commands,
-    mut message_writer: MessageWriter,
+    mut message_writer: LogMessageWriter,
     hierarchy: ItemHierarchy,
     actors: Query<Actor>,
     items: Query<Item>,
@@ -462,7 +462,7 @@ fn perform_wield(
 fn perform_unwield(
     In(unwield): In<ActionIn<Unwield>>,
     mut commands: Commands,
-    mut message_writer: MessageWriter,
+    mut message_writer: LogMessageWriter,
     hierarchy: ItemHierarchy,
     actors: Query<Actor>,
     items: Query<Item>,
@@ -479,7 +479,7 @@ fn perform_unwield(
 fn perform_pickup(
     In(pickup): In<ActionIn<Pickup>>,
     mut commands: Commands,
-    mut message_writer: MessageWriter,
+    mut message_writer: LogMessageWriter,
     hierarchy: ItemHierarchy,
     actors: Query<Actor>,
     items: Query<Item>,
@@ -495,7 +495,7 @@ fn perform_pickup(
 fn perform_move_item(
     In(move_item): In<ActionIn<MoveItem>>,
     mut commands: Commands,
-    mut message_writer: MessageWriter,
+    mut message_writer: LogMessageWriter,
     mut location: ResMut<LocationCache>,
     actors: Query<Actor>,
     items: Query<Item>,
@@ -532,8 +532,8 @@ fn perform_start_craft(
 fn perform_continue_craft(
     In(continue_craft): In<ActionIn<ContinueCraft>>,
     mut commands: Commands,
-    mut message_writer: MessageWriter,
-    mut transient_message_writer: MessageWriter<PlayerActionState>,
+    mut message_writer: LogMessageWriter,
+    mut transient_message_writer: LogMessageWriter<PlayerActionState>,
     player_action_state: Res<State<PlayerActionState>>,
     mut next_player_action_state: ResMut<NextState<PlayerActionState>>,
     mut spawner: TileSpawner,
@@ -554,7 +554,7 @@ fn perform_continue_craft(
 
 fn perform_examine_item(
     In(examine_item): In<ActionIn<ExamineItem>>,
-    mut message_writer: MessageWriter,
+    mut message_writer: LogMessageWriter,
     actors: Query<Actor>,
     items: Query<Item>,
 ) -> ActorImpact {
@@ -576,7 +576,7 @@ fn perform_change_pace(
 #[expect(clippy::needless_pass_by_value)]
 fn proces_impact(
     In(actor_impact): In<Option<ActorImpact>>,
-    mut message_writer: MessageWriter,
+    mut message_writer: LogMessageWriter,
     mut timeouts: ResMut<Timeouts>,
     mut staminas: Query<&mut Stamina>,
     player: Single<Entity, With<Player>>,

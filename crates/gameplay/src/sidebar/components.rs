@@ -51,12 +51,12 @@ pub(super) struct LogDisplay;
 
 #[derive(Component)]
 #[component(immutable)]
-pub(super) struct LastMessage;
+pub(super) struct LastLogMessage;
 
 #[derive(Clone, Debug, Component)]
-pub(super) struct LastMessageCount(Saturating<u16>);
+pub(super) struct LastLogMessageCount(Saturating<u16>);
 
-impl LastMessageCount {
+impl LastLogMessageCount {
     pub(crate) const fn is_single(&self) -> bool {
         self.0.0 == 1
     }
@@ -70,7 +70,7 @@ impl LastMessageCount {
     }
 }
 
-impl Default for LastMessageCount {
+impl Default for LastLogMessageCount {
     fn default() -> Self {
         Self(Saturating(1))
     }
@@ -78,4 +78,4 @@ impl Default for LastMessageCount {
 
 #[derive(Component)]
 #[component(immutable)]
-pub(super) struct TransientMessage;
+pub(super) struct TransientLogMessage;

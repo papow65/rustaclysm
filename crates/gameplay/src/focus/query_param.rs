@@ -5,12 +5,12 @@ use gameplay_location::{Level, Pos, ZoneLevel};
 use std::cmp::Ordering;
 
 #[derive(SystemParam)]
-pub(crate) struct Focus<'w> {
+pub(crate) struct Focus<'w, 's> {
     state: Res<'w, State<FocusState>>,
-    player_pos: Single<'w, Ref<'static, Pos>, With<Player>>,
+    player_pos: Single<'w, 's, Ref<'static, Pos>, With<Player>>,
 }
 
-impl Focus<'_> {
+impl Focus<'_, '_> {
     pub(crate) fn toggle_examine_pos(&self, next_focus_state: &mut NextState<FocusState>) {
         next_focus_state.set(match **self.state {
             FocusState::ExaminingPos(_) => FocusState::Normal,
@@ -73,7 +73,7 @@ impl Focus<'_> {
     }
 }
 
-impl From<&Focus<'_>> for Level {
+impl From<&Focus<'_, '_>> for Level {
     fn from(focus: &Focus) -> Self {
         match **focus.state {
             FocusState::Normal => focus.player_pos.level,
@@ -83,7 +83,7 @@ impl From<&Focus<'_>> for Level {
     }
 }
 
-impl From<&Focus<'_>> for Pos {
+impl From<&Focus<'_, '_>> for Pos {
     fn from(focus: &Focus) -> Self {
         match **focus.state {
             FocusState::Normal => **focus.player_pos,
@@ -93,7 +93,7 @@ impl From<&Focus<'_>> for Pos {
     }
 }
 
-impl From<&Focus<'_>> for ZoneLevel {
+impl From<&Focus<'_, '_>> for ZoneLevel {
     fn from(focus: &Focus) -> Self {
         match **focus.state {
             FocusState::Normal => Self::from(**focus.player_pos),

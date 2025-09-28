@@ -1,4 +1,4 @@
-use bevy::prelude::Event;
+use bevy::prelude::Message;
 
-#[derive(Debug, Event)]
+#[derive(Debug, Message)]
 pub(crate) struct RefreshAfterBehavior;

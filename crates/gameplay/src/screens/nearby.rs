@@ -16,7 +16,7 @@ pub(super) fn find_nearby<'a>(
     items: &'a Query<(Item, &LastSeen)>,
     player_pos: Pos,
     body_containers: &'a BodyContainers,
-) -> Vec<ItemItem<'a>> {
+) -> Vec<ItemItem<'a, 'a>> {
     FIND_RANGE
         .flat_map(move |dz| {
             FIND_RANGE.flat_map(move |dx| {

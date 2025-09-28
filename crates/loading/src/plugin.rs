@@ -1,7 +1,7 @@
 use crate::LoadingIndicatorState;
 use bevy::prelude::{
-    AlignItems, App, AppExtStates as _, Commands, GlobalZIndex, JustifyContent, Node, OnEnter,
-    Plugin, PositionType, Res, StateScoped, Text, Val,
+    AlignItems, App, AppExtStates as _, Commands, DespawnOnExit, GlobalZIndex, JustifyContent,
+    Node, OnEnter, Plugin, PositionType, Res, Text, Val,
 };
 use hud::{DEFAULT_BUTTON_COLOR, Fonts, HARD_TEXT_COLOR};
 use util::log_transition_plugin;
@@ -11,7 +11,6 @@ pub struct LoadingIndicatorPlugin;
 impl Plugin for LoadingIndicatorPlugin {
     fn build(&self, app: &mut App) {
         app.add_computed_state::<LoadingIndicatorState>();
-        app.enable_state_scoped_entities::<LoadingIndicatorState>();
         app.add_plugins(log_transition_plugin::<LoadingIndicatorState>);
 
         app.add_systems(OnEnter(LoadingIndicatorState), spawn_loading);
@@ -31,7 +30,7 @@ fn spawn_loading(mut commands: Commands, fonts: Res<Fonts>) {
                 ..Node::default()
             },
             GlobalZIndex(3),
-            StateScoped(LoadingIndicatorState),
+            DespawnOnExit(LoadingIndicatorState),
         ))
         .with_children(|parent| {
             parent

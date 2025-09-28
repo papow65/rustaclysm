@@ -5,7 +5,7 @@ use crate::screens::base::systems::{
 use crate::{GameplayScreenState, PlayerActionState};
 use bevy::input::mouse::{MouseMotion, MouseWheel};
 use bevy::prelude::{
-    App, IntoScheduleConfigs as _, OnEnter, OnExit, Plugin, Update, in_state, on_event,
+    App, IntoScheduleConfigs as _, OnEnter, OnExit, Plugin, Update, in_state, on_message,
 };
 use gameplay_location::CardinalDirection;
 use strum::VariantArray as _;
@@ -20,9 +20,9 @@ impl Plugin for BaseScreenPlugin {
             Update,
             (
                 manage_mouse_scroll_input
-                    .run_if(on_event::<MouseWheel>)
+                    .run_if(on_message::<MouseWheel>)
                     .before(update_camera_offset),
-                manage_mouse_button_input.run_if(on_event::<MouseMotion>),
+                manage_mouse_button_input.run_if(on_message::<MouseMotion>),
             )
                 .run_if(in_state(GameplayScreenState::Base)),
         );

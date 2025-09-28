@@ -5,14 +5,14 @@ use crate::screens::crafting::{
 use crate::screens::{find_nearby, find_nearby_pseudo, find_sources, nearby_qualities};
 use crate::{
     BodyContainers, Clock, GameplayScreenState, InstructionQueue, Item, ItemHierarchy, ItemItem,
-    MessageWriter, Player, QueuedInstruction, Shared,
+    LogMessageWriter, Player, QueuedInstruction, Shared,
 };
 use bevy::ecs::{spawn::SpawnIter, system::SystemId};
 use bevy::platform::collections::{HashMap, HashSet};
 use bevy::prelude::{
-    AlignItems, AnyOf, Children, Commands, Display, Entity, FlexDirection, In, IntoSystem as _,
-    JustifyContent, KeyCode, Local, NextState, Node, Overflow, Pickable, Query, Res, ResMut,
-    Single, SpawnRelated as _, StateScoped, Text, TextColor, UiRect, Val, With, World, children,
+    AlignItems, AnyOf, Children, Commands, DespawnOnExit, Display, Entity, FlexDirection, In,
+    IntoSystem as _, JustifyContent, KeyCode, Local, NextState, Node, Overflow, Pickable, Query,
+    Res, ResMut, Single, SpawnRelated as _, Text, TextColor, UiRect, Val, With, World, children,
     debug, error,
 };
 use cdda_json_files::{
@@ -83,7 +83,7 @@ pub(super) fn spawn_crafting_screen(
                 height: Val::Percent(100.0),
                 ..Node::default()
             },
-            StateScoped(GameplayScreenState::Crafting),
+            DespawnOnExit(GameplayScreenState::Crafting),
             Pickable::IGNORE,
         ))
         .with_children(|builder| {
@@ -181,7 +181,7 @@ pub(super) fn create_crafting_key_bindings(
             ],
             100,
         ),
-        StateScoped(GameplayScreenState::Crafting),
+        DespawnOnExit(GameplayScreenState::Crafting),
     ));
 
     fresh_bindings.spawn(world, GameplayScreenState::Crafting, |bindings| {
@@ -192,7 +192,7 @@ pub(super) fn create_crafting_key_bindings(
 
     world.spawn((
         ManualSection::new(&[("craft", "c"), ("close crafting", "esc/&")], 100),
-        StateScoped(GameplayScreenState::Crafting),
+        DespawnOnExit(GameplayScreenState::Crafting),
     ));
 
     log_if_slow("create_crafting_key_bindings", start);
@@ -717,7 +717,7 @@ fn show_recipe(
 
 #[expect(clippy::needless_pass_by_value)]
 fn start_craft(
-    mut message_writer: MessageWriter,
+    mut message_writer: LogMessageWriter,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
     mut instruction_queue: ResMut<InstructionQueue>,
     crafting_screen: Res<CraftingScreen>,

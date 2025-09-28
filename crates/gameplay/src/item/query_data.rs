@@ -28,7 +28,7 @@ pub(crate) struct Item {
     pub(crate) common_info: &'static Shared<CommonItemInfo>,
 }
 
-impl<'a> ItemItem<'a> {
+impl<'w, 's> ItemItem<'w, 's> {
     pub(crate) fn parentage(&self) -> Either<&ObjectOn, &InPocket> {
         match (self.on_tile, self.in_pocket) {
             (None, None) => panic!(
@@ -46,7 +46,7 @@ impl<'a> ItemItem<'a> {
         }
     }
 
-    pub(crate) fn fragments(&self) -> impl Iterator<Item = Fragment> + use<'_, 'a> {
+    pub(crate) fn fragments(&self) -> impl Iterator<Item = Fragment> + use<'_, 'w, 's> {
         let fragments = if self.common_info.id == InfoId::new("money") {
             let cents = self.amount.0 as f32;
             let dollars = format!("$ {:.2}", cents / 100.0);

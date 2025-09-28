@@ -1,6 +1,6 @@
 use crate::SpriteOrientation;
-use bevy::render::mesh::{Indices, Mesh, PrimitiveTopology};
-use bevy::render::render_asset::RenderAssetUsages;
+use bevy::{asset::RenderAssetUsages, mesh::Indices, prelude::Mesh};
+use wgpu_types::PrimitiveTopology;
 
 #[derive(PartialEq, Debug, Clone, Copy)]
 pub struct MeshInfo {

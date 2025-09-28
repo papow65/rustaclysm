@@ -1,12 +1,12 @@
-use crate::{LoadButtonArea, LoadError, MessageField, MessageWrapper};
+use crate::{LoadButtonArea, LoadError, LogMessageField, LogMessageWrapper};
 use application_state::ApplicationState;
 use base64::{Engine as _, engine::general_purpose::STANDARD as base64};
 use bevy::ecs::{spawn::SpawnIter, system::SystemId};
 use bevy::prelude::{
-    AlignContent, AlignItems, AppExit, Bundle, Children, Commands, Display, Entity, Events,
-    FlexDirection, FlexWrap, GlobalZIndex, In, JustifyContent, NextState, Node, Res, ResMut,
-    Single, SpawnRelated as _, StateScoped, Text, TextFont, UiRect, Val, With, Without, World,
-    children, debug, error,
+    AlignContent, AlignItems, AppExit, Bundle, Children, Commands, DespawnOnExit, Display, Entity,
+    FlexDirection, FlexWrap, GlobalZIndex, In, JustifyContent, Messages, NextState, Node, Res,
+    ResMut, Single, SpawnRelated as _, Text, TextFont, UiRect, Val, With, Without, World, children,
+    debug, error,
 };
 use gameplay_cdda_active_sav::ActiveSav;
 use gameplay_local::GameplayLocal;
@@ -65,7 +65,7 @@ pub(super) fn spawn_main_menu(
             ..Node::default()
         },
         GlobalZIndex(3),
-        StateScoped(ApplicationState::MainMenu),
+        DespawnOnExit(ApplicationState::MainMenu),
         children![
             title(&fonts),
             tagline(&fonts),
@@ -81,7 +81,7 @@ pub(crate) fn create_main_menu_key_bindings(world: &mut World) {
 
     world.spawn((
         ManualSection::new(&[("load save", "a-z")], 100),
-        StateScoped(ApplicationState::MainMenu),
+        DespawnOnExit(ApplicationState::MainMenu),
     ));
 
     log_if_slow("create_main_menu_key_bindings", start);
@@ -139,7 +139,7 @@ fn notification_area(fonts: &Fonts) -> impl Bundle {
             ..Node::default()
         },
         PANEL_COLOR,
-        MessageWrapper,
+        LogMessageWrapper,
         children![(
             Text::default(),
             HARD_TEXT_COLOR,
@@ -150,7 +150,7 @@ fn notification_area(fonts: &Fonts) -> impl Bundle {
                 flex_wrap: FlexWrap::Wrap,
                 ..Node::default()
             },
-            MessageField,
+            LogMessageField,
         )],
     )
 }
@@ -169,10 +169,10 @@ pub(super) fn update_sav_files(
     mut last_list_saves_result: GameplayLocal<Option<Result<Vec<PathBuf>, LoadError>>>,
     mut load_button_areas: Single<
         (Entity, &mut Node),
-        (With<LoadButtonArea>, Without<MessageWrapper>),
+        (With<LoadButtonArea>, Without<LogMessageWrapper>),
     >,
-    mut message_wrapper: Single<&mut Node, (With<MessageWrapper>, Without<LoadButtonArea>)>,
-    mut message_field: Single<&mut Text, With<MessageField>>,
+    mut message_wrapper: Single<&mut Node, (With<LogMessageWrapper>, Without<LoadButtonArea>)>,
+    mut message_field: Single<&mut Text, With<LogMessageField>>,
 ) {
     let start = Instant::now();
 
@@ -368,6 +368,6 @@ pub(super) fn load(
     next_application_state.set(ApplicationState::PreGameplay);
 }
 
-fn quit(mut app_exit_events: ResMut<Events<AppExit>>) {
-    app_exit_events.send(AppExit::Success);
+fn quit(mut app_exit_events: ResMut<Messages<AppExit>>) {
+    app_exit_events.write(AppExit::Success);
 }

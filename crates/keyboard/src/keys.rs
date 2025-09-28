@@ -2,7 +2,7 @@ use crate::key_binding::{KeyBinding, KeyBindingSystem};
 use crate::{Ctrl, CtrlState, Held, HeldState, InputChange, Key, KeyChange};
 use bevy::input::ButtonState;
 use bevy::input::keyboard::{Key as LogicalKey, KeyboardInput};
-use bevy::prelude::{ButtonInput, Commands, Entity, EventReader, KeyCode, Query, error};
+use bevy::prelude::{ButtonInput, Commands, Entity, KeyCode, MessageReader, Query, error};
 
 /// This resource contains all user keyboard input
 ///
@@ -16,7 +16,7 @@ pub(super) struct Keys {
 
 impl Keys {
     pub(super) fn new(
-        keyboard_inputs: &mut EventReader<KeyboardInput>,
+        keyboard_inputs: &mut MessageReader<KeyboardInput>,
         key_states: &ButtonInput<KeyCode>,
     ) -> Self {
         let ctrl = (key_states.pressed(KeyCode::ControlLeft)

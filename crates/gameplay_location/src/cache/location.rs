@@ -1,6 +1,6 @@
 use crate::{Pos, StairsDown, StairsUp};
 use bevy::ecs::query::{QueryData, QueryFilter, ROQueryItem};
-use bevy::ecs::{component::ComponentHooks, entity::hash_map::EntityHashMap};
+use bevy::ecs::{entity::hash_map::EntityHashMap, lifecycle::HookContext, world::DeferredWorld};
 use bevy::platform::collections::HashMap;
 use bevy::prelude::{Entity, Query, Resource, With, error};
 
@@ -13,43 +13,41 @@ pub struct LocationCache {
 }
 
 impl LocationCache {
-    pub(crate) fn register_hooks(hooks: &mut ComponentHooks) {
-        hooks.on_add(|mut world, context| {
-            let pos = *world
-                .entity(context.entity)
-                .get::<Pos>()
-                .expect("Pos should be present because it was just added");
-            //if let Some(faction) = world.entity(entity).get::<Faction>() {
-            //    trace!("Adding {pos:?} to {faction:?} {:?}", world.entity(entity).get::<CharacterInfo>());
-            //}
+    pub(crate) fn on_insert(mut world: DeferredWorld, context: HookContext) {
+        let pos = *world
+            .entity(context.entity)
+            .get::<Pos>()
+            .expect("Pos should be present because it was just added");
+        //if let Some(faction) = world.entity(entity).get::<Faction>() {
+        //    trace!("Adding {pos:?} to {faction:?} {:?}", world.entity(entity).get::<CharacterInfo>());
+        //}
 
-            let Some(mut this) = world.get_resource_mut::<Self>() else {
-                error!(
-                    "Location missing duuring on_add hook for {:?} @ {pos:?}",
-                    context.entity
-                );
-                return;
-            };
+        let Some(mut this) = world.get_resource_mut::<Self>() else {
+            error!(
+                "Location missing duuring on_insert hook for {:?} @ {pos:?}",
+                context.entity
+            );
+            return;
+        };
 
-            this.add(pos, context.entity);
-            //trace!("Location: {entity:?} @ {pos:?} added");
-        });
+        this.add(pos, context.entity);
+        //trace!("Location: {entity:?} @ {pos:?} added");
+    }
 
-        hooks.on_remove(|mut world, context| {
-            //let removed_pos = *world.entity(entity).get::<Pos>().expect("Pos should be present because it is being removed");
-            //if let Some(faction) = world.entity(entity).get::<Faction>() {
-            //    trace!("Removing {removed_pos:?} from {faction:?} {:?}",world.entity(entity).get::<CharacterInfo>());
-            //}
+    pub(crate) fn on_replace(mut world: DeferredWorld, context: HookContext) {
+        //let removed_pos = *world.entity(entity).get::<Pos>().expect("Pos should be present because it is being removed");
+        //if let Some(faction) = world.entity(entity).get::<Faction>() {
+        //    trace!("Removing {removed_pos:?} from {faction:?} {:?}",world.entity(entity).get::<CharacterInfo>());
+        //}
 
-            let Some(mut this) = world.get_resource_mut::<Self>() else {
-                // This happens when we return from gameplay to the main menu
-                //trace!("Location missing duuring on_remove hook for {entity:?}");
-                return;
-            };
+        let Some(mut this) = world.get_resource_mut::<Self>() else {
+            // This happens when we return from gameplay to the main menu
+            //trace!("Location missing duuring on_replace hook for {entity:?}");
+            return;
+        };
 
-            this.remove(context.entity);
-            //trace!("Location: {entity:?} @ {pos:?} removed");
-        });
+        this.remove(context.entity);
+        //trace!("Location: {entity:?} @ {pos:?} removed");
     }
 
     pub fn move_(&mut self, entity: Entity, to: Pos) {
@@ -91,7 +89,7 @@ impl LocationCache {
         &self,
         pos: Pos,
         items: &'s Query<'w, 's, Q, F>,
-    ) -> Option<ROQueryItem<'s, Q>>
+    ) -> Option<ROQueryItem<'w, 's, Q>>
     where
         F: 'w + 's + QueryFilter,
         Q: 'w + 's + QueryData,
@@ -120,5 +118,79 @@ impl LocationCache {
         stairs_down: &'s Query<'_, 's, &Pos, With<StairsDown>>,
     ) -> bool {
         from.level.down().is_some() && self.any(from, stairs_down)
+    }
+}
+
+#[cfg(test)]
+mod location_tests {
+    use crate::*;
+    use bevy::prelude::*;
+
+    const ALL_ONES: Pos = Pos::new(1, Level::new(1), 1);
+
+    fn setup_at_origin() -> (World, Entity) {
+        let mut world = World::new();
+        world.init_resource::<LocationCache>();
+
+        let location_cache = world.resource::<LocationCache>();
+        assert!(location_cache.all(Pos::ORIGIN).len() == 0);
+
+        let entity = world.spawn(Pos::ORIGIN).id();
+        let location_cache = world.resource::<LocationCache>();
+        assert!(location_cache.all(Pos::ORIGIN).collect::<Vec<_>>() == vec![&entity]);
+
+        (world, entity)
+    }
+
+    #[test]
+    fn test_other() {
+        let (world, _) = setup_at_origin();
+        let location_cache = world.resource::<LocationCache>();
+        assert!(location_cache.all(ALL_ONES).len() == 0);
+    }
+
+    #[test]
+    fn test_replace() {
+        let (mut world, entity) = setup_at_origin();
+        world
+            .get_entity_mut(entity)
+            .expect("Entity should be present")
+            .insert(ALL_ONES);
+        let location_cache = world.resource::<LocationCache>();
+        assert!(location_cache.all(Pos::ORIGIN).len() == 0);
+        assert!(location_cache.all(ALL_ONES).collect::<Vec<_>>() == vec![&entity]);
+    }
+
+    #[test]
+    fn test_component_removal() {
+        let (mut world, entity) = setup_at_origin();
+        world
+            .get_entity_mut(entity)
+            .expect("Entity should be present")
+            .remove::<Pos>();
+        let location_cache = world.resource::<LocationCache>();
+        assert!(location_cache.all(Pos::ORIGIN).len() == 0);
+    }
+
+    #[test]
+    fn test_entity_despawn() {
+        let (mut world, entity) = setup_at_origin();
+        world
+            .get_entity_mut(entity)
+            .expect("Entity should be present")
+            .despawn();
+        let location_cache = world.resource::<LocationCache>();
+        assert!(location_cache.all(Pos::ORIGIN).len() == 0);
+    }
+
+    #[test]
+    fn test_repeat() {
+        let (mut world, entity) = setup_at_origin();
+        world
+            .get_entity_mut(entity)
+            .expect("Entity should be present")
+            .insert(Pos::ORIGIN);
+        let location_cache = world.resource::<LocationCache>();
+        assert!(location_cache.all(Pos::ORIGIN).collect::<Vec<_>>() == vec![&entity]);
     }
 }
