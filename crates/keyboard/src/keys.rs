@@ -28,36 +28,36 @@ impl Keys {
         Self {
             key_changes: keyboard_inputs
             .read()
-            .filter_map(|keyboard_input| match keyboard_input {
-                KeyboardInput { state: ButtonState::Released, .. } => { None}
-                KeyboardInput { key_code, logical_key: LogicalKey::Character(key), .. } if !matches!(key_code, KeyCode::Numpad1 | KeyCode::Numpad2 | KeyCode::Numpad3 | KeyCode::Numpad4 | KeyCode::Numpad5 | KeyCode::Numpad6 | KeyCode::Numpad7 | KeyCode::Numpad8 | KeyCode::Numpad9)=> {
-                    let mut chars = key.chars();
-                    if let Some(char) = chars.next() {
-                        if chars.next().is_some() {
-                            error!("Could not process keyboard input {keyboard_input:?}, because it's multiple characters.");
-                            None
-                        } else {
-                            Some((Key::Character(char), *key_code))
-                        }
-                    } else {
-                        error!("Could not process keyboard input {keyboard_input:?}, because it's an empty character.");
-                        None
-                    }
-                }
-                KeyboardInput { key_code, .. } => {
-                    Some((Key::Code(*key_code), *key_code))
-                }
-            })
-            .map(|(key, key_code)| {
+            .filter(|KeyboardInput { state , ..}| *state == ButtonState::Pressed )
+            .map(|keyboard_input| {
+                let numpad = matches!(
+                    keyboard_input.key_code,
+                    KeyCode::Numpad1
+                    | KeyCode::Numpad2
+                    | KeyCode::Numpad3
+                    | KeyCode::Numpad4
+                    | KeyCode::Numpad5
+                    | KeyCode::Numpad6
+                    | KeyCode::Numpad7
+                    | KeyCode::Numpad8
+                    | KeyCode::Numpad9
+                );
+                let key = if !numpad && let LogicalKey::Character(key) = &keyboard_input.logical_key && let Ok(char_key) = Key::try_from(key.chars()).inspect_err(|error| {
+                    error!("Could not process keyboard input {keyboard_input:?}, because it contains {error}.");
+                }) {
+                    char_key
+                } else {
+                    Key::Code(keyboard_input.key_code)
+                };
                 KeyChange {
                     key,
-                change: if ctrl_change || key_states.just_pressed(key_code) {
-                    //trace!("{:?} just pressed", &key);
-                    InputChange::JustPressed
-                } else {
-                    //trace!("{:?} held", &key);
-                    InputChange::Held
-                },
+                    change: if ctrl_change || key_states.just_pressed(keyboard_input.key_code) {
+                        //trace!("{:?} just pressed", &key);
+                        InputChange::JustPressed
+                    } else {
+                        //trace!("{:?} held", &key);
+                        InputChange::Held
+                    },
                 }
             }).collect(),
             ctrl
