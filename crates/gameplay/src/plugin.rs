@@ -13,12 +13,11 @@ use crate::{
     sidebar::SidebarPlugin, update_camera_offset,
 };
 use application_state::ApplicationState;
-use bevy::ecs::system::ScheduleSystem;
+use bevy::ecs::{schedule::ScheduleConfigs, system::ScheduleSystem};
 use bevy::prelude::{
     App, AppExtStates as _, FixedUpdate, IntoScheduleConfigs as _, OnEnter, Plugin, PostUpdate,
     Update, in_state, on_message, resource_exists, resource_exists_and_changed,
 };
-use bevy::{diagnostic::FrameTimeDiagnosticsPlugin, ecs::schedule::ScheduleConfigs};
 use gameplay_cdda::{CddaPlugin, Exploration};
 use gameplay_local::GameplayLocalPlugin;
 use gameplay_location::LocationPlugin;
@@ -49,7 +48,6 @@ impl Plugin for GameplayPlugin {
                 ScreensPlugin,
                 TimePlugin,
             ),
-            FrameTimeDiagnosticsPlugin::default(),
             log_transition_plugin::<GameplayScreenState>,
         ));
 

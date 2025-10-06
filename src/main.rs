@@ -4,6 +4,7 @@ mod input;
 use crate::{check::check_delay, input::create_global_key_bindings};
 use application_state::ApplicationStatePlugin;
 use background::BackgroundPlugin;
+use bevy::dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin, FrameTimeGraphConfig};
 use bevy::log::{DEFAULT_FILTER, Level, LogPlugin};
 use bevy::prelude::{
     App, AppExit, AssetPlugin, DefaultPlugins, Fixed, ImagePlugin, Last, PluginGroup as _, Startup,
@@ -18,7 +19,7 @@ use loading::LoadingIndicatorPlugin;
 use main_menu::MainMenuPlugin;
 use manual::ManualPlugin;
 use pre_gameplay::PreGameplayPlugin;
-use std::{fmt::Write as _, time::Duration};
+use std::{env, fmt::Write as _, time::Duration};
 
 fn main() -> AppExit {
     let mut app = App::new();
@@ -47,6 +48,15 @@ fn main() -> AppExit {
                 ..WindowPlugin::default()
             }),
     );
+
+    if env::var("FPS_OVERLAY") == Ok(String::from("1")) {
+        app.add_plugins(FpsOverlayPlugin {
+            config: FpsOverlayConfig {
+                frame_time_graph_config: FrameTimeGraphConfig::target_fps(120.0),
+                ..FpsOverlayConfig::default()
+            },
+        });
+    }
 
     // Now that the log plugin is created, we can log
     info!("Started Rustaclysm, version {}", git_version!());
