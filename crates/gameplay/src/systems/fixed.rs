@@ -1,8 +1,8 @@
+use bevy::asset::UntypedAssetLoadFailedEvent;
 use bevy::prelude::{
     Assets, Font, Local, Mesh, MessageReader, Query, Res, StandardMaterial, With, World, debug,
     error,
 };
-use bevy::{asset::UntypedAssetLoadFailedEvent, platform::collections::HashMap};
 use gameplay_cdda::{MapAsset, MapMemoryAsset, OvermapAsset, OvermapBufferAsset};
 use gameplay_location::{Pos, SubzoneLevel, ZoneLevel};
 use std::{env, sync::LazyLock, time::Instant};
@@ -96,35 +96,24 @@ pub(crate) fn log_archetypes(world: &mut World, mut last: Local<ArchetypesOutput
         return;
     }
 
-    let component_names = world
-        .components()
-        .iter_registered()
-        .map(|component| {
-            (component.id().index(), {
-                let name = component.name();
-                let (base, brackets) = name.split_once('<').unwrap_or((&name, ""));
-                let short_base = base.rsplit_once(':').unwrap_or(("", base)).1;
-                String::from(short_base) + (if brackets.is_empty() { "" } else { "<" }) + brackets
-            })
-        })
-        .collect::<HashMap<_, _>>();
-
     let output = world
         .archetypes()
         .iter()
         .filter(|archetype| !archetype.is_empty())
         .map(|archetype| {
             format!(
-                "{:?} {:?} {:?}",
-                archetype.id(),
+                "Archetype {} has {} entities, with components {}",
+                archetype.id().index(),
                 archetype.len(),
                 archetype
                     .components()
                     .iter()
-                    .map(|component| component_names
-                        .get(&component.index())
-                        .cloned()
-                        .unwrap_or_else(|| String::from("[???]")))
+                    .map(
+                        |component_id| world.components().get_name(*component_id).map_or_else(
+                            || String::from("[unknown component]"),
+                            |name| format!("{:?}", name.shortname())
+                        )
+                    )
                     .collect::<Vec<_>>()
                     .join(", ")
             )
@@ -133,7 +122,7 @@ pub(crate) fn log_archetypes(world: &mut World, mut last: Local<ArchetypesOutput
 
     if output != last.0 {
         for line in &output {
-            debug!(line);
+            debug!("{line}");
         }
 
         last.0 = output;
