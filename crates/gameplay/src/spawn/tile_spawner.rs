@@ -638,11 +638,12 @@ impl<'w> TileSpawner<'w, '_> {
                 Some(ObjectName::from_str(&sav.player.name, GOOD_TEXT_COLOR)),
             )
             .expect("Player character should be spawned");
-        self.commands
-            .entity(player)
-            .insert(Player)
-            .insert(Stamina::FULL)
-            .insert(WalkingMode::Walking); // override
+        self.commands.entity(player).insert((
+            Player,
+            Stamina::FULL,
+            WalkingMode::Walking, // override
+            DespawnOnExit(ApplicationState::Gameplay),
+        ));
         self.configure_player(player);
     }
 

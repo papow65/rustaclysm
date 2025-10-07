@@ -62,7 +62,7 @@ pub(crate) struct VehiclePartOf {
 ///
 /// Required
 #[derive(Debug, Component)]
-#[relationship_target(relationship = VehiclePartOf)]
+#[relationship_target(relationship = VehiclePartOf, linked_spawn)]
 pub(crate) struct VehicleParts {
     vehicle_part_entities: Vec<Entity>,
 }
