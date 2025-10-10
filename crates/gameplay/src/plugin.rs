@@ -7,9 +7,9 @@ use crate::systems::{
     log_archetypes, update_visibility, update_visualization_on_item_move,
 };
 use crate::{
-    ActorPlugin, CameraOffset, GameplayScreenState, PhrasePlugin, RelativeSegments,
-    SpawnSubzoneLevel, TimePlugin, TransitionPlugin, VisualizationUpdate, events::EventsPlugin,
-    focus::FocusPlugin, item::ItemChecksPlugin, resources::ResourcePlugin, screens::ScreensPlugin,
+    ActorPlugin, CameraOffset, GameplayScreenState, PhrasePlugin, RelativeSegments, TimePlugin,
+    TransitionPlugin, VisualizationUpdate, events::EventsPlugin, focus::FocusPlugin,
+    item::ItemChecksPlugin, resources::ResourcePlugin, screens::ScreensPlugin,
     sidebar::SidebarPlugin, update_camera_offset,
 };
 use application_state::ApplicationState;
@@ -79,8 +79,7 @@ fn update_systems() -> ScheduleConfigs<ScheduleSystem> {
                 spawn_subzone_levels,
                 update_visualization_on_item_move.run_if(resource_exists::<RelativeSegments>),
             )
-                .chain()
-                .run_if(on_message::<SpawnSubzoneLevel>),
+                .chain(),
             update_visibility.run_if(resource_exists_and_changed::<VisualizationUpdate>),
         )
             .chain(),

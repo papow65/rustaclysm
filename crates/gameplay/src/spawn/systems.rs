@@ -5,6 +5,7 @@ use crate::{
     ZoneLevelIds, ZoneRegion,
 };
 use bevy::ecs::{schedule::ScheduleConfigs, system::ScheduleSystem};
+use bevy::platform::collections::HashSet;
 use bevy::prelude::{
     Added, AssetEvent, Assets, Children, Commands, Entity, GlobalTransform,
     IntoScheduleConfigs as _, MessageReader, MessageWriter, Query, RelationshipTarget as _, Res,
@@ -19,8 +20,9 @@ use gameplay_local::GameplayLocal;
 use gameplay_location::{
     Level, Pos, SubzoneLevel, SubzoneLevelCache, VisionDistance, Zone, ZoneLevel, ZoneLevelCache,
 };
-use std::{cmp::Ordering, time::Instant};
-use util::log_if_slow;
+use std::cmp::Ordering;
+use std::time::{Duration, Instant};
+use util::{MessageBuffer, log_if_slow};
 
 const MAX_EXPAND_DISTANCE: i32 = 10;
 
@@ -152,7 +154,7 @@ fn despawn_expanded_subzone_levels(
 }
 
 pub(crate) fn spawn_subzone_levels(
-    mut spawn_subzone_level_reader: MessageReader<SpawnSubzoneLevel>,
+    mut spawn_subzone_level_buffer: MessageBuffer<SpawnSubzoneLevel>,
     mut subzone_spawner: SubzoneSpawner,
     mut map_manager: MapManager,
     mut map_memory_manager: MapMemoryManager,
@@ -160,23 +162,27 @@ pub(crate) fn spawn_subzone_levels(
     mut vizualization_update: ResMut<VisualizationUpdate>,
 ) {
     let start = Instant::now();
-
-    debug!(
-        "Spawning {} subzone levels",
-        spawn_subzone_level_reader.len()
-    );
-
-    let mut spawn_events = spawn_subzone_level_reader.read().peekable();
-
-    if spawn_events.peek().is_some() {
-        *vizualization_update = VisualizationUpdate::Forced;
+    if spawn_subzone_level_buffer.is_empty() {
+        return;
     }
 
-    subzone_spawner.spawn_subzone_levels(
-        &mut map_manager,
-        &mut map_memory_manager,
-        &mut overmap_buffer_manager,
-        spawn_events.map(|spawn_event| spawn_event.subzone_level),
+    *vizualization_update = VisualizationUpdate::Forced;
+
+    // Prevent duplicates
+    let mut added = HashSet::new();
+
+    spawn_subzone_level_buffer.handle(
+        |spawn_event| {
+            if added.insert(spawn_event.subzone_level) {
+                subzone_spawner.spawn_subzone_level(
+                    &mut map_manager,
+                    &mut map_memory_manager,
+                    &mut overmap_buffer_manager,
+                    spawn_event.subzone_level,
+                );
+            }
+        },
+        Duration::from_millis(3),
     );
 
     log_if_slow("spawn_subzone_levels", start);
