@@ -49,7 +49,10 @@ impl ZoneSpawner<'_, '_> {
             "Zone levels above ground may not be spawned"
         );
 
-        let mut entity = self.tile_spawner.commands.spawn(zone_level);
+        let mut entity = self
+            .tile_spawner
+            .commands
+            .spawn((zone_level, DespawnOnExit(ApplicationState::Gameplay)));
 
         let Some(seen_from) = self.explored.has_zone_level_been_seen(zone_level) else {
             entity.insert(MissingAsset);
