@@ -7,11 +7,11 @@ use crate::{
 };
 use crate::{InPocket, ObjectOn, PocketOf, Tile, TileIn, VehiclePartOf};
 use application_state::ApplicationState;
-use bevy::camera::{PerspectiveProjection, Projection, visibility::RenderLayers};
+use bevy::camera::visibility::RenderLayers;
 use bevy::ecs::{relationship::Relationship, system::SystemParam};
 use bevy::prelude::{
-    Camera, Camera3d, Commands, Component, DespawnOnExit, DirectionalLight, Entity, EulerRot, Mat4,
-    Query, Res, TextColor, Transform, Vec3, Visibility, With, debug, error,
+    Commands, Component, DespawnOnExit, DirectionalLight, Entity, EulerRot, Mat4, Query, Res,
+    TextColor, Transform, Vec3, Visibility, With, debug, error,
 };
 use cdda_json_files::{
     BashItem, BashItems, CddaAmount, CddaItem, CddaItemName, CddaPhase, CddaPocket, CddaVehicle,
@@ -573,7 +573,7 @@ impl<'w> TileSpawner<'w, '_> {
         entity_commands.id()
     }
 
-    fn configure_player(&mut self, player_entity: Entity) {
+    fn configure_player(&mut self, player_entity: Entity, camera_entity: Entity) {
         self.commands
             .entity(player_entity)
             .with_children(|child_builder| {
@@ -588,23 +588,13 @@ impl<'w> TileSpawner<'w, '_> {
                             * Transform::from_translation(Vec3::new(0.0, 0.3, 0.0));
                         child_builder
                             .spawn((camera_direction, Visibility::Hidden))
-                            .with_children(|child_builder| {
-                                child_builder.spawn((
-                                    Camera3d::default(),
-                                    Camera {
-                                        is_active: false,
-                                        ..Camera::default()
-                                    },
-                                    Projection::Perspective(PerspectiveProjection {
-                                        // more overview, less personal than the default
-                                        fov: 0.3,
-                                        ..PerspectiveProjection::default()
-                                    }),
-                                    RenderLayers::default().with(1).without(2),
-                                ));
-                            });
+                            .add_child(camera_entity);
                     });
             });
+
+        self.commands
+            .entity(camera_entity)
+            .insert(RenderLayers::default().with(1).without(2));
     }
 
     pub(crate) fn spawn_light(&mut self) {
@@ -626,7 +616,7 @@ impl<'w> TileSpawner<'w, '_> {
         ));
     }
 
-    pub(crate) fn spawn_characters(&mut self, spawn_pos: Pos) {
+    pub(crate) fn spawn_characters(&mut self, spawn_pos: Pos, camera_entity: Entity) {
         let human = RequiredLinkedLater::from(InfoId::new("human"));
         self.infos.link_character(&human, "player");
 
@@ -644,7 +634,7 @@ impl<'w> TileSpawner<'w, '_> {
             WalkingMode::Walking, // override
             DespawnOnExit(ApplicationState::Gameplay),
         ));
-        self.configure_player(player);
+        self.configure_player(player, camera_entity);
     }
 
     pub(crate) fn spawn_zombies(&mut self, around_pos: Pos) {

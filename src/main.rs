@@ -1,14 +1,17 @@
 mod check;
 mod input;
+mod log;
+mod output;
 
 use crate::{check::check_delay, input::create_global_key_bindings};
+use crate::{log::log_archetypes, output::create_camera};
 use application_state::ApplicationStatePlugin;
 use background::BackgroundPlugin;
 use bevy::dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin, FrameTimeGraphConfig};
 use bevy::log::{DEFAULT_FILTER, Level, LogPlugin};
 use bevy::prelude::{
-    App, AppExit, AssetPlugin, DefaultPlugins, Fixed, ImagePlugin, Last, PluginGroup as _, Startup,
-    Time, Window, WindowPlugin, info,
+    App, AppExit, AssetPlugin, DefaultPlugins, Fixed, FixedUpdate, ImagePlugin, Last,
+    PluginGroup as _, Startup, Time, Window, WindowPlugin, info,
 };
 use bevy::window::PresentMode;
 use gameplay::GameplayPlugin;
@@ -75,8 +78,8 @@ fn main() -> AppExit {
         PreGameplayPlugin,
     ));
 
-    app.add_systems(Startup, create_global_key_bindings);
-
+    app.add_systems(Startup, (create_global_key_bindings, create_camera));
+    app.add_systems(FixedUpdate, log_archetypes);
     app.add_systems(Last, check_delay);
 
     app.run()

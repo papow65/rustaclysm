@@ -7,9 +7,9 @@ use crate::{
 use bevy::ecs::{schedule::ScheduleConfigs, system::ScheduleSystem};
 use bevy::platform::collections::HashSet;
 use bevy::prelude::{
-    Added, AssetEvent, Assets, Children, Commands, Entity, GlobalTransform,
+    Added, AssetEvent, Assets, Camera3d, Children, Commands, Entity, GlobalTransform,
     IntoScheduleConfigs as _, MessageReader, MessageWriter, Query, RelationshipTarget as _, Res,
-    ResMut, Visibility, With, debug, on_message, warn,
+    ResMut, Single, Visibility, With, debug, on_message, warn,
 };
 use gameplay_cdda::{
     Exploration, MapAsset, MapManager, MapMemoryAsset, MapMemoryManager, OvermapAsset,
@@ -392,7 +392,11 @@ fn update_zone_levels_with_missing_assets(
 }
 
 #[expect(clippy::needless_pass_by_value)]
-pub(crate) fn spawn_initial_entities(active_sav: Res<ActiveSav>, mut spawner: TileSpawner) {
+pub(crate) fn spawn_initial_entities(
+    active_sav: Res<ActiveSav>,
+    mut spawner: TileSpawner,
+    camera: Single<Entity, With<Camera3d>>,
+) {
     spawner.spawn_light();
 
     let sav = active_sav.sav();
@@ -406,7 +410,7 @@ pub(crate) fn spawn_initial_entities(active_sav: Res<ActiveSav>, mut spawner: Ti
         12 * i32::from(sav.levx % 2) + 24,
         12 * i32::from(sav.levy % 2) + 24,
     );
-    spawner.spawn_characters(spawn_pos);
+    spawner.spawn_characters(spawn_pos, *camera);
 }
 
 pub(crate) fn update_explored(

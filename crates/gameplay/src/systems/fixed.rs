@@ -1,11 +1,10 @@
 use bevy::asset::UntypedAssetLoadFailedEvent;
 use bevy::prelude::{
-    Assets, Font, Local, Mesh, MessageReader, Query, Res, StandardMaterial, With, World, debug,
-    error,
+    Assets, Font, Local, Mesh, MessageReader, Query, Res, StandardMaterial, With, debug, error,
 };
 use gameplay_cdda::{MapAsset, MapMemoryAsset, OvermapAsset, OvermapBufferAsset};
 use gameplay_location::{Pos, SubzoneLevel, ZoneLevel};
-use std::{env, sync::LazyLock, time::Instant};
+use std::time::Instant;
 use util::log_if_slow;
 
 pub(crate) fn count_assets(
@@ -84,47 +83,4 @@ pub(crate) fn check_failed_asset_loading(mut fails: MessageReader<UntypedAssetLo
     }
 
     log_if_slow("check_failed_asset_loading", start);
-}
-
-#[derive(Default)]
-pub(crate) struct ArchetypesOutput(Vec<String>);
-
-pub(crate) fn log_archetypes(world: &mut World, mut last: Local<ArchetypesOutput>) {
-    static ENABLED: LazyLock<bool> =
-        LazyLock::new(|| env::var("LOG_ARCHETYPES") == Ok(String::from("1")));
-    if !*ENABLED {
-        return;
-    }
-
-    let output = world
-        .archetypes()
-        .iter()
-        .filter(|archetype| !archetype.is_empty())
-        .map(|archetype| {
-            format!(
-                "Archetype {} has {} entities, with components {}",
-                archetype.id().index(),
-                archetype.len(),
-                archetype
-                    .components()
-                    .iter()
-                    .map(
-                        |component_id| world.components().get_name(*component_id).map_or_else(
-                            || String::from("[unknown component]"),
-                            |name| format!("{:?}", name.shortname())
-                        )
-                    )
-                    .collect::<Vec<_>>()
-                    .join(", ")
-            )
-        })
-        .collect::<Vec<_>>();
-
-    if output != last.0 {
-        for line in &output {
-            debug!("{line}");
-        }
-
-        last.0 = output;
-    }
 }

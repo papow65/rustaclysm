@@ -1,7 +1,7 @@
 use crate::{component::Background, handle::BackgroundHandle, state::BackgroundState};
 use bevy::prelude::{
-    AssetServer, Camera2d, Commands, DespawnOnExit, GlobalZIndex, ImageNode, Node, PositionType,
-    Res, Single, Val, Window, With, debug, warn,
+    AssetServer, Commands, DespawnOnExit, GlobalZIndex, ImageNode, Node, PositionType, Res, Single,
+    Val, Window, With, debug, warn,
 };
 use util::AssetPaths;
 
@@ -14,10 +14,6 @@ pub(super) fn load_background(mut commands: Commands, asset_server: Res<AssetSer
     let handle = asset_server.load(AssetPaths::backgrounds().join(BACKGROUND_NAME));
     commands.insert_resource(BackgroundHandle(handle));
     debug!("Background handle created");
-}
-
-pub(super) fn spawn_background_camera(mut commands: Commands) {
-    commands.spawn((Camera2d, DespawnOnExit(BackgroundState)));
 }
 
 #[expect(clippy::needless_pass_by_value)]

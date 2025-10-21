@@ -4,7 +4,7 @@ use crate::spawn::{
 };
 use crate::systems::{
     check_failed_asset_loading, count_assets, count_pos, create_gameplay_key_bindings,
-    log_archetypes, update_visibility, update_visualization_on_item_move,
+    update_visibility, update_visualization_on_item_move,
 };
 use crate::{
     ActorPlugin, CameraOffset, GameplayScreenState, PhrasePlugin, RelativeSegments, TimePlugin,
@@ -89,11 +89,5 @@ fn update_systems() -> ScheduleConfigs<ScheduleSystem> {
 }
 
 fn fixed_update_systems() -> ScheduleConfigs<ScheduleSystem> {
-    (
-        count_assets,
-        count_pos,
-        check_failed_asset_loading,
-        log_archetypes,
-    )
-        .into_configs()
+    (count_assets, count_pos, check_failed_asset_loading).into_configs()
 }

@@ -1,6 +1,10 @@
 use crate::{GameplayScreenState, Player, TileSpawner};
 use application_state::ApplicationState;
-use bevy::prelude::{DespawnOnExit, KeyCode, Local, NextState, ResMut, Single, With, World, debug};
+use bevy::camera::visibility::RenderLayers;
+use bevy::prelude::{
+    Camera3d, ChildOf, Commands, DespawnOnExit, Entity, KeyCode, Local, NextState, ResMut, Single,
+    With, World, debug,
+};
 use gameplay_location::Pos;
 use gameplay_transition_state::GameplayTransitionState;
 use keyboard::KeyBindings;
@@ -37,11 +41,17 @@ fn spawn_zombies(mut tile_spawner: TileSpawner, player: Option<Single<&Pos, With
     }
 }
 
+#[expect(clippy::needless_pass_by_value)]
 pub(crate) fn to_main_menu(
+    mut commands: Commands,
     mut next_gameplay_screen_state: ResMut<NextState<GameplayScreenState>>,
     mut next_gameplay_transition_state: ResMut<NextState<GameplayTransitionState>>,
+    camera: Single<Entity, With<Camera3d>>,
 ) {
     debug!("Unloading");
+
     next_gameplay_screen_state.set(GameplayScreenState::Transitioning);
     next_gameplay_transition_state.set(GameplayTransitionState::Unloading);
+
+    commands.entity(*camera).remove::<(ChildOf, RenderLayers)>();
 }

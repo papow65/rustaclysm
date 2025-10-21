@@ -1,7 +1,5 @@
 use crate::state::BackgroundState;
-use crate::systems::{
-    load_background, resize_background, spawn_background, spawn_background_camera,
-};
+use crate::systems::{load_background, resize_background, spawn_background};
 use bevy::prelude::{
     App, AppExtStates as _, FixedUpdate, IntoScheduleConfigs as _, OnEnter, Plugin, Startup,
     SystemCondition as _, Update, on_message, state_exists,
@@ -18,10 +16,7 @@ impl Plugin for BackgroundPlugin {
 
         app.add_systems(Startup, load_background);
 
-        app.add_systems(
-            OnEnter(BackgroundState),
-            (spawn_background_camera, spawn_background),
-        );
+        app.add_systems(OnEnter(BackgroundState), spawn_background);
 
         app.add_systems(
             Update,
