@@ -1,10 +1,15 @@
 use crate::LoadingIndicatorState;
 use bevy::prelude::{
-    AlignItems, App, AppExtStates as _, Commands, DespawnOnExit, GlobalZIndex, JustifyContent,
-    Node, OnEnter, Plugin, PositionType, Res, Text, Val,
+    AlignItems, App, AppExtStates as _, Commands, Component, DespawnOnExit, FixedUpdate,
+    GlobalZIndex, IntoScheduleConfigs as _, JustifyContent, Node, OnEnter, Plugin, PositionType,
+    Res, Single, Text, Val, With, in_state,
 };
 use hud::{DEFAULT_BUTTON_COLOR, Fonts, HARD_TEXT_COLOR};
 use util::log_transition_plugin;
+
+#[derive(Component)]
+#[component(immutable)]
+struct LoadingText;
 
 pub struct LoadingIndicatorPlugin;
 
@@ -14,6 +19,7 @@ impl Plugin for LoadingIndicatorPlugin {
         app.add_plugins(log_transition_plugin::<LoadingIndicatorState>);
 
         app.add_systems(OnEnter(LoadingIndicatorState), spawn_loading);
+        app.add_systems(FixedUpdate, animate.run_if(in_state(LoadingIndicatorState)));
     }
 }
 
@@ -45,7 +51,22 @@ fn spawn_loading(mut commands: Commands, fonts: Res<Fonts>) {
                     DEFAULT_BUTTON_COLOR,
                 ))
                 .with_children(|parent| {
-                    parent.spawn((Text::from("Loading..."), HARD_TEXT_COLOR, fonts.large()));
+                    parent.spawn((
+                        LoadingText,
+                        Text::from("Loading..."),
+                        HARD_TEXT_COLOR,
+                        fonts.large(),
+                    ));
                 });
         });
+}
+
+fn animate(mut text: Single<&mut Text, With<LoadingText>>) {
+    let now: &str = text.0.as_str();
+    text.0 = String::from(match now {
+        "Loading..." => "Loading!..",
+        "Loading!.." => "Loading.!.",
+        "Loading.!." => "Loading..!",
+        _ => "Loading...",
+    });
 }
