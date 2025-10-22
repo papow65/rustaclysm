@@ -3647,7 +3647,6 @@ dependencies = [
  "application_state",
  "bevy",
  "gameplay",
- "gameplay_transition_state",
 ]
 
 [[package]]
