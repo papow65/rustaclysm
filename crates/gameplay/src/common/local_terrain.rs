@@ -44,7 +44,7 @@ impl LocalTerrain {
         })
     }
 
-    /// Use [`Self.at`] where possible
+    /// Use [`Self::at`] where possible
     pub(crate) const fn unconnected(info: Arc<TerrainInfo>) -> Self {
         Self {
             info,

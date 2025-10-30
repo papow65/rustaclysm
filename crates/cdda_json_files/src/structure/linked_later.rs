@@ -101,7 +101,7 @@ impl<T: fmt::Debug + 'static> RequiredLinkedLater<T> {
         })
     }
 
-    /// Logs the error that [`Self.get`] would give and converts the result to an option
+    /// Logs the error that [`Self::get`] would give and converts the result to an option
     #[track_caller]
     pub fn get_option(&self) -> Option<Arc<T>> {
         self.get()
