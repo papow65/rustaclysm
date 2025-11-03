@@ -64,9 +64,9 @@ fn spawn_loading(mut commands: Commands, fonts: Res<Fonts>) {
 fn animate(mut text: Single<&mut Text, With<LoadingText>>) {
     let now: &str = text.0.as_str();
     text.0 = String::from(match now {
-        "Loading..." => "Loading!..",
-        "Loading!.." => "Loading.!.",
-        "Loading.!." => "Loading..!",
+        "Loading..." => "Loading ..",
+        "Loading .." => "Loading. .",
+        "Loading. ." => "Loading.. ",
         _ => "Loading...",
     });
 }
