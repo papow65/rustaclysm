@@ -131,7 +131,7 @@ pub(super) fn create_crafting_key_bindings(
     });
 
     world.spawn((
-        ManualSection::new(&[("close qualities", "esc/&")], 100),
+        ManualSection::new(&[("close qualities", "esc/q")], 100),
         DespawnOnExit(GameplayScreenState::Quality),
     ));
 
