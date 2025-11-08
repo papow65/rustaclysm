@@ -344,7 +344,7 @@ mod recipe_tests {
 
     #[test]
     fn hammer_works() {
-        let json = include_str!("test_hammer.json");
+        let json = include_str!("test_data/hammer.json");
         let recipe = from_json_str::<Recipe>(json);
         let recipe = recipe.as_ref();
         assert!(
@@ -356,7 +356,7 @@ mod recipe_tests {
 
     #[test]
     fn building_works() {
-        let json = include_str!("test_building.json");
+        let json = include_str!("test_data/building.json");
         let recipe = from_json_str::<Recipe>(json);
         let recipe = recipe.as_ref();
         assert!(

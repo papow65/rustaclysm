@@ -220,7 +220,7 @@ mod tile_info_tests {
 
     #[test]
     fn it_works() {
-        let json = include_str!("test_water_underground.json");
+        let json = include_str!("test_data/water_underground.json");
         let result = from_json_str::<TileInfo>(json);
         assert!(result.is_ok(), "{result:?}");
     }

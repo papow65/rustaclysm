@@ -145,7 +145,7 @@ mod vehicle_tests {
 
     #[test]
     fn it_works() {
-        let json = include_str!("test_vehicle.json");
+        let json = include_str!("test_data/vehicle.json");
         let result = from_json_str::<CddaVehicle>(json);
         assert!(result.is_ok(), "{result:?}");
     }

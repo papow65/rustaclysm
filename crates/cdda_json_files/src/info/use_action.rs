@@ -409,7 +409,7 @@ mod use_action_tests {
 
     #[test]
     fn action_list_works() {
-        let json = include_str!("test_use_actions.json");
+        let json = include_str!("test_data/use_actions.json");
         let result = from_json_str::<Vec<UseAction>>(json);
         assert!(result.is_ok(), "{result:?}");
     }

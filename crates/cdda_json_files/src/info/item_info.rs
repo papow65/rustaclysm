@@ -966,28 +966,28 @@ mod item_tests {
 
     #[test]
     fn ghee_works() {
-        let json = include_str!("test_ghee.json");
+        let json = include_str!("test_data/ghee.json");
         let result = from_json_str::<CommonItemInfo>(json);
         assert!(result.is_ok(), "{result:?}");
     }
 
     #[test]
     fn mc_jian_works() {
-        let json = include_str!("test_mc_jian.json");
+        let json = include_str!("test_data/mc_jian.json");
         let result = from_json_str::<CommonItemInfo>(json);
         assert!(result.is_ok(), "{result:?}");
     }
 
     #[test]
     fn mutagen_works() {
-        let json = include_str!("test_mutagen_beast.json");
+        let json = include_str!("test_data/mutagen_beast.json");
         let result = from_json_str::<CommonItemInfo>(json);
         assert!(result.is_ok(), "{result:?}");
     }
 
     #[test]
     fn pocket_works() {
-        let json = include_str!("test_pocket.json");
+        let json = include_str!("test_data/pocket.json");
         let result = from_json_str::<PocketInfo>(json);
         assert!(result.is_ok(), "{result:?}");
     }

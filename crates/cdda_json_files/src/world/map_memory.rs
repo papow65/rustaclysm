@@ -186,7 +186,7 @@ mod container_tests {
 
     #[test]
     fn it_works() {
-        let json = include_str!("test_tile_memory.json");
+        let json = include_str!("test_data/tile_memory.json");
         let result = from_json_str::<[TileMemory; 3]>(json);
         assert!(
             matches!(

@@ -165,7 +165,7 @@ mod furniture_tests {
 
     #[test]
     fn it_works() {
-        let json = include_str!("test_bash.json");
+        let json = include_str!("test_data/bash.json");
         let result = from_json_str::<Bash>(json);
         assert!(result.is_ok(), "{result:?}");
     }

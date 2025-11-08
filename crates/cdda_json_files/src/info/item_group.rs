@@ -210,21 +210,21 @@ mod quality_tests {
 
     #[test]
     fn lizard_sample_huge_works() {
-        let json = include_str!("test_lizard_sample_huge.json");
+        let json = include_str!("test_data/lizard_sample_huge.json");
         let result = from_json_str::<ItemGroup>(json);
         assert!(result.is_ok(), "{result:?}");
     }
 
     #[test]
     fn molebot_works() {
-        let json = include_str!("test_molebot.json");
+        let json = include_str!("test_data/molebot.json");
         let result = from_json_str::<ItemGroup>(json);
         assert!(result.is_ok(), "{result:?}");
     }
 
     #[test]
     fn swimmer_wetsuit_works() {
-        let json = include_str!("test_swimmer_wetsuit.json");
+        let json = include_str!("test_data/swimmer_wetsuit.json");
         let result = from_json_str::<ItemGroup>(json);
         assert!(result.is_ok(), "{result:?}");
     }

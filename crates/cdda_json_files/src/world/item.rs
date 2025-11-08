@@ -168,7 +168,7 @@ mod container_tests {
 
     #[test]
     fn it_works() {
-        let json = include_str!("test_container.json");
+        let json = include_str!("test_data/container.json");
         let result = from_json_str::<CddaContainer>(json);
         assert!(result.is_ok(), "{result:?}");
     }

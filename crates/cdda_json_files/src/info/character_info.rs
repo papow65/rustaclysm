@@ -119,7 +119,7 @@ mod character_tests {
 
     #[test]
     fn it_works() {
-        let json = include_str!("test_mon_bee.json");
+        let json = include_str!("test_data/mon_bee.json");
         let result = from_json_str::<CharacterInfo>(json);
         assert!(result.is_ok(), "{result:?}");
     }

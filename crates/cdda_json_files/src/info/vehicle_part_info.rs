@@ -72,7 +72,7 @@ mod item_tests {
 
     #[test]
     fn it_works() {
-        let json = include_str!("test_train_motor.json");
+        let json = include_str!("test_data/train_motor.json");
         let result = from_json_str::<VehiclePartInfo>(json);
         assert!(result.is_ok(), "{result:?}");
     }

@@ -51,7 +51,7 @@ mod quality_tests {
 
     #[test]
     fn it_works() {
-        let json = include_str!("test_lockpick.json");
+        let json = include_str!("test_data/lockpick.json");
         let result = from_json_str::<Quality>(json);
         assert!(result.is_ok(), "{result:?}");
     }
