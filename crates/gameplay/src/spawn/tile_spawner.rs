@@ -16,8 +16,9 @@ use bevy::prelude::{
 use cdda_json_files::{
     BashItem, BashItems, CddaAmount, CddaItem, CddaItemName, CddaPhase, CddaPocket, CddaVehicle,
     CddaVehiclePart, Character, CharacterInfo, CommonItemInfo, Description, Field, Flags, FlatVec,
-    FurnitureInfo, Ignored, InfoId, ItemGroup, ItemName, ItemTypeDetails, MoveCostMod, PocketInfo,
-    PocketType, Recipe, Repetition, RequiredLinkedLater, SpawnItem, TerrainInfo, UntypedInfoId,
+    FurnitureInfo, Ignored, InfoId, ItemGroup, ItemName, ItemTypeDetails, MaybeFlatVec,
+    MoveCostMod, PocketInfo, PocketType, Recipe, Repetition, RequiredLinkedLater, SpawnItem,
+    TerrainInfo, UntypedInfoId,
 };
 use either::Either;
 use gameplay_cdda::{Error, Infos, ObjectCategory, TileVariant};
@@ -763,7 +764,7 @@ impl<'w> TileSpawner<'w, '_> {
             techniques: None,
             max_charges: None,
             initial_charges: None,
-            use_action: None,
+            use_action: MaybeFlatVec::default(),
             countdown_interval: None,
             countdown_destroy: None,
             countdown_action: None,

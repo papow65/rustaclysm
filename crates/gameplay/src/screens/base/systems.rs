@@ -236,6 +236,7 @@ pub(super) fn create_base_key_bindings(
         builder.add('&', (|| GameplayScreenState::Crafting).pipe(open_screen));
         builder.add('i', (|| GameplayScreenState::Inventory).pipe(open_screen));
         builder.add('q', (|| GameplayScreenState::Quality).pipe(open_screen));
+        builder.add('t', (|| GameplayScreenState::Tool).pipe(open_screen));
         builder.add('z', (|| ZoomDirection::In).pipe(manage_zoom));
         builder.add('Z', (|| ZoomDirection::Out).pipe(manage_zoom));
         builder.add('h', toggle_elevation);
@@ -289,6 +290,7 @@ pub(super) fn create_base_key_bindings(
                 ("inventory", "i"),
                 ("crafting", "&"),
                 ("qualities", "q"),
+                ("tool actions", "t"),
                 ("toggle map", "m/M"),
                 ("camera angle", "middle mouse button"),
                 ("reset angle", "0"),

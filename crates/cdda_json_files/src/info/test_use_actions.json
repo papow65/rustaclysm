@@ -1,0 +1,19 @@
+[
+    {
+        "done_message": "You break the pane and place the shards on the ground, ready to be cracked by something passing by.",
+        "moves": 150,
+        "practice": 2,
+        "trap": "tr_glass",
+        "type": "place_trap"
+    },
+    {
+        "type": "holster"
+    },
+    {
+        "size": 8,
+        "type": "attach_molle"
+    },
+    {
+        "type": "detach_molle"
+    }
+]

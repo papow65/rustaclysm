@@ -14,6 +14,7 @@ mod quality;
 mod recipe;
 mod requirement;
 mod terrain_info;
+mod use_action;
 mod vehicle_part_info;
 
 pub use self::character_info::CharacterInfo;
@@ -41,4 +42,5 @@ pub use self::recipe::{
 };
 pub use self::requirement::{CalculatedRequirement, Requirement};
 pub use self::terrain_info::{MoveCost, TerrainInfo};
+pub use self::use_action::UseAction;
 pub use self::vehicle_part_info::VehiclePartInfo;

@@ -123,3 +123,23 @@ pub(super) fn nearby_qualities(
             },
         )
 }
+
+pub(super) fn nearby_tools<'i>(
+    nearby_items: &'i [ItemItem],
+    pseudo_items: &'i HashSet<Arc<CommonItemInfo>>,
+) -> impl Iterator<Item = Arc<CommonItemInfo>> {
+    nearby_items
+        .iter()
+        .map(|nearby| nearby.common_info.as_ref().clone())
+        .chain(pseudo_items.iter().cloned())
+        .filter(|item| {
+            !item.use_action.0.is_empty()
+                || item
+                    .qualities
+                    .iter()
+                    .filter_map(|quality| quality.id.get_option())
+                    .flat_map(|quality| quality.usages.clone())
+                    .flat_map(|(_level, item_actions)| item_actions)
+                    .any(|item_action| item_action.get_option().is_some())
+        })
+}

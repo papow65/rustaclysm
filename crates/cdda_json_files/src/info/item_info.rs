@@ -1,5 +1,4 @@
-use crate::{Flags, InfoId, structure::MaybeFlatVec};
-use crate::{Ignored, ItemQuality, UntypedInfoId};
+use crate::{Flags, Ignored, InfoId, ItemQuality, MaybeFlatVec, UntypedInfoId, UseAction};
 use bevy_platform::collections::HashMap;
 use serde::Deserialize;
 use serde_json::Value as JsonValue;
@@ -707,7 +706,10 @@ pub struct CommonItemInfo {
     pub techniques: Option<JsonValue>,
     pub max_charges: Option<u16>,
     pub initial_charges: Option<u16>,
-    pub use_action: Option<JsonValue>,
+
+    #[serde(default)]
+    pub use_action: MaybeFlatVec<UseAction>,
+
     pub countdown_interval: Option<JsonValue>,
     pub countdown_destroy: Option<JsonValue>,
     pub countdown_action: Option<JsonValue>,
@@ -972,6 +974,13 @@ mod item_tests {
     #[test]
     fn mc_jian_works() {
         let json = include_str!("test_mc_jian.json");
+        let result = from_json_str::<CommonItemInfo>(json);
+        assert!(result.is_ok(), "{result:?}");
+    }
+
+    #[test]
+    fn mutagen_works() {
+        let json = include_str!("test_mutagen_beast.json");
         let result = from_json_str::<CommonItemInfo>(json);
         assert!(result.is_ok(), "{result:?}");
     }

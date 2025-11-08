@@ -1,6 +1,6 @@
 use crate::screens::{
     BaseScreenPlugin, CharacterScreenPlugin, CraftingScreenPlugin, DeathScreenPlugin,
-    InventoryScreenPlugin, MenuScreenPlugin, QualityScreenPlugin,
+    InventoryScreenPlugin, MenuScreenPlugin, QualityScreenPlugin, ToolScreenPlugin,
 };
 use bevy::prelude::{App, Plugin};
 
@@ -16,6 +16,7 @@ impl Plugin for ScreensPlugin {
             InventoryScreenPlugin,
             MenuScreenPlugin,
             QualityScreenPlugin,
+            ToolScreenPlugin,
         ));
     }
 }

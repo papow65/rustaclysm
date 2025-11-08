@@ -1,5 +1,6 @@
 use serde::Deserialize;
 
+/// Used when both a single T, and a list of T can be expected.
 #[derive(Clone, Debug, Deserialize)]
 #[serde(from = "MaybeFlat<T>")]
 pub struct MaybeFlatVec<T>(pub Vec<T>);
@@ -10,6 +11,12 @@ impl<T> From<MaybeFlat<T>> for MaybeFlatVec<T> {
             MaybeFlat::Single(single) => vec![single],
             MaybeFlat::Multi(vec) => vec,
         })
+    }
+}
+
+impl<T> Default for MaybeFlatVec<T> {
+    fn default() -> Self {
+        Self(Vec::new())
     }
 }
 

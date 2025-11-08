@@ -1,0 +1,33 @@
+{
+    "id": "iv_mutagen_beast",
+    "type": "COMESTIBLE",
+    "name": { "str": "beast mutagenic primer" },
+    "description": "A processed mutagenic primer as red as a matador's cape.",
+    "looks_like": "iv_mutagen",
+    "price": "3000 USD",
+    "price_postapoc": "1 USD",
+    "//": "Not commercially traded, in case there was any question.",
+    "comestible_type": "MED",
+    "category": "mutagen",
+    "weight": "10 g",
+    "volume": "10 ml",
+    "phase": "liquid",
+    "container": "test_tube",
+    "tool": "syringe",
+    "symbol": "!",
+    "color": "red",
+    "healthy": -6,
+    "stim": -5,
+    "addiction_potential": 6,
+    "addiction_type": "mutagen",
+    "flags": [ "NO_INGEST", "MUTAGEN_PRIMER" ],
+    "vitamins": [  ],
+    "material": [ "water" ],
+    "freezing_point": -8,
+    "use_action": {
+        "type": "consume_drug",
+        "activation_message": "You inject the beast mutagenic primer.",
+        "tools_needed": { "syringe": -1 },
+        "vitamins": [ [ "mutagen_beast", 450, 550 ] ]
+    }
+}

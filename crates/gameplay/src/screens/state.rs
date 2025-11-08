@@ -17,6 +17,8 @@ pub(crate) enum GameplayScreenState {
 
     Quality,
 
+    Tool,
+
     /// Different from the main menu
     Menu,
 

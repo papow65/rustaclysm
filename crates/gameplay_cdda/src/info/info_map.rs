@@ -89,8 +89,15 @@ impl InfoMap<CharacterInfo> {
 }
 
 impl InfoMap<CommonItemInfo> {
-    pub(super) fn link_common_items(&self, qualities: &InfoMap<Quality>) {
+    pub(super) fn link_common_items(
+        &self,
+        item_actions: &InfoMap<ItemAction>,
+        qualities: &InfoMap<Quality>,
+    ) {
         for common_item_info in self.map.values() {
+            for use_action in &common_item_info.use_action.0 {
+                use_action.id().finalize(item_actions, "use_action");
+            }
             for quality in &common_item_info.qualities {
                 quality.id.finalize(qualities, "quality");
             }
