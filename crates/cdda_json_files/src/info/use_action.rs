@@ -1,4 +1,4 @@
-use crate::{InfoId, ItemAction, RequiredLinkedLater};
+use crate::{Ignored, InfoId, ItemAction, RequiredLinkedLater};
 use serde::{Deserialize, de::Error as _};
 use serde_json::{
     Error as JsonError, Map as JsonMap, Value as JsonValue, from_value as from_json_value,
@@ -152,11 +152,17 @@ pub enum DetailedUseAction {
 #[derive(Debug, Deserialize)]
 pub struct AmmobeltDetail {
     pub belt: Arc<str>,
+
+    #[serde(flatten)]
+    pub ignored: Ignored<Self>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct AttachMolleDetail {
     pub size: u8,
+
+    #[serde(flatten)]
+    pub ignored: Ignored<Self>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -169,6 +175,9 @@ pub struct CastSpellDetail {
     pub mundane: bool,
     #[serde(default)]
     pub need_wielding: bool,
+
+    #[serde(flatten)]
+    pub ignored: Ignored<Self>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -178,6 +187,9 @@ pub struct ChangeScentDetail {
     pub effects: Vec<JsonValue>,
     pub moves: u8,
     pub scent_typeid: Arc<str>,
+
+    #[serde(flatten)]
+    pub ignored: Ignored<Self>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -194,6 +206,9 @@ pub struct ConsumeDrugDetail {
     pub stat_adjustments: Option<JsonValue>,
     pub tools_needed: Option<JsonValue>,
     pub used_up_item: Option<Arc<str>>,
+
+    #[serde(flatten)]
+    pub ignored: Ignored<Self>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -206,11 +221,17 @@ pub struct DelayedTransformDetail {
 
     pub container: Option<Arc<str>>,
     pub target_charges: Option<u8>,
+
+    #[serde(flatten)]
+    pub ignored: Ignored<Self>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct DeployFurnDetail {
     pub furn_type: Arc<str>,
+
+    #[serde(flatten)]
+    pub ignored: Ignored<Self>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -223,12 +244,18 @@ pub struct DeployTentDetail {
     pub wall: Arc<str>, // TODO link
 
     pub floor_center: Option<Arc<str>>,
+
+    #[serde(flatten)]
+    pub ignored: Ignored<Self>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct EffectOnConditionsDetail {
     pub description: Arc<str>,
     pub effect_on_conditions: Vec<JsonValue>,
+
+    #[serde(flatten)]
+    pub ignored: Ignored<Self>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -250,6 +277,9 @@ pub struct ExplosionDetail {
     pub fields_type: Option<Arc<str>>,
     pub scrambler_blast_radius: Option<u8>,
     pub sound_msg: Option<Arc<str>>,
+
+    #[serde(flatten)]
+    pub ignored: Ignored<Self>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -260,6 +290,9 @@ pub struct FirestarterDetail {
     pub moves_slow: u16,
     #[serde(default)]
     pub need_sunlight: bool,
+
+    #[serde(flatten)]
+    pub ignored: Ignored<Self>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -274,12 +307,18 @@ pub struct HealDetail {
 
     pub move_cost: u16,
     pub used_up_item: Option<JsonMap<String, JsonValue>>,
+
+    #[serde(flatten)]
+    pub ignored: Ignored<Self>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct HolsterDetail {
     pub holster_msg: Option<Arc<str>>,
     pub holster_prompt: Option<Arc<str>>,
+
+    #[serde(flatten)]
+    pub ignored: Ignored<Self>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -288,6 +327,9 @@ pub struct InscribeDetail {
     pub material_restricted: bool,
     pub on_terrain: bool,
     pub verb: Arc<str>,
+
+    #[serde(flatten)]
+    pub ignored: Ignored<Self>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -299,6 +341,9 @@ pub struct ManualNoiseDetail {
     pub noise_message: Arc<str>,
     pub noise_variant: Arc<str>,
     pub use_message: Arc<str>,
+
+    #[serde(flatten)]
+    pub ignored: Ignored<Self>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -311,6 +356,9 @@ pub struct MusicDetail {
     pub volume: u8,
 
     pub npc_descriptions: Option<Vec<Arc<str>>>,
+
+    #[serde(flatten)]
+    pub ignored: Ignored<Self>,
 }
 
 /// Used for turrets, etc.
@@ -328,6 +376,9 @@ pub struct PlaceMonsterDetail {
     pub friendly_msg: Option<Arc<str>>,
     pub hostile_msg: Option<Arc<str>>,
     pub need_charges: Option<u8>,
+
+    #[serde(flatten)]
+    pub ignored: Ignored<Self>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -347,6 +398,9 @@ pub struct PlaceTrapDetail {
     pub bury: Option<JsonMap<String, JsonValue>>,
     pub bury_question: Option<Arc<str>>,
     pub outer_layer_trap: Option<Arc<str>>,
+
+    #[serde(flatten)]
+    pub ignored: Ignored<Self>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -357,6 +411,9 @@ pub struct RepairItemDetail {
     pub skill: Arc<str>,
 
     pub tool_quality: Option<i16>,
+
+    #[serde(flatten)]
+    pub ignored: Ignored<Self>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -364,6 +421,9 @@ pub struct RevealMapDetail {
     pub message: Arc<str>,
     pub radius: u16,
     pub terrain: Vec<JsonValue>,
+
+    #[serde(flatten)]
+    pub ignored: Ignored<Self>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -384,21 +444,30 @@ pub struct TransformDetail {
 
     pub target: Option<Arc<str>>,
     pub target_charges: Option<u8>,
+
+    #[serde(flatten)]
+    pub ignored: Ignored<Self>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct UnpackDetail {
-    pub group: Arc<str>,
+    pub group: Arc<str>, // TODO link item group
 
     #[serde(default)]
     pub items_fit: bool,
 
     pub filthy_volume_threshold: Option<Volume>,
+
+    #[serde(flatten)]
+    pub ignored: Ignored<Self>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct WeighSelfDetail {
     pub max_weight: Mass,
+
+    #[serde(flatten)]
+    pub ignored: Ignored<Self>,
 }
 
 #[cfg(test)]
