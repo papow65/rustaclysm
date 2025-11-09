@@ -1,5 +1,4 @@
 use crate::{InfoId, ItemAction, RequiredLinkedLater};
-use bevy_platform::collections::HashMap;
 use serde::{Deserialize, de::Error as _};
 use serde_json::{
     Error as JsonError, Map as JsonMap, Value as JsonValue, from_value as from_json_value,
@@ -39,7 +38,7 @@ impl UseAction {
 }
 
 #[derive(Debug, Deserialize)]
-#[serde(try_from = "HashMap<String, JsonValue>")]
+#[serde(try_from = "JsonMap<String, JsonValue>")]
 pub struct TypedUseAction {
     #[serde(rename(deserialize = "type"))]
     pub type_: RequiredLinkedLater<ItemAction>,
@@ -47,10 +46,10 @@ pub struct TypedUseAction {
     pub details: DetailedUseAction,
 }
 
-impl TryFrom<HashMap<String, JsonValue>> for TypedUseAction {
+impl TryFrom<JsonMap<String, JsonValue>> for TypedUseAction {
     type Error = JsonError;
 
-    fn try_from(mut map: HashMap<String, JsonValue>) -> Result<Self, Self::Error> {
+    fn try_from(mut map: JsonMap<String, JsonValue>) -> Result<Self, Self::Error> {
         use DetailedUseAction::{
             Ammobelt, AttachMolle, CastSpell, ChangeScent, ConsumeDrug, DelayedTransform,
             DeployFurn, DeployTent, DetachMolle, EffectOnConditions, Explosion, Firestarter, Heal,
@@ -75,7 +74,7 @@ impl TryFrom<HashMap<String, JsonValue>> for TypedUseAction {
             })?;
         }
 
-        let json_object = JsonValue::Object(map.into_iter().collect::<JsonMap<_, _>>());
+        let json_object = JsonValue::Object(map);
 
         Ok(Self {
             type_: RequiredLinkedLater::new(InfoId::new(type_)),
