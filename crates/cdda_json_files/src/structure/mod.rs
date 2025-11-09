@@ -4,6 +4,7 @@ mod ignored;
 mod linked_later;
 mod maybe_flat;
 mod presence;
+mod range;
 mod repitition;
 
 pub use self::at::{At, AtVec};
@@ -12,4 +13,5 @@ pub use self::ignored::Ignored;
 pub use self::linked_later::{Link, LinkProvider, OptionalLinkedLater, RequiredLinkedLater};
 pub use self::maybe_flat::MaybeFlatVec;
 pub use self::presence::{RequiredComponent, RequiredPart, RequiredTool};
+pub use self::range::Range;
 pub use self::repitition::{CddaAmount, Repetition, RepetitionBlock};

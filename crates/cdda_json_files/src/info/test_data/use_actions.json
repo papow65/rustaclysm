@@ -15,5 +15,29 @@
     },
     {
         "type": "detach_molle"
+    },
+    {
+        "activation_message": "You inject the beast mutagenic primer.",
+        "tools_needed": {
+            "syringe": -1
+        },
+        "type": "consume_drug",
+        "vitamins": [
+            [
+                "mutagen_beast",
+                450,
+                550
+            ]
+        ],
+        "effects": [
+            {
+                "duration": 90,
+                "id": "pkill1"
+            },
+            {
+                "duration": "5 m",
+                "id": "nausea"
+            }
+        ]
     }
 ]

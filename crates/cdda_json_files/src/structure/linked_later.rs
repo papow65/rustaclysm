@@ -1,9 +1,9 @@
 use crate::{Error, InfoId, InfoIdDescription, TerrainInfo};
 use bevy_log::{error, warn};
 use serde::Deserialize;
-use std::fmt;
-use std::panic::Location;
+use std::hash::{Hash, Hasher};
 use std::sync::{Arc, OnceLock, Weak};
+use std::{fmt, panic::Location};
 
 pub trait LinkProvider<T> {
     fn get_option(&self, info_id: &InfoId<T>) -> Option<&Arc<T>>;
@@ -132,11 +132,25 @@ impl<T: fmt::Debug> Clone for RequiredLinkedLater<T> {
     }
 }
 
+impl<T: fmt::Debug> PartialEq for RequiredLinkedLater<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.required == other.required
+    }
+}
+
+impl<T: fmt::Debug> Eq for RequiredLinkedLater<T> {}
+
 impl<T: fmt::Debug> From<InfoId<T>> for RequiredLinkedLater<T> {
     fn from(info_id: InfoId<T>) -> Self {
         Self {
             required: LinkedLater::new(info_id),
         }
+    }
+}
+
+impl<T: fmt::Debug> Hash for RequiredLinkedLater<T> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.required.hash(state);
     }
 }
 
@@ -199,5 +213,19 @@ impl<T: fmt::Debug> LinkedLater<T> {
         self.lock.set(found).expect("{self:?} is already finalized");
 
         result
+    }
+}
+
+impl<T: fmt::Debug> PartialEq for LinkedLater<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.info_id == other.info_id
+    }
+}
+
+impl<T: fmt::Debug> Eq for LinkedLater<T> {}
+
+impl<T: fmt::Debug> Hash for LinkedLater<T> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.info_id.hash(state);
     }
 }

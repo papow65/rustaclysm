@@ -1,4 +1,8 @@
-use crate::{Ignored, InfoId, ItemAction, RequiredLinkedLater};
+use crate::{
+    CharacterInfo, CommonItemInfo, FieldInfo, FurnitureInfo, Ignored, InfoId, ItemAction,
+    ItemGroup, OptionalLinkedLater, Range, RequiredLinkedLater, UntypedInfoId,
+};
+use bevy_platform::collections::HashMap;
 use serde::{Deserialize, de::Error as _};
 use serde_json::{
     Error as JsonError, Map as JsonMap, Value as JsonValue, from_value as from_json_value,
@@ -151,7 +155,7 @@ pub enum DetailedUseAction {
 
 #[derive(Debug, Deserialize)]
 pub struct AmmobeltDetail {
-    pub belt: Arc<str>,
+    pub belt: RequiredLinkedLater<CommonItemInfo>, // TODO link to Magazine instead
 
     #[serde(flatten)]
     pub ignored: Ignored<Self>,
@@ -167,7 +171,7 @@ pub struct AttachMolleDetail {
 
 #[derive(Debug, Deserialize)]
 pub struct CastSpellDetail {
-    pub spell_id: Arc<str>,
+    pub spell_id: UntypedInfoId, // TODO link
     pub level: u8,
     pub no_fail: bool,
 
@@ -184,9 +188,9 @@ pub struct CastSpellDetail {
 pub struct ChangeScentDetail {
     pub charges_to_use: u8,
     pub duration: Duration,
-    pub effects: Vec<JsonValue>,
+    pub effects: Vec<JsonValue>, // TODO expand
     pub moves: u8,
-    pub scent_typeid: Arc<str>,
+    pub scent_typeid: UntypedInfoId, // TODO link
 
     #[serde(flatten)]
     pub ignored: Ignored<Self>,
@@ -195,17 +199,32 @@ pub struct ChangeScentDetail {
 #[derive(Debug, Deserialize)]
 pub struct ConsumeDrugDetail {
     #[serde(default)]
-    pub effects: Vec<JsonValue>,
+    pub charges_needed: HashMap<UntypedInfoId, i8>, // TODO link
     #[serde(default)]
-    pub vitamins: Vec<JsonValue>,
+    pub effects: Vec<DrugEffect>,
+    #[serde(default)]
+    pub fields_produced: HashMap<RequiredLinkedLater<FieldInfo>, u8>,
+    #[serde(default)]
+    pub stat_adjustments: HashMap<UntypedInfoId, i8>, // TODO link
+    #[serde(default)]
+    pub tools_needed: HashMap<RequiredLinkedLater<CommonItemInfo>, i8>,
+    #[serde(default)]
+    pub vitamins: Vec<Range<UntypedInfoId, u16>>, // TODO link
 
     pub activation_message: Option<Arc<str>>,
-    pub charges_needed: Option<JsonValue>,
-    pub fields_produced: Option<JsonValue>,
-    pub moved: Option<u8>,
-    pub stat_adjustments: Option<JsonValue>,
-    pub tools_needed: Option<JsonValue>,
-    pub used_up_item: Option<Arc<str>>,
+    pub moves: Option<u16>,
+    pub used_up_item: OptionalLinkedLater<CommonItemInfo>,
+
+    #[serde(flatten)]
+    pub ignored: Ignored<Self>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct DrugEffect {
+    pub id: UntypedInfoId, // TODO link
+
+    #[serde(default)]
+    pub duration: Duration,
 
     #[serde(flatten)]
     pub ignored: Ignored<Self>,
@@ -216,10 +235,10 @@ pub struct DelayedTransformDetail {
     pub moves: u8,
     pub msg: Arc<str>,
     pub not_ready_msg: Arc<str>,
-    pub target: Arc<str>,
+    pub target: UntypedInfoId, // TODO link
     pub transform_age: u32,
 
-    pub container: Option<Arc<str>>,
+    pub container: Option<UntypedInfoId>, // TODO link
     pub target_charges: Option<u8>,
 
     #[serde(flatten)]
@@ -237,13 +256,13 @@ pub struct DeployFurnDetail {
 #[derive(Debug, Deserialize)]
 pub struct DeployTentDetail {
     pub broken_type: Arc<str>,
-    pub door_closed: Arc<str>, // TODO link
-    pub door_opened: Arc<str>, // TODO link
-    pub floor: Arc<str>,       // TODO link
+    pub door_closed: RequiredLinkedLater<FurnitureInfo>,
+    pub door_opened: RequiredLinkedLater<FurnitureInfo>,
+    pub floor: RequiredLinkedLater<FurnitureInfo>,
     pub radius: u8,
-    pub wall: Arc<str>, // TODO link
+    pub wall: RequiredLinkedLater<FurnitureInfo>,
 
-    pub floor_center: Option<Arc<str>>,
+    pub floor_center: OptionalLinkedLater<FurnitureInfo>,
 
     #[serde(flatten)]
     pub ignored: Ignored<Self>,
@@ -267,14 +286,14 @@ pub struct ExplosionDetail {
     #[serde(default)]
     pub sound_volume: u8,
 
-    pub draw_explosion_color: Option<Arc<str>>,
+    pub draw_explosion_color: Option<UntypedInfoId>, // TODO link
     pub draw_explosion_radius: Option<u8>,
     pub emp_blast_radius: Option<u8>,
-    pub explosion: Option<JsonMap<String, JsonValue>>,
+    pub explosion: Option<JsonMap<String, JsonValue>>, // TODO expand
     pub fields_min_intensity: Option<u8>,
     pub fields_max_intensity: Option<u8>,
     pub fields_radius: Option<u8>,
-    pub fields_type: Option<Arc<str>>,
+    pub fields_type: Option<UntypedInfoId>, // TODO link
     pub scrambler_blast_radius: Option<u8>,
     pub sound_msg: Option<Arc<str>>,
 
@@ -303,10 +322,10 @@ pub struct HealDetail {
     pub disinfectant_power: Option<u8>,
 
     #[serde(default)]
-    pub effects: Vec<JsonValue>,
+    pub effects: Vec<JsonValue>, // TODO expand
 
     pub move_cost: u16,
-    pub used_up_item: Option<JsonMap<String, JsonValue>>,
+    pub used_up_item: Option<JsonMap<String, JsonValue>>, // TODO expand
 
     #[serde(flatten)]
     pub ignored: Ignored<Self>,
@@ -337,9 +356,9 @@ pub struct ManualNoiseDetail {
     pub moves: u8,
     pub no_charges_message: Arc<str>,
     pub noise: u8,
-    pub noise_id: Arc<str>,
+    pub noise_id: UntypedInfoId, // TODO link
     pub noise_message: Arc<str>,
-    pub noise_variant: Arc<str>,
+    pub noise_variant: UntypedInfoId, // TODO link
     pub use_message: Arc<str>,
 
     #[serde(flatten)]
@@ -365,13 +384,13 @@ pub struct MusicDetail {
 #[derive(Debug, Deserialize)]
 pub struct PlaceMonsterDetail {
     pub difficulty: u8,
-    pub monster_id: Arc<str>, // TODO link monster
+    pub monster_id: RequiredLinkedLater<CharacterInfo>,
     pub moves: u16,
 
     #[serde(default)]
     pub place_randomly: bool,
     #[serde(default)]
-    pub skills: Vec<Arc<str>>, // TODO link skill
+    pub skills: Vec<UntypedInfoId>, // TODO link
 
     pub friendly_msg: Option<Arc<str>>,
     pub hostile_msg: Option<Arc<str>>,
@@ -386,7 +405,7 @@ pub struct PlaceTrapDetail {
     pub done_message: Arc<str>,
     pub moves: u16,
     pub practice: u8,
-    pub trap: Arc<str>, // TODO link furniture
+    pub trap: UntypedInfoId, // TODO link furniture
 
     #[serde(default)]
     pub allow_under_player: bool,
@@ -397,7 +416,7 @@ pub struct PlaceTrapDetail {
 
     pub bury: Option<JsonMap<String, JsonValue>>,
     pub bury_question: Option<Arc<str>>,
-    pub outer_layer_trap: Option<Arc<str>>,
+    pub outer_layer_trap: Option<UntypedInfoId>,
 
     #[serde(flatten)]
     pub ignored: Ignored<Self>,
@@ -406,9 +425,9 @@ pub struct PlaceTrapDetail {
 #[derive(Debug, Deserialize)]
 pub struct RepairItemDetail {
     pub cost_scaling: f32,
-    pub materials: Vec<Arc<str>>, // TODO link material
+    pub materials: Vec<UntypedInfoId>, // TODO link
     pub move_cost: u16,
-    pub skill: Arc<str>,
+    pub skill: UntypedInfoId, // TODO link
 
     pub tool_quality: Option<i16>,
 
@@ -420,30 +439,43 @@ pub struct RepairItemDetail {
 pub struct RevealMapDetail {
     pub message: Arc<str>,
     pub radius: u16,
-    pub terrain: Vec<JsonValue>,
+    pub terrain: Vec<JsonValue>, // TODO expand
 
     #[serde(flatten)]
     pub ignored: Ignored<Self>,
 }
 
+#[expect(clippy::struct_excessive_bools)]
 #[derive(Debug, Deserialize)]
 pub struct TransformDetail {
     #[serde(default)]
     pub active: bool,
 
+    #[serde(default)]
+    pub need_empty: bool,
+    #[serde(default)]
+    pub need_wielding: bool,
+    #[serde(default)]
+    pub need_worn: bool,
+
     pub menu_text: Option<Arc<str>>,
     pub moves: Option<u16>,
+
+    pub need_charges_msg: Option<Arc<str>>,
+    pub need_fire_msg: Option<Arc<str>>,
 
     /// Shown when the action is performed
     pub msg: Option<Arc<str>>,
 
     pub need_fire: Option<u8>,
 
-    #[serde(default)]
-    pub need_wielding: bool,
-
-    pub target: Option<Arc<str>>,
+    pub target: Option<UntypedInfoId>, // TODO link
+    pub target_ammo: Option<UntypedInfoId>,
     pub target_charges: Option<u8>,
+
+    pub ammo_scale: Option<u8>,
+    pub need_charges: Option<u8>,
+    pub qualities_needed: Option<JsonValue>,
 
     #[serde(flatten)]
     pub ignored: Ignored<Self>,
@@ -451,7 +483,7 @@ pub struct TransformDetail {
 
 #[derive(Debug, Deserialize)]
 pub struct UnpackDetail {
-    pub group: Arc<str>, // TODO link item group
+    pub group: RequiredLinkedLater<ItemGroup>,
 
     #[serde(default)]
     pub items_fit: bool,

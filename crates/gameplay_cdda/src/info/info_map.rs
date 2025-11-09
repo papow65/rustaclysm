@@ -3,10 +3,11 @@ use crate::{Error, TypeId, info::parsed_json::Enriched};
 use bevy::platform::collections::HashMap;
 use bevy::prelude::{debug, error, warn};
 use cdda_json_files::{
-    Alternative, Bash, BashItem, BashItems, CharacterInfo, CommonItemInfo, FurnitureInfo, InfoId,
+    Alternative, AmmobeltDetail, Bash, BashItem, BashItems, CharacterInfo, CommonItemInfo,
+    ConsumeDrugDetail, DeployTentDetail, DetailedUseAction, FieldInfo, FurnitureInfo, InfoId,
     InfoIdDescription, ItemAction, ItemGroup, ItemMigration, ItemTypeDetails, ItemWithCommonInfo,
-    Link as _, LinkProvider, Quality, Recipe, RecipeResult, Requirement, TerrainInfo,
-    UntypedInfoId, VehiclePartInfo, VehiclePartMigration,
+    Link as _, LinkProvider, PlaceMonsterDetail, Quality, Recipe, RecipeResult, Requirement,
+    TerrainInfo, UnpackDetail, UntypedInfoId, UseAction, VehiclePartInfo, VehiclePartMigration,
 };
 use serde::de::DeserializeOwned;
 use serde_json::{Value as JsonValue, from_value as from_json_value};
@@ -91,12 +92,61 @@ impl InfoMap<CharacterInfo> {
 impl InfoMap<CommonItemInfo> {
     pub(super) fn link_common_items(
         &self,
+        characters: &InfoMap<CharacterInfo>,
+        fields: &InfoMap<FieldInfo>,
+        furniture: &InfoMap<FurnitureInfo>,
         item_actions: &InfoMap<ItemAction>,
+        item_groups: &InfoMap<ItemGroup>,
         qualities: &InfoMap<Quality>,
     ) {
         for common_item_info in self.map.values() {
             for use_action in &common_item_info.use_action.0 {
                 use_action.id().finalize(item_actions, "use_action");
+
+                if let UseAction::Typed(box_) = use_action {
+                    match &box_.details {
+                        DetailedUseAction::Ammobelt(AmmobeltDetail { belt, .. }) => {
+                            belt.finalize(self, "belt");
+                        }
+                        DetailedUseAction::ConsumeDrug(ConsumeDrugDetail {
+                            fields_produced,
+                            tools_needed,
+                            used_up_item,
+                            ..
+                        }) => {
+                            for (field, _) in fields_produced {
+                                field.finalize(fields, "consumed drug field");
+                            }
+                            for (tool, _) in tools_needed {
+                                tool.finalize(self, "consumed drug tool");
+                            }
+                            used_up_item.finalize(self, "consumed drug used up item");
+                        }
+                        DetailedUseAction::DeployTent(DeployTentDetail {
+                            door_closed,
+                            door_opened,
+                            floor,
+                            wall,
+                            floor_center,
+                            ..
+                        }) => {
+                            door_closed.finalize(furniture, "closed tent door");
+                            door_opened.finalize(furniture, "opened tent door");
+                            floor.finalize(furniture, "tent floor");
+                            wall.finalize(furniture, "tent wall");
+                            floor_center.finalize(furniture, "tent center");
+                        }
+                        DetailedUseAction::PlaceMonster(PlaceMonsterDetail {
+                            monster_id, ..
+                        }) => {
+                            monster_id.finalize(characters, "placed monster");
+                        }
+                        DetailedUseAction::Unpack(UnpackDetail { group, .. }) => {
+                            group.finalize(item_groups, "unpack");
+                        }
+                        _ => {}
+                    }
+                }
             }
             for quality in &common_item_info.qualities {
                 quality.id.finalize(qualities, "quality");

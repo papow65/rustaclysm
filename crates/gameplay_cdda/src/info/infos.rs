@@ -200,8 +200,14 @@ impl Infos {
 
     #[must_use]
     fn link_all(mut self) -> Self {
-        self.common_item_infos
-            .link_common_items(&self.item_actions, &self.qualities);
+        self.common_item_infos.link_common_items(
+            &self.characters,
+            &self.fields,
+            &self.furniture,
+            &self.item_actions,
+            &self.item_groups,
+            &self.qualities,
+        );
         self.furniture
             .link_furniture(&self.common_item_infos, &self.item_groups);
         self.qualities.link_qualities(&self.item_actions);

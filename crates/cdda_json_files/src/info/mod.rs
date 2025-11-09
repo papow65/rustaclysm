@@ -42,5 +42,11 @@ pub use self::recipe::{
 };
 pub use self::requirement::{CalculatedRequirement, Requirement};
 pub use self::terrain_info::{MoveCost, TerrainInfo};
-pub use self::use_action::UseAction;
+pub use self::use_action::{
+    AmmobeltDetail, AttachMolleDetail, CastSpellDetail, ChangeScentDetail, ConsumeDrugDetail,
+    DelayedTransformDetail, DeployFurnDetail, DeployTentDetail, DetailedUseAction,
+    EffectOnConditionsDetail, ExplosionDetail, FirestarterDetail, HealDetail, HolsterDetail,
+    InscribeDetail, ManualNoiseDetail, MusicDetail, PlaceMonsterDetail, PlaceTrapDetail,
+    RepairItemDetail, RevealMapDetail, TransformDetail, UnpackDetail, UseAction, WeighSelfDetail,
+};
 pub use self::vehicle_part_info::VehiclePartInfo;
