@@ -7,9 +7,9 @@ use bevy::picking::hover::{HoverMap, Hovered};
 use bevy::prelude::{
     BackgroundColor, Button, ButtonInput, Changed, ChildOf, Commands, ComputedNode, Entity, In,
     Interaction, KeyCode, MessageReader, Or, Query, Res, ScrollPosition, SystemInput,
-    UiGlobalTransform, UiScale, Vec2, With, World,
+    UiGlobalTransform, UiScale, Vec2, Visibility, With, World, error,
 };
-use bevy::ui_widgets::{CoreScrollbarDragState, CoreScrollbarThumb};
+use bevy::ui_widgets::{CoreScrollbarDragState, CoreScrollbarThumb, Scrollbar};
 use std::{fmt, mem::swap};
 
 pub(super) fn load_fonts(world: &mut World) {
@@ -101,6 +101,24 @@ fn max_scroll(node: &ComputedNode) -> Vec2 {
         (node.content_size.x - node.size.x).max(0.0) * node.inverse_scale_factor,
         (node.content_size.y - node.size.y).max(0.0) * node.inverse_scale_factor,
     )
+}
+
+pub(crate) fn toggle_scroll_bar(
+    mut bars: Query<(&mut Visibility, &Scrollbar)>,
+    computed_nodes: Query<&ComputedNode>,
+) {
+    for (mut visibility, scrollbar) in &mut bars {
+        let Ok(computed_node) = computed_nodes.get(scrollbar.target) else {
+            error!("Computed node of scroll bar not found");
+            continue;
+        };
+
+        *visibility = if max_scroll(computed_node).y == 0.0 {
+            Visibility::Hidden
+        } else {
+            Visibility::Inherited
+        };
+    }
 }
 
 pub(crate) fn update_scroll_thumb(

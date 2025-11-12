@@ -4,7 +4,8 @@ use bevy::picking::hover::Hovered;
 use bevy::prelude::{
     AlignItems, BorderRadius, Bundle, ChildOf, Children, Commands, Component, DespawnOnExit,
     Display, Entity, FlexDirection, JustifyContent, Node, Overflow, Pickable, PositionType,
-    RepeatedGridTrack, Spawn, SpawnRelated as _, States, UiRect, Val, WithOneRelated, children,
+    RepeatedGridTrack, Spawn, SpawnRelated as _, States, UiRect, Val, Visibility, WithOneRelated,
+    children,
 };
 use bevy::ui_widgets::{ControlOrientation, CoreScrollbarThumb, Scrollbar};
 use util::Maybe;
@@ -100,6 +101,7 @@ fn scroll_panel(
                     target: content_node,
                     min_thumb_length: 8.0,
                 },
+                Visibility::Hidden,
                 children![(
                     Node {
                         position_type: PositionType::Absolute,
