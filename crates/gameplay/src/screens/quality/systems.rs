@@ -2,15 +2,15 @@ use crate::screens::{find_nearby, find_nearby_pseudo, nearby_qualities};
 use crate::{BodyContainers, GameplayScreenState, Item, Player, Shared};
 use bevy::picking::Pickable;
 use bevy::prelude::{
-    AlignItems, AnyOf, Commands, DespawnOnExit, FlexDirection, JustifyContent, KeyCode, Local,
-    NextState, Node, Overflow, Query, Res, ResMut, Single, Text, UiRect, Val, With, World,
+    AnyOf, Commands, DespawnOnExit, KeyCode, Local, NextState, Query, Res, ResMut, Single, Text,
+    With, World,
 };
 use cdda_json_files::{FurnitureInfo, TerrainInfo};
 use gameplay_location::{LocationCache, Pos};
 use gameplay_model::LastSeen;
-use hud::{Fonts, GOOD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, WARN_TEXT_COLOR};
+use hud::{Fonts, GOOD_TEXT_COLOR, WARN_TEXT_COLOR, scroll_screen};
 use keyboard::KeyBindings;
-use manual::{LargeNode, ManualSection};
+use manual::ManualSection;
 use std::time::Instant;
 use util::{log_if_slow, uppercase_first};
 
@@ -26,65 +26,7 @@ pub(super) fn spawn_crafting_screen(
         &LastSeen,
     )>,
 ) {
-    let qualitiy_list = commands
-        .spawn((
-            Node {
-                width: Val::Percent(100.0),
-                height: Val::Percent(100.0),
-                flex_direction: FlexDirection::Column,
-                align_items: AlignItems::Start,
-                justify_content: JustifyContent::Start,
-                overflow: Overflow::scroll_y(),
-                ..Node::default()
-            },
-            Pickable::default(),
-        ))
-        .id();
-    commands
-        .spawn((
-            Node {
-                width: Val::Percent(100.0),
-                height: Val::Percent(100.0),
-                ..Node::default()
-            },
-            DespawnOnExit(GameplayScreenState::Quality),
-            Pickable::IGNORE,
-        ))
-        .with_children(|builder| {
-            builder
-                .spawn((
-                    Node {
-                        width: Val::Percent(100.0),
-                        height: Val::Auto,
-                        flex_direction: FlexDirection::Column,
-                        align_items: AlignItems::Start,
-                        justify_content: JustifyContent::Start,
-                        margin: UiRect::px(10.0, 365.0, 10.0, 10.0),
-                        padding: UiRect::all(SMALL_SPACING),
-                        overflow: Overflow::clip_y(),
-                        ..Node::default()
-                    },
-                    PANEL_COLOR,
-                    LargeNode,
-                    Pickable::IGNORE,
-                ))
-                .with_children(|builder| {
-                    builder
-                        .spawn((
-                            Node {
-                                width: Val::Percent(100.0),
-                                height: Val::Percent(100.0),
-                                flex_direction: FlexDirection::Row,
-                                align_items: AlignItems::Start,
-                                justify_content: JustifyContent::Start,
-                                overflow: Overflow::clip_y(),
-                                ..Node::default()
-                            },
-                            Pickable::IGNORE,
-                        ))
-                        .add_child(qualitiy_list);
-                });
-        });
+    let qualitiy_list = scroll_screen(&mut commands, GameplayScreenState::Quality);
 
     let (&player_pos, body_containers) = *player;
 

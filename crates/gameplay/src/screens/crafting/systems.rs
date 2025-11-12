@@ -10,10 +10,9 @@ use crate::{
 use bevy::ecs::{spawn::SpawnIter, system::SystemId};
 use bevy::platform::collections::{HashMap, HashSet};
 use bevy::prelude::{
-    AlignItems, AnyOf, Children, Commands, DespawnOnExit, Display, Entity, FlexDirection, In,
-    IntoSystem as _, JustifyContent, KeyCode, Local, NextState, Node, Overflow, Pickable, Query,
-    Res, ResMut, Single, SpawnRelated as _, Text, TextColor, UiRect, Val, With, World, children,
-    debug, error,
+    AnyOf, Children, Commands, DespawnOnExit, Display, Entity, In, IntoSystem as _, KeyCode, Local,
+    NextState, Node, Pickable, Query, Res, ResMut, Single, SpawnRelated as _, Text, TextColor,
+    With, World, children, debug, error,
 };
 use cdda_json_files::{
     Alternative, AutoLearn, BookLearn, BookLearnItem, CalculatedRequirement, CommonItemInfo,
@@ -25,11 +24,11 @@ use gameplay_cdda_active_sav::ActiveSav;
 use gameplay_location::{LocationCache, Pos};
 use gameplay_model::LastSeen;
 use hud::{
-    BAD_TEXT_COLOR, ButtonBuilder, Fonts, PANEL_COLOR, SMALL_SPACING, SelectionList,
-    SelectionListStep, WARN_TEXT_COLOR, scroll_to_selection,
+    BAD_TEXT_COLOR, ButtonBuilder, Fonts, SelectionList, SelectionListStep, WARN_TEXT_COLOR,
+    scroll_to_selection, selection_list_detail_screen,
 };
 use keyboard::{Held, KeyBindings};
-use manual::{LargeNode, ManualSection};
+use manual::ManualSection;
 use std::num::NonZeroU32;
 use std::{sync::Arc, time::Instant};
 use strum::VariantArray as _;
@@ -43,108 +42,12 @@ pub(super) fn create_start_craft_system(world: &mut World) -> StartCraftSystem {
     StartCraftSystem(world.register_system_cached(start_craft))
 }
 
-#[expect(clippy::needless_pass_by_value)]
 pub(super) fn spawn_crafting_screen(
     In(start_craft_system): In<StartCraftSystem>,
     mut commands: Commands,
-    fonts: Res<Fonts>,
 ) {
-    let recipe_list = commands
-        .spawn((
-            Node {
-                width: Val::Percent(100.0),
-                height: Val::Percent(100.0),
-                flex_direction: FlexDirection::Column,
-                align_items: AlignItems::Start,
-                justify_content: JustifyContent::Start,
-                overflow: Overflow::scroll_y(),
-                ..Node::default()
-            },
-            SelectionList::default(),
-            Pickable::default(),
-        ))
-        .id();
-    let recipe_details = commands
-        .spawn(Node {
-            width: Val::Percent(100.0),
-            height: Val::Percent(100.0),
-            flex_direction: FlexDirection::Column,
-            align_items: AlignItems::Start,
-            justify_content: JustifyContent::Start,
-            overflow: Overflow::scroll_y(),
-            ..Node::default()
-        })
-        .id();
-    commands
-        .spawn((
-            // Entire screen
-            Node {
-                width: Val::Percent(100.0),
-                height: Val::Percent(100.0),
-                ..Node::default()
-            },
-            DespawnOnExit(GameplayScreenState::Crafting),
-            Pickable::IGNORE,
-        ))
-        .with_children(|builder| {
-            builder
-                .spawn((
-                    // Panel
-                    Node {
-                        width: Val::Percent(100.0),
-                        flex_direction: FlexDirection::Column,
-                        align_items: AlignItems::Start,
-                        justify_content: JustifyContent::Start,
-                        margin: UiRect::px(10.0, 365.0, 10.0, 10.0),
-                        padding: UiRect::all(SMALL_SPACING),
-                        ..Node::default()
-                    },
-                    PANEL_COLOR,
-                    LargeNode,
-                    Pickable::IGNORE,
-                ))
-                .with_children(|builder| {
-                    builder
-                        .spawn(
-                            // Panel contents
-                            (
-                                Node {
-                                    width: Val::Percent(100.0),
-                                    height: Val::Percent(100.0),
-                                    flex_direction: FlexDirection::Row,
-                                    align_items: AlignItems::Start,
-                                    justify_content: JustifyContent::Start,
-                                    overflow: Overflow::clip_y(),
-                                    ..Node::default()
-                                },
-                                Pickable::IGNORE,
-                            ),
-                        )
-                        .with_children(|parent| {
-                            parent
-                                .spawn((
-                                    // Left column
-                                    Node {
-                                        width: Val::Percent(100.0),
-                                        height: Val::Percent(100.0),
-                                        flex_direction: FlexDirection::Column,
-                                        align_items: AlignItems::Start,
-                                        justify_content: JustifyContent::Start,
-                                        overflow: Overflow::clip_y(),
-                                        ..Node::default()
-                                    },
-                                    Pickable::IGNORE,
-                                    children![(
-                                        Text::from("Known recipies:"),
-                                        WARN_TEXT_COLOR,
-                                        fonts.regular(),
-                                    )],
-                                ))
-                                .add_child(recipe_list);
-                        })
-                        .add_child(recipe_details);
-                });
-        });
+    let (recipe_list, recipe_details) =
+        selection_list_detail_screen(&mut commands, GameplayScreenState::Crafting);
 
     commands.insert_resource(CraftingScreen::new(
         recipe_list,
@@ -226,14 +129,14 @@ pub(super) fn move_crafting_selection(
     if let Some(previous) = selection_list.previous_selected {
         let (text_color, recipe) = &mut recipes
             .get_mut(previous)
-            .expect("Previous highlighted recipe should ba found");
+            .expect("Previous highlighted recipe should be found");
         **text_color = recipe.color(false);
     }
 
     if let Some(selected) = selection_list.selected {
         let (text_color, recipe) = &mut recipes
             .get_mut(selected)
-            .expect("Highlighted recipe should ba found");
+            .expect("Highlighted recipe should be found");
         **text_color = recipe.color(true);
 
         show_recipe(&mut commands, &fonts, &crafting_screen, recipe);
@@ -324,6 +227,12 @@ pub(super) fn refresh_crafting_screen(
     commands
         .entity(crafting_screen.recipe_list)
         .with_children(|parent| {
+            parent.spawn((
+                Text::from("Known recipies:"),
+                WARN_TEXT_COLOR,
+                fonts.regular(),
+            ));
+
             for recipe in shown_recipes {
                 let first = selection_list.selected.is_none();
                 if first {

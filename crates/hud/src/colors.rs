@@ -23,12 +23,11 @@ pub const FILTHY_COLOR: TextColor = TextColor(Color::srgb(0.73, 0.4, 1.0));
 /// For liquids
 pub const BLUE_TEXT_COLOR: TextColor = TextColor(Color::srgb(0.25, 0.75, 1.0));
 
-// Button colors
-
 pub const DEFAULT_BUTTON_COLOR: BackgroundColor = BackgroundColor(Color::srgb(0.2, 0.2, 0.2));
 pub const HOVERED_BUTTON_COLOR: BackgroundColor = BackgroundColor(Color::srgb(0.25, 0.25, 0.25));
 
-// Panel colors
+pub const DEFAULT_SCROLLBAR_COLOR: BackgroundColor = BackgroundColor(Color::srgb(0.4, 0.4, 0.4));
+pub const HOVERED_SCROLLBAR_COLOR: BackgroundColor = BackgroundColor(Color::srgb(0.5, 0.5, 0.5));
 
 pub const PANEL_COLOR: BackgroundColor = BackgroundColor(Color::srgba(0.1, 0.1, 0.1, 0.85));
 

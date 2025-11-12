@@ -1,11 +1,15 @@
-use crate::{DEFAULT_BUTTON_COLOR, Fonts, HOVERED_BUTTON_COLOR, RunButton, SelectionList};
-use bevy::input::mouse::{MouseScrollUnit, MouseWheel};
-use bevy::picking::hover::HoverMap;
-use bevy::prelude::{
-    BackgroundColor, Button, ButtonInput, Changed, Commands, Entity, In, Interaction, KeyCode,
-    MessageReader, Query, Res, ScrollPosition, SystemInput, UiScale, UiTransform, Val, With, World,
-    error,
+use crate::{
+    DEFAULT_BUTTON_COLOR, DEFAULT_SCROLLBAR_COLOR, Fonts, HOVERED_BUTTON_COLOR,
+    HOVERED_SCROLLBAR_COLOR, RunButton, SelectionList,
 };
+use bevy::input::mouse::{MouseScrollUnit, MouseWheel};
+use bevy::picking::hover::{HoverMap, Hovered};
+use bevy::prelude::{
+    BackgroundColor, Button, ButtonInput, Changed, ChildOf, Commands, ComputedNode, Entity, In,
+    Interaction, KeyCode, MessageReader, Or, Query, Res, ScrollPosition, SystemInput,
+    UiGlobalTransform, UiScale, Vec2, With, World,
+};
+use bevy::ui_widgets::{CoreScrollbarDragState, CoreScrollbarThumb};
 use std::{fmt, mem::swap};
 
 pub(super) fn load_fonts(world: &mut World) {
@@ -61,7 +65,7 @@ pub(crate) fn update_scroll_position(
     mut mouse_wheel_events: MessageReader<MouseWheel>,
     hover_map: Res<HoverMap>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut scrolled_node_query: Query<&mut ScrollPosition>,
+    mut scrolled_node_query: Query<(&mut ScrollPosition, &ComputedNode)>,
 ) {
     const LINE_HEIGHT: f32 = 20.0;
 
@@ -82,11 +86,41 @@ pub(crate) fn update_scroll_position(
 
         for hit_data in hover_map.values() {
             for entity in hit_data.keys() {
-                if let Ok(mut scroll_position) = scrolled_node_query.get_mut(*entity) {
-                    scroll_position.x -= dx;
-                    scroll_position.y -= dy;
+                if let Ok((mut scroll_position, node)) = scrolled_node_query.get_mut(*entity) {
+                    let max_scroll = max_scroll(node);
+                    scroll_position.x = (scroll_position.x - dx).clamp(0.0, max_scroll.x);
+                    scroll_position.y = (scroll_position.y - dy).clamp(0.0, max_scroll.y);
                 }
             }
+        }
+    }
+}
+
+fn max_scroll(node: &ComputedNode) -> Vec2 {
+    Vec2::new(
+        (node.content_size.x - node.size.x).max(0.0) * node.inverse_scale_factor,
+        (node.content_size.y - node.size.y).max(0.0) * node.inverse_scale_factor,
+    )
+}
+
+pub(crate) fn update_scroll_thumb(
+    mut q_thumb: Query<
+        (&mut BackgroundColor, &Hovered, &CoreScrollbarDragState),
+        (
+            With<CoreScrollbarThumb>,
+            Or<(Changed<Hovered>, Changed<CoreScrollbarDragState>)>,
+        ),
+    >,
+) {
+    for (mut thumb_bg, Hovered(is_hovering), drag) in &mut q_thumb {
+        let color = if *is_hovering || drag.dragging {
+            HOVERED_SCROLLBAR_COLOR
+        } else {
+            DEFAULT_SCROLLBAR_COLOR
+        };
+
+        if *thumb_bg != color {
+            *thumb_bg = color;
         }
     }
 }
@@ -95,28 +129,33 @@ pub(crate) fn update_scroll_position(
 pub fn scroll_to_selection(
     In(selection_list): In<Entity>,
     ui_scale: Res<UiScale>,
-    mut scroll_lists: Query<(&SelectionList, &mut ScrollPosition)>,
-    transforms: Query<&UiTransform>,
+    mut scroll_lists: Query<(&SelectionList, &ComputedNode, &mut ScrollPosition)>,
+    parents: Query<&ChildOf>,
+    global_transforms: Query<&UiGlobalTransform>,
 ) {
-    let (selection_list, mut scroll_position) = scroll_lists
+    // The middle of the list is also the middle of the screen. This makes using `GlobalTransform` convenient.
+
+    let (selection_list, selection_node, mut scroll_position) = scroll_lists
         .get_mut(selection_list)
         .expect("The selection list entity should be found");
 
     if let Some(selected) = selection_list.selected {
-        let selected_transform = transforms
+        let transation = global_transforms
             .get(selected)
-            .expect("Selected item should be found");
+            .expect("Selected item should have a global transform")
+            .translation;
 
-        let Val::Px(y_transation) = selected_transform.translation.y else {
-            error!(
-                "Expected pixel value for vertical translation, but got {:?}",
-                selected_transform.translation.y
-            );
+        let parent = parents
+            .get(selected)
+            .expect("Selected item should have a parent")
+            .parent();
+        let parent_transation = global_transforms
+            .get(parent)
+            .expect("Parent of selected item should have a global transform")
+            .translation;
 
-            return;
-        };
-
-        // The translation is already offset by the scroll position, so we can use this:
-        scroll_position.y += y_transation / ui_scale.0;
+        let max_scroll = max_scroll(selection_node);
+        scroll_position.y = (scroll_position.y + (transation.y - parent_transation.y) / ui_scale.0)
+            .clamp(0.0, max_scroll.y);
     }
 }

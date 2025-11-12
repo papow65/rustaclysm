@@ -27,7 +27,7 @@ use gameplay_location::{Pos, StairsDown, StairsUp};
 use gameplay_model::LastSeen;
 use hud::{
     BAD_TEXT_COLOR, Fonts, HARD_TEXT_COLOR, PANEL_COLOR, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
-    panel_node, text_color_expect_half,
+    text_color_expect_half,
 };
 use std::{iter::once, time::Instant};
 use util::{Maybe, log_if_slow};
@@ -42,7 +42,9 @@ pub(super) fn spawn_sidebar(mut commands: Commands, fonts: Res<Fonts>) {
             right: Val::Px(0.0),
             width: Val::Px(TEXT_WIDTH + 10.0), // 5px margin on both sides
             height: Val::Percent(100.0),
-            ..panel_node()
+            position_type: PositionType::Absolute,
+            padding: UiRect::all(Val::Px(5.0)),
+            ..Node::default()
         },
         PANEL_COLOR,
         DespawnOnExit(ApplicationState::Gameplay),

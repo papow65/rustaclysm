@@ -8,20 +8,19 @@ use crate::{
     Unwield, Wield,
 };
 use bevy::ecs::{entity::hash_map::EntityHashMap, system::SystemId};
-use bevy::picking::Pickable;
 use bevy::platform::collections::HashMap;
 use bevy::prelude::{
-    AlignItems, BackgroundColor, Button, Children, Commands, DespawnOnExit, Display, Entity,
-    FlexDirection, In, IntoSystem as _, JustifyContent, KeyCode, Local, NextState, Node, Overflow,
-    Query, Res, ResMut, Single, Text, TextColor, TextSpan, UiRect, Val, With, World, debug, error,
+    BackgroundColor, Button, Children, Commands, DespawnOnExit, Display, Entity, In,
+    IntoSystem as _, KeyCode, Local, NextState, Node, Query, Res, ResMut, Single, Text, TextColor,
+    TextSpan, With, World, debug, error,
 };
 use gameplay_location::{HorizontalDirection, Nbor, Pos};
 use hud::{
-    Fonts, HARD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, SOFT_TEXT_COLOR, SelectionList,
-    SelectionListStep, scroll_to_selection,
+    Fonts, HARD_TEXT_COLOR, SOFT_TEXT_COLOR, SelectionList, SelectionListStep, scroll_screen,
+    scroll_to_selection,
 };
 use keyboard::{Held, KeyBindings};
-use manual::{LargeNode, ManualSection};
+use manual::ManualSection;
 use std::time::Instant;
 use strum::VariantArray as _;
 use units::Timestamp;
@@ -41,51 +40,8 @@ pub(super) fn create_inventory_system(world: &mut World) -> InventorySystem {
 }
 
 pub(super) fn spawn_inventory(In(inventory_system): In<InventorySystem>, mut commands: Commands) {
-    let panel = commands
-        .spawn((
-            Node {
-                width: Val::Percent(100.0),
-                height: Val::Percent(100.0),
-                flex_direction: FlexDirection::Column,
-                align_items: AlignItems::Start,
-                justify_content: JustifyContent::Start,
-                overflow: Overflow::scroll_y(),
-                ..Node::default()
-            },
-            SelectionList::default(),
-            Pickable::default(),
-        ))
-        .id();
-    commands
-        .spawn((
-            Node {
-                width: Val::Percent(100.0),
-                height: Val::Percent(100.0),
-                ..Node::default()
-            },
-            DespawnOnExit(GameplayScreenState::Inventory),
-            Pickable::IGNORE,
-        ))
-        .with_children(|builder| {
-            builder
-                .spawn((
-                    Node {
-                        width: Val::Percent(100.0),
-                        height: Val::Auto,
-                        flex_direction: FlexDirection::Column,
-                        align_items: AlignItems::Start,
-                        justify_content: JustifyContent::Start,
-                        margin: UiRect::px(10.0, 365.0, 10.0, 10.0),
-                        padding: UiRect::all(SMALL_SPACING),
-                        overflow: Overflow::clip_y(),
-                        ..Node::default()
-                    },
-                    PANEL_COLOR,
-                    LargeNode,
-                    Pickable::IGNORE,
-                ))
-                .add_child(panel);
-        });
+    let panel = scroll_screen(&mut commands, GameplayScreenState::Inventory);
+    commands.entity(panel).insert(SelectionList::default());
 
     commands.insert_resource(InventoryScreen::new(
         panel,

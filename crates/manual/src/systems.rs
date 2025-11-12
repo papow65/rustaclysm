@@ -1,10 +1,10 @@
 use crate::ManualSection;
-use crate::components::{LargeNode, ManualDisplay, ManualText};
+use crate::components::{ManualDisplay, ManualText};
 use bevy::prelude::{
-    Alpha as _, BackgroundColor, Changed, Commands, GlobalZIndex, Node, Query, RemovedComponents,
-    Res, Text, Val, With, error,
+    Alpha as _, BackgroundColor, Changed, Commands, GlobalZIndex, Node, PositionType, Query,
+    RemovedComponents, Res, Text, UiRect, Val, With, error,
 };
-use hud::{Fonts, PANEL_COLOR, SOFT_TEXT_COLOR, panel_node};
+use hud::{Fonts, LargeNode, PANEL_COLOR, SOFT_TEXT_COLOR};
 
 #[expect(clippy::needless_pass_by_value)]
 pub(super) fn spawn_manual(mut commands: Commands, fonts: Res<Fonts>) {
@@ -13,7 +13,9 @@ pub(super) fn spawn_manual(mut commands: Commands, fonts: Res<Fonts>) {
             Node {
                 bottom: Val::Px(0.0),
                 left: Val::Px(0.0),
-                ..panel_node()
+                position_type: PositionType::Absolute,
+                padding: UiRect::all(Val::Px(5.0)),
+                ..Node::default()
             },
             PANEL_COLOR,
             GlobalZIndex(2),
