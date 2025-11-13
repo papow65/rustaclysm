@@ -1,9 +1,8 @@
 use crate::{DEFAULT_SCROLLBAR_COLOR, PANEL_COLOR, SMALL_SPACING, SelectionList};
-use bevy::ecs::spawn::{SpawnRelatedBundle, SpawnableList};
 use bevy::picking::hover::Hovered;
 use bevy::prelude::{
-    AlignItems, BorderRadius, Bundle, ChildOf, Children, Commands, Component, DespawnOnExit,
-    Display, Entity, FlexDirection, JustifyContent, Node, Overflow, Pickable, PositionType,
+    AlignItems, BorderRadius, Bundle, Children, Commands, Component, DespawnOnExit, Display,
+    Entity, FlexDirection, JustifyContent, Node, Overflow, Pickable, PositionType,
     RepeatedGridTrack, Spawn, SpawnRelated as _, States, UiRect, Val, Visibility, WithOneRelated,
     children,
 };
@@ -26,7 +25,7 @@ pub fn selection_list_detail_screen<S: States>(
     let (list_panel, list_entity) = scroll_panel(commands, Some(SelectionList::default()));
     let (detail_panel, detail_entity) = scroll_panel(commands, None);
 
-    let content_panel = children![(
+    let content_panel = Spawn((
         Node {
             width: Val::Percent(100.0),
             height: Val::Percent(100.0),
@@ -36,8 +35,8 @@ pub fn selection_list_detail_screen<S: States>(
             ..Node::default()
         },
         Pickable::IGNORE,
-        Children::spawn((list_panel, detail_panel))
-    )];
+        Children::spawn((list_panel, detail_panel)),
+    ));
 
     spawn_root(commands, state, content_panel);
 
@@ -48,7 +47,7 @@ pub fn selection_list_detail_screen<S: States>(
 pub fn scroll_screen<S: States>(commands: &mut Commands, state: S) -> Entity {
     let (main_panel, content_entity) = scroll_panel(commands, None);
 
-    spawn_root(commands, state, Children::spawn(main_panel));
+    spawn_root(commands, state, main_panel);
 
     content_entity
 }
@@ -119,11 +118,7 @@ fn scroll_panel(
     (main_panel, content_node)
 }
 
-fn spawn_root<L: SpawnableList<ChildOf> + Send + Sync + 'static, S: States>(
-    commands: &mut Commands,
-    state: S,
-    content_panel: SpawnRelatedBundle<ChildOf, L>,
-) {
+fn spawn_root(commands: &mut Commands, state: impl States, content_panel: Spawn<impl Bundle>) {
     commands.spawn((
         // Entire screen
         Node {
@@ -144,7 +139,7 @@ fn spawn_root<L: SpawnableList<ChildOf> + Send + Sync + 'static, S: States>(
             PANEL_COLOR,
             LargeNode,
             Pickable::IGNORE,
-            content_panel
+            Children::spawn(content_panel)
         )],
     ));
 }
