@@ -18,12 +18,14 @@ const SCREEN_MARGINS: UiRect = UiRect::px(10.0, 365.0, 10.0, 10.0);
 const SMALL_PADDING: UiRect = UiRect::all(SMALL_SPACING);
 
 /// Returns the entities of the list node and the detail node
+#[must_use]
 pub fn selection_list_detail_screen<S: States>(
     commands: &mut Commands,
     state: S,
 ) -> (Entity, Entity) {
-    let (list_panel, list_entity) = scroll_panel(commands, Some(SelectionList::default()));
-    let (detail_panel, detail_entity) = scroll_panel(commands, None);
+    let (list_panel, list_entity) =
+        scroll_panel_with_content_entity(commands, Some(SelectionList::default()));
+    let (detail_panel, detail_entity) = scroll_panel_with_content_entity(commands, None);
 
     let content_panel = Spawn((
         Node {
@@ -50,19 +52,21 @@ pub fn selection_list_detail_screen<S: States>(
 }
 
 /// Returns the entity of the content node
+#[must_use]
 pub fn scroll_screen<S: States>(commands: &mut Commands, state: S) -> Entity {
-    let (main_panel, content_entity) = scroll_panel(commands, None);
+    let (main_panel, content_entity) = scroll_panel_with_content_entity(commands, None);
 
     spawn_root(commands, state, main_panel);
 
     content_entity
 }
 
-fn scroll_panel(
+#[must_use]
+fn scroll_panel_with_content_entity(
     commands: &mut Commands,
     selection_list: Option<SelectionList>,
 ) -> (Spawn<impl Bundle>, Entity) {
-    let content_node = commands
+    let content_entity = commands
         .spawn((
             Node {
                 flex_direction: FlexDirection::Column,
@@ -77,7 +81,12 @@ fn scroll_panel(
         ))
         .id();
 
-    let main_panel = Spawn((
+    (scroll_panel(content_entity), content_entity)
+}
+
+#[must_use]
+pub fn scroll_panel(content_entity: Entity) -> Spawn<impl Bundle> {
+    Spawn((
         Node {
             width: Val::Percent(100.0),
             display: Display::Grid,
@@ -92,7 +101,7 @@ fn scroll_panel(
         },
         Pickable::IGNORE,
         Children::spawn((
-            WithOneRelated(content_node),
+            WithOneRelated(content_entity),
             Spawn((
                 Node {
                     width: Val::Px(8.0),
@@ -100,7 +109,7 @@ fn scroll_panel(
                 },
                 Scrollbar {
                     orientation: ControlOrientation::Vertical,
-                    target: content_node,
+                    target: content_entity,
                     min_thumb_length: 8.0,
                 },
                 Visibility::Hidden,
@@ -116,9 +125,7 @@ fn scroll_panel(
                 )],
             )),
         )),
-    ));
-
-    (main_panel, content_node)
+    ))
 }
 
 fn spawn_root(commands: &mut Commands, state: impl States, content_panel: Spawn<impl Bundle>) {

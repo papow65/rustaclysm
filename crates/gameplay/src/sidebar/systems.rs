@@ -28,7 +28,7 @@ use gameplay_location::{Pos, StairsDown, StairsUp};
 use gameplay_model::LastSeen;
 use hud::{
     BAD_TEXT_COLOR, Fonts, HARD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, SOFT_TEXT_COLOR,
-    WARN_TEXT_COLOR, text_color_expect_half,
+    WARN_TEXT_COLOR, scroll_panel, text_color_expect_half,
 };
 use std::{iter::once, time::Instant};
 use util::{Maybe, log_if_slow};
@@ -37,6 +37,9 @@ const TEXT_WIDTH: f32 = 8.0 * 43.0; // 43 chars
 
 #[expect(clippy::needless_pass_by_value)]
 pub(super) fn spawn_sidebar(mut commands: Commands, fonts: Res<Fonts>) {
+    let status = status_display(&mut commands, &fonts);
+    let log = log_display(&mut commands, &fonts);
+
     commands.spawn((
         Node {
             position_type: PositionType::Absolute,
@@ -68,96 +71,94 @@ pub(super) fn spawn_sidebar(mut commands: Commands, fonts: Res<Fonts>) {
         PANEL_COLOR,
         DespawnOnExit(ApplicationState::Gameplay),
         Pickable::IGNORE,
-        Children::spawn((status_display(&fonts), log_display(&fonts))),
+        Children::spawn((status, log)),
     ));
 }
 
-fn status_display(fonts: &Fonts) -> Spawn<impl Bundle> {
-    Spawn((
-        Node {
-            margin: UiRect::all(Val::Px(5.0)),
-            flex_direction: FlexDirection::Column,
-            align_items: AlignItems::Start,
-            justify_content: JustifyContent::Start,
-            overflow: Overflow::scroll_y(),
-            ..Node::default()
-        },
-        children![
-            (Text::default(), SOFT_TEXT_COLOR, fonts.regular(), FpsText),
-            (Text::default(), SOFT_TEXT_COLOR, fonts.regular(), TimeText),
-            (
-                Text::default(),
-                SOFT_TEXT_COLOR,
-                fonts.regular(),
-                HealthText,
-                children![(TextSpan::new("% health"), SOFT_TEXT_COLOR, fonts.regular())]
-            ),
-            (
-                Text::default(),
-                SOFT_TEXT_COLOR,
-                fonts.regular(),
-                StaminaText,
-                children![(TextSpan::new("% stamina"), SOFT_TEXT_COLOR, fonts.regular())]
-            ),
-            (
-                Text::default(),
-                SOFT_TEXT_COLOR,
-                fonts.regular(),
-                BreathText,
-                children![
-                    (
-                        TextSpan::default(),
-                        SOFT_TEXT_COLOR,
-                        fonts.regular(),
-                        WalkingModeTextSpan,
-                    ),
-                    (TextSpan::new(" ("), SOFT_TEXT_COLOR, fonts.regular()),
-                    (
-                        TextSpan::default(),
-                        SOFT_TEXT_COLOR,
-                        fonts.regular(),
-                        SpeedTextSpan,
-                    ),
-                    (TextSpan::new(" km/h)"), SOFT_TEXT_COLOR, fonts.regular())
-                ]
-            ),
-            (
-                Text::default(),
-                SOFT_TEXT_COLOR,
-                fonts.regular(),
-                PlayerActionStateText,
-            ),
-            (
-                Text::new("Weapon: "),
-                SOFT_TEXT_COLOR,
-                fonts.regular(),
-                WieldedText,
-            ),
-            (
-                Text::default(),
-                SOFT_TEXT_COLOR,
-                fonts.regular(),
-                EnemiesText,
-            ),
-            (
-                Text::default(),
-                SOFT_TEXT_COLOR,
-                fonts.regular(),
-                DetailsText,
-            )
-        ],
-    ))
+fn status_display(commands: &mut Commands, fonts: &Fonts) -> Spawn<impl Bundle> {
+    let status_entity = commands
+        .spawn((
+            Node {
+                margin: UiRect::all(Val::Px(5.0)),
+                flex_direction: FlexDirection::Column,
+                align_items: AlignItems::Start,
+                justify_content: JustifyContent::Start,
+                overflow: Overflow::scroll_y(),
+                ..Node::default()
+            },
+            children![
+                (Text::default(), SOFT_TEXT_COLOR, fonts.regular(), FpsText),
+                (Text::default(), SOFT_TEXT_COLOR, fonts.regular(), TimeText),
+                (
+                    Text::default(),
+                    SOFT_TEXT_COLOR,
+                    fonts.regular(),
+                    HealthText,
+                    children![(TextSpan::new("% health"), SOFT_TEXT_COLOR, fonts.regular())]
+                ),
+                (
+                    Text::default(),
+                    SOFT_TEXT_COLOR,
+                    fonts.regular(),
+                    StaminaText,
+                    children![(TextSpan::new("% stamina"), SOFT_TEXT_COLOR, fonts.regular())]
+                ),
+                (
+                    Text::default(),
+                    SOFT_TEXT_COLOR,
+                    fonts.regular(),
+                    BreathText,
+                    children![
+                        (
+                            TextSpan::default(),
+                            SOFT_TEXT_COLOR,
+                            fonts.regular(),
+                            WalkingModeTextSpan,
+                        ),
+                        (TextSpan::new(" ("), SOFT_TEXT_COLOR, fonts.regular()),
+                        (
+                            TextSpan::default(),
+                            SOFT_TEXT_COLOR,
+                            fonts.regular(),
+                            SpeedTextSpan,
+                        ),
+                        (TextSpan::new(" km/h)"), SOFT_TEXT_COLOR, fonts.regular())
+                    ]
+                ),
+                (
+                    Text::default(),
+                    SOFT_TEXT_COLOR,
+                    fonts.regular(),
+                    PlayerActionStateText,
+                ),
+                (
+                    Text::new("Weapon: "),
+                    SOFT_TEXT_COLOR,
+                    fonts.regular(),
+                    WieldedText,
+                ),
+                (
+                    Text::default(),
+                    SOFT_TEXT_COLOR,
+                    fonts.regular(),
+                    EnemiesText,
+                ),
+                (
+                    Text::default(),
+                    SOFT_TEXT_COLOR,
+                    fonts.regular(),
+                    DetailsText,
+                )
+            ],
+        ))
+        .id();
+
+    scroll_panel(status_entity)
 }
 
-fn log_display(fonts: &Fonts) -> Spawn<impl Bundle> {
-    // TODO properly use flex layout
-    Spawn((
-        Node {
-            margin: UiRect::all(Val::Px(5.0)),
-            ..Node::default()
-        },
-        Pickable::IGNORE,
-        children![(
+fn log_display(commands: &mut Commands, fonts: &Fonts) -> Spawn<impl Bundle> {
+    let log_entity = commands
+        .spawn((
             Node {
                 width: Val::Percent(100.0),
                 height: Val::Percent(100.0),
@@ -183,9 +184,11 @@ fn log_display(fonts: &Fonts) -> Spawn<impl Bundle> {
                     Pickable::IGNORE,
                     LogDisplay,
                 )]
-            ),],
-        ),],
-    ))
+            )],
+        ))
+        .id();
+
+    scroll_panel(log_entity)
 }
 
 pub(super) fn update_sidebar_systems() -> ScheduleConfigs<ScheduleSystem> {

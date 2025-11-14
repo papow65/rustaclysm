@@ -17,7 +17,7 @@ pub use self::colors::{
 };
 pub use self::fonts::Fonts;
 pub use self::plugin::HudPlugin;
-pub use self::screen::{LargeNode, scroll_screen, selection_list_detail_screen};
+pub use self::screen::{LargeNode, scroll_panel, scroll_screen, selection_list_detail_screen};
 pub use self::selection_list::{SelectionList, SelectionListStep};
 pub use self::spacing::{LARGE_SPACING, MEDIUM_SPACING, SMALL_SPACING};
 pub use self::systems::{manage_button_input, scroll_to_selection, trigger_button_action};
