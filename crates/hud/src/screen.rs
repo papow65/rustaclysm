@@ -29,7 +29,13 @@ pub fn selection_list_detail_screen<S: States>(
         Node {
             width: Val::Percent(100.0),
             height: Val::Percent(100.0),
-            flex_direction: FlexDirection::Row,
+            display: Display::Grid,
+            grid_template_columns: vec![
+                RepeatedGridTrack::flex(1, 1.0),
+                RepeatedGridTrack::flex(1, 3.0),
+            ],
+            grid_template_rows: vec![RepeatedGridTrack::auto(1)],
+            column_gap: SMALL_SPACING,
             align_items: AlignItems::Start,
             justify_content: JustifyContent::Start,
             ..Node::default()
@@ -82,7 +88,7 @@ fn scroll_panel(
                 RepeatedGridTrack::flex(1, 1.0),
                 RepeatedGridTrack::auto(1),
             ],
-            grid_template_rows: vec![RepeatedGridTrack::flex(1, 1.0)],
+            grid_template_rows: vec![RepeatedGridTrack::auto(1)],
             column_gap: SMALL_SPACING,
             overflow: Overflow::clip_y(),
             ..Node::default()
