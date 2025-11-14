@@ -16,11 +16,12 @@ use bevy::diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin};
 use bevy::ecs::{hierarchy::Children, schedule::ScheduleConfigs, system::ScheduleSystem};
 use bevy::picking::Pickable;
 use bevy::prelude::{
-    AlignItems, Changed, ChildOf, Commands, ComputedNode, DespawnOnExit, DetectChanges as _,
-    Entity, EntityCommands, FlexDirection, FlexWrap, IntoScheduleConfigs as _, JustifyContent,
+    AlignItems, Bundle, Changed, ChildOf, Commands, ComputedNode, DespawnOnExit,
+    DetectChanges as _, Entity, FlexDirection, FlexWrap, IntoScheduleConfigs as _, JustifyContent,
     MessageReader, Node, Or, Overflow, ParamSet, PositionType, Query, Res, ScrollPosition, Single,
-    SpawnRelated as _, State, SystemCondition as _, Text, TextColor, TextSpan, UiRect, Val, Vec2,
-    Visibility, With, Without, children, on_message, resource_exists, resource_exists_and_changed,
+    Spawn, SpawnRelated as _, State, SystemCondition as _, Text, TextColor, TextSpan, UiRect, Val,
+    Vec2, Visibility, With, Without, children, on_message, resource_exists,
+    resource_exists_and_changed,
 };
 use cdda_json_files::{CharacterInfo, MoveCost};
 use gameplay_location::{Pos, StairsDown, StairsUp};
@@ -36,7 +37,7 @@ const TEXT_WIDTH: f32 = 8.0 * 43.0; // 43 chars
 
 #[expect(clippy::needless_pass_by_value)]
 pub(super) fn spawn_sidebar(mut commands: Commands, fonts: Res<Fonts>) {
-    let mut parent = commands.spawn((
+    commands.spawn((
         Node {
             top: Val::Px(0.0),
             right: Val::Px(0.0),
@@ -49,153 +50,137 @@ pub(super) fn spawn_sidebar(mut commands: Commands, fonts: Res<Fonts>) {
         PANEL_COLOR,
         DespawnOnExit(ApplicationState::Gameplay),
         Pickable::IGNORE,
+        Children::spawn((status_display(&fonts), log_display(&fonts))),
     ));
-
-    spawn_status_display(&fonts, &mut parent);
-    spawn_log_display(&fonts, &mut parent);
 }
 
-fn spawn_status_display(fonts: &Fonts, parent: &mut EntityCommands) {
-    parent.with_children(|child_builder| {
-        child_builder
-            .spawn(Node {
-                position_type: PositionType::Absolute,
-                top: Val::Px(0.0),
-                left: Val::Px(0.0),
-                width: Val::Px(TEXT_WIDTH),
-                height: Val::Percent(100.0),
-                margin: UiRect::all(Val::Px(5.0)),
-                flex_direction: FlexDirection::Column,
-                align_items: AlignItems::Start,
-                justify_content: JustifyContent::Start,
-                ..Node::default()
-            })
-            .with_children(|parent| {
-                parent.spawn((Text::default(), SOFT_TEXT_COLOR, fonts.regular(), FpsText));
-                parent.spawn((Text::default(), SOFT_TEXT_COLOR, fonts.regular(), TimeText));
-                parent
-                    .spawn((
-                        Text::default(),
+fn status_display(fonts: &Fonts) -> Spawn<impl Bundle> {
+    Spawn((
+        Node {
+            position_type: PositionType::Absolute,
+            top: Val::Px(0.0),
+            left: Val::Px(0.0),
+            width: Val::Px(TEXT_WIDTH),
+            height: Val::Percent(100.0),
+            margin: UiRect::all(Val::Px(5.0)),
+            flex_direction: FlexDirection::Column,
+            align_items: AlignItems::Start,
+            justify_content: JustifyContent::Start,
+            ..Node::default()
+        },
+        children![
+            (Text::default(), SOFT_TEXT_COLOR, fonts.regular(), FpsText),
+            (Text::default(), SOFT_TEXT_COLOR, fonts.regular(), TimeText),
+            (
+                Text::default(),
+                SOFT_TEXT_COLOR,
+                fonts.regular(),
+                HealthText,
+                children![(TextSpan::new("% health"), SOFT_TEXT_COLOR, fonts.regular())]
+            ),
+            (
+                Text::default(),
+                SOFT_TEXT_COLOR,
+                fonts.regular(),
+                StaminaText,
+                children![(TextSpan::new("% stamina"), SOFT_TEXT_COLOR, fonts.regular())]
+            ),
+            (
+                Text::default(),
+                SOFT_TEXT_COLOR,
+                fonts.regular(),
+                BreathText,
+                children![
+                    (
+                        TextSpan::default(),
                         SOFT_TEXT_COLOR,
                         fonts.regular(),
-                        HealthText,
-                    ))
-                    .with_children(|parent| {
-                        parent.spawn((TextSpan::new("% health"), SOFT_TEXT_COLOR, fonts.regular()));
-                    });
-                parent
-                    .spawn((
-                        Text::default(),
+                        WalkingModeTextSpan,
+                    ),
+                    (TextSpan::new(" ("), SOFT_TEXT_COLOR, fonts.regular()),
+                    (
+                        TextSpan::default(),
                         SOFT_TEXT_COLOR,
                         fonts.regular(),
-                        StaminaText,
-                    ))
-                    .with_children(|parent| {
-                        parent.spawn((
-                            TextSpan::new("% stamina"),
-                            SOFT_TEXT_COLOR,
-                            fonts.regular(),
-                        ));
-                    });
-                parent
-                    .spawn((
-                        Text::default(),
-                        SOFT_TEXT_COLOR,
-                        fonts.regular(),
-                        BreathText,
-                    ))
-                    .with_children(|parent| {
-                        parent.spawn((
-                            TextSpan::default(),
-                            SOFT_TEXT_COLOR,
-                            fonts.regular(),
-                            WalkingModeTextSpan,
-                        ));
-                        parent.spawn((TextSpan::new(" ("), SOFT_TEXT_COLOR, fonts.regular()));
-                        parent.spawn((
-                            TextSpan::default(),
-                            SOFT_TEXT_COLOR,
-                            fonts.regular(),
-                            SpeedTextSpan,
-                        ));
-                        parent.spawn((TextSpan::new(" km/h)"), SOFT_TEXT_COLOR, fonts.regular()));
-                    });
-                parent.spawn((
-                    Text::default(),
-                    SOFT_TEXT_COLOR,
-                    fonts.regular(),
-                    PlayerActionStateText,
-                ));
-                parent.spawn((
-                    Text::new("Weapon: "),
-                    SOFT_TEXT_COLOR,
-                    fonts.regular(),
-                    WieldedText,
-                ));
-                parent.spawn((
-                    Text::default(),
-                    SOFT_TEXT_COLOR,
-                    fonts.regular(),
-                    EnemiesText,
-                ));
-                parent.spawn((
-                    Text::default(),
-                    SOFT_TEXT_COLOR,
-                    fonts.regular(),
-                    DetailsText,
-                ));
-            });
-    });
+                        SpeedTextSpan,
+                    ),
+                    (TextSpan::new(" km/h)"), SOFT_TEXT_COLOR, fonts.regular())
+                ]
+            ),
+            (
+                Text::default(),
+                SOFT_TEXT_COLOR,
+                fonts.regular(),
+                PlayerActionStateText,
+            ),
+            (
+                Text::new("Weapon: "),
+                SOFT_TEXT_COLOR,
+                fonts.regular(),
+                WieldedText,
+            ),
+            (
+                Text::default(),
+                SOFT_TEXT_COLOR,
+                fonts.regular(),
+                EnemiesText,
+            ),
+            (
+                Text::default(),
+                SOFT_TEXT_COLOR,
+                fonts.regular(),
+                DetailsText,
+            )
+        ],
+    ))
 }
 
-fn spawn_log_display(fonts: &Fonts, parent: &mut EntityCommands) {
+fn log_display(fonts: &Fonts) -> Spawn<impl Bundle> {
     // TODO properly use flex layout
-    parent.with_children(|child_builder| {
-        child_builder.spawn((
+    Spawn((
+        Node {
+            position_type: PositionType::Absolute,
+            bottom: Val::Px(0.0),
+            left: Val::Px(0.0),
+            width: Val::Px(TEXT_WIDTH),
+            height: Val::Px(20.0 * 16.0),
+            margin: UiRect::all(Val::Px(5.0)),
+            ..Node::default()
+        },
+        Pickable::IGNORE,
+        //bevy::prelude::BackgroundColor(bevy::prelude::Srgba::RED.with_alpha(0.4).into()),
+        children![(
             Node {
-                position_type: PositionType::Absolute,
-                bottom: Val::Px(0.0),
-                left: Val::Px(0.0),
-                width: Val::Px(TEXT_WIDTH),
-                height: Val::Px(20.0 * 16.0),
-                margin: UiRect::all(Val::Px(5.0)),
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                overflow: Overflow::scroll_y(),
+                // align_items: AlignItems::End, // TODO This looks better, but it breaks scrolling.
                 ..Node::default()
             },
-            Pickable::IGNORE,
-            //bevy::prelude::BackgroundColor(bevy::prelude::Srgba::RED.with_alpha(0.4).into()),
+            Pickable::default(),
+            //bevy::prelude::BackgroundColor(bevy::prelude::Srgba::GREEN.with_alpha(0.4).into()),
             children![(
                 Node {
                     width: Val::Percent(100.0),
                     height: Val::Percent(100.0),
-                    overflow: Overflow::scroll_y(),
-                    // align_items: AlignItems::End, // TODO This looks better, but it breaks scrolling.
                     ..Node::default()
                 },
-                Pickable::default(),
-                //bevy::prelude::BackgroundColor(bevy::prelude::Srgba::GREEN.with_alpha(0.4).into()),
+                Pickable::IGNORE,
+                //bevy::prelude::BackgroundColor(bevy::prelude::Srgba::RED.with_alpha(0.4).into()),
                 children![(
+                    Text::default(),
+                    fonts.regular(),
                     Node {
-                        width: Val::Percent(100.0),
-                        height: Val::Percent(100.0),
+                        flex_wrap: FlexWrap::Wrap,
                         ..Node::default()
                     },
+                    //bevy::prelude::BackgroundColor(bevy::prelude::Srgba::BLUE.with_alpha(0.4).into()),
                     Pickable::IGNORE,
-                    //bevy::prelude::BackgroundColor(bevy::prelude::Srgba::RED.with_alpha(0.4).into()),
-                    children![(
-                        Text::default(),
-                        fonts.regular(),
-                        Node {
-                            flex_wrap: FlexWrap::Wrap,
-                            ..Node::default()
-                        },
-                        //bevy::prelude::BackgroundColor(bevy::prelude::Srgba::BLUE.with_alpha(0.4).into()),
-                        Pickable::IGNORE,
-                        LogDisplay,
-                    )]
-                ),],
+                    LogDisplay,
+                )]
             ),],
-        ));
-    });
+        ),],
+    ))
 }
 
 pub(super) fn update_sidebar_systems() -> ScheduleConfigs<ScheduleSystem> {
