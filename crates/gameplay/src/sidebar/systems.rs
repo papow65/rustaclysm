@@ -17,18 +17,18 @@ use bevy::ecs::{hierarchy::Children, schedule::ScheduleConfigs, system::Schedule
 use bevy::picking::Pickable;
 use bevy::prelude::{
     AlignItems, Bundle, Changed, ChildOf, Commands, ComputedNode, DespawnOnExit,
-    DetectChanges as _, Entity, FlexDirection, FlexWrap, IntoScheduleConfigs as _, JustifyContent,
-    MessageReader, Node, Or, Overflow, ParamSet, PositionType, Query, Res, ScrollPosition, Single,
-    Spawn, SpawnRelated as _, State, SystemCondition as _, Text, TextColor, TextSpan, UiRect, Val,
-    Vec2, Visibility, With, Without, children, on_message, resource_exists,
-    resource_exists_and_changed,
+    DetectChanges as _, Display, Entity, FlexDirection, FlexWrap, IntoScheduleConfigs as _,
+    JustifyContent, MaxTrackSizingFunction, MessageReader, MinTrackSizingFunction, Node, Or,
+    Overflow, ParamSet, PositionType, Query, RepeatedGridTrack, Res, ScrollPosition, Single, Spawn,
+    SpawnRelated as _, State, SystemCondition as _, Text, TextColor, TextSpan, UiRect, Val, Vec2,
+    Visibility, With, Without, children, on_message, resource_exists, resource_exists_and_changed,
 };
 use cdda_json_files::{CharacterInfo, MoveCost};
 use gameplay_location::{Pos, StairsDown, StairsUp};
 use gameplay_model::LastSeen;
 use hud::{
-    BAD_TEXT_COLOR, Fonts, HARD_TEXT_COLOR, PANEL_COLOR, SOFT_TEXT_COLOR, WARN_TEXT_COLOR,
-    text_color_expect_half,
+    BAD_TEXT_COLOR, Fonts, HARD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, SOFT_TEXT_COLOR,
+    WARN_TEXT_COLOR, text_color_expect_half,
 };
 use std::{iter::once, time::Instant};
 use util::{Maybe, log_if_slow};
@@ -39,11 +39,29 @@ const TEXT_WIDTH: f32 = 8.0 * 43.0; // 43 chars
 pub(super) fn spawn_sidebar(mut commands: Commands, fonts: Res<Fonts>) {
     commands.spawn((
         Node {
+            position_type: PositionType::Absolute,
             top: Val::Px(0.0),
             right: Val::Px(0.0),
             width: Val::Px(TEXT_WIDTH + 10.0), // 5px margin on both sides
             height: Val::Percent(100.0),
-            position_type: PositionType::Absolute,
+            display: Display::Grid,
+            grid_template_columns: vec![RepeatedGridTrack::auto(1)],
+            grid_template_rows: vec![
+                // Status panel: adapt the height to the content, but clamp between 20% and 80%
+                RepeatedGridTrack::minmax(
+                    1,
+                    MinTrackSizingFunction::Percent(20.0),
+                    MaxTrackSizingFunction::FitContentPercent(80.0),
+                ),
+                // Log panel: take only the available free space, but at least 20%
+                RepeatedGridTrack::minmax(
+                    1,
+                    MinTrackSizingFunction::Percent(20.0),
+                    MaxTrackSizingFunction::Fraction(1.0),
+                ),
+            ],
+            column_gap: SMALL_SPACING,
+            justify_content: JustifyContent::SpaceBetween,
             padding: UiRect::all(Val::Px(5.0)),
             ..Node::default()
         },
@@ -57,15 +75,11 @@ pub(super) fn spawn_sidebar(mut commands: Commands, fonts: Res<Fonts>) {
 fn status_display(fonts: &Fonts) -> Spawn<impl Bundle> {
     Spawn((
         Node {
-            position_type: PositionType::Absolute,
-            top: Val::Px(0.0),
-            left: Val::Px(0.0),
-            width: Val::Px(TEXT_WIDTH),
-            height: Val::Percent(100.0),
             margin: UiRect::all(Val::Px(5.0)),
             flex_direction: FlexDirection::Column,
             align_items: AlignItems::Start,
             justify_content: JustifyContent::Start,
+            overflow: Overflow::scroll_y(),
             ..Node::default()
         },
         children![
@@ -139,16 +153,10 @@ fn log_display(fonts: &Fonts) -> Spawn<impl Bundle> {
     // TODO properly use flex layout
     Spawn((
         Node {
-            position_type: PositionType::Absolute,
-            bottom: Val::Px(0.0),
-            left: Val::Px(0.0),
-            width: Val::Px(TEXT_WIDTH),
-            height: Val::Px(20.0 * 16.0),
             margin: UiRect::all(Val::Px(5.0)),
             ..Node::default()
         },
         Pickable::IGNORE,
-        //bevy::prelude::BackgroundColor(bevy::prelude::Srgba::RED.with_alpha(0.4).into()),
         children![(
             Node {
                 width: Val::Percent(100.0),
@@ -158,7 +166,6 @@ fn log_display(fonts: &Fonts) -> Spawn<impl Bundle> {
                 ..Node::default()
             },
             Pickable::default(),
-            //bevy::prelude::BackgroundColor(bevy::prelude::Srgba::GREEN.with_alpha(0.4).into()),
             children![(
                 Node {
                     width: Val::Percent(100.0),
@@ -166,7 +173,6 @@ fn log_display(fonts: &Fonts) -> Spawn<impl Bundle> {
                     ..Node::default()
                 },
                 Pickable::IGNORE,
-                //bevy::prelude::BackgroundColor(bevy::prelude::Srgba::RED.with_alpha(0.4).into()),
                 children![(
                     Text::default(),
                     fonts.regular(),
@@ -174,7 +180,6 @@ fn log_display(fonts: &Fonts) -> Spawn<impl Bundle> {
                         flex_wrap: FlexWrap::Wrap,
                         ..Node::default()
                     },
-                    //bevy::prelude::BackgroundColor(bevy::prelude::Srgba::BLUE.with_alpha(0.4).into()),
                     Pickable::IGNORE,
                     LogDisplay,
                 )]
