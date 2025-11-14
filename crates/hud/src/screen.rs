@@ -65,8 +65,6 @@ fn scroll_panel(
     let content_node = commands
         .spawn((
             Node {
-                //width: Val::Px(300.0),  //Val::Auto, TODO
-                //height: Val::Px(300.0), //Val::Auto,TODO
                 flex_direction: FlexDirection::Column,
                 align_items: AlignItems::Start,
                 justify_content: JustifyContent::Start,
@@ -81,8 +79,7 @@ fn scroll_panel(
 
     let main_panel = Spawn((
         Node {
-            width: Val::Percent(100.0),  //TODO
-            height: Val::Percent(100.0), //TODO
+            width: Val::Percent(100.0),
             display: Display::Grid,
             grid_template_columns: vec![
                 RepeatedGridTrack::flex(1, 1.0),
