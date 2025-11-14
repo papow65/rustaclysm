@@ -1,5 +1,5 @@
 use crate::systems::{
-    load_fonts, manage_button_color, manage_button_input, toggle_scroll_bar,
+    add_node_outlines, load_fonts, manage_button_color, manage_button_input, toggle_scroll_bar,
     update_scroll_position, update_scroll_thumb,
 };
 use bevy::input::mouse::MouseWheel;
@@ -7,6 +7,7 @@ use bevy::prelude::{
     App, FixedUpdate, IntoScheduleConfigs as _, Plugin, Startup, Update, on_message,
 };
 use bevy::ui_widgets::ScrollbarPlugin;
+use std::env;
 
 /// Plugin for the all generic HUD infrastructure
 pub struct HudPlugin;
@@ -28,5 +29,9 @@ impl Plugin for HudPlugin {
         );
 
         app.add_systems(FixedUpdate, toggle_scroll_bar);
+
+        if env::var("UI_OUTLINES") == Ok(String::from("1")) {
+            app.add_observer(add_node_outlines);
+        }
     }
 }

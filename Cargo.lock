@@ -2551,6 +2551,7 @@ name = "hud"
 version = "0.0.0"
 dependencies = [
  "bevy",
+ "fastrand",
  "keyboard",
  "strum",
  "util",

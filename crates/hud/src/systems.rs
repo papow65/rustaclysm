@@ -5,11 +5,13 @@ use crate::{
 use bevy::input::mouse::{MouseScrollUnit, MouseWheel};
 use bevy::picking::hover::{HoverMap, Hovered};
 use bevy::prelude::{
-    BackgroundColor, Button, ButtonInput, Changed, ChildOf, Commands, ComputedNode, Entity, In,
-    Interaction, KeyCode, MessageReader, Or, Query, Res, ScrollPosition, SystemInput,
-    UiGlobalTransform, UiScale, Vec2, Visibility, With, World, error,
+    BackgroundColor, Button, ButtonInput, Changed, ChildOf, Commands, ComputedNode, Entity, Hsla,
+    In, Insert, Interaction, KeyCode, MessageReader, Node, On, Or, Query, Res, ScrollPosition,
+    SystemInput, UiGlobalTransform, UiScale, Val, Vec2, Visibility, With, World, error,
 };
+use bevy::ui::Outline;
 use bevy::ui_widgets::{CoreScrollbarDragState, CoreScrollbarThumb, Scrollbar};
+use fastrand::f32 as rand_f32;
 use std::{fmt, mem::swap};
 
 pub(super) fn load_fonts(world: &mut World) {
@@ -176,4 +178,19 @@ pub fn scroll_to_selection(
         scroll_position.y = (scroll_position.y + (transation.y - parent_transation.y) / ui_scale.0)
             .clamp(0.0, max_scroll.y);
     }
+}
+
+#[expect(clippy::needless_pass_by_value)]
+pub(crate) fn add_node_outlines(trigger: On<Insert, Node>, mut commands: Commands) {
+    commands.entity(trigger.entity).insert(Outline {
+        width: Val::Px(2.0),
+        offset: Val::ZERO,
+        color: Hsla {
+            hue: 360.0 * rand_f32(),
+            saturation: 1.0,
+            lightness: 0.7,
+            alpha: 0.7,
+        }
+        .into(),
+    });
 }

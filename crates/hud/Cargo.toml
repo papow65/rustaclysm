@@ -6,6 +6,7 @@ edition = "2024"
 
 [dependencies]
 bevy = { workspace = true }
+fastrand = { workspace = true }
 keyboard = { workspace = true }
 strum = { workspace = true }
 util = { workspace = true }
