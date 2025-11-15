@@ -1,9 +1,9 @@
 use crate::behavior::schedule::BehaviorSchedule;
 use crate::behavior::systems::refresh::refresh_all;
-use crate::{InstructionQueue, PlayerActionState, RefreshAfterBehavior, RelativeSegments};
+use crate::{BehaviorState, PlayerActionState, RefreshAfterBehavior, RelativeSegments};
 use bevy::ecs::schedule::{IntoScheduleConfigs as _, ScheduleConfigs};
-use bevy::ecs::system::{ScheduleSystem, SystemState};
-use bevy::prelude::{Res, State, World, debug, on_message, resource_exists};
+use bevy::ecs::system::ScheduleSystem;
+use bevy::prelude::{State, World, debug, on_message, resource_exists};
 use std::time::{Duration, Instant};
 use util::log_if_slow;
 
@@ -32,7 +32,7 @@ fn loop_behavior(world: &mut World) {
     };
 
     let mut count = 0;
-    while !waiting_for_user_input(world) {
+    while looping_behavior(world) {
         world.run_schedule(BehaviorSchedule);
         count += 1;
         if max_time < start.elapsed() {
@@ -49,8 +49,9 @@ fn loop_behavior(world: &mut World) {
 }
 
 /// All NPC mave a timeout and the player has an empty instruction queue
-fn waiting_for_user_input(world: &mut World) -> bool {
-    let mut system_state = SystemState::<Res<InstructionQueue>>::new(world);
-    let instruction_queue = system_state.get(world);
-    instruction_queue.is_waiting()
+fn looping_behavior(world: &World) -> bool {
+    world
+        .get_resource::<BehaviorState>()
+        .expect("BehaviorState should be present")
+        .looping_behavior()
 }

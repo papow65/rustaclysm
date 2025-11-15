@@ -1,11 +1,11 @@
 use crate::behavior::systems::phrases::NpcActionFailed;
 use crate::{
-    Action, ActionIn, Actor, ActorEvent, ActorImpact, Amount, Attack, ChangePace, Clock, Close,
-    ContinueCraft, CorpseEvent, Craft, CurrentlyVisibleBuilder, Damage, Envir, ExamineItem,
-    Explored, Faction, Healing, HealingDuration, InstructionQueue, Item, ItemAction as _,
-    ItemHierarchy, Life, LogMessageWriter, MoveItem, Peek, Pickup, PlannedAction, Player,
-    PlayerActionState, Pulp, Sleep, Smash, Stamina, StartCraft, Stay, Step, TerrainEvent, Tile,
-    TileSpawner, Timeouts, Toggle, Unwield, Wield,
+    Action, ActionIn, Actor, ActorEvent, ActorImpact, Amount, Attack, BehaviorState, ChangePace,
+    Clock, Close, ContinueCraft, CorpseEvent, Craft, CurrentlyVisibleBuilder, Damage, Envir,
+    ExamineItem, Explored, Faction, Healing, HealingDuration, Item, ItemAction as _, ItemHierarchy,
+    Life, LogMessageWriter, MoveItem, Peek, Pickup, PlannedAction, Player, PlayerActionState, Pulp,
+    Sleep, Smash, Stamina, StartCraft, Stay, Step, TerrainEvent, Tile, TileSpawner, Timeouts,
+    Toggle, Unwield, Wield,
 };
 use bevy::ecs::schedule::{IntoScheduleConfigs as _, ScheduleConfigs};
 use bevy::ecs::system::{ScheduleSystem, SystemId};
@@ -103,7 +103,7 @@ fn plan_manual_player_action(
     mut next_player_action_state: ResMut<NextState<PlayerActionState>>,
     currently_visible_builder: CurrentlyVisibleBuilder,
     clock: Clock,
-    mut instruction_queue: ResMut<InstructionQueue>,
+    mut behavior_state: ResMut<BehaviorState>,
     actors: Query<Actor>,
 ) -> Option<PlannedAction> {
     let start = Instant::now();
@@ -115,7 +115,7 @@ fn plan_manual_player_action(
         &mut next_player_action_state,
         &mut message_writer,
         &currently_visible_builder.envir,
-        &mut instruction_queue,
+        &mut behavior_state,
         &actor,
         clock.time(),
     );
@@ -131,7 +131,7 @@ fn plan_automatic_player_action(
     player_action_state: Res<State<PlayerActionState>>,
     currently_visible_builder: CurrentlyVisibleBuilder,
     clock: Clock,
-    mut instruction_queue: ResMut<InstructionQueue>,
+    mut behavior_state: ResMut<BehaviorState>,
     explored: Res<Explored>,
     actors: Query<Actor>,
     factions: Query<(&Pos, &Faction), With<Life>>,
@@ -145,7 +145,7 @@ fn plan_automatic_player_action(
     let factions = &factions.iter().map(|(p, f)| (*p, f)).collect::<Vec<_>>();
     let planned_action = player_action_state.plan_automatic_action(
         &currently_visible_builder,
-        &mut instruction_queue,
+        &mut behavior_state,
         &explored,
         &actor,
         clock.time(),
@@ -157,10 +157,10 @@ fn plan_automatic_player_action(
     planned_action
 }
 
-fn wait_for_player_input(mut instruction_queue: ResMut<InstructionQueue>) {
+fn wait_for_player_input(mut behavior_state: ResMut<BehaviorState>) {
     let start = Instant::now();
 
-    instruction_queue.start_waiting();
+    behavior_state.start_waiting();
 
     log_if_slow("wait_for_player_input", start);
 }

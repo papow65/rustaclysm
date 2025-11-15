@@ -1,7 +1,7 @@
 use crate::screens::base::phrases::YouStartTraveling;
 use crate::{
-    CameraOffset, CancelHandling, ChangePace, ElevationVisibility, Focus, FocusState,
-    GameplayScreenState, InstructionQueue, LogMessageWriter, PlayerActionState, PlayerDirection,
+    BehaviorState, CameraOffset, CancelHandling, ChangePace, ElevationVisibility, Focus,
+    FocusState, GameplayScreenState, LogMessageWriter, PlayerActionState, PlayerDirection,
     QueuedInstruction, VisualizationUpdate, ZoomDirection, ZoomDistance,
 };
 use bevy::input::mouse::{MouseMotion, MouseWheel};
@@ -164,17 +164,17 @@ fn handle_queued_instruction(
     focus_state: &FocusState,
     next_focus_state: &mut ResMut<NextState<FocusState>>,
     next_player_action_state: &mut ResMut<NextState<PlayerActionState>>,
-    instruction_queue: &mut ResMut<InstructionQueue>,
+    behavior_state: &mut ResMut<BehaviorState>,
     instruction: QueuedInstruction,
 ) {
     //trace!("{focus_state:?} {instruction:?}");
     match (*focus_state, &instruction) {
-        (FocusState::Normal, _) => instruction_queue.add(instruction),
+        (FocusState::Normal, _) => behavior_state.add(instruction),
         (FocusState::ExaminingPos(target), QueuedInstruction::ToggleAutoTravel) => {
             //trace!("Autotravel pos");
             next_focus_state.set(FocusState::Normal);
             next_player_action_state.set(PlayerActionState::AutoTravel { target });
-            instruction_queue.stop_waiting();
+            behavior_state.stop_waiting();
             message_writer.send(YouStartTraveling);
         }
         (FocusState::ExaminingZoneLevel(zone_level), QueuedInstruction::ToggleAutoTravel) => {
@@ -183,7 +183,7 @@ fn handle_queued_instruction(
             next_player_action_state.set(PlayerActionState::AutoTravel {
                 target: zone_level.center_pos(),
             });
-            instruction_queue.stop_waiting();
+            behavior_state.stop_waiting();
             message_writer.send(YouStartTraveling);
         }
         (FocusState::ExaminingPos(target), QueuedInstruction::Offset(offset)) => {
@@ -202,7 +202,7 @@ fn handle_queued_instruction(
         }
     }
 
-    instruction_queue.log_if_long();
+    behavior_state.log_if_long();
 }
 
 #[expect(clippy::needless_pass_by_value)]
@@ -313,7 +313,7 @@ fn handle_cancelation(
     mut next_player_action_state: ResMut<NextState<PlayerActionState>>,
     focus_state: Res<State<FocusState>>,
     mut next_focus_state: ResMut<NextState<FocusState>>,
-    mut instruction_queue: ResMut<InstructionQueue>,
+    mut behavior_state: ResMut<BehaviorState>,
 ) {
     let start = Instant::now();
 
@@ -325,7 +325,7 @@ fn handle_cancelation(
             &focus_state,
             &mut next_focus_state,
             &mut next_player_action_state,
-            &mut instruction_queue,
+            &mut behavior_state,
             QueuedInstruction::CancelAction,
         );
     }
@@ -352,7 +352,7 @@ fn manage_queued_instruction(
     focus_state: Res<State<FocusState>>,
     mut next_focus_state: ResMut<NextState<FocusState>>,
     mut next_player_action_state: ResMut<NextState<PlayerActionState>>,
-    mut instruction_queue: ResMut<InstructionQueue>,
+    mut behavior_state: ResMut<BehaviorState>,
 ) {
     let start = Instant::now();
 
@@ -362,7 +362,7 @@ fn manage_queued_instruction(
         &focus_state,
         &mut next_focus_state,
         &mut next_player_action_state,
-        &mut instruction_queue,
+        &mut behavior_state,
         instruction,
     );
 

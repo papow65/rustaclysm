@@ -3,9 +3,8 @@ use crate::screens::inventory::resource::InventoryScreen;
 use crate::screens::inventory::row_spawner::RowSpawner;
 use crate::screens::inventory::section::InventorySection;
 use crate::{
-    BodyContainers, Clock, DebugTextShown, Envir, ExamineItem, GameplayScreenState,
-    InstructionQueue, ItemHierarchy, ItemItem, MoveItem, Phrase, Pickup, Player, QueuedInstruction,
-    Unwield, Wield,
+    BehaviorState, BodyContainers, Clock, DebugTextShown, Envir, ExamineItem, GameplayScreenState,
+    ItemHierarchy, ItemItem, MoveItem, Phrase, Pickup, Player, QueuedInstruction, Unwield, Wield,
 };
 use bevy::ecs::{entity::hash_map::EntityHashMap, system::SystemId};
 use bevy::platform::collections::HashMap;
@@ -317,7 +316,7 @@ fn items_by_section<'i>(
 #[expect(clippy::needless_pass_by_value)]
 fn handle_selected_item(
     In(action): In<InventoryAction>,
-    mut instruction_queue: ResMut<InstructionQueue>,
+    mut behavior_state: ResMut<BehaviorState>,
     inventory: Res<InventoryScreen>,
     mut selection_lists: Query<&mut SelectionList>,
     item_rows: Query<&InventoryItemRow>,
@@ -336,7 +335,7 @@ fn handle_selected_item(
         .expect("Selected item row should be found");
     let selected_item = selected_row.item;
 
-    instruction_queue.add(match action {
+    behavior_state.add(match action {
         InventoryAction::Examine => QueuedInstruction::ExamineItem(ExamineItem {
             item_entity: selected_item,
         }),
@@ -375,7 +374,7 @@ fn handle_selected_item(
 #[expect(clippy::needless_pass_by_value)]
 pub(super) fn handle_inventory_action(
     In(inventory_button): In<InventoryButton>,
-    mut instruction_queue: ResMut<InstructionQueue>,
+    mut behavior_state: ResMut<BehaviorState>,
     inventory: Res<InventoryScreen>,
 ) {
     let start = Instant::now();
@@ -392,7 +391,7 @@ pub(super) fn handle_inventory_action(
         InventoryAction::Wield => QueuedInstruction::Wield(Wield { item_entity }),
         InventoryAction::Unwield => QueuedInstruction::Unwield(Unwield { item_entity }),
     };
-    instruction_queue.add(instruction);
+    behavior_state.add(instruction);
 
     log_if_slow("handle_inventory_action", start);
 }

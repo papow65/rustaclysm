@@ -27,6 +27,7 @@ use self::actor::{
     Sleep, Smash, Stamina, StaminaCost, StaminaImpact, StartCraft, Stay, Step, Subject, Unwield,
     WalkingMode, Wield,
 };
+use self::behavior::{BehaviorPlugin, BehaviorState};
 use self::common::{
     CancelHandling, Evolution, Interruption, Limited, LocalTerrain, PlayerDirection,
     QueuedInstruction, Region, Visible, WalkingCost, ZoneRegion, ZoomDirection, ZoomDistance,
@@ -53,8 +54,8 @@ use self::phrase::{
 };
 use self::relations::{ObjectOn, Objects, TileIn, VehiclePartOf};
 use self::resources::{
-    CameraOffset, ElevationVisibility, Expanded, Explored, InstructionQueue, RelativeSegment,
-    RelativeSegments, SeenFrom, VisualizationUpdate, ZoneLevelIds,
+    CameraOffset, ElevationVisibility, Expanded, Explored, RelativeSegment, RelativeSegments,
+    SeenFrom, VisualizationUpdate, ZoneLevelIds,
 };
 use self::screens::{Consumed, GameplayScreenState, RecipeSituation, update_camera_offset};
 use self::spawn::TileSpawner;

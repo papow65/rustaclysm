@@ -1,4 +1,4 @@
-use crate::{PlayerActionState, behavior::BehaviorPlugin};
+use crate::{BehaviorPlugin, PlayerActionState};
 use bevy::prelude::{App, AppExtStates as _, Plugin};
 use util::log_transition_plugin;
 
