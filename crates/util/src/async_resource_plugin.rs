@@ -1,12 +1,11 @@
 use bevy::prelude::{
-    App, Commands, IntoScheduleConfigs as _, Plugin, ResMut, Resource, Update, debug, not,
-    resource_exists,
+    App, Commands, IntoScheduleConfigs as _, ResMut, Resource, Update, debug, not, resource_exists,
 };
 use bevy::tasks::{AsyncComputeTaskPool, Task};
 use futures_lite::future::{block_on, poll_once};
 use regex::Regex;
 use std::time::{Duration, Instant};
-use std::{any::type_name, future::Future, marker::PhantomData, sync::LazyLock, thread::sleep};
+use std::{any::type_name, future::Future, sync::LazyLock, thread::sleep};
 
 /// Resources that take a while to load, are loaded in the background, independent of the current `ApplicationState`
 pub trait AsyncNew<T>: Resource {
@@ -14,23 +13,13 @@ pub trait AsyncNew<T>: Resource {
 }
 
 /// Load the [`AsyncNew`] resource in the background
-pub struct AsyncResourcePlugin<T: AsyncNew<T>>(PhantomData<T>);
+pub fn async_resource_plugin<T: AsyncNew<T>>(app: &mut App) {
+    app.insert_resource(AsyncResourceLoader::<T>::default());
 
-impl<T: AsyncNew<T>> Default for AsyncResourcePlugin<T> {
-    fn default() -> Self {
-        Self(PhantomData)
-    }
-}
-
-impl<T: AsyncNew<T>> Plugin for AsyncResourcePlugin<T> {
-    fn build(&self, app: &mut App) {
-        app.insert_resource(AsyncResourceLoader::<T>::default());
-
-        app.add_systems(
-            Update,
-            create_async_resource::<T>.run_if(not(resource_exists::<T>)),
-        );
-    }
+    app.add_systems(
+        Update,
+        create_async_resource::<T>.run_if(not(resource_exists::<T>)),
+    );
 }
 
 #[derive(Debug, Resource)]

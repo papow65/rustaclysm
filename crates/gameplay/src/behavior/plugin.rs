@@ -1,7 +1,7 @@
 use crate::behavior::systems::{behavior_systems, loop_behavior_and_refresh};
 use crate::{BehaviorState, behavior::schedule::BehaviorSchedule};
 use bevy::prelude::{App, IntoScheduleConfigs as _, Plugin, Res, Update};
-use gameplay_resource::GameplayResourcePlugin;
+use gameplay_resource::gameplay_resource_plugin;
 use util::log_resource_change_plugin;
 
 pub(in super::super) struct BehaviorPlugin;
@@ -10,7 +10,7 @@ impl Plugin for BehaviorPlugin {
     fn build(&self, app: &mut App) {
         app.init_schedule(BehaviorSchedule);
 
-        app.add_plugins(GameplayResourcePlugin::<BehaviorState>::default());
+        app.add_plugins(gameplay_resource_plugin::<BehaviorState>);
         app.add_plugins(log_resource_change_plugin::<BehaviorState>);
 
         app.add_systems(BehaviorSchedule, behavior_systems());

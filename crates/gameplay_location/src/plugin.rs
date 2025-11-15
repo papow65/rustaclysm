@@ -1,15 +1,15 @@
 use crate::{LocationCache, SubzoneLevelCache, ZoneLevelCache};
 use bevy::prelude::{App, Plugin};
-use gameplay_resource::GameplayResourcePlugin;
+use gameplay_resource::gameplay_resource_plugin;
 
 pub struct LocationPlugin;
 
 impl Plugin for LocationPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((
-            GameplayResourcePlugin::<LocationCache>::default(),
-            GameplayResourcePlugin::<SubzoneLevelCache>::default(),
-            GameplayResourcePlugin::<ZoneLevelCache>::default(),
+            gameplay_resource_plugin::<LocationCache>,
+            gameplay_resource_plugin::<SubzoneLevelCache>,
+            gameplay_resource_plugin::<ZoneLevelCache>,
         ));
     }
 }

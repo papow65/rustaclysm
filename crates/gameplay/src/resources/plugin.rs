@@ -3,20 +3,20 @@ use crate::{
     ZoneLevelIds,
 };
 use bevy::prelude::{App, Plugin};
-use gameplay_resource::GameplayResourcePlugin;
-use util::AsyncResourcePlugin;
+use gameplay_resource::gameplay_resource_plugin;
+use util::async_resource_plugin;
 
 pub(crate) struct ResourcePlugin;
 
 impl Plugin for ResourcePlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((
-            AsyncResourcePlugin::<RelativeSegments>::default(),
-            GameplayResourcePlugin::<CameraOffset>::default(),
-            GameplayResourcePlugin::<Expanded>::default(),
-            GameplayResourcePlugin::<Explored>::default(),
-            GameplayResourcePlugin::<VisualizationUpdate>::default(),
-            GameplayResourcePlugin::<ZoneLevelIds>::default(),
+            async_resource_plugin::<RelativeSegments>,
+            gameplay_resource_plugin::<CameraOffset>,
+            gameplay_resource_plugin::<Expanded>,
+            gameplay_resource_plugin::<Explored>,
+            gameplay_resource_plugin::<VisualizationUpdate>,
+            gameplay_resource_plugin::<ZoneLevelIds>,
         ));
 
         app.insert_resource(ElevationVisibility::default());

@@ -2,7 +2,7 @@ use crate::regions::{AssetStorage, Exploration, MapLoader, MapMemoryLoader, Over
 use crate::{MapAsset, MapMemoryAsset, OvermapAsset, OvermapBufferAsset};
 use application_state::ApplicationState;
 use bevy::prelude::{App, AssetApp as _, Plugin, StateScopedMessagesAppExt as _};
-use gameplay_resource::GameplayResourcePlugin;
+use gameplay_resource::gameplay_resource_plugin;
 
 pub(crate) struct RegionsPlugin;
 
@@ -12,10 +12,10 @@ impl Plugin for RegionsPlugin {
             .clear_messages_on_exit::<Exploration>(ApplicationState::Gameplay);
 
         app.add_plugins((
-            GameplayResourcePlugin::<AssetStorage<MapAsset>>::default(),
-            GameplayResourcePlugin::<AssetStorage<MapMemoryAsset>>::default(),
-            GameplayResourcePlugin::<AssetStorage<OvermapAsset>>::default(),
-            GameplayResourcePlugin::<AssetStorage<OvermapBufferAsset>>::default(),
+            gameplay_resource_plugin::<AssetStorage<MapAsset>>,
+            gameplay_resource_plugin::<AssetStorage<MapMemoryAsset>>,
+            gameplay_resource_plugin::<AssetStorage<OvermapAsset>>,
+            gameplay_resource_plugin::<AssetStorage<OvermapBufferAsset>>,
         ));
 
         app.init_asset::<MapAsset>();
