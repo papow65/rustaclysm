@@ -35,6 +35,7 @@ pub(super) fn manage_button_color(
     }
 }
 
+/// Button presses
 pub fn manage_button_input<I: fmt::Debug + SystemInput + 'static>(
     mut commands: Commands,
     interactions: Query<(&Interaction, &RunButton<I>), (Changed<Interaction>, With<Button>)>,
@@ -48,6 +49,7 @@ pub fn manage_button_input<I: fmt::Debug + SystemInput + 'static>(
     }
 }
 
+/// Mimic a button press
 pub fn trigger_button_action<I: fmt::Debug + SystemInput + 'static>(
     In(entity): In<Entity>,
     mut commands: Commands,
