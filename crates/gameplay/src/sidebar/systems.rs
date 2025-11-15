@@ -153,7 +153,7 @@ fn status_display(commands: &mut Commands, fonts: &Fonts) -> Spawn<impl Bundle> 
         ))
         .id();
 
-    scroll_panel(status_entity)
+    scroll_panel(false, status_entity)
 }
 
 fn log_display(commands: &mut Commands, fonts: &Fonts) -> Spawn<impl Bundle> {
@@ -188,7 +188,7 @@ fn log_display(commands: &mut Commands, fonts: &Fonts) -> Spawn<impl Bundle> {
         ))
         .id();
 
-    scroll_panel(log_entity)
+    scroll_panel(false, log_entity)
 }
 
 pub(super) fn update_sidebar_systems() -> ScheduleConfigs<ScheduleSystem> {

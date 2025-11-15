@@ -81,21 +81,19 @@ fn scroll_panel_with_content_entity(
         ))
         .id();
 
-    (scroll_panel(content_entity), content_entity)
+    (scroll_panel(true, content_entity), content_entity)
 }
 
 #[must_use]
-pub fn scroll_panel(content_entity: Entity) -> Spawn<impl Bundle> {
+pub fn scroll_panel(limit_height: bool, content_entity: Entity) -> Spawn<impl Bundle> {
     Spawn((
         Node {
             width: Val::Percent(100.0),
-            display: Display::Grid,
-            grid_template_columns: vec![
-                RepeatedGridTrack::flex(1, 1.0),
-                RepeatedGridTrack::auto(1),
-            ],
-            grid_template_rows: vec![RepeatedGridTrack::auto(1)],
-            column_gap: SMALL_SPACING,
+            height: if limit_height {
+                Val::Percent(100.0)
+            } else {
+                Val::Auto
+            },
             overflow: Overflow::clip_y(),
             ..Node::default()
         },
@@ -104,13 +102,18 @@ pub fn scroll_panel(content_entity: Entity) -> Spawn<impl Bundle> {
             WithOneRelated(content_entity),
             Spawn((
                 Node {
-                    width: Val::Px(8.0),
+                    position_type: PositionType::Absolute,
+                    top: Val::Px(0.0),
+                    right: Val::Px(0.0),
+                    bottom: Val::Px(0.0),
+                    width: Val::Px(6.0),
+                    height: Val::Percent(100.0),
                     ..Node::default()
                 },
                 Scrollbar {
                     orientation: ControlOrientation::Vertical,
                     target: content_entity,
-                    min_thumb_length: 8.0,
+                    min_thumb_length: 12.0,
                 },
                 Visibility::Hidden,
                 children![(
@@ -120,7 +123,7 @@ pub fn scroll_panel(content_entity: Entity) -> Spawn<impl Bundle> {
                     },
                     Hovered::default(),
                     DEFAULT_SCROLLBAR_COLOR,
-                    BorderRadius::all(Val::Px(4.0)),
+                    BorderRadius::all(Val::Px(3.0)),
                     CoreScrollbarThumb,
                 )],
             )),
