@@ -1,8 +1,8 @@
-use crate::{GameplayScreenState, systems::to_main_menu};
+use crate::{BehaviorState, GameplayScreenState, Interruption, systems::to_main_menu};
 use bevy::ecs::system::SystemId;
 use bevy::prelude::{
     AlignItems, Commands, DespawnOnExit, FlexDirection, In, JustifyContent, KeyCode, Local, Node,
-    Res, SpawnRelated as _, Text, UiRect, Val, World, children,
+    Res, ResMut, SpawnRelated as _, Text, UiRect, Val, World, children,
 };
 use hud::{BAD_TEXT_COLOR, ButtonBuilder, Fonts, PANEL_COLOR, SMALL_SPACING, WARN_TEXT_COLOR};
 use keyboard::KeyBindings;
@@ -88,4 +88,14 @@ pub(super) fn create_death_screen_key_bindings(
     ));
 
     log_if_slow("create_death_screen_key_bindings", start);
+}
+
+/// Stop the behavior loop
+pub(super) fn stop_behavior(mut behavior_state: ResMut<BehaviorState>) {
+    let start = Instant::now();
+
+    behavior_state.interrupt(Interruption::Finished);
+    behavior_state.start_waiting();
+
+    log_if_slow("stop_behavior", start);
 }

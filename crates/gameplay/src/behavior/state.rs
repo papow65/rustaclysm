@@ -58,7 +58,7 @@ impl BehaviorState {
         }
     }
 
-    pub(super) fn start_waiting(&mut self) {
+    pub(crate) fn start_waiting(&mut self) {
         // The queue may not be empty if an automatic action added an interrupt.
         assert!(
             self.looping_behavior(),
