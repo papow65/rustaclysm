@@ -3,15 +3,15 @@ use crate::screens::inventory::resource::InventoryScreen;
 use crate::screens::inventory::row_spawner::RowSpawner;
 use crate::screens::inventory::section::InventorySection;
 use crate::{
-    BehaviorState, BodyContainers, Clock, DebugTextShown, Envir, ExamineItem, GameplayScreenState,
+    BehaviorState, BodyContainers, DebugTextShown, Envir, ExamineItem, GameplayScreenState,
     ItemHierarchy, ItemItem, MoveItem, Phrase, Pickup, Player, QueuedInstruction, Unwield, Wield,
 };
 use bevy::ecs::{entity::hash_map::EntityHashMap, system::SystemId};
 use bevy::platform::collections::HashMap;
 use bevy::prelude::{
-    BackgroundColor, Button, Children, Commands, DespawnOnExit, Display, Entity, In,
-    IntoSystem as _, KeyCode, Local, NextState, Node, Query, Res, ResMut, Single, Text, TextColor,
-    TextSpan, With, World, debug, error,
+    BackgroundColor, Button, Children, Commands, DespawnOnExit, Entity, In, IntoSystem as _,
+    KeyCode, Local, NextState, Query, Res, ResMut, Single, Text, TextColor, TextSpan, With, World,
+    debug, error,
 };
 use gameplay_location::{HorizontalDirection, Nbor, Pos};
 use hud::{
@@ -176,35 +176,7 @@ fn exit_inventory(mut next_gameplay_state: ResMut<NextState<GameplayScreenState>
 }
 
 #[expect(clippy::needless_pass_by_value)]
-pub(super) fn clear_inventory(
-    clock: Clock,
-    mut inventory: ResMut<InventoryScreen>,
-    children: Query<&Children>,
-    mut styles: Query<&mut Node>,
-) -> bool {
-    let start = Instant::now();
-
-    if inventory.last_time == clock.time() {
-        return false;
-    }
-    inventory.last_time = clock.time();
-
-    if let Ok(children) = children.get(inventory.panel) {
-        for &child in children {
-            if let Ok(mut style) = styles.get_mut(child) {
-                style.display = Display::None;
-            }
-        }
-    }
-
-    log_if_slow("clear_inventory", start);
-
-    true
-}
-
-#[expect(clippy::needless_pass_by_value)]
 pub(super) fn refresh_inventory(
-    In(run): In<bool>,
     mut commands: Commands,
     fonts: Res<Fonts>,
     envir: Envir,
@@ -215,9 +187,6 @@ pub(super) fn refresh_inventory(
     mut selection_lists: Query<&mut SelectionList>,
     previous_item_rows: Query<&InventoryItemRow>,
 ) {
-    if !run {
-        return;
-    }
     let start = Instant::now();
 
     let mut selection_list = selection_lists
@@ -239,43 +208,46 @@ pub(super) fn refresh_inventory(
 
     let inventory = &mut *inventory;
     let drop_direction = inventory.drop_direction;
-    commands.entity(inventory.panel).with_children(|parent| {
-        for (section, items) in items_by_section {
-            let drop_section = section == InventorySection::Nbor(drop_direction);
+    commands
+        .entity(inventory.panel)
+        .despawn_related::<Children>()
+        .with_children(|parent| {
+            for (section, items) in items_by_section {
+                let drop_section = section == InventorySection::Nbor(drop_direction);
 
-            parent
-                .spawn((
-                    Text::new(format!("{section}")),
-                    SOFT_TEXT_COLOR,
-                    fonts.regular(),
-                ))
-                .with_children(|parent| {
-                    if drop_section {
-                        parent.spawn((
-                            TextSpan::from(" <- drop spot"),
-                            HARD_TEXT_COLOR,
-                            fonts.regular(),
-                        ));
-                    }
-                });
+                parent
+                    .spawn((
+                        Text::new(format!("{section}")),
+                        SOFT_TEXT_COLOR,
+                        fonts.regular(),
+                    ))
+                    .with_children(|parent| {
+                        if drop_section {
+                            parent.spawn((
+                                TextSpan::from(" <- drop spot"),
+                                HARD_TEXT_COLOR,
+                                fonts.regular(),
+                            ));
+                        }
+                    });
 
-            let mut row_spawner = RowSpawner::new(
-                &fonts,
-                &debug_text_shown,
-                &inventory.inventory_system,
-                &mut selection_list,
-                &mut inventory.section_by_item,
-                parent,
-                previous_selected_item,
-                section,
-                drop_section,
-            );
-            item_hierarchy.walk(&mut row_spawner, items);
+                let mut row_spawner = RowSpawner::new(
+                    &fonts,
+                    &debug_text_shown,
+                    &inventory.inventory_system,
+                    &mut selection_list,
+                    &mut inventory.section_by_item,
+                    parent,
+                    previous_selected_item,
+                    section,
+                    drop_section,
+                );
+                item_hierarchy.walk(&mut row_spawner, items);
 
-            // empty row
-            parent.spawn((Text::from(" "), SOFT_TEXT_COLOR, fonts.regular()));
-        }
-    });
+                // empty row
+                parent.spawn((Text::from(" "), SOFT_TEXT_COLOR, fonts.regular()));
+            }
+        });
 
     log_if_slow("refresh_inventory", start);
 }
