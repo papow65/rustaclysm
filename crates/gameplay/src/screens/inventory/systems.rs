@@ -40,6 +40,8 @@ pub(super) fn create_inventory_system(world: &mut World) -> InventorySystem {
 }
 
 pub(super) fn spawn_inventory(In(inventory_system): In<InventorySystem>, mut commands: Commands) {
+    let start = Instant::now();
+
     let panel = scroll_screen(&mut commands, GameplayScreenState::Inventory);
     commands.entity(panel).insert(SelectionList::default());
 
@@ -50,6 +52,8 @@ pub(super) fn spawn_inventory(In(inventory_system): In<InventorySystem>, mut com
         Timestamp::ZERO,
         inventory_system,
     ));
+
+    log_if_slow("spawn_inventory", start);
 }
 
 #[expect(clippy::needless_pass_by_value)]
@@ -179,6 +183,8 @@ pub(super) fn clear_inventory(
     children: Query<&Children>,
     mut styles: Query<&mut Node>,
 ) -> bool {
+    let start = Instant::now();
+
     if inventory.last_time == clock.time() {
         return false;
     }
@@ -191,6 +197,8 @@ pub(super) fn clear_inventory(
             }
         }
     }
+
+    log_if_slow("clear_inventory", start);
 
     true
 }
@@ -211,6 +219,7 @@ pub(super) fn refresh_inventory(
     if !run {
         return;
     }
+    let start = Instant::now();
 
     let mut selection_list = selection_lists
         .get_mut(inventory.panel)
@@ -268,6 +277,8 @@ pub(super) fn refresh_inventory(
             parent.spawn((Text::from(" "), SOFT_TEXT_COLOR, fonts.regular()));
         }
     });
+
+    log_if_slow("refresh_inventory", start);
 }
 
 fn items_by_section<'i>(
@@ -311,6 +322,8 @@ fn handle_selected_item(
     mut selection_lists: Query<&mut SelectionList>,
     item_rows: Query<&InventoryItemRow>,
 ) {
+    let start = Instant::now();
+
     let mut selection_list = selection_lists
         .get_mut(inventory.panel)
         .expect("Inventory selection list should be found");
@@ -355,6 +368,8 @@ fn handle_selected_item(
     if action != InventoryAction::Examine {
         selection_list.adjust(SelectionListStep::SingleDown);
     }
+
+    log_if_slow("handle_selected_item", start);
 }
 
 #[expect(clippy::needless_pass_by_value)]
@@ -363,6 +378,8 @@ pub(super) fn handle_inventory_action(
     mut instruction_queue: ResMut<InstructionQueue>,
     inventory: Res<InventoryScreen>,
 ) {
+    let start = Instant::now();
+
     debug!("{:?}", &inventory_button);
     let item_entity = inventory_button.item;
     let instruction = match inventory_button.action {
@@ -376,6 +393,8 @@ pub(super) fn handle_inventory_action(
         InventoryAction::Unwield => QueuedInstruction::Unwield(Unwield { item_entity }),
     };
     instruction_queue.add(instruction);
+
+    log_if_slow("handle_inventory_action", start);
 }
 
 pub(super) fn remove_inventory_resource(mut commands: Commands) {
