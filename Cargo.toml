@@ -55,6 +55,7 @@ pathfinding = "4"
 glob = "0.3"
 pre_gameplay = { path = "crates/pre_gameplay" }
 regex = "1"
+selection_list = { path = "crates/selection_list" }
 serde = { version = "1", features = ["derive", "rc" ] }
 serde_json = "1"
 strum = { version = "0.27", features = ["derive"] }

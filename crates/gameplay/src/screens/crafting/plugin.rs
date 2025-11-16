@@ -1,16 +1,25 @@
 use crate::GameplayScreenState;
 use crate::screens::crafting::systems::{
-    clear_crafting_screen, create_crafting_key_bindings, create_start_craft_system,
-    refresh_crafting_screen, remove_crafting_resource, spawn_crafting_screen,
+    adapt_to_crafting_selection, clear_crafting_screen, create_crafting_key_bindings,
+    create_start_craft_system, refresh_crafting_screen, remove_crafting_resource,
+    spawn_crafting_screen,
 };
 use bevy::prelude::{
-    App, IntoScheduleConfigs as _, IntoSystem as _, OnEnter, OnExit, Plugin, Update, in_state,
+    App, IntoScheduleConfigs as _, IntoSystem as _, OnEnter, OnExit, Plugin, Update, With, in_state,
 };
+use selection_list::{SelectionList, selection_list_plugin};
 
 pub(crate) struct CraftingScreenPlugin;
 
 impl Plugin for CraftingScreenPlugin {
     fn build(&self, app: &mut App) {
+        selection_list_plugin::<_, _, _, With<SelectionList>>(
+            app,
+            GameplayScreenState::Crafting,
+            "select craft",
+            adapt_to_crafting_selection,
+        );
+
         app.add_systems(
             OnEnter(GameplayScreenState::Crafting),
             (

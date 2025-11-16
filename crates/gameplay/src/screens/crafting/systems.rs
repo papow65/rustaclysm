@@ -10,9 +10,9 @@ use crate::{
 use bevy::ecs::{spawn::SpawnIter, system::SystemId};
 use bevy::platform::collections::{HashMap, HashSet};
 use bevy::prelude::{
-    AnyOf, Children, Commands, DespawnOnExit, Display, Entity, In, IntoSystem as _, KeyCode, Local,
-    NextState, Node, Pickable, Query, Res, ResMut, Single, SpawnRelated as _, Text, TextColor,
-    With, World, children, debug, error,
+    AnyOf, Children, Commands, DespawnOnExit, Display, Entity, In, KeyCode, Local, NextState, Node,
+    Pickable, Query, Res, ResMut, Single, SpawnRelated as _, Text, TextColor, With, World,
+    children, debug, error,
 };
 use cdda_json_files::{
     Alternative, AutoLearn, BookLearn, BookLearnItem, CalculatedRequirement, CommonItemInfo,
@@ -23,15 +23,12 @@ use gameplay_cdda::{Error, Infos};
 use gameplay_cdda_active_sav::ActiveSav;
 use gameplay_location::{LocationCache, Pos};
 use gameplay_model::LastSeen;
-use hud::{
-    BAD_TEXT_COLOR, ButtonBuilder, Fonts, SelectionList, SelectionListStep, WARN_TEXT_COLOR,
-    scroll_to_selection, selection_list_detail_screen,
-};
-use keyboard::{Held, KeyBindings};
+use hud::{BAD_TEXT_COLOR, ButtonBuilder, Fonts, WARN_TEXT_COLOR};
+use keyboard::KeyBindings;
 use manual::ManualSection;
+use selection_list::{SelectionList, selection_list_detail_screen};
 use std::num::NonZeroU32;
 use std::{sync::Arc, time::Instant};
-use strum::VariantArray as _;
 use units::Timestamp;
 use util::{log_if_slow, uppercase_first};
 
@@ -60,32 +57,9 @@ pub(super) fn spawn_crafting_screen(
 #[expect(clippy::needless_pass_by_value)]
 pub(super) fn create_crafting_key_bindings(
     world: &mut World,
-    held_bindings: Local<KeyBindings<GameplayScreenState, (), Held>>,
     fresh_bindings: Local<KeyBindings<GameplayScreenState, (), ()>>,
 ) {
     let start = Instant::now();
-
-    held_bindings.spawn(world, GameplayScreenState::Crafting, |bindings| {
-        for &step in SelectionListStep::VARIANTS {
-            bindings.add(
-                step,
-                (move || step)
-                    .pipe(move_crafting_selection)
-                    .pipe(scroll_to_selection),
-            );
-        }
-    });
-
-    world.spawn((
-        ManualSection::new(
-            &[
-                ("select craft", "arrow up/down"),
-                ("select craft", "page up/down"),
-            ],
-            100,
-        ),
-        DespawnOnExit(GameplayScreenState::Crafting),
-    ));
 
     fresh_bindings.spawn(world, GameplayScreenState::Crafting, |bindings| {
         bindings.add('c', start_craft);
@@ -110,30 +84,23 @@ fn exit_crafting(mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>
 }
 
 #[expect(clippy::needless_pass_by_value)]
-pub(super) fn move_crafting_selection(
-    In(step): In<SelectionListStep>,
+pub(super) fn adapt_to_crafting_selection(
+    In((previous_selected, selected)): In<(Option<Entity>, Option<Entity>)>,
     mut commands: Commands,
     fonts: Res<Fonts>,
     crafting_screen: Res<CraftingScreen>,
     mut recipes: Query<(&mut TextColor, &RecipeSituation)>,
-    mut selection_lists: Query<&mut SelectionList>,
-) -> Entity {
+) {
     let start = Instant::now();
 
-    let mut selection_list = selection_lists
-        .get_mut(crafting_screen.recipe_list)
-        .expect("Recipe selection list should be found");
-
-    selection_list.adjust(step);
-
-    if let Some(previous) = selection_list.previous_selected {
+    if let Some(previous_selected) = previous_selected {
         let (text_color, recipe) = &mut recipes
-            .get_mut(previous)
+            .get_mut(previous_selected)
             .expect("Previous highlighted recipe should be found");
         **text_color = recipe.color(false);
     }
 
-    if let Some(selected) = selection_list.selected {
+    if let Some(selected) = selected {
         let (text_color, recipe) = &mut recipes
             .get_mut(selected)
             .expect("Highlighted recipe should be found");
@@ -142,9 +109,7 @@ pub(super) fn move_crafting_selection(
         show_recipe(&mut commands, &fonts, &crafting_screen, recipe);
     }
 
-    log_if_slow("move_crafting_selection", start);
-
-    crafting_screen.recipe_list
+    log_if_slow("adapt_to_crafting_selection", start);
 }
 
 #[expect(clippy::needless_pass_by_value)]

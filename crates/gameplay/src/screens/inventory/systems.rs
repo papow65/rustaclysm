@@ -13,12 +13,10 @@ use bevy::prelude::{
     debug, error,
 };
 use gameplay_location::{HorizontalDirection, Nbor, Pos};
-use hud::{
-    Fonts, HARD_TEXT_COLOR, SOFT_TEXT_COLOR, SelectionList, SelectionListStep, scroll_screen,
-    scroll_to_selection,
-};
-use keyboard::{Held, KeyBindings};
+use hud::{Fonts, HARD_TEXT_COLOR, SOFT_TEXT_COLOR, scroll_screen};
+use keyboard::KeyBindings;
 use manual::ManualSection;
+use selection_list::{SelectionList, SelectionListStep};
 use std::time::Instant;
 use strum::VariantArray as _;
 use units::Timestamp;
@@ -57,32 +55,9 @@ pub(super) fn spawn_inventory(In(inventory_system): In<InventorySystem>, mut com
 #[expect(clippy::needless_pass_by_value)]
 pub(super) fn create_inventory_key_bindings(
     world: &mut World,
-    held_bindings: Local<KeyBindings<GameplayScreenState, (), Held>>,
     fresh_bindings: Local<KeyBindings<GameplayScreenState, (), ()>>,
 ) {
     let start = Instant::now();
-
-    held_bindings.spawn(world, GameplayScreenState::Inventory, |bindings| {
-        for &step in SelectionListStep::VARIANTS {
-            bindings.add(
-                step,
-                (move || step)
-                    .pipe(move_inventory_selection)
-                    .pipe(scroll_to_selection),
-            );
-        }
-    });
-
-    world.spawn((
-        ManualSection::new(
-            &[
-                ("select item", "arrow up/down"),
-                ("select item", "page up/down"),
-            ],
-            100,
-        ),
-        DespawnOnExit(GameplayScreenState::Inventory),
-    ));
 
     fresh_bindings.spawn(world, GameplayScreenState::Inventory, |bindings| {
         for &horizontal_direction in HorizontalDirection::VARIANTS {
@@ -120,26 +95,17 @@ pub(super) fn create_inventory_key_bindings(
     log_if_slow("create_inventory_key_bindings", start);
 }
 
-#[expect(clippy::needless_pass_by_value)]
-fn move_inventory_selection(
-    In(step): In<SelectionListStep>,
-    inventory: Res<InventoryScreen>,
-    mut selection_lists: Query<&mut SelectionList>,
+pub(super) fn adapt_to_item_selection(
+    In((previous_selected, selected)): In<(Option<Entity>, Option<Entity>)>,
     mut item_rows: Query<(&mut BackgroundColor, &Children)>,
     item_buttons: Query<&Children, With<Button>>,
     mut text_styles: Query<&mut TextColor>,
-) -> Entity {
+) {
     let start = Instant::now();
 
-    let mut selection_list = selection_lists
-        .get_mut(inventory.panel)
-        .expect("Inventory selection list should be found");
-
-    selection_list.adjust(step);
-
-    if let Some(previous) = selection_list.previous_selected {
+    if let Some(previous_selected) = previous_selected {
         InventoryScreen::highlight_selected(
-            previous,
+            previous_selected,
             &mut item_rows,
             &item_buttons,
             &mut text_styles,
@@ -147,7 +113,7 @@ fn move_inventory_selection(
         );
     }
 
-    if let Some(selected) = selection_list.selected {
+    if let Some(selected) = selected {
         InventoryScreen::highlight_selected(
             selected,
             &mut item_rows,
@@ -157,9 +123,7 @@ fn move_inventory_selection(
         );
     }
 
-    log_if_slow("move_crafting_selection", start);
-
-    inventory.panel
+    log_if_slow("adapt_to_item_selection", start);
 }
 
 fn set_inventory_drop_direction(

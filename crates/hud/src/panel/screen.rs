@@ -1,13 +1,11 @@
-use crate::{DEFAULT_SCROLLBAR_COLOR, PANEL_COLOR, SMALL_SPACING, SelectionList};
+use crate::{DEFAULT_SCROLLBAR_COLOR, PANEL_COLOR, SMALL_SPACING};
 use bevy::picking::hover::Hovered;
 use bevy::prelude::{
-    AlignItems, BorderRadius, Bundle, Children, Commands, Component, DespawnOnExit, Display,
-    Entity, FlexDirection, JustifyContent, Node, Overflow, Pickable, PositionType,
-    RepeatedGridTrack, Spawn, SpawnRelated as _, States, UiRect, Val, Visibility, WithOneRelated,
-    children,
+    AlignItems, BorderRadius, Bundle, Children, Commands, Component, DespawnOnExit, Entity,
+    FlexDirection, JustifyContent, Node, Overflow, Pickable, PositionType, Spawn,
+    SpawnRelated as _, States, UiRect, Val, Visibility, WithOneRelated, children,
 };
 use bevy::ui_widgets::{ControlOrientation, CoreScrollbarThumb, Scrollbar};
-use util::Maybe;
 
 /// Indicator component, so that other parts of the ui can adapt.
 #[derive(Debug, Component)]
@@ -17,55 +15,18 @@ pub struct LargeNode;
 const SCREEN_MARGINS: UiRect = UiRect::px(10.0, 365.0, 10.0, 10.0);
 const SMALL_PADDING: UiRect = UiRect::all(SMALL_SPACING);
 
-/// Returns the entities of the list node and the detail node
-#[must_use]
-pub fn selection_list_detail_screen<S: States>(
-    commands: &mut Commands,
-    state: S,
-) -> (Entity, Entity) {
-    let (list_panel, list_entity) =
-        scroll_panel_with_content_entity(commands, Some(SelectionList::default()));
-    let (detail_panel, detail_entity) = scroll_panel_with_content_entity(commands, None);
-
-    let content_panel = Spawn((
-        Node {
-            width: Val::Percent(100.0),
-            height: Val::Percent(100.0),
-            display: Display::Grid,
-            grid_template_columns: vec![
-                RepeatedGridTrack::flex(1, 1.0),
-                RepeatedGridTrack::flex(1, 3.0),
-            ],
-            grid_template_rows: vec![RepeatedGridTrack::auto(1)],
-            column_gap: SMALL_SPACING,
-            align_items: AlignItems::Start,
-            justify_content: JustifyContent::Start,
-            ..Node::default()
-        },
-        Pickable::IGNORE,
-        Children::spawn((list_panel, detail_panel)),
-    ));
-
-    spawn_root(commands, state, content_panel);
-
-    (list_entity, detail_entity)
-}
-
 /// Returns the entity of the content node
 #[must_use]
 pub fn scroll_screen<S: States>(commands: &mut Commands, state: S) -> Entity {
-    let (main_panel, content_entity) = scroll_panel_with_content_entity(commands, None);
+    let (main_panel, content_entity) = scroll_panel_with_content_entity(commands);
 
-    spawn_root(commands, state, main_panel);
+    spawn_panel_root(commands, state, main_panel);
 
     content_entity
 }
 
 #[must_use]
-fn scroll_panel_with_content_entity(
-    commands: &mut Commands,
-    selection_list: Option<SelectionList>,
-) -> (Spawn<impl Bundle>, Entity) {
+pub fn scroll_panel_with_content_entity(commands: &mut Commands) -> (Spawn<impl Bundle>, Entity) {
     let content_entity = commands
         .spawn((
             Node {
@@ -77,7 +38,6 @@ fn scroll_panel_with_content_entity(
                 ..Node::default()
             },
             Pickable::default(),
-            Maybe(selection_list),
         ))
         .id();
 
@@ -131,7 +91,11 @@ pub fn scroll_panel(limit_height: bool, content_entity: Entity) -> Spawn<impl Bu
     ))
 }
 
-fn spawn_root(commands: &mut Commands, state: impl States, content_panel: Spawn<impl Bundle>) {
+pub fn spawn_panel_root(
+    commands: &mut Commands,
+    state: impl States,
+    content_panel: Spawn<impl Bundle>,
+) {
     commands.spawn((
         // Entire screen
         Node {

@@ -11,9 +11,8 @@ use bevy::prelude::{
     JustifyContent, Node, Overflow, Spawn, SpawnRelated as _, Text, TextColor, Val, debug,
 };
 use cdda_json_files::CommonItemInfo;
-use hud::{
-    ButtonBuilder, Fonts, HOVERED_BUTTON_COLOR, SMALL_SPACING, SOFT_TEXT_COLOR, SelectionList,
-};
+use hud::{ButtonBuilder, Fonts, HOVERED_BUTTON_COLOR, SMALL_SPACING, SOFT_TEXT_COLOR};
+use selection_list::SelectionList;
 
 struct SectionData<'r> {
     fonts: &'r Fonts,

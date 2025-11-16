@@ -5,7 +5,6 @@ mod colors;
 mod fonts;
 mod panel;
 mod plugin;
-mod selection_list;
 mod spacing;
 
 pub use self::button::{ButtonBuilder, RunButton, manage_button_input, trigger_button_action};
@@ -15,7 +14,9 @@ pub use self::colors::{
     SOFT_TEXT_COLOR, WARN_TEXT_COLOR, text_color_expect_full, text_color_expect_half,
 };
 pub use self::fonts::Fonts;
-pub use self::panel::{LargeNode, scroll_panel, scroll_screen, selection_list_detail_screen};
+pub use self::panel::{
+    LargeNode, max_scroll, scroll_panel, scroll_panel_with_content_entity, scroll_screen,
+    spawn_panel_root,
+};
 pub use self::plugin::HudPlugin;
-pub use self::selection_list::{SelectionList, SelectionListStep, scroll_to_selection};
 pub use self::spacing::{LARGE_SPACING, MEDIUM_SPACING, SMALL_SPACING};

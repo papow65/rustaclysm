@@ -1,13 +1,15 @@
 [package]
-name = "hud"
-description = "A library for HUD components"
+name = "selection_list"
+description = "A library for selection lists"
 license = "AGPL-3.0-or-later"
 edition = "2024"
 
 [dependencies]
 bevy = { workspace = true }
-fastrand = { workspace = true }
+hud = { workspace = true }
 keyboard = { workspace = true }
+manual = { workspace = true }
+strum = { workspace = true }
 util = { workspace = true }
 
 [lints]

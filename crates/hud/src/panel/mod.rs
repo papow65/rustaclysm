@@ -3,7 +3,9 @@ mod screen;
 mod systems;
 mod util;
 
-pub use self::screen::{LargeNode, scroll_panel, scroll_screen, selection_list_detail_screen};
+pub use self::screen::{
+    LargeNode, scroll_panel, scroll_panel_with_content_entity, scroll_screen, spawn_panel_root,
+};
+pub use self::util::max_scroll;
 
 pub(crate) use self::plugin::PanelPlugin;
-pub(crate) use self::util::max_scroll;

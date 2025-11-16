@@ -2221,6 +2221,7 @@ dependencies = [
  "manual",
  "pathfinding",
  "regex",
+ "selection_list",
  "serde_json",
  "strum",
  "thread_local",
@@ -2553,7 +2554,6 @@ dependencies = [
  "bevy",
  "fastrand",
  "keyboard",
- "strum",
  "util",
 ]
 
@@ -4114,6 +4114,18 @@ checksum = "cc1f0cbffaac4852523ce30d8bd3c5cdc873501d96ff467ca09b6767bb8cd5c0"
 dependencies = [
  "core-foundation-sys",
  "libc",
+]
+
+[[package]]
+name = "selection_list"
+version = "0.0.0"
+dependencies = [
+ "bevy",
+ "hud",
+ "keyboard",
+ "manual",
+ "strum",
+ "util",
 ]
 
 [[package]]
