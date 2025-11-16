@@ -1,7 +1,6 @@
-use crate::screens::inventory::components::{InventoryAction, InventoryItemRow};
-use crate::screens::inventory::resource::InventoryScreen;
-use crate::screens::inventory::row_spawner::RowSpawner;
-use crate::screens::inventory::section::InventorySection;
+use crate::screens::inventory::{
+    InventoryAction, InventoryItemRow, InventoryScreen, InventorySection, RowSpawner,
+};
 use crate::{
     BehaviorState, BodyContainers, DebugTextShown, Envir, ExamineItem, GameplayScreenState,
     ItemHierarchy, ItemItem, MoveItem, Phrase, Pickup, Player, QueuedInstruction, Unwield, Wield,

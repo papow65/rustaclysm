@@ -1,7 +1,7 @@
-use crate::screens::inventory::components::{InventoryAction, InventoryItemRow};
-use crate::screens::inventory::resource::{ITEM_TEXT_COLOR, SELECTED_ITEM_TEXT_COLOR};
-use crate::screens::inventory::section::InventorySection;
-use crate::screens::inventory::systems::{InventoryButton, InventorySystem};
+use crate::screens::inventory::{
+    ITEM_TEXT_COLOR, InventoryAction, InventoryButton, InventoryItemRow, InventorySection,
+    InventorySystem, SELECTED_ITEM_TEXT_COLOR,
+};
 use crate::{DebugTextShown, Fragment, ItemHandler, ItemItem, Phrase};
 use bevy::ecs::entity::hash_map::EntityHashMap;
 use bevy::ecs::spawn::{SpawnIter, SpawnWith};
