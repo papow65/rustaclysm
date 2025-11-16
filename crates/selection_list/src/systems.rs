@@ -1,8 +1,8 @@
 use crate::{SelectionList, SelectionListStep};
 use bevy::ecs::query::QueryFilter;
 use bevy::prelude::{
-    ComputedNode, DespawnOnExit, Entity, In, IntoSystem, Local, Query, Res, ScrollPosition, States,
-    UiGlobalTransform, UiScale, World,
+    ComputedNode, DespawnOnExit, Entity, In, IntoSystem, Local, Query, Res, ScrollPosition, Single,
+    States, UiGlobalTransform, UiScale, World,
 };
 use hud::max_scroll;
 use keyboard::{Held, KeyBindings};
@@ -24,17 +24,12 @@ pub(super) fn create_selection_list_key_bindings<
     move |world: &mut World, held_bindings: Local<KeyBindings<S, (), Held>>| {
         let start = Instant::now();
 
-        let selection_list_entity = world
-            .query_filtered::<Entity, Q>()
-            .single(world)
-            .expect("Selection list should have been found");
-
         held_bindings.spawn(world, state.clone(), |bindings| {
             for &step in SelectionListStep::VARIANTS {
                 bindings.add(
                     step,
-                    (move || (selection_list_entity, step))
-                        .pipe(adjust_selection)
+                    (move || step)
+                        .pipe(adjust_selection::<Q>)
                         .pipe(scroll_to_selection)
                         .pipe(adapt_to_on_selection.clone()),
                 );
@@ -56,15 +51,13 @@ pub(super) fn create_selection_list_key_bindings<
     }
 }
 
-fn adjust_selection(
-    In((selection_list_entity, step)): In<(Entity, SelectionListStep)>,
-    mut selection_lists: Query<&mut SelectionList>,
+fn adjust_selection<Q: QueryFilter + 'static>(
+    In(step): In<SelectionListStep>,
+    mut selection_list: Single<(Entity, &mut SelectionList), Q>,
 ) -> (Entity, Option<Entity>, Option<Entity>) {
     let start = Instant::now();
 
-    let mut selection_list = selection_lists
-        .get_mut(selection_list_entity)
-        .expect("Recipe selection list should be found");
+    let (selection_list_entity, ref mut selection_list) = *selection_list;
 
     selection_list.adjust(step);
 
