@@ -1,4 +1,4 @@
-use bevy::prelude::{AssetServer, Font, Handle, Resource, TextFont};
+use bevy::prelude::{AssetServer, Font, FromWorld, Handle, Resource, TextFont, World};
 use util::AssetPaths;
 
 #[derive(Resource)]
@@ -53,5 +53,12 @@ impl Fonts {
             font_size: Self::HUGE_FONT_SIZE,
             ..TextFont::default()
         }
+    }
+}
+
+impl FromWorld for Fonts {
+    fn from_world(world: &mut World) -> Self {
+        let asset_server = world.get_resource().expect("AssetServer should exist");
+        Self::new(asset_server)
     }
 }
