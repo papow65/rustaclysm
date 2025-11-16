@@ -1,4 +1,4 @@
-use crate::screens::inventory::{InventoryItemRow, InventorySection, InventorySystem};
+use crate::screens::inventory::{InventorySection, InventorySystem};
 use bevy::ecs::entity::hash_map::EntityHashMap;
 use bevy::prelude::{BackgroundColor, Button, Children, Entity, Query, Resource, TextColor, With};
 use gameplay_location::HorizontalDirection;
@@ -36,12 +36,12 @@ impl InventoryScreen {
 
     pub(super) fn highlight_selected(
         item_row: Entity,
-        item_rows: &mut Query<(&InventoryItemRow, &mut BackgroundColor, &Children)>,
+        item_rows: &mut Query<(&mut BackgroundColor, &Children)>,
         item_buttons: &Query<&Children, With<Button>>,
         text_styles: &mut Query<&mut TextColor>,
         show_selected: bool,
     ) {
-        let (_, mut background_color, children) = item_rows
+        let (mut background_color, children) = item_rows
             .get_mut(item_row)
             .expect("Highlighted item row should ba found");
 

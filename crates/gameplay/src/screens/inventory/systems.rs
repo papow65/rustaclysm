@@ -126,7 +126,7 @@ fn move_inventory_selection(
     In(step): In<SelectionListStep>,
     inventory: Res<InventoryScreen>,
     mut selection_lists: Query<&mut SelectionList>,
-    mut item_rows: Query<(&InventoryItemRow, &mut BackgroundColor, &Children)>,
+    mut item_rows: Query<(&mut BackgroundColor, &Children)>,
     item_buttons: Query<&Children, With<Button>>,
     mut text_styles: Query<&mut TextColor>,
 ) -> Entity {
