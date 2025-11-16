@@ -2,15 +2,19 @@ use crate::screens::{find_nearby, find_nearby_pseudo, nearby_tools};
 use crate::{BodyContainers, GameplayScreenState, Item, Player, Shared};
 use bevy::platform::collections::HashSet;
 use bevy::prelude::{
-    AnyOf, Commands, DespawnOnExit, EntityCommands, KeyCode, Local, NextState, Pickable, Query,
-    Res, ResMut, Single, SpawnRelated as _, Text, TextSpan, With, World, children,
+    AnyOf, Commands, DespawnOnExit, Entity, EntityCommands, In, KeyCode, Local, NextState,
+    Pickable, Query, Res, ResMut, Single, SpawnRelated as _, Text, TextColor, TextSpan, With,
+    World, children,
 };
 use cdda_json_files::{CommonItemInfo, FurnitureInfo, InfoId, TerrainInfo, UseAction};
 use gameplay_location::{LocationCache, Pos};
 use gameplay_model::LastSeen;
-use hud::{Fonts, HARD_TEXT_COLOR, SOFT_TEXT_COLOR, WARN_TEXT_COLOR, scroll_screen};
+use hud::{
+    Fonts, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, SOFT_TEXT_COLOR, WARN_TEXT_COLOR, scroll_screen,
+};
 use keyboard::KeyBindings;
 use manual::ManualSection;
+use selection_list::SelectionList;
 use std::collections::{BTreeMap, btree_map::Entry};
 use std::{iter::once, sync::Arc, time::Instant};
 use util::{log_if_slow, uppercase_first};
@@ -57,53 +61,60 @@ fn add_actions(
     let nearby_tools_ = nearby_tools(&nearby_items, &nearby_pseudo_items);
     let nearby_tool_actions = tool_actions(nearby_tools_);
 
-    action_list.with_children(|parent| {
-        parent.spawn((
-            Text::from("Actions using nearby tools:"),
-            WARN_TEXT_COLOR,
-            fonts.regular(),
-            Pickable::IGNORE,
-        ));
+    let mut selection_list = SelectionList::default();
 
-        for ((action, _, level), items) in nearby_tool_actions {
-            let action = uppercase_first(action);
-            let items = items
-                .into_iter()
-                .map(|(_, name)| name)
-                .collect::<Vec<_>>()
-                .join(", ");
+    action_list
+        .with_children(|parent| {
             parent.spawn((
-                Text::from(&*action),
-                HARD_TEXT_COLOR,
+                Text::from("Actions using nearby tools:"),
+                WARN_TEXT_COLOR,
                 fonts.regular(),
                 Pickable::IGNORE,
-                children![
-                    (
-                        TextSpan::from(if let Some(level) = level {
-                            format!(" ({level})")
-                        } else {
-                            String::new()
-                        }),
-                        SOFT_TEXT_COLOR,
-                        fonts.regular(),
-                        Pickable::IGNORE,
-                    ),
-                    (
-                        TextSpan::from(": "),
-                        SOFT_TEXT_COLOR,
-                        fonts.regular(),
-                        Pickable::IGNORE,
-                    ),
-                    (
-                        TextSpan::from(items),
+            ));
+
+            for ((action, _, level), items) in nearby_tool_actions {
+                let action = uppercase_first(action);
+                let items = items
+                    .into_iter()
+                    .map(|(_, name)| name)
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                let child_entity = parent
+                    .spawn((
+                        Text::from(&*action),
                         HARD_TEXT_COLOR,
                         fonts.regular(),
                         Pickable::IGNORE,
-                    )
-                ],
-            ));
-        }
-    });
+                        children![
+                            (
+                                TextSpan::from(if let Some(level) = level {
+                                    format!(" ({level})")
+                                } else {
+                                    String::new()
+                                }),
+                                SOFT_TEXT_COLOR,
+                                fonts.regular(),
+                                Pickable::IGNORE,
+                            ),
+                            (
+                                TextSpan::from(": "),
+                                SOFT_TEXT_COLOR,
+                                fonts.regular(),
+                                Pickable::IGNORE,
+                            ),
+                            (
+                                TextSpan::from(items),
+                                HARD_TEXT_COLOR,
+                                fonts.regular(),
+                                Pickable::IGNORE,
+                            )
+                        ],
+                    ))
+                    .id();
+                selection_list.append(child_entity);
+            }
+        })
+        .insert(selection_list);
 }
 
 fn tool_actions(
@@ -198,4 +209,27 @@ fn exit_tools(mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>) {
     next_gameplay_state.set(GameplayScreenState::Base);
 
     log_if_slow("exit_tools", start);
+}
+
+pub(super) fn adapt_to_tool_selection(
+    In((previous_selected, selected)): In<(Option<Entity>, Option<Entity>)>,
+    mut text_colors: Query<&mut TextColor>,
+) {
+    let start = Instant::now();
+
+    if let Some(previous_selected) = previous_selected {
+        let text_color = &mut text_colors
+            .get_mut(previous_selected)
+            .expect("Previous highlighted tool action should be found");
+        **text_color = HARD_TEXT_COLOR;
+    }
+
+    if let Some(selected) = selected {
+        let text_color = &mut text_colors
+            .get_mut(selected)
+            .expect("Highlighted tool action should be found");
+        **text_color = GOOD_TEXT_COLOR;
+    }
+
+    log_if_slow("adapt_to_tool_selection", start);
 }

@@ -15,7 +15,7 @@ use std::time::Instant;
 use util::{log_if_slow, uppercase_first};
 
 #[expect(clippy::needless_pass_by_value)]
-pub(super) fn spawn_crafting_screen(
+pub(super) fn spawn_quality_screen(
     mut commands: Commands,
     location: Res<LocationCache>,
     fonts: Res<Fonts>,
@@ -26,8 +26,6 @@ pub(super) fn spawn_crafting_screen(
         &LastSeen,
     )>,
 ) {
-    let qualitiy_list = scroll_screen(&mut commands, GameplayScreenState::Quality);
-
     let (&player_pos, body_containers) = *player;
 
     let nearby_items = find_nearby(&location, &items, player_pos, body_containers);
@@ -41,6 +39,7 @@ pub(super) fn spawn_crafting_screen(
         .collect::<Vec<_>>();
     shown_qualities.sort_by_key(|(.., name)| name.clone());
 
+    let qualitiy_list = scroll_screen(&mut commands, GameplayScreenState::Quality);
     commands.entity(qualitiy_list).with_children(|parent| {
         parent.spawn((
             Text::from("Nearby qualities:"),
