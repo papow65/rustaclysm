@@ -4123,6 +4123,7 @@ version = "0.0.0"
 dependencies = [
  "bevy",
  "hud",
+ "indexmap",
  "keyboard",
  "manual",
  "strum",

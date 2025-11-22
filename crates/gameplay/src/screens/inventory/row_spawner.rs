@@ -12,7 +12,6 @@ use bevy::prelude::{
 };
 use cdda_json_files::CommonItemInfo;
 use hud::{ButtonBuilder, Fonts, HOVERED_BUTTON_COLOR, SMALL_SPACING, SOFT_TEXT_COLOR};
-use selection_list::SelectionList;
 
 struct SectionData<'r> {
     fonts: &'r Fonts,
@@ -138,9 +137,10 @@ impl SectionData<'_> {
 }
 
 struct InventoryBuilder<'r, 'c> {
-    selection_list: &'r mut SelectionList,
     section_by_item: &'r mut EntityHashMap<InventorySection>,
     panel: &'r mut ChildSpawnerCommands<'c>,
+    selectable_items: &'r mut Vec<Entity>,
+    selected_item: &'r mut Option<Entity>,
 }
 
 impl InventoryBuilder<'_, '_> {
@@ -153,15 +153,14 @@ impl InventoryBuilder<'_, '_> {
     ) {
         #[derive(PartialEq)]
         enum Selection {
-            FirstItem,
             PreviousSelected,
         }
 
-        let selecttion = if let Some(previous_selected_item) = section_data.previous_selected_item {
-            (item_entity == previous_selected_item).then_some(Selection::PreviousSelected)
-        } else {
-            (self.selection_list.selected.is_none()).then_some(Selection::FirstItem)
-        };
+        let selecttion = section_data
+            .previous_selected_item
+            .and_then(|previous_selected_item| {
+                (item_entity == previous_selected_item).then_some(Selection::PreviousSelected)
+            });
 
         let background_color = if selecttion.is_some() {
             HOVERED_BUTTON_COLOR
@@ -183,7 +182,7 @@ impl InventoryBuilder<'_, '_> {
         SOFT_TEXT_COLOR,
         );*/
 
-        let row_entity = self
+        let row = self
             .panel
             .spawn((
                 Node {
@@ -208,11 +207,11 @@ impl InventoryBuilder<'_, '_> {
                 )),
             ))
             .id();
+        self.selectable_items.push(row);
 
-        self.selection_list.append(row_entity);
         if selecttion == Some(Selection::PreviousSelected) {
             debug!("Previous selected found");
-            self.selection_list.selected = Some(row_entity);
+            *self.selected_item = Some(row);
         }
         self.section_by_item
             .insert(item_entity, section_data.section);
@@ -232,18 +231,20 @@ where
         fonts: &'r Fonts,
         debug_text_shown: &'r DebugTextShown,
         inventory_system: &'r InventorySystem,
-        selection_list: &'r mut SelectionList,
         section_by_item: &'r mut EntityHashMap<InventorySection>,
         inventory_panel: &'r mut ChildSpawnerCommands<'c>,
         previous_selected_item: Option<Entity>,
         section: InventorySection,
         drop_section: bool,
+        selectable_items: &'r mut Vec<Entity>,
+        selected_item: &'r mut Option<Entity>,
     ) -> Self {
         Self {
             builder: InventoryBuilder {
-                selection_list,
                 section_by_item,
                 panel: inventory_panel,
+                selectable_items,
+                selected_item,
             },
             section_data: SectionData {
                 fonts,

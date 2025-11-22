@@ -41,9 +41,10 @@ impl InventoryScreen {
         text_styles: &mut Query<&mut TextColor>,
         show_selected: bool,
     ) {
-        let (mut background_color, children) = item_rows
-            .get_mut(item_row)
-            .expect("Highlighted item row should ba found");
+        let Ok((mut background_color, children)) = item_rows.get_mut(item_row) else {
+            // This may occur when refreshing the inventory
+            return;
+        };
 
         *background_color = if show_selected {
             HOVERED_BUTTON_COLOR

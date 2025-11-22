@@ -2,9 +2,9 @@ use crate::screens::{find_nearby, find_nearby_pseudo, nearby_tools};
 use crate::{BodyContainers, GameplayScreenState, Item, Player, Shared};
 use bevy::platform::collections::HashSet;
 use bevy::prelude::{
-    AnyOf, Commands, DespawnOnExit, Entity, EntityCommands, In, KeyCode, Local, NextState,
-    Pickable, Query, Res, ResMut, Single, SpawnRelated as _, Text, TextColor, TextSpan, With,
-    World, children,
+    Added, AnyOf, Commands, DespawnOnExit, EntityCommands, KeyCode, Local, NextState, Pickable,
+    Query, RemovedComponents, Res, ResMut, Single, SpawnRelated as _, Text, TextColor, TextSpan,
+    With, World, children,
 };
 use cdda_json_files::{CommonItemInfo, FurnitureInfo, InfoId, TerrainInfo, UseAction};
 use gameplay_location::{LocationCache, Pos};
@@ -14,7 +14,7 @@ use hud::{
 };
 use keyboard::KeyBindings;
 use manual::ManualSection;
-use selection_list::SelectionList;
+use selection_list::{SelectableItemIn, SelectedItemIn};
 use std::collections::{BTreeMap, btree_map::Entry};
 use std::{iter::once, sync::Arc, time::Instant};
 use util::{log_if_slow, uppercase_first};
@@ -61,7 +61,7 @@ fn add_actions(
     let nearby_tools_ = nearby_tools(&nearby_items, &nearby_pseudo_items);
     let nearby_tool_actions = tool_actions(nearby_tools_);
 
-    let mut selection_list = SelectionList::default();
+    let mut item_entities = Vec::new();
 
     action_list
         .with_children(|parent| {
@@ -79,7 +79,7 @@ fn add_actions(
                     .map(|(_, name)| name)
                     .collect::<Vec<_>>()
                     .join(", ");
-                let child_entity = parent
+                let item_entity = parent
                     .spawn((
                         Text::from(&*action),
                         HARD_TEXT_COLOR,
@@ -111,10 +111,10 @@ fn add_actions(
                         ],
                     ))
                     .id();
-                selection_list.append(child_entity);
+                item_entities.push(item_entity);
             }
         })
-        .insert(selection_list);
+        .add_related::<SelectableItemIn>(&item_entities);
 }
 
 fn tool_actions(
@@ -212,24 +212,29 @@ fn exit_tools(mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>) {
 }
 
 pub(super) fn adapt_to_tool_selection(
-    In((previous_selected, selected)): In<(Option<Entity>, Option<Entity>)>,
+    mut selected_tools: Query<&mut TextColor, Added<SelectedItemIn>>,
+) {
+    let start = Instant::now();
+
+    for mut text_color in &mut selected_tools {
+        *text_color = GOOD_TEXT_COLOR;
+    }
+
+    log_if_slow("adapt_to_tool_selection", start);
+}
+
+pub(super) fn adapt_to_tool_deselection(
+    mut removed: RemovedComponents<SelectedItemIn>,
     mut text_colors: Query<&mut TextColor>,
 ) {
     let start = Instant::now();
 
-    if let Some(previous_selected) = previous_selected {
+    removed.read().for_each(|deselected_tool| {
         let text_color = &mut text_colors
-            .get_mut(previous_selected)
+            .get_mut(deselected_tool)
             .expect("Previous highlighted tool action should be found");
         **text_color = HARD_TEXT_COLOR;
-    }
+    });
 
-    if let Some(selected) = selected {
-        let text_color = &mut text_colors
-            .get_mut(selected)
-            .expect("Highlighted tool action should be found");
-        **text_color = GOOD_TEXT_COLOR;
-    }
-
-    log_if_slow("adapt_to_tool_selection", start);
+    log_if_slow("adapt_to_tool_deselection", start);
 }

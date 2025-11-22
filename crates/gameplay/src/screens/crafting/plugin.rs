@@ -1,37 +1,40 @@
-use crate::GameplayScreenState;
 use crate::screens::crafting::systems::{
-    adapt_to_crafting_selection, clear_crafting_screen, create_crafting_key_bindings,
+    adapt_to_crafting_deselection, adapt_to_crafting_selection, create_crafting_key_bindings,
     create_start_craft_system, refresh_crafting_screen, remove_crafting_resource,
     spawn_crafting_screen,
 };
+use crate::{GameplayScreenState, RefreshAfterBehavior};
 use bevy::prelude::{
-    App, IntoScheduleConfigs as _, IntoSystem as _, OnEnter, OnExit, Plugin, Update, With, in_state,
+    App, IntoScheduleConfigs as _, IntoSystem as _, OnEnter, OnExit, Plugin, Update, in_state,
+    on_message,
 };
-use selection_list::{SelectionList, selection_list_plugin};
+use selection_list::selection_list_plugin;
 
 pub(crate) struct CraftingScreenPlugin;
 
 impl Plugin for CraftingScreenPlugin {
     fn build(&self, app: &mut App) {
-        selection_list_plugin::<_, _, _, With<SelectionList>>(
-            app,
-            GameplayScreenState::Crafting,
-            "select craft",
-            adapt_to_crafting_selection,
-        );
+        selection_list_plugin::<_, ()>(app, GameplayScreenState::Crafting, "select craft");
 
         app.add_systems(
             OnEnter(GameplayScreenState::Crafting),
             (
-                create_start_craft_system.pipe(spawn_crafting_screen),
+                (
+                    create_start_craft_system.pipe(spawn_crafting_screen),
+                    refresh_crafting_screen,
+                )
+                    .chain(),
                 create_crafting_key_bindings,
             ),
         );
 
         app.add_systems(
             Update,
-            clear_crafting_screen
-                .pipe(refresh_crafting_screen)
+            (
+                adapt_to_crafting_deselection,
+                adapt_to_crafting_selection,
+                refresh_crafting_screen.run_if(on_message::<RefreshAfterBehavior>),
+            )
                 .run_if(in_state(GameplayScreenState::Crafting)),
         );
 

@@ -8,15 +8,15 @@ use crate::{
 use bevy::ecs::{entity::hash_map::EntityHashMap, system::SystemId};
 use bevy::platform::collections::HashMap;
 use bevy::prelude::{
-    BackgroundColor, Button, Children, Commands, DespawnOnExit, Entity, In, IntoSystem as _,
-    KeyCode, Local, NextState, Query, Res, ResMut, Single, Text, TextColor, TextSpan, With, World,
-    debug, error,
+    Added, BackgroundColor, Button, Children, Commands, DespawnOnExit, Entity, In, IntoSystem as _,
+    KeyCode, Local, NextState, Query, RemovedComponents, Res, ResMut, Single, Text, TextColor,
+    TextSpan, With, World, debug, error,
 };
 use gameplay_location::{HorizontalDirection, Nbor, Pos};
 use hud::{Fonts, HARD_TEXT_COLOR, SOFT_TEXT_COLOR, scroll_screen};
 use keyboard::KeyBindings;
 use manual::ManualSection;
-use selection_list::{SelectionList, SelectionListStep};
+use selection_list::{SelectableItemIn, SelectedItemIn, SelectionListItems, SelectionListStep};
 use std::time::Instant;
 use strum::VariantArray as _;
 use units::Timestamp;
@@ -39,7 +39,6 @@ pub(super) fn spawn_inventory(In(inventory_system): In<InventorySystem>, mut com
     let start = Instant::now();
 
     let panel = scroll_screen(&mut commands, GameplayScreenState::Inventory);
-    commands.entity(panel).insert(SelectionList::default());
 
     commands.insert_resource(InventoryScreen::new(
         panel,
@@ -96,26 +95,16 @@ pub(super) fn create_inventory_key_bindings(
 }
 
 pub(super) fn adapt_to_item_selection(
-    In((previous_selected, selected)): In<(Option<Entity>, Option<Entity>)>,
+    selected_rows: Query<Entity, Added<SelectedItemIn>>,
     mut item_rows: Query<(&mut BackgroundColor, &Children)>,
     item_buttons: Query<&Children, With<Button>>,
     mut text_styles: Query<&mut TextColor>,
 ) {
     let start = Instant::now();
 
-    if let Some(previous_selected) = previous_selected {
+    for selected_row in &selected_rows {
         InventoryScreen::highlight_selected(
-            previous_selected,
-            &mut item_rows,
-            &item_buttons,
-            &mut text_styles,
-            false,
-        );
-    }
-
-    if let Some(selected) = selected {
-        InventoryScreen::highlight_selected(
-            selected,
+            selected_row,
             &mut item_rows,
             &item_buttons,
             &mut text_styles,
@@ -124,6 +113,28 @@ pub(super) fn adapt_to_item_selection(
     }
 
     log_if_slow("adapt_to_item_selection", start);
+}
+
+pub(super) fn adapt_to_item_deselection(
+    mut removed: RemovedComponents<SelectedItemIn>,
+    mut item_rows: Query<(&mut BackgroundColor, &Children)>,
+    item_buttons: Query<&Children, With<Button>>,
+    mut text_styles: Query<&mut TextColor>,
+) {
+    let start = Instant::now();
+
+    removed.read().for_each(|deselected_row| {
+        //warn!("Deselected item: {deselected_row:?}");
+        InventoryScreen::highlight_selected(
+            deselected_row,
+            &mut item_rows,
+            &item_buttons,
+            &mut text_styles,
+            false,
+        );
+    });
+
+    log_if_slow("adapt_to_item_deselection", start);
 }
 
 fn set_inventory_drop_direction(
@@ -147,22 +158,14 @@ pub(super) fn refresh_inventory(
     item_hierarchy: ItemHierarchy,
     mut inventory: ResMut<InventoryScreen>,
     player: Single<(&Pos, &BodyContainers), With<Player>>,
-    mut selection_lists: Query<&mut SelectionList>,
-    previous_item_rows: Query<&InventoryItemRow>,
+    previous_item_row: Option<Single<&InventoryItemRow, With<SelectedItemIn>>>,
 ) {
     let start = Instant::now();
 
-    let mut selection_list = selection_lists
-        .get_mut(inventory.panel)
-        .expect("Inventory selection list should be found");
-
-    let previous_selected_item = selection_list
-        .selected
-        .and_then(|row| previous_item_rows.get(row).ok())
-        .map(|row| row.item)
+    let previous_selected_item = previous_item_row
+        .map(|previous| (*previous).item)
         .filter(|item| item_hierarchy.exists(*item));
     debug!("Refresh inventory, with previous selected {previous_selected_item:?}");
-    selection_list.clear();
 
     let (&player_pos, body_containers) = *player;
     let items_by_section = items_by_section(&envir, &item_hierarchy, player_pos, body_containers);
@@ -171,8 +174,11 @@ pub(super) fn refresh_inventory(
 
     let inventory = &mut *inventory;
     let drop_direction = inventory.drop_direction;
-    commands
-        .entity(inventory.panel)
+    let mut item_entities = Vec::new();
+    let mut selected = None;
+
+    let mut panel = commands.entity(inventory.panel);
+    panel
         .despawn_related::<Children>()
         .with_children(|parent| {
             for (section, items) in items_by_section {
@@ -198,19 +204,25 @@ pub(super) fn refresh_inventory(
                     &fonts,
                     &debug_text_shown,
                     &inventory.inventory_system,
-                    &mut selection_list,
                     &mut inventory.section_by_item,
                     parent,
                     previous_selected_item,
                     section,
                     drop_section,
+                    &mut item_entities,
+                    &mut selected,
                 );
                 item_hierarchy.walk(&mut row_spawner, items);
 
                 // empty row
                 parent.spawn((Text::from(" "), SOFT_TEXT_COLOR, fonts.regular()));
             }
-        });
+        })
+        .add_related::<SelectableItemIn>(&item_entities);
+
+    if let Some(selected) = selected {
+        panel.add_one_related::<SelectedItemIn>(selected);
+    }
 
     log_if_slow("refresh_inventory", start);
 }
@@ -251,24 +263,22 @@ fn items_by_section<'i>(
 #[expect(clippy::needless_pass_by_value)]
 fn handle_selected_item(
     In(action): In<InventoryAction>,
+    mut commands: Commands,
     mut behavior_state: ResMut<BehaviorState>,
     inventory: Res<InventoryScreen>,
-    mut selection_lists: Query<&mut SelectionList>,
-    item_rows: Query<&InventoryItemRow>,
+    selection_list: Single<(Entity, &SelectionListItems)>,
+    selected_row: Option<Single<(Entity, &InventoryItemRow), With<SelectedItemIn>>>,
 ) {
     let start = Instant::now();
 
-    let mut selection_list = selection_lists
-        .get_mut(inventory.panel)
-        .expect("Inventory selection list should be found");
-
-    let Some(selected_row) = selection_list.selected else {
+    let Some(selected_row) = selected_row else {
         return;
     };
-    let selected_row = item_rows
-        .get(selected_row)
-        .expect("Selected item row should be found");
+    let (selected_row_entity, selected_row) = *selected_row;
     let selected_item = selected_row.item;
+    let (selection_list_entity, selection_list) = *selection_list;
+
+    let next_row_entity = selection_list.offset(selected_row_entity, SelectionListStep::SingleDown);
 
     behavior_state.add(match action {
         InventoryAction::Examine => QueuedInstruction::ExamineItem(ExamineItem {
@@ -300,7 +310,9 @@ fn handle_selected_item(
     });
 
     if action != InventoryAction::Examine {
-        selection_list.adjust(SelectionListStep::SingleDown);
+        commands
+            .entity(selection_list_entity)
+            .add_one_related::<SelectedItemIn>(next_row_entity);
     }
 
     log_if_slow("handle_selected_item", start);

@@ -1,4 +1,3 @@
-use crate::SelectionList;
 use bevy::prelude::{
     AlignItems, Children, Commands, Display, Entity, JustifyContent, Node, Pickable,
     RepeatedGridTrack, Spawn, SpawnRelated as _, States, Val,
@@ -12,10 +11,6 @@ pub fn selection_list_detail_screen<S: States>(
     state: S,
 ) -> (Entity, Entity) {
     let (list_panel, list_entity) = scroll_panel_with_content_entity(commands);
-    commands
-        .entity(list_entity)
-        .insert(SelectionList::default());
-
     let (detail_panel, detail_entity) = scroll_panel_with_content_entity(commands);
 
     let content_panel = Spawn((

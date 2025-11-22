@@ -4,15 +4,15 @@ use crate::screens::crafting::{
 };
 use crate::screens::{find_nearby, find_nearby_pseudo, find_sources, nearby_qualities};
 use crate::{
-    BehaviorState, BodyContainers, Clock, GameplayScreenState, Item, ItemHierarchy, ItemItem,
+    BehaviorState, BodyContainers, GameplayScreenState, Item, ItemHierarchy, ItemItem,
     LogMessageWriter, Player, QueuedInstruction, Shared,
 };
 use bevy::ecs::{spawn::SpawnIter, system::SystemId};
 use bevy::platform::collections::{HashMap, HashSet};
 use bevy::prelude::{
-    AnyOf, Children, Commands, DespawnOnExit, Display, Entity, In, KeyCode, Local, NextState, Node,
-    Pickable, Query, Res, ResMut, Single, SpawnRelated as _, Text, TextColor, With, World,
-    children, debug, error,
+    Added, AnyOf, Children, Commands, DespawnOnExit, Entity, In, KeyCode, Local, NextState,
+    Pickable, Query, RemovedComponents, Res, ResMut, Single, SpawnRelated as _, Text, TextColor,
+    With, World, children, debug, error,
 };
 use cdda_json_files::{
     Alternative, AutoLearn, BookLearn, BookLearnItem, CalculatedRequirement, CommonItemInfo,
@@ -26,10 +26,9 @@ use gameplay_model::LastSeen;
 use hud::{BAD_TEXT_COLOR, ButtonBuilder, Fonts, WARN_TEXT_COLOR};
 use keyboard::KeyBindings;
 use manual::ManualSection;
-use selection_list::{SelectionList, selection_list_detail_screen};
+use selection_list::{SelectableItemIn, SelectedItemIn, selection_list_detail_screen};
 use std::num::NonZeroU32;
 use std::{sync::Arc, time::Instant};
-use units::Timestamp;
 use util::{log_if_slow, uppercase_first};
 
 #[derive(Debug)]
@@ -49,7 +48,6 @@ pub(super) fn spawn_crafting_screen(
     commands.insert_resource(CraftingScreen::new(
         recipe_list,
         recipe_details,
-        Timestamp::ZERO,
         start_craft_system,
     ));
 }
@@ -85,26 +83,16 @@ fn exit_crafting(mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>
 
 #[expect(clippy::needless_pass_by_value)]
 pub(super) fn adapt_to_crafting_selection(
-    In((previous_selected, selected)): In<(Option<Entity>, Option<Entity>)>,
     mut commands: Commands,
     fonts: Res<Fonts>,
     crafting_screen: Res<CraftingScreen>,
-    mut recipes: Query<(&mut TextColor, &RecipeSituation)>,
+    mut selected_recipes: Query<(&mut TextColor, &RecipeSituation), Added<SelectedItemIn>>,
 ) {
     let start = Instant::now();
 
-    if let Some(previous_selected) = previous_selected {
-        let (text_color, recipe) = &mut recipes
-            .get_mut(previous_selected)
-            .expect("Previous highlighted recipe should be found");
-        **text_color = recipe.color(false);
-    }
-
-    if let Some(selected) = selected {
-        let (text_color, recipe) = &mut recipes
-            .get_mut(selected)
-            .expect("Highlighted recipe should be found");
-        **text_color = recipe.color(true);
+    for (mut text_color, recipe) in &mut selected_recipes {
+        //debug!("Selected: {}", recipe.name);
+        *text_color = recipe.color(true);
 
         show_recipe(&mut commands, &fonts, &crafting_screen, recipe);
     }
@@ -112,46 +100,31 @@ pub(super) fn adapt_to_crafting_selection(
     log_if_slow("adapt_to_crafting_selection", start);
 }
 
-#[expect(clippy::needless_pass_by_value)]
-pub(super) fn clear_crafting_screen(
-    clock: Clock,
-    mut crafting_screen: ResMut<CraftingScreen>,
-    mut selection_lists: Query<&mut SelectionList>,
-    children: Query<&Children>,
-    mut styles: Query<&mut Node>,
-) -> bool {
-    if crafting_screen.last_time == clock.time() {
-        return false;
-    }
+pub(super) fn adapt_to_crafting_deselection(
+    mut removed: RemovedComponents<SelectedItemIn>,
+    mut recipes: Query<(&mut TextColor, &RecipeSituation)>,
+) {
+    let start = Instant::now();
 
-    let mut selection_list = selection_lists
-        .get_mut(crafting_screen.recipe_list)
-        .expect("Recipe selection list should be found");
+    removed.read().for_each(|deselected_recipe| {
+        let (text_color, recipe) = &mut recipes
+            .get_mut(deselected_recipe)
+            .expect("Previous highlighted recipe should be found");
+        **text_color = recipe.color(false);
+        //debug!("Deselected: {}", recipe.name);
+    });
 
-    crafting_screen.last_time = clock.time();
-    selection_list.clear();
-
-    if let Ok(children) = children.get(crafting_screen.recipe_list) {
-        for &child in children {
-            if let Ok(mut style) = styles.get_mut(child) {
-                style.display = Display::None;
-            }
-        }
-    }
-
-    true
+    log_if_slow("adapt_to_crafting_deselection", start);
 }
 
 #[expect(clippy::needless_pass_by_value)]
 pub(super) fn refresh_crafting_screen(
-    In(run): In<bool>,
     mut commands: Commands,
     location: Res<LocationCache>,
     fonts: Res<Fonts>,
     infos: Res<Infos>,
     active_sav: Res<ActiveSav>,
     crafting_screen: Res<CraftingScreen>,
-    mut selection_lists: Query<&mut SelectionList>,
     hierarchy: ItemHierarchy,
     player: Single<(&Pos, &BodyContainers), With<Player>>,
     items: Query<(Item, &LastSeen)>,
@@ -160,10 +133,6 @@ pub(super) fn refresh_crafting_screen(
         &LastSeen,
     )>,
 ) {
-    if !run {
-        return;
-    }
-
     let (&player_pos, body_containers) = *player;
 
     let nearby_items = find_nearby(&location, &items, player_pos, body_containers);
@@ -184,13 +153,11 @@ pub(super) fn refresh_crafting_screen(
         &nearby_sources,
     );
 
-    let mut selection_list = selection_lists
-        .get_mut(crafting_screen.recipe_list)
-        .expect("Recipe selection list should be found");
+    let mut recipe_entities = Vec::new();
 
-    let mut first_recipe = None;
     commands
         .entity(crafting_screen.recipe_list)
+        .despawn_related::<Children>()
         .with_children(|parent| {
             parent.spawn((
                 Text::from("Known recipies:"),
@@ -199,37 +166,29 @@ pub(super) fn refresh_crafting_screen(
             ));
 
             for recipe in shown_recipes {
-                let first = selection_list.selected.is_none();
-                if first {
-                    first_recipe = Some(recipe.clone());
-                }
-
-                let entity = parent
+                let recipe_entity = parent
                     .spawn((
                         Text::from(&*recipe.name),
-                        recipe.color(first),
+                        recipe.color(false),
                         fonts.regular(),
                         recipe,
                         Pickable::IGNORE,
                     ))
                     .id();
-                selection_list.append(entity);
+                recipe_entities.push(recipe_entity);
             }
-        });
+        })
+        .add_related::<SelectableItemIn>(&recipe_entities);
 
-    if let Some(first_recipe) = first_recipe {
-        show_recipe(&mut commands, &fonts, &crafting_screen, &first_recipe);
-    } else {
-        commands
-            .entity(crafting_screen.recipe_details)
-            .with_children(|parent| {
-                parent.spawn((
-                    Text::from("No recipes known"),
-                    BAD_TEXT_COLOR,
-                    fonts.regular(),
-                ));
-            });
-    }
+    commands
+        .entity(crafting_screen.recipe_details)
+        .with_children(|parent| {
+            parent.spawn((
+                Text::from("No recipes known"),
+                BAD_TEXT_COLOR,
+                fonts.regular(),
+            ));
+        });
 }
 
 fn nearby_manuals(nearby_items: &[ItemItem]) -> HashMap<InfoId<CommonItemInfo>, Arc<str>> {
@@ -594,18 +553,12 @@ fn start_craft(
     mut message_writer: LogMessageWriter,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
     mut behavior_state: ResMut<BehaviorState>,
-    crafting_screen: Res<CraftingScreen>,
-    selection_lists: Query<&SelectionList>,
+    selected_item_in: Single<Entity, With<SelectedItemIn>>,
     recipes: Query<&RecipeSituation>,
 ) {
     let start = Instant::now();
 
-    let selection_list = selection_lists
-        .get(crafting_screen.recipe_list)
-        .expect("Recipe selection list should be found");
-    let selected_craft = selection_list
-        .selected
-        .expect("There should be a selected craft");
+    let selected_craft = *selected_item_in;
     let recipe = recipes
         .get(selected_craft)
         .expect("The selected craft should be found");
