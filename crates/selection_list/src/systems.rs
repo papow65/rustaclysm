@@ -1,8 +1,8 @@
 use crate::{SelectedItemIn, SelectedItemOf, SelectionListItems, SelectionListStep};
 use bevy::ecs::query::QueryFilter;
 use bevy::prelude::{
-    Changed, Commands, ComputedNode, DespawnOnExit, Entity, In, IntoSystem as _, Local, Query, Res,
-    ScrollPosition, Single, States, UiGlobalTransform, UiScale, Without, World,
+    Changed, Commands, ComputedNode, DespawnOnExit, Entity, In, IntoSystem as _, Local, Query,
+    ScrollPosition, Single, States, UiGlobalTransform, Without, World,
 };
 use hud::max_scroll;
 use keyboard::{Held, KeyBindings};
@@ -47,6 +47,8 @@ fn adjust_selection<Q: QueryFilter + 'static>(
 ) {
     let start = Instant::now();
 
+    //warn!("Adjust selection: {step:?}");
+
     let (selection_list_entity, selection_list_items, previous_selected_item_of) = *selection_list;
 
     let previous_selected = previous_selected_item_of.selected();
@@ -59,37 +61,44 @@ fn adjust_selection<Q: QueryFilter + 'static>(
     log_if_slow("move_crafting_selection", start);
 }
 
-#[expect(clippy::needless_pass_by_value)]
 pub(crate) fn scroll_to_selection<Q: QueryFilter + 'static>(
-    ui_scale: Res<UiScale>,
-    selection_list: Single<(Entity, &SelectedItemOf), Q>,
-    mut nodes: Query<(&UiGlobalTransform, &ComputedNode, &mut ScrollPosition)>,
+    mut selection_list: Single<
+        (
+            &UiGlobalTransform,
+            &ComputedNode,
+            &mut ScrollPosition,
+            &SelectedItemOf,
+        ),
+        (Q, Changed<SelectedItemOf>),
+    >,
+    ui_global_transforms: Query<&UiGlobalTransform>,
 ) {
-    // The middle of the list is also the middle of the screen. This makes using `GlobalTransform` convenient.
+    // The middle of the list is also the middle of the screen. This makes using `UiGlobalTransform` convenient.
 
-    let (selection_list_entity, selection_list) = *selection_list;
-    let selected = selection_list.selected();
+    let (parent_transform, selection_node, ref mut scroll_position, selected_item_of) =
+        *selection_list;
 
-    let (&transform, ..) = nodes
-        .get(selected)
+    let selected_entity = selected_item_of.selected();
+    let transform = ui_global_transforms
+        .get(selected_entity)
         .expect("Selected item should have a global transform");
 
-    let (parent_transform, selection_node, mut scroll_position) = nodes
-        .get_mut(selection_list_entity)
-        .expect("Selection list entity should be found");
     let max_scroll = max_scroll(selection_node);
+    let adjustment = (transform.translation.y - parent_transform.translation.y)
+        * selection_node.inverse_scale_factor;
+
+    // let old_scroll_pos_y = scroll_position.y;
+    scroll_position.y = (scroll_position.y + adjustment).clamp(0.0, max_scroll.y);
     //warn!(
-    //    "scroll to selection: spy {}, tty {}, ptty {}, uis {}, msy {}",
-    //    scroll_position.y,
+    //    "scroll to selection: t.t.y {}, pt.t.y {}, sn.isf {} => adj {}, [0 ~ ms.y {}] => sp.y {}->{}",
     //    transform.translation.y,
     //    parent_transform.translation.y,
-    //    ui_scale.0,
-    //    max_scroll.y
+    //    selection_node.inverse_scale_factor,
+    //    adjustment,
+    //    max_scroll.y,
+    //    old_scroll_pos_y,
+    //    scroll_position.y
     //);
-    scroll_position.y = (scroll_position.y
-        + (transform.translation.y - parent_transform.translation.y) / ui_scale.0)
-        .clamp(0.0, max_scroll.y);
-    //warn!("new scroll pos: {}", scroll_position.y);
 }
 
 pub(crate) fn select_first_when_empty(
