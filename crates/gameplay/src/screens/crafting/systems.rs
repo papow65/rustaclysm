@@ -564,7 +564,7 @@ fn start_craft(
         .expect("The selected craft should be found");
     if recipe.craftable() {
         debug!("Craft {recipe:?}");
-        behavior_state.add(QueuedInstruction::StartCraft(recipe.clone()));
+        behavior_state.push(QueuedInstruction::StartCraft(recipe.clone()));
         // Close the crafting screen
         next_gameplay_state.set(GameplayScreenState::Base);
     } else {

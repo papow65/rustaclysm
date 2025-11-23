@@ -63,6 +63,7 @@ pub(crate) enum QueuedInstruction {
     ToggleAutoDefend,
     ChangePace(ChangePace),
     ExamineItem(ExamineItem),
+    /// Cancelled by the player
     CancelAction,
     /// Set automatically
     Interrupt(Interruption),

@@ -169,7 +169,7 @@ fn handle_queued_instruction(
 ) {
     //trace!("{focus_state:?} {instruction:?}");
     match (*focus_state, &instruction) {
-        (FocusState::Normal, _) => behavior_state.add(instruction),
+        (FocusState::Normal, _) => behavior_state.push(instruction),
         (FocusState::ExaminingPos(target), QueuedInstruction::ToggleAutoTravel) => {
             //trace!("Autotravel pos");
             next_focus_state.set(FocusState::Normal);

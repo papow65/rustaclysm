@@ -280,7 +280,7 @@ fn handle_selected_item(
 
     let next_row_entity = selection_list.offset(selected_row_entity, SelectionListStep::SingleDown);
 
-    behavior_state.add(match action {
+    behavior_state.push(match action {
         InventoryAction::Examine => QueuedInstruction::ExamineItem(ExamineItem {
             item_entity: selected_item,
         }),
@@ -338,7 +338,7 @@ pub(super) fn handle_inventory_action(
         InventoryAction::Wield => QueuedInstruction::Wield(Wield { item_entity }),
         InventoryAction::Unwield => QueuedInstruction::Unwield(Unwield { item_entity }),
     };
-    behavior_state.add(instruction);
+    behavior_state.push(instruction);
 
     log_if_slow("handle_inventory_action", start);
 }
