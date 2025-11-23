@@ -27,7 +27,7 @@ use self::actor::{
     Sleep, Smash, Stamina, StaminaCost, StaminaImpact, StartCraft, Stay, Step, Subject, Unwield,
     WalkingMode, Wield,
 };
-use self::behavior::{BehaviorPlugin, BehaviorState};
+use self::behavior::{BehaviorLoopSet, BehaviorPlugin, BehaviorState};
 use self::common::{
     Evolution, Interruption, Limited, LocalTerrain, PlayerDirection, QueuedInstruction, Region,
     Visible, WalkingCost, ZoneRegion,

@@ -1,6 +1,8 @@
 use crate::behavior::schedule::BehaviorSchedule;
 use crate::behavior::systems::refresh::refresh_all;
-use crate::{BehaviorState, PlayerActionState, RefreshAfterBehavior, RelativeSegments};
+use crate::{
+    BehaviorLoopSet, BehaviorState, PlayerActionState, RefreshAfterBehavior, RelativeSegments,
+};
 use bevy::ecs::schedule::{IntoScheduleConfigs as _, ScheduleConfigs};
 use bevy::ecs::system::ScheduleSystem;
 use bevy::prelude::{State, World, debug, on_message, resource_exists};
@@ -9,7 +11,7 @@ use util::log_if_slow;
 
 pub(in super::super) fn loop_behavior_and_refresh() -> ScheduleConfigs<ScheduleSystem> {
     (
-        loop_behavior,
+        loop_behavior.in_set(BehaviorLoopSet),
         refresh_all().run_if(on_message::<RefreshAfterBehavior>),
     )
         .chain()
