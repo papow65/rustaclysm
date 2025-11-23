@@ -1,8 +1,14 @@
-use crate::{CancelHandling, PlayerActionState};
+use crate::PlayerActionState;
 use application_state::ApplicationState;
 use bevy::prelude::{StateSet as _, SubStates};
 use gameplay_location::{Pos, ZoneLevel};
 use std::fmt;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum CancelHandling {
+    Queued,
+    Menu,
+}
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, SubStates)]
 #[source(ApplicationState = ApplicationState::Gameplay)]

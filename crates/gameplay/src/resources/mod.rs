@@ -7,7 +7,7 @@ mod relative_segments;
 mod visualization_update;
 mod zone_level_ids;
 
-pub(crate) use self::camera_offset::CameraOffset;
+pub(crate) use self::camera_offset::{CameraOffset, ZoomDirection, ZoomDistance};
 pub(crate) use self::elevation_visibility::ElevationVisibility;
 pub(crate) use self::expanded::Expanded;
 pub(crate) use self::explored::{Explored, SeenFrom};

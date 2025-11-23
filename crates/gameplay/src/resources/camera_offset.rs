@@ -1,5 +1,16 @@
-use crate::{ZoomDirection, ZoomDistance};
 use bevy::prelude::{Resource, Vec2, Vec3};
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum ZoomDistance {
+    Close,
+    Far,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum ZoomDirection {
+    In,
+    Out,
+}
 
 #[derive(Debug, Default, Resource)]
 pub(crate) struct CameraOffset {

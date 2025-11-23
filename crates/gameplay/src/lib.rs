@@ -29,8 +29,8 @@ use self::actor::{
 };
 use self::behavior::{BehaviorPlugin, BehaviorState};
 use self::common::{
-    CancelHandling, Evolution, Interruption, Limited, LocalTerrain, PlayerDirection,
-    QueuedInstruction, Region, Visible, WalkingCost, ZoneRegion, ZoomDirection, ZoomDistance,
+    Evolution, Interruption, Limited, LocalTerrain, PlayerDirection, QueuedInstruction, Region,
+    Visible, WalkingCost, ZoneRegion,
 };
 use self::components::{
     Accessible, CameraBase, Closeable, Corpse, CorpseRaise, Craft, ExamineCursor, HealingDuration,
@@ -39,15 +39,15 @@ use self::components::{
 };
 use self::events::{
     ActorChange, ActorEvent, CorpseChange, CorpseEvent, Damage, DespawnSubzoneLevel,
-    DespawnZoneLevel, Healing, Intransient, LogMessage, LogMessageTransience, RefreshAfterBehavior,
-    Severity, SpawnSubzoneLevel, SpawnZoneLevel, TerrainChange, TerrainEvent, Toggle,
-    UpdateZoneLevelVisibility,
+    DespawnZoneLevel, EventsPlugin, Healing, Intransient, LogMessage, LogMessageTransience,
+    RefreshAfterBehavior, Severity, SpawnSubzoneLevel, SpawnZoneLevel, TerrainChange, TerrainEvent,
+    Toggle, UpdateZoneLevelVisibility,
 };
-use self::focus::{Focus, FocusState};
+use self::focus::{CancelHandling, Focus, FocusPlugin, FocusState};
 use self::item::{
     Amount, BodyContainers, Containable, Container, ContainerLimits, Filthy, InPocket, Item,
-    ItemHandler, ItemHierarchy, ItemIntegrity, ItemItem, Phase, Pocket, PocketContents, PocketItem,
-    PocketOf, Pockets, SealedPocket,
+    ItemChecksPlugin, ItemHandler, ItemHierarchy, ItemIntegrity, ItemItem, Phase, Pocket,
+    PocketContents, PocketItem, PocketOf, Pockets, SealedPocket,
 };
 use self::phrase::{
     DebugText, DebugTextShown, Fragment, Phrase, PhrasePlugin, Positioning, ProtoPhrase,
@@ -55,12 +55,22 @@ use self::phrase::{
 use self::relations::{ObjectOn, Objects, TileIn, VehiclePartOf};
 use self::resources::{
     CameraOffset, ElevationVisibility, Expanded, Explored, RelativeSegment, RelativeSegments,
-    SeenFrom, VisualizationUpdate, ZoneLevelIds,
+    ResourcePlugin, SeenFrom, VisualizationUpdate, ZoneLevelIds, ZoomDirection, ZoomDistance,
 };
-use self::screens::{Consumed, GameplayScreenState, RecipeSituation, update_camera_offset};
-use self::spawn::TileSpawner;
+use self::screens::{
+    Consumed, GameplayScreenState, RecipeSituation, ScreensPlugin, update_camera_offset,
+};
+use self::sidebar::SidebarPlugin;
+use self::spawn::{
+    TileSpawner, despawn_systems, handle_region_asset_events, handle_zone_levels,
+    spawn_initial_entities, spawn_subzone_levels, spawn_subzones_for_camera, update_explored,
+};
 use self::system_params::{
     Collision, CurrentlyVisible, CurrentlyVisibleBuilder, Envir, LogMessageWriter, NoStairs,
+};
+use self::systems::{
+    check_failed_asset_loading, count_assets, count_pos, create_gameplay_key_bindings,
+    update_visibility, update_visualization_on_item_move,
 };
 use self::time::{Clock, TimePlugin, Timeouts};
 use self::transition::TransitionPlugin;

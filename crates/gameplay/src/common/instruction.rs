@@ -2,12 +2,6 @@ use crate::{ChangePace, ExamineItem, Fragment, MoveItem, Pickup, RecipeSituation
 use gameplay_location::{HorizontalDirection, Nbor};
 use strum::VariantArray;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum CancelHandling {
-    Queued,
-    Menu,
-}
-
 #[derive(Clone, Copy, Debug, PartialEq, Eq, VariantArray)]
 pub(crate) enum PlayerDirection {
     Above,
@@ -78,16 +72,4 @@ impl QueuedInstruction {
     pub(crate) const fn held_key_allowed(&self) -> bool {
         matches!(self, Self::Offset(_))
     }
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum ZoomDistance {
-    Close,
-    Far,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum ZoomDirection {
-    In,
-    Out,
 }
