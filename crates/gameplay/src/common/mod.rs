@@ -1,10 +1,8 @@
-mod instruction;
 mod limited;
 mod local_terrain;
 mod region;
 mod walking_cost;
 
-pub(crate) use self::instruction::{Interruption, PlayerDirection, QueuedInstruction};
 pub(crate) use self::limited::{Evolution, Limited};
 pub(crate) use self::local_terrain::LocalTerrain;
 pub(crate) use self::region::{Region, ZoneRegion};

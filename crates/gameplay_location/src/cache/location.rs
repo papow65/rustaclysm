@@ -50,11 +50,6 @@ impl LocationCache {
         //trace!("Location: {entity:?} @ {pos:?} removed");
     }
 
-    pub fn move_(&mut self, entity: Entity, to: Pos) {
-        self.remove(entity);
-        self.add(to, entity);
-    }
-
     fn add(&mut self, pos: Pos, entity: Entity) {
         self.objects.entry(pos).or_default().push(entity);
         self.positions.insert(entity, pos);

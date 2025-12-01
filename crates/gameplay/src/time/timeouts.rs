@@ -34,4 +34,14 @@ impl Timeouts {
     pub(super) fn max_timestamp(&self) -> Timestamp {
         self.m.values().min().copied().unwrap_or(self.start)
     }
+
+    pub(crate) fn is_player_next(&self, player: Entity, entities: &[Entity]) -> bool {
+        let Some(player) = self.m.get(&player) else {
+            return true;
+        };
+
+        entities
+            .iter()
+            .all(|entity| self.m.get(entity).is_none_or(|other| other <= player))
+    }
 }

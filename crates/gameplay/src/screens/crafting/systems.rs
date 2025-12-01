@@ -4,8 +4,8 @@ use crate::screens::crafting::{
 };
 use crate::screens::{find_nearby, find_nearby_pseudo, find_sources, nearby_qualities};
 use crate::{
-    BehaviorState, BodyContainers, GameplayScreenState, Item, ItemHierarchy, ItemItem,
-    LogMessageWriter, Player, QueuedInstruction, Shared,
+    BodyContainers, GameplayScreenState, Item, ItemHierarchy, ItemItem, LogMessageWriter, Player,
+    PlayerInstructions, QueuedInstruction, Shared,
 };
 use bevy::ecs::{spawn::SpawnIter, system::SystemId};
 use bevy::platform::collections::{HashMap, HashSet};
@@ -551,8 +551,8 @@ fn show_recipe(
 #[expect(clippy::needless_pass_by_value)]
 fn start_craft(
     mut message_writer: LogMessageWriter,
+    mut player_instructions: ResMut<PlayerInstructions>,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
-    mut behavior_state: ResMut<BehaviorState>,
     selected_item_in: Single<Entity, With<SelectedItemIn>>,
     recipes: Query<&RecipeSituation>,
 ) {
@@ -564,7 +564,7 @@ fn start_craft(
         .expect("The selected craft should be found");
     if recipe.craftable() {
         debug!("Craft {recipe:?}");
-        behavior_state.push(QueuedInstruction::StartCraft(recipe.clone()));
+        player_instructions.push(QueuedInstruction::StartCraft(recipe.clone()));
         // Close the crafting screen
         next_gameplay_state.set(GameplayScreenState::Base);
     } else {

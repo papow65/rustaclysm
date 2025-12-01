@@ -5,9 +5,9 @@ use crate::actor::phrases::{
     YouWakeUpAfterSleeping,
 };
 use crate::{
-    ActorItem, BehaviorState, Breath, ContinueCraft, CurrentlyVisibleBuilder, Envir, Explored,
-    Faction, Fragment, Intelligence, Interruption, LogMessageWriter, MoveItem, PlannedAction,
-    PlayerDirection, Pulp, QueuedInstruction, RecipeSituation, Severity, StartCraft,
+    ActorItem, Breath, ContinueCraft, CurrentlyVisibleBuilder, Envir, Explored, Faction, Fragment,
+    Intelligence, Interruption, LogMessageWriter, MoveItem, PlannedAction, PlayerDirection,
+    PlayerInstructions, Pulp, QueuedInstruction, RecipeSituation, Severity, StartCraft,
 };
 use application_state::ApplicationState;
 use bevy::prelude::{
@@ -85,16 +85,20 @@ impl PlayerActionState {
         )
     }
 
+    pub(crate) const fn is_automatic(&self) -> bool {
+        !matches!(*self, Self::Normal | Self::PickingNbor(_))
+    }
+
     pub(crate) fn plan_manual_action(
         &self,
         next_state: &mut ResMut<NextState<Self>>,
         message_writer: &mut LogMessageWriter,
         envir: &Envir,
-        behavior_state: &mut BehaviorState,
+        player_instructions: &mut PlayerInstructions,
         player: &ActorItem,
         now: Timestamp,
     ) -> Option<PlannedAction> {
-        while let Some(instruction) = behavior_state.pop() {
+        while let Some(instruction) = player_instructions.pop() {
             if let Some(action) = self.plan(
                 next_state,
                 message_writer,
@@ -116,7 +120,7 @@ impl PlayerActionState {
     pub(crate) fn plan_automatic_action(
         &self,
         currently_visible_builder: &CurrentlyVisibleBuilder,
-        behavior_state: &mut BehaviorState,
+        player_instructions: &mut PlayerInstructions,
         explored: &Explored,
         player: &ActorItem,
         now: Timestamp,
@@ -127,22 +131,29 @@ impl PlayerActionState {
             .faction
             .enemy_name(currently_visible_builder, factions, player);
         match self {
-            Self::Dragging { from } => plan_auto_drag(envir, behavior_state, from, enemy_name),
-            Self::Crafting { item } => plan_auto_continue_craft(behavior_state, *item, enemy_name),
+            Self::Dragging { from } => plan_auto_drag(envir, player_instructions, from, enemy_name),
+            Self::Crafting { item } => {
+                plan_auto_continue_craft(player_instructions, *item, enemy_name)
+            }
             Self::AutoDefend => {
                 let enemies = player
                     .faction
                     .enemies(currently_visible_builder, factions, player);
-                plan_auto_defend(envir, behavior_state, player, &enemies)
+                plan_auto_defend(envir, player_instructions, player, &enemies)
             }
-            Self::AutoTravel { target } => {
-                plan_auto_travel(envir, behavior_state, explored, player, *target, enemy_name)
-            }
+            Self::AutoTravel { target } => plan_auto_travel(
+                envir,
+                player_instructions,
+                explored,
+                player,
+                *target,
+                enemy_name,
+            ),
             Self::Pulping { direction } => {
-                plan_auto_pulp(envir, behavior_state, player, *direction, enemy_name)
+                plan_auto_pulp(envir, player_instructions, player, *direction, enemy_name)
             }
-            Self::Waiting { until } => plan_auto_wait(behavior_state, now, until, enemy_name),
-            Self::Sleeping { from } => plan_auto_sleep(behavior_state, now, from),
+            Self::Waiting { until } => plan_auto_wait(player_instructions, now, until, enemy_name),
+            Self::Sleeping { from } => plan_auto_sleep(player_instructions, now, from),
             _ => None,
         }
     }
@@ -716,13 +727,13 @@ impl fmt::Display for PlayerActionState {
 
 fn plan_auto_drag(
     envir: &Envir<'_, '_>,
-    behavior_state: &mut BehaviorState,
+    player_instructions: &mut PlayerInstructions,
     from: &Pos,
     enemy_name: Option<Fragment>,
 ) -> Option<PlannedAction> {
     if let Some(item) = envir.find_item(*from) {
         interrupt_on_danger(
-            behavior_state,
+            player_instructions,
             enemy_name,
             PlannedAction::MoveItem(MoveItem {
                 item_entity: item.entity,
@@ -730,19 +741,19 @@ fn plan_auto_drag(
             }),
         )
     } else {
-        behavior_state.interrupt(Interruption::Finished);
+        player_instructions.interrupt(Interruption::Finished);
         None
     }
 }
 
 fn plan_auto_continue_craft(
-    behavior_state: &mut BehaviorState,
+    player_instructions: &mut PlayerInstructions,
     item_entity: Entity,
     enemy_name: Option<Fragment>,
 ) -> Option<PlannedAction> {
     // Finishing a craft is checked when performing the action
     interrupt_on_danger(
-        behavior_state,
+        player_instructions,
         enemy_name,
         PlannedAction::ContinueCraft(ContinueCraft { item_entity }),
     )
@@ -750,20 +761,20 @@ fn plan_auto_continue_craft(
 
 fn plan_auto_travel(
     envir: &Envir<'_, '_>,
-    behavior_state: &mut BehaviorState,
+    player_instructions: &mut PlayerInstructions,
     explored: &Explored,
     player: &ActorItem<'_, '_>,
     target: Pos,
     enemy_name: Option<Fragment>,
 ) -> Option<PlannedAction> {
     if *player.pos == target {
-        behavior_state.interrupt(Interruption::Finished);
+        player_instructions.interrupt(Interruption::Finished);
         None
     } else if let Some(enemy_name) = enemy_name {
-        behavior_state.interrupt(Interruption::Danger(enemy_name));
+        player_instructions.interrupt(Interruption::Danger(enemy_name));
         None
     } else if player.stamina.breath() != Breath::Normal {
-        behavior_state.interrupt(Interruption::LowStamina);
+        player_instructions.interrupt(Interruption::LowStamina);
         None
     } else {
         envir
@@ -797,15 +808,15 @@ fn plan_auto_travel(
 
 fn plan_auto_defend(
     envir: &Envir<'_, '_>,
-    behavior_state: &mut BehaviorState,
+    player_instructions: &mut PlayerInstructions,
     player: &ActorItem<'_, '_>,
     enemies: &[Pos],
 ) -> Option<PlannedAction> {
     if enemies.is_empty() {
-        behavior_state.interrupt(Interruption::Finished);
+        player_instructions.interrupt(Interruption::Finished);
         None
     } else if player.stamina.breath() != Breath::Normal {
-        behavior_state.interrupt(Interruption::LowStamina);
+        player_instructions.interrupt(Interruption::LowStamina);
         None
     } else if let Some(target) = enemies.iter().find_map(|pos| envir.nbor(*player.pos, *pos)) {
         Some(PlannedAction::attack(target))
@@ -816,7 +827,7 @@ fn plan_auto_defend(
 
 fn plan_auto_pulp(
     envir: &Envir<'_, '_>,
-    behavior_state: &mut BehaviorState,
+    player_instructions: &mut PlayerInstructions,
     player: &ActorItem<'_, '_>,
     target: HorizontalDirection,
     enemy_name: Option<Fragment>,
@@ -827,7 +838,7 @@ fn plan_auto_pulp(
         .is_some()
     {
         interrupt_on_danger(
-            behavior_state,
+            player_instructions,
             enemy_name,
             if player.stamina.breath() == Breath::Normal {
                 //trace!("Keep pulping");
@@ -839,32 +850,32 @@ fn plan_auto_pulp(
         )
     } else {
         //trace!("Stop pulping");
-        behavior_state.interrupt(Interruption::Finished);
+        player_instructions.interrupt(Interruption::Finished);
         None
     }
 }
 
 fn plan_auto_wait(
-    behavior_state: &mut BehaviorState,
+    player_instructions: &mut PlayerInstructions,
     now: Timestamp,
     until: &Timestamp,
     enemy_name: Option<Fragment>,
 ) -> Option<PlannedAction> {
     if *until <= now {
-        behavior_state.interrupt(Interruption::Finished);
+        player_instructions.interrupt(Interruption::Finished);
         None
     } else {
-        interrupt_on_danger(behavior_state, enemy_name, PlannedAction::Stay)
+        interrupt_on_danger(player_instructions, enemy_name, PlannedAction::Stay)
     }
 }
 
 fn interrupt_on_danger(
-    behavior_state: &mut BehaviorState,
+    player_instructions: &mut PlayerInstructions,
     enemy_name: Option<Fragment>,
     planned_action: PlannedAction,
 ) -> Option<PlannedAction> {
     if let Some(enemy_name) = enemy_name {
-        behavior_state.interrupt(Interruption::Danger(enemy_name));
+        player_instructions.interrupt(Interruption::Danger(enemy_name));
         None
     } else {
         Some(planned_action)
@@ -872,14 +883,14 @@ fn interrupt_on_danger(
 }
 
 fn plan_auto_sleep(
-    behavior_state: &mut BehaviorState,
+    player_instructions: &mut PlayerInstructions,
     now: Timestamp,
     from: &Timestamp,
 ) -> Option<PlannedAction> {
     // TODO interrupt on taking damage
 
     if *from + Duration::HOUR * 8 <= now {
-        behavior_state.interrupt(Interruption::Finished);
+        player_instructions.interrupt(Interruption::Finished);
         None
     } else {
         Some(PlannedAction::Sleep)

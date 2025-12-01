@@ -1,7 +1,7 @@
 use crate::screens::base::phrases::YouStartTraveling;
 use crate::{
-    BehaviorState, CameraOffset, CancelHandling, ChangePace, ElevationVisibility, Focus,
-    FocusState, GameplayScreenState, LogMessageWriter, PlayerActionState, PlayerDirection,
+    CameraOffset, CancelHandling, ChangePace, ElevationVisibility, Focus, FocusState,
+    GameplayScreenState, LogMessageWriter, PlayerActionState, PlayerDirection, PlayerInstructions,
     QueuedInstruction, VisualizationUpdate, ZoomDirection, ZoomDistance,
 };
 use bevy::input::mouse::{MouseMotion, MouseWheel};
@@ -161,20 +161,19 @@ pub(super) fn manage_mouse_button_input(
 
 fn handle_queued_instruction(
     message_writer: &mut LogMessageWriter,
+    player_instructions: &mut PlayerInstructions,
     focus_state: &FocusState,
     next_focus_state: &mut ResMut<NextState<FocusState>>,
     next_player_action_state: &mut ResMut<NextState<PlayerActionState>>,
-    behavior_state: &mut ResMut<BehaviorState>,
     instruction: QueuedInstruction,
 ) {
     //trace!("{focus_state:?} {instruction:?}");
     match (*focus_state, &instruction) {
-        (FocusState::Normal, _) => behavior_state.push(instruction),
+        (FocusState::Normal, _) => player_instructions.push(instruction),
         (FocusState::ExaminingPos(target), QueuedInstruction::ToggleAutoTravel) => {
             //trace!("Autotravel pos");
             next_focus_state.set(FocusState::Normal);
             next_player_action_state.set(PlayerActionState::AutoTravel { target });
-            behavior_state.stop_waiting();
             message_writer.send(YouStartTraveling);
         }
         (FocusState::ExaminingZoneLevel(zone_level), QueuedInstruction::ToggleAutoTravel) => {
@@ -183,7 +182,6 @@ fn handle_queued_instruction(
             next_player_action_state.set(PlayerActionState::AutoTravel {
                 target: zone_level.center_pos(),
             });
-            behavior_state.stop_waiting();
             message_writer.send(YouStartTraveling);
         }
         (FocusState::ExaminingPos(target), QueuedInstruction::Offset(offset)) => {
@@ -202,7 +200,7 @@ fn handle_queued_instruction(
         }
     }
 
-    behavior_state.log_if_long();
+    player_instructions.log_if_long();
 }
 
 #[expect(clippy::needless_pass_by_value)]
@@ -308,12 +306,13 @@ pub(super) fn create_base_key_bindings(
 #[expect(clippy::needless_pass_by_value)]
 fn handle_cancelation(
     mut message_writer: LogMessageWriter,
+    mut player_instructions: ResMut<PlayerInstructions>,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
     player_action_state: Res<State<PlayerActionState>>,
     mut next_player_action_state: ResMut<NextState<PlayerActionState>>,
     focus_state: Res<State<FocusState>>,
     mut next_focus_state: ResMut<NextState<FocusState>>,
-    mut behavior_state: ResMut<BehaviorState>,
+    //player_instructions: Res<PlayerInstructions>,
 ) {
     let start = Instant::now();
 
@@ -322,10 +321,11 @@ fn handle_cancelation(
     } else {
         handle_queued_instruction(
             &mut message_writer,
+            &mut player_instructions,
             &focus_state,
             &mut next_focus_state,
             &mut next_player_action_state,
-            &mut behavior_state,
+            // &player_instructions,
             QueuedInstruction::CancelAction,
         );
     }
@@ -349,20 +349,22 @@ fn manage_zoom(
 fn manage_queued_instruction(
     In(instruction): In<QueuedInstruction>,
     mut message_writer: LogMessageWriter,
+    mut player_instructions: ResMut<PlayerInstructions>,
     focus_state: Res<State<FocusState>>,
     mut next_focus_state: ResMut<NextState<FocusState>>,
     mut next_player_action_state: ResMut<NextState<PlayerActionState>>,
-    mut behavior_state: ResMut<BehaviorState>,
+    //player_instructions: Res<PlayerInstructions>,
 ) {
     let start = Instant::now();
 
     debug!("Player instruction: {:?}", &instruction);
     handle_queued_instruction(
         &mut message_writer,
+        &mut player_instructions,
         &focus_state,
         &mut next_focus_state,
         &mut next_player_action_state,
-        &mut behavior_state,
+        //&player_instructions,
         instruction,
     );
 

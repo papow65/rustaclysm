@@ -27,11 +27,11 @@ use self::actor::{
     Sleep, Smash, Stamina, StaminaCost, StaminaImpact, StartCraft, Stay, Step, Subject, Unwield,
     WalkingMode, Wield,
 };
-use self::behavior::{BehaviorLoopSet, BehaviorPlugin, BehaviorState};
-use self::common::{
-    Evolution, Interruption, Limited, LocalTerrain, PlayerDirection, QueuedInstruction, Region,
-    Visible, WalkingCost, ZoneRegion,
+use self::behavior::{
+    BehaviorLoopSet, BehaviorPlugin, BehaviorValidator, Interruption, PlayerDirection,
+    PlayerInstructions, QueuedInstruction,
 };
+use self::common::{Evolution, Limited, LocalTerrain, Region, Visible, WalkingCost, ZoneRegion};
 use self::components::{
     Accessible, CameraBase, Closeable, Corpse, CorpseRaise, Craft, ExamineCursor, HealingDuration,
     Hurdle, LastSeenExt, Life, Melee, MissingAsset, Mobile, ObjectName, Obstacle, Opaque,

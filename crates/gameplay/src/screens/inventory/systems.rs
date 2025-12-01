@@ -2,8 +2,9 @@ use crate::screens::inventory::{
     InventoryAction, InventoryItemRow, InventoryScreen, InventorySection, RowSpawner,
 };
 use crate::{
-    BehaviorState, BodyContainers, DebugTextShown, Envir, ExamineItem, GameplayScreenState,
-    ItemHierarchy, ItemItem, MoveItem, Phrase, Pickup, Player, QueuedInstruction, Unwield, Wield,
+    BodyContainers, DebugTextShown, Envir, ExamineItem, GameplayScreenState, ItemHierarchy,
+    ItemItem, MoveItem, Phrase, Pickup, Player, PlayerInstructions, QueuedInstruction, Unwield,
+    Wield,
 };
 use bevy::ecs::{entity::hash_map::EntityHashMap, system::SystemId};
 use bevy::platform::collections::HashMap;
@@ -264,7 +265,7 @@ fn items_by_section<'i>(
 fn handle_selected_item(
     In(action): In<InventoryAction>,
     mut commands: Commands,
-    mut behavior_state: ResMut<BehaviorState>,
+    mut player_instructions: ResMut<PlayerInstructions>,
     inventory: Res<InventoryScreen>,
     selection_list: Single<(Entity, &SelectionListItems)>,
     selected_row: Option<Single<(Entity, &InventoryItemRow), With<SelectedItemIn>>>,
@@ -280,7 +281,7 @@ fn handle_selected_item(
 
     let next_row_entity = selection_list.offset(selected_row_entity, SelectionListStep::SingleDown);
 
-    behavior_state.push(match action {
+    player_instructions.push(match action {
         InventoryAction::Examine => QueuedInstruction::ExamineItem(ExamineItem {
             item_entity: selected_item,
         }),
@@ -321,7 +322,7 @@ fn handle_selected_item(
 #[expect(clippy::needless_pass_by_value)]
 pub(super) fn handle_inventory_action(
     In(inventory_button): In<InventoryButton>,
-    mut behavior_state: ResMut<BehaviorState>,
+    mut player_instructions: ResMut<PlayerInstructions>,
     inventory: Res<InventoryScreen>,
 ) {
     let start = Instant::now();
@@ -338,7 +339,7 @@ pub(super) fn handle_inventory_action(
         InventoryAction::Wield => QueuedInstruction::Wield(Wield { item_entity }),
         InventoryAction::Unwield => QueuedInstruction::Unwield(Unwield { item_entity }),
     };
-    behavior_state.push(instruction);
+    player_instructions.push(instruction);
 
     log_if_slow("handle_inventory_action", start);
 }

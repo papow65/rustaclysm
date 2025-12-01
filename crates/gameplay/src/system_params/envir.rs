@@ -4,7 +4,7 @@ use crate::{
     StandardIntegrity, WalkingCost,
 };
 use bevy::ecs::system::SystemParam;
-use bevy::prelude::{Entity, Query, ResMut, With, Without, debug, warn};
+use bevy::prelude::{Entity, Query, Res, With, Without, debug, warn};
 use cdda_json_files::MoveCost;
 use fastrand::f32 as rand_f32;
 use gameplay_location::{
@@ -25,7 +25,7 @@ pub(crate) enum Collision<'a> {
 
 #[derive(SystemParam)]
 pub(crate) struct Envir<'w, 's> {
-    pub(crate) location: ResMut<'w, LocationCache>,
+    pub(crate) location: Res<'w, LocationCache>,
     accessibles: Query<'w, 's, &'static Accessible>,
     hurdles: Query<'w, 's, &'static Hurdle>,
     openables: Query<'w, 's, (Entity, &'static ObjectName), With<Openable>>,

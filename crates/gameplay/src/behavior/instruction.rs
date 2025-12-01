@@ -1,7 +1,9 @@
 use crate::{ChangePace, ExamineItem, Fragment, MoveItem, Pickup, RecipeSituation, Unwield, Wield};
+use bevy::prelude::{Resource, warn};
 use gameplay_location::{HorizontalDirection, Nbor};
 use strum::VariantArray;
 
+#[must_use]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, VariantArray)]
 pub(crate) enum PlayerDirection {
     Above,
@@ -35,6 +37,7 @@ impl PlayerDirection {
     }
 }
 
+#[must_use]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) enum Interruption {
     Danger(Fragment),
@@ -43,6 +46,7 @@ pub(crate) enum Interruption {
 }
 
 /// All instructions related to player character actions
+#[must_use]
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) enum QueuedInstruction {
     Offset(PlayerDirection),
@@ -72,5 +76,38 @@ pub(crate) enum QueuedInstruction {
 impl QueuedInstruction {
     pub(crate) const fn held_key_allowed(&self) -> bool {
         matches!(self, Self::Offset(_))
+    }
+}
+
+#[derive(Debug, Default, Resource)]
+pub(crate) struct PlayerInstructions {
+    /// Can be empty: when waitin for new user input, when npcs act, or when using automatic behavior
+    queue: Vec<QueuedInstruction>,
+}
+
+impl PlayerInstructions {
+    pub(crate) fn push(&mut self, instruction: QueuedInstruction) {
+        // Wait for an instruction to be processed until adding a duplicate when holding a key down.
+        if !instruction.held_key_allowed() || !self.queue.contains(&instruction) {
+            self.queue.insert(0, instruction);
+        }
+    }
+
+    pub(crate) fn interrupt(&mut self, interruption: Interruption) {
+        self.push(QueuedInstruction::Interrupt(interruption));
+    }
+
+    pub(crate) fn pop(&mut self) -> Option<QueuedInstruction> {
+        self.queue.pop()
+    }
+
+    pub(super) const fn is_empty(&self) -> bool {
+        self.queue.is_empty()
+    }
+
+    pub(crate) fn log_if_long(&self) {
+        if 1 < self.queue.len() {
+            warn!("Unprocessed key codes: {:?}", self.queue);
+        }
     }
 }

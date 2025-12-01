@@ -25,3 +25,9 @@ pub(crate) enum GameplayScreenState {
     //Saving, // TODO
     Death,
 }
+
+impl GameplayScreenState {
+    pub(crate) const fn allow_behavior(self) -> bool {
+        !matches!(self, Self::Transitioning | Self::Menu | Self::Death)
+    }
+}

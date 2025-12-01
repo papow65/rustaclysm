@@ -159,7 +159,6 @@ impl ActorItem<'_, '_> {
         match envir.collide(from, to, true) {
             Collision::Pass => {
                 commands.entity(self.entity).insert(to);
-                envir.location.move_(self.entity, to);
                 let walking_cost = envir.walking_cost(from, to);
                 self.impact_from_nbor(
                     walking_cost.duration(self.speed()),
@@ -534,7 +533,7 @@ impl ActorItem<'_, '_> {
         &self,
         commands: &mut Commands,
         message_writer: &mut LogMessageWriter,
-        location: &mut LocationCache,
+        location: &LocationCache,
         moved: &ItemItem,
         to: Nbor,
         tiles: &Query<Entity, With<Tile>>,
@@ -577,7 +576,6 @@ impl ActorItem<'_, '_> {
             .entity(moved.entity)
             .insert((Visibility::default(), to, ObjectOn { tile_entity }))
             .remove::<InPocket>();
-        location.move_(moved.entity, to);
         self.impact_from_duration(Duration::SECOND, StaminaCost::NEUTRAL)
     }
 

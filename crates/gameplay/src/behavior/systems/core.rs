@@ -1,11 +1,11 @@
 use crate::behavior::systems::phrases::NpcActionFailed;
 use crate::{
-    Action, ActionIn, Actor, ActorEvent, ActorImpact, Amount, Attack, BehaviorState, ChangePace,
-    Clock, Close, ContinueCraft, CorpseEvent, Craft, CurrentlyVisibleBuilder, Damage, Envir,
-    ExamineItem, Explored, Faction, Healing, HealingDuration, Item, ItemAction as _, ItemHierarchy,
-    Life, LogMessageWriter, MoveItem, Peek, Pickup, PlannedAction, Player, PlayerActionState, Pulp,
-    Sleep, Smash, Stamina, StartCraft, Stay, Step, TerrainEvent, Tile, TileSpawner, Timeouts,
-    Toggle, Unwield, Wield,
+    Action, ActionIn, Actor, ActorEvent, ActorImpact, Amount, Attack, ChangePace, Clock, Close,
+    ContinueCraft, CorpseEvent, Craft, CurrentlyVisibleBuilder, Damage, Envir, ExamineItem,
+    Explored, Faction, Healing, HealingDuration, Item, ItemAction as _, ItemHierarchy, Life,
+    LogMessageWriter, MoveItem, Peek, Pickup, PlannedAction, Player, PlayerActionState,
+    PlayerInstructions, Pulp, Sleep, Smash, Stamina, StartCraft, Stay, Step, TerrainEvent, Tile,
+    TileSpawner, Timeouts, Toggle, Unwield, Wield,
 };
 use bevy::ecs::schedule::{IntoScheduleConfigs as _, ScheduleConfigs};
 use bevy::ecs::system::{ScheduleSystem, SystemId};
@@ -46,7 +46,6 @@ fn egible_character(
 struct PlanSystems {
     manual_player_action: SystemId<In<Entity>, Option<PlannedAction>>,
     automatic_player_action: SystemId<In<Entity>, Option<PlannedAction>>,
-    wait_for_player_input: SystemId<(), ()>,
     npc_action: SystemId<In<Entity>, PlannedAction>,
 }
 
@@ -55,7 +54,6 @@ impl PlanSystems {
         Self {
             manual_player_action: world.register_system_cached(plan_manual_player_action),
             automatic_player_action: world.register_system_cached(plan_automatic_player_action),
-            wait_for_player_input: world.register_system_cached(wait_for_player_input),
             npc_action: world.register_system_cached(plan_npc_action),
         }
     }
@@ -81,11 +79,7 @@ fn plan_action(
         // The `PlannedActionState` could have transitioned with or without a 'manual_action'.
         world.run_schedule(StateTransition);
         manual_action
-            .or_else(|| run_system(world, plan_systems.automatic_player_action, active_actor))
-            .or_else(|| {
-                run_system(world, plan_systems.wait_for_player_input, ());
-                None
-            })?
+            .or_else(|| run_system(world, plan_systems.automatic_player_action, active_actor))?
     } else {
         run_system(world, plan_systems.npc_action, active_actor)
     };
@@ -103,7 +97,7 @@ fn plan_manual_player_action(
     mut next_player_action_state: ResMut<NextState<PlayerActionState>>,
     currently_visible_builder: CurrentlyVisibleBuilder,
     clock: Clock,
-    mut behavior_state: ResMut<BehaviorState>,
+    mut player_instructions: ResMut<PlayerInstructions>,
     actors: Query<Actor>,
 ) -> Option<PlannedAction> {
     let start = Instant::now();
@@ -115,7 +109,7 @@ fn plan_manual_player_action(
         &mut next_player_action_state,
         &mut message_writer,
         &currently_visible_builder.envir,
-        &mut behavior_state,
+        &mut player_instructions,
         &actor,
         clock.time(),
     );
@@ -131,7 +125,7 @@ fn plan_automatic_player_action(
     player_action_state: Res<State<PlayerActionState>>,
     currently_visible_builder: CurrentlyVisibleBuilder,
     clock: Clock,
-    mut behavior_state: ResMut<BehaviorState>,
+    mut player_instructions: ResMut<PlayerInstructions>,
     explored: Res<Explored>,
     actors: Query<Actor>,
     factions: Query<(&Pos, &Faction), With<Life>>,
@@ -145,7 +139,7 @@ fn plan_automatic_player_action(
     let factions = &factions.iter().map(|(p, f)| (*p, f)).collect::<Vec<_>>();
     let planned_action = player_action_state.plan_automatic_action(
         &currently_visible_builder,
-        &mut behavior_state,
+        &mut player_instructions,
         &explored,
         &actor,
         clock.time(),
@@ -155,14 +149,6 @@ fn plan_automatic_player_action(
     log_if_slow("plan_manual_player_action", start);
 
     planned_action
-}
-
-fn wait_for_player_input(mut behavior_state: ResMut<BehaviorState>) {
-    let start = Instant::now();
-
-    behavior_state.start_waiting();
-
-    log_if_slow("wait_for_player_input", start);
 }
 
 #[expect(clippy::needless_pass_by_value)]
@@ -492,11 +478,12 @@ fn perform_pickup(
     )
 }
 
+#[expect(clippy::needless_pass_by_value)]
 fn perform_move_item(
     In(move_item): In<ActionIn<MoveItem>>,
     mut commands: Commands,
     mut message_writer: LogMessageWriter,
-    mut location: ResMut<LocationCache>,
+    location: Res<LocationCache>,
     actors: Query<Actor>,
     items: Query<Item>,
     tiles: Query<Entity, With<Tile>>,
@@ -504,7 +491,7 @@ fn perform_move_item(
     move_item.actor(&actors).move_item(
         &mut commands,
         &mut message_writer,
-        &mut location,
+        &location,
         &move_item.action.item(&items),
         move_item.action.to,
         &tiles,
