@@ -16,8 +16,8 @@ pub struct TerrainInfo {
     pub symbol: Arc<str>,
     pub description: Arc<str>,
 
-    pub open: OptionalLinkedLater<TerrainInfo>,
-    pub close: OptionalLinkedLater<TerrainInfo>,
+    pub open: OptionalLinkedLater<Self>,
+    pub close: OptionalLinkedLater<Self>,
 
     pub bash: Option<Bash>,
     pub looks_like: Option<UntypedInfoId>,

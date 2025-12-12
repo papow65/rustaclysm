@@ -9,7 +9,7 @@ const ONE: NonZeroU32 = NonZeroU32::MIN;
 
 #[derive(Debug, Deserialize)]
 pub struct Requirement {
-    pub id: InfoId<Requirement>,
+    pub id: InfoId<Self>,
 
     #[serde(default)]
     pub qualities: RequiredQualities,
