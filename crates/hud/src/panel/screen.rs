@@ -79,11 +79,11 @@ pub fn scroll_panel(limit_height: bool, content_entity: Entity) -> Spawn<impl Bu
                 children![(
                     Node {
                         position_type: PositionType::Absolute,
+                        border_radius: BorderRadius::all(Val::Px(3.0)),
                         ..Node::default()
                     },
                     Hovered::default(),
                     DEFAULT_SCROLLBAR_COLOR,
-                    BorderRadius::all(Val::Px(3.0)),
                     CoreScrollbarThumb,
                 )],
             )),

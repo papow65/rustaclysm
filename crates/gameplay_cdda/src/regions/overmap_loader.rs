@@ -1,10 +1,11 @@
 use bevy::asset::{Asset, AssetLoader, LoadContext, io::Reader};
-use bevy::prelude::error;
+use bevy::prelude::{TypePath, error};
 use either::Either;
 use serde::Deserialize;
 use serde_json::from_slice as from_json_slice;
 use std::{marker::PhantomData, str::from_utf8};
 
+#[derive(TypePath)]
 pub(super) struct OvermapLoader<T>(PhantomData<T>)
 where
     T: Asset;
@@ -39,6 +40,7 @@ where
         let after_first_line = bytes.split_at(newline_pos).1;
 
         let file_name = load_context
+            .path()
             .path()
             .file_name()
             .expect("File name present")

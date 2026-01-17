@@ -3,8 +3,8 @@ use crate::{BodyContainers, GameplayScreenState, Item, Player, Shared};
 use bevy::platform::collections::HashSet;
 use bevy::prelude::{
     Added, AnyOf, Commands, DespawnOnExit, EntityCommands, KeyCode, Local, NextState, Pickable,
-    Query, RemovedComponents, Res, ResMut, Single, SpawnRelated as _, Text, TextColor, TextSpan,
-    With, World, children,
+    Query, RemovedComponents, Res, ResMut, Single, Text, TextColor, TextSpan, With, World,
+    children,
 };
 use cdda_json_files::{CommonItemInfo, FurnitureInfo, InfoId, TerrainInfo, UseAction};
 use gameplay_location::{LocationCache, Pos};

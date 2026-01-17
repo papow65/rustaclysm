@@ -1,11 +1,11 @@
 use crate::MapMemoryAsset;
 use bevy::asset::{AssetLoader, LoadContext, io::Reader};
-use bevy::prelude::error;
+use bevy::prelude::{TypePath, error};
 use either::Either;
 use serde_json::from_slice as from_json_slice;
 use std::str::from_utf8;
 
-#[derive(Default)]
+#[derive(Default, TypePath)]
 pub(super) struct MapMemoryLoader;
 
 impl AssetLoader for MapMemoryLoader {

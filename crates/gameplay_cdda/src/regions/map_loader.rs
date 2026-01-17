@@ -1,10 +1,11 @@
 use crate::MapAsset;
 use crate::error::Error;
 use bevy::asset::{AssetLoader, LoadContext, io::Reader};
+use bevy::prelude::TypePath;
 use serde_json::from_slice as from_json_slice;
 use std::{str::from_utf8, sync::Arc};
 
-#[derive(Default)]
+#[derive(Default, TypePath)]
 pub(super) struct MapLoader;
 
 impl AssetLoader for MapLoader {
@@ -26,7 +27,7 @@ impl AssetLoader for MapLoader {
 
         let map = from_json_slice::<MapAsset>(&bytes).map_err(|err| Error::JsonWithContext {
             _wrapped: err,
-            _file_path: load_context.path().to_path_buf(),
+            _file_path: load_context.path().path().to_path_buf(),
             _contents: Arc::from(from_utf8(&bytes[0..1000]).unwrap_or("(invalid UTF8)")),
         })?;
         Ok(map)
