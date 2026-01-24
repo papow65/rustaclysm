@@ -2,7 +2,7 @@ use crate::screens::inventory::{
     ITEM_TEXT_COLOR, InventoryAction, InventoryButton, InventoryItemRow, InventorySection,
     InventorySystem, SELECTED_ITEM_TEXT_COLOR,
 };
-use crate::{DebugTextShown, Fragment, ItemHandler, ItemItem, Phrase};
+use crate::{Fragment, ItemHandler, ItemItem, Phrase};
 use bevy::ecs::entity::hash_map::EntityHashMap;
 use bevy::ecs::spawn::{SpawnIter, SpawnWith};
 use bevy::picking::Pickable;
@@ -11,11 +11,10 @@ use bevy::prelude::{
     JustifyContent, Node, Overflow, Spawn, SpawnRelated as _, Text, TextColor, Val, debug,
 };
 use cdda_json_files::CommonItemInfo;
-use hud::{ButtonBuilder, Fonts, HOVERED_BUTTON_COLOR, SMALL_SPACING, SOFT_TEXT_COLOR};
+use hud::{ButtonBuilder, HOVERED_BUTTON_COLOR, SMALL_SPACING, SOFT_TEXT_COLOR};
+use util::Maybe;
 
 struct SectionData<'r> {
-    fonts: &'r Fonts,
-    debug_text_shown: &'r DebugTextShown,
     inventory_system: &'r InventorySystem,
     previous_selected_item: Option<Entity>,
     section: InventorySection,
@@ -23,29 +22,24 @@ struct SectionData<'r> {
 }
 
 impl SectionData<'_> {
-    fn expansion_button(&self, item_text_color: TextColor) -> impl Bundle {
+    fn expansion_button(item_text_color: TextColor) -> impl Bundle {
         (
             Text::default(),
             item_text_color,
-            self.fonts.regular(),
             Node {
                 width: Val::Px(20.0),
                 overflow: Overflow::clip(),
                 ..Node::default()
             },
-            Pickable::IGNORE,
         )
     }
 
-    fn item_name(&self, item_phrase: &Phrase) -> impl Bundle {
+    fn item_name(item_phrase: &Phrase) -> impl Bundle {
         let text_sections = item_phrase.as_text_sections();
-        let regular = self.fonts.regular();
-        let debug_regular = self.debug_text_shown.text_font(self.fonts.regular());
 
         (
             Text::default(),
             SOFT_TEXT_COLOR,
-            self.fonts.regular(),
             Node {
                 width: Val::Px(500.0),
                 overflow: Overflow::clip(),
@@ -53,17 +47,14 @@ impl SectionData<'_> {
             },
             Children::spawn((SpawnWith(move |parent: &mut ChildSpawner| {
                 for (span, color, debug) in text_sections {
-                    let mut entity = parent.spawn((span, color, regular.clone()));
-                    if let Some(debug) = debug {
-                        entity.insert((debug, debug_regular.clone()));
-                    }
+                    parent.spawn((span, color, Maybe(debug)));
                 }
             }),)),
             Pickable::IGNORE,
         )
     }
 
-    fn item_properties(&self, item_info: &CommonItemInfo) -> [impl Bundle; 2] {
+    fn item_properties(item_info: &CommonItemInfo) -> [impl Bundle; 2] {
         let property_node = Node {
             width: Val::Px(60.0),
             overflow: Overflow::clip(),
@@ -79,8 +70,6 @@ impl SectionData<'_> {
                     String::new()
                 }),
                 SOFT_TEXT_COLOR,
-                self.fonts.regular(),
-                Pickable::IGNORE,
                 property_node.clone(),
             ),
             (
@@ -90,8 +79,6 @@ impl SectionData<'_> {
                     String::new()
                 }),
                 SOFT_TEXT_COLOR,
-                self.fonts.regular(),
-                Pickable::IGNORE,
                 property_node,
             ),
         ]
@@ -123,7 +110,6 @@ impl SectionData<'_> {
                 ButtonBuilder::new(
                     format!("{}", &action),
                     item_text_color,
-                    self.fonts.regular(),
                     self.inventory_system.0,
                     InventoryButton {
                         item: item_entity,
@@ -196,9 +182,9 @@ impl InventoryBuilder<'_, '_> {
                 background_color,
                 Pickable::IGNORE,
                 Children::spawn((
-                    Spawn(section_data.expansion_button(item_text_color)),
-                    Spawn(section_data.item_name(item_phrase)),
-                    SpawnIter(section_data.item_properties(item_info).into_iter()),
+                    Spawn(SectionData::expansion_button(item_text_color)),
+                    Spawn(SectionData::item_name(item_phrase)),
+                    SpawnIter(SectionData::item_properties(item_info).into_iter()),
                     SpawnIter(
                         section_data
                             .item_action_buttons(item_entity, item_text_color)
@@ -228,8 +214,6 @@ where
     'c: 'r,
 {
     pub(super) const fn new(
-        fonts: &'r Fonts,
-        debug_text_shown: &'r DebugTextShown,
         inventory_system: &'r InventorySystem,
         section_by_item: &'r mut EntityHashMap<InventorySection>,
         inventory_panel: &'r mut ChildSpawnerCommands<'c>,
@@ -247,8 +231,6 @@ where
                 selected_item,
             },
             section_data: SectionData {
-                fonts,
-                debug_text_shown,
                 inventory_system,
                 previous_selected_item,
                 section,

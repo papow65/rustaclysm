@@ -44,33 +44,18 @@ pub(super) fn spawn_menu(
         },
         DespawnOnExit(GameplayScreenState::Menu),
         children![
-            ButtonBuilder::new(
-                "Return",
-                GOOD_TEXT_COLOR,
-                fonts.large(),
-                button_actions.return_,
-                (),
-            )
-            .large()
-            .bundle(),
-            ButtonBuilder::new(
-                "Main Menu",
-                HARD_TEXT_COLOR,
-                fonts.large(),
-                button_actions.main_menu,
-                (),
-            )
-            .large()
-            .bundle(),
-            ButtonBuilder::new(
-                "Quit",
-                BAD_TEXT_COLOR,
-                fonts.large(),
-                button_actions.quit,
-                (),
-            )
-            .large()
-            .bundle(),
+            ButtonBuilder::new("Return", GOOD_TEXT_COLOR, button_actions.return_, ())
+                .large()
+                .with_font(fonts.large())
+                .bundle(),
+            ButtonBuilder::new("Main Menu", HARD_TEXT_COLOR, button_actions.main_menu, ())
+                .large()
+                .with_font(fonts.large())
+                .bundle(),
+            ButtonBuilder::new("Quit", BAD_TEXT_COLOR, button_actions.quit, ())
+                .large()
+                .with_font(fonts.large())
+                .bundle(),
         ],
     ));
 }

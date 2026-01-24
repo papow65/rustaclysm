@@ -49,9 +49,7 @@ use self::item::{
     ItemChecksPlugin, ItemHandler, ItemHierarchy, ItemIntegrity, ItemItem, Phase, Pocket,
     PocketContents, PocketItem, PocketOf, Pockets, SealedPocket,
 };
-use self::phrase::{
-    DebugText, DebugTextShown, Fragment, Phrase, PhrasePlugin, Positioning, ProtoPhrase,
-};
+use self::phrase::{Fragment, Phrase, PhrasePlugin, Positioning, ProtoPhrase};
 use self::relations::{ObjectOn, Objects, TileIn, VehiclePartOf};
 use self::resources::{
     CameraOffset, ElevationVisibility, Expanded, Explored, RelativeSegment, RelativeSegments,

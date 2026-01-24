@@ -2,12 +2,11 @@ use crate::ManualSection;
 use crate::components::{ManualDisplay, ManualText};
 use bevy::prelude::{
     Alpha as _, BackgroundColor, Changed, Commands, GlobalZIndex, Node, PositionType, Query,
-    RemovedComponents, Res, Text, UiRect, Val, With, error,
+    RemovedComponents, Text, UiRect, Val, With, error,
 };
-use hud::{Fonts, LargeNode, PANEL_COLOR, SOFT_TEXT_COLOR};
+use hud::{LargeNode, PANEL_COLOR, SOFT_TEXT_COLOR};
 
-#[expect(clippy::needless_pass_by_value)]
-pub(super) fn spawn_manual(mut commands: Commands, fonts: Res<Fonts>) {
+pub(super) fn spawn_manual(mut commands: Commands) {
     commands
         .spawn((
             Node {
@@ -22,12 +21,7 @@ pub(super) fn spawn_manual(mut commands: Commands, fonts: Res<Fonts>) {
             ManualDisplay,
         ))
         .with_children(|parent| {
-            parent.spawn((
-                Text::default(),
-                SOFT_TEXT_COLOR,
-                fonts.regular(),
-                ManualText,
-            ));
+            parent.spawn((Text::default(), SOFT_TEXT_COLOR, ManualText));
         });
 }
 

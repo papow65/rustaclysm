@@ -32,7 +32,7 @@ where
 pub struct ButtonBuilder<I: fmt::Debug + SystemInput<Inner<'static>: Clone + fmt::Debug>> {
     text: Text,
     text_color: TextColor,
-    text_font: TextFont,
+    text_font: Option<TextFont>,
     node: Node,
     run_button: RunButton<I>,
     key_binding: Option<(Key, KeyBinding<(), ()>)>,
@@ -46,14 +46,13 @@ where
     pub fn new<S: Into<String>>(
         caption: S,
         text_color: TextColor,
-        text_font: TextFont,
         system: SystemId<I, ()>,
         context: <I as SystemInput>::Inner<'static>,
     ) -> Self {
         Self {
             text: Text(caption.into()),
             text_color,
-            text_font,
+            text_font: None,
             node: Node {
                 width: Val::Px(70.0),
                 height: Val::Auto,
@@ -71,6 +70,12 @@ where
     pub const fn large(mut self) -> Self {
         self.node.width = Val::Px(250.0);
         self.node.height = Val::Px(70.0);
+        self
+    }
+
+    #[must_use]
+    pub fn with_font(mut self, text_font: TextFont) -> Self {
+        self.text_font = Some(text_font);
         self
     }
 
@@ -104,7 +109,7 @@ where
             Maybe(key_binding),
             Pickable::IGNORE,
             Children::spawn((
-                Spawn((self.text, self.text_color, self.text_font.clone())),
+                Spawn((self.text, self.text_color, Maybe(self.text_font.clone()))),
                 SpawnWith(move |parent: &mut ChildSpawner| {
                     if let Some(key) = key {
                         parent.spawn((
@@ -123,8 +128,7 @@ where
                                     Key::Code(c) => format!("[{c:?}] "),
                                 }),
                                 SOFT_TEXT_COLOR,
-                                self.text_font,
-                                Pickable::IGNORE,
+                                Maybe(self.text_font),
                             )],
                         ));
                     }

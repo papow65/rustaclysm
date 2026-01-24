@@ -1,6 +1,5 @@
 use crate::screens::{find_nearby, find_nearby_pseudo, nearby_qualities};
 use crate::{BodyContainers, GameplayScreenState, Item, Player, Shared};
-use bevy::picking::Pickable;
 use bevy::prelude::{
     AnyOf, Commands, DespawnOnExit, KeyCode, Local, NextState, Query, Res, ResMut, Single, Text,
     With, World,
@@ -8,7 +7,7 @@ use bevy::prelude::{
 use cdda_json_files::{FurnitureInfo, TerrainInfo};
 use gameplay_location::{LocationCache, Pos};
 use gameplay_model::LastSeen;
-use hud::{Fonts, GOOD_TEXT_COLOR, WARN_TEXT_COLOR, scroll_screen};
+use hud::{GOOD_TEXT_COLOR, WARN_TEXT_COLOR, scroll_screen};
 use keyboard::KeyBindings;
 use manual::ManualSection;
 use std::time::Instant;
@@ -18,7 +17,6 @@ use util::{log_if_slow, uppercase_first};
 pub(super) fn spawn_quality_screen(
     mut commands: Commands,
     location: Res<LocationCache>,
-    fonts: Res<Fonts>,
     player: Single<(&Pos, &BodyContainers), With<Player>>,
     items: Query<(Item, &LastSeen)>,
     infrastructure: Query<(
@@ -41,20 +39,10 @@ pub(super) fn spawn_quality_screen(
 
     let qualitiy_list = scroll_screen(&mut commands, GameplayScreenState::Quality);
     commands.entity(qualitiy_list).with_children(|parent| {
-        parent.spawn((
-            Text::from("Nearby qualities:"),
-            WARN_TEXT_COLOR,
-            fonts.regular(),
-            Pickable::IGNORE,
-        ));
+        parent.spawn((Text::from("Nearby qualities:"), WARN_TEXT_COLOR));
 
         for (amount, name) in shown_qualities {
-            parent.spawn((
-                Text::from(format!("{amount} {name}")),
-                GOOD_TEXT_COLOR,
-                fonts.regular(),
-                Pickable::IGNORE,
-            ));
+            parent.spawn((Text::from(format!("{amount} {name}")), GOOD_TEXT_COLOR));
         }
     });
 }

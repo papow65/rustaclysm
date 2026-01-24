@@ -1,8 +1,7 @@
-use crate::DebugText;
 use bevy::prelude::{TextColor, TextSpan};
 use gameplay_location::Pos;
 use hud::{
-    BAD_TEXT_COLOR, FILTHY_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, SOFT_TEXT_COLOR,
+    BAD_TEXT_COLOR, DebugText, FILTHY_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, SOFT_TEXT_COLOR,
     WARN_TEXT_COLOR,
 };
 use regex::Regex;

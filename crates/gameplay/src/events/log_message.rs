@@ -1,6 +1,6 @@
-use crate::{CurrentlyVisibleBuilder, DebugText, Phrase, PlayerActionState, Positioning, Visible};
+use crate::{CurrentlyVisibleBuilder, Phrase, PlayerActionState, Positioning, Visible};
 use bevy::prelude::{Message, TextColor, TextSpan, info, warn};
-use hud::{BAD_TEXT_COLOR, GOOD_TEXT_COLOR, WARN_TEXT_COLOR};
+use hud::{BAD_TEXT_COLOR, DebugText, GOOD_TEXT_COLOR, WARN_TEXT_COLOR};
 use std::fmt;
 
 #[derive(Clone, Debug, PartialEq, Eq)]

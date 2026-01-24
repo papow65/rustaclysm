@@ -4,30 +4,29 @@ use crate::sidebar::{
     WalkingModeTextSpan, WieldedText,
 };
 use crate::{
-    Accessible, Actor, Amount, BaseSpeed, Breath, Clock, Corpse, CurrentlyVisibleBuilder,
-    DebugText, DebugTextShown, Envir, Explored, Faction, FocusState, Fragment, Health, Hurdle,
-    Item, ItemHandler, ItemHierarchy, ItemItem, Life, LogMessage, ObjectName, Obstacle, Opaque,
-    OpaqueFloor, Phrase, Player, PlayerActionState, PlayerWielded, RefreshAfterBehavior,
-    RelativeSegments, SeenFrom, Shared, Stamina, StandardIntegrity, Timeouts, WalkingMode,
-    ZoneLevelIds,
+    Accessible, Actor, Amount, BaseSpeed, Breath, Clock, Corpse, CurrentlyVisibleBuilder, Envir,
+    Explored, Faction, FocusState, Fragment, Health, Hurdle, Item, ItemHandler, ItemHierarchy,
+    ItemItem, Life, LogMessage, ObjectName, Obstacle, Opaque, OpaqueFloor, Phrase, Player,
+    PlayerActionState, PlayerWielded, RefreshAfterBehavior, RelativeSegments, SeenFrom, Shared,
+    Stamina, StandardIntegrity, Timeouts, WalkingMode, ZoneLevelIds,
 };
 use application_state::ApplicationState;
 use bevy::diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin};
 use bevy::ecs::{hierarchy::Children, schedule::ScheduleConfigs, system::ScheduleSystem};
-use bevy::picking::Pickable;
 use bevy::prelude::{
     AlignItems, Bundle, Changed, ChildOf, Commands, ComputedNode, DespawnOnExit,
     DetectChanges as _, Display, Entity, FlexDirection, FlexWrap, IntoScheduleConfigs as _,
     JustifyContent, MaxTrackSizingFunction, MessageReader, MinTrackSizingFunction, Node, Or,
-    Overflow, ParamSet, PositionType, Query, RepeatedGridTrack, Res, ScrollPosition, Single, Spawn,
-    SpawnRelated as _, State, SystemCondition as _, Text, TextColor, TextSpan, UiRect, Val, Vec2,
-    Visibility, With, Without, children, on_message, resource_exists, resource_exists_and_changed,
+    Overflow, ParamSet, Pickable, PositionType, Query, RepeatedGridTrack, Res, ScrollPosition,
+    Single, Spawn, SpawnRelated as _, State, SystemCondition as _, Text, TextColor, TextSpan,
+    UiRect, Val, Vec2, Visibility, With, Without, children, on_message, resource_exists,
+    resource_exists_and_changed,
 };
 use cdda_json_files::{CharacterInfo, MoveCost};
 use gameplay_location::{Pos, StairsDown, StairsUp};
 use gameplay_model::LastSeen;
 use hud::{
-    BAD_TEXT_COLOR, Fonts, HARD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, SOFT_TEXT_COLOR,
+    BAD_TEXT_COLOR, DebugText, HARD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, SOFT_TEXT_COLOR,
     WARN_TEXT_COLOR, scroll_panel, text_color_expect_half,
 };
 use std::{iter::once, time::Instant};
@@ -35,10 +34,9 @@ use util::{Maybe, log_if_slow};
 
 const TEXT_WIDTH: f32 = 8.0 * 43.0; // 43 chars
 
-#[expect(clippy::needless_pass_by_value)]
-pub(super) fn spawn_sidebar(mut commands: Commands, fonts: Res<Fonts>) {
-    let status = status_display(&mut commands, &fonts);
-    let log = log_display(&mut commands, &fonts);
+pub(super) fn spawn_sidebar(mut commands: Commands) {
+    let status = status_display(&mut commands);
+    let log = log_display(&mut commands);
 
     commands.spawn((
         Node {
@@ -75,7 +73,7 @@ pub(super) fn spawn_sidebar(mut commands: Commands, fonts: Res<Fonts>) {
     ));
 }
 
-fn status_display(commands: &mut Commands, fonts: &Fonts) -> Spawn<impl Bundle> {
+fn status_display(commands: &mut Commands) -> Spawn<impl Bundle> {
     let status_entity = commands
         .spawn((
             Node {
@@ -87,68 +85,35 @@ fn status_display(commands: &mut Commands, fonts: &Fonts) -> Spawn<impl Bundle> 
                 ..Node::default()
             },
             children![
-                (Text::default(), SOFT_TEXT_COLOR, fonts.regular(), FpsText),
-                (Text::default(), SOFT_TEXT_COLOR, fonts.regular(), TimeText),
+                (Text::default(), SOFT_TEXT_COLOR, FpsText),
+                (Text::default(), SOFT_TEXT_COLOR, TimeText),
                 (
                     Text::default(),
                     SOFT_TEXT_COLOR,
-                    fonts.regular(),
                     HealthText,
-                    children![(TextSpan::new("% health"), SOFT_TEXT_COLOR, fonts.regular())]
+                    children![(TextSpan::new("% health"), SOFT_TEXT_COLOR)]
                 ),
                 (
                     Text::default(),
                     SOFT_TEXT_COLOR,
-                    fonts.regular(),
                     StaminaText,
-                    children![(TextSpan::new("% stamina"), SOFT_TEXT_COLOR, fonts.regular())]
+                    children![(TextSpan::new("% stamina"), SOFT_TEXT_COLOR)]
                 ),
                 (
                     Text::default(),
                     SOFT_TEXT_COLOR,
-                    fonts.regular(),
                     BreathText,
                     children![
-                        (
-                            TextSpan::default(),
-                            SOFT_TEXT_COLOR,
-                            fonts.regular(),
-                            WalkingModeTextSpan,
-                        ),
-                        (TextSpan::new(" ("), SOFT_TEXT_COLOR, fonts.regular()),
-                        (
-                            TextSpan::default(),
-                            SOFT_TEXT_COLOR,
-                            fonts.regular(),
-                            SpeedTextSpan,
-                        ),
-                        (TextSpan::new(" km/h)"), SOFT_TEXT_COLOR, fonts.regular())
+                        (TextSpan::default(), SOFT_TEXT_COLOR, WalkingModeTextSpan,),
+                        (TextSpan::new(" ("), SOFT_TEXT_COLOR),
+                        (TextSpan::default(), SOFT_TEXT_COLOR, SpeedTextSpan,),
+                        (TextSpan::new(" km/h)"), SOFT_TEXT_COLOR)
                     ]
                 ),
-                (
-                    Text::default(),
-                    SOFT_TEXT_COLOR,
-                    fonts.regular(),
-                    PlayerActionStateText,
-                ),
-                (
-                    Text::new("Weapon: "),
-                    SOFT_TEXT_COLOR,
-                    fonts.regular(),
-                    WieldedText,
-                ),
-                (
-                    Text::default(),
-                    SOFT_TEXT_COLOR,
-                    fonts.regular(),
-                    EnemiesText,
-                ),
-                (
-                    Text::default(),
-                    SOFT_TEXT_COLOR,
-                    fonts.regular(),
-                    DetailsText,
-                )
+                (Text::default(), SOFT_TEXT_COLOR, PlayerActionStateText,),
+                (Text::new("Weapon: "), SOFT_TEXT_COLOR, WieldedText,),
+                (Text::default(), SOFT_TEXT_COLOR, EnemiesText,),
+                (Text::default(), SOFT_TEXT_COLOR, DetailsText,)
             ],
         ))
         .id();
@@ -156,7 +121,7 @@ fn status_display(commands: &mut Commands, fonts: &Fonts) -> Spawn<impl Bundle> 
     scroll_panel(false, status_entity)
 }
 
-fn log_display(commands: &mut Commands, fonts: &Fonts) -> Spawn<impl Bundle> {
+fn log_display(commands: &mut Commands) -> Spawn<impl Bundle> {
     let log_entity = commands
         .spawn((
             Node {
@@ -176,12 +141,10 @@ fn log_display(commands: &mut Commands, fonts: &Fonts) -> Spawn<impl Bundle> {
                 Pickable::IGNORE,
                 children![(
                     Text::default(),
-                    fonts.regular(),
                     Node {
                         flex_wrap: FlexWrap::Wrap,
                         ..Node::default()
                     },
-                    Pickable::IGNORE,
                     LogDisplay,
                 )]
             )],
@@ -230,7 +193,6 @@ fn clear_transient_message(
 fn update_transient_log(
     mut commands: Commands,
     mut new_messages: MessageReader<LogMessage<PlayerActionState>>,
-    fonts: Res<Fonts>,
     currently_visible_builder: CurrentlyVisibleBuilder,
     player_action_state: Res<State<PlayerActionState>>,
     log: Single<Entity, With<LogDisplay>>,
@@ -261,14 +223,7 @@ fn update_transient_log(
             .into_iter()
             .chain(once(newline()))
         {
-            parent.spawn((
-                span,
-                color,
-                fonts.regular(),
-                Maybe(debug),
-                TransientLogMessage,
-                Pickable::IGNORE,
-            ));
+            parent.spawn((span, color, Maybe(debug), TransientLogMessage));
         }
     });
 
@@ -279,7 +234,6 @@ fn update_transient_log(
 fn update_log(
     mut commands: Commands,
     mut new_messages: MessageReader<LogMessage>,
-    fonts: Res<Fonts>,
     currently_visible_builder: CurrentlyVisibleBuilder,
     log: Single<Entity, With<LogDisplay>>,
     last_message_fragments: Query<
@@ -301,7 +255,6 @@ fn update_log(
     for message in new_messages.read() {
         log_message(
             &mut commands,
-            &fonts,
             &currently_visible_builder,
             &log,
             &mut last_message_fragments,
@@ -315,7 +268,6 @@ fn update_log(
 
 fn log_message(
     commands: &mut Commands,
-    fonts: &Res<Fonts>,
     currently_visible_builder: &CurrentlyVisibleBuilder,
     log: &Single<Entity, With<LogDisplay>>,
     last_message_fragments: &mut Vec<(Entity, TextSpan, TextColor, Option<DebugText>)>,
@@ -356,7 +308,6 @@ fn log_message(
 
             add_log_message(
                 commands,
-                fonts,
                 log,
                 &message,
                 last_message_fragments,
@@ -369,7 +320,6 @@ fn log_message(
         let mut last_count = LastLogMessageCount::default();
         add_log_message(
             commands,
-            fonts,
             log,
             &message,
             last_message_fragments,
@@ -394,7 +344,6 @@ fn raise_last_count(
 
 fn add_log_message(
     commands: &mut Commands,
-    fonts: &Res<Fonts>,
     log: &Single<Entity, With<LogDisplay>>,
     message: &LogMessage,
     last_message_fragments: &mut Vec<(Entity, TextSpan, TextColor, Option<DebugText>)>,
@@ -407,14 +356,7 @@ fn add_log_message(
     log.with_children(|parent| {
         for (span, color, debug) in message.as_text_sections() {
             let entity = parent
-                .spawn((
-                    span.clone(),
-                    color,
-                    fonts.regular(),
-                    Maybe(debug),
-                    LastLogMessage,
-                    Pickable::IGNORE,
-                ))
+                .spawn((span.clone(), color, Maybe(debug), LastLogMessage))
                 .id();
 
             last_message_fragments.push((entity, span, color, debug));
@@ -422,22 +364,11 @@ fn add_log_message(
 
         *last_count = LastLogMessageCount::default();
         *last_count_entity = parent
-            .spawn((
-                TextSpan::default(),
-                SOFT_TEXT_COLOR,
-                fonts.regular(),
-                last_count.clone(),
-                Pickable::IGNORE,
-            ))
+            .spawn((TextSpan::default(), SOFT_TEXT_COLOR, last_count.clone()))
             .id();
 
         let (newline_text, newline_color, _) = newline();
-        parent.spawn((
-            newline_text,
-            newline_color,
-            fonts.regular(),
-            Pickable::IGNORE,
-        ));
+        parent.spawn((newline_text, newline_color));
     });
 }
 
@@ -612,8 +543,6 @@ fn update_status_player_action_state(
 #[expect(clippy::needless_pass_by_value)]
 fn update_status_player_wielded(
     mut commands: Commands,
-    fonts: Res<Fonts>,
-    debug_text_shown: Res<DebugTextShown>,
     player_weapon: Option<Single<Item, With<PlayerWielded>>>,
     text: Single<Entity, With<WieldedText>>,
 ) {
@@ -626,13 +555,10 @@ fn update_status_player_wielded(
             if let Some(weapon) = player_weapon {
                 let phrase = Phrase::from_fragments(weapon.fragments().collect());
                 for (span, color, debug) in phrase.as_text_sections() {
-                    let mut entity = parent.spawn((span, color, fonts.regular()));
-                    if let Some(debug) = debug {
-                        entity.insert((debug, debug_text_shown.text_font(fonts.regular())));
-                    }
+                    parent.spawn((span, color, Maybe(debug)));
                 }
             } else {
-                parent.spawn((TextSpan::new("(none)"), SOFT_TEXT_COLOR, fonts.regular()));
+                parent.spawn((TextSpan::new("(none)"), SOFT_TEXT_COLOR));
             }
         });
 
@@ -642,8 +568,6 @@ fn update_status_player_wielded(
 #[expect(clippy::needless_pass_by_value)]
 fn update_status_enemies(
     mut commands: Commands,
-    fonts: Res<Fonts>,
-    debug_text_shown: Res<DebugTextShown>,
     currently_visible_builder: CurrentlyVisibleBuilder,
     player_actor: Single<Actor, With<Player>>,
     factions: Query<(&Pos, &Faction), With<Life>>,
@@ -685,10 +609,7 @@ fn update_status_enemies(
         .despawn_related::<Children>()
         .with_children(|parent| {
             for (span, color, debug) in phrase.as_text_sections() {
-                let mut entity = parent.spawn((span, color, fonts.regular()));
-                if let Some(debug) = debug {
-                    entity.insert((debug, debug_text_shown.text_font(fonts.regular())));
-                }
+                parent.spawn((span, color, Maybe(debug)));
             }
         });
 
@@ -699,8 +620,6 @@ fn update_status_enemies(
 fn update_status_detais(
     mut commands: Commands,
     focus_state: Res<State<FocusState>>,
-    fonts: Res<Fonts>,
-    debug_text_shown: Res<DebugTextShown>,
     explored: Res<Explored>,
     zone_level_ids: Res<ZoneLevelIds>,
     envir: Envir,
@@ -780,10 +699,7 @@ fn update_status_detais(
         .despawn_related::<Children>()
         .with_children(|parent| {
             for (span, color, debug) in text_sections {
-                let mut entity = parent.spawn((span, color, fonts.regular()));
-                if let Some(debug) = debug {
-                    entity.insert((debug, debug_text_shown.text_font(fonts.regular())));
-                }
+                parent.spawn((span, color, Maybe(debug)));
             }
         });
 

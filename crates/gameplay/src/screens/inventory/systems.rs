@@ -2,9 +2,8 @@ use crate::screens::inventory::{
     InventoryAction, InventoryItemRow, InventoryScreen, InventorySection, RowSpawner,
 };
 use crate::{
-    BodyContainers, DebugTextShown, Envir, ExamineItem, GameplayScreenState, ItemHierarchy,
-    ItemItem, MoveItem, Phrase, Pickup, Player, PlayerInstructions, QueuedInstruction, Unwield,
-    Wield,
+    BodyContainers, Envir, ExamineItem, GameplayScreenState, ItemHierarchy, ItemItem, MoveItem,
+    Phrase, Pickup, Player, PlayerInstructions, QueuedInstruction, Unwield, Wield,
 };
 use bevy::ecs::{entity::hash_map::EntityHashMap, system::SystemId};
 use bevy::platform::collections::HashMap;
@@ -14,7 +13,7 @@ use bevy::prelude::{
     TextSpan, With, World, debug, error,
 };
 use gameplay_location::{HorizontalDirection, Nbor, Pos};
-use hud::{Fonts, HARD_TEXT_COLOR, SOFT_TEXT_COLOR, scroll_screen};
+use hud::{HARD_TEXT_COLOR, SOFT_TEXT_COLOR, scroll_screen};
 use keyboard::KeyBindings;
 use manual::ManualSection;
 use selection_list::{SelectableItemIn, SelectedItemIn, SelectionListItems, SelectionListStep};
@@ -153,9 +152,7 @@ fn exit_inventory(mut next_gameplay_state: ResMut<NextState<GameplayScreenState>
 #[expect(clippy::needless_pass_by_value)]
 pub(super) fn refresh_inventory(
     mut commands: Commands,
-    fonts: Res<Fonts>,
     envir: Envir,
-    debug_text_shown: Res<DebugTextShown>,
     item_hierarchy: ItemHierarchy,
     mut inventory: ResMut<InventoryScreen>,
     player: Single<(&Pos, &BodyContainers), With<Player>>,
@@ -186,24 +183,14 @@ pub(super) fn refresh_inventory(
                 let drop_section = section == InventorySection::Nbor(drop_direction);
 
                 parent
-                    .spawn((
-                        Text::new(format!("{section}")),
-                        SOFT_TEXT_COLOR,
-                        fonts.regular(),
-                    ))
+                    .spawn((Text::new(format!("{section}")), SOFT_TEXT_COLOR))
                     .with_children(|parent| {
                         if drop_section {
-                            parent.spawn((
-                                TextSpan::from(" <- drop spot"),
-                                HARD_TEXT_COLOR,
-                                fonts.regular(),
-                            ));
+                            parent.spawn((TextSpan::from(" <- drop spot"), HARD_TEXT_COLOR));
                         }
                     });
 
                 let mut row_spawner = RowSpawner::new(
-                    &fonts,
-                    &debug_text_shown,
                     &inventory.inventory_system,
                     &mut inventory.section_by_item,
                     parent,
@@ -216,7 +203,7 @@ pub(super) fn refresh_inventory(
                 item_hierarchy.walk(&mut row_spawner, items);
 
                 // empty row
-                parent.spawn((Text::from(" "), SOFT_TEXT_COLOR, fonts.regular()));
+                parent.spawn((Text::from(" "), SOFT_TEXT_COLOR));
             }
         })
         .add_related::<SelectableItemIn>(&item_entities);

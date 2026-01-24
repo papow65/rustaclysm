@@ -10,9 +10,9 @@ use crate::{
 use bevy::ecs::{spawn::SpawnIter, system::SystemId};
 use bevy::platform::collections::{HashMap, HashSet};
 use bevy::prelude::{
-    Added, AnyOf, Children, Commands, DespawnOnExit, Entity, In, KeyCode, Local, NextState,
-    Pickable, Query, RemovedComponents, Res, ResMut, Single, SpawnRelated as _, Text, TextColor,
-    With, World, children, debug, error,
+    Added, AnyOf, Children, Commands, DespawnOnExit, Entity, In, KeyCode, Local, NextState, Query,
+    RemovedComponents, Res, ResMut, Single, SpawnRelated as _, Text, TextColor, With, World,
+    children, debug, error,
 };
 use cdda_json_files::{
     Alternative, AutoLearn, BookLearn, BookLearnItem, CalculatedRequirement, CommonItemInfo,
@@ -23,7 +23,7 @@ use gameplay_cdda::{Error, Infos};
 use gameplay_cdda_active_sav::ActiveSav;
 use gameplay_location::{LocationCache, Pos};
 use gameplay_model::LastSeen;
-use hud::{BAD_TEXT_COLOR, ButtonBuilder, Fonts, WARN_TEXT_COLOR};
+use hud::{BAD_TEXT_COLOR, ButtonBuilder, WARN_TEXT_COLOR};
 use keyboard::KeyBindings;
 use manual::ManualSection;
 use selection_list::{SelectableItemIn, SelectedItemIn, selection_list_detail_screen};
@@ -84,7 +84,6 @@ fn exit_crafting(mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>
 #[expect(clippy::needless_pass_by_value)]
 pub(super) fn adapt_to_crafting_selection(
     mut commands: Commands,
-    fonts: Res<Fonts>,
     crafting_screen: Res<CraftingScreen>,
     mut selected_recipes: Query<(&mut TextColor, &RecipeSituation), Added<SelectedItemIn>>,
 ) {
@@ -94,7 +93,7 @@ pub(super) fn adapt_to_crafting_selection(
         //debug!("Selected: {}", recipe.name);
         *text_color = recipe.color(true);
 
-        show_recipe(&mut commands, &fonts, &crafting_screen, recipe);
+        show_recipe(&mut commands, &crafting_screen, recipe);
     }
 
     log_if_slow("adapt_to_crafting_selection", start);
@@ -121,7 +120,6 @@ pub(super) fn adapt_to_crafting_deselection(
 pub(super) fn refresh_crafting_screen(
     mut commands: Commands,
     location: Res<LocationCache>,
-    fonts: Res<Fonts>,
     infos: Res<Infos>,
     active_sav: Res<ActiveSav>,
     crafting_screen: Res<CraftingScreen>,
@@ -159,21 +157,11 @@ pub(super) fn refresh_crafting_screen(
         .entity(crafting_screen.recipe_list)
         .despawn_related::<Children>()
         .with_children(|parent| {
-            parent.spawn((
-                Text::from("Known recipies:"),
-                WARN_TEXT_COLOR,
-                fonts.regular(),
-            ));
+            parent.spawn((Text::from("Known recipies:"), WARN_TEXT_COLOR));
 
             for recipe in shown_recipes {
                 let recipe_entity = parent
-                    .spawn((
-                        Text::from(&*recipe.name),
-                        recipe.color(false),
-                        fonts.regular(),
-                        recipe,
-                        Pickable::IGNORE,
-                    ))
+                    .spawn((Text::from(&*recipe.name), recipe.color(false), recipe))
                     .id();
                 recipe_entities.push(recipe_entity);
             }
@@ -183,11 +171,7 @@ pub(super) fn refresh_crafting_screen(
     commands
         .entity(crafting_screen.recipe_details)
         .with_children(|parent| {
-            parent.spawn((
-                Text::from("No recipes known"),
-                BAD_TEXT_COLOR,
-                fonts.regular(),
-            ));
+            parent.spawn((Text::from("No recipes known"), BAD_TEXT_COLOR));
         });
 }
 
@@ -520,7 +504,6 @@ fn expand_items<
 
 fn show_recipe(
     commands: &mut Commands,
-    fonts: &Fonts,
     crafting_screen: &CraftingScreen,
     recipe_sitation: &RecipeSituation,
 ) {
@@ -531,17 +514,15 @@ fn show_recipe(
             ButtonBuilder::new(
                 "Craft",
                 recipe_sitation.color(true),
-                fonts.regular(),
                 crafting_screen.start_craft_system().0,
                 (),
             )
             .bundle(),
             (
                 Text::default(),
-                fonts.regular(),
                 Children::spawn((SpawnIter(
                     recipe_sitation
-                        .text_sections(fonts, &recipe_sitation.recipe)
+                        .text_sections(&recipe_sitation.recipe)
                         .into_iter()
                 ),)),
             ),

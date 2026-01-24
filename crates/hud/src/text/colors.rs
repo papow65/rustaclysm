@@ -1,6 +1,4 @@
-use bevy::prelude::{BackgroundColor, Color, Mix as _, TextColor};
-
-// Text colors
+use bevy::prelude::{Color, Mix as _, TextColor};
 
 /// For important text
 pub const HARD_TEXT_COLOR: TextColor = TextColor(Color::srgb(0.85, 0.85, 0.85));
@@ -22,16 +20,6 @@ pub const FILTHY_COLOR: TextColor = TextColor(Color::srgb(0.73, 0.4, 1.0));
 
 /// For liquids
 pub const BLUE_TEXT_COLOR: TextColor = TextColor(Color::srgb(0.25, 0.75, 1.0));
-
-pub const DEFAULT_BUTTON_COLOR: BackgroundColor = BackgroundColor(Color::srgb(0.2, 0.2, 0.2));
-pub const HOVERED_BUTTON_COLOR: BackgroundColor = BackgroundColor(Color::srgb(0.25, 0.25, 0.25));
-
-pub const DEFAULT_SCROLLBAR_COLOR: BackgroundColor =
-    BackgroundColor(Color::srgba(0.5, 0.5, 0.5, 0.6));
-pub const HOVERED_SCROLLBAR_COLOR: BackgroundColor =
-    BackgroundColor(Color::srgba(0.6, 0.6, 0.6, 0.6));
-
-pub const PANEL_COLOR: BackgroundColor = BackgroundColor(Color::srgba(0.1, 0.1, 0.1, 0.85));
 
 /// Varying from `BAD_TEXT_COLOR` (0.0) over `WARN_TEXT_COLOR` (0.5) to `GOOD_TEXT_COLOR` (1.0)
 ///

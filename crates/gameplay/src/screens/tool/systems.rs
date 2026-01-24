@@ -2,16 +2,13 @@ use crate::screens::{find_nearby, find_nearby_pseudo, nearby_tools};
 use crate::{BodyContainers, GameplayScreenState, Item, Player, Shared};
 use bevy::platform::collections::HashSet;
 use bevy::prelude::{
-    Added, AnyOf, Commands, DespawnOnExit, EntityCommands, KeyCode, Local, NextState, Pickable,
-    Query, RemovedComponents, Res, ResMut, Single, Text, TextColor, TextSpan, With, World,
-    children,
+    Added, AnyOf, Commands, DespawnOnExit, EntityCommands, KeyCode, Local, NextState, Query,
+    RemovedComponents, Res, ResMut, Single, Text, TextColor, TextSpan, With, World, children,
 };
 use cdda_json_files::{CommonItemInfo, FurnitureInfo, InfoId, TerrainInfo, UseAction};
 use gameplay_location::{LocationCache, Pos};
 use gameplay_model::LastSeen;
-use hud::{
-    Fonts, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, SOFT_TEXT_COLOR, WARN_TEXT_COLOR, scroll_screen,
-};
+use hud::{GOOD_TEXT_COLOR, HARD_TEXT_COLOR, SOFT_TEXT_COLOR, WARN_TEXT_COLOR, scroll_screen};
 use keyboard::KeyBindings;
 use manual::ManualSection;
 use selection_list::{SelectableItemIn, SelectedItemIn};
@@ -23,7 +20,6 @@ use util::{log_if_slow, uppercase_first};
 pub(super) fn spawn_tool_screen(
     mut commands: Commands,
     location: Res<LocationCache>,
-    fonts: Res<Fonts>,
     player: Single<(&Pos, &BodyContainers), With<Player>>,
     items: Query<(Item, &LastSeen)>,
     infrastructure: Query<(
@@ -35,7 +31,6 @@ pub(super) fn spawn_tool_screen(
 
     add_actions(
         &location,
-        &fonts,
         *player,
         &items,
         &infrastructure,
@@ -45,7 +40,6 @@ pub(super) fn spawn_tool_screen(
 
 fn add_actions(
     location: &LocationCache,
-    fonts: &Fonts,
     (&player_pos, body_containers): (&Pos, &BodyContainers),
     items: &Query<(Item, &LastSeen)>,
     infrastructure: &Query<(
@@ -65,12 +59,7 @@ fn add_actions(
 
     action_list
         .with_children(|parent| {
-            parent.spawn((
-                Text::from("Actions using nearby tools:"),
-                WARN_TEXT_COLOR,
-                fonts.regular(),
-                Pickable::IGNORE,
-            ));
+            parent.spawn((Text::from("Actions using nearby tools:"), WARN_TEXT_COLOR));
 
             for ((action, _, level), items) in nearby_tool_actions {
                 let action = uppercase_first(action);
@@ -83,8 +72,6 @@ fn add_actions(
                     .spawn((
                         Text::from(&*action),
                         HARD_TEXT_COLOR,
-                        fonts.regular(),
-                        Pickable::IGNORE,
                         children![
                             (
                                 TextSpan::from(if let Some(level) = level {
@@ -93,21 +80,9 @@ fn add_actions(
                                     String::new()
                                 }),
                                 SOFT_TEXT_COLOR,
-                                fonts.regular(),
-                                Pickable::IGNORE,
                             ),
-                            (
-                                TextSpan::from(": "),
-                                SOFT_TEXT_COLOR,
-                                fonts.regular(),
-                                Pickable::IGNORE,
-                            ),
-                            (
-                                TextSpan::from(items),
-                                HARD_TEXT_COLOR,
-                                fonts.regular(),
-                                Pickable::IGNORE,
-                            )
+                            (TextSpan::from(": "), SOFT_TEXT_COLOR),
+                            (TextSpan::from(items), HARD_TEXT_COLOR)
                         ],
                     ))
                     .id();

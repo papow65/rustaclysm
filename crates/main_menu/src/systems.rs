@@ -156,8 +156,9 @@ fn notification_area(fonts: &Fonts) -> impl Bundle {
 }
 
 fn quit_button(quit_system: &QuitSystem, fonts: &Fonts) -> impl Bundle {
-    ButtonBuilder::new("Quit", BAD_TEXT_COLOR, fonts.large(), quit_system.0, ())
+    ButtonBuilder::new("Quit", BAD_TEXT_COLOR, quit_system.0, ())
         .large()
+        .with_font(fonts.large())
         .bundle()
 }
 
@@ -333,10 +334,10 @@ fn load_button(
     ButtonBuilder::new(
         format!("Load {character} in {}", world_path.display()),
         GOOD_TEXT_COLOR,
-        largish,
         load_systems.button,
         FoundSav(path.to_path_buf()),
     )
+    .with_font(largish)
     .with_node(Node {
         width: Val::Px(400.0),
         align_items: AlignItems::Center,

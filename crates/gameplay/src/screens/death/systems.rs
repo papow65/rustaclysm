@@ -55,15 +55,9 @@ pub(super) fn spawn_death_screen(
                     },
                     children![(Text::from("You died"), BAD_TEXT_COLOR, fonts.largish())],
                 ),
-                ButtonBuilder::new(
-                    "Main menu",
-                    WARN_TEXT_COLOR,
-                    fonts.regular(),
-                    main_menu_system.0,
-                    (),
-                )
-                .large()
-                .bundle(),
+                ButtonBuilder::new("Main menu", WARN_TEXT_COLOR, main_menu_system.0, (),)
+                    .large()
+                    .bundle(),
             ],
         )],
     ));
