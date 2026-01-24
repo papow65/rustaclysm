@@ -8,6 +8,7 @@ edition = "2024"
 pathfinding = { workspace = true }
 regex = { workspace = true }
 serde = { workspace = true }
+strum = { workspace = true }
 time = "0.3"
 
 [lints]

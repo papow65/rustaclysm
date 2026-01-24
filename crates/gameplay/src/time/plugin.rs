@@ -16,10 +16,10 @@ impl Plugin for TimePlugin {
 /// Create resources that need other resources
 #[expect(clippy::needless_pass_by_value)]
 pub(crate) fn create_timeouts(mut commands: Commands, active_sav: Res<ActiveSav>) {
-    const SEASON_LENGTH: u64 = 91; // TODO load from worldoptions.json
+    const DAYS_PER_SEASON: u64 = 91; // TODO load from worldoptions.json
 
     let sav = active_sav.sav();
-    let timestamp = Timestamp::new(sav.turn, SEASON_LENGTH);
+    let timestamp = Timestamp::new(sav.turn, DAYS_PER_SEASON);
     commands.insert_resource(Timeouts::new(timestamp));
 }
 

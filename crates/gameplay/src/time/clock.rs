@@ -13,22 +13,23 @@ impl Clock<'_> {
         self.timeouts.max_timestamp()
     }
 
-    /// Roughly matches New England, centered around 1 PM, ignoring seasons
+    /// Roughly matches New England, centered around 1 PM
     ///
     /// Source: <https://www.suncalc.org>
     pub(crate) fn sunlight_percentage(&self) -> f32 {
         // Calculation in minutes
 
-        const SOLAR_NOON: u64 = 13 * 60;
+        const SOLAR_NOON: f32 = 13.0 * 60.0;
         // We can ignore calculation errors related to solar midnight, because there is no sunlight around that time.
 
-        const FULL_SUN_DIFF: u64 = 3 * 60; // Full daylight up to 3 hours away from solar noon
-        const SUNSET_DIFF: u64 = 7 * 60; // No daylight more than 7 hours away from solar noon
+        let time = self.time();
+        let solar_summer = time.solar_summer();
 
-        let minutes_from_noon = SOLAR_NOON.abs_diff(self.time().minute_of_day());
+        let full_sun_diff = (1.0 + 4.0 * solar_summer) * 60.0; // Full daylight for 1-5 hours away from solar noon
+        let sunset_diff = (5.5 + 3.0 * solar_summer) * 60.0; // No daylight more than 5.5-8.5 hours away from solar noon
 
-        (SUNSET_DIFF.saturating_sub(minutes_from_noon) as f32
-            / SUNSET_DIFF.abs_diff(FULL_SUN_DIFF) as f32)
-            .clamp(0.0, 1.0)
+        let minutes_from_noon = (SOLAR_NOON - time.minute_of_day() as f32).abs();
+
+        ((sunset_diff - minutes_from_noon) / (sunset_diff - full_sun_diff)).clamp(0.0, 1.0)
     }
 }

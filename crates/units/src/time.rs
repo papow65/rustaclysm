@@ -2,13 +2,9 @@ use crate::Error;
 use pathfinding::num_traits::Zero;
 use regex::Regex;
 use serde::Deserialize;
-use std::{
-    cmp::Ordering,
-    fmt,
-    hash::{Hash, Hasher},
-    ops::{Add, AddAssign, Div, Mul, Sub},
-    sync::LazyLock,
-};
+use std::hash::{Hash, Hasher};
+use std::ops::{Add, AddAssign, Div, Mul, Sub};
+use std::{cmp::Ordering, fmt, sync::LazyLock};
 use time::OffsetDateTime;
 
 #[derive(Debug, Deserialize)]
@@ -236,23 +232,50 @@ impl Zero for Duration {
     }
 }
 
+#[derive(Debug, PartialEq, Eq, strum::Display)]
+enum Season {
+    Spring,
+    Summer,
+    Autumn,
+    Winter,
+}
+
+impl From<u64> for Season {
+    fn from(season_number: u64) -> Self {
+        match season_number % 4 {
+            0 => Self::Spring,
+            1 => Self::Summer,
+            2 => Self::Autumn,
+            3 => Self::Winter,
+            _ => unreachable!("Modulo error"),
+        }
+    }
+}
+
+impl From<Timestamp> for Season {
+    fn from(timestamp: Timestamp) -> Self {
+        let day = timestamp.offset.milliseconds() / Duration::DAY.milliseconds();
+        Self::from(day / timestamp.days_per_season)
+    }
+}
+
 #[derive(Clone, Copy, Debug, Default, Eq)]
 pub struct Timestamp {
     /// Since start of the first year of the cataclysm
     offset: Duration,
-    season_length: u64,
+    days_per_season: u64,
 }
 
 impl Timestamp {
     pub const ZERO: Self = Self::new(0, 1);
 
     #[must_use]
-    pub const fn new(turn: u64, season_length: u64) -> Self {
+    pub const fn new(turn: u64, days_per_season: u64) -> Self {
         Self {
             offset: Duration {
                 milliseconds: turn * 1000,
             },
-            season_length,
+            days_per_season,
         }
     }
 
@@ -260,6 +283,21 @@ impl Timestamp {
     pub const fn minute_of_day(&self) -> u64 {
         (self.offset.milliseconds() % Duration::DAY.milliseconds())
             / Duration::MINUTE.milliseconds()
+    }
+
+    /// Returns a number between 0.0 (start of winter) and 1.0 (start of summer)
+    #[must_use]
+    pub fn solar_summer(&self) -> f32 {
+        let season_progress =
+            self.offset.milliseconds() % (Duration::DAY.milliseconds() * self.days_per_season);
+        let season_progress =
+            season_progress as f32 / (Duration::DAY.milliseconds() * self.days_per_season) as f32;
+        match Season::from(*self) {
+            Season::Spring => 0.5 + season_progress / 2.0,
+            Season::Summer => 1.0 - season_progress / 2.0,
+            Season::Autumn => 0.5 - season_progress / 2.0,
+            Season::Winter => season_progress / 2.0,
+        }
     }
 }
 
@@ -269,7 +307,7 @@ impl Add<Duration> for Timestamp {
     fn add(self, other: Duration) -> Self {
         Self {
             offset: self.offset + other,
-            season_length: self.season_length,
+            days_per_season: self.days_per_season,
         }
     }
 }
@@ -295,19 +333,13 @@ impl fmt::Display for Timestamp {
         let minutes = seconds / 60;
         let hours = minutes / 60;
         let days = hours / 24;
-        let seasons = days / self.season_length;
+        let season_number = days / self.days_per_season;
 
         // based on https://cataclysmdda.org/lore-background.html
-        let year = seasons / 4 + OffsetDateTime::now_utc().year() as u64 + 1;
+        let year = season_number / 4 + OffsetDateTime::now_utc().year() as u64 + 1;
+        let season = Season::from(season_number);
 
-        let season_name = match seasons % 4 {
-            0 => "Spring",
-            1 => "Summer",
-            2 => "Autumn",
-            3 => "Winter",
-            _ => panic!("Modulo error"),
-        };
-        let day_of_season = days % self.season_length + 1; // 1-based
+        let day_of_season = days % self.days_per_season + 1; // 1-based
 
         let hours = hours % 24;
         let minutes = minutes % 60;
@@ -316,7 +348,7 @@ impl fmt::Display for Timestamp {
 
         write!(
             f,
-            "{year:#04}-{season_name}-{day_of_season:#02} \
+            "{year:#04}-{season}-{day_of_season:#02} \
 {hours:#02}:{minutes:#02}:{seconds:#02}.{deciseconds}"
         )
     }
@@ -419,5 +451,81 @@ mod time_tests {
             .short_format(),
             String::from("2 days")
         );
+    }
+
+    #[test]
+    #[expect(clippy::float_cmp)]
+    fn seasons_work() {
+        let mut timestamp = Timestamp::new(0, 4);
+        assert_eq!(Season::from(timestamp), Season::Spring);
+        assert_eq!(timestamp.solar_summer(), 0.5);
+
+        timestamp.offset += Duration::DAY;
+        assert_eq!(Season::from(timestamp), Season::Spring);
+        assert_eq!(timestamp.solar_summer(), 0.625);
+
+        timestamp.offset += Duration::DAY;
+        assert_eq!(Season::from(timestamp), Season::Spring);
+        assert_eq!(timestamp.solar_summer(), 0.75);
+
+        timestamp.offset += Duration::DAY;
+        assert_eq!(Season::from(timestamp), Season::Spring);
+        assert_eq!(timestamp.solar_summer(), 0.875);
+
+        timestamp.offset += Duration::DAY;
+        assert_eq!(Season::from(timestamp), Season::Summer);
+        assert_eq!(timestamp.solar_summer(), 1.0);
+
+        timestamp.offset += Duration::DAY;
+        assert_eq!(Season::from(timestamp), Season::Summer);
+        assert_eq!(timestamp.solar_summer(), 0.875);
+
+        timestamp.offset += Duration::DAY;
+        assert_eq!(Season::from(timestamp), Season::Summer);
+        assert_eq!(timestamp.solar_summer(), 0.75);
+
+        timestamp.offset += Duration::DAY;
+        assert_eq!(Season::from(timestamp), Season::Summer);
+        assert_eq!(timestamp.solar_summer(), 0.625);
+
+        timestamp.offset += Duration::DAY;
+        assert_eq!(Season::from(timestamp), Season::Autumn);
+        assert_eq!(timestamp.solar_summer(), 0.5);
+
+        timestamp.offset += Duration::DAY;
+        assert_eq!(Season::from(timestamp), Season::Autumn);
+        assert_eq!(timestamp.solar_summer(), 0.375);
+
+        timestamp.offset += Duration::DAY;
+        assert_eq!(Season::from(timestamp), Season::Autumn);
+        assert_eq!(timestamp.solar_summer(), 0.25);
+
+        timestamp.offset += Duration::DAY;
+        assert_eq!(Season::from(timestamp), Season::Autumn);
+        assert_eq!(timestamp.solar_summer(), 0.125);
+
+        timestamp.offset += Duration::DAY;
+        assert_eq!(Season::from(timestamp), Season::Winter);
+        assert_eq!(timestamp.solar_summer(), 0.0);
+
+        timestamp.offset += Duration::DAY;
+        assert_eq!(Season::from(timestamp), Season::Winter);
+        assert_eq!(timestamp.solar_summer(), 0.125);
+
+        timestamp.offset += Duration::DAY;
+        assert_eq!(Season::from(timestamp), Season::Winter);
+        assert_eq!(timestamp.solar_summer(), 0.25);
+
+        timestamp.offset += Duration::DAY;
+        assert_eq!(Season::from(timestamp), Season::Winter);
+        assert_eq!(timestamp.solar_summer(), 0.375);
+
+        timestamp.offset += Duration::DAY;
+        assert_eq!(Season::from(timestamp), Season::Spring);
+        assert_eq!(timestamp.solar_summer(), 0.5);
+
+        timestamp.offset += Duration::DAY;
+        assert_eq!(Season::from(timestamp), Season::Spring);
+        assert_eq!(timestamp.solar_summer(), 0.625);
     }
 }
