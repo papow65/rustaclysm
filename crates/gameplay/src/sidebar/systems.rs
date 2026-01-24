@@ -36,6 +36,7 @@ const TEXT_WIDTH: f32 = 8.0 * 43.0; // 43 chars
 
 pub(super) fn spawn_sidebar(mut commands: Commands) {
     let status = status_display(&mut commands);
+    let details = details_display(&mut commands);
     let log = log_display(&mut commands);
 
     commands.spawn((
@@ -48,11 +49,17 @@ pub(super) fn spawn_sidebar(mut commands: Commands) {
             display: Display::Grid,
             grid_template_columns: vec![RepeatedGridTrack::auto(1)],
             grid_template_rows: vec![
-                // Status panel: adapt the height to the content, but clamp between 20% and 80%
+                // Status panel: adapt the height to the content, but at most 60%
                 RepeatedGridTrack::minmax(
                     1,
-                    MinTrackSizingFunction::Percent(20.0),
-                    MaxTrackSizingFunction::FitContentPercent(80.0),
+                    MinTrackSizingFunction::MinContent, // never empty
+                    MaxTrackSizingFunction::FitContentPercent(60.0),
+                ),
+                // Details panel: adapt the height to the content, but at most 60%
+                RepeatedGridTrack::minmax(
+                    1,
+                    MinTrackSizingFunction::Percent(0.0),
+                    MaxTrackSizingFunction::FitContentPercent(60.0), // content can be empty
                 ),
                 // Log panel: take only the available free space, but at least 20%
                 RepeatedGridTrack::minmax(
@@ -69,7 +76,7 @@ pub(super) fn spawn_sidebar(mut commands: Commands) {
         PANEL_COLOR,
         DespawnOnExit(ApplicationState::Gameplay),
         Pickable::IGNORE,
-        Children::spawn((status, log)),
+        Children::spawn((status, details, log)),
     ));
 }
 
@@ -104,21 +111,38 @@ fn status_display(commands: &mut Commands) -> Spawn<impl Bundle> {
                     SOFT_TEXT_COLOR,
                     BreathText,
                     children![
-                        (TextSpan::default(), SOFT_TEXT_COLOR, WalkingModeTextSpan,),
+                        (TextSpan::default(), SOFT_TEXT_COLOR, WalkingModeTextSpan),
                         (TextSpan::new(" ("), SOFT_TEXT_COLOR),
-                        (TextSpan::default(), SOFT_TEXT_COLOR, SpeedTextSpan,),
+                        (TextSpan::default(), SOFT_TEXT_COLOR, SpeedTextSpan),
                         (TextSpan::new(" km/h)"), SOFT_TEXT_COLOR)
                     ]
                 ),
-                (Text::default(), SOFT_TEXT_COLOR, PlayerActionStateText,),
-                (Text::new("Weapon: "), SOFT_TEXT_COLOR, WieldedText,),
-                (Text::default(), SOFT_TEXT_COLOR, EnemiesText,),
-                (Text::default(), SOFT_TEXT_COLOR, DetailsText,)
+                (Text::default(), SOFT_TEXT_COLOR, PlayerActionStateText),
+                (Text::new("Weapon: "), SOFT_TEXT_COLOR, WieldedText),
+                (Text::default(), SOFT_TEXT_COLOR, EnemiesText),
             ],
         ))
         .id();
 
     scroll_panel(false, status_entity)
+}
+
+fn details_display(commands: &mut Commands) -> Spawn<impl Bundle> {
+    let details_entity = commands
+        .spawn((
+            Node {
+                margin: UiRect::all(Val::Px(5.0)),
+                flex_direction: FlexDirection::Column,
+                align_items: AlignItems::Start,
+                justify_content: JustifyContent::Start,
+                overflow: Overflow::scroll_y(),
+                ..Node::default()
+            },
+            children![(Text::default(), SOFT_TEXT_COLOR, DetailsText)],
+        ))
+        .id();
+
+    scroll_panel(false, details_entity)
 }
 
 fn log_display(commands: &mut Commands) -> Spawn<impl Bundle> {
