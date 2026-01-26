@@ -61,6 +61,11 @@ on_success = "job:fmt"
 command = ["cargo", "fix", "--profile", "dev-opt", "--workspace", "--allow-dirty"]
 on_success = "job:fmt"
 
+[jobs.killall]
+command = ["killall", "rustaclysm"]
+on_success = "job:fmt"
+on_failure = "job:fmt"
+
 [keybindings]
 f = "job:fmt"
 t = "job:test"
@@ -72,3 +77,4 @@ s = "job:sweep"
 r = "job:run"
 w = "job:wait"
 x = "job:fix"
+k = "job:killall"
