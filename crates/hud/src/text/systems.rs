@@ -1,7 +1,6 @@
 use crate::{DebugText, DebugTextShown, Fonts, text::CheckedFont};
 use bevy::prelude::{
     Commands, Entity, Or, Pickable, Query, Res, ResMut, Text, TextFont, TextSpan, With, Without,
-    info,
 };
 use std::time::Instant;
 use util::log_if_slow;
@@ -18,12 +17,12 @@ pub(super) fn add_missing_font(
 ) {
     let start = Instant::now();
 
-    if !unchecked_texts.is_empty() {
-        info!(
-            "{} text entities where font is not yet checked",
-            unchecked_texts.iter().len()
-        );
-    }
+    //if !unchecked_texts.is_empty() {
+    //    info!(
+    //        "{} text entities where font is not yet checked",
+    //        unchecked_texts.iter().len()
+    //    );
+    //}
 
     for (text_entity, text_font) in &unchecked_texts {
         let mut entity_commands = commands.entity(text_entity);
@@ -44,12 +43,12 @@ pub(super) fn add_missing_pickable(
 ) {
     let start = Instant::now();
 
-    if !texts_without_pickable.is_empty() {
-        info!(
-            "{} text entities where 'Pickable' is not yet set",
-            texts_without_pickable.iter().len()
-        );
-    }
+    //if !texts_without_pickable.is_empty() {
+    //    info!(
+    //        "{} text entities where 'Pickable' is not yet set",
+    //        texts_without_pickable.iter().len()
+    //    );
+    //}
 
     for text_entity in &texts_without_pickable {
         commands.entity(text_entity).insert(Pickable::IGNORE);
