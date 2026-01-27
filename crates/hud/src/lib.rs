@@ -12,7 +12,8 @@ pub use self::button::{
 };
 pub use self::panel::{
     DEFAULT_SCROLLBAR_COLOR, HOVERED_SCROLLBAR_COLOR, LargeNode, PANEL_COLOR, max_scroll,
-    scroll_panel, scroll_panel_with_content_entity, scroll_screen, spawn_panel_root,
+    scroll_panel, scroll_panel_with_content_entity, scroll_screen, spawn_modal_panel,
+    spawn_panel_root,
 };
 pub use self::plugin::HudPlugin;
 pub use self::spacing::{LARGE_SPACING, MEDIUM_SPACING, SMALL_SPACING};

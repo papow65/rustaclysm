@@ -12,7 +12,7 @@ use bevy::platform::collections::{HashMap, HashSet};
 use bevy::prelude::{
     Added, AnyOf, Children, Commands, DespawnOnExit, Entity, In, KeyCode, Local, NextState, Query,
     RemovedComponents, Res, ResMut, Single, SpawnRelated as _, Text, TextColor, With, World,
-    children, debug, error,
+    children, debug, error, warn,
 };
 use cdda_json_files::{
     Alternative, AutoLearn, BookLearn, BookLearnItem, CalculatedRequirement, CommonItemInfo,
@@ -479,7 +479,7 @@ fn expand_items<
         } => {
             let requirement = requirement.get()?;
             if details(&requirement).len() != 1 {
-                error!(
+                warn!(
                     "Unexpected tools or components ({:?}) in {requirement:#?}",
                     &requirement.components
                 );

@@ -61,7 +61,6 @@ pub(crate) enum QueuedInstruction {
     Peek,
     Close,
     Drag,
-    Wait,
     Sleep,
     ToggleAutoTravel,
     ToggleAutoDefend,

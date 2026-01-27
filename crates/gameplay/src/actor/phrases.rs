@@ -407,17 +407,6 @@ impl ProtoPhrase for YouStartDefending {
 }
 
 #[derive(Debug)]
-pub(super) struct YouWait;
-
-impl ProtoPhrase for YouWait {
-    const SEVERITY: Severity = Severity::Neutral;
-
-    fn compose(self) -> Phrase {
-        Self::you("wait...")
-    }
-}
-
-#[derive(Debug)]
 pub(super) struct YouWakeUpAfterSleeping {
     pub(super) duration: Duration,
 }

@@ -19,6 +19,8 @@ pub(crate) enum GameplayScreenState {
 
     Tool,
 
+    Waiting,
+
     /// Different from the main menu
     Menu,
 

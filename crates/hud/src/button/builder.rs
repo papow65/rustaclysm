@@ -55,7 +55,6 @@ where
             text_font: None,
             node: Node {
                 width: Val::Px(70.0),
-                height: Val::Auto,
                 justify_content: JustifyContent::Center,
                 align_items: AlignItems::Center,
                 ..Node::default()

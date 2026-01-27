@@ -280,19 +280,30 @@ impl Timestamp {
     }
 
     #[must_use]
-    pub const fn minute_of_day(&self) -> u64 {
+    pub const fn start_of_day(self) -> Self {
+        Self {
+            offset: Duration {
+                milliseconds: (self.offset.milliseconds / Duration::DAY.milliseconds())
+                    * Duration::DAY.milliseconds(),
+            },
+            ..self
+        }
+    }
+
+    #[must_use]
+    pub const fn minute_of_day(self) -> u64 {
         (self.offset.milliseconds() % Duration::DAY.milliseconds())
             / Duration::MINUTE.milliseconds()
     }
 
     /// Returns a number between 0.0 (start of winter) and 1.0 (start of summer)
     #[must_use]
-    pub fn solar_summer(&self) -> f32 {
+    pub fn solar_summer(self) -> f32 {
         let season_progress =
             self.offset.milliseconds() % (Duration::DAY.milliseconds() * self.days_per_season);
         let season_progress =
             season_progress as f32 / (Duration::DAY.milliseconds() * self.days_per_season) as f32;
-        match Season::from(*self) {
+        match Season::from(self) {
             Season::Spring => 0.5 + season_progress / 2.0,
             Season::Summer => 1.0 - season_progress / 2.0,
             Season::Autumn => 0.5 - season_progress / 2.0,

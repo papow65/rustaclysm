@@ -1,4 +1,4 @@
-use crate::screens::base::phrases::YouStartTraveling;
+use crate::screens::base::phrases::{YouAreBusy, YouStartTraveling};
 use crate::{
     CameraOffset, CancelHandling, ChangePace, ElevationVisibility, Focus, FocusState,
     GameplayScreenState, LogMessageWriter, PlayerActionState, PlayerDirection, PlayerInstructions,
@@ -35,13 +35,20 @@ fn examine_zone_level(focus: Focus, mut next_focus_state: ResMut<NextState<Focus
     log_if_slow("examine_zone_level", start);
 }
 
+#[expect(clippy::needless_pass_by_value)]
 fn open_screen(
     In(screen): In<GameplayScreenState>,
+    player_action_state: Res<State<PlayerActionState>>,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
+    mut message_writer: LogMessageWriter,
 ) {
     let start = Instant::now();
 
-    next_gameplay_state.set(screen);
+    if player_action_state.is_automatic() {
+        message_writer.send(YouAreBusy);
+    } else {
+        next_gameplay_state.set(screen);
+    }
 
     log_if_slow("open_screen", start);
 }
@@ -235,6 +242,7 @@ pub(super) fn create_base_key_bindings(
         builder.add('i', (|| GameplayScreenState::Inventory).pipe(open_screen));
         builder.add('q', (|| GameplayScreenState::Quality).pipe(open_screen));
         builder.add('t', (|| GameplayScreenState::Tool).pipe(open_screen));
+        builder.add('|', (|| GameplayScreenState::Waiting).pipe(open_screen));
         builder.add('z', (|| ZoomDirection::In).pipe(manage_zoom));
         builder.add('Z', (|| ZoomDirection::Out).pipe(manage_zoom));
         builder.add('h', toggle_elevation);
@@ -243,9 +251,7 @@ pub(super) fn create_base_key_bindings(
         {
             use QueuedInstruction::{
                 Attack, Close, Drag, Peek, Pulp, Sleep, Smash, ToggleAutoDefend, ToggleAutoTravel,
-                Wait,
             };
-            builder.add('|', (|| Wait).pipe(manage_queued_instruction));
             builder.add('$', (|| Sleep).pipe(manage_queued_instruction));
             builder.add('a', (|| Attack).pipe(manage_queued_instruction));
             builder.add('s', (|| Smash).pipe(manage_queued_instruction));
@@ -312,7 +318,6 @@ fn handle_cancelation(
     mut next_player_action_state: ResMut<NextState<PlayerActionState>>,
     focus_state: Res<State<FocusState>>,
     mut next_focus_state: ResMut<NextState<FocusState>>,
-    //player_instructions: Res<PlayerInstructions>,
 ) {
     let start = Instant::now();
 
@@ -353,7 +358,6 @@ fn manage_queued_instruction(
     focus_state: Res<State<FocusState>>,
     mut next_focus_state: ResMut<NextState<FocusState>>,
     mut next_player_action_state: ResMut<NextState<PlayerActionState>>,
-    //player_instructions: Res<PlayerInstructions>,
 ) {
     let start = Instant::now();
 
@@ -364,7 +368,6 @@ fn manage_queued_instruction(
         &focus_state,
         &mut next_focus_state,
         &mut next_player_action_state,
-        //&player_instructions,
         instruction,
     );
 

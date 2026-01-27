@@ -1,9 +1,10 @@
-use crate::{DEFAULT_SCROLLBAR_COLOR, PANEL_COLOR, SMALL_SPACING};
+use crate::panel::{SCREEN_MARGINS, SMALL_PADDING};
+use crate::{DEFAULT_SCROLLBAR_COLOR, PANEL_COLOR};
 use bevy::picking::hover::Hovered;
 use bevy::prelude::{
     AlignItems, BorderRadius, Bundle, Children, Commands, Component, DespawnOnExit, Entity,
     FlexDirection, JustifyContent, Node, Overflow, Pickable, PositionType, Spawn,
-    SpawnRelated as _, States, UiRect, Val, Visibility, WithOneRelated, children,
+    SpawnRelated as _, States, Val, Visibility, WithOneRelated, children,
 };
 use bevy::ui_widgets::{ControlOrientation, CoreScrollbarThumb, Scrollbar};
 
@@ -11,9 +12,6 @@ use bevy::ui_widgets::{ControlOrientation, CoreScrollbarThumb, Scrollbar};
 #[derive(Debug, Component)]
 #[component(immutable)]
 pub struct LargeNode;
-
-const SCREEN_MARGINS: UiRect = UiRect::px(10.0, 365.0, 10.0, 10.0);
-const SMALL_PADDING: UiRect = UiRect::all(SMALL_SPACING);
 
 /// Returns the entity of the content node
 #[must_use]

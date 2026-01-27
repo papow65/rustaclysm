@@ -1,7 +1,7 @@
 use crate::actor::phrases::{
     FirstExamineYourDestination, NoPlaceToCraftNearby, NoTargetsNearby, NothingToCloseNearby,
     YouAreAlmostOutOfBreathAndStop, YouAreStillAsleep, YouAreStillDraggingItems, YouCant,
-    YouCantAttackYourself, YouFallAsleep, YouFinish, YouSpotAndStop, YouStartDefending, YouWait,
+    YouCantAttackYourself, YouFallAsleep, YouFinish, YouSpotAndStop, YouStartDefending,
     YouWakeUpAfterSleeping,
 };
 use crate::{
@@ -67,12 +67,6 @@ pub(crate) enum PlayerActionState {
 }
 
 impl PlayerActionState {
-    fn start_waiting(now: Timestamp) -> Self {
-        Self::Waiting {
-            until: now + Duration::MINUTE,
-        }
-    }
-
     const fn start_sleeping(now: Timestamp) -> Self {
         Self::Sleeping { from: now }
     }
@@ -193,11 +187,6 @@ impl PlayerActionState {
                 Self::Normal | Self::PickingNbor(PickingNbor::Dragging),
                 QueuedInstruction::Offset(PlayerDirection::Here),
             ) => Some(PlannedAction::Stay),
-            (Self::Normal, QueuedInstruction::Wait) => {
-                message_writer.send(YouWait);
-                next_state.set(Self::start_waiting(now));
-                None
-            }
             (Self::Normal, QueuedInstruction::Sleep) => {
                 message_writer.send(YouFallAsleep);
                 next_state.set(Self::start_sleeping(now));
@@ -267,7 +256,6 @@ impl PlayerActionState {
         //trace!("processing generic instruction: {instruction:?}");
         match instruction {
             QueuedInstruction::CancelAction
-            | QueuedInstruction::Wait
             | QueuedInstruction::Sleep
             | QueuedInstruction::ToggleAutoTravel
             | QueuedInstruction::ToggleAutoDefend => {

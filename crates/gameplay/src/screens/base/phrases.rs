@@ -10,3 +10,14 @@ impl ProtoPhrase for YouStartTraveling {
         Self::you("start traveling")
     }
 }
+
+#[derive(Debug)]
+pub(super) struct YouAreBusy;
+
+impl ProtoPhrase for YouAreBusy {
+    const SEVERITY: Severity = Severity::ImpossibleAction;
+
+    fn compose(self) -> Phrase {
+        Self::you("are busy")
+    }
+}

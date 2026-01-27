@@ -9,6 +9,7 @@ mod plugin;
 mod quality;
 mod state;
 mod tool;
+mod waiting;
 
 pub(crate) use self::base::update_camera_offset;
 pub(crate) use self::crafting::{Consumed, RecipeSituation};
@@ -24,3 +25,4 @@ use self::menu::MenuScreenPlugin;
 use self::nearby::{find_nearby, find_nearby_pseudo, find_sources, nearby_qualities, nearby_tools};
 use self::quality::QualityScreenPlugin;
 use self::tool::ToolScreenPlugin;
+use self::waiting::WaitingModalPlugin;
