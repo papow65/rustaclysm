@@ -1,6 +1,6 @@
 use crate::{
-    ActorItem, Attack, CurrentlyVisibleBuilder, Envir, Fragment, Health, PlannedAction, Smash,
-    Step, Visible, WalkingCost,
+    ActorItem, Attack, CurrentlyVisibleBuilder, Envir, Health, PlannedAction, Smash, Step, Visible,
+    WalkingCost,
 };
 use bevy::prelude::{Component, TextColor};
 use cdda_json_files::MoveCost;
@@ -11,6 +11,7 @@ use hud::{FILTHY_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR};
 use pathfinding::num_traits::Zero;
 use pathfinding::prelude::{build_path, dijkstra_all};
 use std::{mem::discriminant, ops::Add};
+use text::Fragment;
 use units::Duration;
 
 #[derive(Copy, Clone, PartialEq, Eq)]

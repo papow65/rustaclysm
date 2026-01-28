@@ -1,7 +1,8 @@
-use crate::{ChangePace, ExamineItem, Fragment, MoveItem, Pickup, RecipeSituation, Unwield, Wield};
+use crate::{ChangePace, ExamineItem, MoveItem, Pickup, RecipeSituation, Unwield, Wield};
 use bevy::prelude::{Resource, warn};
 use gameplay_location::{HorizontalDirection, Nbor};
 use strum::VariantArray;
+use text::Fragment;
 
 #[must_use]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, VariantArray)]

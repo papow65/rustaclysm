@@ -1,4 +1,4 @@
-use crate::behavior::systems::phrases::NpcActionFailed;
+use crate::behavior::systems::messages::NpcActionFailed;
 use crate::{
     Action, ActionIn, Actor, ActorEvent, ActorImpact, Amount, Attack, ChangePace, Clock, Close,
     ContinueCraft, CorpseEvent, Craft, CurrentlyVisibleBuilder, Damage, Envir, ExamineItem,

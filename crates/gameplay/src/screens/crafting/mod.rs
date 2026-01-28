@@ -1,5 +1,5 @@
 mod components;
-mod phrases;
+mod messages;
 mod plugin;
 mod resource;
 mod systems;

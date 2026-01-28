@@ -2,7 +2,7 @@ use crate::screens::inventory::{
     ITEM_TEXT_COLOR, InventoryAction, InventoryButton, InventoryItemRow, InventorySection,
     InventorySystem, SELECTED_ITEM_TEXT_COLOR,
 };
-use crate::{Fragment, ItemHandler, ItemItem, Phrase};
+use crate::{ItemHandler, ItemItem};
 use bevy::ecs::entity::hash_map::EntityHashMap;
 use bevy::ecs::spawn::{SpawnIter, SpawnWith};
 use bevy::picking::Pickable;
@@ -12,6 +12,7 @@ use bevy::prelude::{
 };
 use cdda_json_files::CommonItemInfo;
 use hud::{ButtonBuilder, HOVERED_BUTTON_COLOR, SMALL_SPACING, SOFT_TEXT_COLOR};
+use text::{Fragment, Phrase};
 use util::Maybe;
 
 struct SectionData<'r> {

@@ -6,9 +6,9 @@ use manual::ManualSection;
 use std::time::Instant;
 use util::log_if_slow;
 
-pub(crate) struct PhrasePlugin;
+pub struct TextPlugin;
 
-impl Plugin for PhrasePlugin {
+impl Plugin for TextPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             OnEnter(ApplicationState::Gameplay),

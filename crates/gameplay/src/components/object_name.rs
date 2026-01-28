@@ -1,9 +1,9 @@
-use crate::Fragment;
 use bevy::prelude::{Component, TextColor};
 use cdda_json_files::{CddaItemName, ItemName};
 use gameplay_location::Pos;
 use hud::BAD_TEXT_COLOR;
 use std::sync::Arc;
+use text::Fragment;
 
 #[must_use]
 #[derive(Clone, Debug, Component)]

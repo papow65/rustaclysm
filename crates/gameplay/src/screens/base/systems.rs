@@ -1,4 +1,4 @@
-use crate::screens::base::phrases::{YouAreBusy, YouStartTraveling};
+use crate::screens::base::messages::{YouAreBusy, YouStartTraveling};
 use crate::{
     CameraOffset, CancelHandling, ChangePace, ElevationVisibility, Focus, FocusState,
     GameplayScreenState, LogMessageWriter, PlayerActionState, PlayerDirection, PlayerInstructions,

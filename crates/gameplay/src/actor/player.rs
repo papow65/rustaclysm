@@ -1,11 +1,11 @@
-use crate::actor::phrases::{
+use crate::actor::messages::{
     FirstExamineYourDestination, NoPlaceToCraftNearby, NoTargetsNearby, NothingToCloseNearby,
     YouAreAlmostOutOfBreathAndStop, YouAreStillAsleep, YouAreStillDraggingItems, YouCant,
     YouCantAttackYourself, YouFallAsleep, YouFinish, YouSpotAndStop, YouStartDefending,
     YouWakeUpAfterSleeping,
 };
 use crate::{
-    ActorItem, Breath, ContinueCraft, CurrentlyVisibleBuilder, Envir, Explored, Faction, Fragment,
+    ActorItem, Breath, ContinueCraft, CurrentlyVisibleBuilder, Envir, Explored, Faction,
     Intelligence, Interruption, LogMessageWriter, MoveItem, PlannedAction, PlayerDirection,
     PlayerInstructions, Pulp, QueuedInstruction, RecipeSituation, Severity, StartCraft,
 };
@@ -17,6 +17,7 @@ use bevy::prelude::{
 use gameplay_location::{CardinalDirection, HorizontalDirection, Nbor, Pos, VisionDistance};
 use hud::{BAD_TEXT_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR};
 use std::fmt;
+use text::Fragment;
 use units::{Duration, Timestamp};
 
 #[derive(Debug, Component)]

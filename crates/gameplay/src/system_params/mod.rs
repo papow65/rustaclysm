@@ -2,11 +2,11 @@ mod currently_visible;
 mod envir;
 mod gameplay_readiness;
 mod message_writer;
-mod phrases;
+mod messages;
 
 pub use self::gameplay_readiness::GameplayReadiness;
 
 pub(crate) use self::currently_visible::{CurrentlyVisible, CurrentlyVisibleBuilder};
 pub(crate) use self::envir::{Collision, Envir};
 pub(crate) use self::message_writer::LogMessageWriter;
-pub(crate) use self::phrases::NoStairs;
+pub(crate) use self::messages::NoStairs;

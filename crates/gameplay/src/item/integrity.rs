@@ -1,6 +1,6 @@
-use crate::Fragment;
 use bevy::prelude::Component;
 use hud::text_color_expect_full;
+use text::Fragment;
 
 #[derive(Debug, Component)]
 #[component(immutable)]

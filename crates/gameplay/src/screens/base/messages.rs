@@ -1,12 +1,13 @@
-use crate::{Phrase, ProtoPhrase, Severity};
+use crate::{ProtoLogMessage, Severity};
+use text::Phrase;
 
 #[derive(Debug)]
 pub(super) struct YouStartTraveling;
 
-impl ProtoPhrase for YouStartTraveling {
+impl ProtoLogMessage for YouStartTraveling {
     const SEVERITY: Severity = Severity::Neutral;
 
-    fn compose(self) -> Phrase {
+    fn phrase(self) -> Phrase {
         Self::you("start traveling")
     }
 }
@@ -14,10 +15,10 @@ impl ProtoPhrase for YouStartTraveling {
 #[derive(Debug)]
 pub(super) struct YouAreBusy;
 
-impl ProtoPhrase for YouAreBusy {
+impl ProtoLogMessage for YouAreBusy {
     const SEVERITY: Severity = Severity::ImpossibleAction;
 
-    fn compose(self) -> Phrase {
+    fn phrase(self) -> Phrase {
         Self::you("are busy")
     }
 }

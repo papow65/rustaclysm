@@ -1,4 +1,4 @@
-use crate::{Intransient, LogMessage, LogMessageTransience, PlayerActionState, ProtoPhrase};
+use crate::{Intransient, LogMessage, LogMessageTransience, PlayerActionState, ProtoLogMessage};
 use bevy::{ecs::system::SystemParam, prelude::MessageWriter};
 
 #[derive(SystemParam)]
@@ -7,18 +7,17 @@ pub(crate) struct LogMessageWriter<'w, T: LogMessageTransience = Intransient> {
 }
 
 impl LogMessageWriter<'_, Intransient> {
-    pub(crate) fn send<P: ProtoPhrase>(&mut self, phrase: P) {
-        self.event_writer
-            .write(LogMessage::new(phrase.compose(), P::SEVERITY));
+    pub(crate) fn send<P: ProtoLogMessage>(&mut self, proto: P) {
+        self.event_writer.write(proto.compose());
     }
 }
 
 impl LogMessageWriter<'_, PlayerActionState> {
-    pub(crate) fn send_transient<P: ProtoPhrase>(&mut self, phrase: P, state: PlayerActionState) {
-        self.event_writer.write(LogMessage::new_transient(
-            phrase.compose(),
-            P::SEVERITY,
-            state,
-        ));
+    pub(crate) fn send_transient<P: ProtoLogMessage>(
+        &mut self,
+        proto: P,
+        state: PlayerActionState,
+    ) {
+        self.event_writer.write(proto.compose_transient(state));
     }
 }

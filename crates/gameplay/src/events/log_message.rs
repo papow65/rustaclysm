@@ -1,7 +1,9 @@
-use crate::{CurrentlyVisibleBuilder, Phrase, PlayerActionState, Positioning, Visible};
+use crate::{CurrentlyVisibleBuilder, PlayerActionState, Visible};
 use bevy::prelude::{Message, TextColor, TextSpan, info, warn};
+use cdda_json_files::Description;
 use hud::{BAD_TEXT_COLOR, DebugText, GOOD_TEXT_COLOR, WARN_TEXT_COLOR};
 use std::fmt;
+use text::{Phrase, Positioning, Subject};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) enum Severity {
@@ -50,29 +52,7 @@ pub(crate) struct LogMessage<T: LogMessageTransience = Intransient> {
     transient_state: T,
 }
 
-impl LogMessage<Intransient> {
-    pub(crate) const fn new(phrase: Phrase, severity: Severity) -> Self {
-        Self {
-            phrase,
-            severity,
-            transient_state: Intransient,
-        }
-    }
-}
-
 impl LogMessage<PlayerActionState> {
-    pub(crate) const fn new_transient(
-        phrase: Phrase,
-        severity: Severity,
-        transient_state: PlayerActionState,
-    ) -> Self {
-        Self {
-            phrase,
-            severity,
-            transient_state,
-        }
-    }
-
     pub(crate) const fn transient_state(&self) -> &PlayerActionState {
         &self.transient_state
     }
@@ -134,6 +114,55 @@ impl<T: LogMessageTransience> LogMessage<T> {
         percieved.then_some(Self {
             phrase,
             ..self.clone()
+        })
+    }
+}
+
+/// Untranslated message to the player
+pub(crate) trait ProtoLogMessage {
+    const SEVERITY: Severity;
+
+    // TODO Add language and formatting options
+    fn phrase(self) -> Phrase;
+
+    #[must_use]
+    fn you(verb: &str) -> Phrase {
+        Subject::You.verb(verb, "")
+    }
+
+    fn compose(self) -> LogMessage<Intransient>
+    where
+        Self: Sized,
+    {
+        LogMessage {
+            phrase: self.phrase(),
+            severity: Self::SEVERITY,
+            transient_state: Intransient,
+        }
+    }
+
+    fn compose_transient(
+        self,
+        player_action_state: PlayerActionState,
+    ) -> LogMessage<PlayerActionState>
+    where
+        Self: Sized,
+    {
+        LogMessage {
+            phrase: self.phrase(),
+            severity: Self::SEVERITY,
+            transient_state: player_action_state,
+        }
+    }
+}
+
+impl ProtoLogMessage for &Description {
+    const SEVERITY: Severity = Severity::Neutral;
+
+    fn phrase(self) -> Phrase {
+        Phrase::new(&**match self {
+            Description::Simple(simple) => simple,
+            Description::Complex(complex) => complex.get("str").expect("'str' key"),
         })
     }
 }

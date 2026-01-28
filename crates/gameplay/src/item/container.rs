@@ -1,5 +1,6 @@
-use crate::item::phrases::{CanBearButNeeded, CanHoldButNeeded, HasButNeeded};
-use crate::{Amount, Containable, InPocket, ItemHierarchy, LogMessageWriter, Subject};
+use crate::item::messages::{CanBearButNeeded, CanHoldButNeeded, HasButNeeded};
+use crate::{Amount, Containable, InPocket, ItemHierarchy, LogMessageWriter};
+use text::Subject;
 use units::{Mass, Volume};
 
 pub(crate) struct Container<'a> {

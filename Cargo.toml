@@ -26,6 +26,7 @@ loading = { workspace = true }
 main_menu = { workspace = true }
 manual = { workspace = true }
 pre_gameplay = { workspace = true }
+text = { workspace = true }
 util = { workspace = true }
 
 [workspace.dependencies]
@@ -59,6 +60,7 @@ selection_list = { path = "crates/selection_list" }
 serde = { version = "1", features = ["derive", "rc" ] }
 serde_json = "1"
 strum = { version = "0.27", features = ["derive"] }
+text = { path = "crates/text" }
 units = { path = "crates/units" }
 util = { path = "crates/util" }
 

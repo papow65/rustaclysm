@@ -1,5 +1,5 @@
-use crate::Fragment;
 use bevy::prelude::Component;
+use text::Fragment;
 
 #[derive(Clone, Copy, PartialEq, Debug, Component)]
 #[component(immutable)]

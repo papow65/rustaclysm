@@ -1,4 +1,5 @@
-use crate::{Phrase, ProtoPhrase, Severity, Subject};
+use crate::{ProtoLogMessage, Severity};
+use text::{Phrase, Subject};
 use units::{Mass, Volume};
 
 #[derive(Debug)]
@@ -8,10 +9,10 @@ pub(super) struct CanBearButNeeded {
     pub(super) added: Mass,
 }
 
-impl ProtoPhrase for CanBearButNeeded {
+impl ProtoLogMessage for CanBearButNeeded {
     const SEVERITY: Severity = Severity::ImpossibleAction;
 
-    fn compose(self) -> Phrase {
+    fn phrase(self) -> Phrase {
         let free_mass = if self.available == Mass::ZERO {
             String::from("no more weight")
         } else {
@@ -29,10 +30,10 @@ pub(super) struct CanHoldButNeeded {
     pub(super) added: u32,
 }
 
-impl ProtoPhrase for CanHoldButNeeded {
+impl ProtoLogMessage for CanHoldButNeeded {
     const SEVERITY: Severity = Severity::ImpossibleAction;
 
-    fn compose(self) -> Phrase {
+    fn phrase(self) -> Phrase {
         let free_amount = match self.available {
             0 => String::from("no more items"),
             1 => String::from("only one more item"),
@@ -50,10 +51,10 @@ pub(super) struct HasButNeeded {
     pub(super) added: Volume,
 }
 
-impl ProtoPhrase for HasButNeeded {
+impl ProtoLogMessage for HasButNeeded {
     const SEVERITY: Severity = Severity::ImpossibleAction;
 
-    fn compose(self) -> Phrase {
+    fn phrase(self) -> Phrase {
         let free_volume = if self.available == Volume::ZERO {
             String::from("no space left")
         } else {

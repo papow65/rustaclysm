@@ -1,167 +1,64 @@
+use crate::Fragment;
 use bevy::prelude::{TextColor, TextSpan};
-use gameplay_location::Pos;
-use hud::{
-    BAD_TEXT_COLOR, DebugText, FILTHY_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, SOFT_TEXT_COLOR,
-    WARN_TEXT_COLOR,
-};
+use hud::{DebugText, HARD_TEXT_COLOR};
 use regex::Regex;
 use std::{cmp::Eq, fmt, sync::LazyLock};
 
-#[derive(Clone, Debug, Default, PartialEq)]
-pub(crate) enum Positioning {
-    Pos(Pos),
-    Player,
-    #[default]
-    None,
-}
-
-#[must_use]
-#[derive(Clone, Debug, Default)]
-pub(crate) struct Fragment {
-    pub(crate) text: String,
-    pub(crate) color: TextColor,
-    pub(crate) positioning: Positioning,
-    pub(crate) debug: bool,
-}
-
-impl Fragment {
-    pub(crate) fn you() -> Self {
-        Self {
-            text: String::from("You"),
-            color: GOOD_TEXT_COLOR,
-            positioning: Positioning::Player,
-            debug: false,
-        }
-    }
-
-    pub(crate) fn soft<S>(text: S) -> Self
-    where
-        S: Into<String>,
-    {
-        Self::colorized(text, SOFT_TEXT_COLOR)
-    }
-
-    pub(crate) fn hard<S>(text: S) -> Self
-    where
-        S: Into<String>,
-    {
-        Self::colorized(text, HARD_TEXT_COLOR)
-    }
-
-    pub(crate) fn good<S>(text: S) -> Self
-    where
-        S: Into<String>,
-    {
-        Self::colorized(text, GOOD_TEXT_COLOR)
-    }
-
-    pub(crate) fn bad<S>(text: S) -> Self
-    where
-        S: Into<String>,
-    {
-        Self::colorized(text, BAD_TEXT_COLOR)
-    }
-
-    pub(crate) fn filthy<S>(text: S) -> Self
-    where
-        S: Into<String>,
-    {
-        Self::colorized(text, FILTHY_COLOR)
-    }
-
-    pub(crate) fn warn<S>(text: S) -> Self
-    where
-        S: Into<String>,
-    {
-        Self::colorized(text, WARN_TEXT_COLOR)
-    }
-
-    pub(crate) fn colorized<S>(text: S, color: TextColor) -> Self
-    where
-        S: Into<String>,
-    {
-        Self {
-            text: text.into(),
-            color,
-            positioning: Positioning::None,
-            debug: false,
-        }
-    }
-
-    pub(crate) const fn positioned(mut self, pos: Pos) -> Self {
-        self.positioning = Positioning::Pos(pos);
-        self
-    }
-
-    pub(crate) const fn debug(mut self) -> Self {
-        self.debug = true;
-        self
-    }
-}
-
-impl PartialEq for Fragment {
-    fn eq(&self, other: &Self) -> bool {
-        // The floats in color are unimportant and often come from constants
-        self.text == other.text && self.positioning == other.positioning
-    }
-}
-
-impl Eq for Fragment {}
-
+/// Used for a collection of [`Fragment`s](`Fragment`)
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) struct Phrase {
-    pub(crate) fragments: Vec<Fragment>,
+pub struct Phrase {
+    pub fragments: Vec<Fragment>,
 }
 
 impl Phrase {
     #[must_use]
-    pub(crate) fn new(text: impl Into<String>) -> Self {
+    pub fn new(text: impl Into<String>) -> Self {
         Self {
             fragments: vec![Fragment::hard(text.into())],
         }
     }
 
     #[must_use]
-    pub(crate) fn from_fragment(fragment: Fragment) -> Self {
+    pub fn from_fragment(fragment: Fragment) -> Self {
         Self {
             fragments: vec![fragment],
         }
     }
 
     #[must_use]
-    pub(crate) const fn from_fragments(fragments: Vec<Fragment>) -> Self {
+    pub const fn from_fragments(fragments: Vec<Fragment>) -> Self {
         Self { fragments }
     }
 
     #[must_use]
-    pub(crate) fn soft(self, text: impl Into<String>) -> Self {
+    pub fn soft(self, text: impl Into<String>) -> Self {
         self.push(Fragment::soft(text.into()))
     }
 
     #[must_use]
-    pub(crate) fn hard(self, text: impl Into<String>) -> Self {
+    pub fn hard(self, text: impl Into<String>) -> Self {
         self.push(Fragment::hard(text.into()))
     }
 
     #[must_use]
-    pub(crate) fn debug(self, text: impl Into<String>) -> Self {
+    pub fn debug(self, text: impl Into<String>) -> Self {
         self.push(Fragment::soft(text.into()).debug())
     }
 
     #[must_use]
-    pub(crate) fn push(mut self, fragment: Fragment) -> Self {
+    pub fn push(mut self, fragment: Fragment) -> Self {
         self.fragments.push(fragment);
         self
     }
 
     #[must_use]
-    pub(crate) fn extend(mut self, fragments: impl IntoIterator<Item = Fragment>) -> Self {
+    pub fn extend(mut self, fragments: impl IntoIterator<Item = Fragment>) -> Self {
         self.fragments.extend(fragments);
         self
     }
 
     #[must_use]
-    pub(crate) fn color_override(mut self, color_override: Option<TextColor>) -> Self {
+    pub fn color_override(mut self, color_override: Option<TextColor>) -> Self {
         if let Some(color_override) = color_override {
             for fragment in &mut self.fragments {
                 if fragment.color.0 == HARD_TEXT_COLOR.0 {
@@ -173,7 +70,7 @@ impl Phrase {
     }
 
     #[must_use]
-    pub(crate) fn as_text_sections(&self) -> Vec<(TextSpan, TextColor, Option<DebugText>)> {
+    pub fn as_text_sections(&self) -> Vec<(TextSpan, TextColor, Option<DebugText>)> {
         self.fragments.iter().filter(|f| !f.text.is_empty()).fold(
             Vec::new(),
             |mut text_sections, f| {
@@ -197,7 +94,7 @@ impl Phrase {
     }
 
     #[must_use]
-    pub(crate) fn as_string(&self) -> String {
+    pub fn as_string(&self) -> String {
         self.as_text_sections()
             .into_iter()
             .map(|text_section| text_section.0.0)

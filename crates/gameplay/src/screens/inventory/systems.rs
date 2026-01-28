@@ -3,7 +3,7 @@ use crate::screens::inventory::{
 };
 use crate::{
     BodyContainers, Envir, ExamineItem, GameplayScreenState, ItemHierarchy, ItemItem, MoveItem,
-    Phrase, Pickup, Player, PlayerInstructions, QueuedInstruction, Unwield, Wield,
+    Pickup, Player, PlayerInstructions, QueuedInstruction, Unwield, Wield,
 };
 use bevy::ecs::{entity::hash_map::EntityHashMap, system::SystemId};
 use bevy::platform::collections::HashMap;
@@ -19,6 +19,7 @@ use manual::ManualSection;
 use selection_list::{SelectableItemIn, SelectedItemIn, SelectionListItems, SelectionListStep};
 use std::time::Instant;
 use strum::VariantArray as _;
+use text::Phrase;
 use units::Timestamp;
 use util::log_if_slow;
 

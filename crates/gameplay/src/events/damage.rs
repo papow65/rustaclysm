@@ -1,4 +1,5 @@
-use crate::{ActorChange, CorpseChange, Subject, TerrainChange};
+use crate::{ActorChange, CorpseChange, TerrainChange};
+use text::Subject;
 
 #[derive(Clone, Debug)]
 pub(crate) struct Damage {

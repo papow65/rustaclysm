@@ -5,10 +5,10 @@ use crate::sidebar::{
 };
 use crate::{
     Accessible, Actor, Amount, BaseSpeed, Breath, Clock, Corpse, CurrentlyVisibleBuilder, Envir,
-    Explored, Faction, FocusState, Fragment, Health, Hurdle, Item, ItemHandler, ItemHierarchy,
-    ItemItem, Life, LogMessage, ObjectName, Obstacle, Opaque, OpaqueFloor, Phrase, Player,
-    PlayerActionState, PlayerWielded, RefreshAfterBehavior, RelativeSegments, SeenFrom, Shared,
-    Stamina, StandardIntegrity, Timeouts, WalkingMode, ZoneLevelIds,
+    Explored, Faction, FocusState, Health, Hurdle, Item, ItemHandler, ItemHierarchy, ItemItem,
+    Life, LogMessage, ObjectName, Obstacle, Opaque, OpaqueFloor, Player, PlayerActionState,
+    PlayerWielded, RefreshAfterBehavior, RelativeSegments, SeenFrom, Shared, Stamina,
+    StandardIntegrity, Timeouts, WalkingMode, ZoneLevelIds,
 };
 use application_state::ApplicationState;
 use bevy::diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin};
@@ -30,6 +30,7 @@ use hud::{
     WARN_TEXT_COLOR, scroll_panel, text_color_expect_half,
 };
 use std::{iter::once, time::Instant};
+use text::{Fragment, Phrase};
 use util::{Maybe, log_if_slow};
 
 const TEXT_WIDTH: f32 = 8.0 * 43.0; // 43 chars

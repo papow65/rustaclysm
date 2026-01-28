@@ -1,4 +1,4 @@
-mod phrases;
+mod messages;
 mod plugin;
 mod systems;
 

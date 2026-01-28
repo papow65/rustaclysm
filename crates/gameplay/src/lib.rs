@@ -5,7 +5,6 @@ mod components;
 mod events;
 mod focus;
 mod item;
-mod phrase;
 mod plugin;
 mod relations;
 mod resources;
@@ -24,7 +23,7 @@ use self::actor::{
     Action, ActionIn, Actor, ActorImpact, ActorItem, ActorPlugin, Aquatic, Attack, BaseSpeed,
     Breath, ChangePace, Close, ContinueCraft, ExamineItem, Faction, Health, Intelligence,
     ItemAction, LastEnemy, MoveItem, Peek, Pickup, PlannedAction, Player, PlayerActionState, Pulp,
-    Sleep, Smash, Stamina, StaminaCost, StaminaImpact, StartCraft, Stay, Step, Subject, Unwield,
+    Sleep, Smash, Stamina, StaminaCost, StaminaImpact, StartCraft, Stay, Step, Unwield,
     WalkingMode, Wield,
 };
 use self::behavior::{
@@ -40,8 +39,8 @@ use self::components::{
 use self::events::{
     ActorChange, ActorEvent, CorpseChange, CorpseEvent, Damage, DespawnSubzoneLevel,
     DespawnZoneLevel, EventsPlugin, Healing, Intransient, LogMessage, LogMessageTransience,
-    RefreshAfterBehavior, Severity, SpawnSubzoneLevel, SpawnZoneLevel, TerrainChange, TerrainEvent,
-    Toggle, UpdateZoneLevelVisibility,
+    ProtoLogMessage, RefreshAfterBehavior, Severity, SpawnSubzoneLevel, SpawnZoneLevel,
+    TerrainChange, TerrainEvent, Toggle, UpdateZoneLevelVisibility,
 };
 use self::focus::{CancelHandling, Focus, FocusPlugin, FocusState};
 use self::item::{
@@ -49,7 +48,6 @@ use self::item::{
     ItemChecksPlugin, ItemHandler, ItemHierarchy, ItemIntegrity, ItemItem, Phase, Pocket,
     PocketContents, PocketItem, PocketOf, Pockets, SealedPocket,
 };
-use self::phrase::{Fragment, Phrase, PhrasePlugin, Positioning, ProtoPhrase};
 use self::relations::{ObjectOn, Objects, TileIn, VehiclePartOf};
 use self::resources::{
     CameraOffset, ElevationVisibility, Expanded, Explored, RelativeSegment, RelativeSegments,

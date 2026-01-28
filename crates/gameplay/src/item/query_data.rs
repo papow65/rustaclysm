@@ -1,6 +1,6 @@
 use crate::{
-    Amount, Containable, Filthy, Fragment, InPocket, ItemIntegrity, ObjectName, ObjectOn, Phase,
-    Pockets, Positioning, Shared,
+    Amount, Containable, Filthy, InPocket, ItemIntegrity, ObjectName, ObjectOn, Phase, Pockets,
+    Shared,
 };
 use bevy::ecs::query::QueryData;
 use bevy::prelude::{Children, Entity, ops::atan2};
@@ -9,6 +9,7 @@ use either::Either;
 use gameplay_location::Pos;
 use hud::text_color_expect_half;
 use std::f32::consts::FRAC_1_PI;
+use text::{Fragment, Positioning};
 
 #[derive(QueryData)]
 #[query_data(derive(Debug))]

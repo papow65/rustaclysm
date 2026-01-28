@@ -1,4 +1,4 @@
-use crate::actor::phrases::{
+use crate::actor::messages::{
     AttackNothing, CantClose, CantCloseOn, CraftProgressLeft, CrashInto, Drop, HaltAtTheLedge,
     IsTooExhaustedTo, Move, PickUp, PulpNothing, SmashInvalid, SubzoneNotFoundWhileMovingAnItem,
     TooFarToMove, YouCant, YouFinish, YouSleepFor,
@@ -7,9 +7,9 @@ use crate::{
     ActorEvent, ActorImpact, Amount, Aquatic, Attack, BaseSpeed, BodyContainers, Breath,
     ChangePace, Clock, Close, Collision, Consumed, Container, CorpseEvent, Craft, Damage, Envir,
     Faction, Healing, HealingDuration, Health, InPocket, Item, ItemHierarchy, ItemItem, LastEnemy,
-    Life, LogMessageWriter, Melee, ObjectName, ObjectOn, Peek, Phrase, Player, PlayerActionState,
-    PlayerWielded, Pulp, Smash, Stamina, StaminaCost, StartCraft, Step, Subject, TerrainEvent,
-    Tile, TileSpawner, Toggle, WalkingMode,
+    Life, LogMessageWriter, Melee, ObjectName, ObjectOn, Peek, Player, PlayerActionState,
+    PlayerWielded, Pulp, Smash, Stamina, StaminaCost, StartCraft, Step, TerrainEvent, Tile,
+    TileSpawner, Toggle, WalkingMode,
 };
 use bevy::ecs::query::{QueryData, With};
 use bevy::prelude::{
@@ -19,6 +19,7 @@ use cdda_json_files::CddaItem;
 use either::Either;
 use gameplay_location::{HorizontalDirection, LevelOffset, LocationCache, Nbor, Pos};
 use gameplay_model::LastSeen;
+use text::{Phrase, Subject};
 use units::{Distance, Duration, Speed};
 use util::Maybe;
 

@@ -1,7 +1,8 @@
-use crate::{Fragment, PocketContents, PocketOf, Shared};
+use crate::{PocketContents, PocketOf, Shared};
 use bevy::ecs::query::QueryData;
 use bevy::prelude::{Component, Entity};
 use cdda_json_files::{CddaPocket, PocketInfo, SealedData};
+use text::Fragment;
 
 #[derive(Copy, Clone, Debug, Component)]
 #[component(immutable)]

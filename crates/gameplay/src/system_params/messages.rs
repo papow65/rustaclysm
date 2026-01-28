@@ -1,4 +1,5 @@
-use crate::{Phrase, ProtoPhrase, Severity};
+use crate::{ProtoLogMessage, Severity};
+use text::Phrase;
 
 #[derive(Debug, PartialEq)]
 pub(crate) enum NoStairs {
@@ -6,10 +7,10 @@ pub(crate) enum NoStairs {
     Down,
 }
 
-impl ProtoPhrase for NoStairs {
+impl ProtoLogMessage for NoStairs {
     const SEVERITY: Severity = Severity::ImpossibleAction;
 
-    fn compose(self) -> Phrase {
+    fn phrase(self) -> Phrase {
         Phrase::new(match self {
             Self::Up => "No stairs up",
             Self::Down => "No stairs down",

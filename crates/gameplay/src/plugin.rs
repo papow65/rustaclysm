@@ -1,7 +1,7 @@
 use crate::{
     ActorPlugin, CameraOffset, EventsPlugin, FocusPlugin, GameplayScreenState, ItemChecksPlugin,
-    PhrasePlugin, RelativeSegments, ResourcePlugin, ScreensPlugin, SidebarPlugin, TimePlugin,
-    TransitionPlugin, VisualizationUpdate, check_failed_asset_loading, count_assets, count_pos,
+    RelativeSegments, ResourcePlugin, ScreensPlugin, SidebarPlugin, TimePlugin, TransitionPlugin,
+    VisualizationUpdate, check_failed_asset_loading, count_assets, count_pos,
     create_gameplay_key_bindings, despawn_systems, handle_region_asset_events, handle_zone_levels,
     spawn_initial_entities, spawn_subzone_levels, spawn_subzones_for_camera, update_camera_offset,
     update_explored, update_visibility, update_visualization_on_item_move,
@@ -17,6 +17,7 @@ use gameplay_local::GameplayLocalPlugin;
 use gameplay_location::LocationPlugin;
 use gameplay_model::ModelPlugin;
 use gameplay_resource::GampelayResourceSet;
+use text::TextPlugin;
 use util::log_transition_plugin;
 
 pub struct GameplayPlugin;
@@ -34,10 +35,10 @@ impl Plugin for GameplayPlugin {
                 EventsPlugin,
                 ItemChecksPlugin,
                 ModelPlugin,
-                PhrasePlugin,
                 ResourcePlugin,
                 GameplayLocalPlugin,
                 LocationPlugin,
+                TextPlugin,
                 TransitionPlugin,
                 ScreensPlugin,
                 TimePlugin,

@@ -1,7 +1,7 @@
-use crate::Fragment;
 use bevy::prelude::Component;
 use hud::text_color_expect_full;
 use std::ops::{Add, Sub};
+use text::Fragment;
 
 /// Mutable component
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Component)]

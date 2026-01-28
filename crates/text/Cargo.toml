@@ -1,0 +1,18 @@
+[package]
+name = "text"
+description = "A library for text generation"
+license = "AGPL-3.0-or-later"
+edition = "2024"
+
+[dependencies]
+application_state = { workspace = true }
+bevy = { workspace = true }
+gameplay_location = { workspace = true }
+hud = { workspace = true }
+manual = { workspace = true }
+keyboard = { workspace = true }
+regex = { workspace = true }
+util = { workspace = true }
+
+[lints]
+workspace = true

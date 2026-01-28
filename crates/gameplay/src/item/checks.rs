@@ -1,5 +1,5 @@
 use crate::{
-    Amount, Containable, InPocket, ItemHierarchy, ItemIntegrity, Mobile, ObjectOn, Phrase,
+    Amount, Containable, InPocket, ItemHierarchy, ItemIntegrity, Mobile, ObjectOn,
     StandardIntegrity, TileIn,
 };
 use crate::{SealedPocket, Shared};
@@ -11,6 +11,7 @@ use cdda_json_files::{PocketInfo, PocketType};
 use gameplay_cdda::Infos;
 use gameplay_location::Pos;
 use std::fmt::Write as _;
+use text::Phrase;
 
 pub(crate) struct ItemChecksPlugin;
 

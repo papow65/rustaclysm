@@ -1,6 +1,6 @@
 use crate::screens::crafting::{
     AlternativeSituation, ComponentSituation, CraftingScreen, DetectedQuantity, QualitySituation,
-    RecipeSituation, ToolSituation, phrases::YouLackTheMeansToCraft,
+    RecipeSituation, ToolSituation, messages::YouLackTheMeansToCraft,
 };
 use crate::screens::{find_nearby, find_nearby_pseudo, find_sources, nearby_qualities};
 use crate::{

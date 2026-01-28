@@ -2,13 +2,12 @@ mod actions;
 mod breath;
 mod faction;
 mod impact;
-mod phrases;
+mod messages;
 mod planned_action;
 mod player;
 mod plugin;
 mod query_data;
 mod stats;
-mod subject;
 
 pub(crate) use self::actions::{
     Action, ActionIn, Attack, ChangePace, Close, ContinueCraft, ExamineItem, ItemAction, MoveItem,
@@ -24,4 +23,3 @@ pub(crate) use self::query_data::{Actor, ActorItem};
 pub(crate) use self::stats::{
     Aquatic, BaseSpeed, Health, Stamina, StaminaCost, StaminaImpact, WalkingMode,
 };
-pub(crate) use self::subject::Subject;

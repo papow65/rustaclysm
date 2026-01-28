@@ -1,7 +1,7 @@
-use crate::Fragment;
 use bevy::prelude::Component;
 use cdda_json_files::CddaPhase;
 use hud::{BLUE_TEXT_COLOR, WARN_TEXT_COLOR};
+use text::Fragment;
 
 #[derive(Copy, Clone, Debug, Component)]
 #[component(immutable)]

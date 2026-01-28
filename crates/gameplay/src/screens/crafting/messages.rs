@@ -1,15 +1,16 @@
-use crate::{Phrase, ProtoPhrase, Severity};
+use crate::{ProtoLogMessage, Severity};
 use std::sync::Arc;
+use text::Phrase;
 
 #[derive(Debug)]
 pub(super) struct YouLackTheMeansToCraft {
     pub(super) recipe: Arc<str>,
 }
 
-impl ProtoPhrase for YouLackTheMeansToCraft {
+impl ProtoLogMessage for YouLackTheMeansToCraft {
     const SEVERITY: Severity = Severity::ImpossibleAction;
 
-    fn compose(self) -> Phrase {
+    fn phrase(self) -> Phrase {
         Self::you("lack")
             .soft("the")
             .hard("means")

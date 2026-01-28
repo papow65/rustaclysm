@@ -1,12 +1,13 @@
-use crate::{Phrase, ProtoPhrase, Severity};
+use crate::{ProtoLogMessage, Severity};
+use text::Phrase;
 
 #[derive(Debug)]
 pub(super) struct YouWait;
 
-impl ProtoPhrase for YouWait {
+impl ProtoLogMessage for YouWait {
     const SEVERITY: Severity = Severity::Neutral;
 
-    fn compose(self) -> Phrase {
+    fn phrase(self) -> Phrase {
         Self::you("wait...")
     }
 }

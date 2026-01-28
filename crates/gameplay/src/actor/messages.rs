@@ -1,7 +1,8 @@
 use crate::actor::PlayerActionState;
-use crate::{Craft, Fragment, ObjectName, Phrase, ProtoPhrase, Severity, Subject};
+use crate::{Craft, ObjectName, ProtoLogMessage, Severity};
 use gameplay_location::Pos;
 use hud::text_color_expect_full;
+use text::{Fragment, Phrase, Subject};
 use units::Duration;
 
 #[derive(Debug)]
@@ -9,10 +10,10 @@ pub(super) struct AttackNothing {
     pub(super) subject: Subject,
 }
 
-impl ProtoPhrase for AttackNothing {
+impl ProtoLogMessage for AttackNothing {
     const SEVERITY: Severity = Severity::ImpossibleAction;
 
-    fn compose(self) -> Phrase {
+    fn phrase(self) -> Phrase {
         self.subject.verb("attack", "s").hard("nothing")
     }
 }
@@ -23,10 +24,10 @@ pub(super) struct CantClose {
     pub(super) uncloseable: Fragment,
 }
 
-impl ProtoPhrase for CantClose {
+impl ProtoLogMessage for CantClose {
     const SEVERITY: Severity = Severity::Error;
 
-    fn compose(self) -> Phrase {
+    fn phrase(self) -> Phrase {
         self.subject.simple("can't close").push(self.uncloseable)
     }
 }
@@ -38,10 +39,10 @@ pub(super) struct CantCloseOn {
     pub(super) obstacle: Fragment,
 }
 
-impl ProtoPhrase for CantCloseOn {
+impl ProtoLogMessage for CantCloseOn {
     const SEVERITY: Severity = Severity::ImpossibleAction;
 
-    fn compose(self) -> Phrase {
+    fn phrase(self) -> Phrase {
         self.subject
             .simple("can't close")
             .push(self.closeable)
@@ -55,10 +56,10 @@ pub(super) struct CraftProgressLeft<'a> {
     pub(super) craft: &'a Craft,
 }
 
-impl ProtoPhrase for CraftProgressLeft<'_> {
+impl ProtoLogMessage for CraftProgressLeft<'_> {
     const SEVERITY: Severity = Severity::ImpossibleAction;
 
-    fn compose(self) -> Phrase {
+    fn phrase(self) -> Phrase {
         let percent_progress = self.craft.percent_progress();
         let color = text_color_expect_full(percent_progress / 100.0);
         let percent_progress = format!("{percent_progress:.1}");
@@ -79,10 +80,10 @@ pub(super) struct CrashInto<'a> {
     pub(super) to: Pos,
 }
 
-impl ProtoPhrase for CrashInto<'_> {
+impl ProtoLogMessage for CrashInto<'_> {
     const SEVERITY: Severity = Severity::ImpossibleAction;
 
-    fn compose(self) -> Phrase {
+    fn phrase(self) -> Phrase {
         self.subject
             .verb("crash", "es")
             .soft("into")
@@ -96,10 +97,10 @@ pub(super) struct Drop {
     pub(super) item: Vec<Fragment>,
 }
 
-impl ProtoPhrase for Drop {
+impl ProtoLogMessage for Drop {
     const SEVERITY: Severity = Severity::Neutral;
 
-    fn compose(self) -> Phrase {
+    fn phrase(self) -> Phrase {
         self.subject.verb("drop", "s").extend(self.item)
     }
 }
@@ -107,10 +108,10 @@ impl ProtoPhrase for Drop {
 #[derive(Debug)]
 pub(super) struct FirstExamineYourDestination;
 
-impl ProtoPhrase for FirstExamineYourDestination {
+impl ProtoLogMessage for FirstExamineYourDestination {
     const SEVERITY: Severity = Severity::ImpossibleAction;
 
-    fn compose(self) -> Phrase {
+    fn phrase(self) -> Phrase {
         Phrase::new("First examine your destination")
     }
 }
@@ -120,10 +121,10 @@ pub(super) struct HaltAtTheLedge {
     pub(super) subject: Subject,
 }
 
-impl ProtoPhrase for HaltAtTheLedge {
+impl ProtoLogMessage for HaltAtTheLedge {
     const SEVERITY: Severity = Severity::Danger;
 
-    fn compose(self) -> Phrase {
+    fn phrase(self) -> Phrase {
         self.subject.verb("halt", "s").soft("at").hard("the ledge")
     }
 }
@@ -134,10 +135,10 @@ pub(super) struct IsTooExhaustedTo {
     pub(super) verb: &'static str,
 }
 
-impl ProtoPhrase for IsTooExhaustedTo {
+impl ProtoLogMessage for IsTooExhaustedTo {
     const SEVERITY: Severity = Severity::ImpossibleAction;
 
-    fn compose(self) -> Phrase {
+    fn phrase(self) -> Phrase {
         self.subject
             .is()
             .hard("too exhausted")
@@ -152,10 +153,10 @@ pub(super) struct Move {
     pub(super) item: Vec<Fragment>,
 }
 
-impl ProtoPhrase for Move {
+impl ProtoLogMessage for Move {
     const SEVERITY: Severity = Severity::Neutral;
 
-    fn compose(self) -> Phrase {
+    fn phrase(self) -> Phrase {
         self.subject.verb("move", "s").extend(self.item)
     }
 }
@@ -163,10 +164,10 @@ impl ProtoPhrase for Move {
 #[derive(Debug)]
 pub(super) struct NoPlaceToCraftNearby;
 
-impl ProtoPhrase for NoPlaceToCraftNearby {
+impl ProtoLogMessage for NoPlaceToCraftNearby {
     const SEVERITY: Severity = Severity::ImpossibleAction;
 
-    fn compose(self) -> Phrase {
+    fn phrase(self) -> Phrase {
         Phrase::new("no place to craft nearby")
     }
 }
@@ -174,10 +175,10 @@ impl ProtoPhrase for NoPlaceToCraftNearby {
 #[derive(Debug)]
 pub(super) struct NoTargetsNearby;
 
-impl ProtoPhrase for NoTargetsNearby {
+impl ProtoLogMessage for NoTargetsNearby {
     const SEVERITY: Severity = Severity::ImpossibleAction;
 
-    fn compose(self) -> Phrase {
+    fn phrase(self) -> Phrase {
         Phrase::new("no targets nearby")
     }
 }
@@ -185,10 +186,10 @@ impl ProtoPhrase for NoTargetsNearby {
 #[derive(Debug)]
 pub(super) struct NothingToCloseNearby;
 
-impl ProtoPhrase for NothingToCloseNearby {
+impl ProtoLogMessage for NothingToCloseNearby {
     const SEVERITY: Severity = Severity::ImpossibleAction;
 
-    fn compose(self) -> Phrase {
+    fn phrase(self) -> Phrase {
         Phrase::new("nothing to close nearby")
     }
 }
@@ -199,10 +200,10 @@ pub(super) struct PickUp {
     pub(super) taken: Vec<Fragment>,
 }
 
-impl ProtoPhrase for PickUp {
+impl ProtoLogMessage for PickUp {
     const SEVERITY: Severity = Severity::Neutral;
 
-    fn compose(self) -> Phrase {
+    fn phrase(self) -> Phrase {
         self.subject.verb("pick", "s").hard("up").extend(self.taken)
     }
 }
@@ -212,10 +213,10 @@ pub(super) struct PulpNothing {
     pub(super) subject: Subject,
 }
 
-impl ProtoPhrase for PulpNothing {
+impl ProtoLogMessage for PulpNothing {
     const SEVERITY: Severity = Severity::ImpossibleAction;
 
-    fn compose(self) -> Phrase {
+    fn phrase(self) -> Phrase {
         self.subject.verb("pulp", "s").hard("nothing")
     }
 }
@@ -226,10 +227,10 @@ pub(super) struct SmashInvalid {
     pub(super) object: &'static str,
 }
 
-impl ProtoPhrase for SmashInvalid {
+impl ProtoLogMessage for SmashInvalid {
     const SEVERITY: Severity = Severity::ImpossibleAction;
 
-    fn compose(self) -> Phrase {
+    fn phrase(self) -> Phrase {
         self.subject.verb("smash", "es").hard(self.object)
     }
 }
@@ -237,10 +238,10 @@ impl ProtoPhrase for SmashInvalid {
 #[derive()]
 pub(super) struct SubzoneNotFoundWhileMovingAnItem;
 
-impl ProtoPhrase for SubzoneNotFoundWhileMovingAnItem {
+impl ProtoLogMessage for SubzoneNotFoundWhileMovingAnItem {
     const SEVERITY: Severity = Severity::Error;
 
-    fn compose(self) -> Phrase {
+    fn phrase(self) -> Phrase {
         Phrase::new("Subzone not found when moving an item")
     }
 }
@@ -248,10 +249,10 @@ impl ProtoPhrase for SubzoneNotFoundWhileMovingAnItem {
 #[derive()]
 pub(super) struct TooFarToMove;
 
-impl ProtoPhrase for TooFarToMove {
+impl ProtoLogMessage for TooFarToMove {
     const SEVERITY: Severity = Severity::ImpossibleAction;
 
-    fn compose(self) -> Phrase {
+    fn phrase(self) -> Phrase {
         Phrase::new("Too far to move")
     }
 }
@@ -261,10 +262,10 @@ pub(super) struct YouAreAlmostOutOfBreathAndStop {
     pub(crate) verb: String,
 }
 
-impl ProtoPhrase for YouAreAlmostOutOfBreathAndStop {
+impl ProtoLogMessage for YouAreAlmostOutOfBreathAndStop {
     const SEVERITY: Severity = Severity::Danger;
 
-    fn compose(self) -> Phrase {
+    fn phrase(self) -> Phrase {
         Subject::You
             .is()
             .hard("almost out of breath")
@@ -277,10 +278,10 @@ impl ProtoPhrase for YouAreAlmostOutOfBreathAndStop {
 #[derive(Debug)]
 pub(super) struct YouAreStillAsleep;
 
-impl ProtoPhrase for YouAreStillAsleep {
+impl ProtoLogMessage for YouAreStillAsleep {
     const SEVERITY: Severity = Severity::ImpossibleAction;
 
-    fn compose(self) -> Phrase {
+    fn phrase(self) -> Phrase {
         Self::you("are still asleep. Zzz...")
     }
 }
@@ -288,10 +289,10 @@ impl ProtoPhrase for YouAreStillAsleep {
 #[derive(Debug)]
 pub(super) struct YouAreStillDraggingItems;
 
-impl ProtoPhrase for YouAreStillDraggingItems {
+impl ProtoLogMessage for YouAreStillDraggingItems {
     const SEVERITY: Severity = Severity::ImpossibleAction;
 
-    fn compose(self) -> Phrase {
+    fn phrase(self) -> Phrase {
         Self::you("are still dragging items")
     }
 }
@@ -299,10 +300,10 @@ impl ProtoPhrase for YouAreStillDraggingItems {
 #[derive(Debug)]
 pub(super) struct YouCantAttackYourself;
 
-impl ProtoPhrase for YouCantAttackYourself {
+impl ProtoLogMessage for YouCantAttackYourself {
     const SEVERITY: Severity = Severity::ImpossibleAction;
 
-    fn compose(self) -> Phrase {
+    fn phrase(self) -> Phrase {
         Self::you("can't attack yourself")
     }
 }
@@ -313,10 +314,10 @@ pub(super) struct YouCant {
     pub(super) direction: &'static str,
 }
 
-impl ProtoPhrase for YouCant {
+impl ProtoLogMessage for YouCant {
     const SEVERITY: Severity = Severity::ImpossibleAction;
 
-    fn compose(self) -> Phrase {
+    fn phrase(self) -> Phrase {
         Self::you("can't").hard(self.verb).hard(self.direction)
     }
 }
@@ -324,10 +325,10 @@ impl ProtoPhrase for YouCant {
 #[derive(Debug)]
 pub(super) struct YouFallAsleep;
 
-impl ProtoPhrase for YouFallAsleep {
+impl ProtoLogMessage for YouFallAsleep {
     const SEVERITY: Severity = Severity::Neutral;
 
-    fn compose(self) -> Phrase {
+    fn phrase(self) -> Phrase {
         Self::you("fall asleep... Zzz...")
     }
 }
@@ -347,10 +348,10 @@ impl<const SUCCESS: bool> YouFinish<SUCCESS> {
     }
 }
 
-impl<const SUCCESS: bool> ProtoPhrase for YouFinish<SUCCESS> {
+impl<const SUCCESS: bool> ProtoLogMessage for YouFinish<SUCCESS> {
     const SEVERITY: Severity = Self::severity();
 
-    fn compose(self) -> Phrase {
+    fn phrase(self) -> Phrase {
         Self::you("finish").hard(if let PlayerActionState::Crafting { .. } = self.action {
             String::from("your craft")
         } else {
@@ -364,10 +365,10 @@ pub(super) struct YouSleepFor {
     pub(super) total_duration: Duration,
 }
 
-impl ProtoPhrase for YouSleepFor {
+impl ProtoLogMessage for YouSleepFor {
     const SEVERITY: Severity = Severity::Neutral;
 
-    fn compose(self) -> Phrase {
+    fn phrase(self) -> Phrase {
         let color = text_color_expect_full(self.total_duration / (Duration::HOUR * 8));
 
         Self::you("sleep for").push(Fragment::colorized(
@@ -383,10 +384,10 @@ pub(super) struct YouSpotAndStop<S: Into<String>> {
     pub(super) verb: S,
 }
 
-impl<S: Into<String>> ProtoPhrase for YouSpotAndStop<S> {
+impl<S: Into<String>> ProtoLogMessage for YouSpotAndStop<S> {
     const SEVERITY: Severity = Severity::Danger;
 
-    fn compose(self) -> Phrase {
+    fn phrase(self) -> Phrase {
         Self::you("spot")
             .push(self.seen)
             .soft("and")
@@ -398,10 +399,10 @@ impl<S: Into<String>> ProtoPhrase for YouSpotAndStop<S> {
 #[derive(Debug)]
 pub(super) struct YouStartDefending;
 
-impl ProtoPhrase for YouStartDefending {
+impl ProtoLogMessage for YouStartDefending {
     const SEVERITY: Severity = Severity::Danger;
 
-    fn compose(self) -> Phrase {
+    fn phrase(self) -> Phrase {
         Self::you("start defending...")
     }
 }
@@ -411,10 +412,10 @@ pub(super) struct YouWakeUpAfterSleeping {
     pub(super) duration: Duration,
 }
 
-impl ProtoPhrase for YouWakeUpAfterSleeping {
+impl ProtoLogMessage for YouWakeUpAfterSleeping {
     const SEVERITY: Severity = Severity::Neutral;
 
-    fn compose(self) -> Phrase {
+    fn phrase(self) -> Phrase {
         let color = text_color_expect_full(self.duration / (Duration::HOUR * 8));
 
         Self::you("wake up after sleeping")

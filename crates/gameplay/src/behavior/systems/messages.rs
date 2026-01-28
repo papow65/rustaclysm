@@ -1,4 +1,5 @@
-use crate::{Evolution, Fragment, Phrase, ProtoPhrase, Severity, Subject};
+use crate::{Evolution, ProtoLogMessage, Severity};
+use text::{Fragment, Phrase, Subject};
 
 #[derive(Debug)]
 pub(super) struct Break {
@@ -6,10 +7,10 @@ pub(super) struct Break {
     pub(super) broken: Fragment,
 }
 
-impl ProtoPhrase for Break {
+impl ProtoLogMessage for Break {
     const SEVERITY: Severity = Severity::Danger;
 
-    fn compose(self) -> Phrase {
+    fn phrase(self) -> Phrase {
         self.breaker.verb("break", "s").push(self.broken)
     }
 }
@@ -20,10 +21,10 @@ pub(super) struct Heal {
     pub(super) evolution: Evolution,
 }
 
-impl ProtoPhrase for Heal {
+impl ProtoLogMessage for Heal {
     const SEVERITY: Severity = Severity::Success;
 
-    fn compose(self) -> Phrase {
+    fn phrase(self) -> Phrase {
         let builder = self.subject.verb("heal", "s");
         if self.evolution.change_abs() == 1 {
             builder.push(Fragment::good("a bit"))
@@ -46,10 +47,10 @@ pub(super) struct Hit {
     pub(super) evolution: Evolution,
 }
 
-impl ProtoPhrase for Hit {
+impl ProtoLogMessage for Hit {
     const SEVERITY: Severity = Severity::Danger;
 
-    fn compose(self) -> Phrase {
+    fn phrase(self) -> Phrase {
         let builder = self.attacker.verb("hit", "s").push(self.object);
         if self.evolution.changed() {
             builder
@@ -70,10 +71,10 @@ pub(super) struct IsThoroughlyPulped {
     pub(super) corpse: Fragment,
 }
 
-impl ProtoPhrase for IsThoroughlyPulped {
+impl ProtoLogMessage for IsThoroughlyPulped {
     const SEVERITY: Severity = Severity::Success;
 
-    fn compose(self) -> Phrase {
+    fn phrase(self) -> Phrase {
         Subject::Other(Phrase::from_fragment(self.corpse))
             .is()
             .hard("thoroughly pulped")
@@ -86,10 +87,10 @@ pub(super) struct Kill {
     pub(super) killed: Fragment,
 }
 
-impl ProtoPhrase for Kill {
+impl ProtoLogMessage for Kill {
     const SEVERITY: Severity = Severity::Danger;
 
-    fn compose(self) -> Phrase {
+    fn phrase(self) -> Phrase {
         self.killer.verb("kill", "s").push(self.killed)
     }
 }
@@ -97,10 +98,10 @@ impl ProtoPhrase for Kill {
 #[derive(Debug)]
 pub(super) struct NpcActionFailed;
 
-impl ProtoPhrase for NpcActionFailed {
+impl ProtoLogMessage for NpcActionFailed {
     const SEVERITY: Severity = Severity::Error;
 
-    fn compose(self) -> Phrase {
+    fn phrase(self) -> Phrase {
         Phrase::new("NPC action failed")
     }
 }
@@ -111,10 +112,10 @@ pub(super) struct Pulp {
     pub(super) corpse: Fragment,
 }
 
-impl ProtoPhrase for Pulp {
+impl ProtoLogMessage for Pulp {
     const SEVERITY: Severity = Severity::Neutral;
 
-    fn compose(self) -> Phrase {
+    fn phrase(self) -> Phrase {
         self.pulper.verb("pulp", "s").push(self.corpse)
     }
 }

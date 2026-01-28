@@ -1,9 +1,9 @@
 //! These systems are part of [`BehaviorSchedule`](`crate::behavior::schedule::BehaviorSchedule`).
 
-use crate::behavior::systems::phrases::{Break, Heal, Hit, IsThoroughlyPulped, Kill, Pulp};
+use crate::behavior::systems::messages::{Break, Heal, Hit, IsThoroughlyPulped, Kill, Pulp};
 use crate::{
     Actor, ActorEvent, Amount, Clock, ContainerLimits, Corpse, CorpseEvent, CorpseRaise, Damage,
-    Faction, Fragment, GameplayScreenState, Healing, Health, Item, ItemHierarchy, Life, Limited,
+    Faction, GameplayScreenState, Healing, Health, Item, ItemHierarchy, Life, Limited,
     LocalTerrain, LogMessageWriter, ObjectName, ObjectOn, Obstacle, Player, Shared, Stamina,
     StandardIntegrity, TerrainEvent, TileSpawner, Toggle, VisualizationUpdate, WalkingMode,
 };
@@ -19,6 +19,7 @@ use gameplay_cdda::Infos;
 use gameplay_location::Pos;
 use std::f32::consts::FRAC_PI_2;
 use std::time::Instant;
+use text::Fragment;
 use units::Duration;
 use util::log_if_slow;
 
