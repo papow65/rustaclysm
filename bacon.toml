@@ -35,12 +35,18 @@ on_success = "job:doc"
 [jobs.doc]
 command = ["cargo", "doc", "--profile", "dev-opt","--no-deps", "--workspace", "--color", "always", "--document-private-items"]
 need_stdout = false
-on_success = "job:sweep"
+on_success = "job:shear"
 
 [jobs.doc-open]
 command = ["cargo", "doc", "--profile", "dev-opt","--no-deps", "--workspace", "--color", "always", "--document-private-items", "--open"]
 need_stdout = false
 on_success = "back" # so that we don't open the browser at each change
+
+[jobs.shear]
+command = ["cargo", "shear", "--color=always"]
+need_stderr = true
+need_stdout = true
+on_success = "job:sweep"
 
 [jobs.sweep]
 command = ["cargo", "sweep", "--installed"]
@@ -73,7 +79,8 @@ c = "job:clippy"
 b = "job:build"
 d = "job:doc"
 o = "job:doc-open"
-s = "job:sweep"
+s = "job:shear"
+p = "job:sweep"
 r = "job:run"
 w = "job:wait"
 x = "job:fix"
