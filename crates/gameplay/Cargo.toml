@@ -22,7 +22,6 @@ hud = { workspace = true }
 keyboard = { workspace = true }
 manual = { workspace = true }
 pathfinding = { workspace = true }
-regex = { workspace = true }
 selection_list = { workspace = true }
 serde_json = { workspace = true }
 strum = { workspace = true }
