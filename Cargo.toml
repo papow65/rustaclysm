@@ -18,6 +18,7 @@ members = [ "crates/*" ]
 application_state = { workspace = true }
 background = { workspace = true }
 bevy = { workspace = true }
+cargo_metadata = "0.23"
 gameplay = { workspace = true }
 git-version = "0.3"
 hud = { workspace = true }

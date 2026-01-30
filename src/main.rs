@@ -3,12 +3,12 @@ mod input;
 mod log;
 mod output;
 
-use crate::{check::check_delay, input::create_global_key_bindings};
-use crate::{log::log_archetypes, output::create_camera};
+use crate::log::{log_archetypes, log_filter};
+use crate::{check::check_delay, input::create_global_key_bindings, output::create_camera};
 use application_state::ApplicationStatePlugin;
 use background::BackgroundPlugin;
 use bevy::dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin, FrameTimeGraphConfig};
-use bevy::log::{DEFAULT_FILTER, Level, LogPlugin};
+use bevy::log::{Level, LogPlugin};
 use bevy::prelude::{
     App, AppExit, AssetPlugin, DefaultPlugins, Fixed, FixedUpdate, ImagePlugin, Last,
     PluginGroup as _, Startup, Time, Window, WindowPlugin, info,
@@ -22,7 +22,7 @@ use loading::LoadingIndicatorPlugin;
 use main_menu::MainMenuPlugin;
 use manual::ManualPlugin;
 use pre_gameplay::PreGameplayPlugin;
-use std::{env, fmt::Write as _, time::Duration};
+use std::{env, time::Duration};
 
 fn main() -> AppExit {
     let mut app = App::new();
@@ -83,35 +83,4 @@ fn main() -> AppExit {
     app.add_systems(Last, check_delay);
 
     app.run()
-}
-
-fn log_filter() -> String {
-    [
-        "rustaclysm",
-        "application_state",
-        "background",
-        "cdda_json_files",
-        "gameplay",
-        "gameplay_cdda",
-        "gameplay_cdda_active_sav",
-        "gameplay_transition_state",
-        "gameplay_local",
-        "gameplay_location",
-        "gameplay_model",
-        "gameplay_resource",
-        "gameplay_transition_state",
-        "hud",
-        "keyboard",
-        "loading",
-        "main_menu",
-        "manual",
-        "pre_gameplay",
-        "units",
-        "util",
-    ]
-    .into_iter()
-    .fold(format!("info,{DEFAULT_FILTER}"), |mut acc, package| {
-        write!(acc, ",{package}=debug").expect("Writing should work");
-        acc
-    })
 }
