@@ -17,7 +17,6 @@ use gameplay_local::GameplayLocalPlugin;
 use gameplay_location::LocationPlugin;
 use gameplay_model::ModelPlugin;
 use gameplay_resource::GampelayResourceSet;
-use text::TextPlugin;
 use util::log_transition_plugin;
 
 pub struct GameplayPlugin;
@@ -38,7 +37,6 @@ impl Plugin for GameplayPlugin {
                 ResourcePlugin,
                 GameplayLocalPlugin,
                 LocationPlugin,
-                TextPlugin,
                 TransitionPlugin,
                 ScreensPlugin,
                 TimePlugin,

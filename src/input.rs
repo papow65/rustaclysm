@@ -1,5 +1,5 @@
-use bevy::app::AppExit;
-use bevy::prelude::{In, IntoSystem as _, Messages, ResMut, UiScale, World, debug};
+use bevy::prelude::{AppExit, In, IntoSystem as _, Messages, ResMut, UiScale, World, debug};
+use hud::toggle_debug_text;
 use keyboard::{Ctrl, KeyBindings};
 use manual::ManualSection;
 
@@ -12,6 +12,7 @@ pub(super) fn create_global_key_bindings(world: &mut World) {
     KeyBindings::<_, Ctrl, ()>::spawn_global(world, |bindings| {
         bindings.add('+', (|| ZoomUiDirection::In).pipe(zoom_ui));
         bindings.add('-', (|| ZoomUiDirection::Out).pipe(zoom_ui));
+        bindings.add('d', toggle_debug_text);
         bindings.add('q', quit);
         if !cfg!(windows) {
             bindings.add('c', quit);
@@ -21,6 +22,7 @@ pub(super) fn create_global_key_bindings(world: &mut World) {
     world.spawn(ManualSection::new(
         &[
             ("zoom ui", "ctrl +/-"),
+            ("toggle debug", "ctrl d"),
             ("quit", if cfg!(windows) { "ctrl q" } else { "ctrl c/q" }),
         ],
         u8::MAX,

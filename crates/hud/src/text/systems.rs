@@ -1,6 +1,7 @@
 use crate::{DebugText, DebugTextShown, Fonts, text::CheckedFont};
 use bevy::prelude::{
     Commands, Entity, Or, Pickable, Query, Res, ResMut, Text, TextFont, TextSpan, With, Without,
+    debug,
 };
 use std::time::Instant;
 use util::log_if_slow;
@@ -65,6 +66,8 @@ pub fn toggle_debug_text(
     mut debug_fonts: Query<&mut TextFont, With<DebugText>>,
 ) {
     shown.0 = !shown.0;
+
+    debug!("Debug: {shown:?}");
 
     let size = shown.text_font(fonts.regular()).font_size;
     for mut font in &mut debug_fonts {
