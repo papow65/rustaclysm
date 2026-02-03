@@ -8,7 +8,7 @@ use crate::{
     Explored, Faction, FocusState, Health, Hurdle, Item, ItemHandler, ItemHierarchy, ItemItem,
     Life, LogMessage, ObjectName, Obstacle, Opaque, OpaqueFloor, Player, PlayerActionState,
     PlayerWielded, RefreshAfterBehavior, RelativeSegments, SeenFrom, Shared, Stamina,
-    StandardIntegrity, Timeouts, WalkingMode, ZoneLevelIds,
+    StandardIntegrity, TileIn, Timeouts, WalkingMode, ZoneLevelIds,
 };
 use application_state::ApplicationState;
 use bevy::diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin};
@@ -670,7 +670,7 @@ fn update_status_detais(
             Option<&LastSeen>,
             Option<&Visibility>,
         ),
-        (Without<Health>, Without<Amount>),
+        (Without<Health>, Without<Amount>, Without<TileIn>),
     >,
     items: Query<Item>,
     text: Single<Entity, With<DetailsText>>,
