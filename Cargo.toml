@@ -91,8 +91,8 @@ rust-2018-compatibility = { level = "forbid", priority = -1 }
 rust-2021-compatibility = { level = "forbid", priority = -1 }
 rust-2024-compatibility = { level = "forbid", priority = -1 }
 # Denied groups
-nonstandard-style = { level = "deny", priority = -1 }
-rust-2018-idioms = { level = "deny", priority = -1 }
+nonstandard-style = { level = "deny", priority = -1 } # "Forbid" clashes with #[derive(Deserialize)]
+rust-2018-idioms = { level = "deny", priority = -1 } # See https://github.com/rust-lang/rust/issues/91639
 # Forbidden lints
 ambiguous_associated_items = "forbid"
 array_into_iter = "forbid"
@@ -123,17 +123,15 @@ rust_2021_prelude_collisions = "forbid"
 semicolon_in_expressions_from_macros = "forbid"
 soft_unstable = "forbid"
 uninhabited_static = "forbid"
+unreachable_pub = "forbid"
 unsafe_code = "forbid"
 unstable_name_collisions = "forbid"
 # Denied
-non_camel_case_types = "deny"
-non_upper_case_globals = "deny"
-unreachable_code = "deny"
-unreachable_pub = "deny"
-unused_attributes = "deny"
-unused_macros = "deny"
+unused_attributes = "deny" # "Forbid" clashes with #[derive(Deserialize)]
+unused_macros = "deny" # "Forbid" would disallow the use of #[expect(unused)]
 # Warned
-dead_code = "warn"
+dead_code = "warn" # Higher levels complicate development
+unreachable_code = "warn" # Higher levels complicate development
 # Allow
 elided_lifetimes_in_paths = "allow" # See https://github.com/rust-lang/rust/issues/91639
 
