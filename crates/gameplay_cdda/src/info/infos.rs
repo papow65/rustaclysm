@@ -104,7 +104,7 @@ impl Infos {
         let mut missing_types = TypeId::VARIANTS
             .iter()
             .filter(|type_id| !enriched_json_infos.contains_key(*type_id))
-            .map(|type_id| format!("{type_id:?}",))
+            .map(|type_id| format!("{type_id:?}"))
             .collect::<Vec<_>>();
         if !missing_types.is_empty() {
             missing_types.sort();

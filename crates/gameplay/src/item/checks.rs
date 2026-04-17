@@ -129,43 +129,39 @@ fn check_single_item(
             let in_pocket = InPocket { pocket_entity };
             let count = item_hierarchy.items_in_pocket(in_pocket).count();
             match pocket_info.pocket_type {
-                PocketType::MagazineWell => {
-                    if 1 < count {
-                        warn!(
-                            "At most one item expected in {pocket_info:?} ({in_pocket:?}) instead of {count}: {}",
-                            item_hierarchy.items_in_pocket(in_pocket).fold(
-                                String::new(),
-                                |mut output, item| {
-                                    write!(
-                                        output,
-                                        "\n- {}",
-                                        Phrase::from_fragments(item.fragments().collect())
-                                    )
-                                    .expect("Writing should succeed");
-                                    output
-                                }
-                            )
-                        );
-                    }
+                PocketType::MagazineWell if 1 < count => {
+                    warn!(
+                        "At most one item expected in {pocket_info:?} ({in_pocket:?}) instead of {count}: {}",
+                        item_hierarchy.items_in_pocket(in_pocket).fold(
+                            String::new(),
+                            |mut output, item| {
+                                write!(
+                                    output,
+                                    "\n- {}",
+                                    Phrase::from_fragments(item.fragments().collect())
+                                )
+                                .expect("Writing should succeed");
+                                output
+                            }
+                        )
+                    );
                 }
-                PocketType::Magazine => {
-                    if count != 1 {
-                        warn!(
-                            "Exactly one item expected in {pocket_info:?} ({in_pocket:?}) instead of {count}: {}",
-                            item_hierarchy.items_in_pocket(in_pocket).fold(
-                                String::new(),
-                                |mut output, item| {
-                                    write!(
-                                        output,
-                                        "\n- {}",
-                                        Phrase::from_fragments(item.fragments().collect())
-                                    )
-                                    .expect("Writing should succeed");
-                                    output
-                                }
-                            )
-                        );
-                    }
+                PocketType::Magazine if count != 1 => {
+                    warn!(
+                        "Exactly one item expected in {pocket_info:?} ({in_pocket:?}) instead of {count}: {}",
+                        item_hierarchy.items_in_pocket(in_pocket).fold(
+                            String::new(),
+                            |mut output, item| {
+                                write!(
+                                    output,
+                                    "\n- {}",
+                                    Phrase::from_fragments(item.fragments().collect())
+                                )
+                                .expect("Writing should succeed");
+                                output
+                            }
+                        )
+                    );
                 }
                 _ => {}
             }
