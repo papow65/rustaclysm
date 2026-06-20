@@ -9,7 +9,7 @@ pub struct ZoneLevelCache {
 }
 
 impl ZoneLevelCache {
-    pub(crate) fn on_insert(mut world: DeferredWorld, context: HookContext) {
+    pub(crate) fn on_zone_level_insert(mut world: DeferredWorld, context: HookContext) {
         let zone_level = *world
             .entity(context.entity)
             .get::<ZoneLevel>()
@@ -25,7 +25,7 @@ impl ZoneLevelCache {
         }
     }
 
-    pub(crate) fn on_replace(mut world: DeferredWorld, context: HookContext) {
+    pub(crate) fn on_zone_level_discard(mut world: DeferredWorld, context: HookContext) {
         let removed_zone_level = *world
             .entity(context.entity)
             .get::<ZoneLevel>()

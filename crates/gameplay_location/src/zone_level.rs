@@ -4,7 +4,7 @@ use std::fmt;
 
 // Manually deriving `Component`
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Component)]
-#[component(immutable, on_insert=ZoneLevelCache::on_insert, on_replace=ZoneLevelCache::on_replace)]
+#[component(immutable, on_insert=ZoneLevelCache::on_zone_level_insert, on_discard=ZoneLevelCache::on_zone_level_discard)]
 pub struct ZoneLevel {
     pub zone: Zone,
     pub level: Level,

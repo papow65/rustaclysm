@@ -1,21 +1,23 @@
-use bevy::prelude::{AssetServer, Font, FromWorld, Handle, Resource, TextFont, World};
+use bevy::prelude::{AssetServer, FontSize, FontSource, FromWorld, Resource, TextFont, World};
 use util::AssetPaths;
 
 #[derive(Resource)]
 pub struct Fonts {
-    fira: Handle<Font>,
+    fira: FontSource,
 }
 
 impl Fonts {
-    const REGULAR_FONT_SIZE: f32 = 13.0;
-    const LARGISH_FONT_SIZE: f32 = 18.0;
-    const LARGE_FONT_SIZE: f32 = 33.0;
-    const HUGE_FONT_SIZE: f32 = 100.0;
+    const REGULAR_FONT_SIZE: FontSize = FontSize::Px(13.0);
+    const LARGISH_FONT_SIZE: FontSize = FontSize::Px(18.0);
+    const LARGE_FONT_SIZE: FontSize = FontSize::Px(33.0);
+    const HUGE_FONT_SIZE: FontSize = FontSize::Px(100.0);
 
     #[must_use]
     pub fn new(asset_server: &AssetServer) -> Self {
         Self {
-            fira: asset_server.load(AssetPaths::fonts().join("FiraMono-Medium.otf")),
+            fira: FontSource::Handle(
+                asset_server.load(AssetPaths::fonts().join("FiraMono-Medium.otf")),
+            ),
         }
     }
 

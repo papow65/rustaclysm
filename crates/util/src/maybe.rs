@@ -53,6 +53,8 @@ struct MaybeCommand<B> {
 }
 
 impl<B: Bundle> Command for MaybeCommand<B> {
+    type Out = ();
+
     fn apply(self, world: &mut World) {
         let mut entity_mut = world
             .get_entity_mut(self.entity)

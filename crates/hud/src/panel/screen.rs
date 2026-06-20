@@ -6,7 +6,7 @@ use bevy::prelude::{
     FlexDirection, JustifyContent, Node, Overflow, Pickable, PositionType, Spawn,
     SpawnRelated as _, States, Val, Visibility, WithOneRelated, children,
 };
-use bevy::ui_widgets::{ControlOrientation, CoreScrollbarThumb, Scrollbar};
+use bevy::ui_widgets::{ControlOrientation, Scrollbar, ScrollbarThumb};
 
 /// Indicator component, so that other parts of the ui can adapt.
 #[derive(Debug, Component)]
@@ -75,14 +75,12 @@ pub fn scroll_panel(limit_height: bool, content_entity: Entity) -> Spawn<impl Bu
                 },
                 Visibility::Hidden,
                 children![(
-                    Node {
-                        position_type: PositionType::Absolute,
+                    ScrollbarThumb {
                         border_radius: BorderRadius::all(Val::Px(3.0)),
-                        ..Node::default()
+                        ..ScrollbarThumb::default()
                     },
                     Hovered::default(),
                     DEFAULT_SCROLLBAR_COLOR,
-                    CoreScrollbarThumb,
                 )],
             )),
         )),

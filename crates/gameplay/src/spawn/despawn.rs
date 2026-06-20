@@ -31,7 +31,7 @@ fn despawn_subzone_levels(
     let start = Instant::now();
 
     let (mut commands, mut despawn_subzone_level_reader, subzone_level_cache) =
-        sytem_state.get_mut(world);
+        sytem_state.get_mut(world).expect("World should be valid");
 
     let despawned_count = despawn_subzone_level_reader.len();
     debug!("Despawning {despawned_count} subzone levels");

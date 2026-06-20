@@ -34,7 +34,11 @@ fn loop_behavior(world: &mut World, behavior_validator: &mut SystemState<Behavio
     };
 
     let mut count = 0;
-    while behavior_validator.get(world).looping_behavior() {
+    while behavior_validator
+        .get(world)
+        .expect("World should be valid")
+        .looping_behavior()
+    {
         world.run_schedule(BehaviorSchedule);
         count += 1;
         if max_time < start.elapsed() {

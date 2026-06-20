@@ -4,7 +4,7 @@ use cdda_json_files::SubzoneOffset;
 use std::fmt;
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Component)]
-#[component(immutable, on_insert=SubzoneLevelCache::on_insert, on_replace=SubzoneLevelCache::on_replace)]
+#[component(immutable, on_insert=SubzoneLevelCache::on_subzone_level_insert, on_discard=SubzoneLevelCache::on_subzone_level_discard)]
 pub struct SubzoneLevel {
     pub x: i32,
     pub level: Level,

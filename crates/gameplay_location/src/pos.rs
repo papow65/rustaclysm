@@ -18,7 +18,7 @@ fn straight_2d(from: (i32, i32), to: (i32, i32)) -> impl Iterator<Item = (i32, i
 
 /// The position of characters, items, terrain, furniture, ...
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Component)]
-#[component(immutable, on_insert=LocationCache::on_insert, on_replace=LocationCache::on_replace)]
+#[component(immutable, on_insert=LocationCache::on_pos_insert, on_discard=LocationCache::on_pos_discard)]
 pub struct Pos {
     pub x: i32,
     pub level: Level,

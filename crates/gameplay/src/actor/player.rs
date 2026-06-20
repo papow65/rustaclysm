@@ -11,8 +11,7 @@ use crate::{
 };
 use application_state::ApplicationState;
 use bevy::prelude::{
-    Component, DetectChanges as _, Entity, NextState, ResMut, StateSet as _, SubStates, TextColor,
-    debug,
+    Component, DetectChanges as _, Entity, NextState, ResMut, SubStates, TextColor, debug,
 };
 use gameplay_location::{CardinalDirection, HorizontalDirection, Nbor, Pos, VisionDistance};
 use hud::{BAD_TEXT_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR};

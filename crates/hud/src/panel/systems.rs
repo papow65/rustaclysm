@@ -6,7 +6,7 @@ use bevy::prelude::{
     MessageReader, Node, On, Or, Query, Res, ScrollPosition, Val, Visibility, With, error,
 };
 use bevy::ui::Outline;
-use bevy::ui_widgets::{CoreScrollbarDragState, CoreScrollbarThumb, Scrollbar};
+use bevy::ui_widgets::{Scrollbar, ScrollbarDragState, ScrollbarThumb};
 use fastrand::f32 as rand_f32;
 use std::mem::swap;
 
@@ -67,10 +67,10 @@ pub(super) fn toggle_scroll_bar_visibility(
 
 pub(super) fn update_scroll_thumb_color(
     mut q_thumb: Query<
-        (&mut BackgroundColor, &Hovered, &CoreScrollbarDragState),
+        (&mut BackgroundColor, &Hovered, &ScrollbarDragState),
         (
-            With<CoreScrollbarThumb>,
-            Or<(Changed<Hovered>, Changed<CoreScrollbarDragState>)>,
+            With<ScrollbarThumb>,
+            Or<(Changed<Hovered>, Changed<ScrollbarDragState>)>,
         ),
     >,
 ) {

@@ -25,6 +25,8 @@ struct DebugTextCommand {
 }
 
 impl Command for DebugTextCommand {
+    type Out = ();
+
     fn apply(self, world: &mut World) {
         let fonts = world.resource::<Fonts>();
         let debug_text_shown = world.resource::<DebugTextShown>();

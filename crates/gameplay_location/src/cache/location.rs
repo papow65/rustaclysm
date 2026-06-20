@@ -13,7 +13,7 @@ pub struct LocationCache {
 }
 
 impl LocationCache {
-    pub(crate) fn on_insert(mut world: DeferredWorld, context: HookContext) {
+    pub(crate) fn on_pos_insert(mut world: DeferredWorld, context: HookContext) {
         let pos = *world
             .entity(context.entity)
             .get::<Pos>()
@@ -34,7 +34,7 @@ impl LocationCache {
         //trace!("Location: {entity:?} @ {pos:?} added");
     }
 
-    pub(crate) fn on_replace(mut world: DeferredWorld, context: HookContext) {
+    pub(crate) fn on_pos_discard(mut world: DeferredWorld, context: HookContext) {
         //let removed_pos = *world.entity(entity).get::<Pos>().expect("Pos should be present because it is being removed");
         //if let Some(faction) = world.entity(entity).get::<Faction>() {
         //    trace!("Removing {removed_pos:?} from {faction:?} {:?}",world.entity(entity).get::<CharacterInfo>());
@@ -42,7 +42,7 @@ impl LocationCache {
 
         let Some(mut this) = world.get_resource_mut::<Self>() else {
             // This happens when we return from gameplay to the main menu
-            //trace!("Location missing duuring on_replace hook for {entity:?}");
+            //trace!("Location missing duuring on_discard hook for {entity:?}");
             return;
         };
 

@@ -4,15 +4,12 @@ use crate::panel::systems::{
 };
 use bevy::input::mouse::MouseWheel;
 use bevy::prelude::{App, FixedUpdate, IntoScheduleConfigs as _, Plugin, Update, on_message};
-use bevy::ui_widgets::ScrollbarPlugin;
 use std::env;
 
 pub(crate) struct PanelPlugin;
 
 impl Plugin for PanelPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(ScrollbarPlugin);
-
         app.add_systems(
             Update,
             (

@@ -19,7 +19,7 @@ impl SubzoneLevelCache {
         !self.subzone_levels.is_empty()
     }
 
-    pub(crate) fn on_insert(mut world: DeferredWorld, context: HookContext) {
+    pub(crate) fn on_subzone_level_insert(mut world: DeferredWorld, context: HookContext) {
         let subzone_level = *world
             .entity(context.entity)
             .get::<SubzoneLevel>()
@@ -34,7 +34,7 @@ impl SubzoneLevelCache {
         }
     }
 
-    pub(crate) fn on_replace(mut world: DeferredWorld, context: HookContext) {
+    pub(crate) fn on_subzone_level_discard(mut world: DeferredWorld, context: HookContext) {
         let removed_subzone_level = *world
             .entity(context.entity)
             .get::<SubzoneLevel>()

@@ -191,11 +191,11 @@ pub(super) fn update_sidebar_systems() -> ScheduleConfigs<ScheduleSystem> {
             .run_if(resource_exists_and_changed::<State<PlayerActionState>>),
         update_status_player_wielded.run_if(resource_exists_and_changed::<Timeouts>),
         update_status_enemies.run_if(
-            resource_exists_and_changed::<Timeouts>.and(resource_exists::<RelativeSegments>),
+            resource_exists_and_changed::<Timeouts>.and_then(resource_exists::<RelativeSegments>),
         ),
         update_status_detais.run_if(
             resource_exists_and_changed::<State<PlayerActionState>>
-                .or(resource_exists_and_changed::<State<FocusState>>),
+                .or_else(resource_exists_and_changed::<State<FocusState>>),
         ),
         clear_transient_message.run_if(resource_exists_and_changed::<State<PlayerActionState>>),
         update_transient_log.run_if(on_message::<LogMessage<PlayerActionState>>),

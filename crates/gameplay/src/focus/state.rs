@@ -1,6 +1,6 @@
 use crate::PlayerActionState;
 use application_state::ApplicationState;
-use bevy::prelude::{StateSet as _, SubStates};
+use bevy::prelude::SubStates;
 use gameplay_location::{Pos, ZoneLevel};
 use std::fmt;
 

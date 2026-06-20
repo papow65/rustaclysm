@@ -609,7 +609,7 @@ impl<'w> TileSpawner<'w, '_> {
         self.commands.spawn((
             DirectionalLight {
                 illuminance: 10_000.0,
-                shadows_enabled: false, // TODO shadow direction does not match buildin shadows
+                shadow_maps_enabled: false, // TODO shadow direction does not match building shadows
                 ..DirectionalLight::default()
             },
             light_transform,

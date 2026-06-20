@@ -3,7 +3,7 @@
 [![GitHub issues](https://img.shields.io/github/issues/papow65/rustaclysm)](https://github.com/papow65/rustaclysm/issues)
 [![Code license](https://img.shields.io/badge/license-AGPL(code)-blue.svg)](license.md)
 [![Rust version](https://img.shields.io/badge/Rust-latest-orange.svg)](https://www.rust-lang.org/)
-[![Bevy engine version](https://img.shields.io/badge/Bevy-0.16-purple.svg)](https://bevyengine.org/)
+[![Bevy engine version](https://img.shields.io/badge/Bevy-0.19-purple.svg)](https://bevyengine.org/)
 
 **Rustaclysm** is a 3D reimagining of the beloved roguelike **[Cataclysm: Dark Days Ahead](https://cataclysmdda.org/)** (C:DDA) built with **[Rust](https://www.rust-lang.org/)** and the **[Bevy](https://bevyengine.org/)** engine.
 
