@@ -4,11 +4,11 @@ use crate::sidebar::{
     WalkingModeTextSpan, WieldedText,
 };
 use crate::{
-    Accessible, Actor, Amount, BaseSpeed, Breath, Clock, Corpse, CurrentlyVisibleBuilder, Envir,
-    Explored, Faction, FocusState, Health, Hurdle, Item, ItemHandler, ItemHierarchy, ItemItem,
-    Life, LogMessage, ObjectName, Obstacle, Opaque, OpaqueFloor, Player, PlayerActionState,
+    Accessible, Actor, Amount, BaseSpeed, Breath, Corpse, CurrentlyVisibleBuilder, Envir, Explored,
+    Faction, FocusState, Health, Hurdle, Item, ItemHandler, ItemHierarchy, ItemItem, Life,
+    LogMessage, ObjectName, Obstacle, Opaque, OpaqueFloor, Player, PlayerActionState,
     PlayerWielded, RefreshAfterBehavior, RelativeSegments, SeenFrom, Shared, Stamina,
-    StandardIntegrity, TileIn, Timeouts, WalkingMode, ZoneLevelIds,
+    StandardIntegrity, TileIn, WalkingMode, ZoneLevelIds,
 };
 use application_state::ApplicationState;
 use bevy::diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin};
@@ -25,6 +25,7 @@ use bevy::prelude::{
 use cdda_json_files::{CharacterInfo, MoveCost};
 use gameplay_location::{Pos, StairsDown, StairsUp};
 use gameplay_model::LastSeen;
+use gameplay_time::{Clock, Timeouts};
 use hud::{
     BAD_TEXT_COLOR, DebugText, HARD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, SOFT_TEXT_COLOR,
     WARN_TEXT_COLOR, scroll_panel, text_color_expect_half,

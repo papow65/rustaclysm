@@ -2404,6 +2404,7 @@ dependencies = [
  "gameplay_location",
  "gameplay_model",
  "gameplay_resource",
+ "gameplay_time",
  "gameplay_transition_state",
  "hud",
  "keyboard",
@@ -2485,6 +2486,16 @@ version = "0.0.0"
 dependencies = [
  "application_state",
  "bevy",
+]
+
+[[package]]
+name = "gameplay_time"
+version = "0.0.0"
+dependencies = [
+ "application_state",
+ "bevy",
+ "gameplay_cdda_active_sav",
+ "units",
 ]
 
 [[package]]

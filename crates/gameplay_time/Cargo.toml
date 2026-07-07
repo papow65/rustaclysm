@@ -1,0 +1,14 @@
+[package]
+name = "gameplay_time"
+description = "A library for in-game time and clock management"
+license = "AGPL-3.0-or-later"
+edition = "2024"
+
+[dependencies]
+application_state = { workspace = true }
+bevy = { workspace = true }
+gameplay_cdda_active_sav = { workspace = true }
+units = { workspace = true }
+
+[lints]
+workspace = true

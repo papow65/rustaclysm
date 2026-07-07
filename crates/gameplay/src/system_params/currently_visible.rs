@@ -1,9 +1,10 @@
 use crate::{
-    Accessible, Clock, Envir, Player, PlayerActionState, RelativeSegment, RelativeSegments, Visible,
+    Accessible, Envir, Player, PlayerActionState, RelativeSegment, RelativeSegments, Visible,
 };
 use bevy::prelude::{Res, Single, State, With};
 use bevy::{ecs::system::SystemParam, platform::collections::HashMap};
 use gameplay_location::{Level, LevelOffset, Pos, PosOffset, SubzoneLevel, VisionDistance};
+use gameplay_time::Clock;
 
 const WIDTH: usize = 2 * VisionDistance::MAX_VISION_TILES as usize + 1;
 

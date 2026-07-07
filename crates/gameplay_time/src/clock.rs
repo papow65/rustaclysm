@@ -3,20 +3,24 @@ use bevy::ecs::system::SystemParam;
 use bevy::prelude::Res;
 use units::Timestamp;
 
+/// The clock resource querying the current game time and environment properties.
 #[derive(SystemParam)]
-pub(crate) struct Clock<'w> {
+pub struct Clock<'w> {
     timeouts: Res<'w, Timeouts>,
 }
 
 impl Clock<'_> {
-    pub(crate) fn time(&self) -> Timestamp {
+    /// Returns the current maximum timestamp tracked by the game timeouts.
+    #[must_use]
+    pub fn time(&self) -> Timestamp {
         self.timeouts.max_timestamp()
     }
 
-    /// Roughly matches New England, centered around 1 PM
+    /// Roughly matches New England, centered around 1 PM.
     ///
     /// Source: <https://www.suncalc.org>
-    pub(crate) fn sunlight_percentage(&self) -> f32 {
+    #[must_use]
+    pub fn sunlight_percentage(&self) -> f32 {
         // Calculation in minutes
 
         const SOLAR_NOON: f32 = 13.0 * 60.0;

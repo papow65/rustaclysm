@@ -2,8 +2,8 @@
 
 use crate::systems::{update_visualization, update_visualization_on_item_move};
 use crate::{
-    Accessible, BaseSpeed, Clock, CurrentlyVisible, CurrentlyVisibleBuilder, ElevationVisibility,
-    Focus, Player, PlayerActionState, Vehicle, VisualizationUpdate,
+    Accessible, BaseSpeed, CurrentlyVisible, CurrentlyVisibleBuilder, ElevationVisibility, Focus,
+    Player, PlayerActionState, Vehicle, VisualizationUpdate,
 };
 use bevy::ecs::schedule::{IntoScheduleConfigs as _, ScheduleConfigs};
 use bevy::ecs::system::ScheduleSystem;
@@ -16,6 +16,7 @@ use gameplay_cdda::Exploration;
 use gameplay_local::GameplayLocal;
 use gameplay_location::Pos;
 use gameplay_model::{Appearance, LastSeen};
+use gameplay_time::Clock;
 use std::cell::RefCell;
 use std::{cell::OnceCell, time::Instant};
 use thread_local::ThreadLocal;

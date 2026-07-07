@@ -1,11 +1,11 @@
 use crate::behavior::systems::messages::NpcActionFailed;
 use crate::{
-    Action, ActionIn, Actor, ActorEvent, ActorImpact, Amount, Attack, ChangePace, Clock, Close,
+    Action, ActionIn, Actor, ActorEvent, ActorImpact, Amount, Attack, ChangePace, Close,
     ContinueCraft, CorpseEvent, Craft, CurrentlyVisibleBuilder, Damage, Envir, ExamineItem,
     Explored, Faction, Healing, HealingDuration, Item, ItemAction as _, ItemHierarchy, Life,
     LogMessageWriter, MoveItem, Peek, Pickup, PlannedAction, Player, PlayerActionState,
     PlayerInstructions, Pulp, Sleep, Smash, Stamina, StartCraft, Stay, Step, TerrainEvent, Tile,
-    TileSpawner, Timeouts, Toggle, Unwield, Wield,
+    TileSpawner, Toggle, Unwield, Wield,
 };
 use bevy::ecs::schedule::{IntoScheduleConfigs as _, ScheduleConfigs};
 use bevy::ecs::system::{ScheduleSystem, SystemId};
@@ -14,6 +14,7 @@ use bevy::prelude::{
     Single, State, StateTransition, SystemInput, With, World, debug,
 };
 use gameplay_location::{LocationCache, Pos};
+use gameplay_time::{Clock, Timeouts};
 use std::{cell::OnceCell, time::Instant};
 use units::Duration;
 use util::log_if_slow;

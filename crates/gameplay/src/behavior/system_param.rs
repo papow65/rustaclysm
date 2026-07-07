@@ -1,8 +1,7 @@
-use crate::{
-    Actor, Envir, GameplayScreenState, Player, PlayerActionState, PlayerInstructions, Timeouts,
-};
+use crate::{Actor, Envir, GameplayScreenState, Player, PlayerActionState, PlayerInstructions};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{Entity, Query, Res, Single, State, With};
+use gameplay_time::Timeouts;
 
 #[derive(SystemParam)]
 pub(crate) struct BehaviorValidator<'w, 's> {

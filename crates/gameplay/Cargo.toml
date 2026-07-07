@@ -18,6 +18,7 @@ gameplay_location = { workspace = true }
 gameplay_model = { workspace = true }
 gameplay_resource = { workspace = true }
 gameplay_transition_state = { workspace = true }
+gameplay_time = { workspace = true }
 hud = { workspace = true }
 keyboard = { workspace = true }
 manual = { workspace = true }
