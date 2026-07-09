@@ -1,5 +1,3 @@
-//! These systems run at most once at the end of [`loop_behavior_and_refresh`](`crate::behavior::systems::loop::loop_behavior_and_refresh`).
-
 use crate::systems::{update_visualization, update_visualization_on_item_move};
 use crate::{
     Accessible, BaseSpeed, CurrentlyVisible, CurrentlyVisibleBuilder, ElevationVisibility, Focus,

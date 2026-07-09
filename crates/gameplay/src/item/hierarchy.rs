@@ -1,10 +1,11 @@
 use crate::{
-    Amount, ContainerLimits, InPocket, Item, ItemItem, ObjectOn, Objects, Pocket, PocketContents,
-    PocketItem, Pockets, SealedPocket,
+    Amount, ContainerLimits, InPocket, Item, ItemItem, Pocket, PocketContents, PocketItem, Pockets,
+    SealedPocket,
 };
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{Entity, Query, error, warn};
 use cdda_json_files::{ItemTypeDetails, PocketInfo, PocketType, UntypedInfoId};
+use gameplay_relations::{ObjectOn, Objects};
 use std::{iter::once, num::NonZeroUsize, sync::Arc};
 use text::{Fragment, Phrase};
 

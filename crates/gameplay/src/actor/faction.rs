@@ -1,11 +1,11 @@
 use crate::{
-    ActorItem, Attack, CurrentlyVisibleBuilder, Envir, Health, PlannedAction, Smash, Step, Visible,
-    WalkingCost,
+    ActorItem, Attack, CurrentlyVisibleBuilder, Envir, Health, PlannedAction, Smash, Step,
 };
 use bevy::prelude::{Component, TextColor};
 use cdda_json_files::MoveCost;
 use fastrand::{choice as rand_choice, u8 as rand_u8};
 use float_ord::FloatOrd;
+use gameplay_common::{Visible, WalkingCost};
 use gameplay_location::{Nbor, NborDistance, Pos};
 use hud::{FILTHY_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR};
 use pathfinding::num_traits::Zero;

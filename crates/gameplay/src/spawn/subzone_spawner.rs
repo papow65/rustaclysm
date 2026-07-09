@@ -1,6 +1,4 @@
-use crate::{
-    LocalTerrain, TileIn, TileSpawner, VehiclePartOf, ZoneLevelIds, spawn::log_spawn_result,
-};
+use crate::{TileSpawner, ZoneLevelIds, spawn::log_spawn_result};
 use application_state::ApplicationState;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{DespawnOnExit, Res, ResMut};
@@ -12,9 +10,11 @@ use gameplay_cdda::{
     AssetState, Infos, MapManager, MapMemoryManager, OvermapBufferManager, OvermapManager,
     RepetitionBlockExt as _,
 };
+use gameplay_common::LocalTerrain;
 use gameplay_location::{
     LevelOffset, Overzone, PosOffset, SubzoneLevel, SubzoneLevelCache, ZoneLevel,
 };
+use gameplay_relations::{TileIn, VehiclePartOf};
 use std::sync::OnceLock;
 
 #[derive(SystemParam)]

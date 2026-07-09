@@ -8,9 +8,10 @@ pub(crate) use self::object_name::ObjectName;
 pub(crate) use self::shared::Shared;
 pub(crate) use self::vehicle::{Vehicle, VehiclePart};
 
-use crate::{Damage, Evolution, Limited};
+use crate::Damage;
 use bevy::prelude::Component;
 use cdda_json_files::{CommonItemInfo, MoveCost, MoveCostIncrease, Recipe};
+use gameplay_common::{Evolution, Limited};
 use std::sync::Arc;
 use units::{Duration, Timestamp};
 

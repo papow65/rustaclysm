@@ -1,12 +1,14 @@
 //! These systems are part of [`BehaviorSchedule`](`crate::behavior::schedule::BehaviorSchedule`).
 
+use crate::LogMessageWriter;
 use crate::behavior::systems::messages::{Break, Heal, Hit, IsThoroughlyPulped, Kill, Pulp};
 use crate::{
-    Actor, ActorEvent, Amount, ContainerLimits, Corpse, CorpseEvent, CorpseRaise, Damage, Faction,
-    GameplayScreenState, Healing, Health, Item, ItemHierarchy, Life, Limited, LocalTerrain,
-    LogMessageWriter, ObjectName, ObjectOn, Obstacle, Player, Shared, Stamina, StandardIntegrity,
-    TerrainEvent, TileSpawner, Toggle, VisualizationUpdate, WalkingMode,
+    Actor, ActorEvent, Corpse, CorpseEvent, CorpseRaise, Damage, Faction, GameplayScreenState,
+    Healing, Health, Life, Obstacle, Player, Stamina, TerrainEvent, TileSpawner, Toggle,
+    VisualizationUpdate, WalkingMode,
 };
+use crate::{Amount, ContainerLimits, Item, ItemHierarchy};
+use crate::{ObjectName, Shared, StandardIntegrity};
 use bevy::ecs::schedule::{IntoScheduleConfigs as _, ScheduleConfigs};
 use bevy::ecs::system::ScheduleSystem;
 use bevy::prelude::{
@@ -16,7 +18,10 @@ use bevy::prelude::{
 use cdda_json_files::{FurnitureInfo, InfoId, TerrainInfo};
 use either::Either;
 use gameplay_cdda::Infos;
+use gameplay_common::{Limited, LocalTerrain};
 use gameplay_location::Pos;
+use gameplay_log::LogMessageWriter;
+use gameplay_relations::ObjectOn;
 use gameplay_time::Clock;
 use std::f32::consts::FRAC_PI_2;
 use std::time::Instant;

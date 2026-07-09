@@ -1,12 +1,10 @@
 mod actor;
 mod behavior;
-mod common;
 mod components;
 mod events;
 mod focus;
 mod item;
 mod plugin;
-mod relations;
 mod resources;
 mod screens;
 mod sidebar;
@@ -29,7 +27,6 @@ use self::behavior::{
     BehaviorLoopSet, BehaviorPlugin, BehaviorValidator, Interruption, PlayerDirection,
     PlayerInstructions, QueuedInstruction,
 };
-use self::common::{Evolution, Limited, LocalTerrain, Region, Visible, WalkingCost, ZoneRegion};
 use self::components::{
     Accessible, CameraBase, Closeable, Corpse, CorpseRaise, Craft, ExamineCursor, HealingDuration,
     Hurdle, LastSeenExt, Life, Melee, MissingAsset, Mobile, ObjectName, Obstacle, Opaque,
@@ -47,7 +44,6 @@ use self::item::{
     ItemChecksPlugin, ItemHandler, ItemHierarchy, ItemIntegrity, ItemItem, Phase, Pocket,
     PocketContents, PocketItem, PocketOf, Pockets, SealedPocket,
 };
-use self::relations::{ObjectOn, Objects, TileIn, VehiclePartOf};
 use self::resources::{
     CameraOffset, ElevationVisibility, Expanded, Explored, RelativeSegment, RelativeSegments,
     ResourcePlugin, SeenFrom, VisualizationUpdate, ZoneLevelIds, ZoomDirection, ZoomDistance,

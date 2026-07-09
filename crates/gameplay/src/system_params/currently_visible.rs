@@ -1,8 +1,7 @@
-use crate::{
-    Accessible, Envir, Player, PlayerActionState, RelativeSegment, RelativeSegments, Visible,
-};
+use crate::{Accessible, Envir, Player, PlayerActionState, RelativeSegment, RelativeSegments};
 use bevy::prelude::{Res, Single, State, With};
 use bevy::{ecs::system::SystemParam, platform::collections::HashMap};
+use gameplay_common::Visible;
 use gameplay_location::{Level, LevelOffset, Pos, PosOffset, SubzoneLevel, VisionDistance};
 use gameplay_time::Clock;
 

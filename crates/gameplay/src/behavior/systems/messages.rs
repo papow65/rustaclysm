@@ -1,4 +1,5 @@
-use crate::{Evolution, ProtoLogMessage, Severity};
+use gameplay_common::Evolution;
+use gameplay_log::{ProtoLogMessage, Severity};
 use text::{Fragment, Phrase, Subject};
 
 #[derive(Debug)]

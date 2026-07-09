@@ -5,13 +5,14 @@ use std::ops::{Add, Mul};
 use units::{Distance, Duration, Speed};
 
 #[derive(Clone, Copy, Debug)]
-pub(crate) struct WalkingCost {
+pub struct WalkingCost {
     /// Contains the move cost of every step and double cost for going up
     equivalent_distance: Distance,
 }
 
 impl WalkingCost {
-    pub(crate) fn new(nbor_distance: NborDistance, move_cost: MoveCost) -> Self {
+    #[must_use]
+    pub fn new(nbor_distance: NborDistance, move_cost: MoveCost) -> Self {
         let mut new = Self {
             equivalent_distance: match nbor_distance {
                 NborDistance::Up | NborDistance::Down => Distance::VERTICAL,
@@ -29,7 +30,8 @@ impl WalkingCost {
         new
     }
 
-    pub(crate) fn duration(self, speed: Speed) -> Duration {
+    #[must_use]
+    pub fn duration(self, speed: Speed) -> Duration {
         self.equivalent_distance / speed
     }
 }

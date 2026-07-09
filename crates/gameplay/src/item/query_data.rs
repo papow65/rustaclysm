@@ -1,12 +1,12 @@
 use crate::{
-    Amount, Containable, Filthy, InPocket, ItemIntegrity, ObjectName, ObjectOn, Phase, Pockets,
-    Shared,
+    Amount, Containable, Filthy, InPocket, ItemIntegrity, ObjectName, Phase, Pockets, Shared,
 };
 use bevy::ecs::query::QueryData;
 use bevy::prelude::{Children, Entity, ops::atan2};
 use cdda_json_files::{CommonItemInfo, InfoId};
 use either::Either;
 use gameplay_location::Pos;
+use gameplay_relations::ObjectOn;
 use hud::text_color_expect_half;
 use std::f32::consts::FRAC_1_PI;
 use text::{Fragment, Positioning};

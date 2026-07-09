@@ -1,6 +1,7 @@
-use crate::{CurrentlyVisibleBuilder, PlayerActionState, Visible};
+use crate::{CurrentlyVisibleBuilder, PlayerActionState};
 use bevy::prelude::{Message, TextColor, TextSpan, info, warn};
 use cdda_json_files::Description;
+use gameplay_common::Visible;
 use hud::{BAD_TEXT_COLOR, DebugText, GOOD_TEXT_COLOR, WARN_TEXT_COLOR};
 use std::fmt;
 use text::{Phrase, Positioning, Subject};

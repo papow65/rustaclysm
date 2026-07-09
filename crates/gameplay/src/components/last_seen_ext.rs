@@ -1,4 +1,5 @@
-use crate::{BaseSpeed, Player, Visible};
+use crate::{BaseSpeed, Player};
+use gameplay_common::Visible;
 use gameplay_model::LastSeen;
 
 pub(crate) trait LastSeenExt {

@@ -1,0 +1,16 @@
+[package]
+name = "gameplay_common"
+description = "Common utility modules for gameplay"
+license = "AGPL-3.0-or-later"
+edition = "2024"
+
+[dependencies]
+bevy = { workspace = true }
+cdda_json_files = { workspace = true }
+gameplay_cdda = { workspace = true }
+gameplay_location = { workspace = true }
+hud = { workspace = true }
+units = { workspace = true }
+
+[lints]
+workspace = true

@@ -2,26 +2,29 @@ use gameplay_location::{Level, Zone, ZoneLevel};
 use std::{fmt, ops::RangeInclusive};
 
 #[derive(Clone, Debug, PartialEq)]
-pub(crate) struct ZoneRegion {
+pub struct ZoneRegion {
     x: RangeInclusive<i32>,
     z: RangeInclusive<i32>,
 }
 
 impl ZoneRegion {
-    pub(crate) const MAX: Self = Self {
+    pub const MAX: Self = Self {
         x: i32::MIN..=i32::MAX,
         z: i32::MIN..=i32::MAX,
     };
 
-    pub(crate) const fn new(x: RangeInclusive<i32>, z: RangeInclusive<i32>) -> Self {
+    #[must_use]
+    pub const fn new(x: RangeInclusive<i32>, z: RangeInclusive<i32>) -> Self {
         Self { x, z }
     }
 
-    pub(crate) fn contains_zone(&self, zone: Zone) -> bool {
+    #[must_use]
+    pub fn contains_zone(&self, zone: Zone) -> bool {
         self.x.contains(&zone.x) && self.z.contains(&zone.z)
     }
 
-    pub(crate) fn contains_zone_region(&self, other: &Self) -> bool {
+    #[must_use]
+    pub fn contains_zone_region(&self, other: &Self) -> bool {
         self.x.contains(other.x.start())
             && self.x.contains(other.x.end())
             && self.z.contains(other.z.start())
@@ -30,12 +33,13 @@ impl ZoneRegion {
 }
 
 #[derive(Clone, Default, PartialEq)]
-pub(crate) struct Region {
+pub struct Region {
     zone_regions: [Option<ZoneRegion>; Level::AMOUNT],
 }
 
 impl Region {
-    pub(crate) fn new(zone_levels: &[ZoneLevel]) -> Self {
+    #[must_use]
+    pub fn new(zone_levels: &[ZoneLevel]) -> Self {
         Self {
             zone_regions: Level::ALL.map(|level| {
                 let zones = zone_levels
@@ -55,7 +59,8 @@ impl Region {
         }
     }
 
-    pub(crate) fn clamp(&self, inner: &Self, outer: &Self) -> Self {
+    #[must_use]
+    pub fn clamp(&self, inner: &Self, outer: &Self) -> Self {
         let mut i = 0;
         Self {
             zone_regions: self.zone_regions.clone().map(move |region_level| {
@@ -92,7 +97,8 @@ impl Region {
         }
     }
 
-    pub(crate) fn contains_zone_level(&self, zone_level: ZoneLevel) -> bool {
+    #[must_use]
+    pub fn contains_zone_level(&self, zone_level: ZoneLevel) -> bool {
         if let Some(zone_region) = &self.zone_regions[zone_level.level.index()] {
             zone_region.contains_zone(zone_level.zone)
         } else {
@@ -100,7 +106,8 @@ impl Region {
         }
     }
 
-    pub(crate) fn zone_levels(&self) -> Vec<ZoneLevel> {
+    #[must_use]
+    pub fn zone_levels(&self) -> Vec<ZoneLevel> {
         let mut zone_levels = Vec::new();
         for level in Level::ALL {
             if let Some(zone_region) = &self.zone_regions[level.index()] {

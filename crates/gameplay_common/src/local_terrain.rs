@@ -4,16 +4,14 @@ use gameplay_cdda::TileVariant;
 use gameplay_location::{CardinalDirection, HorizontalDirection, Pos};
 use std::sync::Arc;
 
-pub(crate) struct LocalTerrain {
-    pub(crate) info: Arc<TerrainInfo>,
-    pub(crate) variant: TileVariant,
+pub struct LocalTerrain {
+    pub info: Arc<TerrainInfo>,
+    pub variant: TileVariant,
 }
 
 impl LocalTerrain {
-    pub(crate) fn at(
-        terrain: &HashMap<Pos, &RequiredLinkedLater<TerrainInfo>>,
-        pos: Pos,
-    ) -> Option<Self> {
+    #[must_use]
+    pub fn at(terrain: &HashMap<Pos, &RequiredLinkedLater<TerrainInfo>>, pos: Pos) -> Option<Self> {
         let info = at(terrain, pos)?;
 
         let similar_north = similar(terrain, pos, HorizontalDirection::North, &info);
@@ -45,7 +43,7 @@ impl LocalTerrain {
     }
 
     /// Use [`Self::at`] where possible
-    pub(crate) const fn unconnected(info: Arc<TerrainInfo>) -> Self {
+    pub const fn unconnected(info: Arc<TerrainInfo>) -> Self {
         Self {
             info,
             variant: TileVariant::Unconnected,

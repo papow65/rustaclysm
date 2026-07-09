@@ -1,6 +1,5 @@
 use crate::{
-    Amount, Containable, InPocket, ItemHierarchy, ItemIntegrity, Mobile, ObjectOn,
-    StandardIntegrity, TileIn,
+    Amount, Containable, InPocket, ItemHierarchy, ItemIntegrity, Mobile, StandardIntegrity,
 };
 use crate::{SealedPocket, Shared};
 use bevy::prelude::{
@@ -10,6 +9,7 @@ use bevy::prelude::{
 use cdda_json_files::{PocketInfo, PocketType};
 use gameplay_cdda::Infos;
 use gameplay_location::Pos;
+use gameplay_relations::{ObjectOn, TileIn};
 use std::fmt::Write as _;
 use text::Phrase;
 

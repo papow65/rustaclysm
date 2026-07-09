@@ -2400,9 +2400,11 @@ dependencies = [
  "float-ord",
  "gameplay_cdda",
  "gameplay_cdda_active_sav",
+ "gameplay_common",
  "gameplay_local",
  "gameplay_location",
  "gameplay_model",
+ "gameplay_relations",
  "gameplay_resource",
  "gameplay_time",
  "gameplay_transition_state",
@@ -2450,6 +2452,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "gameplay_common"
+version = "0.0.0"
+dependencies = [
+ "bevy",
+ "cdda_json_files",
+ "gameplay_cdda",
+ "gameplay_location",
+ "hud",
+ "units",
+]
+
+[[package]]
 name = "gameplay_local"
 version = "0.0.0"
 dependencies = [
@@ -2478,6 +2492,13 @@ dependencies = [
  "cdda_json_files",
  "gameplay_cdda",
  "gameplay_resource",
+]
+
+[[package]]
+name = "gameplay_relations"
+version = "0.0.0"
+dependencies = [
+ "bevy",
 ]
 
 [[package]]

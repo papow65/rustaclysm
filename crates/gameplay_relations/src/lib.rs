@@ -5,8 +5,8 @@ use bevy::prelude::{Component, Entity, Vec};
 /// Required
 #[derive(Clone, Copy, Debug, Component)]
 #[relationship(relationship_target = Tiles)]
-pub(crate) struct TileIn {
-    pub(crate) subzone_level_entity: Entity,
+pub struct TileIn {
+    pub subzone_level_entity: Entity,
 }
 
 /// Used on a subzone level, for all tiles in that subzone level.
@@ -14,7 +14,7 @@ pub(crate) struct TileIn {
 /// Required
 #[derive(Debug, Component)]
 #[relationship_target(relationship = TileIn, linked_spawn)]
-pub(crate) struct Tiles {
+pub struct Tiles {
     object_entities: Vec<Entity>,
 }
 
@@ -30,8 +30,8 @@ impl Tiles {
 /// Required
 #[derive(Clone, Copy, Debug, Component)]
 #[relationship(relationship_target = Objects)]
-pub(crate) struct ObjectOn {
-    pub(crate) tile_entity: Entity,
+pub struct ObjectOn {
+    pub tile_entity: Entity,
 }
 
 /// Used on a tile, for all objects on the tile.
@@ -39,12 +39,13 @@ pub(crate) struct ObjectOn {
 /// Required
 #[derive(Debug, Component)]
 #[relationship_target(relationship = ObjectOn, linked_spawn)]
-pub(crate) struct Objects {
+pub struct Objects {
     object_entities: Vec<Entity>,
 }
 
 impl Objects {
-    pub(crate) fn object_entities(&self) -> &[Entity] {
+    #[must_use]
+    pub fn object_entities(&self) -> &[Entity] {
         &self.object_entities
     }
 }
@@ -54,8 +55,8 @@ impl Objects {
 /// Required
 #[derive(Clone, Copy, Debug, Component)]
 #[relationship(relationship_target = VehicleParts)]
-pub(crate) struct VehiclePartOf {
-    pub(crate) vehicle_entity: Entity,
+pub struct VehiclePartOf {
+    pub vehicle_entity: Entity,
 }
 
 /// Used on a vehicle, for all vehicle parts of the vehicle.
@@ -63,7 +64,7 @@ pub(crate) struct VehiclePartOf {
 /// Required
 #[derive(Debug, Component)]
 #[relationship_target(relationship = VehiclePartOf, linked_spawn)]
-pub(crate) struct VehicleParts {
+pub struct VehicleParts {
     vehicle_part_entities: Vec<Entity>,
 }
 
