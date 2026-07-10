@@ -12,7 +12,7 @@ rust-version = "1.96" # should be latest stable
 
 [workspace]
 # List internal dependencies: cargo tree | rg rustaclysm
-members = [ "crates/*" ]
+members = ["crates/*"]
 
 [dependencies]
 application_state = { workspace = true }
@@ -41,6 +41,7 @@ either = "1"
 fastrand = "2"
 gameplay = { path = "crates/gameplay" }
 gameplay_common = { path = "crates/gameplay_common" }
+gameplay_log = { path = "crates/gameplay_log" }
 gameplay_relations = { path = "crates/gameplay_relations" }
 gameplay_time = { path = "crates/gameplay_time" }
 gameplay_cdda = { path = "crates/gameplay_cdda" }

@@ -1,6 +1,5 @@
 //! These systems are part of [`BehaviorSchedule`](`crate::behavior::schedule::BehaviorSchedule`).
 
-use crate::LogMessageWriter;
 use crate::behavior::systems::messages::{Break, Heal, Hit, IsThoroughlyPulped, Kill, Pulp};
 use crate::{
     Actor, ActorEvent, Corpse, CorpseEvent, CorpseRaise, Damage, Faction, GameplayScreenState,

@@ -1,4 +1,3 @@
-use crate::LogMessageWriter;
 use crate::actor::messages::{
     AttackNothing, CantClose, CantCloseOn, CraftProgressLeft, CrashInto, Drop, HaltAtTheLedge,
     IsTooExhaustedTo, Move, PickUp, PulpNothing, SmashInvalid, SubzoneNotFoundWhileMovingAnItem,
@@ -20,6 +19,7 @@ use bevy::prelude::{
 use cdda_json_files::CddaItem;
 use either::Either;
 use gameplay_location::{HorizontalDirection, LevelOffset, LocationCache, Nbor, Pos};
+use gameplay_log::LogMessageWriter;
 use gameplay_model::LastSeen;
 use gameplay_relations::ObjectOn;
 use gameplay_time::Clock;

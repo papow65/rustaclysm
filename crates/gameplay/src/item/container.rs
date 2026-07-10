@@ -1,5 +1,6 @@
 use crate::item::messages::{CanBearButNeeded, CanHoldButNeeded, HasButNeeded};
-use crate::{Amount, Containable, InPocket, ItemHierarchy, LogMessageWriter};
+use crate::{Amount, Containable, InPocket, ItemHierarchy};
+use gameplay_log::LogMessageWriter;
 use text::Subject;
 use units::{Mass, Volume};
 

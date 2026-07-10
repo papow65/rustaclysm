@@ -1,74 +1,33 @@
-use crate::{CurrentlyVisibleBuilder, PlayerActionState};
+use crate::{Intransient, LogMessageTransience, PosPerceiver, Severity, Transient};
 use bevy::prelude::{Message, TextColor, TextSpan, info, warn};
 use cdda_json_files::Description;
-use gameplay_common::Visible;
-use hud::{BAD_TEXT_COLOR, DebugText, GOOD_TEXT_COLOR, WARN_TEXT_COLOR};
-use std::fmt;
+use hud::DebugText;
 use text::{Phrase, Positioning, Subject};
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) enum Severity {
-    /// For neutral informaion
-    Neutral,
-
-    /// For danger to the player character
-    Danger,
-
-    /// For actions that can't be performed as instructed
-    ImpossibleAction,
-
-    /// For errors caused by the game
-    Error,
-
-    /// For positive outcomes for the player character
-    Success,
-}
-
-impl Severity {
-    #[must_use]
-    pub(crate) const fn color_override(&self) -> Option<TextColor> {
-        match self {
-            Self::Neutral => None,
-            Self::Danger | Self::ImpossibleAction => Some(WARN_TEXT_COLOR),
-            Self::Error => Some(BAD_TEXT_COLOR),
-            Self::Success => Some(GOOD_TEXT_COLOR),
-        }
-    }
-}
-
-pub(crate) trait LogMessageTransience: Clone + fmt::Debug + Send + Sync + 'static {}
-
-#[derive(Clone, Debug)]
-pub(crate) struct Intransient;
-
-impl LogMessageTransience for Intransient {}
-
-impl LogMessageTransience for PlayerActionState {}
 
 /// `LogMessage` shown to the player
 #[derive(Clone, Debug, PartialEq, Eq, Message)]
-pub(crate) struct LogMessage<T: LogMessageTransience = Intransient> {
+pub struct LogMessage<T: LogMessageTransience = Intransient> {
     phrase: Phrase,
     severity: Severity,
     transient_state: T,
 }
 
-impl LogMessage<PlayerActionState> {
-    pub(crate) const fn transient_state(&self) -> &PlayerActionState {
+impl<T: Transient> LogMessage<T> {
+    pub const fn transient_state(&self) -> &T {
         &self.transient_state
     }
 }
 
 impl<T: LogMessageTransience> LogMessage<T> {
-    pub(crate) fn as_text_sections(&self) -> Vec<(TextSpan, TextColor, Option<DebugText>)> {
+    pub fn as_text_sections(&self) -> Vec<(TextSpan, TextColor, Option<DebugText>)> {
         self.phrase
             .clone()
             .color_override(self.severity.color_override())
             .as_text_sections()
     }
 
-    fn log(&self, precieved: bool) {
-        let suffix = if precieved { "" } else { " (not perceived)" };
+    fn log(&self, perceived: bool) {
+        let suffix = if perceived { "" } else { " (not perceived)" };
         if self.severity == Severity::Error {
             warn!("{}{suffix}", &self.phrase);
         } else {
@@ -76,10 +35,8 @@ impl<T: LogMessageTransience> LogMessage<T> {
         }
     }
 
-    pub(crate) fn percieved(
-        &self,
-        currently_visible_builder: &CurrentlyVisibleBuilder,
-    ) -> Option<Self> {
+    /// Perceive this log message based on visibility
+    pub fn perceived<P: PosPerceiver>(&self, perceiver: &P) -> Option<Self> {
         let mut seen = false;
         let mut global = true;
         let mut phrase = self.phrase.clone();
@@ -87,11 +44,7 @@ impl<T: LogMessageTransience> LogMessage<T> {
         for fragment in &mut phrase.fragments {
             match fragment.positioning {
                 Positioning::Pos(pos) => {
-                    if currently_visible_builder
-                        .for_player(true)
-                        .can_see(pos, None)
-                        == Visible::Seen
-                    {
+                    if perceiver.can_perceive(pos) {
                         seen = true;
                     } else {
                         fragment.text = String::from("(unseen)");
@@ -108,11 +61,10 @@ impl<T: LogMessageTransience> LogMessage<T> {
             }
         }
 
-        let percieved = seen || global;
+        let perceived = seen || global;
+        self.log(perceived);
 
-        self.log(percieved);
-
-        percieved.then_some(Self {
+        perceived.then_some(Self {
             phrase,
             ..self.clone()
         })
@@ -120,7 +72,7 @@ impl<T: LogMessageTransience> LogMessage<T> {
 }
 
 /// Untranslated message to the player
-pub(crate) trait ProtoLogMessage {
+pub trait ProtoLogMessage {
     const SEVERITY: Severity;
 
     // TODO Add language and formatting options
@@ -142,17 +94,14 @@ pub(crate) trait ProtoLogMessage {
         }
     }
 
-    fn compose_transient(
-        self,
-        player_action_state: PlayerActionState,
-    ) -> LogMessage<PlayerActionState>
+    fn compose_transient<T: LogMessageTransience>(self, transient_state: T) -> LogMessage<T>
     where
         Self: Sized,
     {
         LogMessage {
             phrase: self.phrase(),
             severity: Self::SEVERITY,
-            transient_state: player_action_state,
+            transient_state,
         }
     }
 }

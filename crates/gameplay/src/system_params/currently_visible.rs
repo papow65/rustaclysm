@@ -3,6 +3,7 @@ use bevy::prelude::{Res, Single, State, With};
 use bevy::{ecs::system::SystemParam, platform::collections::HashMap};
 use gameplay_common::Visible;
 use gameplay_location::{Level, LevelOffset, Pos, PosOffset, SubzoneLevel, VisionDistance};
+use gameplay_log::PosPerceiver;
 use gameplay_time::Clock;
 
 const WIDTH: usize = 2 * VisionDistance::MAX_VISION_TILES as usize + 1;
@@ -153,6 +154,12 @@ impl CurrentlyVisibleBuilder<'_, '_> {
 
     pub(crate) fn player_pos(&self) -> Pos {
         **self.player
+    }
+}
+
+impl PosPerceiver for CurrentlyVisibleBuilder<'_, '_> {
+    fn can_perceive(&self, pos: Pos) -> bool {
+        self.for_player(true).can_see(pos, None) == Visible::Seen
     }
 }
 

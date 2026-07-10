@@ -1,4 +1,4 @@
-use crate::{ProtoLogMessage, Severity};
+use gameplay_log::{ProtoLogMessage, Severity};
 use text::Phrase;
 
 #[derive(Debug, PartialEq)]

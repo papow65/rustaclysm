@@ -1,6 +1,7 @@
 use crate::actor::PlayerActionState;
-use crate::{Craft, ObjectName, ProtoLogMessage, Severity};
+use crate::{Craft, ObjectName};
 use gameplay_location::Pos;
+use gameplay_log::{ProtoLogMessage, Severity};
 use hud::text_color_expect_full;
 use text::{Fragment, Phrase, Subject};
 use units::Duration;

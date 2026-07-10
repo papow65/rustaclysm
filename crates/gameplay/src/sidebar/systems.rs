@@ -5,9 +5,9 @@ use crate::sidebar::{
 };
 use crate::{
     Accessible, Actor, BaseSpeed, Breath, Corpse, CurrentlyVisibleBuilder, Envir, Explored,
-    Faction, FocusState, Health, Hurdle, ItemItem, Life, LogMessage, Obstacle, Opaque, OpaqueFloor,
-    Player, PlayerActionState, PlayerWielded, RefreshAfterBehavior, RelativeSegments, SeenFrom,
-    Stamina, WalkingMode, ZoneLevelIds,
+    Faction, FocusState, Health, Hurdle, ItemItem, Life, Obstacle, Opaque, OpaqueFloor, Player,
+    PlayerActionState, PlayerWielded, RefreshAfterBehavior, RelativeSegments, SeenFrom, Stamina,
+    WalkingMode, ZoneLevelIds,
 };
 use crate::{Amount, Item, ItemHandler, ItemHierarchy};
 use crate::{ObjectName, Shared, StandardIntegrity};
@@ -25,6 +25,7 @@ use bevy::prelude::{
 };
 use cdda_json_files::{CharacterInfo, MoveCost};
 use gameplay_location::{Pos, StairsDown, StairsUp};
+use gameplay_log::LogMessage;
 use gameplay_model::LastSeen;
 use gameplay_relations::TileIn;
 use gameplay_time::{Clock, Timeouts};
@@ -234,7 +235,7 @@ fn update_transient_log(
             // The messages may arrive after the state has already transitioned.
             |transient_message| transient_message.transient_state() == player_action_state.get(),
         )
-        .filter_map(|transient_message| transient_message.percieved(&currently_visible_builder))
+        .filter_map(|transient_message| transient_message.perceived(&currently_visible_builder))
         .last()
     else {
         return;
@@ -302,7 +303,7 @@ fn log_message(
     last_message_count: &mut Option<(Entity, LastLogMessageCount)>,
     message: &LogMessage,
 ) {
-    let Some(message) = message.percieved(currently_visible_builder) else {
+    let Some(message) = message.perceived(currently_visible_builder) else {
         return;
     };
 

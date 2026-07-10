@@ -1,10 +1,11 @@
 use crate::{
-    ActorEvent, CorpseEvent, Damage, DespawnSubzoneLevel, DespawnZoneLevel, Healing, LogMessage,
+    ActorEvent, CorpseEvent, Damage, DespawnSubzoneLevel, DespawnZoneLevel, Healing,
     PlayerActionState, RefreshAfterBehavior, SpawnSubzoneLevel, SpawnZoneLevel, TerrainEvent,
     Toggle, UpdateZoneLevelVisibility,
 };
 use application_state::ApplicationState;
 use bevy::prelude::{App, Plugin, StateScopedMessagesAppExt as _};
+use gameplay_log::LogMessage;
 
 /// This plugin initializes all gameplay events and clears them between gameplays
 pub(crate) struct EventsPlugin;

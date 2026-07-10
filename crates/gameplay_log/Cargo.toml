@@ -1,0 +1,14 @@
+[package]
+name = "gameplay_log"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+bevy = { workspace = true }
+cdda_json_files = { workspace = true }
+gameplay_location = { workspace = true }
+hud = { workspace = true }
+text = { workspace = true }
+
+[lints]
+workspace = true

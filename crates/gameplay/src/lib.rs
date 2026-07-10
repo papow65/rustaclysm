@@ -34,9 +34,8 @@ use self::components::{
 };
 use self::events::{
     ActorChange, ActorEvent, CorpseChange, CorpseEvent, Damage, DespawnSubzoneLevel,
-    DespawnZoneLevel, EventsPlugin, Healing, Intransient, LogMessage, LogMessageTransience,
-    ProtoLogMessage, RefreshAfterBehavior, Severity, SpawnSubzoneLevel, SpawnZoneLevel,
-    TerrainChange, TerrainEvent, Toggle, UpdateZoneLevelVisibility,
+    DespawnZoneLevel, EventsPlugin, Healing, RefreshAfterBehavior, SpawnSubzoneLevel,
+    SpawnZoneLevel, TerrainChange, TerrainEvent, Toggle, UpdateZoneLevelVisibility,
 };
 use self::focus::{CancelHandling, Focus, FocusPlugin, FocusState};
 use self::item::{
@@ -56,9 +55,7 @@ use self::spawn::{
     TileSpawner, despawn_systems, handle_region_asset_events, handle_zone_levels,
     spawn_initial_entities, spawn_subzone_levels, spawn_subzones_for_camera, update_explored,
 };
-use self::system_params::{
-    Collision, CurrentlyVisible, CurrentlyVisibleBuilder, Envir, LogMessageWriter, NoStairs,
-};
+use self::system_params::{Collision, CurrentlyVisible, CurrentlyVisibleBuilder, Envir, NoStairs};
 use self::systems::{
     check_failed_asset_loading, count_assets, count_pos, create_gameplay_key_bindings,
     update_visibility, update_visualization_on_item_move,

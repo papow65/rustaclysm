@@ -2403,6 +2403,7 @@ dependencies = [
  "gameplay_common",
  "gameplay_local",
  "gameplay_location",
+ "gameplay_log",
  "gameplay_model",
  "gameplay_relations",
  "gameplay_resource",
@@ -2482,6 +2483,17 @@ dependencies = [
  "keyboard",
  "strum",
  "units",
+]
+
+[[package]]
+name = "gameplay_log"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "cdda_json_files",
+ "gameplay_location",
+ "hud",
+ "text",
 ]
 
 [[package]]

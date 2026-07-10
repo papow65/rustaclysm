@@ -1,4 +1,4 @@
-use crate::{ProtoLogMessage, Severity};
+use gameplay_log::{ProtoLogMessage, Severity};
 use std::sync::Arc;
 use text::Phrase;
 

@@ -6,14 +6,15 @@ use crate::actor::messages::{
 };
 use crate::{
     ActorItem, Breath, ContinueCraft, CurrentlyVisibleBuilder, Envir, Explored, Faction,
-    Intelligence, Interruption, LogMessageWriter, MoveItem, PlannedAction, PlayerDirection,
-    PlayerInstructions, Pulp, QueuedInstruction, RecipeSituation, Severity, StartCraft,
+    Intelligence, Interruption, MoveItem, PlannedAction, PlayerDirection, PlayerInstructions, Pulp,
+    QueuedInstruction, RecipeSituation, StartCraft,
 };
 use application_state::ApplicationState;
 use bevy::prelude::{
     Component, DetectChanges as _, Entity, NextState, ResMut, SubStates, TextColor, debug,
 };
 use gameplay_location::{CardinalDirection, HorizontalDirection, Nbor, Pos, VisionDistance};
+use gameplay_log::{LogMessageTransience, LogMessageWriter, Severity, Transient};
 use hud::{BAD_TEXT_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR};
 use std::fmt;
 use text::Fragment;
@@ -712,6 +713,9 @@ impl fmt::Display for PlayerActionState {
         })
     }
 }
+
+impl LogMessageTransience for PlayerActionState {}
+impl Transient for PlayerActionState {}
 
 fn plan_auto_drag(
     envir: &Envir<'_, '_>,

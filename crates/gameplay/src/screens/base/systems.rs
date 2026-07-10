@@ -1,8 +1,8 @@
 use crate::screens::base::messages::{YouAreBusy, YouStartTraveling};
 use crate::{
     CameraOffset, CancelHandling, ChangePace, ElevationVisibility, Focus, FocusState,
-    GameplayScreenState, LogMessageWriter, PlayerActionState, PlayerDirection, PlayerInstructions,
-    QueuedInstruction, VisualizationUpdate, ZoomDirection, ZoomDistance,
+    GameplayScreenState, PlayerActionState, PlayerDirection, PlayerInstructions, QueuedInstruction,
+    VisualizationUpdate, ZoomDirection, ZoomDistance,
 };
 use bevy::input::mouse::{MouseMotion, MouseWheel};
 use bevy::prelude::{
@@ -11,6 +11,7 @@ use bevy::prelude::{
     debug, warn,
 };
 use bevy::{camera::visibility::RenderLayers, picking::hover::HoverMap};
+use gameplay_log::LogMessageWriter;
 use keyboard::{Held, KeyBindings};
 use manual::ManualSection;
 use std::time::Instant;

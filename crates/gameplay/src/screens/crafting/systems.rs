@@ -4,8 +4,8 @@ use crate::screens::crafting::{
 };
 use crate::screens::{find_nearby, find_nearby_pseudo, find_sources, nearby_qualities};
 use crate::{
-    BodyContainers, GameplayScreenState, Item, ItemHierarchy, ItemItem, LogMessageWriter, Player,
-    PlayerInstructions, QueuedInstruction, Shared,
+    BodyContainers, GameplayScreenState, Item, ItemHierarchy, ItemItem, Player, PlayerInstructions,
+    QueuedInstruction, Shared,
 };
 use bevy::ecs::{spawn::SpawnIter, system::SystemId};
 use bevy::platform::collections::{HashMap, HashSet};
@@ -22,6 +22,7 @@ use cdda_json_files::{
 use gameplay_cdda::{Error, Infos};
 use gameplay_cdda_active_sav::ActiveSav;
 use gameplay_location::{LocationCache, Pos};
+use gameplay_log::LogMessageWriter;
 use gameplay_model::LastSeen;
 use hud::{BAD_TEXT_COLOR, ButtonBuilder, WARN_TEXT_COLOR};
 use keyboard::KeyBindings;
