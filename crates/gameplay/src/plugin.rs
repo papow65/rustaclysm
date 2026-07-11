@@ -1,10 +1,10 @@
 use crate::{
-    ActorPlugin, CameraOffset, EventsPlugin, FocusPlugin, GameplayScreenState, ItemChecksPlugin,
-    RelativeSegments, ResourcePlugin, ScreensPlugin, SidebarPlugin, TransitionPlugin,
-    VisualizationUpdate, check_failed_asset_loading, count_assets, count_pos,
-    create_gameplay_key_bindings, despawn_systems, handle_region_asset_events, handle_zone_levels,
-    spawn_initial_entities, spawn_subzone_levels, spawn_subzones_for_camera, update_camera_offset,
-    update_explored, update_visibility, update_visualization_on_item_move,
+    ActorPlugin, CameraOffset, EventsPlugin, FocusPlugin, GameplayScreenState, RelativeSegments,
+    ResourcePlugin, ScreensPlugin, SidebarPlugin, TransitionPlugin, VisualizationUpdate,
+    check_failed_asset_loading, count_assets, count_pos, create_gameplay_key_bindings,
+    despawn_systems, handle_region_asset_events, handle_zone_levels, spawn_initial_entities,
+    spawn_subzone_levels, spawn_subzones_for_camera, update_camera_offset, update_explored,
+    update_visibility, update_visualization_on_item_move,
 };
 use application_state::ApplicationState;
 use bevy::ecs::{schedule::ScheduleConfigs, system::ScheduleSystem};
@@ -13,6 +13,7 @@ use bevy::prelude::{
     Update, in_state, on_message, resource_exists, resource_exists_and_changed,
 };
 use gameplay_cdda::{CddaPlugin, Exploration};
+use gameplay_item::GameplayItemPlugin;
 use gameplay_local::GameplayLocalPlugin;
 use gameplay_location::LocationPlugin;
 use gameplay_model::ModelPlugin;
@@ -33,7 +34,7 @@ impl Plugin for GameplayPlugin {
                 SidebarPlugin,
                 CddaPlugin,
                 EventsPlugin,
-                ItemChecksPlugin,
+                GameplayItemPlugin,
                 ModelPlugin,
                 ResourcePlugin,
                 GameplayLocalPlugin,

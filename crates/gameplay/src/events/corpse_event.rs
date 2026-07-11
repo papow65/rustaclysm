@@ -1,6 +1,9 @@
 use bevy::prelude::{Entity, Message};
+use gameplay_common::Damage;
 
 pub(crate) trait CorpseChange: Clone + Send + Sync + 'static {}
+
+impl CorpseChange for Damage {}
 
 #[must_use]
 #[derive(Clone, Debug, Message)]

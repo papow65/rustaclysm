@@ -5,4 +5,4 @@ mod plugin;
 pub use gameplay_local::GameplayLocal;
 pub use plugin::GameplayLocalPlugin;
 
-use gameplay_counter::{GameplayCount, GameplayCounter};
+use crate::gameplay_counter::{GameplayCount, GameplayCounter};

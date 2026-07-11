@@ -2,8 +2,8 @@ use crate::screens::inventory::{
     InventoryAction, InventoryItemRow, InventoryScreen, InventorySection, RowSpawner,
 };
 use crate::{
-    BodyContainers, Envir, ExamineItem, GameplayScreenState, ItemHierarchy, ItemItem, MoveItem,
-    Pickup, Player, PlayerInstructions, QueuedInstruction, Unwield, Wield,
+    Envir, ExamineItem, GameplayScreenState, MoveItem, Pickup, Player, PlayerInstructions,
+    QueuedInstruction, Unwield, Wield,
 };
 use bevy::ecs::{entity::hash_map::EntityHashMap, system::SystemId};
 use bevy::platform::collections::HashMap;
@@ -12,6 +12,7 @@ use bevy::prelude::{
     KeyCode, Local, NextState, Query, RemovedComponents, Res, ResMut, Single, Text, TextColor,
     TextSpan, With, World, debug, error,
 };
+use gameplay_item::{BodyContainers, ItemHierarchy, ItemItem};
 use gameplay_location::{HorizontalDirection, Nbor, Pos};
 use hud::{HARD_TEXT_COLOR, SOFT_TEXT_COLOR, scroll_screen};
 use keyboard::KeyBindings;

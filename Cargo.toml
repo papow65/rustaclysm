@@ -46,6 +46,7 @@ gameplay_relations = { path = "crates/gameplay_relations" }
 gameplay_time = { path = "crates/gameplay_time" }
 gameplay_cdda = { path = "crates/gameplay_cdda" }
 gameplay_cdda_active_sav = { path = "crates/gameplay_cdda_active_sav" }
+gameplay_item = { path = "crates/gameplay_item" }
 gameplay_local = { path = "crates/gameplay_local" }
 gameplay_location = { path = "crates/gameplay_location" }
 gameplay_model = { path = "crates/gameplay_model" }

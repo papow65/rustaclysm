@@ -1,6 +1,10 @@
 use bevy::prelude::{Entity, Message};
+use gameplay_common::{Damage, Healing};
 
 pub(crate) trait ActorChange: Clone + Send + Sync + 'static {}
+
+impl ActorChange for Damage {}
+impl ActorChange for Healing {}
 
 #[must_use]
 #[derive(Clone, Debug, Message)]

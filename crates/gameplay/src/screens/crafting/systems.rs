@@ -3,10 +3,7 @@ use crate::screens::crafting::{
     RecipeSituation, ToolSituation, messages::YouLackTheMeansToCraft,
 };
 use crate::screens::{find_nearby, find_nearby_pseudo, find_sources, nearby_qualities};
-use crate::{
-    BodyContainers, GameplayScreenState, Item, ItemHierarchy, ItemItem, Player, PlayerInstructions,
-    QueuedInstruction, Shared,
-};
+use crate::{GameplayScreenState, Player, PlayerInstructions, QueuedInstruction};
 use bevy::ecs::{spawn::SpawnIter, system::SystemId};
 use bevy::platform::collections::{HashMap, HashSet};
 use bevy::prelude::{
@@ -21,6 +18,8 @@ use cdda_json_files::{
 };
 use gameplay_cdda::{Error, Infos};
 use gameplay_cdda_active_sav::ActiveSav;
+use gameplay_common::Shared;
+use gameplay_item::{BodyContainers, Item, ItemHierarchy, ItemItem};
 use gameplay_location::{LocationCache, Pos};
 use gameplay_log::LogMessageWriter;
 use gameplay_model::LastSeen;

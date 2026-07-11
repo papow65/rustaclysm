@@ -2401,6 +2401,7 @@ dependencies = [
  "gameplay_cdda",
  "gameplay_cdda_active_sav",
  "gameplay_common",
+ "gameplay_item",
  "gameplay_local",
  "gameplay_location",
  "gameplay_log",
@@ -2461,6 +2462,24 @@ dependencies = [
  "gameplay_cdda",
  "gameplay_location",
  "hud",
+ "text",
+ "units",
+]
+
+[[package]]
+name = "gameplay_item"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "cdda_json_files",
+ "either",
+ "gameplay_cdda",
+ "gameplay_common",
+ "gameplay_location",
+ "gameplay_log",
+ "gameplay_relations",
+ "hud",
+ "text",
  "units",
 ]
 

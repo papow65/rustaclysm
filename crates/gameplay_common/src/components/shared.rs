@@ -3,10 +3,10 @@ use std::{ops::Deref, sync::Arc};
 
 #[derive(Debug, Component)]
 #[component(immutable)]
-pub(crate) struct Shared<T>(Arc<T>);
+pub struct Shared<T>(Arc<T>);
 
 impl<T> Shared<T> {
-    pub(crate) const fn new(arc: Arc<T>) -> Self {
+    pub const fn new(arc: Arc<T>) -> Self {
         Self(arc)
     }
 }

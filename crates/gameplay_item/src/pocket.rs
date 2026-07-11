@@ -1,16 +1,17 @@
-use crate::{PocketContents, PocketOf, Shared};
+use crate::{PocketContents, PocketOf};
 use bevy::ecs::query::QueryData;
 use bevy::prelude::{Component, Entity};
 use cdda_json_files::{CddaPocket, PocketInfo, SealedData};
+use gameplay_common::Shared;
 use text::Fragment;
 
 #[derive(Copy, Clone, Debug, Component)]
 #[component(immutable)]
-pub(crate) struct SealedPocket;
+pub struct SealedPocket;
 
 impl SealedPocket {
     #[expect(clippy::unused_self)]
-    pub(crate) fn suffix(self) -> Fragment {
+    pub fn suffix(self) -> Fragment {
         Fragment::good("sealed")
     }
 }
@@ -31,7 +32,7 @@ impl From<&SealedData> for SealedPocket {
 
 #[derive(QueryData)]
 #[query_data(derive(Debug))]
-pub(crate) struct Pocket {
+pub struct Pocket {
     pub(crate) entity: Entity,
     pub(crate) sealed: Option<&'static SealedPocket>,
     pub(crate) info: &'static Shared<PocketInfo>,

@@ -5,8 +5,8 @@ use bevy::prelude::{Component, Entity, Vec};
 /// Required
 #[derive(Clone, Copy, Debug, Component)]
 #[relationship(relationship_target = Pockets)]
-pub(crate) struct PocketOf {
-    pub(crate) item_entity: Entity,
+pub struct PocketOf {
+    pub item_entity: Entity,
 }
 
 /// Used on an item, for all pockets that the item has.
@@ -14,12 +14,13 @@ pub(crate) struct PocketOf {
 /// Optional, because not all items have pockets
 #[derive(Debug, Component)]
 #[relationship_target(relationship = PocketOf, linked_spawn)]
-pub(crate) struct Pockets {
+pub struct Pockets {
     pocket_entities: Vec<Entity>,
 }
 
 impl Pockets {
-    pub(crate) fn pocket_entities(&self) -> &[Entity] {
+    #[must_use]
+    pub fn pocket_entities(&self) -> &[Entity] {
         &self.pocket_entities
     }
 }
@@ -29,8 +30,8 @@ impl Pockets {
 /// Optional, because not all items are inside a pocket
 #[derive(Clone, Copy, Debug, PartialEq, Component)]
 #[relationship(relationship_target = PocketContents)]
-pub(crate) struct InPocket {
-    pub(crate) pocket_entity: Entity,
+pub struct InPocket {
+    pub pocket_entity: Entity,
 }
 
 /// Used on a pocket, for the items that the pocket contains.
@@ -38,7 +39,7 @@ pub(crate) struct InPocket {
 /// Optional, because pockets may be empty
 #[derive(Debug, Component)]
 #[relationship_target(relationship = InPocket, linked_spawn)]
-pub(crate) struct PocketContents {
+pub struct PocketContents {
     item_entities: Vec<Entity>,
 }
 

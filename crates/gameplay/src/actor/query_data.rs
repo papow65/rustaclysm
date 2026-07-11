@@ -3,21 +3,20 @@ use crate::actor::messages::{
     IsTooExhaustedTo, Move, PickUp, PulpNothing, SmashInvalid, SubzoneNotFoundWhileMovingAnItem,
     TooFarToMove, YouCant, YouFinish, YouSleepFor,
 };
-use crate::components::ObjectName;
-use crate::item::{Amount, InPocket, Item, ItemItem};
 use crate::{
     ActorEvent, ActorImpact, Aquatic, Attack, BaseSpeed, Breath, ChangePace, Close, Collision,
     Consumed, CorpseEvent, Craft, Damage, Envir, Faction, Healing, HealingDuration, Health,
     LastEnemy, Life, Melee, Peek, Player, PlayerActionState, PlayerWielded, Pulp, Smash, Stamina,
     StaminaCost, StartCraft, Step, TerrainEvent, Tile, TileSpawner, Toggle, WalkingMode,
 };
-use crate::{BodyContainers, Container, ItemHierarchy};
 use bevy::ecs::query::{QueryData, With};
 use bevy::prelude::{
     Commands, Entity, Message, MessageWriter, NextState, Query, Transform, Visibility, error,
 };
 use cdda_json_files::CddaItem;
 use either::Either;
+use gameplay_common::ObjectName;
+use gameplay_item::{Amount, BodyContainers, Container, InPocket, Item, ItemHierarchy, ItemItem};
 use gameplay_location::{HorizontalDirection, LevelOffset, LocationCache, Nbor, Pos};
 use gameplay_log::LogMessageWriter;
 use gameplay_model::LastSeen;
@@ -468,25 +467,24 @@ impl ActorItem<'_, '_> {
         }
         // TODO check position of root item
 
-        if let Ok(allowed_amount) = target.check_add(
-            message_writer,
-            self.subject(),
-            taken.containable,
-            *taken.amount,
-        ) {
-            message_writer.send(PickUp {
-                subject: self.subject(),
-                taken: taken.fragments().collect(),
-            });
+        match target.check_add(self.subject(), taken.containable, *taken.amount) {
+            Ok(allowed_amount) => {
+                message_writer.send(PickUp {
+                    subject: self.subject(),
+                    taken: taken.fragments().collect(),
+                });
 
-            if &allowed_amount < taken.amount {
-                Self::take_some(commands, target.in_pocket, allowed_amount, taken);
-            } else {
-                Self::take_all(commands, target.in_pocket, taken.entity);
+                if &allowed_amount < taken.amount {
+                    Self::take_some(commands, target.in_pocket, allowed_amount, taken);
+                } else {
+                    Self::take_all(commands, target.in_pocket, taken.entity);
+                }
+                self.impact_from_duration(Duration::SECOND, StaminaCost::NEUTRAL)
             }
-            self.impact_from_duration(Duration::SECOND, StaminaCost::NEUTRAL)
-        } else {
-            self.no_impact()
+            Err(addition_failure) => {
+                addition_failure.write(message_writer);
+                self.no_impact()
+            }
         }
     }
 

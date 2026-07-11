@@ -5,11 +5,11 @@ use text::Fragment;
 
 /// Mutable component
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Component)]
-pub(crate) struct Amount(pub(crate) u32);
+pub struct Amount(pub u32);
 
 impl Amount {
-    pub(crate) const ZERO: Self = Self(0);
-    pub(crate) const SINGLE: Self = Self(1);
+    pub const ZERO: Self = Self(0);
+    pub const SINGLE: Self = Self(1);
 
     pub(crate) fn fragment(self) -> Option<Fragment> {
         (Self::SINGLE != self).then_some(Fragment::hard(format!("{}", self.0)))

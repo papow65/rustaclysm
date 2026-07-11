@@ -1,13 +1,12 @@
-use crate::{
-    Amount, Containable, InPocket, ItemHierarchy, ItemIntegrity, Mobile, StandardIntegrity,
-};
-use crate::{SealedPocket, Shared};
+use crate::{Amount, Containable, InPocket, ItemHierarchy, ItemIntegrity, SealedPocket};
 use bevy::prelude::{
     App, Changed, ChildOf, Children, Entity, FixedUpdate, IntoScheduleConfigs as _, Or, Plugin,
     Query, With, resource_exists, warn,
 };
 use cdda_json_files::{PocketInfo, PocketType};
 use gameplay_cdda::Infos;
+use gameplay_common::Shared;
+use gameplay_common::{Mobile, StandardIntegrity};
 use gameplay_location::Pos;
 use gameplay_relations::{ObjectOn, TileIn};
 use std::fmt::Write as _;

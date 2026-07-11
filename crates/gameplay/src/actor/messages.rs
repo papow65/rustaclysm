@@ -1,5 +1,5 @@
-use crate::actor::PlayerActionState;
-use crate::{Craft, ObjectName};
+use crate::{Craft, actor::PlayerActionState};
+use gameplay_common::ObjectName;
 use gameplay_location::Pos;
 use gameplay_log::{ProtoLogMessage, Severity};
 use hud::text_color_expect_full;

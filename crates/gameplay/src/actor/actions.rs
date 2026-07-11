@@ -1,5 +1,6 @@
-use crate::{Actor, ActorItem, Item, ItemItem, RecipeSituation};
+use crate::{Actor, ActorItem, RecipeSituation};
 use bevy::prelude::{Entity, Query};
+use gameplay_item::{Item, ItemItem};
 use gameplay_location::{CardinalDirection, HorizontalDirection, Nbor};
 
 /// An action that an actor can perform

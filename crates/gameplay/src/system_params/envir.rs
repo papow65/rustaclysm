@@ -1,13 +1,13 @@
 use crate::{
-    Accessible, Amount, Closeable, Corpse, Health, Hurdle, Intelligence, Item, ItemItem, Life,
-    NoStairs, ObjectName, Obstacle, Opaque, OpaqueFloor, Openable, QueuedInstruction,
-    StandardIntegrity,
+    Accessible, Closeable, Corpse, Health, Hurdle, Intelligence, Life, NoStairs, Obstacle, Opaque,
+    OpaqueFloor, Openable, QueuedInstruction,
 };
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{Entity, Query, Res, With, Without, debug, warn};
 use cdda_json_files::MoveCost;
 use fastrand::f32 as rand_f32;
-use gameplay_common::WalkingCost;
+use gameplay_common::{ObjectName, StandardIntegrity, WalkingCost};
+use gameplay_item::{Amount, Item, ItemItem};
 use gameplay_location::{
     HorizontalDirection, Level, LevelOffset, LocationCache, Nbor, NborDistance, Pos, PosOffset,
     StairsDown, StairsUp, Zone, ZoneLevel,

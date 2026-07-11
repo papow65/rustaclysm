@@ -6,8 +6,6 @@ use crate::{
     Healing, Health, Life, Obstacle, Player, Stamina, TerrainEvent, TileSpawner, Toggle,
     VisualizationUpdate, WalkingMode,
 };
-use crate::{Amount, ContainerLimits, Item, ItemHierarchy};
-use crate::{ObjectName, Shared, StandardIntegrity};
 use bevy::ecs::schedule::{IntoScheduleConfigs as _, ScheduleConfigs};
 use bevy::ecs::system::ScheduleSystem;
 use bevy::prelude::{
@@ -17,7 +15,8 @@ use bevy::prelude::{
 use cdda_json_files::{FurnitureInfo, InfoId, TerrainInfo};
 use either::Either;
 use gameplay_cdda::Infos;
-use gameplay_common::{Limited, LocalTerrain};
+use gameplay_common::{Limited, LocalTerrain, ObjectName, Shared, StandardIntegrity};
+use gameplay_item::{Amount, ContainerLimits, Item, ItemHierarchy};
 use gameplay_location::Pos;
 use gameplay_log::LogMessageWriter;
 use gameplay_relations::ObjectOn;

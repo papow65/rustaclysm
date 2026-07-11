@@ -3,7 +3,6 @@ mod behavior;
 mod components;
 mod events;
 mod focus;
-mod item;
 mod plugin;
 mod resources;
 mod screens;
@@ -29,20 +28,15 @@ use self::behavior::{
 };
 use self::components::{
     Accessible, CameraBase, Closeable, Corpse, CorpseRaise, Craft, ExamineCursor, HealingDuration,
-    Hurdle, LastSeenExt, Life, Melee, MissingAsset, Mobile, ObjectName, Obstacle, Opaque,
-    OpaqueFloor, Openable, PlayerWielded, Shared, StandardIntegrity, Tile, Vehicle, VehiclePart,
+    Hurdle, LastSeenExt, Life, Melee, MissingAsset, Obstacle, Opaque, OpaqueFloor, Openable,
+    PlayerWielded, Tile, Vehicle, VehiclePart,
 };
 use self::events::{
-    ActorChange, ActorEvent, CorpseChange, CorpseEvent, Damage, DespawnSubzoneLevel,
-    DespawnZoneLevel, EventsPlugin, Healing, RefreshAfterBehavior, SpawnSubzoneLevel,
-    SpawnZoneLevel, TerrainChange, TerrainEvent, Toggle, UpdateZoneLevelVisibility,
+    ActorEvent, CorpseEvent, Damage, DespawnSubzoneLevel, DespawnZoneLevel, EventsPlugin, Healing,
+    RefreshAfterBehavior, SpawnSubzoneLevel, SpawnZoneLevel, TerrainEvent, Toggle,
+    UpdateZoneLevelVisibility,
 };
 use self::focus::{CancelHandling, Focus, FocusPlugin, FocusState};
-use self::item::{
-    Amount, BodyContainers, Containable, Container, ContainerLimits, Filthy, InPocket, Item,
-    ItemChecksPlugin, ItemHandler, ItemHierarchy, ItemIntegrity, ItemItem, Phase, Pocket,
-    PocketContents, PocketItem, PocketOf, Pockets, SealedPocket,
-};
 use self::resources::{
     CameraOffset, ElevationVisibility, Expanded, Explored, RelativeSegment, RelativeSegments,
     ResourcePlugin, SeenFrom, VisualizationUpdate, ZoneLevelIds, ZoomDirection, ZoomDistance,

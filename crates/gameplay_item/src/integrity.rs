@@ -4,7 +4,7 @@ use text::Fragment;
 
 #[derive(Debug, Component)]
 #[component(immutable)]
-pub(crate) struct ItemIntegrity {
+pub struct ItemIntegrity {
     damage: i64,
 }
 
@@ -13,7 +13,8 @@ impl ItemIntegrity {
     const BROKEN_DAMAGE: i64 = 4000;
     const REINFORCED_DAMAGE: i64 = -1000;
 
-    pub(crate) const fn broken(&self) -> bool {
+    #[must_use]
+    pub const fn broken(&self) -> bool {
         Self::BROKEN_DAMAGE <= self.damage
     }
 

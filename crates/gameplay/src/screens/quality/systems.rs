@@ -1,10 +1,12 @@
 use crate::screens::{find_nearby, find_nearby_pseudo, nearby_qualities};
-use crate::{BodyContainers, GameplayScreenState, Item, Player, Shared};
+use crate::{GameplayScreenState, Player};
 use bevy::prelude::{
     AnyOf, Commands, DespawnOnExit, KeyCode, Local, NextState, Query, Res, ResMut, Single, Text,
     With, World,
 };
 use cdda_json_files::{FurnitureInfo, TerrainInfo};
+use gameplay_common::Shared;
+use gameplay_item::{BodyContainers, Item};
 use gameplay_location::{LocationCache, Pos};
 use gameplay_model::LastSeen;
 use hud::{GOOD_TEXT_COLOR, WARN_TEXT_COLOR, scroll_screen};

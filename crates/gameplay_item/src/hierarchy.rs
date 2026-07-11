@@ -1,5 +1,5 @@
 use crate::{
-    Amount, ContainerLimits, InPocket, Item, ItemItem, Pocket, PocketContents, PocketItem, Pockets,
+    Amount, ContainerLimits, InPocket, Item, ItemItem, PocketContents, PocketItem, Pockets,
     SealedPocket,
 };
 use bevy::ecs::system::SystemParam;
@@ -9,13 +9,13 @@ use gameplay_relations::{ObjectOn, Objects};
 use std::{iter::once, num::NonZeroUsize, sync::Arc};
 use text::{Fragment, Phrase};
 
-pub(crate) enum PocketWrapper<'w, 's> {
+pub enum PocketWrapper<'w, 's> {
     Concrete(PocketItem<'w, 's>),
     Lazy(Arc<PocketInfo>),
 }
 
 impl PocketWrapper<'_, '_> {
-    pub(crate) const fn in_pocket(&self) -> Option<InPocket> {
+    pub const fn in_pocket(&self) -> Option<InPocket> {
         match self {
             Self::Concrete(pocket) => Some(InPocket {
                 pocket_entity: pocket.entity,
@@ -24,18 +24,18 @@ impl PocketWrapper<'_, '_> {
         }
     }
 
-    pub(crate) fn info(&self) -> &Arc<PocketInfo> {
+    pub fn info(&self) -> &Arc<PocketInfo> {
         match self {
             Self::Concrete(pocket) => pocket.info.as_ref(),
             Self::Lazy(info) => info,
         }
     }
 
-    pub(crate) fn pocket_type(&self) -> PocketType {
+    pub fn pocket_type(&self) -> PocketType {
         self.info().pocket_type
     }
 
-    pub(crate) fn sealed(&self) -> Option<SealedPocket> {
+    pub fn sealed(&self) -> Option<SealedPocket> {
         match self {
             Self::Concrete(pocket) => pocket.sealed.copied(),
             Self::Lazy(info) => info.sealed_data.as_ref().map(SealedPocket::from),
@@ -61,22 +61,20 @@ pub(crate) struct InPocketContext {
 }
 
 #[derive(SystemParam)]
-pub(crate) struct ItemHierarchy<'w, 's> {
+pub struct ItemHierarchy<'w, 's> {
     limits: Query<'w, 's, &'static ContainerLimits>,
     tiles: Query<'w, 's, &'static Objects>,
     items: Query<'w, 's, Item>,
-    pockets: Query<'w, 's, Pocket>,
+    pockets: Query<'w, 's, crate::pocket::Pocket>,
 }
 
 impl<'w, 's> ItemHierarchy<'w, 's> {
-    pub(crate) fn exists(&self, item: Entity) -> bool {
+    #[must_use]
+    pub fn exists(&self, item: Entity) -> bool {
         self.items.get(item).is_ok()
     }
 
-    pub(crate) fn items_on_tile(
-        &self,
-        object_on: ObjectOn,
-    ) -> impl Iterator<Item = ItemItem<'_, '_>> {
+    pub fn items_on_tile(&self, object_on: ObjectOn) -> impl Iterator<Item = ItemItem<'_, '_>> {
         self.tiles
             .get(object_on.tile_entity)
             .inspect_err(|error| error!("Error while looking up area: {error:#?}"))
@@ -85,10 +83,7 @@ impl<'w, 's> ItemHierarchy<'w, 's> {
             .flat_map(|item| self.items.get(*item)) // Filtering out non-items
     }
 
-    pub(crate) fn items_in_pocket(
-        &self,
-        in_pocket: InPocket,
-    ) -> impl Iterator<Item = ItemItem<'_, '_>> {
+    pub fn items_in_pocket(&self, in_pocket: InPocket) -> impl Iterator<Item = ItemItem<'_, '_>> {
         self.pockets
             .get(in_pocket.pocket_entity)
             .inspect_err(|error| panic!("Error while looking up pocket: {error:#?}"))
@@ -98,7 +93,7 @@ impl<'w, 's> ItemHierarchy<'w, 's> {
             .flat_map(|item| self.items.get(*item))
     }
 
-    pub(crate) fn pockets_in(&self, container: &ItemItem) -> Vec<PocketWrapper<'_, '_>> {
+    pub fn pockets_in(&self, container: &ItemItem) -> Vec<PocketWrapper<'_, '_>> {
         let concrete_pockets = container
             .pockets
             .into_iter()
@@ -121,13 +116,14 @@ impl<'w, 's> ItemHierarchy<'w, 's> {
             .collect()
     }
 
-    pub(crate) fn container(&self, in_pocket: InPocket) -> &ContainerLimits {
+    #[must_use]
+    pub fn container(&self, in_pocket: InPocket) -> &ContainerLimits {
         self.limits
             .get(in_pocket.pocket_entity)
             .expect("An existing container")
     }
 
-    pub(crate) fn walk(
+    pub fn walk(
         &self,
         handler: &mut impl ItemHandler,
         items: impl IntoIterator<Item = ItemItem<'w, 's>>,
@@ -462,7 +458,7 @@ fn suffix(pocket_type: PocketType, single_in_type: bool) -> Option<Fragment> {
     }
 }
 
-pub(crate) trait ItemHandler {
+pub trait ItemHandler {
     fn handle_item(&mut self, item: &ItemItem, item_fragments: Vec<Fragment>);
 
     /** Show pockets that are not containers, magazines, or magazine wells */

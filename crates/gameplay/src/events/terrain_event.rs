@@ -1,6 +1,11 @@
+use crate::Toggle;
 use bevy::prelude::{Entity, Message};
+use gameplay_common::Damage;
 
 pub(crate) trait TerrainChange: Clone + Send + Sync + 'static {}
+
+impl TerrainChange for Damage {}
+impl TerrainChange for Toggle {}
 
 #[must_use]
 #[derive(Clone, Debug, Message)]

@@ -5,14 +5,15 @@ use text::Fragment;
 
 #[derive(Copy, Clone, Debug, Component)]
 #[component(immutable)]
-pub(crate) enum Phase {
+pub enum Phase {
     Solid,
     Liquid,
     Gas,
 }
 
 impl Phase {
-    pub(crate) fn suffix(self) -> Option<Fragment> {
+    #[must_use]
+    pub fn suffix(self) -> Option<Fragment> {
         match self {
             Self::Solid => None,
             Self::Liquid => Some(Fragment::colorized("liquid", BLUE_TEXT_COLOR)),

@@ -3,7 +3,7 @@ use text::{Phrase, Subject};
 use units::{Mass, Volume};
 
 #[derive(Debug)]
-pub(super) struct CanBearButNeeded {
+pub struct CanBearButNeeded {
     pub(super) subject: Subject,
     pub(super) available: Mass,
     pub(super) added: Mass,
@@ -24,7 +24,7 @@ impl ProtoLogMessage for CanBearButNeeded {
 }
 
 #[derive(Debug)]
-pub(super) struct CanHoldButNeeded {
+pub struct CanHoldButNeeded {
     pub(super) subject: Subject,
     pub(super) available: u32,
     pub(super) added: u32,
@@ -45,7 +45,7 @@ impl ProtoLogMessage for CanHoldButNeeded {
 }
 
 #[derive(Debug)]
-pub(super) struct HasButNeeded {
+pub struct HasButNeeded {
     pub(super) subject: Subject,
     pub(super) available: Volume,
     pub(super) added: Volume,

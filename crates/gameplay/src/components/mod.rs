@@ -1,17 +1,12 @@
 mod last_seen_ext;
-mod object_name;
-mod shared;
 mod vehicle;
 
 pub(crate) use self::last_seen_ext::LastSeenExt;
-pub(crate) use self::object_name::ObjectName;
-pub(crate) use self::shared::Shared;
 pub(crate) use self::vehicle::{Vehicle, VehiclePart};
 
-use crate::Damage;
 use bevy::prelude::Component;
 use cdda_json_files::{CommonItemInfo, MoveCost, MoveCostIncrease, Recipe};
-use gameplay_common::{Evolution, Limited};
+use gameplay_common::Shared;
 use std::sync::Arc;
 use units::{Duration, Timestamp};
 
@@ -49,17 +44,6 @@ pub(crate) struct Opaque;
 #[derive(Component)]
 #[component(immutable)]
 pub(crate) struct OpaqueFloor;
-
-/// Mutable component
-#[derive(Debug, PartialEq, Component)]
-pub(crate) struct StandardIntegrity(pub(crate) Limited);
-
-impl StandardIntegrity {
-    pub(crate) fn lower(&mut self, damage: &Damage) -> Evolution {
-        self.0.lower(damage.amount)
-    }
-    // TODO raising (not with Healing)
-}
 
 #[derive(Debug, Component)]
 #[component(immutable)]
@@ -165,11 +149,6 @@ impl Melee {
 #[derive(Debug, Component)]
 #[component(immutable)]
 pub(crate) struct MissingAsset;
-
-/// Used for objects that can move, like characters and vehicles
-#[derive(Debug, Component)]
-#[component(immutable)]
-pub(crate) struct Mobile;
 
 /// Used to indicate a root for all non-mobile objects with the same position
 #[derive(Debug, Component)]

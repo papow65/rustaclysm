@@ -1,9 +1,7 @@
 use crate::{
-    Accessible, Amount, Aquatic, BaseSpeed, BodyContainers, CameraBase, Closeable, Containable,
-    Craft, ExamineCursor, Explored, Faction, Filthy, HealingDuration, Health, Hurdle, InPocket,
-    ItemIntegrity, Life, Melee, Mobile, ObjectName, Obstacle, Opaque, OpaqueFloor, Openable, Phase,
-    Player, PocketOf, SealedPocket, Shared, Stamina, StandardIntegrity, Tile, Vehicle, VehiclePart,
-    WalkingMode, spawn::log_spawn_result,
+    Accessible, Aquatic, BaseSpeed, CameraBase, Closeable, Craft, ExamineCursor, Explored, Faction,
+    HealingDuration, Health, Hurdle, Life, Melee, Obstacle, Opaque, OpaqueFloor, Openable, Player,
+    Stamina, Tile, Vehicle, VehiclePart, WalkingMode, spawn::log_spawn_result,
 };
 use application_state::ApplicationState;
 use bevy::camera::visibility::RenderLayers;
@@ -23,6 +21,11 @@ use either::Either;
 use gameplay_cdda::{Error, Infos, ObjectCategory, TileVariant};
 use gameplay_cdda_active_sav::ActiveSav;
 use gameplay_common::{Limited, LocalTerrain};
+use gameplay_common::{Mobile, ObjectName, Shared, StandardIntegrity};
+use gameplay_item::{
+    Amount, BodyContainers, Containable, Filthy, InPocket, ItemIntegrity, Phase, PocketOf,
+    SealedPocket,
+};
 use gameplay_location::{LevelOffset, LocationCache, Pos, PosOffset, StairsDown, StairsUp};
 use gameplay_model::{LastSeen, ModelFactory};
 use gameplay_relations::{ObjectOn, TileIn, VehiclePartOf};

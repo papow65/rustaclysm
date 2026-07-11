@@ -8,36 +8,36 @@ use text::Fragment;
 #[must_use]
 #[derive(Clone, Debug, Component)]
 #[component(immutable)]
-pub(crate) struct ObjectName {
+pub struct ObjectName {
     name: ItemName,
     color: TextColor,
 }
 
 impl ObjectName {
-    pub(crate) fn single(&self, pos: Pos) -> Fragment {
+    pub fn single(&self, pos: Pos) -> Fragment {
         Fragment::colorized(&*self.name.single, self.color).positioned(pos)
     }
 
-    pub(crate) fn amount(&self, amount: u32, pos: Pos) -> Fragment {
+    pub fn amount(&self, amount: u32, pos: Pos) -> Fragment {
         Fragment::colorized(&**self.name.amount(amount), self.color).positioned(pos)
     }
 
-    pub(crate) const fn new(name: ItemName, color: TextColor) -> Self {
+    pub const fn new(name: ItemName, color: TextColor) -> Self {
         Self { name, color }
     }
 
-    pub(crate) fn from_str(text: &str, color: TextColor) -> Self {
+    pub fn from_str(text: &str, color: TextColor) -> Self {
         Self {
             name: ItemName::from(CddaItemName::Simple(Arc::from(text))),
             color,
         }
     }
 
-    pub(crate) fn corpse() -> Self {
+    pub fn corpse() -> Self {
         Self::from_str("corpse", BAD_TEXT_COLOR)
     }
 
-    pub(crate) fn missing() -> Self {
+    pub fn missing() -> Self {
         Self::from_str("(missing name)", BAD_TEXT_COLOR)
     }
 }

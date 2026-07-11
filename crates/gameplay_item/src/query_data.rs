@@ -1,10 +1,10 @@
-use crate::{
-    Amount, Containable, Filthy, InPocket, ItemIntegrity, ObjectName, Phase, Pockets, Shared,
-};
+use crate::{Amount, Containable, Filthy, InPocket, ItemIntegrity, Phase, Pockets};
 use bevy::ecs::query::QueryData;
 use bevy::prelude::{Children, Entity, ops::atan2};
 use cdda_json_files::{CommonItemInfo, InfoId};
 use either::Either;
+use gameplay_common::ObjectName;
+use gameplay_common::Shared;
 use gameplay_location::Pos;
 use gameplay_relations::ObjectOn;
 use hud::text_color_expect_half;
@@ -13,24 +13,25 @@ use text::{Fragment, Positioning};
 
 #[derive(QueryData)]
 #[query_data(derive(Debug))]
-pub(crate) struct Item {
-    pub(crate) entity: Entity,
-    pub(crate) name: &'static ObjectName,
-    pub(crate) pos: Option<&'static Pos>,
-    pub(crate) amount: &'static Amount,
-    pub(crate) filthy: Option<&'static Filthy>,
-    pub(crate) integrity: &'static ItemIntegrity,
-    pub(crate) phase: &'static Phase,
-    pub(crate) containable: &'static Containable,
-    pub(crate) on_tile: Option<&'static ObjectOn>,
-    pub(crate) in_pocket: Option<&'static InPocket>,
-    pub(crate) pockets: Option<&'static Pockets>,
-    pub(crate) models: Option<&'static Children>,
-    pub(crate) common_info: &'static Shared<CommonItemInfo>,
+pub struct Item {
+    pub entity: Entity,
+    pub name: &'static ObjectName,
+    pub pos: Option<&'static Pos>,
+    pub amount: &'static Amount,
+    pub filthy: Option<&'static Filthy>,
+    pub integrity: &'static ItemIntegrity,
+    pub phase: &'static Phase,
+    pub containable: &'static Containable,
+    pub on_tile: Option<&'static ObjectOn>,
+    pub in_pocket: Option<&'static InPocket>,
+    pub pockets: Option<&'static Pockets>,
+    pub models: Option<&'static Children>,
+    pub common_info: &'static Shared<CommonItemInfo>,
 }
 
 impl<'w, 's> ItemItem<'w, 's> {
-    pub(crate) fn parentage(&self) -> Either<&ObjectOn, &InPocket> {
+    #[must_use]
+    pub fn parentage(&self) -> Either<&ObjectOn, &InPocket> {
         match (self.on_tile, self.in_pocket) {
             (None, None) => panic!(
                 "No tile or pocket for item {:?} at {:?}",
@@ -47,7 +48,7 @@ impl<'w, 's> ItemItem<'w, 's> {
         }
     }
 
-    pub(crate) fn fragments(&self) -> impl Iterator<Item = Fragment> + use<'_, 'w, 's> {
+    pub fn fragments(&self) -> impl Iterator<Item = Fragment> + use<'_, 'w, 's> {
         let fragments = if self.common_info.id == InfoId::new("money") {
             let cents = self.amount.0 as f32;
             let dollars = format!("$ {:.2}", cents / 100.0);

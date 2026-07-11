@@ -5,12 +5,10 @@ use crate::sidebar::{
 };
 use crate::{
     Accessible, Actor, BaseSpeed, Breath, Corpse, CurrentlyVisibleBuilder, Envir, Explored,
-    Faction, FocusState, Health, Hurdle, ItemItem, Life, Obstacle, Opaque, OpaqueFloor, Player,
+    Faction, FocusState, Health, Hurdle, Life, Obstacle, Opaque, OpaqueFloor, Player,
     PlayerActionState, PlayerWielded, RefreshAfterBehavior, RelativeSegments, SeenFrom, Stamina,
     WalkingMode, ZoneLevelIds,
 };
-use crate::{Amount, Item, ItemHandler, ItemHierarchy};
-use crate::{ObjectName, Shared, StandardIntegrity};
 use application_state::ApplicationState;
 use bevy::diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin};
 use bevy::ecs::{hierarchy::Children, schedule::ScheduleConfigs, system::ScheduleSystem};
@@ -24,6 +22,8 @@ use bevy::prelude::{
     resource_exists_and_changed,
 };
 use cdda_json_files::{CharacterInfo, MoveCost};
+use gameplay_common::{ObjectName, Shared, StandardIntegrity};
+use gameplay_item::{Amount, Item, ItemHandler, ItemHierarchy, ItemItem};
 use gameplay_location::{Pos, StairsDown, StairsUp};
 use gameplay_log::LogMessage;
 use gameplay_model::LastSeen;

@@ -1,14 +1,20 @@
 [package]
-name = "gameplay_common"
-description = "Common utility modules for gameplay"
-license = "AGPL-3.0-or-later"
+name = "gameplay_item"
+version = "0.1.0"
 edition = "2024"
+
+[lib]
+path = "src/mod.rs"
 
 [dependencies]
 bevy = { workspace = true }
 cdda_json_files = { workspace = true }
+either = { workspace = true }
 gameplay_cdda = { workspace = true }
+gameplay_common = { workspace = true }
 gameplay_location = { workspace = true }
+gameplay_log = { workspace = true }
+gameplay_relations = { workspace = true }
 hud = { workspace = true }
 text = { workspace = true }
 units = { workspace = true }
