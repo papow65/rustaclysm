@@ -5,6 +5,7 @@ mod impact;
 mod messages;
 mod planned_action;
 mod player;
+mod player_handlers;
 mod plugin;
 mod query_data;
 mod stats;
@@ -18,6 +19,7 @@ pub(crate) use self::faction::{Faction, Intelligence, LastEnemy};
 pub(crate) use self::impact::ActorImpact;
 pub(crate) use self::planned_action::PlannedAction;
 pub(crate) use self::player::{Player, PlayerActionState};
+pub(crate) use self::player_handlers::{handle_attack, handle_close, handle_pulp, handle_smash};
 pub(crate) use self::plugin::ActorPlugin;
 pub(crate) use self::query_data::{Actor, ActorItem};
 pub(crate) use self::stats::{

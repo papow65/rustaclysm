@@ -1,9 +1,9 @@
 use crate::actor::messages::{
-    FirstExamineYourDestination, NoPlaceToCraftNearby, NoTargetsNearby, NothingToCloseNearby,
-    YouAreAlmostOutOfBreathAndStop, YouAreStillAsleep, YouAreStillDraggingItems, YouCant,
-    YouCantAttackYourself, YouFallAsleep, YouFinish, YouSpotAndStop, YouStartDefending,
-    YouWakeUpAfterSleeping,
+    FirstExamineYourDestination, NoPlaceToCraftNearby, YouAreAlmostOutOfBreathAndStop,
+    YouAreStillAsleep, YouAreStillDraggingItems, YouCant, YouCantAttackYourself, YouFallAsleep,
+    YouFinish, YouSpotAndStop, YouStartDefending, YouWakeUpAfterSleeping,
 };
+use crate::actor::{handle_attack, handle_close, handle_pulp, handle_smash};
 use crate::{
     ActorItem, Breath, ContinueCraft, CurrentlyVisibleBuilder, Envir, Explored, Faction,
     Intelligence, Interruption, MoveItem, PlannedAction, PlayerDirection, PlayerInstructions, Pulp,
@@ -283,21 +283,15 @@ impl PlayerActionState {
             ),
             // TODO instruction to continue crafting
             QueuedInstruction::Attack => {
-                Self::handle_attack(next_state, message_writer, envir, player_pos)
+                handle_attack(next_state, message_writer, envir, player_pos)
             }
-            QueuedInstruction::Smash => {
-                Self::handle_smash(next_state, message_writer, envir, player_pos)
-            }
-            QueuedInstruction::Pulp => {
-                Self::handle_pulp(next_state, message_writer, envir, player_pos)
-            }
+            QueuedInstruction::Smash => handle_smash(next_state, message_writer, envir, player_pos),
+            QueuedInstruction::Pulp => handle_pulp(next_state, message_writer, envir, player_pos),
             QueuedInstruction::Peek => {
                 next_state.set(Self::PickingNbor(PickingNbor::Peeking));
                 None
             }
-            QueuedInstruction::Close => {
-                Self::handle_close(next_state, message_writer, envir, player_pos)
-            }
+            QueuedInstruction::Close => handle_close(next_state, message_writer, envir, player_pos),
             QueuedInstruction::Drag => {
                 next_state.set(Self::PickingNbor(PickingNbor::Dragging));
                 None
@@ -517,116 +511,6 @@ impl PlayerActionState {
             }
             _ => {
                 next_state.set(Self::PickingNbor(PickingNbor::Crafting(recipe_situation)));
-                None
-            }
-        }
-    }
-
-    fn handle_attack(
-        next_state: &mut ResMut<NextState<Self>>,
-        message_writer: &mut LogMessageWriter,
-        envir: &Envir,
-        pos: Pos,
-    ) -> Option<PlannedAction> {
-        let attackable_nbors = envir
-            .nbors_for_exploring(pos, &QueuedInstruction::Attack)
-            .collect::<Vec<_>>();
-        match attackable_nbors.len() {
-            0 => {
-                message_writer.send(NoTargetsNearby);
-                None
-            }
-            1 => Some(PlannedAction::attack(attackable_nbors[0])),
-            _ => {
-                next_state.set(Self::PickingNbor(PickingNbor::Attacking));
-                None
-            }
-        }
-    }
-
-    fn handle_smash(
-        next_state: &mut ResMut<NextState<Self>>,
-        message_writer: &mut LogMessageWriter,
-        envir: &Envir,
-        pos: Pos,
-    ) -> Option<PlannedAction> {
-        let smashable_nbors = envir
-            .nbors_for_exploring(pos, &QueuedInstruction::Smash)
-            .collect::<Vec<_>>();
-        match smashable_nbors.len() {
-            0 => {
-                message_writer.send(NoTargetsNearby);
-                None
-            }
-            1 => Some(PlannedAction::smash(smashable_nbors[0])),
-            _ => {
-                next_state.set(Self::PickingNbor(PickingNbor::Smashing));
-                None
-            }
-        }
-    }
-
-    fn handle_pulp(
-        next_state: &mut ResMut<NextState<Self>>,
-        message_writer: &mut LogMessageWriter,
-        envir: &Envir,
-        pos: Pos,
-    ) -> Option<PlannedAction> {
-        let pulpable_nbors = envir
-            .nbors_for_exploring(pos, &QueuedInstruction::Pulp)
-            .filter_map(|nbor| {
-                if let Nbor::Horizontal(horizontal) = nbor {
-                    Some(horizontal)
-                } else {
-                    None
-                }
-            })
-            .collect::<Vec<_>>();
-        //trace!("Pulping {} targets", pulpable_nbors.len());
-        match pulpable_nbors.len() {
-            0 => {
-                message_writer.send(NoTargetsNearby);
-                None
-            }
-            1 => {
-                //trace!("Pulping target found -> active");
-                next_state.set(Self::Pulping {
-                    direction: pulpable_nbors[0],
-                });
-                Some(PlannedAction::pulp(pulpable_nbors[0]))
-            }
-            _ => {
-                //trace!("Pulping choice -> inactive");
-                next_state.set(Self::PickingNbor(PickingNbor::Pulping));
-                None
-            }
-        }
-    }
-
-    fn handle_close(
-        next_state: &mut ResMut<NextState<Self>>,
-        message_writer: &mut LogMessageWriter,
-        envir: &Envir,
-        pos: Pos,
-    ) -> Option<PlannedAction> {
-        let closable_nbors = envir
-            .nbors_for_exploring(pos, &QueuedInstruction::Close)
-            .filter_map(|nbor| {
-                if let Nbor::Horizontal(horizontal) = nbor {
-                    Some(horizontal)
-                } else {
-                    None
-                }
-            })
-            .collect::<Vec<_>>();
-        match closable_nbors.len() {
-            0 => {
-                message_writer.send(NothingToCloseNearby);
-                None
-            }
-            1 => Some(PlannedAction::close(closable_nbors[0])),
-            _ => {
-                next_state.set(Self::PickingNbor(PickingNbor::Closing));
                 None
             }
         }
