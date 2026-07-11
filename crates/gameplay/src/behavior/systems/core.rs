@@ -107,7 +107,8 @@ fn plan_manual_player_action(
     let actor = actors
         .get(active_actor)
         .expect("'entity' should be a known actor");
-    let impact = player_action_state.plan_manual_action(
+    let impact = crate::actor::plan_manual_action(
+        &player_action_state,
         &mut next_player_action_state,
         &mut message_writer,
         &currently_visible_builder.envir,
@@ -139,7 +140,8 @@ fn plan_automatic_player_action(
         .expect("'entity' should be a known actor");
 
     let factions = &factions.iter().map(|(p, f)| (*p, f)).collect::<Vec<_>>();
-    let planned_action = player_action_state.plan_automatic_action(
+    let planned_action = crate::actor::plan_automatic_action(
+        &player_action_state,
         &currently_visible_builder,
         &mut player_instructions,
         &explored,
