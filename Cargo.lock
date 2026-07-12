@@ -2402,12 +2402,14 @@ dependencies = [
  "gameplay_cdda_active_sav",
  "gameplay_common",
  "gameplay_crafting",
+ "gameplay_focus",
  "gameplay_item",
  "gameplay_local",
  "gameplay_location",
  "gameplay_log",
  "gameplay_model",
  "gameplay_nearby",
+ "gameplay_player",
  "gameplay_relations",
  "gameplay_resource",
  "gameplay_time",
@@ -2488,6 +2490,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "gameplay_focus"
+version = "0.0.0"
+dependencies = [
+ "application_state",
+ "bevy",
+ "gameplay_location",
+ "gameplay_player",
+ "util",
+]
+
+[[package]]
 name = "gameplay_item"
 version = "0.1.0"
 dependencies = [
@@ -2556,6 +2569,19 @@ dependencies = [
  "gameplay_item",
  "gameplay_location",
  "gameplay_model",
+]
+
+[[package]]
+name = "gameplay_player"
+version = "0.1.0"
+dependencies = [
+ "application_state",
+ "bevy",
+ "gameplay_crafting",
+ "gameplay_location",
+ "gameplay_log",
+ "hud",
+ "units",
 ]
 
 [[package]]

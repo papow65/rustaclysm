@@ -9,10 +9,10 @@ use units::Timestamp;
 
 #[derive(Debug, Component)]
 #[component(immutable)]
-pub(crate) struct Player;
+pub struct Player;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub(crate) enum PickingNbor {
+pub enum PickingNbor {
     Attacking,
     Smashing,
     Pulping,
@@ -25,7 +25,7 @@ pub(crate) enum PickingNbor {
 /// Current action of the player character
 #[derive(Clone, Debug, Default, PartialEq, Eq, Hash, SubStates)]
 #[source(ApplicationState = ApplicationState::Gameplay)]
-pub(crate) enum PlayerActionState {
+pub enum PlayerActionState {
     #[default]
     Normal,
     PickingNbor(PickingNbor),
@@ -56,18 +56,21 @@ pub(crate) enum PlayerActionState {
 
 impl PlayerActionState {
     /// Automatic progress without movement or (expected) danger
-    pub(crate) const fn is_still(&self) -> bool {
+    #[must_use]
+    pub const fn is_still(&self) -> bool {
         matches!(
             *self,
             Self::Crafting { .. } | Self::Waiting { .. } | Self::Sleeping { .. }
         )
     }
 
-    pub(crate) const fn is_automatic(&self) -> bool {
+    #[must_use]
+    pub const fn is_automatic(&self) -> bool {
         !matches!(*self, Self::Normal | Self::PickingNbor(_))
     }
 
-    pub(crate) const fn color_in_progress(&self) -> TextColor {
+    #[must_use]
+    pub const fn color_in_progress(&self) -> TextColor {
         match self {
             Self::Normal | Self::PickingNbor(PickingNbor::Closing) => HARD_TEXT_COLOR,
             Self::Waiting { .. }
@@ -82,7 +85,8 @@ impl PlayerActionState {
         }
     }
 
-    pub(crate) const fn severity_finishing(&self) -> Severity {
+    #[must_use]
+    pub const fn severity_finishing(&self) -> Severity {
         match self {
             Self::Pulping { .. }
             | Self::Crafting { .. }

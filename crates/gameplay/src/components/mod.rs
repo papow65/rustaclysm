@@ -62,14 +62,6 @@ pub(crate) struct CorpseRaise {
 #[component(immutable)]
 pub(crate) struct PlayerWielded;
 
-#[derive(Component)]
-#[component(immutable)]
-pub(crate) struct CameraBase;
-
-#[derive(Component)]
-#[component(immutable)]
-pub(crate) struct ExamineCursor;
-
 /// Mutable component
 #[derive(Debug, Component)]
 pub(crate) struct HealingDuration(Duration);

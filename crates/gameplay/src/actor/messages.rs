@@ -1,7 +1,7 @@
-use crate::PlayerActionState;
 use gameplay_common::ObjectName;
 use gameplay_location::Pos;
 use gameplay_log::{ProtoLogMessage, Severity};
+use gameplay_player::PlayerActionState;
 use hud::text_color_expect_full;
 use text::{Fragment, Phrase, Subject};
 use units::Duration;

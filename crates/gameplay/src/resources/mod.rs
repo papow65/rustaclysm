@@ -1,5 +1,4 @@
 mod camera_offset;
-mod elevation_visibility;
 mod expanded;
 mod explored;
 mod plugin;
@@ -8,7 +7,6 @@ mod visualization_update;
 mod zone_level_ids;
 
 pub(crate) use self::camera_offset::{CameraOffset, ZoomDirection, ZoomDistance};
-pub(crate) use self::elevation_visibility::ElevationVisibility;
 pub(crate) use self::expanded::Expanded;
 pub(crate) use self::explored::{Explored, SeenFrom};
 pub(crate) use self::plugin::ResourcePlugin;

@@ -6,8 +6,8 @@ use crate::actor::messages::{
 use crate::{
     ActorEvent, ActorImpact, Aquatic, Attack, BaseSpeed, Breath, ChangePace, Close, Collision,
     CorpseEvent, Damage, Envir, Faction, Healing, HealingDuration, Health, LastEnemy, Life, Melee,
-    Peek, Player, PlayerActionState, PlayerWielded, Pulp, Smash, Stamina, StaminaCost, StartCraft,
-    Step, TerrainEvent, Tile, TileSpawner, Toggle, WalkingMode,
+    Peek, PlayerWielded, Pulp, Smash, Stamina, StaminaCost, StartCraft, Step, TerrainEvent, Tile,
+    TileSpawner, Toggle, WalkingMode,
 };
 use bevy::ecs::query::{QueryData, With};
 use bevy::prelude::{
@@ -21,6 +21,7 @@ use gameplay_item::{Amount, BodyContainers, Container, InPocket, Item, ItemHiera
 use gameplay_location::{HorizontalDirection, LevelOffset, LocationCache, Nbor, Pos};
 use gameplay_log::LogMessageWriter;
 use gameplay_model::LastSeen;
+use gameplay_player::{Player, PlayerActionState};
 use gameplay_relations::ObjectOn;
 use gameplay_time::Clock;
 use text::{Phrase, Subject};

@@ -1,0 +1,15 @@
+[package]
+name = "gameplay_focus"
+description = "Camera focus systems"
+license = "AGPL-3.0-or-later"
+edition = "2024"
+
+[dependencies]
+application_state = { workspace = true }
+bevy = { workspace = true }
+gameplay_location = { workspace = true }
+gameplay_player = { workspace = true }
+util = { workspace = true }
+
+[lints]
+workspace = true

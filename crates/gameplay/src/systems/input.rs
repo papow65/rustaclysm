@@ -1,4 +1,4 @@
-use crate::{GameplayScreenState, Player, TileSpawner};
+use crate::{GameplayScreenState, TileSpawner};
 use application_state::ApplicationState;
 use bevy::camera::visibility::RenderLayers;
 use bevy::prelude::{
@@ -6,6 +6,7 @@ use bevy::prelude::{
     With, World, debug,
 };
 use gameplay_location::Pos;
+use gameplay_player::Player;
 use gameplay_transition_state::GameplayTransitionState;
 use keyboard::KeyBindings;
 use manual::ManualSection;

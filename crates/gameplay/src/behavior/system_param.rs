@@ -1,6 +1,7 @@
-use crate::{Actor, Envir, GameplayScreenState, Player, PlayerActionState, PlayerInstructions};
+use crate::{Actor, Envir, GameplayScreenState, PlayerInstructions};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{Entity, Query, Res, Single, State, With};
+use gameplay_player::{Player, PlayerActionState};
 use gameplay_time::Timeouts;
 
 #[derive(SystemParam)]

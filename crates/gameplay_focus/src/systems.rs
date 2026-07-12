@@ -1,7 +1,12 @@
 use crate::{CameraBase, ExamineCursor, Focus, FocusState};
-use bevy::prelude::{Camera3d, Res, Single, State, Transform, Vec3, Visibility, With, Without};
+use bevy::prelude::{
+    Camera3d, Res, Single, State, SystemSet, Transform, Vec3, Visibility, With, Without,
+};
 use std::time::Instant;
 use util::log_if_slow;
+
+#[derive(Clone, Debug, PartialEq, Eq, Hash, SystemSet)]
+pub struct OnFocusChange;
 
 #[expect(clippy::needless_pass_by_value)]
 pub(super) fn update_focus_cursor_visibility(

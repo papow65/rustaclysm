@@ -3,7 +3,7 @@
 use crate::behavior::systems::messages::{Break, Heal, Hit, IsThoroughlyPulped, Kill, Pulp};
 use crate::{
     Actor, ActorEvent, Corpse, CorpseEvent, CorpseRaise, Damage, Faction, GameplayScreenState,
-    Healing, Health, Life, Obstacle, Player, Stamina, TerrainEvent, TileSpawner, Toggle,
+    Healing, Health, Life, Obstacle, Stamina, TerrainEvent, TileSpawner, Toggle,
     VisualizationUpdate, WalkingMode,
 };
 use bevy::ecs::schedule::{IntoScheduleConfigs as _, ScheduleConfigs};
@@ -19,6 +19,7 @@ use gameplay_common::{Limited, LocalTerrain, ObjectName, Shared, StandardIntegri
 use gameplay_item::{Amount, ContainerLimits, Item, ItemHierarchy};
 use gameplay_location::Pos;
 use gameplay_log::LogMessageWriter;
+use gameplay_player::Player;
 use gameplay_relations::ObjectOn;
 use gameplay_time::Clock;
 use std::f32::consts::FRAC_PI_2;

@@ -1,39 +1,38 @@
-use crate::{ElevationVisibility, FocusState, Player};
+use crate::{ElevationVisibility, FocusState};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{DetectChanges as _, NextState, Ref, Res, Single, State, Vec3, With};
 use gameplay_location::{Level, Pos, ZoneLevel};
+use gameplay_player::Player;
 use std::cmp::Ordering;
 
 #[derive(SystemParam)]
-pub(crate) struct Focus<'w, 's> {
+pub struct Focus<'w, 's> {
     state: Res<'w, State<FocusState>>,
     player_pos: Single<'w, 's, Ref<'static, Pos>, With<Player>>,
 }
 
 impl Focus<'_, '_> {
-    pub(crate) fn toggle_examine_pos(&self, next_focus_state: &mut NextState<FocusState>) {
+    pub fn toggle_examine_pos(&self, next_focus_state: &mut NextState<FocusState>) {
         next_focus_state.set(match **self.state {
             FocusState::ExaminingPos(_) => FocusState::Normal,
             _ => FocusState::ExaminingPos(Pos::from(self)),
         });
     }
 
-    pub(crate) fn toggle_examine_zone_level(&self, next_focus_state: &mut NextState<FocusState>) {
+    pub fn toggle_examine_zone_level(&self, next_focus_state: &mut NextState<FocusState>) {
         next_focus_state.set(match **self.state {
             FocusState::ExaminingZoneLevel(_) => FocusState::Normal,
             _ => FocusState::ExaminingZoneLevel(ZoneLevel::from(self)),
         });
     }
 
-    pub(crate) fn is_changed(&self) -> bool {
+    #[must_use]
+    pub fn is_changed(&self) -> bool {
         self.state.is_changed() || self.player_pos.is_changed()
     }
 
-    pub(crate) fn is_pos_shown(
-        &self,
-        shown_pos: Pos,
-        elevation_visibility: ElevationVisibility,
-    ) -> bool {
+    #[must_use]
+    pub fn is_pos_shown(&self, shown_pos: Pos, elevation_visibility: ElevationVisibility) -> bool {
         let focus_pos = match **self.state {
             FocusState::Normal => **self.player_pos,
             FocusState::ExaminingPos(pos) => pos,

@@ -1,6 +1,6 @@
 use crate::{
-    ActorPlugin, CameraOffset, EventsPlugin, FocusPlugin, GameplayScreenState, RelativeSegments,
-    ResourcePlugin, ScreensPlugin, SidebarPlugin, TransitionPlugin, VisualizationUpdate,
+    ActorPlugin, CameraOffset, EventsPlugin, GameplayScreenState, RelativeSegments, ResourcePlugin,
+    ScreensPlugin, SidebarPlugin, TransitionPlugin, VisualizationUpdate,
     check_failed_asset_loading, count_assets, count_pos, create_gameplay_key_bindings,
     despawn_systems, handle_region_asset_events, handle_zone_levels, spawn_initial_entities,
     spawn_subzone_levels, spawn_subzones_for_camera, update_camera_offset, update_explored,
@@ -13,6 +13,7 @@ use bevy::prelude::{
     Update, in_state, on_message, resource_exists, resource_exists_and_changed,
 };
 use gameplay_cdda::{CddaPlugin, Exploration};
+use gameplay_focus::{FocusPlugin, OnFocusChange};
 use gameplay_item::GameplayItemPlugin;
 use gameplay_local::GameplayLocalPlugin;
 use gameplay_location::LocationPlugin;
@@ -79,6 +80,7 @@ fn update_systems() -> ScheduleConfigs<ScheduleSystem> {
         )
             .chain(),
         handle_zone_levels(),
+        update_visibility.in_set(OnFocusChange),
     )
         .run_if(in_state(ApplicationState::Gameplay))
 }

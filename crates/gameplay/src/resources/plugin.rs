@@ -1,6 +1,5 @@
 use crate::{
-    CameraOffset, ElevationVisibility, Expanded, Explored, RelativeSegments, VisualizationUpdate,
-    ZoneLevelIds,
+    CameraOffset, Expanded, Explored, RelativeSegments, VisualizationUpdate, ZoneLevelIds,
 };
 use bevy::prelude::{App, Plugin};
 use gameplay_resource::gameplay_resource_plugin;
@@ -18,7 +17,5 @@ impl Plugin for ResourcePlugin {
             gameplay_resource_plugin::<VisualizationUpdate>,
             gameplay_resource_plugin::<ZoneLevelIds>,
         ));
-
-        app.insert_resource(ElevationVisibility::default());
     }
 }

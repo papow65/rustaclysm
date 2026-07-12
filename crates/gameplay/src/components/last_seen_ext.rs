@@ -1,6 +1,7 @@
-use crate::{BaseSpeed, Player};
+use crate::BaseSpeed;
 use gameplay_common::Visible;
 use gameplay_model::LastSeen;
+use gameplay_player::Player;
 
 pub(crate) trait LastSeenExt {
     fn update(&mut self, visible: Visible);

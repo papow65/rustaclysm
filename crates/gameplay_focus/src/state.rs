@@ -1,18 +1,18 @@
-use crate::PlayerActionState;
 use application_state::ApplicationState;
 use bevy::prelude::SubStates;
 use gameplay_location::{Pos, ZoneLevel};
+use gameplay_player::PlayerActionState;
 use std::fmt;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum CancelHandling {
+pub enum CancelHandling {
     Queued,
     Menu,
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, SubStates)]
 #[source(ApplicationState = ApplicationState::Gameplay)]
-pub(crate) enum FocusState {
+pub enum FocusState {
     #[default]
     Normal,
     ExaminingPos(Pos),
@@ -20,10 +20,8 @@ pub(crate) enum FocusState {
 }
 
 impl FocusState {
-    pub(crate) const fn cancel_handling(
-        &self,
-        player_action_state: &PlayerActionState,
-    ) -> CancelHandling {
+    #[must_use]
+    pub const fn cancel_handling(&self, player_action_state: &PlayerActionState) -> CancelHandling {
         if !matches!(*self, Self::Normal) {
             CancelHandling::Queued
         } else if matches!(

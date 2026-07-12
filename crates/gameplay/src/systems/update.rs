@@ -1,15 +1,14 @@
-use crate::{
-    Accessible, BaseSpeed, CurrentlyVisible, CurrentlyVisibleBuilder, ElevationVisibility, Focus,
-    LastSeenExt as _, Player,
-};
+use crate::{Accessible, BaseSpeed, CurrentlyVisible, CurrentlyVisibleBuilder, LastSeenExt as _};
 use bevy::prelude::{
     Camera, Changed, ChildOf, Children, Commands, GlobalTransform, MessageWriter, ParallelCommands,
     Query, Res, Single, Visibility, With, Without, debug, error,
 };
 use gameplay_cdda::Exploration;
+use gameplay_focus::{ElevationVisibility, Focus};
 use gameplay_local::GameplayLocal;
 use gameplay_location::{Pos, SubzoneLevel};
 use gameplay_model::{Appearance, LastSeen};
+use gameplay_player::Player;
 use std::time::Instant;
 use util::log_if_slow;
 

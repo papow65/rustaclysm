@@ -1,8 +1,8 @@
-use crate::Focus;
 use bevy::platform::collections::{HashMap, HashSet, hash_map::Entry};
 use bevy::prelude::{Resource, Visibility};
 use gameplay_cdda::Exploration;
 use gameplay_common::Region;
+use gameplay_focus::Focus;
 use gameplay_location::{Level, Overzone, Pos, SubzoneLevel, Zone, ZoneLevel};
 
 /// Ever seen by the player character

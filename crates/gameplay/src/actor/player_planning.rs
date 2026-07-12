@@ -6,13 +6,14 @@ use crate::actor::messages::{
 };
 use crate::{
     ActorItem, Breath, ContinueCraft, CurrentlyVisibleBuilder, Envir, Explored, Faction,
-    Intelligence, Interruption, MoveItem, PlannedAction, PlayerActionState, PlayerDirection,
-    PlayerInstructions, Pulp, QueuedInstruction, StartCraft, actor::PickingNbor,
+    Intelligence, Interruption, MoveItem, PlannedAction, PlayerDirection, PlayerInstructions, Pulp,
+    QueuedInstruction, StartCraft,
 };
 use bevy::prelude::{DetectChanges as _, Entity, NextState, ResMut};
 use gameplay_crafting::RecipeSituation;
 use gameplay_location::{CardinalDirection, HorizontalDirection, Nbor, Pos, VisionDistance};
 use gameplay_log::{LogMessageWriter, Severity};
+use gameplay_player::{PickingNbor, PlayerActionState};
 use text::Fragment;
 use units::{Duration, Timestamp};
 
@@ -425,9 +426,7 @@ fn plan_attack(
         }
         1 => Some(PlannedAction::attack(attackable_nbors[0])),
         _ => {
-            next_state.set(PlayerActionState::PickingNbor(
-                crate::actor::player::PickingNbor::Attacking,
-            ));
+            next_state.set(PlayerActionState::PickingNbor(PickingNbor::Attacking));
             None
         }
     }
@@ -449,9 +448,7 @@ fn plan_smash(
         }
         1 => Some(PlannedAction::smash(smashable_nbors[0])),
         _ => {
-            next_state.set(PlayerActionState::PickingNbor(
-                crate::actor::player::PickingNbor::Smashing,
-            ));
+            next_state.set(PlayerActionState::PickingNbor(PickingNbor::Smashing));
             None
         }
     }
@@ -488,9 +485,7 @@ fn plan_pulp(
         }
         _ => {
             //trace!("Pulping choice -> inactive");
-            next_state.set(PlayerActionState::PickingNbor(
-                crate::actor::player::PickingNbor::Pulping,
-            ));
+            next_state.set(PlayerActionState::PickingNbor(PickingNbor::Pulping));
             None
         }
     }
@@ -519,9 +514,7 @@ fn plan_close(
         }
         1 => Some(PlannedAction::close(closable_nbors[0])),
         _ => {
-            next_state.set(PlayerActionState::PickingNbor(
-                crate::actor::player::PickingNbor::Closing,
-            ));
+            next_state.set(PlayerActionState::PickingNbor(PickingNbor::Closing));
             None
         }
     }

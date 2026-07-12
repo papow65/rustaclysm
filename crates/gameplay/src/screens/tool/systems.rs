@@ -1,4 +1,4 @@
-use crate::{GameplayScreenState, Player};
+use crate::GameplayScreenState;
 use bevy::platform::collections::HashSet;
 use bevy::prelude::{
     Added, AnyOf, Commands, DespawnOnExit, EntityCommands, KeyCode, Local, NextState, Query,
@@ -10,6 +10,7 @@ use gameplay_item::{BodyContainers, Item};
 use gameplay_location::{LocationCache, Pos};
 use gameplay_model::LastSeen;
 use gameplay_nearby::{find_nearby, find_nearby_pseudo, nearby_tools};
+use gameplay_player::Player;
 use hud::{GOOD_TEXT_COLOR, HARD_TEXT_COLOR, SOFT_TEXT_COLOR, WARN_TEXT_COLOR, scroll_screen};
 use keyboard::KeyBindings;
 use manual::ManualSection;

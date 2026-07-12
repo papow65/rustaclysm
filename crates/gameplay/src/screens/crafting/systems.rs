@@ -1,5 +1,5 @@
 use crate::screens::crafting::{CraftingScreen, messages::YouLackTheMeansToCraft};
-use crate::{GameplayScreenState, Player, PlayerInstructions, QueuedInstruction};
+use crate::{GameplayScreenState, PlayerInstructions, QueuedInstruction};
 use bevy::ecs::{spawn::SpawnIter, system::SystemId};
 use bevy::prelude::{
     Added, AnyOf, Children, Commands, DespawnOnExit, Entity, In, KeyCode, Local, NextState, Query,
@@ -15,6 +15,7 @@ use gameplay_item::{BodyContainers, Item, ItemHierarchy};
 use gameplay_location::{LocationCache, Pos};
 use gameplay_log::LogMessageWriter;
 use gameplay_model::LastSeen;
+use gameplay_player::Player;
 use hud::{BAD_TEXT_COLOR, ButtonBuilder, WARN_TEXT_COLOR};
 use keyboard::KeyBindings;
 use manual::ManualSection;

@@ -2,7 +2,6 @@ mod actor;
 mod behavior;
 mod components;
 mod events;
-mod focus;
 mod plugin;
 mod resources;
 mod screens;
@@ -18,28 +17,26 @@ pub use self::system_params::GameplayReadiness;
 use self::actor::{
     Action, ActionIn, Actor, ActorImpact, ActorItem, ActorPlugin, Aquatic, Attack, BaseSpeed,
     Breath, ChangePace, Close, ContinueCraft, ExamineItem, Faction, Health, Intelligence,
-    ItemAction, LastEnemy, MoveItem, Peek, Pickup, PlannedAction, Player, PlayerActionState, Pulp,
-    Sleep, Smash, Stamina, StaminaCost, StaminaImpact, StartCraft, Stay, Step, Unwield,
-    WalkingMode, Wield,
+    ItemAction, LastEnemy, MoveItem, Peek, Pickup, PlannedAction, Pulp, Sleep, Smash, Stamina,
+    StaminaCost, StaminaImpact, StartCraft, Stay, Step, Unwield, WalkingMode, Wield,
 };
 use self::behavior::{
     BehaviorLoopSet, BehaviorPlugin, BehaviorValidator, Interruption, PlayerDirection,
     PlayerInstructions, QueuedInstruction,
 };
 use self::components::{
-    Accessible, CameraBase, Closeable, Corpse, CorpseRaise, ExamineCursor, HealingDuration, Hurdle,
-    LastSeenExt, Life, Melee, MissingAsset, Obstacle, Opaque, OpaqueFloor, Openable, PlayerWielded,
-    Tile, Vehicle, VehiclePart,
+    Accessible, Closeable, Corpse, CorpseRaise, HealingDuration, Hurdle, LastSeenExt, Life, Melee,
+    MissingAsset, Obstacle, Opaque, OpaqueFloor, Openable, PlayerWielded, Tile, Vehicle,
+    VehiclePart,
 };
 use self::events::{
     ActorEvent, CorpseEvent, Damage, DespawnSubzoneLevel, DespawnZoneLevel, EventsPlugin, Healing,
     RefreshAfterBehavior, SpawnSubzoneLevel, SpawnZoneLevel, TerrainEvent, Toggle,
     UpdateZoneLevelVisibility,
 };
-use self::focus::{CancelHandling, Focus, FocusPlugin, FocusState};
 use self::resources::{
-    CameraOffset, ElevationVisibility, Expanded, Explored, RelativeSegment, RelativeSegments,
-    ResourcePlugin, SeenFrom, VisualizationUpdate, ZoneLevelIds, ZoomDirection, ZoomDistance,
+    CameraOffset, Expanded, Explored, RelativeSegment, RelativeSegments, ResourcePlugin, SeenFrom,
+    VisualizationUpdate, ZoneLevelIds, ZoomDirection, ZoomDistance,
 };
 use self::screens::{GameplayScreenState, ScreensPlugin, update_camera_offset};
 use self::sidebar::SidebarPlugin;

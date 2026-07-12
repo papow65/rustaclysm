@@ -1,8 +1,7 @@
 use crate::spawn::{SubzoneSpawner, VisibleRegion, ZoneSpawner};
 use crate::{
-    DespawnSubzoneLevel, DespawnZoneLevel, Expanded, Explored, Focus, MissingAsset,
-    SpawnSubzoneLevel, SpawnZoneLevel, TileSpawner, UpdateZoneLevelVisibility, VisualizationUpdate,
-    ZoneLevelIds,
+    DespawnSubzoneLevel, DespawnZoneLevel, Expanded, Explored, MissingAsset, SpawnSubzoneLevel,
+    SpawnZoneLevel, TileSpawner, UpdateZoneLevelVisibility, VisualizationUpdate, ZoneLevelIds,
 };
 use bevy::ecs::{schedule::ScheduleConfigs, system::ScheduleSystem};
 use bevy::platform::collections::HashSet;
@@ -17,6 +16,7 @@ use gameplay_cdda::{
 };
 use gameplay_cdda_active_sav::ActiveSav;
 use gameplay_common::{Region, ZoneRegion};
+use gameplay_focus::Focus;
 use gameplay_local::GameplayLocal;
 use gameplay_location::{
     Level, Pos, SubzoneLevel, SubzoneLevelCache, VisionDistance, Zone, ZoneLevel, ZoneLevelCache,
