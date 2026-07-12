@@ -1,13 +1,13 @@
 use crate::actor::messages::{
-    AttackNothing, CantClose, CantCloseOn, CraftProgressLeft, CrashInto, Drop, HaltAtTheLedge,
-    IsTooExhaustedTo, Move, PickUp, PulpNothing, SmashInvalid, SubzoneNotFoundWhileMovingAnItem,
-    TooFarToMove, YouCant, YouFinish, YouSleepFor,
+    AttackNothing, CantClose, CantCloseOn, CrashInto, Drop, HaltAtTheLedge, IsTooExhaustedTo, Move,
+    PickUp, PulpNothing, SmashInvalid, SubzoneNotFoundWhileMovingAnItem, TooFarToMove, YouCant,
+    YouFinish, YouSleepFor,
 };
 use crate::{
     ActorEvent, ActorImpact, Aquatic, Attack, BaseSpeed, Breath, ChangePace, Close, Collision,
-    Consumed, CorpseEvent, Craft, Damage, Envir, Faction, Healing, HealingDuration, Health,
-    LastEnemy, Life, Melee, Peek, Player, PlayerActionState, PlayerWielded, Pulp, Smash, Stamina,
-    StaminaCost, StartCraft, Step, TerrainEvent, Tile, TileSpawner, Toggle, WalkingMode,
+    CorpseEvent, Damage, Envir, Faction, Healing, HealingDuration, Health, LastEnemy, Life, Melee,
+    Peek, Player, PlayerActionState, PlayerWielded, Pulp, Smash, Stamina, StaminaCost, StartCraft,
+    Step, TerrainEvent, Tile, TileSpawner, Toggle, WalkingMode,
 };
 use bevy::ecs::query::{QueryData, With};
 use bevy::prelude::{
@@ -16,6 +16,7 @@ use bevy::prelude::{
 use cdda_json_files::CddaItem;
 use either::Either;
 use gameplay_common::ObjectName;
+use gameplay_crafting::{Consumed, Craft, CraftProgressLeft};
 use gameplay_item::{Amount, BodyContainers, Container, InPocket, Item, ItemHierarchy, ItemItem};
 use gameplay_location::{HorizontalDirection, LevelOffset, LocationCache, Nbor, Pos};
 use gameplay_log::LogMessageWriter;
@@ -671,14 +672,14 @@ impl ActorItem<'_, '_> {
         let crafting_progress = Duration::SECOND * 3;
 
         craft.work(crafting_progress);
-        if craft.finished() {
+        if let Some(craft_result) = craft.finished_result() {
             message_writer.send(YouFinish::<true> {
                 action: PlayerActionState::Crafting { item: craft_entity },
             });
             let pos = *item.pos.unwrap_or(self.pos);
             let amount = *item.amount;
             commands.entity(item.entity).despawn();
-            if let Some(result) = craft.recipe.result.item_info() {
+            if let Some(result) = craft_result.item_info() {
                 let cdda_item = CddaItem::new(&result);
                 if let Err(error) = match item.parentage().cloned() {
                     Either::Left(child_of) => {

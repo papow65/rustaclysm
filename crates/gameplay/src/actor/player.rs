@@ -1,6 +1,6 @@
-use crate::RecipeSituation;
 use application_state::ApplicationState;
 use bevy::prelude::{Component, Entity, SubStates, TextColor};
+use gameplay_crafting::RecipeSituation;
 use gameplay_location::{CardinalDirection, HorizontalDirection, Pos};
 use gameplay_log::{LogMessageTransience, Severity, Transient};
 use hud::{BAD_TEXT_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR};

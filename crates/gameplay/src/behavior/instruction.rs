@@ -1,5 +1,6 @@
-use crate::{ChangePace, ExamineItem, MoveItem, Pickup, RecipeSituation, Unwield, Wield};
+use crate::{ChangePace, ExamineItem, MoveItem, Pickup, Unwield, Wield};
 use bevy::prelude::{Resource, warn};
+use gameplay_crafting::RecipeSituation;
 use gameplay_location::{HorizontalDirection, Nbor};
 use strum::VariantArray;
 use text::Fragment;

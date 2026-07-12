@@ -1,5 +1,6 @@
-use crate::{Actor, ActorItem, RecipeSituation};
+use crate::{Actor, ActorItem};
 use bevy::prelude::{Entity, Query};
+use gameplay_crafting::RecipeSituation;
 use gameplay_item::{Item, ItemItem};
 use gameplay_location::{CardinalDirection, HorizontalDirection, Nbor};
 

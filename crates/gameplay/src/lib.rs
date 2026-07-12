@@ -27,9 +27,9 @@ use self::behavior::{
     PlayerInstructions, QueuedInstruction,
 };
 use self::components::{
-    Accessible, CameraBase, Closeable, Corpse, CorpseRaise, Craft, ExamineCursor, HealingDuration,
-    Hurdle, LastSeenExt, Life, Melee, MissingAsset, Obstacle, Opaque, OpaqueFloor, Openable,
-    PlayerWielded, Tile, Vehicle, VehiclePart,
+    Accessible, CameraBase, Closeable, Corpse, CorpseRaise, ExamineCursor, HealingDuration, Hurdle,
+    LastSeenExt, Life, Melee, MissingAsset, Obstacle, Opaque, OpaqueFloor, Openable, PlayerWielded,
+    Tile, Vehicle, VehiclePart,
 };
 use self::events::{
     ActorEvent, CorpseEvent, Damage, DespawnSubzoneLevel, DespawnZoneLevel, EventsPlugin, Healing,
@@ -41,9 +41,7 @@ use self::resources::{
     CameraOffset, ElevationVisibility, Expanded, Explored, RelativeSegment, RelativeSegments,
     ResourcePlugin, SeenFrom, VisualizationUpdate, ZoneLevelIds, ZoomDirection, ZoomDistance,
 };
-use self::screens::{
-    Consumed, GameplayScreenState, RecipeSituation, ScreensPlugin, update_camera_offset,
-};
+use self::screens::{GameplayScreenState, ScreensPlugin, update_camera_offset};
 use self::sidebar::SidebarPlugin;
 use self::spawn::{
     TileSpawner, despawn_systems, handle_region_asset_events, handle_zone_levels,

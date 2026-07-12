@@ -1,13 +1,50 @@
-use bevy::prelude::{Component, Entity, TextColor, TextSpan};
+use bevy::prelude::{Bundle, Component, Entity, Text, TextColor, TextSpan};
 use cdda_json_files::{
-    CommonItemInfo, InfoId, Recipe, RequiredComponent, RequiredPart, RequiredTool,
+    CommonItemInfo, InfoId, Recipe, RecipeResult, RequiredComponent, RequiredPart, RequiredTool,
 };
 use hud::{BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, SOFT_TEXT_COLOR, WARN_TEXT_COLOR};
 use std::{cmp::Ordering, num::NonZeroU32, sync::Arc};
+use units::Duration;
+
+/// Mutable component
+#[derive(Debug, Component)]
+pub struct Craft {
+    pub(crate) recipe: Arc<Recipe>,
+    pub(crate) work_needed: Duration,
+    pub(crate) work_done: Duration,
+}
+
+impl Craft {
+    pub const fn new(recipe: Arc<Recipe>, work_needed: Duration) -> Self {
+        Self {
+            recipe,
+            work_needed,
+            work_done: Duration::ZERO,
+        }
+    }
+
+    pub fn work(&mut self, duration: Duration) {
+        self.work_done += duration;
+    }
+
+    #[must_use]
+    pub fn finished_result(&self) -> Option<&RecipeResult> {
+        (self.work_needed.milliseconds() <= self.work_done.milliseconds())
+            .then_some(&self.recipe.result)
+    }
+
+    pub(crate) fn percent_progress(&self) -> f32 {
+        100.0 * self.work_done.milliseconds() as f32 / self.work_needed.milliseconds() as f32
+    }
+
+    pub(crate) fn time_left(&self) -> Duration {
+        self.work_needed - self.work_done
+    }
+}
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Component)]
 #[component(immutable)]
-pub(crate) struct RecipeSituation {
+pub struct RecipeSituation {
     pub(super) recipe: Arc<Recipe>,
     pub(super) name: Arc<str>,
     pub(super) autolearn: bool,
@@ -18,19 +55,25 @@ pub(crate) struct RecipeSituation {
 }
 
 impl RecipeSituation {
-    pub(crate) const fn recipe(&self) -> &Arc<Recipe> {
+    #[must_use]
+    pub const fn recipe(&self) -> &Arc<Recipe> {
         &self.recipe
     }
 
+    #[must_use]
+    pub const fn name(&self) -> &Arc<str> {
+        &self.name
+    }
+
     /// Assumes being craftable
-    pub(crate) fn consumed_tool_charges(&self) -> impl Iterator<Item = Consumed<'_>> {
+    pub fn consumed_tool_charges(&self) -> impl Iterator<Item = Consumed<'_>> {
         self.tools
             .iter()
             .filter_map(|tool| Self::consumed(&tool.alternatives))
     }
 
     /// Assumes being craftable
-    pub(crate) fn consumed_components(&self) -> impl Iterator<Item = Consumed<'_>> {
+    pub fn consumed_components(&self) -> impl Iterator<Item = Consumed<'_>> {
         self.components
             .iter()
             .filter_map(|component| Self::consumed(&component.alternatives))
@@ -65,7 +108,8 @@ impl RecipeSituation {
         })
     }
 
-    pub(super) fn color(&self, selected: bool) -> TextColor {
+    #[must_use]
+    pub fn color(&self, selected: bool) -> TextColor {
         if self.craftable() {
             if selected {
                 GOOD_TEXT_COLOR
@@ -79,13 +123,13 @@ impl RecipeSituation {
         }
     }
 
-    pub(super) fn craftable(&self) -> bool {
+    pub fn craftable(&self) -> bool {
         self.qualities.iter().all(QualitySituation::is_present)
             && self.tools.iter().all(ToolSituation::is_present)
             && self.components.iter().all(ComponentSituation::is_present)
     }
 
-    pub(super) fn text_sections(&self, recipe: &Arc<Recipe>) -> Vec<(TextSpan, TextColor)> {
+    pub fn text_sections(&self, recipe: &Arc<Recipe>) -> Vec<(TextSpan, TextColor)> {
         let mut text_sections = vec![
             (TextSpan::new("Result: "), SOFT_TEXT_COLOR),
             (TextSpan::new(&*self.name), self.color(true)),
@@ -139,10 +183,15 @@ impl RecipeSituation {
 
         text_sections
     }
+
+    #[must_use]
+    pub fn to_text_bundle(&self) -> impl Bundle {
+        (Text::from(&*self.name), self.color(false), self.clone())
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub(super) struct QualitySituation {
+pub struct QualitySituation {
     pub(super) name: Arc<str>,
     pub(super) present: Option<i8>,
     pub(super) required: u8,
@@ -202,7 +251,7 @@ impl QualitySituation {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub(super) struct ToolSituation {
+pub struct ToolSituation {
     pub(super) alternatives: Vec<AlternativeSituation<RequiredTool>>,
 }
 
@@ -232,7 +281,7 @@ impl ToolSituation {
     }
 }
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub(super) struct ComponentSituation {
+pub struct ComponentSituation {
     pub(super) alternatives: Vec<AlternativeSituation<RequiredComponent>>,
 }
 
@@ -263,7 +312,7 @@ impl ComponentSituation {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub(super) struct AlternativeSituation<R: RequiredPart> {
+pub struct AlternativeSituation<R: RequiredPart> {
     pub(super) id: InfoId<CommonItemInfo>,
     pub(super) name: Arc<str>,
     pub(super) required: R,
@@ -314,7 +363,7 @@ impl<R: RequiredPart> AlternativeSituation<R> {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub(crate) enum DetectedQuantity<R: RequiredPart> {
+pub enum DetectedQuantity<R: RequiredPart> {
     Missing,
 
     // Note: `Consumed` should not be used here, because the purposes of present and amount differ.
@@ -328,7 +377,7 @@ pub(crate) enum DetectedQuantity<R: RequiredPart> {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub(crate) struct Consumed<'a> {
-    pub(crate) amount: NonZeroU32,
-    pub(crate) from_entities: &'a [Entity],
+pub struct Consumed<'a> {
+    pub amount: NonZeroU32,
+    pub from_entities: &'a [Entity],
 }

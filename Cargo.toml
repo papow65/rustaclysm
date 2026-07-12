@@ -41,6 +41,7 @@ either = "1"
 fastrand = "2"
 gameplay = { path = "crates/gameplay" }
 gameplay_common = { path = "crates/gameplay_common" }
+gameplay_crafting = { path = "crates/gameplay_crafting" }
 gameplay_log = { path = "crates/gameplay_log" }
 gameplay_relations = { path = "crates/gameplay_relations" }
 gameplay_time = { path = "crates/gameplay_time" }
@@ -50,6 +51,7 @@ gameplay_item = { path = "crates/gameplay_item" }
 gameplay_local = { path = "crates/gameplay_local" }
 gameplay_location = { path = "crates/gameplay_location" }
 gameplay_model = { path = "crates/gameplay_model" }
+gameplay_nearby = { path = "crates/gameplay_nearby" }
 gameplay_resource = { path = "crates/gameplay_resource" }
 gameplay_transition_state = { path = "crates/gameplay_transition_state" }
 hud = { path = "crates/hud" }

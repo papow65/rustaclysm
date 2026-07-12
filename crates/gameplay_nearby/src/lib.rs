@@ -12,7 +12,8 @@ use std::{ops::RangeInclusive, sync::Arc};
 const MAX_FIND_DISTANCE: i32 = 7;
 const FIND_RANGE: RangeInclusive<i32> = (-MAX_FIND_DISTANCE)..=MAX_FIND_DISTANCE;
 
-pub(super) fn find_nearby<'a>(
+#[must_use]
+pub fn find_nearby<'a>(
     location: &'a LocationCache,
     items: &'a Query<(Item, &LastSeen)>,
     player_pos: Pos,
@@ -35,7 +36,8 @@ pub(super) fn find_nearby<'a>(
         .collect()
 }
 
-pub(super) fn find_nearby_pseudo(
+#[must_use]
+pub fn find_nearby_pseudo(
     location: &LocationCache,
     infrastructure: &Query<(
         AnyOf<(&Shared<FurnitureInfo>, &Shared<TerrainInfo>)>,
@@ -58,7 +60,8 @@ pub(super) fn find_nearby_pseudo(
         .collect()
 }
 
-pub(super) fn find_sources(
+#[must_use]
+pub fn find_sources(
     location: &LocationCache,
     infrastructure: &Query<(
         AnyOf<(&Shared<FurnitureInfo>, &Shared<TerrainInfo>)>,
@@ -95,7 +98,8 @@ pub(super) fn find_sources(
         .collect()
 }
 
-pub(super) fn nearby_qualities(
+#[must_use]
+pub fn nearby_qualities(
     nearby_items: &[ItemItem],
     pseudo_items: &HashSet<Arc<CommonItemInfo>>,
 ) -> HashMap<Arc<Quality>, i8> {
@@ -125,7 +129,7 @@ pub(super) fn nearby_qualities(
         )
 }
 
-pub(super) fn nearby_tools<'i>(
+pub fn nearby_tools<'i>(
     nearby_items: &'i [ItemItem],
     pseudo_items: &'i HashSet<Arc<CommonItemInfo>>,
 ) -> impl Iterator<Item = Arc<CommonItemInfo>> {

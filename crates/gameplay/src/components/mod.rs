@@ -5,9 +5,8 @@ pub(crate) use self::last_seen_ext::LastSeenExt;
 pub(crate) use self::vehicle::{Vehicle, VehiclePart};
 
 use bevy::prelude::Component;
-use cdda_json_files::{CommonItemInfo, MoveCost, MoveCostIncrease, Recipe};
+use cdda_json_files::{CommonItemInfo, MoveCost, MoveCostIncrease};
 use gameplay_common::Shared;
-use std::sync::Arc;
 use units::{Duration, Timestamp};
 
 /// Terrain that can be accessed, like a floor
@@ -86,40 +85,6 @@ impl HealingDuration {
 
         self.0 += duration;
         self.0.extract_div(healing_rate)
-    }
-}
-
-/// Mutable component
-#[derive(Debug, Component)]
-pub(crate) struct Craft {
-    pub(crate) recipe: Arc<Recipe>,
-    pub(crate) work_needed: Duration,
-    pub(crate) work_done: Duration,
-}
-
-impl Craft {
-    pub(crate) const fn new(recipe: Arc<Recipe>, work_needed: Duration) -> Self {
-        Self {
-            recipe,
-            work_needed,
-            work_done: Duration::ZERO,
-        }
-    }
-
-    pub(crate) fn work(&mut self, duration: Duration) {
-        self.work_done += duration;
-    }
-
-    pub(crate) const fn finished(&self) -> bool {
-        self.work_needed.milliseconds() <= self.work_done.milliseconds()
-    }
-
-    pub(crate) fn percent_progress(&self) -> f32 {
-        100.0 * self.work_done.milliseconds() as f32 / self.work_needed.milliseconds() as f32
-    }
-
-    pub(crate) fn time_left(&self) -> Duration {
-        self.work_needed - self.work_done
     }
 }
 

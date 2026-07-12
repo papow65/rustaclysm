@@ -1,5 +1,5 @@
 use crate::{
-    Accessible, Aquatic, BaseSpeed, CameraBase, Closeable, Craft, ExamineCursor, Explored, Faction,
+    Accessible, Aquatic, BaseSpeed, CameraBase, Closeable, ExamineCursor, Explored, Faction,
     HealingDuration, Health, Hurdle, Life, Melee, Obstacle, Opaque, OpaqueFloor, Openable, Player,
     Stamina, Tile, Vehicle, VehiclePart, WalkingMode, spawn::log_spawn_result,
 };
@@ -20,8 +20,8 @@ use cdda_json_files::{
 use either::Either;
 use gameplay_cdda::{Error, Infos, ObjectCategory, TileVariant};
 use gameplay_cdda_active_sav::ActiveSav;
-use gameplay_common::{Limited, LocalTerrain};
-use gameplay_common::{Mobile, ObjectName, Shared, StandardIntegrity};
+use gameplay_common::{Limited, LocalTerrain, Mobile, ObjectName, Shared, StandardIntegrity};
+use gameplay_crafting::Craft;
 use gameplay_item::{
     Amount, BodyContainers, Containable, Filthy, InPocket, ItemIntegrity, Phase, PocketOf,
     SealedPocket,

@@ -1,0 +1,15 @@
+[package]
+name = "gameplay_nearby"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+bevy = { workspace = true }
+cdda_json_files = { workspace = true }
+gameplay_common = { workspace = true }
+gameplay_item = { workspace = true }
+gameplay_location = { workspace = true }
+gameplay_model = { workspace = true }
+
+[lints]
+workspace = true

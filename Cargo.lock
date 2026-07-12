@@ -2401,11 +2401,13 @@ dependencies = [
  "gameplay_cdda",
  "gameplay_cdda_active_sav",
  "gameplay_common",
+ "gameplay_crafting",
  "gameplay_item",
  "gameplay_local",
  "gameplay_location",
  "gameplay_log",
  "gameplay_model",
+ "gameplay_nearby",
  "gameplay_relations",
  "gameplay_resource",
  "gameplay_time",
@@ -2467,6 +2469,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "gameplay_crafting"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "cdda_json_files",
+ "gameplay_cdda",
+ "gameplay_common",
+ "gameplay_item",
+ "gameplay_location",
+ "gameplay_log",
+ "gameplay_model",
+ "gameplay_nearby",
+ "hud",
+ "text",
+ "units",
+ "util",
+]
+
+[[package]]
 name = "gameplay_item"
 version = "0.1.0"
 dependencies = [
@@ -2523,6 +2544,18 @@ dependencies = [
  "cdda_json_files",
  "gameplay_cdda",
  "gameplay_resource",
+]
+
+[[package]]
+name = "gameplay_nearby"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "cdda_json_files",
+ "gameplay_common",
+ "gameplay_item",
+ "gameplay_location",
+ "gameplay_model",
 ]
 
 [[package]]

@@ -7,9 +7,10 @@ use crate::actor::messages::{
 use crate::{
     ActorItem, Breath, ContinueCraft, CurrentlyVisibleBuilder, Envir, Explored, Faction,
     Intelligence, Interruption, MoveItem, PlannedAction, PlayerActionState, PlayerDirection,
-    PlayerInstructions, Pulp, QueuedInstruction, RecipeSituation, StartCraft, actor::PickingNbor,
+    PlayerInstructions, Pulp, QueuedInstruction, StartCraft, actor::PickingNbor,
 };
 use bevy::prelude::{DetectChanges as _, Entity, NextState, ResMut};
+use gameplay_crafting::RecipeSituation;
 use gameplay_location::{CardinalDirection, HorizontalDirection, Nbor, Pos, VisionDistance};
 use gameplay_log::{LogMessageWriter, Severity};
 use text::Fragment;
