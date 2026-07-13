@@ -51,15 +51,15 @@ pub(super) fn spawn_quality_screen(
 }
 
 #[expect(clippy::needless_pass_by_value)]
-pub(super) fn create_crafting_key_bindings(
+pub(super) fn create_quality_screen_key_bindings(
     world: &mut World,
     fresh_bindings: Local<KeyBindings<GameplayScreenState, (), ()>>,
 ) {
     let start = Instant::now();
 
     fresh_bindings.spawn(world, GameplayScreenState::Quality, |bindings| {
-        bindings.add(KeyCode::Escape, exit_qualities);
-        bindings.add('q', exit_qualities);
+        bindings.add(KeyCode::Escape, exit_quality_screen);
+        bindings.add('q', exit_quality_screen);
     });
 
     world.spawn((
@@ -67,13 +67,13 @@ pub(super) fn create_crafting_key_bindings(
         DespawnOnExit(GameplayScreenState::Quality),
     ));
 
-    log_if_slow("create_crafting_key_bindings", start);
+    log_if_slow("create_quality_screen_key_bindings", start);
 }
 
-fn exit_qualities(mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>) {
+fn exit_quality_screen(mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>) {
     let start = Instant::now();
 
     next_gameplay_state.set(GameplayScreenState::Base);
 
-    log_if_slow("exit_qualities", start);
+    log_if_slow("exit_quality_screen", start);
 }
