@@ -27,6 +27,7 @@ gameplay_relations = { workspace = true }
 gameplay_resource = { workspace = true }
 gameplay_transition_state = { workspace = true }
 gameplay_time = { workspace = true }
+gameplay_vehicle = { workspace = true }
 hud = { workspace = true }
 keyboard = { workspace = true }
 manual = { workspace = true }

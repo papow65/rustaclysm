@@ -14,7 +14,8 @@ use gameplay_common::LocalTerrain;
 use gameplay_location::{
     LevelOffset, Overzone, PosOffset, SubzoneLevel, SubzoneLevelCache, ZoneLevel,
 };
-use gameplay_relations::{TileIn, VehiclePartOf};
+use gameplay_relations::TileIn;
+use gameplay_vehicle::VehiclePartOf;
 use std::sync::OnceLock;
 
 #[derive(SystemParam)]

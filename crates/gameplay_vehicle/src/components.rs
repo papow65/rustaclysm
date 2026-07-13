@@ -3,16 +3,15 @@ use cdda_json_files::CddaItem;
 use gameplay_location::PosOffset;
 use std::sync::Arc;
 
+/// Vehicle component
 #[derive(Component)]
 #[component(immutable)]
-pub(crate) struct Vehicle;
+pub struct Vehicle;
 
+/// Vehicle part component
 #[derive(Component)]
 #[component(immutable)]
-pub(crate) struct VehiclePart {
-    #[expect(unused)]
-    pub(crate) offset: PosOffset,
-
-    #[expect(unused)]
-    pub(crate) item: Arc<CddaItem>,
+pub struct VehiclePart {
+    pub offset: PosOffset,
+    pub item: Arc<CddaItem>,
 }

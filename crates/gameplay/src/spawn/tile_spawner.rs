@@ -1,7 +1,7 @@
 use crate::{
     Accessible, Aquatic, BaseSpeed, Closeable, Explored, Faction, HealingDuration, Health, Hurdle,
-    Life, Melee, Obstacle, Opaque, OpaqueFloor, Openable, Stamina, Tile, Vehicle, VehiclePart,
-    WalkingMode, spawn::log_spawn_result,
+    Life, Melee, Obstacle, Opaque, OpaqueFloor, Openable, Stamina, Tile, WalkingMode,
+    spawn::log_spawn_result,
 };
 use application_state::ApplicationState;
 use bevy::camera::visibility::RenderLayers;
@@ -30,7 +30,8 @@ use gameplay_item::{
 use gameplay_location::{LevelOffset, LocationCache, Pos, PosOffset, StairsDown, StairsUp};
 use gameplay_model::{LastSeen, ModelFactory};
 use gameplay_player::Player;
-use gameplay_relations::{ObjectOn, TileIn, VehiclePartOf};
+use gameplay_relations::{ObjectOn, TileIn};
+use gameplay_vehicle::{Vehicle, VehiclePart, VehiclePartOf};
 use hud::{BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR};
 use std::f32::consts::{FRAC_PI_4, TAU};
 use std::sync::{Arc, LazyLock};

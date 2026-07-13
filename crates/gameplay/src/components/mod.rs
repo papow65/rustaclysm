@@ -1,8 +1,6 @@
 mod last_seen_ext;
-mod vehicle;
 
 pub(crate) use self::last_seen_ext::LastSeenExt;
-pub(crate) use self::vehicle::{Vehicle, VehiclePart};
 
 use bevy::prelude::Component;
 use cdda_json_files::{CommonItemInfo, MoveCost, MoveCostIncrease};
