@@ -6,8 +6,8 @@ use crate::actor::messages::{
 use crate::{
     ActorEvent, ActorImpact, Aquatic, Attack, BaseSpeed, Breath, ChangePace, Close, Collision,
     CorpseEvent, Damage, Envir, Faction, Healing, HealingDuration, Health, LastEnemy, Life, Melee,
-    Peek, PlayerWielded, Pulp, Smash, Stamina, StaminaCost, StartCraft, Step, TerrainEvent, Tile,
-    TileSpawner, Toggle, WalkingMode,
+    Peek, Pulp, Smash, Stamina, StaminaCost, StartCraft, Step, TerrainEvent, Tile, TileSpawner,
+    Toggle, WalkingMode,
 };
 use bevy::ecs::query::{QueryData, With};
 use bevy::prelude::{
@@ -17,7 +17,9 @@ use cdda_json_files::CddaItem;
 use either::Either;
 use gameplay_common::ObjectName;
 use gameplay_crafting::{Consumed, Craft, CraftProgressLeft};
-use gameplay_item::{Amount, BodyContainers, Container, InPocket, Item, ItemHierarchy, ItemItem};
+use gameplay_item::{
+    Amount, BodyContainers, Container, InPocket, Item, ItemHierarchy, ItemItem, WieldedBy,
+};
 use gameplay_location::{HorizontalDirection, LevelOffset, LocationCache, Nbor, Pos};
 use gameplay_log::LogMessageWriter;
 use gameplay_model::LastSeen;
@@ -415,8 +417,10 @@ impl ActorItem<'_, '_> {
         item: &ItemItem,
     ) -> ActorImpact {
         let impact = self.take(commands, message_writer, &self.hands(hierarchy), item);
-        if impact.is_some() && self.player.is_some() {
-            commands.entity(item.entity).insert(PlayerWielded);
+        if impact.is_some() {
+            commands.entity(item.entity).insert(WieldedBy {
+                wielder_entity: self.entity,
+            });
         }
         impact
     }
@@ -430,7 +434,7 @@ impl ActorItem<'_, '_> {
     ) -> ActorImpact {
         let impact = self.take(commands, message_writer, &self.clothing(hierarchy), item);
         if impact.is_some() {
-            commands.entity(item.entity).remove::<PlayerWielded>();
+            commands.entity(item.entity).remove::<WieldedBy>();
         }
         impact
     }

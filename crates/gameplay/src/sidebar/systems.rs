@@ -5,8 +5,8 @@ use crate::sidebar::{
 };
 use crate::{
     Accessible, Actor, BaseSpeed, Breath, Corpse, CurrentlyVisibleBuilder, Envir, Explored,
-    Faction, Health, Hurdle, Life, Obstacle, Opaque, OpaqueFloor, PlayerWielded,
-    RefreshAfterBehavior, RelativeSegments, SeenFrom, Stamina, WalkingMode, ZoneLevelIds,
+    Faction, Health, Hurdle, Life, Obstacle, Opaque, OpaqueFloor, RefreshAfterBehavior,
+    RelativeSegments, SeenFrom, Stamina, WalkingMode, ZoneLevelIds,
 };
 use application_state::ApplicationState;
 use bevy::diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin};
@@ -23,7 +23,7 @@ use bevy::prelude::{
 use cdda_json_files::{CharacterInfo, MoveCost};
 use gameplay_common::{ObjectName, Shared, StandardIntegrity};
 use gameplay_focus::FocusState;
-use gameplay_item::{Amount, Item, ItemHandler, ItemHierarchy, ItemItem};
+use gameplay_item::{Amount, Item, ItemHandler, ItemHierarchy, ItemItem, WieldedItems};
 use gameplay_location::{Pos, StairsDown, StairsUp};
 use gameplay_log::LogMessage;
 use gameplay_model::LastSeen;
@@ -573,7 +573,8 @@ fn update_status_player_action_state(
 #[expect(clippy::needless_pass_by_value)]
 fn update_status_player_wielded(
     mut commands: Commands,
-    player_weapon: Option<Single<Item, With<PlayerWielded>>>,
+    player_wields: Option<Single<&WieldedItems, With<Player>>>,
+    items: Query<Item>,
     text: Single<Entity, With<WieldedText>>,
 ) {
     let start = Instant::now();
@@ -582,7 +583,12 @@ fn update_status_player_wielded(
         .entity(*text)
         .despawn_related::<Children>()
         .with_children(|parent| {
-            if let Some(weapon) = player_weapon {
+            if let Some(player_wields) = player_wields
+                && let Some(first_wielded_item) = player_wields.item_entities().first()
+            {
+                let weapon = items
+                    .get(*first_wielded_item)
+                    .expect("A wielded object should be an item");
                 let phrase = Phrase::from_fragments(weapon.fragments().collect());
                 for (span, color, debug) in phrase.as_text_sections() {
                     parent.spawn((span, color, Maybe(debug)));

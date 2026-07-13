@@ -26,8 +26,7 @@ use self::behavior::{
 };
 use self::components::{
     Accessible, Closeable, Corpse, CorpseRaise, HealingDuration, Hurdle, LastSeenExt, Life, Melee,
-    MissingAsset, Obstacle, Opaque, OpaqueFloor, Openable, PlayerWielded, Tile, Vehicle,
-    VehiclePart,
+    MissingAsset, Obstacle, Opaque, OpaqueFloor, Openable, Tile, Vehicle, VehiclePart,
 };
 use self::events::{
     ActorEvent, CorpseEvent, Damage, DespawnSubzoneLevel, DespawnZoneLevel, EventsPlugin, Healing,

@@ -48,3 +48,28 @@ impl PocketContents {
         &self.item_entities
     }
 }
+
+/// Used on an item, for the entity that is wielding it.
+///
+/// Optional, because not all items are wielded
+#[derive(Clone, Copy, Debug, PartialEq, Component)]
+#[relationship(relationship_target = WieldedItems)]
+pub struct WieldedBy {
+    pub wielder_entity: Entity,
+}
+
+/// Used on an entity (typically an actor), for the items that they are wielding.
+///
+/// Optional, because not all actors wield items
+#[derive(Debug, Component)]
+#[relationship_target(relationship = WieldedBy, linked_spawn)]
+pub struct WieldedItems {
+    item_entities: Vec<Entity>,
+}
+
+impl WieldedItems {
+    #[must_use]
+    pub fn item_entities(&self) -> &[Entity] {
+        &self.item_entities
+    }
+}

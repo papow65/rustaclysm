@@ -22,7 +22,7 @@ pub use self::phase::Phase;
 pub use self::plugin::GameplayItemPlugin;
 pub use self::pocket::SealedPocket;
 pub use self::query_data::{Item, ItemItem};
-pub use self::relations::{InPocket, PocketContents, PocketOf, Pockets};
+pub use self::relations::{InPocket, PocketContents, PocketOf, Pockets, WieldedBy, WieldedItems};
 
 pub(crate) use self::checks::ItemChecksPlugin;
 pub(crate) use self::pocket::PocketItem;
