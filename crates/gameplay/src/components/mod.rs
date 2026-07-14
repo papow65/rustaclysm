@@ -30,6 +30,7 @@ pub(crate) struct Hurdle(pub(crate) MoveCostIncrease);
 #[component(immutable)]
 pub(crate) struct Opaque;
 
+/// To be removed on death, to be added when revived
 #[derive(Debug, Component)]
 #[component(immutable)]
 pub(crate) struct Life;
