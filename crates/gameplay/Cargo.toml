@@ -26,6 +26,7 @@ gameplay_object = { workspace = true }
 gameplay_player = { workspace = true }
 gameplay_relations = { workspace = true }
 gameplay_resource = { workspace = true }
+gameplay_transition = { workspace = true }
 gameplay_transition_state = { workspace = true }
 gameplay_time = { workspace = true }
 gameplay_terrain = { workspace = true }

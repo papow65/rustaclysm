@@ -2415,6 +2415,7 @@ dependencies = [
  "gameplay_resource",
  "gameplay_terrain",
  "gameplay_time",
+ "gameplay_transition",
  "gameplay_transition_state",
  "gameplay_vehicle",
  "gameplay_world",
@@ -2635,6 +2636,18 @@ dependencies = [
  "bevy",
  "gameplay_cdda_active_sav",
  "units",
+]
+
+[[package]]
+name = "gameplay_transition"
+version = "0.0.0"
+dependencies = [
+ "application_state",
+ "bevy",
+ "gameplay_cdda",
+ "gameplay_location",
+ "gameplay_transition_state",
+ "gameplay_world",
 ]
 
 [[package]]
@@ -4189,7 +4202,7 @@ version = "0.0.0"
 dependencies = [
  "application_state",
  "bevy",
- "gameplay",
+ "gameplay_transition",
 ]
 
 [[package]]

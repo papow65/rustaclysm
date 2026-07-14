@@ -1,8 +1,8 @@
-use crate::transition::{LoadingScreenPlugin, UnloadingScreenPlugin};
+use crate::{LoadingScreenPlugin, UnloadingScreenPlugin};
 use bevy::prelude::{App, Plugin};
 use gameplay_transition_state::GameplayTransitionStatePlugin;
 
-pub(crate) struct TransitionPlugin;
+pub struct TransitionPlugin;
 
 impl Plugin for TransitionPlugin {
     fn build(&self, app: &mut App) {

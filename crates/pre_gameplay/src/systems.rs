@@ -1,6 +1,6 @@
 use application_state::ApplicationState;
 use bevy::prelude::{NextState, ResMut};
-use gameplay::GameplayReadiness;
+use gameplay_transition::GameplayReadiness;
 
 #[expect(clippy::needless_pass_by_value)]
 pub(super) fn start_gameplay(

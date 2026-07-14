@@ -1,0 +1,16 @@
+[package]
+name = "gameplay_transition"
+description = "Gameplay transition logic"
+license = "AGPL-3.0-or-later"
+edition = "2024"
+
+[dependencies]
+gameplay_transition_state = { workspace = true }
+gameplay_cdda = { workspace = true }
+gameplay_location = { workspace = true }
+gameplay_world = { workspace = true }
+bevy = { workspace = true }
+application_state = { workspace = true }
+
+[lints]
+workspace = true
