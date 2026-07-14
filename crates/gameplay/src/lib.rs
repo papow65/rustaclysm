@@ -27,8 +27,8 @@ use self::events::{
     RefreshAfterBehavior, SpawnSubzoneLevel, SpawnZoneLevel, Toggle, UpdateZoneLevelVisibility,
 };
 use self::resources::{
-    CameraOffset, Expanded, ResourcePlugin, VisualizationUpdate, ZoneLevelIds, ZoomDirection,
-    ZoomDistance,
+    CameraDirection, CameraZoom, Expanded, ResourcePlugin, VisualizationUpdate, ZoneLevelIds,
+    ZoomDirection, ZoomDistance,
 };
 use self::screens::{GameplayScreenState, ScreensPlugin, update_camera_offset};
 use self::sidebar::SidebarPlugin;

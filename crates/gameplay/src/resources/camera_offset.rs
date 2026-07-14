@@ -13,26 +13,13 @@ pub(crate) enum ZoomDirection {
 }
 
 #[derive(Debug, Default, Resource)]
-pub(crate) struct CameraOffset {
+pub(crate) struct CameraZoom {
     zoom_in_level: i32,
-    /// left/right angle
-    yaw_offset: f32,
-    /// up/down angle
-    pitch_offset: f32,
 }
 
-impl CameraOffset {
-    const DEFAULT_OFFSET: Vec3 = Vec3::new(0.0, 28.4, 35.5);
-
-    pub(crate) fn offset(&self) -> Vec3 {
-        let length = Self::DEFAULT_OFFSET.length() * 0.75_f32.powi(self.zoom_in_level);
-        Vec3::new(
-            Self::DEFAULT_OFFSET.x + self.yaw_offset,
-            Self::DEFAULT_OFFSET.y,
-            Self::DEFAULT_OFFSET.z + self.pitch_offset,
-        )
-        .normalize()
-            * length
+impl CameraZoom {
+    pub(crate) fn distance(&self) -> f32 {
+        45.0 * 0.75_f32.powi(self.zoom_in_level)
     }
 
     pub(crate) const fn zoom(&mut self, zoom_direction: ZoomDirection) {
@@ -66,6 +53,27 @@ impl CameraOffset {
 
     pub(crate) const fn zoom_tiles_only(&self) -> bool {
         -4 < self.zoom_in_level
+    }
+}
+
+#[derive(Debug, Default, Resource)]
+pub(crate) struct CameraDirection {
+    /// left/right angle
+    yaw_offset: f32,
+    /// up/down angle
+    pitch_offset: f32,
+}
+
+impl CameraDirection {
+    const DEFAULT_OFFSET: Vec3 = Vec3::new(0.0, 28.4, 35.5);
+
+    pub(crate) fn direction(&self) -> Vec3 {
+        Vec3::new(
+            Self::DEFAULT_OFFSET.x + self.yaw_offset,
+            Self::DEFAULT_OFFSET.y,
+            Self::DEFAULT_OFFSET.z + self.pitch_offset,
+        )
+        .normalize()
     }
 
     pub(crate) fn adjust_angle(&mut self, delta: Vec2) {

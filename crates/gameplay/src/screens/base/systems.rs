@@ -1,7 +1,7 @@
 use crate::screens::base::messages::{YouAreBusy, YouStartTraveling};
 use crate::{
-    CameraOffset, ChangePace, GameplayScreenState, PlayerDirection, PlayerInstructions,
-    QueuedInstruction, VisualizationUpdate, ZoomDirection, ZoomDistance,
+    CameraDirection, CameraZoom, ChangePace, GameplayScreenState, PlayerDirection,
+    PlayerInstructions, QueuedInstruction, VisualizationUpdate, ZoomDirection, ZoomDistance,
 };
 use bevy::input::mouse::{MouseMotion, MouseWheel};
 use bevy::prelude::{
@@ -57,16 +57,16 @@ fn open_screen(
 
 fn toggle_map(
     In(zoom_distance): In<ZoomDistance>,
-    mut camera_offset: ResMut<CameraOffset>,
+    mut camera_zoom: ResMut<CameraZoom>,
     mut camera_layers: Single<&mut RenderLayers, With<Camera3d>>,
 ) {
     let start = Instant::now();
 
     **camera_layers = if showing_map(&camera_layers) {
-        camera_offset.zoom_to_tiles(zoom_distance);
+        camera_zoom.zoom_to_tiles(zoom_distance);
         (*camera_layers).clone().with(1).without(2)
     } else {
-        camera_offset.zoom_to_map(zoom_distance);
+        camera_zoom.zoom_to_map(zoom_distance);
         (*camera_layers).clone().without(1).with(2)
     };
 
@@ -74,17 +74,17 @@ fn toggle_map(
 }
 
 fn zoom(
-    camera_offset: &mut CameraOffset,
+    camera_zoom: &mut CameraZoom,
     camera_layers: &mut Single<&mut RenderLayers, With<Camera3d>>,
     direction: ZoomDirection,
 ) {
-    camera_offset.zoom(direction);
+    camera_zoom.zoom(direction);
 
     if showing_map(camera_layers) {
-        if camera_offset.zoom_tiles_only() {
+        if camera_zoom.zoom_tiles_only() {
             ***camera_layers = camera_layers.clone().with(1).without(2);
         }
-    } else if camera_offset.zoom_map_only() {
+    } else if camera_zoom.zoom_map_only() {
         ***camera_layers = camera_layers.clone().without(1).with(2);
     }
 }
@@ -93,10 +93,10 @@ fn showing_map(camera_layers: &RenderLayers) -> bool {
     camera_layers.intersects(&RenderLayers::layer(2))
 }
 
-fn reset_camera_angle(mut camera_offset: ResMut<CameraOffset>) {
+fn reset_camera_angle(mut camera_direction: ResMut<CameraDirection>) {
     let start = Instant::now();
 
-    camera_offset.reset_angle();
+    camera_direction.reset_angle();
 
     log_if_slow("reset_camera_angle", start);
 }
@@ -120,7 +120,7 @@ fn toggle_elevation(
 pub(super) fn manage_mouse_scroll_input(
     mut mouse_wheel_events: MessageReader<MouseWheel>,
     hover_map: Res<HoverMap>,
-    mut camera_offset: ResMut<CameraOffset>,
+    mut camera_zoom: ResMut<CameraZoom>,
     mut camera_layers: Single<&mut RenderLayers, With<Camera3d>>,
     ui_nodes: Query<(), With<Node>>,
 ) {
@@ -136,7 +136,7 @@ pub(super) fn manage_mouse_scroll_input(
 
     for scroll_event in &mut mouse_wheel_events.read() {
         zoom(
-            &mut camera_offset,
+            &mut camera_zoom,
             &mut camera_layers,
             if 0.0 < scroll_event.y {
                 ZoomDirection::In
@@ -153,7 +153,7 @@ pub(super) fn manage_mouse_scroll_input(
 pub(super) fn manage_mouse_button_input(
     mut mouse_motion_messages: MessageReader<MouseMotion>,
     mouse_buttons: Res<ButtonInput<MouseButton>>,
-    mut camera_offset: ResMut<CameraOffset>,
+    mut camera_direction: ResMut<CameraDirection>,
 ) {
     let start = Instant::now();
 
@@ -162,7 +162,7 @@ pub(super) fn manage_mouse_button_input(
             .read()
             .map(|motion_message| motion_message.delta)
             .sum();
-        camera_offset.adjust_angle(delta_sum);
+        camera_direction.adjust_angle(delta_sum);
     }
 
     log_if_slow("manage_mouse_button_input", start);
@@ -342,12 +342,12 @@ fn handle_cancelation(
 
 fn manage_zoom(
     In(zoom_direction): In<ZoomDirection>,
-    mut camera_offset: ResMut<CameraOffset>,
+    mut camera_zoom: ResMut<CameraZoom>,
     mut camera_layers: Single<&mut RenderLayers, With<Camera3d>>,
 ) {
     let start = Instant::now();
 
-    zoom(&mut camera_offset, &mut camera_layers, zoom_direction);
+    zoom(&mut camera_zoom, &mut camera_layers, zoom_direction);
 
     log_if_slow("manage_zoom", start);
 }
@@ -378,12 +378,13 @@ fn manage_queued_instruction(
 
 #[expect(clippy::needless_pass_by_value)]
 pub(crate) fn update_camera_offset(
-    camera_offset: Res<CameraOffset>,
+    camera_direction: Res<CameraDirection>,
+    camera_zoom: Res<CameraZoom>,
     mut camera_transform: Single<&mut Transform, With<Camera3d>>,
 ) {
     let start = Instant::now();
 
-    camera_transform.translation = camera_offset.offset();
+    camera_transform.translation = camera_direction.direction() * camera_zoom.distance();
     camera_transform.look_at(Vec3::ZERO, Vec3::Y);
 
     log_if_slow("update_camera", start);
