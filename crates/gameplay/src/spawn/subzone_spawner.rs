@@ -10,11 +10,11 @@ use gameplay_cdda::{
     AssetState, Infos, MapManager, MapMemoryManager, OvermapBufferManager, OvermapManager,
     RepetitionBlockExt as _,
 };
-use gameplay_common::LocalTerrain;
 use gameplay_location::{
     LevelOffset, Overzone, PosOffset, SubzoneLevel, SubzoneLevelCache, ZoneLevel,
 };
 use gameplay_relations::TileIn;
+use gameplay_terrain::LocalTerrain;
 use gameplay_vehicle::VehiclePartOf;
 use std::sync::OnceLock;
 

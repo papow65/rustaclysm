@@ -7,7 +7,6 @@ edition = "2024"
 [dependencies]
 bevy = { workspace = true }
 cdda_json_files = { workspace = true }
-gameplay_cdda = { workspace = true }
 gameplay_location = { workspace = true }
 hud = { workspace = true }
 text = { workspace = true }

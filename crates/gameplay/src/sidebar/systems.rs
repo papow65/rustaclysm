@@ -4,9 +4,9 @@ use crate::sidebar::{
     WalkingModeTextSpan, WieldedText,
 };
 use crate::{
-    Accessible, Actor, BaseSpeed, Breath, Corpse, CurrentlyVisibleBuilder, Envir, Explored,
-    Faction, Health, Hurdle, Life, Obstacle, Opaque, OpaqueFloor, RefreshAfterBehavior,
-    RelativeSegments, SeenFrom, Stamina, WalkingMode, ZoneLevelIds,
+    Actor, BaseSpeed, Breath, Corpse, CurrentlyVisibleBuilder, Envir, Explored, Faction, Health,
+    Hurdle, Life, Obstacle, Opaque, RefreshAfterBehavior, RelativeSegments, SeenFrom, Stamina,
+    WalkingMode, ZoneLevelIds,
 };
 use application_state::ApplicationState;
 use bevy::diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin};
@@ -29,6 +29,7 @@ use gameplay_log::LogMessage;
 use gameplay_model::LastSeen;
 use gameplay_player::{Player, PlayerActionState};
 use gameplay_relations::TileIn;
+use gameplay_terrain::{Accessible, OpaqueFloor};
 use gameplay_time::{Clock, Timeouts};
 use hud::{
     BAD_TEXT_COLOR, DebugText, HARD_TEXT_COLOR, PANEL_COLOR, SMALL_SPACING, SOFT_TEXT_COLOR,

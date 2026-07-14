@@ -25,13 +25,12 @@ use self::behavior::{
     PlayerInstructions, QueuedInstruction,
 };
 use self::components::{
-    Accessible, Closeable, Corpse, CorpseRaise, HealingDuration, Hurdle, LastSeenExt, Life, Melee,
-    MissingAsset, Obstacle, Opaque, OpaqueFloor, Openable, Tile,
+    Closeable, Corpse, CorpseRaise, HealingDuration, Hurdle, LastSeenExt, Life, Melee,
+    MissingAsset, Obstacle, Opaque, Openable, Tile,
 };
 use self::events::{
     ActorEvent, CorpseEvent, Damage, DespawnSubzoneLevel, DespawnZoneLevel, EventsPlugin, Healing,
-    RefreshAfterBehavior, SpawnSubzoneLevel, SpawnZoneLevel, TerrainEvent, Toggle,
-    UpdateZoneLevelVisibility,
+    RefreshAfterBehavior, SpawnSubzoneLevel, SpawnZoneLevel, Toggle, UpdateZoneLevelVisibility,
 };
 use self::resources::{
     CameraOffset, Expanded, Explored, RelativeSegment, RelativeSegments, ResourcePlugin, SeenFrom,

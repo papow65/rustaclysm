@@ -2412,6 +2412,7 @@ dependencies = [
  "gameplay_player",
  "gameplay_relations",
  "gameplay_resource",
+ "gameplay_terrain",
  "gameplay_time",
  "gameplay_transition_state",
  "gameplay_vehicle",
@@ -2464,7 +2465,6 @@ version = "0.0.0"
 dependencies = [
  "bevy",
  "cdda_json_files",
- "gameplay_cdda",
  "gameplay_location",
  "hud",
  "text",
@@ -2598,6 +2598,17 @@ version = "0.0.0"
 dependencies = [
  "application_state",
  "bevy",
+]
+
+[[package]]
+name = "gameplay_terrain"
+version = "0.0.0"
+dependencies = [
+ "bevy",
+ "cdda_json_files",
+ "gameplay_cdda",
+ "gameplay_common",
+ "gameplay_location",
 ]
 
 [[package]]

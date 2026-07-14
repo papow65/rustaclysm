@@ -1,6 +1,6 @@
 use crate::{
-    Accessible, Closeable, Corpse, Health, Hurdle, Intelligence, Life, NoStairs, Obstacle, Opaque,
-    OpaqueFloor, Openable, QueuedInstruction,
+    Closeable, Corpse, Health, Hurdle, Intelligence, Life, NoStairs, Obstacle, Opaque, Openable,
+    QueuedInstruction,
 };
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{Entity, Query, Res, With, Without, debug, warn};
@@ -12,6 +12,7 @@ use gameplay_location::{
     HorizontalDirection, Level, LevelOffset, LocationCache, Nbor, NborDistance, Pos, PosOffset,
     StairsDown, StairsUp, Zone, ZoneLevel,
 };
+use gameplay_terrain::{Accessible, OpaqueFloor};
 use pathfinding::prelude::astar;
 use std::cmp::Ordering;
 use units::{Duration, Speed};

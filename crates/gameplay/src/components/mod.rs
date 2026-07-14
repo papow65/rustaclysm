@@ -3,17 +3,9 @@ mod last_seen_ext;
 pub(crate) use self::last_seen_ext::LastSeenExt;
 
 use bevy::prelude::Component;
-use cdda_json_files::{CommonItemInfo, MoveCost, MoveCostIncrease};
+use cdda_json_files::{CommonItemInfo, MoveCostIncrease};
 use gameplay_common::Shared;
 use units::{Duration, Timestamp};
-
-/// Terrain that can be accessed, like a floor
-#[derive(Component)]
-#[component(immutable)]
-pub(crate) struct Accessible {
-    pub(crate) water: bool,
-    pub(crate) move_cost: MoveCost,
-}
 
 /// Not accessible for any movement
 #[derive(Component)]
@@ -28,6 +20,7 @@ pub(crate) struct Openable;
 #[component(immutable)]
 pub(crate) struct Closeable;
 
+/// Slows movement
 #[derive(Component)]
 #[component(immutable)]
 pub(crate) struct Hurdle(pub(crate) MoveCostIncrease);
@@ -36,11 +29,6 @@ pub(crate) struct Hurdle(pub(crate) MoveCostIncrease);
 #[derive(Component)]
 #[component(immutable)]
 pub(crate) struct Opaque;
-
-/// Blocks vision to and from the level below
-#[derive(Component)]
-#[component(immutable)]
-pub(crate) struct OpaqueFloor;
 
 #[derive(Debug, Component)]
 #[component(immutable)]

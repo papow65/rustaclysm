@@ -1,7 +1,6 @@
 use crate::{
-    Accessible, Aquatic, BaseSpeed, Closeable, Explored, Faction, HealingDuration, Health, Hurdle,
-    Life, Melee, Obstacle, Opaque, OpaqueFloor, Openable, Stamina, Tile, WalkingMode,
-    spawn::log_spawn_result,
+    Aquatic, BaseSpeed, Closeable, Explored, Faction, HealingDuration, Health, Hurdle, Life, Melee,
+    Obstacle, Opaque, Openable, Stamina, Tile, WalkingMode, spawn::log_spawn_result,
 };
 use application_state::ApplicationState;
 use bevy::camera::visibility::RenderLayers;
@@ -20,7 +19,7 @@ use cdda_json_files::{
 use either::Either;
 use gameplay_cdda::{Error, Infos, ObjectCategory, TileVariant};
 use gameplay_cdda_active_sav::ActiveSav;
-use gameplay_common::{Limited, LocalTerrain, Mobile, ObjectName, Shared, StandardIntegrity};
+use gameplay_common::{Limited, Mobile, ObjectName, Shared, StandardIntegrity};
 use gameplay_crafting::Craft;
 use gameplay_focus::{CameraBase, ExamineCursor};
 use gameplay_item::{
@@ -31,6 +30,7 @@ use gameplay_location::{LevelOffset, LocationCache, Pos, PosOffset, StairsDown, 
 use gameplay_model::{LastSeen, ModelFactory};
 use gameplay_player::Player;
 use gameplay_relations::{ObjectOn, TileIn};
+use gameplay_terrain::{Accessible, LocalTerrain, OpaqueFloor};
 use gameplay_vehicle::{Vehicle, VehiclePart, VehiclePartOf};
 use hud::{BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR};
 use std::f32::consts::{FRAC_PI_4, TAU};
