@@ -4,9 +4,9 @@ use crate::sidebar::{
     WalkingModeTextSpan, WieldedText,
 };
 use crate::{
-    Actor, BaseSpeed, Breath, Corpse, CurrentlyVisibleBuilder, Envir, Explored, Faction, Health,
-    Hurdle, Life, Obstacle, Opaque, RefreshAfterBehavior, RelativeSegments, SeenFrom, Stamina,
-    WalkingMode, ZoneLevelIds,
+    Actor, BaseSpeed, Breath, Corpse, CurrentlyVisibleBuilder, Explored, Faction, Health, Hurdle,
+    Life, Obstacle, Opaque, RefreshAfterBehavior, RelativeSegments, SeenFrom, Stamina, WalkingMode,
+    ZoneLevelIds,
 };
 use application_state::ApplicationState;
 use bevy::diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin};
@@ -24,7 +24,7 @@ use cdda_json_files::{CharacterInfo, MoveCost};
 use gameplay_common::{ObjectName, Shared, StandardIntegrity};
 use gameplay_focus::FocusState;
 use gameplay_item::{Amount, Item, ItemHandler, ItemHierarchy, ItemItem, WieldedItems};
-use gameplay_location::{Pos, StairsDown, StairsUp};
+use gameplay_location::{LocationCache, Pos, StairsDown, StairsUp};
 use gameplay_log::LogMessage;
 use gameplay_model::LastSeen;
 use gameplay_player::{Player, PlayerActionState};
@@ -659,8 +659,8 @@ fn update_status_detais(
     focus_state: Res<State<FocusState>>,
     explored: Res<Explored>,
     zone_level_ids: Res<ZoneLevelIds>,
-    envir: Envir,
     item_hierarchy: ItemHierarchy,
+    location: Res<LocationCache>,
     characters: Query<(
         &Shared<CharacterInfo>,
         &ObjectName,
@@ -695,19 +695,18 @@ fn update_status_detais(
             let mut total = vec![Fragment::soft(format!("\n{pos:?}\n"))];
             if explored.has_pos_been_seen(pos) {
                 total.extend(characters_info(
-                    envir.location.all(pos).copied(),
+                    location.all(pos).copied(),
                     &characters,
                     pos,
                 ));
                 total.extend(
-                    envir
-                        .location
+                    location
                         .all(pos)
                         .flat_map(|e| entities.get(*e))
                         .flat_map(entity_info),
                 );
                 total.extend({
-                    let items = envir.location.all(pos).flat_map(|e| items.get(*e));
+                    let items = location.all(pos).flat_map(|e| items.get(*e));
                     let mut handler = SidebarItemHandler { output: Vec::new() };
                     item_hierarchy.walk(&mut handler, items);
                     handler.output

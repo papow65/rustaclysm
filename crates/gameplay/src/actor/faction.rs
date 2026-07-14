@@ -1,5 +1,6 @@
 use crate::{
-    ActorItem, Attack, CurrentlyVisibleBuilder, Envir, Health, PlannedAction, Smash, Step,
+    ActorItem, Attack, CurrentlyVisibleBuilder, Envir, Health, Pathfinder, PlannedAction, Smash,
+    Step,
 };
 use bevy::prelude::{Component, TextColor};
 use cdda_json_files::MoveCost;
@@ -114,7 +115,7 @@ impl Faction {
                     .map(|last_enemy| (true, last_enemy.0)),
             )
             .filter_map(|(memory_only, enemy_pos)| {
-                envir
+                Pathfinder::new(envir)
                     .path(
                         *actor.pos,
                         enemy_pos,
@@ -171,7 +172,7 @@ impl Faction {
 
         //let start = Instant::now();
         let graph = dijkstra_all(&(*actor.pos, Duration::ZERO), |(pos, prev_total_ms)| {
-            envir
+            Pathfinder::new(envir)
                 .nbors_for_moving(*pos, None, self.intelligence(), actor.speed())
                 .filter_map(|(_, nbor_pos, ms)| {
                     let total_ms = *prev_total_ms + ms;
@@ -212,7 +213,7 @@ impl Faction {
         actor: &ActorItem,
     ) -> Option<PlannedAction> {
         if rand_u8(0..10) < 3 {
-            let wander_options = envir
+            let wander_options = Pathfinder::new(envir)
                 .nbors_for_moving(*actor.pos, None, self.intelligence(), actor.speed())
                 .filter(|(_, pos, _)| factions.iter().all(|(other_pos, _)| pos != other_pos))
                 .map(|(_, pos, _)| pos)

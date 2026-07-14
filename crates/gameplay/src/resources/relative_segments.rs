@@ -4,7 +4,7 @@ use std::{array, iter::once};
 use util::AsyncNew;
 
 #[derive(Clone, Debug, PartialEq)]
-pub(crate) struct RelativeRay {
+struct RelativeRay {
     path: Vec<PosOffset>,
 }
 

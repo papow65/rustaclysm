@@ -2,7 +2,7 @@ use crate::screens::inventory::{
     InventoryAction, InventoryItemRow, InventoryScreen, InventorySection, RowSpawner,
 };
 use crate::{
-    Envir, ExamineItem, GameplayScreenState, MoveItem, Pickup, PlayerInstructions,
+    Envir, ExamineItem, GameplayScreenState, MoveItem, Pathfinder, Pickup, PlayerInstructions,
     QueuedInstruction, Unwield, Wield,
 };
 use bevy::ecs::{entity::hash_map::EntityHashMap, system::SystemId};
@@ -225,7 +225,7 @@ fn items_by_section<'i>(
     body_containers: &'i BodyContainers,
 ) -> HashMap<InventorySection, Vec<ItemItem<'i, 'i>>> {
     let mut items_by_section = HashMap::default();
-    for (direction, nbor_pos) in envir.directions_for_item_handling(player_pos) {
+    for (direction, nbor_pos) in Pathfinder::new(envir).directions_for_item_handling(player_pos) {
         items_by_section.insert(
             InventorySection::Nbor(direction),
             envir.all_items(nbor_pos).collect::<Vec<_>>(),

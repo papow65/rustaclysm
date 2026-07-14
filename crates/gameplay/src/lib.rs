@@ -17,8 +17,8 @@ pub use self::system_params::GameplayReadiness;
 use self::actor::{
     Action, ActionIn, Actor, ActorImpact, ActorItem, ActorPlugin, Aquatic, Attack, BaseSpeed,
     Breath, ChangePace, Close, ContinueCraft, ExamineItem, Faction, Health, Intelligence,
-    ItemAction, LastEnemy, MoveItem, Peek, Pickup, PlannedAction, Pulp, Sleep, Smash, Stamina,
-    StaminaCost, StaminaImpact, StartCraft, Stay, Step, Unwield, WalkingMode, Wield,
+    ItemAction, LastEnemy, MoveItem, Pathfinder, Peek, Pickup, PlannedAction, Pulp, Sleep, Smash,
+    Stamina, StaminaCost, StaminaImpact, StartCraft, Stay, Step, Unwield, WalkingMode, Wield,
 };
 use self::behavior::{
     BehaviorLoopSet, BehaviorPlugin, BehaviorValidator, Interruption, PlayerDirection,

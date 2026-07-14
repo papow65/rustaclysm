@@ -6,8 +6,8 @@ use crate::actor::messages::{
 use crate::{
     ActorEvent, ActorImpact, Aquatic, Attack, BaseSpeed, Breath, ChangePace, Close, Collision,
     CorpseEvent, Damage, Envir, Faction, Healing, HealingDuration, Health, LastEnemy, Life, Melee,
-    Peek, Pulp, Smash, Stamina, StaminaCost, StartCraft, Step, Tile, TileSpawner, Toggle,
-    WalkingMode,
+    Pathfinder, Peek, Pulp, Smash, Stamina, StaminaCost, StartCraft, Step, Tile, TileSpawner,
+    Toggle, WalkingMode,
 };
 use bevy::ecs::query::{QueryData, With};
 use bevy::prelude::{
@@ -168,7 +168,7 @@ impl ActorItem<'_, '_> {
         match envir.collide(from, to, true) {
             Collision::Pass => {
                 commands.entity(self.entity).insert(to);
-                let walking_cost = envir.walking_cost(from, to);
+                let walking_cost = Pathfinder::new(envir).walking_cost(from, to);
                 self.impact_from_nbor(
                     walking_cost.duration(self.speed()),
                     self.walking_mode.stamina_impact(self.stamina.breath()),

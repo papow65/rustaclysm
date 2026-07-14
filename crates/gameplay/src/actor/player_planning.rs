@@ -6,8 +6,8 @@ use crate::actor::messages::{
 };
 use crate::{
     ActorItem, Breath, ContinueCraft, CurrentlyVisibleBuilder, Envir, Explored, Faction,
-    Intelligence, Interruption, MoveItem, PlannedAction, PlayerDirection, PlayerInstructions, Pulp,
-    QueuedInstruction, StartCraft,
+    Intelligence, Interruption, MoveItem, Pathfinder, PlannedAction, PlayerDirection,
+    PlayerInstructions, Pulp, QueuedInstruction, StartCraft,
 };
 use bevy::prelude::{DetectChanges as _, Entity, NextState, ResMut};
 use gameplay_crafting::RecipeSituation;
@@ -375,7 +375,7 @@ fn plan_start_craft(
     recipe_situation: RecipeSituation,
 ) -> Option<PlannedAction> {
     let start_craft = QueuedInstruction::StartCraft(recipe_situation);
-    let craftable_nbors = envir
+    let craftable_nbors = Pathfinder::new(envir)
         .nbors_for_exploring(pos, &start_craft)
         .collect::<Vec<_>>();
     let QueuedInstruction::StartCraft(recipe_situation) = start_craft else {
@@ -416,7 +416,7 @@ fn plan_attack(
     envir: &crate::Envir,
     pos: Pos,
 ) -> Option<PlannedAction> {
-    let attackable_nbors = envir
+    let attackable_nbors = Pathfinder::new(envir)
         .nbors_for_exploring(pos, &QueuedInstruction::Attack)
         .collect::<Vec<_>>();
     match attackable_nbors.len() {
@@ -438,7 +438,7 @@ fn plan_smash(
     envir: &crate::Envir,
     pos: Pos,
 ) -> Option<PlannedAction> {
-    let smashable_nbors = envir
+    let smashable_nbors = Pathfinder::new(envir)
         .nbors_for_exploring(pos, &QueuedInstruction::Smash)
         .collect::<Vec<_>>();
     match smashable_nbors.len() {
@@ -460,7 +460,7 @@ fn plan_pulp(
     envir: &crate::Envir,
     pos: Pos,
 ) -> Option<PlannedAction> {
-    let pulpable_nbors = envir
+    let pulpable_nbors = Pathfinder::new(envir)
         .nbors_for_exploring(pos, &QueuedInstruction::Pulp)
         .filter_map(|nbor| {
             if let Nbor::Horizontal(horizontal) = nbor {
@@ -497,7 +497,7 @@ fn plan_close(
     envir: &crate::Envir,
     pos: Pos,
 ) -> Option<PlannedAction> {
-    let closable_nbors = envir
+    let closable_nbors = Pathfinder::new(envir)
         .nbors_for_exploring(pos, &QueuedInstruction::Close)
         .filter_map(|nbor| {
             if let Nbor::Horizontal(horizontal) = nbor {
@@ -649,7 +649,7 @@ fn plan_auto_travel(
         player_instructions.interrupt(Interruption::LowStamina);
         None
     } else {
-        envir
+        Pathfinder::new(envir)
             .path(
                 *player.pos,
                 *target,
@@ -665,7 +665,7 @@ fn plan_auto_travel(
             })
             .or_else(|| {
                 // Full path not available
-                envir
+                Pathfinder::new(envir)
                     .nbors_for_moving(*player.pos, None, Intelligence::Smart, player.speed())
                     .map(|(nbor, nbor_pos, _)| (nbor, nbor_pos.vision_distance(*target)))
                     .min_by_key(|(_, distance)| distance.as_tiles())
