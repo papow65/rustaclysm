@@ -1,13 +1,15 @@
-use crate::{Closeable, Corpse, Health, Hurdle, Life, NoStairs, Obstacle, Opaque, Openable};
+use crate::{Health, NoStairs};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{Entity, Query, Res, With, Without, warn};
 use cdda_json_files::MoveCost;
-use gameplay_common::{ObjectName, StandardIntegrity, WalkingCost};
+use gameplay_common::WalkingCost;
 use gameplay_item::{Amount, Item, ItemItem};
 use gameplay_location::{
     HorizontalDirection, Level, LevelOffset, LocationCache, Nbor, Pos, PosOffset, StairsDown,
     StairsUp, Zone, ZoneLevel,
 };
+use gameplay_object::{Closeable, Corpse, Hurdle, Life, Obstacle, Opaque, Openable};
+use gameplay_object::{ObjectName, StandardIntegrity};
 use gameplay_terrain::{Accessible, OpaqueFloor};
 use std::cmp::Ordering;
 

@@ -43,6 +43,7 @@ gameplay = { path = "crates/gameplay" }
 gameplay_common = { path = "crates/gameplay_common" }
 gameplay_crafting = { path = "crates/gameplay_crafting" }
 gameplay_log = { path = "crates/gameplay_log" }
+gameplay_object = { path = "crates/gameplay_object" }
 gameplay_relations = { path = "crates/gameplay_relations" }
 gameplay_time = { path = "crates/gameplay_time" }
 gameplay_cdda = { path = "crates/gameplay_cdda" }

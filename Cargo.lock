@@ -2409,6 +2409,7 @@ dependencies = [
  "gameplay_log",
  "gameplay_model",
  "gameplay_nearby",
+ "gameplay_object",
  "gameplay_player",
  "gameplay_relations",
  "gameplay_resource",
@@ -2512,6 +2513,7 @@ dependencies = [
  "gameplay_common",
  "gameplay_location",
  "gameplay_log",
+ "gameplay_object",
  "gameplay_relations",
  "hud",
  "text",
@@ -2570,6 +2572,19 @@ dependencies = [
  "gameplay_item",
  "gameplay_location",
  "gameplay_model",
+]
+
+[[package]]
+name = "gameplay_object"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "cdda_json_files",
+ "gameplay_common",
+ "gameplay_location",
+ "hud",
+ "text",
+ "units",
 ]
 
 [[package]]

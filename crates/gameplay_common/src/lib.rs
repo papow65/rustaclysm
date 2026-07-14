@@ -2,20 +2,14 @@ mod damage;
 mod healing;
 mod limited;
 mod region;
+mod shared;
+mod visible;
 mod walking_cost;
 
-pub mod components;
-
-pub use self::components::{Mobile, ObjectName, Shared, StandardIntegrity};
 pub use self::damage::Damage;
 pub use self::healing::Healing;
 pub use self::limited::{Evolution, Limited};
 pub use self::region::{Region, ZoneRegion};
+pub use self::shared::Shared;
+pub use self::visible::Visible;
 pub use self::walking_cost::WalkingCost;
-
-/// Visible to the player character
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Visible {
-    Seen,
-    Unseen,
-}

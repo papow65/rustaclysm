@@ -5,7 +5,7 @@ use crate::actor::messages::{
 };
 use crate::{
     ActorEvent, ActorImpact, Aquatic, Attack, BaseSpeed, Breath, ChangePace, Close, Collision,
-    CorpseEvent, Damage, Envir, Faction, Healing, HealingDuration, Health, LastEnemy, Life, Melee,
+    CorpseEvent, Damage, Envir, Faction, Healing, HealingDuration, Health, LastEnemy, Melee,
     Pathfinder, Peek, Pulp, Smash, Stamina, StaminaCost, StartCraft, Step, Tile, TileSpawner,
     Toggle, WalkingMode,
 };
@@ -15,7 +15,6 @@ use bevy::prelude::{
 };
 use cdda_json_files::CddaItem;
 use either::Either;
-use gameplay_common::ObjectName;
 use gameplay_crafting::{Consumed, Craft, CraftProgressLeft};
 use gameplay_item::{
     Amount, BodyContainers, Container, InPocket, Item, ItemHierarchy, ItemItem, WieldedBy,
@@ -23,6 +22,8 @@ use gameplay_item::{
 use gameplay_location::{HorizontalDirection, LevelOffset, LocationCache, Nbor, Pos};
 use gameplay_log::LogMessageWriter;
 use gameplay_model::LastSeen;
+use gameplay_object::Life;
+use gameplay_object::ObjectName;
 use gameplay_player::{Player, PlayerActionState};
 use gameplay_relations::ObjectOn;
 use gameplay_terrain::TerrainEvent;

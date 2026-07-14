@@ -1,6 +1,6 @@
 use crate::{
-    Aquatic, BaseSpeed, Closeable, Explored, Faction, HealingDuration, Health, Hurdle, Life, Melee,
-    Obstacle, Opaque, Openable, Stamina, Tile, WalkingMode, spawn::log_spawn_result,
+    Aquatic, BaseSpeed, Explored, Faction, HealingDuration, Health, Melee, Stamina, Tile,
+    WalkingMode, spawn::log_spawn_result,
 };
 use application_state::ApplicationState;
 use bevy::camera::visibility::RenderLayers;
@@ -19,7 +19,7 @@ use cdda_json_files::{
 use either::Either;
 use gameplay_cdda::{Error, Infos, ObjectCategory, TileVariant};
 use gameplay_cdda_active_sav::ActiveSav;
-use gameplay_common::{Limited, Mobile, ObjectName, Shared, StandardIntegrity};
+use gameplay_common::{Limited, Shared};
 use gameplay_crafting::Craft;
 use gameplay_focus::{CameraBase, ExamineCursor};
 use gameplay_item::{
@@ -28,6 +28,9 @@ use gameplay_item::{
 };
 use gameplay_location::{LevelOffset, LocationCache, Pos, PosOffset, StairsDown, StairsUp};
 use gameplay_model::{LastSeen, ModelFactory};
+use gameplay_object::{
+    Closeable, Hurdle, Life, Mobile, ObjectName, Obstacle, Opaque, Openable, StandardIntegrity,
+};
 use gameplay_player::Player;
 use gameplay_relations::{ObjectOn, TileIn};
 use gameplay_terrain::{Accessible, LocalTerrain, OpaqueFloor};

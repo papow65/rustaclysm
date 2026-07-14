@@ -2,9 +2,8 @@ use crate::behavior::systems::messages::NpcActionFailed;
 use crate::{
     Action, ActionIn, Actor, ActorEvent, ActorImpact, Attack, ChangePace, Close, ContinueCraft,
     CorpseEvent, CurrentlyVisibleBuilder, Damage, Envir, ExamineItem, Explored, Faction, Healing,
-    HealingDuration, ItemAction as _, Life, MoveItem, Peek, Pickup, PlannedAction,
-    PlayerInstructions, Pulp, Sleep, Smash, Stamina, StartCraft, Stay, Step, Tile, TileSpawner,
-    Toggle, Unwield, Wield,
+    HealingDuration, ItemAction as _, MoveItem, Peek, Pickup, PlannedAction, PlayerInstructions,
+    Pulp, Sleep, Smash, Stamina, StartCraft, Stay, Step, Tile, TileSpawner, Toggle, Unwield, Wield,
 };
 use bevy::ecs::schedule::{IntoScheduleConfigs as _, ScheduleConfigs};
 use bevy::ecs::system::{ScheduleSystem, SystemId};
@@ -16,6 +15,7 @@ use gameplay_crafting::Craft;
 use gameplay_item::{Amount, Item, ItemHierarchy};
 use gameplay_location::{LocationCache, Pos};
 use gameplay_log::LogMessageWriter;
+use gameplay_object::Life;
 use gameplay_player::{Player, PlayerActionState};
 use gameplay_terrain::TerrainEvent;
 use gameplay_time::{Clock, Timeouts};

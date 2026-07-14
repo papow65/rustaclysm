@@ -6,8 +6,8 @@ use bevy::prelude::{
 use cdda_json_files::{PocketInfo, PocketType};
 use gameplay_cdda::Infos;
 use gameplay_common::Shared;
-use gameplay_common::{Mobile, StandardIntegrity};
 use gameplay_location::Pos;
+use gameplay_object::{Mobile, StandardIntegrity};
 use gameplay_relations::{ObjectOn, TileIn};
 use std::fmt::Write as _;
 use text::Phrase;

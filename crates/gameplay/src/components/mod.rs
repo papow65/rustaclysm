@@ -3,47 +3,9 @@ mod last_seen_ext;
 pub(crate) use self::last_seen_ext::LastSeenExt;
 
 use bevy::prelude::Component;
-use cdda_json_files::{CommonItemInfo, MoveCostIncrease};
+use cdda_json_files::CommonItemInfo;
 use gameplay_common::Shared;
-use units::{Duration, Timestamp};
-
-/// Not accessible for any movement
-#[derive(Component)]
-#[component(immutable)]
-pub(crate) struct Obstacle;
-
-#[derive(Component)]
-#[component(immutable)]
-pub(crate) struct Openable;
-
-#[derive(Component)]
-#[component(immutable)]
-pub(crate) struct Closeable;
-
-/// Slows movement
-#[derive(Component)]
-#[component(immutable)]
-pub(crate) struct Hurdle(pub(crate) MoveCostIncrease);
-
-/// Blocks vision (horizontally)
-#[derive(Component)]
-#[component(immutable)]
-pub(crate) struct Opaque;
-
-/// To be removed on death, to be added when revived
-#[derive(Debug, Component)]
-#[component(immutable)]
-pub(crate) struct Life;
-
-#[derive(Component)]
-#[component(immutable)]
-pub(crate) struct Corpse;
-
-#[derive(Component)]
-#[component(immutable)]
-pub(crate) struct CorpseRaise {
-    pub(crate) at: Timestamp,
-}
+use units::Duration;
 
 /// Mutable component
 #[derive(Debug, Component)]

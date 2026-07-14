@@ -2,9 +2,8 @@
 
 use crate::behavior::systems::messages::{Break, Heal, Hit, IsThoroughlyPulped, Kill, Pulp};
 use crate::{
-    Actor, ActorEvent, Corpse, CorpseEvent, CorpseRaise, Damage, Faction, GameplayScreenState,
-    Healing, Health, Life, Obstacle, Stamina, TileSpawner, Toggle, VisualizationUpdate,
-    WalkingMode,
+    Actor, ActorEvent, CorpseEvent, Damage, Faction, GameplayScreenState, Healing, Health, Stamina,
+    TileSpawner, Toggle, VisualizationUpdate, WalkingMode,
 };
 use bevy::ecs::schedule::{IntoScheduleConfigs as _, ScheduleConfigs};
 use bevy::ecs::system::ScheduleSystem;
@@ -15,10 +14,11 @@ use bevy::prelude::{
 use cdda_json_files::{FurnitureInfo, InfoId, TerrainInfo};
 use either::Either;
 use gameplay_cdda::Infos;
-use gameplay_common::{Limited, ObjectName, Shared, StandardIntegrity};
+use gameplay_common::{Limited, Shared};
 use gameplay_item::{Amount, ContainerLimits, Item, ItemHierarchy};
 use gameplay_location::Pos;
 use gameplay_log::LogMessageWriter;
+use gameplay_object::{Corpse, CorpseRaise, Life, ObjectName, Obstacle, StandardIntegrity};
 use gameplay_player::Player;
 use gameplay_relations::ObjectOn;
 use gameplay_terrain::{LocalTerrain, TerrainEvent};

@@ -24,10 +24,7 @@ use self::behavior::{
     BehaviorLoopSet, BehaviorPlugin, BehaviorValidator, Interruption, PlayerDirection,
     PlayerInstructions, QueuedInstruction,
 };
-use self::components::{
-    Closeable, Corpse, CorpseRaise, HealingDuration, Hurdle, LastSeenExt, Life, Melee,
-    MissingAsset, Obstacle, Opaque, Openable, Tile,
-};
+use self::components::{HealingDuration, LastSeenExt, Melee, MissingAsset, Tile};
 use self::events::{
     ActorEvent, CorpseEvent, Damage, DespawnSubzoneLevel, DespawnZoneLevel, EventsPlugin, Healing,
     RefreshAfterBehavior, SpawnSubzoneLevel, SpawnZoneLevel, Toggle, UpdateZoneLevelVisibility,

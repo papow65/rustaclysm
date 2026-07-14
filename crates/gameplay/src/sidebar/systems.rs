@@ -4,9 +4,8 @@ use crate::sidebar::{
     WalkingModeTextSpan, WieldedText,
 };
 use crate::{
-    Actor, BaseSpeed, Breath, Corpse, CurrentlyVisibleBuilder, Explored, Faction, Health, Hurdle,
-    Life, Obstacle, Opaque, RefreshAfterBehavior, RelativeSegments, SeenFrom, Stamina, WalkingMode,
-    ZoneLevelIds,
+    Actor, BaseSpeed, Breath, CurrentlyVisibleBuilder, Explored, Faction, Health,
+    RefreshAfterBehavior, RelativeSegments, SeenFrom, Stamina, WalkingMode, ZoneLevelIds,
 };
 use application_state::ApplicationState;
 use bevy::diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin};
@@ -21,12 +20,14 @@ use bevy::prelude::{
     resource_exists_and_changed,
 };
 use cdda_json_files::{CharacterInfo, MoveCost};
-use gameplay_common::{ObjectName, Shared, StandardIntegrity};
+use gameplay_common::Shared;
 use gameplay_focus::FocusState;
 use gameplay_item::{Amount, Item, ItemHandler, ItemHierarchy, ItemItem, WieldedItems};
 use gameplay_location::{LocationCache, Pos, StairsDown, StairsUp};
 use gameplay_log::LogMessage;
 use gameplay_model::LastSeen;
+use gameplay_object::{Corpse, Hurdle, Life, Obstacle, Opaque};
+use gameplay_object::{ObjectName, StandardIntegrity};
 use gameplay_player::{Player, PlayerActionState};
 use gameplay_relations::TileIn;
 use gameplay_terrain::{Accessible, OpaqueFloor};
