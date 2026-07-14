@@ -1,10 +1,10 @@
-use crate::behavior::schedule::BehaviorSchedule;
-use crate::behavior::systems::refresh::refresh_all;
-use crate::{BehaviorLoopSet, BehaviorValidator, RefreshAfterBehavior, RelativeSegments};
+use crate::behavior::{schedule::BehaviorSchedule, systems::refresh::refresh_all};
+use crate::{BehaviorLoopSet, BehaviorValidator, RefreshAfterBehavior};
 use bevy::ecs::schedule::{IntoScheduleConfigs as _, ScheduleConfigs};
 use bevy::ecs::system::{ScheduleSystem, SystemState};
 use bevy::prelude::{State, World, debug, on_message, resource_exists};
 use gameplay_player::PlayerActionState;
+use gameplay_world::RelativeSegments;
 use std::time::{Duration, Instant};
 use util::log_if_slow;
 

@@ -7,12 +7,11 @@ mod resources;
 mod screens;
 mod sidebar;
 mod spawn;
-mod system_params;
 mod systems;
 mod transition;
 
 pub use self::plugin::GameplayPlugin;
-pub use self::system_params::GameplayReadiness;
+pub use self::transition::GameplayReadiness;
 
 use self::actor::{
     Action, ActionIn, Actor, ActorImpact, ActorItem, ActorPlugin, Aquatic, Attack, BaseSpeed,
@@ -30,8 +29,8 @@ use self::events::{
     RefreshAfterBehavior, SpawnSubzoneLevel, SpawnZoneLevel, Toggle, UpdateZoneLevelVisibility,
 };
 use self::resources::{
-    CameraOffset, Expanded, Explored, RelativeSegment, RelativeSegments, ResourcePlugin, SeenFrom,
-    VisualizationUpdate, ZoneLevelIds, ZoomDirection, ZoomDistance,
+    CameraOffset, Expanded, ResourcePlugin, VisualizationUpdate, ZoneLevelIds, ZoomDirection,
+    ZoomDistance,
 };
 use self::screens::{GameplayScreenState, ScreensPlugin, update_camera_offset};
 use self::sidebar::SidebarPlugin;
@@ -39,7 +38,6 @@ use self::spawn::{
     TileSpawner, despawn_systems, handle_region_asset_events, handle_zone_levels,
     spawn_initial_entities, spawn_subzone_levels, spawn_subzones_for_camera, update_explored,
 };
-use self::system_params::{Collision, CurrentlyVisible, CurrentlyVisibleBuilder, Envir, NoStairs};
 use self::systems::{
     check_failed_asset_loading, count_assets, count_pos, create_gameplay_key_bindings,
     update_visibility, update_visualization_on_item_move,

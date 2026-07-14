@@ -2417,6 +2417,7 @@ dependencies = [
  "gameplay_time",
  "gameplay_transition_state",
  "gameplay_vehicle",
+ "gameplay_world",
  "hud",
  "keyboard",
  "manual",
@@ -2652,6 +2653,26 @@ dependencies = [
  "bevy",
  "cdda_json_files",
  "gameplay_location",
+]
+
+[[package]]
+name = "gameplay_world"
+version = "0.0.0"
+dependencies = [
+ "bevy",
+ "cdda_json_files",
+ "gameplay_cdda",
+ "gameplay_common",
+ "gameplay_focus",
+ "gameplay_item",
+ "gameplay_location",
+ "gameplay_log",
+ "gameplay_object",
+ "gameplay_player",
+ "gameplay_terrain",
+ "gameplay_time",
+ "text",
+ "util",
 ]
 
 [[package]]

@@ -1,7 +1,4 @@
-use crate::{
-    Explored, MissingAsset, SeenFrom, SpawnZoneLevel, TileSpawner, ZoneLevelIds,
-    spawn::VisibleRegion,
-};
+use crate::{MissingAsset, SpawnZoneLevel, TileSpawner, ZoneLevelIds, spawn::VisibleRegion};
 use application_state::ApplicationState;
 use bevy::prelude::{
     DespawnOnExit, Entity, MessageReader, Res, Transform, Vec3, Visibility, debug,
@@ -13,6 +10,7 @@ use gameplay_focus::Focus;
 use gameplay_location::{Level, ZoneLevel};
 use gameplay_model::LastSeen;
 use gameplay_object::ObjectName;
+use gameplay_world::{Explored, SeenFrom};
 use hud::HARD_TEXT_COLOR;
 
 #[derive(SystemParam)]

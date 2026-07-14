@@ -5,15 +5,15 @@ use crate::actor::messages::{
     YouWakeUpAfterSleeping,
 };
 use crate::{
-    ActorItem, Breath, ContinueCraft, CurrentlyVisibleBuilder, Envir, Explored, Faction,
-    Intelligence, Interruption, MoveItem, Pathfinder, PlannedAction, PlayerDirection,
-    PlayerInstructions, Pulp, QueuedInstruction, StartCraft,
+    ActorItem, Breath, ContinueCraft, Faction, Intelligence, Interruption, MoveItem, Pathfinder,
+    PlannedAction, PlayerDirection, PlayerInstructions, Pulp, QueuedInstruction, StartCraft,
 };
 use bevy::prelude::{DetectChanges as _, Entity, NextState, ResMut};
 use gameplay_crafting::RecipeSituation;
 use gameplay_location::{CardinalDirection, HorizontalDirection, Nbor, Pos, VisionDistance};
 use gameplay_log::{LogMessageWriter, Severity};
 use gameplay_player::{PickingNbor, PlayerActionState};
+use gameplay_world::{CurrentlyVisibleBuilder, Envir, Explored};
 use text::Fragment;
 use units::{Duration, Timestamp};
 
@@ -413,7 +413,7 @@ fn plan_start_craft(
 fn plan_attack(
     next_state: &mut ResMut<NextState<PlayerActionState>>,
     message_writer: &mut LogMessageWriter,
-    envir: &crate::Envir,
+    envir: &Envir,
     pos: Pos,
 ) -> Option<PlannedAction> {
     let attackable_nbors = Pathfinder::new(envir)
@@ -435,7 +435,7 @@ fn plan_attack(
 fn plan_smash(
     next_state: &mut ResMut<NextState<PlayerActionState>>,
     message_writer: &mut LogMessageWriter,
-    envir: &crate::Envir,
+    envir: &Envir,
     pos: Pos,
 ) -> Option<PlannedAction> {
     let smashable_nbors = Pathfinder::new(envir)
@@ -457,7 +457,7 @@ fn plan_smash(
 fn plan_pulp(
     next_state: &mut ResMut<NextState<PlayerActionState>>,
     message_writer: &mut LogMessageWriter,
-    envir: &crate::Envir,
+    envir: &Envir,
     pos: Pos,
 ) -> Option<PlannedAction> {
     let pulpable_nbors = Pathfinder::new(envir)
@@ -494,7 +494,7 @@ fn plan_pulp(
 fn plan_close(
     next_state: &mut ResMut<NextState<PlayerActionState>>,
     message_writer: &mut LogMessageWriter,
-    envir: &crate::Envir,
+    envir: &Envir,
     pos: Pos,
 ) -> Option<PlannedAction> {
     let closable_nbors = Pathfinder::new(envir)

@@ -59,6 +59,7 @@ gameplay_resource = { path = "crates/gameplay_resource" }
 gameplay_transition_state = { path = "crates/gameplay_transition_state" }
 gameplay_terrain = { path = "crates/gameplay_terrain" }
 gameplay_vehicle = { path = "crates/gameplay_vehicle" }
+gameplay_world = { path = "crates/gameplay_world" }
 hud = { path = "crates/hud" }
 keyboard = { path = "crates/keyboard" }
 loading = { path = "crates/loading" }

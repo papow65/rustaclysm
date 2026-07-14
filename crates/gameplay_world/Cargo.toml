@@ -1,0 +1,24 @@
+[package]
+name = "gameplay_world"
+description = "The gameplay world around the player and what hey know about it"
+license = "AGPL-3.0-or-later"
+edition = "2024"
+
+[dependencies]
+bevy = { workspace = true }
+cdda_json_files = { workspace = true }
+gameplay_cdda = { workspace = true }
+gameplay_common = { workspace = true }
+gameplay_focus = { workspace = true }
+gameplay_item = { workspace = true }
+gameplay_location = { workspace = true }
+gameplay_log = { workspace = true }
+gameplay_object = { workspace = true }
+gameplay_player = { workspace = true }
+gameplay_terrain = { workspace = true }
+gameplay_time = { workspace = true }
+text = { workspace = true }
+util = { workspace = true }
+
+[lints]
+workspace = true

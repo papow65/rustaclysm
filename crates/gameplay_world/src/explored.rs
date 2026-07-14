@@ -7,14 +7,14 @@ use gameplay_location::{Level, Overzone, Pos, SubzoneLevel, Zone, ZoneLevel};
 
 /// Ever seen by the player character
 #[derive(Copy, Clone, Debug, PartialEq)]
-pub(crate) enum SeenFrom {
+pub enum SeenFrom {
     FarAway,
     CloseBy,
     Never,
 }
 
 #[derive(Default, Resource)]
-pub(crate) struct Explored {
+pub struct Explored {
     zone_levels: HashMap<ZoneLevel, SeenFrom>,
     pos: HashMap<Pos, bool>,
     loaded_overzones: HashSet<Overzone>,
@@ -53,7 +53,7 @@ impl Explored {
         }
     }
 
-    pub(crate) fn add<'e>(&mut self, explorations: impl Iterator<Item = &'e Exploration>) {
+    pub fn add<'e>(&mut self, explorations: impl Iterator<Item = &'e Exploration>) {
         for exploration in explorations {
             match exploration {
                 Exploration::Pos(pos) => self.mark_pos_seen(*pos),
@@ -67,7 +67,8 @@ impl Explored {
         }
     }
 
-    pub(crate) fn has_zone_level_been_seen(&self, zone_level: ZoneLevel) -> Option<SeenFrom> {
+    #[must_use]
+    pub fn has_zone_level_been_seen(&self, zone_level: ZoneLevel) -> Option<SeenFrom> {
         self.zone_levels.get(&zone_level).copied().or_else(|| {
             self.loaded_overzones
                 .contains(&Overzone::from(zone_level.zone))
@@ -75,15 +76,18 @@ impl Explored {
         })
     }
 
-    pub(crate) fn has_pos_been_seen(&self, pos: Pos) -> bool {
+    #[must_use]
+    pub fn has_pos_been_seen(&self, pos: Pos) -> bool {
         self.pos.get(&pos) == Some(&true)
     }
 
-    pub(crate) fn loaded(&self) -> bool {
+    #[must_use]
+    pub fn loaded(&self) -> bool {
         !self.zone_levels.is_empty()
     }
 
-    pub(crate) fn zone_level_visibility(
+    #[must_use]
+    pub fn zone_level_visibility(
         &self,
         focus: &Focus,
         zone_level: ZoneLevel,

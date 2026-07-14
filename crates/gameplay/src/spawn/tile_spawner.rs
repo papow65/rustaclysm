@@ -1,6 +1,6 @@
 use crate::{
-    Aquatic, BaseSpeed, Explored, Faction, HealingDuration, Health, Melee, Stamina, Tile,
-    WalkingMode, spawn::log_spawn_result,
+    Aquatic, BaseSpeed, Faction, HealingDuration, Health, Melee, Stamina, Tile, WalkingMode,
+    spawn::log_spawn_result,
 };
 use application_state::ApplicationState;
 use bevy::camera::visibility::RenderLayers;
@@ -35,6 +35,7 @@ use gameplay_player::Player;
 use gameplay_relations::{ObjectOn, TileIn};
 use gameplay_terrain::{Accessible, LocalTerrain, OpaqueFloor};
 use gameplay_vehicle::{Vehicle, VehiclePart, VehiclePartOf};
+use gameplay_world::Explored;
 use hud::{BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR};
 use std::f32::consts::{FRAC_PI_4, TAU};
 use std::sync::{Arc, LazyLock};

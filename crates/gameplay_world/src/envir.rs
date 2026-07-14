@@ -1,4 +1,4 @@
-use crate::{Health, NoStairs};
+use crate::NoStairs;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{Entity, Query, Res, With, Without, warn};
 use cdda_json_files::MoveCost;
@@ -13,7 +13,8 @@ use gameplay_object::{ObjectName, StandardIntegrity};
 use gameplay_terrain::{Accessible, OpaqueFloor};
 use std::cmp::Ordering;
 
-pub(crate) enum Collision<'a> {
+#[must_use]
+pub enum Collision<'a> {
     Pass,
     //Fall(Pos), // todo
     Blocked(&'a ObjectName),
@@ -22,7 +23,7 @@ pub(crate) enum Collision<'a> {
 }
 
 #[derive(SystemParam)]
-pub(crate) struct Envir<'w, 's> {
+pub struct Envir<'w, 's> {
     location: Res<'w, LocationCache>,
     accessibles: Query<'w, 's, &'static Accessible>,
     hurdles: Query<'w, 's, &'static Hurdle>,
@@ -30,7 +31,7 @@ pub(crate) struct Envir<'w, 's> {
     closeables: Query<'w, 's, (Entity, &'static ObjectName), With<Closeable>>,
     stairs_up: Query<'w, 's, &'static Pos, With<StairsUp>>,
     stairs_down: Query<'w, 's, &'static Pos, With<StairsDown>>,
-    terrain: Query<'w, 's, &'static ObjectName, (Without<Health>, Without<Amount>)>,
+    terrain: Query<'w, 's, &'static ObjectName, (Without<Life>, Without<Corpse>, Without<Amount>)>,
     obstacles: Query<'w, 's, &'static ObjectName, With<Obstacle>>,
     opaques: Query<'w, 's, &'static ObjectName, With<Opaque>>,
     opaque_floors: Query<'w, 's, &'static OpaqueFloor>,
@@ -43,21 +44,25 @@ pub(crate) struct Envir<'w, 's> {
 impl<'w, 's> Envir<'w, 's> {
     // base methods
 
-    pub(crate) fn exists(&self, pos: Pos) -> bool {
+    #[must_use]
+    pub fn exists(&self, pos: Pos) -> bool {
         pos.level == Level::ZERO || self.location.all(pos).next().is_some()
     }
 
-    pub(crate) fn is_accessible(&self, pos: Pos) -> bool {
+    #[must_use]
+    pub fn is_accessible(&self, pos: Pos) -> bool {
         self.location.any(pos, &self.accessibles)
     }
 
-    pub(crate) fn is_water(&self, pos: Pos) -> bool {
+    #[must_use]
+    pub fn is_water(&self, pos: Pos) -> bool {
         self.location
             .get_first(pos, &self.accessibles)
             .is_some_and(|floor| floor.water)
     }
 
-    pub(crate) fn stairs_up_to(&self, from: Pos) -> Option<Pos> {
+    #[must_use]
+    pub fn stairs_up_to(&self, from: Pos) -> Option<Pos> {
         if self.location.has_stairs_up(from, &self.stairs_up) {
             let zone_level_up = ZoneLevel::from(from).offset(LevelOffset::UP)?;
 
@@ -93,7 +98,8 @@ impl<'w, 's> Envir<'w, 's> {
         }
     }
 
-    pub(crate) fn stairs_down_to(&self, from: Pos) -> Option<Pos> {
+    #[must_use]
+    pub fn stairs_down_to(&self, from: Pos) -> Option<Pos> {
         if self.location.has_stairs_down(from, &self.stairs_down) {
             let zone_level_down = ZoneLevel::from(from).offset(LevelOffset::DOWN)?;
 
@@ -130,55 +136,67 @@ impl<'w, 's> Envir<'w, 's> {
         }
     }
 
-    pub(crate) fn find_accessibles(&self, pos: Pos) -> Option<&Accessible> {
+    #[must_use]
+    pub fn find_accessibles(&self, pos: Pos) -> Option<&Accessible> {
         self.location.get_first(pos, &self.accessibles)
     }
 
-    pub(crate) fn find_hurdles(&self, pos: Pos) -> Option<&Hurdle> {
+    #[must_use]
+    pub fn find_hurdles(&self, pos: Pos) -> Option<&Hurdle> {
         self.location.get_first(pos, &self.hurdles)
     }
 
-    pub(crate) fn find_openable(&self, pos: Pos) -> Option<(Entity, &ObjectName)> {
+    #[must_use]
+    pub fn find_openable(&self, pos: Pos) -> Option<(Entity, &ObjectName)> {
         self.location.get_first(pos, &self.openables)
     }
 
-    pub(crate) fn find_closeable(&self, pos: Pos) -> Option<(Entity, &ObjectName)> {
+    #[must_use]
+    pub fn find_closeable(&self, pos: Pos) -> Option<(Entity, &ObjectName)> {
         self.location.get_first(pos, &self.closeables)
     }
 
-    pub(crate) fn find_terrain(&self, pos: Pos) -> Option<&ObjectName> {
+    #[must_use]
+    pub fn find_terrain(&self, pos: Pos) -> Option<&ObjectName> {
         self.location.get_first(pos, &self.terrain)
     }
 
-    pub(crate) fn find_obstacle(&self, pos: Pos) -> Option<&ObjectName> {
+    #[must_use]
+    pub fn find_obstacle(&self, pos: Pos) -> Option<&ObjectName> {
         self.location.get_first(pos, &self.obstacles)
     }
 
-    pub(crate) fn is_opaque(&self, pos: Pos) -> bool {
+    #[must_use]
+    pub fn is_opaque(&self, pos: Pos) -> bool {
         self.location.any(pos, &self.opaques)
     }
 
-    pub(crate) fn has_opaque_floor(&self, pos: Pos) -> bool {
+    #[must_use]
+    pub fn has_opaque_floor(&self, pos: Pos) -> bool {
         self.location.any(pos, &self.opaque_floors)
     }
 
-    pub(crate) fn find_character(&self, pos: Pos) -> Option<(Entity, &ObjectName)> {
+    #[must_use]
+    pub fn find_character(&self, pos: Pos) -> Option<(Entity, &ObjectName)> {
         self.location.get_first(pos, &self.characters)
     }
 
-    pub(crate) fn find_smashable(&self, pos: Pos) -> Option<Entity> {
+    #[must_use]
+    pub fn find_smashable(&self, pos: Pos) -> Option<Entity> {
         self.location.get_first(pos, &self.smashables)
     }
 
-    pub(crate) fn find_pulpable(&self, pos: Pos) -> Option<Entity> {
+    #[must_use]
+    pub fn find_pulpable(&self, pos: Pos) -> Option<Entity> {
         self.location.get_first(pos, &self.pulpables)
     }
 
-    pub(crate) fn find_item(&self, pos: Pos) -> Option<ItemItem<'_, '_>> {
+    #[must_use]
+    pub fn find_item(&self, pos: Pos) -> Option<ItemItem<'_, '_>> {
         self.location.get_first(pos, &self.items)
     }
 
-    pub(crate) fn all_items(&self, pos: Pos) -> impl Iterator<Item = ItemItem<'_, '_>> {
+    pub fn all_items(&self, pos: Pos) -> impl Iterator<Item = ItemItem<'_, '_>> {
         self.location
             .all(pos)
             .flat_map(|&entity| self.items.get(entity))
@@ -187,6 +205,7 @@ impl<'w, 's> Envir<'w, 's> {
     // helper methods
 
     /// In case of vertical nbors: Follow stairs, even when they do not go staight up or down. Without stairs, see the raw position below/above, unless that contains a stair to somewhere else.
+    #[must_use]
     #[expect(dead_code)]
     pub(crate) fn get_looking_nbor(&self, from: Pos, nbor: Nbor) -> Option<Pos> {
         match nbor {
@@ -202,7 +221,10 @@ impl<'w, 's> Envir<'w, 's> {
     }
 
     /// Follow stairs, even when they do not go staight up or down.
-    pub(crate) fn get_nbor(&self, from: Pos, nbor: Nbor) -> Result<Pos, NoStairs> {
+    ///
+    /// # Errors
+    /// On vertical nbors when there are no stairs
+    pub fn get_nbor(&self, from: Pos, nbor: Nbor) -> Result<Pos, NoStairs> {
         match nbor {
             Nbor::Up => self.stairs_up_to(from).ok_or(NoStairs::Up),
             Nbor::Down => self.stairs_down_to(from).ok_or(NoStairs::Down),
@@ -214,7 +236,8 @@ impl<'w, 's> Envir<'w, 's> {
     }
 
     /// Follow stairs, even when they do not go staight up or down.
-    pub(crate) fn to_nbor(&self, from: Pos, to: Pos) -> Option<Nbor> {
+    #[must_use]
+    pub fn to_nbor(&self, from: Pos, to: Pos) -> Option<Nbor> {
         let offset = to - from;
         match offset.level {
             LevelOffset::UP if self.get_nbor(from, Nbor::Up) == Ok(to) => Some(Nbor::Up),
@@ -226,10 +249,7 @@ impl<'w, 's> Envir<'w, 's> {
         }
     }
 
-    pub(crate) fn nbors(
-        &'s self,
-        pos: Pos,
-    ) -> impl Iterator<Item = (Nbor, Pos, WalkingCost)> + use<'s> {
+    pub fn nbors(&'s self, pos: Pos) -> impl Iterator<Item = (Nbor, Pos, WalkingCost)> + use<'s> {
         Nbor::ALL.iter().filter_map(move |&nbor| {
             self.get_nbor(pos, nbor).ok().map(|npos| {
                 (
@@ -247,13 +267,14 @@ impl<'w, 's> Envir<'w, 's> {
     }
 
     /// Nbor from the first pos
-    pub(crate) fn nbor(&self, one: Pos, other: Pos) -> Option<Nbor> {
+    #[must_use]
+    pub fn nbor(&self, one: Pos, other: Pos) -> Option<Nbor> {
         self.nbors_if(one, move |npos| npos == other)
             .next()
             .map(|(nbor, ..)| nbor)
     }
 
-    pub(crate) fn nbors_if<F>(
+    pub fn nbors_if<F>(
         &'s self,
         pos: Pos,
         acceptable: F,
@@ -265,7 +286,7 @@ impl<'w, 's> Envir<'w, 's> {
             .filter(move |(_nbor, npos, _distance)| acceptable(*npos))
     }
 
-    pub(crate) fn collide(&self, from: Pos, to: Pos, controlled: bool) -> Collision<'_> {
+    pub fn collide(&self, from: Pos, to: Pos, controlled: bool) -> Collision<'_> {
         assert_ne!(from, to, "Collisions require movement");
         assert!(
             self.nbor(from, to).is_some(),
@@ -306,7 +327,7 @@ impl<'w, 's> Envir<'w, 's> {
         }
     }
 
-    pub(crate) fn magic_stairs_up(&self) -> impl Iterator<Item = Pos> + use<'_> {
+    pub fn magic_stairs_up(&self) -> impl Iterator<Item = Pos> + use<'_> {
         self.stairs_up
             .iter()
             .filter(|pos| {
@@ -316,7 +337,7 @@ impl<'w, 's> Envir<'w, 's> {
             .copied()
     }
 
-    pub(crate) fn magic_stairs_down(&self) -> impl Iterator<Item = Pos> + use<'_> {
+    pub fn magic_stairs_down(&self) -> impl Iterator<Item = Pos> + use<'_> {
         self.stairs_down
             .iter()
             .filter(|pos| {

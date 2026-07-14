@@ -1,8 +1,7 @@
-use crate::{
-    CameraOffset, Expanded, Explored, RelativeSegments, VisualizationUpdate, ZoneLevelIds,
-};
+use crate::{CameraOffset, Expanded, VisualizationUpdate, ZoneLevelIds};
 use bevy::prelude::{App, Plugin};
 use gameplay_resource::gameplay_resource_plugin;
+use gameplay_world::{Explored, RelativeSegments};
 use util::async_resource_plugin;
 
 pub(crate) struct ResourcePlugin;

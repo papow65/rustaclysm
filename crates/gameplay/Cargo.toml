@@ -30,6 +30,7 @@ gameplay_transition_state = { workspace = true }
 gameplay_time = { workspace = true }
 gameplay_terrain = { workspace = true }
 gameplay_vehicle = { workspace = true }
+gameplay_world = { workspace = true }
 hud = { workspace = true }
 keyboard = { workspace = true }
 manual = { workspace = true }

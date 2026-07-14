@@ -2,7 +2,7 @@ use gameplay_log::{ProtoLogMessage, Severity};
 use text::Phrase;
 
 #[derive(Debug, PartialEq)]
-pub(crate) enum NoStairs {
+pub enum NoStairs {
     Up,
     Down,
 }

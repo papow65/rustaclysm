@@ -4,7 +4,7 @@ use std::{array, iter::once};
 use util::AsyncNew;
 
 #[derive(Clone, Debug, PartialEq)]
-struct RelativeRay {
+pub struct RelativeRay {
     path: Vec<PosOffset>,
 }
 
@@ -64,15 +64,15 @@ impl RelativeRay {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub(crate) struct RelativeSegment {
-    pub(crate) preceding: Option<PosOffset>,
-    pub(crate) segment: Vec<PosOffset>,
-    pub(crate) down_pairs: Vec<(PosOffset, PosOffset)>,
+pub struct RelativeSegment {
+    pub preceding: Option<PosOffset>,
+    pub segment: Vec<PosOffset>,
+    pub down_pairs: Vec<(PosOffset, PosOffset)>,
 }
 
 #[derive(Debug, Resource)]
-pub(crate) struct RelativeSegments {
-    pub(crate) segments: [HashMap<PosOffset, RelativeSegment>; Self::SIZE],
+pub struct RelativeSegments {
+    pub segments: [HashMap<PosOffset, RelativeSegment>; Self::SIZE],
 }
 
 impl RelativeSegments {

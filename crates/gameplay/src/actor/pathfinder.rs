@@ -1,9 +1,10 @@
-use crate::{Envir, Intelligence, QueuedInstruction};
+use crate::{Intelligence, QueuedInstruction};
 use bevy::prelude::debug;
 use cdda_json_files::MoveCost;
 use fastrand::f32 as rand_f32;
 use gameplay_common::WalkingCost;
 use gameplay_location::{HorizontalDirection, Nbor, NborDistance, Pos};
+use gameplay_world::Envir;
 use pathfinding::prelude::astar;
 use units::{Duration, Speed};
 

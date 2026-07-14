@@ -4,10 +4,9 @@ use crate::actor::messages::{
     YouFinish, YouSleepFor,
 };
 use crate::{
-    ActorEvent, ActorImpact, Aquatic, Attack, BaseSpeed, Breath, ChangePace, Close, Collision,
-    CorpseEvent, Damage, Envir, Faction, Healing, HealingDuration, Health, LastEnemy, Melee,
-    Pathfinder, Peek, Pulp, Smash, Stamina, StaminaCost, StartCraft, Step, Tile, TileSpawner,
-    Toggle, WalkingMode,
+    ActorEvent, ActorImpact, Aquatic, Attack, BaseSpeed, Breath, ChangePace, Close, CorpseEvent,
+    Damage, Faction, Healing, HealingDuration, Health, LastEnemy, Melee, Pathfinder, Peek, Pulp,
+    Smash, Stamina, StaminaCost, StartCraft, Step, Tile, TileSpawner, Toggle, WalkingMode,
 };
 use bevy::ecs::query::{QueryData, With};
 use bevy::prelude::{
@@ -28,6 +27,7 @@ use gameplay_player::{Player, PlayerActionState};
 use gameplay_relations::ObjectOn;
 use gameplay_terrain::TerrainEvent;
 use gameplay_time::Clock;
+use gameplay_world::{Collision, Envir};
 use text::{Phrase, Subject};
 use units::{Distance, Duration, Speed};
 use util::Maybe;

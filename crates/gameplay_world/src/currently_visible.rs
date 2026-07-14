@@ -56,8 +56,8 @@ impl<V: Clone + Copy> Default for FullMap<V> {
 }
 
 #[derive(SystemParam)]
-pub(crate) struct CurrentlyVisibleBuilder<'w, 's> {
-    pub(crate) envir: Envir<'w, 's>,
+pub struct CurrentlyVisibleBuilder<'w, 's> {
+    pub envir: Envir<'w, 's>,
     relative_segments: Res<'w, RelativeSegments>,
     clock: Clock<'w>,
     player_action_state: Res<'w, State<PlayerActionState>>,
@@ -65,12 +65,12 @@ pub(crate) struct CurrentlyVisibleBuilder<'w, 's> {
 }
 
 impl CurrentlyVisibleBuilder<'_, '_> {
-    pub(crate) fn for_npc(&self, pos: Pos) -> CurrentlyVisible<'_> {
+    pub fn for_npc(&self, pos: Pos) -> CurrentlyVisible<'_> {
         let viewing_distance = CurrentlyVisible::viewing_distance(&self.clock, None, pos.level);
         self.build(viewing_distance, pos, true)
     }
 
-    pub(crate) fn for_player(&self, only_nearby: bool) -> CurrentlyVisible<'_> {
+    pub fn for_player(&self, only_nearby: bool) -> CurrentlyVisible<'_> {
         let from_pos = if let PlayerActionState::Peeking { direction } = **self.player_action_state
         {
             self.player_pos().horizontal_nbor(direction.into())
@@ -154,7 +154,8 @@ impl CurrentlyVisibleBuilder<'_, '_> {
         }
     }
 
-    pub(crate) fn player_pos(&self) -> Pos {
+    #[must_use]
+    pub fn player_pos(&self) -> Pos {
         **self.player
     }
 }
@@ -165,7 +166,8 @@ impl PosPerceiver for CurrentlyVisibleBuilder<'_, '_> {
     }
 }
 
-pub(crate) struct CurrentlyVisible<'a> {
+#[must_use]
+pub struct CurrentlyVisible<'a> {
     envir: &'a Envir<'a, 'a>,
     segments: &'a HashMap<PosOffset, RelativeSegment>,
 
@@ -188,7 +190,8 @@ pub(crate) struct CurrentlyVisible<'a> {
 impl CurrentlyVisible<'_> {
     const MIN_DISTANCE: f32 = 3.0;
 
-    pub(crate) fn viewing_distance(
+    #[must_use]
+    pub fn viewing_distance(
         clock: &Clock,
         player_action_state: Option<&PlayerActionState>,
         level: Level,
@@ -208,7 +211,7 @@ impl CurrentlyVisible<'_> {
         }
     }
 
-    pub(crate) fn can_see(&mut self, to: Pos, accessible: Option<&Accessible>) -> Visible {
+    pub fn can_see(&mut self, to: Pos, accessible: Option<&Accessible>) -> Visible {
         // We ignore floors seen from below. Those are not particulary interesting and require complex logic to do properly.
 
         if self.nearby_pos(to, 0) && (to.level <= self.from.level || accessible.is_none()) {
@@ -227,7 +230,7 @@ impl CurrentlyVisible<'_> {
             && self.from.z.abs_diff(pos.z) <= viewing_distance as u32 + extra as u32
     }
 
-    pub(crate) fn can_see_relative(&mut self, relative_to: PosOffset) -> Visible {
+    pub fn can_see_relative(&mut self, relative_to: PosOffset) -> Visible {
         if let Some(visible) = self.visible_cache.get(&relative_to) {
             return visible;
         }
@@ -296,7 +299,8 @@ impl CurrentlyVisible<'_> {
         visible
     }
 
-    pub(crate) const fn nearby(&self, subzone_level: SubzoneLevel) -> bool {
+    #[must_use]
+    pub const fn nearby(&self, subzone_level: SubzoneLevel) -> bool {
         let Some((min, max)) = self.nearby_subzone_limits else {
             return true;
         };

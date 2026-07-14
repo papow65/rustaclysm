@@ -1,6 +1,6 @@
 use crate::spawn::{SubzoneSpawner, VisibleRegion, ZoneSpawner};
 use crate::{
-    DespawnSubzoneLevel, DespawnZoneLevel, Expanded, Explored, MissingAsset, SpawnSubzoneLevel,
+    DespawnSubzoneLevel, DespawnZoneLevel, Expanded, MissingAsset, SpawnSubzoneLevel,
     SpawnZoneLevel, TileSpawner, UpdateZoneLevelVisibility, VisualizationUpdate, ZoneLevelIds,
 };
 use bevy::ecs::{schedule::ScheduleConfigs, system::ScheduleSystem};
@@ -21,6 +21,7 @@ use gameplay_local::GameplayLocal;
 use gameplay_location::{
     Level, Pos, SubzoneLevel, SubzoneLevelCache, VisionDistance, Zone, ZoneLevel, ZoneLevelCache,
 };
+use gameplay_world::Explored;
 use std::cmp::Ordering;
 use std::time::{Duration, Instant};
 use util::{MessageBuffer, log_if_slow};
