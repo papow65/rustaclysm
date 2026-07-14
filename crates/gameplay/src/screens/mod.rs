@@ -8,6 +8,7 @@ mod plugin;
 mod quality;
 mod state;
 mod tool;
+mod transitioning;
 mod waiting;
 
 pub(crate) use self::base::update_camera_offset;
@@ -22,4 +23,5 @@ use self::inventory::InventoryScreenPlugin;
 use self::menu::MenuScreenPlugin;
 use self::quality::QualityScreenPlugin;
 use self::tool::ToolScreenPlugin;
+use self::transitioning::TransitioningScreenPlugin;
 use self::waiting::WaitingModalPlugin;
