@@ -1,13 +1,7 @@
 use crate::GameplayScreenState;
-use crate::screens::base::systems::{
-    create_base_key_bindings, manage_mouse_button_input, manage_mouse_scroll_input,
-    trigger_refresh, update_camera_offset,
-};
-
-use bevy::input::mouse::{MouseMotion, MouseWheel};
-use bevy::prelude::{
-    App, IntoScheduleConfigs as _, OnEnter, OnExit, Plugin, Update, in_state, on_message,
-};
+use crate::screens::base::systems::{create_base_key_bindings, trigger_refresh};
+use bevy::prelude::{App, IntoScheduleConfigs as _, OnEnter, OnExit, Plugin, Update, in_state};
+use gameplay_camera::{CameraPlugin, manage_camera_offset};
 use gameplay_location::CardinalDirection;
 use gameplay_player::PlayerActionState;
 use strum::VariantArray as _;
@@ -16,17 +10,13 @@ pub(crate) struct BaseScreenPlugin;
 
 impl Plugin for BaseScreenPlugin {
     fn build(&self, app: &mut App) {
+        app.add_plugins(CameraPlugin);
+
         app.add_systems(OnEnter(GameplayScreenState::Base), create_base_key_bindings);
 
         app.add_systems(
             Update,
-            (
-                manage_mouse_scroll_input
-                    .run_if(on_message::<MouseWheel>)
-                    .before(update_camera_offset),
-                manage_mouse_button_input.run_if(on_message::<MouseMotion>),
-            )
-                .run_if(in_state(GameplayScreenState::Base)),
+            manage_camera_offset().run_if(in_state(GameplayScreenState::Base)),
         );
 
         for &direction in CardinalDirection::VARIANTS {

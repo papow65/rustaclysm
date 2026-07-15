@@ -11,7 +11,6 @@ mod tool;
 mod transitioning;
 mod waiting;
 
-pub(crate) use self::base::update_camera_offset;
 pub(crate) use self::plugin::ScreensPlugin;
 pub(crate) use self::state::GameplayScreenState;
 

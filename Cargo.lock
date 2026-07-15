@@ -2398,6 +2398,7 @@ dependencies = [
  "either",
  "fastrand",
  "float-ord",
+ "gameplay_camera",
  "gameplay_cdda",
  "gameplay_cdda_active_sav",
  "gameplay_common",
@@ -2429,6 +2430,15 @@ dependencies = [
  "text",
  "thread_local",
  "units",
+ "util",
+]
+
+[[package]]
+name = "gameplay_camera"
+version = "0.0.0"
+dependencies = [
+ "bevy",
+ "gameplay_resource",
  "util",
 ]
 

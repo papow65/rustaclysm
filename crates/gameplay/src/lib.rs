@@ -26,11 +26,8 @@ use self::events::{
     ActorEvent, CorpseEvent, Damage, DespawnSubzoneLevel, DespawnZoneLevel, EventsPlugin, Healing,
     RefreshAfterBehavior, SpawnSubzoneLevel, SpawnZoneLevel, Toggle, UpdateZoneLevelVisibility,
 };
-use self::resources::{
-    CameraDirection, CameraZoom, Expanded, ResourcePlugin, VisualizationUpdate, ZoneLevelIds,
-    ZoomDirection, ZoomDistance,
-};
-use self::screens::{GameplayScreenState, ScreensPlugin, update_camera_offset};
+use self::resources::{Expanded, ResourcePlugin, VisualizationUpdate, ZoneLevelIds};
+use self::screens::{GameplayScreenState, ScreensPlugin};
 use self::sidebar::SidebarPlugin;
 use self::spawn::{
     TileSpawner, despawn_systems, handle_region_asset_events, handle_zone_levels,

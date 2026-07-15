@@ -1,17 +1,18 @@
 use crate::{
-    ActorPlugin, CameraDirection, CameraZoom, EventsPlugin, GameplayScreenState, ResourcePlugin,
-    ScreensPlugin, SidebarPlugin, VisualizationUpdate, check_failed_asset_loading, count_assets,
-    count_pos, create_gameplay_key_bindings, despawn_systems, handle_region_asset_events,
-    handle_zone_levels, spawn_initial_entities, spawn_subzone_levels, spawn_subzones_for_camera,
-    update_camera_offset, update_explored, update_visibility, update_visualization_on_item_move,
+    ActorPlugin, EventsPlugin, GameplayScreenState, ResourcePlugin, ScreensPlugin, SidebarPlugin,
+    VisualizationUpdate, check_failed_asset_loading, count_assets, count_pos,
+    create_gameplay_key_bindings, despawn_systems, handle_region_asset_events, handle_zone_levels,
+    spawn_initial_entities, spawn_subzone_levels, spawn_subzones_for_camera, update_explored,
+    update_visibility, update_visualization_on_item_move,
 };
 use application_state::ApplicationState;
-use bevy::ecs::schedule::{ScheduleConfigs, SystemCondition as _};
+use bevy::ecs::schedule::ScheduleConfigs;
 use bevy::ecs::system::ScheduleSystem;
 use bevy::prelude::{
     App, AppExtStates as _, FixedUpdate, IntoScheduleConfigs as _, OnEnter, Plugin, PostUpdate,
     Update, in_state, on_message, resource_exists, resource_exists_and_changed,
 };
+use gameplay_camera::UpdateCameraOffset;
 use gameplay_cdda::{CddaPlugin, Exploration};
 use gameplay_focus::{FocusPlugin, OnFocusChange};
 use gameplay_item::GameplayItemPlugin;
@@ -68,14 +69,8 @@ fn update_systems() -> ScheduleConfigs<ScheduleSystem> {
     (
         handle_region_asset_events(),
         (
-            (
-                update_explored.run_if(on_message::<Exploration>),
-                update_camera_offset.run_if(
-                    resource_exists_and_changed::<CameraDirection>
-                        .or_else(resource_exists_and_changed::<CameraZoom>),
-                ),
-            ),
-            spawn_subzones_for_camera,
+            (update_explored.run_if(on_message::<Exploration>),),
+            spawn_subzones_for_camera.after(UpdateCameraOffset),
             (
                 spawn_subzone_levels,
                 update_visualization_on_item_move.run_if(resource_exists::<RelativeSegments>),

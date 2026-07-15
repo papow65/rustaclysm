@@ -1,4 +1,4 @@
-use crate::{CameraDirection, CameraZoom, Expanded, VisualizationUpdate, ZoneLevelIds};
+use crate::{Expanded, VisualizationUpdate, ZoneLevelIds};
 use bevy::prelude::{App, Plugin};
 use gameplay_resource::gameplay_resource_plugin;
 use gameplay_world::{Explored, RelativeSegments};
@@ -10,8 +10,6 @@ impl Plugin for ResourcePlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((
             async_resource_plugin::<RelativeSegments>,
-            gameplay_resource_plugin::<CameraDirection>,
-            gameplay_resource_plugin::<CameraZoom>,
             gameplay_resource_plugin::<Expanded>,
             gameplay_resource_plugin::<Explored>,
             gameplay_resource_plugin::<VisualizationUpdate>,

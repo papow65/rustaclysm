@@ -60,6 +60,7 @@ gameplay_transition = { path = "crates/gameplay_transition" }
 gameplay_transition_state = { path = "crates/gameplay_transition_state" }
 gameplay_terrain = { path = "crates/gameplay_terrain" }
 gameplay_vehicle = { path = "crates/gameplay_vehicle" }
+gameplay_camera = { path = "crates/gameplay_camera" }
 gameplay_world = { path = "crates/gameplay_world" }
 hud = { path = "crates/hud" }
 keyboard = { path = "crates/keyboard" }
