@@ -1,5 +1,5 @@
+use crate::VisualizationUpdate;
 use crate::systems::{update_visualization, update_visualization_on_item_move};
-use crate::{BaseSpeed, VisualizationUpdate};
 use bevy::ecs::schedule::{IntoScheduleConfigs as _, ScheduleConfigs};
 use bevy::ecs::system::ScheduleSystem;
 use bevy::prelude::{
@@ -12,6 +12,7 @@ use gameplay_focus::{ElevationVisibility, Focus};
 use gameplay_local::GameplayLocal;
 use gameplay_location::Pos;
 use gameplay_model::{Appearance, LastSeen};
+use gameplay_object::Mobile;
 use gameplay_player::{Player, PlayerActionState};
 use gameplay_terrain::Accessible;
 use gameplay_time::Clock;
@@ -110,7 +111,7 @@ fn update_visualization_on_player_move(
         &mut Visibility,
         &mut LastSeen,
         Option<&Accessible>,
-        Option<&BaseSpeed>,
+        Option<&Mobile>,
         &Children,
     )>,
     child_items: Query<&Appearance, (With<ChildOf>, Without<Pos>)>,

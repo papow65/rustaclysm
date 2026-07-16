@@ -1,11 +1,11 @@
-use crate::BaseSpeed;
 use gameplay_common::Visible;
 use gameplay_model::LastSeen;
+use gameplay_object::Mobile;
 use gameplay_player::Player;
 
 pub(crate) trait LastSeenExt {
     fn update(&mut self, visible: Visible);
-    fn shown(&self, player: Option<&Player>, speed: Option<&BaseSpeed>) -> bool;
+    fn shown(&self, player: Option<&Player>, mobile: Option<&Mobile>) -> bool;
 }
 
 impl LastSeenExt for LastSeen {
@@ -17,10 +17,10 @@ impl LastSeenExt for LastSeen {
         }
     }
 
-    fn shown(&self, player: Option<&Player>, speed: Option<&BaseSpeed>) -> bool {
+    fn shown(&self, player: Option<&Player>, mobile: Option<&Mobile>) -> bool {
         // Things that can move, like NPCs, are hidden when out of sight.
         self == &Self::Currently
-            || (self == &Self::Previously && speed.is_none())
+            || (self == &Self::Previously && mobile.is_none())
             || player.is_some()
     }
 }

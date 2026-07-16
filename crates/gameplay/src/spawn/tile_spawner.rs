@@ -150,7 +150,7 @@ impl<'w> TileSpawner<'w, '_> {
         }
 
         if 0 < character_info.speed {
-            entity.insert(BaseSpeed::from_percent(character_info.speed));
+            entity.insert((Mobile, BaseSpeed::from_percent(character_info.speed)));
         }
 
         if character_info.flags.aquatic() {

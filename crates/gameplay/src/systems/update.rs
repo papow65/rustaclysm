@@ -1,4 +1,4 @@
-use crate::{BaseSpeed, LastSeenExt as _};
+use crate::LastSeenExt as _;
 use bevy::prelude::{
     Camera, Changed, ChildOf, Children, Commands, GlobalTransform, MessageWriter, ParallelCommands,
     Query, Res, Single, Visibility, With, Without, debug, error,
@@ -8,6 +8,7 @@ use gameplay_focus::{ElevationVisibility, Focus};
 use gameplay_local::GameplayLocal;
 use gameplay_location::{Pos, SubzoneLevel};
 use gameplay_model::{Appearance, LastSeen};
+use gameplay_object::Mobile;
 use gameplay_player::Player;
 use gameplay_terrain::Accessible;
 use gameplay_world::{CurrentlyVisible, CurrentlyVisibleBuilder};
@@ -39,7 +40,7 @@ pub(crate) fn update_visualization(
     visibility: &mut Visibility,
     last_seen: &mut LastSeen,
     accessible: Option<&Accessible>,
-    speed: Option<&BaseSpeed>,
+    mobile: Option<&Mobile>,
     children: &Children,
     child_items: &Query<&Appearance, (With<ChildOf>, Without<Pos>)>,
 ) -> Option<Exploration> {
@@ -64,7 +65,7 @@ pub(crate) fn update_visualization(
             }
 
             *visibility =
-                calculate_visibility(focus, player, pos, elevation_visibility, last_seen, speed);
+                calculate_visibility(focus, player, pos, elevation_visibility, last_seen, mobile);
         }
 
         let hidden = *visibility == Visibility::Hidden;
@@ -86,10 +87,10 @@ fn calculate_visibility(
     pos: Pos,
     elevation_visibility: ElevationVisibility,
     last_seen: &LastSeen,
-    speed: Option<&BaseSpeed>,
+    mobile: Option<&Mobile>,
 ) -> Visibility {
     // The player character can see things not shown to the player, like the top of a tower when walking next to it.
-    if focus.is_pos_shown(pos, elevation_visibility) && last_seen.shown(player, speed) {
+    if focus.is_pos_shown(pos, elevation_visibility) && last_seen.shown(player, mobile) {
         Visibility::Inherited
     } else {
         Visibility::Hidden
@@ -107,7 +108,7 @@ pub(crate) fn update_visibility(
         &Pos,
         &mut Visibility,
         &mut LastSeen,
-        Option<&BaseSpeed>,
+        Option<&Mobile>,
     )>,
     camera: Single<&GlobalTransform, With<Camera>>,
 ) {
@@ -118,7 +119,7 @@ pub(crate) fn update_visibility(
         || camera_global_transform != *previous_camera_global_transform.get()
         || *elevation_visibility != *last_elevation_visibility.get()
     {
-        for (player, &pos, mut visibility, last_seen, speed) in &mut items {
+        for (player, &pos, mut visibility, last_seen, mobile) in &mut items {
             if *last_seen != LastSeen::Never {
                 *visibility = calculate_visibility(
                     &focus,
@@ -126,7 +127,7 @@ pub(crate) fn update_visibility(
                     pos,
                     *elevation_visibility,
                     &last_seen,
-                    speed,
+                    mobile,
                 );
             }
         }
@@ -153,7 +154,7 @@ pub(crate) fn update_visualization_on_item_move(
             &mut Visibility,
             &mut LastSeen,
             Option<&Accessible>,
-            Option<&BaseSpeed>,
+            Option<&Mobile>,
             &Children,
         ),
         Changed<Pos>,
@@ -165,7 +166,8 @@ pub(crate) fn update_visualization_on_item_move(
     if moved_items.iter().peekable().peek().is_some() {
         let mut currently_visible = currently_visible_builder.for_player(true);
 
-        for (&pos, mut visibility, mut last_seen, accessible, speed, children) in &mut moved_items {
+        for (&pos, mut visibility, mut last_seen, accessible, mobile, children) in &mut moved_items
+        {
             let exploration = par_commands.command_scope(|mut commands| {
                 update_visualization(
                     &mut commands,
@@ -177,7 +179,7 @@ pub(crate) fn update_visualization_on_item_move(
                     &mut visibility,
                     &mut last_seen,
                     accessible,
-                    speed,
+                    mobile,
                     children,
                     &child_items,
                 )
