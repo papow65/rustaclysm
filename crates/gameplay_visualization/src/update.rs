@@ -1,4 +1,3 @@
-use crate::LastSeenExt as _;
 use bevy::prelude::{
     Camera, Changed, ChildOf, Children, Commands, GlobalTransform, MessageWriter, ParallelCommands,
     Query, Res, Single, Visibility, With, Without, debug, error,
@@ -9,9 +8,9 @@ use gameplay_local::GameplayLocal;
 use gameplay_location::{Pos, SubzoneLevel};
 use gameplay_model::{Appearance, LastSeen};
 use gameplay_object::Mobile;
+use gameplay_perception::{CurrentlyVisible, CurrentlyVisibleBuilder, LastSeenExt as _};
 use gameplay_player::Player;
 use gameplay_terrain::Accessible;
-use gameplay_world::{CurrentlyVisible, CurrentlyVisibleBuilder};
 use std::time::Instant;
 use util::log_if_slow;
 
@@ -30,7 +29,7 @@ fn update_material(
     }
 }
 
-pub(crate) fn update_visualization(
+pub fn update_visualization(
     commands: &mut Commands,
     currently_visible: &mut CurrentlyVisible,
     elevation_visibility: ElevationVisibility,
@@ -98,7 +97,7 @@ fn calculate_visibility(
 }
 
 #[expect(clippy::needless_pass_by_value)]
-pub(crate) fn update_visibility(
+pub fn update_visibility(
     focus: Focus,
     elevation_visibility: Res<ElevationVisibility>,
     mut previous_camera_global_transform: GameplayLocal<GlobalTransform>,
@@ -142,7 +141,7 @@ pub(crate) fn update_visibility(
 }
 
 #[expect(clippy::needless_pass_by_value)]
-pub(crate) fn update_visualization_on_item_move(
+pub fn update_visualization_on_item_move(
     par_commands: ParallelCommands,
     mut explorations: MessageWriter<Exploration>,
     focus: Focus,

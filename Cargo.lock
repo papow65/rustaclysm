@@ -2411,6 +2411,7 @@ dependencies = [
  "gameplay_model",
  "gameplay_nearby",
  "gameplay_object",
+ "gameplay_perception",
  "gameplay_player",
  "gameplay_relations",
  "gameplay_resource",
@@ -2419,13 +2420,13 @@ dependencies = [
  "gameplay_transition",
  "gameplay_transition_state",
  "gameplay_vehicle",
+ "gameplay_visualization",
  "gameplay_world",
  "hud",
  "keyboard",
  "manual",
  "pathfinding",
  "selection_list",
- "serde_json",
  "strum",
  "text",
  "thread_local",
@@ -2600,6 +2601,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "gameplay_perception"
+version = "0.0.0"
+dependencies = [
+ "bevy",
+ "gameplay_cdda",
+ "gameplay_common",
+ "gameplay_focus",
+ "gameplay_location",
+ "gameplay_log",
+ "gameplay_model",
+ "gameplay_object",
+ "gameplay_player",
+ "gameplay_resource",
+ "gameplay_terrain",
+ "gameplay_time",
+ "gameplay_world",
+ "util",
+]
+
+[[package]]
 name = "gameplay_player"
 version = "0.1.0"
 dependencies = [
@@ -2656,8 +2677,8 @@ dependencies = [
  "bevy",
  "gameplay_cdda",
  "gameplay_location",
+ "gameplay_perception",
  "gameplay_transition_state",
- "gameplay_world",
 ]
 
 [[package]]
@@ -2679,6 +2700,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "gameplay_visualization"
+version = "0.0.0"
+dependencies = [
+ "bevy",
+ "gameplay_cdda",
+ "gameplay_common",
+ "gameplay_focus",
+ "gameplay_local",
+ "gameplay_location",
+ "gameplay_model",
+ "gameplay_object",
+ "gameplay_perception",
+ "gameplay_player",
+ "gameplay_resource",
+ "gameplay_terrain",
+ "util",
+]
+
+[[package]]
 name = "gameplay_world"
 version = "0.0.0"
 dependencies = [
@@ -2686,16 +2726,14 @@ dependencies = [
  "cdda_json_files",
  "gameplay_cdda",
  "gameplay_common",
- "gameplay_focus",
  "gameplay_item",
  "gameplay_location",
  "gameplay_log",
  "gameplay_object",
- "gameplay_player",
+ "gameplay_resource",
  "gameplay_terrain",
- "gameplay_time",
+ "serde_json",
  "text",
- "util",
 ]
 
 [[package]]

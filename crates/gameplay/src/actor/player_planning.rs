@@ -12,8 +12,9 @@ use bevy::prelude::{DetectChanges as _, Entity, NextState, ResMut};
 use gameplay_crafting::RecipeSituation;
 use gameplay_location::{CardinalDirection, HorizontalDirection, Nbor, Pos, VisionDistance};
 use gameplay_log::{LogMessageWriter, Severity};
+use gameplay_perception::{CurrentlyVisibleBuilder, Explored};
 use gameplay_player::{PickingNbor, PlayerActionState};
-use gameplay_world::{CurrentlyVisibleBuilder, Envir, Explored};
+use gameplay_world::Envir;
 use text::Fragment;
 use units::{Duration, Timestamp};
 

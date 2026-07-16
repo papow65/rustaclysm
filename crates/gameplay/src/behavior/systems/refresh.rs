@@ -1,5 +1,3 @@
-use crate::VisualizationUpdate;
-use crate::systems::{update_visualization, update_visualization_on_item_move};
 use bevy::ecs::schedule::{IntoScheduleConfigs as _, ScheduleConfigs};
 use bevy::ecs::system::ScheduleSystem;
 use bevy::prelude::{
@@ -13,11 +11,14 @@ use gameplay_local::GameplayLocal;
 use gameplay_location::Pos;
 use gameplay_model::{Appearance, LastSeen};
 use gameplay_object::Mobile;
+use gameplay_perception::{CurrentlyVisible, CurrentlyVisibleBuilder};
 use gameplay_player::{Player, PlayerActionState};
 use gameplay_terrain::Accessible;
 use gameplay_time::Clock;
 use gameplay_vehicle::Vehicle;
-use gameplay_world::{CurrentlyVisible, CurrentlyVisibleBuilder};
+use gameplay_visualization::{
+    VisualizationUpdate, update_visualization, update_visualization_on_item_move,
+};
 use std::cell::RefCell;
 use std::{cell::OnceCell, time::Instant};
 use thread_local::ThreadLocal;

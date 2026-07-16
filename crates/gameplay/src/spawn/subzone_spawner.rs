@@ -1,4 +1,4 @@
-use crate::{TileSpawner, ZoneLevelIds, spawn::log_spawn_result};
+use crate::{TileSpawner, spawn::log_spawn_result};
 use application_state::ApplicationState;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{DespawnOnExit, Res, ResMut};
@@ -16,6 +16,7 @@ use gameplay_location::{
 use gameplay_relations::TileIn;
 use gameplay_terrain::LocalTerrain;
 use gameplay_vehicle::VehiclePartOf;
+use gameplay_world::ZoneLevelIds;
 use std::sync::OnceLock;
 
 #[derive(SystemParam)]

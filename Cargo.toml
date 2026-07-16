@@ -61,6 +61,8 @@ gameplay_transition_state = { path = "crates/gameplay_transition_state" }
 gameplay_terrain = { path = "crates/gameplay_terrain" }
 gameplay_vehicle = { path = "crates/gameplay_vehicle" }
 gameplay_camera = { path = "crates/gameplay_camera" }
+gameplay_perception = { path = "crates/gameplay_perception" }
+gameplay_visualization = { path = "crates/gameplay_visualization" }
 gameplay_world = { path = "crates/gameplay_world" }
 hud = { path = "crates/hud" }
 keyboard = { path = "crates/keyboard" }

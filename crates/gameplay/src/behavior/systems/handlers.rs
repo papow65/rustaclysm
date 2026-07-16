@@ -3,7 +3,7 @@
 use crate::behavior::systems::messages::{Break, Heal, Hit, IsThoroughlyPulped, Kill, Pulp};
 use crate::{
     Actor, ActorEvent, CorpseEvent, Damage, Faction, GameplayScreenState, Healing, Health, Stamina,
-    TileSpawner, Toggle, VisualizationUpdate, WalkingMode,
+    TileSpawner, Toggle, WalkingMode,
 };
 use bevy::ecs::schedule::{IntoScheduleConfigs as _, ScheduleConfigs};
 use bevy::ecs::system::ScheduleSystem;
@@ -23,6 +23,7 @@ use gameplay_player::Player;
 use gameplay_relations::ObjectOn;
 use gameplay_terrain::{LocalTerrain, TerrainEvent};
 use gameplay_time::Clock;
+use gameplay_visualization::VisualizationUpdate;
 use std::{f32::consts::FRAC_PI_2, time::Instant};
 use text::Fragment;
 use units::Duration;

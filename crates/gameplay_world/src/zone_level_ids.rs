@@ -6,17 +6,18 @@ use serde_json::Value as JsonValue;
 use std::sync::OnceLock;
 
 #[derive(Default, Resource)]
-pub(crate) struct ZoneLevelIds {
+pub struct ZoneLevelIds {
     names: HashMap<ZoneLevel, InfoId<OvermapTerrainInfo>>,
     loaded_overzones: Vec<Overzone>,
 }
 
 impl ZoneLevelIds {
-    pub(crate) fn get(&self, zone_level: ZoneLevel) -> Option<&InfoId<OvermapTerrainInfo>> {
+    #[must_use]
+    pub fn get(&self, zone_level: ZoneLevel) -> Option<&InfoId<OvermapTerrainInfo>> {
         self.names.get(&zone_level)
     }
 
-    pub(crate) fn load(&mut self, overzone: Overzone, overmap: &OvermapAsset) {
+    pub fn load(&mut self, overzone: Overzone, overmap: &OvermapAsset) {
         if !self.loaded_overzones.contains(&overzone) {
             for level in Level::ALL {
                 self.names.extend(
@@ -31,7 +32,7 @@ impl ZoneLevelIds {
         }
     }
 
-    pub(crate) fn create_missing(&mut self, overzone: Overzone) {
+    pub fn create_missing(&mut self, overzone: Overzone) {
         let fallback = OvermapAsset(Overmap {
             layers: [
                 OvermapLevel::all(InfoId::new("deep_rock")),

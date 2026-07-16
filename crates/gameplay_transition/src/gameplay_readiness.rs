@@ -4,7 +4,7 @@ use gameplay_cdda::{
     Infos, MapAsset, MapMemoryAsset, OvermapAsset, OvermapBufferAsset, TileLoader,
 };
 use gameplay_location::SubzoneLevelCache;
-use gameplay_world::{Explored, RelativeSegments};
+use gameplay_perception::{Explored, RelativeSegments};
 
 #[derive(SystemParam)]
 pub struct GameplayReadiness<'w> {

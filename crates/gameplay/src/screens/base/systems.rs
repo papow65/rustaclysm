@@ -1,7 +1,6 @@
 use crate::screens::base::messages::{YouAreBusy, YouStartTraveling};
 use crate::{
     ChangePace, GameplayScreenState, PlayerDirection, PlayerInstructions, QueuedInstruction,
-    VisualizationUpdate,
 };
 use bevy::prelude::{
     DespawnOnExit, In, IntoSystem as _, KeyCode, Local, NextState, Res, ResMut, State, World,
@@ -11,6 +10,7 @@ use gameplay_camera::{ZoomDirection, ZoomDistance, manage_zoom, reset_camera_ang
 use gameplay_focus::{CancelHandling, ElevationVisibility, Focus, FocusState};
 use gameplay_log::LogMessageWriter;
 use gameplay_player::PlayerActionState;
+use gameplay_visualization::VisualizationUpdate;
 use keyboard::{Held, KeyBindings};
 use manual::ManualSection;
 use std::time::Instant;

@@ -3,7 +3,7 @@ use gameplay_model::LastSeen;
 use gameplay_object::Mobile;
 use gameplay_player::Player;
 
-pub(crate) trait LastSeenExt {
+pub trait LastSeenExt {
     fn update(&mut self, visible: Visible);
     fn shown(&self, player: Option<&Player>, mobile: Option<&Mobile>) -> bool;
 }

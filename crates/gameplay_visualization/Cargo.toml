@@ -1,0 +1,23 @@
+[package]
+name = "gameplay_visualization"
+description = "Visualization systems for gameplay"
+license = "AGPL-3.0-or-later"
+edition = "2024"
+
+[dependencies]
+bevy = { workspace = true }
+gameplay_common = { workspace = true }
+gameplay_cdda = { workspace = true }
+gameplay_focus = { workspace = true }
+gameplay_local = { workspace = true }
+gameplay_location = { workspace = true }
+gameplay_model = { workspace = true }
+gameplay_object = { workspace = true }
+gameplay_perception = { workspace = true }
+gameplay_player = { workspace = true }
+gameplay_resource = { workspace = true }
+gameplay_terrain = { workspace = true }
+util = { workspace = true }
+
+[lints]
+workspace = true

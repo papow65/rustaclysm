@@ -1,7 +1,3 @@
-mod last_seen_ext;
-
-pub(crate) use self::last_seen_ext::LastSeenExt;
-
 use bevy::prelude::Component;
 use cdda_json_files::CommonItemInfo;
 use gameplay_common::Shared;
