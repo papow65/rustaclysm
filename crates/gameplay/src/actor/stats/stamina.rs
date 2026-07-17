@@ -1,5 +1,4 @@
-use crate::Breath;
-use crate::actor::impact::Impact;
+use crate::{Breath, Impact};
 use bevy::prelude::Component;
 use gameplay_common::Limited;
 use gameplay_location::{Nbor, NborDistance};

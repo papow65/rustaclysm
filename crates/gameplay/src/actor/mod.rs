@@ -1,5 +1,7 @@
 mod actions;
+mod actor_event;
 mod breath;
+mod corpse_event;
 mod faction;
 mod impact;
 mod messages;
@@ -14,9 +16,11 @@ pub(crate) use self::actions::{
     Action, ActionIn, Attack, ChangePace, Close, ContinueCraft, ExamineItem, ItemAction, MoveItem,
     Peek, Pickup, Pulp, Sleep, Smash, StartCraft, Stay, Step, Unwield, Wield,
 };
+pub(crate) use self::actor_event::ActorEvent;
 pub(crate) use self::breath::Breath;
+pub(crate) use self::corpse_event::CorpseEvent;
 pub(crate) use self::faction::{Faction, Intelligence, LastEnemy};
-pub(crate) use self::impact::ActorImpact;
+pub(crate) use self::impact::{ActorImpact, Impact};
 pub(crate) use self::pathfinder::Pathfinder;
 pub(crate) use self::planned_action::PlannedAction;
 pub(crate) use self::player_planning::{plan_automatic_action, plan_manual_action};

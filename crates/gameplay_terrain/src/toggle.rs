@@ -1,8 +1,8 @@
-use gameplay_terrain::TerrainChange;
+use crate::TerrainChange;
 
 /// Open or close something, like a door
 #[derive(Clone, Debug, PartialEq)]
-pub(crate) enum Toggle {
+pub enum Toggle {
     Open,
     Close,
 }

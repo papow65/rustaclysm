@@ -1,5 +1,5 @@
 use crate::{
-    ActorPlugin, EventsPlugin, GameplayScreenState, ScreensPlugin, SidebarPlugin,
+    ActorPlugin, GameplayScreenState, ScreensPlugin, SidebarPlugin, SpawnPlugin,
     check_failed_asset_loading, count_assets, count_pos, create_gameplay_key_bindings,
     despawn_systems, handle_region_asset_events, handle_zone_levels, spawn_initial_entities,
     spawn_subzone_levels, spawn_subzones_for_camera, update_explored,
@@ -17,9 +17,12 @@ use gameplay_focus::{FocusPlugin, OnFocusChange};
 use gameplay_item::GameplayItemPlugin;
 use gameplay_local::GameplayLocalPlugin;
 use gameplay_location::LocationPlugin;
+use gameplay_log::LogPlugin;
 use gameplay_model::ModelPlugin;
 use gameplay_perception::{GameplayPerceptionPlugin, RelativeSegments};
+use gameplay_player::PlayerPlugin;
 use gameplay_resource::GampelayResourceSet;
+use gameplay_terrain::TerrainPlugin;
 use gameplay_time::TimePlugin;
 use gameplay_transition::TransitionPlugin;
 use gameplay_visualization::{
@@ -41,17 +44,17 @@ impl Plugin for GameplayPlugin {
                 FocusPlugin,
                 SidebarPlugin,
                 CddaPlugin,
-                EventsPlugin,
                 GameplayItemPlugin,
                 GameplayLocalPlugin,
                 GameplayPerceptionPlugin,
                 GameplayVisualizationPlugin,
                 GameplayWorldPlugin,
                 LocationPlugin,
+                LogPlugin,
                 ModelPlugin,
-                TransitionPlugin,
-                ScreensPlugin,
-                TimePlugin,
+                PlayerPlugin,
+                SpawnPlugin,
+                (ScreensPlugin, TerrainPlugin, TimePlugin, TransitionPlugin),
             ),
             log_transition_plugin::<GameplayScreenState>,
         ));

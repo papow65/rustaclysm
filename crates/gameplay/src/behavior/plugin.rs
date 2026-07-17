@@ -1,6 +1,12 @@
 use crate::behavior::systems::{behavior_systems, loop_behavior_and_refresh};
-use crate::{BehaviorValidator, PlayerInstructions, behavior::schedule::BehaviorSchedule};
-use bevy::prelude::{App, IntoScheduleConfigs as _, Plugin, Update};
+use crate::{
+    BehaviorValidator, PlayerInstructions, RefreshAfterBehavior,
+    behavior::schedule::BehaviorSchedule,
+};
+use application_state::ApplicationState;
+use bevy::prelude::{
+    App, IntoScheduleConfigs as _, Plugin, StateScopedMessagesAppExt as _, Update,
+};
 use gameplay_resource::gameplay_resource_plugin;
 use util::log_resource_change_plugin;
 
@@ -12,6 +18,9 @@ impl Plugin for BehaviorPlugin {
 
         app.add_plugins(gameplay_resource_plugin::<PlayerInstructions>);
         app.add_plugins(log_resource_change_plugin::<PlayerInstructions>);
+
+        app.add_message::<RefreshAfterBehavior>()
+            .clear_messages_on_exit::<RefreshAfterBehavior>(ApplicationState::Gameplay);
 
         app.add_systems(BehaviorSchedule, behavior_systems());
 

@@ -1,9 +1,9 @@
 use crate::behavior::systems::messages::NpcActionFailed;
 use crate::{
     Action, ActionIn, Actor, ActorEvent, ActorImpact, Attack, ChangePace, Close, ContinueCraft,
-    CorpseEvent, Damage, ExamineItem, Faction, Healing, HealingDuration, ItemAction as _, MoveItem,
-    Peek, Pickup, PlannedAction, PlayerInstructions, Pulp, Sleep, Smash, Stamina, StartCraft, Stay,
-    Step, Tile, TileSpawner, Toggle, Unwield, Wield,
+    CorpseEvent, ExamineItem, Faction, HealingDuration, ItemAction as _, MoveItem, Peek, Pickup,
+    PlannedAction, PlayerInstructions, Pulp, Sleep, Smash, Stamina, StartCraft, Stay, Step, Tile,
+    TileSpawner, Unwield, Wield,
 };
 use bevy::ecs::schedule::{IntoScheduleConfigs as _, ScheduleConfigs};
 use bevy::ecs::system::{ScheduleSystem, SystemId};
@@ -11,6 +11,7 @@ use bevy::prelude::{
     Commands, Entity, In, IntoSystem as _, Local, MessageWriter, NextState, Query, Res, ResMut,
     Single, State, StateTransition, SystemInput, With, World, debug,
 };
+use gameplay_common::{Damage, Healing};
 use gameplay_crafting::Craft;
 use gameplay_item::{Amount, Item, ItemHierarchy};
 use gameplay_location::{LocationCache, Pos};
@@ -18,7 +19,7 @@ use gameplay_log::LogMessageWriter;
 use gameplay_object::Life;
 use gameplay_perception::{CurrentlyVisibleBuilder, Explored};
 use gameplay_player::{Player, PlayerActionState};
-use gameplay_terrain::TerrainEvent;
+use gameplay_terrain::{TerrainEvent, Toggle};
 use gameplay_time::{Clock, Timeouts};
 use gameplay_world::Envir;
 use std::{cell::OnceCell, time::Instant};

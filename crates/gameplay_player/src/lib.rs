@@ -7,6 +7,10 @@ use hud::{BAD_TEXT_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR};
 use std::fmt;
 use units::Timestamp;
 
+mod plugin;
+
+pub use plugin::PlayerPlugin;
+
 #[derive(Debug, Component)]
 #[component(immutable)]
 pub struct Player;

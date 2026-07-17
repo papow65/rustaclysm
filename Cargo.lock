@@ -2558,6 +2558,7 @@ dependencies = [
 name = "gameplay_log"
 version = "0.1.0"
 dependencies = [
+ "application_state",
  "bevy",
  "cdda_json_files",
  "gameplay_location",
@@ -2652,6 +2653,7 @@ dependencies = [
 name = "gameplay_terrain"
 version = "0.0.0"
 dependencies = [
+ "application_state",
  "bevy",
  "cdda_json_files",
  "gameplay_cdda",

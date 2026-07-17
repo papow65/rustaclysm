@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+application_state = { workspace = true }
 bevy = { workspace = true }
 cdda_json_files = { workspace = true }
 gameplay_location = { workspace = true }

@@ -5,6 +5,7 @@ license = "AGPL-3.0-or-later"
 edition = "2024"
 
 [dependencies]
+application_state = { workspace = true }
 bevy = { workspace = true }
 cdda_json_files = { workspace = true }
 gameplay_cdda = { workspace = true }
