@@ -109,7 +109,7 @@ impl SectionData<'_> {
             .into_iter()
             .map(move |action| {
                 ButtonBuilder::new(
-                    format!("{}", &action),
+                    format!("{action}"),
                     item_text_color,
                     self.inventory_system.0,
                     InventoryButton {

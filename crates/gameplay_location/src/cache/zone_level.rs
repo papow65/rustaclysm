@@ -72,7 +72,7 @@ mod zone_level_tests {
 
         let entity = world.spawn(ORIGIN).id();
         let zone_level_cache = world.resource::<ZoneLevelCache>();
-        assert!(zone_level_cache.get(ORIGIN) == Some(entity));
+        assert_eq!(zone_level_cache.get(ORIGIN), Some(entity));
 
         (world, entity)
     }
@@ -93,7 +93,7 @@ mod zone_level_tests {
             .insert(ALL_ONES);
         let zone_level_cache = world.resource::<ZoneLevelCache>();
         assert!(zone_level_cache.get(ORIGIN).is_none());
-        assert!(zone_level_cache.get(ALL_ONES) == Some(entity));
+        assert_eq!(zone_level_cache.get(ALL_ONES), Some(entity));
     }
 
     #[test]
@@ -126,6 +126,6 @@ mod zone_level_tests {
             .expect("Entity should be present")
             .insert(ORIGIN);
         let zone_level_cache = world.resource::<ZoneLevelCache>();
-        assert!(zone_level_cache.get(ORIGIN) == Some(entity));
+        assert_eq!(zone_level_cache.get(ORIGIN), Some(entity));
     }
 }

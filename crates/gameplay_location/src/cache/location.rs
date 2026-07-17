@@ -128,11 +128,14 @@ mod location_tests {
         world.init_resource::<LocationCache>();
 
         let location_cache = world.resource::<LocationCache>();
-        assert!(location_cache.all(Pos::ORIGIN).len() == 0);
+        assert_eq!(location_cache.all(Pos::ORIGIN).len(), 0);
 
         let entity = world.spawn(Pos::ORIGIN).id();
         let location_cache = world.resource::<LocationCache>();
-        assert!(location_cache.all(Pos::ORIGIN).collect::<Vec<_>>() == vec![&entity]);
+        assert_eq!(
+            location_cache.all(Pos::ORIGIN).collect::<Vec<_>>(),
+            vec![&entity]
+        );
 
         (world, entity)
     }
@@ -141,7 +144,7 @@ mod location_tests {
     fn test_other() {
         let (world, _) = setup_at_origin();
         let location_cache = world.resource::<LocationCache>();
-        assert!(location_cache.all(ALL_ONES).len() == 0);
+        assert_eq!(location_cache.all(ALL_ONES).len(), 0);
     }
 
     #[test]
@@ -152,8 +155,11 @@ mod location_tests {
             .expect("Entity should be present")
             .insert(ALL_ONES);
         let location_cache = world.resource::<LocationCache>();
-        assert!(location_cache.all(Pos::ORIGIN).len() == 0);
-        assert!(location_cache.all(ALL_ONES).collect::<Vec<_>>() == vec![&entity]);
+        assert_eq!(location_cache.all(Pos::ORIGIN).len(), 0);
+        assert_eq!(
+            location_cache.all(ALL_ONES).collect::<Vec<_>>(),
+            vec![&entity]
+        );
     }
 
     #[test]
@@ -164,7 +170,7 @@ mod location_tests {
             .expect("Entity should be present")
             .remove::<Pos>();
         let location_cache = world.resource::<LocationCache>();
-        assert!(location_cache.all(Pos::ORIGIN).len() == 0);
+        assert_eq!(location_cache.all(Pos::ORIGIN).len(), 0);
     }
 
     #[test]
@@ -175,7 +181,7 @@ mod location_tests {
             .expect("Entity should be present")
             .despawn();
         let location_cache = world.resource::<LocationCache>();
-        assert!(location_cache.all(Pos::ORIGIN).len() == 0);
+        assert_eq!(location_cache.all(Pos::ORIGIN).len(), 0);
     }
 
     #[test]
@@ -186,6 +192,9 @@ mod location_tests {
             .expect("Entity should be present")
             .insert(Pos::ORIGIN);
         let location_cache = world.resource::<LocationCache>();
-        assert!(location_cache.all(Pos::ORIGIN).collect::<Vec<_>>() == vec![&entity]);
+        assert_eq!(
+            location_cache.all(Pos::ORIGIN).collect::<Vec<_>>(),
+            vec![&entity]
+        );
     }
 }

@@ -78,7 +78,7 @@ mod subzone_level_tests {
 
         let entity = world.spawn(ORIGIN).id();
         let subzone_level_cache = world.resource::<SubzoneLevelCache>();
-        assert!(subzone_level_cache.get(ORIGIN) == Some(entity));
+        assert_eq!(subzone_level_cache.get(ORIGIN), Some(entity));
 
         (world, entity)
     }
@@ -99,7 +99,7 @@ mod subzone_level_tests {
             .insert(ALL_ONES);
         let subzone_level_cache = world.resource::<SubzoneLevelCache>();
         assert!(subzone_level_cache.get(ORIGIN).is_none());
-        assert!(subzone_level_cache.get(ALL_ONES) == Some(entity));
+        assert_eq!(subzone_level_cache.get(ALL_ONES), Some(entity));
     }
 
     #[test]
@@ -132,6 +132,6 @@ mod subzone_level_tests {
             .expect("Entity should be present")
             .insert(ORIGIN);
         let subzone_level_cache = world.resource::<SubzoneLevelCache>();
-        assert!(subzone_level_cache.get(ORIGIN) == Some(entity));
+        assert_eq!(subzone_level_cache.get(ORIGIN), Some(entity));
     }
 }

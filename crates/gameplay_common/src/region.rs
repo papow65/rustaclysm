@@ -71,10 +71,8 @@ impl Region {
                     let outer = outer.zone_regions[i].clone().unwrap_or(ZoneRegion::MAX);
                     assert!(
                         outer.contains_zone_region(&inner),
-                        "Level {:?}: {:?} does not contain {:?}",
+                        "Level {:?}: {outer:?} does not contain {inner:?}",
                         Level::ALL[i],
-                        &outer,
-                        &inner
                     );
 
                     let x_from = *zone_region

@@ -377,7 +377,7 @@ impl<'w, 's> ItemHierarchy<'w, 's> {
             assert!(
                 container_data.contents.len() <= 1,
                 "Too many (>1) contents to inline for {item:?}: {:?}",
-                &container_data.contents
+                container_data.contents
             );
         }
         self.item_fragments(None, None, item, container_data.as_mut())
