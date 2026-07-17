@@ -13,6 +13,10 @@ use util::log_if_slow;
 #[derive(Clone, Debug, PartialEq, Eq, Hash, SystemSet)]
 pub struct UpdateCameraOffset;
 
+pub fn initialize_camera_offset() -> ScheduleConfigs<ScheduleSystem> {
+    (update_camera_offset.in_set(UpdateCameraOffset),).into_configs()
+}
+
 pub fn manage_camera_offset() -> ScheduleConfigs<ScheduleSystem> {
     (
         (
