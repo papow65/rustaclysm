@@ -3,6 +3,7 @@ use bevy::prelude::{Component, Mix as _, TextColor};
 use hud::{BAD_TEXT_COLOR, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, WARN_TEXT_COLOR};
 use units::Speed;
 
+#[must_use]
 #[derive(Debug, Clone, Copy, Component)]
 #[component(immutable)]
 pub struct BaseSpeed(Speed);
@@ -37,7 +38,6 @@ pub enum WalkingMode {
 
 impl WalkingMode {
     /// Various factors may adjuct this speed
-    #[must_use]
     pub const fn standard_speed(&self, breath: Breath) -> Speed {
         Speed::from_kmph(match breath {
             Breath::Normal | Breath::AlmostWinded => match self {

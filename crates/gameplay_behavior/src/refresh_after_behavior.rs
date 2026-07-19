@@ -1,4 +1,4 @@
 use bevy::prelude::Message;
 
 #[derive(Debug, Message)]
-pub(crate) struct RefreshAfterBehavior;
+pub struct RefreshAfterBehavior;

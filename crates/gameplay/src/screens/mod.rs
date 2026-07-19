@@ -6,13 +6,11 @@ mod inventory;
 mod menu;
 mod plugin;
 mod quality;
-mod state;
 mod tool;
 mod transitioning;
 mod waiting;
 
 pub(crate) use self::plugin::ScreensPlugin;
-pub(crate) use self::state::GameplayScreenState;
 
 use self::base::BaseScreenPlugin;
 use self::character::CharacterScreenPlugin;

@@ -1,8 +1,6 @@
 use crate::{
-    GameplayScreenState, ScreensPlugin, SidebarPlugin, SpawnPlugin, check_failed_asset_loading,
-    count_assets, count_pos, create_gameplay_key_bindings, despawn_systems,
-    handle_region_asset_events, handle_zone_levels, spawn_initial_entities, spawn_subzone_levels,
-    spawn_subzones_for_camera, update_explored,
+    ScreensPlugin, SidebarPlugin, check_failed_asset_loading, count_assets, count_pos,
+    create_gameplay_key_bindings,
 };
 use application_state::ApplicationState;
 use bevy::ecs::schedule::ScheduleConfigs;
@@ -11,8 +9,7 @@ use bevy::prelude::{
     App, AppExtStates as _, FixedUpdate, IntoScheduleConfigs as _, OnEnter, Plugin, PostUpdate,
     Update, in_state, on_message, resource_exists, resource_exists_and_changed,
 };
-use gameplay_action_planning::ActionPlanningPlugin;
-use gameplay_behavior_loop::BehaviorLoopPlugin;
+use gameplay_behavior::BehaviorLoopPlugin;
 use gameplay_camera::UpdateCameraOffset;
 use gameplay_cdda::{CddaPlugin, Exploration};
 use gameplay_character::CharacterPlugin;
@@ -25,6 +22,11 @@ use gameplay_model::ModelPlugin;
 use gameplay_perception::{GameplayPerceptionPlugin, RelativeSegments};
 use gameplay_player::PlayerPlugin;
 use gameplay_resource::GampelayResourceSet;
+use gameplay_screen_state::GameplayScreenState;
+use gameplay_spawn::{
+    SpawnPlugin, despawn_systems, handle_region_asset_events, handle_zone_levels,
+    spawn_initial_entities, spawn_subzone_levels, spawn_subzones_for_camera, update_explored,
+};
 use gameplay_terrain::TerrainPlugin;
 use gameplay_time::TimePlugin;
 use gameplay_transition::TransitionPlugin;
@@ -43,7 +45,6 @@ impl Plugin for GameplayPlugin {
 
         app.add_plugins((
             (
-                ActionPlanningPlugin,
                 BehaviorLoopPlugin,
                 CharacterPlugin,
                 FocusPlugin,
@@ -58,8 +59,13 @@ impl Plugin for GameplayPlugin {
                 LogPlugin,
                 ModelPlugin,
                 PlayerPlugin,
-                SpawnPlugin,
-                (ScreensPlugin, TerrainPlugin, TimePlugin, TransitionPlugin),
+                (
+                    SpawnPlugin,
+                    ScreensPlugin,
+                    TerrainPlugin,
+                    TimePlugin,
+                    TransitionPlugin,
+                ),
             ),
             log_transition_plugin::<GameplayScreenState>,
         ));

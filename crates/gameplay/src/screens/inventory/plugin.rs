@@ -3,11 +3,12 @@ use crate::screens::inventory::systems::{
     create_inventory_key_bindings, create_inventory_system, refresh_inventory,
     remove_inventory_resource, spawn_inventory,
 };
-use crate::{BehaviorLoopSet, GameplayScreenState, RefreshAfterBehavior};
 use bevy::prelude::{
     App, In, IntoScheduleConfigs as _, IntoSystem as _, OnEnter, OnExit, Plugin, Update, in_state,
     on_message,
 };
+use gameplay_behavior::{BehaviorLoopSet, RefreshAfterBehavior};
+use gameplay_screen_state::GameplayScreenState;
 use hud::manage_button_input;
 use selection_list::selection_list_plugin;
 

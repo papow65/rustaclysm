@@ -1,5 +1,6 @@
 use crate::{Fragment, Phrase};
 
+#[must_use]
 #[derive(Clone, Debug)]
 pub enum Subject {
     You,

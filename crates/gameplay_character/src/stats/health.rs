@@ -6,11 +6,12 @@ use units::Duration;
 /// Not to be removed on death, because it is needed again when revived
 ///
 /// Mutable component
+#[must_use]
 #[derive(Debug, Component)]
 pub struct Health(Limited);
 
 impl Health {
-    pub fn full(max: u16) -> Self {
+    pub const fn full(max: u16) -> Self {
         Self(Limited::full(max))
     }
 
@@ -22,7 +23,7 @@ impl Health {
         self.0.raise(healing.amount)
     }
 
-    pub fn value(&self) -> &Limited {
+    pub const fn value(&self) -> &Limited {
         &self.0
     }
 }
@@ -34,15 +35,17 @@ impl Health {
 pub struct HealingDuration(Duration);
 
 impl HealingDuration {
-    pub const fn new() -> Self {
-        Self(Duration::ZERO)
-    }
-
     #[must_use]
     pub fn heal(&mut self, duration: Duration) -> u64 {
         let healing_rate = Duration::SECOND * 1000;
 
         self.0 += duration;
         self.0.extract_div(healing_rate)
+    }
+}
+
+impl Default for HealingDuration {
+    fn default() -> Self {
+        Self(Duration::ZERO)
     }
 }

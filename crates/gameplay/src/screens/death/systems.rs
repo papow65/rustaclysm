@@ -1,9 +1,10 @@
-use crate::{GameplayScreenState, systems::to_main_menu};
+use crate::systems::to_main_menu;
 use bevy::ecs::system::SystemId;
 use bevy::prelude::{
     AlignItems, Commands, DespawnOnExit, FlexDirection, In, JustifyContent, KeyCode, Local, Node,
     Res, Text, UiRect, Val, World, children,
 };
+use gameplay_screen_state::GameplayScreenState;
 use hud::{BAD_TEXT_COLOR, ButtonBuilder, Fonts, PANEL_COLOR, SMALL_SPACING, WARN_TEXT_COLOR};
 use keyboard::KeyBindings;
 use manual::ManualSection;

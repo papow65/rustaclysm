@@ -3,9 +3,6 @@ use crate::sidebar::{
     LogDisplay, PlayerActionStateText, SpeedTextSpan, StaminaText, TimeText, TransientLogMessage,
     WalkingModeTextSpan, WieldedText,
 };
-use crate::{
-    Actor, BaseSpeed, Breath, Faction, Health, RefreshAfterBehavior, Stamina, WalkingMode,
-};
 use application_state::ApplicationState;
 use bevy::diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin};
 use bevy::ecs::{hierarchy::Children, schedule::ScheduleConfigs, system::ScheduleSystem};
@@ -19,6 +16,9 @@ use bevy::prelude::{
     resource_exists_and_changed,
 };
 use cdda_json_files::{CharacterInfo, MoveCost};
+use gameplay_action_planning::FactionPlanner as _;
+use gameplay_behavior::RefreshAfterBehavior;
+use gameplay_character::{Actor, BaseSpeed, Breath, Faction, Health, Stamina, WalkingMode};
 use gameplay_common::Shared;
 use gameplay_focus::FocusState;
 use gameplay_item::{Amount, Item, ItemHandler, ItemHierarchy, ItemItem, WieldedItems};
@@ -478,8 +478,8 @@ fn update_status_health(
     if let Some(health) = health {
         let (mut text, mut color) = text.into_inner();
 
-        text.0 = format!("{:3}", health.0.current());
-        *color = health.0.color();
+        text.0 = format!("{:3}", health.value().current());
+        *color = health.value().color();
 
         //trace!("{:?}", ((health, text, style));
     }
@@ -759,13 +759,13 @@ fn characters_info(
         .flat_map(|(info, name, health, integrity)| {
             let start = Phrase::from_fragment(name.single(pos)).soft("(");
 
-            if health.0.is_nonzero() {
+            if health.value().is_nonzero() {
                 start
                     .push(Fragment::colorized(
-                        format!("{}", health.0.current()),
-                        health.0.color(),
+                        format!("{}", health.value().current()),
+                        health.value().color(),
                     ))
-                    .push(Fragment::colorized("health", health.0.color()))
+                    .push(Fragment::colorized("health", health.value().color()))
             } else {
                 match integrity {
                     Some(integrity) if integrity.0.is_max() => {

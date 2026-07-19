@@ -1,4 +1,3 @@
-use crate::GameplayScreenState;
 use crate::screens::waiting::{WaitDuration, YouWait};
 use bevy::ecs::system::SystemId;
 use bevy::prelude::{
@@ -7,6 +6,7 @@ use bevy::prelude::{
 };
 use gameplay_log::LogMessageWriter;
 use gameplay_player::PlayerActionState;
+use gameplay_screen_state::GameplayScreenState;
 use gameplay_time::Clock;
 use hud::{
     BAD_TEXT_COLOR, ButtonBuilder, HARD_TEXT_COLOR, SMALL_SPACING, WARN_TEXT_COLOR,

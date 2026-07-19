@@ -336,6 +336,8 @@ impl<'w, 's> Envir<'w, 's> {
     }
 
     /// With regard for obstacles and stairs
+    /// # Errors
+    /// When going vertically without stairs
     pub fn nbor_walking_cost(&self, from: Pos, nbor: Nbor) -> Result<WalkingCost, NoStairs> {
         let to = self.get_nbor(from, nbor)?;
 
@@ -345,33 +347,12 @@ impl<'w, 's> Envir<'w, 's> {
                 floor.move_cost.adjust(self.find_hurdles(to).map(|h| h.0))
             });
 
-        Ok(self.walking_cost(from, to, move_cost))
+        Ok(walking_cost(from, to, move_cost))
     }
 
     /// Without regard for obstacles or stairs
-    pub fn estimated_walking_cost(&self, from: Pos, to: Pos) -> WalkingCost {
-        self.walking_cost(from, to, MoveCost::default())
-    }
-
-    fn walking_cost(&self, from: Pos, to: Pos, move_cost: MoveCost) -> WalkingCost {
-        let dx = u64::from(from.x.abs_diff(to.x));
-        let dz = u64::from(from.z.abs_diff(to.z));
-        let diagonal = dx.min(dz);
-        let adjacent = dx.max(dz) - diagonal;
-
-        let dy = (to.level - from.level).h;
-        let up = dy.max(0) as u64;
-        let down = (-dy).max(0) as u64;
-
-        [
-            (NborDistance::Up, up),
-            (NborDistance::Adjacent, adjacent),
-            (NborDistance::Diagonal, diagonal),
-            (NborDistance::Down, down),
-        ]
-        .into_iter()
-        .map(|(nd, amount)| WalkingCost::new(nd, move_cost) * amount)
-        .sum()
+    pub fn estimated_walking_cost(from: Pos, to: Pos) -> WalkingCost {
+        walking_cost(from, to, MoveCost::default())
     }
 
     pub fn collide(&self, from: Pos, to: Pos, controlled: bool) -> Collision<'_> {
@@ -434,4 +415,25 @@ impl<'w, 's> Envir<'w, 's> {
             })
             .copied()
     }
+}
+
+fn walking_cost(from: Pos, to: Pos, move_cost: MoveCost) -> WalkingCost {
+    let dx = u64::from(from.x.abs_diff(to.x));
+    let dz = u64::from(from.z.abs_diff(to.z));
+    let diagonal = dx.min(dz);
+    let adjacent = dx.max(dz) - diagonal;
+
+    let dy = (to.level - from.level).h;
+    let up = dy.max(0) as u64;
+    let down = (-dy).max(0) as u64;
+
+    [
+        (NborDistance::Up, up),
+        (NborDistance::Adjacent, adjacent),
+        (NborDistance::Diagonal, diagonal),
+        (NborDistance::Down, down),
+    ]
+    .into_iter()
+    .map(|(nd, amount)| WalkingCost::new(nd, move_cost) * amount)
+    .sum()
 }

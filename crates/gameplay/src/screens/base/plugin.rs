@@ -1,9 +1,9 @@
-use crate::GameplayScreenState;
 use crate::screens::base::systems::{create_base_key_bindings, trigger_refresh};
 use bevy::prelude::{App, IntoScheduleConfigs as _, OnEnter, OnExit, Plugin, Update, in_state};
 use gameplay_camera::{CameraPlugin, initialize_camera_offset, manage_camera_offset};
 use gameplay_location::CardinalDirection;
 use gameplay_player::PlayerActionState;
+use gameplay_screen_state::GameplayScreenState;
 use strum::VariantArray as _;
 
 pub(crate) struct BaseScreenPlugin;

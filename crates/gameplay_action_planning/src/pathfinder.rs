@@ -60,11 +60,10 @@ impl<'w, 's> Pathfinder<'w, 's> {
                 .map(|(_, pos, cost)| (pos, cost))
         };
         let estimated_duration_fn = |&pos: &Pos| {
-            self.envir
-                .estimated_walking_cost(from, pos)
+            Envir::estimated_walking_cost(from, pos)
                 .duration(speed)
                 .max(stay_duration)
-                + self.envir.estimated_walking_cost(pos, to).duration(speed)
+                + Envir::estimated_walking_cost(pos, to).duration(speed)
         };
 
         //trace!("dumb? {dumb:?} @{from:?}");

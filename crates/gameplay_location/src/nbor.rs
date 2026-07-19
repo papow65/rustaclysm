@@ -3,6 +3,7 @@ use bevy::input::keyboard::KeyCode;
 use keyboard::Key;
 
 /// Neighbor
+#[must_use]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Nbor {
     Up,

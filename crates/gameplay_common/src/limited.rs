@@ -19,6 +19,7 @@ impl Evolution {
     }
 }
 
+#[must_use]
 #[derive(Debug, PartialEq)]
 pub struct Limited {
     pub current: u16,
@@ -31,7 +32,6 @@ impl Limited {
         Self { current: 0, max }
     }
 
-    #[must_use]
     pub const fn full(max: u16) -> Self {
         Self { current: max, max }
     }

@@ -6,6 +6,8 @@ use gameplay_location::Pos;
 use crate::Amount;
 
 pub trait ItemSpawner {
+    /// # Errors
+    /// CDDA errors for the spawned item
     fn spawn_item<R: Relationship>(
         &mut self,
         parent: R,

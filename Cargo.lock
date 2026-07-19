@@ -2404,8 +2404,6 @@ dependencies = [
  "application_state",
  "bevy",
  "cdda_json_files",
- "either",
- "fastrand",
  "gameplay_action_planning",
  "gameplay_behavior",
  "gameplay_camera",
@@ -2426,18 +2424,17 @@ dependencies = [
  "gameplay_player",
  "gameplay_relations",
  "gameplay_resource",
+ "gameplay_screen_state",
  "gameplay_spawn",
  "gameplay_terrain",
  "gameplay_time",
  "gameplay_transition",
  "gameplay_transition_state",
- "gameplay_vehicle",
  "gameplay_visualization",
  "gameplay_world",
  "hud",
  "keyboard",
  "manual",
- "pathfinding",
  "selection_list",
  "strum",
  "text",
@@ -2449,7 +2446,6 @@ dependencies = [
 name = "gameplay_action_planning"
 version = "0.1.0"
 dependencies = [
- "application_state",
  "bevy",
  "cdda_json_files",
  "fastrand",
@@ -2461,15 +2457,12 @@ dependencies = [
  "gameplay_log",
  "gameplay_perception",
  "gameplay_player",
- "gameplay_resource",
- "gameplay_time",
  "gameplay_world",
  "hud",
  "pathfinding",
  "strum",
  "text",
  "units",
- "util",
 ]
 
 [[package]]
@@ -2496,6 +2489,7 @@ dependencies = [
  "gameplay_player",
  "gameplay_relations",
  "gameplay_resource",
+ "gameplay_screen_state",
  "gameplay_spawn",
  "gameplay_terrain",
  "gameplay_time",
@@ -2746,6 +2740,14 @@ dependencies = [
 [[package]]
 name = "gameplay_resource"
 version = "0.0.0"
+dependencies = [
+ "application_state",
+ "bevy",
+]
+
+[[package]]
+name = "gameplay_screen_state"
+version = "0.1.0"
 dependencies = [
  "application_state",
  "bevy",

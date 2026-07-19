@@ -11,13 +11,13 @@ mod set;
 mod system_param;
 
 pub use self::plugin::BehaviorLoopPlugin;
+pub use self::refresh_after_behavior::RefreshAfterBehavior;
+pub use self::set::BehaviorLoopSet;
 
-pub(crate) use self::core::perform_egible_character_action;
-pub(crate) use self::handlers::handle_action_effects;
-pub(crate) use self::r#loop::loop_behavior_and_refresh;
-pub(crate) use self::once::behavior_systems;
-pub(crate) use self::refresh::refresh_all;
-pub(crate) use self::refresh_after_behavior::RefreshAfterBehavior;
-pub(crate) use self::schedule::BehaviorSchedule;
-pub(crate) use self::set::BehaviorLoopSet;
-pub(crate) use self::system_param::BehaviorValidator;
+use self::core::perform_egible_character_action;
+use self::handlers::handle_action_effects;
+use self::r#loop::loop_behavior_and_refresh;
+use self::once::behavior_systems;
+use self::refresh::refresh_all;
+use self::schedule::BehaviorSchedule;
+use self::system_param::BehaviorValidator;

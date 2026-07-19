@@ -5,5 +5,7 @@ use gameplay_location::Pos;
 use std::sync::Arc;
 
 pub trait CraftSpawner {
+    /// # Errors
+    /// CDDA errors for the spawned craft
     fn spawn_craft(&mut self, pos: Pos, recipe: Arc<Recipe>) -> Result<Entity, Error>;
 }

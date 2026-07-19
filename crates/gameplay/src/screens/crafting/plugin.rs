@@ -3,11 +3,12 @@ use crate::screens::crafting::systems::{
     create_start_craft_system, refresh_crafting_screen, remove_crafting_resource,
     spawn_crafting_screen,
 };
-use crate::{GameplayScreenState, RefreshAfterBehavior};
 use bevy::prelude::{
     App, IntoScheduleConfigs as _, IntoSystem as _, OnEnter, OnExit, Plugin, Update, in_state,
     on_message,
 };
+use gameplay_behavior::RefreshAfterBehavior;
+use gameplay_screen_state::GameplayScreenState;
 use selection_list::selection_list_plugin;
 
 pub(crate) struct CraftingScreenPlugin;

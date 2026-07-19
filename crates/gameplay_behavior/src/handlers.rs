@@ -1,5 +1,3 @@
-//! These systems are part of [`BehaviorSchedule`](`crate::behavior::schedule::BehaviorSchedule`).
-
 use crate::messages::{Break, Heal, Hit, IsThoroughlyPulped, Kill, Pulp};
 use bevy::ecs::schedule::{IntoScheduleConfigs as _, ScheduleConfigs};
 use bevy::ecs::system::ScheduleSystem;
@@ -20,6 +18,7 @@ use gameplay_log::LogMessageWriter;
 use gameplay_object::{Corpse, CorpseRaise, Life, ObjectName, Obstacle, StandardIntegrity};
 use gameplay_player::Player;
 use gameplay_relations::ObjectOn;
+use gameplay_screen_state::GameplayScreenState;
 use gameplay_spawn::TileSpawner;
 use gameplay_terrain::{LocalTerrain, TerrainEvent, Toggle};
 use gameplay_time::Clock;
@@ -28,7 +27,6 @@ use std::{f32::consts::FRAC_PI_2, time::Instant};
 use text::Fragment;
 use units::Duration;
 use util::log_if_slow;
-use zzz::GameplayScreenState;
 
 pub(crate) fn handle_action_effects() -> ScheduleConfigs<ScheduleSystem> {
     (

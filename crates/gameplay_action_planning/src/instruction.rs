@@ -22,7 +22,7 @@ pub enum PlayerDirection {
 }
 
 impl PlayerDirection {
-    pub(crate) const fn to_nbor(self) -> Nbor {
+    pub const fn to_nbor(self) -> Nbor {
         match self {
             Self::Above => Nbor::Up,
             Self::AwayLeft => Nbor::Horizontal(HorizontalDirection::NorthWest),
@@ -87,7 +87,7 @@ pub struct PlayerInstructions {
 }
 
 impl PlayerInstructions {
-    pub(crate) fn push(&mut self, instruction: QueuedInstruction) {
+    pub fn push(&mut self, instruction: QueuedInstruction) {
         // Wait for an instruction to be processed until adding a duplicate when holding a key down.
         if !instruction.held_key_allowed() || !self.queue.contains(&instruction) {
             self.queue.insert(0, instruction);
@@ -102,6 +102,7 @@ impl PlayerInstructions {
         self.queue.pop()
     }
 
+    #[must_use]
     pub const fn is_empty(&self) -> bool {
         self.queue.is_empty()
     }

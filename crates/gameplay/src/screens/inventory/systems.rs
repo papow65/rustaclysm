@@ -1,10 +1,6 @@
 use crate::screens::inventory::{
     InventoryAction, InventoryItemRow, InventoryScreen, InventorySection, RowSpawner,
 };
-use crate::{
-    ExamineItem, GameplayScreenState, MoveItem, Pickup, PlayerInstructions, QueuedInstruction,
-    Unwield, Wield,
-};
 use bevy::ecs::{entity::hash_map::EntityHashMap, system::SystemId};
 use bevy::platform::collections::HashMap;
 use bevy::prelude::{
@@ -12,9 +8,12 @@ use bevy::prelude::{
     KeyCode, Local, NextState, Query, RemovedComponents, Res, ResMut, Single, Text, TextColor,
     TextSpan, With, World, debug, error,
 };
+use gameplay_action_planning::{PlayerInstructions, QueuedInstruction};
+use gameplay_character::{ExamineItem, MoveItem, Pickup, Unwield, Wield};
 use gameplay_item::{BodyContainers, ItemHierarchy, ItemItem};
 use gameplay_location::{HorizontalDirection, Nbor, Pos};
 use gameplay_player::Player;
+use gameplay_screen_state::GameplayScreenState;
 use gameplay_world::Envir;
 use hud::{HARD_TEXT_COLOR, SOFT_TEXT_COLOR, scroll_screen};
 use keyboard::KeyBindings;

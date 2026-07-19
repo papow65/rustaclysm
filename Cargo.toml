@@ -59,6 +59,7 @@ gameplay_model = { path = "crates/gameplay_model" }
 gameplay_nearby = { path = "crates/gameplay_nearby" }
 gameplay_player = { path = "crates/gameplay_player" }
 gameplay_resource = { path = "crates/gameplay_resource" }
+gameplay_screen_state = { path = "crates/gameplay_screen_state" }
 gameplay_transition = { path = "crates/gameplay_transition" }
 gameplay_transition_state = { path = "crates/gameplay_transition_state" }
 gameplay_terrain = { path = "crates/gameplay_terrain" }

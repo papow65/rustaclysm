@@ -1,0 +1,11 @@
+[package]
+name = "gameplay_screen_state"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+application_state = { workspace = true }
+bevy = { workspace = true }
+
+[lints]
+workspace = true

@@ -1,10 +1,10 @@
-use crate::GameplayScreenState;
 use application_state::ApplicationState;
 use bevy::prelude::{
     AlignItems, Commands, DespawnOnExit, FlexDirection, In, JustifyContent, KeyCode, Local,
     Messages, NextState, Node, Res, ResMut, Val, World, children,
 };
 use bevy::{app::AppExit, ecs::system::SystemId};
+use gameplay_screen_state::GameplayScreenState;
 use hud::{BAD_TEXT_COLOR, ButtonBuilder, Fonts, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, MEDIUM_SPACING};
 use keyboard::KeyBindings;
 use manual::ManualSection;

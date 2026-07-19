@@ -143,7 +143,7 @@ impl<'w> TileSpawner<'w, '_> {
                 dices: character_info.melee_dice,
                 sides: character_info.melee_dice_sides,
             },
-            HealingDuration::new(),
+            HealingDuration::default(),
         ));
 
         if let Some(name) = name {
@@ -609,7 +609,7 @@ impl<'w> TileSpawner<'w, '_> {
     }
 }
 
-impl<'w> CraftSpawner for TileSpawner<'w, '_> {
+impl CraftSpawner for TileSpawner<'_, '_> {
     fn spawn_craft(&mut self, pos: Pos, recipe: Arc<Recipe>) -> Result<Entity, Error> {
         let object_in = ObjectOn {
             tile_entity: self
@@ -709,7 +709,7 @@ impl<'w> CraftSpawner for TileSpawner<'w, '_> {
     }
 }
 
-impl<'w> ItemSpawner for TileSpawner<'w, '_> {
+impl ItemSpawner for TileSpawner<'_, '_> {
     fn spawn_item<R: Relationship>(
         &mut self,
         parent: R,

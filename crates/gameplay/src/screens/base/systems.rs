@@ -1,15 +1,15 @@
 use crate::screens::base::messages::{YouAreBusy, YouStartTraveling};
-use crate::{
-    ChangePace, GameplayScreenState, PlayerDirection, PlayerInstructions, QueuedInstruction,
-};
 use bevy::prelude::{
     DespawnOnExit, In, IntoSystem as _, KeyCode, Local, NextState, Res, ResMut, State, World,
     debug, warn,
 };
+use gameplay_action_planning::{PlayerDirection, PlayerInstructions, QueuedInstruction};
 use gameplay_camera::{ZoomDirection, ZoomDistance, manage_zoom, reset_camera_angle, toggle_map};
+use gameplay_character::ChangePace;
 use gameplay_focus::{CancelHandling, ElevationVisibility, Focus, FocusState};
 use gameplay_log::LogMessageWriter;
 use gameplay_player::PlayerActionState;
+use gameplay_screen_state::GameplayScreenState;
 use gameplay_visualization::VisualizationUpdate;
 use keyboard::{Held, KeyBindings};
 use manual::ManualSection;

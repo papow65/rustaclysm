@@ -14,6 +14,7 @@ enum ProtoDuration {
     Seconds(u64),
 }
 
+#[must_use]
 #[derive(Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Deserialize)]
 #[serde(try_from = "ProtoDuration")]
 pub struct Duration {

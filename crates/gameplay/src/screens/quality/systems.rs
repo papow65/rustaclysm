@@ -1,4 +1,3 @@
-use crate::GameplayScreenState;
 use bevy::prelude::{
     AnyOf, Commands, DespawnOnExit, KeyCode, Local, NextState, Query, Res, ResMut, Single, Text,
     With, World,
@@ -10,6 +9,7 @@ use gameplay_location::{LocationCache, Pos};
 use gameplay_model::LastSeen;
 use gameplay_nearby::{find_nearby, find_nearby_pseudo, nearby_qualities};
 use gameplay_player::Player;
+use gameplay_screen_state::GameplayScreenState;
 use hud::{GOOD_TEXT_COLOR, WARN_TEXT_COLOR, scroll_screen};
 use keyboard::KeyBindings;
 use manual::ManualSection;

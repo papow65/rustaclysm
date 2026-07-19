@@ -1,8 +1,8 @@
-use crate::GameplayScreenState;
 use crate::screens::tool::systems::{
     adapt_to_tool_deselection, adapt_to_tool_selection, create_tool_key_bindings, spawn_tool_screen,
 };
 use bevy::prelude::{App, IntoScheduleConfigs as _, OnEnter, Plugin, Update, in_state};
+use gameplay_screen_state::GameplayScreenState;
 use selection_list::selection_list_plugin;
 
 pub(crate) struct ToolScreenPlugin;

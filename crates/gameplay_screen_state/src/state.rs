@@ -3,7 +3,7 @@ use bevy::prelude::SubStates;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, SubStates)]
 #[source(ApplicationState = ApplicationState::Gameplay)]
-pub(crate) enum GameplayScreenState {
+pub enum GameplayScreenState {
     #[default]
     Transitioning,
 
@@ -29,7 +29,8 @@ pub(crate) enum GameplayScreenState {
 }
 
 impl GameplayScreenState {
-    pub(crate) const fn allow_behavior(self) -> bool {
+    #[must_use]
+    pub const fn allow_behavior(self) -> bool {
         !matches!(self, Self::Transitioning | Self::Menu | Self::Death)
     }
 }

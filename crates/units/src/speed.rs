@@ -1,12 +1,12 @@
 use std::{fmt, ops::Mul};
 
+#[must_use]
 #[derive(Clone, Copy)]
 pub struct Speed {
     millimeter_per_second: u64,
 }
 
 impl Speed {
-    #[must_use]
     pub const fn from_kmph(n: f32) -> Self {
         Self {
             millimeter_per_second: (n * 1_000_000.0 / 3_600.0) as u64,
@@ -23,7 +23,6 @@ impl Speed {
         self.millimeter_per_second as f32 * 3_600.0 / 1_000_000.0
     }
 
-    #[must_use]
     pub const fn combine(self, other: Self, average: Self) -> Self {
         Self {
             millimeter_per_second: self.millimeter_per_second * other.millimeter_per_second

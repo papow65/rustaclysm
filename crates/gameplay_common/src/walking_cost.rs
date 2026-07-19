@@ -12,7 +12,6 @@ pub struct WalkingCost {
 }
 
 impl WalkingCost {
-    #[must_use]
     pub fn new(nbor_distance: NborDistance, move_cost: MoveCost) -> Self {
         let mut new = Self {
             equivalent_distance: match nbor_distance {
@@ -31,7 +30,6 @@ impl WalkingCost {
         new
     }
 
-    #[must_use]
     pub fn duration(self, speed: Speed) -> Duration {
         self.equivalent_distance / speed
     }
