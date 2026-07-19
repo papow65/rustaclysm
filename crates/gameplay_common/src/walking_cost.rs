@@ -4,6 +4,7 @@ use std::iter::Sum;
 use std::ops::{Add, Mul};
 use units::{Distance, Duration, Speed};
 
+#[must_use]
 #[derive(Clone, Copy, Debug)]
 pub struct WalkingCost {
     /// Contains the move cost of every step and double cost for going up

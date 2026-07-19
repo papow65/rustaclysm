@@ -1,5 +1,7 @@
-use crate::behavior::{schedule::BehaviorSchedule, systems::refresh::refresh_all};
-use crate::{BehaviorLoopSet, BehaviorValidator, RefreshAfterBehavior};
+use crate::behavior::{
+    BehaviorLoopSet, BehaviorSchedule, BehaviorValidator, RefreshAfterBehavior,
+    systems::refresh_all,
+};
 use bevy::ecs::schedule::{IntoScheduleConfigs as _, ScheduleConfigs};
 use bevy::ecs::system::{ScheduleSystem, SystemState};
 use bevy::prelude::{State, World, debug, on_message, resource_exists};

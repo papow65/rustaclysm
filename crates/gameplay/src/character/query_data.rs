@@ -1,11 +1,11 @@
-use crate::actor::messages::{
+use crate::character::messages::{
     AttackNothing, CantClose, CantCloseOn, CrashInto, Drop, HaltAtTheLedge, IsTooExhaustedTo, Move,
     PickUp, PulpNothing, SmashInvalid, SubzoneNotFoundWhileMovingAnItem, TooFarToMove, YouCant,
     YouFinish, YouSleepFor,
 };
 use crate::{
-    ActorEvent, ActorImpact, Aquatic, Attack, BaseSpeed, Breath, ChangePace, Close, CorpseEvent,
-    Faction, HealingDuration, Health, LastEnemy, Melee, Pathfinder, Peek, Pulp, Smash, Stamina,
+    ActorImpact, Aquatic, Attack, BaseSpeed, Breath, ChangePace, CharacterEvent, Close,
+    CorpseEvent, Faction, HealingDuration, Health, LastEnemy, Melee, Peek, Pulp, Smash, Stamina,
     StaminaCost, StartCraft, Step, Tile, TileSpawner, WalkingMode,
 };
 use bevy::ecs::query::{QueryData, With};
@@ -123,7 +123,7 @@ impl ActorItem<'_, '_> {
     pub(crate) fn sleep(
         &self,
         transient_message_writer: &mut LogMessageWriter<PlayerActionState>,
-        healing_writer: &mut MessageWriter<'_, ActorEvent<Healing>>,
+        healing_writer: &mut MessageWriter<'_, CharacterEvent<Healing>>,
         player_action_state: &PlayerActionState,
         clock: &Clock,
         healing_durations: &mut Query<&mut HealingDuration>,
@@ -135,7 +135,7 @@ impl ActorItem<'_, '_> {
             .expect("Actor entity should be found");
 
         let healing_amount = healing_duration.heal(SLEEP_DURATION);
-        healing_writer.write(ActorEvent::new(
+        healing_writer.write(CharacterEvent::new(
             self.entity,
             Healing {
                 amount: healing_amount as u16,
@@ -170,12 +170,17 @@ impl ActorItem<'_, '_> {
         match envir.collide(from, to, true) {
             Collision::Pass => {
                 commands.entity(self.entity).insert(to);
-                let walking_cost = Pathfinder::new(envir).walking_cost(from, to);
-                self.impact_from_nbor(
-                    walking_cost.duration(self.speed()),
-                    self.walking_mode.stamina_impact(self.stamina.breath()),
-                    step.to,
-                )
+                match envir.nbor_walking_cost(from, step.to) {
+                    Ok(walking_cost) => self.impact_from_nbor(
+                        walking_cost.duration(self.speed()),
+                        self.walking_mode.stamina_impact(self.stamina.breath()),
+                        step.to,
+                    ),
+                    Err(no_stairs) => {
+                        message_writer.send(no_stairs);
+                        self.no_impact()
+                    }
+                }
             }
             //Collision::Fall(fall_pos) => {
             //    pos = fall_pos;
@@ -236,7 +241,7 @@ impl ActorItem<'_, '_> {
     pub(crate) fn attack(
         &self,
         message_writer: &mut LogMessageWriter,
-        damage_writer: &mut MessageWriter<ActorEvent<Damage>>,
+        damage_writer: &mut MessageWriter<CharacterEvent<Damage>>,
         envir: &Envir,
         hierarchy: &ItemHierarchy,
         attack: &Attack,
@@ -252,7 +257,7 @@ impl ActorItem<'_, '_> {
         let target = envir.get_nbor(*self.pos, attack.target).expect("Valid pos");
 
         if let Some((defender, _)) = envir.find_character(target) {
-            self.damage(damage_writer, hierarchy, defender, ActorEvent::new)
+            self.damage(damage_writer, hierarchy, defender, CharacterEvent::new)
         } else {
             message_writer.send(AttackNothing {
                 subject: self.subject(),

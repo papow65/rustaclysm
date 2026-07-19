@@ -5,8 +5,8 @@ use cdda_json_files::MoveCost;
 use gameplay_common::WalkingCost;
 use gameplay_item::{Amount, Item, ItemItem};
 use gameplay_location::{
-    HorizontalDirection, Level, LevelOffset, LocationCache, Nbor, Pos, PosOffset, StairsDown,
-    StairsUp, Zone, ZoneLevel,
+    HorizontalDirection, Level, LevelOffset, LocationCache, Nbor, NborDistance, Pos, PosOffset,
+    StairsDown, StairsUp, Zone, ZoneLevel,
 };
 use gameplay_object::{Closeable, Corpse, Hurdle, Life, Obstacle, Opaque, Openable};
 use gameplay_object::{ObjectName, StandardIntegrity};
@@ -284,6 +284,94 @@ impl<'w, 's> Envir<'w, 's> {
     {
         self.nbors(pos)
             .filter(move |(_nbor, npos, _distance)| acceptable(*npos))
+    }
+
+    pub fn directions_for_item_handling(
+        &'s self,
+        pos: Pos,
+    ) -> impl Iterator<Item = (HorizontalDirection, Pos)> + use<'s> {
+        self.nbors(pos).filter_map(|(nbor, npos, _)| {
+            HorizontalDirection::try_from(nbor)
+                .ok()
+                .map(|direction| (direction, npos))
+        })
+    }
+
+    pub fn nbors_to_attack(&'s self, pos: Pos) -> impl Iterator<Item = Nbor> + use<'s> {
+        self.nbors_if(pos, move |nbor| {
+            nbor != pos && self.find_character(nbor).is_some()
+        })
+        .map(move |(nbor, _npos, _distance)| nbor)
+    }
+
+    pub fn nbors_to_smash(&'s self, pos: Pos) -> impl Iterator<Item = Nbor> + use<'s> {
+        self.nbors_if(pos, move |nbor| self.find_smashable(nbor).is_some())
+            .map(move |(nbor, _npos, _distance)| nbor)
+    }
+
+    pub fn directions_to_pulp(
+        &'s self,
+        pos: Pos,
+    ) -> impl Iterator<Item = HorizontalDirection> + use<'s> {
+        self.nbors_if(pos, move |nbor| self.find_pulpable(nbor).is_some())
+            .filter_map(move |(nbor, _npos, _distance)| HorizontalDirection::try_from(nbor).ok())
+    }
+
+    pub fn directions_to_close(
+        &'s self,
+        pos: Pos,
+    ) -> impl Iterator<Item = HorizontalDirection> + use<'s> {
+        self.nbors_if(pos, move |nbor| self.find_closeable(nbor).is_some())
+            .filter_map(move |(nbor, _npos, _distance)| HorizontalDirection::try_from(nbor).ok())
+    }
+
+    pub fn directions_to_craft(
+        &'s self,
+        pos: Pos,
+    ) -> impl Iterator<Item = HorizontalDirection> + use<'s> {
+        self.nbors_if(pos, move |nbor| {
+            self.is_accessible(nbor) && !self.is_water(nbor)
+        })
+        .filter_map(move |(nbor, _npos, _distance)| HorizontalDirection::try_from(nbor).ok())
+    }
+
+    /// With regard for obstacles and stairs
+    pub fn nbor_walking_cost(&self, from: Pos, nbor: Nbor) -> Result<WalkingCost, NoStairs> {
+        let to = self.get_nbor(from, nbor)?;
+
+        let move_cost = self
+            .find_accessibles(to)
+            .map_or_else(MoveCost::default, |floor| {
+                floor.move_cost.adjust(self.find_hurdles(to).map(|h| h.0))
+            });
+
+        Ok(self.walking_cost(from, to, move_cost))
+    }
+
+    /// Without regard for obstacles or stairs
+    pub fn estimated_walking_cost(&self, from: Pos, to: Pos) -> WalkingCost {
+        self.walking_cost(from, to, MoveCost::default())
+    }
+
+    fn walking_cost(&self, from: Pos, to: Pos, move_cost: MoveCost) -> WalkingCost {
+        let dx = u64::from(from.x.abs_diff(to.x));
+        let dz = u64::from(from.z.abs_diff(to.z));
+        let diagonal = dx.min(dz);
+        let adjacent = dx.max(dz) - diagonal;
+
+        let dy = (to.level - from.level).h;
+        let up = dy.max(0) as u64;
+        let down = (-dy).max(0) as u64;
+
+        [
+            (NborDistance::Up, up),
+            (NborDistance::Adjacent, adjacent),
+            (NborDistance::Diagonal, diagonal),
+            (NborDistance::Down, down),
+        ]
+        .into_iter()
+        .map(|(nd, amount)| WalkingCost::new(nd, move_cost) * amount)
+        .sum()
     }
 
     pub fn collide(&self, from: Pos, to: Pos, controlled: bool) -> Collision<'_> {

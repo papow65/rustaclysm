@@ -7,3 +7,5 @@ mod refresh;
 
 pub(super) use self::r#loop::loop_behavior_and_refresh;
 pub(super) use self::once::behavior_systems;
+
+use self::refresh::refresh_all;

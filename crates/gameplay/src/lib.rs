@@ -1,5 +1,5 @@
-mod actor;
 mod behavior;
+mod character;
 mod components;
 mod plugin;
 mod screens;
@@ -9,16 +9,16 @@ mod systems;
 
 pub use self::plugin::GameplayPlugin;
 
-use self::actor::{
-    Action, ActionIn, Actor, ActorEvent, ActorImpact, ActorItem, ActorPlugin, Aquatic, Attack,
-    BaseSpeed, Breath, ChangePace, Close, ContinueCraft, CorpseEvent, ExamineItem, Faction, Health,
-    Impact, Intelligence, ItemAction, LastEnemy, MoveItem, Pathfinder, Peek, Pickup, PlannedAction,
-    Pulp, Sleep, Smash, Stamina, StaminaCost, StaminaImpact, StartCraft, Stay, Step, Unwield,
-    WalkingMode, Wield,
-};
 use self::behavior::{
-    BehaviorLoopSet, BehaviorPlugin, BehaviorValidator, Interruption, PlayerDirection,
+    BehaviorLoopSet, BehaviorPlugin, Interruption, PlannedAction, PlayerDirection,
     PlayerInstructions, QueuedInstruction, RefreshAfterBehavior,
+};
+use self::character::{
+    Action, ActionIn, Actor, ActorImpact, ActorItem, ActorPlugin, Aquatic, Attack, BaseSpeed,
+    Breath, ChangePace, CharacterEvent, Close, ContinueCraft, CorpseEvent, ExamineItem, Faction,
+    Health, Impact, Intelligence, ItemAction, LastEnemy, MoveItem, Pathfinder, Peek, Pickup, Pulp,
+    Sleep, Smash, Stamina, StaminaCost, StaminaImpact, StartCraft, Stay, Step, Unwield,
+    WalkingMode, Wield,
 };
 use self::components::{HealingDuration, Melee, MissingAsset, Tile};
 use self::screens::{GameplayScreenState, ScreensPlugin};

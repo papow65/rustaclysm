@@ -1,9 +1,7 @@
-use crate::{Intelligence, QueuedInstruction};
+use crate::Intelligence;
 use bevy::prelude::debug;
-use cdda_json_files::MoveCost;
 use fastrand::f32 as rand_f32;
-use gameplay_common::WalkingCost;
-use gameplay_location::{HorizontalDirection, Nbor, NborDistance, Pos};
+use gameplay_location::{Nbor, Pos};
 use gameplay_world::Envir;
 use pathfinding::prelude::astar;
 use units::{Duration, Speed};
@@ -40,75 +38,6 @@ impl<'w, 's> Pathfinder<'w, 's> {
             .map(move |(nbor, npos, walking_cost)| (nbor, npos, walking_cost.duration(speed)))
     }
 
-    pub(crate) fn directions_for_item_handling(
-        &'s self,
-        pos: Pos,
-    ) -> impl Iterator<Item = (HorizontalDirection, Pos)> + use<'s> {
-        self.envir.nbors(pos).filter_map(|(nbor, npos, _)| {
-            HorizontalDirection::try_from(nbor)
-                .ok()
-                .map(|direction| (direction, npos))
-        })
-    }
-
-    pub(crate) fn nbors_for_exploring(
-        &'s self,
-        pos: Pos,
-        instruction: &'s QueuedInstruction,
-    ) -> impl Iterator<Item = Nbor> + use<'s> {
-        self.envir
-            .nbors_if(pos, move |nbor| match instruction {
-                QueuedInstruction::Attack => {
-                    nbor != pos && self.envir.find_character(nbor).is_some()
-                }
-                QueuedInstruction::Smash => self.envir.find_smashable(nbor).is_some(),
-                QueuedInstruction::Pulp => self.envir.find_pulpable(nbor).is_some(),
-                QueuedInstruction::Close => self.envir.find_closeable(nbor).is_some(),
-                QueuedInstruction::StartCraft { .. } => {
-                    self.envir.is_accessible(nbor) && !self.envir.is_water(nbor)
-                }
-                _ => panic!("unexpected instruction {instruction:?}"),
-            })
-            .map(move |(nbor, _npos, _distance)| nbor)
-    }
-
-    /// `WalkingCost` without regard for obstacles or stairs, unless they are nbors
-    pub(crate) fn walking_cost(&self, from: Pos, to: Pos) -> WalkingCost {
-        let dx = u64::from(from.x.abs_diff(to.x));
-        let dz = u64::from(from.z.abs_diff(to.z));
-        let diagonal = dx.min(dz);
-        let adjacent = dx.max(dz) - diagonal;
-
-        let dy = (to.level - from.level).h;
-        let up = dy.max(0) as u64;
-        let down = (-dy).max(0) as u64;
-
-        let move_cost = if diagonal + adjacent + up + down == 1 {
-            // nbors, the precise value matters in some cases
-            // Dumb creatures may try to use paths that do not have a floor.
-            self.envir
-                .find_accessibles(to)
-                .map_or_else(MoveCost::default, |floor| {
-                    floor
-                        .move_cost
-                        .adjust(self.envir.find_hurdles(to).map(|h| h.0))
-                })
-        } else {
-            // estimate
-            MoveCost::default()
-        };
-
-        [
-            (NborDistance::Up, up),
-            (NborDistance::Adjacent, adjacent),
-            (NborDistance::Diagonal, diagonal),
-            (NborDistance::Down, down),
-        ]
-        .into_iter()
-        .map(|(nd, amount)| WalkingCost::new(nd, move_cost) * amount)
-        .sum()
-    }
-
     pub(crate) fn path<F>(
         &self,
         from: Pos,
@@ -131,10 +60,11 @@ impl<'w, 's> Pathfinder<'w, 's> {
                 .map(|(_, pos, cost)| (pos, cost))
         };
         let estimated_duration_fn = |&pos: &Pos| {
-            self.walking_cost(from, pos)
+            self.envir
+                .estimated_walking_cost(from, pos)
                 .duration(speed)
                 .max(stay_duration)
-                + self.walking_cost(pos, to).duration(speed)
+                + self.envir.estimated_walking_cost(pos, to).duration(speed)
         };
 
         //trace!("dumb? {dumb:?} @{from:?}");

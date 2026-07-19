@@ -11,6 +11,7 @@ gameplay_location = { workspace = true }
 gameplay_log = { workspace = true }
 hud = { workspace = true }
 units = { workspace = true }
+util = { workspace = true }
 
 [lints]
 workspace = true

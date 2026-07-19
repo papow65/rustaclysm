@@ -1,7 +1,6 @@
-use crate::behavior::systems::{behavior_systems, loop_behavior_and_refresh};
-use crate::{
-    BehaviorValidator, PlayerInstructions, RefreshAfterBehavior,
-    behavior::schedule::BehaviorSchedule,
+use crate::behavior::{
+    BehaviorSchedule, BehaviorValidator, PlayerInstructions, RefreshAfterBehavior,
+    behavior_systems, loop_behavior_and_refresh,
 };
 use application_state::ApplicationState;
 use bevy::prelude::{

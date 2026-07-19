@@ -1,4 +1,4 @@
-use crate::actor::messages::{
+use crate::behavior::messages::{
     FirstExamineYourDestination, NoPlaceToCraftNearby, NoTargetsNearby, NothingToCloseNearby,
     YouAreAlmostOutOfBreathAndStop, YouAreStillAsleep, YouAreStillDraggingItems, YouCant,
     YouCantAttackYourself, YouFallAsleep, YouFinish, YouSpotAndStop, YouStartDefending,
@@ -18,7 +18,7 @@ use gameplay_world::Envir;
 use text::Fragment;
 use units::{Duration, Timestamp};
 
-pub(crate) fn plan_manual_action(
+pub(super) fn plan_manual_action(
     current_state: &PlayerActionState,
     next_state: &mut ResMut<NextState<PlayerActionState>>,
     message_writer: &mut LogMessageWriter,
@@ -47,7 +47,7 @@ pub(crate) fn plan_manual_action(
     None
 }
 
-pub(crate) fn plan_automatic_action(
+pub(super) fn plan_automatic_action(
     current_state: &PlayerActionState,
     currently_visible_builder: &CurrentlyVisibleBuilder,
     player_instructions: &mut PlayerInstructions,
@@ -375,32 +375,18 @@ fn plan_start_craft(
     pos: Pos,
     recipe_situation: RecipeSituation,
 ) -> Option<PlannedAction> {
-    let start_craft = QueuedInstruction::StartCraft(recipe_situation);
-    let craftable_nbors = Pathfinder::new(envir)
-        .nbors_for_exploring(pos, &start_craft)
-        .collect::<Vec<_>>();
-    let QueuedInstruction::StartCraft(recipe_situation) = start_craft else {
-        panic!("The instruction {start_craft:?} should still match start craft");
-    };
-
-    match craftable_nbors.len() {
-        0 => {
+    let craftable_directions = envir.directions_to_craft(pos).collect::<Vec<_>>();
+    match craftable_directions.as_slice() {
+        [] => {
             message_writer.send(NoPlaceToCraftNearby);
             None
         }
-        1 => {
-            if let Nbor::Horizontal(horizontal_direction) =
-                craftable_nbors.first().expect("Single valid pos")
-            {
-                // Craftig state is set when performing the action
-                Some(PlannedAction::StartCraft(StartCraft {
-                    recipe_situation,
-                    target: *horizontal_direction,
-                }))
-            } else {
-                message_writer.send(NoPlaceToCraftNearby);
-                None
-            }
+        [direction] => {
+            // Craftig state is set when performing the action
+            Some(PlannedAction::StartCraft(StartCraft {
+                recipe_situation,
+                target: *direction,
+            }))
         }
         _ => {
             next_state.set(PlayerActionState::PickingNbor(PickingNbor::Crafting(
@@ -417,15 +403,13 @@ fn plan_attack(
     envir: &Envir,
     pos: Pos,
 ) -> Option<PlannedAction> {
-    let attackable_nbors = Pathfinder::new(envir)
-        .nbors_for_exploring(pos, &QueuedInstruction::Attack)
-        .collect::<Vec<_>>();
-    match attackable_nbors.len() {
-        0 => {
+    let attackable_nbors = envir.nbors_to_attack(pos).collect::<Vec<_>>();
+    match attackable_nbors.as_slice() {
+        [] => {
             message_writer.send(NoTargetsNearby);
             None
         }
-        1 => Some(PlannedAction::attack(attackable_nbors[0])),
+        [nbor] => Some(PlannedAction::attack(*nbor)),
         _ => {
             next_state.set(PlayerActionState::PickingNbor(PickingNbor::Attacking));
             None
@@ -439,15 +423,13 @@ fn plan_smash(
     envir: &Envir,
     pos: Pos,
 ) -> Option<PlannedAction> {
-    let smashable_nbors = Pathfinder::new(envir)
-        .nbors_for_exploring(pos, &QueuedInstruction::Smash)
-        .collect::<Vec<_>>();
-    match smashable_nbors.len() {
-        0 => {
+    let smashable_nbors = envir.nbors_to_smash(pos).collect::<Vec<_>>();
+    match smashable_nbors.as_slice() {
+        [] => {
             message_writer.send(NoTargetsNearby);
             None
         }
-        1 => Some(PlannedAction::smash(smashable_nbors[0])),
+        [nbor] => Some(PlannedAction::smash(*nbor)),
         _ => {
             next_state.set(PlayerActionState::PickingNbor(PickingNbor::Smashing));
             None
@@ -461,28 +443,19 @@ fn plan_pulp(
     envir: &Envir,
     pos: Pos,
 ) -> Option<PlannedAction> {
-    let pulpable_nbors = Pathfinder::new(envir)
-        .nbors_for_exploring(pos, &QueuedInstruction::Pulp)
-        .filter_map(|nbor| {
-            if let Nbor::Horizontal(horizontal) = nbor {
-                Some(horizontal)
-            } else {
-                None
-            }
-        })
-        .collect::<Vec<_>>();
-    //trace!("Pulping {} targets", pulpable_nbors.len());
-    match pulpable_nbors.len() {
-        0 => {
+    let pulpable_directions = envir.directions_to_pulp(pos).collect::<Vec<_>>();
+    //trace!("Pulping {} targets", pulpable_directions.len());
+    match pulpable_directions.as_slice() {
+        [] => {
             message_writer.send(NoTargetsNearby);
             None
         }
-        1 => {
+        [direction] => {
             //trace!("Pulping target found -> active");
             next_state.set(PlayerActionState::Pulping {
-                direction: pulpable_nbors[0],
+                direction: *direction,
             });
-            Some(PlannedAction::pulp(pulpable_nbors[0]))
+            Some(PlannedAction::pulp(*direction))
         }
         _ => {
             //trace!("Pulping choice -> inactive");
@@ -498,22 +471,13 @@ fn plan_close(
     envir: &Envir,
     pos: Pos,
 ) -> Option<PlannedAction> {
-    let closable_nbors = Pathfinder::new(envir)
-        .nbors_for_exploring(pos, &QueuedInstruction::Close)
-        .filter_map(|nbor| {
-            if let Nbor::Horizontal(horizontal) = nbor {
-                Some(horizontal)
-            } else {
-                None
-            }
-        })
-        .collect::<Vec<_>>();
-    match closable_nbors.len() {
-        0 => {
+    let closable_nbors = envir.directions_to_close(pos).collect::<Vec<_>>();
+    match closable_nbors.as_slice() {
+        [] => {
             message_writer.send(NothingToCloseNearby);
             None
         }
-        1 => Some(PlannedAction::close(closable_nbors[0])),
+        [direction] => Some(PlannedAction::close(*direction)),
         _ => {
             next_state.set(PlayerActionState::PickingNbor(PickingNbor::Closing));
             None

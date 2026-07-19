@@ -1,6 +1,7 @@
 use crate::behavior::systems::messages::NpcActionFailed;
+use crate::behavior::{plan_automatic_action, plan_manual_action};
 use crate::{
-    Action, ActionIn, Actor, ActorEvent, ActorImpact, Attack, ChangePace, Close, ContinueCraft,
+    Action, ActionIn, Actor, ActorImpact, Attack, ChangePace, CharacterEvent, Close, ContinueCraft,
     CorpseEvent, ExamineItem, Faction, HealingDuration, ItemAction as _, MoveItem, Peek, Pickup,
     PlannedAction, PlayerInstructions, Pulp, Sleep, Smash, Stamina, StartCraft, Stay, Step, Tile,
     TileSpawner, Unwield, Wield,
@@ -113,7 +114,7 @@ fn plan_manual_player_action(
     let actor = actors
         .get(active_actor)
         .expect("'entity' should be a known actor");
-    let impact = crate::actor::plan_manual_action(
+    let impact = plan_manual_action(
         &player_action_state,
         &mut next_player_action_state,
         &mut message_writer,
@@ -146,7 +147,7 @@ fn plan_automatic_player_action(
         .expect("'entity' should be a known actor");
 
     let factions = &factions.iter().map(|(p, f)| (*p, f)).collect::<Vec<_>>();
-    let planned_action = crate::actor::plan_automatic_action(
+    let planned_action = plan_automatic_action(
         &player_action_state,
         &currently_visible_builder,
         &mut player_instructions,
@@ -319,7 +320,7 @@ fn perform_stay(In(stay): In<ActionIn<Stay>>, actors: Query<Actor>) -> ActorImpa
 fn perform_sleep(
     In(sleep): In<ActionIn<Sleep>>,
     mut transient_message_writer: LogMessageWriter<PlayerActionState>,
-    mut healing_writer: MessageWriter<ActorEvent<Healing>>,
+    mut healing_writer: MessageWriter<CharacterEvent<Healing>>,
     player_action_state: Res<State<PlayerActionState>>,
     clock: Clock,
     mut healing_durations: Query<&mut HealingDuration>,
@@ -355,7 +356,7 @@ fn perform_step(
 fn perform_attack(
     In(attack): In<ActionIn<Attack>>,
     mut message_writer: LogMessageWriter,
-    mut damage_writer: MessageWriter<ActorEvent<Damage>>,
+    mut damage_writer: MessageWriter<CharacterEvent<Damage>>,
     envir: Envir,
     hierarchy: ItemHierarchy,
     actors: Query<Actor>,

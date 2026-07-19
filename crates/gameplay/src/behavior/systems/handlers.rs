@@ -2,7 +2,7 @@
 
 use crate::behavior::systems::messages::{Break, Heal, Hit, IsThoroughlyPulped, Kill, Pulp};
 use crate::{
-    Actor, ActorEvent, CorpseEvent, Faction, GameplayScreenState, Health, Stamina, TileSpawner,
+    Actor, CharacterEvent, CorpseEvent, Faction, GameplayScreenState, Health, Stamina, TileSpawner,
     WalkingMode,
 };
 use bevy::ecs::schedule::{IntoScheduleConfigs as _, ScheduleConfigs};
@@ -34,9 +34,9 @@ pub(in super::super) fn handle_action_effects() -> ScheduleConfigs<ScheduleSyste
         (
             // actor events
             // Make sure killed actors are handled early
-            update_damaged_characters.run_if(on_message::<ActorEvent<Damage>>),
+            update_damaged_characters.run_if(on_message::<CharacterEvent<Damage>>),
             (
-                update_healed_characters.run_if(on_message::<ActorEvent<Healing>>),
+                update_healed_characters.run_if(on_message::<CharacterEvent<Healing>>),
                 update_corpses,
             ),
         )
@@ -93,7 +93,7 @@ pub(in super::super) fn toggle_doors(
 pub(in super::super) fn update_damaged_characters(
     mut commands: Commands,
     mut message_writer: LogMessageWriter,
-    mut damage_reader: MessageReader<ActorEvent<Damage>>,
+    mut damage_reader: MessageReader<CharacterEvent<Damage>>,
     clock: Clock,
     mut next_gameplay_state: ResMut<NextState<GameplayScreenState>>,
     mut characters: Query<
@@ -156,7 +156,7 @@ pub(in super::super) fn update_damaged_characters(
 
 pub(in super::super) fn update_healed_characters(
     mut message_writer: LogMessageWriter,
-    mut healing_reader: MessageReader<ActorEvent<Healing>>,
+    mut healing_reader: MessageReader<CharacterEvent<Healing>>,
     mut actors: ParamSet<(
         Query<&mut Health, (With<Faction>, With<Life>)>,
         Query<Actor, (With<Faction>, With<Life>)>,
