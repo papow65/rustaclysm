@@ -5,7 +5,7 @@ use gameplay_location::{Level, Pos, ZoneLevel};
 
 /// Region visible on the camera
 #[derive(SystemParam)]
-pub(crate) struct VisibleRegion<'w, 's> {
+pub struct VisibleRegion<'w, 's> {
     camera: Single<'w, 's, (&'static Camera, &'static GlobalTransform), With<Camera3d>>,
 }
 

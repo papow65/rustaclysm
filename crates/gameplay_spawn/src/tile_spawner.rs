@@ -1,7 +1,4 @@
-use crate::{
-    Aquatic, BaseSpeed, Faction, HealingDuration, Health, Melee, Stamina, Tile, WalkingMode,
-    spawn::log_spawn_result,
-};
+use crate::log_spawn_result;
 use application_state::ApplicationState;
 use bevy::camera::visibility::RenderLayers;
 use bevy::ecs::{relationship::Relationship, system::SystemParam};
@@ -19,12 +16,16 @@ use cdda_json_files::{
 use either::Either;
 use gameplay_cdda::{Error, Infos, ObjectCategory, TileVariant};
 use gameplay_cdda_active_sav::ActiveSav;
-use gameplay_common::{Limited, Shared};
-use gameplay_crafting::Craft;
+use gameplay_character::{
+    Aquatic, BaseFaction as _, BaseSpeed, Faction, HealingDuration, Health, Melee, Stamina,
+    WalkingMode,
+};
+use gameplay_common::{Limited, Shared, Tile};
+use gameplay_crafting::{Craft, CraftSpawner};
 use gameplay_focus::{CameraBase, ExamineCursor};
 use gameplay_item::{
-    Amount, BodyContainers, Containable, Filthy, InPocket, ItemIntegrity, Phase, PocketOf,
-    SealedPocket,
+    Amount, BodyContainers, Containable, Filthy, InPocket, ItemIntegrity, ItemSpawner, Phase,
+    PocketOf, SealedPocket,
 };
 use gameplay_location::{LevelOffset, LocationCache, Pos, PosOffset, StairsDown, StairsUp};
 use gameplay_model::{LastSeen, ModelFactory};
@@ -43,7 +44,7 @@ use units::{Mass, Volume};
 use util::Maybe;
 
 #[derive(SystemParam)]
-pub(crate) struct TileSpawner<'w, 's> {
+pub struct TileSpawner<'w, 's> {
     pub(super) commands: Commands<'w, 's>,
     infos: Res<'w, Infos>,
     active_sav: Res<'w, ActiveSav>,
@@ -134,7 +135,7 @@ impl<'w> TileSpawner<'w, '_> {
             Shared::new(character_info.clone()),
             Life,
             Obstacle,
-            Health(Limited::full(character_info.hp as u16)),
+            Health::full(character_info.hp as u16),
             Stamina::Unlimited,
             WalkingMode::Perpetual,
             faction.clone(),
@@ -215,105 +216,6 @@ impl<'w> TileSpawner<'w, '_> {
         self.commands.entity(entity).insert(Shared::new(field_info));
     }
 
-    pub(crate) fn spawn_item<R: Relationship>(
-        &mut self,
-        parent: R,
-        pos: Option<Pos>,
-        item: &CddaItem,
-        amount: Amount,
-    ) -> Result<Entity, Error> {
-        let item_info = &item.item_info.get()?;
-
-        let phase = Phase::from(&item_info.phase);
-
-        //trace!("{:?} {:?} {:?} {:?}", &parent, pos, &id, &amount);
-        let object_name = ObjectName::new(
-            item_info.name.clone(),
-            item_category_text_color(item_info.category.as_ref()),
-        );
-        let object_entity = self.spawn_object(
-            parent,
-            pos,
-            item_info.id.untyped(),
-            ObjectCategory::Item,
-            object_name,
-            None,
-        );
-
-        let (volume, mass) = match &item.corpse.get() {
-            Some(corpse_character) => {
-                if corpse_character.id == InfoId::new("mon_null") {
-                    (item_info.volume, item_info.mass)
-                } else {
-                    debug!("{:?}", &corpse_character.id);
-                    (corpse_character.volume, corpse_character.mass)
-                }
-            }
-            _ => (item_info.volume, item_info.mass),
-        };
-
-        let mut entity = self.commands.entity(object_entity);
-        entity.insert((
-            Shared::new(item_info.clone()),
-            amount,
-            Containable {
-                // Based on cataclysm-dda src/mtype.cpp lines 47-48
-                volume: volume
-                    .unwrap_or_else(|| Volume::try_from("62499 ml").expect("Well formatted")),
-                mass: mass.unwrap_or_else(|| Mass::try_from("81499 g").expect("Well formatted")),
-            },
-            ItemIntegrity::from(item.damaged),
-            phase,
-        ));
-
-        if item.item_tags.contains(&Arc::from("FILTHY")) {
-            entity.insert(Filthy);
-        }
-
-        let entity = entity.id();
-        //trace!("Item {entity:?} with parent {parent:?}");
-        if let Some(container) = &item.contents {
-            for (index, cdda_pocket) in container.contents.iter().enumerate() {
-                let Some(pocket_info) = pocket_info(item_info, index, cdda_pocket) else {
-                    if ![PocketType::Mod, PocketType::Migration].contains(&cdda_pocket.pocket_type)
-                    {
-                        error! {"No pocket info found for pocket {index} ({cdda_pocket:?}) of {:?}", item_info.name.single};
-                    }
-                    continue;
-                };
-
-                //trace!("Pocket of {:?}: {:?}", &item.typeid, cdda_pocket);
-                let pocket_entity = self
-                    .commands
-                    .spawn((
-                        Visibility::Hidden,
-                        Transform::IDENTITY,
-                        Shared::new(pocket_info),
-                        PocketOf {
-                            item_entity: entity,
-                        },
-                        Maybe(SealedPocket::try_from(cdda_pocket).ok()),
-                    ))
-                    .id();
-
-                //trace!("Pocket {pocket:?} with parent {entity:?}");
-                for content in &cdda_pocket.contents {
-                    if let Err(error) = self.spawn_item(
-                        InPocket { pocket_entity },
-                        None,
-                        content,
-                        Amount(content.charges.unwrap_or(1)),
-                    ) {
-                        error!("Spawning a nested item failed: {error:#?}");
-                    }
-                }
-            }
-            // TODO container.additional_pockets
-        }
-
-        Ok(entity)
-    }
-
     fn spawn_items(
         &mut self,
         object_in: ObjectOn,
@@ -380,12 +282,7 @@ impl<'w> TileSpawner<'w, '_> {
         }
     }
 
-    pub(crate) fn spawn_terrain(
-        &mut self,
-        object_in: ObjectOn,
-        pos: Pos,
-        local_terrain: &LocalTerrain,
-    ) {
+    pub fn spawn_terrain(&mut self, object_in: ObjectOn, pos: Pos, local_terrain: &LocalTerrain) {
         if local_terrain.info.id == InfoId::new("t_open_air")
             || local_terrain.info.id == InfoId::new("t_open_air_rooved")
         {
@@ -649,7 +546,7 @@ impl<'w> TileSpawner<'w, '_> {
         self.configure_player(player, camera_entity);
     }
 
-    pub(crate) fn spawn_zombies(&mut self, around_pos: Pos) {
+    pub fn spawn_zombies(&mut self, around_pos: Pos) {
         let human = RequiredLinkedLater::from(InfoId::new("human"));
         self.infos.link_character(&human, "survivor");
 
@@ -677,7 +574,7 @@ impl<'w> TileSpawner<'w, '_> {
         ));
     }
 
-    pub(crate) fn spawn_smashed(
+    pub fn spawn_smashed(
         &mut self,
         object_in: ObjectOn,
         pos: Pos,
@@ -710,8 +607,10 @@ impl<'w> TileSpawner<'w, '_> {
             }
         }
     }
+}
 
-    pub(crate) fn spawn_craft(&mut self, pos: Pos, recipe: Arc<Recipe>) -> Result<Entity, Error> {
+impl<'w> CraftSpawner for TileSpawner<'w, '_> {
+    fn spawn_craft(&mut self, pos: Pos, recipe: Arc<Recipe>) -> Result<Entity, Error> {
         let object_in = ObjectOn {
             tile_entity: self
                 .location_cache
@@ -805,6 +704,107 @@ impl<'w> TileSpawner<'w, '_> {
         })?;
         let craft = Craft::new(recipe, crafting_time);
         self.commands.entity(entity).insert(craft);
+
+        Ok(entity)
+    }
+}
+
+impl<'w> ItemSpawner for TileSpawner<'w, '_> {
+    fn spawn_item<R: Relationship>(
+        &mut self,
+        parent: R,
+        pos: Option<Pos>,
+        item: &CddaItem,
+        amount: Amount,
+    ) -> Result<Entity, Error> {
+        let item_info = &item.item_info.get()?;
+
+        let phase = Phase::from(&item_info.phase);
+
+        //trace!("{:?} {:?} {:?} {:?}", &parent, pos, &id, &amount);
+        let object_name = ObjectName::new(
+            item_info.name.clone(),
+            item_category_text_color(item_info.category.as_ref()),
+        );
+        let object_entity = self.spawn_object(
+            parent,
+            pos,
+            item_info.id.untyped(),
+            ObjectCategory::Item,
+            object_name,
+            None,
+        );
+
+        let (volume, mass) = match &item.corpse.get() {
+            Some(corpse_character) => {
+                if corpse_character.id == InfoId::new("mon_null") {
+                    (item_info.volume, item_info.mass)
+                } else {
+                    debug!("{:?}", &corpse_character.id);
+                    (corpse_character.volume, corpse_character.mass)
+                }
+            }
+            _ => (item_info.volume, item_info.mass),
+        };
+
+        let mut entity = self.commands.entity(object_entity);
+        entity.insert((
+            Shared::new(item_info.clone()),
+            amount,
+            Containable {
+                // Based on cataclysm-dda src/mtype.cpp lines 47-48
+                volume: volume
+                    .unwrap_or_else(|| Volume::try_from("62499 ml").expect("Well formatted")),
+                mass: mass.unwrap_or_else(|| Mass::try_from("81499 g").expect("Well formatted")),
+            },
+            ItemIntegrity::from(item.damaged),
+            phase,
+        ));
+
+        if item.item_tags.contains(&Arc::from("FILTHY")) {
+            entity.insert(Filthy);
+        }
+
+        let entity = entity.id();
+        //trace!("Item {entity:?} with parent {parent:?}");
+        if let Some(container) = &item.contents {
+            for (index, cdda_pocket) in container.contents.iter().enumerate() {
+                let Some(pocket_info) = pocket_info(item_info, index, cdda_pocket) else {
+                    if ![PocketType::Mod, PocketType::Migration].contains(&cdda_pocket.pocket_type)
+                    {
+                        error! {"No pocket info found for pocket {index} ({cdda_pocket:?}) of {:?}", item_info.name.single};
+                    }
+                    continue;
+                };
+
+                //trace!("Pocket of {:?}: {:?}", &item.typeid, cdda_pocket);
+                let pocket_entity = self
+                    .commands
+                    .spawn((
+                        Visibility::Hidden,
+                        Transform::IDENTITY,
+                        Shared::new(pocket_info),
+                        PocketOf {
+                            item_entity: entity,
+                        },
+                        Maybe(SealedPocket::try_from(cdda_pocket).ok()),
+                    ))
+                    .id();
+
+                //trace!("Pocket {pocket:?} with parent {entity:?}");
+                for content in &cdda_pocket.contents {
+                    if let Err(error) = self.spawn_item(
+                        InPocket { pocket_entity },
+                        None,
+                        content,
+                        Amount(content.charges.unwrap_or(1)),
+                    ) {
+                        error!("Spawning a nested item failed: {error:#?}");
+                    }
+                }
+            }
+            // TODO container.additional_pockets
+        }
 
         Ok(entity)
     }

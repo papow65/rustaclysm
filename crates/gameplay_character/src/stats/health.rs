@@ -13,7 +13,7 @@ impl Health {
     pub fn full(max: u16) -> Self {
         Self(Limited::full(max))
     }
-    
+
     pub fn lower(&mut self, damage: &Damage) -> Evolution {
         self.0.lower(damage.amount)
     }

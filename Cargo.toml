@@ -65,6 +65,7 @@ gameplay_terrain = { path = "crates/gameplay_terrain" }
 gameplay_vehicle = { path = "crates/gameplay_vehicle" }
 gameplay_camera = { path = "crates/gameplay_camera" }
 gameplay_perception = { path = "crates/gameplay_perception" }
+gameplay_spawn = { path = "crates/gameplay_spawn" }
 gameplay_visualization = { path = "crates/gameplay_visualization" }
 gameplay_world = { path = "crates/gameplay_world" }
 hud = { path = "crates/hud" }

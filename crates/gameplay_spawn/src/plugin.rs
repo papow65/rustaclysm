@@ -5,7 +5,7 @@ use crate::{
 use application_state::ApplicationState;
 use bevy::prelude::{App, Plugin, StateScopedMessagesAppExt as _};
 
-pub(crate) struct SpawnPlugin;
+pub struct SpawnPlugin;
 
 impl Plugin for SpawnPlugin {
     fn build(&self, app: &mut App) {

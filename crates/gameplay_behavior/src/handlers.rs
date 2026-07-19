@@ -20,6 +20,7 @@ use gameplay_log::LogMessageWriter;
 use gameplay_object::{Corpse, CorpseRaise, Life, ObjectName, Obstacle, StandardIntegrity};
 use gameplay_player::Player;
 use gameplay_relations::ObjectOn;
+use gameplay_spawn::TileSpawner;
 use gameplay_terrain::{LocalTerrain, TerrainEvent, Toggle};
 use gameplay_time::Clock;
 use gameplay_visualization::VisualizationUpdate;
@@ -27,7 +28,7 @@ use std::{f32::consts::FRAC_PI_2, time::Instant};
 use text::Fragment;
 use units::Duration;
 use util::log_if_slow;
-use zzz::{GameplayScreenState, TileSpawner};
+use zzz::GameplayScreenState;
 
 pub(crate) fn handle_action_effects() -> ScheduleConfigs<ScheduleSystem> {
     (

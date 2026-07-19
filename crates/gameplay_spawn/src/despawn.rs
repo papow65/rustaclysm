@@ -10,7 +10,7 @@ use std::time::Instant;
 use util::log_if_slow;
 
 /// This should run last, to prevent Bevy crashing on despawned entities being modified.
-pub(crate) fn despawn_systems() -> ScheduleConfigs<ScheduleSystem> {
+pub fn despawn_systems() -> ScheduleConfigs<ScheduleSystem> {
     (
         despawn_subzone_levels.run_if(on_message::<DespawnSubzoneLevel>),
         despawn_zone_level.run_if(on_message::<DespawnZoneLevel>),

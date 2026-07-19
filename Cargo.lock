@@ -2426,6 +2426,7 @@ dependencies = [
  "gameplay_player",
  "gameplay_relations",
  "gameplay_resource",
+ "gameplay_spawn",
  "gameplay_terrain",
  "gameplay_time",
  "gameplay_transition",
@@ -2495,6 +2496,7 @@ dependencies = [
  "gameplay_player",
  "gameplay_relations",
  "gameplay_resource",
+ "gameplay_spawn",
  "gameplay_terrain",
  "gameplay_time",
  "gameplay_vehicle",
@@ -2747,6 +2749,37 @@ version = "0.0.0"
 dependencies = [
  "application_state",
  "bevy",
+]
+
+[[package]]
+name = "gameplay_spawn"
+version = "0.1.0"
+dependencies = [
+ "application_state",
+ "bevy",
+ "cdda_json_files",
+ "either",
+ "gameplay_cdda",
+ "gameplay_cdda_active_sav",
+ "gameplay_character",
+ "gameplay_common",
+ "gameplay_crafting",
+ "gameplay_focus",
+ "gameplay_item",
+ "gameplay_local",
+ "gameplay_location",
+ "gameplay_model",
+ "gameplay_object",
+ "gameplay_perception",
+ "gameplay_player",
+ "gameplay_relations",
+ "gameplay_terrain",
+ "gameplay_vehicle",
+ "gameplay_visualization",
+ "gameplay_world",
+ "hud",
+ "units",
+ "util",
 ]
 
 [[package]]

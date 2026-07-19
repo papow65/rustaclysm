@@ -2,12 +2,12 @@ use bevy::prelude::{Entity, Message};
 use gameplay_location::{SubzoneLevel, ZoneLevel};
 
 #[derive(Clone, Copy, Debug, Message)]
-pub(crate) struct SpawnSubzoneLevel {
+pub struct SpawnSubzoneLevel {
     pub(crate) subzone_level: SubzoneLevel,
 }
 
 #[derive(Debug, Message)]
-pub(crate) struct DespawnSubzoneLevel {
+pub struct DespawnSubzoneLevel {
     pub(crate) subzone_level: SubzoneLevel,
 }
 

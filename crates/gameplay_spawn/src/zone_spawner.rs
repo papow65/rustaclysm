@@ -1,4 +1,4 @@
-use crate::{MissingAsset, SpawnZoneLevel, TileSpawner, spawn::VisibleRegion};
+use crate::{MissingAsset, SpawnZoneLevel, TileSpawner, VisibleRegion};
 use application_state::ApplicationState;
 use bevy::prelude::{
     DespawnOnExit, Entity, MessageReader, Res, Transform, Vec3, Visibility, debug,

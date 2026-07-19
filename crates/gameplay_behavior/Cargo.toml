@@ -24,6 +24,7 @@ gameplay_perception = { workspace = true }
 gameplay_resource = { workspace = true }
 gameplay_player = { workspace = true }
 gameplay_relations = { workspace = true }
+gameplay_spawn = { workspace = true }
 gameplay_terrain = { workspace = true }
 gameplay_time = { workspace = true }
 gameplay_vehicle = { workspace = true }

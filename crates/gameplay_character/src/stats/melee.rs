@@ -7,10 +7,10 @@ use gameplay_common::Shared;
 #[component(immutable)]
 pub struct Melee {
     /// Can be 0
-    pub(crate) dices: u16,
+    pub dices: u16,
 
     /// Can be 0
-    pub(crate) sides: u16,
+    pub sides: u16,
 }
 
 impl Melee {

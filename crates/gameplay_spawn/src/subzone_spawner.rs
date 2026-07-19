@@ -1,4 +1,4 @@
-use crate::{TileSpawner, spawn::log_spawn_result};
+use crate::{TileSpawner, log_spawn_result};
 use application_state::ApplicationState;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{DespawnOnExit, Res, ResMut};
@@ -20,7 +20,7 @@ use gameplay_world::ZoneLevelIds;
 use std::sync::OnceLock;
 
 #[derive(SystemParam)]
-pub(crate) struct SubzoneSpawner<'w, 's> {
+pub struct SubzoneSpawner<'w, 's> {
     infos: Res<'w, Infos>,
     zone_level_ids: ResMut<'w, ZoneLevelIds>,
     subzone_level_cache: ResMut<'w, SubzoneLevelCache>,

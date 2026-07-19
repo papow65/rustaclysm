@@ -1,7 +1,6 @@
-use crate::spawn::{SubzoneSpawner, VisibleRegion, ZoneSpawner};
 use crate::{
     DespawnSubzoneLevel, DespawnZoneLevel, MissingAsset, SpawnSubzoneLevel, SpawnZoneLevel,
-    TileSpawner, UpdateZoneLevelVisibility,
+    SubzoneSpawner, TileSpawner, UpdateZoneLevelVisibility, VisibleRegion, ZoneSpawner,
 };
 use bevy::ecs::{schedule::ScheduleConfigs, system::ScheduleSystem};
 use bevy::platform::collections::HashSet;
@@ -30,7 +29,7 @@ use util::{MessageBuffer, log_if_slow};
 
 const MAX_EXPAND_DISTANCE: i32 = 10;
 
-pub(crate) fn handle_region_asset_events() -> ScheduleConfigs<ScheduleSystem> {
+pub fn handle_region_asset_events() -> ScheduleConfigs<ScheduleSystem> {
     (
         (
             (
@@ -47,7 +46,7 @@ pub(crate) fn handle_region_asset_events() -> ScheduleConfigs<ScheduleSystem> {
         .into_configs()
 }
 
-pub(crate) fn handle_zone_levels() -> ScheduleConfigs<ScheduleSystem> {
+pub fn handle_zone_levels() -> ScheduleConfigs<ScheduleSystem> {
     (
         update_zone_levels,
         (
@@ -60,7 +59,7 @@ pub(crate) fn handle_zone_levels() -> ScheduleConfigs<ScheduleSystem> {
 }
 
 #[expect(clippy::needless_pass_by_value)]
-pub(crate) fn spawn_subzones_for_camera(
+pub fn spawn_subzones_for_camera(
     mut spawn_subzone_level_writer: MessageWriter<SpawnSubzoneLevel>,
     mut despawn_subzone_level_writer: MessageWriter<DespawnSubzoneLevel>,
     focus: Focus,
@@ -157,7 +156,7 @@ fn despawn_expanded_subzone_levels(
         });
 }
 
-pub(crate) fn spawn_subzone_levels(
+pub fn spawn_subzone_levels(
     mut spawn_subzone_level_buffer: MessageBuffer<SpawnSubzoneLevel>,
     mut subzone_spawner: SubzoneSpawner,
     mut map_manager: MapManager,
@@ -396,7 +395,7 @@ fn update_zone_levels_with_missing_assets(
 }
 
 #[expect(clippy::needless_pass_by_value)]
-pub(crate) fn spawn_initial_entities(
+pub fn spawn_initial_entities(
     active_sav: Res<ActiveSav>,
     mut spawner: TileSpawner,
     camera: Single<Entity, With<Camera3d>>,
@@ -417,7 +416,7 @@ pub(crate) fn spawn_initial_entities(
     spawner.spawn_characters(spawn_pos, *camera);
 }
 
-pub(crate) fn update_explored(
+pub fn update_explored(
     mut explorations: MessageReader<Exploration>,
     mut explored: ResMut<Explored>,
 ) {
