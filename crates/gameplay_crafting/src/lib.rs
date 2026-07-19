@@ -1,4 +1,5 @@
 mod components;
+mod craft_spawner;
 mod lookup;
 mod messages;
 
@@ -7,4 +8,5 @@ pub use self::components::{
     RecipeSituation, ToolSituation,
 };
 pub use self::messages::CraftProgressLeft;
+pub use craft_spawner::CraftSpawner;
 pub use lookup::shown_recipes;

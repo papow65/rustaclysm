@@ -1,0 +1,104 @@
+use crate::{Breath, Impact};
+use bevy::prelude::Component;
+use gameplay_common::Limited;
+use gameplay_location::{Nbor, NborDistance};
+use units::{Distance, Duration};
+
+/// Short term breath - Mutable component
+#[derive(Debug, Component)]
+pub enum Stamina {
+    Unlimited,
+    Limited(Limited),
+}
+
+impl Stamina {
+    const MAX: u16 = i16::MAX as u16;
+
+    pub const FULL: Self = Self::Limited(Limited::full(Self::MAX));
+
+    pub const fn breath(&self) -> Breath {
+        match self {
+            Self::Unlimited => Breath::Normal,
+            Self::Limited(limited) => {
+                const SPRINT_COST: u16 = (-StaminaCost::EXTREME.0) as u16;
+                if 2 * SPRINT_COST <= limited.current() {
+                    Breath::Normal
+                } else if SPRINT_COST <= limited.current() {
+                    Breath::AlmostWinded
+                } else {
+                    Breath::Winded
+                }
+            }
+        }
+    }
+
+    pub fn apply(&mut self, impact: &Impact) {
+        if let &mut Self::Limited(ref mut limited) = self {
+            limited.adjust(impact.stamina_impact().as_i16(impact.duration()));
+        }
+    }
+}
+
+#[derive(Copy, Clone, Debug)]
+pub enum StaminaImpact {
+    Duration {
+        cost_per_second: StaminaCost,
+    },
+    Nbor {
+        cost_per_meter: StaminaCost,
+        nbor: Nbor,
+    },
+}
+
+impl StaminaImpact {
+    fn as_i16(self, duration: Duration) -> i16 {
+        (match self {
+            Self::Duration { cost_per_second } => {
+                i64::from(cost_per_second.0) * duration.milliseconds() as i64 / 1000
+            }
+            Self::Nbor {
+                cost_per_meter,
+                nbor,
+            } => {
+                i64::from(cost_per_meter.0)
+                    * match nbor.distance() {
+                        NborDistance::Up => Distance::VERTICAL * 5,
+                        NborDistance::Adjacent => Distance::ADJACENT,
+                        NborDistance::Diagonal => Distance::DIAGONAL,
+                        NborDistance::Zero => panic!("Stamina impact nbor should not be 'here'"),
+                        NborDistance::Down => Distance::VERTICAL,
+                    }
+                    .millimeter() as i64
+                    / Distance::ADJACENT.millimeter() as i64
+            }
+        }) as i16
+    }
+}
+
+#[derive(Copy, Clone, Debug)]
+pub struct StaminaCost(i16);
+
+impl StaminaCost {
+    /// Distance to walk to fully recuperate
+    const FULL_RECUPERATION: u16 = 1000; // (adjacent) tiles
+    const WALK_GAIN: i16 = (Stamina::MAX / Self::FULL_RECUPERATION) as i16;
+
+    /// Distance to sprint to be fully out of breath
+    const OUT_OF_BREATH: u16 = 50; // (adjacent) tiles
+    const SPRINT_COST: i16 = (Stamina::MAX / Self::OUT_OF_BREATH) as i16;
+
+    /// For example when lying down
+    pub const LYING_REST: Self = Self(Self::WALK_GAIN * 4);
+    /// For example when sitting still
+    pub const SITTING_REST: Self = Self(Self::WALK_GAIN * 3);
+    /// For example when standing still
+    pub const STANDING_REST: Self = Self(Self::WALK_GAIN * 2);
+    /// For example when walking
+    pub const LIGHT: Self = Self(Self::WALK_GAIN);
+    /// For example when speed walking
+    pub const NEUTRAL: Self = Self(0);
+    /// For example when running
+    pub const HEAVY: Self = Self(-Self::SPRINT_COST / 2);
+    /// For example when sprinting
+    pub const EXTREME: Self = Self(-Self::SPRINT_COST);
+}

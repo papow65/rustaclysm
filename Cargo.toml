@@ -40,6 +40,9 @@ cdda_json_files = { path = "crates/cdda_json_files" }
 either = "1"
 fastrand = "2"
 gameplay = { path = "crates/gameplay" }
+gameplay_action_planning = { path = "crates/gameplay_action_planning" }
+gameplay_behavior = { path = "crates/gameplay_behavior" }
+gameplay_character = { path = "crates/gameplay_character" }
 gameplay_common = { path = "crates/gameplay_common" }
 gameplay_crafting = { path = "crates/gameplay_crafting" }
 gameplay_log = { path = "crates/gameplay_log" }

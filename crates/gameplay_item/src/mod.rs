@@ -5,6 +5,7 @@ mod container_components;
 mod filthy;
 mod hierarchy;
 mod integrity;
+mod item_spawner;
 mod messages;
 mod phase;
 mod plugin;
@@ -18,6 +19,7 @@ pub use self::container_components::{BodyContainers, Containable, ContainerLimit
 pub use self::filthy::Filthy;
 pub use self::hierarchy::{ItemHandler, ItemHierarchy};
 pub use self::integrity::ItemIntegrity;
+pub use self::item_spawner::ItemSpawner;
 pub use self::phase::Phase;
 pub use self::plugin::GameplayItemPlugin;
 pub use self::pocket::SealedPocket;

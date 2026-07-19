@@ -1,0 +1,34 @@
+use crate::{
+    BehaviorSchedule, BehaviorValidator, RefreshAfterBehavior, behavior_systems,
+    loop_behavior_and_refresh,
+};
+use application_state::ApplicationState;
+use bevy::prelude::{
+    App, IntoScheduleConfigs as _, Plugin, StateScopedMessagesAppExt as _, Update,
+};
+use gameplay_action_planning::PlayerInstructions;
+use gameplay_resource::gameplay_resource_plugin;
+use util::log_resource_change_plugin;
+
+pub struct BehaviorLoopPlugin;
+
+impl Plugin for BehaviorLoopPlugin {
+    fn build(&self, app: &mut App) {
+        app.init_schedule(BehaviorSchedule);
+
+        app.add_plugins(gameplay_resource_plugin::<PlayerInstructions>);
+        app.add_plugins(log_resource_change_plugin::<PlayerInstructions>);
+
+        app.add_message::<RefreshAfterBehavior>()
+            .clear_messages_on_exit::<RefreshAfterBehavior>(ApplicationState::Gameplay);
+
+        app.add_systems(BehaviorSchedule, behavior_systems());
+
+        app.add_systems(Update, loop_behavior_and_refresh().run_if(looping_behavior));
+    }
+}
+
+#[expect(clippy::needless_pass_by_value)]
+fn looping_behavior(behavior_validator: BehaviorValidator) -> bool {
+    behavior_validator.looping_behavior()
+}

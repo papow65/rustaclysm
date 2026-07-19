@@ -1,0 +1,30 @@
+[package]
+name = "gameplay_character"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+application_state = { workspace = true }
+bevy = { workspace = true }
+cdda_json_files = { workspace = true }
+either = { workspace = true }
+fastrand = { workspace = true }
+gameplay_crafting = { workspace = true }
+gameplay_common = { workspace = true }
+gameplay_item = { workspace = true }
+gameplay_location = { workspace = true }
+gameplay_log = { workspace = true }
+gameplay_model = { workspace = true }
+gameplay_object = { workspace = true }
+gameplay_player = { workspace = true }
+gameplay_relations = { workspace = true }
+gameplay_terrain = { workspace = true }
+gameplay_time = { workspace = true }
+gameplay_world = { workspace = true }
+hud = { workspace = true }
+text = { workspace = true }
+units = { workspace = true }
+util = { workspace = true }
+
+[lints]
+workspace = true

@@ -1,8 +1,8 @@
 use crate::{
-    ActorPlugin, GameplayScreenState, ScreensPlugin, SidebarPlugin, SpawnPlugin,
-    check_failed_asset_loading, count_assets, count_pos, create_gameplay_key_bindings,
-    despawn_systems, handle_region_asset_events, handle_zone_levels, spawn_initial_entities,
-    spawn_subzone_levels, spawn_subzones_for_camera, update_explored,
+    GameplayScreenState, ScreensPlugin, SidebarPlugin, SpawnPlugin, check_failed_asset_loading,
+    count_assets, count_pos, create_gameplay_key_bindings, despawn_systems,
+    handle_region_asset_events, handle_zone_levels, spawn_initial_entities, spawn_subzone_levels,
+    spawn_subzones_for_camera, update_explored,
 };
 use application_state::ApplicationState;
 use bevy::ecs::schedule::ScheduleConfigs;
@@ -11,8 +11,11 @@ use bevy::prelude::{
     App, AppExtStates as _, FixedUpdate, IntoScheduleConfigs as _, OnEnter, Plugin, PostUpdate,
     Update, in_state, on_message, resource_exists, resource_exists_and_changed,
 };
+use gameplay_action_planning::ActionPlanningPlugin;
+use gameplay_behavior_loop::BehaviorLoopPlugin;
 use gameplay_camera::UpdateCameraOffset;
 use gameplay_cdda::{CddaPlugin, Exploration};
+use gameplay_character::CharacterPlugin;
 use gameplay_focus::{FocusPlugin, OnFocusChange};
 use gameplay_item::GameplayItemPlugin;
 use gameplay_local::GameplayLocalPlugin;
@@ -40,7 +43,9 @@ impl Plugin for GameplayPlugin {
 
         app.add_plugins((
             (
-                ActorPlugin,
+                ActionPlanningPlugin,
+                BehaviorLoopPlugin,
+                CharacterPlugin,
                 FocusPlugin,
                 SidebarPlugin,
                 CddaPlugin,

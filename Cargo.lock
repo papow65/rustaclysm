@@ -2406,10 +2406,12 @@ dependencies = [
  "cdda_json_files",
  "either",
  "fastrand",
- "float-ord",
+ "gameplay_action_planning",
+ "gameplay_behavior",
  "gameplay_camera",
  "gameplay_cdda",
  "gameplay_cdda_active_sav",
+ "gameplay_character",
  "gameplay_common",
  "gameplay_crafting",
  "gameplay_focus",
@@ -2437,6 +2439,67 @@ dependencies = [
  "pathfinding",
  "selection_list",
  "strum",
+ "text",
+ "units",
+ "util",
+]
+
+[[package]]
+name = "gameplay_action_planning"
+version = "0.1.0"
+dependencies = [
+ "application_state",
+ "bevy",
+ "cdda_json_files",
+ "fastrand",
+ "float-ord",
+ "gameplay_character",
+ "gameplay_common",
+ "gameplay_crafting",
+ "gameplay_location",
+ "gameplay_log",
+ "gameplay_perception",
+ "gameplay_player",
+ "gameplay_resource",
+ "gameplay_time",
+ "gameplay_world",
+ "hud",
+ "pathfinding",
+ "strum",
+ "text",
+ "units",
+ "util",
+]
+
+[[package]]
+name = "gameplay_behavior"
+version = "0.1.0"
+dependencies = [
+ "application_state",
+ "bevy",
+ "cdda_json_files",
+ "either",
+ "gameplay_action_planning",
+ "gameplay_cdda",
+ "gameplay_character",
+ "gameplay_common",
+ "gameplay_crafting",
+ "gameplay_focus",
+ "gameplay_item",
+ "gameplay_local",
+ "gameplay_location",
+ "gameplay_log",
+ "gameplay_model",
+ "gameplay_object",
+ "gameplay_perception",
+ "gameplay_player",
+ "gameplay_relations",
+ "gameplay_resource",
+ "gameplay_terrain",
+ "gameplay_time",
+ "gameplay_vehicle",
+ "gameplay_visualization",
+ "gameplay_world",
  "text",
  "thread_local",
  "units",
@@ -2479,6 +2542,33 @@ dependencies = [
  "bevy",
  "cdda_json_files",
  "serde_json",
+ "util",
+]
+
+[[package]]
+name = "gameplay_character"
+version = "0.1.0"
+dependencies = [
+ "application_state",
+ "bevy",
+ "cdda_json_files",
+ "either",
+ "fastrand",
+ "gameplay_common",
+ "gameplay_crafting",
+ "gameplay_item",
+ "gameplay_location",
+ "gameplay_log",
+ "gameplay_model",
+ "gameplay_object",
+ "gameplay_player",
+ "gameplay_relations",
+ "gameplay_terrain",
+ "gameplay_time",
+ "gameplay_world",
+ "hud",
+ "text",
+ "units",
  "util",
 ]
 

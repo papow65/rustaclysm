@@ -1,7 +1,6 @@
 [package]
-name = "gameplay"
-description = "The in-game world"
-license = "AGPL-3.0-or-later"
+name = "gameplay_behavior"
+version = "0.1.0"
 edition = "2024"
 
 [dependencies]
@@ -9,15 +8,9 @@ application_state = { workspace = true }
 bevy = { workspace = true }
 cdda_json_files = { workspace = true }
 either = { workspace = true }
-fastrand = { workspace = true }
 gameplay_action_planning = { workspace = true }
-gameplay_behavior = { workspace = true }
-gameplay_camera = { workspace = true }
-gameplay_character = { workspace = true }
-gameplay_perception = { workspace = true }
-gameplay_visualization = { workspace = true }
 gameplay_cdda = { workspace = true }
-gameplay_cdda_active_sav = { workspace = true }
+gameplay_character = { workspace = true }
 gameplay_common = { workspace = true }
 gameplay_crafting = { workspace = true }
 gameplay_focus = { workspace = true }
@@ -26,23 +19,17 @@ gameplay_local = { workspace = true }
 gameplay_location = { workspace = true }
 gameplay_log = { workspace = true }
 gameplay_model = { workspace = true }
-gameplay_nearby = { workspace = true }
 gameplay_object = { workspace = true }
+gameplay_perception = { workspace = true }
+gameplay_resource = { workspace = true }
 gameplay_player = { workspace = true }
 gameplay_relations = { workspace = true }
-gameplay_resource = { workspace = true }
-gameplay_transition = { workspace = true }
-gameplay_transition_state = { workspace = true }
-gameplay_time = { workspace = true }
 gameplay_terrain = { workspace = true }
+gameplay_time = { workspace = true }
 gameplay_vehicle = { workspace = true }
+gameplay_visualization = { workspace = true }
 gameplay_world = { workspace = true }
-hud = { workspace = true }
-keyboard = { workspace = true }
-manual = { workspace = true }
-pathfinding = { workspace = true }
-selection_list = { workspace = true }
-strum = { workspace = true }
+thread_local = "1"
 text = { workspace = true }
 units = { workspace = true }
 util = { workspace = true }

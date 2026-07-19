@@ -1,5 +1,6 @@
 mod despawn;
 mod log;
+mod missing_asset;
 mod plugin;
 mod subzone_spawner;
 mod systems;
@@ -9,6 +10,7 @@ mod zone_events;
 mod zone_spawner;
 
 pub(crate) use self::despawn::despawn_systems;
+pub(crate) use self::missing_asset::MissingAsset;
 pub(crate) use self::plugin::SpawnPlugin;
 pub(crate) use self::systems::{
     handle_region_asset_events, handle_zone_levels, spawn_initial_entities, spawn_subzone_levels,
