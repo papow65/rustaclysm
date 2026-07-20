@@ -1,5 +1,5 @@
 use crate::{
-    ScreensPlugin, SidebarPlugin, check_failed_asset_loading, count_assets, count_pos,
+    ScreensPlugin, check_failed_asset_loading, count_assets, count_pos,
     create_gameplay_key_bindings,
 };
 use application_state::ApplicationState;
@@ -23,6 +23,7 @@ use gameplay_perception::{GameplayPerceptionPlugin, RelativeSegments};
 use gameplay_player::PlayerPlugin;
 use gameplay_resource::GampelayResourceSet;
 use gameplay_screen_state::GameplayScreenState;
+use gameplay_sidebar::SidebarPlugin;
 use gameplay_spawn::{
     SpawnPlugin, despawn_systems, handle_region_asset_events, handle_zone_levels,
     spawn_initial_entities, spawn_subzone_levels, spawn_subzones_for_camera, update_explored,
@@ -48,7 +49,6 @@ impl Plugin for GameplayPlugin {
                 BehaviorLoopPlugin,
                 CharacterPlugin,
                 FocusPlugin,
-                SidebarPlugin,
                 CddaPlugin,
                 GameplayItemPlugin,
                 GameplayLocalPlugin,
@@ -62,6 +62,7 @@ impl Plugin for GameplayPlugin {
                 (
                     SpawnPlugin,
                     ScreensPlugin,
+                    SidebarPlugin,
                     TerrainPlugin,
                     TimePlugin,
                     TransitionPlugin,

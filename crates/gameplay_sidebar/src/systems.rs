@@ -1,4 +1,4 @@
-use crate::sidebar::{
+use crate::{
     BreathText, DetailsText, EnemiesText, FpsText, HealthText, LastLogMessage, LastLogMessageCount,
     LogDisplay, PlayerActionStateText, SpeedTextSpan, StaminaText, TimeText, TransientLogMessage,
     WalkingModeTextSpan, WieldedText,

@@ -4,7 +4,7 @@ mod components;
 mod plugin;
 mod systems;
 
-pub(crate) use self::plugin::SidebarPlugin;
+pub use self::plugin::SidebarPlugin;
 
 use self::components::{
     BreathText, DetailsText, EnemiesText, FpsText, HealthText, LastLogMessage, LastLogMessageCount,

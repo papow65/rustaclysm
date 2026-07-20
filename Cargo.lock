@@ -2419,12 +2419,11 @@ dependencies = [
  "gameplay_log",
  "gameplay_model",
  "gameplay_nearby",
- "gameplay_object",
  "gameplay_perception",
  "gameplay_player",
- "gameplay_relations",
  "gameplay_resource",
  "gameplay_screen_state",
+ "gameplay_sidebar",
  "gameplay_spawn",
  "gameplay_terrain",
  "gameplay_time",
@@ -2751,6 +2750,34 @@ version = "0.1.0"
 dependencies = [
  "application_state",
  "bevy",
+]
+
+[[package]]
+name = "gameplay_sidebar"
+version = "0.1.0"
+dependencies = [
+ "application_state",
+ "bevy",
+ "cdda_json_files",
+ "gameplay_action_planning",
+ "gameplay_behavior",
+ "gameplay_character",
+ "gameplay_common",
+ "gameplay_focus",
+ "gameplay_item",
+ "gameplay_location",
+ "gameplay_log",
+ "gameplay_model",
+ "gameplay_object",
+ "gameplay_perception",
+ "gameplay_player",
+ "gameplay_relations",
+ "gameplay_terrain",
+ "gameplay_time",
+ "gameplay_world",
+ "hud",
+ "text",
+ "util",
 ]
 
 [[package]]
