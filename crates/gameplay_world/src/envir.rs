@@ -1,8 +1,7 @@
-use crate::NoStairs;
+use crate::{NoStairs, WalkingCost};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{Entity, Query, Res, With, Without, warn};
 use cdda_json_files::MoveCost;
-use gameplay_common::WalkingCost;
 use gameplay_item::{Amount, Item, ItemItem};
 use gameplay_location::{
     HorizontalDirection, Level, LevelOffset, LocationCache, Nbor, NborDistance, Pos, PosOffset,

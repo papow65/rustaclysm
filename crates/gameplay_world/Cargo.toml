@@ -8,7 +8,6 @@ edition = "2024"
 bevy = { workspace = true }
 cdda_json_files = { workspace = true }
 gameplay_cdda = { workspace = true }
-gameplay_common = { workspace = true }
 gameplay_item = { workspace = true }
 gameplay_location = { workspace = true }
 gameplay_log = { workspace = true }
@@ -17,6 +16,7 @@ gameplay_resource = { workspace = true }
 gameplay_terrain = { workspace = true }
 serde_json = { workspace = true }
 text = { workspace = true }
+units = { workspace = true }
 
 [lints]
 workspace = true

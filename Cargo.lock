@@ -2568,10 +2568,7 @@ name = "gameplay_common"
 version = "0.0.0"
 dependencies = [
  "bevy",
- "cdda_json_files",
- "gameplay_location",
  "hud",
- "units",
 ]
 
 [[package]]
@@ -3042,7 +3039,6 @@ dependencies = [
  "bevy",
  "cdda_json_files",
  "gameplay_cdda",
- "gameplay_common",
  "gameplay_item",
  "gameplay_location",
  "gameplay_log",
@@ -3051,6 +3047,7 @@ dependencies = [
  "gameplay_terrain",
  "serde_json",
  "text",
+ "units",
 ]
 
 [[package]]
