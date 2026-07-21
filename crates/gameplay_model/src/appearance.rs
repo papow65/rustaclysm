@@ -1,5 +1,5 @@
-use crate::LastSeen;
 use bevy::prelude::{AlphaMode, Assets, Color, Component, MeshMaterial3d, Srgba, StandardMaterial};
+use gameplay_common::LastSeen;
 
 #[derive(Clone, Debug, Component)]
 #[component(immutable)]

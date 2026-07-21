@@ -20,7 +20,7 @@ use gameplay_character::{
     Aquatic, BaseFaction as _, BaseSpeed, Faction, HealingDuration, Health, Melee, Stamina,
     WalkingMode,
 };
-use gameplay_common::{Limited, Shared, Tile};
+use gameplay_common::{LastSeen, Limited, Shared, Tile};
 use gameplay_crafting::{Craft, CraftSpawner};
 use gameplay_focus::{CameraBase, ExamineCursor};
 use gameplay_item::{
@@ -28,7 +28,7 @@ use gameplay_item::{
     PocketOf, SealedPocket,
 };
 use gameplay_location::{LevelOffset, LocationCache, Pos, PosOffset, StairsDown, StairsUp};
-use gameplay_model::{LastSeen, ModelFactory};
+use gameplay_model::ModelFactory;
 use gameplay_object::{
     Closeable, Hurdle, Life, Mobile, ObjectName, Obstacle, Opaque, Openable, StandardIntegrity,
 };

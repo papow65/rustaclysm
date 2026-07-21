@@ -2551,7 +2551,6 @@ dependencies = [
  "gameplay_item",
  "gameplay_location",
  "gameplay_log",
- "gameplay_model",
  "gameplay_object",
  "gameplay_player",
  "gameplay_relations",
@@ -2587,7 +2586,6 @@ dependencies = [
  "gameplay_item",
  "gameplay_location",
  "gameplay_log",
- "gameplay_model",
  "gameplay_nearby",
  "hud",
  "text",
@@ -2664,6 +2662,7 @@ dependencies = [
  "bevy",
  "cdda_json_files",
  "gameplay_cdda",
+ "gameplay_common",
  "gameplay_resource",
 ]
 
@@ -2676,7 +2675,6 @@ dependencies = [
  "gameplay_common",
  "gameplay_item",
  "gameplay_location",
- "gameplay_model",
 ]
 
 [[package]]
@@ -2702,7 +2700,6 @@ dependencies = [
  "gameplay_focus",
  "gameplay_location",
  "gameplay_log",
- "gameplay_model",
  "gameplay_object",
  "gameplay_player",
  "gameplay_resource",
@@ -2777,7 +2774,6 @@ dependencies = [
  "gameplay_item",
  "gameplay_location",
  "gameplay_log",
- "gameplay_model",
  "gameplay_player",
  "gameplay_screen_state",
  "hud",
@@ -2847,7 +2843,6 @@ dependencies = [
  "gameplay_common",
  "gameplay_item",
  "gameplay_location",
- "gameplay_model",
  "gameplay_nearby",
  "gameplay_player",
  "gameplay_screen_state",
@@ -2874,7 +2869,6 @@ dependencies = [
  "gameplay_common",
  "gameplay_item",
  "gameplay_location",
- "gameplay_model",
  "gameplay_nearby",
  "gameplay_player",
  "gameplay_screen_state",
@@ -2928,7 +2922,6 @@ dependencies = [
  "gameplay_item",
  "gameplay_location",
  "gameplay_log",
- "gameplay_model",
  "gameplay_object",
  "gameplay_perception",
  "gameplay_player",

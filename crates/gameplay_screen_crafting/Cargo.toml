@@ -15,7 +15,6 @@ gameplay_crafting = { workspace = true }
 gameplay_item = { workspace = true }
 gameplay_location = { workspace = true }
 gameplay_log = { workspace = true }
-gameplay_model = { workspace = true }
 gameplay_player = { workspace = true }
 gameplay_screen_state = { workspace = true }
 hud = { workspace = true }

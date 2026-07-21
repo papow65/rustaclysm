@@ -8,6 +8,7 @@ edition = "2024"
 bevy = { workspace = true }
 cdda_json_files = { workspace = true }
 gameplay_cdda = { workspace = true }
+gameplay_common = { workspace = true }
 gameplay_resource = { workspace = true }
 
 [lints]

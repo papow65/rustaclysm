@@ -3,10 +3,10 @@ use bevy::prelude::{AnyOf, Query};
 use cdda_json_files::{
     CommonItemInfo, ExamineAction, FurnitureInfo, InfoId, Quality, SimpleExamineAction, TerrainInfo,
 };
+use gameplay_common::LastSeen;
 use gameplay_common::Shared;
 use gameplay_item::{BodyContainers, Item, ItemItem};
 use gameplay_location::{LocationCache, Pos};
-use gameplay_model::LastSeen;
 use std::{ops::RangeInclusive, sync::Arc};
 
 const MAX_FIND_DISTANCE: i32 = 7;

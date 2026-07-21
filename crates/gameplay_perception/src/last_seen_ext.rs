@@ -1,5 +1,4 @@
-use gameplay_common::Visible;
-use gameplay_model::LastSeen;
+use gameplay_common::{LastSeen, Visible};
 use gameplay_object::Mobile;
 use gameplay_player::Player;
 

@@ -6,9 +6,9 @@ use bevy::prelude::{
 use bevy::{camera::visibility::RenderLayers, ecs::system::SystemParam};
 use cdda_json_files::{CddaItemName, InfoId, ItemName, OvermapTerrainInfo};
 use gameplay_cdda::{Infos, ObjectCategory};
+use gameplay_common::LastSeen;
 use gameplay_focus::Focus;
 use gameplay_location::{Level, ZoneLevel};
-use gameplay_model::LastSeen;
 use gameplay_object::ObjectName;
 use gameplay_perception::{Explored, SeenFrom};
 use gameplay_world::ZoneLevelIds;

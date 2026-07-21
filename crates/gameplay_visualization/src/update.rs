@@ -3,10 +3,11 @@ use bevy::prelude::{
     Query, Res, Single, Visibility, With, Without, debug, error,
 };
 use gameplay_cdda::Exploration;
+use gameplay_common::LastSeen;
 use gameplay_focus::{ElevationVisibility, Focus};
 use gameplay_local::GameplayLocal;
 use gameplay_location::{Pos, SubzoneLevel};
-use gameplay_model::{Appearance, LastSeen};
+use gameplay_model::Appearance;
 use gameplay_object::Mobile;
 use gameplay_perception::{CurrentlyVisible, CurrentlyVisibleBuilder, LastSeenExt as _};
 use gameplay_player::Player;

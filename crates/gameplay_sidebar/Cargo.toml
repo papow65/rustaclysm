@@ -15,7 +15,6 @@ gameplay_focus = { workspace = true }
 gameplay_item = { workspace = true }
 gameplay_location = { workspace = true }
 gameplay_log = { workspace = true }
-gameplay_model = { workspace = true }
 gameplay_object = { workspace = true }
 gameplay_perception = { workspace = true }
 gameplay_player = { workspace = true }

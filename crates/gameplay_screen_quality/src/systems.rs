@@ -3,10 +3,9 @@ use bevy::prelude::{
     With, World,
 };
 use cdda_json_files::{FurnitureInfo, TerrainInfo};
-use gameplay_common::Shared;
+use gameplay_common::{LastSeen, Shared};
 use gameplay_item::{BodyContainers, Item};
 use gameplay_location::{LocationCache, Pos};
-use gameplay_model::LastSeen;
 use gameplay_nearby::{find_nearby, find_nearby_pseudo, nearby_qualities};
 use gameplay_player::Player;
 use gameplay_screen_state::GameplayScreenState;

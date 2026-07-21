@@ -10,10 +10,9 @@ use cdda_json_files::{
     RequiredQuality, RequiredTool, Requirement, Sav, Skill, TerrainInfo,
 };
 use gameplay_cdda::{Error, Infos};
-use gameplay_common::Shared;
+use gameplay_common::{LastSeen, Shared};
 use gameplay_item::{BodyContainers, Item, ItemHierarchy, ItemItem};
 use gameplay_location::{LocationCache, Pos};
-use gameplay_model::LastSeen;
 use gameplay_nearby::{find_nearby, find_nearby_pseudo, find_sources, nearby_qualities};
 use std::num::NonZeroU32;
 use std::sync::Arc;
