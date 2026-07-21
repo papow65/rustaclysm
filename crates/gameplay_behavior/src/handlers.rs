@@ -11,11 +11,13 @@ use gameplay_cdda::Infos;
 use gameplay_character::{
     Actor, BaseFaction as _, CharacterEvent, CorpseEvent, Faction, Health, Stamina, WalkingMode,
 };
-use gameplay_common::{Damage, Healing, Limited, Shared};
+use gameplay_common::{Limited, Shared};
 use gameplay_item::{Amount, ContainerLimits, Item, ItemHierarchy};
 use gameplay_location::Pos;
 use gameplay_log::LogMessageWriter;
-use gameplay_object::{Corpse, CorpseRaise, Life, ObjectName, Obstacle, StandardIntegrity};
+use gameplay_object::{
+    Corpse, CorpseRaise, Damage, Healing, Life, ObjectName, Obstacle, StandardIntegrity,
+};
 use gameplay_player::Player;
 use gameplay_relations::ObjectOn;
 use gameplay_screen_state::GameplayScreenState;

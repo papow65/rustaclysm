@@ -1,5 +1,6 @@
+use crate::Damage;
 use bevy::prelude::Component;
-use gameplay_common::{Damage, Evolution, Limited};
+use gameplay_common::{Evolution, Limited};
 
 /// Mutable component
 #[derive(Debug, PartialEq, Component)]

@@ -1,7 +1,7 @@
 use crate::{CharacterEvent, CorpseEvent};
 use application_state::ApplicationState;
 use bevy::prelude::{App, Plugin, StateScopedMessagesAppExt as _};
-use gameplay_common::{Damage, Healing};
+use gameplay_object::{Damage, Healing};
 
 pub struct CharacterPlugin;
 

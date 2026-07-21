@@ -1,5 +1,3 @@
-mod damage;
-mod healing;
 mod last_seen;
 mod limited;
 mod region;
@@ -8,8 +6,6 @@ mod tile;
 mod visible;
 mod walking_cost;
 
-pub use self::damage::Damage;
-pub use self::healing::Healing;
 pub use self::last_seen::LastSeen;
 pub use self::limited::{Evolution, Limited};
 pub use self::region::{Region, ZoneRegion};

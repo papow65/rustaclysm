@@ -1,7 +1,7 @@
 use crate::{TerrainEvent, Toggle};
 use application_state::ApplicationState;
 use bevy::prelude::{App, Plugin, StateScopedMessagesAppExt as _};
-use gameplay_common::Damage;
+use gameplay_object::Damage;
 
 pub struct TerrainPlugin;
 

@@ -14,12 +14,12 @@ use gameplay_character::{
     CorpseEvent, ExamineItem, Faction, HealingDuration, ItemAction as _, MoveItem, Peek, Pickup,
     Pulp, Sleep, Smash, Stamina, StartCraft, Stay, Step, Unwield, Wield,
 };
-use gameplay_common::{Damage, Healing, Tile};
+use gameplay_common::Tile;
 use gameplay_crafting::Craft;
 use gameplay_item::{Amount, Item, ItemHierarchy};
 use gameplay_location::{LocationCache, Pos};
 use gameplay_log::LogMessageWriter;
-use gameplay_object::Life;
+use gameplay_object::{Damage, Healing, Life};
 use gameplay_perception::{CurrentlyVisibleBuilder, Explored};
 use gameplay_player::{Player, PlayerActionState};
 use gameplay_spawn::TileSpawner;

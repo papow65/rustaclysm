@@ -1,6 +1,6 @@
 use bevy::prelude::Component;
-use gameplay_common::{Damage, Healing};
 use gameplay_common::{Evolution, Limited};
+use gameplay_object::{Damage, Healing};
 use units::Duration;
 
 /// Not to be removed on death, because it is needed again when revived

@@ -1,5 +1,5 @@
 use bevy::prelude::{Entity, Message};
-use gameplay_common::{Damage, Healing};
+use gameplay_object::{Damage, Healing};
 
 pub trait CharacterChange: Clone + Send + Sync + 'static {}
 

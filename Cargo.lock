@@ -2571,7 +2571,6 @@ dependencies = [
  "cdda_json_files",
  "gameplay_location",
  "hud",
- "text",
  "units",
 ]
 
@@ -2973,8 +2972,8 @@ dependencies = [
  "bevy",
  "cdda_json_files",
  "gameplay_cdda",
- "gameplay_common",
  "gameplay_location",
+ "gameplay_object",
 ]
 
 [[package]]

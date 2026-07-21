@@ -1,5 +1,5 @@
 use bevy::prelude::{Entity, Message};
-use gameplay_common::Damage;
+use gameplay_object::Damage;
 
 pub trait TerrainChange: Clone + Send + Sync + 'static {}
 

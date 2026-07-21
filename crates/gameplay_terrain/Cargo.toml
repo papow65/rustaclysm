@@ -9,7 +9,7 @@ application_state = { workspace = true }
 bevy = { workspace = true }
 cdda_json_files = { workspace = true }
 gameplay_cdda = { workspace = true }
-gameplay_common = { workspace = true }
+gameplay_object = { workspace = true }
 gameplay_location = { workspace = true }
 
 [dev-dependencies]
