@@ -14,13 +14,12 @@ use gameplay_cdda::{
     OvermapBufferAsset, OvermapBufferManager, OvermapManager,
 };
 use gameplay_cdda_active_sav::ActiveSav;
-use gameplay_common::{Region, ZoneRegion};
 use gameplay_focus::Focus;
 use gameplay_local::GameplayLocal;
 use gameplay_location::{
     Level, Pos, SubzoneLevel, SubzoneLevelCache, VisionDistance, Zone, ZoneLevel, ZoneLevelCache,
 };
-use gameplay_perception::Explored;
+use gameplay_perception::{Explored, Region, ZoneRegion};
 use gameplay_visualization::{Expanded, VisualizationUpdate};
 use gameplay_world::ZoneLevelIds;
 use std::cmp::Ordering;

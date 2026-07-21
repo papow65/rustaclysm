@@ -1,5 +1,5 @@
 use bevy::prelude::Resource;
-use gameplay_common::Region;
+use gameplay_perception::Region;
 
 /// The area that should be expanded into tiles
 #[derive(Default, Resource)]

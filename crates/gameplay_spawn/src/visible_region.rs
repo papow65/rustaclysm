@@ -1,7 +1,7 @@
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{Camera, Camera3d, GlobalTransform, Rect, Single, Vec2, With};
-use gameplay_common::Region;
 use gameplay_location::{Level, Pos, ZoneLevel};
+use gameplay_perception::Region;
 
 /// Region visible on the camera
 #[derive(SystemParam)]
