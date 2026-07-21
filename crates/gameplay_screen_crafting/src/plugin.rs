@@ -1,0 +1,47 @@
+use crate::systems::{
+    adapt_to_crafting_deselection, adapt_to_crafting_selection, create_crafting_key_bindings,
+    create_start_craft_system, refresh_crafting_screen, remove_crafting_resource,
+    spawn_crafting_screen,
+};
+use bevy::prelude::{
+    App, IntoScheduleConfigs as _, IntoSystem as _, OnEnter, OnExit, Plugin, Update, in_state,
+    on_message,
+};
+use gameplay_behavior::RefreshAfterBehavior;
+use gameplay_screen_state::GameplayScreenState;
+use selection_list::selection_list_plugin;
+
+pub struct CraftingScreenPlugin;
+
+impl Plugin for CraftingScreenPlugin {
+    fn build(&self, app: &mut App) {
+        selection_list_plugin::<_, ()>(app, GameplayScreenState::Crafting, "select craft");
+
+        app.add_systems(
+            OnEnter(GameplayScreenState::Crafting),
+            (
+                (
+                    create_start_craft_system.pipe(spawn_crafting_screen),
+                    refresh_crafting_screen,
+                )
+                    .chain(),
+                create_crafting_key_bindings,
+            ),
+        );
+
+        app.add_systems(
+            Update,
+            (
+                adapt_to_crafting_deselection,
+                adapt_to_crafting_selection,
+                refresh_crafting_screen.run_if(on_message::<RefreshAfterBehavior>),
+            )
+                .run_if(in_state(GameplayScreenState::Crafting)),
+        );
+
+        app.add_systems(
+            OnExit(GameplayScreenState::Crafting),
+            remove_crafting_resource,
+        );
+    }
+}

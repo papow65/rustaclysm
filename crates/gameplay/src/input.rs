@@ -1,0 +1,39 @@
+use application_state::ApplicationState;
+use bevy::prelude::{DespawnOnExit, KeyCode, Local, Single, With, World};
+use gameplay_location::Pos;
+use gameplay_player::Player;
+use gameplay_screen_death::to_main_menu;
+use gameplay_spawn::TileSpawner;
+use keyboard::KeyBindings;
+use manual::ManualSection;
+use std::time::Instant;
+use util::log_if_slow;
+
+#[expect(clippy::needless_pass_by_value)]
+pub(crate) fn create_gameplay_key_bindings(
+    world: &mut World,
+    bindings: Local<KeyBindings<ApplicationState, (), ()>>,
+) {
+    let start = Instant::now();
+
+    bindings.spawn(world, ApplicationState::Gameplay, |bindings| {
+        bindings.add('!', spawn_zombies);
+        bindings.add(KeyCode::F12, to_main_menu);
+    });
+
+    world.spawn((
+        ManualSection::new(
+            &[("add debug zeds", "!"), ("to main menu", "F12")],
+            u8::MAX - 2,
+        ),
+        DespawnOnExit(ApplicationState::Gameplay),
+    ));
+
+    log_if_slow("create_gameplay_key_bindings", start);
+}
+
+fn spawn_zombies(mut tile_spawner: TileSpawner, player: Option<Single<&Pos, With<Player>>>) {
+    if let Some(player_pos) = player {
+        tile_spawner.spawn_zombies(**player_pos);
+    }
+}

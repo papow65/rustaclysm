@@ -1,0 +1,27 @@
+[package]
+name = "gameplay_screen_inventory"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+bevy = { workspace = true }
+cdda_json_files = { workspace = true }
+gameplay_action_planning = { workspace = true }
+gameplay_behavior = { workspace = true }
+gameplay_character = { workspace = true }
+gameplay_item = { workspace = true }
+gameplay_location = { workspace = true }
+gameplay_player = { workspace = true }
+gameplay_screen_state = { workspace = true }
+gameplay_world = { workspace = true }
+hud = { workspace = true }
+keyboard = { workspace = true }
+manual = { workspace = true }
+selection_list = { workspace = true }
+strum = { workspace = true }
+text = { workspace = true }
+units = { workspace = true }
+util = { workspace = true }
+
+[lints]
+workspace = true

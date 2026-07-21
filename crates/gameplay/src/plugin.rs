@@ -1,7 +1,4 @@
-use crate::{
-    ScreensPlugin, check_failed_asset_loading, count_assets, count_pos,
-    create_gameplay_key_bindings,
-};
+use crate::{check_failed_asset_loading, count_assets, count_pos, create_gameplay_key_bindings};
 use application_state::ApplicationState;
 use bevy::ecs::schedule::ScheduleConfigs;
 use bevy::ecs::system::ScheduleSystem;
@@ -22,7 +19,16 @@ use gameplay_model::ModelPlugin;
 use gameplay_perception::{GameplayPerceptionPlugin, RelativeSegments};
 use gameplay_player::PlayerPlugin;
 use gameplay_resource::GampelayResourceSet;
+use gameplay_screen_base::BaseScreenPlugin;
+use gameplay_screen_crafting::CraftingScreenPlugin;
+use gameplay_screen_death::DeathScreenPlugin;
+use gameplay_screen_inventory::InventoryScreenPlugin;
+use gameplay_screen_menu::MenuScreenPlugin;
+use gameplay_screen_quality::QualityScreenPlugin;
 use gameplay_screen_state::GameplayScreenState;
+use gameplay_screen_tool::ToolScreenPlugin;
+use gameplay_screen_transitioning::TransitioningScreenPlugin;
+use gameplay_screen_waiting::WaitingModalPlugin;
 use gameplay_sidebar::SidebarPlugin;
 use gameplay_spawn::{
     SpawnPlugin, despawn_systems, handle_region_asset_events, handle_zone_levels,
@@ -60,8 +66,18 @@ impl Plugin for GameplayPlugin {
                 ModelPlugin,
                 PlayerPlugin,
                 (
+                    BaseScreenPlugin,
+                    CraftingScreenPlugin,
+                    DeathScreenPlugin,
+                    InventoryScreenPlugin,
+                    MenuScreenPlugin,
+                    QualityScreenPlugin,
+                    ToolScreenPlugin,
+                    TransitioningScreenPlugin,
+                    WaitingModalPlugin,
+                ),
+                (
                     SpawnPlugin,
-                    ScreensPlugin,
                     SidebarPlugin,
                     TerrainPlugin,
                     TimePlugin,

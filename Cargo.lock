@@ -2403,41 +2403,38 @@ version = "0.0.0"
 dependencies = [
  "application_state",
  "bevy",
- "cdda_json_files",
- "gameplay_action_planning",
  "gameplay_behavior",
  "gameplay_camera",
  "gameplay_cdda",
- "gameplay_cdda_active_sav",
  "gameplay_character",
- "gameplay_common",
- "gameplay_crafting",
  "gameplay_focus",
  "gameplay_item",
  "gameplay_local",
  "gameplay_location",
  "gameplay_log",
  "gameplay_model",
- "gameplay_nearby",
  "gameplay_perception",
  "gameplay_player",
  "gameplay_resource",
+ "gameplay_screen_base",
+ "gameplay_screen_crafting",
+ "gameplay_screen_death",
+ "gameplay_screen_inventory",
+ "gameplay_screen_menu",
+ "gameplay_screen_quality",
  "gameplay_screen_state",
+ "gameplay_screen_tool",
+ "gameplay_screen_transitioning",
+ "gameplay_screen_waiting",
  "gameplay_sidebar",
  "gameplay_spawn",
  "gameplay_terrain",
  "gameplay_time",
  "gameplay_transition",
- "gameplay_transition_state",
  "gameplay_visualization",
  "gameplay_world",
- "hud",
  "keyboard",
  "manual",
- "selection_list",
- "strum",
- "text",
- "units",
  "util",
 ]
 
@@ -2745,11 +2742,175 @@ dependencies = [
 ]
 
 [[package]]
+name = "gameplay_screen_base"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "gameplay_action_planning",
+ "gameplay_camera",
+ "gameplay_character",
+ "gameplay_focus",
+ "gameplay_location",
+ "gameplay_log",
+ "gameplay_player",
+ "gameplay_screen_state",
+ "gameplay_visualization",
+ "keyboard",
+ "manual",
+ "strum",
+ "text",
+ "util",
+]
+
+[[package]]
+name = "gameplay_screen_crafting"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "cdda_json_files",
+ "gameplay_action_planning",
+ "gameplay_behavior",
+ "gameplay_cdda",
+ "gameplay_cdda_active_sav",
+ "gameplay_common",
+ "gameplay_crafting",
+ "gameplay_item",
+ "gameplay_location",
+ "gameplay_log",
+ "gameplay_model",
+ "gameplay_player",
+ "gameplay_screen_state",
+ "hud",
+ "keyboard",
+ "manual",
+ "selection_list",
+ "text",
+ "util",
+]
+
+[[package]]
+name = "gameplay_screen_death"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "gameplay_screen_state",
+ "gameplay_transition_state",
+ "hud",
+ "keyboard",
+ "manual",
+ "util",
+]
+
+[[package]]
+name = "gameplay_screen_inventory"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "cdda_json_files",
+ "gameplay_action_planning",
+ "gameplay_behavior",
+ "gameplay_character",
+ "gameplay_item",
+ "gameplay_location",
+ "gameplay_player",
+ "gameplay_screen_state",
+ "gameplay_world",
+ "hud",
+ "keyboard",
+ "manual",
+ "selection_list",
+ "strum",
+ "text",
+ "units",
+ "util",
+]
+
+[[package]]
+name = "gameplay_screen_menu"
+version = "0.1.0"
+dependencies = [
+ "application_state",
+ "bevy",
+ "gameplay_screen_state",
+ "hud",
+ "keyboard",
+ "manual",
+ "util",
+]
+
+[[package]]
+name = "gameplay_screen_quality"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "cdda_json_files",
+ "gameplay_common",
+ "gameplay_item",
+ "gameplay_location",
+ "gameplay_model",
+ "gameplay_nearby",
+ "gameplay_player",
+ "gameplay_screen_state",
+ "hud",
+ "keyboard",
+ "manual",
+ "util",
+]
+
+[[package]]
 name = "gameplay_screen_state"
 version = "0.1.0"
 dependencies = [
  "application_state",
  "bevy",
+]
+
+[[package]]
+name = "gameplay_screen_tool"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "cdda_json_files",
+ "gameplay_common",
+ "gameplay_item",
+ "gameplay_location",
+ "gameplay_model",
+ "gameplay_nearby",
+ "gameplay_player",
+ "gameplay_screen_state",
+ "hud",
+ "keyboard",
+ "manual",
+ "selection_list",
+ "util",
+]
+
+[[package]]
+name = "gameplay_screen_transitioning"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "gameplay_screen_state",
+ "gameplay_transition_state",
+]
+
+[[package]]
+name = "gameplay_screen_waiting"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "gameplay_log",
+ "gameplay_player",
+ "gameplay_screen_state",
+ "gameplay_time",
+ "hud",
+ "keyboard",
+ "manual",
+ "selection_list",
+ "strum",
+ "text",
+ "units",
+ "util",
 ]
 
 [[package]]

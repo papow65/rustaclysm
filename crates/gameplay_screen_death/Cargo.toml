@@ -1,0 +1,16 @@
+[package]
+name = "gameplay_screen_death"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+bevy = { workspace = true }
+gameplay_screen_state = { workspace = true }
+gameplay_transition_state = { workspace = true }
+hud = { workspace = true }
+keyboard = { workspace = true }
+manual = { workspace = true }
+util = { workspace = true }
+
+[lints]
+workspace = true

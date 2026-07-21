@@ -1,0 +1,22 @@
+[package]
+name = "gameplay_screen_waiting"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+bevy = { workspace = true }
+gameplay_log = { workspace = true }
+gameplay_player = { workspace = true }
+gameplay_screen_state = { workspace = true }
+gameplay_time = { workspace = true }
+hud = { workspace = true }
+keyboard = { workspace = true }
+manual = { workspace = true }
+selection_list = { workspace = true }
+strum = { workspace = true }
+text = { workspace = true }
+units = { workspace = true }
+util = { workspace = true }
+
+[lints]
+workspace = true
