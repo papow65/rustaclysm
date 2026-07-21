@@ -1,6 +1,7 @@
 use crate::{
-    DespawnSubzoneLevel, DespawnZoneLevel, MissingAsset, SpawnSubzoneLevel, SpawnZoneLevel,
-    SubzoneSpawner, TileSpawner, UpdateZoneLevelVisibility, VisibleRegion, ZoneSpawner,
+    DespawnSubzoneLevel, DespawnZoneLevel, MessageBuffer, MissingAsset, SpawnSubzoneLevel,
+    SpawnZoneLevel, SubzoneSpawner, TileSpawner, UpdateZoneLevelVisibility, VisibleRegion,
+    ZoneSpawner,
 };
 use bevy::ecs::{schedule::ScheduleConfigs, system::ScheduleSystem};
 use bevy::platform::collections::HashSet;
@@ -24,7 +25,7 @@ use gameplay_visualization::{Expanded, VisualizationUpdate};
 use gameplay_world::ZoneLevelIds;
 use std::cmp::Ordering;
 use std::time::{Duration, Instant};
-use util::{MessageBuffer, log_if_slow};
+use util::log_if_slow;
 
 const MAX_EXPAND_DISTANCE: i32 = 10;
 

@@ -1,5 +1,6 @@
 mod despawn;
 mod log;
+mod message_buffer;
 mod missing_asset;
 mod plugin;
 mod subzone_spawner;
@@ -19,6 +20,7 @@ pub use self::tile_spawner::TileSpawner;
 pub use self::visible_region::VisibleRegion;
 
 use self::log::log_spawn_result;
+use self::message_buffer::MessageBuffer;
 use self::missing_asset::MissingAsset;
 use self::subzone_spawner::SubzoneSpawner;
 use self::zone_events::{
