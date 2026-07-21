@@ -9,7 +9,6 @@ cdda_json_files = { workspace = true }
 fastrand = { workspace = true }
 float-ord = "0.3"
 gameplay_character = { workspace = true }
-gameplay_common = { workspace = true }
 gameplay_crafting = { workspace = true }
 gameplay_location = { workspace = true }
 gameplay_log = { workspace = true }

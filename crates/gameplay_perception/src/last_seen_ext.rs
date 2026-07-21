@@ -1,4 +1,5 @@
-use gameplay_common::{LastSeen, Visible};
+use crate::Visible;
+use gameplay_common::LastSeen;
 use gameplay_object::Mobile;
 use gameplay_player::Player;
 

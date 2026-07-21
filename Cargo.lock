@@ -2447,7 +2447,6 @@ dependencies = [
  "fastrand",
  "float-ord",
  "gameplay_character",
- "gameplay_common",
  "gameplay_crafting",
  "gameplay_location",
  "gameplay_log",
