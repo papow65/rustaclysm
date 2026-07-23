@@ -16,5 +16,5 @@ pub use self::systems::toggle_debug_text;
 
 pub(crate) use self::plugin::TextPlugin;
 
-use self::components::CheckedFont;
-use self::systems::{add_missing_font, add_missing_pickable};
+use self::fonts::FiraFont;
+use self::systems::{add_missing_pickable, set_default_font_size, setup_global_font};

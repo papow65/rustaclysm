@@ -1,6 +1,6 @@
 use bevy::prelude::{
     AlignItems, Camera3d, ChildOf, Commands, DespawnOnExit, Entity, FlexDirection, In,
-    JustifyContent, KeyCode, Local, NextState, Node, Res, ResMut, Single, Text, UiRect, Val, With,
+    JustifyContent, KeyCode, Local, NextState, Node, ResMut, Single, Text, UiRect, Val, With,
     World, children, debug,
 };
 use bevy::{camera::visibility::RenderLayers, ecs::system::SystemId};
@@ -19,12 +19,7 @@ pub(super) fn create_main_menu_system(world: &mut World) -> MainMenuSystem {
     MainMenuSystem(world.register_system_cached(to_main_menu))
 }
 
-#[expect(clippy::needless_pass_by_value)]
-pub(super) fn spawn_death_screen(
-    In(main_menu_system): In<MainMenuSystem>,
-    mut commands: Commands,
-    fonts: Res<Fonts>,
-) {
+pub(super) fn spawn_death_screen(In(main_menu_system): In<MainMenuSystem>, mut commands: Commands) {
     commands.spawn((
         Node {
             width: Val::Percent(100.0),
@@ -55,7 +50,7 @@ pub(super) fn spawn_death_screen(
                         align_items: AlignItems::Center,
                         ..Node::default()
                     },
-                    children![(Text::from("You died"), BAD_TEXT_COLOR, fonts.largish())],
+                    children![(Text::from("You died"), BAD_TEXT_COLOR, Fonts::largish())],
                 ),
                 ButtonBuilder::new("Main menu", WARN_TEXT_COLOR, main_menu_system.0, (),)
                     .large()

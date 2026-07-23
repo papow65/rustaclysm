@@ -2,7 +2,7 @@ use crate::LoadingIndicatorState;
 use bevy::prelude::{
     AlignItems, App, AppExtStates as _, Commands, Component, DespawnOnExit, FixedUpdate,
     GlobalZIndex, IntoScheduleConfigs as _, JustifyContent, Node, OnEnter, Plugin, PositionType,
-    Res, Single, Text, Val, With, in_state,
+    Single, Text, Val, With, in_state,
 };
 use hud::{DEFAULT_BUTTON_COLOR, Fonts, HARD_TEXT_COLOR};
 use util::log_transition_plugin;
@@ -23,8 +23,7 @@ impl Plugin for LoadingIndicatorPlugin {
     }
 }
 
-#[expect(clippy::needless_pass_by_value)]
-fn spawn_loading(mut commands: Commands, fonts: Res<Fonts>) {
+fn spawn_loading(mut commands: Commands) {
     commands
         .spawn((
             Node {
@@ -55,7 +54,7 @@ fn spawn_loading(mut commands: Commands, fonts: Res<Fonts>) {
                         LoadingText,
                         Text::from("Loading..."),
                         HARD_TEXT_COLOR,
-                        fonts.large(),
+                        Fonts::large(),
                     ));
                 });
         });

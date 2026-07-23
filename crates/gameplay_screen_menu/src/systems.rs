@@ -1,7 +1,7 @@
 use application_state::ApplicationState;
 use bevy::prelude::{
     AlignItems, Commands, DespawnOnExit, FlexDirection, In, JustifyContent, KeyCode, Local,
-    Messages, NextState, Node, Res, ResMut, Val, World, children,
+    Messages, NextState, Node, ResMut, Val, World, children,
 };
 use bevy::{app::AppExit, ecs::system::SystemId};
 use gameplay_screen_state::GameplayScreenState;
@@ -26,12 +26,7 @@ pub(super) fn create_menu_button_actions(world: &mut World) -> MenuButtonActions
     }
 }
 
-#[expect(clippy::needless_pass_by_value)]
-pub(super) fn spawn_menu(
-    In(button_actions): In<MenuButtonActions>,
-    mut commands: Commands,
-    fonts: Res<Fonts>,
-) {
+pub(super) fn spawn_menu(In(button_actions): In<MenuButtonActions>, mut commands: Commands) {
     commands.spawn((
         Node {
             width: Val::Percent(100.0),
@@ -46,15 +41,15 @@ pub(super) fn spawn_menu(
         children![
             ButtonBuilder::new("Return", GOOD_TEXT_COLOR, button_actions.return_, ())
                 .large()
-                .with_font(fonts.large())
+                .with_font(Fonts::large())
                 .bundle(),
             ButtonBuilder::new("Main Menu", HARD_TEXT_COLOR, button_actions.main_menu, ())
                 .large()
-                .with_font(fonts.large())
+                .with_font(Fonts::large())
                 .bundle(),
             ButtonBuilder::new("Quit", BAD_TEXT_COLOR, button_actions.quit, ())
                 .large()
-                .with_font(fonts.large())
+                .with_font(Fonts::large())
                 .bundle(),
         ],
     ));

@@ -4,9 +4,9 @@ use base64::{Engine as _, engine::general_purpose::STANDARD as base64};
 use bevy::ecs::{spawn::SpawnIter, system::SystemId};
 use bevy::prelude::{
     AlignContent, AlignItems, AppExit, Bundle, Children, Commands, DespawnOnExit, Display, Entity,
-    FlexDirection, FlexWrap, GlobalZIndex, In, JustifyContent, Messages, NextState, Node, Res,
-    ResMut, Single, SpawnRelated as _, Text, TextFont, UiRect, Val, With, Without, World, children,
-    debug, error,
+    FlexDirection, FlexWrap, GlobalZIndex, In, JustifyContent, Messages, NextState, Node, ResMut,
+    Single, SpawnRelated as _, Text, TextFont, UiRect, Val, With, Without, World, children, debug,
+    error,
 };
 use gameplay_cdda_active_sav::ActiveSav;
 use gameplay_local::GameplayLocal;
@@ -49,12 +49,7 @@ pub(super) fn create_quit_system(world: &mut World) -> QuitSystem {
     QuitSystem(world.register_system_cached(quit))
 }
 
-#[expect(clippy::needless_pass_by_value)]
-pub(super) fn spawn_main_menu(
-    In(quit_system): In<QuitSystem>,
-    mut commands: Commands,
-    fonts: Res<Fonts>,
-) {
+pub(super) fn spawn_main_menu(In(quit_system): In<QuitSystem>, mut commands: Commands) {
     commands.spawn((
         Node {
             flex_direction: FlexDirection::Column,
@@ -67,11 +62,11 @@ pub(super) fn spawn_main_menu(
         GlobalZIndex(3),
         DespawnOnExit(ApplicationState::MainMenu),
         children![
-            title(&fonts),
-            tagline(&fonts),
+            title(),
+            tagline(),
             load_button_area(),
-            notification_area(&fonts),
-            quit_button(&quit_system, &fonts),
+            notification_area(),
+            quit_button(&quit_system),
         ],
     ));
 }
@@ -87,15 +82,15 @@ pub(crate) fn create_main_menu_key_bindings(world: &mut World) {
     log_if_slow("create_main_menu_key_bindings", start);
 }
 
-fn title(fonts: &Fonts) -> impl Bundle {
-    (Text::from("Rustaclysm"), HARD_TEXT_COLOR, fonts.huge())
+fn title() -> impl Bundle {
+    (Text::from("Rustaclysm"), HARD_TEXT_COLOR, Fonts::huge())
 }
 
-fn tagline(fonts: &Fonts) -> impl Bundle {
+fn tagline() -> impl Bundle {
     (
         Text::from("A 3D reimplementation of Cataclysm: Dark Days Ahead"),
         HARD_TEXT_COLOR,
-        fonts.largish(),
+        Fonts::largish(),
         Node {
             margin: UiRect {
                 bottom: LARGE_SPACING,
@@ -122,7 +117,7 @@ fn load_button_area() -> impl Bundle {
     )
 }
 
-fn notification_area(fonts: &Fonts) -> impl Bundle {
+fn notification_area() -> impl Bundle {
     (
         Node {
             width: Val::Px(FULL_WIDTH),
@@ -143,7 +138,7 @@ fn notification_area(fonts: &Fonts) -> impl Bundle {
         children![(
             Text::default(),
             HARD_TEXT_COLOR,
-            fonts.largish(),
+            Fonts::largish(),
             Node {
                 width: Val::Px(FULL_WIDTH),
                 padding: UiRect::horizontal(MEDIUM_SPACING),
@@ -155,18 +150,16 @@ fn notification_area(fonts: &Fonts) -> impl Bundle {
     )
 }
 
-fn quit_button(quit_system: &QuitSystem, fonts: &Fonts) -> impl Bundle {
+fn quit_button(quit_system: &QuitSystem) -> impl Bundle {
     ButtonBuilder::new("Quit", BAD_TEXT_COLOR, quit_system.0, ())
         .large()
-        .with_font(fonts.large())
+        .with_font(Fonts::large())
         .bundle()
 }
 
-#[expect(clippy::needless_pass_by_value)]
 pub(super) fn update_sav_files(
     In(load_systems): In<LoadSystems>,
     mut commands: Commands,
-    fonts: Res<Fonts>,
     mut last_list_saves_result: GameplayLocal<Option<Result<Vec<PathBuf>, LoadError>>>,
     mut load_button_areas: Single<
         (Entity, &mut Node),
@@ -195,7 +188,7 @@ pub(super) fn update_sav_files(
             load_button_area_style.display = Display::Flex;
             message_wrapper.display = Display::None;
 
-            let largish = fonts.largish();
+            let largish = Fonts::largish();
 
             commands
                 .entity(load_button_area)
