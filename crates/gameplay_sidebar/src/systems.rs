@@ -193,7 +193,10 @@ pub(super) fn update_sidebar_systems() -> ScheduleConfigs<ScheduleSystem> {
         update_status_time.run_if(resource_exists_and_changed::<Timeouts>),
         update_status_health.run_if(resource_exists_and_changed::<Timeouts>),
         update_status_stamina.run_if(resource_exists_and_changed::<Timeouts>),
-        update_status_speed.run_if(on_message::<RefreshAfterBehavior>),
+        update_status_speed.run_if(
+            on_message::<RefreshAfterBehavior>
+                .or_else(resource_exists_and_changed::<State<PlayerActionState>>),
+        ),
         update_status_player_action_state
             .run_if(resource_exists_and_changed::<State<PlayerActionState>>),
         update_status_player_wielded.run_if(resource_exists_and_changed::<Timeouts>),
