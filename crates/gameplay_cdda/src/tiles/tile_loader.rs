@@ -1,6 +1,4 @@
-use crate::ObjectCategory;
-use crate::{Atlas, TextureInfo, error::Error};
-use crate::{Layers, Model, SpriteLayer, TileVariant};
+use crate::{Atlas, Layers, Model, ObjectCategory, SpriteLayer, TextureInfo, TileVariant, error::Error};
 use bevy::platform::collections::{HashMap, hash_map::Entry};
 use bevy::prelude::{Resource, error, warn};
 use cdda_json_files::{
