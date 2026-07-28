@@ -43,8 +43,11 @@ gameplay = { path = "crates/gameplay" }
 gameplay_action_planning = { path = "crates/gameplay_action_planning" }
 gameplay_behavior = { path = "crates/gameplay_behavior" }
 gameplay_camera = { path = "crates/gameplay_camera" }
-gameplay_cdda = { path = "crates/gameplay_cdda" }
 gameplay_cdda_active_sav = { path = "crates/gameplay_cdda_active_sav" }
+gameplay_cdda_common = { path = "crates/gameplay_cdda_common" }
+gameplay_cdda_info = { path = "crates/gameplay_cdda_info" }
+gameplay_cdda_regions = { path = "crates/gameplay_cdda_regions" }
+gameplay_cdda_tiles = { path = "crates/gameplay_cdda_tiles" }
 gameplay_character = { path = "crates/gameplay_character" }
 gameplay_common = { path = "crates/gameplay_common" }
 gameplay_crafting = { path = "crates/gameplay_crafting" }

@@ -1,7 +1,7 @@
 use crate::Region;
 use bevy::platform::collections::{HashMap, HashSet, hash_map::Entry};
 use bevy::prelude::{Resource, Visibility};
-use gameplay_cdda::Exploration;
+use gameplay_cdda_regions::Exploration;
 use gameplay_focus::Focus;
 use gameplay_location::{Level, Overzone, Pos, SubzoneLevel, Zone, ZoneLevel};
 

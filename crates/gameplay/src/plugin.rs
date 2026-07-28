@@ -8,7 +8,10 @@ use bevy::prelude::{
 };
 use gameplay_behavior::BehaviorLoopPlugin;
 use gameplay_camera::UpdateCameraOffset;
-use gameplay_cdda::{CddaPlugin, Exploration};
+use gameplay_cdda_active_sav::ActiveSavPlugin;
+use gameplay_cdda_info::InfoPlugin;
+use gameplay_cdda_regions::{Exploration, RegionsPlugin};
+use gameplay_cdda_tiles::TilesPlugin;
 use gameplay_character::CharacterPlugin;
 use gameplay_focus::{FocusPlugin, OnFocusChange};
 use gameplay_item::GameplayItemPlugin;
@@ -52,19 +55,19 @@ impl Plugin for GameplayPlugin {
 
         app.add_plugins((
             (
+                ActiveSavPlugin,
                 BehaviorLoopPlugin,
                 CharacterPlugin,
                 FocusPlugin,
-                CddaPlugin,
                 GameplayItemPlugin,
                 GameplayLocalPlugin,
                 GameplayPerceptionPlugin,
                 GameplayVisualizationPlugin,
                 GameplayWorldPlugin,
+                InfoPlugin,
                 LocationPlugin,
                 LogPlugin,
                 ModelPlugin,
-                PlayerPlugin,
                 (
                     BaseScreenPlugin,
                     CraftingScreenPlugin,
@@ -77,9 +80,12 @@ impl Plugin for GameplayPlugin {
                     WaitingModalPlugin,
                 ),
                 (
+                    PlayerPlugin,
+                    RegionsPlugin,
                     SpawnPlugin,
                     SidebarPlugin,
                     TerrainPlugin,
+                    TilesPlugin,
                     TimePlugin,
                     TransitionPlugin,
                 ),

@@ -1,6 +1,7 @@
-use crate::{MeshInfo, ObjectCategory, SpriteLayer, TextureInfo};
+use crate::{MeshInfo, SpriteLayer, TextureInfo};
 use bevy::prelude::{AlphaMode, Mesh, Transform, Vec2, Vec3};
 use cdda_json_files::{InfoId, SpriteNumber, TerrainInfo, UntypedInfoId};
+use gameplay_cdda_common::ObjectCategory;
 use std::path::PathBuf;
 use units::Distance;
 
@@ -265,7 +266,7 @@ impl Model {
             sprite_number,
             mesh_info: texture_info.mesh_info,
             texture_path: texture_info.image_path.clone(),
-            vertical_offset: category.vertical_offset(layer),
+            vertical_offset: layer.vertical_offset(category),
             alpha_mode,
         }
     }

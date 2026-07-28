@@ -7,7 +7,7 @@ use bevy::prelude::{
 };
 use cdda_json_files::{FurnitureInfo, InfoId, TerrainInfo};
 use either::Either;
-use gameplay_cdda::Infos;
+use gameplay_cdda_info::Infos;
 use gameplay_character::{
     Actor, BaseFaction as _, CharacterEvent, CorpseEvent, Faction, Health, Stamina, WalkingMode,
 };

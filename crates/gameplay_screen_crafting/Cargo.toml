@@ -8,8 +8,8 @@ bevy = { workspace = true }
 cdda_json_files = { workspace = true }
 gameplay_action_planning = { workspace = true }
 gameplay_behavior = { workspace = true }
-gameplay_cdda = { workspace = true }
 gameplay_cdda_active_sav = { workspace = true }
+gameplay_cdda_info = { workspace = true }
 gameplay_common = { workspace = true }
 gameplay_crafting = { workspace = true }
 gameplay_item = { workspace = true }

@@ -1,5 +1,5 @@
-use crate::info::fixed::{human, wiring};
-use crate::{Error, TypeId, info::parsed_json::Enriched};
+use crate::fixed::{human, wiring};
+use crate::{TypeId, parsed_json::Enriched};
 use bevy::platform::collections::HashMap;
 use bevy::prelude::{debug, error, warn};
 use cdda_json_files::{
@@ -9,6 +9,7 @@ use cdda_json_files::{
     Link as _, LinkProvider, PlaceMonsterDetail, Quality, Recipe, RecipeResult, Requirement,
     TerrainInfo, UnpackDetail, UntypedInfoId, UseAction, VehiclePartInfo, VehiclePartMigration,
 };
+use gameplay_cdda_common::Error;
 use serde::de::DeserializeOwned;
 use serde_json::{Value as JsonValue, from_value as from_json_value};
 use std::{any::type_name, fmt, sync::Arc};

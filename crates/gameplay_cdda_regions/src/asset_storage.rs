@@ -1,4 +1,4 @@
-use crate::{AssetState, PathFor, regions::RegionAsset};
+use crate::{AssetState, PathFor, RegionAsset};
 use bevy::platform::collections::HashMap;
 use bevy::prelude::{AssetId, AssetServer, Assets, Handle, Resource};
 

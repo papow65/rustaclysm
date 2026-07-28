@@ -10,11 +10,11 @@ use bevy::prelude::{
     IntoScheduleConfigs as _, MessageReader, MessageWriter, Query, RelationshipTarget as _, Res,
     ResMut, Single, Visibility, With, debug, on_message, warn,
 };
-use gameplay_cdda::{
+use gameplay_cdda_active_sav::ActiveSav;
+use gameplay_cdda_regions::{
     Exploration, MapAsset, MapManager, MapMemoryAsset, MapMemoryManager, OvermapAsset,
     OvermapBufferAsset, OvermapBufferManager, OvermapManager,
 };
-use gameplay_cdda_active_sav::ActiveSav;
 use gameplay_focus::Focus;
 use gameplay_local::GameplayLocal;
 use gameplay_location::{

@@ -1,5 +1,6 @@
-use crate::regions::AssetStorage;
-use crate::{ActiveSavExt as _, AssetState, Exploration, MapMemoryAsset, MapMemoryPath};
+use crate::{
+    ActiveSavExt as _, AssetState, AssetStorage, Exploration, MapMemoryAsset, MapMemoryPath,
+};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{AssetEvent, AssetServer, Assets, MessageReader, Res, ResMut};
 use cdda_json_files::SubmapMemory;

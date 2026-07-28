@@ -1,7 +1,6 @@
-use crate::info::info_map::{InfoMap, ItemInfoMapLoader};
-use crate::info::migration_provider::{ItemMigrationProvider, VehiclePartMigrationProvider};
-use crate::info::parsed_json::ParsedJson;
-use crate::{ObjectCategory, TypeId};
+use crate::info_map::{InfoMap, ItemInfoMapLoader};
+use crate::migration_provider::{ItemMigrationProvider, VehiclePartMigrationProvider};
+use crate::{TypeId, parsed_json::ParsedJson};
 use bevy::prelude::{Resource, debug, error, info, warn};
 use cdda_json_files::{
     Ammo, BionicItem, Book, CddaItem, CharacterInfo, Clothing, Comestible, CommonItemInfo, Engine,
@@ -10,6 +9,7 @@ use cdda_json_files::{
     RequiredLinkedLater, Requirement, Submap, TerrainInfo, Tool, ToolClothing, Toolmod,
     UntypedInfoId, VehiclePartInfo, VehiclePartMigration, Wheel,
 };
+use gameplay_cdda_common::ObjectCategory;
 use std::{env, process::exit, time::Instant};
 use strum::VariantArray as _;
 use util::AsyncNew;

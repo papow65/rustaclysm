@@ -1,4 +1,4 @@
-use crate::info::info_map::InfoMap;
+use crate::info_map::InfoMap;
 use cdda_json_files::{
     CommonItemInfo, InfoId, ItemMigration, LinkProvider, UntypedInfoId, VehiclePartInfo,
     VehiclePartMigration,

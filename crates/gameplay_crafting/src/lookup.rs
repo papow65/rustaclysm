@@ -9,7 +9,8 @@ use cdda_json_files::{
     FurnitureInfo, InfoId, PocketType, Quality, Recipe, RequiredComponent, RequiredPart,
     RequiredQuality, RequiredTool, Requirement, Sav, Skill, TerrainInfo,
 };
-use gameplay_cdda::{Error, Infos};
+use gameplay_cdda_common::Error;
+use gameplay_cdda_info::Infos;
 use gameplay_common::{LastSeen, Shared};
 use gameplay_item::{BodyContainers, Item, ItemHierarchy, ItemItem};
 use gameplay_location::{LocationCache, Pos};

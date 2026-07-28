@@ -1,7 +1,7 @@
 use crate::MapAsset;
-use crate::error::Error;
 use bevy::asset::{AssetLoader, LoadContext, io::Reader};
 use bevy::prelude::TypePath;
+use gameplay_cdda_common::Error;
 use serde_json::from_slice as from_json_slice;
 use std::{str::from_utf8, sync::Arc};
 

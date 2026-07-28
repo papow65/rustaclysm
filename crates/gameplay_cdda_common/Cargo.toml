@@ -1,0 +1,12 @@
+[package]
+name = "gameplay_cdda_common"
+description = "Common utilities for Cataclysm:DDA gameplay crates"
+license = "AGPL-3.0-or-later"
+edition = "2024"
+
+[dependencies]
+cdda_json_files = { workspace = true }
+serde_json = { workspace = true }
+
+[lints]
+workspace = true

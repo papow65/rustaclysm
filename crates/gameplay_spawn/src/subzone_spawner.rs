@@ -6,8 +6,9 @@ use cdda_json_files::{
     CddaAmount, FlatVec, InfoId, OvermapTerrainInfo, RepetitionBlock, RequiredLinkedLater, Submap,
     SubzoneOffset,
 };
-use gameplay_cdda::{
-    AssetState, Infos, MapManager, MapMemoryManager, OvermapBufferManager, OvermapManager,
+use gameplay_cdda_info::Infos;
+use gameplay_cdda_regions::{
+    AssetState, MapManager, MapMemoryManager, OvermapBufferManager, OvermapManager,
     RepetitionBlockExt as _,
 };
 use gameplay_location::{

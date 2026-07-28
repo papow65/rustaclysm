@@ -5,9 +5,9 @@ use bevy::prelude::{
     Vec3,
 };
 use cdda_json_files::UntypedInfoId;
-use gameplay_cdda::{
-    Infos, Layers, Model, ModelShape, ObjectCategory, SpriteOrientation, TileLoader, TileVariant,
-};
+use gameplay_cdda_common::ObjectCategory;
+use gameplay_cdda_info::Infos;
+use gameplay_cdda_tiles::{Layers, Model, ModelShape, SpriteOrientation, TileLoader, TileVariant};
 
 #[derive(SystemParam)]
 pub struct ModelFactory<'w> {

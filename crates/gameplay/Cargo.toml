@@ -9,7 +9,10 @@ application_state = { workspace = true }
 bevy = { workspace = true }
 gameplay_behavior = { workspace = true }
 gameplay_camera = { workspace = true }
-gameplay_cdda = { workspace = true }
+gameplay_cdda_active_sav = { workspace = true }
+gameplay_cdda_info = { workspace = true }
+gameplay_cdda_regions = { workspace = true }
+gameplay_cdda_tiles = { workspace = true }
 gameplay_character = { workspace = true }
 gameplay_focus = { workspace = true }
 gameplay_item = { workspace = true }

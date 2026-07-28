@@ -1,8 +1,8 @@
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{Assets, Res, debug};
-use gameplay_cdda::{
-    Infos, MapAsset, MapMemoryAsset, OvermapAsset, OvermapBufferAsset, TileLoader,
-};
+use gameplay_cdda_info::Infos;
+use gameplay_cdda_regions::{MapAsset, MapMemoryAsset, OvermapAsset, OvermapBufferAsset};
+use gameplay_cdda_tiles::TileLoader;
 use gameplay_location::SubzoneLevelCache;
 use gameplay_perception::{Explored, RelativeSegments};
 

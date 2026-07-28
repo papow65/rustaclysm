@@ -14,8 +14,10 @@ use cdda_json_files::{
     TerrainInfo, UntypedInfoId,
 };
 use either::Either;
-use gameplay_cdda::{Error, Infos, ObjectCategory, TileVariant};
 use gameplay_cdda_active_sav::ActiveSav;
+use gameplay_cdda_common::{Error, ObjectCategory};
+use gameplay_cdda_info::Infos;
+use gameplay_cdda_tiles::TileVariant;
 use gameplay_character::{
     Aquatic, BaseFaction as _, BaseSpeed, Faction, HealingDuration, Health, Melee, Stamina,
     WalkingMode,

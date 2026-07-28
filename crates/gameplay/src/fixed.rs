@@ -2,7 +2,7 @@ use bevy::asset::UntypedAssetLoadFailedEvent;
 use bevy::prelude::{
     Assets, Font, Local, Mesh, MessageReader, Query, Res, StandardMaterial, With, debug, error,
 };
-use gameplay_cdda::{MapAsset, MapMemoryAsset, OvermapAsset, OvermapBufferAsset};
+use gameplay_cdda_regions::{MapAsset, MapMemoryAsset, OvermapAsset, OvermapBufferAsset};
 use gameplay_location::{Pos, SubzoneLevel, ZoneLevel};
 use std::time::Instant;
 use util::log_if_slow;

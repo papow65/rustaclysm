@@ -7,7 +7,7 @@ edition = "2024"
 [dependencies]
 bevy = { workspace = true }
 gameplay_common = { workspace = true }
-gameplay_cdda = { workspace = true }
+gameplay_cdda_regions = { workspace = true }
 gameplay_focus = { workspace = true }
 gameplay_local = { workspace = true }
 gameplay_location = { workspace = true }

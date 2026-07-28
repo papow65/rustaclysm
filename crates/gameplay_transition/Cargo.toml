@@ -6,7 +6,9 @@ edition = "2024"
 
 [dependencies]
 gameplay_transition_state = { workspace = true }
-gameplay_cdda = { workspace = true }
+gameplay_cdda_info = { workspace = true }
+gameplay_cdda_regions = { workspace = true }
+gameplay_cdda_tiles = { workspace = true }
 gameplay_location = { workspace = true }
 gameplay_perception = { workspace = true }
 bevy = { workspace = true }

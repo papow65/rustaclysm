@@ -1,9 +1,10 @@
-use crate::{Error, TypeId};
+use crate::TypeId;
 use bevy::platform::collections::HashMap;
 use bevy::prelude::{debug, error, warn};
 use bevy::tasks::IoTaskPool;
 use cdda_json_files::UntypedInfoId;
 use fastrand::alphabetic;
+use gameplay_cdda_common::Error;
 use glob::glob;
 use serde::Deserialize;
 use serde_json::{

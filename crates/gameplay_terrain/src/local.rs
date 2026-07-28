@@ -1,6 +1,6 @@
 use bevy::platform::collections::HashMap;
 use cdda_json_files::{RequiredLinkedLater, TerrainInfo};
-use gameplay_cdda::TileVariant;
+use gameplay_cdda_tiles::TileVariant;
 use gameplay_location::{CardinalDirection, HorizontalDirection, Pos};
 use std::sync::Arc;
 

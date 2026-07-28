@@ -2405,7 +2405,10 @@ dependencies = [
  "bevy",
  "gameplay_behavior",
  "gameplay_camera",
- "gameplay_cdda",
+ "gameplay_cdda_active_sav",
+ "gameplay_cdda_info",
+ "gameplay_cdda_regions",
+ "gameplay_cdda_tiles",
  "gameplay_character",
  "gameplay_focus",
  "gameplay_item",
@@ -2469,7 +2472,8 @@ dependencies = [
  "cdda_json_files",
  "either",
  "gameplay_action_planning",
- "gameplay_cdda",
+ "gameplay_cdda_info",
+ "gameplay_cdda_regions",
  "gameplay_character",
  "gameplay_common",
  "gameplay_crafting",
@@ -2507,17 +2511,32 @@ dependencies = [
 ]
 
 [[package]]
-name = "gameplay_cdda"
+name = "gameplay_cdda_active_sav"
 version = "0.0.0"
 dependencies = [
  "application_state",
  "bevy",
  "cdda_json_files",
- "either",
+ "serde_json",
+ "util",
+]
+
+[[package]]
+name = "gameplay_cdda_common"
+version = "0.0.0"
+dependencies = [
+ "cdda_json_files",
+ "serde_json",
+]
+
+[[package]]
+name = "gameplay_cdda_info"
+version = "0.0.0"
+dependencies = [
+ "bevy",
+ "cdda_json_files",
  "fastrand",
- "gameplay_cdda_active_sav",
- "gameplay_location",
- "gameplay_resource",
+ "gameplay_cdda_common",
  "glob",
  "serde",
  "serde_json",
@@ -2527,12 +2546,31 @@ dependencies = [
 ]
 
 [[package]]
-name = "gameplay_cdda_active_sav"
+name = "gameplay_cdda_regions"
+version = "0.0.0"
+dependencies = [
+ "application_state",
+ "bevy",
+ "cdda_json_files",
+ "either",
+ "gameplay_cdda_active_sav",
+ "gameplay_cdda_common",
+ "gameplay_location",
+ "gameplay_resource",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "gameplay_cdda_tiles"
 version = "0.0.0"
 dependencies = [
  "bevy",
  "cdda_json_files",
+ "gameplay_cdda_common",
+ "gameplay_location",
  "serde_json",
+ "units",
  "util",
 ]
 
@@ -2576,7 +2614,8 @@ version = "0.1.0"
 dependencies = [
  "bevy",
  "cdda_json_files",
- "gameplay_cdda",
+ "gameplay_cdda_common",
+ "gameplay_cdda_info",
  "gameplay_common",
  "gameplay_item",
  "gameplay_location",
@@ -2606,7 +2645,8 @@ dependencies = [
  "bevy",
  "cdda_json_files",
  "either",
- "gameplay_cdda",
+ "gameplay_cdda_common",
+ "gameplay_cdda_info",
  "gameplay_common",
  "gameplay_location",
  "gameplay_log",
@@ -2656,7 +2696,9 @@ version = "0.0.0"
 dependencies = [
  "bevy",
  "cdda_json_files",
- "gameplay_cdda",
+ "gameplay_cdda_common",
+ "gameplay_cdda_info",
+ "gameplay_cdda_tiles",
  "gameplay_common",
  "gameplay_resource",
 ]
@@ -2690,7 +2732,7 @@ name = "gameplay_perception"
 version = "0.0.0"
 dependencies = [
  "bevy",
- "gameplay_cdda",
+ "gameplay_cdda_regions",
  "gameplay_common",
  "gameplay_focus",
  "gameplay_location",
@@ -2762,8 +2804,8 @@ dependencies = [
  "cdda_json_files",
  "gameplay_action_planning",
  "gameplay_behavior",
- "gameplay_cdda",
  "gameplay_cdda_active_sav",
+ "gameplay_cdda_info",
  "gameplay_common",
  "gameplay_crafting",
  "gameplay_item",
@@ -2937,8 +2979,11 @@ dependencies = [
  "bevy",
  "cdda_json_files",
  "either",
- "gameplay_cdda",
  "gameplay_cdda_active_sav",
+ "gameplay_cdda_common",
+ "gameplay_cdda_info",
+ "gameplay_cdda_regions",
+ "gameplay_cdda_tiles",
  "gameplay_character",
  "gameplay_common",
  "gameplay_crafting",
@@ -2967,7 +3012,7 @@ dependencies = [
  "application_state",
  "bevy",
  "cdda_json_files",
- "gameplay_cdda",
+ "gameplay_cdda_tiles",
  "gameplay_location",
  "gameplay_object",
 ]
@@ -2988,7 +3033,9 @@ version = "0.0.0"
 dependencies = [
  "application_state",
  "bevy",
- "gameplay_cdda",
+ "gameplay_cdda_info",
+ "gameplay_cdda_regions",
+ "gameplay_cdda_tiles",
  "gameplay_location",
  "gameplay_perception",
  "gameplay_transition_state",
@@ -3017,7 +3064,7 @@ name = "gameplay_visualization"
 version = "0.0.0"
 dependencies = [
  "bevy",
- "gameplay_cdda",
+ "gameplay_cdda_regions",
  "gameplay_common",
  "gameplay_focus",
  "gameplay_local",
@@ -3037,7 +3084,7 @@ version = "0.0.0"
 dependencies = [
  "bevy",
  "cdda_json_files",
- "gameplay_cdda",
+ "gameplay_cdda_regions",
  "gameplay_item",
  "gameplay_location",
  "gameplay_log",

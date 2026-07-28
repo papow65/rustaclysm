@@ -1,0 +1,17 @@
+[package]
+name = "gameplay_cdda_tiles"
+description = "Cataclysm:DDA rendering and visualization"
+license = "AGPL-3.0-or-later"
+edition = "2024"
+
+[dependencies]
+bevy = { workspace = true }
+cdda_json_files = { workspace = true }
+gameplay_cdda_common = { workspace = true }
+gameplay_location = { workspace = true }
+serde_json = { workspace = true }
+units = { workspace = true }
+util = { workspace = true }
+
+[lints]
+workspace = true

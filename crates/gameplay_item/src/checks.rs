@@ -4,7 +4,7 @@ use bevy::prelude::{
     Query, With, resource_exists, warn,
 };
 use cdda_json_files::{PocketInfo, PocketType};
-use gameplay_cdda::Infos;
+use gameplay_cdda_info::Infos;
 use gameplay_common::Shared;
 use gameplay_location::Pos;
 use gameplay_object::{Mobile, StandardIntegrity};

@@ -1,3 +1,4 @@
+mod active_sav_ext;
 mod asset_state;
 mod asset_storage;
 mod assets;
@@ -9,7 +10,9 @@ mod map_memory_manager;
 mod overmap_buffer_manager;
 mod overmap_loader;
 mod overmap_manager;
+mod paths;
 mod plugin;
+mod repetition_block_ext;
 
 pub use self::asset_state::AssetState;
 pub use self::assets::{MapAsset, MapMemoryAsset, OvermapAsset, OvermapBufferAsset};
@@ -18,11 +21,15 @@ pub use self::map_manager::MapManager;
 pub use self::map_memory_manager::MapMemoryManager;
 pub use self::overmap_buffer_manager::OvermapBufferManager;
 pub use self::overmap_manager::OvermapManager;
+pub use self::plugin::RegionsPlugin;
+pub use self::repetition_block_ext::RepetitionBlockExt;
 
-pub(crate) use self::plugin::RegionsPlugin;
-
+use self::active_sav_ext::ActiveSavExt;
 use self::asset_storage::AssetStorage;
 use self::assets::RegionAsset;
 use self::map_loader::MapLoader;
 use self::map_memory_loader::MapMemoryLoader;
 use self::overmap_loader::OvermapLoader;
+use self::paths::{
+    MapMemoryPath, MapPath, OvermapBufferPath, OvermapPath, PathFor, SavPath, WorldPath,
+};

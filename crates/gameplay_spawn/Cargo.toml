@@ -8,8 +8,11 @@ application_state = { workspace = true }
 bevy = { workspace = true }
 cdda_json_files = { workspace = true }
 either = { workspace = true }
-gameplay_cdda = { workspace = true }
 gameplay_cdda_active_sav = { workspace = true }
+gameplay_cdda_common = { workspace = true }
+gameplay_cdda_info = { workspace = true }
+gameplay_cdda_regions = { workspace = true }
+gameplay_cdda_tiles = { workspace = true }
 gameplay_character = { workspace = true }
 gameplay_common = { workspace = true }
 gameplay_crafting = { workspace = true }

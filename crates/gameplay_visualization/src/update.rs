@@ -2,7 +2,7 @@ use bevy::prelude::{
     Camera, Changed, ChildOf, Children, Commands, GlobalTransform, MessageWriter, ParallelCommands,
     Query, Res, Single, Visibility, With, Without, debug, error,
 };
-use gameplay_cdda::Exploration;
+use gameplay_cdda_regions::Exploration;
 use gameplay_common::LastSeen;
 use gameplay_focus::{ElevationVisibility, Focus};
 use gameplay_local::GameplayLocal;

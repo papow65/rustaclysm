@@ -1,6 +1,6 @@
 use bevy::prelude::Entity;
 use cdda_json_files::Recipe;
-use gameplay_cdda::Error;
+use gameplay_cdda_common::Error;
 use gameplay_location::Pos;
 use std::sync::Arc;
 

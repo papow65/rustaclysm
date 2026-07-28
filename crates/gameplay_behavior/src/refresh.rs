@@ -5,7 +5,7 @@ use bevy::prelude::{
     ParallelCommands, Query, RemovedComponents, Res, ResMut, Single, State, Transform, Vec3,
     Visibility, With, Without, debug, resource_exists_and_changed,
 };
-use gameplay_cdda::Exploration;
+use gameplay_cdda_regions::Exploration;
 use gameplay_common::LastSeen;
 use gameplay_focus::{ElevationVisibility, Focus};
 use gameplay_local::GameplayLocal;

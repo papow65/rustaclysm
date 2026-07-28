@@ -7,8 +7,8 @@ use bevy::prelude::{
 };
 use cdda_json_files::{FurnitureInfo, TerrainInfo};
 use gameplay_action_planning::{PlayerInstructions, QueuedInstruction};
-use gameplay_cdda::Infos;
 use gameplay_cdda_active_sav::ActiveSav;
+use gameplay_cdda_info::Infos;
 use gameplay_common::{LastSeen, Shared};
 use gameplay_crafting::{RecipeSituation, shown_recipes};
 use gameplay_item::{BodyContainers, Item, ItemHierarchy};

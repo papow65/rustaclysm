@@ -1,5 +1,5 @@
 use bevy::prelude::{Entity, debug, error};
-use gameplay_cdda::Error;
+use gameplay_cdda_common::Error;
 
 pub(super) fn log_spawn_result(spawned: Result<Entity, Error>) {
     match spawned {
