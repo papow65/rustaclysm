@@ -5,10 +5,10 @@ license = "AGPL-3.0-or-later"
 edition = "2024"
 
 [dependencies]
+anyhow = { workspace = true }
 bevy = { workspace = true }
 cdda_json_files = { workspace = true }
 fastrand = { workspace = true }
-gameplay_cdda_common = { workspace = true }
 glob = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

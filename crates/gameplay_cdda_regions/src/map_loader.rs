@@ -1,9 +1,10 @@
 use crate::MapAsset;
+use anyhow::Error as AnyError;
 use bevy::asset::{AssetLoader, LoadContext, io::Reader};
 use bevy::prelude::TypePath;
-use gameplay_cdda_common::Error;
 use serde_json::from_slice as from_json_slice;
-use std::{str::from_utf8, sync::Arc};
+use std::str::from_utf8;
+use util::json_parse_error;
 
 #[derive(Default, TypePath)]
 pub(super) struct MapLoader;
@@ -11,7 +12,7 @@ pub(super) struct MapLoader;
 impl AssetLoader for MapLoader {
     type Asset = MapAsset;
     type Settings = ();
-    type Error = Error;
+    type Error = AnyError;
 
     async fn load(
         &self,
@@ -20,17 +21,15 @@ impl AssetLoader for MapLoader {
         load_context: &mut LoadContext<'_>,
     ) -> Result<Self::Asset, Self::Error> {
         let mut bytes = Vec::new();
-        reader
-            .read_to_end(&mut bytes)
-            .await
-            .map_err(|err| Error::Io { _wrapped: err })?;
+        reader.read_to_end(&mut bytes).await?;
 
-        let map = from_json_slice::<MapAsset>(&bytes).map_err(|err| Error::JsonWithContext {
-            _wrapped: err,
-            _file_path: load_context.path().path().to_path_buf(),
-            _contents: Arc::from(from_utf8(&bytes[0..1000]).unwrap_or("(invalid UTF8)")),
-        })?;
-        Ok(map)
+        from_json_slice::<MapAsset>(&bytes).map_err(|err| {
+            json_parse_error(
+                err,
+                load_context.path().path(),
+                from_utf8(&bytes).unwrap_or("(invalid UTF8)"),
+            )
+        })
     }
 
     fn extensions(&self) -> &[&str] {

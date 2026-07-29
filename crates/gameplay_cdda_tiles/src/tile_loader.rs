@@ -1,14 +1,14 @@
 use crate::{Atlas, Layers, Model, SpriteLayer, TextureInfo, TileVariant};
+use anyhow::{Error as AnyError, anyhow};
 use bevy::platform::collections::{HashMap, hash_map::Entry};
 use bevy::prelude::{Resource, error, warn};
 use cdda_json_files::{
     CddaTileConfig, CddaTileVariant, DynInfoId, MaybeFlatVec, SpriteNumber, SpriteNumbers,
     TileInfo, UntypedInfoId,
 };
-use gameplay_cdda_common::Error;
 use serde_json::from_str as from_json_str;
 use std::{fs::read_to_string, sync::Arc};
-use util::{AssetPaths, AsyncNew};
+use util::{AssetPaths, AsyncNew, json_parse_error};
 
 #[derive(Resource)]
 pub struct TileLoader {
@@ -17,18 +17,12 @@ pub struct TileLoader {
 }
 
 impl TileLoader {
-    pub(crate) fn try_new() -> Result<Self, Error> {
+    pub(crate) fn try_new() -> Result<Self, AnyError> {
         let tileset_path = AssetPaths::gfx().join("UltimateCataclysm");
         let file_path = tileset_path.join("tile_config.json");
         let file_contents = read_to_string(&file_path)?;
-        let cdda_tile_config =
-            from_json_str::<CddaTileConfig>(file_contents.as_str()).map_err(|e| {
-                Error::JsonWithContext {
-                    _wrapped: e,
-                    _file_path: file_path,
-                    _contents: Arc::from(file_contents.as_str()),
-                }
-            })?;
+        let cdda_tile_config = from_json_str::<CddaTileConfig>(file_contents.as_str())
+            .map_err(|e| json_parse_error(e, &file_path, file_contents))?;
 
         let mut tiles = HashMap::default();
 
@@ -64,14 +58,15 @@ impl TileLoader {
         Ok(Self { tiles, textures })
     }
 
-    fn texture_info(atlases: &[Atlas], sprite_number: SpriteNumber) -> Result<TextureInfo, Error> {
+    fn texture_info(
+        atlases: &[Atlas],
+        sprite_number: SpriteNumber,
+    ) -> Result<TextureInfo, AnyError> {
         atlases
             .iter()
             .find(|atlas| atlas.contains(sprite_number))
             .map(|atlas| atlas.texture_info(sprite_number))
-            .ok_or(Error::UnknownSpriteNumber {
-                _number: sprite_number,
-            })
+            .ok_or_else(|| anyhow!("Unknown sprite number {sprite_number:?}"))
     }
 
     pub fn get_models(

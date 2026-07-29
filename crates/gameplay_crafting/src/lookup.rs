@@ -2,6 +2,7 @@ use crate::{
     AlternativeSituation, ComponentSituation, DetectedQuantity, QualitySituation, RecipeSituation,
     ToolSituation,
 };
+use anyhow::Error as AnyError;
 use bevy::platform::collections::{HashMap, HashSet};
 use bevy::prelude::{AnyOf, Query, error, warn};
 use cdda_json_files::{
@@ -9,7 +10,6 @@ use cdda_json_files::{
     FurnitureInfo, InfoId, PocketType, Quality, Recipe, RequiredComponent, RequiredPart,
     RequiredQuality, RequiredTool, Requirement, Sav, Skill, TerrainInfo,
 };
-use gameplay_cdda_common::Error;
 use gameplay_cdda_info::Infos;
 use gameplay_common::{LastSeen, Shared};
 use gameplay_item::{BodyContainers, Item, ItemHierarchy, ItemItem};
@@ -324,7 +324,7 @@ fn expand_items<
 >(
     alternative: &Alternative<R>,
     details: P,
-) -> Result<Vec<(Arc<CommonItemInfo>, R)>, Error> {
+) -> Result<Vec<(Arc<CommonItemInfo>, R)>, AnyError> {
     match alternative {
         Alternative::Item { item, required, .. } => Ok(vec![(item.get()?, *required)]),
         Alternative::Requirement {

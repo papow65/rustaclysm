@@ -1,10 +1,10 @@
 use crate::TypeId;
+use anyhow::{Context as _, Error as AnyError};
 use bevy::platform::collections::HashMap;
 use bevy::prelude::{debug, error, warn};
 use bevy::tasks::IoTaskPool;
 use cdda_json_files::UntypedInfoId;
 use fastrand::alphabetic;
-use gameplay_cdda_common::Error;
 use glob::glob;
 use serde::Deserialize;
 use serde_json::{
@@ -117,7 +117,7 @@ impl ParsedJson {
         &self,
         json_path: &Path,
         skipped_count: &AtomicUsize,
-    ) -> Result<(), Error> {
+    ) -> Result<(), AnyError> {
         //trace!("Parsing {json_path:?}...");
         let file_contents = read_to_string(json_path)?;
 
@@ -127,11 +127,12 @@ impl ParsedJson {
                 // Maybe is one of the few of non-list files?
                 let Ok(content) = from_json_str::<Typed>(file_contents.as_str()) else {
                     // The first match attempt was the most likely to succeed, so its error is most relevant.
-                    return Err(Error::JsonWithContext {
-                        _wrapped: error,
-                        _file_path: json_path.into(),
-                        _contents: file_contents.as_str().into(),
-                    });
+                    Err(error).with_context(|| {
+                        format!(
+                            "Failed to read info file {}\nContents: {file_contents}",
+                            json_path.display()
+                        )
+                    })?
                 };
 
                 vec![content]

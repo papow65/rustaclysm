@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-#[derive(PartialEq, Eq, PartialOrd, Debug, Clone, Copy, Hash, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Hash, Deserialize)]
 pub struct SpriteNumber(u16);
 
 impl SpriteNumber {

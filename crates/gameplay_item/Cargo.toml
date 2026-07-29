@@ -7,10 +7,10 @@ edition = "2024"
 path = "src/mod.rs"
 
 [dependencies]
+anyhow = { workspace = true }
 bevy = { workspace = true }
 cdda_json_files = { workspace = true }
 either = { workspace = true }
-gameplay_cdda_common = { workspace = true }
 gameplay_cdda_info = { workspace = true }
 gameplay_common = { workspace = true }
 gameplay_location = { workspace = true }

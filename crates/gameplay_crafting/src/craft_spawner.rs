@@ -1,11 +1,11 @@
+use anyhow::Error as AnyError;
 use bevy::prelude::Entity;
 use cdda_json_files::Recipe;
-use gameplay_cdda_common::Error;
 use gameplay_location::Pos;
 use std::sync::Arc;
 
 pub trait CraftSpawner {
     /// # Errors
     /// CDDA errors for the spawned craft
-    fn spawn_craft(&mut self, pos: Pos, recipe: Arc<Recipe>) -> Result<Entity, Error>;
+    fn spawn_craft(&mut self, pos: Pos, recipe: Arc<Recipe>) -> Result<Entity, AnyError>;
 }

@@ -1,6 +1,6 @@
+use anyhow::Error as AnyError;
 use bevy::{ecs::relationship::Relationship, prelude::Entity};
 use cdda_json_files::CddaItem;
-use gameplay_cdda_common::Error;
 use gameplay_location::Pos;
 
 use crate::Amount;
@@ -14,5 +14,5 @@ pub trait ItemSpawner {
         pos: Option<Pos>,
         item: &CddaItem,
         amount: Amount,
-    ) -> Result<Entity, Error>;
+    ) -> Result<Entity, AnyError>;
 }

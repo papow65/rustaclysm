@@ -4,12 +4,12 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+anyhow = { workspace = true }
 application_state = { workspace = true }
 bevy = { workspace = true }
 cdda_json_files = { workspace = true }
 either = { workspace = true }
 gameplay_cdda_active_sav = { workspace = true }
-gameplay_cdda_common = { workspace = true }
 gameplay_cdda_info = { workspace = true }
 gameplay_cdda_regions = { workspace = true }
 gameplay_cdda_tiles = { workspace = true }

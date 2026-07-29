@@ -1,6 +1,6 @@
+use anyhow::Error as AnyError;
 use bevy::asset::{Asset, AssetLoader, LoadContext, io::Reader};
 use bevy::prelude::{TypePath, error};
-use either::Either;
 use serde::Deserialize;
 use serde_json::from_slice as from_json_slice;
 use std::{marker::PhantomData, str::from_utf8};
@@ -16,7 +16,7 @@ where
 {
     type Asset = T;
     type Settings = ();
-    type Error = Either<std::io::Error, serde_json::Error>;
+    type Error = AnyError;
 
     async fn load(
         &self,
@@ -25,13 +25,9 @@ where
         load_context: &mut LoadContext<'_>,
     ) -> Result<Self::Asset, Self::Error> {
         let mut bytes = Vec::new();
-        reader
-            .read_to_end(&mut bytes)
-            .await
-            .inspect_err(|e| {
-                error!("Map file loading error: {:?} {e:?}", load_context.path());
-            })
-            .map_err(Either::Left)?;
+        reader.read_to_end(&mut bytes).await.inspect_err(|e| {
+            error!("Map file loading error: {:?} {e:?}", load_context.path());
+        })?;
 
         let newline_pos = bytes
             .windows(1)
@@ -54,7 +50,7 @@ where
                     from_utf8(&bytes[0..40])
                 );
             })
-            .map_err(Either::Right)
+            .map_err(AnyError::from)
     }
 
     fn extensions(&self) -> &[&str] {

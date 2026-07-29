@@ -31,6 +31,7 @@ util = { workspace = true }
 
 [workspace.dependencies]
 # We limit this list to crates that are used in multiple crates.
+anyhow = "1"
 application_state = { path = "crates/application_state" }
 background = { path = "crates/background" }
 bevy = { version = "0.19", default-features = false, features = [ "async_executor", "bevy_asset", "bevy_dev_tools", "bevy_pbr", "bevy_log", "bevy_state", "bevy_text", "bevy_ui", "bevy_ui_render", "bevy_ui_widgets", "bevy_window", "multi_threaded", "png", "std", "tonemapping_luts", "ui_picking", "wayland", "zstd_rust" ] }
@@ -44,7 +45,6 @@ gameplay_action_planning = { path = "crates/gameplay_action_planning" }
 gameplay_behavior = { path = "crates/gameplay_behavior" }
 gameplay_camera = { path = "crates/gameplay_camera" }
 gameplay_cdda_active_sav = { path = "crates/gameplay_cdda_active_sav" }
-gameplay_cdda_common = { path = "crates/gameplay_cdda_common" }
 gameplay_cdda_info = { path = "crates/gameplay_cdda_info" }
 gameplay_cdda_regions = { path = "crates/gameplay_cdda_regions" }
 gameplay_cdda_tiles = { path = "crates/gameplay_cdda_tiles" }

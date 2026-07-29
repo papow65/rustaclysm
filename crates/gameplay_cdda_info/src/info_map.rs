@@ -1,14 +1,15 @@
 use crate::{Enriched, TypeId, human, wiring};
+use anyhow::Error as AnyError;
 use bevy::platform::collections::HashMap;
 use bevy::prelude::{debug, error, warn};
 use cdda_json_files::{
     Alternative, AmmobeltDetail, Bash, BashItem, BashItems, CharacterInfo, CommonItemInfo,
-    ConsumeDrugDetail, DeployTentDetail, DetailedUseAction, DynInfoId, FieldInfo, FurnitureInfo,
-    InfoId, ItemAction, ItemGroup, ItemMigration, ItemTypeDetails, ItemWithCommonInfo, Link as _,
-    LinkProvider, PlaceMonsterDetail, Quality, Recipe, RecipeResult, Requirement, TerrainInfo,
-    UnpackDetail, UntypedInfoId, UseAction, VehiclePartInfo, VehiclePartMigration,
+    ConsumeDrugDetail, DeployTentDetail, DetailedUseAction, DynInfoId, Error as CddaError,
+    FieldInfo, FurnitureInfo, InfoId, ItemAction, ItemGroup, ItemMigration, ItemTypeDetails,
+    ItemWithCommonInfo, Link as _, LinkProvider, PlaceMonsterDetail, Quality, Recipe, RecipeResult,
+    Requirement, TerrainInfo, UnpackDetail, UntypedInfoId, UseAction, VehiclePartInfo,
+    VehiclePartMigration,
 };
-use gameplay_cdda_common::Error;
 use serde::de::DeserializeOwned;
 use serde_json::{Value as JsonValue, from_value as from_json_value};
 use std::{any::type_name, fmt, sync::Arc};
@@ -67,12 +68,15 @@ impl<T: fmt::Debug + DeserializeOwned + 'static> InfoMap<T> {
     /// # Errors
     ///
     /// This function will return an error if the given `id` is unknown.
-    pub fn get(&self, id: &InfoId<T>) -> Result<&Arc<T>, Error> {
+    pub fn get(&self, id: &InfoId<T>) -> Result<&Arc<T>, AnyError> {
         self.map
             .get(id)
             .or_else(|| self.aliases.get(id))
-            .ok_or_else(|| Error::UnknownObject {
-                _id: DynInfoId::from(id.clone()),
+            .ok_or_else(|| {
+                CddaError::UnknownInfoId {
+                    _id: DynInfoId::from(id.clone()),
+                }
+                .into()
             })
     }
 

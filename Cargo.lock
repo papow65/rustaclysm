@@ -163,6 +163,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "anyhow"
+version = "1.0.104"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "330a5ed07fa54e4702c9d6c4174f74427fc0ef6e214bbd677ae50a5099946470"
+
+[[package]]
 name = "application_state"
 version = "0.0.0"
 dependencies = [
@@ -2514,6 +2520,7 @@ dependencies = [
 name = "gameplay_cdda_active_sav"
 version = "0.0.0"
 dependencies = [
+ "anyhow",
  "application_state",
  "bevy",
  "cdda_json_files",
@@ -2522,21 +2529,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "gameplay_cdda_common"
-version = "0.0.0"
-dependencies = [
- "cdda_json_files",
- "serde_json",
-]
-
-[[package]]
 name = "gameplay_cdda_info"
 version = "0.0.0"
 dependencies = [
+ "anyhow",
  "bevy",
  "cdda_json_files",
  "fastrand",
- "gameplay_cdda_common",
  "glob",
  "serde",
  "serde_json",
@@ -2549,25 +2548,25 @@ dependencies = [
 name = "gameplay_cdda_regions"
 version = "0.0.0"
 dependencies = [
+ "anyhow",
  "application_state",
  "bevy",
  "cdda_json_files",
- "either",
  "gameplay_cdda_active_sav",
- "gameplay_cdda_common",
  "gameplay_location",
  "gameplay_resource",
  "serde",
  "serde_json",
+ "util",
 ]
 
 [[package]]
 name = "gameplay_cdda_tiles"
 version = "0.0.0"
 dependencies = [
+ "anyhow",
  "bevy",
  "cdda_json_files",
- "gameplay_cdda_common",
  "gameplay_location",
  "serde_json",
  "units",
@@ -2612,9 +2611,9 @@ dependencies = [
 name = "gameplay_crafting"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "bevy",
  "cdda_json_files",
- "gameplay_cdda_common",
  "gameplay_cdda_info",
  "gameplay_common",
  "gameplay_item",
@@ -2642,10 +2641,10 @@ dependencies = [
 name = "gameplay_item"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "bevy",
  "cdda_json_files",
  "either",
- "gameplay_cdda_common",
  "gameplay_cdda_info",
  "gameplay_common",
  "gameplay_location",
@@ -2974,12 +2973,12 @@ dependencies = [
 name = "gameplay_spawn"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "application_state",
  "bevy",
  "cdda_json_files",
  "either",
  "gameplay_cdda_active_sav",
- "gameplay_cdda_common",
  "gameplay_cdda_info",
  "gameplay_cdda_regions",
  "gameplay_cdda_tiles",
@@ -5799,9 +5798,11 @@ checksum = "b6c140620e7ffbb22c2dee59cafe6084a59b5ffc27a8859a5f0d494b5d52b6be"
 name = "util"
 version = "0.0.0"
 dependencies = [
+ "anyhow",
  "bevy",
  "futures-lite",
  "regex",
+ "serde_json",
 ]
 
 [[package]]

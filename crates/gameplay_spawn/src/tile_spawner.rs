@@ -1,4 +1,5 @@
 use crate::log_spawn_result;
+use anyhow::Error as AnyError;
 use application_state::ApplicationState;
 use bevy::camera::visibility::RenderLayers;
 use bevy::ecs::{relationship::Relationship, system::SystemParam};
@@ -15,7 +16,6 @@ use cdda_json_files::{
 };
 use either::Either;
 use gameplay_cdda_active_sav::ActiveSav;
-use gameplay_cdda_common::Error;
 use gameplay_cdda_info::Infos;
 use gameplay_cdda_tiles::TileVariant;
 use gameplay_character::{
@@ -115,7 +115,7 @@ impl<'w> TileSpawner<'w, '_> {
         pos: Pos,
         character_info: &RequiredLinkedLater<CharacterInfo>,
         name: Option<ObjectName>,
-    ) -> Result<Entity, Error> {
+    ) -> Result<Entity, AnyError> {
         let character_info = character_info.get()?;
         let faction = match &*character_info.default_faction {
             "human" => Faction::Human,
@@ -605,7 +605,7 @@ impl<'w> TileSpawner<'w, '_> {
 }
 
 impl CraftSpawner for TileSpawner<'_, '_> {
-    fn spawn_craft(&mut self, pos: Pos, recipe: Arc<Recipe>) -> Result<Entity, Error> {
+    fn spawn_craft(&mut self, pos: Pos, recipe: Arc<Recipe>) -> Result<Entity, AnyError> {
         let object_in = ObjectOn {
             tile_entity: self
                 .location_cache
@@ -707,7 +707,7 @@ impl ItemSpawner for TileSpawner<'_, '_> {
         pos: Option<Pos>,
         item: &CddaItem,
         amount: Amount,
-    ) -> Result<Entity, Error> {
+    ) -> Result<Entity, AnyError> {
         let item_info = &item.item_info.get()?;
 
         let phase = Phase::from(&item_info.phase);

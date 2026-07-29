@@ -1,7 +1,7 @@
 use crate::MapMemoryAsset;
+use anyhow::Error as AnyError;
 use bevy::asset::{AssetLoader, LoadContext, io::Reader};
 use bevy::prelude::{TypePath, error};
-use either::Either;
 use serde_json::from_slice as from_json_slice;
 use std::str::from_utf8;
 
@@ -11,7 +11,7 @@ pub(super) struct MapMemoryLoader;
 impl AssetLoader for MapMemoryLoader {
     type Asset = MapMemoryAsset;
     type Settings = ();
-    type Error = Either<std::io::Error, serde_json::Error>;
+    type Error = AnyError;
 
     async fn load(
         &self,
@@ -20,24 +20,18 @@ impl AssetLoader for MapMemoryLoader {
         load_context: &mut LoadContext<'_>,
     ) -> Result<Self::Asset, Self::Error> {
         let mut bytes = Vec::new();
-        reader
-            .read_to_end(&mut bytes)
-            .await
-            .inspect_err(|e| {
-                error!("Map file loading error: {:?} {e:?}", load_context.path());
-            })
-            .map_err(Either::Left)?;
+        reader.read_to_end(&mut bytes).await.inspect_err(|e| {
+            error!("Map file loading error: {:?} {e:?}", load_context.path());
+        })?;
 
-        let map_memory = from_json_slice::<MapMemoryAsset>(&bytes)
-            .map_err(|e| {
-                error!(
-                    "Map memory json loading error: {:?} {:?} {e:?}",
-                    load_context.path(),
-                    from_utf8(&bytes[0..40])
-                );
-                e
-            })
-            .map_err(Either::Right)?;
+        let map_memory = from_json_slice::<MapMemoryAsset>(&bytes).map_err(|e| {
+            error!(
+                "Map memory json loading error: {:?} {:?} {e:?}",
+                load_context.path(),
+                from_utf8(&bytes[0..40])
+            );
+            e
+        })?;
         Ok(map_memory)
     }
 
