@@ -2,10 +2,10 @@ use crate::{Atlas, Layers, Model, SpriteLayer, TextureInfo, TileVariant};
 use bevy::platform::collections::{HashMap, hash_map::Entry};
 use bevy::prelude::{Resource, error, warn};
 use cdda_json_files::{
-    CddaTileConfig, CddaTileVariant, MaybeFlatVec, SpriteNumber, SpriteNumbers, TileInfo,
-    UntypedInfoId,
+    CddaTileConfig, CddaTileVariant, DynInfoId, MaybeFlatVec, SpriteNumber, SpriteNumbers,
+    TileInfo, UntypedInfoId,
 };
-use gameplay_cdda_common::{DynInfoId, Error};
+use gameplay_cdda_common::Error;
 use serde_json::from_str as from_json_str;
 use std::{fs::read_to_string, sync::Arc};
 use util::{AssetPaths, AsyncNew};

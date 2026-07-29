@@ -207,27 +207,3 @@ impl From<InfoId<VehiclePartInfo>> for InfoId<VehiclePartMigration> {
         Self::from(info_id.untyped)
     }
 }
-
-/// Usefull for debugging
-#[derive(Deserialize)]
-pub struct InfoIdDescription {
-    untyped: UntypedInfoId,
-    type_name: String,
-}
-
-impl fmt::Debug for InfoIdDescription {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.type_name, self.untyped.0)
-    }
-}
-
-impl<T> From<InfoId<T>> for InfoIdDescription {
-    fn from(info_id: InfoId<T>) -> Self {
-        let full_type_name = type_name::<T>();
-        let type_short = full_type_name.split("::").last().unwrap_or(full_type_name);
-        Self {
-            untyped: info_id.untyped,
-            type_name: String::from(type_short),
-        }
-    }
-}

@@ -4,8 +4,7 @@ use bevy::prelude::{
     AssetServer, Assets, Mesh, Mesh3d, MeshMaterial3d, Res, ResMut, StandardMaterial, Transform,
     Vec3,
 };
-use cdda_json_files::UntypedInfoId;
-use gameplay_cdda_common::DynInfoId;
+use cdda_json_files::{DynInfoId, UntypedInfoId};
 use gameplay_cdda_info::Infos;
 use gameplay_cdda_tiles::{Layers, Model, ModelShape, SpriteOrientation, TileLoader, TileVariant};
 
@@ -71,7 +70,7 @@ impl ModelFactory<'_> {
     }
 
     pub fn get_cursor(&mut self) -> (Mesh3d, Transform, MeshMaterial3d<StandardMaterial>) {
-        let dyn_info_id = DynInfoId::Meta(UntypedInfoId::new("cursor"));
+        let dyn_info_id = DynInfoId::Untyped(UntypedInfoId::new("cursor"));
         let models = self
             .loader
             .get_models(&dyn_info_id, &self.infos.variants(&dyn_info_id), None);

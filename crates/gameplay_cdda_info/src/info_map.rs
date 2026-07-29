@@ -1,13 +1,12 @@
-use crate::fixed::{human, wiring};
-use crate::{TypeId, parsed_json::Enriched};
+use crate::{Enriched, TypeId, human, wiring};
 use bevy::platform::collections::HashMap;
 use bevy::prelude::{debug, error, warn};
 use cdda_json_files::{
     Alternative, AmmobeltDetail, Bash, BashItem, BashItems, CharacterInfo, CommonItemInfo,
-    ConsumeDrugDetail, DeployTentDetail, DetailedUseAction, FieldInfo, FurnitureInfo, InfoId,
-    InfoIdDescription, ItemAction, ItemGroup, ItemMigration, ItemTypeDetails, ItemWithCommonInfo,
-    Link as _, LinkProvider, PlaceMonsterDetail, Quality, Recipe, RecipeResult, Requirement,
-    TerrainInfo, UnpackDetail, UntypedInfoId, UseAction, VehiclePartInfo, VehiclePartMigration,
+    ConsumeDrugDetail, DeployTentDetail, DetailedUseAction, DynInfoId, FieldInfo, FurnitureInfo,
+    InfoId, ItemAction, ItemGroup, ItemMigration, ItemTypeDetails, ItemWithCommonInfo, Link as _,
+    LinkProvider, PlaceMonsterDetail, Quality, Recipe, RecipeResult, Requirement, TerrainInfo,
+    UnpackDetail, UntypedInfoId, UseAction, VehiclePartInfo, VehiclePartMigration,
 };
 use gameplay_cdda_common::Error;
 use serde::de::DeserializeOwned;
@@ -73,7 +72,7 @@ impl<T: fmt::Debug + DeserializeOwned + 'static> InfoMap<T> {
             .get(id)
             .or_else(|| self.aliases.get(id))
             .ok_or_else(|| Error::UnknownObject {
-                _id: InfoIdDescription::from(id.clone()),
+                _id: DynInfoId::from(id.clone()),
             })
     }
 

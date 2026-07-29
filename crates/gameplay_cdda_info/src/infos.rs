@@ -3,13 +3,12 @@ use crate::migration_provider::{ItemMigrationProvider, VehiclePartMigrationProvi
 use crate::{TypeId, parsed_json::ParsedJson};
 use bevy::prelude::{Resource, debug, error, info, warn};
 use cdda_json_files::{
-    Ammo, BionicItem, Book, CddaItem, CharacterInfo, Clothing, Comestible, CommonItemInfo, Engine,
-    FieldInfo, FurnitureInfo, GenericItem, Gun, Gunmod, ItemAction, ItemGroup, ItemMigration,
-    Link as _, Magazine, Overmap, OvermapTerrainInfo, PetArmor, Practice, Quality, Recipe,
-    RequiredLinkedLater, Requirement, Submap, TerrainInfo, Tool, ToolClothing, Toolmod,
+    Ammo, BionicItem, Book, CddaItem, CharacterInfo, Clothing, Comestible, CommonItemInfo,
+    DynInfoId, Engine, FieldInfo, FurnitureInfo, GenericItem, Gun, Gunmod, ItemAction, ItemGroup,
+    ItemMigration, Link as _, Magazine, Overmap, OvermapTerrainInfo, PetArmor, Practice, Quality,
+    Recipe, RequiredLinkedLater, Requirement, Submap, TerrainInfo, Tool, ToolClothing, Toolmod,
     UntypedInfoId, VehiclePartInfo, VehiclePartMigration, Wheel,
 };
-use gameplay_cdda_common::DynInfoId;
 use std::{env, process::exit, time::Instant};
 use strum::VariantArray as _;
 use util::AsyncNew;
@@ -261,24 +260,23 @@ impl Infos {
                 .get(info_id)
                 .ok()
                 .and_then(|o| o.looks_like.clone()),
-            DynInfoId::ZoneLevel(info_id) => self
+            DynInfoId::OvermapTerrain(info_id) => self
                 .zone_levels
                 .get(info_id)
                 .ok()
                 .and_then(|o| o.looks_like.clone()),
-            DynInfoId::Meta(info_id) => unimplemented!("{info_id:?}"),
-            DynInfoId::Vehicle(info_id) => unimplemented!("{info_id:?}"),
+            other_dyn_info_id => unimplemented!("{other_dyn_info_id:?}"),
         }
         .map(|looks_like| dyn_info_id.modified(|_u| looks_like.clone()))
     }
 
     #[must_use]
     pub fn variants(&self, dyn_info_id: &DynInfoId) -> Vec<UntypedInfoId> {
-        if let DynInfoId::Meta(info_id) = dyn_info_id {
+        if let DynInfoId::Untyped(info_id) = dyn_info_id {
             return vec![info_id.clone()];
         }
 
-        let mut current_id = if matches!(dyn_info_id, DynInfoId::ZoneLevel(..)) {
+        let mut current_id = if matches!(dyn_info_id, DynInfoId::OvermapTerrain(..)) {
             dyn_info_id.modified(UntypedInfoId::truncate)
         } else {
             dyn_info_id.clone()

@@ -1,4 +1,4 @@
-use crate::{Error, InfoId, InfoIdDescription, TerrainInfo};
+use crate::{DynInfoId, Error, InfoId, TerrainInfo};
 use bevy_log::{error, warn};
 use serde::Deserialize;
 use std::hash::{Hash, Hasher};
@@ -26,11 +26,11 @@ pub trait Link<T> {
 
 #[derive(Debug, Deserialize)]
 #[serde(from = "Option<InfoId<T>>")]
-pub struct OptionalLinkedLater<T: fmt::Debug> {
+pub struct OptionalLinkedLater<T: fmt::Debug + 'static> {
     option: Option<LinkedLater<T>>,
 }
 
-impl<T: fmt::Debug> OptionalLinkedLater<T> {
+impl<T: fmt::Debug + 'static> OptionalLinkedLater<T> {
     #[must_use]
     pub const fn new_final_none() -> Self {
         Self { option: None }
@@ -48,7 +48,7 @@ impl<T: fmt::Debug> OptionalLinkedLater<T> {
     }
 }
 
-impl<T: fmt::Debug> From<Option<InfoId<T>>> for OptionalLinkedLater<T> {
+impl<T: fmt::Debug + 'static> From<Option<InfoId<T>>> for OptionalLinkedLater<T> {
     fn from(mut info_id: Option<InfoId<T>>) -> Self {
         if info_id == Some(InfoId::new("t_null")) {
             info_id = None;
@@ -60,7 +60,7 @@ impl<T: fmt::Debug> From<Option<InfoId<T>>> for OptionalLinkedLater<T> {
     }
 }
 
-impl<T: fmt::Debug> Link<T> for OptionalLinkedLater<T> {
+impl<T: fmt::Debug + 'static> Link<T> for OptionalLinkedLater<T> {
     fn connect(&self, provider: &impl LinkProvider<T>) -> Result<(), Error> {
         self.option.as_ref().map_or(Ok(()), |linked_later| {
             linked_later.finalize(
@@ -74,7 +74,7 @@ impl<T: fmt::Debug> Link<T> for OptionalLinkedLater<T> {
 
 #[derive(Debug, Deserialize)]
 #[serde(from = "InfoId<T>")]
-pub struct RequiredLinkedLater<T: fmt::Debug> {
+pub struct RequiredLinkedLater<T: fmt::Debug + 'static> {
     required: LinkedLater<T>,
 }
 
@@ -97,7 +97,7 @@ impl<T: fmt::Debug + 'static> RequiredLinkedLater<T> {
     /// When the link is unavailable
     pub fn get(&self) -> Result<Arc<T>, Error> {
         self.required.get().ok_or_else(|| Error::LinkUnavailable {
-            _id: InfoIdDescription::from(self.required.info_id.clone()),
+            _id: DynInfoId::from(self.required.info_id.clone()),
         })
     }
 
@@ -140,7 +140,7 @@ impl<T: fmt::Debug> PartialEq for RequiredLinkedLater<T> {
 
 impl<T: fmt::Debug> Eq for RequiredLinkedLater<T> {}
 
-impl<T: fmt::Debug> From<InfoId<T>> for RequiredLinkedLater<T> {
+impl<T: fmt::Debug + 'static> From<InfoId<T>> for RequiredLinkedLater<T> {
     fn from(info_id: InfoId<T>) -> Self {
         Self {
             required: LinkedLater::new(info_id),
@@ -154,7 +154,7 @@ impl<T: fmt::Debug> Hash for RequiredLinkedLater<T> {
     }
 }
 
-impl<T: fmt::Debug> Link<T> for RequiredLinkedLater<T> {
+impl<T: fmt::Debug + 'static> Link<T> for RequiredLinkedLater<T> {
     fn connect(&self, provider: &impl LinkProvider<T>) -> Result<(), Error> {
         self.required.finalize(
             provider
@@ -170,7 +170,7 @@ struct LinkedLater<T: fmt::Debug> {
     lock: OnceLock<Option<Weak<T>>>,
 }
 
-impl<T: fmt::Debug> LinkedLater<T> {
+impl<T: fmt::Debug + 'static> LinkedLater<T> {
     fn new(info_id: InfoId<T>) -> Self {
         Self {
             info_id,
@@ -205,7 +205,7 @@ impl<T: fmt::Debug> LinkedLater<T> {
             Ok(())
         } else {
             Err(Error::UnknownInfoId {
-                _id: self.info_id.clone().into(),
+                _id: DynInfoId::from(self.info_id.clone()),
             })
         };
 

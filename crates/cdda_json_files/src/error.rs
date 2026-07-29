@@ -1,11 +1,11 @@
-use crate::InfoIdDescription;
+use crate::DynInfoId;
 use std::{error::Error as StdError, fmt};
 
 #[derive(Debug)]
 pub enum Error {
-    UnknownInfoId { _id: InfoIdDescription },
+    UnknownInfoId { _id: DynInfoId },
     UnknownExamineAction { _str: String },
-    LinkUnavailable { _id: InfoIdDescription },
+    LinkUnavailable { _id: DynInfoId },
 }
 
 // Requirement for StdError

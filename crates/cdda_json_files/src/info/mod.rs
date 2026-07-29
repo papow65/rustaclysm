@@ -1,4 +1,5 @@
 mod character_info;
+mod dyn_info_id;
 mod examine_action;
 mod field_info;
 mod flags;
@@ -18,13 +19,14 @@ mod use_action;
 mod vehicle_part_info;
 
 pub use self::character_info::CharacterInfo;
+pub use self::dyn_info_id::DynInfoId;
 pub use self::examine_action::{ExamineAction, ExamineActionOption, SimpleExamineAction};
 pub use self::field_info::FieldInfo;
 pub use self::flags::Flags;
 pub use self::furniture_info::{
     Bash, BashItem, BashItems, CountRange, FurnitureInfo, MoveCostIncrease, MoveCostMod,
 };
-pub use self::info_id::{InfoId, InfoIdDescription, UntypedInfoId};
+pub use self::info_id::{InfoId, UntypedInfoId};
 pub use self::item_action::ItemAction;
 pub use self::item_group::{ItemGroup, SpawnItem};
 pub use self::item_info::{

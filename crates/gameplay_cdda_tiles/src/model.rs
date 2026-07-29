@@ -1,7 +1,6 @@
 use crate::{MeshInfo, SpriteLayer, TextureInfo};
 use bevy::prelude::{AlphaMode, Mesh, Transform, Vec2, Vec3};
-use cdda_json_files::SpriteNumber;
-use gameplay_cdda_common::DynInfoId;
+use cdda_json_files::{DynInfoId, SpriteNumber};
 use std::path::PathBuf;
 use units::Distance;
 
@@ -124,7 +123,7 @@ impl ModelShape {
     fn derive(dyn_info_id: &DynInfoId, layer: SpriteLayer, transform2d: &Transform2d) -> Self {
         let info_id = dyn_info_id.untyped().clone();
 
-        if matches!(dyn_info_id, &DynInfoId::ZoneLevel(..))
+        if matches!(dyn_info_id, &DynInfoId::OvermapTerrain(..))
             || info_id.starts_with("t_rock_floor")
             || info_id.starts_with("t_rock_roof")
         {

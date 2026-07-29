@@ -8,14 +8,14 @@ use bevy::prelude::{
 };
 use cdda_json_files::{
     BashItem, BashItems, CddaAmount, CddaItem, CddaItemName, CddaPhase, CddaPocket, CddaVehicle,
-    CddaVehiclePart, Character, CharacterInfo, CommonItemInfo, Description, Field, Flags, FlatVec,
-    FurnitureInfo, Ignored, InfoId, ItemGroup, ItemName, ItemTypeDetails, MaybeFlatVec,
-    MoveCostMod, PocketInfo, PocketType, Recipe, Repetition, RequiredLinkedLater, SpawnItem,
-    TerrainInfo,
+    CddaVehiclePart, Character, CharacterInfo, CommonItemInfo, Description, DynInfoId, Field,
+    Flags, FlatVec, FurnitureInfo, Ignored, InfoId, ItemGroup, ItemName, ItemTypeDetails,
+    MaybeFlatVec, MoveCostMod, PocketInfo, PocketType, Recipe, Repetition, RequiredLinkedLater,
+    SpawnItem, TerrainInfo,
 };
 use either::Either;
 use gameplay_cdda_active_sav::ActiveSav;
-use gameplay_cdda_common::{DynInfoId, Error};
+use gameplay_cdda_common::Error;
 use gameplay_cdda_info::Infos;
 use gameplay_cdda_tiles::TileVariant;
 use gameplay_character::{
@@ -417,7 +417,7 @@ impl<'w> TileSpawner<'w, '_> {
         tile_variant: Option<TileVariant>,
     ) -> Entity {
         //trace!("{:?} {pos:?} {:?} {:?} {:?}", &parent, &info_id, &category);
-        let last_seen = if dyn_info_id.shading_applied() {
+        let last_seen = if shading_applied(dyn_info_id) {
             if pos.is_some_and(|p| self.explored.has_pos_been_seen(p)) {
                 LastSeen::Previously
             } else {
@@ -470,7 +470,7 @@ impl<'w> TileSpawner<'w, '_> {
                 }
             });
         }
-        if dyn_info_id.shading_applied() {
+        if shading_applied(dyn_info_id) {
             entity_commands.insert(last_seen);
         }
 
@@ -798,6 +798,13 @@ impl ItemSpawner for TileSpawner<'_, '_> {
 
         Ok(entity)
     }
+}
+
+const fn shading_applied(dyn_info_id: &DynInfoId) -> bool {
+    !matches!(
+        dyn_info_id,
+        DynInfoId::OvermapTerrain(..) | DynInfoId::Untyped(..)
+    )
 }
 
 fn pocket_info(

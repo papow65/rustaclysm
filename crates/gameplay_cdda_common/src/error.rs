@@ -1,11 +1,11 @@
-use cdda_json_files::{Error as CddaJsonError, InfoIdDescription, SpriteNumber};
+use cdda_json_files::{DynInfoId, Error as CddaJsonError, SpriteNumber};
 use std::{error::Error as StdError, fmt, io, path::PathBuf, sync::Arc};
 
 #[derive(Debug)]
 pub enum Error {
     /// This id, or combination of id and type is not known
     UnknownObject {
-        _id: InfoIdDescription,
+        _id: DynInfoId,
     },
     /// This sprite numer is not known
     UnknownSpriteNumber {
