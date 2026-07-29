@@ -5,7 +5,7 @@ use cdda_json_files::{
     CddaTileConfig, CddaTileVariant, MaybeFlatVec, SpriteNumber, SpriteNumbers, TileInfo,
     UntypedInfoId,
 };
-use gameplay_cdda_common::{Error, ObjectCategory};
+use gameplay_cdda_common::{DynInfoId, Error};
 use serde_json::from_str as from_json_str;
 use std::{fs::read_to_string, sync::Arc};
 use util::{AssetPaths, AsyncNew};
@@ -76,8 +76,7 @@ impl TileLoader {
 
     pub fn get_models(
         &self,
-        info_id: &UntypedInfoId,
-        category: ObjectCategory,
+        dyn_info_id: &DynInfoId,
         id_variants: &[UntypedInfoId],
         tile_variant: Option<TileVariant>,
     ) -> Layers<Model> {
@@ -102,7 +101,7 @@ impl TileLoader {
         {
             if let Some(expected_legth) = tile_variant.expected_length() && vec.len() != expected_legth {
                 warn!(
-                    "Expected {expected_legth} variants for {tile_variant:?} tiles of {category:?} {info_id:?}, but got {:?}",
+                    "Expected {expected_legth} variants for {tile_variant:?} tiles of {dyn_info_id:?}, but got {:?}",
                     &vec
                 );
             }
@@ -115,10 +114,10 @@ impl TileLoader {
         .or_else(|| foregrounds.random());
         let background = backgrounds.random();
 
-        let foreground_model = foreground
-            .map(|foreground| self.to_model(foreground, info_id, category, SpriteLayer::Front));
-        let background_model = background
-            .map(|background| self.to_model(background, info_id, category, SpriteLayer::Back));
+        let foreground_model =
+            foreground.map(|foreground| self.to_model(foreground, dyn_info_id, SpriteLayer::Front));
+        let background_model =
+            background.map(|background| self.to_model(background, dyn_info_id, SpriteLayer::Back));
 
         match (foreground_model, background_model) {
             (foreground_model, Some(background_model)) => Layers {
@@ -130,9 +129,7 @@ impl TileLoader {
                 overlay: None,
             },
             (None, None) => {
-                panic!(
-                    "No foreground or background for {category:?} {info_id:?} and {id_variants:?}"
-                );
+                panic!("No foreground or background for {dyn_info_id:?} and {id_variants:?}");
             }
         }
     }
@@ -140,13 +137,11 @@ impl TileLoader {
     fn to_model(
         &self,
         sprite_number: SpriteNumber,
-        info_id: &UntypedInfoId,
-        category: ObjectCategory,
+        dyn_info_id: &DynInfoId,
         layer: SpriteLayer,
     ) -> Model {
         Model::new(
-            info_id,
-            category,
+            dyn_info_id,
             layer,
             sprite_number,
             &self.textures[&sprite_number],

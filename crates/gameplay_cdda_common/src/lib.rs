@@ -1,5 +1,5 @@
+mod dyn_info_id;
 mod error;
-mod object_category;
 
+pub use self::dyn_info_id::DynInfoId;
 pub use self::error::Error;
-pub use self::object_category::ObjectCategory;

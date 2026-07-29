@@ -5,7 +5,7 @@ use bevy::prelude::{
 };
 use bevy::{camera::visibility::RenderLayers, ecs::system::SystemParam};
 use cdda_json_files::{CddaItemName, InfoId, ItemName, OvermapTerrainInfo};
-use gameplay_cdda_common::ObjectCategory;
+use gameplay_cdda_common::DynInfoId;
 use gameplay_cdda_info::Infos;
 use gameplay_common::LastSeen;
 use gameplay_focus::Focus;
@@ -94,7 +94,7 @@ impl ZoneSpawner<'_, '_> {
         let pbr_bundles = self
             .tile_spawner
             .model_factory()
-            .get_layers(info_id.untyped(), ObjectCategory::ZoneLevel, None)
+            .get_layers(&DynInfoId::ZoneLevel(info_id.clone()), None)
             .map(|(mesh, transform, appearance)| {
                 (
                     mesh,

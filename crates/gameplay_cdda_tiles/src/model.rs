@@ -1,7 +1,7 @@
 use crate::{MeshInfo, SpriteLayer, TextureInfo};
 use bevy::prelude::{AlphaMode, Mesh, Transform, Vec2, Vec3};
-use cdda_json_files::{InfoId, SpriteNumber, TerrainInfo, UntypedInfoId};
-use gameplay_cdda_common::ObjectCategory;
+use cdda_json_files::SpriteNumber;
+use gameplay_cdda_common::DynInfoId;
 use std::path::PathBuf;
 use units::Distance;
 
@@ -121,13 +121,10 @@ pub enum ModelShape {
 }
 
 impl ModelShape {
-    fn derive(
-        info_id: &UntypedInfoId,
-        category: ObjectCategory,
-        layer: SpriteLayer,
-        transform2d: &Transform2d,
-    ) -> Self {
-        if category == ObjectCategory::ZoneLevel
+    fn derive(dyn_info_id: &DynInfoId, layer: SpriteLayer, transform2d: &Transform2d) -> Self {
+        let info_id = dyn_info_id.untyped().clone();
+
+        if matches!(dyn_info_id, &DynInfoId::ZoneLevel(..))
             || info_id.starts_with("t_rock_floor")
             || info_id.starts_with("t_rock_roof")
         {
@@ -246,14 +243,13 @@ pub struct Model {
 
 impl Model {
     pub(crate) fn new(
-        info_id: &UntypedInfoId,
-        category: ObjectCategory,
+        dyn_info_id: &DynInfoId,
         layer: SpriteLayer,
         sprite_number: SpriteNumber,
         texture_info: &TextureInfo,
     ) -> Self {
-        let alpha_mode = if category == ObjectCategory::Terrain
-            && InfoId::<TerrainInfo>::from(info_id.clone()).is_ground()
+        let alpha_mode = if let DynInfoId::Terrain(info_id) = dyn_info_id
+            && info_id.is_ground()
         {
             AlphaMode::Opaque
         } else {
@@ -261,12 +257,12 @@ impl Model {
         };
 
         Self {
-            shape: ModelShape::derive(info_id, category, layer, &texture_info.transform2d),
+            shape: ModelShape::derive(dyn_info_id, layer, &texture_info.transform2d),
             layer,
             sprite_number,
             mesh_info: texture_info.mesh_info,
             texture_path: texture_info.image_path.clone(),
-            vertical_offset: layer.vertical_offset(category),
+            vertical_offset: layer.vertical_offset(dyn_info_id),
             alpha_mode,
         }
     }

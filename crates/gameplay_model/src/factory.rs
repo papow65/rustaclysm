@@ -5,7 +5,7 @@ use bevy::prelude::{
     Vec3,
 };
 use cdda_json_files::UntypedInfoId;
-use gameplay_cdda_common::ObjectCategory;
+use gameplay_cdda_common::DynInfoId;
 use gameplay_cdda_info::Infos;
 use gameplay_cdda_tiles::{Layers, Model, ModelShape, SpriteOrientation, TileLoader, TileVariant};
 
@@ -55,16 +55,12 @@ impl ModelFactory<'_> {
 
     pub fn get_layers(
         &mut self,
-        info_id: &UntypedInfoId,
-        category: ObjectCategory,
+        dyn_info_id: &DynInfoId,
         tile_variant: Option<TileVariant>,
     ) -> Layers<(Mesh3d, Transform, Appearance)> {
-        let models = self.loader.get_models(
-            info_id,
-            category,
-            &self.infos.variants(info_id.clone(), category),
-            tile_variant,
-        );
+        let models =
+            self.loader
+                .get_models(dyn_info_id, &self.infos.variants(dyn_info_id), tile_variant);
         models.map_mut(|model| {
             (
                 self.get_mesh(&model),
@@ -75,13 +71,10 @@ impl ModelFactory<'_> {
     }
 
     pub fn get_cursor(&mut self) -> (Mesh3d, Transform, MeshMaterial3d<StandardMaterial>) {
-        let info_id = UntypedInfoId::new("cursor");
-        let models = self.loader.get_models(
-            &info_id,
-            ObjectCategory::Meta,
-            &self.infos.variants(info_id.clone(), ObjectCategory::Meta),
-            None,
-        );
+        let dyn_info_id = DynInfoId::Meta(UntypedInfoId::new("cursor"));
+        let models = self
+            .loader
+            .get_models(&dyn_info_id, &self.infos.variants(&dyn_info_id), None);
         assert!(models.overlay.is_none(), "{models:?}");
 
         let mesh3d = self.get_mesh(&models.base);

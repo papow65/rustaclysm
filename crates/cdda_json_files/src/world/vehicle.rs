@@ -1,4 +1,4 @@
-use crate::{CddaItem, Repetition, RequiredLinkedLater, UntypedInfoId, VehiclePartInfo};
+use crate::{CddaItem, InfoId, Repetition, RequiredLinkedLater, VehiclePartInfo};
 use bevy_platform::collections::HashMap;
 use serde::Deserialize;
 use serde_json::Value as JsonValue;
@@ -9,7 +9,7 @@ use std::sync::Arc;
 #[serde(deny_unknown_fields)]
 pub struct CddaVehicle {
     #[serde(rename = "type")]
-    pub id: UntypedInfoId,
+    pub id: InfoId<Self>,
 
     /// u8 would suffice, but i32 requires less casting
     pub posx: i32,

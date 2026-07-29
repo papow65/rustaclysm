@@ -9,7 +9,7 @@ use cdda_json_files::{
     RequiredLinkedLater, Requirement, Submap, TerrainInfo, Tool, ToolClothing, Toolmod,
     UntypedInfoId, VehiclePartInfo, VehiclePartMigration, Wheel,
 };
-use gameplay_cdda_common::ObjectCategory;
+use gameplay_cdda_common::DynInfoId;
 use std::{env, process::exit, time::Instant};
 use strum::VariantArray as _;
 use util::AsyncNew;
@@ -229,81 +229,82 @@ impl Infos {
     }
 
     #[must_use]
-    fn looks_like(
-        &self,
-        info_id: UntypedInfoId,
-        category: ObjectCategory,
-    ) -> Option<UntypedInfoId> {
-        match category {
-            ObjectCategory::Character => self
+    fn looks_like(&self, dyn_info_id: &DynInfoId) -> Option<DynInfoId> {
+        match dyn_info_id {
+            DynInfoId::Character(info_id) => self
                 .characters
-                .get(&info_id.into())
+                .get(info_id)
                 .ok()
                 .and_then(|o| o.looks_like.clone()),
-            ObjectCategory::Item => self
+            DynInfoId::Item(info_id) => self
                 .common_item_infos
-                .get(&info_id.into())
+                .get(info_id)
                 .ok()
                 .and_then(|o| o.looks_like.clone()),
-            ObjectCategory::Field => self
+            DynInfoId::Field(info_id) => self
                 .fields
-                .get(&info_id.into())
+                .get(info_id)
                 .ok()
                 .and_then(|o| o.looks_like.clone()),
-            ObjectCategory::Furniture => self
+            DynInfoId::Furniture(info_id) => self
                 .furniture
-                .get(&info_id.into())
+                .get(info_id)
                 .ok()
                 .and_then(|o| o.looks_like.clone()),
-            ObjectCategory::Terrain => self
+            DynInfoId::Terrain(info_id) => self
                 .terrain
-                .get(&info_id.into())
+                .get(info_id)
                 .ok()
                 .and_then(|o| o.looks_like.clone()),
-            ObjectCategory::VehiclePart => self
+            DynInfoId::VehiclePart(info_id) => self
                 .vehicle_parts
-                .get(&info_id.into())
+                .get(info_id)
                 .ok()
                 .and_then(|o| o.looks_like.clone()),
-            ObjectCategory::ZoneLevel => self
+            DynInfoId::ZoneLevel(info_id) => self
                 .zone_levels
-                .get(&info_id.into())
+                .get(info_id)
                 .ok()
                 .and_then(|o| o.looks_like.clone()),
-            _ => unimplemented!("{info_id:?} {category:?}"),
+            DynInfoId::Meta(info_id) => unimplemented!("{info_id:?}"),
+            DynInfoId::Vehicle(info_id) => unimplemented!("{info_id:?}"),
         }
+        .map(|looks_like| dyn_info_id.modified(|_u| looks_like.clone()))
     }
 
     #[must_use]
-    pub fn variants(&self, info_id: UntypedInfoId, category: ObjectCategory) -> Vec<UntypedInfoId> {
-        if category == ObjectCategory::Meta {
-            return vec![info_id];
+    pub fn variants(&self, dyn_info_id: &DynInfoId) -> Vec<UntypedInfoId> {
+        if let DynInfoId::Meta(info_id) = dyn_info_id {
+            return vec![info_id.clone()];
         }
 
-        let mut current_id = if category == ObjectCategory::ZoneLevel {
-            info_id.truncate()
+        let mut current_id = if matches!(dyn_info_id, DynInfoId::ZoneLevel(..)) {
+            dyn_info_id.modified(UntypedInfoId::truncate)
         } else {
-            info_id
+            dyn_info_id.clone()
         };
         let mut variants = vec![
-            current_id.suffix("_season_summer"),
+            current_id.modified(|u| u.suffix("_season_summer")),
             current_id.clone(),
-            current_id.prefix("vp_"),
-            current_id.prefix("vp_").suffix("_cover"),
+            current_id.modified(|u| u.prefix("vp_")),
+            current_id.modified(|u| u.prefix("vp_").suffix("_cover")),
         ];
 
-        while let Some(other) = self.looks_like(current_id, category) {
+        while let Some(other) = self.looks_like(&current_id) {
             if variants.contains(&other) {
                 //trace!("Variants {:?} already contains {:?}", &variants, &other); // TODO
                 break;
             }
-            variants.push(other.suffix("_season_summer"));
+            variants.push(other.modified(|u| u.suffix("_season_summer")));
             variants.push(other.clone());
-            variants.push(other.prefix("vp_"));
-            variants.push(other.prefix("vp_").suffix("_cover"));
+            variants.push(other.modified(|u| u.prefix("vp_")));
+            variants.push(other.modified(|u| u.prefix("vp_").suffix("_cover")));
             current_id = other.clone();
         }
         variants
+            .into_iter()
+            .map(|dyn_info_id| dyn_info_id.untyped().clone())
+            .collect()
     }
 
     pub fn link_overmap(&self, overmap: &Overmap) {

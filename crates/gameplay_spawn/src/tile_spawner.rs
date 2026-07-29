@@ -11,11 +11,11 @@ use cdda_json_files::{
     CddaVehiclePart, Character, CharacterInfo, CommonItemInfo, Description, Field, Flags, FlatVec,
     FurnitureInfo, Ignored, InfoId, ItemGroup, ItemName, ItemTypeDetails, MaybeFlatVec,
     MoveCostMod, PocketInfo, PocketType, Recipe, Repetition, RequiredLinkedLater, SpawnItem,
-    TerrainInfo, UntypedInfoId,
+    TerrainInfo,
 };
 use either::Either;
 use gameplay_cdda_active_sav::ActiveSav;
-use gameplay_cdda_common::{Error, ObjectCategory};
+use gameplay_cdda_common::{DynInfoId, Error};
 use gameplay_cdda_info::Infos;
 use gameplay_cdda_tiles::TileVariant;
 use gameplay_character::{
@@ -127,8 +127,7 @@ impl<'w> TileSpawner<'w, '_> {
         let entity = self.spawn_object(
             Mobile,
             Some(pos),
-            character_info.id.untyped(),
-            ObjectCategory::Character,
+            &DynInfoId::Character(character_info.id.clone()),
             object_name,
             None,
         );
@@ -210,8 +209,7 @@ impl<'w> TileSpawner<'w, '_> {
         let entity = self.spawn_object(
             object_in,
             Some(pos),
-            field_info.id.untyped(),
-            ObjectCategory::Field,
+            &DynInfoId::Field(field_info.id.clone()),
             object_name,
             None,
         );
@@ -257,8 +255,7 @@ impl<'w> TileSpawner<'w, '_> {
         let entity = self.spawn_object(
             object_in,
             Some(pos),
-            furniture_info.id.untyped(),
-            ObjectCategory::Furniture,
+            &DynInfoId::Furniture(furniture_info.id.clone()),
             object_name,
             Some(TileVariant::Unconnected),
         );
@@ -296,8 +293,7 @@ impl<'w> TileSpawner<'w, '_> {
         let entity = self.spawn_object(
             object_in,
             Some(pos),
-            local_terrain.info.id.untyped(),
-            ObjectCategory::Terrain,
+            &DynInfoId::Terrain(local_terrain.info.id.clone()),
             object_name,
             Some(local_terrain.variant),
         );
@@ -345,8 +341,7 @@ impl<'w> TileSpawner<'w, '_> {
         let entity = self.spawn_object(
             Mobile,
             Some(pos),
-            &vehicle.id,
-            ObjectCategory::Vehicle,
+            &DynInfoId::Vehicle(vehicle.id.clone()),
             object_name,
             None,
         );
@@ -391,8 +386,7 @@ impl<'w> TileSpawner<'w, '_> {
         let entity = self.spawn_object(
             Mobile,
             Some(pos),
-            part_info.id.untyped(),
-            ObjectCategory::VehiclePart,
+            &DynInfoId::VehiclePart(part_info.id.clone()),
             object_name,
             Some(variant),
         );
@@ -418,13 +412,12 @@ impl<'w> TileSpawner<'w, '_> {
         &mut self,
         parent_or_mobile: R,
         pos: Option<Pos>,
-        info_id: &UntypedInfoId,
-        category: ObjectCategory,
+        dyn_info_id: &DynInfoId,
         object_name: ObjectName,
         tile_variant: Option<TileVariant>,
     ) -> Entity {
         //trace!("{:?} {pos:?} {:?} {:?} {:?}", &parent, &info_id, &category);
-        let last_seen = if category.shading_applied() {
+        let last_seen = if dyn_info_id.shading_applied() {
             if pos.is_some_and(|p| self.explored.has_pos_been_seen(p)) {
                 LastSeen::Previously
             } else {
@@ -436,12 +429,12 @@ impl<'w> TileSpawner<'w, '_> {
         };
         //trace!("{:?}", &last_seen);
 
-        let layers = if category == ObjectCategory::Vehicle {
+        let layers = if matches!(dyn_info_id, DynInfoId::Vehicle(..)) {
             None
         } else {
             Some(
                 self.model_factory
-                    .get_layers(info_id, category, tile_variant)
+                    .get_layers(dyn_info_id, tile_variant)
                     .map(|(mesh, transform, apprearance)| {
                         let material = if last_seen == LastSeen::Never {
                             apprearance.material(&LastSeen::Currently)
@@ -477,7 +470,7 @@ impl<'w> TileSpawner<'w, '_> {
                 }
             });
         }
-        if category.shading_applied() {
+        if dyn_info_id.shading_applied() {
             entity_commands.insert(last_seen);
         }
 
@@ -731,8 +724,7 @@ impl ItemSpawner for TileSpawner<'_, '_> {
         let object_entity = self.spawn_object(
             parent,
             pos,
-            item_info.id.untyped(),
-            ObjectCategory::Item,
+            &DynInfoId::Item(item_info.id.clone()),
             object_name,
             None,
         );
