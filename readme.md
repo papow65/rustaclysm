@@ -65,7 +65,7 @@ Currently, these features are (partially) supported:
 3.  Install [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git), [Rust, and Cargo](https://forge.rust-lang.org/infra/other-installation-methods.html#which-installer-should-you-use)
 4.  Clone the Rustaclysm git repository: `git clone https://github.com/papow65/rustaclysm.git`
 5.  Navigate to the Rustaclysm directory: `cd rustaclysm`
-6.  Launch it by running the command `cargo run --profile dev-opt` on the command line.
+6.  Launch it by running the command `cargo run` on the command line.
 7.  Follow the instructions to set up the necessary symlinks or directories in the `assets` directory.
 
 ## Environment configuration

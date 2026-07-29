@@ -103,12 +103,15 @@ util = { path = "crates/util" }
 # We use --no-default-features for production builds. See .github/workflows/ci.yml
 default = ["bevy/debug", "bevy/dynamic_linking"]
 
-[profile.dev.package."*"]
-opt-level = 3 # copied by https://bevy-cheatbook.github.io/pitfalls/performance.html
-
-[profile.dev-opt] # Used in development, with performance similar to release
-inherits = "dev"
+[profile.dev] # More optimized, so that the performance is similar to release
 opt-level = 3 # inspired by https://bevy-cheatbook.github.io/pitfalls/performance.html
+
+[profile.unopt] # Like the original 'dev' profile
+inherits = "dev"
+opt-level = 0
+
+[profile.unopt.package."*"]
+opt-level = 3 # copied by https://bevy-cheatbook.github.io/pitfalls/performance.html
 
 [profile.release]
 debug = "line-tables-only" # For useful bug reports

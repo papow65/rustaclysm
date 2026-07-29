@@ -3,7 +3,7 @@
 default_job = "fmt"
 
 [jobs.check]
-command = ["cargo", "check", "--profile", "dev-opt", "--all-targets", "--color", "always"]
+command = ["cargo", "check", "--all-targets", "--color", "always"]
 need_stdout = false
 
 [jobs.fmt]
@@ -13,7 +13,7 @@ on_success = "job:test"
 
 [jobs.test]
 command = [
-    "cargo", "nextest", "run", "--cargo-profile", "dev-opt", "--workspace", "--status-level", "slow",
+    "cargo", "nextest", "run", "--workspace", "--status-level", "slow",
     "--hide-progress-bar", "--failure-output", "final", "--no-fail-fast", "--", "--include-ignored",
 ]
 need_stdout = true
@@ -22,23 +22,23 @@ on_success = "job:clippy"
 
 [jobs.clippy]
 command = [
-    "cargo", "clippy", "--profile", "dev-opt", "--workspace", "--no-deps", "--all-targets", "--color", "always"
+    "cargo", "clippy", "--workspace", "--no-deps", "--all-targets", "--color", "always"
 ]
 need_stdout = false
 on_success = "job:build"
 
 [jobs.build]
-command = ["cargo", "build", "--profile", "dev-opt", "--color", "always"]
+command = ["cargo", "build", "--color", "always"]
 need_stdout = false
 on_success = "job:doc"
 
 [jobs.doc]
-command = ["cargo", "doc", "--profile", "dev-opt","--no-deps", "--workspace", "--color", "always", "--document-private-items"]
+command = ["cargo", "doc", "--no-deps", "--workspace", "--color", "always", "--document-private-items"]
 need_stdout = false
 on_success = "job:shear"
 
 [jobs.doc-open]
-command = ["cargo", "doc", "--profile", "dev-opt","--no-deps", "--workspace", "--color", "always", "--document-private-items", "--open"]
+command = ["cargo", "doc", "--no-deps", "--workspace", "--color", "always", "--document-private-items", "--open"]
 need_stdout = false
 on_success = "back" # so that we don't open the browser at each change
 
@@ -54,7 +54,7 @@ need_stdout = false
 on_success = "job:wait"
 
 [jobs.run]
-command = ["cargo", "run", "--profile", "dev-opt"]
+command = ["cargo", "run"]
 on_success = "back"
 on_failure = "back"
 
@@ -64,7 +64,7 @@ need_stdout = false
 on_success = "job:fmt"
 
 [jobs.fix]
-command = ["cargo", "fix", "--profile", "dev-opt", "--workspace", "--allow-dirty"]
+command = ["cargo", "fix", "--workspace", "--allow-dirty"]
 on_success = "job:fmt"
 
 [jobs.killall]
