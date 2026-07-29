@@ -26,7 +26,6 @@ pub struct Recipe {
     #[serde(default)]
     pub difficulty: u8,
 
-    pub time: Option<Duration>,
     pub activity_level: Option<ActivityLevel>,
 
     #[serde(default)]
@@ -45,12 +44,6 @@ pub struct Recipe {
     pub using: Vec<Using>,
 
     pub batch_time_factors: Option<Vec<JsonValue>>,
-    pub blueprint_excludes: Option<Vec<JsonValue>>,
-    pub blueprint_name: Option<Arc<str>>,
-    pub blueprint_needs: Option<JsonValue>,
-    pub blueprint_provides: Option<Vec<JsonValue>>,
-    pub blueprint_requires: Option<Vec<JsonValue>>,
-    pub blueprint_resources: Option<Vec<JsonValue>>,
     pub byproduct_group: Option<Vec<JsonValue>>,
     pub byproducts: Option<Vec<JsonValue>>,
     pub charges: Option<u16>,
@@ -70,9 +63,7 @@ pub struct Recipe {
 
     #[serde(default)]
     pub tools: Vec<Vec<Alternative<RequiredTool>>>,
-
-    #[serde(flatten)]
-    _ignored: Ignored<Self>,
+    // No Ignored<Self> field here, because the fields used for RecipeResult would also appear ignored. So Ignored<Self> is handled in RecipeResult.
 }
 
 impl PartialEq for Recipe {
@@ -96,6 +87,18 @@ pub enum RecipeResult {
     Camp {
         result: UntypedInfoId,
         description: Arc<str>,
+
+        time: Option<Duration>,
+
+        blueprint_excludes: Option<Vec<JsonValue>>,
+        blueprint_name: Option<Arc<str>>,
+        blueprint_needs: Option<JsonValue>,
+        blueprint_provides: Option<Vec<JsonValue>>,
+        blueprint_requires: Option<Vec<JsonValue>>,
+        blueprint_resources: Option<Vec<JsonValue>>,
+
+        #[serde(flatten)]
+        _ignored: Ignored<Self>,
     },
 
     #[serde(alias = "CC_*")]
@@ -111,16 +114,18 @@ pub enum RecipeResult {
     Item {
         #[serde(rename = "result")]
         item_info: RequiredLinkedLater<CommonItemInfo>,
-    },
 
-    #[serde(untagged)]
-    Unknown { result: UntypedInfoId },
+        time: Duration,
+
+        #[serde(flatten)]
+        _ignored: Ignored<Self>,
+    },
 }
 
 impl RecipeResult {
     #[track_caller]
     pub fn item_info(&self) -> Option<Arc<CommonItemInfo>> {
-        if let Self::Item { item_info } = self {
+        if let Self::Item { item_info, .. } = self {
             item_info.get_option()
         } else {
             None

@@ -236,7 +236,7 @@ impl InfoMap<Recipe> {
                 using.requirement.finalize(requirements, "recipe");
             }
 
-            if let RecipeResult::Item { item_info } = &recipe.result {
+            if let RecipeResult::Item { item_info, .. } = &recipe.result {
                 item_info.finalize(common_item_infos, "recipe");
             }
         }

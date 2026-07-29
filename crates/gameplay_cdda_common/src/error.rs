@@ -1,12 +1,8 @@
-use cdda_json_files::{Error as CddaJsonError, InfoId, InfoIdDescription, Recipe, SpriteNumber};
+use cdda_json_files::{Error as CddaJsonError, InfoIdDescription, SpriteNumber};
 use std::{error::Error as StdError, fmt, io, path::PathBuf, sync::Arc};
 
 #[derive(Debug)]
 pub enum Error {
-    /// This recipe has no time set, where it is expected
-    RecipeWithoutTime {
-        _id: InfoId<Recipe>,
-    },
     /// This id, or combination of id and type is not known
     UnknownObject {
         _id: InfoIdDescription,

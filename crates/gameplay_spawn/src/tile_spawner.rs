@@ -694,11 +694,7 @@ impl CraftSpawner for TileSpawner<'_, '_> {
             &CddaItem::new(&Arc::new(craft_item_info)),
             Amount::SINGLE,
         )?;
-        let crafting_time = recipe.time.ok_or_else(|| Error::RecipeWithoutTime {
-            _id: recipe.id.clone(),
-        })?;
-        let craft = Craft::new(recipe, crafting_time);
-        self.commands.entity(entity).insert(craft);
+        self.commands.entity(entity).insert(Craft::new(recipe));
 
         Ok(entity)
     }

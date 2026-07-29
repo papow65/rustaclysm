@@ -15,10 +15,14 @@ pub struct Craft {
 }
 
 impl Craft {
-    pub const fn new(recipe: Arc<Recipe>, work_needed: Duration) -> Self {
+    pub fn new(recipe: Arc<Recipe>) -> Self {
+        let RecipeResult::Item { time, .. } = recipe.result else {
+            todo!("{:?}", recipe.result);
+        };
+
         Self {
             recipe,
-            work_needed,
+            work_needed: time,
             work_done: Duration::ZERO,
         }
     }
@@ -147,7 +151,7 @@ impl RecipeSituation {
                 WARN_TEXT_COLOR,
             ));
         }
-        if let Some(time) = &recipe.time {
+        if let RecipeResult::Item { time, .. } = &recipe.result {
             text_sections.push((TextSpan::new("\n\nDuration: "), SOFT_TEXT_COLOR));
             text_sections.push((TextSpan::new(time.to_string()), WARN_TEXT_COLOR));
         }
