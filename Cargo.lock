@@ -2662,6 +2662,7 @@ version = "0.0.0"
 dependencies = [
  "application_state",
  "bevy",
+ "util",
 ]
 
 [[package]]
