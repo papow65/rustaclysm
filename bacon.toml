@@ -9,6 +9,13 @@ need_stdout = false
 [jobs.fmt]
 command = ["cargo", "fmt", "--", "--color", "always"]
 need_stdout = false
+on_success = "job:clippy"
+
+[jobs.clippy]
+command = [
+    "cargo", "clippy", "--workspace", "--no-deps", "--all-targets", "--color", "always"
+]
+need_stdout = false
 on_success = "job:test"
 
 [jobs.test]
@@ -18,29 +25,12 @@ command = [
 ]
 need_stdout = true
 analyzer = "nextest"
-on_success = "job:clippy"
-
-[jobs.clippy]
-command = [
-    "cargo", "clippy", "--workspace", "--no-deps", "--all-targets", "--color", "always"
-]
-need_stdout = false
 on_success = "job:build"
 
 [jobs.build]
 command = ["cargo", "build", "--color", "always"]
 need_stdout = false
-on_success = "job:doc"
-
-[jobs.doc]
-command = ["cargo", "doc", "--no-deps", "--workspace", "--color", "always", "--document-private-items"]
-need_stdout = false
 on_success = "job:shear"
-
-[jobs.doc-open]
-command = ["cargo", "doc", "--no-deps", "--workspace", "--color", "always", "--document-private-items", "--open"]
-need_stdout = false
-on_success = "back" # so that we don't open the browser at each change
 
 [jobs.shear]
 command = ["cargo", "shear", "--color=always"]
@@ -63,6 +53,16 @@ command = ["inotifywait", "-e", "modify,create,delete,move", "--exclude", "/\\."
 need_stdout = false
 on_success = "job:fmt"
 
+[jobs.doc]
+command = ["cargo", "doc", "--no-deps", "--workspace", "--color", "always", "--document-private-items"]
+need_stdout = false
+on_success = "job:fmt"
+
+[jobs.doc-open]
+command = ["cargo", "doc", "--no-deps", "--workspace", "--color", "always", "--document-private-items", "--open"]
+need_stdout = false
+on_success = "back" # so that we don't open the browser at each change
+
 [jobs.fix]
 command = ["cargo", "fix", "--workspace", "--allow-dirty"]
 on_success = "job:fmt"
@@ -74,14 +74,14 @@ on_failure = "job:fmt"
 
 [keybindings]
 f = "job:fmt"
-t = "job:test"
 c = "job:clippy"
+t = "job:test"
 b = "job:build"
-d = "job:doc"
-o = "job:doc-open"
 s = "job:shear"
 p = "job:sweep"
 r = "job:run"
 w = "job:wait"
+d = "job:doc"
+o = "job:doc-open"
 x = "job:fix"
 k = "job:killall"
