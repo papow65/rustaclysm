@@ -3,8 +3,8 @@ use bevy::ecs::{entity::hash_map::EntityHashMap, system::SystemId};
 use bevy::platform::collections::HashMap;
 use bevy::prelude::{
     Added, BackgroundColor, Button, Children, Commands, DespawnOnExit, Entity, In, IntoSystem as _,
-    KeyCode, Local, NextState, Query, RemovedComponents, Res, ResMut, Single, Text, TextColor,
-    TextSpan, With, World, debug, error,
+    KeyCode, Local, NextState, Query, RemovedComponents, Res, ResMut, Single, Srgba, Text,
+    TextColor, TextSpan, With, World, debug, error,
 };
 use gameplay_action_planning::{PlayerInstructions, QueuedInstruction};
 use gameplay_character::{ExamineItem, MoveItem, Pickup, Unwield, Wield};
@@ -183,12 +183,22 @@ pub(super) fn refresh_inventory(
             for (section, items) in items_by_section {
                 let drop_section = section == InventorySection::Nbor(drop_direction);
 
+                let section_title = format!("{}{section}", " ".repeat(50 * section.offset()));
+                let section_title_length = section_title.chars().count();
                 parent
-                    .spawn((Text::new(format!("{section}")), SOFT_TEXT_COLOR))
+                    .spawn((
+                        Text::new(section_title),
+                        SOFT_TEXT_COLOR,
+                        BackgroundColor::from(Srgba::BLACK),
+                    ))
                     .with_children(|parent| {
+                        let mut whitespace = 170 - section_title_length;
                         if drop_section {
-                            parent.spawn((TextSpan::from(" <- drop spot"), HARD_TEXT_COLOR));
+                            let suffix = " <- drop spot";
+                            whitespace -= suffix.chars().count();
+                            parent.spawn((TextSpan::from(suffix), HARD_TEXT_COLOR));
                         }
+                        parent.spawn(TextSpan::from(" ".repeat(whitespace)));
                     });
 
                 let mut row_spawner = RowSpawner::new(
