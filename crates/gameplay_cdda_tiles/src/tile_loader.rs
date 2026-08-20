@@ -146,6 +146,6 @@ impl TileLoader {
 
 impl AsyncNew<Self> for TileLoader {
     async fn async_new() -> Self {
-        async move { Self::try_new().expect("Tiles should load") }.await
+        Self::try_new().expect("Tiles should load")
     }
 }

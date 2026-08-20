@@ -8,7 +8,7 @@ repository = "https://github.com/papow65/rustaclysm"
 authors = [ "papow65 <papow65@protonmail.com>" ]
 exclude = [ "/screenshots/" ]
 edition = "2024"
-rust-version = "1.97" # should be latest stable
+rust-version = "1.98" # should be latest stable
 
 [workspace]
 # List internal dependencies: cargo tree | rg rustaclysm
@@ -197,6 +197,7 @@ pedantic = { level = "deny", priority = -1 }
     redundant_else = "allow"
     similar_names = "allow"
     struct_field_names = "allow" # Doens't work well with CDDA data
+    unused_async_trait_impl = "allow" # Negligible overhead
 perf = { level = "forbid", priority = -1 }
 restriction = { level = "allow", priority = -1 }
     allow_attributes = "forbid"

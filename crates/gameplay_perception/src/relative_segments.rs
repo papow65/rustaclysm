@@ -205,6 +205,6 @@ impl RelativeSegments {
 
 impl AsyncNew<Self> for RelativeSegments {
     async fn async_new() -> Self {
-        async move { Self::new() }.await
+        Self::new()
     }
 }
