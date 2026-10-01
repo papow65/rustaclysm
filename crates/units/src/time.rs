@@ -466,7 +466,6 @@ mod time_tests {
     }
 
     #[test]
-    #[expect(clippy::float_cmp)]
     fn seasons_work() {
         let mut timestamp = Timestamp::new(0, 4);
         assert_eq!(Season::from(timestamp), Season::Spring);

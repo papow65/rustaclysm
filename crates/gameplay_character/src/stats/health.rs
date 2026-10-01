@@ -23,6 +23,7 @@ impl Health {
         self.0.raise(healing.amount)
     }
 
+    #[must_use]
     pub const fn value(&self) -> &Limited {
         &self.0
     }

@@ -8,7 +8,7 @@ repository = "https://github.com/papow65/rustaclysm"
 authors = [ "papow65 <papow65@protonmail.com>" ]
 exclude = [ "/screenshots/" ]
 edition = "2024"
-rust-version = "1.98" # should be latest stable
+rust-version = "1.99" # should be latest stable
 
 [workspace]
 # List internal dependencies: cargo tree | rg rustaclysm
@@ -123,14 +123,14 @@ workspace = true
 
 [workspace.lints.rust]
 # Forbidden groups
-keyword-idents = { level = "forbid", priority = -1 }
-let-underscore = { level = "forbid", priority = -1 }
-rust-2018-compatibility = { level = "forbid", priority = -1 }
-rust-2021-compatibility = { level = "forbid", priority = -1 }
-rust-2024-compatibility = { level = "forbid", priority = -1 }
+keyword_idents = { level = "forbid", priority = -1 }
+let_underscore = { level = "forbid", priority = -1 }
+rust_2018_compatibility = { level = "forbid", priority = -1 }
+rust_2021_compatibility = { level = "forbid", priority = -1 }
+rust_2024_compatibility = { level = "forbid", priority = -1 }
 # Denied groups
-nonstandard-style = { level = "deny", priority = -1 } # "Forbid" clashes with #[derive(Deserialize)]
-rust-2018-idioms = { level = "deny", priority = -1 } # See https://github.com/rust-lang/rust/issues/91639
+nonstandard_style = { level = "deny", priority = -1 } # "Forbid" clashes with #[derive(Deserialize)]
+rust_2018_idioms = { level = "deny", priority = -1 } # See https://github.com/rust-lang/rust/issues/91639
 # Forbidden lints
 ambiguous_associated_items = "forbid"
 array_into_iter = "forbid"

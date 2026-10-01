@@ -92,7 +92,6 @@ impl LocationCache {
         self.all(pos).find_map(|&x| items.get(x).ok())
     }
 
-    #[must_use]
     pub fn all(&self, pos: Pos) -> impl ExactSizeIterator<Item = &Entity> {
         self.objects.get(&pos).unwrap_or(NOT_FOUND).iter()
     }
