@@ -2,10 +2,11 @@ use crate::SOFT_TEXT_COLOR;
 use bevy::ecs::{spawn::SpawnWith, system::SystemId};
 use bevy::picking::Pickable;
 use bevy::prelude::{
-    AlignItems, Bundle, Button, ChildSpawner, Children, Commands, Component, Entity, In,
-    JustifyContent, Node, PositionType, Spawn, SpawnRelated as _, SystemInput, Text, TextColor,
-    TextFont, Val, children,
+    AlignItems, Bundle, ChildSpawner, Children, Commands, Component, Entity, In, JustifyContent,
+    Node, PositionType, Spawn, SpawnRelated as _, SystemInput, Text, TextColor, TextFont, Val,
+    children,
 };
+use bevy::ui_widgets::Button;
 use keyboard::{Key, KeyBinding};
 use std::fmt;
 use util::Maybe;
@@ -106,7 +107,6 @@ where
             self.node,
             self.run_button,
             Maybe(key_binding),
-            Pickable::IGNORE,
             Children::spawn((
                 Spawn((self.text, self.text_color, Maybe(self.text_font.clone()))),
                 SpawnWith(move |parent: &mut ChildSpawner| {

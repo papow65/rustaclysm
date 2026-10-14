@@ -1,6 +1,7 @@
 use crate::{InventorySection, InventorySystem};
 use bevy::ecs::entity::hash_map::EntityHashMap;
-use bevy::prelude::{BackgroundColor, Button, Children, Entity, Query, Resource, TextColor, With};
+use bevy::prelude::{BackgroundColor, Children, Entity, Query, Resource, TextColor, With};
+use bevy::ui_widgets::Button;
 use gameplay_location::HorizontalDirection;
 use hud::{GOOD_TEXT_COLOR, HARD_TEXT_COLOR, HOVERED_BUTTON_COLOR};
 use units::Timestamp;

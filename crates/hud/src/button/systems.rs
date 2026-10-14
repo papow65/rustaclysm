@@ -1,19 +1,32 @@
 use crate::{DEFAULT_BUTTON_COLOR, HOVERED_BUTTON_COLOR, RunButton};
+use bevy::ecs::query::Spawned;
+use bevy::picking::hover::Hovered;
 use bevy::prelude::{
-    BackgroundColor, Button, Changed, Commands, Entity, In, Interaction, Query, SystemInput, With,
+    Added, BackgroundColor, Changed, Commands, Entity, In, Query, SystemInput, With,
 };
+use bevy::ui::Pressed;
+use bevy::ui_widgets::Button;
 use std::fmt;
 
-pub(super) fn manage_button_color(
-    mut interactions: Query<
-        (&Interaction, &mut BackgroundColor),
-        (Changed<Interaction>, With<Button>),
-    >,
+pub(super) fn manage_new_button(
+    mut commands: Commands,
+    mut interactions: Query<Entity, (Spawned, With<Button>)>,
 ) {
-    for (interaction, mut color) in &mut interactions {
-        *color = match *interaction {
-            Interaction::Hovered | Interaction::Pressed => HOVERED_BUTTON_COLOR,
-            Interaction::None => DEFAULT_BUTTON_COLOR,
+    for button_entity in &mut interactions {
+        commands
+            .entity(button_entity)
+            .insert((Hovered::default(), DEFAULT_BUTTON_COLOR));
+    }
+}
+
+pub(super) fn manage_interacted_button_color(
+    mut interactions: Query<(&Hovered, &mut BackgroundColor), (Changed<Hovered>, With<Button>)>,
+) {
+    for (hovered, mut color) in &mut interactions {
+        *color = if hovered.get() {
+            HOVERED_BUTTON_COLOR
+        } else {
+            DEFAULT_BUTTON_COLOR
         };
     }
 }
@@ -21,14 +34,12 @@ pub(super) fn manage_button_color(
 /// Button presses
 pub fn manage_button_input<I: fmt::Debug + SystemInput + 'static>(
     mut commands: Commands,
-    interactions: Query<(&Interaction, &RunButton<I>), (Changed<Interaction>, With<Button>)>,
+    interactions: Query<&RunButton<I>, (Added<Pressed>, With<Button>)>,
 ) where
     <I as SystemInput>::Inner<'static>: Clone + fmt::Debug + Send + Sync,
 {
-    for (interaction, button) in &interactions {
-        if *interaction == Interaction::Pressed {
-            button.run(&mut commands);
-        }
+    for button in &interactions {
+        button.run(&mut commands);
     }
 }
 

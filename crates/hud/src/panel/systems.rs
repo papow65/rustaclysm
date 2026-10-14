@@ -88,7 +88,7 @@ pub(super) fn update_scroll_thumb_color(
 }
 
 #[expect(clippy::needless_pass_by_value)]
-pub(crate) fn add_node_outlines(trigger: On<Insert, Node>, mut commands: Commands) {
+pub(crate) fn add_node_outlines(trigger: On<Insert<Node>>, mut commands: Commands) {
     commands.entity(trigger.entity).insert(Outline {
         width: Val::Px(2.0),
         offset: Val::ZERO,
