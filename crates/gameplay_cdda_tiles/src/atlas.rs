@@ -49,7 +49,7 @@ impl Atlas {
         for tile_info in cdda_atlas.tiles {
             let tile_info = Arc::from(tile_info);
             for id in tile_info.ids() {
-                tiles.insert(id.clone(), tile_info.clone());
+                tiles.insert(id, tile_info.clone());
             }
         }
 

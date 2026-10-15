@@ -21,7 +21,7 @@ pub(crate) fn setup_global_font(
                 .expect("Added font should be found")
                 .clone();
             font_assets
-                .insert(AssetId::default(), font.clone())
+                .insert(AssetId::default(), font)
                 .expect("Font asset should have a valid generation");
 
             // Existing TextFont components: replace the font(source)

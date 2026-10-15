@@ -82,7 +82,7 @@ pub(crate) fn toggle_doors(
                 .get()
                 .expect("Terrain should be closeable"),
         };
-        let local_terrain = LocalTerrain::unconnected(toggled.clone());
+        let local_terrain = LocalTerrain::unconnected(toggled);
         spawner.spawn_terrain(object_in, pos, &local_terrain);
         *visualization_update = VisualizationUpdate::Forced;
     }

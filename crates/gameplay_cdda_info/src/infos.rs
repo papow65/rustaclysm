@@ -297,7 +297,7 @@ impl Infos {
             variants.push(other.clone());
             variants.push(other.modified(|u| u.prefix("vp_")));
             variants.push(other.modified(|u| u.prefix("vp_").suffix("_cover")));
-            current_id = other.clone();
+            current_id = other;
         }
         variants
             .into_iter()
