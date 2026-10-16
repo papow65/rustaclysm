@@ -1,6 +1,9 @@
 use bevy::prelude::{AlphaMode, Assets, Color, Component, MeshMaterial3d, Srgba, StandardMaterial};
 use gameplay_common::LastSeen;
 
+// AlphaMode::Blend causes graphical issues in Bevy 0.20 (and earlier).
+const TRANSPARENCY_SUPPORTED: AlphaMode = AlphaMode::Mask(0.5);
+
 #[derive(Clone, Debug, Component)]
 #[component(immutable)]
 pub struct Appearance {
@@ -10,16 +13,15 @@ pub struct Appearance {
 
 impl Appearance {
     #[must_use]
-    pub(crate) fn new<T>(materials: &mut Assets<StandardMaterial>, material: T) -> Self
-    where
-        T: Into<StandardMaterial>,
-    {
-        let mut material = material.into();
-        material.alpha_mode = AlphaMode::Blend;
+    pub(crate) fn new(
+        materials: &mut Assets<StandardMaterial>,
+        mut material: StandardMaterial,
+    ) -> Self {
+        material.alpha_mode = TRANSPARENCY_SUPPORTED;
         let remembered = materials.add(StandardMaterial {
             base_color_texture: material.base_color_texture.clone(),
             base_color: Self::remembered(material.base_color),
-            alpha_mode: AlphaMode::Blend,
+            alpha_mode: TRANSPARENCY_SUPPORTED,
             ..StandardMaterial::default()
         });
         Self {
