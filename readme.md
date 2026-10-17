@@ -76,11 +76,14 @@ These environment variables can be set for development purposes:
 |--------------------|----------------|--------------------------------------------------------|
 | `DUMP_ENRICHED`    | Directory path | Dump the enriched C:DDA data to the given directory.   |
 | `EXIT_AFTER_INFOS` | `1`            | Exit the application when all C:DDA data is processed. |
-| `FPS_OVERLAY`      | `1`            | Show the FPS overlay                                   |
 | `LOG_ARCHETYPES`   | `1`            | Log the Bevy archetypes used within the application.   |
 | `UI_OUTLINES`      | `1`            | Show outlines around every UI node                     |
 
-This project uses environment variables instead of Cargo features for easier maintenance.
+Where possible, this project uses environment variables instead of Cargo features for easier maintenance.
+
+## Features
+
+| `fps_ovelay` | Show the FPS overlay |
 
 ## License
 

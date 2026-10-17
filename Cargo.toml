@@ -34,7 +34,7 @@ util = { workspace = true }
 anyhow = "1"
 application_state = { path = "crates/application_state" }
 background = { path = "crates/background" }
-bevy = { version = "0.20", default-features = false, features = [ "async_executor", "bevy_asset", "render_dev_tools", "bevy_log", "bevy_pbr", "bevy_picking", "bevy_state", "bevy_text", "bevy_ui", "bevy_ui_render", "bevy_ui_widgets", "bevy_window", "multi_threaded", "png", "std", "tonemapping_luts", "ui_picking", "wayland", "zstd_rust" ] }
+bevy = { version = "0.20", default-features = false, features = [ "async_executor", "bevy_asset", "bevy_log", "bevy_pbr", "bevy_picking", "bevy_state", "bevy_text", "bevy_ui", "bevy_ui_render", "bevy_ui_widgets", "bevy_window", "multi_threaded", "png", "std", "tonemapping_luts", "ui_picking", "wayland", "zstd_rust" ] }
 bevy_log = "0.20"
 bevy_platform = "0.20"
 cdda_json_files = { path = "crates/cdda_json_files" }
@@ -102,6 +102,8 @@ util = { path = "crates/util" }
 [features]
 # We use --no-default-features for production builds. See .github/workflows/ci.yml
 default = ["bevy/debug", "bevy/dynamic_linking"]
+
+fps_overlay = ["bevy/render_dev_tools"]
 
 [profile.dev] # More optimized, so that the performance is similar to release
 opt-level = 3 # inspired by https://bevy-cheatbook.github.io/pitfalls/performance.html

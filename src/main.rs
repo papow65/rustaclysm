@@ -7,7 +7,6 @@ use crate::log::{log_archetypes, log_filter};
 use crate::{check::check_delay, input::create_global_key_bindings, output::create_camera};
 use application_state::ApplicationStatePlugin;
 use background::BackgroundPlugin;
-use bevy::dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin, FrameTimeGraphConfig};
 use bevy::log::{Level, LogPlugin};
 use bevy::prelude::{
     App, AppExit, AssetPlugin, DefaultPlugins, Fixed, FixedUpdate, ImagePlugin, Last,
@@ -22,7 +21,7 @@ use loading::LoadingIndicatorPlugin;
 use main_menu::MainMenuPlugin;
 use manual::ManualPlugin;
 use pre_gameplay::PreGameplayPlugin;
-use std::{env, time::Duration};
+use std::time::Duration;
 
 fn main() -> AppExit {
     let mut app = App::new();
@@ -52,7 +51,12 @@ fn main() -> AppExit {
             }),
     );
 
-    if env::var("FPS_OVERLAY") == Ok(String::from("1")) {
+    #[cfg(feature = "fps_overlay")]
+    {
+        use bevy::dev_tools::fps_overlay::{
+            FpsOverlayConfig, FpsOverlayPlugin, FrameTimeGraphConfig,
+        };
+
         app.add_plugins(FpsOverlayPlugin {
             config: FpsOverlayConfig {
                 frame_time_graph_config: FrameTimeGraphConfig::target_fps(120.0),
