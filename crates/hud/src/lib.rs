@@ -18,7 +18,7 @@ pub use self::panel::{
 pub use self::plugin::HudPlugin;
 pub use self::spacing::{LARGE_SPACING, MEDIUM_SPACING, SMALL_SPACING};
 pub use self::text::{
-    BAD_TEXT_COLOR, BLUE_TEXT_COLOR, DebugText, DebugTextShown, FILTHY_COLOR, Fonts,
-    GOOD_TEXT_COLOR, HARD_TEXT_COLOR, SOFT_TEXT_COLOR, WARN_TEXT_COLOR, text_color_expect_full,
-    text_color_expect_half, toggle_debug_text,
+    BAD_TEXT_COLOR, BLUE_TEXT_COLOR, DebugText, DebugTextShown, FILTHY_COLOR, GOOD_TEXT_COLOR,
+    HARD_TEXT_COLOR, SOFT_TEXT_COLOR, WARN_TEXT_COLOR, huge_font, large_font, largish_font,
+    regular_font, text_color_expect_full, text_color_expect_half, toggle_debug_text,
 };

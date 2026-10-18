@@ -12,8 +12,8 @@ use gameplay_cdda_active_sav::ActiveSav;
 use gameplay_local::GameplayLocal;
 use glob::glob;
 use hud::{
-    BAD_TEXT_COLOR, ButtonBuilder, Fonts, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, LARGE_SPACING,
-    MEDIUM_SPACING, PANEL_COLOR, trigger_button_action,
+    BAD_TEXT_COLOR, ButtonBuilder, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, LARGE_SPACING, MEDIUM_SPACING,
+    PANEL_COLOR, huge_font, large_font, largish_font, trigger_button_action,
 };
 use manual::ManualSection;
 use std::path::{Path, PathBuf};
@@ -83,14 +83,14 @@ pub(crate) fn create_main_menu_key_bindings(world: &mut World) {
 }
 
 fn title() -> impl Bundle {
-    (Text::from("Rustaclysm"), HARD_TEXT_COLOR, Fonts::huge())
+    (Text::from("Rustaclysm"), HARD_TEXT_COLOR, huge_font())
 }
 
 fn tagline() -> impl Bundle {
     (
         Text::from("A 3D reimplementation of Cataclysm: Dark Days Ahead"),
         HARD_TEXT_COLOR,
-        Fonts::largish(),
+        largish_font(),
         Node {
             margin: UiRect {
                 bottom: LARGE_SPACING,
@@ -138,7 +138,7 @@ fn notification_area() -> impl Bundle {
         children![(
             Text::default(),
             HARD_TEXT_COLOR,
-            Fonts::largish(),
+            largish_font(),
             Node {
                 width: Val::Px(FULL_WIDTH),
                 padding: UiRect::horizontal(MEDIUM_SPACING),
@@ -153,7 +153,7 @@ fn notification_area() -> impl Bundle {
 fn quit_button(quit_system: &QuitSystem) -> impl Bundle {
     ButtonBuilder::new("Quit", BAD_TEXT_COLOR, quit_system.0, ())
         .large()
-        .with_font(Fonts::large())
+        .with_font(large_font())
         .bundle()
 }
 
@@ -188,7 +188,7 @@ pub(super) fn update_sav_files(
             load_button_area_style.display = Display::Flex;
             message_wrapper.display = Display::None;
 
-            let largish = Fonts::largish();
+            let largish = largish_font();
 
             commands
                 .entity(load_button_area)

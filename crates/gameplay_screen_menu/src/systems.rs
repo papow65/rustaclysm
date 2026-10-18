@@ -5,7 +5,9 @@ use bevy::prelude::{
 };
 use bevy::{app::AppExit, ecs::system::SystemId};
 use gameplay_screen_state::GameplayScreenState;
-use hud::{BAD_TEXT_COLOR, ButtonBuilder, Fonts, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, MEDIUM_SPACING};
+use hud::{
+    BAD_TEXT_COLOR, ButtonBuilder, GOOD_TEXT_COLOR, HARD_TEXT_COLOR, MEDIUM_SPACING, large_font,
+};
 use keyboard::KeyBindings;
 use manual::ManualSection;
 use std::time::Instant;
@@ -41,15 +43,15 @@ pub(super) fn spawn_menu(In(button_actions): In<MenuButtonActions>, mut commands
         children![
             ButtonBuilder::new("Return", GOOD_TEXT_COLOR, button_actions.return_, ())
                 .large()
-                .with_font(Fonts::large())
+                .with_font(large_font())
                 .bundle(),
             ButtonBuilder::new("Main Menu", HARD_TEXT_COLOR, button_actions.main_menu, ())
                 .large()
-                .with_font(Fonts::large())
+                .with_font(large_font())
                 .bundle(),
             ButtonBuilder::new("Quit", BAD_TEXT_COLOR, button_actions.quit, ())
                 .large()
-                .with_font(Fonts::large())
+                .with_font(large_font())
                 .bundle(),
         ],
     ));

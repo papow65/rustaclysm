@@ -6,7 +6,9 @@ use bevy::prelude::{
 use bevy::{camera::visibility::RenderLayers, ecs::system::SystemId};
 use gameplay_screen_state::GameplayScreenState;
 use gameplay_transition_state::GameplayTransitionState;
-use hud::{BAD_TEXT_COLOR, ButtonBuilder, Fonts, PANEL_COLOR, SMALL_SPACING, WARN_TEXT_COLOR};
+use hud::{
+    BAD_TEXT_COLOR, ButtonBuilder, PANEL_COLOR, SMALL_SPACING, WARN_TEXT_COLOR, largish_font,
+};
 use keyboard::KeyBindings;
 use manual::ManualSection;
 use std::time::Instant;
@@ -50,7 +52,7 @@ pub(super) fn spawn_death_screen(In(main_menu_system): In<MainMenuSystem>, mut c
                         align_items: AlignItems::Center,
                         ..Node::default()
                     },
-                    children![(Text::from("You died"), BAD_TEXT_COLOR, Fonts::largish())],
+                    children![(Text::from("You died"), BAD_TEXT_COLOR, largish_font())],
                 ),
                 ButtonBuilder::new("Main menu", WARN_TEXT_COLOR, main_menu_system.0, (),)
                     .large()

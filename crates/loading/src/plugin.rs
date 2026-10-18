@@ -4,7 +4,7 @@ use bevy::prelude::{
     GlobalZIndex, IntoScheduleConfigs as _, JustifyContent, Node, OnEnter, Plugin, PositionType,
     Single, Text, Val, With, in_state,
 };
-use hud::{DEFAULT_BUTTON_COLOR, Fonts, HARD_TEXT_COLOR};
+use hud::{DEFAULT_BUTTON_COLOR, HARD_TEXT_COLOR, large_font};
 use util::log_transition_plugin;
 
 #[derive(Component)]
@@ -54,7 +54,7 @@ fn spawn_loading(mut commands: Commands) {
                         LoadingText,
                         Text::from("Loading..."),
                         HARD_TEXT_COLOR,
-                        Fonts::large(),
+                        large_font(),
                     ));
                 });
         });

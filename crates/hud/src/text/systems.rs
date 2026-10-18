@@ -1,4 +1,4 @@
-use crate::text::{DebugText, DebugTextShown, FiraFont, Fonts};
+use crate::text::{DebugText, DebugTextShown, FiraFont, regular_font};
 use bevy::prelude::{
     Added, AssetEvent, AssetId, Assets, Commands, Entity, Font, MessageReader, Or, Pickable, Query,
     Res, ResMut, Text, TextFont, TextSpan, With, Without, debug,
@@ -40,7 +40,7 @@ pub(super) fn set_default_font_size(
 
     for mut text_font in &mut unchecked_texts {
         if text_font.font_size == TextFont::default().font_size {
-            text_font.font_size = Fonts::regular().font_size;
+            text_font.font_size = regular_font().font_size;
         }
     }
 
@@ -70,7 +70,7 @@ pub fn toggle_debug_text(
 
     debug!("Debug: {shown:?}");
 
-    let size = shown.text_font(Fonts::regular()).font_size;
+    let size = shown.text_font(regular_font()).font_size;
     for mut font in &mut debug_fonts {
         font.font_size = size;
     }

@@ -11,7 +11,7 @@ pub use self::colors::{
 };
 pub use self::components::DebugText;
 pub use self::debug_text_shown::DebugTextShown;
-pub use self::fonts::Fonts;
+pub use self::fonts::{huge_font, large_font, largish_font, regular_font};
 pub use self::systems::toggle_debug_text;
 
 pub(crate) use self::plugin::TextPlugin;

@@ -1,4 +1,4 @@
-use crate::{Fonts, text::DebugTextShown};
+use crate::{regular_font, text::DebugTextShown};
 use bevy::ecs::{lifecycle::HookContext, world::DeferredWorld};
 use bevy::prelude::{Command, Component, Entity, World};
 
@@ -25,7 +25,7 @@ impl Command for DebugTextCommand {
 
     fn apply(self, world: &mut World) {
         let debug_text_shown = world.resource::<DebugTextShown>();
-        let font = debug_text_shown.text_font(Fonts::regular());
+        let font = debug_text_shown.text_font(regular_font());
 
         world
             .get_entity_mut(self.entity)

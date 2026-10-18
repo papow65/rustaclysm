@@ -18,43 +18,39 @@ impl FromWorld for FiraFont {
     }
 }
 
-pub enum Fonts {}
+const REGULAR_FONT_SIZE: FontSize = FontSize::Px(13.0);
+const LARGISH_FONT_SIZE: FontSize = FontSize::Px(18.0);
+const LARGE_FONT_SIZE: FontSize = FontSize::Px(33.0);
+const HUGE_FONT_SIZE: FontSize = FontSize::Px(100.0);
 
-impl Fonts {
-    const REGULAR_FONT_SIZE: FontSize = FontSize::Px(13.0);
-    const LARGISH_FONT_SIZE: FontSize = FontSize::Px(18.0);
-    const LARGE_FONT_SIZE: FontSize = FontSize::Px(33.0);
-    const HUGE_FONT_SIZE: FontSize = FontSize::Px(100.0);
-
-    #[must_use]
-    pub fn regular() -> TextFont {
-        TextFont {
-            font_size: Self::REGULAR_FONT_SIZE,
-            ..TextFont::default()
-        }
+#[must_use]
+pub fn regular_font() -> TextFont {
+    TextFont {
+        font_size: REGULAR_FONT_SIZE,
+        ..TextFont::default()
     }
+}
 
-    #[must_use]
-    pub fn largish() -> TextFont {
-        TextFont {
-            font_size: Self::LARGISH_FONT_SIZE,
-            ..TextFont::default()
-        }
+#[must_use]
+pub fn largish_font() -> TextFont {
+    TextFont {
+        font_size: LARGISH_FONT_SIZE,
+        ..TextFont::default()
     }
+}
 
-    #[must_use]
-    pub fn large() -> TextFont {
-        TextFont {
-            font_size: Self::LARGE_FONT_SIZE,
-            ..TextFont::default()
-        }
+#[must_use]
+pub fn large_font() -> TextFont {
+    TextFont {
+        font_size: LARGE_FONT_SIZE,
+        ..TextFont::default()
     }
+}
 
-    #[must_use]
-    pub fn huge() -> TextFont {
-        TextFont {
-            font_size: Self::HUGE_FONT_SIZE,
-            ..TextFont::default()
-        }
+#[must_use]
+pub fn huge_font() -> TextFont {
+    TextFont {
+        font_size: HUGE_FONT_SIZE,
+        ..TextFont::default()
     }
 }
