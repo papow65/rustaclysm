@@ -14,12 +14,11 @@ use gameplay_model::Appearance;
 use gameplay_object::Mobile;
 use gameplay_perception::{CurrentlyVisible, CurrentlyVisibleBuilder};
 use gameplay_player::{Player, PlayerActionState};
+use gameplay_refresh::RefreshScope;
 use gameplay_terrain::Accessible;
 use gameplay_time::Clock;
 use gameplay_vehicle::Vehicle;
-use gameplay_visualization::{
-    VisualizationUpdate, update_visualization, update_visualization_on_item_move,
-};
+use gameplay_visualization::{update_visualization, update_visualization_on_item_move};
 use std::cell::RefCell;
 use std::{cell::OnceCell, time::Instant};
 use thread_local::ThreadLocal;
@@ -105,7 +104,7 @@ fn update_visualization_on_player_move(
     currently_visible_builder: CurrentlyVisibleBuilder,
     mut explorations: MessageWriter<Exploration>,
     elevation_visibility: Res<ElevationVisibility>,
-    mut visualization_update: ResMut<VisualizationUpdate>,
+    mut refresh_scope: ResMut<RefreshScope>,
     mut previous_camera_global_transform: GameplayLocal<GlobalTransform>,
     mut items: Query<(
         Option<&Player>,
@@ -123,7 +122,7 @@ fn update_visualization_on_player_move(
 
     let camera_moved = **camera_global_transform != *previous_camera_global_transform.get();
 
-    if focus.is_changed() || camera_moved || visualization_update.forced() {
+    if focus.is_changed() || camera_moved || refresh_scope.is_all_loaded() {
         let currently_visible = ThreadLocal::new();
         let new_explorations = ThreadLocal::new();
 
@@ -131,7 +130,7 @@ fn update_visualization_on_player_move(
             |(player, &pos, mut visibility, mut last_seen, accessible, speed, children)| {
                 let currently_visible = currently_visible.get_or(|| {
                     RefCell::new(
-                        currently_visible_builder.for_player(!visualization_update.forced()),
+                        currently_visible_builder.for_player(!refresh_scope.is_all_loaded()),
                     )
                 });
                 let new_explorations =
@@ -167,7 +166,7 @@ fn update_visualization_on_player_move(
         debug!("{}x visualization updated", items.iter().len());
 
         *previous_camera_global_transform.get() = **camera_global_transform;
-        (*visualization_update).reset();
+        (*refresh_scope).reset();
     }
 
     log_if_slow("update_visualization_on_player_move", start);
@@ -177,7 +176,7 @@ fn update_visualization_on_player_move(
 fn update_visualization_on_weather_change(
     clock: Clock,
     player_action_state: Res<State<PlayerActionState>>,
-    mut visualization_update: ResMut<VisualizationUpdate>,
+    mut refresh_scope: ResMut<RefreshScope>,
     mut last_viewing_disttance: GameplayLocal<Option<u8>>,
     player_pos: Single<&Pos, With<Player>>,
 ) {
@@ -189,7 +188,7 @@ fn update_visualization_on_weather_change(
         *last_viewing_disttance.get() = viewing_distance;
 
         // Handled by update_visualization_on_player_move next frame
-        *visualization_update = VisualizationUpdate::Forced;
+        *refresh_scope = RefreshScope::AllLoaded;
     }
 
     log_if_slow("update_visualization_on_weather_change", start);

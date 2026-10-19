@@ -1,4 +1,5 @@
 mod despawn;
+mod expanded;
 mod log;
 mod message_buffer;
 mod missing_asset;

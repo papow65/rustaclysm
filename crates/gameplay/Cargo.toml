@@ -22,6 +22,7 @@ gameplay_log = { workspace = true }
 gameplay_model = { workspace = true }
 gameplay_perception = { workspace = true }
 gameplay_player = { workspace = true }
+gameplay_refresh = { workspace = true }
 gameplay_resource = { workspace = true }
 gameplay_screen_base = { workspace = true }
 gameplay_screen_crafting = { workspace = true }

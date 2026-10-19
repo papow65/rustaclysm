@@ -1,3 +1,4 @@
+use crate::expanded::Expanded;
 use crate::{
     DespawnSubzoneLevel, DespawnZoneLevel, MessageBuffer, MissingAsset, SpawnSubzoneLevel,
     SpawnZoneLevel, SubzoneSpawner, TileSpawner, UpdateZoneLevelVisibility, VisibleRegion,
@@ -21,7 +22,7 @@ use gameplay_location::{
     Level, Pos, SubzoneLevel, SubzoneLevelCache, VisionDistance, Zone, ZoneLevel, ZoneLevelCache,
 };
 use gameplay_perception::{Explored, Region, ZoneRegion};
-use gameplay_visualization::{Expanded, VisualizationUpdate};
+use gameplay_refresh::RefreshScope;
 use gameplay_world::ZoneLevelIds;
 use std::cmp::Ordering;
 use std::time::{Duration, Instant};
@@ -162,14 +163,14 @@ pub fn spawn_subzone_levels(
     mut map_manager: MapManager,
     mut map_memory_manager: MapMemoryManager,
     mut overmap_buffer_manager: OvermapBufferManager,
-    mut vizualization_update: ResMut<VisualizationUpdate>,
+    mut refresh_scope: ResMut<RefreshScope>,
 ) {
     let start = Instant::now();
     if spawn_subzone_level_buffer.is_empty() {
         return;
     }
 
-    *vizualization_update = VisualizationUpdate::Forced;
+    *refresh_scope = RefreshScope::AllLoaded;
 
     // Prevent duplicates
     let mut added = HashSet::new();

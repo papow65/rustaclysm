@@ -62,6 +62,7 @@ gameplay_object = { path = "crates/gameplay_object" }
 gameplay_perception = { path = "crates/gameplay_perception" }
 gameplay_player = { path = "crates/gameplay_player" }
 gameplay_relations = { path = "crates/gameplay_relations" }
+gameplay_refresh = { path = "crates/gameplay_refresh" }
 gameplay_resource = { path = "crates/gameplay_resource" }
 gameplay_screen_base = { path = "crates/gameplay_screen_base" }
 gameplay_screen_crafting = { path = "crates/gameplay_screen_crafting" }

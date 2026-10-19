@@ -21,6 +21,7 @@ use gameplay_log::LogPlugin;
 use gameplay_model::ModelPlugin;
 use gameplay_perception::{GameplayPerceptionPlugin, RelativeSegments};
 use gameplay_player::PlayerPlugin;
+use gameplay_refresh::{GameplayRefreshPlugin, RefreshScope};
 use gameplay_resource::GampelayResourceSet;
 use gameplay_screen_base::BaseScreenPlugin;
 use gameplay_screen_crafting::CraftingScreenPlugin;
@@ -40,10 +41,7 @@ use gameplay_spawn::{
 use gameplay_terrain::TerrainPlugin;
 use gameplay_time::TimePlugin;
 use gameplay_transition::TransitionPlugin;
-use gameplay_visualization::{
-    GameplayVisualizationPlugin, VisualizationUpdate, update_visibility,
-    update_visualization_on_item_move,
-};
+use gameplay_visualization::{update_visibility, update_visualization_on_item_move};
 use gameplay_world::GameplayWorldPlugin;
 use util::log_transition_plugin;
 
@@ -62,7 +60,7 @@ impl Plugin for GameplayPlugin {
                 GameplayItemPlugin,
                 GameplayLocalPlugin,
                 GameplayPerceptionPlugin,
-                GameplayVisualizationPlugin,
+                GameplayRefreshPlugin,
                 GameplayWorldPlugin,
                 InfoPlugin,
                 LocationPlugin,
@@ -119,7 +117,7 @@ fn update_systems() -> ScheduleConfigs<ScheduleSystem> {
                 update_visualization_on_item_move.run_if(resource_exists::<RelativeSegments>),
             )
                 .chain(),
-            update_visibility.run_if(resource_exists_and_changed::<VisualizationUpdate>),
+            update_visibility.run_if(resource_exists_and_changed::<RefreshScope>),
         )
             .chain(),
         handle_zone_levels(),

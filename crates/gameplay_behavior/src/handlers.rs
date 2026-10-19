@@ -19,12 +19,12 @@ use gameplay_object::{
     Corpse, CorpseRaise, Damage, Healing, Life, ObjectName, Obstacle, StandardIntegrity,
 };
 use gameplay_player::Player;
+use gameplay_refresh::RefreshScope;
 use gameplay_relations::ObjectOn;
 use gameplay_screen_state::GameplayScreenState;
 use gameplay_spawn::TileSpawner;
 use gameplay_terrain::{LocalTerrain, TerrainEvent, Toggle};
 use gameplay_time::Clock;
-use gameplay_visualization::VisualizationUpdate;
 use std::{f32::consts::FRAC_PI_2, time::Instant};
 use text::Fragment;
 use units::Duration;
@@ -63,7 +63,7 @@ pub(crate) fn toggle_doors(
     mut commands: Commands,
     mut toggle_reader: MessageReader<TerrainEvent<Toggle>>,
     mut spawner: TileSpawner,
-    mut visualization_update: ResMut<VisualizationUpdate>,
+    mut refresh_scope: ResMut<RefreshScope>,
     terrain: Query<(&Pos, &Shared<TerrainInfo>, &ObjectOn)>,
 ) {
     let start = Instant::now();
@@ -84,7 +84,7 @@ pub(crate) fn toggle_doors(
         };
         let local_terrain = LocalTerrain::unconnected(toggled);
         spawner.spawn_terrain(object_in, pos, &local_terrain);
-        *visualization_update = VisualizationUpdate::Forced;
+        *refresh_scope = RefreshScope::AllLoaded;
     }
 
     log_if_slow("toggle_doors", start);
@@ -261,7 +261,7 @@ pub(crate) fn update_damaged_terrain(
     mut message_writer: LogMessageWriter,
     mut damage_reader: MessageReader<TerrainEvent<Damage>>,
     mut spawner: TileSpawner,
-    mut visualization_update: ResMut<VisualizationUpdate>,
+    mut refresh_scope: ResMut<RefreshScope>,
     mut terrain: Query<(
         Entity,
         &Pos,
@@ -295,7 +295,7 @@ pub(crate) fn update_damaged_terrain(
                     .or_else(|| furniture_info.map(Shared::as_ref).map(Either::Right))
                     .expect("Either terrain or furniture"),
             );
-            *visualization_update = VisualizationUpdate::Forced;
+            *refresh_scope = RefreshScope::AllLoaded;
         } else {
             message_writer.send(Hit {
                 attacker: damage.change.attacker.clone(),

@@ -9,8 +9,8 @@ use gameplay_character::ChangePace;
 use gameplay_focus::{CancelHandling, ElevationVisibility, Focus, FocusState};
 use gameplay_log::LogMessageWriter;
 use gameplay_player::PlayerActionState;
+use gameplay_refresh::RefreshScope;
 use gameplay_screen_state::GameplayScreenState;
-use gameplay_visualization::VisualizationUpdate;
 use keyboard::{Held, KeyBindings};
 use manual::ManualSection;
 use std::time::Instant;
@@ -55,7 +55,7 @@ fn open_screen(
 
 fn toggle_elevation(
     mut elevation_visibility: ResMut<ElevationVisibility>,
-    mut visualization_update: ResMut<VisualizationUpdate>,
+    mut refresh_scope: ResMut<RefreshScope>,
 ) {
     let start = Instant::now();
 
@@ -63,7 +63,7 @@ fn toggle_elevation(
         ElevationVisibility::Shown => ElevationVisibility::Hidden,
         ElevationVisibility::Hidden => ElevationVisibility::Shown,
     };
-    *visualization_update = VisualizationUpdate::Forced;
+    *refresh_scope = RefreshScope::AllLoaded;
 
     log_if_slow("toggle_elevation", start);
 }
@@ -264,6 +264,6 @@ fn manage_queued_instruction(
     log_if_slow("manage_queued_instruction", start);
 }
 
-pub(crate) fn trigger_refresh(mut visualization_update: ResMut<VisualizationUpdate>) {
-    *visualization_update = VisualizationUpdate::Forced;
+pub(crate) fn trigger_refresh(mut refresh_scope: ResMut<RefreshScope>) {
+    *refresh_scope = RefreshScope::AllLoaded;
 }

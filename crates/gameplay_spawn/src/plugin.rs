@@ -1,14 +1,17 @@
+use crate::expanded::Expanded;
 use crate::{
     DespawnSubzoneLevel, DespawnZoneLevel, SpawnSubzoneLevel, SpawnZoneLevel,
     UpdateZoneLevelVisibility,
 };
 use application_state::ApplicationState;
 use bevy::prelude::{App, Plugin, StateScopedMessagesAppExt as _};
+use gameplay_resource::gameplay_resource_plugin;
 
 pub struct SpawnPlugin;
 
 impl Plugin for SpawnPlugin {
     fn build(&self, app: &mut App) {
+        app.add_plugins(gameplay_resource_plugin::<Expanded>);
         app.add_message::<DespawnSubzoneLevel>()
             .clear_messages_on_exit::<DespawnSubzoneLevel>(ApplicationState::Gameplay);
         app.add_message::<DespawnZoneLevel>()

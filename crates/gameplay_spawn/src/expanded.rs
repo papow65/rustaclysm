@@ -1,14 +1,14 @@
 use bevy::prelude::Resource;
 use gameplay_perception::Region;
 
-/// The area that should be expanded into tiles
+/// The region whose subzone levels should be expanded into tiles.
 #[derive(Default, Resource)]
 pub struct Expanded {
-    pub region: Region,
+    pub(crate) region: Region,
 }
 
 impl Expanded {
-    pub fn update(&mut self, region: Region) -> bool {
+    pub(crate) fn update(&mut self, region: Region) -> bool {
         let changed = self.region != region;
         if changed {
             self.region = region;

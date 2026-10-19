@@ -15,7 +15,6 @@ gameplay_model = { workspace = true }
 gameplay_object = { workspace = true }
 gameplay_perception = { workspace = true }
 gameplay_player = { workspace = true }
-gameplay_resource = { workspace = true }
 gameplay_terrain = { workspace = true }
 util = { workspace = true }
 
